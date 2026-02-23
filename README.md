@@ -35,13 +35,13 @@ Compiles everything, links 3 binaries, runs all 92 tests.
 
 Produces deterministic hex values matching the Python reference bit-for-bit on mainnet parameters (4GB scratchpad, 100k rounds).
 
-## Emission Model — Feigenbaum Constants
+## Emission Model — Feigenbaum-Inspired Constants
 
-The emission schedule is governed by the two Feigenbaum universal constants:
+The emission schedule encodes the two Feigenbaum universal constants (α, δ) with a smooth exponential decay:
 
 - **Epoch length:** alpha (2.502907875 years) = 131,553 blocks per epoch
 - **Max supply:** delta-derived = 4,669,201.609 SOST (asymptotic hard cap)
-- **Decay factor:** q = exp(-1/4) = 0.7788007831 per epoch (~9.03% annual)
+- **Decay factor:** q = exp(-1/4) = 0.7788007831 per epoch (~9.03% smooth annual decay)
 - **Initial reward:** 7.85100863 SOST per block
 - **95% mined** in ~12 epochs (~30 years), smooth decay with no halvings
 - **Coinbase split:** 50% miner, 25% gold vault (automatic XAUT/PAXG), 25% PoPC pool
