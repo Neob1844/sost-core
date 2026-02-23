@@ -3,7 +3,7 @@
 // =============================================================================
 //
 // Implements canonical byte-level serialization for TxInput, TxOutput, and
-// Transaction as specified in Design Document v1.2, Section 5.
+// Transaction as specified in Design Document v1.2a, Section 5.
 //
 // All integers are little-endian. CompactSize uses Bitcoin's varint encoding.
 // txid = SHA256(SHA256(serialized_tx)).
@@ -16,10 +16,10 @@
 #include "sost/transaction.h"
 
 #include <openssl/sha.h>
-#include <openssl/ripemd.h>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <utility>
 
 namespace sost {
 
@@ -32,6 +32,13 @@ static void WriteU32LE(std::vector<Byte>& out, uint32_t v) {
     out.push_back(static_cast<Byte>((v >> 8) & 0xFF));
     out.push_back(static_cast<Byte>((v >> 16) & 0xFF));
     out.push_back(static_cast<Byte>((v >> 24) & 0xFF));
+}
+
+static void WriteU64LE(std::vector<Byte>& out, uint64_t v) {
+    for (int i = 0; i < 8; ++i) {
+        out.push_back(static_cast<Byte>(v & 0xFF));
+        v >>= 8;
+    }
 }
 
 static void WriteI64LE(std::vector<Byte>& out, int64_t v) {
@@ -53,6 +60,21 @@ static bool ReadU32LE(const std::vector<Byte>& in, size_t& offset,
             | (static_cast<uint32_t>(in[offset + 2]) << 16)
             | (static_cast<uint32_t>(in[offset + 3]) << 24);
     offset += 4;
+    return true;
+}
+
+static bool ReadU64LE(const std::vector<Byte>& in, size_t& offset,
+                      uint64_t& out_val, std::string* err) {
+    if (offset + 8 > in.size()) {
+        if (err) *err = "ReadU64LE: unexpected end of data";
+        return false;
+    }
+    uint64_t u = 0;
+    for (int i = 0; i < 8; ++i) {
+        u |= (static_cast<uint64_t>(in[offset + i]) << (8 * i));
+    }
+    out_val = u;
+    offset += 8;
     return true;
 }
 
@@ -101,10 +123,10 @@ static void WriteBytes(std::vector<Byte>& out, const Byte* src, size_t count) {
 // =============================================================================
 //
 // Encoding rules:
-//   0x00-0xFC:        1 byte  (value itself)
-//   0xFD-0xFFFF:      3 bytes (0xFD + uint16_le)
-//   0x10000-0xFFFFFFFF: 5 bytes (0xFE + uint32_le)
-//   larger:           9 bytes (0xFF + uint64_le)
+//   0x00-0xFC:           1 byte  (value itself)
+//   0xFD-0xFFFF:         3 bytes (0xFD + uint16_le)
+//   0x10000-0xFFFFFFFF:  5 bytes (0xFE + uint32_le)
+//   larger:              9 bytes (0xFF + uint64_le)
 //
 // Canonical means: the shortest possible encoding MUST be used.
 // Non-canonical encodings (e.g., 0xFD for values < 0xFD) are invalid.
@@ -116,12 +138,12 @@ void WriteCompactSize(std::vector<Byte>& out, uint64_t n) {
         out.push_back(0xFD);
         out.push_back(static_cast<Byte>(n & 0xFF));
         out.push_back(static_cast<Byte>((n >> 8) & 0xFF));
-    } else if (n <= 0xFFFFFFFF) {
+    } else if (n <= 0xFFFFFFFFULL) {
         out.push_back(0xFE);
         WriteU32LE(out, static_cast<uint32_t>(n));
     } else {
         out.push_back(0xFF);
-        WriteI64LE(out, static_cast<int64_t>(n));
+        WriteU64LE(out, n);
     }
 }
 
@@ -143,6 +165,7 @@ bool ReadCompactSize(const std::vector<Byte>& in, size_t& offset,
         out_n = static_cast<uint64_t>(in[offset])
               | (static_cast<uint64_t>(in[offset + 1]) << 8);
         offset += 2;
+
         // Canonical check: must be >= 0xFD
         if (out_n < 0xFD) {
             if (err) *err = "ReadCompactSize: non-canonical encoding (u16 < 0xFD)";
@@ -155,6 +178,7 @@ bool ReadCompactSize(const std::vector<Byte>& in, size_t& offset,
         uint32_t v = 0;
         if (!ReadU32LE(in, offset, v, err)) return false;
         out_n = v;
+
         // Canonical check: must be > 0xFFFF
         if (out_n <= 0xFFFF) {
             if (err) *err = "ReadCompactSize: non-canonical encoding (u32 <= 0xFFFF)";
@@ -164,11 +188,12 @@ bool ReadCompactSize(const std::vector<Byte>& in, size_t& offset,
     }
 
     // first == 0xFF
-    int64_t v = 0;
-    if (!ReadI64LE(in, offset, v, err)) return false;
-    out_n = static_cast<uint64_t>(v);
+    uint64_t v = 0;
+    if (!ReadU64LE(in, offset, v, err)) return false;
+    out_n = v;
+
     // Canonical check: must be > 0xFFFFFFFF
-    if (out_n <= 0xFFFFFFFF) {
+    if (out_n <= 0xFFFFFFFFULL) {
         if (err) *err = "ReadCompactSize: non-canonical encoding (u64 <= 0xFFFFFFFF)";
         return false;
     }
@@ -218,6 +243,7 @@ bool TxOutput::SerializeTo(std::vector<Byte>& out, std::string* err) const {
         if (err) *err = "TxOutput::Serialize: payload_len exceeds 255 bytes";
         return false;
     }
+
     WriteI64LE(out, amount);
     out.push_back(type);
     WriteBytes(out, pubkey_hash.data(), 20);
@@ -254,7 +280,7 @@ bool TxOutput::DeserializeFrom(const std::vector<Byte>& in, size_t& offset,
 // Transaction serialization
 // =============================================================================
 //
-// Layout (Section 5, Design v1.2):
+// Layout (Section 5, Design v1.2a):
 //   version        4 bytes   u32 LE
 //   tx_type        1 byte
 //   num_inputs     CompactSize
@@ -265,6 +291,9 @@ bool TxOutput::DeserializeFrom(const std::vector<Byte>& in, size_t& offset,
 // txid = SHA256(SHA256(entire serialized bytes))
 
 bool Transaction::Serialize(std::vector<Byte>& out, std::string* err) const {
+    // Produce exact canonical serialization (never append to caller buffer)
+    out.clear();
+
     // Validate structural constraints before serializing
     if (inputs.empty()) {
         if (err) *err = "Transaction::Serialize: no inputs";
@@ -301,13 +330,15 @@ bool Transaction::Serialize(std::vector<Byte>& out, std::string* err) const {
 
 bool Transaction::Deserialize(const std::vector<Byte>& in,
                               Transaction& out_tx, std::string* err) {
+    // Parse into temporary object to avoid partially-mutated output on failure
+    Transaction tmp{};
     size_t offset = 0;
 
     // Version
-    if (!ReadU32LE(in, offset, out_tx.version, err)) return false;
+    if (!ReadU32LE(in, offset, tmp.version, err)) return false;
 
     // tx_type
-    if (!ReadU8(in, offset, out_tx.tx_type, err)) return false;
+    if (!ReadU8(in, offset, tmp.tx_type, err)) return false;
 
     // Inputs
     uint64_t num_inputs = 0;
@@ -321,9 +352,9 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
         return false;
     }
 
-    out_tx.inputs.resize(static_cast<size_t>(num_inputs));
+    tmp.inputs.resize(static_cast<size_t>(num_inputs));
     for (size_t i = 0; i < num_inputs; ++i) {
-        if (!TxInput::DeserializeFrom(in, offset, out_tx.inputs[i], err)) {
+        if (!TxInput::DeserializeFrom(in, offset, tmp.inputs[i], err)) {
             if (err && err->empty()) {
                 *err = "Transaction::Deserialize: failed at input " + std::to_string(i);
             }
@@ -343,9 +374,9 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
         return false;
     }
 
-    out_tx.outputs.resize(static_cast<size_t>(num_outputs));
+    tmp.outputs.resize(static_cast<size_t>(num_outputs));
     for (size_t i = 0; i < num_outputs; ++i) {
-        if (!TxOutput::DeserializeFrom(in, offset, out_tx.outputs[i], err)) {
+        if (!TxOutput::DeserializeFrom(in, offset, tmp.outputs[i], err)) {
             if (err && err->empty()) {
                 *err = "Transaction::Deserialize: failed at output " + std::to_string(i);
             }
@@ -362,6 +393,7 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
         return false;
     }
 
+    out_tx = std::move(tmp);
     return true;
 }
 
@@ -369,7 +401,7 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
 // txid computation — SHA256(SHA256(serialized_tx))
 // =============================================================================
 //
-// Double SHA256 as specified in Design v1.2, Section 5.
+// Double SHA256 as specified in Design v1.2a, Section 5.
 // Consistent with sighash and Merkle tree hashing.
 
 bool Transaction::ComputeTxId(Hash256& out_txid, std::string* err) const {
