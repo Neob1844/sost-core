@@ -1,0 +1,867 @@
+// =============================================================================
+// SOST Transaction System — Design Document v1.2a (FROZEN)
+// =============================================================================
+//
+// Author: CTO
+// Branch: feature/transactions
+// Status: FROZEN — specification locked for implementation
+// Date: 2026-02-23
+//
+// Changelog:
+//   v1.0   Initial design (typed outputs, UTXO, ECDSA)
+//   v1.1   Review round 1: sighash, LOW-S, double SHA256, LevelDB, activations
+//   v1.2   Review round 2: payload field, emergency fix, SUPPLY_MAX, endianness
+//   v1.2a  Final blindaje: canonical hash rule, emergency precision, BOND schema
+//
+// =============================================================================
+// 1. PHILOSOPHY
+// =============================================================================
+//
+// Bitcoin transactions are generic: opaque value from A to B. The chain has
+// no awareness of what a payment "means."
+//
+// SOST is different. SOST has constitutional purpose:
+//   - Gold Vault accumulation (25% of every block, forever)
+//   - PoPC Pool funding (25% of every block, forever)
+//   - Future bond locking (Model A)
+//   - Future escrow deposits (Model B)
+//   - Slash burns (deflationary by constitution)
+//
+// The transaction format reflects this with Typed Outputs: every output
+// carries a purpose byte and an extensible payload at the consensus level.
+// No other UTXO blockchain has purpose-aware outputs enforced by consensus.
+//
+// This enables:
+//   1. Consensus-level constitutional validation (correct coinbase splits)
+//   2. Self-documenting UTXO set (instant vault/pool/bond/burn tallies)
+//   3. Future PoPC bond/escrow at Layer 1 (no smart contracts needed)
+//   4. Forward-compatible output format (payload avoids future format breaks)
+//   5. Simpler wallet and explorer semantics
+//
+// =============================================================================
+// 2. UTXO MODEL (rationale)
+// =============================================================================
+//
+//   UTXO (Bitcoin model):
+//     + Proven 15+ years under adversarial conditions
+//     + Natural fit for PoW (coinbase creates UTXOs)
+//     + Better privacy (outputs are independent)
+//     + Parallel validation (independent inputs)
+//     + No "account state" to corrupt
+//
+//   Account (Ethereum model):
+//     + Simpler mental model
+//     - Nonce management complexity
+//     - Sequential same-account validation
+//     - Full balance always visible (worse privacy)
+//     - Less proven in PoW context
+//
+//   Decision: UTXO. Natural for PoW, proven, and our coinbase already
+//   produces 3 typed outputs by constitutional design.
+//
+// =============================================================================
+// 3. OUTPUT TYPES (the unique feature)
+// =============================================================================
+//
+// Every TxOutput carries a uint8 type field and an extensible payload.
+//
+// --- Active in v1 (genesis) ---
+//
+//   0x00  TRANSFER
+//         Standard value transfer between users.
+//         Created in standard transactions. Spendable with valid signature.
+//         payload_len MUST be 0 in v1.
+//
+//   0x01  COINBASE_MINER
+//         Miner reward output. Created only in coinbase transactions.
+//         One per block. Amount = miner_share (50% + remainder + fees).
+//         Subject to COINBASE_MATURITY (100 confirmations).
+//         payload_len MUST be 0 in v1.
+//
+//   0x02  COINBASE_GOLD
+//         Gold Vault allocation. Created only in coinbase transactions.
+//         One per block. Amount = gold_share (25%).
+//         Destination MUST be GOLD_VAULT_PKH (constitutional constant).
+//         Subject to COINBASE_MATURITY.
+//         payload_len MUST be 0 in v1.
+//
+//   0x03  COINBASE_POPC
+//         PoPC Pool allocation. Created only in coinbase transactions.
+//         One per block. Amount = popc_share (25%).
+//         Destination MUST be POPC_POOL_PKH (constitutional constant).
+//         Subject to COINBASE_MATURITY.
+//         payload_len MUST be 0 in v1.
+//
+// --- Reserved (inactive until activation height) ---
+//
+//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Jan 2027)
+//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Jan 2027)
+//   0x20  BURN            (slash burns, voluntary burns — target: v2)
+//
+//   Consensus rule: any output with a reserved type (0x10-0xFF) is INVALID
+//   until the corresponding activation height is reached. A node that sees
+//   a reserved type before activation MUST reject the transaction.
+//
+//   Activation heights are defined as consensus constants and enforced
+//   via hardfork. This eliminates version ambiguity between old/new nodes.
+//
+// --- Reserved ranges ---
+//
+//   0x00-0x0F: Core transaction types
+//   0x10-0x1F: PoPC-related types
+//   0x20-0x2F: Special operations (burn, etc.)
+//   0x30-0xFF: Reserved for future use (invalid until activated)
+//
+// --- Forward-compatibility note (normative design note) ---
+//
+//   The v1 TxOutput format includes an extensible typed payload field
+//   (payload_len + payload). In v1, all active output types (0x00-0x03)
+//   MUST use payload_len = 0 (empty payload).
+//
+//   Future types (BOND_LOCK, ESCROW_LOCK) will use the payload to encode
+//   consensus-validated metadata (e.g., expiry height, lock terms). This
+//   avoids a format-breaking hardfork when these types are activated.
+//
+//   The payload is fully committed in txid and sighash (via hashOutputs).
+//   Any future typed metadata is therefore consensus-bound and signed by
+//   every input, preventing tampering without introducing new sighash modes.
+//
+// --- BURN (0x20) design notes (for activation in v2) ---
+//
+//   When activated, BURN outputs are non-spendable BY CONSENSUS RULE.
+//   The rule is: "No input may reference an output of type 0x20. Period."
+//   Enforced in validation, not by probability.
+//   pubkey_hash = 0x00*20 is a visual marker; non-spendability comes from
+//   the consensus rule exclusively.
+//   payload_len may be 0 unless a future burn subtype requires metadata.
+//
+// --- Planned v2 BOND_LOCK payload (draft, non-normative until activation) ---
+//
+//   payload[0]      = schema_version    (u8, always 1 at activation)
+//   payload[1..4]   = bond_expiry_height (u32 LE)
+//   payload[5]      = bond_flags         (u8, reserved bits)
+//   payload[6..7]   = reserved           (u16 LE, must be 0)
+//   Total payload:  8 bytes
+//
+//   This draft is informational only. Final payload schema will be frozen
+//   in the hardfork activation specification for BOND_LOCK.
+//
+// --- Activation-time validation requirement (normative at BOND_LOCK activation) ---
+//
+//   Upon BOND_LOCK activation, consensus validation MUST require:
+//     - payload_len == 8
+//     - payload[0] (schema_version) == 1
+//     - payload[6..7] == 0x0000 (reserved bytes must be zero, u16 LE)
+//   before reading or using bond_expiry_height from payload[1..4].
+//   Any BOND_LOCK output with malformed payload encoding MUST be rejected.
+//
+// =============================================================================
+// 4. DATA STRUCTURES
+// =============================================================================
+//
+// --- TxOutput ---
+//
+//   struct TxOutput {
+//       int64_t   amount;               // Value in stockshis (must be > 0)
+//       uint8_t   type;                 // Output type (Section 3)
+//       uint8_t   pubkey_hash[20];      // RIPEMD160(SHA256(compressed_pubkey))
+//       uint8_t   payload_len;          // Length of typed payload (0..255)
+//       uint8_t   payload[payload_len]; // Type-specific metadata (may be empty)
+//   };
+//
+//   Serialized size (v1 active types): 8 + 1 + 20 + 1 + 0 = 30 bytes per output
+//   (payload_len = 0 for all active v1 output types)
+//
+//   Notes:
+//     - amount is int64 (signed) for safe arithmetic without overflow.
+//     - payload_len uses uint8 (0-255 bytes). Sufficient for all planned types.
+//       CompactSize is not needed here; max 255 bytes covers BOND, ESCROW,
+//       and any foreseeable typed metadata.
+//     - payload_len and payload are consensus fields: included in txid,
+//       sighash (via hashOutputs), and Merkle root.
+//     - In v1, active types (0x00-0x03) MUST have payload_len = 0.
+//     - For BURN outputs (when activated): pubkey_hash = 0x00*20.
+//
+// --- TxInput ---
+//
+//   struct TxInput {
+//       uint8_t   prev_txid[32];    // Hash of transaction being spent
+//       uint32_t  prev_index;       // Index of output in that transaction
+//       uint8_t   signature[64];    // ECDSA secp256k1 compact (r || s)
+//       uint8_t   pubkey[33];       // Compressed public key (02/03 prefix)
+//   };
+//
+//   Serialized size: 32 + 4 + 64 + 33 = 133 bytes per input.
+//
+//   Signature format (consensus-critical, explicit endianness):
+//     signature[0..31]  = r (big-endian, 32 bytes, zero-padded left)
+//     signature[32..63] = s (big-endian, 32 bytes, zero-padded left)
+//
+//   Notes:
+//     - Fixed 64-byte compact format eliminates DER malleability entirely.
+//     - LOW-S enforced: s must satisfy s <= secp256k1_order / 2.
+//       Signatures with high-S are INVALID (consensus rule).
+//     - pubkey is always 33-byte compressed. Uncompressed not supported.
+//     - For coinbase: prev_txid = 0x00*32, prev_index = 0xFFFFFFFF,
+//       signature field = block_height(8 bytes LE) + miner_data(up to 56 bytes),
+//       pubkey = 0x00*33.
+//
+// --- Transaction ---
+//
+//   struct Transaction {
+//       uint32_t            version;    // Protocol version (1)
+//       uint8_t             tx_type;    // 0x00 = standard, 0x01 = coinbase
+//       vector<TxInput>     inputs;     // 1 or more
+//       vector<TxOutput>    outputs;    // 1 or more
+//   };
+//
+//   txid = SHA256(SHA256(canonical_serialization(tx)))
+//
+//   Notes:
+//     - Double SHA256 for txid (consistent with sighash and Merkle).
+//     - tx_type at transaction level for fast filtering.
+//     - No locktime in v1. If needed later, added via new tx version.
+//
+// =============================================================================
+// 5. SERIALIZATION (consensus-critical)
+// =============================================================================
+//
+// All integers: little-endian (consistent with all SOST serialization).
+//
+// Variable-length counts use CompactSize (Bitcoin varint):
+//   0x00-0xFC:        1 byte (value itself)
+//   0xFD + uint16_le: 3 bytes
+//   0xFE + uint32_le: 5 bytes
+//   0xFF + uint64_le: 9 bytes
+//
+// --- Canonical transaction serialization ---
+//
+//   version         4 bytes    u32 LE
+//   tx_type         1 byte
+//   num_inputs      CompactSize
+//   for each input:
+//     prev_txid     32 bytes   raw
+//     prev_index    4 bytes    u32 LE
+//     signature     64 bytes   raw (r[32] big-endian || s[32] big-endian)
+//     pubkey        33 bytes   raw (compressed, 02/03 prefix)
+//   num_outputs     CompactSize
+//   for each output:
+//     amount        8 bytes    i64 LE
+//     type          1 byte
+//     pubkey_hash   20 bytes   raw
+//     payload_len   1 byte     u8
+//     payload       N bytes    raw (N = payload_len, may be 0)
+//
+// --- txid computation ---
+//
+//   txid = SHA256(SHA256(serialized_bytes))
+//
+//   The txid covers the ENTIRE serialization including signatures and
+//   output payloads. Combined with compact signatures (fixed 64 bytes),
+//   LOW-S rule, and explicit endianness, txid is fully non-malleable.
+//
+// =============================================================================
+// 6. SIGNATURE SCHEME — BIP143-SIMPLIFIED SIGHASH
+// =============================================================================
+//
+// Inspired by BIP143 (Bitcoin SegWit) but simplified for SOST.
+// All inputs committed via hashPrevouts. Domain separated via genesis_hash.
+//
+// --- Precomputed hashes (computed once per transaction) ---
+//
+//   hashPrevouts = SHA256(SHA256(
+//       prev_txid[0] || prev_index[0] ||
+//       prev_txid[1] || prev_index[1] ||
+//       ...
+//       prev_txid[n] || prev_index[n]
+//   ))
+//
+//   hashOutputs = SHA256(SHA256(
+//       amount[0] || type[0] || pkh[0] || payload_len[0] || payload[0] ||
+//       amount[1] || type[1] || pkh[1] || payload_len[1] || payload[1] ||
+//       ...
+//       amount[m] || type[m] || pkh[m] || payload_len[m] || payload[m]
+//   ))
+//
+//   Note: hashOutputs includes payload_len and payload for every output.
+//   This ensures any future typed metadata (e.g., bond expiry) is fully
+//   signed by every input, preventing metadata tampering.
+//
+//   Canonical serialization rule for precomputed hashes:
+//   All fields included in hashPrevouts and hashOutputs MUST be serialized
+//   using the exact same canonical field encoding and byte order defined in
+//   Section 5. In particular, prev_index (u32 LE), amount (i64 LE), and
+//   payload_len (u8) MUST use their Section 5 encodings without any
+//   alternative endianness or re-encoding. This eliminates cross-implementation
+//   divergence in sighash computation.
+//
+// --- Sighash preimage (per input[i]) ---
+//
+//   sighash_preimage =
+//       version              4 bytes    u32 LE
+//       tx_type              1 byte
+//       hashPrevouts         32 bytes   (commits to ALL inputs)
+//       prev_txid[i]         32 bytes   (specific input being signed)
+//       prev_index[i]        4 bytes    u32 LE
+//       spent_amount[i]      8 bytes    i64 LE  (from referenced UTXO)
+//       spent_type[i]        1 byte              (from referenced UTXO)
+//       hashOutputs          32 bytes   (commits to ALL outputs incl. payloads)
+//       genesis_hash         32 bytes   (domain separation)
+//
+//   Total preimage: 4+1+32+32+4+8+1+32+32 = 146 bytes (fixed size)
+//
+//   sighash = SHA256(SHA256(sighash_preimage))
+//   signature = ECDSA_sign(private_key, sighash)
+//
+// --- Domain separation (anti-replay between networks) ---
+//
+//   genesis_hash = block_id of block 0 (the genesis block)
+//
+//   Serialized as 32 raw bytes in the same byte order used internally
+//   for block_id storage and hash computation (i.e., the direct output
+//   of SHA256, no endianness reversal).
+//
+//   This 32-byte value is unique per network (mainnet, testnet, dev).
+//   Including it in every sighash preimage means:
+//     - A mainnet signature is INVALID on testnet
+//     - A testnet signature is INVALID on mainnet
+//     - A signature from a hypothetical SOST fork is invalid on original chain
+//
+// --- Why this scheme is robust ---
+//
+//   hashPrevouts: prevents cross-input signature reuse. A signature for
+//     input[0] in tx_A is invalid for input[0] in tx_B (different prevouts).
+//
+//   spent_amount + spent_type: prevents spending a 100-SOST UTXO with a
+//     signature intended for a 1-SOST UTXO. Includes type to prevent
+//     cross-type attacks.
+//
+//   hashOutputs: all outputs are signed, including payloads. No
+//     SIGHASH_NONE/SINGLE variants. Signer always commits to the exact
+//     set of recipients, amounts, types, and metadata.
+//
+//   output payload commitment: because hashOutputs includes payload_len
+//     and payload, any future typed metadata (e.g., bond expiry height)
+//     is fully signed by every input. No new sighash modes needed.
+//
+//   genesis_hash: anti-replay across networks and forks.
+//
+// --- Verification procedure ---
+//
+//   For each input[i] in a standard transaction:
+//     1. Look up UTXO: utxo = UTXO_SET[prev_txid[i], prev_index[i]]
+//     2. Verify: RIPEMD160(SHA256(input[i].pubkey)) == utxo.pubkey_hash
+//     3. Verify: input[i].pubkey is a valid compressed secp256k1 point
+//     4. Compute sighash using preimage formula above
+//     5. Parse signature: r = signature[0..31], s = signature[32..63]
+//        (both big-endian unsigned 256-bit integers)
+//     6. Verify: r in [1, curve_order - 1]
+//     7. Verify: s in [1, curve_order / 2]  (LOW-S)
+//     8. Verify: signature is not all zeros
+//     9. ECDSA_verify(input[i].pubkey, sighash, (r, s)) == true
+//
+// =============================================================================
+// 7. VALIDATION RULES (consensus-critical)
+// =============================================================================
+//
+// --- 7.1 Universal Rules (all transactions) ---
+//
+//   R1:  version == 1.
+//   R2:  tx_type in {0x00, 0x01} (standard or coinbase).
+//   R3:  1 <= num_inputs <= MAX_INPUTS_PER_TX (256).
+//   R4:  1 <= num_outputs <= MAX_OUTPUTS_PER_TX (256).
+//   R5:  Every output amount > 0.
+//   R6:  Every output amount <= SUPPLY_MAX_STOCKSHIS.
+//   R7:  Sum of all output amounts <= SUPPLY_MAX_STOCKSHIS (no overflow).
+//   R8:  No duplicate inputs (no two inputs share prev_txid + prev_index).
+//   R9:  Serialized transaction size <= MAX_TX_SIZE (100,000 bytes).
+//   R10: txid is unique within the block (no duplicate transactions).
+//   R11: Output types must be active (see activation table, Section 3).
+//        Any output with an inactive/reserved type → REJECT.
+//   R12: For every output, payload_len must match the exact number of
+//        serialized payload bytes that follow.
+//   R13: payload_len <= 255 (enforced by uint8 format).
+//   R14: For active v1 output types (0x00-0x03), payload_len MUST be 0.
+//        Any non-empty payload on an active v1 type → REJECT.
+//
+// --- 7.2 Standard Transaction Rules (tx_type = 0x00) ---
+//
+//   S1:  Every input must reference an existing, unspent UTXO.
+//   S2:  Every input's RIPEMD160(SHA256(pubkey)) must match UTXO's pubkey_hash.
+//   S3:  Every input's pubkey must be a valid compressed secp256k1 point.
+//   S4:  Every input's signature must be non-zero.
+//   S5:  Every input's signature must satisfy LOW-S (s <= curve_order / 2).
+//   S6:  Every input's signature must be valid for the computed sighash.
+//   S7:  sum(input_amounts) >= sum(output_amounts).
+//   S8:  fee = sum(input_amounts) - sum(output_amounts) >= MIN_FEE.
+//        MIN_FEE = serialized_tx_size_bytes * MIN_FEE_PER_BYTE.
+//   S9:  All output types must be 0x00 (TRANSFER) in v1, and each such
+//        output MUST have payload_len = 0.
+//        Standard transactions cannot create coinbase/bond/escrow/burn outputs.
+//        (When BURN is activated in v2, S9 expands to allow {0x00, 0x20},
+//        with payload rules defined at activation.)
+//   S10: If any input references a coinbase output (types 0x01/0x02/0x03),
+//        that UTXO must have >= COINBASE_MATURITY (100) confirmations.
+//   S11: If any input references a BOND_LOCK output (type 0x10, when active),
+//        current_height >= bond_expiry_height AND no slash recorded.
+//        Before reading bond_expiry_height, the BOND_LOCK payload encoding
+//        MUST satisfy the activation-defined schema validation rules
+//        (payload_len, schema_version, reserved bytes; see Section 3).
+//   S12: No input may reference a BURN output (type 0x20). Ever.
+//        Enforced by consensus regardless of activation state.
+//
+// --- 7.3 Coinbase Transaction Rules (tx_type = 0x01) ---
+//
+//   CB1:  Exactly one coinbase transaction per block, always txs[0].
+//   CB2:  Exactly one input: prev_txid = 0x00*32, prev_index = 0xFFFFFFFF.
+//   CB3:  Coinbase signature field (64 bytes total):
+//         Bytes [0..7]:  block_height as int64 LE (consensus-critical).
+//         Bytes [8..63]: miner_data (pool ID, emergency tags, etc.).
+//         Max miner_data: COINBASE_MINER_DATA_MAX (56 bytes).
+//   CB4:  Exactly three outputs, in canonical order:
+//         [0] type=0x01 COINBASE_MINER  amount=miner_share  any pubkey_hash
+//         [1] type=0x02 COINBASE_GOLD   amount=gold_share   GOLD_VAULT_PKH
+//         [2] type=0x03 COINBASE_POPC   amount=popc_share   POPC_POOL_PKH
+//   CB5:  Amounts must satisfy:
+//         reward = subsidy(height) + total_fees
+//         gold   = reward / 4
+//         popc   = reward / 4
+//         miner  = reward - gold - popc
+//         (Integer division, remainder to miner. Exact conservation.)
+//   CB6:  GOLD_VAULT_PKH and POPC_POOL_PKH are constitutional constants
+//         derived from genesis addresses. Any mismatch → invalid block.
+//   CB7:  No additional outputs. Exactly 3.
+//   CB8:  Coinbase outputs unspendable for COINBASE_MATURITY (100) blocks.
+//   CB9:  Coinbase pubkey field = 0x00*33 (not a real key, ignored).
+//   CB10: All coinbase outputs (types 0x01, 0x02, 0x03) MUST have
+//         payload_len = 0. Coinbase typed payloads are not permitted in v1.
+//
+// --- 7.4 Fee Rules ---
+//
+//   F1: fee = sum(input_amounts) - sum(output_amounts).
+//   F2: fee >= serialized_tx_size_bytes * MIN_FEE_PER_BYTE (1 stockshi/byte).
+//   F3: Fees collected by miner via coinbase (added to reward in CB5).
+//   F4: Coinbase transactions exempt from fee rules.
+//   F5: Zero-fee standard transactions are invalid.
+//
+// =============================================================================
+// 8. EMERGENCY SIGNALING (compact binary format)
+// =============================================================================
+//
+// The Emergency Catastrophe procedure (WP v3.4, Appendix G) requires miners
+// to signal support via their coinbase.
+//
+// For v1, signaling uses the miner_data portion of the coinbase signature
+// field (bytes 8..63, max 56 bytes). To fit within this fixed-size field,
+// the emergency signal uses a compact binary format.
+//
+// --- Signal format (consensus-critical) ---
+//
+//   Byte offset within miner_data (i.e., within coinbase signature[8..63]):
+//
+//   [0..3]    ASCII magic: "EM1|"              4 bytes
+//   [4..35]   proposalId (raw bytes32)        32 bytes
+//   [36]      action_type (u8, optional)       1 byte  (0 if unused)
+//   [37]      flags (u8, optional)             1 byte  (0 if unused)
+//   [38..55]  free bytes (pool tag, etc.)     18 bytes (optional)
+//
+//   Minimum signal payload: 4 + 32 = 36 bytes (fits in 56-byte field)
+//   Maximum signal payload: 56 bytes (entire miner_data)
+//
+// --- Counting rule (normative) ---
+//
+//   Within the signaling window [startHeight, startHeight + W - 1]:
+//
+//   A block counts as YES if:
+//     (a) the transaction is a valid coinbase (tx_type == 0x01) and its
+//         single input signature field is exactly 64 bytes (guaranteed by
+//         canonical transaction format)
+//     (b) signature[8..11]  == "EM1|" (4-byte ASCII magic)
+//     (c) signature[12..43] == proposalId (raw 32-byte match)
+//
+//   Note on byte offsets: signature[8..11] corresponds to miner_data[0..3],
+//   and signature[12..43] to miner_data[4..35]. Bytes [44..45] in signature
+//   space are action_type and flags (miner_data[36..37]); bytes [46..63]
+//   remain free-form (pool tags, human-readable text, etc.).
+//
+//   Approval: YES >= ceil(0.60 * W)
+//   With default W = 144: YES >= 87 blocks.
+//
+// --- Notes ---
+//
+//   - proposalId is raw 32 bytes (NOT hex-encoded ASCII).
+//   - The signal is machine-parseable and deterministic.
+//   - Pools may append human-readable tags in bytes [46..63].
+//   - Future v2 may add header versionbits signaling (BIP9-style).
+//     The coinbase method remains valid as a backward-compatible mechanism.
+//
+// =============================================================================
+// 9. UTXO SET
+// =============================================================================
+//
+// The UTXO set is the authoritative record of all unspent transaction outputs.
+//
+// --- UTXOEntry ---
+//
+//   struct UTXOEntry {
+//       int64_t   amount;          // Stockshis
+//       uint8_t   type;            // Output type
+//       uint8_t   pubkey_hash[20]; // Owner
+//       uint8_t   payload_len;     // Typed payload length
+//       uint8_t   payload[];       // Typed payload (may be empty)
+//       int64_t   height;          // Block height where created
+//   };
+//
+// --- Key ---
+//
+//   UTXOKey = (txid[32], output_index[4]) → 36 bytes
+//
+// --- Operations ---
+//
+//   ADD(key, entry):    Insert new unspent output.
+//   REMOVE(key):        Mark output as spent (delete from set).
+//   GET(key) → entry:   Look up an unspent output.
+//   EXISTS(key) → bool: Check if output exists and is unspent.
+//
+// --- Spendability check ---
+//
+//   is_spendable(entry, current_height):
+//     if entry.type in {0x01, 0x02, 0x03}:   // Coinbase types
+//       return (current_height - entry.height) >= COINBASE_MATURITY
+//     if entry.type == 0x20:                  // BURN
+//       return false                          // Never spendable (consensus rule)
+//     if entry.type == 0x10:                  // BOND_LOCK (when active)
+//       expiry = u32_le(entry.payload[1..4])  // From typed payload
+//       return current_height >= expiry AND not_slashed(entry)
+//     return true                             // TRANSFER: spendable with sig
+//
+// --- Storage ---
+//
+//   Development/testing: in-memory std::unordered_map
+//   Production (March 15): LevelDB on disk
+//
+//   The UTXOSet interface is storage-agnostic:
+//
+//   struct UTXOBackend {
+//       virtual bool add(const UTXOKey& key, const UTXOEntry& entry) = 0;
+//       virtual bool remove(const UTXOKey& key) = 0;
+//       virtual std::optional<UTXOEntry> get(const UTXOKey& key) = 0;
+//       virtual bool exists(const UTXOKey& key) = 0;
+//       virtual void flush() = 0;  // Write batch to disk
+//   };
+//
+// --- Aggregate queries (typed outputs enable these natively) ---
+//
+//   total_gold_vault()  → sum of all unspent type 0x02 amounts
+//   total_popc_pool()   → sum of all unspent type 0x03 amounts
+//   total_bonds()       → sum of all unspent type 0x10 amounts (when active)
+//   total_burned()      → cumulative type 0x20 amounts (tracked separately;
+//                          burns are never in UTXO set)
+//   circulating()       → total_mined - gold_vault - popc_pool - bonds - burned
+//
+//   These are first-class protocol queries, not application-layer hacks.
+//
+// =============================================================================
+// 10. MERKLE ROOT
+// =============================================================================
+//
+//   leaves = [txid_0, txid_1, ..., txid_n]
+//   If odd count: duplicate last leaf.
+//   parent = SHA256(SHA256(left || right))
+//   Repeat until single root.
+//
+// Double SHA256 at every level (consistent with txid and sighash).
+//
+// For blocks with only the coinbase:
+//   merkle_root = txid_coinbase (single leaf = root)
+//
+// The merkle_root is in header_core, which feeds into ConvergenceX seed.
+// This binds the transaction set to the PoW proof.
+//
+// =============================================================================
+// 11. CONSTITUTIONAL OUTPUT VALIDATION
+// =============================================================================
+//
+//   validate_coinbase(tx, height, total_fees):
+//
+//     // Structure
+//     REJECT if tx.tx_type != 0x01
+//     REJECT if tx.inputs.size() != 1
+//     REJECT if tx.outputs.size() != 3
+//
+//     // Input
+//     REJECT if tx.inputs[0].prev_txid != 0x00*32
+//     REJECT if tx.inputs[0].prev_index != 0xFFFFFFFF
+//     REJECT if int64_le(tx.inputs[0].signature[0..7]) != height
+//
+//     // Types
+//     REJECT if tx.outputs[0].type != 0x01  // COINBASE_MINER
+//     REJECT if tx.outputs[1].type != 0x02  // COINBASE_GOLD
+//     REJECT if tx.outputs[2].type != 0x03  // COINBASE_POPC
+//
+//     // Payloads (v1: must be empty)
+//     REJECT if tx.outputs[0].payload_len != 0
+//     REJECT if tx.outputs[1].payload_len != 0
+//     REJECT if tx.outputs[2].payload_len != 0
+//
+//     // Destinations (constitutional)
+//     REJECT if tx.outputs[1].pubkey_hash != GOLD_VAULT_PKH
+//     REJECT if tx.outputs[2].pubkey_hash != POPC_POOL_PKH
+//
+//     // Amounts (exact integer arithmetic)
+//     reward = subsidy(height) + total_fees
+//     gold   = reward / 4
+//     popc   = reward / 4
+//     miner  = reward - gold - popc
+//
+//     REJECT if tx.outputs[0].amount != miner
+//     REJECT if tx.outputs[1].amount != gold
+//     REJECT if tx.outputs[2].amount != popc
+//
+//     ACCEPT
+//
+// =============================================================================
+// 12. TRANSACTION LIFECYCLE
+// =============================================================================
+//
+//   1. CREATION
+//      Wallet selects UTXOs, constructs outputs (with payload if applicable),
+//      computes sighash per input, signs each input.
+//
+//   2. BROADCAST
+//      Submitted to local node (v1) or broadcast via P2P (v2).
+//
+//   3. MEMPOOL ADMISSION
+//      Node validates against current UTXO set + mempool state.
+//      Valid → mempool. Invalid → rejected with error code.
+//
+//   4. BLOCK INCLUSION
+//      Miner selects from mempool by fee density (stockshis/byte).
+//      Constructs coinbase with accumulated fees. Computes merkle_root.
+//      Mines via ConvergenceX.
+//
+//   5. CONFIRMATION
+//      Block accepted → UTXO set updated (spent removed, new added).
+//      Transaction confirmed at depth 1.
+//
+//   6. MATURITY (coinbase only)
+//      Coinbase outputs spendable after 100 confirmations.
+//
+// =============================================================================
+// 13. ECDSA RULES (consensus-critical)
+// =============================================================================
+//
+//   Curve:     secp256k1 (same as Bitcoin)
+//   Key:       compressed only (33 bytes, prefix 0x02 or 0x03)
+//   Signature: compact (r || s), 64 bytes fixed
+//
+//   Endianness (explicit):
+//     signature[0..31]  = r, big-endian, 32 bytes, zero-padded left
+//     signature[32..63] = s, big-endian, 32 bytes, zero-padded left
+//
+//   --- Mandatory validation rules ---
+//
+//   E1: pubkey must be a valid point on secp256k1.
+//   E2: pubkey must not be the point at infinity.
+//   E3: signature must not be all zeros (64 zero bytes → REJECT).
+//   E4: r must be in range [1, curve_order - 1].
+//   E5: s must be in range [1, curve_order / 2] (LOW-S rule).
+//       Signatures with s > curve_order/2 are INVALID.
+//       The signer MUST negate s before broadcasting.
+//       Rationale: for any (r, s), (r, -s mod n) is also valid.
+//       LOW-S canonicalizes this, making txid non-malleable.
+//   E6: ECDSA_verify(pubkey, sighash, (r, s)) must return true.
+//
+//   --- secp256k1 constants ---
+//
+//   curve_order (n):
+//     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+//
+//   curve_order / 2 (LOW-S threshold):
+//     0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+//
+// =============================================================================
+// 14. CONSTANTS
+// =============================================================================
+//
+//   --- Transaction format ---
+//
+//   TX_VERSION                = 1
+//   COINBASE_MATURITY         = 100 blocks
+//   MAX_TX_SIZE               = 100,000 bytes
+//   MAX_BLOCK_TX_BYTES        = 1,000,000 bytes (1 MB, excluding coinbase)
+//   MIN_FEE_PER_BYTE          = 1 stockshi/byte
+//   MAX_INPUTS_PER_TX         = 256
+//   MAX_OUTPUTS_PER_TX        = 256
+//   MAX_PAYLOAD_LEN           = 255 bytes (uint8)
+//   COINBASE_MINER_DATA_MAX   = 56 bytes
+//
+//   --- Supply (consensus, immutable) ---
+//
+//   STOCKSHIS_PER_SOST        = 100,000,000
+//   SUPPLY_MAX_SOST           = 4,669,201
+//   SUPPLY_MAX_STOCKSHIS      = 466,920,100,000,000
+//     // = SUPPLY_MAX_SOST * STOCKSHIS_PER_SOST
+//     // Used in validation rules R6, R7
+//
+//   --- Constitutional addresses (from genesis) ---
+//
+//   GOLD_VAULT_PKH            = RIPEMD160(SHA256(gold_vault_compressed_pubkey))
+//   POPC_POOL_PKH             = RIPEMD160(SHA256(popc_pool_compressed_pubkey))
+//   GENESIS_HASH              = block_id of block 0 (for sighash domain sep.)
+//     // Serialized as 32 raw bytes, same byte order as SHA256 output.
+//     // No endianness reversal.
+//
+//   --- Emergency signaling ---
+//
+//   EMERG_SIGNAL_MAGIC        = "EM1|"  (4-byte ASCII prefix)
+//   EMERG_SIGNAL_MIN_LEN      = 36 bytes (magic + proposalId)
+//   EMERG_WINDOW_BLOCKS        = 144
+//   EMERG_THRESHOLD_PERCENT   = 60
+//   EMERG_YES_REQUIRED        = 87  // ceil(0.60 * 144)
+//     // Derived: ceil(EMERG_THRESHOLD_PERCENT * EMERG_WINDOW_BLOCKS / 100)
+//     // MUST be recomputed if EMERG_WINDOW_BLOCKS or EMERG_THRESHOLD_PERCENT
+//     // changes by consensus.
+//
+//   --- Activation heights (reserved types, inactive in v1) ---
+//
+//   ACTIVATION_BOND_LOCK      = TBD (target: ~block 52,560, ~year 1)
+//   ACTIVATION_ESCROW_LOCK    = TBD (target: same as BOND_LOCK)
+//   ACTIVATION_BURN           = TBD (target: same as BOND_LOCK)
+//
+// =============================================================================
+// 15. IMPLEMENTATION PLAN
+// =============================================================================
+//
+// Phase 1: Data Structures (2 days)
+//   include/sost/transaction.h      TxInput, TxOutput, Transaction structs
+//   src/transaction.cpp             Serialization, deserialization, txid
+//   tests/test_transaction.cpp      Round-trip, txid vectors, payload edge cases
+//
+// Phase 2: Sighash + ECDSA (2 days)
+//   include/sost/tx_signer.h        Sighash computation, sign, verify
+//   src/tx_signer.cpp               BIP143-simplified, LOW-S enforcement
+//   tests/test_tx_signer.cpp        Sign, verify, LOW-S, tamper, cross-network
+//
+// Phase 3: Validation (2 days)
+//   include/sost/tx_validation.h    All rules from Section 7
+//   src/tx_validation.cpp           validate_standard(), validate_coinbase()
+//   tests/test_tx_validation.cpp    One test per rule (R1-R14, S1-S12, CB1-CB10)
+//
+// Phase 4: UTXO Set (2 days)
+//   include/sost/utxo.h             UTXOBackend interface
+//   src/utxo_memory.cpp             In-memory backend (tests)
+//   src/utxo_leveldb.cpp            LevelDB backend (production)
+//   tests/test_utxo.cpp             Add, remove, spend, double-spend, maturity
+//
+// Phase 5: Merkle + Block Integration (1 day)
+//   src/merkle.cpp                  Double-SHA256 Merkle tree
+//   Update block validation for Transaction-based coinbase
+//   Fee accumulation from transaction set
+//   tests/test_merkle.cpp           Tree vectors
+//   tests/test_block_tx.cpp         Mine block with real transactions
+//
+// Phase 6: Mempool (1 day)
+//   include/sost/mempool.h          Add, remove, select by fee density
+//   src/mempool.cpp                 UTXO-aware validation, eviction
+//   tests/test_mempool.cpp          Lifecycle, conflicts, replacement
+//
+// Total: ~10 days (March 1-10)
+// Integration + stress testing: March 11-14
+// Public launch with transactions: March 15
+//
+// =============================================================================
+// 16. CHANGELOG
+// =============================================================================
+//
+// v1.0 → v1.1 (review round 1):
+//
+//   1.  Sighash commits ALL inputs via hashPrevouts (BIP143-simplified)
+//   2.  LOW-S mandatory (s <= curve_order / 2)
+//   3.  Double SHA256 everywhere (txid, sighash, Merkle)
+//   4.  BURN non-spendable by consensus rule (not probability)
+//   5.  BURN disabled in v1 (reserved, activated by height)
+//   6.  UTXO persistence via LevelDB for production
+//   7.  Emergency signaling clarified (coinbase v1, versionbits v2 planned)
+//   8.  genesis_hash in sighash (domain separation / anti-replay)
+//   9.  MAX_INPUTS/OUTPUTS enforced in rules R3/R4
+//   10. Reserved types invalid until activation_height
+//
+// v1.1 → v1.2 (review round 2):
+//
+//   11. TxOutput extended with payload_len + payload field (Section 4).
+//       In v1, all active types require payload_len = 0.
+//       Forward-compatible: avoids format-breaking hardfork for BOND/ESCROW.
+//       payload committed in txid and hashOutputs (sighash).
+//
+//   12. Emergency signaling corrected to compact binary format (Section 8).
+//       "EM1|" (4 bytes) + proposalId raw (32 bytes) = 36 bytes.
+//       Previous ASCII format ("SOST_EMERG|" + hex) exceeded 56-byte limit.
+//
+//   13. SUPPLY_MAX_STOCKSHIS explicitly defined (Section 14).
+//       466,920,100,000,000 stockshis. Used in rules R6/R7.
+//       STOCKSHIS_PER_SOST = 100,000,000 also declared.
+//
+//   14. Signature endianness made explicit (Section 4, Section 13).
+//       r = signature[0..31] big-endian. s = signature[32..63] big-endian.
+//       Eliminates cross-implementation ambiguity.
+//
+//   15. genesis_hash serialization specified (Section 6).
+//       "32 raw bytes, same byte order as SHA256 output, no reversal."
+//
+//   16. Payload validation rules added (Section 7).
+//       R12: payload_len matches actual bytes.
+//       R13: payload_len <= 255.
+//       R14: active v1 types require payload_len = 0.
+//       CB10: coinbase outputs require payload_len = 0.
+//
+//   17. BOND_LOCK payload schema drafted (Section 3, non-normative).
+//       8-byte payload: schema_version + expiry_height + flags + reserved.
+//       Informational until activation hardfork.
+//
+//   18. UTXOEntry includes payload_len + payload (Section 9).
+//       Bond spendability check reads expiry from payload.
+//
+// v1.2 → v1.2a (final blindaje):
+//
+//   19. Canonical serialization rule for hashPrevouts/hashOutputs (Section 6).
+//       All fields MUST use Section 5 encoding. Prevents cross-implementation
+//       endianness divergence in sighash computation.
+//
+//   20. Emergency counting rule (a) made precise (Section 8).
+//       Replaced ">= 44 bytes" with explicit coinbase format check.
+//       Added byte offset mapping between signature-space and miner_data-space.
+//
+//   21. BOND_LOCK activation-time validation requirement added (Section 3).
+//       payload_len == 8, schema_version == 1, reserved == 0x0000.
+//       S11 updated to reference payload schema rules before reading expiry.
+//
+//   22. EMERG_YES_REQUIRED derivation formula documented (Section 14).
+//       Must be recomputed if EMERG_WINDOW_BLOCKS changes by consensus.
+//
+// =============================================================================
+// 17. SUMMARY
+// =============================================================================
+//
+// SOST Transaction System v1.2a:
+//
+//   Model:        UTXO (proven, natural for PoW)
+//   Unique:       Typed Outputs with extensible payload
+//   Signature:    ECDSA secp256k1, compact 64-byte (r||s big-endian), LOW-S
+//   Sighash:      BIP143-simplified: hashPrevouts + hashOutputs + genesis_hash
+//   Hashing:      Double SHA256 everywhere (txid, sighash, Merkle)
+//   Coinbase:     3 typed outputs [miner/gold/popc], constitutional validation
+//   Maturity:     100 blocks for coinbase outputs
+//   Fee:          1 stockshi/byte minimum, implicit (inputs - outputs)
+//   Storage:      LevelDB (production), in-memory (test)
+//   Future:       Bond/escrow/burn reserved, activated by height, payload-ready
+//   Domain sep:   genesis_hash in every sighash (anti-replay)
+//   Emergency:    Compact binary "EM1|" + proposalId in coinbase (36 bytes)
+//   Payload:      Forward-compatible field in TxOutput (empty in v1)
+//
+//   This is a purpose-built transaction system for a protocol
+//   that knows what its money is for.
+//
+// =============================================================================
+// END OF DESIGN DOCUMENT v1.2a
+// =============================================================================
