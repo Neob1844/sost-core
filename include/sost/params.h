@@ -70,6 +70,11 @@ inline constexpr int32_t CX_CP_D      = 64;
 inline constexpr int32_t CX_ROUNDS_T  = 1200;
 inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
+// Constitutional addresses (hardcoded at genesis, immutable)
+// Coinbase outputs MUST pay these addresses exactly per C2
+constexpr const char* ADDR_MINER_FOUNDER   = "sost1b72872cc2cfcd4665384b5aee29166d74f838ac4";
+constexpr const char* ADDR_GOLD_VAULT      = "sost1a1778e783f9317aa6cb9064f0bb1d6239caf9792";
+constexpr const char* ADDR_POPC_POOL       = "sost1b4cbecc734db69f465c5f3d777b05a4b4a8daf3f";
 // Timestamp
 inline constexpr int32_t MTP_WINDOW       = 11;
 inline constexpr int64_t MAX_FUTURE_DRIFT = 600;
