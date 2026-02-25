@@ -114,8 +114,8 @@ static TxValidationResult ValidateStructure(
                 "R5: output[" + std::to_string(i) + "] amount <= 0", -1, (int32_t)i);
         }
 
-        // R6: every output amount <= SUPPLY_MAX
-        if (out.amount > SUPPLY_MAX) {
+        // R6: every output amount <= SUPPLY_MAX_STOCKSHIS
+        if (out.amount > SUPPLY_MAX_STOCKSHIS) {
             return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
                 "R6: output[" + std::to_string(i) + "] amount exceeds supply max",
                 -1, (int32_t)i);
@@ -123,7 +123,7 @@ static TxValidationResult ValidateStructure(
 
         // R7: accumulate for overflow check
         sum_outputs += out.amount;
-        if (sum_outputs > SUPPLY_MAX || sum_outputs < 0) {
+        if (sum_outputs > SUPPLY_MAX_STOCKSHIS || sum_outputs < 0) {
             return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
                 "R7: sum of outputs exceeds supply max at output[" +
                 std::to_string(i) + "]", -1, (int32_t)i);
@@ -261,7 +261,7 @@ static TxValidationResult ValidateInputs(
         }
 
         out_input_sum += utxo.amount;
-        if (out_input_sum > SUPPLY_MAX || out_input_sum < 0) {
+        if (out_input_sum > SUPPLY_MAX_STOCKSHIS || out_input_sum < 0) {
             return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
                 "input sum overflow at input[" + std::to_string(i) + "]",
                 (int32_t)i);
@@ -552,7 +552,7 @@ TxValidationResult ValidateCoinbaseConsensus(
                 "R5: coinbase output[" + std::to_string(i) + "] amount <= 0",
                 -1, (int32_t)i);
         }
-        if (tx.outputs[i].amount > SUPPLY_MAX) {
+        if (tx.outputs[i].amount > SUPPLY_MAX_STOCKSHIS) {
             return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
                 "R6: coinbase output[" + std::to_string(i) + "] amount exceeds supply max",
                 -1, (int32_t)i);

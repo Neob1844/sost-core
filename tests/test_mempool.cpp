@@ -191,7 +191,7 @@ static bool MP01_accept_valid() {
     EXPECT(res.code == MempoolAcceptCode::ACCEPTED);
     EXPECT(res.txid == txid);
     EXPECT(res.fee == fee);
-    EXPECT(res.fee_rate_per_kb > 0);
+    EXPECT(res.fee_rate > 0);
     EXPECT(pool.Size() == 1);
     return true;
 }

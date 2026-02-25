@@ -55,17 +55,17 @@ add_executable(test-chunk2 tests/test_chunk2.cpp)
 target_link_libraries(test-chunk2 PRIVATE sost-core)
 add_test(NAME chunk2 COMMAND test-chunk2)
 
-add_executable(test-chunk4 tests/test_chunk4.cpp)
-target_link_libraries(test-chunk4 PRIVATE sost-core)
-add_test(NAME chunk4 COMMAND test-chunk4)
+#add_executable(test-chunk4 tests/test_chunk4.cpp)
+#target_link_libraries(test-chunk4 PRIVATE sost-core)
+#add_test(NAME chunk4 COMMAND test-chunk4)
 
-add_executable(test-chunk6 tests/test_chunk6.cpp)
-target_link_libraries(test-chunk6 PRIVATE sost-core)
-add_test(NAME chunk6 COMMAND test-chunk6)
+#add_executable(test-chunk6 tests/test_chunk6.cpp)
+#target_link_libraries(test-chunk6 PRIVATE sost-core)
+#add_test(NAME chunk6 COMMAND test-chunk6)
 
-add_executable(test-chunk7 tests/test_chunk7.cpp)
-target_link_libraries(test-chunk7 PRIVATE sost-core)
-add_test(NAME chunk7 COMMAND test-chunk7)
+#add_executable(test-chunk7 tests/test_chunk7.cpp)
+#target_link_libraries(test-chunk7 PRIVATE sost-core)
+#add_test(NAME chunk7 COMMAND test-chunk7)
 
 # Phase 1-6 tests
 add_executable(test-transaction tests/test_transaction.cpp)

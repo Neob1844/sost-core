@@ -2,7 +2,7 @@
 
 #include "sost/transaction.h"
 #include "sost/tx_signer.h"
-
+#include "sost/consensus_constants.h"
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -10,17 +10,6 @@
 
 namespace sost {
 
-// =============================================================================
-// Consensus constants (Design v1.2a Section 7)
-// =============================================================================
-
-inline constexpr int64_t  COINBASE_MATURITY        = 100;
-inline constexpr int64_t SUPPLY_MAX = 466'920'160'910'299LL; // stockshis (1e-8 SOST)
-inline constexpr int64_t  STOCKSHIS_PER_SOST_TX    = 100000000LL;
-inline constexpr int32_t  MAX_TX_BYTES_CONSENSUS   = 100000;
-inline constexpr int32_t  MAX_BLOCK_BYTES_CONSENSUS = 1000000;
-inline constexpr uint16_t MAX_INPUTS_CONSENSUS     = 256;
-inline constexpr uint16_t MAX_OUTPUTS_CONSENSUS    = 256;
 
 // Capsule activation — payload allowed in OUT_TRANSFER after this height
 // Before: R14 enforces payload_len == 0 on all active types (genesis-safe)

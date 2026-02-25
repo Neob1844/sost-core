@@ -300,7 +300,7 @@ TEST(T07_R5_zero_amount) {
 
 TEST(T08_R6_amount_overflow) {
     auto b = MakeValidStdTx();
-    b.tx.outputs[0].amount = SUPPLY_MAX + 1;
+    b.tx.outputs[0].amount = SUPPLY_MAX_STOCKSHIS + 1;
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R6_AMOUNT_OVERFLOW);
     g_pass++;
 }
@@ -310,10 +310,10 @@ TEST(T08_R6_amount_overflow) {
 // =============================================================================
 
 TEST(T09_R7_sum_overflow) {
-    auto b = MakeValidStdTx(SUPPLY_MAX, 1);
-    // Add a second output that pushes sum over SUPPLY_MAX
+    auto b = MakeValidStdTx(SUPPLY_MAX_STOCKSHIS, 1);
+    // Add a second output that pushes sum over SUPPLY_MAX_STOCKSHIS
     TxOutput out2;
-    out2.amount = SUPPLY_MAX;
+    out2.amount = SUPPLY_MAX_STOCKSHIS;
     out2.type = OUT_TRANSFER;
     out2.pubkey_hash = g_pkh;
     b.tx.outputs.push_back(out2);

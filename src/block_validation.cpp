@@ -236,7 +236,7 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
             return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] negative fee");
         }
         total_fees += fee;
-        if (total_fees < 0 || total_fees > SUPPLY_MAX) {
+        if (total_fees < 0 || total_fees > SUPPLY_MAX_STOCKSHIS) {
             return BlockConsensusResult::Fail("fee overflow");
         }
 
