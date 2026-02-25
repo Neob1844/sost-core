@@ -9,7 +9,8 @@
 #include <algorithm>
 #include <cstring>
 #include <set>
-#include <numeric>
+#include <sstream>
+#include <iomanip>
 
 namespace sost {
 
@@ -25,16 +26,11 @@ static bool IsActiveOutputType(uint8_t type) {
            type == OUT_COINBASE_POPC;
 }
 
-// v1 active types require payload_len == 0 (R14)
-static bool IsV1ActiveType(uint8_t type) {
-    return type <= 0x03;
-}
-
 // CompactSize encoded length (matching Phase 1 WriteCompactSize)
 static size_t CompactSizeLen(uint64_t n) {
     if (n < 0xFD) return 1;
     if (n <= 0xFFFF) return 3;
-    if (n <= 0xFFFFFFFF) return 5;
+    if (n <= 0xFFFFFFFFULL) return 5;
     return 9;
 }
 
@@ -42,6 +38,12 @@ static bool IsAllZeros(const uint8_t* data, size_t len) {
     for (size_t i = 0; i < len; ++i)
         if (data[i] != 0) return false;
     return true;
+}
+
+static std::string HexU32(uint32_t v) {
+    std::ostringstream oss;
+    oss << std::hex << std::setw(8) << std::setfill('0') << (uint64_t)v;
+    return oss.str();
 }
 
 // =============================================================================
@@ -101,7 +103,7 @@ static TxValidationResult ValidateStructure(
             "R4: output count " + std::to_string(tx.outputs.size()) + " out of range [1,256]");
     }
 
-    // Per-output checks: R5, R6, R11, R12, R13, R14
+    // Per-output checks: R5, R6, R11, R13, R14
     int64_t sum_outputs = 0;
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         const auto& out = tx.outputs[i];
@@ -137,23 +139,16 @@ static TxValidationResult ValidateStructure(
         // R13: payload_len <= 255 (enforced by uint8 but check vector)
         if (out.payload.size() > 255) {
             return TxValidationResult::Fail(TxValCode::R13_PAYLOAD_TOO_LONG,
-                "R13: output[" + std::to_string(i) + "] payload too long ("
-                + std::to_string(out.payload.size()) + ")", -1, (int32_t)i);
+                "R13: output[" + std::to_string(i) + "] payload too long (" +
+                std::to_string(out.payload.size()) + ")", -1, (int32_t)i);
         }
 
-        // R14: before capsule activation, active v1 types require payload_len == 0
-        //      after activation, OUT_TRANSFER may carry payload (Capsule Protocol v1)
-        //      coinbase types (0x01-0x03) always require payload_len == 0
+        // R14: pre-activation payload forbidden; post-activation only OUT_TRANSFER may carry payload
         if (!out.payload.empty()) {
             bool payload_allowed = false;
-
             if (ctx.spend_height >= ctx.capsule_activation_height) {
-                // Post-activation: only OUT_TRANSFER may carry payload
-                if (out.type == OUT_TRANSFER) {
-                    payload_allowed = true;
-                }
+                if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
-
             if (!payload_allowed) {
                 return TxValidationResult::Fail(TxValCode::R14_PAYLOAD_FORBIDDEN,
                     "R14: output[" + std::to_string(i) + "] type 0x" +
@@ -210,12 +205,10 @@ static TxValidationResult ValidateInputs(
     for (size_t i = 0; i < tx.inputs.size(); ++i) {
         const auto& txin = tx.inputs[i];
 
-        // Build outpoint
         OutPoint op;
         op.txid = txin.prev_txid;
         op.index = txin.prev_index;
 
-        // S1: input must reference existing unspent UTXO
         auto utxo_opt = utxos.GetUTXO(op);
         if (!utxo_opt.has_value()) {
             return TxValidationResult::Fail(TxValCode::S1_UTXO_NOT_FOUND,
@@ -224,21 +217,18 @@ static TxValidationResult ValidateInputs(
         }
         const UTXOEntry& utxo = utxo_opt.value();
 
-        // S12: BURN outputs are never spendable
         if (utxo.type == OUT_BURN) {
             return TxValidationResult::Fail(TxValCode::S12_BURN_UNSPENDABLE,
                 "S12: input[" + std::to_string(i) + "] references burned output",
                 (int32_t)i);
         }
 
-        // S11: BOND_LOCK spendability (reserved for future — reject if encountered)
         if (utxo.type == OUT_BOND_LOCK || utxo.type == OUT_ESCROW_LOCK) {
             return TxValidationResult::Fail(TxValCode::S11_BOND_LOCKED,
                 "S11: input[" + std::to_string(i) + "] references locked output",
                 (int32_t)i);
         }
 
-        // S10: coinbase outputs require COINBASE_MATURITY confirmations
         if (utxo.is_coinbase) {
             int64_t confirmations = ctx.spend_height - utxo.height;
             if (confirmations < COINBASE_MATURITY) {
@@ -249,17 +239,13 @@ static TxValidationResult ValidateInputs(
             }
         }
 
-        // S2-S6: signature verification via Phase 2 VerifyTransactionInput
-        // This checks: S2 (pkh match), S3 (valid pubkey), S4 (non-zero sig),
-        //              S5 (LOW-S), S6 (ECDSA verify)
         SpentOutput spent;
         spent.amount = utxo.amount;
         spent.type = utxo.type;
 
         std::string verify_err;
         if (!VerifyTransactionInput(tx, i, spent, ctx.genesis_hash,
-                                     utxo.pubkey_hash, &verify_err)) {
-            // Map Phase 2 error to appropriate code
+                                    utxo.pubkey_hash, &verify_err)) {
             TxValCode code = TxValCode::S6_VERIFY_FAIL;
             if (verify_err.find("hash mismatch") != std::string::npos)
                 code = TxValCode::S2_PKH_MISMATCH;
@@ -274,7 +260,6 @@ static TxValidationResult ValidateInputs(
                 "input[" + std::to_string(i) + "]: " + verify_err, (int32_t)i);
         }
 
-        // Accumulate input sum
         out_input_sum += utxo.amount;
         if (out_input_sum > SUPPLY_MAX || out_input_sum < 0) {
             return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
@@ -295,49 +280,41 @@ TxValidationResult ValidateTransactionConsensus(
     const IUtxoView& utxos,
     const TxValidationContext& ctx)
 {
-    // Reject coinbase — use ValidateCoinbaseConsensus() for those
     if (tx.tx_type == TX_TYPE_COINBASE) {
         return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
             "use ValidateCoinbaseConsensus for coinbase transactions");
     }
 
-    // Phase 1: structural checks (R1-R7, R9, R11-R14)
     auto r = ValidateStructure(tx, ctx);
     if (!r.ok) return r;
 
-    // Phase 2: duplicate inputs (R8)
     r = CheckDuplicateInputs(tx);
     if (!r.ok) return r;
 
-    // Phase 3: UTXO lookups + signature verification (S1-S6, S10-S12)
     int64_t input_sum = 0;
     r = ValidateInputs(tx, utxos, ctx, input_sum);
     if (!r.ok) return r;
 
-    // Phase 4: fee validation
     int64_t output_sum = 0;
-    for (const auto& out : tx.outputs) {
-        output_sum += out.amount;
-    }
+    for (const auto& out : tx.outputs) output_sum += out.amount;
 
-    // S7: sum(inputs) >= sum(outputs)
     if (input_sum < output_sum) {
         return TxValidationResult::Fail(TxValCode::S7_INPUTS_LT_OUTPUTS,
             "S7: input sum " + std::to_string(input_sum) +
             " < output sum " + std::to_string(output_sum));
     }
 
-    // S8: fee >= size * MIN_FEE_PER_BYTE (consensus minimum)
     int64_t fee = input_sum - output_sum;
     size_t tx_size = EstimateTxSerializedSize(tx);
-    int64_t min_fee = (int64_t)tx_size * 1;  // 1 stockshi/byte consensus minimum
+    int64_t min_fee = (int64_t)tx_size * 1;
     if (fee < min_fee) {
         return TxValidationResult::Fail(TxValCode::S8_FEE_TOO_LOW,
             "S8: fee " + std::to_string(fee) + " < min " + std::to_string(min_fee) +
             " (" + std::to_string(tx_size) + " bytes × 1)");
     }
 
-    // S9: standard tx outputs must be type OUT_TRANSFER with payload_len=0 (v1)
+    // S9: standard tx outputs must be OUT_TRANSFER in v1.
+    // Payload allowance is governed by R14 (pre/post capsule activation).
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (tx.outputs[i].type != OUT_TRANSFER) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,
@@ -352,6 +329,7 @@ TxValidationResult ValidateTransactionConsensus(
 
 // =============================================================================
 // ValidateTransactionPolicy (relay/mining policy checks)
+// PRECONDICIÓN: debe llamarse DESPUÉS de ValidateTransactionConsensus.
 // =============================================================================
 
 TxValidationResult ValidateTransactionPolicy(
@@ -359,7 +337,6 @@ TxValidationResult ValidateTransactionPolicy(
     const IUtxoView& utxos,
     const TxValidationContext& ctx)
 {
-    // P1: tx size within standard limits
     size_t tx_size = EstimateTxSerializedSize(tx);
     if (tx_size > (size_t)MAX_TX_BYTES_STANDARD) {
         return TxValidationResult::Fail(TxValCode::P_TX_TOO_LARGE,
@@ -367,25 +344,23 @@ TxValidationResult ValidateTransactionPolicy(
             " exceeds standard limit " + std::to_string(MAX_TX_BYTES_STANDARD));
     }
 
-    // P2: input count
     if (tx.inputs.size() > MAX_INPUTS_STANDARD) {
         return TxValidationResult::Fail(TxValCode::P_TOO_MANY_INPUTS,
-            "Policy: " + std::to_string(tx.inputs.size()) + " inputs exceeds standard " +
-            std::to_string(MAX_INPUTS_STANDARD));
+            "Policy: " + std::to_string(tx.inputs.size()) +
+            " inputs exceeds standard " + std::to_string(MAX_INPUTS_STANDARD));
     }
 
-    // P3: output count
     if (tx.outputs.size() > MAX_OUTPUTS_STANDARD) {
         return TxValidationResult::Fail(TxValCode::P_TOO_MANY_OUTPUTS,
-            "Policy: " + std::to_string(tx.outputs.size()) + " outputs exceeds standard " +
-            std::to_string(MAX_OUTPUTS_STANDARD));
+            "Policy: " + std::to_string(tx.outputs.size()) +
+            " outputs exceeds standard " + std::to_string(MAX_OUTPUTS_STANDARD));
     }
 
-    // P4/P5: payload checks
     int payload_count = 0;
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (!tx.outputs[i].payload.empty()) {
             ++payload_count;
+
             if (tx.outputs[i].payload.size() > MAX_PAYLOAD_STANDARD) {
                 return TxValidationResult::Fail(TxValCode::P_PAYLOAD_TOO_LARGE,
                     "Policy: output[" + std::to_string(i) + "] payload " +
@@ -394,7 +369,6 @@ TxValidationResult ValidateTransactionPolicy(
                     -1, (int32_t)i);
             }
 
-            // P8: Capsule structure validation (post-activation only)
             if (ctx.spend_height >= ctx.capsule_activation_height) {
                 auto cap_result = ValidateCapsulePolicy(tx.outputs[i].payload);
                 if (!cap_result.ok) {
@@ -406,6 +380,7 @@ TxValidationResult ValidateTransactionPolicy(
             }
         }
     }
+
     if (payload_count > MAX_PAYLOAD_OUTPUTS_STD) {
         return TxValidationResult::Fail(TxValCode::P_TOO_MANY_PAYLOADS,
             "Policy: " + std::to_string(payload_count) +
@@ -413,22 +388,22 @@ TxValidationResult ValidateTransactionPolicy(
             std::to_string(MAX_PAYLOAD_OUTPUTS_STD));
     }
 
-    // P6: relay fee (fee per byte >= MIN_RELAY_FEE_PER_BYTE)
-    // Compute fee from UTXOs
+    // relay fee: require all inputs resolvable (no silent skipping)
     int64_t input_sum = 0;
-    for (const auto& txin : tx.inputs) {
-        OutPoint op;
-        op.txid = txin.prev_txid;
-        op.index = txin.prev_index;
+    for (size_t i = 0; i < tx.inputs.size(); ++i) {
+        OutPoint op{tx.inputs[i].prev_txid, tx.inputs[i].prev_index};
         auto utxo_opt = utxos.GetUTXO(op);
-        if (utxo_opt.has_value()) {
-            input_sum += utxo_opt->amount;
+        if (!utxo_opt.has_value()) {
+            return TxValidationResult::Fail(TxValCode::INTERNAL_ERROR,
+                "Policy: missing UTXO for input[" + std::to_string(i) +
+                "] (precondition: call ValidateTransactionConsensus first)");
         }
+        input_sum += utxo_opt->amount;
     }
+
     int64_t output_sum = 0;
-    for (const auto& out : tx.outputs) {
-        output_sum += out.amount;
-    }
+    for (const auto& out : tx.outputs) output_sum += out.amount;
+
     int64_t fee = input_sum - output_sum;
     int64_t min_relay_fee = (int64_t)tx_size * MIN_RELAY_FEE_PER_BYTE;
     if (fee < min_relay_fee) {
@@ -437,7 +412,7 @@ TxValidationResult ValidateTransactionPolicy(
             std::to_string(min_relay_fee));
     }
 
-    // P7: dust check — all outputs must be above DUST_THRESHOLD
+    // dust
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (tx.outputs[i].amount < DUST_THRESHOLD) {
             return TxValidationResult::Fail(TxValCode::P_DUST_OUTPUT,
@@ -462,42 +437,38 @@ TxValidationResult ValidateCoinbaseConsensus(
     const PubKeyHash& gold_vault_pkh,
     const PubKeyHash& popc_pool_pkh)
 {
-    // CB1: must be tx_type coinbase
     if (tx.tx_type != TX_TYPE_COINBASE) {
         return TxValidationResult::Fail(TxValCode::CB1_MISSING_COINBASE,
             "CB1: tx_type must be COINBASE (0x01)");
     }
 
-    // R1: version == 1
     if (tx.version != 1) {
         return TxValidationResult::Fail(TxValCode::R1_BAD_VERSION,
             "R1: coinbase version must be 1");
     }
 
-    // CB2: exactly 1 input with prev_txid=0x00*32, prev_index=0xFFFFFFFF
     if (tx.inputs.size() != 1) {
         return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
             "CB2: coinbase must have exactly 1 input, got " +
             std::to_string(tx.inputs.size()));
     }
+
     const auto& cbin = tx.inputs[0];
     Hash256 zero_hash{};
     if (cbin.prev_txid != zero_hash) {
         return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
             "CB2: coinbase prev_txid must be all zeros");
     }
-    if (cbin.prev_index != 0xFFFFFFFF) {
+    if (cbin.prev_index != 0xFFFFFFFFu) {
         return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
-            "CB2: coinbase prev_index must be 0xFFFFFFFF, got 0x" +
-            std::to_string(cbin.prev_index));
+            "CB2: coinbase prev_index must be 0xFFFFFFFF, got 0x" + HexU32(cbin.prev_index));
     }
 
-    // CB3: signature field = height (8 bytes LE) + miner_data (up to 56 bytes)
-    // The 64-byte signature field contains: height as uint64 LE in first 8 bytes
-    // Remaining 56 bytes are miner's arbitrary data (e.g., pool name)
-    // Validate: encoded height must match block height
+    // CB3: signature[0..7] = height as uint64 LE (portable)
     uint64_t encoded_height = 0;
-    std::memcpy(&encoded_height, cbin.signature.data(), 8);
+    for (int i = 0; i < 8; ++i) {
+        encoded_height |= (uint64_t)cbin.signature[i] << (8 * i);
+    }
     if ((int64_t)encoded_height != height) {
         return TxValidationResult::Fail(TxValCode::CB3_BAD_CB_SIG_FIELD,
             "CB3: coinbase height mismatch: encoded " +
@@ -505,7 +476,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             std::to_string(height));
     }
 
-    // CB9: coinbase pubkey must be 0x00*33
+    // CB9: pubkey must be 0x00*33
     if (!IsAllZeros(cbin.pubkey.data(), 33)) {
         return TxValidationResult::Fail(TxValCode::CB9_CB_PUBKEY_NONZERO,
             "CB9: coinbase input pubkey must be all zeros");
@@ -518,7 +489,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             std::to_string(tx.outputs.size()));
     }
 
-    // CB4: outputs in order: MINER(0x01), GOLD(0x02), POPC(0x03)
+    // CB4: output type order
     if (tx.outputs[0].type != OUT_COINBASE_MINER) {
         return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
             "CB4: output[0] must be OUT_COINBASE_MINER (0x01)", -1, 0);
@@ -532,7 +503,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             "CB4: output[2] must be OUT_COINBASE_POPC (0x03)", -1, 2);
     }
 
-    // CB5: amounts = subsidy + fees, split 50/25/25 (remainder to miner)
+    // CB5: exact split of (subsidy + fees): quarter, quarter, remainder-to-miner
     int64_t total_reward = subsidy + total_fees;
     int64_t quarter = total_reward / 4;
     int64_t expected_gold = quarter;
@@ -555,7 +526,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             " != expected " + std::to_string(expected_popc), -1, 2);
     }
 
-    // CB6: gold and popc pubkey_hash must match constitutional addresses
+    // CB6: vault destinations must match constitutional PKHs
     if (tx.outputs[1].pubkey_hash != gold_vault_pkh) {
         return TxValidationResult::Fail(TxValCode::CB6_CB_VAULT_MISMATCH,
             "CB6: gold vault pubkey_hash mismatch", -1, 1);
@@ -565,7 +536,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             "CB6: popc pool pubkey_hash mismatch", -1, 2);
     }
 
-    // CB10: all coinbase outputs payload_len = 0
+    // CB10: coinbase outputs payload must be empty
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (!tx.outputs[i].payload.empty()) {
             return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
@@ -574,7 +545,7 @@ TxValidationResult ValidateCoinbaseConsensus(
         }
     }
 
-    // Per-output amount checks (R5, R6)
+    // R5/R6 on coinbase outputs
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (tx.outputs[i].amount <= 0) {
             return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,

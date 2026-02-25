@@ -15,7 +15,7 @@ namespace sost {
 // =============================================================================
 
 inline constexpr int64_t  COINBASE_MATURITY        = 100;
-inline constexpr int64_t  SUPPLY_MAX               = 466920160910299LL; // stockshis
+inline constexpr int64_t SUPPLY_MAX = 466'920'160'910'299LL; // stockshis (1e-8 SOST)
 inline constexpr int64_t  STOCKSHIS_PER_SOST_TX    = 100000000LL;
 inline constexpr int32_t  MAX_TX_BYTES_CONSENSUS   = 100000;
 inline constexpr int32_t  MAX_BLOCK_BYTES_CONSENSUS = 1000000;

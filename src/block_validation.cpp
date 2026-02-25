@@ -1,0 +1,311 @@
+// =============================================================================
+// SOST — Phase 5.5: Block Validation Implementation
+// Compatible with Phase 3 (tx_validation) + Phase 4 (utxo_set)
+// =============================================================================
+
+#include <sost/block_validation.h>
+#include <sost/merkle.h>
+
+#include <sost/subsidy.h>
+#include <unordered_set>
+#include <string>
+
+namespace sost {
+
+// ---------------------------------------------------------------------------
+// GetBlockSubsidy
+// NOTE: If you have a real schedule function (e.g. sost_subsidy_stockshis),
+// you can call it here. For now we default to 50 SOST.
+// ---------------------------------------------------------------------------
+
+int64_t GetBlockSubsidy(int64_t height) {
+    return ::sost::sost_subsidy_stockshis(height); // epoch decay
+}
+
+// ==========================================================================
+// L1: ValidateBlockStructure (context-free)
+// ==========================================================================
+
+bool ValidateBlockStructure(const Block& block, std::string* err) {
+
+    // Size
+    size_t block_size = block.EstimateSize();
+    if (block_size > MAX_BLOCK_SIZE_CONSENSUS) {
+        if (err) *err = "ValidateBlockStructure: block too large ("
+                      + std::to_string(block_size) + " > "
+                      + std::to_string(MAX_BLOCK_SIZE_CONSENSUS) + ")";
+        return false;
+    }
+
+    // tx_count >= 1
+    if (block.txs.empty()) {
+        if (err) *err = "ValidateBlockStructure: no transactions";
+        return false;
+    }
+
+    // tx_count <= max
+    if (block.txs.size() > MAX_BLOCK_TXS_CONSENSUS) {
+        if (err) *err = "ValidateBlockStructure: too many txs ("
+                      + std::to_string(block.txs.size()) + " > "
+                      + std::to_string(MAX_BLOCK_TXS_CONSENSUS) + ")";
+        return false;
+    }
+
+    // coinbase at [0]
+    if (block.txs[0].tx_type != TX_TYPE_COINBASE) {
+        if (err) *err = "ValidateBlockStructure: tx[0] is not coinbase";
+        return false;
+    }
+
+    // others standard
+    for (size_t i = 1; i < block.txs.size(); ++i) {
+        if (block.txs[i].tx_type != TX_TYPE_STANDARD) {
+            if (err) *err = "ValidateBlockStructure: tx[" + std::to_string(i) +
+                            "] is not standard";
+            return false;
+        }
+    }
+
+    // Merkle root + mutation detection
+    Hash256 computed{};
+    bool mutated = false;
+    std::string m_err;
+    if (!ComputeMerkleRootFromTxs(block.txs, computed, &mutated, &m_err)) {
+        if (err) *err = "ValidateBlockStructure: merkle compute: " + m_err;
+        return false;
+    }
+    if (mutated) {
+        if (err) *err = "ValidateBlockStructure: mutated merkle root (CVE-2012-2459 style)";
+        return false;
+    }
+    if (computed != block.header.merkle_root) {
+        if (err) *err = "ValidateBlockStructure: merkle mismatch (computed "
+                      + HexStr(computed) + " != header " + HexStr(block.header.merkle_root) + ")";
+        return false;
+    }
+
+    return true;
+}
+
+// ==========================================================================
+// L2: ValidateBlockHeaderContext
+// ==========================================================================
+
+bool ValidateBlockHeaderContext(
+    const BlockHeader& header,
+    const BlockHeader* prev,
+    int64_t current_time,
+    uint32_t expected_bits_q,
+    std::string* err)
+{
+    // version must match protocol
+    if (header.version != BLOCK_HEADER_VERSION) {
+        if (err) *err = "ValidateBlockHeaderContext: bad header.version";
+        return false;
+    }
+
+    // ---- Genesis ----
+    if (header.height == 0) {
+        if (prev != nullptr) {
+            if (err) *err = "ValidateBlockHeaderContext: genesis with non-null prev";
+            return false;
+        }
+        if (header.prev_block_hash != Hash256{}) {
+            if (err) *err = "ValidateBlockHeaderContext: genesis prev_block_hash not zero";
+            return false;
+        }
+        if (header.timestamp != GENESIS_TIMESTAMP) {
+            if (err) *err = "ValidateBlockHeaderContext: genesis timestamp mismatch";
+            return false;
+        }
+        if (header.bits_q != GENESIS_BITSQ) {
+            if (err) *err = "ValidateBlockHeaderContext: genesis bits_q mismatch";
+            return false;
+        }
+        return true;
+    }
+
+    // ---- Non-genesis requires prev ----
+    if (prev == nullptr) {
+        if (err) *err = "ValidateBlockHeaderContext: height requires prev";
+        return false;
+    }
+
+    // prev hash must match prev block hash
+    Hash256 want_prev = prev->ComputeBlockHash();
+    if (header.prev_block_hash != want_prev) {
+        if (err) *err = "ValidateBlockHeaderContext: prev_block_hash mismatch";
+        return false;
+    }
+
+    // height continuity
+    if (header.height != prev->height + 1) {
+        if (err) *err = "ValidateBlockHeaderContext: height mismatch (got="
+                      + std::to_string(header.height) + ", expected="
+                      + std::to_string(prev->height + 1) + ")";
+        return false;
+    }
+
+    // timestamp monotonic (allow equal to avoid needless forks)
+    if (header.timestamp < prev->timestamp) {
+        if (err) *err = "ValidateBlockHeaderContext: timestamp goes backwards";
+        return false;
+    }
+
+    // not too far in future
+    if (header.timestamp > current_time + MAX_FUTURE_BLOCK_TIME) {
+        if (err) *err = "ValidateBlockHeaderContext: timestamp too far in future";
+        return false;
+    }
+
+    // difficulty bits_q match expected (ASERT hook)
+    if (header.bits_q != expected_bits_q) {
+        if (err) *err = "ValidateBlockHeaderContext: bits_q mismatch (got="
+                      + std::to_string(header.bits_q) + ", expected="
+                      + std::to_string(expected_bits_q) + ")";
+        return false;
+    }
+
+    return true;
+}
+
+// ==========================================================================
+// L3: ValidateBlockTransactionsConsensus
+// ==========================================================================
+
+BlockConsensusResult ValidateBlockTransactionsConsensus(
+    const Block& block,
+    const UtxoSet& utxos_view,
+    const TxValidationContext& base_tx_ctx,
+    const PubKeyHash& gold_vault_pkh,
+    const PubKeyHash& popc_pool_pkh)
+{
+    // scratch UTXO view for intra-block spends
+    UtxoSet scratch = utxos_view;
+
+    // compute txids + duplicate txid check (R10)
+    std::unordered_set<std::string> seen;
+    seen.reserve(block.txs.size() * 2);
+
+    std::vector<Hash256> txids(block.txs.size());
+    for (size_t i = 0; i < block.txs.size(); ++i) {
+        std::string id_err;
+        if (!block.txs[i].ComputeTxId(txids[i], &id_err)) {
+            return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] txid: " + id_err);
+        }
+        std::string hex = HexStr(txids[i]);
+        if (seen.count(hex)) {
+            return BlockConsensusResult::Fail("duplicate txid " + hex + " at tx[" + std::to_string(i) + "]");
+        }
+        seen.insert(hex);
+    }
+
+    const int64_t height = block.header.height;
+    const int64_t subsidy = GetBlockSubsidy(height);
+
+    // validate standard txs, connect into scratch, accumulate fees
+    int64_t total_fees = 0;
+
+    for (size_t i = 1; i < block.txs.size(); ++i) {
+        const Transaction& tx = block.txs[i];
+
+        // tx context at this block height
+        TxValidationContext tx_ctx = base_tx_ctx;
+        tx_ctx.spend_height = height;
+
+        auto vr = ValidateTransactionConsensus(tx, scratch, tx_ctx);
+        if (!vr.ok) {
+            return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] consensus: " + vr.message);
+        }
+
+        // fee calc using current scratch view BEFORE connect
+        int64_t sum_in = 0;
+        for (const auto& inp : tx.inputs) {
+            OutPoint op{inp.prev_txid, inp.prev_index};
+            auto e = scratch.GetUTXO(op);
+            if (!e.has_value()) {
+                return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] fee: missing input UTXO");
+            }
+            sum_in += e->amount;
+        }
+        int64_t sum_out = 0;
+        for (const auto& out : tx.outputs) sum_out += out.amount;
+
+        int64_t fee = sum_in - sum_out;
+        if (fee < 0) {
+            return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] negative fee");
+        }
+        total_fees += fee;
+        if (total_fees < 0 || total_fees > SUPPLY_MAX) {
+            return BlockConsensusResult::Fail("fee overflow");
+        }
+
+        // connect tx into scratch
+        std::vector<UndoEntry> dummy_undo;
+        std::string c_err;
+        if (!scratch.ConnectTransaction(tx, txids[i], height, dummy_undo, &c_err)) {
+            return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] connect: " + c_err);
+        }
+    }
+
+    // validate coinbase EXACT (CB rules) using Phase 3
+    {
+        auto cr = ValidateCoinbaseConsensus(
+            block.txs[0],
+            height,
+            subsidy,
+            total_fees,
+            gold_vault_pkh,
+            popc_pool_pkh);
+
+        if (!cr.ok) {
+            return BlockConsensusResult::Fail("coinbase consensus: " + cr.message);
+        }
+    }
+
+    return BlockConsensusResult::Ok(total_fees, subsidy);
+}
+
+// ==========================================================================
+// L4: ConnectValidatedBlockAtomic
+// ==========================================================================
+
+bool ConnectValidatedBlockAtomic(
+    const Block& block,
+    UtxoSet& utxo_set,
+    BlockUndo& out_undo,
+    std::string* err)
+{
+    // atomic: mutate only scratch
+    UtxoSet scratch = utxo_set;
+    BlockUndo tmp{};
+    std::string c_err;
+
+    if (!scratch.ConnectBlock(block.txs, block.header.height, tmp, &c_err)) {
+        if (err) *err = "ConnectValidatedBlockAtomic: " + c_err;
+        return false;
+    }
+
+    utxo_set = std::move(scratch);
+    out_undo = std::move(tmp);
+    return true;
+}
+
+// ==========================================================================
+// DisconnectBlock
+// ==========================================================================
+
+bool DisconnectBlock(
+    const Block& block,
+    UtxoSet& utxo_set,
+    const BlockUndo& undo,
+    std::string* err)
+{
+    if (!utxo_set.DisconnectBlock(block.txs, undo, err)) {
+        if (err && !err->empty()) *err = "DisconnectBlock: " + *err;
+        return false;
+    }
+    return true;
+}
+
+} // namespace sost

@@ -90,6 +90,14 @@ struct Transaction {
         Transaction& out_tx,
         std::string* err = nullptr);
 
+    // Parse transaction at offset within a larger buffer (for block parsing).
+    // Advances offset past the consumed bytes. Does NOT reject trailing bytes.
+    static bool DeserializeFrom(
+        const std::vector<Byte>& in,
+        size_t& offset,
+        Transaction& out_tx,
+        std::string* err = nullptr);
+
     // txid = SHA256(SHA256(serialized_tx))
     bool ComputeTxId(Hash256& out_txid, std::string* err = nullptr) const;
 

@@ -397,6 +397,68 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
     return true;
 }
 
+// ---------------------------------------------------------------------------
+// Transaction::DeserializeFrom (offset-based, for block parsing)
+// Same as Deserialize but takes external offset and allows trailing bytes.
+// ---------------------------------------------------------------------------
+
+bool Transaction::DeserializeFrom(const std::vector<Byte>& in,
+                                   size_t& offset,
+                                   Transaction& out_tx, std::string* err) {
+    // Version
+    if (!ReadU32LE(in, offset, out_tx.version, err)) return false;
+
+    // tx_type
+    if (!ReadU8(in, offset, out_tx.tx_type, err)) return false;
+
+    // Inputs
+    uint64_t num_inputs = 0;
+    if (!ReadCompactSize(in, offset, num_inputs, err)) return false;
+    if (num_inputs == 0) {
+        if (err) *err = "Transaction::DeserializeFrom: zero inputs";
+        return false;
+    }
+    if (num_inputs > 256) {
+        if (err) *err = "Transaction::DeserializeFrom: too many inputs (max 256)";
+        return false;
+    }
+
+    out_tx.inputs.resize(static_cast<size_t>(num_inputs));
+    for (size_t i = 0; i < num_inputs; ++i) {
+        if (!TxInput::DeserializeFrom(in, offset, out_tx.inputs[i], err)) {
+            if (err && err->empty()) {
+                *err = "Transaction::DeserializeFrom: failed at input " + std::to_string(i);
+            }
+            return false;
+        }
+    }
+
+    // Outputs
+    uint64_t num_outputs = 0;
+    if (!ReadCompactSize(in, offset, num_outputs, err)) return false;
+    if (num_outputs == 0) {
+        if (err) *err = "Transaction::DeserializeFrom: zero outputs";
+        return false;
+    }
+    if (num_outputs > 256) {
+        if (err) *err = "Transaction::DeserializeFrom: too many outputs (max 256)";
+        return false;
+    }
+
+    out_tx.outputs.resize(static_cast<size_t>(num_outputs));
+    for (size_t i = 0; i < num_outputs; ++i) {
+        if (!TxOutput::DeserializeFrom(in, offset, out_tx.outputs[i], err)) {
+            if (err && err->empty()) {
+                *err = "Transaction::DeserializeFrom: failed at output " + std::to_string(i);
+            }
+            return false;
+        }
+    }
+
+    // No trailing bytes check — offset advances for caller to continue
+    return true;
+}
+
 // =============================================================================
 // txid computation — SHA256(SHA256(serialized_tx))
 // =============================================================================

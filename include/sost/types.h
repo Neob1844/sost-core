@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <cstddef>
 #include <string>
 #include <vector>
 namespace sost {
