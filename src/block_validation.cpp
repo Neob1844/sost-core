@@ -14,12 +14,12 @@ namespace sost {
 
 // ---------------------------------------------------------------------------
 // GetBlockSubsidy
-// NOTE: If you have a real schedule function (e.g. sost_subsidy_stockshis),
+// NOTE: If you have a real schedule function (e.g. sost_subsidy_stocks),
 // you can call it here. For now we default to 50 SOST.
 // ---------------------------------------------------------------------------
 
 int64_t GetBlockSubsidy(int64_t height) {
-    return ::sost::sost_subsidy_stockshis(height); // epoch decay
+    return ::sost::sost_subsidy_stocks(height); // epoch decay
 }
 
 // ==========================================================================

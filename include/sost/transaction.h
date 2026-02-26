@@ -56,7 +56,7 @@ struct TxInput {
 // -----------------------------------------------------------------------------
 
 struct TxOutput {
-    int64_t amount{0};                   // i64 LE (stockshis)
+    int64_t amount{0};                   // i64 LE (stocks)
     uint8_t type{OUT_TRANSFER};          // typed output
     std::array<Byte, 20> pubkey_hash{};  // RIPEMD160(SHA256(pubkey))
     std::vector<Byte> payload;           // typed metadata (empty in v1 active types)

@@ -20,7 +20,7 @@ int main() {
     T("balance=0", w.balance() == 0);
     // Credit coinbase
     Bytes32 bid{}; bid.fill(0x42);
-    int64_t sub = sost_subsidy_stockshis(0);
+    int64_t sub = sost_subsidy_stocks(0);
     w.credit_coinbase(0, sub, bid);
     T("balance after coinbase", w.balance() == sub);
     T("utxos count=1", w.utxos().size() == 1);

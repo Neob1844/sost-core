@@ -20,14 +20,14 @@ int main(int argc, char** argv) {
     if (argc >= 3 && !strcmp(argv[1], "load")) {
         if (!w.load(argv[2])) { printf("Failed to load %s\n", argv[2]); return 1; }
         printf("Loaded wallet from %s\n", argv[2]);
-        printf("Addresses: %zu | Balance: %lld stockshis\n", w.addresses().size(), (long long)w.balance());
+        printf("Addresses: %zu | Balance: %lld stocks\n", w.addresses().size(), (long long)w.balance());
     } else if (!strcmp(argv[1], "generate")) {
         auto kp = w.generate_key();
         printf("Address: %s\n", kp.addr.c_str());
         printf("Pubkey:  %s\n", hex(kp.pub).c_str());
         printf("Privkey: %s\n", hex(kp.priv).c_str());
     } else if (!strcmp(argv[1], "balance")) {
-        printf("Balance: %lld stockshis\n", (long long)w.balance());
+        printf("Balance: %lld stocks\n", (long long)w.balance());
     } else if (!strcmp(argv[1], "addresses")) {
         for (auto& a : w.addresses()) printf("  %s\n", a.c_str());
     } else { usage(); }

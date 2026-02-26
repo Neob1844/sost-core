@@ -691,7 +691,7 @@ TEST(T34_P_tx_too_large) {
 // =============================================================================
 
 TEST(T35_P_dust_output) {
-    auto b = MakeValidStdTx(1000000, 100);  // 100 stockshis < 10000 dust
+    auto b = MakeValidStdTx(1000000, 100);  // 100 stocks < 10000 dust
     // Re-sign
     SpentOutput spent{1000000, OUT_TRANSFER};
     std::string err;

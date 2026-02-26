@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         printf("[RPC] Started on port %d\n", port);
     }
     int rc = node.mine_loop(blocks, wallet, mn);
-    printf("\nFinal balance: %lld stockshis\n", (long long)wallet.balance());
+    printf("\nFinal balance: %lld stocks\n", (long long)wallet.balance());
     printf("Chain height: %lld\n", (long long)node.height());
     if(port>0){printf("[RPC] still running, Ctrl+C to stop\n");while(true)sleep(1);}
     return rc;

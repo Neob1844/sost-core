@@ -45,7 +45,7 @@ MineResult mine_block(
             b.checkpoints_root = res.checkpoints_root;
             b.stability_metric = res.stability_metric;
             b.x_bytes = res.x_bytes;
-            b.subsidy_stockshis = sost_subsidy_stockshis(h);
+            b.subsidy_stocks = sost_subsidy_stocks(h);
             b.block_id = compute_block_id_from_parts(
                 prev_hash, merkle_root, (uint32_t)timestamp, powDiffQ,
                 res.checkpoints_root, nonce, 0, res.commit);
@@ -77,14 +77,14 @@ int mine_chain(
             if (mr.found) {
                 found = true;
                 mr.block.chainwork = cw; // simplified
-                auto split = coinbase_split(mr.block.subsidy_stockshis);
+                auto split = coinbase_split(mr.block.subsidy_stocks);
                 printf("[BLOCK %lld] id=%s nonce=%u t=%llds metric=%lu sub=%lld (m=%lld g=%lld p=%lld)\n",
                     (long long)mr.block.height,
                     hex(mr.block.block_id).substr(0,16).c_str(),
                     mr.block.nonce,
                     (long long)mr.elapsed_ms,
                     (unsigned long)mr.block.stability_metric,
-                    (long long)mr.block.subsidy_stockshis,
+                    (long long)mr.block.subsidy_stocks,
                     (long long)split.miner,
                     (long long)split.gold_vault,
                     (long long)split.popc_pool);

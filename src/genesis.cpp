@@ -16,13 +16,13 @@ int main() {
     printf("  PoPC Pool:  %s\n", ADDR_POPC_POOL);
     
     // Subsidy and split for block 0
-    int64_t subsidy = sost_subsidy_stockshis(0);
+    int64_t subsidy = sost_subsidy_stocks(0);
     auto split = coinbase_split(subsidy);
-    printf("\nBlock 0 reward: %lld stockshis (%.8f SOST)\n", 
+    printf("\nBlock 0 reward: %lld stocks (%.8f SOST)\n", 
            (long long)subsidy, (double)subsidy / STOCKSHIS_PER_SOST);
-    printf("  Miner:      %lld stockshis\n", (long long)split.miner);
-    printf("  Gold Vault: %lld stockshis\n", (long long)split.gold_vault);
-    printf("  PoPC Pool:  %lld stockshis\n", (long long)split.popc_pool);
+    printf("  Miner:      %lld stocks\n", (long long)split.miner);
+    printf("  Gold Vault: %lld stocks\n", (long long)split.gold_vault);
+    printf("  PoPC Pool:  %lld stocks\n", (long long)split.popc_pool);
     printf("  Sum check:  %lld == %lld ? %s\n\n",
            (long long)(split.miner + split.gold_vault + split.popc_pool),
            (long long)subsidy,
@@ -112,7 +112,7 @@ int main() {
             genesis.checkpoints_root = res.checkpoints_root;
             genesis.stability_metric = res.stability_metric;
             genesis.x_bytes = res.x_bytes;
-            genesis.subsidy_stockshis = subsidy;
+            genesis.subsidy_stocks = subsidy;
             genesis.chainwork = 0;
             genesis.block_id = compute_block_id_from_parts(
                 prev, mrkl, (uint32_t)ts, powDiffQ,
@@ -130,7 +130,7 @@ int main() {
             printf("  attempts:         %u\n", attempts);
             printf("  elapsed:          %llds\n", (long long)(mine_ms/1000));
             printf("  timestamp:        %lld (2026-02-28 00:00:00 UTC)\n", (long long)ts);
-            printf("  subsidy:          %lld stockshis\n", (long long)subsidy);
+            printf("  subsidy:          %lld stocks\n", (long long)subsidy);
             printf("  miner_reward:     %lld → %s\n", (long long)split.miner, ADDR_MINER_FOUNDER);
             printf("  gold_vault:       %lld → %s\n", (long long)split.gold_vault, ADDR_GOLD_VAULT);
             printf("  popc_pool:        %lld → %s\n", (long long)split.popc_pool, ADDR_POPC_POOL);
@@ -156,7 +156,7 @@ int main() {
                 fprintf(f, "  \"commit\": \"%s\",\n", hex(genesis.commit).c_str());
                 fprintf(f, "  \"checkpoints_root\": \"%s\",\n", hex(genesis.checkpoints_root).c_str());
                 fprintf(f, "  \"stability_metric\": %lu,\n", (unsigned long)genesis.stability_metric);
-                fprintf(f, "  \"subsidy_stockshis\": %lld,\n", (long long)genesis.subsidy_stockshis);
+                fprintf(f, "  \"subsidy_stocks\": %lld,\n", (long long)genesis.subsidy_stocks);
                 fprintf(f, "  \"subsidy_sost\": \"%.8f\",\n", (double)subsidy / STOCKSHIS_PER_SOST);
                 fprintf(f, "  \"coinbase\": {\n");
                 fprintf(f, "    \"miner\": { \"address\": \"%s\", \"amount\": %lld },\n", ADDR_MINER_FOUNDER, (long long)split.miner);

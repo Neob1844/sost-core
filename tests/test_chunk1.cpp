@@ -21,18 +21,18 @@ static int tests_failed = 0;
 
 void test_emission() {
     printf("\n=== Emission ===\n");
-    int64_t r0 = sost_subsidy_stockshis(0);
+    int64_t r0 = sost_subsidy_stocks(0);
     TEST("V6: height=0 subsidy", r0 == 785100863);
 
-    int64_t r1 = sost_subsidy_stockshis(131553);
+    int64_t r1 = sost_subsidy_stocks(131553);
     TEST("V6: epoch 1 < epoch 0", r1 < r0);
     TEST("V6: epoch 1 > 0", r1 > 0);
 
-    int64_t r2 = sost_subsidy_stockshis(2 * 131553);
+    int64_t r2 = sost_subsidy_stocks(2 * 131553);
     TEST("V6: epoch 2 < epoch 1", r2 < r1);
 
     // Negative height
-    TEST("negative height = 0", sost_subsidy_stockshis(-1) == 0);
+    TEST("negative height = 0", sost_subsidy_stocks(-1) == 0);
 }
 
 void test_coinbase_split() {

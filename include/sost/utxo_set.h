@@ -136,7 +136,7 @@ public:
     // Number of unspent outputs in the set
     size_t Size() const { return utxos_.size(); }
 
-    // Sum of all UTXO amounts (stockshis)
+    // Sum of all UTXO amounts (stocks)
     int64_t GetTotalValue() const;
 
     // Clear all UTXOs (for testing / reset)

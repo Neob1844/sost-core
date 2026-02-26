@@ -36,7 +36,7 @@ static inline uint64_t pow_q(uint64_t exp) {
     return result;
 }
 
-int64_t sost_subsidy_stockshis(int64_t height) {
+int64_t sost_subsidy_stocks(int64_t height) {
     if (height < 0) return 0;
 
     // epoch = height / BLOCKS_PER_EPOCH

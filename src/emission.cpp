@@ -15,7 +15,7 @@ static int64_t qpow_floor(int64_t base, int64_t exp) {
     }
     return result;
 }
-int64_t sost_subsidy_stockshis(int64_t height) {
+int64_t sost_subsidy_stocks(int64_t height) {
     if (height < 0) return 0;
     int64_t epoch = height / BLOCKS_PER_EPOCH;
     int64_t qpow = qpow_floor(EMISSION_Q_NUM, epoch);

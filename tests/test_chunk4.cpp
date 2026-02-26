@@ -61,7 +61,7 @@ void test_mine_and_verify() {
             blk.checkpoints_root = res.checkpoints_root;
             blk.stability_metric = res.stability_metric;
             blk.x_bytes = res.x_bytes;
-            blk.subsidy_stockshis = sost_subsidy_stockshis(0);
+            blk.subsidy_stocks = sost_subsidy_stocks(0);
             blk.block_id = compute_block_id_from_parts(
                 prev, mrkl, (uint32_t)ts, powDiffQ,
                 res.checkpoints_root, nonce, 0, res.commit);
@@ -88,7 +88,7 @@ void test_mine_and_verify() {
     auto r4 = verify_block_full(bad, chain, prof);
     T("tampered nonce fails full verify", !r4.ok);
     // Tamper: bad subsidy
-    Block bad2 = blk; bad2.subsidy_stockshis = 999;
+    Block bad2 = blk; bad2.subsidy_stocks = 999;
     auto r5 = verify_block_basic(bad2, chain, ts, prof);
     T("bad subsidy fails basic verify", !r5.ok);
 }

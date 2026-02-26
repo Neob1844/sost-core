@@ -15,7 +15,7 @@ int main(){
     auto mr2=node.mine_next(w);
     T("mined block 1",mr2.found);
     T("height=1",node.height()==1);
-    T("balance increased",w.balance()>mr.block.subsidy_stockshis);
+    T("balance increased",w.balance()>mr.block.subsidy_stocks);
     auto info=node.info_json();
     T("info has height",info.find("height")!=std::string::npos);
     auto bj=node.block_json(0);

@@ -69,7 +69,7 @@ static Transaction MakeMinimalStandardTx() {
     tx.inputs.push_back(in);
 
     TxOutput out;
-    out.amount = 785100863;  // 7.85100863 SOST in stockshis
+    out.amount = 785100863;  // 7.85100863 SOST in stocks
     out.type = OUT_TRANSFER;
     std::memset(out.pubkey_hash.data(), 0xDD, 20);
     // No payload (v1 standard)
@@ -162,7 +162,7 @@ TEST(minimal_standard_roundtrip) {
 // --- T2: Coinbase tx round-trip (3 outputs, typed) ---
 
 TEST(coinbase_roundtrip) {
-    int64_t reward = 785100863;  // Genesis block reward in stockshis
+    int64_t reward = 785100863;  // Genesis block reward in stocks
     Transaction tx = MakeCoinbaseTx(0, reward);
 
     std::vector<Byte> buf;

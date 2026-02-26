@@ -45,7 +45,7 @@ MineResult Node::mine_next(Wallet& w, uint32_t max_nonce) {
         if (vr.ok) {
             cs_.blocks.push_back(mr.block); cs_.metas.push_back(to_meta(mr.block));
             cs_.tip_hash = mr.block.block_id; cs_.tip_height = mr.block.height;
-            w.credit_coinbase(h, mr.block.subsidy_stockshis, mr.block.block_id);
+            w.credit_coinbase(h, mr.block.subsidy_stocks, mr.block.block_id);
             printf("[NODE] block %lld mined id=%s nonce=%u\n",(long long)h,hex(mr.block.block_id).substr(0,16).c_str(),mr.block.nonce);
         } else { mr.found=false; mr.error=vr.reason; }
     }
@@ -70,10 +70,10 @@ std::string Node::info_json() const {
 std::string Node::block_json(int64_t h) const {
     std::lock_guard<std::mutex> lk(mu_);
     if(h<0||h>=(int64_t)cs_.blocks.size()) return "{\"error\":\"not found\"}";
-    auto& b=cs_.blocks[h]; auto sp=coinbase_split(b.subsidy_stockshis);
+    auto& b=cs_.blocks[h]; auto sp=coinbase_split(b.subsidy_stocks);
     std::ostringstream s;
     s<<"{\"height\":"<<b.height<<",\"id\":\""<<hex(b.block_id)<<"\",\"nonce\":"<<b.nonce
-     <<",\"subsidy\":"<<b.subsidy_stockshis<<",\"miner\":"<<sp.miner
+     <<",\"subsidy\":"<<b.subsidy_stocks<<",\"miner\":"<<sp.miner
      <<",\"gold_vault\":"<<sp.gold_vault<<",\"popc_pool\":"<<sp.popc_pool
      <<",\"metric\":"<<b.stability_metric<<"}";
     return s.str();
