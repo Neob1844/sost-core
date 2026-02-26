@@ -1,6 +1,6 @@
 #pragma once
-#include "types.h"
-#include "params.h"
+#include "sost/types.h"
+#include "sost/params.h"
 #include <vector>
 #include <utility>
 namespace sost {

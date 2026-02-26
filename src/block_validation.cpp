@@ -3,6 +3,7 @@
 // Compatible with Phase 3 (tx_validation) + Phase 4 (utxo_set)
 // =============================================================================
 
+#include <sost/types.h>
 #include <sost/block_validation.h>
 #include <sost/merkle.h>
 
@@ -146,13 +147,16 @@ bool ValidateBlockHeaderContext(
         return false;
     }
 
-    // timestamp monotonic (allow equal to avoid needless forks)
-    if (header.timestamp < prev->timestamp) {
-        if (err) *err = "ValidateBlockHeaderContext: timestamp goes backwards";
+    // Python-aligned (strictly increasing vs. parent).
+    // NOTE: Python uses MTP(11). We can't compute full MTP here because this function
+    // receives only `prev`, not the last 11 headers. Enforcing strict monotonicity
+    // is a safe subset that prevents accepting blocks Python would reject.
+    if (header.timestamp <= prev->timestamp) {
+        if (err) *err = "ValidateBlockHeaderContext: timestamp not strictly increasing";
         return false;
     }
 
-    // not too far in future
+    // not too far in future (Python uses +600s)
     if (header.timestamp > current_time + MAX_FUTURE_BLOCK_TIME) {
         if (err) *err = "ValidateBlockHeaderContext: timestamp too far in future";
         return false;
@@ -163,6 +167,83 @@ bool ValidateBlockHeaderContext(
         if (err) *err = "ValidateBlockHeaderContext: bits_q mismatch (got="
                       + std::to_string(header.bits_q) + ", expected="
                       + std::to_string(expected_bits_q) + ")";
+        return false;
+    }
+
+    return true;
+}
+
+// ==========================================================================
+// L2b: ValidateBlockHeaderContextWithMTP (Python-aligned MTP=11 + drift)
+// ==========================================================================
+//
+// This does NOT replace ValidateBlockHeaderContext().
+// It's a stricter variant that matches the Python miner/verifier rules:
+//
+//   - header.timestamp > MedianTimePast(last 11 blocks)
+//   - header.timestamp <= now + MAX_FUTURE_DRIFT
+//
+// `chain_meta` is expected to contain the existing chain in order (genesis..tip),
+// where chain_meta.back() corresponds to `prev`.
+//
+bool ValidateBlockHeaderContextWithMTP(
+    const BlockHeader& header,
+    const BlockHeader* prev,
+    const std::vector<BlockMeta>& chain_meta,
+    int64_t current_time,
+    uint32_t expected_bits_q,
+    std::string* err)
+{
+    // Reuse the existing checks first (version, genesis rules, prev-link,
+    // height continuity, difficulty match, future drift, etc.)
+    //
+    // IMPORTANT: Your current ValidateBlockHeaderContext() uses a weaker
+    // monotonic time check (prev timestamp). We still call it because it
+    // validates many other invariants. Then we apply the strict MTP rule below.
+    if (!ValidateBlockHeaderContext(header, prev, current_time, expected_bits_q, err)) {
+        return false;
+    }
+
+    // Genesis already handled by ValidateBlockHeaderContext().
+    if (header.height == 0) return true;
+
+    // Need enough history to compute MTP. Python uses window=11.
+    constexpr int MTP_WINDOW = 11;
+
+    // `chain_meta` should include `prev` as its last element for normal validation.
+    // If not available, fail-closed (consensus strictness).
+    if (chain_meta.empty()) {
+        if (err) *err = "ValidateBlockHeaderContextWithMTP: missing chain_meta";
+        return false;
+    }
+
+    // Compute MedianTimePast over the last up-to-11 timestamps.
+    // Python takes last 11 blocks (or fewer if chain shorter).
+    const int n = (int)chain_meta.size();
+    const int take = (n < MTP_WINDOW) ? n : MTP_WINDOW;
+
+    // Collect timestamps
+    int64_t times[MTP_WINDOW];
+    for (int i = 0; i < take; ++i) {
+        times[i] = chain_meta[n - take + i].time;
+    }
+
+    // Sort small array (insertion sort, deterministic)
+    for (int i = 1; i < take; ++i) {
+        int64_t key = times[i];
+        int j = i - 1;
+        while (j >= 0 && times[j] > key) {
+            times[j + 1] = times[j];
+            --j;
+        }
+        times[j + 1] = key;
+    }
+
+    const int64_t mtp = times[take / 2];
+
+    // Python rule: ts MUST be strictly greater than MTP
+    if (header.timestamp <= mtp) {
+        if (err) *err = "ValidateBlockHeaderContextWithMTP: time-too-old (ts<=MTP)";
         return false;
     }
 
@@ -236,7 +317,7 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
             return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] negative fee");
         }
         total_fees += fee;
-        if (total_fees < 0 || total_fees > SUPPLY_MAX_STOCKSHIS) {
+        if (total_fees < 0 || total_fees > SUPPLY_MAX_STOCKS) {
             return BlockConsensusResult::Fail("fee overflow");
         }
 

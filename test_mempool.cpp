@@ -306,7 +306,7 @@ static bool MP07_fee_too_low() {
     Mempool pool;
 
     PubKeyHash dest; dest.fill(0x01);
-    // Send almost all — fee = 1 stockshi (below min relay)
+    // Send almost all — fee = 1 stocks (below min relay)
     auto [tx, txid, fee] = MakeSignedTx(
         env.cb_txid, 0, env.miner_amount, env.miner_amount - 1,
         env.priv, env.pub, dest);

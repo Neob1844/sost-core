@@ -153,7 +153,7 @@ static TestTxBundle MakeValidStdTx(int64_t utxo_amount = 1000000,
     in.prev_index = 0;
     b.tx.inputs.push_back(in);
 
-    // Output: leave room for fee (size * 1 stockshi/byte minimum)
+    // Output: leave room for fee (size * 1 stocks/byte minimum)
     // Estimate: ~163 bytes for 1-in-1-out tx → fee ~163
     if (output_amount == 0) {
         output_amount = utxo_amount - 300;  // generous fee
@@ -300,7 +300,7 @@ TEST(T07_R5_zero_amount) {
 
 TEST(T08_R6_amount_overflow) {
     auto b = MakeValidStdTx();
-    b.tx.outputs[0].amount = SUPPLY_MAX_STOCKSHIS + 1;
+    b.tx.outputs[0].amount = SUPPLY_MAX_STOCKS + 1;
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R6_AMOUNT_OVERFLOW);
     g_pass++;
 }
@@ -310,10 +310,10 @@ TEST(T08_R6_amount_overflow) {
 // =============================================================================
 
 TEST(T09_R7_sum_overflow) {
-    auto b = MakeValidStdTx(SUPPLY_MAX_STOCKSHIS, 1);
-    // Add a second output that pushes sum over SUPPLY_MAX_STOCKSHIS
+    auto b = MakeValidStdTx(SUPPLY_MAX_STOCKS, 1);
+    // Add a second output that pushes sum over SUPPLY_MAX_STOCKS
     TxOutput out2;
-    out2.amount = SUPPLY_MAX_STOCKSHIS;
+    out2.amount = SUPPLY_MAX_STOCKS;
     out2.type = OUT_TRANSFER;
     out2.pubkey_hash = g_pkh;
     b.tx.outputs.push_back(out2);

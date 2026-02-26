@@ -3,8 +3,8 @@
 #include "sost/serialize.h"
 #include "sost/crypto.h"
 #include "sost/emission.h"
-#include "sost/asert.h"
-#include "sost/casert.h"
+#include "sost/pow/asert.h"
+#include "sost/pow/casert.h"
 #include "sost/sostcompact.h"
 #include <cstdio>
 #include <cassert>

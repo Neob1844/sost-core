@@ -1,41 +1,64 @@
 #pragma once
 // =============================================================================
 // SOST — Phase 5.5: Block Validation + Chain Connect (Atomic)
+// =============================================================================
 //
-// L1: ValidateBlockStructure(block)
-// L2: ValidateBlockHeaderContext(header, prev, now, expected_bits_q)
-// L3: ValidateBlockTransactionsConsensus(block, utxos_view, tx_ctx_base, gold_pkh, popc_pkh)
-// L4: ConnectValidatedBlockAtomic(block, utxo_set, out_undo)
+// This header defines the *consensus-facing* block validation pipeline:
+//
+//   L1: ValidateBlockStructure(block)
+//   L2: ValidateBlockHeaderContext(header, prev, now, expected_bits_q)
+//   L3: ValidateBlockTransactionsConsensus(block, utxos_view, tx_ctx_base, gold_pkh, popc_pkh)
+//   L4: ConnectValidatedBlockAtomic(block, utxo_set, out_undo)
+//
+// Notes (consensus-critical):
+// - Keep constants single-sourced to avoid accidental forks.
+// - Genesis constants must match chainparams/miner/genesis tooling exactly.
+// - Avoid duplicating GENESIS_BITSQ here: it is defined in <sost/params.h>.
 //
 // =============================================================================
 
 #include <sost/block.h>
 #include <sost/tx_validation.h>
 #include <sost/utxo_set.h>
+#include <sost/params.h>   // GENESIS_BITSQ lives here (single source of truth)
 
 #include <cstdint>
 #include <string>
 
 namespace sost {
 
+// =============================================================================
 // Consensus limits (align with tx_validation.h)
+// =============================================================================
 inline constexpr size_t  MAX_BLOCK_SIZE_CONSENSUS = (size_t)MAX_BLOCK_BYTES_CONSENSUS; // 1,000,000
 inline constexpr size_t  MAX_BLOCK_TXS_CONSENSUS  = 65536;
-inline constexpr int64_t MAX_FUTURE_BLOCK_TIME    = 2 * 60 * 60; // 2 hours
+// Python-aligned: MAX_FUTURE_DRIFT = 600s (10 minutes)
+inline constexpr int64_t MAX_FUTURE_BLOCK_TIME    = 10 * 60; // 600 seconds
 
+// =============================================================================
 // Genesis parameters (must match chainparams)
-inline constexpr int64_t  GENESIS_TIMESTAMP = 1772236800; // 2026-02-28 00:00:00 UTC
-inline constexpr uint32_t GENESIS_BITSQ     = 353075;     // Q16.16 initial difficulty
+// =============================================================================
+//
+// GENESIS_TIMESTAMP is defined here because block validation needs it for
+// header-time checks (genesis timestamp mismatch, future drift rules, etc.).
+//
+// GENESIS_BITSQ is defined in <sost/params.h> to ensure:
+// - One canonical definition shared by PoW, miner, and validation.
+// - No ODR/redefinition hazards when including pow headers.
+// - Lower risk of accidental consensus divergence.
+//
+inline constexpr int64_t GENESIS_TIMESTAMP = 1772236800; // 2026-02-28 00:00:00 UTC
+// GENESIS_BITSQ: defined in <sost/params.h>
 
 // ---------------------------------------------------------------------------
-// L1
+// L1 — Structural validation (format / bounds)
 // ---------------------------------------------------------------------------
 bool ValidateBlockStructure(
     const Block& block,
     std::string* err = nullptr);
 
 // ---------------------------------------------------------------------------
-// L2
+// L2 — Header context validation (prev-link, time rules, expected difficulty)
 // ---------------------------------------------------------------------------
 bool ValidateBlockHeaderContext(
     const BlockHeader& header,
@@ -45,7 +68,7 @@ bool ValidateBlockHeaderContext(
     std::string* err = nullptr);
 
 // ---------------------------------------------------------------------------
-// L3
+// L3 — Transaction consensus validation (fees, coinbase, UTXO semantics)
 // ---------------------------------------------------------------------------
 struct BlockConsensusResult {
     bool        ok{false};
@@ -71,7 +94,7 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
     const PubKeyHash& popc_pool_pkh);
 
 // ---------------------------------------------------------------------------
-// L4
+// L4 — Atomic chain connect/disconnect (apply UTXO diffs)
 // ---------------------------------------------------------------------------
 bool ConnectValidatedBlockAtomic(
     const Block& block,

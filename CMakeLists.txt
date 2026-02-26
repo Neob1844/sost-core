@@ -9,8 +9,8 @@ find_package(Threads REQUIRED)
 # Core library — Phase 0 (consensus base) + Phase 1-6
 add_library(sost-core STATIC
     # Phase 0: consensus base
-    src/crypto.cpp src/emission.cpp src/asert.cpp src/casert.cpp
-    src/sostcompact.cpp src/convergencex.cpp src/scratchpad.cpp
+    src/crypto.cpp src/emission.cpp src/pow/asert.cpp src/pow/casert.cpp
+    src/sostcompact.cpp src/pow/convergencex.cpp src/pow/scratchpad.cpp
     
     # Phase 1: transaction serialization
     src/transaction.cpp
@@ -95,3 +95,6 @@ add_test(NAME merkle-block COMMAND test-merkle-block)
 add_executable(test-mempool tests/test_mempool.cpp)
 target_link_libraries(test-mempool PRIVATE sost-core)
 add_test(NAME mempool COMMAND test-mempool)
+
+add_executable(sost-genesis src/genesis.cpp)
+target_link_libraries(sost-genesis PRIVATE sost-core)

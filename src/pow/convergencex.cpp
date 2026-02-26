@@ -1,6 +1,6 @@
 // convergencex.cpp - ConvergenceX Proof of Irreversible Convergence
 // Consensus-critical: integer-only, deterministic, sequential.
-#include "sost/convergencex.h"
+#include "sost/pow/convergencex.h"
 #include <cstring>
 #include <algorithm>
 namespace sost {
@@ -126,12 +126,14 @@ bool verify_stability_basin(
             if (d_now > sat_u64_add(d_prev, margin_u64)) { all_ok = false; d_prev = d_now; break; }
             d_prev = d_now;
         }
-        metric_out = sat_u64_add(metric_out, sat_u64_from_nonneg((int64_t)d_prev));
+        metric_out = sat_u64_add(metric_out, d_prev);
+
         if (d0 > (uint64_t)large_th) {
-            int64_t lhs = (int64_t)d_prev * CX_C_DEN;
-            int64_t rhs = (int64_t)d0 * CX_C_NUM + margin_eff;
+            __int128 lhs = (__int128)d_prev * (__int128)CX_C_DEN;
+            __int128 rhs = (__int128)d0 * (__int128)CX_C_NUM + (__int128)margin_eff;
             if (lhs > rhs) all_ok = false;
         }
+
     }
     return all_ok;
 }

@@ -1,8 +1,8 @@
 #pragma once
-#include "types.h"
-#include "params.h"
-#include "serialize.h"
-#include "crypto.h"
+#include "sost/types.h"
+#include "sost/params.h"
+#include "sost/serialize.h"
+#include "sost/crypto.h"
 #include <vector>
 namespace sost {
 

@@ -1,5 +1,5 @@
-#include "sost/convergencex.h"
-#include "sost/scratchpad.h"
+#include "sost/pow/convergencex.h"
+#include "sost/pow/scratchpad.h"
 #include "sost/emission.h"
 #include "sost/sostcompact.h"
 #include <cstdio>

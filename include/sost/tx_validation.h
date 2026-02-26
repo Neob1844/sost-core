@@ -24,7 +24,7 @@ inline constexpr uint16_t MAX_INPUTS_STANDARD      = 128;
 inline constexpr uint16_t MAX_OUTPUTS_STANDARD     = 32;
 inline constexpr uint16_t MAX_PAYLOAD_STANDARD     = 255;  // per-type limits in capsule validator
 inline constexpr uint8_t  MAX_PAYLOAD_OUTPUTS_STD  = 1;
-inline constexpr int64_t  MIN_RELAY_FEE_PER_BYTE   = 1;  // stockshi/byte
+inline constexpr int64_t  MIN_RELAY_FEE_PER_BYTE   = 1;  // stocks/byte
 inline constexpr int64_t  DUST_THRESHOLD           = 10000; // stocks
 
 // =============================================================================

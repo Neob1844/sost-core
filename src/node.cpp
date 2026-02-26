@@ -30,25 +30,78 @@ int64_t Node::height() const { std::lock_guard<std::mutex> lk(mu_); return cs_.t
 Bytes32 Node::tip() const { std::lock_guard<std::mutex> lk(mu_); return cs_.tip_hash; }
 ChainState Node::state() const { std::lock_guard<std::mutex> lk(mu_); return cs_; }
 
+#include <mutex>
+#include <ctime>   // time(nullptr)
+
 MineResult Node::mine_next(Wallet& w, uint32_t max_nonce) {
-    std::lock_guard<std::mutex> lk(mu_);
-    int64_t h = (int64_t)cs_.metas.size();
-    Bytes32 prev = (h==0)?ZERO_HASH():cs_.tip_hash;
-    Bytes32 mrkl{}; mrkl.fill(0x11);
-    int64_t ts = (h==0)?GENESIS_TIME:cs_.blocks.back().timestamp+TARGET_SPACING;
-    uint32_t diff = asert_next_difficulty(cs_.metas, h);
-    mu_.unlock();
-    auto mr = mine_block(cs_.metas, prev, mrkl, ts, diff, max_nonce, prof_);
-    mu_.lock();
-    if (mr.found) {
-        auto vr = verify_block(mr.block, cs_.metas, ts, prof_, true);
-        if (vr.ok) {
-            cs_.blocks.push_back(mr.block); cs_.metas.push_back(to_meta(mr.block));
-            cs_.tip_hash = mr.block.block_id; cs_.tip_height = mr.block.height;
-            w.credit_coinbase(h, mr.block.subsidy_stocks, mr.block.block_id);
-            printf("[NODE] block %lld mined id=%s nonce=%u\n",(long long)h,hex(mr.block.block_id).substr(0,16).c_str(),mr.block.nonce);
-        } else { mr.found=false; mr.error=vr.reason; }
+    std::unique_lock<std::mutex> lk(mu_);
+
+    const int64_t h = (int64_t)cs_.metas.size();
+    const Bytes32 prev = (h==0) ? ZERO_HASH() : cs_.tip_hash;
+
+    Bytes32 mrkl{}; 
+    mrkl.fill(0x11);
+
+    const int64_t ts = (h==0)
+        ? GENESIS_TIME
+        : cs_.blocks.back().timestamp + TARGET_SPACING;
+
+    const uint32_t diff = asert_next_difficulty(cs_.metas, h);
+
+    // Snapshot to mine without holding the lock
+    const auto metas_snapshot = cs_.metas;
+    lk.unlock();
+
+    // Try extra_nonce expansion (like mine_chain)
+    MineResult mr{};
+    for (uint32_t extra = 0; extra <= 1000; ++extra) {
+        mr = mine_block(
+            metas_snapshot,
+            prev,
+            mrkl,
+            ts,
+            diff,
+            max_nonce,
+            extra,
+            prof_);
+
+        if (mr.found) break;
+
+        // If it's not the classic "ran out of nonces", stop early
+        if (mr.error != "exhausted-nonces") break;
     }
+
+    lk.lock();
+
+    // If chain moved while we mined, reject as stale
+    if ((int64_t)cs_.metas.size() != h || cs_.tip_hash != prev) {
+        mr.found = false;
+        mr.error = "stale-work";
+        return mr;
+    }
+
+    if (mr.found) {
+        const int64_t now = (int64_t)time(nullptr);  // or: ts + 7200
+        auto vr = verify_block(mr.block, cs_.metas, now, prof_, true);
+        if (vr.ok) {
+            cs_.blocks.push_back(mr.block);
+            cs_.metas.push_back(to_meta(mr.block));
+            cs_.tip_hash = mr.block.block_id;
+            cs_.tip_height = mr.block.height;
+
+            w.credit_coinbase(h, mr.block.subsidy_stocks, mr.block.block_id);
+
+            printf("[NODE] block %lld mined id=%s nonce=%u extra=%u\n",
+                   (long long)h,
+                   hex(mr.block.block_id).substr(0,16).c_str(),
+                   mr.block.nonce,
+                   mr.block.extra_nonce);
+        } else {
+            mr.found = false;
+            mr.error = vr.reason;
+        }
+    }
+
     return mr;
 }
 

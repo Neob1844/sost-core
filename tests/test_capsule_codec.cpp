@@ -117,7 +117,11 @@ static TxBundle MakeTxWithPayload(
     // Sign
     SpentOutput spent{utxo_amount, OUT_TRANSFER};
     std::string err;
-    SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err);
+    bool ok = SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err);
+    if (!ok) {
+        std::cerr << "  FAIL: SignTransactionInput failed in MakeTxWithPayload: " << err << "\n";
+        g_fail++;
+    }
 
     return b;
 }
@@ -367,6 +371,18 @@ TEST(C14_too_short) {
 // PART 2: tx_validation integration — R14 conditional by height
 // =============================================================================
 
+// Helper: sign tx[0] and fail the test if signing fails
+static void SignBundleOrFail(decltype(MakeTxWithPayload(std::vector<Byte>{}, 0, 0))& b) {
+    // Ensure pubkey is present (some builders leave it zeroed)
+    if (!b.tx.inputs.empty()) {
+        b.tx.inputs[0].pubkey = g_pub;
+    }
+    SpentOutput spent{10000000, OUT_TRANSFER};
+    std::string err;
+    bool ok = SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err);
+    EXPECT(ok, "SignTransactionInput failed: " + err);
+}
+
 // C20: pre-activation: payload on OUT_TRANSFER rejected by consensus
 TEST(C20_pre_activation_payload_rejected) {
     std::vector<Byte> note_payload;
@@ -374,6 +390,7 @@ TEST(C20_pre_activation_payload_rejected) {
 
     // spend_height=50, activation=5000 → pre-activation
     auto b = MakeTxWithPayload(note_payload, 50, 5000);
+    SignBundleOrFail(b);
 
     auto r = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(!r.ok, "pre-activation payload should fail consensus");
@@ -388,6 +405,7 @@ TEST(C21_post_activation_payload_passes) {
 
     // spend_height=5001, activation=5000 → post-activation
     auto b = MakeTxWithPayload(note_payload, 5001, 5000);
+    SignBundleOrFail(b);
 
     auto r = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r.ok, "post-activation payload should pass consensus: " + r.message);
@@ -400,6 +418,7 @@ TEST(C22_post_activation_capsule_policy_pass) {
     BuildOpenNotePayload("Payment for order #42", note_payload);
 
     auto b = MakeTxWithPayload(note_payload, 5001, 5000);
+    SignBundleOrFail(b);
 
     auto r1 = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r1.ok, "consensus should pass: " + r1.message);
@@ -413,10 +432,11 @@ TEST(C22_post_activation_capsule_policy_pass) {
 TEST(C23_bad_capsule_magic_policy_fail) {
     // Build raw payload with wrong magic
     std::vector<Byte> bad_payload = {0xFF, 0xFF, 0x01, 0x01, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
-                                      0x01, 'X'};
+                                     0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
+                                     0x01, 'X'};
 
     auto b = MakeTxWithPayload(bad_payload, 5001, 5000);
+    SignBundleOrFail(b);
 
     // Consensus should pass (only checks size <=255 and type==OUT_TRANSFER post-activation)
     auto r1 = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
@@ -433,6 +453,7 @@ TEST(C23_bad_capsule_magic_policy_fail) {
 TEST(C24_post_activation_no_payload_ok) {
     std::vector<Byte> empty_payload;
     auto b = MakeTxWithPayload(empty_payload, 5001, 5000);
+    SignBundleOrFail(b);
 
     auto r1 = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r1.ok, "no payload should pass: " + r1.message);
@@ -448,6 +469,8 @@ TEST(C25_exact_activation_height) {
     BuildOpenNotePayload("activated", note);
 
     auto b = MakeTxWithPayload(note, 5000, 5000);  // exactly at boundary
+    SignBundleOrFail(b);
+
     auto r = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r.ok, "at exact activation height payload should pass: " + r.message);
     g_pass++;
@@ -459,6 +482,8 @@ TEST(C26_dev_activation) {
     BuildOpenNotePayload("dev-test", note);
 
     auto b = MakeTxWithPayload(note, 1, CAPSULE_ACTIVATION_HEIGHT_DEV);
+    SignBundleOrFail(b);
+
     auto r = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r.ok, "DEV mode payload at height 1: " + r.message);
     g_pass++;
@@ -468,6 +493,8 @@ TEST(C26_dev_activation) {
 TEST(C27_pre_activation_no_payload_ok) {
     std::vector<Byte> empty;
     auto b = MakeTxWithPayload(empty, 1, 5000);
+    SignBundleOrFail(b);
+
     auto r = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r.ok, "pre-activation no payload: " + r.message);
     g_pass++;
@@ -488,16 +515,15 @@ TEST(C28_too_many_payload_outputs) {
     BuildOpenNotePayload("note2", out2.payload);
     b.tx.outputs.push_back(out2);
 
-    // Re-sign (hashOutputs changed)
-    SpentOutput spent{10000000, OUT_TRANSFER};
-    std::string err;
-    SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err);
-
     // Adjust output amounts to be valid
     b.tx.outputs[0].amount = 5000000;
     b.tx.outputs[1].amount = 4999000;
-    // Re-sign again
-    SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err);
+
+    // Re-sign (hashOutputs changed)
+    b.tx.inputs[0].pubkey = g_pub;
+    SpentOutput spent{10000000, OUT_TRANSFER};
+    std::string err;
+    EXPECT(SignTransactionInput(b.tx, 0, spent, g_genesis, g_priv, &err), "SignTransactionInput failed: " + err);
 
     auto r = ValidateTransactionPolicy(b.tx, b.utxos, b.ctx);
     EXPECT(!r.ok, "2 payload outputs should fail policy");
@@ -519,6 +545,7 @@ TEST(C29_doc_ref_open_integration) {
     BuildDocRefOpenPayload(p, payload);
 
     auto b = MakeTxWithPayload(payload, 5001, 5000);
+    SignBundleOrFail(b);
 
     auto r1 = ValidateTransactionConsensus(b.tx, b.utxos, b.ctx);
     EXPECT(r1.ok, "DOC_REF consensus: " + r1.message);

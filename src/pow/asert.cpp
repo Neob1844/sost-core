@@ -1,4 +1,4 @@
-#include "sost/asert.h"
+#include "sost/pow/asert.h"
 #include <algorithm>
 namespace sost {
 int64_t median_time_past(const std::vector<BlockMeta>& chain, int32_t window) {

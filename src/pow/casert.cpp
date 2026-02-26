@@ -1,4 +1,4 @@
-#include "sost/casert.h"
+#include "sost/pow/casert.h"
 #include <algorithm>
 namespace sost {
 CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain, int64_t next_height) {
@@ -22,8 +22,8 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain, int64
     int32_t n = (int32_t)deltas.size();
     int32_t signal = (int32_t)(score / (int64_t)n);
     CasertMode mode;
-    if (signal > CASERT_DEGRADED_TH) mode = CasertMode::OPEN;
-    else if (signal > CASERT_NORMAL_TH) mode = CasertMode::DEGRADED;
+    if (signal > CASERT_OPEN_TH) mode = CasertMode::OPEN;
+    else if (signal > CASERT_DEGRADED_TH) mode = CasertMode::DEGRADED;
     else mode = CasertMode::NORMAL;
     return {mode, signal, n};
 }

@@ -6,8 +6,8 @@
 // as specified in Design Document v1.2a, Sections 6 and 13.
 //
 // Sighash preimage (146 bytes fixed):
-//   version(4) || tx_type(1) || hashPrevouts(32) || prev_txid[i](32) ||
-//   prev_index[i](4) || spent_amount[i](8) || spent_type[i](1) ||
+//   version(4) || tx_type(1) || hashPrevouts(32) || prev_txid ||
+//   prev_index || spent_amount || spent_type ||
 //   hashOutputs(32) || genesis_hash(32)
 //
 // All fields use Section 5 canonical encoding (little-endian integers).
@@ -30,6 +30,7 @@
 #include <openssl/ripemd.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
+
 #include <cstring>
 #include <memory>
 
@@ -160,9 +161,8 @@ Hash256 ComputeHashOutputs(const Transaction& tx) {
     buf.reserve(tx.outputs.size() * 30);
 
     for (const auto& out : tx.outputs) {
-        // FIX #1: Validate payload fits in uint8 (Design v1.2a R13)
+        // Validate payload fits in uint8 (Design v1.2a R13)
         if (out.payload.size() > 255) {
-            // Return deterministic "poison" hash — will cause verify to fail
             Hash256 poison{};
             return poison;
         }
@@ -189,17 +189,10 @@ Hash256 ComputeSighash(
     const SpentOutput& spent,
     const Hash256& genesis_hash)
 {
-    // FIX #3: Bounds check input_index
     if (input_index >= tx.inputs.size()) {
-        // Return zeroed hash (will cause signature mismatch → safe failure)
         Hash256 poison{};
         return poison;
     }
-
-    // Preimage (146 bytes fixed):
-    //   version(4) || tx_type(1) || hashPrevouts(32) || prev_txid[i](32) ||
-    //   prev_index[i](4) || spent_amount[i](8) || spent_type[i](1) ||
-    //   hashOutputs(32) || genesis_hash(32)
 
     Hash256 hp = ComputeHashPrevouts(tx);
     Hash256 ho = ComputeHashOutputs(tx);
@@ -230,7 +223,7 @@ bool IsLowS(const Sig64& sig) {
         if (sig[32 + i] < SECP256K1_HALF_ORDER[i]) return true;
         if (sig[32 + i] > SECP256K1_HALF_ORDER[i]) return false;
     }
-    return true;  // Equal is still valid
+    return true;
 }
 
 bool EnforceLowS(Sig64& sig) {
@@ -242,13 +235,11 @@ bool EnforceLowS(Sig64& sig) {
     BN_ptr order(BN_new());
     if (!order) return false;
 
-    // FIX #4: Check return of GetCurveOrder
     if (!GetCurveOrder(order.get(), nullptr)) return false;
 
     // s = order - s
     if (BN_sub(s_bn.get(), order.get(), s_bn.get()) != 1) return false;
 
-    // Write back to sig[32..63], zero-padded big-endian
     std::memset(sig.data() + 32, 0, 32);
     int s_len = BN_num_bytes(s_bn.get());
     if (s_len > 32) return false;
@@ -269,7 +260,6 @@ static bool ValidateRSRange(const Sig64& sig, std::string* err) {
         return false;
     }
 
-    // E3: neither r nor s can be zero
     if (BN_is_zero(r_bn.get())) {
         if (err) *err = "ValidateRSRange: r is zero (E4)";
         return false;
@@ -279,7 +269,6 @@ static bool ValidateRSRange(const Sig64& sig, std::string* err) {
         return false;
     }
 
-    // FIX #2: Validate r < curve_order (E4: r in [1, n-1])
     BN_ptr order(BN_new());
     if (!order) {
         if (err) *err = "ValidateRSRange: BN_new failed";
@@ -292,7 +281,6 @@ static bool ValidateRSRange(const Sig64& sig, std::string* err) {
         return false;
     }
 
-    // E5: s <= curve_order / 2 (LOW-S)
     if (!IsLowS(sig)) {
         if (err) *err = "ValidateRSRange: s > curve_order/2 (LOW-S violation, E5)";
         return false;
@@ -317,6 +305,9 @@ bool SignSighash(
         return false;
     }
 
+    // Ensure OpenSSL uses compressed form where relevant
+    EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
+
     BN_ptr priv_bn(BN_bin2bn(privkey.data(), 32, nullptr));
     if (!priv_bn) {
         if (err) *err = "SignSighash: failed to create BIGNUM from privkey";
@@ -328,7 +319,6 @@ bool SignSighash(
         return false;
     }
 
-    // Derive and set public key (required by OpenSSL for signing)
     const EC_GROUP* group = EC_KEY_get0_group(key.get());
     if (!group) {
         if (err) *err = "SignSighash: EC_KEY_get0_group failed";
@@ -354,7 +344,6 @@ bool SignSighash(
         return false;
     }
 
-    // FIX #4: Check return of EC_KEY_set_public_key
     if (EC_KEY_set_public_key(key.get(), pub_point) != 1) {
         EC_POINT_free(pub_point);
         if (err) *err = "SignSighash: EC_KEY_set_public_key failed";
@@ -362,14 +351,12 @@ bool SignSighash(
     }
     EC_POINT_free(pub_point);
 
-    // Sign
     ECDSA_SIG_ptr sig_obj(ECDSA_do_sign(sighash.data(), 32, key.get()));
     if (!sig_obj) {
         if (err) *err = "SignSighash: ECDSA_do_sign failed";
         return false;
     }
 
-    // Extract r and s as big-endian 32 bytes each
     const BIGNUM* r_bn = nullptr;
     const BIGNUM* s_bn = nullptr;
     ECDSA_SIG_get0(sig_obj.get(), &r_bn, &s_bn);
@@ -390,7 +377,6 @@ bool SignSighash(
     BN_bn2bin(r_bn, out_sig.data() + (32 - r_len));
     BN_bn2bin(s_bn, out_sig.data() + 32 + (32 - s_len));
 
-    // Enforce LOW-S (Design v1.2a Section 13 E5)
     if (!IsLowS(out_sig)) {
         if (!EnforceLowS(out_sig)) {
             if (err) *err = "SignSighash: failed to enforce LOW-S";
@@ -415,7 +401,6 @@ bool VerifySighash(
     const Sig64& sig,
     std::string* err)
 {
-    // E3: signature must not be all zeros
     bool all_zero = true;
     for (int i = 0; i < 64; ++i) {
         if (sig[i] != 0) { all_zero = false; break; }
@@ -425,17 +410,17 @@ bool VerifySighash(
         return false;
     }
 
-    // FIX #2: Full r/s range validation (E4, E5)
     if (!ValidateRSRange(sig, err)) return false;
 
-    // Create EC_KEY and set public key
     EC_KEY_ptr key(EC_KEY_new_by_curve_name(NID_secp256k1));
     if (!key) {
         if (err) *err = "VerifySighash: failed to create EC_KEY";
         return false;
     }
 
-    // E1/E2: pubkey must be a valid compressed point (not infinity)
+    // Ensure OpenSSL expects compressed form
+    EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
+
     const EC_GROUP* group = EC_KEY_get0_group(key.get());
     if (!group) {
         if (err) *err = "VerifySighash: EC_KEY_get0_group failed";
@@ -459,7 +444,6 @@ bool VerifySighash(
         return false;
     }
 
-    // FIX #4: Check return of EC_KEY_set_public_key
     if (EC_KEY_set_public_key(key.get(), point) != 1) {
         EC_POINT_free(point);
         if (err) *err = "VerifySighash: EC_KEY_set_public_key failed";
@@ -467,14 +451,12 @@ bool VerifySighash(
     }
     EC_POINT_free(point);
 
-    // Build ECDSA_SIG from r, s
     ECDSA_SIG* sig_obj = ECDSA_SIG_new();
     if (!sig_obj) {
         if (err) *err = "VerifySighash: failed to create ECDSA_SIG";
         return false;
     }
 
-    // FIX #4: Check BN_dup returns
     BN_ptr r_bn(BN_bin2bn(sig.data(), 32, nullptr));
     BN_ptr s_bn(BN_bin2bn(sig.data() + 32, 32, nullptr));
     BIGNUM* r_copy = BN_dup(r_bn.get());
@@ -489,14 +471,12 @@ bool VerifySighash(
 
     if (ECDSA_SIG_set0(sig_obj, r_copy, s_copy) != 1) {
         ECDSA_SIG_free(sig_obj);
-        // set0 takes ownership only on success; on failure we must free
         BN_free(r_copy);
         BN_free(s_copy);
         if (err) *err = "VerifySighash: failed to set r/s in ECDSA_SIG";
         return false;
     }
 
-    // E6: ECDSA_verify
     int result = ECDSA_do_verify(sighash.data(), 32, sig_obj, key.get());
     ECDSA_SIG_free(sig_obj);
 
@@ -519,6 +499,9 @@ bool GenerateKeyPair(PrivKey& out_privkey, PubKey& out_pubkey, std::string* err)
         return false;
     }
 
+    // Ensure compressed keys
+    EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
+
     if (EC_KEY_generate_key(key.get()) != 1) {
         if (err) *err = "GenerateKeyPair: key generation failed";
         return false;
@@ -538,7 +521,6 @@ bool GenerateKeyPair(PrivKey& out_privkey, PubKey& out_pubkey, std::string* err)
     }
     BN_bn2bin(priv_bn, out_privkey.data() + (32 - priv_len));
 
-    EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
     const EC_POINT* pub_point = EC_KEY_get0_public_key(key.get());
     const EC_GROUP* group = EC_KEY_get0_group(key.get());
 
@@ -547,12 +529,25 @@ bool GenerateKeyPair(PrivKey& out_privkey, PubKey& out_pubkey, std::string* err)
         return false;
     }
 
-    size_t pub_len = EC_POINT_point2oct(group, pub_point,
-                                         POINT_CONVERSION_COMPRESSED,
-                                         out_pubkey.data(), 33, nullptr);
+    size_t pub_len = EC_POINT_point2oct(
+        group, pub_point, POINT_CONVERSION_COMPRESSED,
+        out_pubkey.data(), 33, nullptr
+    );
     if (pub_len != 33) {
-        if (err) *err = "GenerateKeyPair: compressed pubkey not 33 bytes";
-        return false;
+        // Retry with ctx (some builds behave better with ctx)
+        BN_CTX_ptr ctx(BN_CTX_new());
+        if (!ctx) {
+            if (err) *err = "GenerateKeyPair: compressed pubkey not 33 bytes (and BN_CTX_new failed)";
+            return false;
+        }
+        pub_len = EC_POINT_point2oct(
+            group, pub_point, POINT_CONVERSION_COMPRESSED,
+            out_pubkey.data(), 33, ctx.get()
+        );
+        if (pub_len != 33) {
+            if (err) *err = "GenerateKeyPair: compressed pubkey not 33 bytes";
+            return false;
+        }
     }
 
     return true;
@@ -569,11 +564,7 @@ bool DerivePublicKey(const PrivKey& privkey, PubKey& out_pubkey, std::string* er
         return false;
     }
 
-    BN_ptr priv_bn(BN_bin2bn(privkey.data(), 32, nullptr));
-    if (!priv_bn || EC_KEY_set_private_key(key.get(), priv_bn.get()) != 1) {
-        if (err) *err = "DerivePublicKey: invalid private key";
-        return false;
-    }
+    EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
 
     const EC_GROUP* group = EC_KEY_get0_group(key.get());
     if (!group) {
@@ -581,16 +572,50 @@ bool DerivePublicKey(const PrivKey& privkey, PubKey& out_pubkey, std::string* er
         return false;
     }
 
-    EC_POINT* pub_point = EC_POINT_new(group);
-    if (!pub_point) {
-        if (err) *err = "DerivePublicKey: EC_POINT_new failed";
+    BN_CTX_ptr ctx(BN_CTX_new());
+    if (!ctx) {
+        if (err) *err = "DerivePublicKey: BN_CTX_new failed";
         return false;
     }
 
-    BN_CTX_ptr ctx(BN_CTX_new());
-    if (!ctx) {
-        EC_POINT_free(pub_point);
-        if (err) *err = "DerivePublicKey: BN_CTX_new failed";
+    // Parse privkey (big-endian)
+    BN_ptr priv_bn(BN_bin2bn(privkey.data(), 32, nullptr));
+    if (!priv_bn) {
+        if (err) *err = "DerivePublicKey: failed to create BIGNUM from privkey";
+        return false;
+    }
+
+    // Get curve order n
+    BN_ptr order(BN_new());
+    if (!order) {
+        if (err) *err = "DerivePublicKey: BN_new(order) failed";
+        return false;
+    }
+    if (EC_GROUP_get_order(group, order.get(), ctx.get()) != 1) {
+        if (err) *err = "DerivePublicKey: EC_GROUP_get_order failed";
+        return false;
+    }
+
+    // STRICT RANGE CHECK: priv must be in [1, n-1]
+    if (BN_is_zero(priv_bn.get())) {
+        if (err) *err = "DerivePublicKey: invalid private key (zero)";
+        return false;
+    }
+    if (BN_cmp(priv_bn.get(), order.get()) >= 0) {
+        if (err) *err = "DerivePublicKey: invalid private key (>= curve order)";
+        return false;
+    }
+
+    // Set private key
+    if (EC_KEY_set_private_key(key.get(), priv_bn.get()) != 1) {
+        if (err) *err = "DerivePublicKey: EC_KEY_set_private_key failed";
+        return false;
+    }
+
+    // Derive pub = priv*G
+    EC_POINT* pub_point = EC_POINT_new(group);
+    if (!pub_point) {
+        if (err) *err = "DerivePublicKey: EC_POINT_new failed";
         return false;
     }
 
@@ -600,13 +625,26 @@ bool DerivePublicKey(const PrivKey& privkey, PubKey& out_pubkey, std::string* er
         return false;
     }
 
-    size_t len = EC_POINT_point2oct(group, pub_point,
-                                     POINT_CONVERSION_COMPRESSED,
-                                     out_pubkey.data(), 33, nullptr);
+    if (EC_POINT_is_at_infinity(group, pub_point) == 1) {
+        EC_POINT_free(pub_point);
+        if (err) *err = "DerivePublicKey: derived public key is point at infinity";
+        return false;
+    }
+
+    // Serialize compressed (33 bytes)
+    size_t len = EC_POINT_point2oct(
+        group, pub_point, POINT_CONVERSION_COMPRESSED,
+        out_pubkey.data(), out_pubkey.size(), ctx.get()
+    );
     EC_POINT_free(pub_point);
 
-    if (len != 33) {
+    if (len != out_pubkey.size()) {
         if (err) *err = "DerivePublicKey: compressed key not 33 bytes";
+        return false;
+    }
+
+    if (out_pubkey[0] != 0x02 && out_pubkey[0] != 0x03) {
+        if (err) *err = "DerivePublicKey: invalid compressed pubkey prefix";
         return false;
     }
 
@@ -658,7 +696,6 @@ bool SignTransactionInput(
         return false;
     }
 
-    // Reject if any output has oversized payload (explicit, not poison-hash)
     if (!ValidateOutputsForSighash(tx, err)) return false;
 
     PubKey pubkey{};
@@ -692,7 +729,6 @@ bool VerifyTransactionInput(
         return false;
     }
 
-    // Reject if any output has oversized payload (explicit, not poison-hash)
     if (!ValidateOutputsForSighash(tx, err)) return false;
 
     const auto& txin = tx.inputs[input_index];

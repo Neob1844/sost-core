@@ -130,7 +130,11 @@ static Transaction MakeStdTx(const Hash256& prev_txid, uint32_t prev_index,
     // Sign
     SpentOutput spent{input_amount, OUT_TRANSFER};
     std::string err;
-    SignTransactionInput(tx, 0, spent, g_genesis, g_priv, &err);
+    bool ok = SignTransactionInput(tx, 0, spent, g_genesis, g_priv, &err);
+    if (!ok) {
+        std::cerr << "  FAIL: SignTransactionInput failed in MakeStdTx: " << err << "\n";
+        g_fail++;
+    }
 
     return tx;
 }
@@ -547,8 +551,14 @@ TEST(U17_phase3_validation_integration) {
     Hash256 prev = FakeTxid(0x77);
     utxos.AddUTXO({prev, 0}, MakeEntry(5000000, 0));
 
-    // Build and sign a valid tx
+    // Build tx
     auto tx = MakeStdTx(prev, 0, 5000000, 4999500);
+
+    // Ensure signed (some builders leave sig zero)
+    if (!tx.inputs.empty()) tx.inputs[0].pubkey = g_pub;
+    SpentOutput spent{5000000, OUT_TRANSFER};
+    std::string err;
+    EXPECT(SignTransactionInput(tx, 0, spent, g_genesis, g_priv, &err), "SignTransactionInput failed: " + err);
 
     // Validate with Phase 3 using UtxoSet as IUtxoView
     TxValidationContext ctx;
@@ -576,24 +586,27 @@ TEST(U18_coinbase_maturity_integration) {
 
     int64_t miner_amount = utxos.GetUTXO({cb_txid, 0})->amount;
 
-    // Try to spend miner output at height 100 (only 50 confirmations < 100)
-    // Must sign with correct spent type (OUT_COINBASE_MINER, not OUT_TRANSFER)
+    // Spend miner output
     Transaction tx;
     tx.version = 1;
     tx.tx_type = TX_TYPE_STANDARD;
+
     TxInput in;
     in.prev_txid = cb_txid;
     in.prev_index = 0;
+    in.pubkey = g_pub;               // IMPORTANT: ensure pubkey is present
     tx.inputs.push_back(in);
+
     TxOutput out;
     out.amount = miner_amount - 500;
     out.type = OUT_TRANSFER;
     out.pubkey_hash = g_pkh;
     tx.outputs.push_back(out);
+
     // Sign with correct spent type
     SpentOutput spent{miner_amount, OUT_COINBASE_MINER};
     std::string err;
-    SignTransactionInput(tx, 0, spent, g_genesis, g_priv, &err);
+    EXPECT(SignTransactionInput(tx, 0, spent, g_genesis, g_priv, &err), "SignTransactionInput failed: " + err);
 
     TxValidationContext ctx;
     ctx.genesis_hash = g_genesis;

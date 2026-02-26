@@ -2,6 +2,7 @@
 #include "block.h"
 #include <vector>
 #include <functional>
+
 namespace sost {
 
 struct MineResult {
@@ -15,9 +16,13 @@ struct MineResult {
 // Mine a single block
 MineResult mine_block(
     const std::vector<BlockMeta>& chain,
-    const Bytes32& prev_hash, const Bytes32& merkle_root,
-    int64_t timestamp, uint32_t powDiffQ,
-    uint32_t max_nonce, Profile prof);
+    const Bytes32& prev_hash,
+    const Bytes32& merkle_root,
+    int64_t timestamp,
+    uint32_t powDiffQ,
+    uint32_t max_nonce,
+    uint32_t extra_nonce,
+    Profile prof);
 
 // Mine a chain of blocks (integration miner)
 int mine_chain(

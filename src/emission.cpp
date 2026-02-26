@@ -19,7 +19,7 @@ int64_t sost_subsidy_stocks(int64_t height) {
     if (height < 0) return 0;
     int64_t epoch = height / BLOCKS_PER_EPOCH;
     int64_t qpow = qpow_floor(EMISSION_Q_NUM, epoch);
-    __int128 prod = (__int128)R0_STOCKSHIS * (__int128)qpow;
+    __int128 prod = (__int128)R0_STOCKS * (__int128)qpow;
     return (int64_t)(prod / (__int128)EMISSION_Q_DEN);
 }
 CoinbaseSplit coinbase_split(int64_t reward) {

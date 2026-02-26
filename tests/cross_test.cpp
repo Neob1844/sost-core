@@ -1,6 +1,6 @@
-#include "sost/convergencex.h"
+#include "sost/pow/convergencex.h"
 #include "sost/block.h"
-#include "sost/scratchpad.h"
+#include "sost/pow/scratchpad.h"
 #include <cstdio>
 using namespace sost;
 
