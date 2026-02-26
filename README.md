@@ -63,3 +63,22 @@ The emission schedule encodes the two Feigenbaum universal constants (α, δ) wi
 ## License
 
 Proprietary. All rights reserved. Not for public distribution.
+
+## Test Status
+
+✅ **237/237 tests passing** (2026-02-27)
+
+| Suite | Tests | Status |
+|-------|-------|--------|
+| tx-validation | 42 | ✅ |
+| tx-signer | 22 | ✅ |
+| mempool | 25 | ✅ |
+| transaction | 15 | ✅ |
+| utxo-set | 22 | ✅ |
+| capsule | 25 | ✅ |
+| merkle-block | 35 | ✅ |
+| chunk1 | 30 | ✅ |
+| chunk2 | 21 | ✅ |
+```bash
+cd build && ctest --output-on-failure
+```
