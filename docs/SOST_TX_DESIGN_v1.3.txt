@@ -1,0 +1,461 @@
+// =============================================================================
+// SOST Transaction System — Design Document v1.3 (FINAL)
+// =============================================================================
+//
+// Author: CTO
+// Branch: feature/transactions
+// Status: APPROVED — implementation complete, migration pending
+// Date: 2026-02-26
+//
+// Changelog:
+//   v1.0  Initial design (typed outputs, UTXO, ECDSA)
+//   v1.1  Review round 1: sighash, LOW-S, double SHA256, LevelDB, activations
+//   v1.2  Review round 2: payload field, emergency fix, SUPPLY_MAX, endianness
+//   v1.3  Implementation status: 161/161 tests, libsecp256k1 migration planned
+//         Terminology: stockshis → stocks throughout
+//
+// =============================================================================
+// 1. PHILOSOPHY
+// =============================================================================
+//
+// Bitcoin transactions are generic: opaque value from A to B. The chain has
+// no awareness of what a payment "means."
+//
+// SOST is different. SOST has constitutional purpose:
+//   - Gold Vault accumulation (25% of every block, forever)
+//   - PoPC Pool funding (25% of every block, forever)
+//   - Future bond locking (Model A)
+//   - Future escrow deposits (Model B)
+//   - Slash burns (deflationary by constitution)
+//
+// The transaction format reflects this with Typed Outputs: every output
+// carries a purpose byte and an extensible payload at the consensus level.
+// No other UTXO blockchain has purpose-aware outputs enforced by consensus.
+//
+// This enables:
+//   1. Consensus-level constitutional validation (correct coinbase splits)
+//   2. Self-documenting UTXO set (instant vault/pool/bond/burn tallies)
+//   3. Future PoPC bond/escrow at Layer 1 (no smart contracts needed)
+//   4. Forward-compatible output format (payload avoids future format breaks)
+//   5. Simpler wallet and explorer semantics
+//
+// =============================================================================
+// 2. UTXO MODEL (rationale)
+// =============================================================================
+//
+//   UTXO (Bitcoin model):
+//     + Proven 15+ years under adversarial conditions
+//     + Natural fit for PoW (coinbase creates UTXOs)
+//     + Better privacy (outputs are independent)
+//     + Parallel validation (independent inputs)
+//     + No "account state" to corrupt
+//
+//   Decision: UTXO. Natural for PoW, proven, and our coinbase already
+//   produces 3 typed outputs by constitutional design.
+//
+// =============================================================================
+// 3. OUTPUT TYPES (the unique feature)
+// =============================================================================
+//
+// Every TxOutput carries a uint8 type field and an extensible payload.
+//
+// --- Active in v1 (genesis) ---
+//
+//   0x00  TRANSFER
+//         Standard value transfer between users.
+//         payload_len MUST be 0 in v1.
+//
+//   0x01  COINBASE_MINER
+//         Miner reward output. Amount = miner_share (50% + remainder + fees).
+//         Subject to COINBASE_MATURITY (100 confirmations).
+//         payload_len MUST be 0 in v1.
+//
+//   0x02  COINBASE_GOLD
+//         Gold Vault allocation. Amount = gold_share (25%).
+//         Destination MUST be GOLD_VAULT_PKH (constitutional constant).
+//         payload_len MUST be 0 in v1.
+//
+//   0x03  COINBASE_POPC
+//         PoPC Pool allocation. Amount = popc_share (25%).
+//         Destination MUST be POPC_POOL_PKH (constitutional constant).
+//         payload_len MUST be 0 in v1.
+//
+// --- Reserved (inactive until activation height) ---
+//
+//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Jan 2027)
+//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Jan 2027)
+//   0x20  BURN            (slash burns, voluntary burns — target: v2)
+//
+// =============================================================================
+// 4. DATA STRUCTURES
+// =============================================================================
+//
+// --- TxOutput ---
+//
+//   struct TxOutput {
+//       int64_t   amount;               // Value in stocks (must be > 0)
+//       uint8_t   type;                 // Output type (Section 3)
+//       uint8_t   pubkey_hash[20];      // RIPEMD160(SHA256(compressed_pubkey))
+//       uint8_t   payload_len;          // Length of typed payload (0..255)
+//       uint8_t   payload[payload_len]; // Type-specific metadata (may be empty)
+//   };
+//
+//   Serialized size (v1 active types): 8 + 1 + 20 + 1 + 0 = 30 bytes per output
+//
+// --- TxInput ---
+//
+//   struct TxInput {
+//       uint8_t   prev_txid[32];    // Hash of transaction being spent
+//       uint32_t  prev_index;       // Index of output in that transaction
+//       uint8_t   signature[64];    // ECDSA secp256k1 compact (r || s)
+//       uint8_t   pubkey[33];       // Compressed public key (02/03 prefix)
+//   };
+//
+//   Serialized size: 32 + 4 + 64 + 33 = 133 bytes per input.
+//
+//   Signature format (consensus-critical, explicit endianness):
+//     signature[0..31]  = r (big-endian, 32 bytes, zero-padded left)
+//     signature[32..63] = s (big-endian, 32 bytes, zero-padded left)
+//
+// --- Transaction ---
+//
+//   struct Transaction {
+//       uint32_t            version;    // Protocol version (1)
+//       uint8_t             tx_type;    // 0x00 = standard, 0x01 = coinbase
+//       vector<TxInput>     inputs;     // 1 or more
+//       vector<TxOutput>    outputs;    // 1 or more
+//   };
+//
+//   txid = SHA256(SHA256(canonical_serialization(tx)))
+//
+// =============================================================================
+// 5. SERIALIZATION (consensus-critical)
+// =============================================================================
+//
+// All integers: little-endian (consistent with all SOST serialization).
+//
+// Variable-length counts use CompactSize (Bitcoin varint):
+//   0x00-0xFC:        1 byte (value itself)
+//   0xFD + uint16_le: 3 bytes
+//   0xFE + uint32_le: 5 bytes
+//   0xFF + uint64_le: 9 bytes
+//
+// --- Canonical transaction serialization ---
+//
+//   version         4 bytes    u32 LE
+//   tx_type         1 byte
+//   num_inputs      CompactSize
+//   for each input:
+//     prev_txid     32 bytes   raw
+//     prev_index    4 bytes    u32 LE
+//     signature     64 bytes   raw (r[32] big-endian || s[32] big-endian)
+//     pubkey        33 bytes   raw (compressed, 02/03 prefix)
+//   num_outputs     CompactSize
+//   for each output:
+//     amount        8 bytes    i64 LE
+//     type          1 byte
+//     pubkey_hash   20 bytes   raw
+//     payload_len   1 byte     u8
+//     payload       N bytes    raw (N = payload_len, may be 0)
+//
+// =============================================================================
+// 6. SIGNATURE SCHEME — BIP143-SIMPLIFIED SIGHASH
+// =============================================================================
+//
+// --- Precomputed hashes (computed once per transaction) ---
+//
+//   hashPrevouts = SHA256(SHA256(
+//       prev_txid[0] || prev_index[0] || ... || prev_txid[n] || prev_index[n]
+//   ))
+//
+//   hashOutputs = SHA256(SHA256(
+//       amount[0] || type[0] || pkh[0] || payload_len[0] || payload[0] || ...
+//   ))
+//
+// --- Sighash preimage (per input[i]) ---
+//
+//   sighash_preimage =
+//       version              4 bytes    u32 LE
+//       tx_type              1 byte
+//       hashPrevouts         32 bytes
+//       prev_txid[i]         32 bytes
+//       prev_index[i]        4 bytes    u32 LE
+//       spent_amount[i]      8 bytes    i64 LE
+//       spent_type[i]        1 byte
+//       hashOutputs          32 bytes
+//       genesis_hash         32 bytes   (domain separation)
+//
+//   Total preimage: 146 bytes (fixed size)
+//   sighash = SHA256(SHA256(sighash_preimage))
+//
+// =============================================================================
+// 7. VALIDATION RULES (consensus-critical)
+// =============================================================================
+//
+// --- 7.1 Universal Rules (all transactions) ---
+//
+//   R1:  version == 1.
+//   R2:  tx_type in {0x00, 0x01} (standard or coinbase).
+//   R3:  1 <= num_inputs <= MAX_INPUTS_PER_TX (256).
+//   R4:  1 <= num_outputs <= MAX_OUTPUTS_PER_TX (256).
+//   R5:  Every output amount > 0.
+//   R6:  Every output amount <= SUPPLY_MAX_STOCKS.
+//   R7:  Sum of all output amounts <= SUPPLY_MAX_STOCKS (no overflow).
+//   R8:  No duplicate inputs (no two inputs share prev_txid + prev_index).
+//   R9:  Serialized transaction size <= MAX_TX_SIZE (100,000 bytes).
+//   R10: txid is unique within the block.
+//   R11: Output types must be active at current height.
+//   R12: payload_len must match actual payload bytes.
+//   R13: payload_len <= 255.
+//   R14: For active v1 output types (0x00-0x03), payload_len MUST be 0.
+//
+// --- 7.2 Standard Transaction Rules (tx_type = 0x00) ---
+//
+//   S1:  Every input must reference an existing, unspent UTXO.
+//   S2:  Every input's RIPEMD160(SHA256(pubkey)) must match UTXO's pubkey_hash.
+//   S3:  Every input's pubkey must be a valid compressed secp256k1 point.
+//   S4:  Every input's signature must be non-zero.
+//   S5:  Every input's signature must satisfy LOW-S (s <= curve_order / 2).
+//   S6:  Every input's signature must be valid for the computed sighash.
+//   S7:  sum(input_amounts) >= sum(output_amounts).
+//   S8:  fee = sum(inputs) - sum(outputs) >= MIN_FEE.
+//   S9:  All output types must be 0x00 (TRANSFER) in v1.
+//   S10: Coinbase inputs require >= COINBASE_MATURITY (100) confirmations.
+//   S11: BOND_LOCK spendable only after expiry (when active).
+//   S12: BURN outputs never spendable (consensus rule).
+//
+// --- 7.3 Coinbase Transaction Rules (tx_type = 0x01) ---
+//
+//   CB1:  Exactly one coinbase per block, always txs[0].
+//   CB2:  Exactly one input: prev_txid = 0x00*32, prev_index = 0xFFFFFFFF.
+//   CB3:  Coinbase signature[0..7] = block_height as int64 LE.
+//   CB4:  Exactly three outputs in canonical order:
+//         [0] type=0x01 COINBASE_MINER  amount=miner_share
+//         [1] type=0x02 COINBASE_GOLD   amount=gold_share   GOLD_VAULT_PKH
+//         [2] type=0x03 COINBASE_POPC   amount=popc_share   POPC_POOL_PKH
+//   CB5:  Amounts:
+//         reward = subsidy(height) + total_fees
+//         gold   = reward / 4
+//         popc   = reward / 4
+//         miner  = reward - gold - popc
+//   CB6:  GOLD_VAULT_PKH and POPC_POOL_PKH are constitutional constants.
+//   CB7:  Exactly 3 outputs.
+//   CB8:  Coinbase outputs unspendable for 100 blocks.
+//   CB9:  Coinbase pubkey field = 0x00*33.
+//   CB10: All coinbase outputs MUST have payload_len = 0.
+//
+// --- 7.4 Fee Rules ---
+//
+//   F1: fee = sum(input_amounts) - sum(output_amounts).
+//   F2: fee >= serialized_tx_size_bytes * MIN_FEE_PER_BYTE (1 stock/byte).
+//   F3: Fees collected by miner via coinbase.
+//   F4: Coinbase transactions exempt from fee rules.
+//   F5: Zero-fee standard transactions are invalid.
+//
+// =============================================================================
+// 8. EMISSION SCHEDULE (consensus-critical)
+// =============================================================================
+//
+// --- SOST: Smooth epoch-based emission decay ---
+//
+// Timebase:
+//   - 10-minute blocks => 52,560 blocks/year
+//   - Epoch length: Feigenbaum alpha in years:
+//       alpha_years = 2.502907875095892 years/epoch
+//   - Epoch size (consensus constant):
+//       BLOCKS_PER_EPOCH = round(52,560 * alpha_years) = 131,553 blocks/epoch
+//
+// Decay factor:
+//   - q = exp(-1/4) = 0.7788007830714049
+//   - Implemented as fixed-point (NO floating point in consensus):
+//       Q_DEN = 10,000,000,000,000,000
+//       Q_NUM =  7,788,007,830,714,049
+//
+// Supply cap (design constant; unit = stocks, 1e-8 SOST):
+//   - SUPPLY_MAX_STOCKS = 466,920,160,910,299
+//     (= 4,669,201.60910299 SOST)
+//
+// Initial reward:
+//   - R0 = floor( SUPPLY_MAX_STOCKS * (1 - q) / BLOCKS_PER_EPOCH )
+//   - R0 = 785,100,863 stocks (= 7.85100863 SOST)
+//
+// Rule (consensus):
+//   - epoch = height / BLOCKS_PER_EPOCH
+//   - reward(height) = floor( R0 * q^epoch )
+//   - Reward constant within epoch; decay at epoch boundaries.
+//
+// Milestones:
+//   - ~95% supply after ~12 epochs (~30 years)
+//
+// Consensus note:
+//   - MUST remain purely integer-based and deterministic.
+//   - O(log epoch) via exponentiation-by-squaring in fixed-point.
+//
+// =============================================================================
+// 9. UTXO SET
+// =============================================================================
+//
+// --- UTXOEntry ---
+//
+//   struct UTXOEntry {
+//       int64_t   amount;          // Stocks
+//       uint8_t   type;            // Output type
+//       uint8_t   pubkey_hash[20]; // Owner
+//       uint8_t   payload_len;     // Typed payload length
+//       uint8_t   payload[];       // Typed payload (may be empty)
+//       int64_t   height;          // Block height where created
+//   };
+//
+// --- Key ---
+//
+//   UTXOKey = (txid[32], output_index[4]) -> 36 bytes
+//
+// --- Storage ---
+//
+//   Development/testing: in-memory std::unordered_map
+//   Production: LevelDB on disk
+//
+// =============================================================================
+// 10. MERKLE ROOT
+// =============================================================================
+//
+//   leaves = [txid_0, txid_1, ..., txid_n]
+//   If odd count: duplicate last leaf.
+//   parent = SHA256(SHA256(left || right))
+//   Repeat until single root.
+//
+// =============================================================================
+// 11. ECDSA RULES (consensus-critical)
+// =============================================================================
+//
+//   Curve:     secp256k1 (same as Bitcoin)
+//   Key:       compressed only (33 bytes, prefix 0x02 or 0x03)
+//   Signature: compact (r || s), 64 bytes fixed
+//
+//   Endianness:
+//     signature[0..31]  = r, big-endian, 32 bytes
+//     signature[32..63] = s, big-endian, 32 bytes
+//
+//   Rules:
+//     E1: pubkey must be valid secp256k1 point.
+//     E2: pubkey must not be point at infinity.
+//     E3: signature must not be all zeros.
+//     E4: r in [1, curve_order - 1].
+//     E5: s in [1, curve_order / 2] (LOW-S rule).
+//     E6: ECDSA_verify(pubkey, sighash, (r, s)) must return true.
+//
+//   secp256k1 curve_order:
+//     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+//
+//   curve_order / 2 (LOW-S threshold):
+//     0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+//
+//   Implementation note:
+//     Current: OpenSSL EC_KEY (temporary)
+//     Target:  libsecp256k1 (migration Mar 1-7, 2026)
+//
+// =============================================================================
+// 12. CONSTANTS
+// =============================================================================
+//
+//   --- Transaction format ---
+//
+//   TX_VERSION                = 1
+//   COINBASE_MATURITY         = 100 blocks
+//   MAX_TX_SIZE               = 100,000 bytes
+//   MAX_BLOCK_TX_BYTES        = 1,000,000 bytes (1 MB)
+//   MIN_FEE_PER_BYTE          = 1 stock/byte
+//   MAX_INPUTS_PER_TX         = 256
+//   MAX_OUTPUTS_PER_TX        = 256
+//   MAX_PAYLOAD_LEN           = 255 bytes
+//   COINBASE_MINER_DATA_MAX   = 56 bytes
+//
+//   --- Supply (consensus, immutable) ---
+//
+//   STOCKS_PER_SOST           = 100,000,000
+//   SUPPLY_MAX_SOST           = 4,669,201.60910299
+//   SUPPLY_MAX_STOCKS         = 466,920,160,910,299
+//   BLOCKS_PER_EPOCH          = 131,553
+//   R0_STOCKS                 = 785,100,863
+//
+//   --- Constitutional addresses (from genesis) ---
+//
+//   ADDR_MINER_FOUNDER = "sost1b72872cc2cfcd4665384b5aee29166d74f838ac4"
+//   ADDR_GOLD_VAULT    = "sost1a1778e783f9317aa6cb9064f0bb1d6239caf9792"
+//   ADDR_POPC_POOL     = "sost1b4cbecc734db69f465c5f3d777b05a4b4a8daf3f"
+//
+//   GOLD_VAULT_PKH     = RIPEMD160(SHA256(gold_vault_compressed_pubkey))
+//   POPC_POOL_PKH      = RIPEMD160(SHA256(popc_pool_compressed_pubkey))
+//   GENESIS_HASH       = block_id of block 0
+//
+//   --- Activation heights (reserved, inactive in v1) ---
+//
+//   ACTIVATION_BOND_LOCK      = TBD (~block 52,560, ~year 1)
+//   ACTIVATION_ESCROW_LOCK    = TBD
+//   ACTIVATION_BURN           = TBD
+//
+// =============================================================================
+// 13. IMPLEMENTATION STATUS
+// =============================================================================
+//
+// --- Current Status (2026-02-26) ---
+//
+//   Phases 1-6: COMPLETE
+//   Tests:      161/161 passing
+//   Genesis:    February 28, 2026 00:00 UTC
+//
+// --- Implementation Files ---
+//
+//   include/sost/transaction.h      TxInput, TxOutput, Transaction
+//   src/transaction.cpp             Serialization, deserialization, txid
+//   include/sost/tx_signer.h        Sighash computation, sign, verify
+//   src/tx_signer.cpp               BIP143-simplified, LOW-S enforcement
+//   include/sost/tx_validation.h    All validation rules
+//   src/tx_validation.cpp           validate_standard(), validate_coinbase()
+//   include/sost/utxo.h             UTXOBackend interface
+//   src/utxo_set.cpp                In-memory backend
+//   src/merkle.cpp                  Double-SHA256 Merkle tree
+//   src/mempool.cpp                 UTXO-aware validation
+//
+// --- ECDSA Migration Note ---
+//
+//   Current: OpenSSL EC_KEY (temporary, functional)
+//   Target:  libsecp256k1 (migration Mar 1-7)
+//
+//   Rationale:
+//     - libsecp256k1 is Bitcoin's battle-tested library
+//     - Faster, constant-time, safer
+//     - OpenSSL EC_KEY deprecated in OpenSSL 3.x
+//
+//   Migration scope: tx_signer.cpp only (API unchanged)
+//
+// --- Post-Genesis Roadmap ---
+//
+//   Week 1 (Mar 1-7):   Migrate tx_signer to libsecp256k1
+//   Week 2 (Mar 8-14):  RPC daemon + basic node
+//   Week 3 (Mar 15-21): Wallet CLI
+//   Week 4 (Mar 22-28): P2P broadcast
+//   Month 2 (April):    Block explorer
+//
+// =============================================================================
+// 14. SUMMARY
+// =============================================================================
+//
+// SOST Transaction System v1.3:
+//
+//   Model:        UTXO (proven, natural for PoW)
+//   Unique:       Typed Outputs with extensible payload
+//   Signature:    ECDSA secp256k1, compact 64-byte (r||s), LOW-S
+//   Sighash:      BIP143-simplified + genesis_hash domain separation
+//   Hashing:      Double SHA256 everywhere
+//   Coinbase:     3 typed outputs [miner/gold/popc], constitutional
+//   Maturity:     100 blocks for coinbase outputs
+//   Fee:          1 stock/byte minimum
+//   Storage:      LevelDB (prod), in-memory (test)
+//   Future:       Bond/escrow/burn reserved, payload-ready
+//   Status:       161/161 tests passing
+//   Migration:    OpenSSL -> libsecp256k1 (Mar 1-7, 2026)
+//
+// =============================================================================
+// END OF DESIGN DOCUMENT v1.3
+// =============================================================================
