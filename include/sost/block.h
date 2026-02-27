@@ -125,4 +125,9 @@ BlockHeader MakeGenesisHeader(
     int64_t timestamp,
     uint32_t bits_q);
 
+/// Bridge: extract the 72-byte PoW header_core from a BlockHeader.
+/// Layout: prev_hash(32) || merkle_root(32) || ts_u32(4 LE) || bits_q(4 LE)
+/// Used by ConvergenceX mining/verification layer.
+void BlockHeaderToCore72(const BlockHeader& hdr, uint8_t out[72]);
+
 } // namespace sost

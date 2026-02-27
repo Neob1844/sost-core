@@ -1,27 +1,8 @@
 #include "sost/emission.h"
 #include <stdexcept>
 namespace sost {
-static inline int64_t qmul_floor(int64_t a, int64_t b) {
-    __int128 prod = (__int128)a * (__int128)b;
-    return (int64_t)(prod / (__int128)EMISSION_Q_DEN);
-}
-static int64_t qpow_floor(int64_t base, int64_t exp) {
-    if (exp < 0) throw std::runtime_error("qpow: neg exp");
-    int64_t result = EMISSION_Q_DEN;
-    int64_t x = base; int64_t e = exp;
-    while (e > 0) {
-        if (e & 1) result = qmul_floor(result, x);
-        x = qmul_floor(x, x); e >>= 1;
-    }
-    return result;
-}
-int64_t sost_subsidy_stocks(int64_t height) {
-    if (height < 0) return 0;
-    int64_t epoch = height / BLOCKS_PER_EPOCH;
-    int64_t qpow = qpow_floor(EMISSION_Q_NUM, epoch);
-    __int128 prod = (__int128)R0_STOCKS * (__int128)qpow;
-    return (int64_t)(prod / (__int128)EMISSION_Q_DEN);
-}
+// sost_subsidy_stocks() removed — single definition lives in subsidy.cpp
+// qmul_floor / qpow_floor removed — only used by the deleted function above
 CoinbaseSplit coinbase_split(int64_t reward) {
     int64_t q = reward / 4;
     return { reward - q - q, q, q, reward };

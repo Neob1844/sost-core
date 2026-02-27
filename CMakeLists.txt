@@ -9,7 +9,7 @@ find_package(Threads REQUIRED)
 # Core library — Phase 0 (consensus base) + Phase 1-6
 add_library(sost-core STATIC
     # Phase 0: consensus base
-    src/crypto.cpp src/emission.cpp src/pow/asert.cpp src/pow/casert.cpp
+    src/crypto.cpp src/subsidy.cpp src/emission.cpp src/pow/asert.cpp src/pow/casert.cpp
     src/sostcompact.cpp src/pow/convergencex.cpp src/pow/scratchpad.cpp
     
     # Phase 1: transaction serialization

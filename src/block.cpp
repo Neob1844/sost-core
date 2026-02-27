@@ -264,4 +264,25 @@ BlockHeader MakeGenesisHeader(
     return hdr;
 }
 
+// ---------------------------------------------------------------------------
+// BlockHeaderToCore72 — bridge between 96-byte internal header and
+// 72-byte PoW consensus header_core (Python-compatible format)
+// ---------------------------------------------------------------------------
+
+void BlockHeaderToCore72(const BlockHeader& hdr, uint8_t out[72]) {
+    std::memcpy(out,      hdr.prev_block_hash.data(), 32);
+    std::memcpy(out + 32, hdr.merkle_root.data(),     32);
+    // timestamp: truncate i64 → u32 LE (safe until year 2106)
+    uint32_t ts_u32 = (uint32_t)(hdr.timestamp & 0xFFFFFFFF);
+    out[64] = (uint8_t)(ts_u32      );
+    out[65] = (uint8_t)(ts_u32 >>  8);
+    out[66] = (uint8_t)(ts_u32 >> 16);
+    out[67] = (uint8_t)(ts_u32 >> 24);
+    // bits_q: already u32
+    out[68] = (uint8_t)(hdr.bits_q      );
+    out[69] = (uint8_t)(hdr.bits_q >>  8);
+    out[70] = (uint8_t)(hdr.bits_q >> 16);
+    out[71] = (uint8_t)(hdr.bits_q >> 24);
+}
+
 } // namespace sost
