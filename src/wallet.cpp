@@ -1,175 +1,557 @@
+// wallet.cpp — SOST Wallet (real secp256k1 keys via tx_signer)
 #include "sost/wallet.h"
-#include <chrono>
-#include <cstring>
+#include "sost/serialize.h"
+#include "sost/emission.h"
+
+#include <openssl/sha.h>
+#include <openssl/rand.h>
+
 #include <fstream>
+#include <sstream>
 #include <algorithm>
+#include <cstring>
+#include <cstdio>
+
 namespace sost {
 
-std::string pubkey_to_address(const Bytes32& pub) {
-    std::string a = "sost1";
-    for (int i = 0; i < 20; ++i) {
-        const char* hx = "0123456789abcdef";
-        a += hx[pub[i] >> 4]; a += hx[pub[i] & 0xF];
+// =============================================================================
+// Construction
+// =============================================================================
+
+Wallet::Wallet() {}
+
+// =============================================================================
+// Key management
+// =============================================================================
+
+WalletKey Wallet::generate_key(const std::string& label) {
+    WalletKey wk;
+    std::string err;
+    if (!GenerateKeyPair(wk.privkey, wk.pubkey, &err)) {
+        // Should not happen in practice; GenerateKeyPair retries 100 times
+        throw std::runtime_error("generate_key: " + err);
     }
-    return a;
+    wk.pkh = ComputePubKeyHash(wk.pubkey);
+    wk.address = address_encode(wk.pkh);
+    wk.label = label;
+
+    addr_index_[wk.address] = keys_.size();
+    keys_.push_back(wk);
+    return wk;
 }
 
-Bytes32 sign_hash(const Bytes32& priv, const Bytes32& h) {
-    std::vector<uint8_t> buf;
-    append(buf, priv); append(buf, h);
-    return sha256(buf);
+WalletKey Wallet::import_privkey(const PrivKey& privkey, const std::string& label) {
+    WalletKey wk;
+    wk.privkey = privkey;
+
+    std::string err;
+    if (!DerivePublicKey(privkey, wk.pubkey, &err)) {
+        throw std::runtime_error("import_privkey: " + err);
+    }
+    wk.pkh = ComputePubKeyHash(wk.pubkey);
+    wk.address = address_encode(wk.pkh);
+    wk.label = label;
+
+    // Don't import duplicates
+    if (addr_index_.count(wk.address)) {
+        return keys_[addr_index_[wk.address]];
+    }
+
+    addr_index_[wk.address] = keys_.size();
+    keys_.push_back(wk);
+    return wk;
 }
 
-bool verify_sig(const Bytes32& pub, const Bytes32& h, const Bytes32& sig) {
-    (void)pub; (void)h; (void)sig;
-    // Simplified: in full impl, use ed25519 or secp256k1
-    // For genesis, coinbase-only model doesn't need tx verification
-    return true;
+bool Wallet::has_address(const std::string& addr) const {
+    return addr_index_.count(addr) > 0;
 }
 
-Wallet::Wallet() : ctr_(0) {
-    seed_.fill(0);
-    // Random seed from time-based entropy
-    auto t = std::chrono::steady_clock::now().time_since_epoch().count();
-    uint8_t tb[8]; 
-    for(int i=0;i<8;++i) { tb[i]=(uint8_t)(t&0xFF); t>>=8; }
-    seed_ = sha256(tb, 8);
+const WalletKey* Wallet::find_key(const std::string& addr) const {
+    auto it = addr_index_.find(addr);
+    if (it == addr_index_.end()) return nullptr;
+    return &keys_[it->second];
 }
 
-KeyPair Wallet::generate_key() {
-    std::vector<uint8_t> buf;
-    append(buf, seed_);
-    uint8_t cb[4]; write_u32_le(cb, ctr_++);
-    append(buf, cb, 4);
-    KeyPair kp;
-    kp.priv = sha256(buf);
-    std::vector<uint8_t> pb; append(pb, kp.priv);
-    kp.pub = sha256(pb);
-    kp.addr = pubkey_to_address(kp.pub);
-    keys_.push_back(kp);
-    return kp;
-}
-
-KeyPair Wallet::import_key(const Bytes32& priv) {
-    KeyPair kp; kp.priv = priv;
-    std::vector<uint8_t> pb; append(pb, priv);
-    kp.pub = sha256(pb);
-    kp.addr = pubkey_to_address(kp.pub);
-    keys_.push_back(kp);
-    return kp;
+const WalletKey* Wallet::find_key_by_pkh(const PubKeyHash& pkh) const {
+    std::string addr = address_encode(pkh);
+    return find_key(addr);
 }
 
 std::string Wallet::default_address() const {
     if (keys_.empty()) return "";
-    return keys_[0].addr;
+    return keys_[0].address;
 }
 
-std::vector<std::string> Wallet::addresses() const {
-    std::vector<std::string> r;
-    for (auto& k : keys_) r.push_back(k.addr);
-    return r;
+void Wallet::rebuild_index() {
+    addr_index_.clear();
+    for (size_t i = 0; i < keys_.size(); ++i) {
+        addr_index_[keys_[i].address] = i;
+    }
+}
+
+// =============================================================================
+// UTXO management
+// =============================================================================
+
+void Wallet::add_utxo(const WalletUTXO& utxo) {
+    // Check for duplicate
+    for (const auto& u : utxos_) {
+        if (u.txid == utxo.txid && u.vout == utxo.vout) return;
+    }
+    utxos_.push_back(utxo);
+}
+
+void Wallet::mark_spent(const Hash256& txid, uint32_t vout) {
+    for (auto& u : utxos_) {
+        if (u.txid == txid && u.vout == vout) {
+            u.spent = true;
+            return;
+        }
+    }
+}
+
+std::vector<WalletUTXO> Wallet::list_unspent() const {
+    std::vector<WalletUTXO> result;
+    for (const auto& u : utxos_) {
+        if (!u.spent) result.push_back(u);
+    }
+    return result;
+}
+
+std::vector<WalletUTXO> Wallet::list_unspent(const std::string& addr) const {
+    PubKeyHash pkh{};
+    if (!address_decode(addr, pkh)) return {};
+
+    std::vector<WalletUTXO> result;
+    for (const auto& u : utxos_) {
+        if (!u.spent && u.pkh == pkh) result.push_back(u);
+    }
+    return result;
 }
 
 int64_t Wallet::balance() const {
-    int64_t b = 0;
-    for (auto& u : utxos_) if (!u.spent) b += u.amount;
-    return b;
-}
-
-void Wallet::add_utxo(const UTXO& u) { utxos_.push_back(u); }
-
-void Wallet::mark_spent(const Bytes32& txid, uint32_t vout) {
-    for (auto& u : utxos_)
-        if (u.txid == txid && u.vout == vout) u.spent = true;
-}
-
-std::vector<UTXO> Wallet::utxos() const {
-    std::vector<UTXO> r;
-    for (auto& u : utxos_) if (!u.spent) r.push_back(u);
-    return r;
-}
-
-void Wallet::credit_coinbase(int64_t h, int64_t sub, const Bytes32& bid) {
-    if (keys_.empty()) generate_key();
-    UTXO u; u.txid = bid; u.vout = 0;
-    u.amount = sub; u.addr = keys_[0].addr;
-    u.height = h; u.spent = false;
-    utxos_.push_back(u);
-}
-
-Tx Wallet::create_tx(const std::string& to, int64_t amt, int64_t fee) {
-    Tx tx; tx.fee = fee;
-    int64_t need = amt + fee, have = 0;
-    for (auto& u : utxos_) {
-        if (u.spent) continue;
-        TxIn in; in.txid = u.txid; in.vout = u.vout;
-        // Sign
-        std::vector<uint8_t> sb;
-        append(sb, u.txid); append_u32_le(sb, u.vout);
-        append_u64_le(sb, (uint64_t)amt);
-        Bytes32 h = sha256(sb);
-        in.sig = sign_hash(keys_[0].priv, h);
-        tx.ins.push_back(in);
-        have += u.amount;
-        u.spent = true;
-        if (have >= need) break;
+    int64_t total = 0;
+    for (const auto& u : utxos_) {
+        if (!u.spent) total += u.amount;
     }
-    tx.outs.push_back({to, amt});
-    if (have > need) {
-        tx.outs.push_back({keys_[0].addr, have - need}); // change
-    }
-    // txid
-    std::vector<uint8_t> tb;
-    for (auto& i : tx.ins) { append(tb, i.txid); append_u32_le(tb, i.vout); }
-    for (auto& o : tx.outs) { append(tb, o.addr.c_str(), o.addr.size()); append_u64_le(tb, (uint64_t)o.amount); }
-    tx.txid = sha256(tb);
-    return tx;
+    return total;
 }
 
-bool Wallet::save(const std::string& path) const {
-    std::ofstream f(path, std::ios::binary);
-    if (!f) return false;
-    uint32_t nk = (uint32_t)keys_.size();
-    f.write((char*)&nk, 4);
-    for (auto& k : keys_) {
-        f.write((char*)k.priv.data(), 32);
-        f.write((char*)k.pub.data(), 32);
+int64_t Wallet::balance(const std::string& addr) const {
+    PubKeyHash pkh{};
+    if (!address_decode(addr, pkh)) return 0;
+
+    int64_t total = 0;
+    for (const auto& u : utxos_) {
+        if (!u.spent && u.pkh == pkh) total += u.amount;
     }
-    uint32_t nu = (uint32_t)utxos_.size();
-    f.write((char*)&nu, 4);
-    for (auto& u : utxos_) {
-        f.write((char*)u.txid.data(), 32);
-        f.write((char*)&u.vout, 4);
-        f.write((char*)&u.amount, 8);
-        f.write((char*)&u.height, 8);
-        uint8_t s = u.spent ? 1 : 0; f.write((char*)&s, 1);
+    return total;
+}
+
+size_t Wallet::num_utxos() const {
+    size_t count = 0;
+    for (const auto& u : utxos_) {
+        if (!u.spent) ++count;
+    }
+    return count;
+}
+
+// =============================================================================
+// Genesis import
+// =============================================================================
+
+// Minimal JSON string value extractor (no dependency on json library)
+static std::string json_string_value(const std::string& json, const std::string& key) {
+    std::string needle = "\"" + key + "\"";
+    auto pos = json.find(needle);
+    if (pos == std::string::npos) return "";
+    pos = json.find(':', pos + needle.size());
+    if (pos == std::string::npos) return "";
+    pos = json.find('"', pos + 1);
+    if (pos == std::string::npos) return "";
+    auto end = json.find('"', pos + 1);
+    if (end == std::string::npos) return "";
+    return json.substr(pos + 1, end - pos - 1);
+}
+
+static int64_t json_int_value(const std::string& json, const std::string& key) {
+    std::string needle = "\"" + key + "\"";
+    auto pos = json.find(needle);
+    if (pos == std::string::npos) return -1;
+    pos = json.find(':', pos + needle.size());
+    if (pos == std::string::npos) return -1;
+    // Skip whitespace
+    while (pos + 1 < json.size() && (json[pos + 1] == ' ' || json[pos + 1] == '\t')) ++pos;
+    return std::stoll(json.substr(pos + 1));
+}
+
+bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* err) {
+    std::ifstream f(genesis_json_path);
+    if (!f) {
+        if (err) *err = "cannot open " + genesis_json_path;
+        return false;
+    }
+    std::string json((std::istreambuf_iterator<char>(f)),
+                      std::istreambuf_iterator<char>());
+
+    // Extract block_id (used as txid for coinbase)
+    std::string block_id_hex = json_string_value(json, "block_id");
+    if (block_id_hex.size() != 64) {
+        if (err) *err = "invalid block_id in genesis JSON";
+        return false;
+    }
+    Hash256 block_id = from_hex(block_id_hex);
+
+    // Extract subsidy amounts
+    int64_t miner_amt  = json_int_value(json, "miner_subsidy");
+    int64_t gold_amt   = json_int_value(json, "gold_vault_subsidy");
+    int64_t popc_amt   = json_int_value(json, "popc_pool_subsidy");
+
+    if (miner_amt <= 0 && gold_amt <= 0 && popc_amt <= 0) {
+        // Try alternative field names
+        int64_t total = json_int_value(json, "subsidy");
+        if (total > 0) {
+            CoinbaseSplit split = coinbase_split(total);
+            miner_amt = split.miner;
+            gold_amt  = split.gold_vault;
+            popc_amt  = split.popc_pool;
+        } else {
+            if (err) *err = "cannot find subsidy amounts in genesis JSON";
+            return false;
+        }
+    }
+
+    // Constitutional addresses
+    const char* addrs[3] = {
+        "sost1b72872cc2cfcd4665384b5aee29166d74f838ac4",  // miner
+        "sost1a1778e783f9317aa6cb9064f0bb1d6239caf9792",  // gold_vault
+        "sost1b4cbecc734db69f465c5f3d777b05a4b4a8daf3f",  // popc_pool
+    };
+    int64_t amounts[3] = { miner_amt, gold_amt, popc_amt };
+
+    int imported = 0;
+    for (int i = 0; i < 3; ++i) {
+        if (has_address(addrs[i])) {
+            PubKeyHash pkh{};
+            address_decode(addrs[i], pkh);
+
+            WalletUTXO utxo;
+            utxo.txid = block_id;
+            utxo.vout = (uint32_t)i;
+            utxo.amount = amounts[i];
+            utxo.output_type = 0x00;
+            utxo.pkh = pkh;
+            utxo.height = 0;
+            utxo.spent = false;
+
+            add_utxo(utxo);
+            ++imported;
+        }
+    }
+
+    if (imported == 0) {
+        if (err) *err = "no wallet addresses match genesis coinbase outputs";
+        return false;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Transaction creation
+// =============================================================================
+
+bool Wallet::create_transaction(
+    const std::string& to_addr,
+    int64_t amount,
+    int64_t fee,
+    const Hash256& genesis_hash,
+    Transaction& out_tx,
+    std::string* err)
+{
+    if (amount <= 0) {
+        if (err) *err = "amount must be positive";
+        return false;
+    }
+    if (fee < 0) {
+        if (err) *err = "fee must be non-negative";
+        return false;
+    }
+
+    PubKeyHash to_pkh{};
+    if (!address_decode(to_addr, to_pkh)) {
+        if (err) *err = "invalid destination address: " + to_addr;
+        return false;
+    }
+
+    int64_t needed = amount + fee;
+
+    // Select UTXOs (simple: oldest first)
+    std::vector<size_t> selected;
+    int64_t total_in = 0;
+    for (size_t i = 0; i < utxos_.size(); ++i) {
+        if (utxos_[i].spent) continue;
+        // Only spend UTXOs we have keys for
+        if (!find_key_by_pkh(utxos_[i].pkh)) continue;
+        selected.push_back(i);
+        total_in += utxos_[i].amount;
+        if (total_in >= needed) break;
+    }
+
+    if (total_in < needed) {
+        if (err) {
+            char buf[128];
+            snprintf(buf, sizeof(buf),
+                "insufficient funds: have %lld stocks, need %lld",
+                (long long)total_in, (long long)needed);
+            *err = buf;
+        }
+        return false;
+    }
+
+    // Build transaction
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = 0x00;  // TRANSFER
+
+    // Inputs
+    for (size_t idx : selected) {
+        TxInput inp{};
+        inp.prev_txid = utxos_[idx].txid;
+        inp.prev_index = utxos_[idx].vout;
+        // signature and pubkey will be filled by signing
+        out_tx.inputs.push_back(inp);
+    }
+
+    // Output 0: payment
+    {
+        TxOutput out{};
+        out.amount = amount;
+        out.type = 0x00;
+        out.pubkey_hash = to_pkh;
+        out_tx.outputs.push_back(out);
+    }
+
+    // Output 1: change (if any)
+    int64_t change = total_in - needed;
+    if (change > 0) {
+        // Send change to the first input's address
+        const WalletKey* change_key = find_key_by_pkh(utxos_[selected[0]].pkh);
+        if (!change_key) {
+            if (err) *err = "internal error: no key for change address";
+            return false;
+        }
+        TxOutput out{};
+        out.amount = change;
+        out.type = 0x00;
+        out.pubkey_hash = change_key->pkh;
+        out_tx.outputs.push_back(out);
+    }
+
+    // Sign each input
+    for (size_t i = 0; i < selected.size(); ++i) {
+        const WalletUTXO& utxo = utxos_[selected[i]];
+        const WalletKey* key = find_key_by_pkh(utxo.pkh);
+        if (!key) {
+            if (err) *err = "no private key for UTXO";
+            return false;
+        }
+
+        SpentOutput spent;
+        spent.amount = utxo.amount;
+        spent.type = utxo.output_type;
+
+        if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err)) {
+            return false;
+        }
+    }
+
+    // Mark UTXOs as spent
+    for (size_t idx : selected) {
+        utxos_[idx].spent = true;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Persistence — simple JSON format
+// =============================================================================
+
+// Helper: bytes to hex string
+static std::string to_hex(const uint8_t* data, size_t len) {
+    static const char* hx = "0123456789abcdef";
+    std::string s;
+    s.reserve(len * 2);
+    for (size_t i = 0; i < len; ++i) {
+        s += hx[data[i] >> 4];
+        s += hx[data[i] & 0xF];
+    }
+    return s;
+}
+
+// Helper: hex string to bytes
+static bool from_hex_bytes(const std::string& hex, uint8_t* out, size_t len) {
+    if (hex.size() != len * 2) return false;
+    auto hv = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+        if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+        return -1;
+    };
+    for (size_t i = 0; i < len; ++i) {
+        int hi = hv(hex[i * 2]);
+        int lo = hv(hex[i * 2 + 1]);
+        if (hi < 0 || lo < 0) return false;
+        out[i] = (uint8_t)((hi << 4) | lo);
     }
     return true;
 }
 
-bool Wallet::load(const std::string& path) {
-    std::ifstream f(path, std::ios::binary);
-    if (!f) return false;
-    keys_.clear(); utxos_.clear();
-    uint32_t nk; f.read((char*)&nk, 4);
-    for (uint32_t i = 0; i < nk; ++i) {
-        KeyPair kp;
-        f.read((char*)kp.priv.data(), 32);
-        f.read((char*)kp.pub.data(), 32);
-        kp.addr = pubkey_to_address(kp.pub);
-        keys_.push_back(kp);
+bool Wallet::save(const std::string& path, std::string* err) const {
+    std::ofstream f(path);
+    if (!f) {
+        if (err) *err = "cannot open " + path + " for writing";
+        return false;
     }
-    uint32_t nu; f.read((char*)&nu, 4);
-    for (uint32_t i = 0; i < nu; ++i) {
-        UTXO u;
-        f.read((char*)u.txid.data(), 32);
-        f.read((char*)&u.vout, 4);
-        f.read((char*)&u.amount, 8);
-        f.read((char*)&u.height, 8);
-        uint8_t s; f.read((char*)&s, 1); u.spent = s;
-        u.addr = keys_.empty() ? "" : keys_[0].addr;
-        utxos_.push_back(u);
+
+    f << "{\n";
+    f << "  \"version\": 1,\n";
+    f << "  \"warning\": \"PRIVATE KEYS ARE UNENCRYPTED — KEEP THIS FILE SECURE\",\n";
+
+    // Keys
+    f << "  \"keys\": [\n";
+    for (size_t i = 0; i < keys_.size(); ++i) {
+        const auto& k = keys_[i];
+        f << "    {\n";
+        f << "      \"privkey\": \"" << to_hex(k.privkey.data(), 32) << "\",\n";
+        f << "      \"pubkey\": \"" << to_hex(k.pubkey.data(), 33) << "\",\n";
+        f << "      \"address\": \"" << k.address << "\",\n";
+        f << "      \"label\": \"" << k.label << "\"\n";
+        f << "    }" << (i + 1 < keys_.size() ? "," : "") << "\n";
     }
+    f << "  ],\n";
+
+    // UTXOs
+    f << "  \"utxos\": [\n";
+    size_t utxo_count = 0;
+    for (size_t i = 0; i < utxos_.size(); ++i) {
+        const auto& u = utxos_[i];
+        if (i > 0) f << ",\n";
+        f << "    {\n";
+        f << "      \"txid\": \"" << to_hex(u.txid.data(), 32) << "\",\n";
+        f << "      \"vout\": " << u.vout << ",\n";
+        f << "      \"amount\": " << u.amount << ",\n";
+        f << "      \"output_type\": " << (int)u.output_type << ",\n";
+        f << "      \"pkh\": \"" << to_hex(u.pkh.data(), 20) << "\",\n";
+        f << "      \"height\": " << u.height << ",\n";
+        f << "      \"spent\": " << (u.spent ? "true" : "false") << "\n";
+        f << "    }";
+        ++utxo_count;
+    }
+    if (utxo_count > 0) f << "\n";
+    f << "  ]\n";
+    f << "}\n";
+
     return true;
 }
+
+bool Wallet::load(const std::string& path, std::string* err) {
+    std::ifstream f(path);
+    if (!f) {
+        if (err) *err = "cannot open " + path;
+        return false;
+    }
+
+    std::string json((std::istreambuf_iterator<char>(f)),
+                      std::istreambuf_iterator<char>());
+
+    keys_.clear();
+    utxos_.clear();
+    addr_index_.clear();
+
+    // Parse keys — find each "privkey" entry
+    size_t pos = 0;
+    while (true) {
+        pos = json.find("\"privkey\"", pos);
+        if (pos == std::string::npos) break;
+
+        // Extract privkey hex
+        auto pk_start = json.find('"', pos + 9);
+        if (pk_start == std::string::npos) break;
+        pk_start++;
+        auto pk_end = json.find('"', pk_start);
+        if (pk_end == std::string::npos) break;
+        std::string priv_hex = json.substr(pk_start, pk_end - pk_start);
+
+        // Extract label (optional)
+        std::string label;
+        auto label_pos = json.find("\"label\"", pk_end);
+        if (label_pos != std::string::npos && label_pos < json.find("\"privkey\"", pk_end)) {
+            auto lb_start = json.find('"', label_pos + 7);
+            if (lb_start != std::string::npos) {
+                lb_start++;
+                auto lb_end = json.find('"', lb_start);
+                if (lb_end != std::string::npos) {
+                    label = json.substr(lb_start, lb_end - lb_start);
+                }
+            }
+        }
+
+        PrivKey priv{};
+        if (from_hex_bytes(priv_hex, priv.data(), 32)) {
+            try {
+                import_privkey(priv, label);
+            } catch (...) {
+                // Skip invalid keys
+            }
+        }
+
+        pos = pk_end + 1;
+    }
+
+    // Parse UTXOs — find each "txid" in utxos section
+    auto utxos_pos = json.find("\"utxos\"");
+    if (utxos_pos != std::string::npos) {
+        pos = utxos_pos;
+        while (true) {
+            auto txid_pos = json.find("\"txid\"", pos);
+            if (txid_pos == std::string::npos) break;
+
+            // Find the enclosing object
+            auto obj_start = json.rfind('{', txid_pos);
+            auto obj_end = json.find('}', txid_pos);
+            if (obj_start == std::string::npos || obj_end == std::string::npos) break;
+
+            std::string obj = json.substr(obj_start, obj_end - obj_start + 1);
+
+            WalletUTXO utxo{};
+
+            // Parse fields from this object
+            std::string txid_hex = json_string_value(obj, "txid");
+            if (txid_hex.size() == 64) {
+                from_hex_bytes(txid_hex, utxo.txid.data(), 32);
+            }
+
+            utxo.vout = (uint32_t)json_int_value(obj, "vout");
+            utxo.amount = json_int_value(obj, "amount");
+            utxo.output_type = (uint8_t)json_int_value(obj, "output_type");
+
+            std::string pkh_hex = json_string_value(obj, "pkh");
+            if (pkh_hex.size() == 40) {
+                from_hex_bytes(pkh_hex, utxo.pkh.data(), 20);
+            }
+
+            utxo.height = json_int_value(obj, "height");
+            utxo.spent = (obj.find("\"spent\": true") != std::string::npos ||
+                          obj.find("\"spent\":true") != std::string::npos);
+
+            utxos_.push_back(utxo);
+            pos = obj_end + 1;
+        }
+    }
+
+    return true;
+}
+
 } // namespace sost

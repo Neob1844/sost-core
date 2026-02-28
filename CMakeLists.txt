@@ -26,6 +26,8 @@ add_library(sost-core STATIC
     src/block.cpp src/merkle.cpp
     # Phase 6: mempool
     src/mempool.cpp
+    src/address.cpp
+    src/wallet.cpp
     # Phase 5.5: block validation
     src/block_validation.cpp
 )
@@ -98,3 +100,6 @@ add_test(NAME mempool COMMAND test-mempool)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
+
+add_executable(sost-cli src/sost-cli.cpp)
+target_link_libraries(sost-cli PRIVATE sost-core)
