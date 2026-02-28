@@ -306,6 +306,46 @@ static bool load_genesis(const std::string& path) {
     return true;
 }
 
+// === Chain loader ===
+static bool load_chain(const std::string& path) {
+    std::ifstream f(path); if(!f) return false;
+    std::string json((std::istreambuf_iterator<char>(f)),std::istreambuf_iterator<char>());
+    int64_t ch=jint(json,"chain_height"); if(ch<0) return false;
+    size_t search=json.find("\"blocks\""); if(search==std::string::npos) return false;
+    search=json.find('[',search); if(search==std::string::npos) return false;
+    while(true){
+        auto bs=json.find('{',search); if(bs==std::string::npos) break;
+        auto be=json.find('}',bs); if(be==std::string::npos) break;
+        std::string bj=json.substr(bs,be-bs+1); search=be+1;
+        std::string bid=jstr(bj,"block_id"); if(bid.size()!=64) continue;
+        int64_t height=jint(bj,"height"); if(height==0) continue;
+        StoredBlock sb;
+        sb.block_id=from_hex(bid); sb.prev_hash=from_hex(jstr(bj,"prev_hash"));
+        sb.merkle_root={}; sb.merkle_root.fill(0x11);
+        sb.timestamp=jint(bj,"timestamp"); sb.bits_q=(uint32_t)jint(bj,"bits_q");
+        sb.nonce=(uint64_t)jint(bj,"nonce"); sb.height=height;
+        sb.subsidy=jint(bj,"subsidy");
+        g_blocks.push_back(sb);
+        int64_t m_amt=jint(bj,"miner"),g_amt=jint(bj,"gold_vault"),p_amt=jint(bj,"popc_pool");
+        struct{const char*a;int64_t v;uint8_t t;}cb[3]={
+            {ADDR_MINER_FOUNDER,m_amt,OUT_COINBASE_MINER},
+            {ADDR_GOLD_VAULT,g_amt,OUT_COINBASE_GOLD},
+            {ADDR_POPC_POOL,p_amt,OUT_COINBASE_POPC},
+        };
+        for(int i=0;i<3;++i){
+            PubKeyHash pkh{}; address_decode(cb[i].a,pkh);
+            OutPoint op; op.txid=sb.block_id; op.index=(uint32_t)i;
+            UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t;
+            e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
+            std::string err; g_utxo_set.AddUTXO(op,e,&err);
+        }
+    }
+    g_chain_height=ch;
+    printf("Chain loaded: %zu blocks, height=%lld, UTXOs=%zu\n",
+           g_blocks.size(),(long long)g_chain_height,g_utxo_set.Size());
+    return true;
+}
+
 // === main ===
 int main(int argc,char**argv){
     int port=18232; std::string genesis_path="genesis_block.json";
@@ -314,6 +354,7 @@ int main(int argc,char**argv){
         else if(!strcmp(argv[i],"--port")&&i+1<argc)port=atoi(argv[++i]);
         else if(!strcmp(argv[i],"--genesis")&&i+1<argc)genesis_path=argv[++i];
         else if(!strcmp(argv[i],"--test-height")&&i+1<argc) g_chain_height=atoi(argv[++i]);
+	else if(!strcmp(argv[i],"--chain")&&i+1<argc) ;// handled below
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
             printf("SOST RPC Daemon v0.3\n  --wallet <path>\n  --port <port>\n  --genesis <path>\n  --test-height <n>\n");return 0;
         }
@@ -321,6 +362,8 @@ int main(int argc,char**argv){
     printf("=== SOST RPC Daemon v0.3 ===\n");
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     for(int i=1;i<argc;++i) if(!strcmp(argv[i],"--test-height")&&i+1<argc) g_chain_height=atoi(argv[i+1]);
+    // Load chain if provided
+    for(int i=1;i<argc;++i) if(!strcmp(argv[i],"--chain")&&i+1<argc){ load_chain(argv[i+1]); break; }
     printf("Genesis: %s (height=%lld)\n",to_hex(g_genesis_hash.data(),32).c_str(),(long long)g_chain_height);
     std::string err;
     if(!g_wallet.load(g_wallet_path,&err)){fprintf(stderr,"Error: %s\nUse sost-cli newwallet first.\n",err.c_str());return 1;}
