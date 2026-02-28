@@ -33,7 +33,7 @@ add_library(sost-core STATIC
 #   src/node.cpp src/miner.cpp src/wallet.cpp
 
 target_include_directories(sost-core PUBLIC include)
-target_link_libraries(sost-core PUBLIC OpenSSL::Crypto Threads::Threads)
+target_link_libraries(sost-core PUBLIC OpenSSL::Crypto Threads::Threads secp256k1)
 
 # Binaries — DISABLED until node/miner/wallet updated to new Block API
 # add_executable(sost-node src/main_node.cpp)
