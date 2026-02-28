@@ -89,6 +89,9 @@ static void usage(const char* argv0) {
 }
 
 int main(int argc, char** argv) {
+    // CRITICAL: Set profile before any function that uses append_magic()
+    ACTIVE_PROFILE = Profile::MAINNET;
+
     bool now = false;
     uint32_t max_nonce = 10'000'000;
     uint32_t extra_nonce = 0;
@@ -171,7 +174,7 @@ int main(int argc, char** argv) {
     const uint32_t ts_u32 = (uint32_t)GENESIS_TIMESTAMP; // safe (fits u32)
     const uint32_t bitsq = GENESIS_BITSQ;
 
-    // Build scratchpad (epoch 0 key must match python: "EPOCH" 5 bytes — you already fixed this)
+    // Build scratchpad (epoch 0 key must match python: "EPOCH" 5 bytes)
     std::printf("Building scratchpad (%d MB)...\n", (int)scratch_mb);
     Bytes32 skey = epoch_scratch_key(0, nullptr);
     auto t0 = std::chrono::steady_clock::now();
