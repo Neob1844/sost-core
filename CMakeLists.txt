@@ -106,3 +106,5 @@ target_link_libraries(sost-cli PRIVATE sost-core)
 
 add_executable(sost-rpc src/sost-rpc.cpp)
 target_link_libraries(sost-rpc PRIVATE sost-core)
+add_executable(sost-miner src/sost-miner.cpp)
+target_link_libraries(sost-miner PRIVATE sost-core)
