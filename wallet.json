@@ -3,10 +3,16 @@
   "warning": "PRIVATE KEYS ARE UNENCRYPTED — KEEP THIS FILE SECURE",
   "keys": [
     {
-      "privkey": "19f7e310ab560873044387531070cf7c20cc997e89a57382b2b7398b09f1639e",
-      "pubkey": "024a5845ab3693ec14edaf80fa2d14fa25b34c42a3f9f4dc833f7acd323fbb043b",
-      "address": "sost1bb500fd4cdd23a90f4794eb40f86394947f21eff",
+      "privkey": "2de3ce6936fe7e1ea354e835091857bbfa2bc04142dd997b05fdf82644fcff1c",
+      "pubkey": "029a2ec602ce29eb9b5ba0cd0a4235686e9e49a58d7107b832976561fc6492ff45",
+      "address": "sost1ee1363a3232416184c166e2160bc6bbbdd91f0da",
       "label": "default"
+    },
+    {
+      "privkey": "23990a25bf2693aad512413b9af4aba63d636171d0fd1f3048196a3af4e33eff",
+      "pubkey": "02ab455af567b79e728263ef97c2fe71d568baaf2149c6ade7ccdd0e1ec2927a78",
+      "address": "sost1f559e05f39486582231179a4985366961d8f8313",
+      "label": ""
     },
     {
       "privkey": "2e69b9477adbbaa75e1a6a920d8b88c6df7d0f6373ca27db19ab9c3281b4d551",
@@ -18,12 +24,6 @@
       "privkey": "b7bd08f30080d4ea8f2779515cab87ccf8df980d07f16002e91521d7bda7b5be",
       "pubkey": "039cf8c185c63a917d018243d38c5c822ce6eab5079c7acfe41cc255723ed3833d",
       "address": "sost18a222922bba5ac84979a74d76c392fdeaa59f505",
-      "label": ""
-    },
-    {
-      "privkey": "23990a25bf2693aad512413b9af4aba63d636171d0fd1f3048196a3af4e33eff",
-      "pubkey": "02ab455af567b79e728263ef97c2fe71d568baaf2149c6ade7ccdd0e1ec2927a78",
-      "address": "sost1f559e05f39486582231179a4985366961d8f8313",
       "label": ""
     }
   ],
