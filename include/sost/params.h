@@ -99,9 +99,9 @@ inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
-constexpr const char* ADDR_MINER_FOUNDER = "sost1b72872cc2cfcd4665384b5aee29166d74f838ac4";
-constexpr const char* ADDR_GOLD_VAULT    = "sost1a1778e783f9317aa6cb9064f0bb1d6239caf9792";
-constexpr const char* ADDR_POPC_POOL     = "sost1b4cbecc734db69f465c5f3d777b05a4b4a8daf3f";
+constexpr const char* ADDR_MINER_FOUNDER = "sost1f559e05f39486582231179a4985366961d8f8313";
+constexpr const char* ADDR_GOLD_VAULT    = "sost1be2302d89daef55af4162127b9656f7604948efa";
+constexpr const char* ADDR_POPC_POOL     = "sost18a222922bba5ac84979a74d76c392fdeaa59f505";
 
 // Timestamp rules
 inline constexpr int32_t MTP_WINDOW       = 11;
