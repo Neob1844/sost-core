@@ -1,9 +1,10 @@
-// sost-miner.cpp — SOST Block Miner v0.1
+// sost-miner.cpp — SOST Block Miner v0.2
 //
-// Mines blocks post-genesis using ConvergenceX.
-// Uses the exact same block construction as genesis.cpp:
-//   full_header = MAGIC || "HDR2" || header_core(72) || checkpoints_root(32) || nonce(4) || extra(4)
-//   block_id = compute_block_id(full_header, len, commit)
+// Mines blocks post-genesis using ConvergenceX with:
+//   - Real coinbase transactions (50/25/25 split)
+//   - Real merkle root (ComputeMerkleRootFromTxs)
+//   - Optional mempool tx inclusion
+//   - Chain state saved to chain.json
 //
 // Usage:
 //   sost-miner --blocks 100 --genesis genesis_block.json --chain chain.json
@@ -19,6 +20,9 @@
 #include "sost/emission.h"
 #include "sost/subsidy.h"
 #include "sost/block_validation.h"
+#include "sost/transaction.h"
+#include "sost/merkle.h"
+#include "sost/address.h"
 
 #include <fstream>
 #include <cstdio>
@@ -68,7 +72,6 @@ static std::vector<uint8_t> build_full_header_bytes(
     return buf;
 }
 
-// Header core builder matching Python: prev(32)||mrkl(32)||ts(4LE)||bits(4LE)
 static void build_hc72(uint8_t out[72],
                        const Bytes32& prev, const Bytes32& mrkl,
                        uint32_t ts, uint32_t bits) {
@@ -76,6 +79,50 @@ static void build_hc72(uint8_t out[72],
     std::memcpy(out + 32, mrkl.data(), 32);
     write_u32_le(out + 64, ts);
     write_u32_le(out + 68, bits);
+}
+
+// =============================================================================
+// Coinbase transaction builder
+// =============================================================================
+
+static Transaction build_coinbase_tx(int64_t height, int64_t subsidy, const CoinbaseSplit& split) {
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+
+    // Single coinbase input: prev_txid=0x00*32, prev_index=0xFFFFFFFF
+    TxInput cin;
+    cin.prev_txid.fill(0);
+    cin.prev_index = 0xFFFFFFFF;
+    cin.signature.fill(0);
+    cin.pubkey.fill(0);
+    // Encode height in first 8 bytes of signature (coinbase field)
+    for (int i = 0; i < 8; ++i)
+        cin.signature[i] = (uint8_t)((height >> (i * 8)) & 0xFF);
+    tx.inputs.push_back(cin);
+
+    // Output 0: miner reward
+    TxOutput out_miner;
+    out_miner.amount = split.miner;
+    out_miner.type = 0x01; // OUT_COINBASE_MINER
+    address_decode(ADDR_MINER_FOUNDER, out_miner.pubkey_hash);
+    tx.outputs.push_back(out_miner);
+
+    // Output 1: gold vault
+    TxOutput out_gold;
+    out_gold.amount = split.gold_vault;
+    out_gold.type = 0x02; // OUT_COINBASE_GOLD
+    address_decode(ADDR_GOLD_VAULT, out_gold.pubkey_hash);
+    tx.outputs.push_back(out_gold);
+
+    // Output 2: popc pool
+    TxOutput out_popc;
+    out_popc.amount = split.popc_pool;
+    out_popc.type = 0x03; // OUT_COINBASE_POPC
+    address_decode(ADDR_POPC_POOL, out_popc.pubkey_hash);
+    tx.outputs.push_back(out_popc);
+
+    return tx;
 }
 
 // =============================================================================
@@ -142,6 +189,7 @@ static bool save_chain(const std::string& path) {
     for (size_t i = 0; i < g_mined_blocks.size(); ++i) {
         const auto& b = g_mined_blocks[i];
         f << "    {\"block_id\":\"" << hex(b.block_id) << "\",\"prev_hash\":\"" << hex(b.prev_hash)
+          << "\",\"merkle_root\":\"" << hex(b.merkle_root)
           << "\",\"height\":" << b.height << ",\"timestamp\":" << b.timestamp
           << ",\"bits_q\":" << b.bits_q << ",\"nonce\":" << b.nonce
           << ",\"extra_nonce\":" << b.extra_nonce << ",\"subsidy\":" << b.subsidy
@@ -170,15 +218,12 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     auto cdec = casert_mode_from_chain(g_chain, h);
     params = casert_apply_overlay(params, cdec.mode);
 
-    // Scratchpad (rebuilt per epoch)
+    // Scratchpad
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
 
     // Block key
     Bytes32 bk = compute_block_key(g_tip_hash);
-
-    // Merkle root placeholder (no user txs yet)
-    Bytes32 mrkl; mrkl.fill(0x11);
 
     // Timestamp
     int64_t ts;
@@ -189,12 +234,26 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    // Subsidy
+    // Subsidy & coinbase tx
     int64_t subsidy = sost_subsidy_stocks(h);
     auto split = coinbase_split(subsidy);
+    Transaction coinbase_tx = build_coinbase_tx(h, subsidy, split);
 
-    printf("[MINING] h=%lld diff=%u sub=%lld casert=%s\n",
-           (long long)h, bits_q, (long long)subsidy, casert_mode_str(cdec.mode));
+    // TODO: include mempool txs here
+    std::vector<Transaction> block_txs;
+    block_txs.push_back(coinbase_tx);
+
+    // Compute real merkle root
+    Hash256 mrkl;
+    std::string merr;
+    if (!ComputeMerkleRootFromTxs(block_txs, mrkl, &merr)) {
+        printf("[ERROR] merkle root failed: %s\n", merr.c_str());
+        return false;
+    }
+
+    printf("[MINING] h=%lld diff=%u sub=%lld casert=%s merkle=%s\n",
+           (long long)h, bits_q, (long long)subsidy, casert_mode_str(cdec.mode),
+           hex(mrkl).substr(0, 16).c_str());
 
     // Header core 72 bytes
     uint8_t hc72[72];
@@ -224,9 +283,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 auto full_hdr = build_full_header_bytes(hc72, res.checkpoints_root, nonce, extra_nonce);
                 Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
 
-                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms\n",
+                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu\n",
                        (long long)h, hex(block_id).substr(0, 16).c_str(),
-                       nonce, extra_nonce, (long long)elapsed);
+                       nonce, extra_nonce, (long long)elapsed, block_txs.size());
                 printf("  sub=%lld miner=%lld gold=%lld popc=%lld\n",
                        (long long)subsidy, (long long)split.miner,
                        (long long)split.gold_vault, (long long)split.popc_pool);
@@ -243,7 +302,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 // Store
                 MinedBlock mb;
                 mb.block_id = block_id;
-                mb.prev_hash = g_chain[g_chain.size() - 2].block_id; // prev block
+                mb.prev_hash = g_chain[g_chain.size() - 2].block_id;
                 mb.merkle_root = mrkl;
                 mb.commit = res.commit;
                 mb.checkpoints_root = res.checkpoints_root;
@@ -264,6 +323,15 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         if (!found) {
             extra_nonce++;
             if (sim_time) ts++;
+            // Update coinbase with new extra_nonce in signature field
+            coinbase_tx.inputs[0].signature[8] = (uint8_t)(extra_nonce & 0xFF);
+            coinbase_tx.inputs[0].signature[9] = (uint8_t)((extra_nonce >> 8) & 0xFF);
+            block_txs[0] = coinbase_tx;
+            // Recompute merkle root
+            if (!ComputeMerkleRootFromTxs(block_txs, mrkl, &merr)) {
+                printf("[ERROR] merkle recompute: %s\n", merr.c_str());
+                return false;
+            }
             build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
             if (extra_nonce > 1000) {
                 printf("\n[FATAL] exhausted 1000 extra_nonce loops\n");
@@ -300,7 +368,7 @@ int main(int argc, char** argv) {
             else if (!strcmp(argv[i], "dev")) prof = Profile::DEV;
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.1\n");
+            printf("SOST Miner v0.2\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce (default: 500000)\n");
             printf("  --genesis <path>   Genesis JSON\n");
@@ -311,7 +379,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    printf("=== SOST Miner v0.1 ===\n");
+    printf("=== SOST Miner v0.2 (real coinbase + merkle) ===\n");
     printf("Profile: %s | Blocks: %d | Max nonce: %u\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
            num_blocks, max_nonce);
