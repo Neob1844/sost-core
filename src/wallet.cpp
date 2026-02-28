@@ -239,7 +239,7 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
             utxo.txid = block_id;
             utxo.vout = (uint32_t)i;
             utxo.amount = amounts[i];
-            utxo.output_type = 0x00;
+            utxo.output_type = (i == 0) ? 0x01 : (i == 1) ? 0x02 : 0x03;
             utxo.pkh = pkh;
             utxo.height = 0;
             utxo.spent = false;

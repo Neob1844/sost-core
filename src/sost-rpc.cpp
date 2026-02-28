@@ -313,13 +313,15 @@ int main(int argc,char**argv){
         if(!strcmp(argv[i],"--wallet")&&i+1<argc)g_wallet_path=argv[++i];
         else if(!strcmp(argv[i],"--port")&&i+1<argc)port=atoi(argv[++i]);
         else if(!strcmp(argv[i],"--genesis")&&i+1<argc)genesis_path=argv[++i];
+        else if(!strcmp(argv[i],"--test-height")&&i+1<argc) g_chain_height=atoi(argv[++i]);
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
-            printf("SOST RPC Daemon v0.3\n  --wallet <path>\n  --port <port>\n  --genesis <path>\n");return 0;
+            printf("SOST RPC Daemon v0.3\n  --wallet <path>\n  --port <port>\n  --genesis <path>\n  --test-height <n>\n");return 0;
         }
     }
     printf("=== SOST RPC Daemon v0.3 ===\n");
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
-    printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
+    for(int i=1;i<argc;++i) if(!strcmp(argv[i],"--test-height")&&i+1<argc) g_chain_height=atoi(argv[i+1]);
+    printf("Genesis: %s (height=%lld)\n",to_hex(g_genesis_hash.data(),32).c_str(),(long long)g_chain_height);
     std::string err;
     if(!g_wallet.load(g_wallet_path,&err)){fprintf(stderr,"Error: %s\nUse sost-cli newwallet first.\n",err.c_str());return 1;}
     printf("Wallet: %zu keys, %s SOST\n",g_wallet.num_keys(),format_sost(g_wallet.balance()).c_str());
@@ -334,3 +336,7 @@ int main(int argc,char**argv){
     while(true){int cl=accept(srv,nullptr,nullptr);if(cl<0)continue;handle_connection(cl);}
     close(srv); return 0;
 }
+
+
+
+

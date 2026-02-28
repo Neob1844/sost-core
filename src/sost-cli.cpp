@@ -13,6 +13,7 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
+#include "sost/types.h"
 #include "sost/params.h"
 
 
@@ -291,7 +292,7 @@ int main(int argc, char** argv) {
 
         // For genesis hash, use the genesis block_id
         // TODO: read from chain state; for now use zero hash
-        sost::Hash256 genesis_hash{}; genesis_hash.fill(0);
+        sost::Hash256 genesis_hash = sost::from_hex("0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
         sost::Transaction tx;
         std::string err;
