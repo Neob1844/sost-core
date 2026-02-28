@@ -203,9 +203,9 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
     Hash256 block_id = from_hex(block_id_hex);
 
     // Extract subsidy amounts
-    int64_t miner_amt  = json_int_value(json, "miner_subsidy");
-    int64_t gold_amt   = json_int_value(json, "gold_vault_subsidy");
-    int64_t popc_amt   = json_int_value(json, "popc_pool_subsidy");
+    int64_t miner_amt  = json_int_value(json, "miner");
+    int64_t gold_amt   = json_int_value(json, "gold_vault");
+    int64_t popc_amt   = json_int_value(json, "popc_pool");
 
     if (miner_amt <= 0 && gold_amt <= 0 && popc_amt <= 0) {
         // Try alternative field names
@@ -223,9 +223,9 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
 
     // Constitutional addresses
     const char* addrs[3] = {
-        "sost1b72872cc2cfcd4665384b5aee29166d74f838ac4",  // miner
-        "sost1a1778e783f9317aa6cb9064f0bb1d6239caf9792",  // gold_vault
-        "sost1b4cbecc734db69f465c5f3d777b05a4b4a8daf3f",  // popc_pool
+        "sost1f559e05f39486582231179a4985366961d8f8313",  // miner
+        "sost1be2302d89daef55af4162127b9656f7604948efa",  // gold_vault
+        "sost18a222922bba5ac84979a74d76c392fdeaa59f505",  // popc_pool
     };
     int64_t amounts[3] = { miner_amt, gold_amt, popc_amt };
 

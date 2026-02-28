@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "warning": "PRIVATE KEYS ARE UNENCRYPTED — KEEP THIS FILE SECURE",
+  "keys": [
+    {
+      "privkey": "bdc094865762bf05834b0b870cae39103d4c7f3e948791510b49e4ac7636c72d",
+      "pubkey": "028c071e016a71e959206ccab13dc0451629bb4aea61bb452668ed09cf19c57422",
+      "address": "sost1c9813cd7bb82dc1ddca36c50d0f86a4035cd4bdf",
+      "label": "default"
+    },
+    {
+      "privkey": "23990a25bf2693aad512413b9af4aba63d636171d0fd1f3048196a3af4e33eff",
+      "pubkey": "02ab455af567b79e728263ef97c2fe71d568baaf2149c6ade7ccdd0e1ec2927a78",
+      "address": "sost1f559e05f39486582231179a4985366961d8f8313",
+      "label": ""
+    },
+    {
+      "privkey": "2e69b9477adbbaa75e1a6a920d8b88c6df7d0f6373ca27db19ab9c3281b4d551",
+      "pubkey": "0207c7400d198271488ee9cb638c0be237e44918d7de5e77ab394541e095def5fd",
+      "address": "sost1be2302d89daef55af4162127b9656f7604948efa",
+      "label": ""
+    },
+    {
+      "privkey": "b7bd08f30080d4ea8f2779515cab87ccf8df980d07f16002e91521d7bda7b5be",
+      "pubkey": "039cf8c185c63a917d018243d38c5c822ce6eab5079c7acfe41cc255723ed3833d",
+      "address": "sost18a222922bba5ac84979a74d76c392fdeaa59f505",
+      "label": ""
+    }
+  ],
+  "utxos": [
+    {
+      "txid": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",
+      "vout": 0,
+      "amount": 392550433,
+      "output_type": 0,
+      "pkh": "f559e05f39486582231179a4985366961d8f8313",
+      "height": 0,
+      "spent": false
+    },
+    {
+      "txid": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",
+      "vout": 1,
+      "amount": 196275215,
+      "output_type": 0,
+      "pkh": "be2302d89daef55af4162127b9656f7604948efa",
+      "height": 0,
+      "spent": false
+    },
+    {
+      "txid": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",
+      "vout": 2,
+      "amount": 196275215,
+      "output_type": 0,
+      "pkh": "8a222922bba5ac84979a74d76c392fdeaa59f505",
+      "height": 0,
+      "spent": false
+    }
+  ]
+}
