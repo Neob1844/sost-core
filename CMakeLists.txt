@@ -103,3 +103,6 @@ target_link_libraries(sost-genesis PRIVATE sost-core)
 
 add_executable(sost-cli src/sost-cli.cpp)
 target_link_libraries(sost-cli PRIVATE sost-core)
+
+add_executable(sost-rpc src/sost-rpc.cpp)
+target_link_libraries(sost-rpc PRIVATE sost-core)
