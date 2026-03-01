@@ -136,7 +136,15 @@ static std::string json_get_string(const std::string& json, const std::string& k
 static std::vector<std::string> json_get_params(const std::string& json) {
     std::vector<std::string> r; auto pos=json.find("\"params\""); if(pos==std::string::npos)return r;
     pos=json.find('[',pos); if(pos==std::string::npos)return r;
-    auto end=json.find(']',pos); if(end==std::string::npos)return r;
+    // Find matching ']' accounting for nested brackets and strings
+    size_t depth=1; size_t end=pos+1; bool in_str=false;
+    while(end<json.size()&&depth>0){
+        char c=json[end];
+        if(in_str){if(c=='"'&&json[end-1]!='\\')in_str=false;}
+        else{if(c=='"')in_str=true;else if(c=='['||c=='{')depth++;else if(c==']'||c=='}')depth--;}
+        if(depth>0)end++;
+    }
+    if(depth!=0)return r;
     std::string inner=json.substr(pos+1,end-pos-1); size_t i=0;
     while(i<inner.size()){
         while(i<inner.size()&&(inner[i]==' '||inner[i]==','||inner[i]=='\t'||inner[i]=='\n'))i++;
@@ -482,12 +490,12 @@ static void p2p_broadcast_tx(const std::string& hex_str) {
 
 // Process received block (with standard transaction support)
 static bool process_block(const std::string& block_json) {
-    std::string bid=jstr(block_json,"block_id"); if(bid.size()!=64) return false;
+    std::string bid=jstr(block_json,"block_id"); if(bid.size()!=64){printf("[BLOCK] REJECTED: bad block_id len=%zu\n",bid.size());return false;}
     int64_t height=jint(block_json,"height");
 
     std::lock_guard<std::mutex> lk(g_chain_mu);
-    if(height<(int64_t)g_blocks.size()) return false;
-    if(height!=(int64_t)g_blocks.size()) return false;
+    if(height<(int64_t)g_blocks.size()){printf("[BLOCK] REJECTED: height %lld < chain size %zu\n",(long long)height,g_blocks.size());return false;}
+    if(height!=(int64_t)g_blocks.size()){printf("[BLOCK] REJECTED: height %lld != expected %zu\n",(long long)height,g_blocks.size());return false;}
 
     StoredBlock sb;
     sb.block_id=from_hex(bid); sb.prev_hash=from_hex(jstr(block_json,"prev_hash"));
@@ -499,7 +507,7 @@ static bool process_block(const std::string& block_json) {
     sb.gold_vault_reward=jint(block_json,"gold_vault");
     sb.popc_pool_reward=jint(block_json,"popc_pool");
 
-    if(g_blocks.size()>0 && sb.prev_hash!=g_blocks.back().block_id) return false;
+    if(g_blocks.size()>0 && sb.prev_hash!=g_blocks.back().block_id){printf("[BLOCK] REJECTED: prev_hash mismatch at height %lld\n",(long long)height);return false;}
 
     g_blocks.push_back(sb);
     g_chain_height=height;
