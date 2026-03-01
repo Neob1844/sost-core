@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
     int num_blocks = 5;
     uint32_t max_nonce = 500000;
     Profile prof = Profile::MAINNET;
-    bool sim_time = true;
+    bool sim_time = false; // mainnet uses real timestamps
     std::string genesis_path = "genesis_block.json";
     std::string chain_path = "chain.json";
 
