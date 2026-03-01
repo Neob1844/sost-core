@@ -29,6 +29,7 @@
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
 #include "sost/emission.h"
+#include "sost/pow/casert.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -184,7 +185,17 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
              <<",\"previousblockhash\":\""<<to_hex(b.prev_hash.data(),32)
              <<"\",\"merkleroot\":\""<<to_hex(b.merkle_root.data(),32)
              <<"\",\"time\":"<<b.timestamp<<",\"bits_q\":"<<b.bits_q
-             <<",\"nonce\":"<<b.nonce<<",\"subsidy\":"<<b.subsidy<<"}";
+             <<",\"nonce\":"<<b.nonce<<",\"subsidy\":"<<b.subsidy;
+            // Compute cASERT mode for this block
+            std::vector<BlockMeta> meta;
+            for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){
+                BlockMeta bm; bm.block_id=g_blocks[j].block_id;
+                bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
+                bm.powDiffQ=g_blocks[j].bits_q; meta.push_back(bm);
+            }
+            auto cd=casert_mode_from_chain(meta,b.height+1);
+            s<<",\"casert_mode\":\""<<casert_mode_str(cd.mode)
+             <<"\",\"casert_signal\":"<<cd.signal_s<<"}";
             return rpc_result(id,s.str());
         }
     }
@@ -300,6 +311,31 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
     s<<"]"; return rpc_result(id,s.str());
 }
 
+static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing address");
+    if(!address_valid(p[0])) return rpc_error(id,-5,"invalid address");
+    PubKeyHash target_pkh{}; address_decode(p[0],target_pkh);
+    const auto& umap=g_utxo_set.GetMap();
+    int64_t balance=0; int utxo_count=0;
+    std::ostringstream utxos; utxos<<"[";
+    for(const auto& [op,entry]:umap){
+        if(entry.pubkey_hash==target_pkh){
+            if(utxo_count)utxos<<",";
+            utxos<<"{\"txid\":\""<<to_hex(op.txid.data(),32)<<"\",\"vout\":"<<op.index
+                 <<",\"amount\":"<<format_sost(entry.amount)<<",\"height\":"<<entry.height
+                 <<",\"coinbase\":"<<(entry.is_coinbase?"true":"false")<<"}";
+            balance+=entry.amount; utxo_count++;
+        }
+    }
+    utxos<<"]";
+    bool mine=g_wallet.has_address(p[0]);
+    std::ostringstream s;
+    s<<"{\"address\":\""<<p[0]<<"\",\"balance\":"<<format_sost(balance)
+     <<",\"utxo_count\":"<<utxo_count<<",\"ismine\":"<<(mine?"true":"false")
+     <<",\"utxos\":"<<utxos.str()<<"}";
+    return rpc_result(id,s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -308,7 +344,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"validateaddress",handle_validateaddress},{"listunspent",handle_listunspent},{"gettxout",handle_gettxout},
     {"sendrawtransaction",handle_sendrawtransaction},{"getmempoolinfo",handle_getmempoolinfo},
     {"getrawmempool",handle_getrawmempool},{"getrawtransaction",handle_getrawtransaction},
-    {"getpeerinfo",handle_getpeerinfo},
+    {"getpeerinfo",handle_getpeerinfo},{"getaddressinfo",handle_getaddressinfo},
 };
 static std::string dispatch_rpc(const std::string& req) {
     std::string method=json_get_string(req,"method"),id_raw=json_get_string(req,"id");
@@ -670,20 +706,42 @@ static bool load_chain(const std::string& path) {
 // =============================================================================
 
 static void rpc_handle_connection(int fd) {
-    char buf[65536]{}; ssize_t n=read(fd,buf,sizeof(buf)-1); if(n<=0){close(fd);return;}
-    std::string req(buf,n),body;
-    auto bp=req.find("\r\n\r\n"); body=(bp!=std::string::npos)?req.substr(bp+4):req;
+    char buf[65536]{};
+    ssize_t total=0;
+    while(total<(ssize_t)sizeof(buf)-1){
+        ssize_t n=read(fd,buf+total,sizeof(buf)-1-total);
+        if(n<=0) break;
+        total+=n; buf[total]=0;
+        if(strstr(buf,"\r\n\r\n")) break;
+    }
+    if(total<=0){close(fd);return;}
+    std::string req(buf,total);
     if(req.substr(0,3)=="GET"){
         auto result=dispatch_rpc("{\"method\":\"getinfo\",\"id\":1}");
-        std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
+        std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
         write(fd,resp.c_str(),resp.size());close(fd);return;
     }
     if(req.substr(0,7)=="OPTIONS"){
-        std::string resp="HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: POST,GET,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type,Authorization\r\nContent-Length: 0\r\n\r\n";
+        std::string resp="HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: POST,GET,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type,Authorization\r\nAccess-Control-Max-Age: 86400\r\nContent-Length: 0\r\n\r\n";
         write(fd,resp.c_str(),resp.size());close(fd);return;
     }
+    std::string body;
+    auto bp=req.find("\r\n\r\n");
+    if(bp!=std::string::npos){
+        body=req.substr(bp+4);
+        int content_len=0;
+        auto cl=req.find("Content-Length:");
+        if(cl==std::string::npos) cl=req.find("content-length:");
+        if(cl!=std::string::npos) content_len=atoi(req.c_str()+cl+15);
+        while((int)body.size()<content_len){
+            char tmp[4096];
+            ssize_t n=read(fd,tmp,std::min((int)sizeof(tmp),content_len-(int)body.size()));
+            if(n<=0) break;
+            body.append(tmp,n);
+        }
+    } else { body=req; }
     auto result=dispatch_rpc(body);
-    std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
+    std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type\r\nAccess-Control-Max-Age: 86400\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
     write(fd,resp.c_str(),resp.size());close(fd);
 }
 
@@ -692,7 +750,7 @@ static void rpc_server_thread(int port) {
     int opt=1; setsockopt(srv,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
     struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("rpc bind");close(srv);return;}
-    listen(srv,10);
+    listen(srv,128);
     printf("[RPC] Listening on port %d — 14 methods\n",port);
     while(g_running){
         int cl=accept(srv,nullptr,nullptr);
@@ -711,7 +769,7 @@ static void p2p_server_thread(int port) {
     int opt=1; setsockopt(srv,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
     struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("p2p bind");close(srv);return;}
-    listen(srv,10);
+    listen(srv,128);
     printf("[P2P] Listening on port %d\n",port);
     while(g_running){
         struct sockaddr_in cl_addr{};
@@ -824,6 +882,28 @@ int main(int argc, char** argv) {
         printf("Warning: %s (run sost-cli newwallet)\n",err.c_str());
     } else {
         printf("Wallet: %zu keys\n",g_wallet.num_keys());
+    }
+    // === Wallet UTXO rescan: register all chain UTXOs owned by wallet ===
+    {
+        int rescan_count = 0;
+        const auto& umap = g_utxo_set.GetMap();
+        for (const auto& [op, entry] : umap) {
+            std::string addr = address_encode(entry.pubkey_hash);
+            if (g_wallet.has_address(addr)) {
+                WalletUTXO wu;
+                wu.txid = op.txid;
+                wu.vout = op.index;
+                wu.amount = entry.amount;
+                wu.output_type = entry.type;
+                wu.pkh = entry.pubkey_hash;
+                wu.height = entry.height;
+                wu.spent = false;
+                g_wallet.add_utxo(wu);
+                rescan_count++;
+            }
+        }
+        printf("Wallet rescan: %d UTXOs registered (balance: %s SOST)\n",
+               rescan_count, format_sost(g_wallet.balance()).c_str());
     }
 
     printf("UTXO set: %zu entries | Mempool: %zu txs\n\n",g_utxo_set.Size(),g_mempool.Size());
