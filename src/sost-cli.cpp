@@ -1,4 +1,4 @@
-// sost-cli.cpp — SOST Wallet CLI
+// sost-cli.cpp — SOST Wallet CLI v1.1
 //
 // Commands:
 //   sost-cli newwallet [path]           Create new wallet
@@ -9,6 +9,7 @@
 //   sost-cli getbalance [address]       Show balance (stocks)
 //   sost-cli listunspent [address]      Show unspent outputs
 //   sost-cli createtx <to> <amount> [fee]  Create and sign transaction
+//   sost-cli send <to> <amount> [fee]   Create, sign and broadcast to node
 //   sost-cli dumpprivkey <address>      Show private key (DANGER)
 //   sost-cli info                       Wallet summary
 
@@ -16,12 +17,16 @@
 #include "sost/types.h"
 #include "sost/params.h"
 
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
 
 static const char* DEFAULT_WALLET = "wallet.json";
 static const int64_t STOCKS_PER_SOST = 100000000LL;
@@ -71,7 +76,7 @@ static std::string to_hex(const uint8_t* data, size_t len) {
 }
 
 static void print_usage() {
-    printf("SOST Wallet CLI v1.0\n\n");
+    printf("SOST Wallet CLI v1.1\n\n");
     printf("Usage: sost-cli [--wallet <path>] <command> [args...]\n\n");
     printf("Commands:\n");
     printf("  newwallet              Create new wallet file\n");
@@ -82,6 +87,7 @@ static void print_usage() {
     printf("  getbalance [addr]      Show balance in SOST\n");
     printf("  listunspent [addr]     List unspent transaction outputs\n");
     printf("  createtx <to> <amt> [fee]  Create and sign a transaction\n");
+    printf("  send <to> <amt> [fee]      Create, sign and broadcast to node\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  info                   Wallet summary\n");
     printf("\nOptions:\n");
@@ -291,7 +297,6 @@ int main(int argc, char** argv) {
         }
 
         // For genesis hash, use the genesis block_id
-        // TODO: read from chain state; for now use zero hash
         sost::Hash256 genesis_hash = sost::from_hex("0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
         sost::Transaction tx;
@@ -324,6 +329,115 @@ int main(int argc, char** argv) {
             printf("  Txid:    %s\n", to_hex(txid.data(), 32).c_str());
         }
 
+        return 0;
+    }
+
+    // =====================================================================
+    // send <to_addr> <amount> [fee] [--node host:port]
+    // =====================================================================
+    if (cmd == "send") {
+        if (argc < arg_start + 3) {
+            fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost> [fee_sost] [--node host:port]\n");
+            return 1;
+        }
+        std::string to_addr = argv[arg_start + 1];
+        int64_t amount = parse_amount(argv[arg_start + 2]);
+        int64_t fee = 100; // default: 100 stocks = 0.00000100 SOST
+        std::string node_addr = "127.0.0.1:18232";
+
+        for (int i = arg_start + 3; i < argc; ++i) {
+            if (std::string(argv[i]) == "--node" && i + 1 < argc) {
+                node_addr = argv[++i];
+            } else {
+                fee = parse_amount(argv[i]);
+            }
+        }
+
+        // Create transaction
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+
+        sost::Transaction tx;
+        std::string err;
+        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, &err)) {
+            fprintf(stderr, "Error creating tx: %s\n", err.c_str());
+            return 1;
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
+        // Serialize
+        std::vector<sost::Byte> raw;
+        std::string ser_err;
+        if (!tx.Serialize(raw, &ser_err)) {
+            fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
+            return 1;
+        }
+        std::string raw_hex = to_hex(raw.data(), raw.size());
+
+        sost::Hash256 txid;
+        tx.ComputeTxId(txid);
+        printf("TX created: %s\n", to_hex(txid.data(), 32).c_str());
+        printf("  To:     %s\n", to_addr.c_str());
+        printf("  Amount: %s SOST\n", format_sost(amount).c_str());
+        printf("  Fee:    %s SOST\n", format_sost(fee).c_str());
+        printf("  Size:   %zu bytes\n", raw.size());
+
+        // Send to node via HTTP RPC
+        printf("Sending to node %s...\n", node_addr.c_str());
+
+        std::string host = "127.0.0.1";
+        int port = 18232;
+        auto colon = node_addr.find(':');
+        if (colon != std::string::npos) {
+            host = node_addr.substr(0, colon);
+            port = atoi(node_addr.substr(colon + 1).c_str());
+        }
+
+        // JSON-RPC: sendrawtransaction
+        std::string rpc_body = "{\"method\":\"sendrawtransaction\",\"params\":[\""
+            + raw_hex + "\"],\"id\":1}";
+
+        int fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (fd < 0) { perror("socket"); return 1; }
+        struct sockaddr_in saddr{};
+        saddr.sin_family = AF_INET;
+        saddr.sin_port = htons(port);
+        struct hostent* he = gethostbyname(host.c_str());
+        if (!he) { fprintf(stderr, "Cannot resolve %s\n", host.c_str()); close(fd); return 1; }
+        memcpy(&saddr.sin_addr, he->h_addr_list[0], he->h_length);
+        if (connect(fd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
+            fprintf(stderr, "Cannot connect to %s:%d\n", host.c_str(), port);
+            close(fd); return 1;
+        }
+        std::string http_req = "POST / HTTP/1.1\r\nHost: " + host
+            + "\r\nContent-Type: application/json\r\nContent-Length: "
+            + std::to_string(rpc_body.size()) + "\r\n\r\n" + rpc_body;
+        write(fd, http_req.c_str(), http_req.size());
+
+        char rbuf[4096]{};
+        read(fd, rbuf, sizeof(rbuf) - 1);
+        close(fd);
+
+        std::string resp(rbuf);
+        if (resp.find("\"result\":\"") != std::string::npos) {
+            printf("\nTX accepted by node! Txid: %s\n", to_hex(txid.data(), 32).c_str());
+            printf("  Waiting for next mined block to confirm...\n");
+        } else {
+            // Extract error message
+            auto err_pos = resp.find("\"message\":\"");
+            if (err_pos != std::string::npos) {
+                auto err_end = resp.find('"', err_pos + 11);
+                std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
+                fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
+            } else {
+                fprintf(stderr, "\nTX rejected (unknown error)\n");
+                fprintf(stderr, "  Raw response: %s\n", resp.c_str());
+            }
+            return 1;
+        }
         return 0;
     }
 

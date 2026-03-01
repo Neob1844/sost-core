@@ -1,4 +1,4 @@
-// sost-node.cpp — SOST Full Node v0.1
+// sost-node.cpp — SOST Full Node v0.2
 //
 // Combines: P2P networking + JSON-RPC + chain sync + tx relay
 //
@@ -141,7 +141,14 @@ static std::vector<std::string> json_get_params(const std::string& json) {
     while(i<inner.size()){
         while(i<inner.size()&&(inner[i]==' '||inner[i]==','||inner[i]=='\t'||inner[i]=='\n'))i++;
         if(i>=inner.size())break;
-        if(inner[i]=='"'){auto q=inner.find('"',i+1);if(q==std::string::npos)break;r.push_back(inner.substr(i+1,q-i-1));i=q+1;}
+        if(inner[i]=='"'){
+            size_t q=i+1;
+            while(q<inner.size()){if(inner[q]=='"'&&(q==0||inner[q-1]!='\\'))break;q++;}
+            if(q>=inner.size())break;
+            std::string val=inner.substr(i+1,q-i-1);
+            std::string unesc; for(size_t k=0;k<val.size();k++){if(val[k]=='\\'&&k+1<val.size()&&val[k+1]=='"'){unesc+='"';k++;}else unesc+=val[k];}
+            r.push_back(unesc);i=q+1;
+        }
         else{auto p=inner.find_first_of(",] \t\n\r",i);if(p==std::string::npos)p=inner.size();r.push_back(inner.substr(i,p-i));i=p;}
     }
     return r;
@@ -155,6 +162,7 @@ static std::string jstr(const std::string& j,const std::string& k){
 
 // Forward declarations
 static void p2p_broadcast_tx(const std::string& hex_str);
+static bool process_block(const std::string& block_json);
 
 // =============================================================================
 // RPC (reuse from sost-rpc.cpp, condensed)
@@ -205,7 +213,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     size_t peers_count;
     {std::lock_guard<std::mutex> lk(g_peers_mu); peers_count=g_peers.size();}
     std::ostringstream s;
-    s<<"{\"version\":\"0.4.0\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
+    s<<"{\"version\":\"0.5.0\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
      <<",\"testnet\":false,\"balance\":\""<<format_sost(g_wallet.balance())
@@ -270,7 +278,6 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
         return rpc_error(id,-25,result.reason);
     }
     printf("[RPC] sendrawtx ACCEPTED: %s fee=%lld\n",to_hex(txid.data(),32).c_str(),(long long)result.fee);
-    // Relay to all peers
     p2p_broadcast_tx(hex_str);
     return rpc_result(id,"\""+to_hex(txid.data(),32)+"\"");
 }
@@ -336,6 +343,30 @@ static std::string handle_getaddressinfo(const std::string& id, const std::vecto
     return rpc_result(id,s.str());
 }
 
+static std::string handle_submitblock(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing block JSON");
+    if(process_block(p[0])) return rpc_result(id,"true");
+    return rpc_error(id,-25,"Block rejected");
+}
+
+static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
+    auto tmpl = g_mempool.BuildBlockTemplate();
+    std::ostringstream s;
+    s << "{\"transactions\":[";
+    for (size_t i = 0; i < tmpl.txs.size(); ++i) {
+        if (i) s << ",";
+        std::vector<Byte> raw;
+        std::string err;
+        if (tmpl.txs[i].Serialize(raw, &err)) {
+            s << "\"" << to_hex(raw.data(), raw.size()) << "\"";
+        }
+    }
+    s << "],\"total_fees\":" << tmpl.total_fees
+      << ",\"count\":" << tmpl.txs.size()
+      << ",\"mempool_size\":" << g_mempool.Size() << "}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -345,6 +376,8 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"sendrawtransaction",handle_sendrawtransaction},{"getmempoolinfo",handle_getmempoolinfo},
     {"getrawmempool",handle_getrawmempool},{"getrawtransaction",handle_getrawtransaction},
     {"getpeerinfo",handle_getpeerinfo},{"getaddressinfo",handle_getaddressinfo},
+    {"submitblock",handle_submitblock},
+    {"getblocktemplate",handle_getblocktemplate},
 };
 static std::string dispatch_rpc(const std::string& req) {
     std::string method=json_get_string(req,"method"),id_raw=json_get_string(req,"id");
@@ -360,9 +393,8 @@ static std::string dispatch_rpc(const std::string& req) {
 // P2P Protocol
 // =============================================================================
 
-// Wire format: [magic 4][cmd 4][len 4][payload len]
 struct P2PMsg {
-    char cmd[5]; // null-terminated
+    char cmd[5];
     std::vector<uint8_t> payload;
 };
 
@@ -406,13 +438,12 @@ static bool p2p_recv(int fd, P2PMsg& msg) {
     if(magic!=P2P_MAGIC) return false;
     memcpy(msg.cmd, hdr+4, 4); msg.cmd[4]=0;
     uint32_t len=read_u32(hdr+8);
-    if(len>10*1024*1024) return false; // 10MB max
+    if(len>10*1024*1024) return false;
     msg.payload.resize(len);
     if(len>0 && !read_exact(fd, msg.payload.data(), len)) return false;
     return true;
 }
 
-// Send version message
 static void p2p_send_version(int fd) {
     uint8_t buf[40];
     write_i64(buf, g_chain_height);
@@ -420,12 +451,10 @@ static void p2p_send_version(int fd) {
     p2p_send(fd, "VERS", buf, 40);
 }
 
-// Send block at height h
 static void p2p_send_block(int fd, int64_t h) {
     std::lock_guard<std::mutex> lk(g_chain_mu);
     if(h<0||h>=(int64_t)g_blocks.size()) return;
     const auto& b=g_blocks[h];
-    // Send as JSON for simplicity
     std::ostringstream s;
     s<<"{\"block_id\":\""<<to_hex(b.block_id.data(),32)
      <<"\",\"prev_hash\":\""<<to_hex(b.prev_hash.data(),32)
@@ -442,7 +471,6 @@ static void p2p_send_block(int fd, int64_t h) {
     p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
 }
 
-// Broadcast tx to all peers
 static void p2p_broadcast_tx(const std::string& hex_str) {
     std::lock_guard<std::mutex> lk(g_peers_mu);
     for(auto& p:g_peers){
@@ -452,15 +480,13 @@ static void p2p_broadcast_tx(const std::string& hex_str) {
     }
 }
 
-// Process received block
+// Process received block (with standard transaction support)
 static bool process_block(const std::string& block_json) {
     std::string bid=jstr(block_json,"block_id"); if(bid.size()!=64) return false;
     int64_t height=jint(block_json,"height");
 
     std::lock_guard<std::mutex> lk(g_chain_mu);
-    // Already have it?
     if(height<(int64_t)g_blocks.size()) return false;
-    // Must be next block
     if(height!=(int64_t)g_blocks.size()) return false;
 
     StoredBlock sb;
@@ -473,13 +499,12 @@ static bool process_block(const std::string& block_json) {
     sb.gold_vault_reward=jint(block_json,"gold_vault");
     sb.popc_pool_reward=jint(block_json,"popc_pool");
 
-    // Verify prev_hash links
     if(g_blocks.size()>0 && sb.prev_hash!=g_blocks.back().block_id) return false;
 
     g_blocks.push_back(sb);
     g_chain_height=height;
 
-    // Add coinbase UTXOs
+    // 1. Añadir UTXOs de coinbase
     struct{const char*a;int64_t v;uint8_t t;}cb[3]={
         {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
         {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
@@ -491,9 +516,117 @@ static bool process_block(const std::string& block_json) {
         UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t;
         e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
         std::string err; g_utxo_set.AddUTXO(op,e,&err);
+        // Actualizar wallet si la dirección es nuestra
+        std::string addr=address_encode(pkh);
+        if(g_wallet.has_address(addr)){
+            WalletUTXO wu; wu.txid=op.txid; wu.vout=op.index;
+            wu.amount=e.amount; wu.output_type=e.type;
+            wu.pkh=pkh; wu.height=height; wu.spent=false;
+            g_wallet.add_utxo(wu);
+        }
     }
 
-    printf("[P2P] Block %lld accepted: %s\n",(long long)height,bid.substr(0,16).c_str());
+    // 2. Procesar transacciones estándar del bloque
+    size_t tx_count = 0;
+    auto tx_pos = block_json.find("\"transactions\"");
+    if (tx_pos != std::string::npos) {
+        auto arr_start = block_json.find('[', tx_pos);
+        auto arr_end = block_json.find(']', arr_start);
+        if (arr_start != std::string::npos && arr_end != std::string::npos) {
+            std::string arr = block_json.substr(arr_start + 1, arr_end - arr_start - 1);
+            size_t p = 0;
+            std::vector<Transaction> block_std_txs;
+
+            while (p < arr.size()) {
+                auto q1 = arr.find('"', p);
+                if (q1 == std::string::npos) break;
+                auto q2 = arr.find('"', q1 + 1);
+                if (q2 == std::string::npos) break;
+                std::string tx_hex = arr.substr(q1 + 1, q2 - q1 - 1);
+                p = q2 + 1;
+
+                if (tx_hex.empty() || tx_hex.size() % 2 != 0) continue;
+
+                std::vector<Byte> raw;
+                raw.reserve(tx_hex.size() / 2);
+                bool hex_ok = true;
+                for (size_t i = 0; i < tx_hex.size(); i += 2) {
+                    uint8_t b;
+                    if (!hex_to_bytes(tx_hex.substr(i, 2), &b, 1)) { hex_ok = false; break; }
+                    raw.push_back(b);
+                }
+                if (!hex_ok) continue;
+
+                Transaction tx;
+                std::string err;
+                if (!Transaction::Deserialize(raw, tx, &err)) {
+                    printf("[BLOCK] WARNING: skip malformed tx: %s\n", err.c_str());
+                    continue;
+                }
+                if (tx.tx_type == TX_TYPE_COINBASE) continue;
+
+                block_std_txs.push_back(tx);
+            }
+
+            for (const auto& tx : block_std_txs) {
+                Hash256 txid{};
+                std::string err;
+                if (!tx.ComputeTxId(txid, &err)) {
+                    printf("[BLOCK] WARNING: cannot compute txid: %s\n", err.c_str());
+                    continue;
+                }
+
+                // Gastar inputs
+                for (const auto& txin : tx.inputs) {
+                    OutPoint op{txin.prev_txid, txin.prev_index};
+                    g_utxo_set.SpendUTXO(op, nullptr, nullptr);
+                    g_wallet.mark_spent(txin.prev_txid, txin.prev_index);
+                }
+
+                // Crear outputs
+                for (size_t i = 0; i < tx.outputs.size(); ++i) {
+                    const auto& txout = tx.outputs[i];
+                    OutPoint op{txid, (uint32_t)i};
+                    UTXOEntry entry;
+                    entry.amount = txout.amount;
+                    entry.type = txout.type;
+                    entry.pubkey_hash = txout.pubkey_hash;
+                    entry.height = height;
+                    entry.is_coinbase = false;
+                    std::string aerr;
+                    g_utxo_set.AddUTXO(op, entry, &aerr);
+
+                    std::string addr = address_encode(txout.pubkey_hash);
+                    if (g_wallet.has_address(addr)) {
+                        WalletUTXO wu;
+                        wu.txid = txid;
+                        wu.vout = (uint32_t)i;
+                        wu.amount = txout.amount;
+                        wu.output_type = txout.type;
+                        wu.pkh = txout.pubkey_hash;
+                        wu.height = height;
+                        wu.spent = false;
+                        g_wallet.add_utxo(wu);
+                    }
+                }
+
+                tx_count++;
+                printf("[BLOCK] TX confirmed: %s\n",
+                       to_hex(txid.data(), 32).substr(0, 16).c_str());
+            }
+
+            // 3. Limpiar mempool
+            if (!block_std_txs.empty()) {
+                size_t removed = g_mempool.RemoveForBlock(block_std_txs);
+                if (removed > 0)
+                    printf("[BLOCK] Mempool: %zu txs removed\n", removed);
+            }
+        }
+    }
+
+    printf("[BLOCK] Height %lld accepted: %s (%zu std txs, UTXOs: %zu)\n",
+           (long long)height, bid.substr(0, 16).c_str(),
+           tx_count, g_utxo_set.Size());
     return true;
 }
 
@@ -526,10 +659,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
     }
     printf("[P2P] Peer connected: %s (%s)\n",addr.c_str(),outbound?"outbound":"inbound");
 
-    // Send our version
     p2p_send_version(fd);
 
-    // Set socket timeout
     struct timeval tv; tv.tv_sec=30; tv.tv_usec=0;
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
@@ -537,19 +668,16 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         P2PMsg msg;
         if(!p2p_recv(fd, msg)) break;
 
-        // Update last seen
         {
             std::lock_guard<std::mutex> lk(g_peers_mu);
             for(auto& p:g_peers) if(p.fd==fd) { p.last_seen=time(nullptr); break; }
         }
 
         if(!strcmp(msg.cmd,"VERS")) {
-            // Parse version
             if(msg.payload.size()>=40){
                 int64_t their_h=read_i64(msg.payload.data());
                 Hash256 their_genesis;
                 memcpy(their_genesis.data(), msg.payload.data()+8, 32);
-                // Check genesis match
                 if(their_genesis!=g_genesis_hash){
                     printf("[P2P] %s: genesis mismatch, disconnecting\n",addr.c_str());
                     break;
@@ -558,11 +686,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
                     for(auto& p:g_peers) if(p.fd==fd){p.their_height=their_h;p.version_acked=true;break;}
                 }
-                // Send version ack
                 p2p_send(fd, "VACK", nullptr, 0);
                 printf("[P2P] %s: version OK, their height=%lld\n",addr.c_str(),(long long)their_h);
 
-                // If they have more blocks, request sync
                 if(their_h > g_chain_height){
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height+1);
@@ -578,11 +704,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"GETB")) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
-                // Send blocks from from_h to tip
                 for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
                     p2p_send_block(fd, h);
                 }
-                // Send "done" marker
                 p2p_send(fd, "DONE", nullptr, 0);
             }
         }
@@ -593,7 +717,6 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
             if(process_tx(hex_str)){
-                // Relay to other peers
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers){
                     if(p.fd!=fd && p.version_acked){
@@ -622,7 +745,6 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         }
     }
 
-    // Remove peer
     close(fd);
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
@@ -647,7 +769,6 @@ static bool load_genesis(const std::string& path) {
     auto sp=coinbase_split(g.subsidy);
     g.miner_reward=sp.miner; g.gold_vault_reward=sp.gold_vault; g.popc_pool_reward=sp.popc_pool;
     g_genesis_hash=g.block_id; g_blocks.push_back(g); g_chain_height=0;
-    // Init UTXO set
     struct{const char*addr;int64_t amt;uint8_t type;}cb[3]={
         {ADDR_MINER_FOUNDER,sp.miner,OUT_COINBASE_MINER},
         {ADDR_GOLD_VAULT,sp.gold_vault,OUT_COINBASE_GOLD},
@@ -751,7 +872,7 @@ static void rpc_server_thread(int port) {
     struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("rpc bind");close(srv);return;}
     listen(srv,128);
-    printf("[RPC] Listening on port %d — 14 methods\n",port);
+    printf("[RPC] Listening on port %d — 17 methods\n",port);
     while(g_running){
         int cl=accept(srv,nullptr,nullptr);
         if(cl<0) continue;
@@ -783,7 +904,6 @@ static void p2p_server_thread(int port) {
     close(srv);
 }
 
-// Connect to a peer
 static void connect_peer(const std::string& host, int port) {
     struct addrinfo hints{}, *res;
     hints.ai_family=AF_INET; hints.ai_socktype=SOCK_STREAM;
@@ -848,7 +968,7 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--chain")&&i+1<argc) chain_path=argv[++i];
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
-            printf("SOST Node v0.1\n");
+            printf("SOST Node v0.2\n");
             printf("  --wallet <path>      Wallet file (default: wallet.json)\n");
             printf("  --genesis <path>     Genesis JSON\n");
             printf("  --chain <path>       Chain JSON to load\n");
@@ -859,14 +979,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    printf("=== SOST Node v0.1 ===\n");
+    printf("=== SOST Node v0.2 ===\n");
     printf("P2P: %d | RPC: %d\n\n",p2p_port,rpc_port);
 
-    // Load genesis
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
 
-    // Load chain
     if(!chain_path.empty()){
         if(load_chain(chain_path)){
             printf("Chain: %zu blocks, height=%lld, UTXOs=%zu\n",
@@ -876,14 +994,13 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Load wallet
     std::string err;
     if(!g_wallet.load(g_wallet_path,&err)){
         printf("Warning: %s (run sost-cli newwallet)\n",err.c_str());
     } else {
         printf("Wallet: %zu keys\n",g_wallet.num_keys());
     }
-    // === Wallet UTXO rescan: register all chain UTXOs owned by wallet ===
+    // === Wallet UTXO rescan ===
     {
         int rescan_count = 0;
         const auto& umap = g_utxo_set.GetMap();
@@ -904,19 +1021,20 @@ int main(int argc, char** argv) {
         }
         printf("Wallet rescan: %d UTXOs registered (balance: %s SOST)\n",
                rescan_count, format_sost(g_wallet.balance()).c_str());
+        // Persistir UTXOs al disco para que sost-cli los vea
+        std::string werr;
+        if (!g_wallet.save(g_wallet_path, &werr))
+            printf("Warning: wallet save failed: %s\n", werr.c_str());
     }
 
     printf("UTXO set: %zu entries | Mempool: %zu txs\n\n",g_utxo_set.Size(),g_mempool.Size());
 
-    // Start RPC
     std::thread rpc_thread(rpc_server_thread, rpc_port);
     rpc_thread.detach();
 
-    // Start P2P listener
     std::thread p2p_thread(p2p_server_thread, p2p_port);
     p2p_thread.detach();
 
-    // Connect to peers
     for(const auto& a:connect_addrs){
         auto colon=a.rfind(':');
         if(colon!=std::string::npos){
@@ -928,18 +1046,15 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Main loop — periodic tasks
     printf("Node running. Ctrl+C to stop.\n\n");
     while(g_running){
         std::this_thread::sleep_for(std::chrono::seconds(30));
-        // Ping peers
         {
             std::lock_guard<std::mutex> lk(g_peers_mu);
             for(auto& p:g_peers){
                 if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
             }
         }
-        // Auto-save chain
         if(!chain_path.empty()) save_chain(chain_path);
     }
 
