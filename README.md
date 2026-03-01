@@ -1,84 +1,105 @@
-# SOST Core — ConvergenceX PoW Engine
+# SOST Protocol v0.4.1 — Linux x86_64
 
-**Status:** Pre-genesis (target: 2026-02-28 00:00:00 UTC)
-**Version:** 0.1.0
-**Tests:** 92/92 passing
-**Cross-verified:** C++ and Python bit-for-bit determinism confirmed (mainnet params)
+**CPU-friendly Proof-of-Work cryptocurrency with constitutional gold reserves.**
 
-## What Is This
+## Quick Start
 
-C++ implementation of the ConvergenceX Proof-of-Work consensus engine for the SOST protocol. This is the core library that powers block mining, validation, and chain management.
+```bash
+# 1. Install dependencies
+sudo apt install libssl3 libsecp256k1-0
 
-ConvergenceX replaces brute-force hash guessing with a mandatory sequential convergence process: 4 GB RAM, 100,000 rounds of integer-only gradient descent, memory-hard scratchpad reads, and a stability basin verification certificate.
+# 2. Create wallet
+./sost-cli newwallet
 
-## Build
+# 3. Start node
+./sost-node --genesis genesis_block.json --wallet wallet.json
 
-Requirements: g++ (C++17), OpenSSL (libcrypto).
+# 4. Start mining (in another terminal)
+./sost-miner --genesis genesis_block.json --wallet wallet.json --chain chain.json
 ```
-chmod +x build.sh
-./build.sh
-```
-
-Compiles everything, links 3 binaries, runs all 92 tests.
 
 ## Binaries
+
+| Binary | Description |
+|--------|-------------|
+| `sost-node` | Full node with P2P networking + RPC server |
+| `sost-miner` | ConvergenceX PoW miner (CPU, 4GB RAM) |
+| `sost-cli` | Wallet management CLI |
+
+## Node Options
+
 ```
-./build/sost-miner --blocks 5 --profile dev
-./build/sost-node --blocks 10 --profile dev --port 8332
-./build/sost-wallet generate
+./sost-node [options]
+  --genesis <path>       Genesis block JSON (required)
+  --wallet <path>        Wallet file (default: wallet.json)
+  --chain <path>         Load/save chain state
+  --port <n>             P2P port (default: 19333)
+  --rpc-port <n>         RPC port (default: 18232)
+  --connect <host:port>  Connect to peer
 ```
 
-## Cross-Verification
+## Miner Options
+
 ```
-./build/cross_mainnet
+./sost-miner [options]
+  --genesis <path>       Genesis block JSON (required)
+  --wallet <path>        Wallet file
+  --chain <path>         Chain state file
+  --blocks <n>           Number of blocks to mine (default: unlimited)
 ```
 
-Produces deterministic hex values matching the Python reference bit-for-bit on mainnet parameters (4GB scratchpad, 100k rounds).
+## RPC API (port 18232)
 
-## Emission Model — Feigenbaum-Inspired Constants
+| Method | Params | Description |
+|--------|--------|-------------|
+| `getinfo` | — | Node status, height, difficulty, balance |
+| `getblockcount` | — | Current chain height |
+| `getblockhash` | height | Block hash at height |
+| `getblock` | hash | Block details + cASERT mode |
+| `getaddressinfo` | address | Address balance + UTXOs |
+| `getbalance` | — | Wallet balance |
+| `listunspent` | — | Wallet UTXOs |
+| `gettxout` | txid, vout | Query specific UTXO |
+| `validateaddress` | address | Check address validity |
+| `getnewaddress` | [label] | Generate new address |
+| `sendrawtransaction` | hex | Submit signed transaction |
+| `getmempoolinfo` | — | Mempool statistics |
+| `getrawmempool` | — | Pending transaction IDs |
+| `getpeerinfo` | — | Connected peers |
 
-The emission schedule encodes the two Feigenbaum universal constants (α, δ) with a smooth exponential decay:
+Example:
+```bash
+curl -X POST -d '{"method":"getinfo","id":1}' http://localhost:18232
+```
 
-- **Epoch length:** alpha (2.502907875 years) = 131,553 blocks per epoch
-- **Max supply:** delta-derived = 4,669,201.609 SOST (asymptotic hard cap)
-- **Decay factor:** q = exp(-1/4) = 0.7788007831 per epoch (~9.03% smooth annual decay)
-- **Initial reward:** 7.85100863 SOST per block
-- **95% mined** in ~12 epochs (~30 years), smooth decay with no halvings
-- **Coinbase split:** 50% miner, 25% gold vault (automatic XAUT/PAXG), 25% PoPC pool
-- **Arithmetic:** 100% integer fixed-point (zero floating-point in consensus)
+## Network
 
-## Consensus Parameters
+- **Algorithm:** ConvergenceX (CPU/GPU, 4GB RAM, ASIC-resistant)
+- **Block time:** 10 minutes (ASERT + cASERT difficulty adjustment)
+- **Block reward:** 7.8510 SOST (50% miner, 25% Gold Vault, 25% PoPC Pool)
+- **Emission:** Feigenbaum decay, ~131,553 blocks per epoch
+- **Addresses:** `sost1` prefix (20-byte pubkey hash)
+- **P2P port:** 19333
+- **RPC port:** 18232
 
-| Parameter | Value |
-|---|---|
-| Genesis | 2026-02-28 00:00:00 UTC |
-| Block target | 600s (10 min) |
-| Epoch | 131,553 blocks (~2.5 years) |
-| Max supply | 4,669,201.609 SOST (hard cap) |
-| RAM | 4,096 MB scratchpad |
-| Rounds | 100,000 sequential per attempt |
-| Difficulty | ASERT Q16.16, 24h half-life |
-| CASERT | 4 adaptive modes, 64-interval window |
+## Constitutional Addresses
+
+| Address | Role |
+|---------|------|
+| `sost1be23...` | Gold Vault (25% of rewards → automatic XAUT/PAXG purchases) |
+| `sost18a22...` | PoPC Pool (25% of rewards → Proof of Personal Custody incentives) |
+
+## Explorer
+
+- Local: Open `explorer.html` and connect to `http://localhost:18232`
+- Online: https://explorer.sostcore.com
+
+## Links
+
+- Website: https://sostcore.com
+- Explorer: https://explorer.sostcore.com
+- GitHub: https://github.com/sostprotocol/sost-core
 
 ## License
 
-Proprietary. All rights reserved. Not for public distribution.
-
-## Test Status
-
-✅ **237/237 tests passing** (2026-02-27)
-
-| Suite | Tests | Status |
-|-------|-------|--------|
-| tx-validation | 42 | ✅ |
-| tx-signer | 22 | ✅ |
-| mempool | 25 | ✅ |
-| transaction | 15 | ✅ |
-| utxo-set | 22 | ✅ |
-| capsule | 25 | ✅ |
-| merkle-block | 35 | ✅ |
-| chunk1 | 30 | ✅ |
-| chunk2 | 21 | ✅ |
-```bash
-cd build && ctest --output-on-failure
-```
+MIT
