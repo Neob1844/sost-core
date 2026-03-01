@@ -17,23 +17,26 @@ Every block mined automatically allocates 25% to purchase physical gold (XAUT/PA
 # 2. Import genesis block UTXOs
 ./sost-cli importgenesis genesis_block.json
 
-# 3. Start node
+# 3. Start node (terminal 1)
 ./sost-node --genesis genesis_block.json --chain chain.json --wallet wallet.json
 
-# 4. Start mining (in another terminal)
-./sost-miner --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --blocks 10
+# 4. Start mining (terminal 2)
+./sost-miner --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --blocks 100
 
-# 5. Send SOST (in another terminal)
+# 5. Send SOST (terminal 3 — requires 100+ confirmations on coinbase UTXOs)
 ./sost-cli --wallet wallet.json send <destination_address> 10.0 0.001
+
+# 6. Mine 1 block to confirm the transaction
+./sost-miner --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --blocks 1
 ```
 
 ## Binaries
 
-| Binary | Description |
-|--------|-------------|
-| `sost-node` | Full node — P2P networking, JSON-RPC server, chain validation, mempool |
-| `sost-miner` | ConvergenceX PoW miner (CPU-only, requires 4GB RAM) |
-| `sost-cli` | Wallet CLI — create keys, send transactions, check balances |
+| Binary | Version | Description |
+|--------|---------|-------------|
+| `sost-node` | v0.2 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
+| `sost-miner` | v0.4 | ConvergenceX PoW miner with mempool integration via RPC |
+| `sost-cli` | v1.1 | Wallet CLI — create keys, send transactions, check balances |
 
 ## Node
 
@@ -46,6 +49,13 @@ Every block mined automatically allocates 25% to purchase physical gold (XAUT/PA
   --rpc-port <n>         RPC port (default: 18232)
   --connect <host:port>  Connect to peer node
 ```
+
+The node:
+- Validates all blocks and transactions against consensus rules (R1-R14, S1-S12, CB1-CB10)
+- Maintains the UTXO set and mempool
+- Rescans wallet UTXOs on startup and persists to disk
+- Auto-saves chain state every 30 seconds
+- Supports P2P block/tx relay between peers
 
 ## Miner
 
@@ -60,9 +70,9 @@ Every block mined automatically allocates 25% to purchase physical gold (XAUT/PA
   --realtime             Use real timestamps (default)
 ```
 
-The miner can run in two modes:
-- **RPC mode** (`--rpc 127.0.0.1:18232`): submits blocks to the node, includes mempool transactions, recommended.
-- **Standalone mode** (no `--rpc`): writes directly to `chain.json`, no transaction support.
+**RPC mode** (`--rpc 127.0.0.1:18232`): Fetches mempool transactions via `getblocktemplate`, includes them in the block, distributes fees across coinbase outputs, submits via `submitblock`. This is the recommended mode.
+
+**Standalone mode** (no `--rpc`): Writes directly to `chain.json`, coinbase-only blocks, no transaction support.
 
 ## Wallet CLI
 
@@ -77,10 +87,20 @@ The miner can run in two modes:
   getbalance [address]         Show balance in SOST
   listunspent [address]        List unspent transaction outputs
   createtx <to> <amt> [fee]   Create and sign a transaction (outputs hex)
-  send <to> <amt> [fee]        Create, sign and broadcast to node
+  send <to> <amt> [fee]        Create, sign and broadcast to node via RPC
   dumpprivkey <address>        Reveal private key (DANGER)
   info                         Wallet summary
 ```
+
+**Note on coinbase maturity:** Coinbase UTXOs require 100 confirmations before they can be spent. Mine at least 100 blocks before attempting to send SOST.
+
+## Transaction Flow
+
+1. `sost-cli send` creates, signs, and broadcasts the transaction to the node
+2. Node validates the transaction and accepts it to the mempool
+3. `sost-miner` fetches mempool via `getblocktemplate` and includes transactions in the next block
+4. Node confirms the transaction when the block is accepted
+5. Transaction outputs become spendable immediately (coinbase outputs require 100 blocks)
 
 ## RPC API (port 18232)
 
@@ -115,23 +135,43 @@ curl -s -X POST -d '{"method":"getinfo","id":1}' http://localhost:18232
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
 | Block time | 10 minutes target |
 | Difficulty | ASERT + cASERT overlay (24h half-life) |
-| Block reward | ~7.8510 SOST (Feigenbaum decay) |
+| Initial block reward | 7.85100863 SOST |
+| Emission | Smooth exponential decay, q = e^(-1/4) |
+| Epoch length | 131,553 blocks (~2.503 years, Feigenbaum α) |
+| Max supply | ~4,669,201 SOST (Feigenbaum δ × 10⁶) |
+| 95% supply | ~12 epochs (~30 years) |
 | Reward split | 50% miner · 25% Gold Vault · 25% PoPC Pool |
 | Coinbase maturity | 100 blocks |
-| Address format | `sost1` prefix, 20-byte pubkey hash |
+| Address format | `sost1` + 40 hex chars (20-byte pubkey hash) |
+| Signature | ECDSA secp256k1 (libsecp256k1) with LOW-S |
 | P2P port | 19333 |
 | RPC port | 18232 |
-| Signature | ECDSA secp256k1 with LOW-S enforcement |
 
 ## Constitutional Addresses
 
-These addresses are hardcoded at genesis and cannot be changed.
+These addresses receive coinbase rewards at every block. Hardcoded at genesis, immutable forever.
 
-| Role | Address | Allocation |
-|------|---------|------------|
-| **Miner / Founder** | `sost1f559e05f39486582231179a4985366961d8f8313` | 50% of block reward |
-| **Gold Vault** | *(see `include/sost/params.h`)* | 25% → automatic XAUT/PAXG purchases |
-| **PoPC Pool** | *(see `include/sost/params.h`)* | 25% → Proof of Personal Custody rewards |
+| Role | Allocation |
+|------|------------|
+| **Miner reward** | 50% → miner's configured address |
+| **Gold Vault** | 25% → automatic XAUT/PAXG purchases (auditable on-chain) |
+| **PoPC Pool** | 25% → Proof of Personal Custody rewards |
+
+Gold Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
+
+## Explorer (v3.0)
+
+Standalone HTML file (`explorer.html`) that connects to your node's RPC.
+
+Features:
+- Dashboard: block height, avg block time, total supply, Gold Vault reserves, mempool
+- Difficulty progress bar with epoch tracking
+- Gold Reserves tracker (25% of all rewards since genesis)
+- Emission curve chart (smooth exponential decay, 12 epochs, interactive tooltip)
+- Block detail with transaction list (coinbase split + standard txs)
+- Smart search: block height, full/partial hash, txid, sost1 address
+- Copy-to-clipboard on hashes and addresses
+- Auto-refresh (10s) with new block notification
 
 ## Build from Source
 
@@ -147,15 +187,20 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 ```
 
-## Explorer
+## Security Status
 
-The block explorer is a standalone HTML file that connects to your node's RPC.
-
-1. Open `explorer.html` in your browser
-2. Set the RPC endpoint to `http://localhost:18232`
-3. Click **CONNECT**
-
-You can search by block height, block hash, or address.
+| Component | Status |
+|-----------|--------|
+| Transaction signing (libsecp256k1) | ✅ Complete |
+| Consensus validation (R1-R14, S1-S12, CB1-CB10) | ✅ Complete |
+| ASERT + cASERT difficulty adjustment | ✅ Complete |
+| Mempool validation and relay | ✅ Complete |
+| Transaction confirmation in blocks | ✅ Complete |
+| RPC authentication | ⏳ Pre-launch |
+| Wallet encryption | ⏳ Pre-launch |
+| PoW verification in block acceptance | ⏳ Pre-launch |
+| Coinbase maturity filter in wallet | ⏳ Pre-launch |
+| P2P encryption | 📋 Post-launch |
 
 ## License
 
