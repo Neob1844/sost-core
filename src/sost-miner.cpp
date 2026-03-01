@@ -203,6 +203,43 @@ static bool save_chain(const std::string& path) {
 }
 
 // =============================================================================
+// Chain loader (continue from existing chain)
+// =============================================================================
+
+static bool load_chain(const std::string& path) {
+    std::ifstream f(path); if (!f) return false;
+    std::string json((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    int64_t ch = jint(json, "chain_height"); if (ch < 0) return false;
+    size_t search = json.find("\"blocks\""); if (search == std::string::npos) return false;
+    search = json.find('[', search); if (search == std::string::npos) return false;
+    while (true) {
+        auto bs = json.find('{', search); if (bs == std::string::npos) break;
+        auto be = json.find('}', bs); if (be == std::string::npos) break;
+        std::string bj = json.substr(bs, be - bs + 1); search = be + 1;
+        std::string bid = jstr(bj, "block_id"); if (bid.size() != 64) continue;
+        int64_t height = jint(bj, "height"); if (height == 0) continue;
+        BlockMeta bm;
+        bm.block_id = from_hex(bid); bm.height = height;
+        bm.time = jint(bj, "timestamp"); bm.powDiffQ = (uint32_t)jint(bj, "bits_q");
+        g_chain.push_back(bm);
+        MinedBlock mb;
+        mb.block_id = bm.block_id; mb.prev_hash = from_hex(jstr(bj, "prev_hash"));
+        std::string mr = jstr(bj, "merkle_root");
+        mb.merkle_root = mr.size() == 64 ? from_hex(mr) : Bytes32{};
+        mb.height = height; mb.timestamp = bm.time; mb.bits_q = bm.powDiffQ;
+        mb.nonce = (uint32_t)jint(bj, "nonce"); mb.extra_nonce = (uint32_t)jint(bj, "extra_nonce");
+        mb.subsidy = jint(bj, "subsidy");
+        mb.miner_reward = jint(bj, "miner"); mb.gold_vault_reward = jint(bj, "gold_vault");
+        mb.popc_pool_reward = jint(bj, "popc_pool");
+        mb.stability_metric = (uint64_t)jint(bj, "stability_metric");
+        g_mined_blocks.push_back(mb);
+        g_tip_hash = bm.block_id;
+    }
+    printf("Chain loaded: %zu blocks, height=%lld\n", g_chain.size(), (long long)(g_chain.size()-1));
+    return true;
+}
+
+// =============================================================================
 // Mine one block
 // =============================================================================
 
@@ -388,6 +425,17 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Error: cannot load genesis\n"); return 1;
     }
     printf("Genesis: %s\n\n", hex(g_tip_hash).c_str());
+
+    // Load existing chain to continue mining
+    {
+        std::ifstream test(chain_path);
+        if (test.good()) {
+            test.close();
+            load_chain(chain_path);
+            printf("Continuing from height %lld, tip=%s\n\n",
+                   (long long)(g_chain.size()-1), hex(g_tip_hash).substr(0,16).c_str());
+        }
+    }
 
     int mined = 0;
     for (int i = 0; i < num_blocks; ++i) {
