@@ -427,9 +427,9 @@ int main(int argc, char** argv) {
             printf("  Did you mean %s SOST? Fee is specified in SOST, not stocks.\n",
                    format_sost(DEFAULT_FEE_STOCKS).c_str());
             printf("  Example: sost-cli send <addr> 10 0.0001\n");
-            printf("  Proceeding anyway in 3 seconds... (Ctrl+C to cancel)\n");
+            printf("  Proceeding anyway in 10 seconds... (Ctrl+C to cancel)\n");
             fflush(stdout);
-            sleep(3);
+            sleep(10);
         }
 
         // Create transaction
