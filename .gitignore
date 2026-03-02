@@ -1,3 +1,5 @@
 build/
 *.o
 *.tar.gz
+wallet.json
+node_log.txt

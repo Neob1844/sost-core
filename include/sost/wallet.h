@@ -3,6 +3,7 @@
 #include "sost/tx_signer.h"
 #include "sost/address.h"
 #include "sost/transaction.h"
+#include "sost/consensus_constants.h"   // COINBASE_MATURITY
 #include <vector>
 #include <string>
 #include <map>
@@ -52,25 +53,26 @@ public:
     // --- UTXO management ---
     void add_utxo(const WalletUTXO& utxo);
     void mark_spent(const Hash256& txid, uint32_t vout);
-    std::vector<WalletUTXO> list_unspent() const;
-    std::vector<WalletUTXO> list_unspent(const std::string& addr) const;
-    int64_t balance() const;
-    int64_t balance(const std::string& addr) const;
+
+    // v0.3.2: maturity-aware queries.
+    // chain_height >= 0 => exclude coinbase UTXOs with < COINBASE_MATURITY confirmations.
+    // chain_height < 0  => no filtering (backward compatible).
+    std::vector<WalletUTXO> list_unspent(int64_t chain_height = -1) const;
+    std::vector<WalletUTXO> list_unspent(const std::string& addr, int64_t chain_height = -1) const;
+    int64_t balance(int64_t chain_height = -1) const;
+    int64_t balance(const std::string& addr, int64_t chain_height = -1) const;
 
     // --- Genesis import ---
-    // Import genesis coinbase outputs: scans for addresses we own
     bool import_genesis(const std::string& genesis_json_path, std::string* err = nullptr);
 
     // --- Transaction creation ---
-    // Create and sign a transaction sending `amount` stocks to `to_addr`.
-    // Automatically selects UTXOs and creates change output.
-    // genesis_hash is needed for sighash computation.
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,
         int64_t fee,
         const Hash256& genesis_hash,
         Transaction& out_tx,
+        int64_t chain_height = -1,       // maturity filter
         std::string* err = nullptr);
 
     // --- Persistence ---
@@ -87,6 +89,7 @@ private:
     std::map<std::string, size_t> addr_index_; // address → keys_ index
 
     void rebuild_index();
+    static bool is_mature(const WalletUTXO& u, int64_t chain_height);
 };
 
 } // namespace sost

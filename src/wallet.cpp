@@ -28,7 +28,6 @@ WalletKey Wallet::generate_key(const std::string& label) {
     WalletKey wk;
     std::string err;
     if (!GenerateKeyPair(wk.privkey, wk.pubkey, &err)) {
-        // Should not happen in practice; GenerateKeyPair retries 100 times
         throw std::runtime_error("generate_key: " + err);
     }
     wk.pkh = ComputePubKeyHash(wk.pubkey);
@@ -110,40 +109,67 @@ void Wallet::mark_spent(const Hash256& txid, uint32_t vout) {
     }
 }
 
-std::vector<WalletUTXO> Wallet::list_unspent() const {
+// =============================================================================
+// Maturity filter
+// =============================================================================
+
+bool Wallet::is_mature(const WalletUTXO& u, int64_t chain_height) {
+    if (chain_height < 0) return true;  // no filtering
+
+    bool is_cb = (u.output_type == OUT_COINBASE_MINER ||
+                  u.output_type == OUT_COINBASE_GOLD  ||
+                  u.output_type == OUT_COINBASE_POPC);
+    if (!is_cb) return true;
+
+    if (u.height < 0) return false;  // unconfirmed coinbase = never mature
+
+    return (chain_height - u.height) >= COINBASE_MATURITY;
+}
+
+// =============================================================================
+// Maturity-aware queries
+// =============================================================================
+
+std::vector<WalletUTXO> Wallet::list_unspent(int64_t chain_height) const {
     std::vector<WalletUTXO> result;
     for (const auto& u : utxos_) {
-        if (!u.spent) result.push_back(u);
+        if (u.spent) continue;
+        if (!is_mature(u, chain_height)) continue;
+        result.push_back(u);
     }
     return result;
 }
 
-std::vector<WalletUTXO> Wallet::list_unspent(const std::string& addr) const {
+std::vector<WalletUTXO> Wallet::list_unspent(const std::string& addr, int64_t chain_height) const {
     PubKeyHash pkh{};
     if (!address_decode(addr, pkh)) return {};
-
     std::vector<WalletUTXO> result;
     for (const auto& u : utxos_) {
-        if (!u.spent && u.pkh == pkh) result.push_back(u);
+        if (u.spent || u.pkh != pkh) continue;
+        if (!is_mature(u, chain_height)) continue;
+        result.push_back(u);
     }
     return result;
 }
 
-int64_t Wallet::balance() const {
+int64_t Wallet::balance(int64_t chain_height) const {
     int64_t total = 0;
     for (const auto& u : utxos_) {
-        if (!u.spent) total += u.amount;
+        if (u.spent) continue;
+        if (!is_mature(u, chain_height)) continue;
+        total += u.amount;
     }
     return total;
 }
 
-int64_t Wallet::balance(const std::string& addr) const {
+int64_t Wallet::balance(const std::string& addr, int64_t chain_height) const {
     PubKeyHash pkh{};
     if (!address_decode(addr, pkh)) return 0;
-
     int64_t total = 0;
     for (const auto& u : utxos_) {
-        if (!u.spent && u.pkh == pkh) total += u.amount;
+        if (u.spent || u.pkh != pkh) continue;
+        if (!is_mature(u, chain_height)) continue;
+        total += u.amount;
     }
     return total;
 }
@@ -180,7 +206,6 @@ static int64_t json_int_value(const std::string& json, const std::string& key) {
     if (pos == std::string::npos) return -1;
     pos = json.find(':', pos + needle.size());
     if (pos == std::string::npos) return -1;
-    // Skip whitespace
     while (pos + 1 < json.size() && (json[pos + 1] == ' ' || json[pos + 1] == '\t')) ++pos;
     return std::stoll(json.substr(pos + 1));
 }
@@ -194,7 +219,6 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
     std::string json((std::istreambuf_iterator<char>(f)),
                       std::istreambuf_iterator<char>());
 
-    // Extract block_id (used as txid for coinbase)
     std::string block_id_hex = json_string_value(json, "block_id");
     if (block_id_hex.size() != 64) {
         if (err) *err = "invalid block_id in genesis JSON";
@@ -202,13 +226,11 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
     }
     Hash256 block_id = from_hex(block_id_hex);
 
-    // Extract subsidy amounts
     int64_t miner_amt  = json_int_value(json, "miner");
     int64_t gold_amt   = json_int_value(json, "gold_vault");
     int64_t popc_amt   = json_int_value(json, "popc_pool");
 
     if (miner_amt <= 0 && gold_amt <= 0 && popc_amt <= 0) {
-        // Try alternative field names
         int64_t total = json_int_value(json, "subsidy");
         if (total > 0) {
             CoinbaseSplit split = coinbase_split(total);
@@ -221,11 +243,10 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
         }
     }
 
-    // Constitutional addresses
     const char* addrs[3] = {
-        "sost1f559e05f39486582231179a4985366961d8f8313",  // miner
-        "sost1be2302d89daef55af4162127b9656f7604948efa",  // gold_vault
-        "sost18a222922bba5ac84979a74d76c392fdeaa59f505",  // popc_pool
+        "sost1f559e05f39486582231179a4985366961d8f8313",
+        "sost1be2302d89daef55af4162127b9656f7604948efa",
+        "sost18a222922bba5ac84979a74d76c392fdeaa59f505",
     };
     int64_t amounts[3] = { miner_amt, gold_amt, popc_amt };
 
@@ -267,6 +288,7 @@ bool Wallet::create_transaction(
     int64_t fee,
     const Hash256& genesis_hash,
     Transaction& out_tx,
+    int64_t chain_height,
     std::string* err)
 {
     if (amount <= 0) {
@@ -286,15 +308,24 @@ bool Wallet::create_transaction(
 
     int64_t needed = amount + fee;
 
-    // Select UTXOs (simple: oldest first)
+    // Select UTXOs (simple: oldest first) — maturity-aware
+    auto unspent = list_unspent(chain_height);
+
     std::vector<size_t> selected;
     int64_t total_in = 0;
-    for (size_t i = 0; i < utxos_.size(); ++i) {
-        if (utxos_[i].spent) continue;
+
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
         // Only spend UTXOs we have keys for
-        if (!find_key_by_pkh(utxos_[i].pkh)) continue;
+        if (!find_key_by_pkh(u.pkh)) continue;
+        // Never spend constitutional UTXOs (gold vault, popc pool) in transfers
+        std::string utxo_addr = address_encode(u.pkh);
+        if (utxo_addr == "sost1be2302d89daef55af4162127b9656f7604948efa" ||  // GOLD VAULT
+            utxo_addr == "sost18a222922bba5ac84979a74d76c392fdeaa59f505") {  // POPC POOL
+            continue;
+        }
         selected.push_back(i);
-        total_in += utxos_[i].amount;
+        total_in += u.amount;
         if (total_in >= needed) break;
     }
 
@@ -314,12 +345,12 @@ bool Wallet::create_transaction(
     out_tx.version = 1;
     out_tx.tx_type = 0x00;  // TRANSFER
 
-    // Inputs
+    // Inputs — reference the original utxos_ vector for txid/vout
     for (size_t idx : selected) {
+        const auto& u = unspent[idx];
         TxInput inp{};
-        inp.prev_txid = utxos_[idx].txid;
-        inp.prev_index = utxos_[idx].vout;
-        // signature and pubkey will be filled by signing
+        inp.prev_txid = u.txid;
+        inp.prev_index = u.vout;
         out_tx.inputs.push_back(inp);
     }
 
@@ -335,8 +366,15 @@ bool Wallet::create_transaction(
     // Output 1: change (if any)
     int64_t change = total_in - needed;
     if (change > 0) {
-        // Send change to the first input's address
-        const WalletKey* change_key = find_key_by_pkh(utxos_[selected[0]].pkh);
+        const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        for (const auto& k : keys_) {
+            if (k.address != "sost1be2302d89daef55af4162127b9656f7604948efa" &&
+                k.address != "sost18a222922bba5ac84979a74d76c392fdeaa59f505") {
+                change_key = &k;
+                break;
+            }
+        }
+        if (!change_key) change_key = find_key_by_pkh(unspent[selected[0]].pkh);
         if (!change_key) {
             if (err) *err = "internal error: no key for change address";
             return false;
@@ -350,25 +388,26 @@ bool Wallet::create_transaction(
 
     // Sign each input
     for (size_t i = 0; i < selected.size(); ++i) {
-        const WalletUTXO& utxo = utxos_[selected[i]];
-        const WalletKey* key = find_key_by_pkh(utxo.pkh);
+        const auto& u = unspent[selected[i]];
+        const WalletKey* key = find_key_by_pkh(u.pkh);
         if (!key) {
             if (err) *err = "no private key for UTXO";
             return false;
         }
 
         SpentOutput spent;
-        spent.amount = utxo.amount;
-        spent.type = utxo.output_type;
+        spent.amount = u.amount;
+        spent.type = u.output_type;
 
         if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err)) {
             return false;
         }
     }
 
-    // Mark UTXOs as spent
+    // Mark UTXOs as spent in the main utxos_ vector
     for (size_t idx : selected) {
-        utxos_[idx].spent = true;
+        const auto& u = unspent[idx];
+        mark_spent(u.txid, u.vout);
     }
 
     return true;
@@ -378,7 +417,6 @@ bool Wallet::create_transaction(
 // Persistence — simple JSON format
 // =============================================================================
 
-// Helper: bytes to hex string
 static std::string to_hex(const uint8_t* data, size_t len) {
     static const char* hx = "0123456789abcdef";
     std::string s;
@@ -390,7 +428,6 @@ static std::string to_hex(const uint8_t* data, size_t len) {
     return s;
 }
 
-// Helper: hex string to bytes
 static bool from_hex_bytes(const std::string& hex, uint8_t* out, size_t len) {
     if (hex.size() != len * 2) return false;
     auto hv = [](char c) -> int {
@@ -419,7 +456,6 @@ bool Wallet::save(const std::string& path, std::string* err) const {
     f << "  \"version\": 1,\n";
     f << "  \"warning\": \"PRIVATE KEYS ARE UNENCRYPTED — KEEP THIS FILE SECURE\",\n";
 
-    // Keys
     f << "  \"keys\": [\n";
     for (size_t i = 0; i < keys_.size(); ++i) {
         const auto& k = keys_[i];
@@ -432,7 +468,6 @@ bool Wallet::save(const std::string& path, std::string* err) const {
     }
     f << "  ],\n";
 
-    // UTXOs
     f << "  \"utxos\": [\n";
     size_t utxo_count = 0;
     for (size_t i = 0; i < utxos_.size(); ++i) {
@@ -470,13 +505,11 @@ bool Wallet::load(const std::string& path, std::string* err) {
     utxos_.clear();
     addr_index_.clear();
 
-    // Parse keys — find each "privkey" entry
     size_t pos = 0;
     while (true) {
         pos = json.find("\"privkey\"", pos);
         if (pos == std::string::npos) break;
 
-        // Extract privkey hex
         auto pk_start = json.find('"', pos + 9);
         if (pk_start == std::string::npos) break;
         pk_start++;
@@ -484,7 +517,6 @@ bool Wallet::load(const std::string& path, std::string* err) {
         if (pk_end == std::string::npos) break;
         std::string priv_hex = json.substr(pk_start, pk_end - pk_start);
 
-        // Extract label (optional)
         std::string label;
         auto label_pos = json.find("\"label\"", pk_end);
         if (label_pos != std::string::npos && label_pos < json.find("\"privkey\"", pk_end)) {
@@ -510,7 +542,6 @@ bool Wallet::load(const std::string& path, std::string* err) {
         pos = pk_end + 1;
     }
 
-    // Parse UTXOs — find each "txid" in utxos section
     auto utxos_pos = json.find("\"utxos\"");
     if (utxos_pos != std::string::npos) {
         pos = utxos_pos;
@@ -518,7 +549,6 @@ bool Wallet::load(const std::string& path, std::string* err) {
             auto txid_pos = json.find("\"txid\"", pos);
             if (txid_pos == std::string::npos) break;
 
-            // Find the enclosing object
             auto obj_start = json.rfind('{', txid_pos);
             auto obj_end = json.find('}', txid_pos);
             if (obj_start == std::string::npos || obj_end == std::string::npos) break;
@@ -527,7 +557,6 @@ bool Wallet::load(const std::string& path, std::string* err) {
 
             WalletUTXO utxo{};
 
-            // Parse fields from this object
             std::string txid_hex = json_string_value(obj, "txid");
             if (txid_hex.size() == 64) {
                 from_hex_bytes(txid_hex, utxo.txid.data(), 32);
