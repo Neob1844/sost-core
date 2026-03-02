@@ -1,14 +1,11 @@
-// sost-miner.cpp — SOST Block Miner v0.4
+// sost-miner.cpp — SOST Block Miner v0.5
 //
-// Mines blocks post-genesis using ConvergenceX with:
-//   - Real coinbase transactions (50/25/25 split)
-//   - Real merkle root (ComputeMerkleRootFromTxs)
+// Miner ConvergenceX with:
+//   - Real coinbase tx
+//   - Real merkle root
 //   - Mempool tx inclusion via getblocktemplate RPC
-//   - Chain state saved to chain.json OR submitted to node via RPC
-//
-// Usage:
-//   sost-miner --blocks 100 --genesis genesis_block.json --chain chain.json
-//   sost-miner --blocks 100 --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232
+//   - Submits FULL block to node (including commit/checkpoints_root/extra_nonce/txs)
+//   - Supports RPC Basic Auth
 
 #include "sost/types.h"
 #include "sost/params.h"
@@ -43,11 +40,9 @@ using namespace sost;
 // =============================================================================
 // Chain state
 // =============================================================================
-
 static std::vector<BlockMeta> g_chain;
 static Bytes32 g_tip_hash;
 
-// Mined block record
 struct MinedBlock {
     Bytes32  block_id, prev_hash, merkle_root, commit, checkpoints_root;
     int64_t  height, timestamp, subsidy;
@@ -59,11 +54,12 @@ static std::vector<MinedBlock> g_mined_blocks;
 
 // RPC mode
 static std::string g_rpc_url = "";
+static std::string g_rpc_user = "";
+static std::string g_rpc_pass = "";
 
 // =============================================================================
-// Full header builder (same as genesis.cpp)
+// Full header builder (same as genesis.cpp / node.cpp)
 // =============================================================================
-
 static std::vector<uint8_t> build_full_header_bytes(
     const uint8_t hc72[72],
     const Bytes32& checkpoints_root,
@@ -91,9 +87,8 @@ static void build_hc72(uint8_t out[72],
 }
 
 // =============================================================================
-// Hex helper (for arbitrary byte buffers)
+// Hex helper
 // =============================================================================
-
 static std::string to_hex_str(const uint8_t* d, size_t len) {
     static const char* hx = "0123456789abcdef";
     std::string s; s.reserve(len * 2);
@@ -101,29 +96,35 @@ static std::string to_hex_str(const uint8_t* d, size_t len) {
     return s;
 }
 
-static int hex_val(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
-    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
-    return -1;
+// =============================================================================
+// Base64 encode (Basic Auth)
+// =============================================================================
+static std::string base64_encode(const std::string& in) {
+    static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    int val=0, valb=-6;
+    for(unsigned char c : in){
+        val = (val<<8) + c;
+        valb += 8;
+        while(valb>=0){
+            out.push_back(b64[(val>>valb)&0x3F]);
+            valb -= 6;
+        }
+    }
+    if(valb>-6) out.push_back(b64[((val<<8)>>(valb+8))&0x3F]);
+    while(out.size()%4) out.push_back('=');
+    return out;
 }
 
-static bool hex_to_raw(const std::string& h, std::vector<uint8_t>& out) {
-    if (h.size() % 2 != 0) return false;
-    out.clear();
-    out.reserve(h.size() / 2);
-    for (size_t i = 0; i < h.size(); i += 2) {
-        int hi = hex_val(h[i]), lo = hex_val(h[i + 1]);
-        if (hi < 0 || lo < 0) return false;
-        out.push_back((uint8_t)((hi << 4) | lo));
-    }
-    return true;
+static std::string rpc_auth_header() {
+    if(g_rpc_user.empty() && g_rpc_pass.empty()) return "";
+    std::string token = base64_encode(g_rpc_user + ":" + g_rpc_pass);
+    return "Authorization: Basic " + token + "\r\n";
 }
 
 // =============================================================================
 // Coinbase transaction builder
 // =============================================================================
-
 static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split) {
     Transaction tx;
     tx.version = 1;
@@ -140,19 +141,19 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
 
     TxOutput out_miner;
     out_miner.amount = split.miner;
-    out_miner.type = 0x01;
+    out_miner.type = OUT_COINBASE_MINER;
     address_decode(ADDR_MINER_FOUNDER, out_miner.pubkey_hash);
     tx.outputs.push_back(out_miner);
 
     TxOutput out_gold;
     out_gold.amount = split.gold_vault;
-    out_gold.type = 0x02;
+    out_gold.type = OUT_COINBASE_GOLD;
     address_decode(ADDR_GOLD_VAULT, out_gold.pubkey_hash);
     tx.outputs.push_back(out_gold);
 
     TxOutput out_popc;
     out_popc.amount = split.popc_pool;
-    out_popc.type = 0x03;
+    out_popc.type = OUT_COINBASE_POPC;
     address_decode(ADDR_POPC_POOL, out_popc.pubkey_hash);
     tx.outputs.push_back(out_popc);
 
@@ -160,9 +161,8 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
 }
 
 // =============================================================================
-// JSON helpers
+// JSON helpers (very small)
 // =============================================================================
-
 static std::string jstr(const std::string& j, const std::string& k) {
     std::string n = "\"" + k + "\"";
     auto p = j.find(n); if (p == std::string::npos) return "";
@@ -181,7 +181,6 @@ static int64_t jint(const std::string& j, const std::string& k) {
 // =============================================================================
 // Genesis loader
 // =============================================================================
-
 static bool load_genesis(const std::string& path) {
     std::ifstream f(path); if (!f) return false;
     std::string json((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
@@ -195,7 +194,7 @@ static bool load_genesis(const std::string& path) {
     g_chain.push_back(gm);
     g_tip_hash = gm.block_id;
 
-    MinedBlock gb;
+    MinedBlock gb{};
     gb.block_id = gm.block_id;
     gb.prev_hash = from_hex(jstr(json, "prev_hash"));
     gb.merkle_root = from_hex(jstr(json, "merkle_root"));
@@ -215,7 +214,6 @@ static bool load_genesis(const std::string& path) {
 // =============================================================================
 // Chain saver
 // =============================================================================
-
 static bool save_chain(const std::string& path) {
     std::ofstream f(path); if (!f) return false;
     f << "{\n  \"chain_height\": " << (int64_t)(g_chain.size() - 1)
@@ -224,6 +222,8 @@ static bool save_chain(const std::string& path) {
         const auto& b = g_mined_blocks[i];
         f << "    {\"block_id\":\"" << hex(b.block_id) << "\",\"prev_hash\":\"" << hex(b.prev_hash)
           << "\",\"merkle_root\":\"" << hex(b.merkle_root)
+          << "\",\"commit\":\"" << hex(b.commit)
+          << "\",\"checkpoints_root\":\"" << hex(b.checkpoints_root)
           << "\",\"height\":" << b.height << ",\"timestamp\":" << b.timestamp
           << ",\"bits_q\":" << b.bits_q << ",\"nonce\":" << b.nonce
           << ",\"extra_nonce\":" << b.extra_nonce << ",\"subsidy\":" << b.subsidy
@@ -237,65 +237,8 @@ static bool save_chain(const std::string& path) {
 }
 
 // =============================================================================
-// RPC: submit block to node (with optional mempool txs)
-// =============================================================================
-
-static bool rpc_submit_block(const MinedBlock& mb, const std::vector<std::string>& tx_hexes = {}) {
-    if (g_rpc_url.empty()) return false;
-    std::string host = "127.0.0.1";
-    int port = 18232;
-    auto colon = g_rpc_url.find(':');
-    if (colon != std::string::npos) {
-        host = g_rpc_url.substr(0, colon);
-        port = atoi(g_rpc_url.substr(colon + 1).c_str());
-    }
-    std::string bj = "{\"block_id\":\"" + hex(mb.block_id)
-        + "\",\"prev_hash\":\"" + hex(mb.prev_hash)
-        + "\",\"merkle_root\":\"" + hex(mb.merkle_root)
-        + "\",\"height\":" + std::to_string(mb.height)
-        + ",\"timestamp\":" + std::to_string(mb.timestamp)
-        + ",\"bits_q\":" + std::to_string(mb.bits_q)
-        + ",\"nonce\":" + std::to_string(mb.nonce)
-        + ",\"subsidy\":" + std::to_string(mb.subsidy)
-        + ",\"miner\":" + std::to_string(mb.miner_reward)
-        + ",\"gold_vault\":" + std::to_string(mb.gold_vault_reward)
-        + ",\"popc_pool\":" + std::to_string(mb.popc_pool_reward)
-        + ",\"stability_metric\":" + std::to_string(mb.stability_metric);
-    // Incluir transacciones del mempool en el bloque
-    if (!tx_hexes.empty()) {
-        bj += ",\"transactions\":[";
-        for (size_t i = 0; i < tx_hexes.size(); ++i) {
-            if (i) bj += ",";
-            bj += "\"" + tx_hexes[i] + "\"";
-        }
-        bj += "]";
-    }
-    bj += "}";
-    std::string escaped;
-    for (char c : bj) { if (c == '"') escaped += "\\\""; else escaped += c; }
-    std::string body = "{\"method\":\"submitblock\",\"params\":[\"" + escaped + "\"],\"id\":1}";
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) return false;
-    struct sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    struct hostent* he = gethostbyname(host.c_str());
-    if (!he) { close(fd); return false; }
-    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
-    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) { close(fd); return false; }
-    std::string req = "POST / HTTP/1.1\r\nHost: " + host + "\r\nContent-Type: application/json\r\nContent-Length: "
-        + std::to_string(body.size()) + "\r\n\r\n" + body;
-    write(fd, req.c_str(), req.size());
-    char rbuf[4096]{};
-    read(fd, rbuf, sizeof(rbuf) - 1);
-    close(fd);
-    return std::string(rbuf).find("\"result\":true") != std::string::npos;
-}
-
-// =============================================================================
 // RPC: generic call to node — returns HTTP response body
 // =============================================================================
-
 static std::string rpc_call(const std::string& method, const std::string& params = "[]") {
     if (g_rpc_url.empty()) return "";
     std::string host = "127.0.0.1";
@@ -315,9 +258,11 @@ static std::string rpc_call(const std::string& method, const std::string& params
     if (!he) { close(fd); return ""; }
     memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) { close(fd); return ""; }
-    std::string req = "POST / HTTP/1.1\r\nHost: " + host
-        + "\r\nContent-Type: application/json\r\nContent-Length: "
-        + std::to_string(body.size()) + "\r\n\r\n" + body;
+
+    std::string req = "POST / HTTP/1.1\r\nHost: " + host + "\r\nContent-Type: application/json\r\n"
+        + rpc_auth_header()
+        + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+
     write(fd, req.c_str(), req.size());
 
     std::string response;
@@ -348,13 +293,30 @@ static std::string rpc_call(const std::string& method, const std::string& params
 // =============================================================================
 // Fetch block template from node (mempool txs + fees)
 // =============================================================================
-
 struct BlockTemplateResult {
     std::vector<std::vector<uint8_t>> tx_raws;
     std::vector<std::string> tx_hexes;
     int64_t total_fees;
     int count;
 };
+
+static int hex_val(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+    return -1;
+}
+static bool hex_to_raw(const std::string& h, std::vector<uint8_t>& out) {
+    if (h.size() % 2 != 0) return false;
+    out.clear();
+    out.reserve(h.size() / 2);
+    for (size_t i = 0; i < h.size(); i += 2) {
+        int hi = hex_val(h[i]), lo = hex_val(h[i + 1]);
+        if (hi < 0 || lo < 0) return false;
+        out.push_back((uint8_t)((hi << 4) | lo));
+    }
+    return true;
+}
 
 static BlockTemplateResult fetch_block_template() {
     BlockTemplateResult result;
@@ -396,38 +358,124 @@ static BlockTemplateResult fetch_block_template() {
 }
 
 // =============================================================================
-// Chain loader (continue from existing chain)
+// RPC: submit FULL block to node
 // =============================================================================
+static bool rpc_submit_block_full(
+    const MinedBlock& mb,
+    const std::vector<std::string>& tx_hexes_including_coinbase)
+{
+    if (g_rpc_url.empty()) return false;
 
+    std::string host = "127.0.0.1";
+    int port = 18232;
+    auto colon = g_rpc_url.find(':');
+    if (colon != std::string::npos) {
+        host = g_rpc_url.substr(0, colon);
+        port = atoi(g_rpc_url.substr(colon + 1).c_str());
+    }
+
+    // Build block JSON for node (must match node parser)
+    std::string bj = "{\"block_id\":\"" + hex(mb.block_id)
+        + "\",\"prev_hash\":\"" + hex(mb.prev_hash)
+        + "\",\"merkle_root\":\"" + hex(mb.merkle_root)
+        + "\",\"commit\":\"" + hex(mb.commit)
+        + "\",\"checkpoints_root\":\"" + hex(mb.checkpoints_root)
+        + "\",\"height\":" + std::to_string(mb.height)
+        + ",\"timestamp\":" + std::to_string(mb.timestamp)
+        + ",\"bits_q\":" + std::to_string(mb.bits_q)
+        + ",\"nonce\":" + std::to_string(mb.nonce)
+        + ",\"extra_nonce\":" + std::to_string(mb.extra_nonce)
+        + ",\"subsidy\":" + std::to_string(mb.subsidy)
+        + ",\"miner\":" + std::to_string(mb.miner_reward)
+        + ",\"gold_vault\":" + std::to_string(mb.gold_vault_reward)
+        + ",\"popc_pool\":" + std::to_string(mb.popc_pool_reward)
+        + ",\"stability_metric\":" + std::to_string(mb.stability_metric);
+
+    bj += ",\"transactions\":[";
+    for(size_t i=0;i<tx_hexes_including_coinbase.size();++i){
+        if(i) bj += ",";
+        bj += "\"" + tx_hexes_including_coinbase[i] + "\"";
+    }
+    bj += "]}";
+
+    // Escape JSON for RPC param string
+    std::string escaped;
+    escaped.reserve(bj.size()*2);
+    for (char c : bj) { if (c == '"') escaped += "\\\""; else escaped += c; }
+
+    std::string body = "{\"method\":\"submitblock\",\"params\":[\"" + escaped + "\"],\"id\":1}";
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) return false;
+
+    struct sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+
+    struct hostent* he = gethostbyname(host.c_str());
+    if (!he) { close(fd); return false; }
+    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) { close(fd); return false; }
+
+    std::string req = "POST / HTTP/1.1\r\nHost: " + host
+        + "\r\nContent-Type: application/json\r\n"
+        + rpc_auth_header()
+        + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+
+    write(fd, req.c_str(), req.size());
+
+    char rbuf[4096]{};
+    read(fd, rbuf, sizeof(rbuf) - 1);
+    close(fd);
+
+    return std::string(rbuf).find("\"result\":true") != std::string::npos;
+}
+
+// =============================================================================
+// Chain loader
+// =============================================================================
 static bool load_chain(const std::string& path) {
     std::ifstream f(path); if (!f) return false;
     std::string json((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     int64_t ch = jint(json, "chain_height"); if (ch < 0) return false;
     size_t search = json.find("\"blocks\""); if (search == std::string::npos) return false;
     search = json.find('[', search); if (search == std::string::npos) return false;
+
     while (true) {
         auto bs = json.find('{', search); if (bs == std::string::npos) break;
         auto be = json.find('}', bs); if (be == std::string::npos) break;
         std::string bj = json.substr(bs, be - bs + 1); search = be + 1;
         std::string bid = jstr(bj, "block_id"); if (bid.size() != 64) continue;
         int64_t height = jint(bj, "height"); if (height == 0) continue;
+
         BlockMeta bm;
         bm.block_id = from_hex(bid); bm.height = height;
         bm.time = jint(bj, "timestamp"); bm.powDiffQ = (uint32_t)jint(bj, "bits_q");
         g_chain.push_back(bm);
-        MinedBlock mb;
-        mb.block_id = bm.block_id; mb.prev_hash = from_hex(jstr(bj, "prev_hash"));
+
+        MinedBlock mb{};
+        mb.block_id = bm.block_id;
+        mb.prev_hash = from_hex(jstr(bj, "prev_hash"));
         std::string mr = jstr(bj, "merkle_root");
         mb.merkle_root = mr.size() == 64 ? from_hex(mr) : Bytes32{};
+        std::string cm = jstr(bj, "commit");
+        mb.commit = cm.size()==64 ? from_hex(cm) : Bytes32{};
+        std::string cr = jstr(bj, "checkpoints_root");
+        mb.checkpoints_root = cr.size()==64 ? from_hex(cr) : Bytes32{};
         mb.height = height; mb.timestamp = bm.time; mb.bits_q = bm.powDiffQ;
-        mb.nonce = (uint32_t)jint(bj, "nonce"); mb.extra_nonce = (uint32_t)jint(bj, "extra_nonce");
+        mb.nonce = (uint32_t)jint(bj, "nonce");
+        mb.extra_nonce = (uint32_t)jint(bj, "extra_nonce");
         mb.subsidy = jint(bj, "subsidy");
-        mb.miner_reward = jint(bj, "miner"); mb.gold_vault_reward = jint(bj, "gold_vault");
+        mb.miner_reward = jint(bj, "miner");
+        mb.gold_vault_reward = jint(bj, "gold_vault");
         mb.popc_pool_reward = jint(bj, "popc_pool");
         mb.stability_metric = (uint64_t)jint(bj, "stability_metric");
         g_mined_blocks.push_back(mb);
+
         g_tip_hash = bm.block_id;
     }
+
     printf("Chain loaded: %zu blocks, height=%lld\n", g_chain.size(), (long long)(g_chain.size()-1));
     return true;
 }
@@ -435,7 +483,6 @@ static bool load_chain(const std::string& path) {
 // =============================================================================
 // Mine one block
 // =============================================================================
-
 static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int64_t h = (int64_t)g_chain.size();
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
@@ -443,23 +490,19 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     uint32_t bits_q = asert_next_difficulty(g_chain, h);
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_mode_from_chain(g_chain, h);
-    params = casert_apply_overlay(params, cdec.mode);
+    params = casert_apply_overlay(params, cdec);
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
     Bytes32 bk = compute_block_key(g_tip_hash);
 
     int64_t ts;
-    if (sim_time) {
-        ts = g_chain.back().time + TARGET_SPACING;
-    } else {
-        ts = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-    }
+    if (sim_time) ts = g_chain.back().time + TARGET_SPACING;
+    else ts = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     int64_t subsidy = sost_subsidy_stocks(h);
 
-    // ── Fetch mempool txs from node (only in RPC mode) ──
+    // Fetch mempool txs from node (RPC mode)
     int64_t total_fees = 0;
     std::vector<Transaction> mempool_txs;
     std::vector<std::string> mempool_tx_hexes;
@@ -478,8 +521,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 }
             }
             if (!mempool_txs.empty())
-                printf("[MINER] Template: %zu txs, fees=%lld stocks\n",
-                       mempool_txs.size(), (long long)total_fees);
+                printf("[MINER] Template: %zu txs, fees=%lld stocks\n", mempool_txs.size(), (long long)total_fees);
         }
     }
 
@@ -499,9 +541,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         return false;
     }
 
-    printf("[MINING] h=%lld diff=%u sub=%lld fees=%lld casert=%s merkle=%s txs=%zu\n",
+    printf("[MINING] h=%lld diff=%u sub=%lld fees=%lld merkle=%s txs=%zu\n",
            (long long)h, bits_q, (long long)subsidy, (long long)total_fees,
-           casert_mode_str(cdec.mode),
            hex(mrkl).substr(0, 16).c_str(), block_txs.size());
 
     uint8_t hc72[72];
@@ -510,6 +551,12 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     auto t0 = std::chrono::steady_clock::now();
     uint32_t extra_nonce = 0;
     bool found = false;
+
+    // Pre-serialize coinbase for submitblock (we update if extra_nonce changes, but we keep same tx here)
+    std::vector<Byte> cb_raw;
+    std::string cb_ser_err;
+    coinbase_tx.Serialize(cb_raw, &cb_ser_err);
+    std::string coinbase_hex = to_hex_str(cb_raw.data(), cb_raw.size());
 
     while (!found) {
         for (uint32_t nonce = 0; nonce <= max_nonce; ++nonce) {
@@ -535,8 +582,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                        nonce, extra_nonce, (long long)elapsed, block_txs.size());
                 printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                        (long long)subsidy, (long long)total_fees,
-                       (long long)split.miner,
-                       (long long)split.gold_vault, (long long)split.popc_pool);
+                       (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
 
                 BlockMeta meta;
                 meta.block_id = block_id;
@@ -546,7 +592,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 g_chain.push_back(meta);
                 g_tip_hash = block_id;
 
-                MinedBlock mb;
+                MinedBlock mb{};
                 mb.block_id = block_id;
                 mb.prev_hash = g_chain[g_chain.size() - 2].block_id;
                 mb.merkle_root = mrkl;
@@ -561,11 +607,17 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.popc_pool_reward = split.popc_pool;
                 g_mined_blocks.push_back(mb);
 
-                // Submit to node via RPC if configured
+                // Submit full block to node (coinbase + mempool txs)
                 if (!g_rpc_url.empty()) {
-                    if (rpc_submit_block(mb, mempool_tx_hexes))
-                        printf("  -> submitted to node OK (%zu txs)\n", mempool_tx_hexes.size());
-                    else printf("  -> WARNING: node rejected block!\n");
+                    std::vector<std::string> all_hexes;
+                    all_hexes.reserve(1 + mempool_tx_hexes.size());
+                    all_hexes.push_back(coinbase_hex);
+                    for(const auto& hx : mempool_tx_hexes) all_hexes.push_back(hx);
+
+                    if (rpc_submit_block_full(mb, all_hexes))
+                        printf("  -> submitted to node OK (%zu txs)\n", all_hexes.size());
+                    else
+                        printf("  -> WARNING: node rejected block!\n");
                 }
 
                 found = true;
@@ -576,14 +628,6 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         if (!found) {
             extra_nonce++;
             if (sim_time) ts++;
-            coinbase_tx.inputs[0].signature[8] = (uint8_t)(extra_nonce & 0xFF);
-            coinbase_tx.inputs[0].signature[9] = (uint8_t)((extra_nonce >> 8) & 0xFF);
-            block_txs[0] = coinbase_tx;
-            if (!ComputeMerkleRootFromTxs(block_txs, mrkl, &merr)) {
-                printf("[ERROR] merkle recompute: %s\n", merr.c_str());
-                return false;
-            }
-            build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
             if (extra_nonce > 1000) {
                 printf("\n[FATAL] exhausted 1000 extra_nonce loops\n");
                 return false;
@@ -596,7 +640,6 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 // =============================================================================
 // main
 // =============================================================================
-
 int main(int argc, char** argv) {
     ACTIVE_PROFILE = Profile::MAINNET;
 
@@ -614,25 +657,29 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--chain") && i + 1 < argc) chain_path = argv[++i];
         else if (!strcmp(argv[i], "--realtime")) sim_time = false;
         else if (!strcmp(argv[i], "--rpc") && i + 1 < argc) g_rpc_url = argv[++i];
+        else if (!strcmp(argv[i], "--rpc-user") && i + 1 < argc) g_rpc_user = argv[++i];
+        else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) g_rpc_pass = argv[++i];
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
             else if (!strcmp(argv[i], "dev")) prof = Profile::DEV;
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.4\n");
+            printf("SOST Miner v0.5\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce (default: 500000)\n");
             printf("  --genesis <path>   Genesis JSON\n");
             printf("  --chain <path>     Chain file (default: chain.json)\n");
             printf("  --rpc <host:port>  Submit blocks to node via RPC\n");
+            printf("  --rpc-user <u>     RPC Basic Auth user\n");
+            printf("  --rpc-pass <p>     RPC Basic Auth pass\n");
             printf("  --profile <p>      mainnet|testnet|dev\n");
             printf("  --realtime         Real timestamps\n");
             return 0;
         }
     }
 
-    printf("=== SOST Miner v0.4 (coinbase + merkle + mempool + RPC) ===\n");
+    printf("=== SOST Miner v0.5 (FULL submitblock) ===\n");
     printf("Profile: %s | Blocks: %d | Max nonce: %u%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
            num_blocks, max_nonce,

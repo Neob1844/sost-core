@@ -1,4 +1,10 @@
-// sost-cli.cpp — SOST Wallet CLI v1.1
+// sost-cli.cpp — SOST Wallet CLI v1.2
+//
+// CHANGES v1.2:
+// - ADD: --rpc-user / --rpc-pass for RPC Basic Auth
+// - FIX: fee default is now 0.00010000 SOST (10000 stocks)
+//        fee parameter is in SOST (same as amount, for consistency)
+//        Help text clarifies fee unit
 //
 // Commands:
 //   sost-cli newwallet [path]           Create new wallet
@@ -30,6 +36,13 @@
 
 static const char* DEFAULT_WALLET = "wallet.json";
 static const int64_t STOCKS_PER_SOST = 100000000LL;
+
+// Default fee: 0.00010000 SOST = 10000 stocks (sensible minimum)
+static const int64_t DEFAULT_FEE_STOCKS = 10000;
+
+// RPC auth credentials (empty = no auth header sent)
+static std::string g_rpc_user = "";
+static std::string g_rpc_pass = "";
 
 // Format stocks as SOST with 8 decimal places
 static std::string format_sost(int64_t stocks) {
@@ -75,9 +88,35 @@ static std::string to_hex(const uint8_t* data, size_t len) {
     return s;
 }
 
+// =============================================================================
+// Base64 encode (for RPC Basic Auth)
+// =============================================================================
+static std::string base64_encode(const std::string& in) {
+    static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    int val = 0, valb = -6;
+    for (unsigned char c : in) {
+        val = (val << 8) + c;
+        valb += 8;
+        while (valb >= 0) {
+            out.push_back(b64[(val >> valb) & 0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb > -6) out.push_back(b64[((val << 8) >> (valb + 8)) & 0x3F]);
+    while (out.size() % 4) out.push_back('=');
+    return out;
+}
+
+static std::string rpc_auth_header() {
+    if (g_rpc_user.empty() && g_rpc_pass.empty()) return "";
+    std::string token = base64_encode(g_rpc_user + ":" + g_rpc_pass);
+    return "Authorization: Basic " + token + "\r\n";
+}
+
 static void print_usage() {
-    printf("SOST Wallet CLI v1.1\n\n");
-    printf("Usage: sost-cli [--wallet <path>] <command> [args...]\n\n");
+    printf("SOST Wallet CLI v1.2\n\n");
+    printf("Usage: sost-cli [options] <command> [args...]\n\n");
     printf("Commands:\n");
     printf("  newwallet              Create new wallet file\n");
     printf("  getnewaddress [label]  Generate new receiving address\n");
@@ -92,16 +131,37 @@ static void print_usage() {
     printf("  info                   Wallet summary\n");
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
+    printf("  --rpc-user <user>      RPC Basic Auth username\n");
+    printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
+    printf("\nAmounts:\n");
+    printf("  <amt> and [fee] are in SOST (e.g. 10 = 10 SOST, 0.5 = 0.5 SOST)\n");
+    printf("  Default fee: %s SOST (%lld stocks)\n",
+           format_sost(DEFAULT_FEE_STOCKS).c_str(), (long long)DEFAULT_FEE_STOCKS);
+    printf("  Example: sost-cli send sost1abc... 10 0.0001\n");
 }
 
 int main(int argc, char** argv) {
     std::string wallet_path = DEFAULT_WALLET;
 
-    // Parse --wallet flag
+    // Parse global options (--wallet, --rpc-user, --rpc-pass)
     int arg_start = 1;
-    if (argc >= 3 && std::string(argv[1]) == "--wallet") {
-        wallet_path = argv[2];
-        arg_start = 3;
+    while (arg_start < argc && argv[arg_start][0] == '-') {
+        std::string flag = argv[arg_start];
+        if (flag == "--wallet" && arg_start + 1 < argc) {
+            wallet_path = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--rpc-user" && arg_start + 1 < argc) {
+            g_rpc_user = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--rpc-pass" && arg_start + 1 < argc) {
+            g_rpc_pass = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--help" || flag == "-h") {
+            print_usage();
+            return 0;
+        } else {
+            break;
+        }
     }
 
     if (argc < arg_start + 1) {
@@ -133,7 +193,6 @@ int main(int argc, char** argv) {
     {
         std::string err;
         if (!w.load(wallet_path, &err)) {
-            // If file doesn't exist, suggest creating one
             fprintf(stderr, "Error loading wallet '%s': %s\n",
                     wallet_path.c_str(), err.c_str());
             fprintf(stderr, "Use 'sost-cli newwallet' to create a new wallet.\n");
@@ -282,26 +341,34 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
-    // createtx <to_addr> <amount> [fee]
+    // createtx <to_addr> <amount_sost> [fee_sost]
     // =====================================================================
     if (cmd == "createtx") {
         if (argc < arg_start + 3) {
             fprintf(stderr, "Usage: sost-cli createtx <to_address> <amount_sost> [fee_sost]\n");
+            fprintf(stderr, "  Default fee: %s SOST\n", format_sost(DEFAULT_FEE_STOCKS).c_str());
             return 1;
         }
         std::string to_addr = argv[arg_start + 1];
         int64_t amount = parse_amount(argv[arg_start + 2]);
-        int64_t fee = 0;
+        int64_t fee = DEFAULT_FEE_STOCKS;
         if (argc > arg_start + 3) {
             fee = parse_amount(argv[arg_start + 3]);
         }
 
-        // For genesis hash, use the genesis block_id
+        if (fee == 0) {
+            fprintf(stderr, "Warning: fee is 0 — tx may not be relayed (min: 1 stock/byte)\n");
+        }
+        if (fee > 1 * STOCKS_PER_SOST) {
+            fprintf(stderr, "Warning: fee is %.8f SOST — that seems high! (default: %s SOST)\n",
+                    (double)fee / STOCKS_PER_SOST, format_sost(DEFAULT_FEE_STOCKS).c_str());
+        }
+
         sost::Hash256 genesis_hash = sost::from_hex("0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
         sost::Transaction tx;
         std::string err;
-        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, &err)) {
+        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, -1, &err)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -310,7 +377,6 @@ int main(int argc, char** argv) {
             fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
         }
 
-        // Serialize transaction
         std::vector<sost::Byte> raw;
         std::string ser_err;
         if (!tx.Serialize(raw, &ser_err)) {
@@ -323,7 +389,6 @@ int main(int argc, char** argv) {
         printf("  Size:    %zu bytes\n", raw.size());
         printf("  Raw hex: %s\n", to_hex(raw.data(), raw.size()).c_str());
 
-        // Compute txid
         sost::Hash256 txid;
         if (tx.ComputeTxId(txid)) {
             printf("  Txid:    %s\n", to_hex(txid.data(), 32).c_str());
@@ -333,16 +398,19 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
-    // send <to_addr> <amount> [fee] [--node host:port]
+    // send <to_addr> <amount_sost> [fee_sost] [--node host:port]
     // =====================================================================
     if (cmd == "send") {
         if (argc < arg_start + 3) {
             fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost> [fee_sost] [--node host:port]\n");
+            fprintf(stderr, "  Default fee: %s SOST (%lld stocks)\n",
+                    format_sost(DEFAULT_FEE_STOCKS).c_str(), (long long)DEFAULT_FEE_STOCKS);
+            fprintf(stderr, "  Example: sost-cli send sost1abc... 10 0.0001\n");
             return 1;
         }
         std::string to_addr = argv[arg_start + 1];
         int64_t amount = parse_amount(argv[arg_start + 2]);
-        int64_t fee = 100; // default: 100 stocks = 0.00000100 SOST
+        int64_t fee = DEFAULT_FEE_STOCKS;
         std::string node_addr = "127.0.0.1:18232";
 
         for (int i = arg_start + 3; i < argc; ++i) {
@@ -353,13 +421,24 @@ int main(int argc, char** argv) {
             }
         }
 
+        // Safety check: warn if fee seems way too high
+        if (fee > 1 * STOCKS_PER_SOST) {
+            printf("WARNING: Fee is %s SOST — this seems very high!\n", format_sost(fee).c_str());
+            printf("  Did you mean %s SOST? Fee is specified in SOST, not stocks.\n",
+                   format_sost(DEFAULT_FEE_STOCKS).c_str());
+            printf("  Example: sost-cli send <addr> 10 0.0001\n");
+            printf("  Proceeding anyway in 3 seconds... (Ctrl+C to cancel)\n");
+            fflush(stdout);
+            sleep(3);
+        }
+
         // Create transaction
         sost::Hash256 genesis_hash = sost::from_hex(
             "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
         sost::Transaction tx;
         std::string err;
-        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, &err)) {
+        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, -1, &err)) {
             fprintf(stderr, "Error creating tx: %s\n", err.c_str());
             return 1;
         }
@@ -382,7 +461,7 @@ int main(int argc, char** argv) {
         printf("TX created: %s\n", to_hex(txid.data(), 32).c_str());
         printf("  To:     %s\n", to_addr.c_str());
         printf("  Amount: %s SOST\n", format_sost(amount).c_str());
-        printf("  Fee:    %s SOST\n", format_sost(fee).c_str());
+        printf("  Fee:    %s SOST (%lld stocks)\n", format_sost(fee).c_str(), (long long)fee);
         printf("  Size:   %zu bytes\n", raw.size());
 
         // Send to node via HTTP RPC
@@ -412,9 +491,12 @@ int main(int argc, char** argv) {
             fprintf(stderr, "Cannot connect to %s:%d\n", host.c_str(), port);
             close(fd); return 1;
         }
+
         std::string http_req = "POST / HTTP/1.1\r\nHost: " + host
-            + "\r\nContent-Type: application/json\r\nContent-Length: "
-            + std::to_string(rpc_body.size()) + "\r\n\r\n" + rpc_body;
+            + "\r\nContent-Type: application/json\r\n"
+            + rpc_auth_header()
+            + "Content-Length: " + std::to_string(rpc_body.size()) + "\r\n\r\n" + rpc_body;
+
         write(fd, http_req.c_str(), http_req.size());
 
         char rbuf[4096]{};
@@ -425,8 +507,11 @@ int main(int argc, char** argv) {
         if (resp.find("\"result\":\"") != std::string::npos) {
             printf("\nTX accepted by node! Txid: %s\n", to_hex(txid.data(), 32).c_str());
             printf("  Waiting for next mined block to confirm...\n");
+        } else if (resp.find("401") != std::string::npos) {
+            fprintf(stderr, "\nTX rejected: 401 Unauthorized\n");
+            fprintf(stderr, "  Node requires auth. Use: --rpc-user <user> --rpc-pass <pass>\n");
+            return 1;
         } else {
-            // Extract error message
             auto err_pos = resp.find("\"message\":\"");
             if (err_pos != std::string::npos) {
                 auto err_end = resp.find('"', err_pos + 11);

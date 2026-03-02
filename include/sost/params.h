@@ -64,7 +64,7 @@ inline constexpr int32_t  ASERT_DOWN_STEPS = 2; // log2(4)
 inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
 
 // CASERT (match Python)
-inline constexpr int32_t CASERT_MAX_INTERVALS = 64;
+inline constexpr int32_t CASERT_MAX_INTERVALS = 10;
 inline constexpr int32_t CASERT_E_CAP         = 1800;
 inline constexpr int32_t CASERT_DEGRADED_TH   = 50;
 inline constexpr int32_t CASERT_OPEN_TH       = 200;

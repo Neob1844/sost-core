@@ -1,24 +1,18 @@
-// sost-node.cpp — SOST Full Node v0.2
+// sost-node.cpp — SOST Full Node v0.3.1
 //
-// Combines: P2P networking + JSON-RPC + chain sync + tx relay
+// Full node: P2P + JSON-RPC + chain sync + tx relay
 //
-// P2P Protocol (TCP, little-endian):
-//   [4 bytes MAGIC] [4 bytes cmd] [4 bytes payload_len] [payload...]
+// CHANGES v0.3.1 (bug-fix release):
+// - FIX #1: ACTIVE_PROFILE now set to MAINNET at startup (was DEV default)
+//           + added --profile mainnet|testnet|dev CLI flag
+// - FIX #2: Chain load validates tip continuity with genesis
+// - FIX #3: Defensive height check on block acceptance
 //
-// Commands:
-//   "VERS" - version handshake: height(8) + tip_hash(32)
-//   "VACK" - version ack
-//   "GETB" - getblocks: from_height(8)
-//   "BLCK" - block data: block JSON
-//   "TXXX" - transaction: raw tx hex
-//   "PING" - keepalive
-//   "PONG" - keepalive response
-//   "GETM" - get mempool txids
-//   "MPTX" - mempool txids list
-//
-// Usage:
-//   sost-node --genesis genesis_block.json --chain chain.json --port 19333
-//   sost-node --genesis genesis_block.json --connect 1.2.3.4:19333
+// v0.3 features preserved:
+// - REAL PoW verification for ConvergenceX blocks
+// - RPC Basic Auth (fail-closed by default)
+// - getblocktemplate enforces 500KB max block tx bytes (excluding coinbase)
+// - relay/mempool min fee handled by tx_validation policy
 
 #include "sost/wallet.h"
 #include "sost/address.h"
@@ -30,6 +24,13 @@
 #include "sost/tx_validation.h"
 #include "sost/emission.h"
 #include "sost/pow/casert.h"
+#include "sost/pow/asert.h"
+#include "sost/subsidy.h"
+#include "sost/merkle.h"
+#include "sost/serialize.h"
+#include "sost/pow/convergencex.h"
+#include "sost/block_validation.h"
+#include "sost/sostcompact.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -37,9 +38,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <pthread.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -70,11 +68,23 @@ static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
 static std::mutex   g_chain_mu;
 
+// RPC auth (fail-closed by default)
+static std::string g_rpc_user = "";
+static std::string g_rpc_pass = "";
+static bool        g_rpc_auth_required = true;
+
+// Block record
 struct StoredBlock {
     Hash256 block_id, prev_hash, merkle_root;
-    int64_t timestamp; uint32_t bits_q; uint64_t nonce;
-    int64_t height, subsidy;
+    Hash256 commit, checkpoints_root;
+    int64_t timestamp;
+    uint32_t bits_q;
+    uint32_t nonce;
+    uint32_t extra_nonce;
+    int64_t height;
+    int64_t subsidy;
     int64_t miner_reward, gold_vault_reward, popc_pool_reward;
+    uint64_t stability_metric;
 };
 static std::vector<StoredBlock> g_blocks;
 
@@ -97,75 +107,165 @@ static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
 
 // =============================================================================
-// Helpers (shared with RPC)
+// Helpers
 // =============================================================================
 
 static std::string to_hex(const uint8_t* d, size_t len) {
     static const char* hx = "0123456789abcdef";
     std::string s; s.reserve(len*2);
-    for(size_t i=0;i<len;++i){s+=hx[d[i]>>4];s+=hx[d[i]&0xF];}
+    for(size_t i=0;i<len;++i){ s+=hx[d[i]>>4]; s+=hx[d[i]&0xF]; }
     return s;
 }
+
 static bool hex_to_bytes(const std::string& h, uint8_t* out, size_t len) {
     if(h.size()!=len*2) return false;
-    auto hv=[](char c)->int{if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return 10+c-'a';if(c>='A'&&c<='F')return 10+c-'A';return -1;};
-    for(size_t i=0;i<len;++i){int hi=hv(h[i*2]),lo=hv(h[i*2+1]);if(hi<0||lo<0)return false;out[i]=(uint8_t)((hi<<4)|lo);}
+    auto hv=[](char c)->int{
+        if(c>='0'&&c<='9')return c-'0';
+        if(c>='a'&&c<='f')return 10+c-'a';
+        if(c>='A'&&c<='F')return 10+c-'A';
+        return -1;
+    };
+    for(size_t i=0;i<len;++i){
+        int hi=hv(h[i*2]),lo=hv(h[i*2+1]);
+        if(hi<0||lo<0) return false;
+        out[i]=(uint8_t)((hi<<4)|lo);
+    }
     return true;
 }
+
 static std::string format_sost(int64_t stocks) {
-    char buf[64]; bool neg=stocks<0; int64_t a=neg?-stocks:stocks;
-    snprintf(buf,sizeof(buf),"%s%lld.%08lld",neg?"-":"",(long long)(a/sost::STOCKS_PER_SOST),(long long)(a%sost::STOCKS_PER_SOST));
+    char buf[64];
+    bool neg=stocks<0;
+    int64_t a=neg?-stocks:stocks;
+    snprintf(buf,sizeof(buf),"%s%lld.%08lld",neg?"-":"",
+            (long long)(a/sost::STOCKS_PER_SOST),
+            (long long)(a%sost::STOCKS_PER_SOST));
     return buf;
 }
+
 static std::string json_escape(const std::string& s) {
-    std::string o; for(char c:s){if(c=='"')o+="\\\"";else if(c=='\\')o+="\\\\";else if(c=='\n')o+="\\n";else o+=c;} return o;
+    std::string o;
+    for(char c:s){
+        if(c=='"') o+="\\\"";
+        else if(c=='\\') o+="\\\\";
+        else if(c=='\n') o+="\\n";
+        else o+=c;
+    }
+    return o;
 }
 
 // =============================================================================
-// JSON parser
+// JSON parser (very small, sufficient for this node)
 // =============================================================================
 
 static std::string json_get_string(const std::string& json, const std::string& key) {
-    std::string needle="\""+key+"\""; auto pos=json.find(needle); if(pos==std::string::npos)return"";
-    pos=json.find(':',pos+needle.size()); if(pos==std::string::npos)return""; pos++;
-    while(pos<json.size()&&(json[pos]==' '||json[pos]=='\t'))pos++;
-    if(pos>=json.size())return"";
-    if(json[pos]=='"'){auto end=json.find('"',pos+1);if(end==std::string::npos)return"";return json.substr(pos+1,end-pos-1);}
-    auto end=json.find_first_of(",}] \t\n\r",pos);if(end==std::string::npos)end=json.size();return json.substr(pos,end-pos);
+    std::string needle="\""+key+"\"";
+    auto pos=json.find(needle);
+    if(pos==std::string::npos) return "";
+    pos=json.find(':',pos+needle.size());
+    if(pos==std::string::npos) return "";
+    pos++;
+    while(pos<json.size()&&(json[pos]==' '||json[pos]=='\t')) pos++;
+    if(pos>=json.size()) return "";
+    if(json[pos]=='"'){
+        auto end=json.find('"',pos+1);
+        if(end==std::string::npos) return "";
+        return json.substr(pos+1,end-pos-1);
+    }
+    auto end=json.find_first_of(",}] \t\n\r",pos);
+    if(end==std::string::npos) end=json.size();
+    return json.substr(pos,end-pos);
 }
+
 static std::vector<std::string> json_get_params(const std::string& json) {
-    std::vector<std::string> r; auto pos=json.find("\"params\""); if(pos==std::string::npos)return r;
-    pos=json.find('[',pos); if(pos==std::string::npos)return r;
-    // Find matching ']' accounting for nested brackets and strings
+    std::vector<std::string> r;
+    auto pos=json.find("\"params\"");
+    if(pos==std::string::npos) return r;
+    pos=json.find('[',pos);
+    if(pos==std::string::npos) return r;
+
     size_t depth=1; size_t end=pos+1; bool in_str=false;
     while(end<json.size()&&depth>0){
         char c=json[end];
-        if(in_str){if(c=='"'&&json[end-1]!='\\')in_str=false;}
-        else{if(c=='"')in_str=true;else if(c=='['||c=='{')depth++;else if(c==']'||c=='}')depth--;}
-        if(depth>0)end++;
+        if(in_str){
+            if(c=='"'&&json[end-1]!='\\') in_str=false;
+        } else {
+            if(c=='"') in_str=true;
+            else if(c=='['||c=='{') depth++;
+            else if(c==']'||c=='}') depth--;
+        }
+        if(depth>0) end++;
     }
-    if(depth!=0)return r;
-    std::string inner=json.substr(pos+1,end-pos-1); size_t i=0;
+    if(depth!=0) return r;
+
+    std::string inner=json.substr(pos+1,end-pos-1);
+    size_t i=0;
     while(i<inner.size()){
-        while(i<inner.size()&&(inner[i]==' '||inner[i]==','||inner[i]=='\t'||inner[i]=='\n'))i++;
-        if(i>=inner.size())break;
+        while(i<inner.size()&&(inner[i]==' '||inner[i]==','||inner[i]=='\t'||inner[i]=='\n')) i++;
+        if(i>=inner.size()) break;
+
         if(inner[i]=='"'){
             size_t q=i+1;
-            while(q<inner.size()){if(inner[q]=='"'&&(q==0||inner[q-1]!='\\'))break;q++;}
-            if(q>=inner.size())break;
+            while(q<inner.size()){
+                if(inner[q]=='"'&&(q==0||inner[q-1]!='\\')) break;
+                q++;
+            }
+            if(q>=inner.size()) break;
             std::string val=inner.substr(i+1,q-i-1);
-            std::string unesc; for(size_t k=0;k<val.size();k++){if(val[k]=='\\'&&k+1<val.size()&&val[k+1]=='"'){unesc+='"';k++;}else unesc+=val[k];}
-            r.push_back(unesc);i=q+1;
+            std::string unesc;
+            for(size_t k=0;k<val.size();k++){
+                if(val[k]=='\\'&&k+1<val.size()&&val[k+1]=='"'){ unesc+='"'; k++; }
+                else unesc+=val[k];
+            }
+            r.push_back(unesc);
+            i=q+1;
+        } else {
+            auto p=inner.find_first_of(",] \t\n\r",i);
+            if(p==std::string::npos) p=inner.size();
+            r.push_back(inner.substr(i,p-i));
+            i=p;
         }
-        else{auto p=inner.find_first_of(",] \t\n\r",i);if(p==std::string::npos)p=inner.size();r.push_back(inner.substr(i,p-i));i=p;}
     }
     return r;
 }
+
 static int64_t jint(const std::string& j,const std::string& k){
-    std::string n="\""+k+"\"";auto p=j.find(n);if(p==std::string::npos)return-1;p=j.find(':',p+n.size());if(p==std::string::npos)return-1;p++;while(p<j.size()&&j[p]==' ')p++;return std::stoll(j.substr(p));
+    std::string n="\""+k+"\"";
+    auto p=j.find(n); if(p==std::string::npos) return -1;
+    p=j.find(':',p+n.size()); if(p==std::string::npos) return -1;
+    p++;
+    while(p<j.size()&&(j[p]==' '||j[p]=='\t')) p++;
+    return std::stoll(j.substr(p));
 }
+
 static std::string jstr(const std::string& j,const std::string& k){
-    std::string n="\""+k+"\"";auto p=j.find(n);if(p==std::string::npos)return"";p=j.find('"',p+n.size()+1);if(p==std::string::npos)return"";auto e=j.find('"',p+1);if(e==std::string::npos)return"";return j.substr(p+1,e-p-1);
+    std::string n="\""+k+"\"";
+    auto p=j.find(n); if(p==std::string::npos) return "";
+    p=j.find('"',p+n.size()+1); if(p==std::string::npos) return "";
+    auto e=j.find('"',p+1); if(e==std::string::npos) return "";
+    return j.substr(p+1,e-p-1);
+}
+
+// Parse "transactions":[ "hex", "hex", ... ] from block JSON
+static std::vector<std::string> json_get_tx_hexes(const std::string& block_json) {
+    std::vector<std::string> out;
+    auto tx_pos = block_json.find("\"transactions\"");
+    if(tx_pos==std::string::npos) return out;
+
+    auto arr_start = block_json.find('[', tx_pos);
+    auto arr_end = block_json.find(']', arr_start);
+    if(arr_start==std::string::npos || arr_end==std::string::npos) return out;
+
+    std::string arr = block_json.substr(arr_start+1, arr_end-arr_start-1);
+    size_t p=0;
+    while(p<arr.size()){
+        auto q1=arr.find('"',p); if(q1==std::string::npos) break;
+        auto q2=arr.find('"',q1+1); if(q2==std::string::npos) break;
+        std::string tx_hex=arr.substr(q1+1,q2-q1-1);
+        p=q2+1;
+        if(!tx_hex.empty()) out.push_back(tx_hex);
+    }
+    return out;
 }
 
 // Forward declarations
@@ -173,9 +273,104 @@ static void p2p_broadcast_tx(const std::string& hex_str);
 static bool process_block(const std::string& block_json);
 
 // =============================================================================
-// RPC (reuse from sost-rpc.cpp, condensed)
+// RPC Basic Auth (Base64 decode)
 // =============================================================================
+static inline bool is_b64(unsigned char c) { return (isalnum(c) || c=='+' || c=='/'); }
 
+static std::string base64_decode(const std::string& encoded) {
+    static const std::string b64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    int in_len=(int)encoded.size();
+    int i=0,j=0,in_=0;
+    unsigned char a4[4],a3[3];
+    std::string ret; ret.reserve((encoded.size()*3)/4);
+
+    while(in_len-- && encoded[in_]!='=' && is_b64((unsigned char)encoded[in_])) {
+        a4[i++]=(unsigned char)encoded[in_]; in_++;
+        if(i==4){
+            for(i=0;i<4;i++) a4[i]=(unsigned char)b64.find(a4[i]);
+            a3[0]=(unsigned char)((a4[0]<<2)+((a4[1]&0x30)>>4));
+            a3[1]=(unsigned char)(((a4[1]&0x0F)<<4)+((a4[2]&0x3C)>>2));
+            a3[2]=(unsigned char)(((a4[2]&0x03)<<6)+a4[3]);
+            for(i=0;i<3;i++) ret.push_back((char)a3[i]);
+            i=0;
+        }
+    }
+    if(i){
+        for(j=i;j<4;j++) a4[j]=0;
+        for(j=0;j<4;j++) a4[j]=(unsigned char)b64.find(a4[j]);
+        a3[0]=(unsigned char)((a4[0]<<2)+((a4[1]&0x30)>>4));
+        a3[1]=(unsigned char)(((a4[1]&0x0F)<<4)+((a4[2]&0x3C)>>2));
+        a3[2]=(unsigned char)(((a4[2]&0x03)<<6)+a4[3]);
+        for(j=0;j<i-1;j++) ret.push_back((char)a3[j]);
+    }
+    return ret;
+}
+
+static std::string trim(const std::string& s) {
+    size_t a=0; while(a<s.size()&&(s[a]==' '||s[a]=='\t'||s[a]=='\r'||s[a]=='\n')) a++;
+    size_t b=s.size(); while(b>a&&(s[b-1]==' '||s[b-1]=='\t'||s[b-1]=='\r'||s[b-1]=='\n')) b--;
+    return s.substr(a,b-a);
+}
+
+static bool rpc_check_basic_auth(const std::string& req) {
+    if(!g_rpc_auth_required) return true;
+    if(g_rpc_user.empty() || g_rpc_pass.empty()) return false;
+
+    auto p=req.find("Authorization:");
+    if(p==std::string::npos) return false;
+    auto e=req.find("\r\n",p);
+    if(e==std::string::npos) e=req.find('\n',p);
+    if(e==std::string::npos) return false;
+
+    std::string line=req.substr(p,e-p);
+    auto b=line.find("Basic ");
+    if(b==std::string::npos) return false;
+    std::string b64=trim(line.substr(b+6));
+    std::string decoded=base64_decode(b64);
+    return decoded==(g_rpc_user+":"+g_rpc_pass);
+}
+
+static void rpc_reply_401(int fd) {
+    const std::string resp =
+        "HTTP/1.1 401 Unauthorized\r\n"
+        "WWW-Authenticate: Basic realm=\"sost\"\r\n"
+        "Content-Length: 0\r\n"
+        "Connection: close\r\n\r\n";
+    write(fd, resp.c_str(), resp.size());
+}
+
+// =============================================================================
+// ConvergenceX header builder (mirror of miner)
+// =============================================================================
+static void build_hc72(uint8_t out[72],
+                       const Bytes32& prev, const Bytes32& mrkl,
+                       uint32_t ts, uint32_t bits) {
+    std::memcpy(out, prev.data(), 32);
+    std::memcpy(out + 32, mrkl.data(), 32);
+    write_u32_le(out + 64, ts);
+    write_u32_le(out + 68, bits);
+}
+
+static std::vector<uint8_t> build_full_header_bytes(
+    const uint8_t hc72[72],
+    const Bytes32& checkpoints_root,
+    uint32_t nonce_u32,
+    uint32_t extra_u32)
+{
+    std::vector<uint8_t> buf;
+    buf.reserve(10 + 4 + 72 + 32 + 4 + 4);
+    append_magic(buf);
+    append(buf, "HDR2", 4);
+    append(buf, hc72, 72);
+    append(buf, checkpoints_root);
+    append_u32_le(buf, nonce_u32);
+    append_u32_le(buf, extra_u32);
+    return buf;
+}
+
+// =============================================================================
+// RPC (condensed)
+// =============================================================================
 static std::string rpc_result(const std::string& id, const std::string& r) {
     return "{\"jsonrpc\":\"2.0\",\"id\":"+id+",\"result\":"+r+"}";
 }
@@ -186,12 +381,14 @@ static std::string rpc_error(const std::string& id, int code, const std::string&
 static std::string handle_getblockcount(const std::string& id, const std::vector<std::string>&) {
     return rpc_result(id, std::to_string(g_chain_height));
 }
+
 static std::string handle_getblockhash(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing height");
     int64_t h=std::stoll(p[0]);
     if(h<0||h>=(int64_t)g_blocks.size()) return rpc_error(id,-8,"Block height out of range");
     return rpc_result(id,"\""+to_hex(g_blocks[h].block_id.data(),32)+"\"");
 }
+
 static std::string handle_getblock(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing blockhash");
     for(const auto& b:g_blocks){
@@ -201,8 +398,11 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
              <<",\"previousblockhash\":\""<<to_hex(b.prev_hash.data(),32)
              <<"\",\"merkleroot\":\""<<to_hex(b.merkle_root.data(),32)
              <<"\",\"time\":"<<b.timestamp<<",\"bits_q\":"<<b.bits_q
-             <<",\"nonce\":"<<b.nonce<<",\"subsidy\":"<<b.subsidy;
-            // Compute cASERT mode for this block
+             <<",\"nonce\":"<<b.nonce<<",\"extra_nonce\":"<<b.extra_nonce
+             <<",\"subsidy\":"<<b.subsidy
+             <<",\"commit\":\""<<to_hex(b.commit.data(),32)<<"\""
+             <<",\"checkpoints_root\":\""<<to_hex(b.checkpoints_root.data(),32)<<"\""
+             <<",\"stability_metric\":"<<b.stability_metric;
             std::vector<BlockMeta> meta;
             for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){
                 BlockMeta bm; bm.block_id=g_blocks[j].block_id;
@@ -217,30 +417,43 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
     }
     return rpc_error(id,-5,"Block not found");
 }
+
 static std::string handle_getinfo(const std::string& id, const std::vector<std::string>&) {
     size_t peers_count;
-    {std::lock_guard<std::mutex> lk(g_peers_mu); peers_count=g_peers.size();}
+    { std::lock_guard<std::mutex> lk(g_peers_mu); peers_count=g_peers.size(); }
+
+    // Show which profile is active so operator can verify at a glance
+    const char* profile_str = "unknown";
+    if(ACTIVE_PROFILE == Profile::MAINNET) profile_str = "mainnet";
+    else if(ACTIVE_PROFILE == Profile::TESTNET) profile_str = "testnet";
+    else if(ACTIVE_PROFILE == Profile::DEV) profile_str = "dev";
+
     std::ostringstream s;
-    s<<"{\"version\":\"0.5.0\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
+    s<<"{\"version\":\"0.3.1\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
-     <<",\"testnet\":false,\"balance\":\""<<format_sost(g_wallet.balance())
+     <<",\"profile\":\""<<profile_str<<"\""
+     <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
+     <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))
      <<"\",\"keypoolsize\":"<<g_wallet.num_keys()
      <<",\"mempool_size\":"<<g_mempool.Size()
      <<",\"utxo_count\":"<<g_utxo_set.Size()<<"}";
     return rpc_result(id,s.str());
 }
+
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
-    double bal=(double)g_wallet.balance()/(double)sost::STOCKS_PER_SOST;
+    double bal=(double)g_wallet.balance(g_chain_height)/(double)sost::STOCKS_PER_SOST;
     char buf[64]; snprintf(buf,sizeof(buf),"%.8f",bal);
     return rpc_result(id,buf);
 }
+
 static std::string handle_getnewaddress(const std::string& id, const std::vector<std::string>& p) {
     std::string label; if(!p.empty()) label=p[0];
     auto key=g_wallet.generate_key(label);
     std::string err; g_wallet.save(g_wallet_path,&err);
     return rpc_result(id,"\""+key.address+"\"");
 }
+
 static std::string handle_validateaddress(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     bool valid=address_valid(p[0]); bool mine=g_wallet.has_address(p[0]);
@@ -249,8 +462,9 @@ static std::string handle_validateaddress(const std::string& id, const std::vect
      <<"\",\"ismine\":"<<(mine?"true":"false")<<"}";
     return rpc_result(id,s.str());
 }
+
 static std::string handle_listunspent(const std::string& id, const std::vector<std::string>&) {
-    auto utxos=g_wallet.list_unspent(); std::ostringstream s; s<<"[";
+    auto utxos=g_wallet.list_unspent(g_chain_height); std::ostringstream s; s<<"[";
     for(size_t i=0;i<utxos.size();++i){
         if(i)s<<","; const auto& u=utxos[i];
         s<<"{\"txid\":\""<<to_hex(u.txid.data(),32)<<"\",\"vout\":"<<u.vout
@@ -259,62 +473,92 @@ static std::string handle_listunspent(const std::string& id, const std::vector<s
     }
     s<<"]"; return rpc_result(id,s.str());
 }
+
 static std::string handle_gettxout(const std::string& id, const std::vector<std::string>& p) {
     if(p.size()<2) return rpc_error(id,-1,"missing txid and vout");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
     OutPoint op; op.txid=txid; op.index=(uint32_t)std::stoul(p[1]);
     auto entry=g_utxo_set.GetUTXO(op); if(!entry) return rpc_result(id,"null");
     std::ostringstream s;
-    s<<"{\"bestblock\":\""<<to_hex(g_genesis_hash.data(),32)<<"\",\"confirmations\":"<<(g_chain_height-entry->height+1)
+    s<<"{\"bestblock\":\""<<to_hex(g_blocks.back().block_id.data(),32)
+     <<"\",\"confirmations\":"<<(g_chain_height-entry->height+1)
      <<",\"value\":"<<format_sost(entry->amount)<<",\"address\":\""<<address_encode(entry->pubkey_hash)
      <<"\",\"type\":"<<(int)entry->type<<",\"coinbase\":"<<(entry->is_coinbase?"true":"false")<<"}";
     return rpc_result(id,s.str());
 }
+
 static std::string handle_sendrawtransaction(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing hex tx");
-    std::string hex_str=p[0]; if(hex_str.size()%2!=0) return rpc_error(id,-22,"odd hex length");
+    std::string hex_str=p[0];
+    if(hex_str.size()%2!=0) return rpc_error(id,-22,"odd hex length");
+
     std::vector<Byte> raw; raw.reserve(hex_str.size()/2);
-    for(size_t i=0;i<hex_str.size();i+=2){uint8_t b;if(!hex_to_bytes(hex_str.substr(i,2),&b,1))return rpc_error(id,-22,"invalid hex");raw.push_back(b);}
+    for(size_t i=0;i<hex_str.size();i+=2){
+        uint8_t b; if(!hex_to_bytes(hex_str.substr(i,2),&b,1)) return rpc_error(id,-22,"invalid hex");
+        raw.push_back(b);
+    }
+
     Transaction tx; std::string err;
     if(!Transaction::Deserialize(raw,tx,&err)) return rpc_error(id,-22,"TX decode: "+err);
+
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
+
     TxValidationContext ctx; ctx.genesis_hash=g_genesis_hash; ctx.spend_height=g_chain_height+1;
+
     int64_t now=(int64_t)time(nullptr);
     auto result=g_mempool.AcceptToMempool(tx,g_utxo_set,ctx,now);
     if(!result.accepted){
-        printf("[RPC] sendrawtx REJECTED: %s\n",result.reason.c_str());
         return rpc_error(id,-25,result.reason);
     }
-    printf("[RPC] sendrawtx ACCEPTED: %s fee=%lld\n",to_hex(txid.data(),32).c_str(),(long long)result.fee);
+
     p2p_broadcast_tx(hex_str);
     return rpc_result(id,"\""+to_hex(txid.data(),32)+"\"");
 }
+
 static std::string handle_getmempoolinfo(const std::string& id, const std::vector<std::string>&) {
     std::ostringstream s;
     s<<"{\"size\":"<<g_mempool.Size()<<",\"bytes\":"<<g_mempool.TotalSize()
      <<",\"total_fees\":"<<g_mempool.TotalFees()<<",\"maxsize\":"<<g_mempool.MaxEntries()<<"}";
     return rpc_result(id,s.str());
 }
+
 static std::string handle_getrawmempool(const std::string& id, const std::vector<std::string>&) {
-    auto tmpl=g_mempool.BuildBlockTemplate(); std::ostringstream s; s<<"[";
-    for(size_t i=0;i<tmpl.txids.size();++i){if(i)s<<",";s<<"\""<<to_hex(tmpl.txids[i].data(),32)<<"\"";}
+    auto tmpl=g_mempool.BuildBlockTemplate();
+    std::ostringstream s; s<<"[";
+    for(size_t i=0;i<tmpl.txids.size();++i){
+        if(i)s<<",";
+        s<<"\""<<to_hex(tmpl.txids[i].data(),32)<<"\"";
+    }
     s<<"]"; return rpc_result(id,s.str());
 }
+
 static std::string handle_getrawtransaction(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing txid");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
-    const MempoolEntry* entry=g_mempool.GetEntry(txid); if(!entry) return rpc_error(id,-5,"Not in mempool");
+    const MempoolEntry* entry=g_mempool.GetEntry(txid);
+    if(!entry) return rpc_error(id,-5,"Not in mempool");
     std::vector<Byte> raw; std::string err;
     if(!entry->tx.Serialize(raw,&err)) return rpc_error(id,-1,"serialize: "+err);
     bool verbose=(p.size()>1&&p[1]!="0"&&p[1]!="false");
     if(!verbose) return rpc_result(id,"\""+to_hex(raw.data(),raw.size())+"\"");
     std::ostringstream s;
-    s<<"{\"txid\":\""<<to_hex(txid.data(),32)<<"\",\"size\":"<<raw.size()<<",\"fee\":"<<entry->fee<<",\"vin\":[";
-    for(size_t i=0;i<entry->tx.inputs.size();++i){if(i)s<<",";const auto&in=entry->tx.inputs[i];s<<"{\"txid\":\""<<to_hex(in.prev_txid.data(),32)<<"\",\"vout\":"<<in.prev_index<<"}";}
+    s<<"{\"txid\":\""<<to_hex(txid.data(),32)<<"\",\"size\":"<<raw.size()
+     <<",\"fee\":"<<entry->fee<<",\"vin\":[";
+    for(size_t i=0;i<entry->tx.inputs.size();++i){
+        if(i)s<<",";
+        const auto& in=entry->tx.inputs[i];
+        s<<"{\"txid\":\""<<to_hex(in.prev_txid.data(),32)<<"\",\"vout\":"<<in.prev_index<<"}";
+    }
     s<<"],\"vout\":[";
-    for(size_t i=0;i<entry->tx.outputs.size();++i){if(i)s<<",";const auto&o=entry->tx.outputs[i];s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<address_encode(o.pubkey_hash)<<"\"}";}
-    s<<"]}"; return rpc_result(id,s.str());
+    for(size_t i=0;i<entry->tx.outputs.size();++i){
+        if(i)s<<",";
+        const auto& o=entry->tx.outputs[i];
+        s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<address_encode(o.pubkey_hash)<<"\"}";
+    }
+    s<<"]}";
+    return rpc_result(id,s.str());
 }
+
 static std::string handle_getpeerinfo(const std::string& id, const std::vector<std::string>&) {
     std::lock_guard<std::mutex> lk(g_peers_mu);
     std::ostringstream s; s<<"[";
@@ -326,39 +570,17 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
     s<<"]"; return rpc_result(id,s.str());
 }
 
-static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
-    if(p.empty()) return rpc_error(id,-1,"missing address");
-    if(!address_valid(p[0])) return rpc_error(id,-5,"invalid address");
-    PubKeyHash target_pkh{}; address_decode(p[0],target_pkh);
-    const auto& umap=g_utxo_set.GetMap();
-    int64_t balance=0; int utxo_count=0;
-    std::ostringstream utxos; utxos<<"[";
-    for(const auto& [op,entry]:umap){
-        if(entry.pubkey_hash==target_pkh){
-            if(utxo_count)utxos<<",";
-            utxos<<"{\"txid\":\""<<to_hex(op.txid.data(),32)<<"\",\"vout\":"<<op.index
-                 <<",\"amount\":"<<format_sost(entry.amount)<<",\"height\":"<<entry.height
-                 <<",\"coinbase\":"<<(entry.is_coinbase?"true":"false")<<"}";
-            balance+=entry.amount; utxo_count++;
-        }
-    }
-    utxos<<"]";
-    bool mine=g_wallet.has_address(p[0]);
-    std::ostringstream s;
-    s<<"{\"address\":\""<<p[0]<<"\",\"balance\":"<<format_sost(balance)
-     <<",\"utxo_count\":"<<utxo_count<<",\"ismine\":"<<(mine?"true":"false")
-     <<",\"utxos\":"<<utxos.str()<<"}";
-    return rpc_result(id,s.str());
-}
-
 static std::string handle_submitblock(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing block JSON");
     if(process_block(p[0])) return rpc_result(id,"true");
     return rpc_error(id,-25,"Block rejected");
 }
 
+// 500KB tx bytes in template (coinbase excluded here)
+static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
+
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
-    auto tmpl = g_mempool.BuildBlockTemplate();
+    auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES);
     std::ostringstream s;
     s << "{\"transactions\":[";
     for (size_t i = 0; i < tmpl.txs.size(); ++i) {
@@ -371,29 +593,91 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     }
     s << "],\"total_fees\":" << tmpl.total_fees
       << ",\"count\":" << tmpl.txs.size()
+      << ",\"max_block_tx_bytes\":" << NODE_MAX_BLOCK_TX_BYTES
       << ",\"mempool_size\":" << g_mempool.Size() << "}";
+    return rpc_result(id, s.str());
+}
+
+static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing address");
+    std::string addr = p[0];
+
+    bool valid = address_valid(addr);
+    bool mine = g_wallet.has_address(addr);
+
+    PubKeyHash pkh{};
+    address_decode(addr, pkh);
+
+    int64_t total = 0;
+    int utxo_count = 0;
+    std::ostringstream utxo_arr;
+    utxo_arr << "[";
+
+    const auto& umap = g_utxo_set.GetMap();
+    bool first = true;
+    for (const auto& kv : umap) {
+        const auto& op = kv.first;
+        const auto& entry = kv.second;
+        if (entry.pubkey_hash != pkh) continue;
+
+        if (!first) utxo_arr << ",";
+        first = false;
+
+        utxo_arr << "{\"txid\":\"" << to_hex(op.txid.data(), 32)
+                 << "\",\"vout\":" << op.index
+                 << ",\"amount\":" << format_sost(entry.amount)
+                 << ",\"height\":" << entry.height
+                 << ",\"type\":" << (int)entry.type
+                 << ",\"coinbase\":" << (entry.is_coinbase ? "true" : "false")
+                 << "}";
+
+        total += entry.amount;
+        utxo_count++;
+    }
+    utxo_arr << "]";
+
+    std::ostringstream s;
+    s << "{\"address\":\"" << json_escape(addr) << "\""
+      << ",\"isvalid\":" << (valid ? "true" : "false")
+      << ",\"ismine\":" << (mine ? "true" : "false")
+      << ",\"balance\":" << format_sost(total)
+      << ",\"utxo_count\":" << utxo_count
+      << ",\"utxos\":" << utxo_arr.str()
+      << "}";
     return rpc_result(id, s.str());
 }
 
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
-    {"getblockcount",handle_getblockcount},{"getblockhash",handle_getblockhash},{"getblock",handle_getblock},
-    {"getinfo",handle_getinfo},{"getbalance",handle_getbalance},{"getnewaddress",handle_getnewaddress},
-    {"validateaddress",handle_validateaddress},{"listunspent",handle_listunspent},{"gettxout",handle_gettxout},
-    {"sendrawtransaction",handle_sendrawtransaction},{"getmempoolinfo",handle_getmempoolinfo},
-    {"getrawmempool",handle_getrawmempool},{"getrawtransaction",handle_getrawtransaction},
-    {"getpeerinfo",handle_getpeerinfo},{"getaddressinfo",handle_getaddressinfo},
+    {"getblockcount",handle_getblockcount},
+    {"getblockhash",handle_getblockhash},
+    {"getblock",handle_getblock},
+    {"getinfo",handle_getinfo},
+    {"getbalance",handle_getbalance},
+    {"getnewaddress",handle_getnewaddress},
+    {"validateaddress",handle_validateaddress},
+    {"listunspent",handle_listunspent},
+    {"gettxout",handle_gettxout},
+    {"sendrawtransaction",handle_sendrawtransaction},
+    {"getmempoolinfo",handle_getmempoolinfo},
+    {"getrawmempool",handle_getrawmempool},
+    {"getrawtransaction",handle_getrawtransaction},
+    {"getpeerinfo",handle_getpeerinfo},
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
+    {"getaddressinfo",handle_getaddressinfo},
 };
+
 static std::string dispatch_rpc(const std::string& req) {
     std::string method=json_get_string(req,"method"),id_raw=json_get_string(req,"id");
     std::string id=id_raw.empty()?"null":id_raw;
-    if(!id_raw.empty()&&id_raw[0]>='0'&&id_raw[0]<='9')id=id_raw;
-    else if(id_raw!="null"&&!id_raw.empty())id="\""+id_raw+"\"";
+    if(!id_raw.empty()&&id_raw[0]>='0'&&id_raw[0]<='9') id=id_raw;
+    else if(id_raw!="null"&&!id_raw.empty()) id="\""+id_raw+"\"";
+
     if(method.empty()) return rpc_error(id,-32600,"missing method");
-    auto it=g_handlers.find(method); if(it==g_handlers.end()) return rpc_error(id,-32601,"Method not found: "+method);
+    auto it=g_handlers.find(method);
+    if(it==g_handlers.end()) return rpc_error(id,-32601,"Method not found: "+method);
     return it->second(id,json_get_params(req));
 }
 
@@ -467,14 +751,19 @@ static void p2p_send_block(int fd, int64_t h) {
     s<<"{\"block_id\":\""<<to_hex(b.block_id.data(),32)
      <<"\",\"prev_hash\":\""<<to_hex(b.prev_hash.data(),32)
      <<"\",\"merkle_root\":\""<<to_hex(b.merkle_root.data(),32)
+     <<"\",\"commit\":\""<<to_hex(b.commit.data(),32)
+     <<"\",\"checkpoints_root\":\""<<to_hex(b.checkpoints_root.data(),32)
      <<"\",\"height\":"<<b.height
      <<",\"timestamp\":"<<b.timestamp
      <<",\"bits_q\":"<<b.bits_q
      <<",\"nonce\":"<<b.nonce
+     <<",\"extra_nonce\":"<<b.extra_nonce
      <<",\"subsidy\":"<<b.subsidy
      <<",\"miner\":"<<b.miner_reward
      <<",\"gold_vault\":"<<b.gold_vault_reward
-     <<",\"popc_pool\":"<<b.popc_pool_reward<<"}";
+     <<",\"popc_pool\":"<<b.popc_pool_reward
+     <<",\"stability_metric\":"<<b.stability_metric
+     <<"}";
     std::string js=s.str();
     p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
 }
@@ -488,171 +777,318 @@ static void p2p_broadcast_tx(const std::string& hex_str) {
     }
 }
 
-// Process received block (with standard transaction support)
-static bool process_block(const std::string& block_json) {
-    std::string bid=jstr(block_json,"block_id"); if(bid.size()!=64){printf("[BLOCK] REJECTED: bad block_id len=%zu\n",bid.size());return false;}
-    int64_t height=jint(block_json,"height");
+// =============================================================================
+// Block processing (FULL validation + PoW)
+// =============================================================================
 
-    std::lock_guard<std::mutex> lk(g_chain_mu);
-    if(height<(int64_t)g_blocks.size()){printf("[BLOCK] REJECTED: height %lld < chain size %zu\n",(long long)height,g_blocks.size());return false;}
-    if(height!=(int64_t)g_blocks.size()){printf("[BLOCK] REJECTED: height %lld != expected %zu\n",(long long)height,g_blocks.size());return false;}
-
-    StoredBlock sb;
-    sb.block_id=from_hex(bid); sb.prev_hash=from_hex(jstr(block_json,"prev_hash"));
-    sb.merkle_root=from_hex(jstr(block_json,"merkle_root"));
-    sb.timestamp=jint(block_json,"timestamp"); sb.bits_q=(uint32_t)jint(block_json,"bits_q");
-    sb.nonce=(uint64_t)jint(block_json,"nonce"); sb.height=height;
-    sb.subsidy=jint(block_json,"subsidy");
-    sb.miner_reward=jint(block_json,"miner");
-    sb.gold_vault_reward=jint(block_json,"gold_vault");
-    sb.popc_pool_reward=jint(block_json,"popc_pool");
-
-    if(g_blocks.size()>0 && sb.prev_hash!=g_blocks.back().block_id){printf("[BLOCK] REJECTED: prev_hash mismatch at height %lld\n",(long long)height);return false;}
-
-    g_blocks.push_back(sb);
-    g_chain_height=height;
-
-    // 1. Añadir UTXOs de coinbase
-    struct{const char*a;int64_t v;uint8_t t;}cb[3]={
-        {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
-        {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
-        {ADDR_POPC_POOL,sb.popc_pool_reward,OUT_COINBASE_POPC},
-    };
-    for(int i=0;i<3;++i){
-        PubKeyHash pkh{}; address_decode(cb[i].a,pkh);
-        OutPoint op; op.txid=sb.block_id; op.index=(uint32_t)i;
-        UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t;
-        e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
-        std::string err; g_utxo_set.AddUTXO(op,e,&err);
-        // Actualizar wallet si la dirección es nuestra
-        std::string addr=address_encode(pkh);
-        if(g_wallet.has_address(addr)){
-            WalletUTXO wu; wu.txid=op.txid; wu.vout=op.index;
-            wu.amount=e.amount; wu.output_type=e.type;
-            wu.pkh=pkh; wu.height=height; wu.spent=false;
-            g_wallet.add_utxo(wu);
-        }
+static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw) {
+    if(tx_hex.empty() || (tx_hex.size()%2)!=0) return false;
+    out_raw.clear();
+    out_raw.reserve(tx_hex.size()/2);
+    for(size_t i=0;i<tx_hex.size();i+=2){
+        uint8_t b;
+        if(!hex_to_bytes(tx_hex.substr(i,2), &b, 1)) return false;
+        out_raw.push_back(b);
     }
-
-    // 2. Procesar transacciones estándar del bloque
-    size_t tx_count = 0;
-    auto tx_pos = block_json.find("\"transactions\"");
-    if (tx_pos != std::string::npos) {
-        auto arr_start = block_json.find('[', tx_pos);
-        auto arr_end = block_json.find(']', arr_start);
-        if (arr_start != std::string::npos && arr_end != std::string::npos) {
-            std::string arr = block_json.substr(arr_start + 1, arr_end - arr_start - 1);
-            size_t p = 0;
-            std::vector<Transaction> block_std_txs;
-
-            while (p < arr.size()) {
-                auto q1 = arr.find('"', p);
-                if (q1 == std::string::npos) break;
-                auto q2 = arr.find('"', q1 + 1);
-                if (q2 == std::string::npos) break;
-                std::string tx_hex = arr.substr(q1 + 1, q2 - q1 - 1);
-                p = q2 + 1;
-
-                if (tx_hex.empty() || tx_hex.size() % 2 != 0) continue;
-
-                std::vector<Byte> raw;
-                raw.reserve(tx_hex.size() / 2);
-                bool hex_ok = true;
-                for (size_t i = 0; i < tx_hex.size(); i += 2) {
-                    uint8_t b;
-                    if (!hex_to_bytes(tx_hex.substr(i, 2), &b, 1)) { hex_ok = false; break; }
-                    raw.push_back(b);
-                }
-                if (!hex_ok) continue;
-
-                Transaction tx;
-                std::string err;
-                if (!Transaction::Deserialize(raw, tx, &err)) {
-                    printf("[BLOCK] WARNING: skip malformed tx: %s\n", err.c_str());
-                    continue;
-                }
-                if (tx.tx_type == TX_TYPE_COINBASE) continue;
-
-                block_std_txs.push_back(tx);
-            }
-
-            for (const auto& tx : block_std_txs) {
-                Hash256 txid{};
-                std::string err;
-                if (!tx.ComputeTxId(txid, &err)) {
-                    printf("[BLOCK] WARNING: cannot compute txid: %s\n", err.c_str());
-                    continue;
-                }
-
-                // Gastar inputs
-                for (const auto& txin : tx.inputs) {
-                    OutPoint op{txin.prev_txid, txin.prev_index};
-                    g_utxo_set.SpendUTXO(op, nullptr, nullptr);
-                    g_wallet.mark_spent(txin.prev_txid, txin.prev_index);
-                }
-
-                // Crear outputs
-                for (size_t i = 0; i < tx.outputs.size(); ++i) {
-                    const auto& txout = tx.outputs[i];
-                    OutPoint op{txid, (uint32_t)i};
-                    UTXOEntry entry;
-                    entry.amount = txout.amount;
-                    entry.type = txout.type;
-                    entry.pubkey_hash = txout.pubkey_hash;
-                    entry.height = height;
-                    entry.is_coinbase = false;
-                    std::string aerr;
-                    g_utxo_set.AddUTXO(op, entry, &aerr);
-
-                    std::string addr = address_encode(txout.pubkey_hash);
-                    if (g_wallet.has_address(addr)) {
-                        WalletUTXO wu;
-                        wu.txid = txid;
-                        wu.vout = (uint32_t)i;
-                        wu.amount = txout.amount;
-                        wu.output_type = txout.type;
-                        wu.pkh = txout.pubkey_hash;
-                        wu.height = height;
-                        wu.spent = false;
-                        g_wallet.add_utxo(wu);
-                    }
-                }
-
-                tx_count++;
-                printf("[BLOCK] TX confirmed: %s\n",
-                       to_hex(txid.data(), 32).substr(0, 16).c_str());
-            }
-
-            // 3. Limpiar mempool
-            if (!block_std_txs.empty()) {
-                size_t removed = g_mempool.RemoveForBlock(block_std_txs);
-                if (removed > 0)
-                    printf("[BLOCK] Mempool: %zu txs removed\n", removed);
-            }
-        }
-    }
-
-    printf("[BLOCK] Height %lld accepted: %s (%zu std txs, UTXOs: %zu)\n",
-           (long long)height, bid.substr(0, 16).c_str(),
-           tx_count, g_utxo_set.Size());
     return true;
 }
 
-// Process received tx
-static bool process_tx(const std::string& hex_str) {
-    std::vector<Byte> raw; raw.reserve(hex_str.size()/2);
-    for(size_t i=0;i<hex_str.size();i+=2){
-        uint8_t b; if(!hex_to_bytes(hex_str.substr(i,2),&b,1)) return false;
-        raw.push_back(b);
+static bool compute_fee_for_tx(const Transaction& tx, const IUtxoView& view, int64_t& out_fee, std::string* err) {
+    __int128 sum_in=0;
+    for(size_t i=0;i<tx.inputs.size();++i){
+        OutPoint op{tx.inputs[i].prev_txid, tx.inputs[i].prev_index};
+        auto utxo=view.GetUTXO(op);
+        if(!utxo.has_value()){
+            if(err) *err="fee: missing utxo for input["+std::to_string(i)+"]";
+            return false;
+        }
+        sum_in += (__int128)utxo->amount;
     }
+    __int128 sum_out=0;
+    for(const auto& o:tx.outputs) sum_out += (__int128)o.amount;
+    __int128 fee=sum_in - sum_out;
+    if(fee < 0 || fee > (__int128)SUPPLY_MAX_STOCKS){
+        if(err) *err="fee: invalid computed fee";
+        return false;
+    }
+    out_fee=(int64_t)fee;
+    return true;
+}
+
+static bool process_block(const std::string& block_json) {
+    std::lock_guard<std::mutex> lk(g_chain_mu);
+
+    // Required fields
+    std::string bid = jstr(block_json,"block_id");
+    std::string prev = jstr(block_json,"prev_hash");
+    std::string mrkl = jstr(block_json,"merkle_root");
+    std::string commit_hex = jstr(block_json,"commit");
+    std::string croot_hex  = jstr(block_json,"checkpoints_root");
+
+    if(bid.size()!=64 || prev.size()!=64 || mrkl.size()!=64 || commit_hex.size()!=64 || croot_hex.size()!=64){
+        printf("[BLOCK] REJECTED: missing/invalid required hex fields\n");
+        return false;
+    }
+
+    int64_t height = jint(block_json,"height");
+    int64_t ts64   = jint(block_json,"timestamp");
+    uint32_t bits_q= (uint32_t)jint(block_json,"bits_q");
+    uint32_t nonce = (uint32_t)jint(block_json,"nonce");
+    uint32_t extra = (uint32_t)jint(block_json,"extra_nonce");
+    int64_t subsidy= jint(block_json,"subsidy");
+    int64_t miner_r= jint(block_json,"miner");
+    int64_t gold_r = jint(block_json,"gold_vault");
+    int64_t popc_r = jint(block_json,"popc_pool");
+    uint64_t stb   = (uint64_t)jint(block_json,"stability_metric");
+
+    if(height != (int64_t)g_blocks.size()){
+        printf("[BLOCK] REJECTED: height %lld != expected %zu\n",(long long)height,g_blocks.size());
+        return false;
+    }
+
+    // Chain link
+    Hash256 prev_h = from_hex(prev);
+    if(!g_blocks.empty() && prev_h != g_blocks.back().block_id){
+        printf("[BLOCK] REJECTED: prev_hash mismatch\n");
+        return false;
+    }
+
+    // Timestamp rules
+    if(!g_blocks.empty() && ts64 <= g_blocks.back().timestamp){
+        printf("[BLOCK] REJECTED: timestamp not increasing\n");
+        return false;
+    }
+    int64_t now_ts=(int64_t)time(nullptr);
+    if(ts64 > now_ts + MAX_FUTURE_DRIFT){
+        printf("[BLOCK] REJECTED: timestamp too far in future\n");
+        return false;
+    }
+
+    // Difficulty must match ASERT
+    std::vector<BlockMeta> chain_meta;
+    chain_meta.reserve(g_blocks.size());
+    for(const auto& b:g_blocks){
+        BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q;
+        chain_meta.push_back(bm);
+    }
+    uint32_t expected_diff = asert_next_difficulty(chain_meta, height);
+    if(bits_q != expected_diff){
+        printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
+        return false;
+    }
+
+    // Decode txs (coinbase included)
+    std::vector<std::string> tx_hexes = json_get_tx_hexes(block_json);
+    if(tx_hexes.empty()){
+        printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
+        return false;
+    }
+
+    std::vector<Transaction> txs;
+    txs.reserve(tx_hexes.size());
+    for(const auto& hx : tx_hexes){
+        std::vector<Byte> raw;
+        if(!decode_tx_hex(hx, raw)){
+            printf("[BLOCK] REJECTED: bad tx hex in transactions[]\n");
+            return false;
+        }
+        Transaction tx; std::string derr;
+        if(!Transaction::Deserialize(raw, tx, &derr)){
+            printf("[BLOCK] REJECTED: tx deserialize failed: %s\n", derr.c_str());
+            return false;
+        }
+        txs.push_back(std::move(tx));
+    }
+
+    // Validate merkle root from txs
+    Hash256 computed_mrkl{}; std::string merr;
+    if(!ComputeMerkleRootFromTxs(txs, computed_mrkl, &merr)){
+        printf("[BLOCK] REJECTED: merkle compute failed: %s\n", merr.c_str());
+        return false;
+    }
+    Hash256 mrkl_h = from_hex(mrkl);
+    if(computed_mrkl != mrkl_h){
+        printf("[BLOCK] REJECTED: merkle_root mismatch\n");
+        printf("  got:      %s\n", to_hex(mrkl_h.data(),32).c_str());
+        printf("  computed: %s\n", to_hex(computed_mrkl.data(),32).c_str());
+        return false;
+    }
+
+    // Coinbase consensus validation: subsidy + total_fees must match outputs split.
+    if(txs[0].tx_type != TX_TYPE_COINBASE){
+        printf("[BLOCK] REJECTED: txs[0] must be coinbase\n");
+        return false;
+    }
+
+    // Compute total fees from standard txs using current UTXO view (pre-state)
+    int64_t total_fees = 0;
+    TxValidationContext vctx;
+    vctx.genesis_hash = g_genesis_hash;
+    vctx.spend_height = height; // coinbase maturity uses spend_height - utxo.height
+
+    for(size_t i=1;i<txs.size();++i){
+        if(txs[i].tx_type != TX_TYPE_STANDARD){
+            printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
+            return false;
+        }
+        auto cres = ValidateTransactionConsensus(txs[i], g_utxo_set, vctx);
+        if(!cres.ok){
+            printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+            return false;
+        }
+        auto pres = ValidateTransactionPolicy(txs[i], g_utxo_set, vctx);
+        if(!pres.ok){
+            printf("[BLOCK] REJECTED: tx policy fail: %s\n", pres.message.c_str());
+            return false;
+        }
+        int64_t fee_i=0; std::string ferr;
+        if(!compute_fee_for_tx(txs[i], g_utxo_set, fee_i, &ferr)){
+            printf("[BLOCK] REJECTED: cannot compute fee: %s\n", ferr.c_str());
+            return false;
+        }
+        total_fees += fee_i;
+        if(total_fees < 0 || total_fees > SUPPLY_MAX_STOCKS){
+            printf("[BLOCK] REJECTED: fee overflow\n");
+            return false;
+        }
+    }
+
+    // Subsidy must match schedule
+    int64_t expected_sub = sost_subsidy_stocks(height);
+    if(subsidy != expected_sub){
+        printf("[BLOCK] REJECTED: subsidy mismatch (got=%lld expected=%lld)\n",
+               (long long)subsidy,(long long)expected_sub);
+        return false;
+    }
+
+    // Validate coinbase amounts/destinations against subsidy+fees
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    auto cbr = ValidateCoinbaseConsensus(txs[0], height, subsidy, total_fees, gold_pkh, popc_pkh);
+    if(!cbr.ok){
+        printf("[BLOCK] REJECTED: coinbase invalid: %s\n", cbr.message.c_str());
+        return false;
+    }
+
+    // Also check JSON claimed split matches real coinbase outputs (hardening)
+    if((int64_t)txs[0].outputs.size()!=3){
+        printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
+        return false;
+    }
+    if(txs[0].outputs[0].amount!=miner_r || txs[0].outputs[1].amount!=gold_r || txs[0].outputs[2].amount!=popc_r){
+        printf("[BLOCK] REJECTED: JSON rewards mismatch vs coinbase tx outputs\n");
+        return false;
+    }
+
+    // Recompute block_id and verify PoW
+    Bytes32 prev32 = prev_h;
+    Bytes32 mrkl32 = computed_mrkl;
+    Bytes32 commit32 = from_hex(commit_hex);
+    Bytes32 croot32  = from_hex(croot_hex);
+
+    uint8_t hc72[72];
+    build_hc72(hc72, prev32, mrkl32, (uint32_t)ts64, bits_q);
+    auto full_hdr = build_full_header_bytes(hc72, croot32, nonce, extra);
+    Bytes32 computed_bid = compute_block_id(full_hdr.data(), full_hdr.size(), commit32);
+
+    Bytes32 provided_bid = from_hex(bid);
+    if(computed_bid != provided_bid){
+        printf("[BLOCK] REJECTED: block_id mismatch (computed != provided)\n");
+        printf("  provided: %s\n", to_hex(provided_bid.data(),32).c_str());
+        printf("  computed: %s\n", to_hex(computed_bid.data(),32).c_str());
+        // Diagnostic: show profile magic being used
+        printf("  ACTIVE_PROFILE: %s (magic bytes in header)\n",
+               ACTIVE_PROFILE==Profile::MAINNET?"MAINNET":
+               ACTIVE_PROFILE==Profile::TESTNET?"TESTNET":"DEV");
+        return false;
+    }
+
+    if(!pow_meets_target(commit32, bits_q)){
+        printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
+        return false;
+    }
+
+    // Connect block to UTXO set atomically
+    BlockUndo undo;
+    std::string uerr;
+    if(!g_utxo_set.ConnectBlock(txs, height, undo, &uerr)){
+        printf("[BLOCK] REJECTED: UTXO ConnectBlock failed: %s\n", uerr.c_str());
+        return false;
+    }
+
+    // Accept block: record
+    StoredBlock sb;
+    sb.block_id = computed_bid;
+    sb.prev_hash = prev_h;
+    sb.merkle_root = computed_mrkl;
+    sb.commit = commit32;
+    sb.checkpoints_root = croot32;
+    sb.timestamp = ts64;
+    sb.bits_q = bits_q;
+    sb.nonce = nonce;
+    sb.extra_nonce = extra;
+    sb.height = height;
+    sb.subsidy = subsidy;
+    sb.miner_reward = miner_r;
+    sb.gold_vault_reward = gold_r;
+    sb.popc_pool_reward = popc_r;
+    sb.stability_metric = stb;
+
+    g_blocks.push_back(sb);
+    g_chain_height = height;
+
+    // Wallet bookkeeping (mark spends + add outputs owned by us)
+    for(size_t ti=1; ti<txs.size(); ++ti){
+        for(const auto& in:txs[ti].inputs){
+            g_wallet.mark_spent(in.prev_txid, in.prev_index);
+        }
+    }
+    for(const auto& tx:txs){
+        Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
+        for(size_t oi=0; oi<tx.outputs.size(); ++oi){
+            const auto& o = tx.outputs[oi];
+            std::string addr = address_encode(o.pubkey_hash);
+            if(g_wallet.has_address(addr)){
+                WalletUTXO wu;
+                wu.txid = txid;
+                wu.vout = (uint32_t)oi;
+                wu.amount = o.amount;
+                wu.output_type = o.type;
+                wu.pkh = o.pubkey_hash;
+                wu.height = height;
+                wu.spent = false;
+                g_wallet.add_utxo(wu);
+            }
+        }
+    }
+
+    // Remove confirmed/conflicting txs from mempool
+    if(txs.size()>1){
+        std::vector<Transaction> stdtxs(txs.begin()+1, txs.end());
+        size_t removed = g_mempool.RemoveForBlock(stdtxs);
+        if(removed>0) printf("[BLOCK] Mempool: %zu txs removed\n", removed);
+    }
+
+    printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu)\n",
+           (long long)height, bid.substr(0,16).c_str(), txs.size(), (long long)total_fees, g_utxo_set.Size());
+    return true;
+}
+
+// Process received tx (P2P relay path)
+static bool process_tx(const std::string& hex_str) {
+    std::vector<Byte> raw;
+    if(!decode_tx_hex(hex_str, raw)) return false;
     Transaction tx; std::string err;
-    if(!Transaction::Deserialize(raw,tx,&err)) return false;
-    Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return false;
+    if(!Transaction::Deserialize(raw, tx, &err)) return false;
+
     TxValidationContext ctx; ctx.genesis_hash=g_genesis_hash; ctx.spend_height=g_chain_height+1;
     int64_t now=(int64_t)time(nullptr);
     auto result=g_mempool.AcceptToMempool(tx,g_utxo_set,ctx,now);
     if(!result.accepted) return false;
-    printf("[P2P] TX accepted: %s\n",to_hex(txid.data(),32).substr(0,16).c_str());
+
+    Hash256 txid{}; tx.ComputeTxId(txid,nullptr);
+    printf("[P2P] TX accepted: %s\n", to_hex(txid.data(),32).substr(0,16).c_str());
     return true;
 }
 
@@ -767,16 +1203,37 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 // =============================================================================
 
 static bool load_genesis(const std::string& path) {
-    std::ifstream f(path); if(!f)return false;
+    std::ifstream f(path); if(!f) return false;
     std::string json((std::istreambuf_iterator<char>(f)),std::istreambuf_iterator<char>());
-    std::string bid=jstr(json,"block_id"); if(bid.size()!=64)return false;
-    StoredBlock g; g.block_id=from_hex(bid); g.prev_hash=from_hex(jstr(json,"prev_hash"));
-    g.merkle_root=from_hex(jstr(json,"merkle_root")); g.timestamp=jint(json,"timestamp");
-    g.bits_q=(uint32_t)jint(json,"bits_q"); g.nonce=(uint64_t)jint(json,"nonce"); g.height=0;
+
+    std::string bid=jstr(json,"block_id"); if(bid.size()!=64) return false;
+    std::string prev=jstr(json,"prev_hash"); if(prev.size()!=64) return false;
+    std::string mr=jstr(json,"merkle_root"); if(mr.size()!=64) return false;
+
+    StoredBlock g{};
+    g.block_id=from_hex(bid);
+    g.prev_hash=from_hex(prev);
+    g.merkle_root=from_hex(mr);
+    g.commit = from_hex(jstr(json,"commit"));
+    g.checkpoints_root = from_hex(jstr(json,"checkpoints_root"));
+    g.timestamp=jint(json,"timestamp");
+    g.bits_q=(uint32_t)jint(json,"bits_q");
+    g.nonce=(uint32_t)jint(json,"nonce");
+    g.extra_nonce=(uint32_t)jint(json,"extra_nonce");
+    g.height=0;
     g.subsidy=jint(json,"subsidy_stocks");
+    g.stability_metric=(uint64_t)jint(json,"stability_metric");
+
     auto sp=coinbase_split(g.subsidy);
-    g.miner_reward=sp.miner; g.gold_vault_reward=sp.gold_vault; g.popc_pool_reward=sp.popc_pool;
-    g_genesis_hash=g.block_id; g_blocks.push_back(g); g_chain_height=0;
+    g.miner_reward=sp.miner;
+    g.gold_vault_reward=sp.gold_vault;
+    g.popc_pool_reward=sp.popc_pool;
+
+    g_genesis_hash=g.block_id;
+    g_blocks.push_back(g);
+    g_chain_height=0;
+
+    // Add genesis coinbase-like UTXOs
     struct{const char*addr;int64_t amt;uint8_t type;}cb[3]={
         {ADDR_MINER_FOUNDER,sp.miner,OUT_COINBASE_MINER},
         {ADDR_GOLD_VAULT,sp.gold_vault,OUT_COINBASE_GOLD},
@@ -786,6 +1243,7 @@ static bool load_genesis(const std::string& path) {
         PubKeyHash pkh{}; address_decode(cb[i].addr,pkh);
         OutPoint op; op.txid=g_genesis_hash; op.index=(uint32_t)i;
         UTXOEntry e; e.amount=cb[i].amt; e.type=cb[i].type; e.pubkey_hash=pkh; e.height=0; e.is_coinbase=true;
+        e.payload_len=0; e.payload.clear();
         std::string err; g_utxo_set.AddUTXO(op,e,&err);
     }
     return true;
@@ -795,24 +1253,53 @@ static bool load_chain(const std::string& path) {
     std::ifstream f(path); if(!f) return false;
     std::string json((std::istreambuf_iterator<char>(f)),std::istreambuf_iterator<char>());
     int64_t ch=jint(json,"chain_height"); if(ch<0) return false;
+
     size_t search=json.find("\"blocks\""); if(search==std::string::npos) return false;
     search=json.find('[',search); if(search==std::string::npos) return false;
+
     while(true){
         auto bs=json.find('{',search); if(bs==std::string::npos) break;
         auto be=json.find('}',bs); if(be==std::string::npos) break;
         std::string bj=json.substr(bs,be-bs+1); search=be+1;
+
         std::string bid=jstr(bj,"block_id"); if(bid.size()!=64) continue;
         int64_t height=jint(bj,"height"); if(height==0) continue;
-        StoredBlock sb;
-        sb.block_id=from_hex(bid); sb.prev_hash=from_hex(jstr(bj,"prev_hash"));
+
+        // FIX #2: Validate chain continuity — loaded block must link to previous
+        if(height != (int64_t)g_blocks.size()){
+            printf("[CHAIN-LOAD] Warning: height gap at %lld (expected %zu), skipping\n",
+                   (long long)height, g_blocks.size());
+            continue;
+        }
+
+        StoredBlock sb{};
+        sb.block_id=from_hex(bid);
+        sb.prev_hash=from_hex(jstr(bj,"prev_hash"));
+
+        // FIX #2: Verify prev_hash links to the tip we have so far
+        if(!g_blocks.empty() && sb.prev_hash != g_blocks.back().block_id){
+            printf("[CHAIN-LOAD] ERROR: prev_hash mismatch at height %lld, aborting chain load\n",
+                   (long long)height);
+            break;
+        }
+
         std::string mr=jstr(bj,"merkle_root");
-        if(mr.size()==64) sb.merkle_root=from_hex(mr);
-        else { sb.merkle_root={}; sb.merkle_root.fill(0x11); }
-        sb.timestamp=jint(bj,"timestamp"); sb.bits_q=(uint32_t)jint(bj,"bits_q");
-        sb.nonce=(uint64_t)jint(bj,"nonce"); sb.height=height;
+        sb.merkle_root = mr.size()==64 ? from_hex(mr) : Hash256{};
+        std::string cm=jstr(bj,"commit"); sb.commit = cm.size()==64 ? from_hex(cm) : Hash256{};
+        std::string cr=jstr(bj,"checkpoints_root"); sb.checkpoints_root = cr.size()==64 ? from_hex(cr) : Hash256{};
+        sb.timestamp=jint(bj,"timestamp");
+        sb.bits_q=(uint32_t)jint(bj,"bits_q");
+        sb.nonce=(uint32_t)jint(bj,"nonce");
+        sb.extra_nonce=(uint32_t)jint(bj,"extra_nonce");
+        sb.height=height;
         sb.subsidy=jint(bj,"subsidy");
-        sb.miner_reward=jint(bj,"miner"); sb.gold_vault_reward=jint(bj,"gold_vault"); sb.popc_pool_reward=jint(bj,"popc_pool");
+        sb.miner_reward=jint(bj,"miner");
+        sb.gold_vault_reward=jint(bj,"gold_vault");
+        sb.popc_pool_reward=jint(bj,"popc_pool");
+        sb.stability_metric=(uint64_t)jint(bj,"stability_metric");
         g_blocks.push_back(sb);
+
+        // Reconstruct UTXOs for coinbase outputs
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
             {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
@@ -821,12 +1308,17 @@ static bool load_chain(const std::string& path) {
         for(int i=0;i<3;++i){
             PubKeyHash pkh{}; address_decode(cb[i].a,pkh);
             OutPoint op; op.txid=sb.block_id; op.index=(uint32_t)i;
-            UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t;
-            e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
+            UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t; e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
+            e.payload_len=0; e.payload.clear();
             std::string err; g_utxo_set.AddUTXO(op,e,&err);
         }
     }
-    g_chain_height=ch;
+
+    g_chain_height = (int64_t)g_blocks.size() - 1;  // FIX #2: derive from actual loaded blocks, not JSON claim
+    if(g_chain_height != ch){
+        printf("[CHAIN-LOAD] Warning: JSON claimed height=%lld but loaded %lld blocks (using %lld)\n",
+               (long long)ch, (long long)g_blocks.size(), (long long)g_chain_height);
+    }
     return true;
 }
 
@@ -834,26 +1326,70 @@ static bool load_chain(const std::string& path) {
 // RPC Server Thread
 // =============================================================================
 
+static bool rpc_is_readonly_method(const std::string& body_json) {
+    std::string m = json_get_string(body_json, "method");
+    if (m.empty()) return false;
+
+    static const std::set<std::string> kReadOnly = {
+        "getinfo",
+        "getblockcount",
+        "getblockhash",
+        "getblock",
+        "getmempoolinfo",
+        "getrawmempool",
+        "getrawtransaction",
+        "getpeerinfo",
+        "validateaddress",
+        "gettxout",
+        "getblocktemplate",
+        "getaddressinfo"
+    };
+    return kReadOnly.count(m) > 0;
+}
+
 static void rpc_handle_connection(int fd) {
     char buf[65536]{};
     ssize_t total=0;
+
     while(total<(ssize_t)sizeof(buf)-1){
         ssize_t n=read(fd,buf+total,sizeof(buf)-1-total);
         if(n<=0) break;
         total+=n; buf[total]=0;
         if(strstr(buf,"\r\n\r\n")) break;
     }
-    if(total<=0){close(fd);return;}
+    if(total<=0){ close(fd); return; }
+
     std::string req(buf,total);
-    if(req.substr(0,3)=="GET"){
-        auto result=dispatch_rpc("{\"method\":\"getinfo\",\"id\":1}");
-        std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
-        write(fd,resp.c_str(),resp.size());close(fd);return;
+
+    // OPTIONS (CORS preflight) — no auth needed
+    if(req.rfind("OPTIONS", 0) == 0){
+        std::string resp=
+            "HTTP/1.1 204 No Content\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Access-Control-Allow-Methods: POST,GET,OPTIONS\r\n"
+            "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
+            "Access-Control-Max-Age: 86400\r\n"
+            "Content-Length: 0\r\n\r\n";
+        write(fd,resp.c_str(),resp.size());
+        close(fd);
+        return;
     }
-    if(req.substr(0,7)=="OPTIONS"){
-        std::string resp="HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: POST,GET,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type,Authorization\r\nAccess-Control-Max-Age: 86400\r\nContent-Length: 0\r\n\r\n";
-        write(fd,resp.c_str(),resp.size());close(fd);return;
+
+    // GET → getinfo (no auth, for quick status / explorer)
+    if(req.rfind("GET", 0) == 0){
+        auto result = dispatch_rpc("{\"method\":\"getinfo\",\"id\":1}");
+        std::string resp =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/json\r\n"
+            "Access-Control-Allow-Origin: *\r\n"
+            "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
+            "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
+        write(fd,resp.c_str(),resp.size());
+        close(fd);
+        return;
     }
+
+    // Parse body (POST)
     std::string body;
     auto bp=req.find("\r\n\r\n");
     if(bp!=std::string::npos){
@@ -868,10 +1404,33 @@ static void rpc_handle_connection(int fd) {
             if(n<=0) break;
             body.append(tmp,n);
         }
-    } else { body=req; }
+    } else {
+        body=req;
+    }
+
+    // Auth gating: read-only without auth, state-changing requires auth
+    bool readonly = rpc_is_readonly_method(body);
+
+    if (!readonly) {
+        if(!rpc_check_basic_auth(req)){
+            rpc_reply_401(fd);
+            close(fd);
+            return;
+        }
+    }
+
     auto result=dispatch_rpc(body);
-    std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type\r\nAccess-Control-Max-Age: 86400\r\nContent-Length: "+std::to_string(result.size())+"\r\n\r\n"+result;
-    write(fd,resp.c_str(),resp.size());close(fd);
+
+    std::string resp =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
+        "Access-Control-Max-Age: 86400\r\n"
+        "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
+
+    write(fd,resp.c_str(),resp.size());
+    close(fd);
 }
 
 static void rpc_server_thread(int port) {
@@ -880,7 +1439,8 @@ static void rpc_server_thread(int port) {
     struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("rpc bind");close(srv);return;}
     listen(srv,128);
-    printf("[RPC] Listening on port %d — 17 methods\n",port);
+    printf("[RPC] Listening on port %d — %zu methods (auth=%s)\n",port,g_handlers.size(),
+           g_rpc_auth_required ? "ON" : "OFF");
     while(g_running){
         int cl=accept(srv,nullptr,nullptr);
         if(cl<0) continue;
@@ -931,9 +1491,8 @@ static void connect_peer(const std::string& host, int port) {
 }
 
 // =============================================================================
-// Save chain
+// Save chain (node local)
 // =============================================================================
-
 static bool save_chain(const std::string& path) {
     std::lock_guard<std::mutex> lk(g_chain_mu);
     std::ofstream f(path); if (!f) return false;
@@ -945,13 +1504,19 @@ static bool save_chain(const std::string& path) {
         f << "    {\"block_id\":\"" << to_hex(b.block_id.data(),32)
           << "\",\"prev_hash\":\"" << to_hex(b.prev_hash.data(),32)
           << "\",\"merkle_root\":\"" << to_hex(b.merkle_root.data(),32)
-          << "\",\"height\":" << b.height << ",\"timestamp\":" << b.timestamp
-          << ",\"bits_q\":" << b.bits_q << ",\"nonce\":" << b.nonce
+          << "\",\"commit\":\"" << to_hex(b.commit.data(),32)
+          << "\",\"checkpoints_root\":\"" << to_hex(b.checkpoints_root.data(),32)
+          << "\",\"height\":" << b.height
+          << ",\"timestamp\":" << b.timestamp
+          << ",\"bits_q\":" << b.bits_q
+          << ",\"nonce\":" << b.nonce
+          << ",\"extra_nonce\":" << b.extra_nonce
           << ",\"subsidy\":" << b.subsidy
-          << ",\"miner\":" << b.miner_reward << ",\"gold_vault\":" << b.gold_vault_reward
+          << ",\"miner\":" << b.miner_reward
+          << ",\"gold_vault\":" << b.gold_vault_reward
           << ",\"popc_pool\":" << b.popc_pool_reward
-          << ",\"stability_metric\":0}"
-          << (i + 1 < g_blocks.size() ? ",\n" : "\n");
+          << ",\"stability_metric\":" << b.stability_metric
+          << "}" << (i + 1 < g_blocks.size() ? ",\n" : "\n");
     }
     f << "  ]\n}\n";
     return f.good();
@@ -960,8 +1525,13 @@ static bool save_chain(const std::string& path) {
 // =============================================================================
 // main
 // =============================================================================
-
 int main(int argc, char** argv) {
+    // =========================================================================
+    // FIX #1: Set ACTIVE_PROFILE BEFORE anything that touches magic bytes.
+    // Default to MAINNET. Can be overridden with --profile.
+    // =========================================================================
+    Profile selected_profile = Profile::MAINNET;
+
     int rpc_port=RPC_PORT_DEFAULT;
     int p2p_port=P2P_PORT_DEFAULT;
     std::string genesis_path="genesis_block.json";
@@ -975,20 +1545,43 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--genesis")&&i+1<argc) genesis_path=argv[++i];
         else if(!strcmp(argv[i],"--chain")&&i+1<argc) chain_path=argv[++i];
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
+        else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
+        else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
+        else if(!strcmp(argv[i],"--rpc-noauth")) g_rpc_auth_required=false;
+        else if(!strcmp(argv[i],"--profile")&&i+1<argc){
+            std::string pv=argv[++i];
+            if(pv=="mainnet") selected_profile=Profile::MAINNET;
+            else if(pv=="testnet") selected_profile=Profile::TESTNET;
+            else if(pv=="dev") selected_profile=Profile::DEV;
+            else { fprintf(stderr,"Error: unknown profile '%s' (use mainnet|testnet|dev)\n",pv.c_str()); return 1; }
+        }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
-            printf("SOST Node v0.2\n");
-            printf("  --wallet <path>      Wallet file (default: wallet.json)\n");
-            printf("  --genesis <path>     Genesis JSON\n");
-            printf("  --chain <path>       Chain JSON to load\n");
-            printf("  --port <n>           P2P port (default: 19333)\n");
-            printf("  --rpc-port <n>       RPC port (default: 18232)\n");
-            printf("  --connect <host:port> Connect to peer\n");
+            printf("SOST Node v0.3.1\n");
+            printf("  --wallet <path>            Wallet file (default: wallet.json)\n");
+            printf("  --genesis <path>           Genesis JSON\n");
+            printf("  --chain <path>             Chain JSON to load/save\n");
+            printf("  --port <n>                 P2P port (default: 19333)\n");
+            printf("  --rpc-port <n>             RPC port (default: 18232)\n");
+            printf("  --connect <host:port>      Connect to peer\n");
+            printf("  --rpc-user <u>             RPC Basic Auth user (required by default)\n");
+            printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
+            printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
+            printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
             return 0;
         }
     }
 
-    printf("=== SOST Node v0.2 ===\n");
-    printf("P2P: %d | RPC: %d\n\n",p2p_port,rpc_port);
+    // FIX #1: Apply profile AFTER parsing all args, BEFORE any crypto/chain ops
+    ACTIVE_PROFILE = selected_profile;
+
+    const char* profile_name =
+        ACTIVE_PROFILE==Profile::MAINNET ? "MAINNET" :
+        ACTIVE_PROFILE==Profile::TESTNET ? "TESTNET" : "DEV";
+
+    printf("=== SOST Node v0.3.1 ===\n");
+    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s\n\n",
+           profile_name, p2p_port, rpc_port,
+           g_rpc_auth_required ? "ON" : "OFF");
 
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
@@ -1008,11 +1601,14 @@ int main(int argc, char** argv) {
     } else {
         printf("Wallet: %zu keys\n",g_wallet.num_keys());
     }
-    // === Wallet UTXO rescan ===
+
+    // Wallet rescan from UTXO set
     {
         int rescan_count = 0;
         const auto& umap = g_utxo_set.GetMap();
-        for (const auto& [op, entry] : umap) {
+        for (const auto& kv : umap) {
+            const auto& op = kv.first;
+            const auto& entry = kv.second;
             std::string addr = address_encode(entry.pubkey_hash);
             if (g_wallet.has_address(addr)) {
                 WalletUTXO wu;
@@ -1029,7 +1625,6 @@ int main(int argc, char** argv) {
         }
         printf("Wallet rescan: %d UTXOs registered (balance: %s SOST)\n",
                rescan_count, format_sost(g_wallet.balance()).c_str());
-        // Persistir UTXOs al disco para que sost-cli los vea
         std::string werr;
         if (!g_wallet.save(g_wallet_path, &werr))
             printf("Warning: wallet save failed: %s\n", werr.c_str());

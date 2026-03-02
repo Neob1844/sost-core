@@ -27,17 +27,20 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain, int64
     else mode = CasertMode::NORMAL;
     return {mode, signal, n};
 }
-ConsensusParams casert_apply_overlay(const ConsensusParams& base, CasertMode mode) {
+ConsensusParams casert_apply_overlay(const ConsensusParams& base, const CasertDecision& dec) {
     ConsensusParams out = base;
-    switch (mode) {
-    case CasertMode::OPEN:
-        out.stab_scale=1; out.stab_k=2; out.stab_margin=CX_STB_MARGIN; out.stab_steps=1; break;
-    case CasertMode::DEGRADED:
-        out.stab_scale=2; out.stab_k=3; out.stab_margin=CX_STB_MARGIN; out.stab_steps=2; break;
-    case CasertMode::WARMUP: case CasertMode::NORMAL: default:
-        out.stab_scale=CX_STB_SCALE; out.stab_k=CX_STB_K;
-        out.stab_margin=CX_STB_MARGIN; out.stab_steps=CX_STB_STEPS; break;
-    }
+    // Level 1-3: fixed thresholds. Level 4+: rises every 200 signal points.
+    int32_t level;
+    if      (dec.signal_s > 200)   level = 1;  // chain very slow
+    else if (dec.signal_s > 0)     level = 2;  // chain slow
+    else if (dec.signal_s > -200)  level = 3;  // normal range
+    else level = 3 + (-dec.signal_s - 200) / 200;  // progressive hardening
+
+    // Scale and steps rise with level. k stays fixed.
+    out.stab_scale  = level;
+    out.stab_k      = 3;
+    out.stab_steps  = 3;
+    out.stab_margin = CX_STB_MARGIN;
     return out;
 }
 } // namespace sost
