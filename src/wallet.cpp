@@ -435,18 +435,10 @@ bool Wallet::create_transaction(
         out_tx.outputs.push_back(out);
     }
 
-    // Output 1: change (if any)
+    // Output 1: change (if any) — returns to first input's address
     int64_t change = total_in - needed;
     if (change > 0) {
         const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
-        for (const auto& k : keys_) {
-            if (k.address != "sost1be2302d89daef55af4162127b9656f7604948efa" &&
-                k.address != "sost18a222922bba5ac84979a74d76c392fdeaa59f505") {
-                change_key = &k;
-                break;
-            }
-        }
-        if (!change_key) change_key = find_key_by_pkh(unspent[selected[0]].pkh);
         if (!change_key) {
             if (err) *err = "internal error: no key for change address";
             return false;
