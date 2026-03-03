@@ -18,25 +18,29 @@ Every block mined automatically allocates 25% to purchase physical gold (XAUT/PA
 ./sost-cli importgenesis genesis_block.json
 
 # 3. Start node (terminal 1)
-./sost-node --genesis genesis_block.json --chain chain.json --wallet wallet.json
+./sost-node --genesis genesis_block.json --chain chain.json --wallet wallet.json \
+    --rpc-user=myuser --rpc-pass=mypass
 
 # 4. Start mining (terminal 2)
-./sost-miner --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --blocks 100
+./sost-miner --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 --rpc-user=myuser --rpc-pass=mypass --blocks 100
 
 # 5. Send SOST (terminal 3 — requires 100+ confirmations on coinbase UTXOs)
-./sost-cli --wallet wallet.json send <destination_address> 10.0 0.001
+./sost-cli --wallet wallet.json --rpc-user=myuser --rpc-pass=mypass \
+    send <destination_address> 10.0
 
 # 6. Mine 1 block to confirm the transaction
-./sost-miner --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --blocks 1
+./sost-miner --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 --rpc-user=myuser --rpc-pass=mypass --blocks 1
 ```
 
 ## Binaries
 
 | Binary | Version | Description |
 |--------|---------|-------------|
-| `sost-node` | v0.2 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
+| `sost-node` | v0.3.1 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
 | `sost-miner` | v0.4 | ConvergenceX PoW miner with mempool integration via RPC |
-| `sost-cli` | v1.1 | Wallet CLI — create keys, send transactions, check balances |
+| `sost-cli` | v1.3 | Wallet CLI — create keys, send transactions, auto fee calculation |
 
 ## Node
 
@@ -47,6 +51,8 @@ Every block mined automatically allocates 25% to purchase physical gold (XAUT/PA
   --wallet <path>        Wallet file (default: wallet.json)
   --port <n>             P2P port (default: 19333)
   --rpc-port <n>         RPC port (default: 18232)
+  --rpc-user <user>      RPC Basic Auth username
+  --rpc-pass <pass>      RPC Basic Auth password
   --connect <host:port>  Connect to peer node
 ```
 
@@ -64,6 +70,8 @@ The node:
   --genesis <path>       Genesis block JSON (required)
   --chain <path>         Chain state file (required)
   --rpc <host:port>      Submit blocks to node via RPC (recommended)
+  --rpc-user <user>      RPC Basic Auth username
+  --rpc-pass <pass>      RPC Basic Auth password
   --blocks <n>           Number of blocks to mine (default: 5)
   --max-nonce <n>        Max nonce per round (default: 500000)
   --profile <p>          Network profile: mainnet|testnet|dev
@@ -77,8 +85,16 @@ The node:
 ## Wallet CLI
 
 ```
-./sost-cli [--wallet <path>] <command> [args...]
+./sost-cli [options] <command> [args...]
 
+Options:
+  --wallet <path>        Wallet file (default: wallet.json)
+  --rpc-user <user>      RPC Basic Auth username
+  --rpc-pass <pass>      RPC Basic Auth password
+  --node <host:port>     Node address (default: 127.0.0.1:18232)
+  --fee-rate <n>         Fee rate in stocks/byte (default: 1)
+
+Commands:
   newwallet                    Create new wallet file
   getnewaddress [label]        Generate new receiving address
   listaddresses                List all wallet addresses with balances
@@ -86,26 +102,32 @@ The node:
   importgenesis <path>         Import genesis block coinbase UTXOs
   getbalance [address]         Show balance in SOST
   listunspent [address]        List unspent transaction outputs
-  createtx <to> <amt> [fee]   Create and sign a transaction (outputs hex)
-  send <to> <amt> [fee]        Create, sign and broadcast to node via RPC
+  createtx <to> <amt>         Create and sign a transaction (auto fee)
+  send <to> <amt>              Create, sign and broadcast to node via RPC
   dumpprivkey <address>        Reveal private key (DANGER)
   info                         Wallet summary
 ```
 
-**Note on coinbase maturity:** Coinbase UTXOs require 100 confirmations before they can be spent. Mine at least 100 blocks before attempting to send SOST.
+**Fee calculation (v1.3):** Fees are computed automatically based on transaction size. The CLI builds the transaction, measures its byte count, and sets `fee = size × fee_rate`. Default rate is 1 stock/byte (consensus minimum per rule S8). Use `--fee-rate 2` for priority.
+
+**Coinbase maturity:** Coinbase UTXOs require 100 confirmations before they can be spent. The CLI queries the node for the current chain height and filters immature UTXOs automatically.
 
 ## Transaction Flow
 
-1. `sost-cli send` creates, signs, and broadcasts the transaction to the node
-2. Node validates the transaction and accepts it to the mempool
-3. `sost-miner` fetches mempool via `getblocktemplate` and includes transactions in the next block
-4. Node confirms the transaction when the block is accepted
-5. Transaction outputs become spendable immediately (coinbase outputs require 100 blocks)
+1. `sost-cli send` queries the node for chain height (maturity filter)
+2. CLI selects only mature UTXOs, builds the transaction, calculates fee from real size
+3. CLI signs and broadcasts the transaction to the node via RPC
+4. Node validates the transaction and accepts it to the mempool
+5. `sost-miner` fetches mempool via `getblocktemplate` and includes transactions in the next block
+6. Node confirms the transaction when the block is accepted
+7. Transaction outputs become spendable immediately (coinbase outputs require 100 blocks)
 
 ## RPC API (port 18232)
 
 ```bash
-curl -s -X POST -d '{"method":"getinfo","id":1}' http://localhost:18232
+# With authentication:
+curl -s -X POST -u myuser:mypass \
+    -d '{"method":"getinfo","id":1}' http://localhost:18232
 ```
 
 | Method | Params | Description |
@@ -159,17 +181,20 @@ These addresses receive coinbase rewards at every block. Hardcoded at genesis, i
 
 Gold Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
 
-## Explorer (v3.0)
+## Explorer (v3.8)
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC.
 
 Features:
 - Dashboard: block height, avg block time, total supply, Gold Vault reserves, mempool
+- Chain timing panel: wall clock elapsed, chain time, expected vs actual blocks, block lag
 - Difficulty progress bar with epoch tracking
 - Gold Reserves tracker (25% of all rewards since genesis)
 - Emission curve chart (smooth exponential decay, 12 epochs, interactive tooltip)
 - Block detail with transaction list (coinbase split + standard txs)
+- Mature/immature balance breakdown per address with UTXO maturity progress bars
 - Smart search: block height, full/partial hash, txid, sost1 address
+- Pagination with NEWEST/OLDEST and NEWER/OLDER navigation
 - Copy-to-clipboard on hashes and addresses
 - Auto-refresh (10s) with new block notification
 
@@ -196,10 +221,11 @@ make -j$(nproc)
 | ASERT + cASERT difficulty adjustment | ✅ Complete |
 | Mempool validation and relay | ✅ Complete |
 | Transaction confirmation in blocks | ✅ Complete |
-| RPC authentication | ⏳ Pre-launch |
+| RPC authentication (Basic Auth) | ✅ Complete |
+| Coinbase maturity filter in wallet | ✅ Complete |
+| Dynamic fee calculation (S8 compliant) | ✅ Complete |
 | Wallet encryption | ⏳ Pre-launch |
 | PoW verification in block acceptance | ⏳ Pre-launch |
-| Coinbase maturity filter in wallet | ⏳ Pre-launch |
 | P2P encryption | 📋 Post-launch |
 
 ## License
