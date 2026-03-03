@@ -38,7 +38,7 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base, const CasertDe
 
     // Scale and steps rise with level. k stays fixed.
     out.stab_scale  = level;
-    out.stab_k      = 3;
+    out.stab_k      = 4;
     out.stab_steps  = 3;
     out.stab_margin = CX_STB_MARGIN;
     return out;
