@@ -3,3 +3,7 @@ build/
 *.tar.gz
 wallet.json
 node_log.txt
+wallet.json
+wallet.json.*
+chain.json
+*.swp

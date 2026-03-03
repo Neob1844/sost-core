@@ -1,4 +1,14 @@
-// sost-cli.cpp — SOST Wallet CLI v1.2
+// sost-cli.cpp — SOST Wallet CLI v1.3
+//
+// CHANGES v1.3:
+// - FIX: query node for chain height via getinfo RPC before building tx
+// - FIX: pass real height to create_transaction (was -1, now actual)
+//        This enables coinbase maturity filtering inside wallet
+// - ADD: dynamic fee calculation: build tx → measure size → fee = size × rate
+//        Consensus rule S8 requires fee >= tx_size_bytes × 1 stock/byte
+// - ADD: --fee-rate <n> flag (stocks per byte, default 1)
+// - ADD: --node <host:port> promoted to global option (used by fee calc + send)
+// - REM: manual [fee] parameter removed from send/createtx (now automatic)
 //
 // CHANGES v1.2:
 // - ADD: --rpc-user / --rpc-pass for RPC Basic Auth
@@ -14,8 +24,8 @@
 //   sost-cli importgenesis <json>       Import genesis coinbase UTXOs
 //   sost-cli getbalance [address]       Show balance (stocks)
 //   sost-cli listunspent [address]      Show unspent outputs
-//   sost-cli createtx <to> <amount> [fee]  Create and sign transaction
-//   sost-cli send <to> <amount> [fee]   Create, sign and broadcast to node
+//   sost-cli createtx <to> <amount>     Create and sign transaction (auto fee)
+//   sost-cli send <to> <amount>         Create, sign and broadcast (auto fee)
 //   sost-cli dumpprivkey <address>      Show private key (DANGER)
 //   sost-cli info                       Wallet summary
 
@@ -37,12 +47,18 @@
 static const char* DEFAULT_WALLET = "wallet.json";
 static const int64_t STOCKS_PER_SOST = 100000000LL;
 
-// Default fee: 0.00010000 SOST = 10000 stocks (sensible minimum)
-static const int64_t DEFAULT_FEE_STOCKS = 10000;
+// v1.3: fee is now dynamic — this is only the absolute floor
+static const int64_t MIN_FEE_STOCKS   = 1000;  // 0.00001 SOST floor
+static const int64_t FEE_RATE_DEFAULT  = 1;     // 1 stock/byte (consensus min S8)
 
 // RPC auth credentials (empty = no auth header sent)
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
+
+// v1.3: global node address and fee rate
+static std::string g_node_host = "127.0.0.1";
+static int         g_node_port = 18232;
+static int64_t     g_fee_rate  = FEE_RATE_DEFAULT;
 
 // Format stocks as SOST with 8 decimal places
 static std::string format_sost(int64_t stocks) {
@@ -114,8 +130,87 @@ static std::string rpc_auth_header() {
     return "Authorization: Basic " + token + "\r\n";
 }
 
+// =============================================================================
+// v1.3: RPC helper — send a JSON-RPC call to the running node
+//
+// Used to query chain height (getinfo) before building transactions.
+// This lets us pass the real height to create_transaction so it can
+// filter out immature coinbase UTXOs (COINBASE_MATURITY = 1000).
+// =============================================================================
+static std::string rpc_call(const std::string& method,
+                            const std::string& params_json = "[]")
+{
+    std::string body = "{\"method\":\"" + method
+        + "\",\"params\":" + params_json + ",\"id\":1}";
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) return "";
+
+    struct sockaddr_in saddr{};
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(g_node_port);
+    struct hostent* he = gethostbyname(g_node_host.c_str());
+    if (!he) { close(fd); return ""; }
+    memcpy(&saddr.sin_addr, he->h_addr_list[0], he->h_length);
+
+    if (connect(fd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
+        close(fd);
+        return "";
+    }
+
+    std::string req = "POST / HTTP/1.1\r\nHost: " + g_node_host
+        + "\r\nContent-Type: application/json\r\n"
+        + rpc_auth_header()
+        + "Content-Length: " + std::to_string(body.size())
+        + "\r\n\r\n" + body;
+
+    write(fd, req.c_str(), req.size());
+
+    // Read response (16KB buffer — enough for getinfo)
+    std::string resp;
+    char buf[4096];
+    ssize_t n;
+    while ((n = read(fd, buf, sizeof(buf) - 1)) > 0) {
+        buf[n] = 0;
+        resp += buf;
+        if (resp.find("\r\n\r\n") != std::string::npos &&
+            resp.back() == '}') break;
+    }
+    close(fd);
+    return resp;
+}
+
+// v1.3: Extract "blocks" field from getinfo JSON response
+static int64_t query_chain_height() {
+    std::string resp = rpc_call("getinfo");
+    if (resp.empty()) return -1;
+
+    // Find "blocks":NNN in JSON
+    auto pos = resp.find("\"blocks\":");
+    if (pos == std::string::npos) return -1;
+    pos += 9;  // skip past "blocks":
+    return std::stoll(resp.substr(pos));
+}
+
+// =============================================================================
+// v1.3: Dynamic fee calculation
+//
+// Bitcoin Core approach:
+//   1. Build tx with initial fee estimate
+//   2. Serialize to measure real byte count
+//   3. fee = max(real_size × fee_rate, MIN_FEE_STOCKS)
+//   4. If fee changed, rebuild tx with correct fee (change output adjusts)
+//
+// This guarantees S8 compliance: fee >= tx_size × 1 stock/byte
+// =============================================================================
+static int64_t calculate_fee(int64_t tx_size_bytes) {
+    int64_t fee = tx_size_bytes * g_fee_rate;
+    if (fee < MIN_FEE_STOCKS) fee = MIN_FEE_STOCKS;
+    return fee;
+}
+
 static void print_usage() {
-    printf("SOST Wallet CLI v1.2\n\n");
+    printf("SOST Wallet CLI v1.3\n\n");
     printf("Usage: sost-cli [options] <command> [args...]\n\n");
     printf("Commands:\n");
     printf("  newwallet              Create new wallet file\n");
@@ -125,25 +220,30 @@ static void print_usage() {
     printf("  importgenesis <json>   Import genesis block coinbase UTXOs\n");
     printf("  getbalance [addr]      Show balance in SOST\n");
     printf("  listunspent [addr]     List unspent transaction outputs\n");
-    printf("  createtx <to> <amt> [fee]  Create and sign a transaction\n");
-    printf("  send <to> <amt> [fee]      Create, sign and broadcast to node\n");
+    printf("  createtx <to> <amt>    Create and sign a transaction (auto fee)\n");
+    printf("  send <to> <amt>        Create, sign and broadcast to node (auto fee)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  info                   Wallet summary\n");
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
     printf("  --rpc-user <user>      RPC Basic Auth username\n");
     printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
-    printf("\nAmounts:\n");
-    printf("  <amt> and [fee] are in SOST (e.g. 10 = 10 SOST, 0.5 = 0.5 SOST)\n");
-    printf("  Default fee: %s SOST (%lld stocks)\n",
-           format_sost(DEFAULT_FEE_STOCKS).c_str(), (long long)DEFAULT_FEE_STOCKS);
-    printf("  Example: sost-cli send sost1abc... 10 0.0001\n");
+    printf("  --node <host:port>     Node address (default: 127.0.0.1:18232)\n");
+    printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
+    printf("\nFee calculation (v1.3 — automatic):\n");
+    printf("  Fee = tx_size_bytes x fee_rate stocks/byte\n");
+    printf("  Minimum: %s SOST (%lld stocks)\n",
+           format_sost(MIN_FEE_STOCKS).c_str(), (long long)MIN_FEE_STOCKS);
+    printf("  Consensus rule S8: fee >= tx_size x 1 stock/byte\n");
+    printf("\nExamples:\n");
+    printf("  sost-cli send sost1abc... 10              (auto fee, 1 stock/byte)\n");
+    printf("  sost-cli --fee-rate 2 send sost1abc... 10 (priority: 2 stocks/byte)\n");
 }
 
 int main(int argc, char** argv) {
     std::string wallet_path = DEFAULT_WALLET;
 
-    // Parse global options (--wallet, --rpc-user, --rpc-pass)
+    // Parse global options
     int arg_start = 1;
     while (arg_start < argc && argv[arg_start][0] == '-') {
         std::string flag = argv[arg_start];
@@ -155,6 +255,25 @@ int main(int argc, char** argv) {
             arg_start += 2;
         } else if (flag == "--rpc-pass" && arg_start + 1 < argc) {
             g_rpc_pass = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--node" && arg_start + 1 < argc) {
+            // v1.3: --node is now a global option (used by fee calc + send)
+            std::string na = argv[arg_start + 1];
+            auto colon = na.find(':');
+            if (colon != std::string::npos) {
+                g_node_host = na.substr(0, colon);
+                g_node_port = atoi(na.substr(colon + 1).c_str());
+            } else {
+                g_node_host = na;
+            }
+            arg_start += 2;
+        } else if (flag == "--fee-rate" && arg_start + 1 < argc) {
+            // v1.3: custom fee rate (stocks per byte)
+            g_fee_rate = std::stoll(argv[arg_start + 1]);
+            if (g_fee_rate < 1) {
+                fprintf(stderr, "Error: --fee-rate must be >= 1 (consensus minimum)\n");
+                return 1;
+            }
             arg_start += 2;
         } else if (flag == "--help" || flag == "-h") {
             print_usage();
@@ -341,52 +460,101 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
-    // createtx <to_addr> <amount_sost> [fee_sost]
+    // createtx <to_addr> <amount_sost>
+    //
+    // v1.3: fee is now automatic. Two-pass build:
+    //   Pass 1: build tx with MIN_FEE estimate → serialize → measure bytes
+    //   Pass 2: real_fee = bytes × fee_rate → rebuild if different
+    //   Pass 3: (rare) if size shifted after fee change, one more adjust
     // =====================================================================
     if (cmd == "createtx") {
         if (argc < arg_start + 3) {
-            fprintf(stderr, "Usage: sost-cli createtx <to_address> <amount_sost> [fee_sost]\n");
-            fprintf(stderr, "  Default fee: %s SOST\n", format_sost(DEFAULT_FEE_STOCKS).c_str());
+            fprintf(stderr, "Usage: sost-cli createtx <to_address> <amount_sost>\n");
+            fprintf(stderr, "  Fee is automatic: tx_size x %lld stock/byte\n",
+                    (long long)g_fee_rate);
             return 1;
         }
         std::string to_addr = argv[arg_start + 1];
         int64_t amount = parse_amount(argv[arg_start + 2]);
-        int64_t fee = DEFAULT_FEE_STOCKS;
-        if (argc > arg_start + 3) {
-            fee = parse_amount(argv[arg_start + 3]);
+
+        // v1.3: Query node for chain height so create_transaction can
+        //       filter out immature coinbase UTXOs (need COINBASE_MATURITY confs)
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) {
+            fprintf(stderr, "Warning: cannot reach node at %s:%d\n",
+                    g_node_host.c_str(), g_node_port);
+            fprintf(stderr, "  Maturity check disabled — tx may be rejected by node.\n");
+            chain_height = -1;
+        } else {
+            printf("Chain height: %lld\n", (long long)chain_height);
         }
 
-        if (fee == 0) {
-            fprintf(stderr, "Warning: fee is 0 — tx may not be relayed (min: 1 stock/byte)\n");
-        }
-        if (fee > 1 * STOCKS_PER_SOST) {
-            fprintf(stderr, "Warning: fee is %.8f SOST — that seems high! (default: %s SOST)\n",
-                    (double)fee / STOCKS_PER_SOST, format_sost(DEFAULT_FEE_STOCKS).c_str());
-        }
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
-        sost::Hash256 genesis_hash = sost::from_hex("0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
-
+        // --- Pass 1: build with estimated fee to measure real size ---
+        int64_t est_fee = MIN_FEE_STOCKS;
         sost::Transaction tx;
         std::string err;
-        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, -1, &err)) {
+        if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
+                                  tx, chain_height, &err)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
 
-        if (!w.save(wallet_path, &err)) {
-            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
-        }
-
+        // Serialize to get actual byte count
         std::vector<sost::Byte> raw;
         std::string ser_err;
         if (!tx.Serialize(raw, &ser_err)) {
             fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
             return 1;
         }
+
+        // --- Pass 2: recalculate fee from real size, rebuild if needed ---
+        int64_t real_fee = calculate_fee((int64_t)raw.size());
+        if (real_fee != est_fee) {
+            sost::Transaction tx2;
+            if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
+                                      tx2, chain_height, &err)) {
+                fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
+                return 1;
+            }
+            tx = tx2;
+            raw.clear();
+            if (!tx.Serialize(raw, &ser_err)) {
+                fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
+                return 1;
+            }
+
+            // --- Pass 3: final check (size may shift by a few bytes) ---
+            int64_t final_fee = calculate_fee((int64_t)raw.size());
+            if (final_fee > real_fee) {
+                sost::Transaction tx3;
+                if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
+                                          tx3, chain_height, &err)) {
+                    fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
+                    return 1;
+                }
+                tx = tx3;
+                raw.clear();
+                tx.Serialize(raw, &ser_err);
+                real_fee = final_fee;
+            } else {
+                real_fee = final_fee;
+            }
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
         printf("Transaction created successfully.\n");
         printf("  Inputs:  %zu\n", tx.inputs.size());
         printf("  Outputs: %zu\n", tx.outputs.size());
         printf("  Size:    %zu bytes\n", raw.size());
+        printf("  Fee:     %s SOST (%lld stocks = %zu bytes x %lld rate)\n",
+               format_sost(real_fee).c_str(), (long long)real_fee,
+               raw.size(), (long long)g_fee_rate);
         printf("  Raw hex: %s\n", to_hex(raw.data(), raw.size()).c_str());
 
         sost::Hash256 txid;
@@ -398,84 +566,111 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
-    // send <to_addr> <amount_sost> [fee_sost] [--node host:port]
+    // send <to_addr> <amount_sost>
+    //
+    // v1.3: automatic fee, queries node for height, two-pass build
+    //       No more manual [fee] parameter — calculated from real tx size
     // =====================================================================
     if (cmd == "send") {
         if (argc < arg_start + 3) {
-            fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost> [fee_sost] [--node host:port]\n");
-            fprintf(stderr, "  Default fee: %s SOST (%lld stocks)\n",
-                    format_sost(DEFAULT_FEE_STOCKS).c_str(), (long long)DEFAULT_FEE_STOCKS);
-            fprintf(stderr, "  Example: sost-cli send sost1abc... 10 0.0001\n");
+            fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost>\n");
+            fprintf(stderr, "  Fee is automatic: tx_size x %lld stock/byte\n",
+                    (long long)g_fee_rate);
+            fprintf(stderr, "  Use --fee-rate <n> for priority (default: 1)\n");
+            fprintf(stderr, "\nExamples:\n");
+            fprintf(stderr, "  sost-cli send sost1abc... 10\n");
+            fprintf(stderr, "  sost-cli --fee-rate 2 send sost1abc... 10\n");
             return 1;
         }
         std::string to_addr = argv[arg_start + 1];
         int64_t amount = parse_amount(argv[arg_start + 2]);
-        int64_t fee = DEFAULT_FEE_STOCKS;
-        std::string node_addr = "127.0.0.1:18232";
 
-        for (int i = arg_start + 3; i < argc; ++i) {
-            if (std::string(argv[i]) == "--node" && i + 1 < argc) {
-                node_addr = argv[++i];
-            } else {
-                fee = parse_amount(argv[i]);
-            }
+        // v1.3: Query node for current chain height
+        //       Required for: maturity filter + broadcasting
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) {
+            fprintf(stderr, "Error: cannot connect to node at %s:%d\n",
+                    g_node_host.c_str(), g_node_port);
+            fprintf(stderr, "  Node must be running to check maturity and broadcast.\n");
+            return 1;
         }
+        printf("Chain height: %lld\n", (long long)chain_height);
 
-        // Safety check: warn if fee seems way too high
-        if (fee > 1 * STOCKS_PER_SOST) {
-            printf("WARNING: Fee is %s SOST — this seems very high!\n", format_sost(fee).c_str());
-            printf("  Did you mean %s SOST? Fee is specified in SOST, not stocks.\n",
-                   format_sost(DEFAULT_FEE_STOCKS).c_str());
-            printf("  Example: sost-cli send <addr> 10 0.0001\n");
-            printf("  Proceeding anyway in 10 seconds... (Ctrl+C to cancel)\n");
-            fflush(stdout);
-            sleep(10);
-        }
-
-        // Create transaction
+        // Create transaction with dynamic fee
         sost::Hash256 genesis_hash = sost::from_hex(
             "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
 
+        // --- Pass 1: build with estimated fee to measure real size ---
+        int64_t est_fee = MIN_FEE_STOCKS;
         sost::Transaction tx;
         std::string err;
-        if (!w.create_transaction(to_addr, amount, fee, genesis_hash, tx, -1, &err)) {
-            fprintf(stderr, "Error creating tx: %s\n", err.c_str());
+        if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
+                                  tx, chain_height, &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
 
-        if (!w.save(wallet_path, &err)) {
-            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
-        }
-
-        // Serialize
         std::vector<sost::Byte> raw;
         std::string ser_err;
         if (!tx.Serialize(raw, &ser_err)) {
             fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
             return 1;
         }
-        std::string raw_hex = to_hex(raw.data(), raw.size());
 
+        // --- Pass 2: recalculate fee from real size, rebuild if different ---
+        int64_t real_fee = calculate_fee((int64_t)raw.size());
+        if (real_fee != est_fee) {
+            sost::Transaction tx2;
+            if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
+                                      tx2, chain_height, &err)) {
+                fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
+                return 1;
+            }
+            tx = tx2;
+            raw.clear();
+            if (!tx.Serialize(raw, &ser_err)) {
+                fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
+                return 1;
+            }
+
+            // --- Pass 3: final check ---
+            int64_t final_fee = calculate_fee((int64_t)raw.size());
+            if (final_fee > real_fee) {
+                sost::Transaction tx3;
+                if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
+                                          tx3, chain_height, &err)) {
+                    fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
+                    return 1;
+                }
+                tx = tx3;
+                raw.clear();
+                tx.Serialize(raw, &ser_err);
+                real_fee = final_fee;
+            } else {
+                real_fee = final_fee;
+            }
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
+        // Display tx info
+        std::string raw_hex = to_hex(raw.data(), raw.size());
         sost::Hash256 txid;
         tx.ComputeTxId(txid);
+
         printf("TX created: %s\n", to_hex(txid.data(), 32).c_str());
         printf("  To:     %s\n", to_addr.c_str());
         printf("  Amount: %s SOST\n", format_sost(amount).c_str());
-        printf("  Fee:    %s SOST (%lld stocks)\n", format_sost(fee).c_str(), (long long)fee);
+        printf("  Fee:    %s SOST (%lld stocks = %zu bytes x %lld rate)\n",
+               format_sost(real_fee).c_str(), (long long)real_fee,
+               raw.size(), (long long)g_fee_rate);
         printf("  Size:   %zu bytes\n", raw.size());
 
-        // Send to node via HTTP RPC
-        printf("Sending to node %s...\n", node_addr.c_str());
+        // Broadcast via JSON-RPC: sendrawtransaction
+        printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);
 
-        std::string host = "127.0.0.1";
-        int port = 18232;
-        auto colon = node_addr.find(':');
-        if (colon != std::string::npos) {
-            host = node_addr.substr(0, colon);
-            port = atoi(node_addr.substr(colon + 1).c_str());
-        }
-
-        // JSON-RPC: sendrawtransaction
         std::string rpc_body = "{\"method\":\"sendrawtransaction\",\"params\":[\""
             + raw_hex + "\"],\"id\":1}";
 
@@ -483,19 +678,26 @@ int main(int argc, char** argv) {
         if (fd < 0) { perror("socket"); return 1; }
         struct sockaddr_in saddr{};
         saddr.sin_family = AF_INET;
-        saddr.sin_port = htons(port);
-        struct hostent* he = gethostbyname(host.c_str());
-        if (!he) { fprintf(stderr, "Cannot resolve %s\n", host.c_str()); close(fd); return 1; }
+        saddr.sin_port = htons(g_node_port);
+        struct hostent* he = gethostbyname(g_node_host.c_str());
+        if (!he) {
+            fprintf(stderr, "Cannot resolve %s\n", g_node_host.c_str());
+            close(fd);
+            return 1;
+        }
         memcpy(&saddr.sin_addr, he->h_addr_list[0], he->h_length);
         if (connect(fd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
-            fprintf(stderr, "Cannot connect to %s:%d\n", host.c_str(), port);
-            close(fd); return 1;
+            fprintf(stderr, "Cannot connect to %s:%d\n",
+                    g_node_host.c_str(), g_node_port);
+            close(fd);
+            return 1;
         }
 
-        std::string http_req = "POST / HTTP/1.1\r\nHost: " + host
+        std::string http_req = "POST / HTTP/1.1\r\nHost: " + g_node_host
             + "\r\nContent-Type: application/json\r\n"
             + rpc_auth_header()
-            + "Content-Length: " + std::to_string(rpc_body.size()) + "\r\n\r\n" + rpc_body;
+            + "Content-Length: " + std::to_string(rpc_body.size())
+            + "\r\n\r\n" + rpc_body;
 
         write(fd, http_req.c_str(), http_req.size());
 
@@ -505,7 +707,8 @@ int main(int argc, char** argv) {
 
         std::string resp(rbuf);
         if (resp.find("\"result\":\"") != std::string::npos) {
-            printf("\nTX accepted by node! Txid: %s\n", to_hex(txid.data(), 32).c_str());
+            printf("\nTX accepted by node! Txid: %s\n",
+                   to_hex(txid.data(), 32).c_str());
             printf("  Waiting for next mined block to confirm...\n");
         } else if (resp.find("401") != std::string::npos) {
             fprintf(stderr, "\nTX rejected: 401 Unauthorized\n");
@@ -515,7 +718,8 @@ int main(int argc, char** argv) {
             auto err_pos = resp.find("\"message\":\"");
             if (err_pos != std::string::npos) {
                 auto err_end = resp.find('"', err_pos + 11);
-                std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
+                std::string err_msg = resp.substr(err_pos + 11,
+                                                   err_end - err_pos - 11);
                 fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
             } else {
                 fprintf(stderr, "\nTX rejected (unknown error)\n");
@@ -549,7 +753,7 @@ int main(int argc, char** argv) {
     // info
     // =====================================================================
     if (cmd == "info") {
-        printf("SOST Wallet\n");
+        printf("SOST Wallet v1.3\n");
         printf("  File:      %s\n", wallet_path.c_str());
         printf("  Addresses: %zu\n", w.num_keys());
         printf("  UTXOs:     %zu\n", w.num_utxos());

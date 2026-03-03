@@ -329,12 +329,84 @@ bool Wallet::create_transaction(
         if (total_in >= needed) break;
     }
 
+// ==========================================================================
+// PATCH for wallet.cpp — replace the "insufficient funds" block inside
+// create_transaction() with this version.
+//
+// FIND this code (around line ~240):
+//
+//     if (total_in < needed) {
+//         if (err) {
+//             char buf[128];
+//             snprintf(buf, sizeof(buf),
+//                 "insufficient funds: have %lld stocks, need %lld",
+//                 (long long)total_in, (long long)needed);
+//             *err = buf;
+//         }
+//         return false;
+//     }
+//
+// REPLACE WITH:
+// ==========================================================================
+
     if (total_in < needed) {
         if (err) {
-            char buf[128];
-            snprintf(buf, sizeof(buf),
-                "insufficient funds: have %lld stocks, need %lld",
-                (long long)total_in, (long long)needed);
+            // v1.3: distinguish "no mature balance" from "not enough total"
+            //       so the user knows WHY the tx failed
+            int64_t immature_total = 0;
+            int     immature_count = 0;
+            int64_t earliest_height = INT64_MAX;
+
+            for (const auto& u : utxos_) {
+                if (u.spent) continue;
+                if (!is_mature(u, chain_height)) {
+                    immature_total += u.amount;
+                    immature_count++;
+                    if (u.height >= 0 && u.height < earliest_height)
+                        earliest_height = u.height;
+                }
+            }
+
+            char buf[512];
+            if (immature_count > 0 && total_in == 0) {
+                // All funds are immature — common case before height 1000
+                int64_t first_matures_at = earliest_height + COINBASE_MATURITY;
+                snprintf(buf, sizeof(buf),
+                    "insufficient mature balance\n"
+                    "  Spendable:  0 SOST (0 mature UTXOs)\n"
+                    "  Immature:   %lld.%08lld SOST (%d coinbase UTXOs)\n"
+                    "  Need:       %lld confirmations per coinbase (COINBASE_MATURITY)\n"
+                    "  Current height: %lld\n"
+                    "  First UTXO matures at height: %lld  (~%lld blocks to go)",
+                    (long long)(immature_total / 100000000LL),
+                    (long long)(immature_total % 100000000LL),
+                    immature_count,
+                    (long long)COINBASE_MATURITY,
+                    (long long)chain_height,
+                    (long long)first_matures_at,
+                    (long long)(first_matures_at - chain_height));
+            } else if (immature_count > 0) {
+                // Some funds mature, some not — but not enough mature
+                snprintf(buf, sizeof(buf),
+                    "insufficient mature funds: have %lld.%08lld SOST spendable, "
+                    "need %lld.%08lld SOST\n"
+                    "  (%d additional coinbase UTXOs with %lld.%08lld SOST still immature)",
+                    (long long)(total_in / 100000000LL),
+                    (long long)(total_in % 100000000LL),
+                    (long long)(needed / 100000000LL),
+                    (long long)(needed % 100000000LL),
+                    immature_count,
+                    (long long)(immature_total / 100000000LL),
+                    (long long)(immature_total % 100000000LL));
+            } else {
+                // Genuinely insufficient — no immature UTXOs either
+                snprintf(buf, sizeof(buf),
+                    "insufficient funds: have %lld.%08lld SOST, need %lld.%08lld SOST",
+                    (long long)(total_in / 100000000LL),
+                    (long long)(total_in % 100000000LL),
+                    (long long)(needed / 100000000LL),
+                    (long long)(needed % 100000000LL));
+            }
             *err = buf;
         }
         return false;
