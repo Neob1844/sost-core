@@ -1,0 +1,29 @@
+[Unit]
+Description=SOST Protocol Miner
+After=sost-node.service
+Requires=sost-node.service
+
+[Service]
+Type=simple
+User=sost
+Group=sost
+WorkingDirectory=/opt/sost
+ExecStart=/opt/sost/build/sost-miner \
+    --genesis /opt/sost/genesis_block.json \
+    --chain /opt/sost/chain.json \
+    --wallet /opt/sost/wallet.json \
+    --rpc 127.0.0.1:18232 \
+    --rpc-user CHANGE_ME \
+    --rpc-pass CHANGE_ME \
+    --threads 2 \
+    --blocks 999999
+Restart=always
+RestartSec=30
+
+# Security hardening
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

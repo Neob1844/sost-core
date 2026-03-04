@@ -1,0 +1,26 @@
+[Unit]
+Description=SOST Protocol Full Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sost
+Group=sost
+WorkingDirectory=/opt/sost
+ExecStart=/opt/sost/build/sost-node \
+    --genesis /opt/sost/genesis_block.json \
+    --chain /opt/sost/chain.json \
+    --rpc-user CHANGE_ME \
+    --rpc-pass CHANGE_ME
+Restart=always
+RestartSec=10
+LimitNOFILE=65536
+
+# Security hardening
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
