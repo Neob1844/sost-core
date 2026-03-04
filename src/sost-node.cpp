@@ -1,6 +1,12 @@
-// sost-node.cpp — SOST Full Node v0.3.1
+// sost-node.cpp — SOST Full Node v0.3.2
 //
 // Full node: P2P + JSON-RPC + chain sync + tx relay
+//
+// CHANGES v0.3.2 (critical fix):
+// - FIX: Transaction persistence — chain.json now stores ALL txs per block
+//        load_chain() replays full UTXO connect on restart
+// - FIX: Auto-save chain.json after every accepted block (no data loss on crash)
+// - FIX: p2p_send_block includes transactions for full peer sync
 //
 // CHANGES v0.3.1 (bug-fix release):
 // - FIX #1: ACTIVE_PROFILE now set to MAINNET at startup (was DEV default)
@@ -64,6 +70,7 @@ static Wallet       g_wallet;
 static UtxoSet      g_utxo_set;
 static Mempool      g_mempool;
 static std::string  g_wallet_path = "wallet.json";
+static std::string  g_chain_path  = "";            // v0.3.2: for auto-save after block acceptance
 static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
 static std::mutex   g_chain_mu;
@@ -85,6 +92,7 @@ struct StoredBlock {
     int64_t subsidy;
     int64_t miner_reward, gold_vault_reward, popc_pool_reward;
     uint64_t stability_metric;
+    std::vector<std::string> tx_hexes;  // ALL serialized txs (coinbase + transfers)
 };
 static std::vector<StoredBlock> g_blocks;
 
@@ -271,6 +279,7 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 // Forward declarations
 static void p2p_broadcast_tx(const std::string& hex_str);
 static bool process_block(const std::string& block_json);
+static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
 
 // =============================================================================
 // RPC Basic Auth (Base64 decode)
@@ -429,7 +438,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     else if(ACTIVE_PROFILE == Profile::DEV) profile_str = "dev";
 
     std::ostringstream s;
-    s<<"{\"version\":\"0.3.1\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
+    s<<"{\"version\":\"0.3.2\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
      <<",\"profile\":\""<<profile_str<<"\""
@@ -762,8 +771,19 @@ static void p2p_send_block(int fd, int64_t h) {
      <<",\"miner\":"<<b.miner_reward
      <<",\"gold_vault\":"<<b.gold_vault_reward
      <<",\"popc_pool\":"<<b.popc_pool_reward
-     <<",\"stability_metric\":"<<b.stability_metric
-     <<"}";
+     <<",\"stability_metric\":"<<b.stability_metric;
+
+    // Include transactions for full block sync (v0.3.2)
+    if (!b.tx_hexes.empty()) {
+        s << ",\"transactions\":[";
+        for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
+            if (t) s << ",";
+            s << "\"" << b.tx_hexes[t] << "\"";
+        }
+        s << "]";
+    }
+
+    s << "}";
     std::string js=s.str();
     p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
 }
@@ -1034,6 +1054,7 @@ static bool process_block(const std::string& block_json) {
     sb.gold_vault_reward = gold_r;
     sb.popc_pool_reward = popc_r;
     sb.stability_metric = stb;
+    sb.tx_hexes = tx_hexes;  // PERSIST all transaction hex strings
 
     g_blocks.push_back(sb);
     g_chain_height = height;
@@ -1072,6 +1093,14 @@ static bool process_block(const std::string& block_json) {
 
     printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu)\n",
            (long long)height, bid.substr(0,16).c_str(), txs.size(), (long long)total_fees, g_utxo_set.Size());
+
+    // v0.3.2: Auto-save chain immediately after every accepted block
+    if (!g_chain_path.empty()) {
+        if (!save_chain_internal(g_chain_path)) {
+            printf("[BLOCK] WARNING: chain auto-save failed!\n");
+        }
+    }
+
     return true;
 }
 
@@ -1257,15 +1286,33 @@ static bool load_chain(const std::string& path) {
     size_t search=json.find("\"blocks\""); if(search==std::string::npos) return false;
     search=json.find('[',search); if(search==std::string::npos) return false;
 
+    // We need to parse block objects that may contain nested arrays (transactions)
+    // so use brace-matching instead of simple find('}')
     while(true){
         auto bs=json.find('{',search); if(bs==std::string::npos) break;
-        auto be=json.find('}',bs); if(be==std::string::npos) break;
+
+        // Brace-match to find the end of this block object
+        size_t depth=1; size_t be=bs+1;
+        bool in_str=false;
+        while(be<json.size() && depth>0){
+            char c=json[be];
+            if(in_str){
+                if(c=='"' && json[be-1]!='\\') in_str=false;
+            } else {
+                if(c=='"') in_str=true;
+                else if(c=='{' || c=='[') depth++;
+                else if(c=='}' || c==']') depth--;
+            }
+            if(depth>0) be++;
+        }
+        if(depth!=0) break;
+
         std::string bj=json.substr(bs,be-bs+1); search=be+1;
 
         std::string bid=jstr(bj,"block_id"); if(bid.size()!=64) continue;
         int64_t height=jint(bj,"height"); if(height==0) continue;
 
-        // FIX #2: Validate chain continuity — loaded block must link to previous
+        // FIX #2: Validate chain continuity
         if(height != (int64_t)g_blocks.size()){
             printf("[CHAIN-LOAD] Warning: height gap at %lld (expected %zu), skipping\n",
                    (long long)height, g_blocks.size());
@@ -1276,7 +1323,7 @@ static bool load_chain(const std::string& path) {
         sb.block_id=from_hex(bid);
         sb.prev_hash=from_hex(jstr(bj,"prev_hash"));
 
-        // FIX #2: Verify prev_hash links to the tip we have so far
+        // FIX #2: Verify prev_hash links
         if(!g_blocks.empty() && sb.prev_hash != g_blocks.back().block_id){
             printf("[CHAIN-LOAD] ERROR: prev_hash mismatch at height %lld, aborting chain load\n",
                    (long long)height);
@@ -1297,9 +1344,74 @@ static bool load_chain(const std::string& path) {
         sb.gold_vault_reward=jint(bj,"gold_vault");
         sb.popc_pool_reward=jint(bj,"popc_pool");
         sb.stability_metric=(uint64_t)jint(bj,"stability_metric");
-        g_blocks.push_back(sb);
 
-        // Reconstruct UTXOs for coinbase outputs
+        // Parse transactions if present (v0.3.2+)
+        sb.tx_hexes = json_get_tx_hexes(bj);
+
+        if (!sb.tx_hexes.empty()) {
+            // FULL REPLAY: deserialize all TXs and connect to UTXO set
+            std::vector<Transaction> txs;
+            txs.reserve(sb.tx_hexes.size());
+            bool tx_ok = true;
+
+            for (const auto& hx : sb.tx_hexes) {
+                std::vector<Byte> raw;
+                if (!decode_tx_hex(hx, raw)) {
+                    printf("[CHAIN-LOAD] Warning: bad tx hex at height %lld, falling back to coinbase-only\n",
+                           (long long)height);
+                    tx_ok = false;
+                    break;
+                }
+                Transaction tx; std::string derr;
+                if (!Transaction::Deserialize(raw, tx, &derr)) {
+                    printf("[CHAIN-LOAD] Warning: tx deserialize failed at height %lld: %s\n",
+                           (long long)height, derr.c_str());
+                    tx_ok = false;
+                    break;
+                }
+                txs.push_back(std::move(tx));
+            }
+
+            if (tx_ok && !txs.empty()) {
+                // Use ConnectBlock to atomically update UTXO set
+                BlockUndo undo;
+                std::string uerr;
+                if (g_utxo_set.ConnectBlock(txs, height, undo, &uerr)) {
+                    // Also register wallet UTXOs
+                    for (size_t ti = 1; ti < txs.size(); ++ti) {
+                        for (const auto& in : txs[ti].inputs) {
+                            g_wallet.mark_spent(in.prev_txid, in.prev_index);
+                        }
+                    }
+                    for (const auto& tx : txs) {
+                        Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
+                        for (size_t oi = 0; oi < tx.outputs.size(); ++oi) {
+                            const auto& o = tx.outputs[oi];
+                            std::string addr = address_encode(o.pubkey_hash);
+                            if (g_wallet.has_address(addr)) {
+                                WalletUTXO wu;
+                                wu.txid = txid;
+                                wu.vout = (uint32_t)oi;
+                                wu.amount = o.amount;
+                                wu.output_type = o.type;
+                                wu.pkh = o.pubkey_hash;
+                                wu.height = height;
+                                wu.spent = false;
+                                g_wallet.add_utxo(wu);
+                            }
+                        }
+                    }
+                    g_blocks.push_back(sb);
+                    continue;  // skip the legacy coinbase-only path below
+                } else {
+                    printf("[CHAIN-LOAD] Warning: ConnectBlock failed at height %lld: %s (falling back)\n",
+                           (long long)height, uerr.c_str());
+                }
+            }
+        }
+
+        // LEGACY fallback: no transactions field → reconstruct coinbase only
+        g_blocks.push_back(sb);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
             {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
@@ -1314,7 +1426,7 @@ static bool load_chain(const std::string& path) {
         }
     }
 
-    g_chain_height = (int64_t)g_blocks.size() - 1;  // FIX #2: derive from actual loaded blocks, not JSON claim
+    g_chain_height = (int64_t)g_blocks.size() - 1;
     if(g_chain_height != ch){
         printf("[CHAIN-LOAD] Warning: JSON claimed height=%lld but loaded %lld blocks (using %lld)\n",
                (long long)ch, (long long)g_blocks.size(), (long long)g_chain_height);
@@ -1493,8 +1605,9 @@ static void connect_peer(const std::string& host, int port) {
 // =============================================================================
 // Save chain (node local)
 // =============================================================================
-static bool save_chain(const std::string& path) {
-    std::lock_guard<std::mutex> lk(g_chain_mu);
+
+// v0.3.2: Internal save — caller MUST already hold g_chain_mu
+static bool save_chain_internal(const std::string& path) {
     std::ofstream f(path); if (!f) return false;
     f << "{\n  \"chain_height\": " << g_chain_height
       << ",\n  \"tip\": \"" << to_hex(g_blocks.back().block_id.data(),32)
@@ -1515,11 +1628,28 @@ static bool save_chain(const std::string& path) {
           << ",\"miner\":" << b.miner_reward
           << ",\"gold_vault\":" << b.gold_vault_reward
           << ",\"popc_pool\":" << b.popc_pool_reward
-          << ",\"stability_metric\":" << b.stability_metric
-          << "}" << (i + 1 < g_blocks.size() ? ",\n" : "\n");
+          << ",\"stability_metric\":" << b.stability_metric;
+
+        // WRITE TRANSACTIONS (v0.3.2 — critical for TX persistence)
+        if (!b.tx_hexes.empty()) {
+            f << ",\"transactions\":[";
+            for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
+                if (t) f << ",";
+                f << "\"" << b.tx_hexes[t] << "\"";
+            }
+            f << "]";
+        }
+
+        f << "}" << (i + 1 < g_blocks.size() ? ",\n" : "\n");
     }
     f << "  ]\n}\n";
     return f.good();
+}
+
+// Public save — acquires lock, then delegates to internal
+static bool save_chain(const std::string& path) {
+    std::lock_guard<std::mutex> lk(g_chain_mu);
+    return save_chain_internal(path);
 }
 
 // =============================================================================
@@ -1556,7 +1686,7 @@ int main(int argc, char** argv) {
             else { fprintf(stderr,"Error: unknown profile '%s' (use mainnet|testnet|dev)\n",pv.c_str()); return 1; }
         }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
-            printf("SOST Node v0.3.1\n");
+            printf("SOST Node v0.3.2\n");
             printf("  --wallet <path>            Wallet file (default: wallet.json)\n");
             printf("  --genesis <path>           Genesis JSON\n");
             printf("  --chain <path>             Chain JSON to load/save\n");
@@ -1574,11 +1704,14 @@ int main(int argc, char** argv) {
     // FIX #1: Apply profile AFTER parsing all args, BEFORE any crypto/chain ops
     ACTIVE_PROFILE = selected_profile;
 
+    // v0.3.2: Set global chain path for auto-save in process_block
+    g_chain_path = chain_path;
+
     const char* profile_name =
         ACTIVE_PROFILE==Profile::MAINNET ? "MAINNET" :
         ACTIVE_PROFILE==Profile::TESTNET ? "TESTNET" : "DEV";
 
-    printf("=== SOST Node v0.3.1 ===\n");
+    printf("=== SOST Node v0.3.2 ===\n");
     printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s\n\n",
            profile_name, p2p_port, rpc_port,
            g_rpc_auth_required ? "ON" : "OFF");
