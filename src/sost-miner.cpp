@@ -549,6 +549,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
 
     auto t0 = std::chrono::steady_clock::now();
+    auto ts_last_update = t0;
     uint32_t extra_nonce = 0;
     bool found = false;
 
@@ -563,6 +564,18 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if ((nonce % 5000) == 0 && nonce > 0) {
                 printf("\r  nonce=%u extra=%u", nonce, extra_nonce);
                 fflush(stdout);
+
+                // Refresh timestamp every 30s to keep block time accurate
+                if (!sim_time) {
+                    auto now_check = std::chrono::steady_clock::now();
+                    auto since_update = std::chrono::duration_cast<std::chrono::seconds>(now_check - ts_last_update).count();
+                    if (since_update >= 30) {
+                        ts = std::chrono::duration_cast<std::chrono::seconds>(
+                            std::chrono::system_clock::now().time_since_epoch()).count();
+                        build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
+                        ts_last_update = now_check;
+                    }
+                }
             }
 
             auto res = convergencex_attempt(
@@ -627,7 +640,14 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
         if (!found) {
             extra_nonce++;
-            if (sim_time) ts++;
+            if (sim_time) {
+                ts++;
+            } else {
+                ts = std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
+                ts_last_update = std::chrono::steady_clock::now();
+            }
+            build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
             if (extra_nonce > 1000) {
                 printf("\n[FATAL] exhausted 1000 extra_nonce loops\n");
                 return false;
