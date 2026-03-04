@@ -105,7 +105,7 @@ Constitutional Addresses
 These addresses receive coinbase rewards at every block. Hardcoded at genesis, immutable forever.
 RoleAllocationMiner reward50% → miner's configured addressGold Vault25% → automatic XAUT/PAXG purchases (auditable on-chain)PoPC Pool25% → Proof of Personal Custody rewards
 Gold Vault and PoPC Pool addresses are defined in include/sost/params.h.
-Explorer (v3.14)
+Explorer (v4.2)
 Standalone HTML file (explorer.html) that connects to your node's RPC with authentication.
 Features:
 
@@ -116,7 +116,7 @@ PoPC Pool tracker with real block-interval bar chart
 Emission curve chart (smooth exponential decay, 12 epochs, interactive tooltip)
 Chain timing panel: wall clock, chain time, expected vs actual blocks, block lag
 Block detail: bits_q, bits_real, cASERT level/signal, nonce, subsidy, coinbase split
-cASERT panel: L1-L5+ level display with color coding and ConvergenceX parameter scaling
+cASERT panel: L3-L6 level display with color coding and ConvergenceX parameter scaling (unidirectional, hardening only)
 Address view: balance (mature/immature), UTXO list, transaction history, role tagging
 Smart search: block height, full/partial hash, txid, sost1 address
 RPC authentication support (username/password fields)
