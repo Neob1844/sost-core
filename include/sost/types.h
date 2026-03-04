@@ -33,8 +33,13 @@ struct ConsensusParams {
 struct CoinbaseSplit { int64_t miner, gold_vault, popc_pool, total; };
 enum class CasertMode : uint8_t { WARMUP=0, NORMAL=1, DEGRADED=2, OPEN=3 };
 inline const char* casert_mode_str(CasertMode m) {
-    switch(m){case CasertMode::WARMUP:return"warmup";case CasertMode::NORMAL:return"normal";
-    case CasertMode::DEGRADED:return"degraded";case CasertMode::OPEN:return"open";}return"?";
+    switch(m) {
+        case CasertMode::WARMUP:   return "warmup";
+        case CasertMode::NORMAL:   return "L3";
+        case CasertMode::DEGRADED: return "L4";
+        case CasertMode::OPEN:     return "L5+";
+    }
+    return "?";
 }
 struct CasertDecision { CasertMode mode; int32_t signal_s, samples; };
 struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };
