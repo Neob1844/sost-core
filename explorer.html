@@ -246,9 +246,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card"><div class="dash-label">⛏ MINER REWARDS</div><div class="dash-val orange" id="dMiner">—</div><div class="dash-sub">50% of all rewards</div></div>
-  <div class="dash-card"><div class="dash-label">⬙ GOLD VAULT</div><div class="dash-val gold" id="dGold">—</div><div class="dash-sub">25% of all rewards</div></div>
-  <div class="dash-card"><div class="dash-label">⏱ POPC POOL</div><div class="dash-val cyan" id="dPopc">—</div><div class="dash-sub">25% of all rewards</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1f559e05f39486582231179a4985366961d8f8313')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -462,17 +462,23 @@ async function updateDashboard(info){
     _lastBlockTime=times[0];startCountdown();}}catch(e){}
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
-  var gSOST=tSOST*0.25;
-  var mSOST=tSOST*0.5;
-  document.getElementById('dMiner').textContent=fComma(Math.floor(mSOST))+' SOST';
-  document.getElementById('dGold').textContent=fComma(Math.floor(gSOST))+' SOST';
-  document.getElementById('goldTotal').textContent=fComma(Math.floor(gSOST))+' SOST';
-  document.getElementById('goldSub').textContent='accumulated from '+fComma(info.blocks)+' blocks \u00B7 25% of every block reward since genesis';
-  var pSOST=tSOST*0.25;
-  document.getElementById('dPopc').textContent=fComma(Math.floor(pSOST))+' SOST';
-  document.getElementById('popcTotal').textContent=fComma(Math.floor(pSOST))+' SOST';
-  document.getElementById('popcSub').textContent='accumulated from '+fComma(info.blocks)+' blocks \u00B7 25% of every block reward for PoPC participants';
   drawReserveBars();
+  try{
+    var ADDR_MINER='sost1f559e05f39486582231179a4985366961d8f8313';
+    var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
+    var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
+    var am=await rpc('getaddressinfo',[ADDR_MINER]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
+    var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
+    document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
+    document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
+    document.getElementById('goldTotal').textContent=bg.toFixed(4)+' SOST';
+    document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
+    document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
+    document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
+  }catch(e){}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
