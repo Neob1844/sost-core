@@ -303,8 +303,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
       <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-02-28 00:00:00 UTC</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">last block timestamp − genesis</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">block lag × 10 min</div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">chain clock − wall clock</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED BLOCKS</div><div id="csExpected" style="font-size:16px;font-weight:600;color:var(--yellow)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at 10 min/block target</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACTUAL BLOCKS</div><div id="csActual" style="font-size:16px;font-weight:600;color:var(--red)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">mined on chain</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div></div>
@@ -513,13 +513,13 @@ function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/360
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
   var wallSec=now-GENESIS_TS;
-  var chainSec=_lastBlockTime?_lastBlockTime-GENESIS_TS:0;
+  var chainSec=H*600;
   var expected=Math.floor(wallSec/600);
   var actual=H;
   var lag=expected-actual;
   document.getElementById('csWall').textContent=fDuration(wallSec);
-  document.getElementById('csChain').textContent=chainSec>0?fDuration(chainSec):'\u2014';
-  var offSec=-lag*600;var absOff=Math.abs(offSec);var oMin=Math.floor(absOff/60);var oSec=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';document.getElementById('csOffset').textContent=absOff===0?'on schedule':sign+' '+oMin+'m '+oSec+'s';document.getElementById('csOffset').style.color=absOff===0?'var(--green)':absOff<=1200?'var(--yellow)':'var(--orange)';
+  document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
+  var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   if(lag>0){document.getElementById('csLag').textContent='+'+fComma(lag)+' behind';document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lag)+' blocks behind schedule';}
