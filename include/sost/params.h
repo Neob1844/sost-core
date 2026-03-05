@@ -63,17 +63,13 @@ inline constexpr int64_t  ASERT_HALF_LIFE  = 86400;
 inline constexpr int32_t  ASERT_DOWN_STEPS = 2; // log2(4)
 inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
 
-// cASERT v2 — Unidirectional hardening (blocks ahead of schedule)
-// Only activates when chain is AHEAD (emission protection).
-// When behind → ASERT alone handles difficulty reduction.
-//
-//   ahead <  21 → L3 (neutral)       0–20 blocks ahead
-//   ahead <  51 → L4 (light)        21–50 blocks ahead
-//   ahead < 101 → L5 (moderate)     51–100 blocks ahead
-//   ahead >= 101 → L6 (maximum)     101+ blocks ahead
-inline constexpr int32_t CASERT_L4_BLOCKS = 21;   // 21+ ahead → L4 light hardening
-inline constexpr int32_t CASERT_L5_BLOCKS = 51;   // 51+ ahead → L5 moderate
-inline constexpr int32_t CASERT_L6_BLOCKS = 101;  // 101+ ahead → L6 maximum CX cost
+// cASERT v3 thresholds (blocks ahead of schedule)
+//   0– 4 → L1 neutral   | 5–19 → L2 light
+//  20–49 → L3 moderate  | 50–74 → L4 strong  | 75+ → L5 max (cap)
+inline constexpr int32_t CASERT_L2_BLOCKS = 5;
+inline constexpr int32_t CASERT_L3_BLOCKS = 20;
+inline constexpr int32_t CASERT_L4_BLOCKS = 50;
+inline constexpr int32_t CASERT_L5_BLOCKS = 75;
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;

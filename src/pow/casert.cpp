@@ -31,9 +31,11 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain,
     int32_t ahead = (lag < 0) ? -lag : 0;
 
     CasertMode mode;
-    if      (ahead < CASERT_L4_BLOCKS) mode = CasertMode::NORMAL;    // L3 (0–20)
-    else if (ahead < CASERT_L5_BLOCKS) mode = CasertMode::DEGRADED;  // L4 (21–50)
-    else                               mode = CasertMode::OPEN;      // L5/L6 (51+)
+    if      (ahead < CASERT_L2_BLOCKS) mode = CasertMode::L1;
+    else if (ahead < CASERT_L3_BLOCKS) mode = CasertMode::L2;
+    else if (ahead < CASERT_L4_BLOCKS) mode = CasertMode::L3;
+    else if (ahead < CASERT_L5_BLOCKS) mode = CasertMode::L4;
+    else                               mode = CasertMode::L5;
 
     return {mode, lag, (int32_t)(chain.size() - 1)};
 }
@@ -50,10 +52,10 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
     int32_t ahead = -dec.signal_s;
 
     int32_t level;
-    if      (ahead < CASERT_L4_BLOCKS) level = 3;   // L3 — neutral  (0–20)
-    else if (ahead < CASERT_L5_BLOCKS) level = 4;   // L4 — light    (21–50)
-    else if (ahead < CASERT_L6_BLOCKS) level = 5;   // L5 — moderate (51–100)
-    else                               level = 6;   // L6 — maximum  (101+)
+    if      (ahead < CASERT_L2_BLOCKS) level = 3;   // L1 neutral
+    else if (ahead < CASERT_L3_BLOCKS) level = 4;   // L2 light
+    else if (ahead < CASERT_L4_BLOCKS) level = 5;   // L3 moderate
+    else                               level = 6;   // L4/L5 capped at 6          
 
     out.stab_scale  = level;
     out.stab_k      = 4;
