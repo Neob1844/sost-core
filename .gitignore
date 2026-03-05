@@ -7,3 +7,15 @@ wallet.json
 wallet.json.*
 chain.json
 *.swp
+
+# Secrets
+wallet.json
+*.dat
+
+# Binaries/build
+build/
+sost-v*/
+*.exe
+*.dll
+*.so
+*.dylib
