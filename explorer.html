@@ -347,11 +347,11 @@ const ROLES={
   'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'0\u20134 ahead',level:1,scale:3,k:4,steps:3},
-  {signal:'5\u201319 ahead',level:2,scale:4,k:4,steps:3},
-  {signal:'20\u201349 ahead',level:3,scale:5,k:4,steps:3},
-  {signal:'50\u201374 ahead',level:4,scale:6,k:4,steps:3},
-  {signal:'75+ ahead',level:5,scale:6,k:4,steps:3},
+  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:3},
+  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:3},
+  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:3},
+  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:3},
+  {signal:'75+ ahead',level:5,scale:5,k:4,steps:3},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -442,7 +442,7 @@ function renderNav(){
 }
 function renderCasertPanel(signal,mode){
   var activeLevel=getCasertLevel(signal);
-  var activeScale=3;
+  var activeScale=1;
   for(var si=0;si<CASERT_LEVELS.length;si++){if(CASERT_LEVELS[si].level===activeLevel){activeScale=CASERT_LEVELS[si].scale;break;}}
   var tableRows='';
   for(var li=0;li<CASERT_LEVELS.length;li++){
