@@ -347,10 +347,10 @@ const ROLES={
   'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'0 to 5 ahead',level:3,scale:3,k:4,steps:3},
-  {signal:'6 to 20 ahead',level:4,scale:4,k:4,steps:3},
-  {signal:'21 to 50 ahead',level:5,scale:5,k:4,steps:3},
-  {signal:'51+ ahead',level:6,scale:6,k:4,steps:3},
+  {signal:'0\u201320 ahead',level:3,scale:3,k:4,steps:3},
+  {signal:'21\u201350 ahead',level:4,scale:4,k:4,steps:3},
+  {signal:'51\u2013100 ahead',level:5,scale:5,k:4,steps:3},
+  {signal:'101+ ahead',level:6,scale:6,k:4,steps:3},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -364,10 +364,10 @@ function getCasertLevel(signal){
   // Unidirectional: only harden when ahead (signal < 0).
   if(signal>=0)return 3;  // behind or on-time → L3 (neutral)
   var ahead=-signal;
-  if(ahead<=5)return 3;   // L3
-  if(ahead<=20)return 4;  // L4
-  if(ahead<=50)return 5;  // L5
-  return 6;               // L6
+  if(ahead<21)return 3;   // L3: 0-20 ahead
+  if(ahead<51)return 4;   // L4: 21-50 ahead
+  if(ahead<101)return 5;  // L5: 51-100 ahead
+  return 6;               // L6: 101+ ahead
 }
 function getLevelColor(lv){
   if(lv<=3)return '#4ade80';  // L3 = green (neutral/base)
@@ -832,10 +832,10 @@ function showCXInfo(){
   '<b style="color:var(--orange)">cASERT</b> — <b>Unidirectional</b> adaptive stability overlay. '+
   'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
   'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
-  'Levels: <span style="color:#4ade80">L3</span> (neutral, 0-5 ahead) → '+
-  '<span style="color:#fbbf24">L4</span> (6-20) → '+
-  '<span style="color:#fb923c">L5</span> (21-50) → '+
-  '<span style="color:#e63946">L6</span> (51+ ahead, maximum CX cost). '+
+  'Levels: <span style="color:#4ade80">L3</span> (neutral, 0–20 ahead) → '+
+  '<span style="color:#fbbf24">L4</span> (21–50) → '+
+  '<span style="color:#fb923c">L5</span> (51–100) → '+
+  '<span style="color:#e63946">L6</span> (101+ ahead, maximum CX cost). '+
   'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
   'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
   '<div class="dtl-grid">'+
@@ -847,7 +847,7 @@ function showCXInfo(){
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
   '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
-  '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-51)+' (51+ blocks ahead of schedule)</div>'+
+  '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-101)+' (101+ blocks ahead of schedule)</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+
