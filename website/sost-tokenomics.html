@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Tokenomics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* CODE SNIPPET */
+  .code-snippet { background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; margin: 16px 0; white-space: pre; font-family: var(--font-mono); }
+  .code-snippet .keyword { color: var(--red-primary); }
+  .code-snippet .fn { color: var(--cyan-primary); }
+  .code-snippet .comment { color: var(--text-muted); font-style: italic; }
+  .code-snippet .num { color: var(--green-primary); }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; text-align: center; transition: all 0.3s; }
+  .stat-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .stat-card .stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-card .stat-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text-primary); }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* SPLIT BAR */
+  .split-bar { display: flex; height: 40px; border-radius: 6px; overflow: hidden; margin: 24px 0; border: 1px solid var(--border-dim); }
+  .split-bar .segment { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+
+  /* ARCH FLOW */
+  .arch-flow { display: flex; align-items: stretch; gap: 0; margin: 24px 0; flex-wrap: wrap; }
+  .arch-layer { flex: 1; min-width: 200px; padding: 20px; border: 1px solid var(--border-dim); background: var(--bg-card); text-align: center; position: relative; }
+  .arch-layer:first-child { border-radius: 8px 0 0 8px; }
+  .arch-layer:last-child { border-radius: 0 8px 8px 0; }
+  .arch-layer h3 { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .arch-layer p { font-size: 12px; color: var(--text-dim); }
+  .arch-layer .arrow { position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--red-primary); font-size: 18px; z-index: 2; }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .arch-flow { flex-direction: column; }
+    .arch-layer { border-radius: 0; }
+    .arch-layer:first-child { border-radius: 8px 8px 0 0; }
+    .arch-layer:last-child { border-radius: 0 0 8px 8px; }
+    .arch-layer .arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html" class="active">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Monetary Policy</div>
+    <h1 class="fade-in delay-1">Feigenbaum <span>Emission.</span><br>Constitutional <span>Split.</span></h1>
+    <p class="hero-sub fade-in delay-2">No ICO. No premine. No VCs. Every SOST is mined through ConvergenceX proof-of-work. The emission schedule, coinbase split, and maximum supply are immutable at genesis — enforced by consensus, not governance.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">HARD CAP</span>
+      <span class="sep">|</span>
+      <span class="val">4,669,201 SOST &middot; Feigenbaum &delta; &times; 10&sup6;</span>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPLY OVERVIEW -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">Supply <span class="accent">Overview</span></h2>
+    </div>
+
+    <div class="stat-grid fade-in delay-1">
+      <div class="stat-card">
+        <div class="stat-label">Maximum Supply</div>
+        <div class="stat-value" style="color:var(--red-primary)">4,669,201</div>
+        <div class="stat-sub">SOST (hard cap by construction)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Initial Block Reward</div>
+        <div class="stat-value">7.851</div>
+        <div class="stat-sub">SOST per block</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Block Time</div>
+        <div class="stat-value">600s</div>
+        <div class="stat-sub">10 minutes target</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Epoch Length</div>
+        <div class="stat-value">131,553</div>
+        <div class="stat-sub">blocks (~2.503 years)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Smallest Unit</div>
+        <div class="stat-value">1 stock</div>
+        <div class="stat-sub">10&sup-;&sup8; SOST</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">95% Mined</div>
+        <div class="stat-value">~30 yrs</div>
+        <div class="stat-sub">~12 epochs</div>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2">
+      <strong>No premine, no ICO, no VC allocation.</strong> The only way to create SOST is to mine a valid block via ConvergenceX proof-of-work. Any block that mints more than the subsidy for its height is invalid. Shortfall due to integer flooring remains permanently unissued.
+    </div>
+  </div>
+</section>
+
+<!-- COINBASE SPLIT -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Coinbase <span class="accent">Split</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Every block reward is split by consensus into exactly three outputs. Hardcoded at genesis. Immutable forever. Any deviation makes the block invalid.</p>
+
+    <div class="split-bar fade-in delay-1">
+      <div class="segment" style="width:50%;background:var(--red-primary);color:#fff;">MINER 50%</div>
+      <div class="segment" style="width:25%;background:#b8860b;color:#fff;">GOLD VAULT 25%</div>
+      <div class="segment" style="width:25%;background:var(--cyan-primary);color:#000;">PoPC POOL 25%</div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Constitutional Rule</span>
+        </div>
+        <span class="spec-tag">CONSENSUS-CRITICAL</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment">// Coinbase split — immutable at genesis</span>
+q     = reward // <span class="num">4</span>
+gold  = q                    <span class="comment">// 25% to Metals Funding Vault</span>
+popc  = q                    <span class="comment">// 25% to PoPC Pool</span>
+miner = reward - gold - popc <span class="comment">// 50% + remainder to miner</span>
+
+<span class="comment">// Invariant: miner + gold + popc == reward</span>
+<span class="comment">// Exactly 3 outputs in canonical order: miner, gold, popc</span></div>
+        <table class="code-table">
+          <tr><th>Output</th><th>Recipient</th><th>Allocation</th></tr>
+          <tr><td class="value">Output 0</td><td class="value">Miner's configured address</td><td class="highlight">50% + remainder</td></tr>
+          <tr><td class="value">Output 1</td><td class="value">Metals Funding Vault (Gold-first)</td><td class="cyan">25% (q = reward // 4)</td></tr>
+          <tr><td class="value">Output 2</td><td class="value">PoPC Pool</td><td class="cyan">25% (q = reward // 4)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-3">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">MINER</div>
+        <h3 style="color:var(--red-primary)">50% + Remainder</h3>
+        <p>Direct reward for ConvergenceX proof-of-work. The miner receives the full remainder after integer division, ensuring no stocks are lost.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:#b8860b33;color:#b8860b;">GOLD VAULT</div>
+        <h3 style="color:#b8860b">25% Gold Reserve</h3>
+        <p>Accumulates SOST, periodically converted to XAUT/PAXG via auditable execution. Deposited into Heritage Reserve Vault on Ethereum mainnet. Sealed by default.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">PoPC POOL</div>
+        <h3 style="color:var(--cyan-primary)">25% Custody Rewards</h3>
+        <p>Funds Proof of Personal Custody rewards. Participants who prove gold custody earn from this pool. Slashed bonds are recycled back into it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EMISSION SCHEDULE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Feigenbaum <span class="accent">Emission</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Smooth exponential decay with no cliff events. The decay factor q = e<sup>-1/4</sup> produces a 9.03% annual reduction in block reward, implemented as integer-only fixed-point arithmetic for consensus determinism.</p>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Emission Constants</span>
+        </div>
+        <span class="spec-tag">CONSENSUS-CRITICAL</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Constant</th><th>Value</th><th>Description</th></tr>
+          <tr><td class="label">R0_STOCKS</td><td class="value">785,100,863</td><td class="value">Initial reward (7.85100863 SOST)</td></tr>
+          <tr><td class="label">Q_NUM</td><td class="value">7,788,007,830,714,049</td><td class="value">Decay numerator</td></tr>
+          <tr><td class="label">Q_DEN</td><td class="value">10,000,000,000,000,000</td><td class="value">Decay denominator (10<sup>16</sup>)</td></tr>
+          <tr><td class="label">BLOCKS_PER_EPOCH</td><td class="value">131,553</td><td class="value">Feigenbaum &alpha; reference</td></tr>
+          <tr><td class="label">TARGET_SPACING</td><td class="value">600 seconds</td><td class="value">10-minute block target</td></tr>
+          <tr><td class="label">SUPPLY_MAX</td><td class="highlight">~4,669,201 SOST</td><td class="value">Feigenbaum &delta; &times; 10<sup>6</sup></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Fixed-Point Subsidy Calculation</span>
+        </div>
+        <span class="spec-tag">INTEGER-ONLY</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">No floating-point arithmetic. Bit-identical results on any hardware, any language, any platform.</p>
+        <div class="code-snippet"><span class="fn">subsidy</span>(height):
+    epoch = height // <span class="num">131,553</span>
+    qpow  = <span class="fn">_qpow_floor</span>(Q_NUM, epoch)
+    <span class="keyword">return</span> (R0 * qpow) // Q_DEN
+
+<span class="fn">_qpow_floor</span>(base, exp):
+    result = Q_DEN
+    x = base
+    <span class="keyword">while</span> exp &gt; <span class="num">0</span>:
+        <span class="keyword">if</span> exp &amp; <span class="num">1</span>: result = <span class="fn">_qmul_floor</span>(result, x)
+        x = <span class="fn">_qmul_floor</span>(x, x)
+        exp &gt;&gt;= <span class="num">1</span>
+    <span class="keyword">return</span> result
+
+<span class="fn">_qmul_floor</span>(a, b):
+    <span class="keyword">return</span> (a * b) // Q_DEN</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPLY PROJECTIONS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
+      <h2 class="section-title">Supply <span class="accent">Projections</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Total Supply Breakdown</span>
+        </div>
+        <span class="spec-tag">HARD CAP</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Recipient</th><th>Total SOST</th><th>Share</th></tr>
+          <tr><td class="label">Miners</td><td class="highlight">2,334,600</td><td class="value">50%</td></tr>
+          <tr><td class="label">Gold Vault</td><td class="cyan">1,167,300</td><td class="value">25%</td></tr>
+          <tr><td class="label">PoPC Pool</td><td class="cyan">1,167,300</td><td class="value">25%</td></tr>
+          <tr><td class="label" style="border-top:1px solid var(--border-med)"><strong style="color:var(--text-primary)">Maximum</strong></td><td style="border-top:1px solid var(--border-med)" class="highlight">4,669,201</td><td style="border-top:1px solid var(--border-med)" class="value">100%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Vault Accumulation</span>
+        </div>
+        <span class="spec-tag">PER VAULT (25%)</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Period</th><th>SOST per Vault</th><th>Note</th></tr>
+          <tr><td class="label">Year 1</td><td class="value">103,160 SOST</td><td class="value">Annual intake</td></tr>
+          <tr><td class="label">Epoch 0 (years 0-2.5)</td><td class="value">258,210 SOST</td><td class="value">First epoch total</td></tr>
+          <tr><td class="label">30 years (~12 epochs)</td><td class="value">1,167,300 SOST</td><td class="value">~95% of lifetime allocation</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BITCOIN COMPARISON -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
+      <h2 class="section-title">SOST vs <span class="accent">Bitcoin</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">SOST follows Bitcoin's fundamental commitment to fixed supply and proof-of-work, while choosing smooth exponential decay over discrete halvings.</p>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Emission Comparison</span>
+        </div>
+        <span class="spec-tag">RESPECTFUL</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Bitcoin</th><th>SOST</th></tr>
+          <tr><td class="label">Max supply</td><td class="value">21,000,000 BTC</td><td class="highlight">4,669,201 SOST</td></tr>
+          <tr><td class="label">Initial reward</td><td class="value">50 BTC/block</td><td class="value">7.851 SOST/block</td></tr>
+          <tr><td class="label">Decay method</td><td class="value">Halving every 210,000 blocks</td><td class="value">Smooth 9.03% annual decay</td></tr>
+          <tr><td class="label">Decay events</td><td class="value">Discrete cliff (50% overnight)</td><td class="green">Continuous (no cliff events)</td></tr>
+          <tr><td class="label">Mining allocation</td><td class="value">100% to miner</td><td class="value">50% miner, 25% gold, 25% PoPC</td></tr>
+          <tr><td class="label">Smallest unit</td><td class="value">1 satoshi (10<sup>-8</sup> BTC)</td><td class="value">1 stock (10<sup>-8</sup> SOST)</td></tr>
+          <tr><td class="label">~95% emission</td><td class="value">~2036 (year 28)</td><td class="value">~2056 (year 30)</td></tr>
+          <tr><td class="label">Supply cap</td><td class="value">Consensus rule</td><td class="value">Subsidy-by-height (upper-bounded)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEIGENBAUM -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 06</div>
+      <h2 class="section-title">Feigenbaum <span class="accent">Constants</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">SOST's monetary parameters are derived from the Feigenbaum universal constants — fundamental mathematical constants of chaos theory that appear in all dynamical systems exhibiting period-doubling cascades.</p>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">FEIGENBAUM &delta;</div>
+        <h3 style="color:var(--red-primary)">4.669201...</h3>
+        <p>The rate of convergence of period-doubling bifurcations. Maximum supply = &delta; &times; 10<sup>6</sup> = 4,669,201 SOST.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">FEIGENBAUM &alpha;</div>
+        <h3 style="color:var(--cyan-primary)">2.502907...</h3>
+        <p>The scaling factor for bifurcation widths. Epoch length of 131,553 blocks corresponds to ~2.503 years.</p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2" style="margin-top:24px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Hard Cap by Construction</span>
+        </div>
+        <span class="spec-tag">MATHEMATICAL PROOF</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">SOST enforces maximum supply by construction, not by tracking cumulative supply on-chain.</p>
+        <div class="code-snippet"><span class="comment">// Let B = BLOCKS_PER_EPOCH, 0 &lt; q &lt; 1</span>
+<span class="comment">// Since floor(x) &le; x:</span>
+
+TotalIssued &le; B &times; &Sigma;<sub>e&ge;0</sub>(R0 &times; q<sup>e</sup>)
+            = B &times; R0 / (<span class="num">1</span> - q)
+            &le; SUPPLY_MAX_STOCKS
+
+<span class="comment">// No other minting path exists.</span>
+<span class="comment">// Any block minting more than subsidy(height) is invalid.</span>
+<span class="comment">// Shortfall from flooring remains permanently unissued.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSACTION FEES -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 07</div>
+      <h2 class="section-title">Transaction <span class="accent">Fees</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Fee Parameters</span>
+        </div>
+        <span class="spec-tag">NETWORK</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="label">Default fee rate</td><td class="value">1 stock/byte</td></tr>
+          <tr><td class="label">Minimum relay fee</td><td class="value">1,000 stocks (0.00001 SOST)</td></tr>
+          <tr><td class="label">Fee calculation</td><td class="value">Automatic based on transaction size</td></tr>
+          <tr><td class="label">Fee distribution</td><td class="value">Included in coinbase, split across all 3 outputs</td></tr>
+          <tr><td class="label">Coinbase maturity</td><td class="value">100 blocks</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Address Format</span>
+        </div>
+        <span class="spec-tag">SOST1 PREFIX</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="label">Format</td><td class="value" style="font-family:var(--font-mono)">sost1 + 40 hex characters</td></tr>
+          <tr><td class="label">Derivation</td><td class="value">20-byte pubkey hash (ECDSA secp256k1)</td></tr>
+          <tr><td class="label">Signature</td><td class="value">ECDSA secp256k1 with LOW-S (libsecp256k1)</td></tr>
+          <tr><td class="label">Wallet encryption</td><td class="value">AES-256-GCM + scrypt key derivation</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

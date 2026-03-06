@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  /* DL BTN */
+  .dl-area { margin-top: 32px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .dl-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; border: 1px solid var(--red-primary); border-radius: 6px; background: var(--red-subtle); color: var(--red-primary); font-family: var(--font-mono); font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 1px; transition: all 0.3s; }
+  .dl-btn:hover { background: var(--red-primary); color: #fff; box-shadow: 0 0 20px var(--red-glow); }
+  .dl-btn.secondary { border-color: var(--border-med); background: var(--bg-card); color: var(--text-secondary); }
+  .dl-btn.secondary:hover { border-color: var(--cyan-primary); color: var(--cyan-primary); background: var(--bg-hover); box-shadow: none; }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* CODE SNIPPET */
+  .code-snippet { background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; margin: 16px 0; white-space: pre; font-family: var(--font-mono); }
+  .code-snippet .keyword { color: var(--red-primary); }
+  .code-snippet .fn { color: var(--cyan-primary); }
+  .code-snippet .comment { color: var(--text-muted); font-style: italic; }
+  .code-snippet .num { color: var(--green-primary); }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html" class="active">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Block Explorer</div>
+    <h1 class="fade-in delay-1">Explore the <span>Chain.</span><br>Verify <span>Everything.</span></h1>
+    <p class="hero-sub fade-in delay-2">The SOST block explorer is a standalone HTML application that connects directly to your node's JSON-RPC. Real-time chain data, Gold Reserve tracking, PoPC Pool monitoring, difficulty analysis, and full block/address/transaction lookup.</p>
+    <div class="dl-area fade-in delay-3">
+      <a href="https://explorer.sostcore.com" target="_blank" rel="noopener" class="dl-btn">OPEN EXPLORER</a>
+      <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" class="dl-btn secondary">VIEW SOURCE</a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">Explorer <span class="accent">Features</span></h2>
+    </div>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">DASHBOARD</div>
+        <h3 style="color:var(--red-primary)">Chain Overview</h3>
+        <p>Block height, total supply, hashrate estimate, current difficulty, mempool status, and network peer count. Auto-refreshes every 10 seconds.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:#b8860b33;color:#b8860b;">RESERVE</div>
+        <h3 style="color:#b8860b">Gold Reserve Tracker</h3>
+        <p>Real-time Gold Vault balance, accumulated SOST, conversion status. Tracks the 25% coinbase allocation flowing to the Metals Funding Vault.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">PoPC</div>
+        <h3 style="color:var(--cyan-primary)">PoPC Pool Monitor</h3>
+        <p>PoPC Pool balance and accumulation tracking. 25% of every block reward flowing to the custody reward pool, visible in real time.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">DIFFICULTY</div>
+        <h3 style="color:var(--green-primary)">Difficulty Analysis</h3>
+        <p>ASERT difficulty progress bar, cASERT level indicators (L1-L5), chain timing panel, and time offset tracking.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">BLOCKS</div>
+        <h3 style="color:var(--red-primary)">Block Detail</h3>
+        <p>Full block view with header fields, coinbase transaction, cASERT mode, ConvergenceX proof data, and all transactions.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">ADDRESSES</div>
+        <h3 style="color:var(--cyan-primary)">Address View</h3>
+        <p>Balance with mature/immature breakdown, full UTXO list, transaction history, and coinbase maturity status.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">EMISSION</div>
+        <h3 style="color:var(--green-primary)">Emission Curve</h3>
+        <p>Interactive supply chart showing Feigenbaum exponential decay, epoch boundaries, and projected supply over time.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">SEARCH</div>
+        <h3 style="color:var(--red-primary)">Smart Search</h3>
+        <p>Search by block height, block hash, transaction ID, or address. Auto-detects input type and routes to the correct view.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONNECTING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Connecting to <span class="accent">Your Node</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The explorer is a standalone HTML file that connects to any SOST node's JSON-RPC endpoint. No server required — it runs entirely in your browser.</p>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Setup</span>
+        </div>
+        <span class="spec-tag">3 STEPS</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># 1. Start your node with RPC enabled</span>
+./sost-node --genesis genesis_block.json --chain chain.json \
+    --rpc-user myuser --rpc-pass mypass --profile mainnet
+
+<span class="comment"># 2. Open explorer.html in your browser</span>
+<span class="comment"># 3. Enter RPC credentials when prompted:</span>
+<span class="comment">#    Host: http://localhost:18232</span>
+<span class="comment">#    User: myuser</span>
+<span class="comment">#    Pass: mypass</span></div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">RPC Methods Used</span>
+        </div>
+        <span class="spec-tag">JSON-RPC 2.0</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Method</th><th>Explorer Use</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getinfo</td><td class="value">Dashboard — height, difficulty, hashrate, mempool</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblockcount</td><td class="value">Chain height display</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblockhash</td><td class="value">Block navigation by height</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblock</td><td class="value">Block detail view — header, transactions, cASERT</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getaddressinfo</td><td class="value">Address balance, UTXO list</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">gettxout</td><td class="value">UTXO lookup</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getmempoolinfo</td><td class="value">Mempool size and fee stats</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getrawmempool</td><td class="value">Pending transaction list</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getpeerinfo</td><td class="value">Connected peers display</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGN -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Explorer <span class="accent">Design</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Technical Details</span>
+        </div>
+        <span class="spec-tag">v4.2</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="label">Architecture</td><td class="value">Standalone HTML — no backend, no dependencies</td></tr>
+          <tr><td class="label">Connection</td><td class="value">Direct JSON-RPC to your node (port 18232)</td></tr>
+          <tr><td class="label">Authentication</td><td class="value">RPC user/pass entered in browser</td></tr>
+          <tr><td class="label">Auto-refresh</td><td class="value">10-second polling interval</td></tr>
+          <tr><td class="label">Responsive</td><td class="green">Mobile and desktop</td></tr>
+          <tr><td class="label">Theme</td><td class="value">Dark theme matching SOST design system</td></tr>
+          <tr><td class="label">Privacy</td><td class="green">No external requests — runs entirely local</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Constitutional Addresses</span>
+        </div>
+        <span class="spec-tag">TRACKED</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">The explorer automatically tracks the two constitutional vault addresses that receive coinbase allocations at every block.</p>
+        <table class="code-table">
+          <tr><th>Vault</th><th>Allocation</th><th>Explorer View</th></tr>
+          <tr><td class="label">Gold Vault</td><td class="value">25% of every block</td><td class="green">Gold Reserve tracker panel</td></tr>
+          <tr><td class="label">PoPC Pool</td><td class="value">25% of every block</td><td class="cyan">PoPC Pool tracker panel</td></tr>
+          <tr><td class="label">Miner</td><td class="value">50% + remainder</td><td class="value">Block detail coinbase view</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-3">
+      <strong>Self-hosted by design.</strong> The explorer connects to your own node — you verify the chain yourself. The public explorer at explorer.sostcore.com runs the same standalone HTML against the seed node. No trust required beyond your own RPC connection.
+    </div>
+
+    <div class="dl-area fade-in delay-4" style="margin-top:32px;justify-content:center;">
+      <a href="https://explorer.sostcore.com" target="_blank" rel="noopener" class="dl-btn">OPEN PUBLIC EXPLORER</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

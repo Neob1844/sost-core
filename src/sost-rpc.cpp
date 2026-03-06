@@ -233,6 +233,16 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     s<<"]}"; return rpc_result(id,s.str());
 }
 
+// estimatefee (standalone: always returns minimum relay)
+static std::string handle_estimatefee(const std::string& id, const std::vector<std::string>&) {
+    const int64_t MIN_FEE = 1000;
+    std::ostringstream s;
+    s<<"{\"fee_per_byte\":"<<MIN_FEE
+     <<",\"fee_for_typical_tx\":"<<(MIN_FEE*250)
+     <<",\"basis\":\"minimum_relay\"}";
+    return rpc_result(id,s.str());
+}
+
 // === Dispatch ===
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -241,6 +251,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"validateaddress",handle_validateaddress},{"listunspent",handle_listunspent},{"gettxout",handle_gettxout},
     {"sendrawtransaction",handle_sendrawtransaction},{"getmempoolinfo",handle_getmempoolinfo},
     {"getrawmempool",handle_getrawmempool},{"getrawtransaction",handle_getrawtransaction},
+    {"estimatefee",handle_estimatefee},
 };
 static std::string dispatch_rpc(const std::string& req) {
     std::string method=json_get_string(req,"method"),id_raw=json_get_string(req,"id");

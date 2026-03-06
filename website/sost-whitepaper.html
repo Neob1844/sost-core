@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Whitepaper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  /* DOWNLOAD */
+  .dl-area { margin-top: 32px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .dl-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; border: 1px solid var(--red-primary); border-radius: 6px; background: var(--red-subtle); color: var(--red-primary); font-family: var(--font-mono); font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 1px; transition: all 0.3s; }
+  .dl-btn:hover { background: var(--red-primary); color: #fff; box-shadow: 0 0 20px var(--red-glow); }
+  .dl-meta { font-size: 11px; color: var(--text-muted); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* TOC */
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .toc-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 6px; text-decoration: none; transition: all 0.3s; }
+  .toc-item:hover { border-color: var(--border-med); transform: translateX(4px); }
+  .toc-num { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--red-primary); min-width: 32px; }
+  .toc-text { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .toc-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* THREE PILLARS */
+  .pillar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; }
+  .pillar-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; transition: all 0.3s; }
+  .pillar-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .pillar-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .pillar-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .toc-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html" class="active">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Technical Whitepaper</div>
+    <h1 class="fade-in delay-1">Proof of <span>Irreversible</span><br><span>Convergence.</span></h1>
+    <p class="hero-sub fade-in delay-2">The complete technical specification of SOST Protocol — ConvergenceX proof-of-work, Feigenbaum emission schedule, Metals Reserve architecture, and Proof of Personal Custody. Version 3.5, March 2026.</p>
+    <div class="dl-area fade-in delay-3">
+      <a href="whitepaper.pdf" class="dl-btn" download>DOWNLOAD PDF</a>
+      <span class="dl-meta">v3.5 &middot; March 2026 &middot; Living document</span>
+    </div>
+  </div>
+</section>
+
+<!-- THREE PILLARS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">Three <span class="accent">Pillars</span></h2>
+    </div>
+
+    <div class="pillar-grid fade-in delay-1">
+      <div class="pillar-card">
+        <h3 style="color:var(--red-primary)">ConvergenceX</h3>
+        <p>Proof-of-Work that produces a mathematical certificate. Replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.</p>
+      </div>
+      <div class="pillar-card">
+        <h3 style="color:#b8860b">Metals Reserve</h3>
+        <p>Automatic, constitutional accumulation of gold reserve. Every mined block allocates 25% to a Gold Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default.</p>
+      </div>
+      <div class="pillar-card">
+        <h3 style="color:var(--cyan-primary)">Proof of Personal Custody</h3>
+        <p>Voluntary custody commitments audited by PoW-derived entropy. PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TABLE OF CONTENTS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Table of <span class="accent">Contents</span></h2>
+    </div>
+
+    <div class="toc-grid fade-in delay-1">
+      <div class="toc-item">
+        <span class="toc-num">1</span>
+        <div>
+          <div class="toc-text">Abstract</div>
+          <div class="toc-desc">Protocol overview and design principles</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">2</span>
+        <div>
+          <div class="toc-text">The Problem</div>
+          <div class="toc-desc">PoW centralization and ASIC dominance</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">3</span>
+        <div>
+          <div class="toc-text">ConvergenceX</div>
+          <div class="toc-desc">Proof of Irreversible Convergence algorithm</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">4</span>
+        <div>
+          <div class="toc-text">Monetary Policy</div>
+          <div class="toc-desc">Feigenbaum emission, coinbase split, supply cap</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">5</span>
+        <div>
+          <div class="toc-text">Metals Reserve Protocol</div>
+          <div class="toc-desc">Two-vault architecture, Heritage reserve, G-rules</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">6</span>
+        <div>
+          <div class="toc-text">Proof of Personal Custody</div>
+          <div class="toc-desc">Model A, Model B, reputation, slashing</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">7</span>
+        <div>
+          <div class="toc-text">Governance Model</div>
+          <div class="toc-desc">No consensus governance, operational scope</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">8</span>
+        <div>
+          <div class="toc-text">Economic Model</div>
+          <div class="toc-desc">Demand sources, deflationary mechanics, autoequilibrium</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">9</span>
+        <div>
+          <div class="toc-text">Security Analysis</div>
+          <div class="toc-desc">51% resistance, attack vectors, threat model</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">10</span>
+        <div>
+          <div class="toc-text">The Constitution</div>
+          <div class="toc-desc">Immutable consensus rules and constitutional constraints</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">11</span>
+        <div>
+          <div class="toc-text">Roadmap</div>
+          <div class="toc-desc">Genesis to Heritage timeline</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">12</span>
+        <div>
+          <div class="toc-text">Technical Specifications</div>
+          <div class="toc-desc">Full parameter table and appendices</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEY SPECIFICATIONS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Key <span class="accent">Specifications</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Protocol Parameters</span>
+        </div>
+        <span class="spec-tag">CONSENSUS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="label">Algorithm</td><td class="value">ConvergenceX (4GB RAM, 100K rounds, sequential, stability certificate)</td></tr>
+          <tr><td class="label">Block time</td><td class="value">600 seconds target</td></tr>
+          <tr><td class="label">Max supply</td><td class="highlight">4,669,201 SOST (hard cap by construction)</td></tr>
+          <tr><td class="label">Initial reward</td><td class="value">7.85100863 SOST/block</td></tr>
+          <tr><td class="label">Coinbase split</td><td class="value">50% miner / 25% Gold Vault / 25% PoPC Pool</td></tr>
+          <tr><td class="label">Annual decay</td><td class="value">~9.03% (smooth exponential, no halvings)</td></tr>
+          <tr><td class="label">Epoch length</td><td class="value">131,553 blocks (~2.503 years)</td></tr>
+          <tr><td class="label">Difficulty</td><td class="value">ASERT Q16.16, 24h half-life, per-block adjustment</td></tr>
+          <tr><td class="label">Stability check</td><td class="value">k probes &times; g steps, dual criteria</td></tr>
+          <tr><td class="label">Checkpoints</td><td class="value">16 per attempt, Merkle tree, SPV-verifiable</td></tr>
+          <tr><td class="label">Consensus arithmetic</td><td class="green">100% integer (zero floating-point)</td></tr>
+          <tr><td class="label">Premine / ICO / VCs</td><td class="highlight">None</td></tr>
+          <tr><td class="label">Consensus governance</td><td class="highlight">None — immutable at genesis</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Reserve Architecture</span>
+        </div>
+        <span class="spec-tag">HERITAGE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="label">Reserve chain</td><td class="value">Ethereum mainnet</td></tr>
+          <tr><td class="label">Reserve mode</td><td class="value">Heritage (sealed by default)</td></tr>
+          <tr><td class="label">Default gold split</td><td class="value">50/50 XAUt/PAXG (adjustable operationally)</td></tr>
+          <tr><td class="label">Emergency authorization</td><td class="value">PoW &ge;60% (W=144) + Foundation Execution Order</td></tr>
+          <tr><td class="label">Emergency actions</td><td class="value">E1: ROTATE / E2: LIQUIDATE&rarr;BUY&rarr;BURN</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GOVERNANCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
+      <h2 class="section-title">Governance <span class="accent">Model</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">No Consensus Governance</span>
+        </div>
+        <span class="spec-tag">IMMUTABLE</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">No entity — including the Foundation — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters.</p>
+        <table class="code-table">
+          <tr><th>Rule</th><th>Status</th></tr>
+          <tr><td class="label">Emission schedule</td><td class="green">Immutable at genesis</td></tr>
+          <tr><td class="label">Coinbase split</td><td class="green">Immutable at genesis</td></tr>
+          <tr><td class="label">Difficulty algorithm</td><td class="green">Immutable at genesis</td></tr>
+          <tr><td class="label">Supply cap</td><td class="green">Immutable at genesis</td></tr>
+          <tr><td class="label">Constitutional constraints</td><td class="green">Immutable at genesis</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Operational Governance</span>
+        </div>
+        <span class="spec-tag">FOUNDATION-EXECUTED</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Foundation executes operational actions under constitutional constraints and public attestations. No operational action can modify consensus rules.</p>
+        <table class="code-table">
+          <tr><th>Action</th><th>Scope</th></tr>
+          <tr><td class="label">Gold Vault conversion</td><td class="value">SOST&rarr;XAUT/PAXG purchases, every batch attested on-chain</td></tr>
+          <tr><td class="label">50/50 split adjustment</td><td class="value">Future purchases only, disclosed in batch reports</td></tr>
+          <tr><td class="label">Purchase pause</td><td class="value">May pause without consensus, disclosed via batch reports</td></tr>
+          <tr><td class="label">PoPC contract management</td><td class="value">May pause new contracts for critical bugs; existing unaffected</td></tr>
+          <tr><td class="label">Reserve asset movement</td><td class="highlight">Requires Emergency Catastrophe authorization only</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ECONOMIC MODEL -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
+      <h2 class="section-title">Economic <span class="accent">Model</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Demand Sources</span>
+        </div>
+        <span class="spec-tag">ORGANIC</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Source</th><th>Mechanism</th></tr>
+          <tr><td class="label">Mining</td><td class="value">Miners earn SOST and decide to hold or sell</td></tr>
+          <tr><td class="label">Model A bonds</td><td class="value">Participants must buy SOST to create bonds — direct buy pressure</td></tr>
+          <tr><td class="label">Model B distribution</td><td class="value">SOST distributed to gold holders — organic distribution to non-crypto users</td></tr>
+          <tr><td class="label">Reserve sales</td><td class="value">Foundation sells SOST to buy gold — sell-side liquidity and price discovery</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Deflationary Mechanics</span>
+        </div>
+        <span class="spec-tag">BUILT-IN</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Mechanic</th><th>Effect</th></tr>
+          <tr><td class="label">Smooth exponential decay</td><td class="value">9.03% annual reduction in new issuance — no cliff events</td></tr>
+          <tr><td class="label">Slash recycling</td><td class="value">100% redistributed to PoPC Pool (50%) and Gold Vault (50%)</td></tr>
+          <tr><td class="label">Reputation limits</td><td class="value">Large commitments require proven track record</td></tr>
+          <tr><td class="label">Long contracts</td><td class="value">9-12 month commitments remove SOST from circulation</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-3">
+      <strong>Reserve Ratio:</strong> As the Metals Reserve grows, the system produces a public, verifiable metric: reserve_value_usd / circulating_supply. This is NOT a peg, NOT a guarantee, and does NOT grant redemption rights. It is simply a transparent indicator of the reserve accumulated by the protocol.
+    </div>
+
+    <div class="dl-area fade-in delay-4" style="margin-top:40px;justify-content:center;">
+      <a href="whitepaper.pdf" class="dl-btn" download>DOWNLOAD WHITEPAPER PDF</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

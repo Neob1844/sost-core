@@ -663,6 +663,7 @@ async function showTxDetail(txid){
   pushNav('tx','TX '+sH(txid),txid);
   c.innerHTML='<div class="ld">loading transaction</div>';
   try{var tx=await rpc('getrawtransaction',[txid,'true']);renderMempoolTx(tx,c);window.scrollTo({top:0,behavior:'smooth'});return;}catch(e){}
+  try{var gtx=await rpc('gettransaction',{txid:txid});renderGettransaction(gtx,c);window.scrollTo({top:0,behavior:'smooth'});return;}catch(e){}
   try{
     var outputs=[];
     for(var v=0;v<20;v++){try{var o=await rpc('gettxout',[txid,String(v)]);if(!o||o==='null')break;outputs.push({vout:v,address:o.address,amount:o.value,type:o.type,confirmations:o.confirmations,coinbase:o.coinbase,height:H-(o.confirmations||0)+1});}catch(e2){break;}}
@@ -694,6 +695,18 @@ function renderMempoolTx(tx,c){
   var outputsHtml='';
   for(var oi=0;oi<tx.vout.length;oi++){var o=tx.vout[oi];var amt=typeof o.value==='number'?o.value.toFixed(8):o.value;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--green)">OUTPUT \u00B7 vout:'+(o.n!==undefined?o.n:oi)+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div></div>';}
   c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div><div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div><div class="k">inputs</div><div class="v">'+tx.vin.length+'</div><div class="k">outputs</div><div class="v">'+tx.vout.length+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
+}
+function renderGettransaction(tx,c){
+  var confs=tx.confirmations||0;var bh=tx.block_height||0;var isCB=tx.coinbase||false;
+  var fee=typeof tx.fee==='number'?tx.fee:0;
+  var totalIn=0,totalOut=0;
+  var inputsHtml='';
+  if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div></div>';}
+  else if(tx.inputs&&tx.inputs.length>0){for(var ii=0;ii<tx.inputs.length;ii++){var inp=tx.inputs[ii];var iamt=typeof inp.amount==='number'?inp.amount:parseFloat(inp.amount||'0');totalIn+=iamt;inputsHtml+='<div class="tx-io-item"><div class="tx-io-label">INPUT #'+ii+'</div><div class="tx-io-addr" onclick="showTxDetail(\''+inp.txid+'\')">'+sH(inp.txid)+'<span style="color:var(--text3)">:'+inp.vout+'</span></div><div class="tx-io-amt">'+iamt.toFixed(8)+' SOST</div><div class="tx-io-meta" onclick="showAddress(\''+inp.address+'\')">'+inp.address+'</div></div>';}}
+  var outputsHtml='';
+  if(tx.outputs&&tx.outputs.length>0){for(var oi=0;oi<tx.outputs.length;oi++){var o=tx.outputs[oi];var amt=typeof o.amount==='number'?o.amount:parseFloat(o.amount||'0');totalOut+=amt;outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--green)">OUTPUT \u00B7 vout:'+oi+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+amt.toFixed(8)+' SOST</div></div>';}}
+  var feeHtml=fee>0?'<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fee.toFixed(8)+' SOST</span></div>':'';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase (block reward)</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div>'+feeHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="font-size:9px;color:var(--text3)">via tx-index</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
 }
 async function showAddress(addr){
   openDetail();var c=document.getElementById('detailContent');
@@ -797,6 +810,7 @@ async function doSearch(){
     try{await rpc('getblock',[q]);showBlock(q);return;}catch(e){}
     try{var o=await rpc('gettxout',[q,'0']);if(o){showTxDetail(q);return;}}catch(e){}
     try{await rpc('getrawtransaction',[q,'true']);showTxDetail(q);return;}catch(e){}
+    try{await rpc('gettransaction',{txid:q});showTxDetail(q);return;}catch(e){}
     showSearchError('Hash not found as block or tx');return;
   }
   if(/^[0-9a-fA-F]{4,63}$/.test(q)){var ql=q.toLowerCase();var sm=Math.min(H+1,500);
