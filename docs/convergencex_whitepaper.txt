@@ -2,7 +2,7 @@
 
 ## Proof of Irreversible Convergence
 
-**ConvergenceX  •  PoPC  •  Gold Reserve**
+**ConvergenceX  •  PoPC  •  Metals Reserve (tokenized, allowlisted)**
 
 **Technical Whitepaper v3.5**
 
@@ -13,7 +13,13 @@
 > Consensus rules (Section 10) remain immutable at genesis. Updated versions will be published with
 > full errata documentation.
 
-SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Gold Funding Vault by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Reserve Vault on Ethereum mainnet. The Reserve Vault is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥60%) and executed by a Foundation Execution Order.
+SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Reserve Vault on Ethereum mainnet. The Reserve Vault is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥60%) and executed by a Foundation Execution Order.
+
+ALLOWLIST (v2 — conservative scope)
+In mainnet v2, the reserve is limited to tokenized precious metals with public audits and verifiable liquidity.
+Initial allowlist: PAXG (Paxos Gold) and XAUt (Tether Gold).
+Expanding to other metals (silver/platinum/palladium/rhodium/iridium) is a roadmap item, not a promise.
+An asset may be added only if it satisfies: (1) verifiable custody/audits, (2) sufficient liquidity, (3) acceptable issuer risk and public documentation.
 
 A mathematically grounded Proof-of-Work based on verifiable dynamical-system certificates.
 
@@ -21,7 +27,8 @@ No ICO • No Premine • No VCs • No Consensus Governance
 
 The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.
 
-Genesis Block: February 28, 2026 — 00:00:00 UTC
+Mainnet v2 Genesis: 2026-03-13 00:00:00 UTC
+Note: mainnet v2 is a clean regenesis following security and custody improvements.
 
 Table of Contents
 
@@ -33,7 +40,7 @@ ConvergenceX: Proof of Irreversible Convergence
 
 Monetary Policy
 
-Gold Protocol Reserve
+Metals Reserve Protocol (Gold-first)
 
 Proof of Personal Custody (PoPC)
 
@@ -65,7 +72,7 @@ Every block splits the coinbase reward by consensus:
 
 50% + remainder to the miner,
 
-25% to a Gold Funding Vault,
+25% to a Metals Funding Vault (Gold-first),
 
 25% to a PoPC Pool powering Proof of Personal Custody.
 
@@ -283,37 +290,36 @@ The stability context `stctx` is derived from `header_core`, `seed`, and `checkp
 #### CASERT Stability Parameters
 
 The intensity of perturbation probes adapts to network conditions through the CASERT
-overlay (Section 3.12). Instead of discrete modes, CASERT uses a continuous signal-based
-level system derived from recent timing error:
+overlay (Section 3.12). CASERT computes how many blocks the chain is ahead of
+the ideal schedule (genesis + height × TARGET_SPACING) and assigns levels L1-L5:
 
-  signal > 200   → level 1  (chain very slow, minimum verification)
-  signal > 0     → level 2  (chain slow)
-  signal > -200  → level 3  (normal operation, baseline)
-  signal ≤ -200  → level 3 + floor((-signal - 200) / 200)
-                    (progressive hardening under fast-chain conditions)
+  ahead = 0–4   → L1  (neutral, base verification)
+  ahead = 5–19  → L2  (light hardening)
+  ahead = 20–49 → L3  (moderate hardening)
+  ahead = 50–74 → L4  (strong hardening)
+  ahead = 75+   → L5  (maximum CX cost)
 
 Stability parameters by level:
 
-  scale  = level  (increases continuously: 1, 2, 3, 4, 5, ...)
-  k      = 3      (fixed: always 3 probes)
-  steps  = 3      (fixed: always 3 refinement steps per probe)
+  scale  = level  (L1=1, L2=2, L3=3, L4=4, L5=5)
+  k      = 4      (fixed: always 4 probes)
+  steps  = 4      (fixed: always 4 refinement steps per probe)
   margin = 180    (fixed)
 
 Examples:
 
 | Condition | Level | Scale | k | Steps | Margin |
 |---|---|---|---|---|---|
-| Chain very slow (signal > 200) | 1 | 1 | 3 | 3 | 180 |
-| Chain slow (signal > 0) | 2 | 2 | 3 | 3 | 180 |
-| Normal (signal > -200) | 3 | 3 | 3 | 3 | 180 |
-| Chain fast (signal ≈ -400) | 4 | 4 | 3 | 3 | 180 |
-| Chain very fast (signal ≈ -600) | 5 | 5 | 3 | 3 | 180 |
+| On-time or behind (ahead 0–4) | L1 | 1 | 4 | 4 | 180 |
+| Slightly ahead (5–19 blocks) | L2 | 2 | 4 | 4 | 180 |
+| Moderately ahead (20–49 blocks) | L3 | 3 | 4 | 4 | 180 |
+| Significantly ahead (50–74 blocks) | L4 | 4 | 4 | 4 | 180 |
+| Far ahead (75+ blocks) | L5 | 5 | 4 | 4 | 180 |
 
-At level 3 (normal operation), 3 independent probes each run 3 gradient steps with
-perturbation scale ±3. This is the baseline configuration matching the genesis stability
-constants. When the chain runs slow (positive signal), scale decreases to 1 or 2 —
-still meaningful, but less computationally expensive, preserving liveness. When the chain
-runs fast (negative signal beyond -200), scale increases progressively without upper bound
+At L1 (neutral), 4 independent probes each run 4 gradient steps with
+perturbation scale ±1. This is the lightest configuration. When the chain is
+behind schedule, ASERT alone handles difficulty reduction — CASERT stays at L1.
+When the chain runs ahead, scale increases through L2-L5
 — an attacker mining blocks quickly faces increasingly strict stability requirements,
 gaining no advantage. This asymmetric policy ensures that relaxation is only available
 when the chain genuinely needs help, never when an attacker is dominating hashrate.
@@ -644,10 +650,10 @@ Difficulty algorithm       ASERT, 24h half-life
 Clamp (easier)             4× per block
 Clamp (harder)             8× per block
 CASERT window              50 intervals
-CASERT error clamp         ±1,800s per sample
-CASERT levels              continuous (signal-based, not discrete modes)
+CASERT model               blocks-ahead-of-schedule, L1–L5
+CASERT thresholds          L2=5, L3=20, L4=50, L5=75 blocks ahead
 Block target spacing       600s
-Stability baseline         scale=3, k=4, margin=180, steps=3, stab_shift=20
+Stability baseline (L1)    scale=1, k=4, margin=180, steps=4, stab_shift=20
 
 3.11 ASERT Q16.16 Difficulty Adjustment (Consensus-Critical)
 
@@ -663,34 +669,40 @@ max 8× harder per block
 3.12 CASERT Adaptive Overlay (Consensus-Critical)
 
 CASERT does not change difficulty. It adjusts stability verification
-intensity based on recent timing error, using a continuous signal model.
+intensity based on how far ahead the chain is relative to the ideal schedule.
 
-SIGNAL COMPUTATION:
-  Collect up to 50 most recent inter-block deltas.
-  For each delta: err = dt - TARGET_SPACING, clamped to ±1,800s.
-  signal = mean(errors)
+SIGNAL COMPUTATION (deterministic, block-timestamp based):
+  expected_time = GENESIS_TIME + height * TARGET_SPACING
+  elapsed       = latest_block_time - GENESIS_TIME
+  expected_h    = elapsed / TARGET_SPACING
+  lag           = expected_h - current_height
+  ahead         = max(0, -lag)
 
-LEVEL ASSIGNMENT (continuous, not discrete modes):
-  signal > 200   → level 1  (chain very slow, easiest verification)
-  signal > 0     → level 2  (chain slow)
-  signal > -200  → level 3  (normal operation)
-  signal ≤ -200  → level 3 + floor((-signal - 200) / 200)
-                    (progressive hardening, no upper bound)
+LEVEL ASSIGNMENT (L1–L5):
+  ahead = 0–4   → L1  (neutral, base verification)
+  ahead = 5–19  → L2  (light hardening)
+  ahead = 20–49 → L3  (moderate hardening)
+  ahead = 50–74 → L4  (strong hardening)
+  ahead = 75+   → L5  (maximum CX cost)
 
 STABILITY PARAMETERS BY LEVEL:
-  scale  = level  (increases with level: 1, 2, 3, 4, 5, ...)
-  k      = 3      (fixed: always 3 probes)
-  steps  = 3      (fixed: always 3 refinement steps)
+  scale  = level  (L1=1, L2=2, L3=3, L4=4, L5=5)
+  k      = 4      (fixed: always 4 probes)
+  steps  = 4      (fixed: always 4 refinement steps)
   margin = 180    (fixed)
 
+DETERMINISM: CASERT derives its signal only from on-chain block data
+(height, timestamp) and consensus constants. Timestamp manipulation
+is bounded by MTP and MAX_FUTURE_DRIFT.
+
 ASYMMETRIC POLICY:
-  When the chain is fast (signal ≤ -200), CASERT progressively
-  increases the scale — making stability verification harder, not
-  easier. An attacker with high hashrate mining blocks quickly
-  pushes signal negative, which increases scale without bound.
-  The attacker gains nothing: stability requirements grow stricter.
-  Relaxation (scale < 3) only occurs when the chain is genuinely
-  slow (positive signal), which is when relaxation aids liveness.
+  When the chain is ahead of schedule, CASERT increases the scale
+  through L2-L5, making stability verification harder. An attacker
+  with high hashrate mining blocks quickly pushes ahead count up,
+  which increases scale. The attacker gains nothing: stability
+  requirements grow stricter. CASERT only stays at L1 (neutral)
+  when the chain is on-time or behind — which is when ASERT alone
+  handles difficulty reduction to maintain liveness.
 
 3.13 Node Synchronization and Verification Policy
 
@@ -709,8 +721,8 @@ merkle_root: 32 bytes
 timestamp ts = 1,771,700,109
 MedianTimePast MTP = 1,771,697,922
 powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits
-CASERT selected stability parameters:
-scale=3, k=4, margin=180, steps=3, stab_shift=20
+CASERT selected stability parameters (L3, 20–49 blocks ahead):
+scale=3, k=4, margin=180, steps=4, stab_shift=20
 
 3.14.2 Timestamp Rules (MTP + Future Drift)
 
@@ -735,7 +747,7 @@ then clamp per-block change and global bounds.
 
 scale=3: each perturbation component in [-3, +3] ("how far we poke")
 k=4: number of probes (more probes = stronger certificate)
-steps=3: refinement steps per probe
+steps=4: refinement steps per probe
 margin=180: tolerated bounded growth in local distance
 stab_shift=20: conservative refinement step size (smaller updates)
 
@@ -833,7 +845,7 @@ VAULT ACCUMULATION (PoPC Pool & Gold Vault each receive 25%):
 | ~95% emission | ~2036 (year 28) | ~2056 (year 30) |
 | Supply cap enforcement | Consensus rule | Subsidy-by-height only (upper-bounded by construction) |
 
-## 5. Gold Protocol Reserve
+## 5. Metals Reserve Protocol (Gold-first)
 
 ### 5.1 How It Works — Two-Vault Architecture
 
@@ -857,7 +869,7 @@ RESERVE VAULT (Heritage, Ethereum mainnet):
 
 FLOW:
 Block reward (coinbase) →
-[Gold Funding Vault (SOST)] → sell SOST (TWAP) → buy XAUT/PAXG →
+[Metals Funding Vault (Gold-first) (SOST)] → sell SOST (TWAP) → buy XAUT/PAXG →
 [Reserve Vault (XAUT/PAXG)] → HERITAGE / SEALED — Perpetual by default;
 movable only via Emergency Catastrophe.
 
@@ -872,13 +884,13 @@ by default. The Foundation may adjust this split operationally at any time;
 adjustments apply only to future purchases and must be disclosed in batch reports.
 Previously purchased reserve assets are not rebalanced except under Emergency Catastrophe.
 
-### 5.2 Constitutional Rules — Gold Reserve
+### 5.2 Constitutional Rules — Metals Reserve (tokenized, allowlisted)
 
 The following rules are **constitutional** (project-level commitments) and are enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Reserve Vault behavior and reporting).
 
-Gold Reserve Constitution (immutable at genesis)
+Metals Reserve (tokenized, allowlisted) Constitution (immutable at genesis)
 
-G1 (Consensus Allocation): Every valid block MUST pay the Gold Funding Vault exactly q = reward // 4.
+G1 (Consensus Allocation): Every valid block MUST pay the Metals Funding Vault (Gold-first) exactly q = reward // 4.
 Any block that fails to do so is invalid.
 
 G2 (Two-Vault Separation): Funding Vault is operational; Reserve Vault is cold storage.
@@ -937,12 +949,12 @@ MUST be publicly published in a reproducible format.
 
 ### 5.3 Automated Vault Execution Architecture
 
-The Gold Funding Vault conversion pipeline is designed to be operationally automated and fully auditable, without requiring a cross-chain bridge or wrapped SOST (wSOST). No trustless cross-chain mechanism is used; instead, automation is achieved through a deterministic execution stack with public attestations at every stage.
+The Metals Funding Vault (Gold-first) conversion pipeline is designed to be operationally automated and fully auditable, without requiring a cross-chain bridge or wrapped SOST (wSOST). No trustless cross-chain mechanism is used; instead, automation is achieved through a deterministic execution stack with public attestations at every stage.
 
 VAULT EXECUTION PIPELINE (no bridge, no wSOST)
 
 WATCHER (SOST chain):
-  Monitors the Gold Funding Vault balance continuously.
+  Monitors the Metals Funding Vault (Gold-first) balance continuously.
   Detects when accumulated SOST exceeds a batch threshold.
 
 BATCHER:
@@ -966,7 +978,7 @@ TRUST MODEL:
 
 #### 5.3.1 Execution Policy: TWAP Batch Sales (Operational, Non-Consensus)
 
-SOST's Gold Funding Vault accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.
+SOST's Metals Funding Vault (Gold-first) accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.
 
 TWAP (Time-Weighted Average Price) means executing a daily sell budget as many small, evenly spaced limit orders over time (e.g., across 24 hours), so the realized execution price approximates the market's average price over that window and minimizes market impact.
 
@@ -1392,9 +1404,11 @@ SECURITY PROPERTIES:
 
 ### 6.7 Model A Rewards
 
-Rewards are denominated in SOST (percentage of bond). This ensures the PoPC Pool can always pay regardless of SOST price. Longer commitments receive proportionally higher APR to incentivize long-term participation. Bond is fully recoverable upon successful completion.
+Note: Reward rates are operational reference parameters, not guaranteed. They may be adjusted, budgeted per epoch, or paused for security without changing consensus rules. They do not constitute interest, promised yield, or a financial obligation of the protocol.
 
-| Duration | Reward (% of bond) | Equivalent APR |
+Rewards are denominated in SOST (percentage of bond). This ensures the PoPC Pool can always pay regardless of SOST price. Longer commitments receive proportionally higher reward rates to incentivize long-term participation. Bond is fully recoverable upon successful completion.
+
+| Duration | Reward (% of bond) | Reference annualized rate (non-guaranteed) |
 |---|---|---|
 | 1 month | 1% of bond in SOST | 12% annualized |
 | 3 months | 4% of bond in SOST | 16% annualized |
@@ -1464,7 +1478,7 @@ EXAMPLE (12-month, same assumptions as Section 6.7):
   Protocol fee (5%):     1.485 × 0.05 = 0.074 SOST
   User receives:         6.75 + 1.411 = 8.161 SOST
   Foundation receives:   0.074 SOST
-  User effective APR:    20.9% (vs 22% nominal)
+  User effective rate:   20.9% (vs 22% nominal, non-guaranteed)
 
 Fee destination: Foundation operational wallet (publicly auditable).
 Fee purpose: infrastructure, watcher operation, bulletin publication,
@@ -1483,7 +1497,7 @@ Model B: For holders of XAUT/PAXG — precious metal investors
    function. During the term, it cannot transfer deposited gold tokens
    to any third party — including the Foundation.
 3. User receives SOST immediately from PoPC Pool:
-   SOST_reward = gold_value × APR × (duration/12) / sost_price
+   SOST_reward = gold_value × rate × (duration/12) / sost_price
    The SOST reward is delivered to the user's wallet at deposit time.
    This is the compensation for surrendering gold liquidity.
 4. At expiry: ONLY the original depositor can withdraw full XAUT/PAXG.
@@ -1549,19 +1563,21 @@ Trust required: MEDIUM (non-custodial escrow; risks: smart contract,
 
 ### 6.9 Model B Rewards by Duration
 
-Reward-rate parameters (non-guaranteed), expressed as annualized reference rates for sizing payouts. Longer commitments receive higher APR to incentivize extended gold lockup. Model B has lower APR than Model A because there is no slash risk.
+Note: Reward rates are operational reference parameters, not guaranteed. They may be adjusted, budgeted per epoch, or paused for security without changing consensus rules. They do not constitute interest, promised yield, or a financial obligation of the protocol.
 
-| Duration | APR (annualized) | Total Reward |
+Reward-rate parameters (non-guaranteed), expressed as annualized reference rates for sizing payouts. Longer commitments receive higher reward rates to incentivize extended gold lockup. Model B has lower rates than Model A because there is no slash risk.
+
+| Duration | Reward rate (reference) | Total Reward |
 |---|---|---|
-| 1 month | 0.25% APR | 0.02% of gold value |
-| 3 months | 1% APR | 0.25% of gold value |
-| 6 months | 3% APR | 1.5% of gold value |
-| 9 months | 5% APR | 3.75% of gold value |
-| 12 months | 7% APR | 7% of gold value |
+| 1 month | 0.25% annualized | 0.02% of gold value |
+| 3 months | 1% annualized | 0.25% of gold value |
+| 6 months | 3% annualized | 1.5% of gold value |
+| 9 months | 5% annualized | 3.75% of gold value |
+| 12 months | 7% annualized | 7% of gold value |
 ```
 CALCULATION:
 
-  total_reward_pct = APR × (duration_months / 12)
+  total_reward_pct = rate × (duration_months / 12)
   
   SOST_reward = gold_value × total_reward_pct / sost_price
 
@@ -1572,7 +1588,7 @@ EXAMPLE: Model B — 12 month commitment
     - SOST price: $100 (from Price Bulletin)
     - User deposits: 1 oz XAUT into escrow
     - Duration: 12 months
-    - APR: 7%
+    - Reward rate (reference): 7%
   
   STEP 1: Calculate reward
     total_reward_pct = 7% × (12/12) = 7%
@@ -1604,7 +1620,7 @@ EXAMPLE: Model B — 3 month commitment
     - SOST price: $100 (from Price Bulletin)
     - User deposits: 1 oz XAUT into escrow
     - Duration: 3 months
-    - APR: 1%
+    - Reward rate (reference): 1%
   
   CALCULATION:
     total_reward_pct = 1% × (3/12) = 0.25%
@@ -1623,7 +1639,7 @@ EXAMPLE: Model B — Different prices (gold = €40,000, SOST = €500)
     - SOST price: €500 (from Price Bulletin)
     - User deposits: 1 oz XAUT into escrow
     - Duration: 12 months
-    - APR: 7%
+    - Reward rate (reference): 7%
   
   CALCULATION:
     total_reward_pct = 7% × (12/12) = 7%
@@ -1648,7 +1664,7 @@ MODEL A vs MODEL B COMPARISON:
   │ Bond required   │ Yes (12-30%)    │ No              │
   │ Reward timing   │ At end if pass  │ Immediately     │
   │ Risk            │ Lose bond       │ None (no slash) │
-  │ APR (12 month)  │ 22%             │ 7%              │
+  │ Rate (12 month) │ 22%             │ 7%              │
   │ Best for        │ Crypto natives  │ Gold holders    │
   └─────────────────┴─────────────────┴─────────────────┘
 
@@ -1658,7 +1674,7 @@ A protocol fee of 10% is deducted from the reward at payout. Model B has a highe
 because participants bear no slash risk and the Foundation assumes greater operational
 burden (watcher, immediate payout, escrow monitoring).
 
-  base_reward    = gold_value × APR × (duration/12) / sost_price
+  base_reward    = gold_value × rate × (duration/12) / sost_price
   protocol_fee   = base_reward × 0.10
   user_reward    = base_reward - protocol_fee
 
@@ -1667,7 +1683,7 @@ EXAMPLE (12-month, 1 oz XAUT, same assumptions as Section 6.9):
   Protocol fee (10%):    0.189 SOST
   User receives:         1.701 SOST immediately
   Foundation receives:   0.189 SOST
-  User effective APR:    6.3% (vs 7% nominal)
+  User effective rate:   6.3% (vs 7% nominal, non-guaranteed)
 
 Same operational rules apply: fee destination auditable, 30-day notice
 for changes, existing contracts locked at creation fee rate.
@@ -1881,7 +1897,7 @@ Operational scope (exhaustive):
 
 Moving previously purchased reserve assets requires Emergency Catastrophe authorization (≥60% miner signaling + Foundation Execution Order). No other mechanism exists.
 
-No operational action can modify consensus rules, alter the emission schedule, redirect coinbase allocations, or access the Gold Reserve outside of Emergency Catastrophe or formally declared Dissolution.
+No operational action can modify consensus rules, alter the emission schedule, redirect coinbase allocations, or access the Metals Reserve (tokenized, allowlisted) outside of Emergency Catastrophe or formally declared Dissolution.
 
 ## 8. Economic Model
 
@@ -1890,7 +1906,7 @@ No operational action can modify consensus rules, alter the emission schedule, r
 - **Mining:** miners earn SOST and decide to hold or sell.
 - **Model A bonds:** participants must buy SOST on CEX to create bonds — direct buy pressure.
 - **Model B distribution:** SOST distributed to gold holders — organic distribution to non-crypto users.
-- **Gold Reserve sales:** Foundation sells SOST to buy gold — provides sell-side liquidity and price discovery.
+- **Metals Reserve (tokenized, allowlisted) sales:** Foundation sells SOST to buy gold — provides sell-side liquidity and price discovery.
 - **Speculation:** market prices SOST partly on observable gold reserve backing.
 
 ### 8.2 Deflationary Mechanics
@@ -1900,26 +1916,19 @@ No operational action can modify consensus rules, alter the emission schedule, r
 - **Reputation limits:** large commitments require proven track record — slow unlock of supply pressure.
 - **Long contracts:** 9 and 12-month commitments remove SOST from circulation for extended periods.
 
-### 8.3 The Gold Floor
+### 8.3 Reserve Ratio Metric (observable, not a peg)
 
-As the Gold Reserve grows over years and decades, it creates an observable, verifiable reference floor for SOST. This is not a peg. SOST is not a stablecoin. But any market participant can calculate:
+As the Metals Reserve grows, the system produces a public, verifiable metric:
 
 ```
-GOLD BACKING PER SOST (observable, not guaranteed):
+Reserve Ratio (observable metric):
 
-  Year 3:  Gold Reserve = $200,000
-           Circulating SOST = ~600,000
-           Implied gold backing = $0.33/SOST
-
-  Year 10: Gold Reserve = $2,000,000+
-           Circulating SOST = ~2,000,000
-           Implied gold backing = $1.00+/SOST
-
-  This is an observable on-chain reality.
-  The market prices it as it wishes.
-  The protocol guarantees nothing.
-  The protocol delivers everything it promised.
+  reserve_ratio = reserve_value_usd / circulating_supply
 ```
+
+This is NOT a peg, NOT a guarantee, and does NOT grant redemption rights.
+It is simply a transparent indicator of the reserve accumulated by the protocol.
+Markets may price this information as they see fit.
 
 ### 8.4 Autoequilibrium: When SOST > Gold
 
@@ -1982,6 +1991,10 @@ CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which i
 | Issuer risk (future purchases only) | Foundation redirects future purchases without consensus. Previously purchased assets remain sealed. |
 | Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. Reserve remains in Heritage if no emergency was authorized before chain death. |
 
+### 9.7 Key Hygiene (operational)
+
+Institutional keys (Foundation / Vault ops) must be kept offline (cold) and never reside on public nodes. Public nodes run with low-balance hot wallets and no reserve keys. Any operational address rotation will be published with full traceability and proofs.
+
 ## 10. The Constitution
 
 SOST has no consensus governance. No DAO. No voting token. No multisig that can change protocol rules. The following are immutable at genesis:
@@ -1997,7 +2010,7 @@ C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold
 C3:  Gold Vault coinbase destination is immutable at genesis. Reserve Vault is Heritage sealed;
      Emergency Catastrophe dual gate (≥60% miner signaling + Foundation Execution Order) is the
      only mechanism to move previously purchased reserve assets.
-C4:  Gold Reserve shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-burn)
+C4:  Metals Reserve (tokenized, allowlisted) shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-burn)
      or formally declared Dissolution.
 C5:  Dissolution requires 90 days of zero blocks + 60-day public timelock.
 C6:  Dissolution is one-way and irreversible.
@@ -2020,7 +2033,7 @@ C15: Emergency Catastrophe dual gate: ≥60% miner signaling (W=144 blocks, YES�
 
 | Date | Milestone |
 |---|---|
-| Feb 28, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
+| Mar 13, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. CEX listing request. C++ miner released. GitHub public. |
 | Jun 2026 | Gold purchases begin. First XAUT/PAXG acquired. Reserve Vault deployed on Ethereum mainnet. Dashboard published. |
 | Jan 2027 | PoPC Model A + B launch. First custody contracts active. |
@@ -2038,7 +2051,7 @@ C15: Emergency Catastrophe dual gate: ≥60% miner signaling (W=144 blocks, YES�
 | Parameter | Value |
 |---|---|
 | Name / Symbol | SOST |
-| Genesis | 2026-02-28 00:00:00 UTC (block 0) |
+| Genesis | 2026-03-13 00:00:00 UTC (block 0) |
 | Algorithm | ConvergenceX (4GB RAM, 100k rounds, sequential, stability certificate) |
 | Block time | 600 seconds target |
 | Supply cap enforcement | Subsidy-by-height (hard cap by construction) |
@@ -2077,13 +2090,17 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 The genesis block is self-sufficient: it requires only a miner and a timestamp. Exchange listings, community growth, and gold accumulation follow naturally from the protocol's own mechanics. SOST launches from code, not from capital.
 
-00:00:00 UTC, February 28, 2026.
+00:00:00 UTC, March 13, 2026.
 
 ## Legal Disclaimer
 
-This document is for informational purposes only. SOST is not an investment product. Participation in PoPC is entirely voluntary and does not constitute a financial instrument or security. The Gold Reserve does not represent a claim on gold by SOST holders. Past simulations do not predict future performance. The Foundation makes no representations about the future price, utility, or availability of SOST. Nothing herein constitutes an offer, solicitation, or promise of returns; PoPC reward-rate parameters may be modified at the operational layer and may be paused for security without affecting consensus. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.
+This document is for informational purposes only. SOST is not an investment product. Participation in PoPC is entirely voluntary and does not constitute a financial instrument or security. The Metals Reserve (tokenized, allowlisted) does not represent a claim on gold by SOST holders. Past simulations do not predict future performance. The Foundation makes no representations about the future price, utility, or availability of SOST. Nothing herein constitutes an offer, solicitation, or promise of returns; PoPC reward-rate parameters may be modified at the operational layer and may be paused for security without affecting consensus. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.
 
 **Operational Limits & Pauses:** PoPC reward-rate parameters are non-guaranteed and may be subject to operational per-epoch budgets, per-wallet caps, and temporary pauses if the PoPC Pool is underfunded or risk controls trigger. The protocol does not create debt or unfunded obligations: no new contracts may be opened unless the reward can be reserved at inception. Any pauses affect only new contract openings and do not alter consensus rules or existing matured withdrawal rights. Nothing herein constitutes a promise of returns or an entitlement to rewards under all conditions.
+
+**NO BROKER / NO TRADING / NO CUSTODY:** SOST does not provide brokerage, does not execute trades on behalf of users, does not offer arbitrage, and does not custody user assets. Any Vault conversion (SOST → allowlisted tokenized metals) is a transparent, auditable operational procedure and does not constitute active management or promised returns. SOST is a protocol; third-party venues (exchanges, issuers, custodians) may impose their own KYC/AML requirements.
+
+**Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Epoch 2 activation (target: February 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
 
 ---
 
@@ -2102,11 +2119,11 @@ CONVERGENCEX PARAMETERS:
   CX_STABILITY_PERTURBATION_SCALE = 3
   CX_STABILITY_K               = 4
   CX_STABILITY_MARGIN          = 180
-  CX_STABILITY_GRADIENT_STEPS  = 3
+  CX_STABILITY_GRADIENT_STEPS  = 4
   CX_STABILITY_LR_SHIFT        = 20
 
 MONETARY PARAMETERS:
-  GENESIS_TIME                 = 1,772,236,800  // 2026-02-28 00:00:00 UTC
+  GENESIS_TIME                 = 1,773,360,000  // 2026-03-13 00:00:00 UTC
   TARGET_SPACING               = 600
   BLOCKS_PER_EPOCH             = 131,553
   R0_STOCKS                 = 785,100,863
@@ -2119,13 +2136,13 @@ DIFFICULTY PARAMETERS:
   HALF_LIFE                    = 86,400
   MAX_FUTURE_DRIFT             = 600
 
-CASERT PARAMETERS:
-  MAX_INTERVALS                = 50
-  E_CAP                        = 1,800
-  DEGRADED_THRESHOLD           = 50    // signal > 50 → level 2
-  OPEN_THRESHOLD               = 200   // signal > 200 → level 1
-  FIXED_K                      = 3
-  FIXED_STEPS                  = 3
+CASERT PARAMETERS (blocks-ahead thresholds):
+  CASERT_L2_BLOCKS             = 5     // 5–19 ahead → L2
+  CASERT_L3_BLOCKS             = 20    // 20–49 ahead → L3
+  CASERT_L4_BLOCKS             = 50    // 50–74 ahead → L4
+  CASERT_L5_BLOCKS             = 75    // 75+ ahead → L5
+  FIXED_K                      = 4
+  FIXED_STEPS                  = 4
   FIXED_MARGIN                 = 180
 
 EMERGENCY PARAMETERS:
@@ -2229,7 +2246,7 @@ TEST VECTORS (minimum conformance set):
 
   V2: header_core construction
     Input:  prev_hash = 0xAA×32, merkle_root = 0xBB×32,
-            timestamp = 1772236800, powDiffQ = GENESIS_BITSQ
+            timestamp = 1773360000, powDiffQ = GENESIS_BITSQ
     Output: 72 bytes (hex, published in repo)
 
   V3: seed derivation
@@ -2398,10 +2415,10 @@ MODEL B CONSISTENCY (CTO review):
 35) Model B reward: CONFIRMED immediate payout
 36) Model B: added NO EARLY EXIT clause (gold escrow only)
 37) Model B watcher: clarified "triggers immediate SOST payout"
-38) Section 6.9: table confirms "received immediately" + APR proration
+38) Section 6.9: table confirms "received immediately" + reward rate proration
 39) Section 6.12: REWARD BUDGET + SOLVENCY SAFEGUARDS added
 40) Legal Disclaimer: added Operational Limits & Pauses paragraph
-41) Section 5.1: TWO-VAULT ARCHITECTURE (Gold Funding Vault + Reserve Vault)
+41) Section 5.1: TWO-VAULT ARCHITECTURE (Metals Funding Vault (Gold-first) + Reserve Vault)
 42) Section 4.3: COINBASE TRANSACTION FORMAT (normative)
 43) Section 3.13: BASIC MODE TIP REJECTION (normative box)
 ```
@@ -2516,10 +2533,10 @@ Changes from v3.4 to v3.5:
   
   CASERT MODIFICATIONS:
   70) CASERT rewritten: discrete 3-mode system replaced by continuous
-      signal-based levels. k=3 and steps=3 are fixed. Scale equals
+      signal-based levels. k=4 and steps=4 are fixed. Scale equals
       level and increases without bound under fast-chain conditions
       (progressive hardening). MAX_INTERVALS corrected from 64 to 50.
   71) CASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
       (naming aligned with code).
 
-**SOST Protocol — Technical Whitepaper v3.4 — February 2026**
+**SOST Protocol — Technical Whitepaper v3.5 — March 2026**

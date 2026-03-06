@@ -52,7 +52,10 @@ static PubKeyHash g_popc_pkh{};
 
 static void InitKeys() {
     std::string err;
-    assert(GenerateKeyPair(g_priv, g_pub, &err));
+    if (!GenerateKeyPair(g_priv, g_pub, &err)) {
+        std::cerr << "FATAL: GenerateKeyPair failed: " << err << "\n";
+        std::abort();
+    }
     g_pkh = ComputePubKeyHash(g_pub);
     std::memset(g_genesis.data(), 0xAA, 32);
     std::memset(g_gold_pkh.data(), 0xBB, 20);

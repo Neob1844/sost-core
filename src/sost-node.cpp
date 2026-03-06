@@ -102,6 +102,9 @@ static const int P2P_PORT_DEFAULT = 19333;
 static const int RPC_PORT_DEFAULT = 18232;
 static std::atomic<bool> g_running{true};
 
+// Forward declaration — defined in P2P section, used by RPC handlers too
+static bool write_exact(int fd, const void* buf, size_t len);
+
 struct Peer {
     int fd;
     std::string addr;
@@ -110,9 +113,83 @@ struct Peer {
     bool version_acked;
     bool outbound;
     time_t last_seen;
+    int ban_score;         // misbehavior score, ban at >= 100
 };
 static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
+
+// Checkpoints: known block_id at specific heights (hex → height)
+// Prevents deep reorgs past a checkpoint and validates chain integrity.
+struct ChainCheckpoint {
+    int64_t height;
+    const char* block_hash;  // hex
+};
+static const ChainCheckpoint g_checkpoints[] = {
+    // Genesis is validated separately via load_genesis()
+    // Add mainnet checkpoints here after launch:
+    // { 1000, "abcdef..." },
+    // { 5000, "123456..." },
+};
+static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpoints[0]);
+
+// Maximum reorg depth: reject any attempt to reorganize deeper than this
+static const int64_t MAX_REORG_DEPTH = 100;
+
+// DoS/ban tracking
+static const int BAN_THRESHOLD = 100;
+static const int BAN_DURATION  = 86400;  // 24 hours
+static const size_t MAX_P2P_MSG_SIZE = 4 * 1024 * 1024;  // 4MB max message
+static const int MAX_INBOUND_PEERS = 64;
+static std::map<std::string, time_t> g_banned;  // IP → ban expiry
+static std::mutex g_ban_mu;
+
+static std::string peer_ip(const std::string& addr) {
+    auto colon = addr.rfind(':');
+    return (colon != std::string::npos) ? addr.substr(0, colon) : addr;
+}
+
+static bool is_banned(const std::string& ip) {
+    std::lock_guard<std::mutex> lk(g_ban_mu);
+    auto it = g_banned.find(ip);
+    if (it == g_banned.end()) return false;
+    if (time(nullptr) >= it->second) {
+        g_banned.erase(it);
+        return false;
+    }
+    return true;
+}
+
+static void ban_peer(int fd, const std::string& addr, const char* reason) {
+    std::string ip = peer_ip(addr);
+    {
+        std::lock_guard<std::mutex> lk(g_ban_mu);
+        g_banned[ip] = time(nullptr) + BAN_DURATION;
+    }
+    printf("[P2P] BANNED %s: %s (24h)\n", addr.c_str(), reason);
+    close(fd);
+}
+
+// Add misbehavior score to a peer; returns true if peer was banned
+static bool add_misbehavior(int fd, const std::string& addr, int points, const char* reason) {
+    int new_score = 0;
+    {
+        std::lock_guard<std::mutex> lk(g_peers_mu);
+        for (auto& p : g_peers) {
+            if (p.fd == fd) {
+                p.ban_score += points;
+                new_score = p.ban_score;
+                break;
+            }
+        }
+    }
+    if (new_score >= BAN_THRESHOLD) {
+        ban_peer(fd, addr, reason);
+        return true;
+    }
+    printf("[P2P] Misbehavior +%d (%s) from %s [score=%d/%d]\n",
+           points, reason, addr.c_str(), new_score, BAN_THRESHOLD);
+    return false;
+}
 
 // =============================================================================
 // Helpers
@@ -345,7 +422,7 @@ static void rpc_reply_401(int fd) {
         "WWW-Authenticate: Basic realm=\"sost\"\r\n"
         "Content-Length: 0\r\n"
         "Connection: close\r\n\r\n";
-    write(fd, resp.c_str(), resp.size());
+    write_exact(fd, resp.c_str(), resp.size());
 }
 
 // =============================================================================
@@ -722,13 +799,24 @@ static bool read_exact(int fd, uint8_t* buf, size_t len) {
     return true;
 }
 
+static bool write_exact(int fd, const void* buf, size_t len) {
+    size_t sent=0;
+    const uint8_t* p=static_cast<const uint8_t*>(buf);
+    while(sent<len){
+        ssize_t n=write(fd,p+sent,len-sent);
+        if(n<=0) return false;
+        sent+=n;
+    }
+    return true;
+}
+
 static bool p2p_send(int fd, const char* cmd, const uint8_t* payload, size_t len) {
     uint8_t hdr[12];
     write_u32(hdr, P2P_MAGIC);
     memcpy(hdr+4, cmd, 4);
     write_u32(hdr+8, (uint32_t)len);
-    if(write(fd, hdr, 12)!=12) return false;
-    if(len>0 && write(fd, payload, len)!=(ssize_t)len) return false;
+    if(!write_exact(fd, hdr, 12)) return false;
+    if(len>0 && !write_exact(fd, payload, len)) return false;
     return true;
 }
 
@@ -739,7 +827,7 @@ static bool p2p_recv(int fd, P2PMsg& msg) {
     if(magic!=P2P_MAGIC) return false;
     memcpy(msg.cmd, hdr+4, 4); msg.cmd[4]=0;
     uint32_t len=read_u32(hdr+8);
-    if(len>10*1024*1024) return false;
+    if(len>MAX_P2P_MSG_SIZE) return false;
     msg.payload.resize(len);
     if(len>0 && !read_exact(fd, msg.payload.data(), len)) return false;
     return true;
@@ -1029,6 +1117,36 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // Checkpoint validation: if this height has a checkpoint, block_id must match
+    for(size_t ci=0; ci<g_num_checkpoints; ++ci){
+        if(g_checkpoints[ci].height == height){
+            Hash256 expected_cp = from_hex(g_checkpoints[ci].block_hash);
+            if(computed_bid != expected_cp){
+                printf("[BLOCK] REJECTED: checkpoint mismatch at height %lld\n",(long long)height);
+                return false;
+            }
+            printf("[BLOCK] Checkpoint verified at height %lld\n",(long long)height);
+            break;
+        }
+    }
+
+    // Reorg depth limit: reject blocks that would require undoing more than MAX_REORG_DEPTH blocks
+    // (Currently chain is append-only, but this guards against future reorg logic)
+    if(height < g_chain_height - MAX_REORG_DEPTH){
+        printf("[BLOCK] REJECTED: height %lld is beyond max reorg depth (%lld blocks behind tip %lld)\n",
+               (long long)height, (long long)MAX_REORG_DEPTH, (long long)g_chain_height);
+        return false;
+    }
+
+    // Reject blocks that would reorg past a checkpoint
+    for(size_t ci=0; ci<g_num_checkpoints; ++ci){
+        if(g_checkpoints[ci].height <= g_chain_height && height <= g_checkpoints[ci].height){
+            printf("[BLOCK] REJECTED: would reorg past checkpoint at height %lld\n",
+                   (long long)g_checkpoints[ci].height);
+            return false;
+        }
+    }
+
     // Connect block to UTXO set atomically
     BlockUndo undo;
     std::string uerr;
@@ -1127,7 +1245,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         std::lock_guard<std::mutex> lk(g_peers_mu);
         Peer p; p.fd=fd; p.addr=addr; p.their_height=-1;
         p.version_sent=false; p.version_acked=false;
-        p.outbound=outbound; p.last_seen=time(nullptr);
+        p.outbound=outbound; p.last_seen=time(nullptr); p.ban_score=0;
         g_peers.push_back(p);
     }
     printf("[P2P] Peer connected: %s (%s)\n",addr.c_str(),outbound?"outbound":"inbound");
@@ -1185,7 +1303,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
             std::string block_json((char*)msg.payload.data(), msg.payload.size());
-            process_block(block_json);
+            if(!process_block(block_json)){
+                if(add_misbehavior(fd, addr, 50, "invalid block")) break;
+            }
         }
         else if(!strcmp(msg.cmd,"TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
@@ -1196,10 +1316,15 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                         p2p_send(p.fd, "TXXX", msg.payload.data(), msg.payload.size());
                     }
                 }
+            } else {
+                if(add_misbehavior(fd, addr, 10, "invalid tx")) break;
             }
         }
         else if(!strcmp(msg.cmd,"PING")) {
             p2p_send(fd, "PONG", nullptr, 0);
+        }
+        else if(!strcmp(msg.cmd,"PONG")) {
+            // no-op, just update last_seen (already done above)
         }
         else if(!strcmp(msg.cmd,"DONE")) {
             int64_t their_h=-1;
@@ -1215,6 +1340,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             } else {
                 printf("[P2P] Sync complete, height=%lld\n",(long long)g_chain_height);
             }
+        }
+        else {
+            if(add_misbehavior(fd, addr, 10, "unknown command")) break;
         }
     }
 
@@ -1482,7 +1610,7 @@ static void rpc_handle_connection(int fd) {
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
             "Access-Control-Max-Age: 86400\r\n"
             "Content-Length: 0\r\n\r\n";
-        write(fd,resp.c_str(),resp.size());
+        write_exact(fd,resp.c_str(),resp.size());
         close(fd);
         return;
     }
@@ -1496,7 +1624,7 @@ static void rpc_handle_connection(int fd) {
             "Access-Control-Allow-Origin: *\r\n"
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
             "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
-        write(fd,resp.c_str(),resp.size());
+        write_exact(fd,resp.c_str(),resp.size());
         close(fd);
         return;
     }
@@ -1541,7 +1669,7 @@ static void rpc_handle_connection(int fd) {
         "Access-Control-Max-Age: 86400\r\n"
         "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
 
-    write(fd,resp.c_str(),resp.size());
+    write_exact(fd,resp.c_str(),resp.size());
     close(fd);
 }
 
@@ -1579,6 +1707,24 @@ static void p2p_server_thread(int port) {
         if(cl<0) continue;
         char ip[64]; inet_ntop(AF_INET,&cl_addr.sin_addr,ip,sizeof(ip));
         std::string peer_addr=std::string(ip)+":"+std::to_string(ntohs(cl_addr.sin_port));
+
+        // DoS: reject banned IPs
+        if (is_banned(ip)) {
+            close(cl);
+            continue;
+        }
+
+        // DoS: limit inbound peers
+        {
+            std::lock_guard<std::mutex> lk(g_peers_mu);
+            int inbound_count = 0;
+            for (const auto& p : g_peers) if (!p.outbound) ++inbound_count;
+            if (inbound_count >= MAX_INBOUND_PEERS) {
+                close(cl);
+                continue;
+            }
+        }
+
         std::thread([cl,peer_addr](){handle_peer(cl,peer_addr,false);}).detach();
     }
     close(srv);
@@ -1771,6 +1917,11 @@ int main(int argc, char** argv) {
     std::thread p2p_thread(p2p_server_thread, p2p_port);
     p2p_thread.detach();
 
+    // Default seed node (VPS) — used when no --connect is specified
+    if(connect_addrs.empty()){
+        printf("[P2P] No --connect specified, using default seed: seed.sostcore.com:%d\n", P2P_PORT_DEFAULT);
+        connect_peer("seed.sostcore.com", P2P_PORT_DEFAULT);
+    }
     for(const auto& a:connect_addrs){
         auto colon=a.rfind(':');
         if(colon!=std::string::npos){

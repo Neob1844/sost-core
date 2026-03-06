@@ -224,6 +224,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="header-right">
     <span class="net-badge" id="netBadge"><span class="net-dot"></span>MAINNET</span>
     <a class="header-link" style="cursor:pointer;color:var(--purple)" onclick="showCXInfo()">CONVERGENCEX</a>
+    <a class="header-link" style="cursor:pointer;color:var(--gold)" onclick="showReserves()">RESERVES</a>
     <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
     <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
   </div>
@@ -246,9 +247,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1f559e05f39486582231179a4985366961d8f8313')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost144cc82d3c711b5a9322640c66b94a520497ac40d')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -300,7 +301,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   </div>
   <div class="chain-sync-wrap" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
     <div style="background:var(--bg2);border:1px solid var(--border);padding:14px 20px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-02-28 00:00:00 UTC</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-13 00:00:00 UTC</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
@@ -342,16 +343,16 @@ var _lastBlockTime=0;
 var _avgBlockTime=120;
 var _countdownInterval=null;
 const ROLES={
-  'sost1be2302d89daef55af4162127b9656f7604948efa':'GOLD VAULT',
-  'sost18a222922bba5ac84979a74d76c392fdeaa59f505':'POPC POOL',
-  'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
+  'sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724':'GOLD VAULT',
+  'sost144cc82d3c711b5a9322640c66b94a520497ac40d':'POPC POOL',
+  'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:3},
-  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:3},
-  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:3},
-  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:3},
-  {signal:'75+ ahead',level:5,scale:5,k:4,steps:3},
+  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
+  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:4},
+  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:4},
+  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:4},
+  {signal:'75+ ahead',level:5,scale:5,k:4,steps:4},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -469,9 +470,9 @@ async function updateDashboard(info){
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   drawReserveBars();
   try{
-    var ADDR_MINER='sost1f559e05f39486582231179a4985366961d8f8313';
-    var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
-    var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
+    var ADDR_MINER='sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429';
+    var ADDR_GOLD='sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724';
+    var ADDR_POPC='sost144cc82d3c711b5a9322640c66b94a520497ac40d';
     var am=await rpc('getaddressinfo',[ADDR_MINER]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
@@ -519,7 +520,7 @@ function drawReserveBars(){
   makeBar(document.getElementById('goldBar'),'gold-bar-seg',intervals,maxIv);
   makeBar(document.getElementById('popcBar'),'popc-bar-seg',intervals,maxIv);
 }
-var GENESIS_TS=1772236800;
+var GENESIS_TS=1773360000;
 function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);var p=[];if(d>0)p.push(d+'d');if(h>0)p.push(h+'h');if(m>0)p.push(m+'m');p.push(s+'s');return p.join(' ');}
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
@@ -851,7 +852,7 @@ function showCXInfo(){
   '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
-  '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
+  '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
   '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-75)+' (75+ blocks ahead of schedule)</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
@@ -866,6 +867,53 @@ function showCXInfo(){
   'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>';
 }
 
+async function showReserves(){
+  openDetail();
+  var c=document.getElementById('detailContent');
+  _navStack=[];pushNav('reserves','Foundation Reserves','');
+  c.innerHTML='<div class="dtl-head"><b>Foundation Reserves</b> <span style="font-size:10px;color:var(--text3)">loading...</span></div>';
+  try{
+    var resp=await fetch('reserves.json');
+    if(!resp.ok)throw new Error('reserves.json not found');
+    var data=await resp.json();
+    var tokensHtml='';
+    for(var i=0;i<data.tokens.length;i++){
+      var t=data.tokens[i];
+      var statusColor=t.status==='active'?'var(--green)':t.status==='pending'?'var(--yellow)':'var(--text3)';
+      tokensHtml+=
+        '<div style="margin:12px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold)">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+        '<div><span style="font-size:14px;font-weight:700;color:var(--gold)">'+t.symbol+'</span> <span style="font-size:11px;color:var(--text2)">'+t.name+'</span></div>'+
+        '<span style="font-size:10px;padding:2px 8px;border:1px solid '+statusColor+';color:'+statusColor+';letter-spacing:1px;text-transform:uppercase">'+t.status+'</span>'+
+        '</div>'+
+        '<div class="dtl-grid">'+
+        '<div class="k">AMOUNT</div><div class="v"><span style="color:var(--gold);font-size:14px;font-weight:600">'+t.amount+'</span> <span style="color:var(--text3)">'+t.symbol+'</span></div>'+
+        '<div class="k">ETH ADDRESS</div><div class="v"><span style="color:var(--cyan);font-size:11px;word-break:break-all">'+t.ethereum_address+'</span></div>'+
+        '<div class="k">VERIFY</div><div class="v"><a href="'+t.etherscan_link+'" target="_blank" style="color:var(--green);font-size:11px">View on Etherscan \u2197</a></div>'+
+        '<div class="k">COMMITMENT</div><div class="v">'+t.commitment_start+' \u2192 '+t.commitment_end+'</div>'+
+        '<div class="k">STATUS</div><div class="v"><span style="color:'+statusColor+'">'+t.status.toUpperCase()+'</span></div>'+
+        '</div></div>';
+    }
+    c.innerHTML=
+      '<div class="dtl-head"><b>Foundation Reserves</b> <span style="font-size:10px;color:var(--text3)">tokenized gold commitment</span></div>'+
+      '<div style="margin:16px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--red)">'+
+      '<div style="font-size:11px;color:var(--red);letter-spacing:2px;margin-bottom:10px">DISCLAIMER</div>'+
+      '<div style="font-size:11px;color:var(--text2);line-height:1.8">'+data.disclaimer+'</div></div>'+
+      '<div style="margin:16px 0;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:1px">'+
+      'LAST UPDATED: '+data.last_updated+'</div>'+
+      tokensHtml+
+      '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+
+      '<div style="font-size:11px;color:var(--green);letter-spacing:2px;margin-bottom:10px">HOW TO VERIFY</div>'+
+      '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
+      'Each token entry includes an Etherscan link pointing to the Foundation\u2019s Ethereum address for that specific token contract. '+
+      'Click <b style="color:var(--green)">"View on Etherscan"</b> to independently verify the on-chain balance. '+
+      'This data is manually updated via <span style="color:var(--cyan)">reserves.json</span> and may not reflect real-time balances.</div></div>';
+  }catch(e){
+    c.innerHTML='<div class="dtl-head"><b>Foundation Reserves</b></div>'+
+      '<div style="text-align:center;padding:40px"><div style="font-size:14px;color:var(--red);margin-bottom:12px">\u2717 LOAD ERROR</div>'+
+      '<div style="font-size:12px;color:var(--text2)">Could not load reserves.json: '+e.message+'</div></div>';
+  }
+}
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,10000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});

@@ -30,29 +30,37 @@ You should see four binaries: `sost-node`, `sost-miner`, `sost-cli`, `sost-rpc`.
 ## Step 3: Create Your Wallet
 
 ```bash
-./build/sost-cli newwallet
+./sost-cli newwallet
 ```
 
 This creates `wallet.json` with your first SOST address (`sost1...`). **Back up this file — it contains your private keys.**
 
 Generate a dedicated mining address:
 ```bash
-./build/sost-cli getnewaddress mining
+./sost-cli getnewaddress mining
+```
+
+**Optional:** Encrypt your wallet with a passphrase (AES-256-GCM + scrypt):
+```bash
+./sost-cli encryptwallet
 ```
 
 ## Step 4: Start the Node
 
 Open **Terminal 1**:
 ```bash
-./build/sost-node \
+./sost-node \
     --genesis genesis_block.json \
     --chain chain.json \
     --rpc-user YOUR_USER \
     --rpc-pass YOUR_PASS \
-    --connect SEED_NODE_IP:19333
+    --profile mainnet
 ```
 
-Replace `SEED_NODE_IP` with the public seed node address (check sostcore.com or the BitcoinTalk thread for current seed nodes).
+The node connects to `seed.sostcore.com:19333` automatically. To use a specific peer instead:
+```bash
+./sost-node ... --connect <IP>:19333
+```
 
 The node will:
 1. Connect to the seed node
@@ -71,7 +79,7 @@ curl -s -u YOUR_USER:YOUR_PASS -X POST \
 
 Open **Terminal 2**:
 ```bash
-./build/sost-miner \
+./sost-miner \
     --genesis genesis_block.json \
     --chain chain.json \
     --wallet wallet.json \
@@ -94,7 +102,7 @@ The miner will:
 ## Step 6: Check Your Balance
 
 ```bash
-./build/sost-cli --wallet wallet.json \
+./sost-cli --wallet wallet.json \
     --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
     getbalance
 ```
@@ -105,7 +113,7 @@ The miner will:
 
 Once you have mature coins:
 ```bash
-./build/sost-cli --wallet wallet.json \
+./sost-cli --wallet wallet.json \
     --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
     send sost1DESTINATION_ADDRESS 10.0
 ```
@@ -114,7 +122,7 @@ Fees are calculated automatically based on transaction size (default: 1 stock/by
 
 Then mine at least 1 block to confirm the transaction:
 ```bash
-./build/sost-miner --genesis genesis_block.json --chain chain.json \
+./sost-miner --genesis genesis_block.json --chain chain.json \
     --wallet wallet.json --rpc 127.0.0.1:18232 \
     --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
     --threads 4 --blocks 1
@@ -125,6 +133,7 @@ Then mine at least 1 block to confirm the transaction:
 | Parameter | Value |
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
+| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5, k=4) |
 | Block time | 10 minutes target |
 | Initial reward | 7.85100863 SOST |
 | Coinbase split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
@@ -133,6 +142,8 @@ Then mine at least 1 block to confirm the transaction:
 | Min relay fee | 0.00001 SOST (1,000 stocks) |
 | P2P port | 19333 |
 | RPC port | 18232 |
+| Default seed | seed.sostcore.com:19333 |
+| Mainnet genesis | 2026-03-13 00:00:00 UTC |
 
 ## Troubleshooting
 
@@ -156,5 +167,5 @@ The CLI wallet only tracks UTXOs it knows about. If you mined via RPC mode, the 
 - **Website:** https://sostcore.com
 - **Explorer:** https://explorer.sostcore.com
 - **GitHub:** https://github.com/Neob1844/sost-core
-- **BitcoinTalk:** [ANN thread link]
+- **BitcoinTalk:** [ANN thread — TBD]
 - **Whitepaper:** https://sostcore.com/whitepaper.pdf

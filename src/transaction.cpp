@@ -230,24 +230,27 @@ bool TxInput::DeserializeFrom(const std::vector<Byte>& in, size_t& offset,
 // TxOutput serialization
 // =============================================================================
 //
-// Layout (30 + payload_len bytes):
+// Layout (31 + payload_len bytes):
 //   amount         8 bytes  i64 LE
 //   type           1 byte
 //   pubkey_hash   20 bytes  raw
-//   payload_len    1 byte   u8 (0..255)
+//   payload_len    2 bytes  u16 LE (0..512)
 //   payload        N bytes  raw (N = payload_len)
 
 bool TxOutput::SerializeTo(std::vector<Byte>& out, std::string* err) const {
-    // Validate payload size fits in uint8
-    if (payload.size() > 255) {
-        if (err) *err = "TxOutput::Serialize: payload_len exceeds 255 bytes";
+    // Validate payload size fits in uint16 and within consensus limit
+    if (payload.size() > 512) {
+        if (err) *err = "TxOutput::Serialize: payload_len exceeds 512 bytes";
         return false;
     }
 
     WriteI64LE(out, amount);
     out.push_back(type);
     WriteBytes(out, pubkey_hash.data(), 20);
-    out.push_back(static_cast<Byte>(payload.size()));
+    // payload_len as uint16 LE
+    uint16_t plen = static_cast<uint16_t>(payload.size());
+    out.push_back(static_cast<Byte>(plen & 0xFF));
+    out.push_back(static_cast<Byte>((plen >> 8) & 0xFF));
     if (!payload.empty()) {
         WriteBytes(out, payload.data(), payload.size());
     }
@@ -260,8 +263,14 @@ bool TxOutput::DeserializeFrom(const std::vector<Byte>& in, size_t& offset,
     if (!ReadU8(in, offset, out_txout.type, err)) return false;
     if (!ReadBytes(in, offset, out_txout.pubkey_hash.data(), 20, err)) return false;
 
-    uint8_t plen = 0;
-    if (!ReadU8(in, offset, plen, err)) return false;
+    // payload_len as uint16 LE
+    if (offset + 2 > in.size()) {
+        if (err) *err = "TxOutput::Deserialize: truncated payload_len";
+        return false;
+    }
+    uint16_t plen = static_cast<uint16_t>(in[offset])
+                  | (static_cast<uint16_t>(in[offset + 1]) << 8);
+    offset += 2;
 
     if (plen > 0) {
         if (offset + plen > in.size()) {

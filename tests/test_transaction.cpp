@@ -145,8 +145,8 @@ TEST(minimal_standard_roundtrip) {
 
     // Expected size:
     //   version(4) + tx_type(1) + CompactSize(1) + input(133)
-    //   + CompactSize(1) + output(30) = 170 bytes
-    ASSERT_EQ(buf.size(), 170u, "unexpected serialized size");
+    //   + CompactSize(1) + output(31) = 171 bytes
+    ASSERT_EQ(buf.size(), 171u, "unexpected serialized size");
 
     Transaction tx2;
     ASSERT_TRUE(Transaction::Deserialize(buf, tx2, &err), "deserialize failed: " + err);
@@ -170,8 +170,8 @@ TEST(coinbase_roundtrip) {
     ASSERT_TRUE(tx.Serialize(buf, &err), "serialize failed: " + err);
 
     // Expected: version(4) + tx_type(1) + CS(1) + input(133)
-    //           + CS(1) + 3 * output(30) = 230 bytes
-    ASSERT_EQ(buf.size(), 230u, "unexpected coinbase serialized size");
+    //           + CS(1) + 3 * output(31) = 233 bytes
+    ASSERT_EQ(buf.size(), 233u, "unexpected coinbase serialized size");
 
     Transaction tx2;
     ASSERT_TRUE(Transaction::Deserialize(buf, tx2, &err), "deserialize failed: " + err);
@@ -267,8 +267,8 @@ TEST(output_with_payload) {
     std::string err;
     ASSERT_TRUE(out.SerializeTo(buf, &err), "serialize output with payload failed: " + err);
 
-    // Expected: 8 + 1 + 20 + 1 + 8 = 38 bytes
-    ASSERT_EQ(buf.size(), 38u, "unexpected output size with payload");
+    // Expected: 8 + 1 + 20 + 2 + 8 = 39 bytes
+    ASSERT_EQ(buf.size(), 39u, "unexpected output size with payload");
 
     TxOutput out2;
     size_t offset = 0;
@@ -296,9 +296,10 @@ TEST(empty_payload_byte) {
     std::string err;
     ASSERT_TRUE(out.SerializeTo(buf, &err), "serialize failed: " + err);
 
-    // Last byte before end should be payload_len = 0x00
-    ASSERT_EQ(buf.size(), 30u, "expected 30 bytes for output with empty payload");
-    ASSERT_EQ(buf[29], 0x00, "payload_len byte should be 0x00");
+    // Last two bytes should be payload_len = 0x0000 (uint16 LE)
+    ASSERT_EQ(buf.size(), 31u, "expected 31 bytes for output with empty payload");
+    ASSERT_EQ(buf[29], 0x00, "payload_len low byte should be 0x00");
+    ASSERT_EQ(buf[30], 0x00, "payload_len high byte should be 0x00");
 
     PASS("empty_payload_byte");
 }
@@ -458,8 +459,8 @@ TEST(multi_input_output) {
     std::string err;
     ASSERT_TRUE(tx.Serialize(buf, &err), "serialize multi failed: " + err);
 
-    // Expected: 4 + 1 + 1 + 3*133 + 1 + 5*30 = 556 bytes
-    ASSERT_EQ(buf.size(), 556u, "unexpected multi tx size");
+    // Expected: 4 + 1 + 1 + 3*133 + 1 + 5*31 = 561 bytes
+    ASSERT_EQ(buf.size(), 561u, "unexpected multi tx size");
 
     Transaction tx2;
     ASSERT_TRUE(Transaction::Deserialize(buf, tx2, &err), "deserialize multi failed: " + err);
@@ -485,12 +486,12 @@ TEST(reject_oversized_payload) {
     TxOutput out;
     out.amount = 100;
     out.type = OUT_TRANSFER;
-    out.payload.resize(256, 0xAA);  // 256 > 255 max
+    out.payload.resize(513, 0xAA);  // 513 > 512 max
 
     std::vector<Byte> buf;
     std::string err;
     bool ok = out.SerializeTo(buf, &err);
-    ASSERT_TRUE(!ok, "should reject payload > 255 bytes");
+    ASSERT_TRUE(!ok, "should reject payload > 512 bytes");
 
     PASS("reject_oversized_payload");
 }
