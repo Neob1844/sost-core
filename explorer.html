@@ -224,7 +224,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="header-right">
     <span class="net-badge" id="netBadge"><span class="net-dot"></span>MAINNET</span>
     <a class="header-link" style="cursor:pointer;color:var(--purple)" onclick="showCXInfo()">CONVERGENCEX</a>
-    <a class="header-link" style="cursor:pointer;color:var(--gold)" onclick="showReserves()">RESERVES</a>
     <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
     <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
   </div>
@@ -330,7 +329,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   </div>
 </div>
 <div class="footer">
-  <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
+  <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="s-comment">--&gt;</span>
 </div>
 <script>
 let RPC='http://localhost:18232',RPC_USER='TU_USER',RPC_PASS='TU_PASS',H=0,prevH=0,off=0;
@@ -737,7 +736,7 @@ async function showAddress(addr){
     // Constitutional protection info
     var protectionHtml='';
     if(role==='GOLD VAULT'){
-      protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--gold);font-weight:600">\u{1F512} CONSTITUTIONAL LOCK</span> <span style="color:var(--text3)">// funds reserved for XAUT/PAXG acquisition \u2014 cannot be spent as SOST</span></div>';
+      protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--gold);font-weight:600">\u{1F512} CONSTITUTIONAL LOCK</span> <span style="color:var(--text3)">// funds constitutionally reserved \u2014 cannot be spent as SOST</span></div>';
     } else if(role==='POPC POOL'){
       protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--cyan);font-weight:600">\u{1F551} CONSTITUTIONAL RESERVE</span> <span style="color:var(--text3)">// accumulates rewards for PoPC participants \u2014 distributed after audit cycle</span></div>';
     }
@@ -787,7 +786,7 @@ async function showAddress(addr){
       '<div class="fee-note" style="margin-top:16px;border-left-color:var(--cyan)">'+
         '<b style="color:var(--cyan)">\u2139 About maturity:</b> Coinbase UTXOs (block rewards) require <b>'+COINBASE_MATURITY+' confirmations</b> before they can be spent. '+
         'This protects the network against chain reorganizations. Standard transfer outputs are spendable immediately.'+
-        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> for purchasing XAUT/PAXG tokens and cannot be spent as SOST on-chain.':'')+
+        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> and cannot be spent as SOST on-chain.':'')+
         (role==='POPC POOL'?' <b style="color:var(--cyan)">PoPC Pool funds accumulate</b> and are distributed to participants who complete the Proof of Personal Custody audit protocol.':'')+
       '</div>';
     _navStack[_navStack.length-1].label=sH(addr);renderNav();
@@ -876,58 +875,11 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   'Every block reward (subsidy + fees) is split constitutionally:<br>'+
   '<span style="color:var(--orange)">50%</span> → Miner &nbsp;&nbsp;'+
-  '<span style="color:var(--gold)">25%</span> → Gold Vault (automatic XAUT/PAXG purchase) &nbsp;&nbsp;'+
+  '<span style="color:var(--gold)">25%</span> → Gold Vault &nbsp;&nbsp;'+
   '<span style="color:var(--cyan)">25%</span> → PoPC Pool (Proof of Personal Custody rewards)<br><br>'+
   'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>';
 }
 
-async function showReserves(){
-  openDetail();
-  var c=document.getElementById('detailContent');
-  _navStack=[];pushNav('reserves','Foundation Reserves','');
-  c.innerHTML='<div class="dtl-head"><b>Foundation Reserves</b> <span style="font-size:10px;color:var(--text3)">loading...</span></div>';
-  try{
-    var resp=await fetch('reserves.json');
-    if(!resp.ok)throw new Error('reserves.json not found');
-    var data=await resp.json();
-    var tokensHtml='';
-    for(var i=0;i<data.tokens.length;i++){
-      var t=data.tokens[i];
-      var statusColor=t.status==='active'?'var(--green)':t.status==='pending'?'var(--yellow)':'var(--text3)';
-      tokensHtml+=
-        '<div style="margin:12px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--gold)">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
-        '<div><span style="font-size:14px;font-weight:700;color:var(--gold)">'+t.symbol+'</span> <span style="font-size:11px;color:var(--text2)">'+t.name+'</span></div>'+
-        '<span style="font-size:10px;padding:2px 8px;border:1px solid '+statusColor+';color:'+statusColor+';letter-spacing:1px;text-transform:uppercase">'+t.status+'</span>'+
-        '</div>'+
-        '<div class="dtl-grid">'+
-        '<div class="k">AMOUNT</div><div class="v"><span style="color:var(--gold);font-size:14px;font-weight:600">'+t.amount+'</span> <span style="color:var(--text3)">'+t.symbol+'</span></div>'+
-        '<div class="k">ETH ADDRESS</div><div class="v"><span style="color:var(--cyan);font-size:11px;word-break:break-all">'+t.ethereum_address+'</span></div>'+
-        '<div class="k">VERIFY</div><div class="v"><a href="'+t.etherscan_link+'" target="_blank" style="color:var(--green);font-size:11px">View on Etherscan \u2197</a></div>'+
-        '<div class="k">COMMITMENT</div><div class="v">'+t.commitment_start+' \u2192 '+t.commitment_end+'</div>'+
-        '<div class="k">STATUS</div><div class="v"><span style="color:'+statusColor+'">'+t.status.toUpperCase()+'</span></div>'+
-        '</div></div>';
-    }
-    c.innerHTML=
-      '<div class="dtl-head"><b>Foundation Reserves</b> <span style="font-size:10px;color:var(--text3)">tokenized gold commitment</span></div>'+
-      '<div style="margin:16px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--red)">'+
-      '<div style="font-size:11px;color:var(--red);letter-spacing:2px;margin-bottom:10px">DISCLAIMER</div>'+
-      '<div style="font-size:11px;color:var(--text2);line-height:1.8">'+data.disclaimer+'</div></div>'+
-      '<div style="margin:16px 0;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:1px">'+
-      'LAST UPDATED: '+data.last_updated+'</div>'+
-      tokensHtml+
-      '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+
-      '<div style="font-size:11px;color:var(--green);letter-spacing:2px;margin-bottom:10px">HOW TO VERIFY</div>'+
-      '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-      'Each token entry includes an Etherscan link pointing to the Foundation\u2019s Ethereum address for that specific token contract. '+
-      'Click <b style="color:var(--green)">"View on Etherscan"</b> to independently verify the on-chain balance. '+
-      'This data is manually updated via <span style="color:var(--cyan)">reserves.json</span> and may not reflect real-time balances.</div></div>';
-  }catch(e){
-    c.innerHTML='<div class="dtl-head"><b>Foundation Reserves</b></div>'+
-      '<div style="text-align:center;padding:40px"><div style="font-size:14px;color:var(--red);margin-bottom:12px">\u2717 LOAD ERROR</div>'+
-      '<div style="font-size:12px;color:var(--text2)">Could not load reserves.json: '+e.message+'</div></div>';
-  }
-}
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,10000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
