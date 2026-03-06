@@ -81,9 +81,9 @@ inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
 
 // ConvergenceX mainnet baseline
 inline constexpr int32_t CX_STB_SCALE  = 1;    // L1 neutral = scale 1
-inline constexpr int32_t CX_STB_K      = 5;
+inline constexpr int32_t CX_STB_K      = 4;
 inline constexpr int32_t CX_STB_MARGIN = 180;
-inline constexpr int32_t CX_STB_STEPS  = 5;
+inline constexpr int32_t CX_STB_STEPS  = 4;
 inline constexpr int32_t CX_STB_LR     = 20;   // LR_SHIFT+2
 
 inline constexpr int32_t CX_C_NUM = 7;

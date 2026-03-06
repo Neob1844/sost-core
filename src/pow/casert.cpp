@@ -60,8 +60,8 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
     else                               level = 5;   // L5 — maximum  (75+)
 
     out.stab_scale  = level;
-    out.stab_k      = 5;
-    out.stab_steps  = 5;
+    out.stab_k      = 4;
+    out.stab_steps  = 4;
     out.stab_margin = CX_STB_MARGIN;
     return out;
 }
