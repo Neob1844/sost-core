@@ -233,7 +233,7 @@ ctest --output-on-failure</div>
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Binary</th><th>Version</th><th>Description</th></tr>
-          <tr><td class="highlight">sost-node</td><td class="value">v0.3.2</td><td class="value">Full node — P2P networking, JSON-RPC, chain validation, mempool</td></tr>
+          <tr><td class="highlight">sost-node</td><td class="value">v0.4.0</td><td class="value">Full node — P2P networking, JSON-RPC, chain validation, mempool</td></tr>
           <tr><td class="highlight">sost-miner</td><td class="value">v0.5</td><td class="value">ConvergenceX PoW miner with mempool integration</td></tr>
           <tr><td class="highlight">sost-cli</td><td class="value">v1.3</td><td class="value">Wallet CLI — create keys, send transactions, auto fees</td></tr>
           <tr><td class="highlight">sost-rpc</td><td class="value">v0.1</td><td class="value">Standalone RPC client for node queries</td></tr>
@@ -302,7 +302,20 @@ ctest --output-on-failure</div>
       </div>
     </div>
 
-    <div class="notice green fade-in delay-3">
+    <div class="mode-grid fade-in delay-3">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">RECOMMENDED</div>
+        <h3 style="color:var(--green-primary)">CLI Wallet</h3>
+        <p>Full-featured command-line wallet via <code style="color:var(--cyan-primary)">sost-cli</code>. Create keys, sign transactions, broadcast via RPC. Requires a running node for balance queries and broadcasting.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">BROWSER</div>
+        <h3 style="color:var(--cyan-primary)">Web Wallet</h3>
+        <p>Client-side wallet at <a href="sost-wallet.html" style="color:var(--cyan-primary);text-decoration:underline;">sost-wallet.html</a>. Generate keys, create and sign transactions in your browser. Private keys never leave your device.</p>
+      </div>
+    </div>
+
+    <div class="notice green fade-in delay-4">
       <strong>Wallet encryption:</strong> AES-256-GCM with scrypt key derivation (N=32768, r=8, p=1). Address format: <code style="color:var(--cyan-primary)">sost1</code> + 40 hex characters (20-byte pubkey hash, ECDSA secp256k1).
     </div>
   </div>
@@ -316,6 +329,10 @@ ctest --output-on-failure</div>
       <h2 class="section-title">Run a <span class="accent">Full Node</span></h2>
     </div>
 
+    <div class="notice fade-in" style="border-left-color:var(--red-primary);background:var(--red-subtle);">
+      <strong>Node must be running first.</strong> The miner (STEP 04) and wallet CLI (STEP 05) both connect to the node via RPC. Start the node in a separate terminal before proceeding.
+    </div>
+
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
@@ -326,8 +343,14 @@ ctest --output-on-failure</div>
       </div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Start full node — connects to seed.sostcore.com automatically</span>
+<span class="comment"># genesis_block.json must be in the current directory (from the repo root)</span>
 ./sost-node --genesis genesis_block.json --chain chain.json \
-    --rpc-user myuser --rpc-pass mypass --profile mainnet</div>
+    --rpc-user myuser --rpc-pass mypass --profile mainnet
+
+<span class="comment"># Verify node is running (in another terminal)</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getinfo</span>","params":[]}' \
+    http://localhost:18232 | python3 -m json.tool</div>
       </div>
     </div>
 
@@ -337,7 +360,7 @@ ctest --output-on-failure</div>
           <div class="spec-icon cyan"></div>
           <span class="spec-label">Node Options</span>
         </div>
-        <span class="spec-tag">v0.3.2</span>
+        <span class="spec-tag">v0.4.0</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
@@ -353,6 +376,10 @@ ctest --output-on-failure</div>
           <tr><td class="value" style="font-family:var(--font-mono)">--profile &lt;p&gt;</td><td class="label">mainnet</td><td class="value">Network profile</td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="notice green fade-in delay-2">
+      <strong>RPC credentials:</strong> The <code style="color:var(--cyan-primary)">--rpc-user</code> and <code style="color:var(--cyan-primary)">--rpc-pass</code> values must match between the node, miner, and CLI. Use strong, unique credentials — these are not transmitted over the network but protect local RPC access.
     </div>
 
     <div class="spec-block fade-in delay-3">
@@ -397,10 +424,16 @@ ctest --output-on-failure</div>
       </div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Start mining with RPC mode (recommended)</span>
+<span class="comment"># --blocks 10 mines 10 blocks then stops; omit for continuous mining</span>
 ./sost-miner --genesis genesis_block.json --chain chain.json \
     --wallet wallet.json --rpc 127.0.0.1:18232 \
     --rpc-user myuser --rpc-pass mypass \
-    --threads 4 --blocks 100</div>
+    --threads 4 --blocks 10
+
+<span class="comment"># Verify blocks are being accepted</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getblockcount</span>","params":[]}' \
+    http://localhost:18232</div>
       </div>
     </div>
 
@@ -462,7 +495,7 @@ ctest --output-on-failure</div>
         <span class="spec-tag">VIA RPC</span>
       </div>
       <div class="spec-body">
-        <div class="code-snippet"><span class="comment"># Send SOST to an address (requires 100+ confirmations on coinbase UTXOs)</span>
+        <div class="code-snippet"><span class="comment"># Send SOST to an address (requires 1000+ confirmations on coinbase UTXOs)</span>
 ./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass \
     send sost1abc123...def456 10.0</div>
       </div>
@@ -503,7 +536,7 @@ ctest --output-on-failure</div>
           <tr><td class="label">Default fee rate</td><td class="value">1 stock/byte</td></tr>
           <tr><td class="label">Minimum relay fee</td><td class="value">1,000 stocks (0.00001 SOST)</td></tr>
           <tr><td class="label">Override</td><td class="value" style="font-family:var(--font-mono)">--fee-rate &lt;n&gt;</td></tr>
-          <tr><td class="label">Coinbase maturity</td><td class="highlight">100 confirmations required</td></tr>
+          <tr><td class="label">Coinbase maturity</td><td class="highlight">1000 confirmations required (~7 days)</td></tr>
           <tr><td class="label">Regular TX outputs</td><td class="green">Spendable immediately</td></tr>
         </table>
       </div>
@@ -512,7 +545,7 @@ ctest --output-on-failure</div>
 </section>
 
 <!-- STEP 6: RPC -->
-<section class="section" style="border-bottom:none;">
+<section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">STEP 06</div>
@@ -563,6 +596,61 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="value" style="font-family:var(--font-mono)">getpeerinfo</td><td class="label">—</td><td class="value">Connected P2P peers</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">submitblock</td><td class="label">block_json</td><td class="value">Submit mined block</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">getblocktemplate</td><td class="label">—</td><td class="value">Get mempool txs for mining</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 7: VERIFY -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 07</div>
+      <h2 class="section-title">Verify &amp; <span class="accent">Troubleshoot</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Health Check</span>
+        </div>
+        <span class="spec-tag">QUICK VERIFY</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># 1. Check node is running and synced</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getinfo</span>","params":[]}' \
+    http://localhost:18232
+
+<span class="comment"># 2. Check connected peers</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getpeerinfo</span>","params":[]}' \
+    http://localhost:18232
+
+<span class="comment"># 3. Check wallet balance</span>
+./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass getbalance</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Common Issues</span>
+        </div>
+        <span class="spec-tag">TROUBLESHOOTING</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Problem</th><th>Solution</th></tr>
+          <tr><td class="label">Connection refused on RPC</td><td class="value">Ensure sost-node is running and --rpc-port matches (default 18232)</td></tr>
+          <tr><td class="label">Authentication failed</td><td class="value">Check --rpc-user and --rpc-pass match between node, miner, and CLI</td></tr>
+          <tr><td class="label">No peers connected</td><td class="value">Check firewall allows port 19333; try --connect seed.sostcore.com:19333</td></tr>
+          <tr><td class="label">Miner finds no template</td><td class="value">Node must be fully synced before mining; check getinfo height</td></tr>
+          <tr><td class="label">"Immature coinbase" error</td><td class="value">Coinbase outputs require 1000 confirmations (~7 days) before spending</td></tr>
+          <tr><td class="label">Out of memory (miner)</td><td class="value">ConvergenceX requires 4GB RAM per thread; reduce --threads</td></tr>
         </table>
       </div>
     </div>
