@@ -348,6 +348,19 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
     <div class="notice fade-in delay-4">
       <strong>EOA Requirement:</strong> The declared wallet must be an Externally Owned Account. Smart contract wallets, multisig wallets, and proxy contracts are not eligible. EOA status is verified at contract creation and at every audit. CREATE2 deployment after commitment triggers automatic slash.
     </div>
+
+    <div class="spec-block fade-in delay-4" style="margin-top:24px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Top-up &amp; Extend</span>
+        </div>
+        <span class="spec-tag">MODEL A</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;">At any point before expiry you can increase your SOST bond and extend the contract duration. The contract restructures from the top-up moment &mdash; prior time settles proportionally, new period begins with the combined bond. Fee applies only to the new increment (5%). One contract, one reputation record.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -428,6 +441,19 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
 
     <div class="notice fade-in delay-4">
       <strong>The fundamental trade:</strong> Gold liquidity for SOST liquidity. Users cannot unlock escrowed gold before maturity. However, the SOST reward is delivered immediately at deposit — full liquidity from day 1.
+    </div>
+
+    <div class="spec-block fade-in delay-4" style="margin-top:24px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Time Extension</span>
+        </div>
+        <span class="spec-tag">MODEL B</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;">Before expiry you may extend the duration and earn a loyalty bonus on the additional reward period. Fee applies to the extra reward only (10%). The escrow is immutable &mdash; to add more metals, open a new parallel contract.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -519,6 +545,39 @@ user_reward  = SOST_reward - protocol_fee
           <tr><td class="label">Protocol fee</td><td class="value">5%</td><td class="value">10%</td></tr>
           <tr><td class="label">Best for</td><td class="value">Crypto natives</td><td class="value">Gold holders</td></tr>
         </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEE STRUCTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">FEE DESIGN</div>
+      <h2 class="section-title">Fee <span class="accent">Structure</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Fee-at-Deposit Design</span>
+        </div>
+        <span class="spec-tag">NEVER AT COMPLETION</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">All fees are charged at the moment of each operation &mdash; never at completion.</p>
+        <table class="code-table">
+          <tr><th>Model</th><th>Fee</th><th>Charged on</th></tr>
+          <tr><td class="highlight">Model A</td><td class="value">5% of bond</td><td class="value">Per operation (opening or top-up increment)</td></tr>
+          <tr><td class="highlight">Model B</td><td class="value">10% of gross reward</td><td class="value">Per operation (opening or extension)</td></tr>
+        </table>
+        <div class="code-snippet"><span class="comment">// Example &mdash; Model A top-up:</span>
+Month 0: bond <span class="num">100</span> SOST  &rarr;  fee <span class="num">5</span> SOST
+Month 2: top-up +<span class="num">50</span> SOST  &rarr;  fee <span class="num">2.5</span> SOST
+Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as two separate contracts</span>
+                  <span class="comment">// top-up is pure convenience</span></div>
       </div>
     </div>
   </div>
