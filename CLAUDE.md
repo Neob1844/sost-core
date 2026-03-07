@@ -90,7 +90,7 @@ Difficulty encoded as Q16.16 fixed-point (`include/sost/sostcompact.h`).
 ### Key constants (in `include/sost/params.h`)
 
 - STOCKS_PER_SOST: 100,000,000 (1e-8 precision)
-- COINBASE_MATURITY: 100 blocks
+- COINBASE_MATURITY: 1000 blocks (~7 days)
 - TARGET_SPACING: 600 seconds (10 min)
 - BLOCKS_PER_EPOCH: 131,553
 - GENESIS_REWARD: 785,100,863 stocks (7.85100863 SOST)

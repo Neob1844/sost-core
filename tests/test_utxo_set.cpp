@@ -613,7 +613,7 @@ TEST(U18_coinbase_maturity_integration) {
 
     TxValidationContext ctx;
     ctx.genesis_hash = g_genesis;
-    ctx.spend_height = 100;  // 100 - 50 = 50 < COINBASE_MATURITY(100)
+    ctx.spend_height = 100;  // 100 - 50 = 50 < COINBASE_MATURITY(1000)
     ctx.capsule_activation_height = 5000;
 
     auto r1 = ValidateTransactionConsensus(tx, utxos, ctx);

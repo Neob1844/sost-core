@@ -333,7 +333,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 </div>
 <script>
 let RPC='http://212.132.108.244/rpc',RPC_USER='NeoB_1_248',RPC_PASS='sost1b3f7a2c9e5d14b08f6a3c7e9d2b4f1a8c5e3d07b',H=0,prevH=0,off=0;
-const COINBASE_MATURITY=100;
+const COINBASE_MATURITY=1000;
 const PS=10;
 let _loading=false;
 let _navStack=[];
@@ -771,8 +771,8 @@ async function showAddress(addr){
         '<tbody>'+(utxoRows||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">no UTXOs</td></tr>')+'</tbody></table>'+
       '</div>'+
       '<div class="fee-note" style="margin-top:16px;border-left-color:var(--cyan)">'+
-        '<b style="color:var(--cyan)">\u2139 About maturity:</b> Coinbase UTXOs (block rewards) require <b>'+COINBASE_MATURITY+' confirmations</b> before they can be spent. '+
-        'This protects the network against chain reorganizations. Standard transfer outputs are spendable immediately.'+
+        '<b style="color:var(--cyan)">\u2139 About maturity:</b> Coinbase UTXOs (block rewards) require <b>'+COINBASE_MATURITY+' confirmations (~7 days)</b> before they can be spent. '+
+        'This reinforces SOST\u2019s store-of-value character and protects against chain reorganizations. Standard transfer outputs are spendable immediately.'+
         (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> for purchasing XAUT/PAXG tokens and cannot be spent as SOST on-chain.':'')+
         (role==='POPC POOL'?' <b style="color:var(--cyan)">PoPC Pool funds accumulate</b> and are distributed to participants who complete the Proof of Personal Custody audit protocol.':'')+
       '</div>';
