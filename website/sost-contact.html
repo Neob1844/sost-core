@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Contact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  .form-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 32px; max-width: 640px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 4px;
+    padding: 10px 14px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--red-primary); }
+  .form-group textarea { min-height: 140px; resize: vertical; }
+  .form-group select { cursor: pointer; }
+  .form-group select option { background: var(--bg-panel); color: var(--text-primary); }
+
+  .submit-btn {
+    display: inline-block; padding: 12px 32px; background: var(--red-primary); color: #fff;
+    font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: 1px;
+    border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;
+  }
+  .submit-btn:hover { background: var(--red-bright); }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; max-width: 640px; }
+  .notice strong { color: var(--text-primary); }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:52px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html" class="active">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Contact</div>
+    <h1 class="fade-in delay-1">Get in <span>Touch.</span></h1>
+    <p class="hero-sub fade-in delay-2">Business inquiries, CEX listings, partnerships, press, and general questions.</p>
+  </div>
+</section>
+
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">CONTACT FORM</div>
+      <div class="section-title">Send a <span class="accent">Message</span></div>
+    </div>
+
+    <form id="contactForm" class="form-wrap fade-in delay-1" onsubmit="return submitContact()">
+      <div class="form-group">
+        <label>Name *</label>
+        <input type="text" id="cfName" required placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Organization</label>
+        <input type="text" id="cfOrg" placeholder="Company or organization (optional)">
+      </div>
+      <div class="form-group">
+        <label>Subject *</label>
+        <select id="cfSubject" required>
+          <option value="">Select a subject...</option>
+          <option value="General Inquiry">General Inquiry</option>
+          <option value="CEX Listing">CEX Listing</option>
+          <option value="Partnership">Partnership</option>
+          <option value="Security Disclosure">Security Disclosure</option>
+          <option value="Mining">Mining</option>
+          <option value="Press">Press</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Message *</label>
+        <textarea id="cfMessage" required placeholder="Your message..."></textarea>
+      </div>
+      <button type="submit" class="submit-btn">SEND MESSAGE</button>
+    </form>
+
+    <div class="notice fade-in delay-2">
+      <strong>Security vulnerabilities:</strong> For security vulnerabilities use GitHub's private vulnerability reporting — do not use this form for security disclosures.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+<script>
+function submitContact() {
+  var parts = ['contact', 'sostcore.com'];
+  var addr = parts.join('@');
+  var name = document.getElementById('cfName').value;
+  var org = document.getElementById('cfOrg').value;
+  var subject = document.getElementById('cfSubject').value;
+  var message = document.getElementById('cfMessage').value;
+  var body = 'Name: ' + name + '\n';
+  if (org) body += 'Organization: ' + org + '\n';
+  body += '\n' + message;
+  window.location.href = 'mail' + 'to:' + addr + '?subject=' + encodeURIComponent('[SOST] ' + subject) + '&body=' + encodeURIComponent(body);
+  return false;
+}
+</script>
+
+</body>
+</html>

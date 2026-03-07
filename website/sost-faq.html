@@ -73,7 +73,7 @@
   .faq-q .toggle { font-size: 18px; color: var(--red-primary); transition: transform 0.3s; flex-shrink: 0; }
   .faq-item.open .faq-q .toggle { transform: rotate(45deg); }
   .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-  .faq-item.open .faq-a { max-height: 600px; }
+  .faq-item.open .faq-a { max-height: 1200px; }
   .faq-a-inner { padding: 0 20px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; border-top: 1px solid var(--border-dim); padding-top: 16px; }
   .faq-a-inner strong { color: var(--text-primary); }
   .faq-a-inner code { color: var(--cyan-primary); font-size: 12px; }
@@ -99,7 +99,7 @@
 <nav>
   <div class="container">
     <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="height:32px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+      <img src="sost-logo.png" alt="SOST" style="height:52px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
     <div class="nav-links">
       <a href="index.html">Home</a>
@@ -118,6 +118,7 @@
       <a href="sost-explorer.html">Explorer</a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
@@ -185,13 +186,13 @@
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>What is the block reward?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Initial block reward is <strong>7.85100863 SOST</strong>, split: 50% to miner (~3.93 SOST), 25% to Gold Vault (~1.96 SOST), 25% to PoPC Pool (~1.96 SOST). The reward decays smoothly at ~9.03% per year (no halvings, no cliff events). Block target is 10 minutes.</div></div>
+      <div class="faq-q"><h3>What is the block reward and emission schedule?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">La emisi&oacute;n de SOST sigue un decaimiento suave por &eacute;pocas basado en la constante matem&aacute;tica q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Recompensa inicial R&#8320; = <strong>7.85100863 SOST/bloque</strong> (785,100,863 stocks)<br>&bull; Cada &eacute;poca tiene exactamente 131,553 bloques (~2.502907875095892 a&ntilde;os — la constante alfa de Feigenbaum &alpha;)<br>&bull; Decaimiento: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) donde epoch = height &divide; 131,553<br>&bull; Sin halvings, sin acantilados — decaimiento continuo ~9.03% anual<br>&bull; Suministro m&aacute;ximo asint&oacute;tico: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, l&iacute;mite estricto por construcci&oacute;n matem&aacute;tica)<br>&bull; ~95% extra&iacute;do en ~30 a&ntilde;os (~12 &eacute;pocas)<br>&bull; Split: 50% minero &middot; 25% Gold Vault &middot; 25% PoPC Pool<br>&bull; Toda la aritm&eacute;tica es entera determinista (Q16.16 fixed-point). Ninguna operaci&oacute;n en punto flotante — ser&iacute;a un fallo de consenso.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>ASERT</strong> (Absolutely Scheduled Exponential Rising Targets) with a 24-hour half-life for per-block difficulty adjustment, plus a <strong>cASERT</strong> overlay with 5 levels (L1-L5) that adjusts ConvergenceX stability requirements based on chain timing. cASERT is asymmetric — it only relaxes when the chain is genuinely slow, never when an attacker is mining fast.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST utiliza dos capas de dificultad:<br><br><strong>ASERT</strong> (Absolutely Scheduled Exponentially Rising Targets): ajusta la dificultad real bloque a bloque en funci&oacute;n de la velocidad de la cadena, con una vida media de 24 horas. Es el mecanismo principal de calibraci&oacute;n a largo plazo.<br><br><strong>cASERT</strong> (Constitutional ASERT overlay): act&uacute;a como freno de emergencia unidireccional. Si la cadena va demasiado r&aacute;pido respecto al calendario ideal (genesis + altura &times; 600s), cASERT endurece los requisitos de estabilidad ConvergenceX en 5 niveles (L1 neutral &rarr; L5 m&aacute;ximo). Nunca se relaja cuando un atacante mina r&aacute;pido — solo cuando la cadena genuinamente va lenta. ASERT corrige la velocidad; cASERT protege la emisi&oacute;n.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -216,12 +217,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can anyone access or move the gold reserve?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Reserve Vault is Heritage sealed. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;60% miner signaling (87 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-burn).</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Reserve Vault is Heritage sealed. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;60% miner signaling (87 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>When do gold purchases begin?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">No earlier than <strong>6 months after genesis</strong> (approximately June 2026), and only once market readiness is met — meaning at least one verifiable execution venue with demonstrated liquidity. First purchases target a 50/50 split between XAUt and PAXG.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">No earlier than <strong>6 months after genesis</strong> (approximately June 2026), and only once market readiness is met — meaning at least one verifiable execution venue with demonstrated liquidity. First purchases target a 50/50 split between XAUt and PAXG.<br><br>Tambi&eacute;n se puede presentar una propuesta de rotaci&oacute;n entre los metales permitidos (E1) siguiendo el mismo proceso de doble puerta: &ge;60% se&ntilde;alizaci&oacute;n minera + Orden de Ejecuci&oacute;n de Fundaci&oacute;n.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -241,7 +242,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol. Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (13 de marzo de 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Cualquier usuario, incluida la Fundaci&oacute;n, puede realizar donaciones directas a la B&oacute;veda Perpetua (Gold Vault: <code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code>) para apoyar el protocolo y dotarlo de valor a&ntilde;adido perpetuo.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -256,7 +257,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What happens if I fail a PoPC audit?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Gold Vault. Your reputation is destroyed (reset to 0 stars) and your address is blacklisted. No human can override the slash once triggered. <strong>Model B:</strong> there is no slash risk — gold custody is enforced by the escrow contract.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Gold Vault. Tu direcci&oacute;n queda en la lista negra de forma permanente. Ning&uacute;n humano puede revertir el corte ni eliminar la lista negra una vez activado. El protocolo no tiene mecanismo de apelaci&oacute;n.<br><br><strong>Modelo B:</strong> dep&oacute;sito en escrow inmutable — recuperas el 100% de tus metales al vencer el plazo, sin riesgo de corte.</div></div>
     </div>
   </div>
 </section>
@@ -301,12 +302,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What ports does SOST use?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>P2P:</strong> port 19333 (default). <strong>RPC:</strong> port 18232 (default). The node connects to <code>seed.sostcore.com:19333</code> automatically. RPC requires authentication via <code>--rpc-user</code> and <code>--rpc-pass</code>.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>P2P:</strong> port 19333 (default). <strong>RPC:</strong> port 18232 (default). The node connects to <code>seed.sostcore.com:19333</code> automatically. RPC requires authentication via <code>--rpc-user</code> and <code>--rpc-pass</code>.<br><br>To create your RPC credentials, choose any username and password when starting the node with <code>--rpc-user=&lt;youruser&gt; --rpc-pass=&lt;yourpass&gt;</code>. These are set by you — there is no central registration. The seed node at <code>seed.sostcore.com:19333</code> connects automatically on first launch.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>How do I report a security vulnerability?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Use <strong>GitHub private vulnerability reporting only</strong> — do not open a public issue. Report at: <a href="https://github.com/Neob1844/sost-core/security/advisories/new" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core/security/advisories/new</a>. Receipt acknowledged within 72 hours. Critical vulnerabilities are prioritized for immediate fix.</div></div>
+      <div class="faq-q"><h3>Contact &amp; Support</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>GitHub:</strong> <a href="https://github.com/Neob1844/sost-core/issues" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core/issues</a><br>For security disclosures, use GitHub's private vulnerability reporting.<br><strong>General contact:</strong> contact@sostcore.com</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
