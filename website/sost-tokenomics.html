@@ -6,6 +6,7 @@
 <title>SOST Protocol — Tokenomics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -692,11 +693,80 @@ TotalIssued &le; B &times; &Sigma;<sub>e&ge;0</sub>(R0 &times; q<sup>e</sup>)
   </div>
 </section>
 
+<!-- CHART: SOST EMISSION PER EPOCH -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 11</div>
+      <h2 class="section-title">SOST Emission per Epoch — <span class="accent">Logarithmic Scale</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Smooth exponential decay — no cliffs (each epoch &asymp; 2.5 years)</p>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">SOST Epoch Emission</span>
+        </div>
+        <span class="spec-tag">LOGARITHMIC</span>
+      </div>
+      <div class="spec-body">
+        <div style="position:relative;height:350px;"><canvas id="chartSostEpoch"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHART: BITCOIN EMISSION PER ERA -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 12</div>
+      <h2 class="section-title">Bitcoin Emission per Era — <span class="accent">Logarithmic Scale</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Abrupt 50% halving steps every 4 years</p>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">BTC Era Emission</span>
+        </div>
+        <span class="spec-tag">LOGARITHMIC</span>
+      </div>
+      <div class="spec-body">
+        <div style="position:relative;height:350px;"><canvas id="chartBtcEra"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHART: NORMALIZED COMPARISON -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 13</div>
+      <h2 class="section-title">Emission Curve Comparison — <span class="accent">SOST vs Bitcoin</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Both normalized to % of total supply emitted over time</p>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Normalized Supply Curve</span>
+        </div>
+        <span class="spec-tag">% OF TOTAL</span>
+      </div>
+      <div class="spec-body">
+        <div style="position:relative;height:350px;"><canvas id="chartComparison"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- BITCOIN EMISSION TIMELINE -->
 <section class="section" style="border-bottom:none;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 11</div>
+      <div class="section-id">SECTION 14</div>
       <h2 class="section-title">Bitcoin Emission <span class="accent">Timeline</span></h2>
     </div>
 
@@ -740,6 +810,211 @@ TotalIssued &le; B &times; &Sigma;<sub>e&ge;0</sub>(R0 &times; q<sup>e</sup>)
     <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
   </div>
 </footer>
+
+<script>
+(function(){
+  var mono = "'JetBrains Mono', 'IBM Plex Mono', monospace";
+  var gridColor = '#1a1a1a';
+  var textColor = '#94a3b8';
+  var cardBg = '#0a0a0a';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.font.family = mono;
+  Chart.defaults.font.size = 11;
+
+  // --- CHART 1: SOST Emission per Epoch (log bar) ---
+  var sostLabels = ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','20','25','30','40','50'];
+  var sostData = [1032824,804364,626439,487871,379955,295909,230454,179478,139777,108859,84779,66026,51421,40047,31189,24290,5580,1281,294,15,0.4];
+
+  new Chart(document.getElementById('chartSostEpoch'), {
+    type: 'bar',
+    data: {
+      labels: sostLabels,
+      datasets: [{
+        label: 'Epoch Emission (SOST)',
+        data: sostData,
+        backgroundColor: 'rgba(230,57,70,0.8)',
+        borderColor: '#e63946',
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Decay: smooth and continuous (NO steps like Bitcoin)',
+          color: '#4ade80',
+          font: { size: 11, family: mono },
+          padding: { top: 8 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.parsed.y.toLocaleString() + ' SOST';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Epoch', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor }
+        },
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'Epoch Emission (SOST)', color: textColor },
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            callback: function(v) {
+              if ([1,10,100,1000,10000,100000,1000000].indexOf(v) !== -1) return v.toLocaleString();
+              return '';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // --- CHART 2: Bitcoin Emission per Era (log bar) ---
+  var btcLabels = ['0','1','2','3','4','5','6','7','8','9','10'];
+  var btcData = [10500000,5250000,2625000,1312500,656250,328125,164063,82031,41016,20508,10254];
+  var btcColors = btcData.map(function(_,i){ return i===3 ? 'rgba(34,211,238,0.8)' : 'rgba(247,147,26,0.8)'; });
+  var btcBorders = btcData.map(function(_,i){ return i===3 ? '#22d3ee' : '#f7931a'; });
+
+  new Chart(document.getElementById('chartBtcEra'), {
+    type: 'bar',
+    data: {
+      labels: btcLabels,
+      datasets: [{
+        label: 'Era Emission (BTC)',
+        data: btcData,
+        backgroundColor: btcColors,
+        borderColor: btcBorders,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Decay: STEPPED — abrupt 50% drops every 4 years',
+          color: '#f7931a',
+          font: { size: 11, family: mono },
+          padding: { top: 8 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.parsed.y.toLocaleString() + ' BTC';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Era', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor }
+        },
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'Era Emission (BTC)', color: textColor },
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            callback: function(v) {
+              if ([10000,100000,1000000,10000000].indexOf(v) !== -1) return v.toLocaleString();
+              return '';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // --- CHART 3: Normalized comparison line chart ---
+  var sostYears = [0,1.25,3.75,6.25,8.75,11.25,13.75,16.25,18.75,21.25,23.75,26.25,28.75,31.25,33.75,36.25,38.75];
+  var sostPct =   [0,11,30,46,58,67,73,78,83,86,89,91,93,95,96,97,98];
+
+  var btcYears2 = [0,4,8,12,16,20,24,28,32,36,40,60];
+  var btcPct =    [0,50,75,87.5,93.75,96.88,98.44,99.22,99.61,99.8,99.9,99.99];
+
+  new Chart(document.getElementById('chartComparison'), {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'SOST (smooth curve)',
+          data: sostYears.map(function(x,i){ return {x:x, y:sostPct[i]}; }),
+          borderColor: '#e63946',
+          backgroundColor: 'rgba(230,57,70,0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#e63946'
+        },
+        {
+          label: 'Bitcoin (stepped halvings)',
+          data: btcYears2.map(function(x,i){ return {x:x, y:btcPct[i]}; }),
+          borderColor: '#f7931a',
+          backgroundColor: 'rgba(247,147,26,0.08)',
+          borderWidth: 2,
+          stepped: true,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#f7931a'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: textColor, font: { family: mono, size: 11 }, usePointStyle: true, padding: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + ctx.parsed.y + '% at year ' + ctx.parsed.x;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Years', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor, stepSize: 5 },
+          min: 0,
+          max: 60
+        },
+        y: {
+          title: { display: true, text: '% of Total Supply Emitted', color: textColor },
+          grid: { color: gridColor },
+          ticks: { color: textColor, callback: function(v){ return v + '%'; } },
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
