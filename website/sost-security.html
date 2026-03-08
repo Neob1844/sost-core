@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html" class="active">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Security Analysis</div>
+    <h1 class="fade-in delay-1">Defense in <span>Depth.</span><br>Layered <span>Deterrence.</span></h1>
+    <p class="hero-sub fade-in delay-2">Sequential PoW dependency chains, memory-hard mining, consensus-enforced integer arithmetic, layered bond deterrence, entropy-derived audits, and dual-gate emergency authorization. Security is structural, not promised.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">CONSENSUS</span>
+      <span class="sep">|</span>
+      <span class="val">100% integer arithmetic &middot; Zero floating-point</span>
+    </div>
+  </div>
+</section>
+
+<!-- 51% ATTACK RESISTANCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">51% Attack <span class="accent">Resistance</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Sequential Dependency</span>
+        </div>
+        <span class="spec-tag">CONVERGENCEX</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Each ConvergenceX attempt requires 4 GB RAM and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts.</p>
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="label">RAM per attempt</td><td class="highlight">4 GB (scratchpad)</td></tr>
+          <tr><td class="label">Rounds per attempt</td><td class="value">100,000 (strictly sequential)</td></tr>
+          <tr><td class="label">Intra-attempt parallelism</td><td class="highlight">Eliminated by state dependency</td></tr>
+          <tr><td class="label">Inter-attempt parallelism</td><td class="value">Multiple cores = multiple independent attempts</td></tr>
+          <tr><td class="label">ASIC advantage estimate</td><td class="value">Low multiples over modern CPUs</td></tr>
+          <tr><td class="label">Difficulty adjustment</td><td class="value">ASERT per-block, stable regardless of hashrate</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2">
+      <strong>Key insight:</strong> An attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000&times; faster on a single attempt. The sequential dependency chain is the fundamental defense. As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold.
+    </div>
+  </div>
+</section>
+
+<!-- BOND DETERRENCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Bond <span class="accent">Deterrence</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The bond does not make fraud impossible — it makes it costly. Four layers of deterrence combine to make large-scale systematic fraud economically irrational.</p>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">LAYER 1</div>
+        <h3 style="color:var(--red-primary)">Financial Bond</h3>
+        <p>Up to 30% of gold value locked as SOST bond. Immediate financial cost on slash. Bond is fully lost and redistributed to PoPC Pool and Gold Vault.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">LAYER 2</div>
+        <h3 style="color:var(--cyan-primary)">Reputation Destruction</h3>
+        <p>Permanent record. Stars reset to zero. Future contracts blocked at all levels. Rebuilding reputation requires starting from scratch with 0.5 oz limits.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">LAYER 3</div>
+        <h3 style="color:var(--red-primary)">Wallet Blacklist</h3>
+        <p>Known fraudulent wallets excluded at the application layer. This is not consensus and does not affect the base chain — it is PoPC policy enforcement.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">LAYER 4</div>
+        <h3 style="color:var(--green-primary)">Size Limits</h3>
+        <p>New users (0 stars) can only commit 0.5 oz maximum. Large commitments require proven track record (5 stars = max 10 oz). Slow unlock prevents mass fraud.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIT & ORACLE RESISTANCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Audit &amp; Oracle <span class="accent">Resistance</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Audit Manipulation Resistance</span>
+        </div>
+        <span class="spec-tag">ENTROPY-DERIVED</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Analysis</th></tr>
+          <tr><td class="label">Audit source</td><td class="value">ConvergenceX block entropy triple (block_id, commit, checkpoints_root)</td></tr>
+          <tr><td class="label">Predictability</td><td class="green">None — depends on 100K-round PoW that hasn't occurred</td></tr>
+          <tr><td class="label">Influence</td><td class="green">No party can predict or influence the schedule</td></tr>
+          <tr><td class="label">Post-audit fraud window</td><td class="value">Next random audit within the period (5-30% probability)</td></tr>
+          <tr><td class="label">Detection cost</td><td class="highlight">Full bond slash</td></tr>
+          <tr><td class="label">Continuous custody</td><td class="value">Historical balance sampling at deterministic checkpoints</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Oracle Manipulation Resistance</span>
+        </div>
+        <span class="spec-tag">NO ON-CHAIN ORACLE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Analysis</th></tr>
+          <tr><td class="label">Consensus oracle dependency</td><td class="green">None — all consensus uses chain-internal data only</td></tr>
+          <tr><td class="label">Bond price source</td><td class="value">7-day TWAP of CEX prices (resistant to single-block manipulation)</td></tr>
+          <tr><td class="label">Price data role</td><td class="value">Advisory for PoPC bond sizing, not consensus-critical</td></tr>
+          <tr><td class="label">User consent</td><td class="green">Required — user signs exact bond terms before submission</td></tr>
+          <tr><td class="label">Malicious bulletin</td><td class="value">Users simply refuse to sign — no funds at risk</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- cASERT SECURITY -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
+      <h2 class="section-title">cASERT <span class="accent">Security</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Asymmetric Defense</span>
+        </div>
+        <span class="spec-tag">ANTI-WEAPONIZATION</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">The asymmetric cASERT policy prevents attackers from exploiting difficulty relaxation.</p>
+        <table class="code-table">
+          <tr><th>Scenario</th><th>Signal</th><th>cASERT Response</th></tr>
+          <tr><td class="label">Attacker with high hashrate</td><td class="value">Chain fast (negative signal)</td><td class="green">NORMAL mode — no relaxation</td></tr>
+          <tr><td class="label">Genuine hashrate drop</td><td class="value">Chain slow (positive signal)</td><td class="cyan">Relaxed stability — liveness preserved</td></tr>
+          <tr><td class="label">Attacker benefit</td><td class="highlight" colspan="2">None — stability requirements remain at maximum</td></tr>
+        </table>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.8;">Relaxed stability is only available when the chain needs help (hashrate dropped), never when an attacker is dominating. This is the correct security trade-off.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EMERGENCY PROCEDURES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
+      <h2 class="section-title">Emergency <span class="accent">Procedures</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Incident Response</span>
+        </div>
+        <span class="spec-tag">SCENARIO TABLE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Scenario</th><th>Response</th></tr>
+          <tr><td class="label">Critical bug</td><td class="value">Foundation pauses new PoPC contracts. Existing contracts continue unaffected.</td></tr>
+          <tr><td class="label">Exchange hack</td><td class="value">Gold Vault is a cold wallet with no exchange connection. Independent and safe.</td></tr>
+          <tr><td class="label">XAUT/PAXG issuer risk</td><td class="value">Emergency Catastrophe: rotate (E1) or liquidate-buy-burn (E2). Requires dual gate.</td></tr>
+          <tr><td class="label">Issuer risk (future only)</td><td class="value">Foundation redirects future purchases without consensus. Existing assets sealed.</td></tr>
+          <tr><td class="label">Chain death (90 days)</td><td class="value">Dead-man switch. 60-day dissolution notice. Reserve stays Heritage if no prior emergency.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Key Hygiene</span>
+        </div>
+        <span class="spec-tag">OPERATIONAL</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Practice</th><th>Detail</th></tr>
+          <tr><td class="label">Institutional keys</td><td class="value">Offline (cold), never on public nodes</td></tr>
+          <tr><td class="label">Public nodes</td><td class="value">Low-balance hot wallets, no reserve keys</td></tr>
+          <tr><td class="label">Address rotation</td><td class="value">Published with full traceability and proofs</td></tr>
+          <tr><td class="label">Wallet encryption</td><td class="value">AES-256-GCM + scrypt (N=32768, r=8, p=1)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPLEMENTATION STATUS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 06</div>
+      <h2 class="section-title">Implementation <span class="accent">Status</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Security Components</span>
+        </div>
+        <span class="spec-tag">CURRENT STATUS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Component</th><th>Status</th></tr>
+          <tr><td class="label">Transaction signing (libsecp256k1)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Consensus validation (R1-R14, S1-S12, CB1-CB10)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">ASERT + cASERT difficulty (L1-L5, k=4)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Mempool validation and relay</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Transaction confirmation in blocks</td><td class="green">Complete</td></tr>
+          <tr><td class="label">RPC authentication (--rpc-user/--rpc-pass)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Coinbase maturity filter (1000 blocks)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Dynamic fee calculation (CLI v1.3)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Wallet encryption (AES-256-GCM + scrypt)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">P2P DoS protection (ban scoring, peer limits)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Checkpoints + reorg limit (100 blocks)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">P2P encryption</td><td class="cyan">Post-launch</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VULNERABILITY REPORTING -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 07</div>
+      <h2 class="section-title">Vulnerability <span class="accent">Reporting</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Responsible Disclosure</span>
+        </div>
+        <span class="spec-tag">PRIVATE ONLY</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Do not open a public issue for security vulnerabilities. Use GitHub's private vulnerability reporting.</p>
+        <table class="code-table">
+          <tr><th>Channel</th><th>URL</th></tr>
+          <tr><td class="label">Private vulnerability report</td><td class="value"><a href="https://github.com/Neob1844/sost-core/security/advisories/new" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">github.com/Neob1844/sost-core/security/advisories/new</a></td></tr>
+          <tr><td class="label">General issues</td><td class="value"><a href="https://github.com/Neob1844/sost-core/issues" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">github.com/Neob1844/sost-core/issues</a></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Scope</span>
+        </div>
+        <span class="spec-tag">IN / OUT</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>In Scope</th><th>Out of Scope</th></tr>
+          <tr><td class="value">Consensus rule bypass</td><td class="label">Social engineering</td></tr>
+          <tr><td class="value">Private key exposure</td><td class="label">Attacks requiring physical access</td></tr>
+          <tr><td class="value">Remote code execution</td><td class="label">Third-party dependencies (report upstream)</td></tr>
+          <tr><td class="value">P2P protocol exploits</td><td class="label">Denial of service via network flooding</td></tr>
+          <tr><td class="value">RPC authentication bypass</td><td class="label">Explorer HTML (client-side only)</td></tr>
+          <tr><td class="value">Wallet encryption weakness</td><td class="label"></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-3">
+      <strong>Response time:</strong> Receipt acknowledged within 72 hours. Critical vulnerabilities (consensus bypass, key compromise, remote code execution) are prioritized for immediate fix. A public advisory will be published after the fix is released.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

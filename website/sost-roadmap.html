@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, var(--red-primary), var(--border-dim) 80%, transparent); }
+  .timeline-item { position: relative; margin-bottom: 40px; }
+  .timeline-item:last-child { margin-bottom: 0; }
+  .timeline-dot { position: absolute; left: -33px; top: 6px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-dim); background: var(--bg-deep); z-index: 2; transition: all 0.3s; }
+  .timeline-dot.active { border-color: var(--red-primary); background: var(--red-primary); box-shadow: 0 0 12px var(--red-glow); }
+  .timeline-dot.upcoming { border-color: var(--cyan-primary); background: var(--bg-deep); }
+  .timeline-dot.future { border-color: var(--border-med); background: var(--bg-deep); }
+  .timeline-date { font-size: 11px; color: var(--red-primary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  .timeline-date.upcoming { color: var(--cyan-primary); }
+  .timeline-date.future { color: var(--text-muted); }
+  .timeline-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .timeline-body { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 16px 20px; transition: border-color 0.3s; }
+  .timeline-body:hover { border-color: var(--border-med); }
+  .timeline-body ul { list-style: none; padding: 0; }
+  .timeline-body li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; padding-left: 16px; position: relative; }
+  .timeline-body li::before { content: ''; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; border-radius: 1px; background: var(--border-med); }
+  .timeline-body li.done::before { background: var(--green-primary); box-shadow: 0 0 4px var(--green-dim); }
+  .timeline-body li.next::before { background: var(--cyan-primary); box-shadow: 0 0 4px var(--cyan-dim); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .timeline { padding-left: 32px; }
+    .timeline-dot { left: -25px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html" class="active">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Development Roadmap</div>
+    <h1 class="fade-in delay-1">From <span>Genesis</span><br>to <span>Heritage.</span></h1>
+    <p class="hero-sub fade-in delay-2">SOST launches from code, not from capital. The genesis block is self-sufficient — it requires only a miner and a timestamp. Exchange listings, community growth, and gold accumulation follow naturally from the protocol's own mechanics.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">GENESIS</span>
+      <span class="sep">|</span>
+      <span class="val">2026-03-13 00:00:00 UTC</span>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">Protocol <span class="accent">Timeline</span></h2>
+    </div>
+
+    <div class="timeline fade-in delay-1">
+
+      <!-- GENESIS -->
+      <div class="timeline-item">
+        <div class="timeline-dot active"></div>
+        <div class="timeline-date">MARCH 13, 2026</div>
+        <div class="timeline-title">Genesis Block</div>
+        <div class="timeline-body">
+          <ul>
+            <li class="next">Genesis block mined — 00:00:00 UTC</li>
+            <li class="next">Solo mining begins (C++ ConvergenceX miner)</li>
+            <li class="next">Chain validation active — all consensus rules enforced from block 0</li>
+            <li class="next">Coinbase split active: 50% miner / 25% Gold Vault / 25% PoPC Pool</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PUBLIC LAUNCH -->
+      <div class="timeline-item">
+        <div class="timeline-dot upcoming"></div>
+        <div class="timeline-date upcoming">MARCH 15, 2026</div>
+        <div class="timeline-title">Public Launch</div>
+        <div class="timeline-body">
+          <ul>
+            <li>BTCTalk announcement thread published</li>
+            <li>CEX listing requests submitted</li>
+            <li>C++ miner released publicly</li>
+            <li>GitHub repository public</li>
+            <li>Block explorer live</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- GOLD PURCHASES -->
+      <div class="timeline-item">
+        <div class="timeline-dot upcoming"></div>
+        <div class="timeline-date upcoming">JUNE 2026</div>
+        <div class="timeline-title">Gold Purchases Begin</div>
+        <div class="timeline-body">
+          <ul>
+            <li>First XAUT/PAXG acquired from Gold Vault accumulation</li>
+            <li>Reserve Vault deployed on Ethereum mainnet</li>
+            <li>Public dashboard for reserve tracking published</li>
+            <li>Batch execution reports with on-chain attestations</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PoPC LAUNCH -->
+      <div class="timeline-item">
+        <div class="timeline-dot upcoming"></div>
+        <div class="timeline-date upcoming">JANUARY 2027</div>
+        <div class="timeline-title">PoPC Activation (Epoch 2)</div>
+        <div class="timeline-body">
+          <ul>
+            <li>PoPC Model A (self-custody bonds) and Model B (timelocked escrow) launch</li>
+            <li>First custody contracts active</li>
+            <li>Escrow contract published, verified, and independently audited</li>
+            <li>PoPC Pool has accumulated ~103,160 SOST</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PHYSICAL EXTENSION -->
+      <div class="timeline-item">
+        <div class="timeline-dot future"></div>
+        <div class="timeline-date future">JUNE 2027</div>
+        <div class="timeline-title">Physical Gold Extension</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Mobile app for PoPC audit challenges</li>
+            <li>Verifier network expansion</li>
+            <li>Physical gold custody exploration</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ZK R&D -->
+      <div class="timeline-item">
+        <div class="timeline-dot future"></div>
+        <div class="timeline-date future">2028</div>
+        <div class="timeline-title">ZK Research &amp; Development</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Zero-knowledge proof R&D begins</li>
+            <li>Physical proof system research</li>
+            <li>Privacy-preserving audit system design</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ZK PROOFS -->
+      <div class="timeline-item">
+        <div class="timeline-dot future"></div>
+        <div class="timeline-date future">2029 &ndash; 2030</div>
+        <div class="timeline-title">ZK Physical Custody Proofs</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Full privacy-preserving audit system</li>
+            <li>ZK proofs for physical custody verification</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- MULTI-METAL -->
+      <div class="timeline-item">
+        <div class="timeline-dot future"></div>
+        <div class="timeline-date future">2030+</div>
+        <div class="timeline-title">Multi-Metal Platform (Vision)</div>
+        <div class="timeline-body">
+          <ul>
+            <li>SOST blockchain as infrastructure for tokenizing multiple precious metals</li>
+            <li>Gold, silver, platinum, palladium, rhodium, iridium</li>
+            <li>Every tokenized asset backed 1:1 by physical reserves</li>
+            <li>Independent proof of reserves in auditable vaults</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- HERITAGE -->
+      <div class="timeline-item">
+        <div class="timeline-dot future"></div>
+        <div class="timeline-date future">INDEFINITE</div>
+        <div class="timeline-title">Heritage Reserve</div>
+        <div class="timeline-body">
+          <ul>
+            <li>Gold sealed by default — Heritage mode perpetual</li>
+            <li>Emergency dual-gate available if needed (&ge;60% miner signaling + Foundation Execution Order)</li>
+            <li>Chain sustained by transaction fees</li>
+            <li>Protocol runs autonomously</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- RESERVE EVOLUTION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Reserve <span class="accent">Evolution</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The metals reserve transitions through three phases — from tokenized gold on Ethereum to sovereign physical custody.</p>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">PHASE 1 &middot; YEARS 0-3</div>
+        <h3 style="color:var(--red-primary)">Tokenized Reserve</h3>
+        <p>Reserve Vault holds XAUT/PAXG tokens on Ethereum mainnet. No infrastructure needed. Liquid, auditable, immediate. Risks: issuer dependency (Tether, Paxos).</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">PHASE 2 &middot; YEARS 3-5</div>
+        <h3 style="color:var(--cyan-primary)">Physical Transition</h3>
+        <p>When reserve exceeds 500 oz equivalent: Foundation establishes legal entity, contracts with LBMA-approved vault, redeems XAUT/PAXG to physical delivery. Independent quarterly audits.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">PHASE 3 &middot; YEARS 5+</div>
+        <h3 style="color:var(--green-primary)">Sovereign Reserve</h3>
+        <p>Physical gold, platinum, palladium, rhodium, iridium. Zero intermediaries. Foundation-controlled vault. Public serial numbers and audit reports. 100% independent of token issuers.</p>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2">
+      <strong>Heritage rules apply equally</strong> to physical metals as to tokenized metals. The reserve is sealed by default regardless of form factor. Expanding to other metals is a roadmap item, not a promise — each asset must satisfy verifiable custody, sufficient liquidity, and acceptable issuer risk.
+    </div>
+  </div>
+</section>
+
+<!-- EPOCH STRUCTURE -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Epoch <span class="accent">Structure</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Emission Epochs</span>
+        </div>
+        <span class="spec-tag">131,553 BLOCKS EACH</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Epoch</th><th>Approx. Years</th><th>Block Reward</th><th>Key Events</th></tr>
+          <tr><td class="highlight">0</td><td class="value">0 &ndash; 2.5</td><td class="value">7.851 SOST</td><td class="value">Genesis, public launch, gold purchases begin, PoPC activation</td></tr>
+          <tr><td class="cyan">1</td><td class="value">2.5 &ndash; 5</td><td class="value">~6.12 SOST</td><td class="value">Physical gold transition, ZK R&D, mobile audit app</td></tr>
+          <tr><td class="label">2</td><td class="value">5 &ndash; 7.5</td><td class="value">~4.77 SOST</td><td class="value">ZK custody proofs, privacy-preserving audits</td></tr>
+          <tr><td class="label">3</td><td class="value">7.5 &ndash; 10</td><td class="value">~3.72 SOST</td><td class="value">Multi-metal platform vision</td></tr>
+          <tr><td class="label">4-11</td><td class="value">10 &ndash; 30</td><td class="value">Smooth decay</td><td class="value">~95% of total supply mined by epoch 12</td></tr>
+          <tr><td class="label">12+</td><td class="value">30+</td><td class="value">Minimal</td><td class="value">Heritage reserve. Chain runs on fees.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Scratchpad Evolution</span>
+        </div>
+        <span class="spec-tag">PER EPOCH</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Each epoch produces a new 4 GB mining scratchpad. For epoch &gt; 0, the scratchpad key depends on the block that ended the previous epoch — it cannot be pre-computed.</p>
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="label">Epoch 0 key</td><td class="value" style="font-family:var(--font-mono)">SHA256(MAGIC || "EPOCH" || epoch_u32)</td></tr>
+          <tr><td class="label">Epoch N key (N &gt; 0)</td><td class="value" style="font-family:var(--font-mono)">SHA256(MAGIC || "EPOCH" || epoch_u32 || anchor_block_id)</td></tr>
+          <tr><td class="label">Scratchpad size</td><td class="value">4,096 MB (4 GB)</td></tr>
+          <tr><td class="label">Pre-computation</td><td class="highlight">Impossible for epoch &gt; 0</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

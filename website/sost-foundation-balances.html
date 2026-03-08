@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Foundation Balances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold: #b8860b;
+    --gold-dim: rgba(184,134,11,0.2);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo img { height: 72px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .hero-logo { margin-bottom: 20px; }
+  .hero-logo img { height: 60px; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+  .spec-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); gap: 10px; flex-wrap: wrap; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-icon.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-left: auto; }
+  .spec-body { padding: 20px; }
+
+  .code-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .code-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .gold { color: var(--gold); }
+  .code-table .pending { color: var(--text-muted); font-style: italic; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-card .stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .chart-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+  .chart-wrap canvas { max-height: 350px; }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+      <a href="sost-foundation-balances.html" class="active">Balances</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-logo"><img src="sost-logo.png" alt="SOST Protocol"></div>
+    <div class="hero-label fade-in">Foundation Transparency</div>
+    <h1 class="fade-in delay-1">Foundation <span>Balances</span></h1>
+    <p class="hero-sub fade-in delay-2">Real-time transparency for Foundation PoPC commitments, reserve accumulation, and smart contract registry. All data publicly verifiable on-chain.</p>
+  </div>
+</section>
+
+<!-- Constitutional Gold Reserves intro -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">OVERVIEW</div>
+      <div class="section-title">Constitutional Gold <span class="accent">Reserves</span></div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-icon gold"></div>
+        <span class="spec-label">Gold Vault On-Chain Address</span>
+        <span class="spec-tag">SOST CHAIN</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Field</th><th>Value</th></tr>
+          <tr><td class="label">Address</td><td style="font-size:11px;word-break:break-all;color:var(--gold)">sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</td></tr>
+          <tr><td class="label">Live Balance</td><td><a href="https://explorer.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">View on explorer.sostcore.com</a></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      Live SOST balance visible in the block explorer. This vault accumulates 25% of every block reward for XAUT/PAXG acquisition.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 1: Foundation PoPC Commitments -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 01</div>
+      <div class="section-title">Foundation PoPC <span class="accent">Commitments</span></div>
+    </div>
+
+    <div class="notice">
+      <strong>Constitutional Demonstration:</strong> The Foundation commits its own assets to PoPC as a constitutional demonstration of protocol alignment. Model A: XAUT remains in Foundation wallet, SOST bond locked. Model B: PAXG locked in immutable escrow, SOST reward received immediately.
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-icon gold"></div>
+        <span class="spec-label">Foundation PoPC Contracts</span>
+        <span class="spec-tag">ETHEREUM MAINNET</span>
+      </div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table" id="foundationTable">
+          <tr>
+            <th>Model</th><th>Asset</th><th>Amount</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Contract</th><th>Etherscan</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="spec-block" style="border-color:var(--gold);margin-top:24px;">
+      <div class="spec-header" style="border-bottom-color:var(--gold);">
+        <div class="spec-icon gold"></div>
+        <span class="spec-label">Foundation Ethereum Wallet (PoPC Phase 1)</span>
+        <span class="spec-tag" style="color:#eab308;background:rgba(234,179,8,0.12);padding:2px 10px;border-radius:4px;font-weight:600;letter-spacing:1px;">PENDING</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Field</th><th>Value</th></tr>
+          <tr><td>Address</td><td style="font-size:11px;word-break:break-all;color:var(--gold)">0xd38955822b88867CD010946F0Ba25680B9DfC7a6</td></tr>
+          <tr><td>Purpose</td><td>This wallet will hold XAUT/PAXG committed under the Foundation's Model A PoPC contract. Contract deployment pending — estimated Mar 28, 2026.</td></tr>
+          <tr><td>Status</td><td style="color:#eab308;font-weight:600;">PENDING — contract not yet signed.</td></tr>
+          <tr><td>Verify on Etherscan</td><td><a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;font-size:11px;word-break:break-all;">etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6</a></td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 2: Reserve Summary -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 02</div>
+      <div class="section-title">Reserve <span class="accent">Summary</span></div>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+  </div>
+</section>
+
+<!-- SECTION 3: Accumulation Chart -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 03</div>
+      <div class="section-title">Vault Accumulation <span class="accent">Projection</span></div>
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="accChart"></canvas>
+    </div>
+
+    <div class="notice">
+      <strong>Projection basis:</strong> 25% of genesis reward (7.85100863 SOST/block) at 6 blocks/hour, 24h/day. Gold Vault and PoPC Pool each receive 25% of every block reward. Actual accumulation depends on block times and emission decay.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: All PoPC Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 04</div>
+      <div class="section-title">All PoPC <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-icon cyan"></div>
+        <span class="spec-label">Public Contract Registry</span>
+        <span class="spec-tag">ON-CHAIN VERIFIED</span>
+      </div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table" id="registryTable">
+          <tr>
+            <th>Contract ID</th><th>Type</th><th>Asset</th><th>Amount (oz)</th><th>Duration</th><th>Start</th><th>Status</th><th>Address</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      This registry will update as contracts are deployed on Ethereum mainnet.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px">SOST PROTOCOL &mdash; <a href="https://sostcore.com">sostcore.com</a></p>
+    <p style="color:var(--text-muted);font-size:10px;line-height:1.6">Data updated manually. On-chain balances verified via <a href="https://explorer.sostcore.com" target="_blank" rel="noopener">explorer.sostcore.com</a>. Ethereum contract addresses published upon deployment (est. Mar 28, 2026).</p>
+  </div>
+</footer>
+
+<script>
+const RESERVE_DATA = {
+  foundationContracts: [
+    {
+      model: 'Model A',
+      asset: 'XAUT',
+      amount: 'TBD oz',
+      duration: '3 months',
+      start: 'Mar 28, 2026',
+      end: 'Jun 28, 2026',
+      status: 'PENDING',
+      contract: 'TBD (Ethereum mainnet)',
+      etherscan: 'TBD'
+    },
+    {
+      model: 'Model B',
+      asset: 'PAXG',
+      amount: 'TBD oz',
+      duration: '3 months',
+      start: 'Mar 28, 2026',
+      end: 'Jun 28, 2026',
+      status: 'PENDING',
+      contract: 'TBD (Ethereum mainnet)',
+      etherscan: 'TBD'
+    }
+  ],
+  summary: {
+    totalXAUT: 'TBD',
+    totalPAXG: 'TBD',
+    combinedUSD: 'TBD',
+    activeContracts: 0
+  },
+  genesisReward: 7.85100863,
+  blocksPerHour: 6
+};
+
+// Render Foundation Contracts table
+(function() {
+  var tb = document.getElementById('foundationTable');
+  RESERVE_DATA.foundationContracts.forEach(function(c) {
+    var tr = document.createElement('tr');
+    var statusClass = c.status === 'PENDING' ? 'pending' : (c.status === 'ACTIVE' ? 'green' : '');
+    tr.innerHTML = '<td class="highlight">' + c.model + '</td><td class="gold">' + c.asset + '</td><td>' + c.amount + '</td><td>' + c.duration + '</td><td>' + c.start + '</td><td>' + c.end + '</td><td class="' + statusClass + '">' + c.status + '</td><td style="font-size:10px">' + c.contract + '</td><td style="font-size:10px">' + c.etherscan + '</td>';
+    tb.appendChild(tr);
+  });
+})();
+
+// Render Summary cards
+(function() {
+  var grid = document.getElementById('statGrid');
+  var cards = [
+    { label: 'Total XAUT Committed', val: RESERVE_DATA.summary.totalXAUT, sub: 'troy ounces', color: 'var(--gold)' },
+    { label: 'Total PAXG Committed', val: RESERVE_DATA.summary.totalPAXG, sub: 'troy ounces', color: 'var(--gold)' },
+    { label: 'Combined USD Value', val: RESERVE_DATA.summary.combinedUSD, sub: 'at current spot', color: 'var(--green-primary)' },
+    { label: 'Active Contracts', val: RESERVE_DATA.summary.activeContracts, sub: 'PENDING', color: 'var(--red-primary)' }
+  ];
+  cards.forEach(function(c) {
+    var div = document.createElement('div');
+    div.className = 'stat-card';
+    div.innerHTML = '<div class="stat-label">' + c.label + '</div><div class="stat-val" style="color:' + c.color + '">' + c.val + '</div><div class="stat-sub">' + c.sub + '</div>';
+    grid.appendChild(div);
+  });
+})();
+
+// Render Registry table
+(function() {
+  var tb = document.getElementById('registryTable');
+  RESERVE_DATA.foundationContracts.forEach(function(c, i) {
+    var tr = document.createElement('tr');
+    var statusClass = c.status === 'PENDING' ? 'pending' : 'green';
+    tr.innerHTML = '<td>FOUND-' + String(i+1).padStart(3,'0') + '</td><td class="highlight">' + c.model + '</td><td class="gold">' + c.asset + '</td><td>' + c.amount + '</td><td>' + c.duration + '</td><td>' + c.start + '</td><td class="' + statusClass + '">' + c.status + '</td><td style="font-size:10px">' + c.contract + '</td>';
+    tb.appendChild(tr);
+  });
+})();
+
+// Accumulation Chart
+(function() {
+  var rewardPerBlock = RESERVE_DATA.genesisReward;
+  var vaultShare = 0.25;
+  var blocksPerDay = RESERVE_DATA.blocksPerHour * 24;
+  var labels = [];
+  var goldData = [];
+  var popcData = [];
+  for (var m = 1; m <= 12; m++) {
+    labels.push('Month ' + m);
+    var days = m * 30.44;
+    var totalBlocks = days * blocksPerDay;
+    var vaultAccum = totalBlocks * rewardPerBlock * vaultShare;
+    goldData.push(Math.round(vaultAccum * 100) / 100);
+    popcData.push(Math.round(vaultAccum * 100) / 100);
+  }
+  var ctx = document.getElementById('accChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Gold Vault (25%)',
+          data: goldData,
+          borderColor: '#b8860b',
+          backgroundColor: 'rgba(184,134,11,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#b8860b'
+        },
+        {
+          label: 'PoPC Pool (25%)',
+          data: popcData,
+          borderColor: '#e63946',
+          backgroundColor: 'rgba(230,57,70,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#e63946'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + ' SOST'; }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+          grid: { color: '#333333' }
+        },
+        y: {
+          ticks: {
+            color: '#64748b',
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            callback: function(v) { return v.toLocaleString() + ' SOST'; }
+          },
+          grid: { color: '#333333' }
+        }
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

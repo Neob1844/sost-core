@@ -61,7 +61,7 @@ struct TxOutput {
     std::array<Byte, 20> pubkey_hash{};  // RIPEMD160(SHA256(pubkey))
     std::vector<Byte> payload;           // typed metadata (empty in v1 active types)
 
-    // payload_len is serialized as uint8, so payload.size() must be <= 255.
+    // payload_len is serialized as uint16 LE, so payload.size() must be <= 512.
     bool SerializeTo(std::vector<Byte>& out, std::string* err = nullptr) const;
 
     static bool DeserializeFrom(

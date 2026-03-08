@@ -315,7 +315,7 @@ static bool B01_header_size() {
     hdr.version = 1;
     hdr.prev_block_hash = MakeHash(0xAA);
     hdr.merkle_root = MakeHash(0xBB);
-    hdr.timestamp = 1772236800;
+    hdr.timestamp = 1773360000;
     hdr.bits_q = 353075;
     hdr.nonce = 42;
     hdr.height = 0;
@@ -335,7 +335,7 @@ static bool B02_header_roundtrip() {
     hdr.version = 1;
     hdr.prev_block_hash = MakeHash(0x11);
     hdr.merkle_root = MakeHash(0x22);
-    hdr.timestamp = 1772236800;
+    hdr.timestamp = 1773360000;
     hdr.bits_q = 353075;
     hdr.nonce = 999999;
     hdr.height = 1000;
@@ -358,7 +358,7 @@ static bool B03_block_hash_deterministic() {
     hdr.version = 1;
     hdr.prev_block_hash = MakeHash(0xAA);
     hdr.merkle_root = MakeHash(0xBB);
-    hdr.timestamp = 1772236800;
+    hdr.timestamp = 1773360000;
     hdr.bits_q = 353075;
     hdr.nonce = 42;
     hdr.height = 0;
@@ -384,7 +384,7 @@ static bool B03_block_hash_deterministic() {
 static bool B04_hash_manual_verification() {
     BlockHeader hdr;
     hdr.version = 1;
-    hdr.timestamp = 1772236800;
+    hdr.timestamp = 1773360000;
     hdr.bits_q = 353075;
 
     auto serialized = hdr.Serialize();
@@ -408,7 +408,7 @@ static bool B05_deserialize_short() {
 // B06: Genesis header helper
 static bool B06_genesis_header() {
     Hash256 root = MakeHash(0xAA);
-    int64_t ts = 1772236800;
+    int64_t ts = 1773360000;
     uint32_t bits = 353075;
 
     BlockHeader hdr = MakeGenesisHeader(root, ts, bits);
@@ -479,7 +479,7 @@ static bool B08_le_encoding() {
 static bool B09_hash_hex() {
     BlockHeader hdr;
     hdr.version = 1;
-    hdr.timestamp = 1772236800;
+    hdr.timestamp = 1773360000;
     hdr.bits_q = 353075;
 
     std::string hex = hdr.ComputeBlockHashHex();
@@ -527,7 +527,7 @@ static bool B12_block_roundtrip() {
 
     Block blk;
     blk.header.version = 1;
-    blk.header.timestamp = 1772236800;
+    blk.header.timestamp = 1773360000;
     blk.header.bits_q = 353075;
     blk.header.height = 0;
 
@@ -680,7 +680,7 @@ static bool B18_hash_chain() {
     blk0.version = 1;
     blk0.prev_block_hash = Hash256{};
     blk0.merkle_root = MakeHash(0x11);
-    blk0.timestamp = 1772236800;
+    blk0.timestamp = 1773360000;
     blk0.bits_q = 353075;
     blk0.nonce = 42;
     blk0.height = 0;
@@ -719,7 +719,7 @@ static bool I01_full_block_lifecycle() {
     // Build block
     Block blk;
     blk.header.version = 1;
-    blk.header.timestamp = 1772236800;
+    blk.header.timestamp = 1773360000;
     blk.header.bits_q = 353075;
     blk.header.height = 0;
 
@@ -758,7 +758,7 @@ static bool I02_two_block_chain() {
     Block blk0;
     blk0.header.version = 1;
     blk0.header.prev_block_hash = Hash256{};
-    blk0.header.timestamp = 1772236800;
+    blk0.header.timestamp = 1773360000;
     blk0.header.bits_q = 353075;
     blk0.header.height = 0;
     blk0.txs.push_back(MakeTestCoinbase(0, 785100863, 0,
@@ -802,7 +802,7 @@ static bool I03_serialize_deserialize_verify() {
 
     Block blk;
     blk.header.version = 1;
-    blk.header.timestamp = 1772236800;
+    blk.header.timestamp = 1773360000;
     blk.header.bits_q = 353075;
     blk.header.nonce = 12345;
     blk.header.height = 42;

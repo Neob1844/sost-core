@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Metals Reserve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold-primary: #b8860b;
+    --gold-dim: #b8860b33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(184,134,11,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--gold-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--gold-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+  .protocol-badge .tag { color: var(--gold-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+  .section-title .gold { color: var(--gold-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-icon.gold { background: var(--gold-primary); box-shadow: 0 0 6px var(--gold-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+  .code-table .gold { color: var(--gold-primary); font-weight: 600; }
+
+  /* CODE SNIPPET */
+  .code-snippet { background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; margin: 16px 0; white-space: pre; font-family: var(--font-mono); }
+  .code-snippet .keyword { color: var(--red-primary); }
+  .code-snippet .fn { color: var(--cyan-primary); }
+  .code-snippet .comment { color: var(--text-muted); font-style: italic; }
+  .code-snippet .num { color: var(--green-primary); }
+
+  /* ARCH FLOW */
+  .arch-flow { display: flex; align-items: stretch; gap: 0; margin: 24px 0; flex-wrap: wrap; }
+  .arch-layer { flex: 1; min-width: 180px; padding: 20px; border: 1px solid var(--border-dim); background: var(--bg-card); text-align: center; position: relative; }
+  .arch-layer:first-child { border-radius: 8px 0 0 8px; }
+  .arch-layer:last-child { border-radius: 0 8px 8px 0; }
+  .arch-layer h3 { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .arch-layer p { font-size: 12px; color: var(--text-dim); }
+  .arch-layer .arrow { position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--gold-primary); font-size: 18px; z-index: 2; }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--gold-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+  .notice.red { border-left-color: var(--red-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .arch-flow { flex-direction: column; }
+    .arch-layer { border-radius: 0; }
+    .arch-layer:first-child { border-radius: 8px 8px 0 0; }
+    .arch-layer:last-child { border-radius: 0 0 8px 8px; }
+    .arch-layer .arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html" class="active">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Metals Reserve Protocol</div>
+    <h1 class="fade-in delay-1">Every Block Buys <span>Gold.</span><br>Heritage <span>Sealed.</span></h1>
+    <p class="hero-sub fade-in delay-2">25% of every block reward flows to the Metals Funding Vault by consensus. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an auditable execution pipeline. Purchased reserves are deposited into a Heritage Vault on Ethereum mainnet — sealed by default, perpetual.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">GOLD-FIRST</span>
+      <span class="sep">|</span>
+      <span class="val">25% coinbase &middot; Heritage sealed &middot; XAUt + PAXG</span>
+    </div>
+  </div>
+</section>
+
+<!-- TWO-VAULT ARCHITECTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <h2 class="section-title">Two-Vault <span class="gold">Architecture</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy gold. The Reserve Vault needs maximum immutability.</p>
+
+    <div class="arch-flow fade-in delay-1">
+      <div class="arch-layer">
+        <h3 style="color:var(--red-primary)">Coinbase</h3>
+        <p>Block reward mined</p>
+        <span class="arrow">&rarr;</span>
+      </div>
+      <div class="arch-layer">
+        <h3 style="color:var(--gold-primary)">Funding Vault</h3>
+        <p>25% accumulates (SOST chain)</p>
+        <span class="arrow">&rarr;</span>
+      </div>
+      <div class="arch-layer">
+        <h3 style="color:var(--cyan-primary)">TWAP Execution</h3>
+        <p>Sell SOST, buy XAUT/PAXG</p>
+        <span class="arrow">&rarr;</span>
+      </div>
+      <div class="arch-layer">
+        <h3 style="color:var(--green-primary)">Reserve Vault</h3>
+        <p>Heritage sealed (Ethereum)</p>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-2">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--gold-dim);color:var(--gold-primary);">SOST CHAIN</div>
+        <h3 style="color:var(--gold-primary)">Metals Funding Vault</h3>
+        <p>Hardcoded coinbase destination. Receives exactly 25% of each block subsidy by consensus (q = reward // 4). Any block without the correct vault output is invalid. Accumulates SOST for periodic conversion.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ETHEREUM MAINNET</div>
+        <h3 style="color:var(--green-primary)">Heritage Reserve Vault</h3>
+        <p>Holds allowlisted precious-metal tokens (XAUt and PAXG). Sealed by default — no outbound transfers in normal operation. Reserve assets are intended to remain perpetual and untouched while SOST exists.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- G-RULES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <h2 class="section-title">Constitutional <span class="gold">Rules</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <span class="spec-label">Metals Reserve Constitution</span>
+        </div>
+        <span class="spec-tag">G1 &ndash; G10</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Rule</th><th>Provision</th></tr>
+          <tr><td class="gold">G1</td><td class="value">Every valid block MUST pay the Funding Vault exactly q = reward // 4. Otherwise invalid.</td></tr>
+          <tr><td class="gold">G2</td><td class="value">Two-vault separation: Funding Vault is operational; Reserve Vault is cold storage.</td></tr>
+          <tr><td class="gold">G3</td><td class="value">Reserve Vault deployed on Ethereum mainnet. Heritage sealed by default.</td></tr>
+          <tr><td class="gold">G4</td><td class="value">Purchases begin no earlier than 6 months after genesis, only once market readiness is met.</td></tr>
+          <tr><td class="gold">G5</td><td class="value">Purchases executed in batches following rule-based TWAP policy, not discretionary timing.</td></tr>
+          <tr><td class="gold">G6</td><td class="value">Reserve limited to allowlisted tokens (XAUt/PAXG). USDC/USDT only as staging (&le;72h).</td></tr>
+          <tr><td class="gold">G7</td><td class="value">Default 50/50 XAUt/PAXG. Adjustable for future purchases only, disclosed in batch reports.</td></tr>
+          <tr><td class="gold">G8</td><td class="value">Foundation may redirect future purchases from threatened issuer without consensus.</td></tr>
+          <tr><td class="gold">G9</td><td class="value">Emergency Catastrophe dual gate: &ge;60% miner signaling + Foundation Execution Order.</td></tr>
+          <tr><td class="gold">G10</td><td class="value">Both vault addresses, all batch reports, and all transaction proofs MUST be publicly published.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXECUTION PIPELINE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Execution <span class="accent">Pipeline</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">No cross-chain bridge. No wrapped SOST. Automation is achieved through a deterministic execution stack with public attestations at every stage.</p>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Pipeline Components</span>
+        </div>
+        <span class="spec-tag">4 STAGES</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Stage</th><th>Role</th><th>Detail</th></tr>
+          <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Funding Vault balance, detects batch threshold</td></tr>
+          <tr><td class="gold">Batcher</td><td class="value">Order</td><td class="value">Creates signed execution order when threshold is met</td></tr>
+          <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips, purchases XAUT/PAXG, deposits to Reserve Vault</td></tr>
+          <tr><td class="gold">Attestor</td><td class="value">Audit</td><td class="value">Publishes public batch record with full transaction proofs</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">TWAP Execution Policy</span>
+        </div>
+        <span class="spec-tag">ANTI-MOMENTUM</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Convert Funding Vault SOST into XAUT/PAXG with minimal market impact, maximum traceability, and rule-based execution.</p>
+        <div class="code-snippet"><span class="comment">// Daily sell budget (rate-limited)</span>
+<span class="fn">DailySell</span> = <span class="keyword">min</span>(VaultBalance &times; <span class="num">0.25%</span>, DailyVolume &times; <span class="num">2%</span>)
+
+<span class="comment">// Split into micro-orders</span>
+Clips: <span class="num">48</span>/day (every 30 min) or <span class="num">96</span>/day (every 15 min)
+Type:  limit orders with explicit slippage tolerance
+
+<span class="comment">// Anti-crash layer</span>
+<span class="keyword">if</span> intraday drawdown &gt; <span class="num">-8%</span>: reduce budget or pause 24h
+<span class="keyword">if</span> spreads widen: sell less
+<span class="keyword">if</span> price drops rapidly: throttle, never accelerate</div>
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="label">Max daily volume</td><td class="value">2% of exchange daily volume</td></tr>
+          <tr><td class="label">Clips per day</td><td class="value">48-96 micro-orders</td></tr>
+          <tr><td class="label">Max slippage per clip</td><td class="value">0.5%-1.0%</td></tr>
+          <tr><td class="label">Crash throttle</td><td class="value">Reduce or pause on &gt;8% drawdown</td></tr>
+          <tr><td class="label">Order type</td><td class="value">Limit orders (no blind market selling)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Batch Record (Mandatory)</span>
+        </div>
+        <span class="spec-tag">AUDIT TRAIL</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Field</th><th>Description</th></tr>
+          <tr><td class="label">Execution window</td><td class="value">Day/time range of batch</td></tr>
+          <tr><td class="label">SOST sold</td><td class="value">Total amount and number of clips</td></tr>
+          <tr><td class="label">Venue(s)</td><td class="value">Exchange or OTC counterparties used</td></tr>
+          <tr><td class="label">Realized TWAP/VWAP</td><td class="value">Average execution price and total slippage</td></tr>
+          <tr><td class="label">Purchase proof</td><td class="value">XAUT/PAXG acquisition records</td></tr>
+          <tr><td class="label">Deposit hash</td><td class="value">Transaction hash proving deposit into Reserve Vault</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ALLOWLIST -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
+      <h2 class="section-title">Asset <span class="gold">Allowlist</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <span class="spec-label">Allowlisted Reserve Assets</span>
+        </div>
+        <span class="spec-tag">MAINNET V2</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Token</th><th>Issuer</th><th>Backing</th></tr>
+          <tr><td class="gold">XAUt</td><td class="value">Tether Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
+          <tr><td class="gold">PAXG</td><td class="value">Paxos Gold</td><td class="value">Physical gold, London Good Delivery bars</td></tr>
+        </table>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.8;">Staging assets: USDC and USDT may be used strictly as temporary staging during execution (&le;72 hours). They are not reserve assets. Expanding to other metals (silver, platinum, palladium, rhodium, iridium) is a roadmap item, not a promise.</p>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2">
+      <strong>Allowlist criteria:</strong> An asset may be added only if it satisfies (1) verifiable custody/audits, (2) sufficient liquidity, and (3) acceptable issuer risk and public documentation. The Foundation may redirect future purchases from a threatened issuer without consensus; previously purchased assets remain sealed.
+    </div>
+  </div>
+</section>
+
+<!-- ACCUMULATION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
+      <h2 class="section-title">Reserve <span class="gold">Accumulation</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <span class="spec-label">Gold Vault Projections</span>
+        </div>
+        <span class="spec-tag">25% OF COINBASE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Period</th><th>SOST Accumulated</th><th>Note</th></tr>
+          <tr><td class="label">Year 1</td><td class="gold">103,160 SOST</td><td class="value">Annual intake from coinbase</td></tr>
+          <tr><td class="label">Epoch 0 (years 0-2.5)</td><td class="gold">258,210 SOST</td><td class="value">First epoch total</td></tr>
+          <tr><td class="label">30 years (~12 epochs)</td><td class="gold">1,167,300 SOST</td><td class="value">~95% of lifetime allocation</td></tr>
+          <tr><td class="label">Lifetime total</td><td class="gold">~1,167,300 SOST</td><td class="value">25% of max supply</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Reserve Ratio (Observable Metric)</span>
+        </div>
+        <span class="spec-tag">NOT A PEG</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment">// Observable, public, verifiable — NOT a peg</span>
+<span class="fn">reserve_ratio</span> = reserve_value_usd / circulating_supply
+
+<span class="comment">// This does NOT grant redemption rights.</span>
+<span class="comment">// Markets may price this information as they see fit.</span></div>
+      </div>
+    </div>
+
+    <div class="notice red fade-in delay-3">
+      <strong>Not a peg, not a guarantee.</strong> The Metals Reserve does not represent a claim on gold by SOST holders. The reserve ratio is simply a transparent indicator of the reserve accumulated by the protocol. No redemption rights are implied.
+    </div>
+  </div>
+</section>
+
+<!-- TRUST MODEL -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 06</div>
+      <h2 class="section-title">Trust <span class="accent">Model</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Trust Boundaries</span>
+        </div>
+        <span class="spec-tag">LAYERED</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Layer</th><th>Trust Level</th><th>Mechanism</th></tr>
+          <tr><td class="label">Coinbase allocation</td><td class="green">Trustless</td><td class="value">Consensus-enforced (hardcoded validation rules)</td></tr>
+          <tr><td class="label">SOST&rarr;gold conversion</td><td class="value">Auditable</td><td class="value">Foundation-executed, public batch records</td></tr>
+          <tr><td class="label">Reserve Vault custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses</td></tr>
+          <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;60% miner signal + Foundation order</td></tr>
+          <tr><td class="label">Cross-chain bridge</td><td class="green">None required</td><td class="value">No bridge, no wSOST, no smart contract dependency</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+</body>
+</html>

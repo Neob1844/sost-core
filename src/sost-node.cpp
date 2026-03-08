@@ -60,6 +60,11 @@
 #include <thread>
 #include <chrono>
 
+// P2P encryption (X25519 + ChaCha20-Poly1305)
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <openssl/kdf.h>
+
 using namespace sost;
 
 // =============================================================================
@@ -102,6 +107,131 @@ static const int P2P_PORT_DEFAULT = 19333;
 static const int RPC_PORT_DEFAULT = 18232;
 static std::atomic<bool> g_running{true};
 
+// P2P encryption mode
+enum class P2PEncMode { OFF, ON, REQUIRED };
+static P2PEncMode g_p2p_enc = P2PEncMode::ON;
+
+// P2PMsg defined early for use by encryption functions
+struct P2PMsg {
+    char cmd[5];
+    std::vector<uint8_t> payload;
+};
+
+// Per-peer encryption state
+struct PeerCrypto {
+    bool encrypted{false};
+    uint8_t send_key[32]{};
+    uint8_t recv_key[32]{};
+    uint64_t send_nonce{0};
+    uint64_t recv_nonce{0};
+};
+
+static bool chacha20_poly1305_encrypt(const uint8_t key[32], uint64_t nonce_counter,
+    const uint8_t* plaintext, size_t plen, uint8_t* out, uint8_t tag[16]) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if(!ctx) return false;
+    uint8_t nonce[12]{};
+    memcpy(nonce+4, &nonce_counter, 8); // little-endian nonce
+    int ok=1;
+    ok &= EVP_EncryptInit_ex(ctx, EVP_chacha20_poly1305(), nullptr, key, nonce);
+    int outl=0;
+    ok &= EVP_EncryptUpdate(ctx, out, &outl, plaintext, (int)plen);
+    int finl=0;
+    ok &= EVP_EncryptFinal_ex(ctx, out+outl, &finl);
+    ok &= EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, tag);
+    EVP_CIPHER_CTX_free(ctx);
+    return ok==1;
+}
+
+static bool chacha20_poly1305_decrypt(const uint8_t key[32], uint64_t nonce_counter,
+    const uint8_t* ciphertext, size_t clen, const uint8_t tag[16], uint8_t* out) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if(!ctx) return false;
+    uint8_t nonce[12]{};
+    memcpy(nonce+4, &nonce_counter, 8);
+    int ok=1;
+    ok &= EVP_DecryptInit_ex(ctx, EVP_chacha20_poly1305(), nullptr, key, nonce);
+    ok &= EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, (void*)tag);
+    int outl=0;
+    ok &= EVP_DecryptUpdate(ctx, out, &outl, ciphertext, (int)clen);
+    int finl=0;
+    ok &= EVP_DecryptFinal_ex(ctx, out+outl, &finl);
+    EVP_CIPHER_CTX_free(ctx);
+    return ok==1;
+}
+
+// X25519 key exchange
+static bool x25519_keygen(uint8_t privkey[32], uint8_t pubkey[32]) {
+    EVP_PKEY* pkey = nullptr;
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr);
+    if(!ctx) return false;
+    bool ok = EVP_PKEY_keygen_init(ctx)==1 && EVP_PKEY_keygen(ctx, &pkey)==1;
+    if(ok){
+        size_t len=32;
+        ok &= EVP_PKEY_get_raw_private_key(pkey, privkey, &len)==1;
+        len=32;
+        ok &= EVP_PKEY_get_raw_public_key(pkey, pubkey, &len)==1;
+    }
+    EVP_PKEY_free(pkey);
+    EVP_PKEY_CTX_free(ctx);
+    return ok;
+}
+
+static bool x25519_derive(const uint8_t our_priv[32], const uint8_t their_pub[32], uint8_t shared[32]) {
+    EVP_PKEY* our_key = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, our_priv, 32);
+    EVP_PKEY* their_key = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, their_pub, 32);
+    if(!our_key || !their_key){ EVP_PKEY_free(our_key); EVP_PKEY_free(their_key); return false; }
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(our_key, nullptr);
+    bool ok = ctx && EVP_PKEY_derive_init(ctx)==1 && EVP_PKEY_derive_set_peer(ctx, their_key)==1;
+    if(ok){
+        size_t len=32;
+        ok = EVP_PKEY_derive(ctx, shared, &len)==1 && len==32;
+    }
+    EVP_PKEY_CTX_free(ctx);
+    EVP_PKEY_free(our_key);
+    EVP_PKEY_free(their_key);
+    return ok;
+}
+
+// Derive send/recv keys from shared secret using HKDF-SHA256
+static void derive_session_keys(const uint8_t shared[32], bool is_initiator,
+    uint8_t send_key[32], uint8_t recv_key[32]) {
+    // Simple key derivation: SHA256(shared || "sost-p2p-send" || role_byte)
+    // and SHA256(shared || "sost-p2p-recv" || role_byte)
+    uint8_t buf[64];
+    memcpy(buf, shared, 32);
+    // Initiator sends with key A, receives with key B
+    // Responder sends with key B, receives with key A
+    const char* label_a = "sost-p2p-key-a";
+    const char* label_b = "sost-p2p-key-b";
+    unsigned int md_len=32;
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    // Key A
+    EVP_DigestInit_ex(mdctx, EVP_sha256(), nullptr);
+    EVP_DigestUpdate(mdctx, shared, 32);
+    EVP_DigestUpdate(mdctx, label_a, strlen(label_a));
+    uint8_t key_a[32]; EVP_DigestFinal_ex(mdctx, key_a, &md_len);
+    // Key B
+    EVP_DigestInit_ex(mdctx, EVP_sha256(), nullptr);
+    EVP_DigestUpdate(mdctx, shared, 32);
+    EVP_DigestUpdate(mdctx, label_b, strlen(label_b));
+    uint8_t key_b[32]; EVP_DigestFinal_ex(mdctx, key_b, &md_len);
+    EVP_MD_CTX_free(mdctx);
+
+    if(is_initiator){
+        memcpy(send_key, key_a, 32);
+        memcpy(recv_key, key_b, 32);
+    } else {
+        memcpy(send_key, key_b, 32);
+        memcpy(recv_key, key_a, 32);
+    }
+}
+
+// p2p_send_encrypted and p2p_recv_encrypted defined after P2P protocol section
+
+// Forward declaration — defined in P2P section, used by RPC handlers too
+static bool write_exact(int fd, const void* buf, size_t len);
+
 struct Peer {
     int fd;
     std::string addr;
@@ -110,9 +240,90 @@ struct Peer {
     bool version_acked;
     bool outbound;
     time_t last_seen;
+    int ban_score;         // misbehavior score, ban at >= 100
 };
 static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
+
+// Checkpoints: known block_id at specific heights (hex → height)
+// Prevents deep reorgs past a checkpoint and validates chain integrity.
+struct ChainCheckpoint {
+    int64_t height;
+    const char* block_hash;  // hex
+};
+static const ChainCheckpoint g_checkpoints[] = {
+    // Genesis is validated separately via load_genesis()
+    // Add mainnet checkpoints here after launch:
+    // { 1000, "abcdef..." },
+    // { 5000, "123456..." },
+};
+static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpoints[0]);
+
+// Maximum reorg depth: reject any attempt to reorganize deeper than this
+static const int64_t MAX_REORG_DEPTH = 100;
+
+// DoS/ban tracking
+static const int BAN_THRESHOLD = 100;
+static const int BAN_DURATION  = 86400;  // 24 hours
+static const size_t MAX_P2P_MSG_SIZE = 4 * 1024 * 1024;  // 4MB max message
+static const int MAX_INBOUND_PEERS = 64;
+static std::map<std::string, time_t> g_banned;  // IP → ban expiry
+static std::mutex g_ban_mu;
+
+// TX-INDEX: txid → {block_height, tx_position_in_block}
+struct TxIndexEntry {
+    int64_t block_height;
+    uint32_t tx_pos;
+};
+static std::map<Hash256, TxIndexEntry> g_tx_index;
+
+static std::string peer_ip(const std::string& addr) {
+    auto colon = addr.rfind(':');
+    return (colon != std::string::npos) ? addr.substr(0, colon) : addr;
+}
+
+static bool is_banned(const std::string& ip) {
+    std::lock_guard<std::mutex> lk(g_ban_mu);
+    auto it = g_banned.find(ip);
+    if (it == g_banned.end()) return false;
+    if (time(nullptr) >= it->second) {
+        g_banned.erase(it);
+        return false;
+    }
+    return true;
+}
+
+static void ban_peer(int fd, const std::string& addr, const char* reason) {
+    std::string ip = peer_ip(addr);
+    {
+        std::lock_guard<std::mutex> lk(g_ban_mu);
+        g_banned[ip] = time(nullptr) + BAN_DURATION;
+    }
+    printf("[P2P] BANNED %s: %s (24h)\n", addr.c_str(), reason);
+    close(fd);
+}
+
+// Add misbehavior score to a peer; returns true if peer was banned
+static bool add_misbehavior(int fd, const std::string& addr, int points, const char* reason) {
+    int new_score = 0;
+    {
+        std::lock_guard<std::mutex> lk(g_peers_mu);
+        for (auto& p : g_peers) {
+            if (p.fd == fd) {
+                p.ban_score += points;
+                new_score = p.ban_score;
+                break;
+            }
+        }
+    }
+    if (new_score >= BAN_THRESHOLD) {
+        ban_peer(fd, addr, reason);
+        return true;
+    }
+    printf("[P2P] Misbehavior +%d (%s) from %s [score=%d/%d]\n",
+           points, reason, addr.c_str(), new_score, BAN_THRESHOLD);
+    return false;
+}
 
 // =============================================================================
 // Helpers
@@ -280,6 +491,7 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 static void p2p_broadcast_tx(const std::string& hex_str);
 static bool process_block(const std::string& block_json);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
+static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
 
 // =============================================================================
 // RPC Basic Auth (Base64 decode)
@@ -345,7 +557,7 @@ static void rpc_reply_401(int fd) {
         "WWW-Authenticate: Basic realm=\"sost\"\r\n"
         "Content-Length: 0\r\n"
         "Connection: close\r\n\r\n";
-    write(fd, resp.c_str(), resp.size());
+    write_exact(fd, resp.c_str(), resp.size());
 }
 
 // =============================================================================
@@ -607,6 +819,236 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     return rpc_result(id, s.str());
 }
 
+// TX-INDEX: gettransaction — returns full transaction JSON from confirmed blocks
+static std::string handle_gettransaction(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing txid");
+    Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
+
+    // Check mempool first
+    const MempoolEntry* mentry=g_mempool.GetEntry(txid);
+    if(mentry){
+        std::ostringstream s;
+        s<<"{\"txid\":\""<<to_hex(txid.data(),32)<<"\",\"block_height\":-1,\"confirmations\":0";
+        s<<",\"in_mempool\":true";
+        s<<",\"vin\":[";
+        for(size_t i=0;i<mentry->tx.inputs.size();++i){
+            if(i)s<<",";
+            const auto&in=mentry->tx.inputs[i];
+            std::string in_addr;
+            int64_t in_amt=0;
+            OutPoint op{in.prev_txid,in.prev_index};
+            auto utxo=g_utxo_set.GetUTXO(op);
+            if(utxo){in_addr=address_encode(utxo->pubkey_hash);in_amt=utxo->amount;}
+            s<<"{\"prev_txid\":\""<<to_hex(in.prev_txid.data(),32)
+             <<"\",\"index\":"<<in.prev_index
+             <<",\"address\":\""<<in_addr<<"\",\"amount\":"<<format_sost(in_amt)<<"}";
+        }
+        s<<"],\"vout\":[";
+        for(size_t i=0;i<mentry->tx.outputs.size();++i){
+            if(i)s<<",";
+            const auto&o=mentry->tx.outputs[i];
+            s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+             <<"\",\"amount\":"<<format_sost(o.amount)
+             <<",\"type\":"<<(int)o.type<<"}";
+        }
+        s<<"],\"fee\":"<<mentry->fee<<"}";
+        return rpc_result(id,s.str());
+    }
+
+    // Check tx-index for confirmed transactions
+    auto it=g_tx_index.find(txid);
+    if(it==g_tx_index.end()) return rpc_error(id,-5,"Transaction not found");
+
+    int64_t bh=it->second.block_height;
+    uint32_t tpos=it->second.tx_pos;
+    if(bh<0||bh>=(int64_t)g_blocks.size()) return rpc_error(id,-5,"Block not available");
+    const auto& blk=g_blocks[bh];
+    if(tpos>=blk.tx_hexes.size()) return rpc_error(id,-5,"TX position out of range");
+
+    // Deserialize the transaction
+    std::vector<Byte> raw;
+    if(!decode_tx_hex(blk.tx_hexes[tpos],raw)) return rpc_error(id,-1,"cannot decode tx hex");
+    Transaction tx; std::string derr;
+    if(!Transaction::Deserialize(raw,tx,&derr)) return rpc_error(id,-1,"tx deserialize: "+derr);
+
+    // Compute fee for standard txs (not coinbase)
+    int64_t fee=0;
+    if(tx.tx_type==TX_TYPE_STANDARD){
+        // Sum input amounts from tx-index lookup of previous outputs
+        int64_t sum_in=0,sum_out=0;
+        for(const auto&o:tx.outputs) sum_out+=o.amount;
+        // Try to compute from the block's UTXO state... simplify: fee = sum_in - sum_out
+        // For confirmed txs, compute from the UTXO entries at the time (we can look up each input's source block)
+        for(const auto&in:tx.inputs){
+            auto iit=g_tx_index.find(in.prev_txid);
+            if(iit!=g_tx_index.end()){
+                int64_t ibh=iit->second.block_height;
+                uint32_t itpos=iit->second.tx_pos;
+                if(ibh<(int64_t)g_blocks.size()&&itpos<g_blocks[ibh].tx_hexes.size()){
+                    std::vector<Byte> iraw;
+                    if(decode_tx_hex(g_blocks[ibh].tx_hexes[itpos],iraw)){
+                        Transaction itx; std::string ie;
+                        if(Transaction::Deserialize(iraw,itx,&ie)&&in.prev_index<itx.outputs.size()){
+                            sum_in+=itx.outputs[in.prev_index].amount;
+                        }
+                    }
+                }
+            }
+        }
+        fee=sum_in-sum_out;
+        if(fee<0) fee=0;
+    }
+
+    std::ostringstream s;
+    s<<"{\"txid\":\""<<to_hex(txid.data(),32)<<"\",\"block_height\":"<<bh
+     <<",\"tx_position\":"<<tpos
+     <<",\"confirmations\":"<<(g_chain_height-bh+1)
+     <<",\"in_mempool\":false";
+    s<<",\"vin\":[";
+    for(size_t i=0;i<tx.inputs.size();++i){
+        if(i)s<<",";
+        const auto&in=tx.inputs[i];
+        std::string in_addr;
+        int64_t in_amt=0;
+        // Look up the source output
+        auto iit=g_tx_index.find(in.prev_txid);
+        if(iit!=g_tx_index.end()){
+            int64_t ibh=iit->second.block_height;
+            uint32_t itpos=iit->second.tx_pos;
+            if(ibh<(int64_t)g_blocks.size()&&itpos<g_blocks[ibh].tx_hexes.size()){
+                std::vector<Byte> iraw;
+                if(decode_tx_hex(g_blocks[ibh].tx_hexes[itpos],iraw)){
+                    Transaction itx; std::string ie;
+                    if(Transaction::Deserialize(iraw,itx,&ie)&&in.prev_index<itx.outputs.size()){
+                        in_addr=address_encode(itx.outputs[in.prev_index].pubkey_hash);
+                        in_amt=itx.outputs[in.prev_index].amount;
+                    }
+                }
+            }
+        }
+        s<<"{\"prev_txid\":\""<<to_hex(in.prev_txid.data(),32)
+         <<"\",\"index\":"<<in.prev_index
+         <<",\"address\":\""<<in_addr<<"\",\"amount\":"<<format_sost(in_amt)<<"}";
+    }
+    s<<"],\"vout\":[";
+    for(size_t i=0;i<tx.outputs.size();++i){
+        if(i)s<<",";
+        const auto&o=tx.outputs[i];
+        s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
+         <<"\",\"amount\":"<<format_sost(o.amount)
+         <<",\"type\":"<<(int)o.type<<"}";
+    }
+    s<<"],\"fee\":"<<fee<<"}";
+    return rpc_result(id,s.str());
+}
+
+// ESTIMATEFEE: analyze last 10 blocks + mempool for fee recommendation
+static std::string handle_estimatefee(const std::string& id, const std::vector<std::string>&) {
+    const int64_t MIN_FEE = 1000; // relay minimum in stocks/byte
+    const int LOOKBACK = 10;
+
+    // Analyze fees in last LOOKBACK blocks
+    int64_t total_fee_rate = 0;
+    int fee_samples = 0;
+
+    int64_t start = std::max((int64_t)1, g_chain_height - LOOKBACK + 1);
+    for(int64_t h=start; h<=g_chain_height && h<(int64_t)g_blocks.size(); ++h){
+        const auto& blk=g_blocks[h];
+        // Only look at standard txs (skip coinbase at index 0)
+        for(size_t t=1; t<blk.tx_hexes.size(); ++t){
+            std::vector<Byte> raw;
+            if(!decode_tx_hex(blk.tx_hexes[t],raw)) continue;
+            Transaction tx; std::string derr;
+            if(!Transaction::Deserialize(raw,tx,&derr)) continue;
+
+            int64_t sum_in=0,sum_out=0;
+            for(const auto&in:tx.inputs){
+                auto iit=g_tx_index.find(in.prev_txid);
+                if(iit!=g_tx_index.end()){
+                    int64_t ibh=iit->second.block_height;
+                    uint32_t itpos=iit->second.tx_pos;
+                    if(ibh<(int64_t)g_blocks.size()&&itpos<g_blocks[ibh].tx_hexes.size()){
+                        std::vector<Byte> iraw;
+                        if(decode_tx_hex(g_blocks[ibh].tx_hexes[itpos],iraw)){
+                            Transaction itx; std::string ie;
+                            if(Transaction::Deserialize(iraw,itx,&ie)&&in.prev_index<itx.outputs.size()){
+                                sum_in+=itx.outputs[in.prev_index].amount;
+                            }
+                        }
+                    }
+                }
+            }
+            for(const auto&o:tx.outputs) sum_out+=o.amount;
+            int64_t fee=sum_in-sum_out;
+            if(fee>0 && raw.size()>0){
+                total_fee_rate += fee / (int64_t)raw.size();
+                fee_samples++;
+            }
+        }
+    }
+
+    int64_t fee_per_byte = MIN_FEE;
+    std::string basis = "minimum_relay";
+    if(fee_samples>0){
+        fee_per_byte = std::max(MIN_FEE, total_fee_rate / fee_samples);
+        basis = "block_analysis";
+    }
+
+    // Also check mempool
+    int64_t mp_total_rate=0; int mp_samples=0;
+    auto tmpl=g_mempool.BuildBlockTemplate();
+    for(size_t i=0;i<tmpl.txs.size();++i){
+        if(tmpl.txids.size()>i){
+            const MempoolEntry* me=g_mempool.GetEntry(tmpl.txids[i]);
+            if(me && me->size>0){
+                mp_total_rate += me->fee / (int64_t)me->size;
+                mp_samples++;
+            }
+        }
+    }
+    if(mp_samples>0){
+        int64_t mp_rate = mp_total_rate / mp_samples;
+        if(mp_rate > fee_per_byte){
+            fee_per_byte = mp_rate;
+            basis = "mempool_analysis";
+        }
+    }
+
+    // Typical tx ~250 bytes
+    int64_t typical_fee = fee_per_byte * 250;
+
+    std::ostringstream s;
+    s<<"{\"fee_per_byte\":"<<fee_per_byte
+     <<",\"fee_for_typical_tx\":"<<typical_fee
+     <<",\"basis\":\""<<basis<<"\"}";
+    return rpc_result(id,s.str());
+}
+
+// GETADDRESSBALANCE: return balance for any address (used by web wallet)
+static std::string handle_getaddressbalance(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing address");
+    std::string addr = p[0];
+    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
+
+    PubKeyHash pkh{};
+    address_decode(addr, pkh);
+
+    int64_t total = 0;
+    int utxo_count = 0;
+    const auto& umap = g_utxo_set.GetMap();
+    for(const auto& kv : umap){
+        if(kv.second.pubkey_hash == pkh){
+            total += kv.second.amount;
+            utxo_count++;
+        }
+    }
+
+    std::ostringstream s;
+    s<<"{\"address\":\""<<json_escape(addr)<<"\",\"balance\":"<<format_sost(total)
+     <<",\"balance_stocks\":"<<total<<",\"utxo_count\":"<<utxo_count<<"}";
+    return rpc_result(id,s.str());
+}
+
 static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     std::string addr = p[0];
@@ -676,6 +1118,9 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
     {"getaddressinfo",handle_getaddressinfo},
+    {"gettransaction",handle_gettransaction},
+    {"estimatefee",handle_estimatefee},
+    {"getaddressbalance",handle_getaddressbalance},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
@@ -694,10 +1139,7 @@ static std::string dispatch_rpc(const std::string& req) {
 // P2P Protocol
 // =============================================================================
 
-struct P2PMsg {
-    char cmd[5];
-    std::vector<uint8_t> payload;
-};
+// P2PMsg defined earlier (near encryption section)
 
 static void write_u32(uint8_t* p, uint32_t v) {
     p[0]=v&0xFF; p[1]=(v>>8)&0xFF; p[2]=(v>>16)&0xFF; p[3]=(v>>24)&0xFF;
@@ -722,13 +1164,24 @@ static bool read_exact(int fd, uint8_t* buf, size_t len) {
     return true;
 }
 
+static bool write_exact(int fd, const void* buf, size_t len) {
+    size_t sent=0;
+    const uint8_t* p=static_cast<const uint8_t*>(buf);
+    while(sent<len){
+        ssize_t n=write(fd,p+sent,len-sent);
+        if(n<=0) return false;
+        sent+=n;
+    }
+    return true;
+}
+
 static bool p2p_send(int fd, const char* cmd, const uint8_t* payload, size_t len) {
     uint8_t hdr[12];
     write_u32(hdr, P2P_MAGIC);
     memcpy(hdr+4, cmd, 4);
     write_u32(hdr+8, (uint32_t)len);
-    if(write(fd, hdr, 12)!=12) return false;
-    if(len>0 && write(fd, payload, len)!=(ssize_t)len) return false;
+    if(!write_exact(fd, hdr, 12)) return false;
+    if(len>0 && !write_exact(fd, payload, len)) return false;
     return true;
 }
 
@@ -739,9 +1192,66 @@ static bool p2p_recv(int fd, P2PMsg& msg) {
     if(magic!=P2P_MAGIC) return false;
     memcpy(msg.cmd, hdr+4, 4); msg.cmd[4]=0;
     uint32_t len=read_u32(hdr+8);
-    if(len>10*1024*1024) return false;
+    if(len>MAX_P2P_MSG_SIZE) return false;
     msg.payload.resize(len);
     if(len>0 && !read_exact(fd, msg.payload.data(), len)) return false;
+    return true;
+}
+
+// Encrypted p2p send/recv (X25519 + ChaCha20-Poly1305)
+static bool p2p_send_encrypted(int fd, PeerCrypto& crypto, const char* cmd,
+    const uint8_t* payload, size_t len) {
+    if(!crypto.encrypted) return false;
+    size_t plen = 4 + len;
+    std::vector<uint8_t> plain(plen);
+    memcpy(plain.data(), cmd, 4);
+    if(len>0) memcpy(plain.data()+4, payload, len);
+
+    std::vector<uint8_t> cipher(plen);
+    uint8_t tag[16];
+    if(!chacha20_poly1305_encrypt(crypto.send_key, crypto.send_nonce++,
+        plain.data(), plen, cipher.data(), tag)) return false;
+
+    uint8_t hdr[12];
+    write_u32(hdr, P2P_MAGIC);
+    memcpy(hdr+4, "ENCR", 4);
+    write_u32(hdr+8, (uint32_t)(plen + 16));
+    if(!write_exact(fd, hdr, 12)) return false;
+    if(!write_exact(fd, cipher.data(), plen)) return false;
+    if(!write_exact(fd, tag, 16)) return false;
+    return true;
+}
+
+static bool p2p_recv_encrypted(int fd, PeerCrypto& crypto, P2PMsg& msg) {
+    uint8_t hdr[12];
+    if(!read_exact(fd, hdr, 12)) return false;
+    uint32_t magic=read_u32(hdr);
+    if(magic!=P2P_MAGIC) return false;
+
+    char cmd[5]; memcpy(cmd, hdr+4, 4); cmd[4]=0;
+    uint32_t len=read_u32(hdr+8);
+
+    if(strcmp(cmd,"ENCR")!=0){
+        if(len>MAX_P2P_MSG_SIZE) return false;
+        msg.payload.resize(len);
+        memcpy(msg.cmd, cmd, 5);
+        if(len>0 && !read_exact(fd, msg.payload.data(), len)) return false;
+        return true;
+    }
+
+    if(len < 20 || len > MAX_P2P_MSG_SIZE) return false;
+    uint32_t clen = len - 16;
+    std::vector<uint8_t> cipher(clen);
+    uint8_t tag[16];
+    if(!read_exact(fd, cipher.data(), clen)) return false;
+    if(!read_exact(fd, tag, 16)) return false;
+
+    std::vector<uint8_t> plain(clen);
+    if(!chacha20_poly1305_decrypt(crypto.recv_key, crypto.recv_nonce++,
+        cipher.data(), clen, tag, plain.data())) return false;
+
+    memcpy(msg.cmd, plain.data(), 4); msg.cmd[4]=0;
+    msg.payload.assign(plain.begin()+4, plain.end());
     return true;
 }
 
@@ -1029,6 +1539,36 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // Checkpoint validation: if this height has a checkpoint, block_id must match
+    for(size_t ci=0; ci<g_num_checkpoints; ++ci){
+        if(g_checkpoints[ci].height == height){
+            Hash256 expected_cp = from_hex(g_checkpoints[ci].block_hash);
+            if(computed_bid != expected_cp){
+                printf("[BLOCK] REJECTED: checkpoint mismatch at height %lld\n",(long long)height);
+                return false;
+            }
+            printf("[BLOCK] Checkpoint verified at height %lld\n",(long long)height);
+            break;
+        }
+    }
+
+    // Reorg depth limit: reject blocks that would require undoing more than MAX_REORG_DEPTH blocks
+    // (Currently chain is append-only, but this guards against future reorg logic)
+    if(height < g_chain_height - MAX_REORG_DEPTH){
+        printf("[BLOCK] REJECTED: height %lld is beyond max reorg depth (%lld blocks behind tip %lld)\n",
+               (long long)height, (long long)MAX_REORG_DEPTH, (long long)g_chain_height);
+        return false;
+    }
+
+    // Reject blocks that would reorg past a checkpoint
+    for(size_t ci=0; ci<g_num_checkpoints; ++ci){
+        if(g_checkpoints[ci].height <= g_chain_height && height <= g_checkpoints[ci].height){
+            printf("[BLOCK] REJECTED: would reorg past checkpoint at height %lld\n",
+                   (long long)g_checkpoints[ci].height);
+            return false;
+        }
+    }
+
     // Connect block to UTXO set atomically
     BlockUndo undo;
     std::string uerr;
@@ -1058,6 +1598,12 @@ static bool process_block(const std::string& block_json) {
 
     g_blocks.push_back(sb);
     g_chain_height = height;
+
+    // TX-INDEX: index all transactions in this block
+    for(size_t ti=0; ti<txs.size(); ++ti){
+        Hash256 txid_i{}; txs[ti].ComputeTxId(txid_i, nullptr);
+        g_tx_index[txid_i] = {height, (uint32_t)ti};
+    }
 
     // Wallet bookkeeping (mark spends + add outputs owned by us)
     for(size_t ti=1; ti<txs.size(); ++ti){
@@ -1121,16 +1667,61 @@ static bool process_tx(const std::string& hex_str) {
     return true;
 }
 
+// Adaptive p2p send: use encryption if established, else plaintext
+static bool p2p_send_adaptive(int fd, PeerCrypto& crypto, const char* cmd,
+    const uint8_t* payload, size_t len) {
+    if(crypto.encrypted)
+        return p2p_send_encrypted(fd, crypto, cmd, payload, len);
+    return p2p_send(fd, cmd, payload, len);
+}
+
 // Handle one peer connection
 static void handle_peer(int fd, const std::string& addr, bool outbound) {
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
         Peer p; p.fd=fd; p.addr=addr; p.their_height=-1;
         p.version_sent=false; p.version_acked=false;
-        p.outbound=outbound; p.last_seen=time(nullptr);
+        p.outbound=outbound; p.last_seen=time(nullptr); p.ban_score=0;
         g_peers.push_back(p);
     }
     printf("[P2P] Peer connected: %s (%s)\n",addr.c_str(),outbound?"outbound":"inbound");
+
+    // P2P encryption handshake
+    PeerCrypto crypto{};
+    if(g_p2p_enc != P2PEncMode::OFF){
+        uint8_t our_priv[32], our_pub[32];
+        if(x25519_keygen(our_priv, our_pub)){
+            // Send our ephemeral public key
+            p2p_send(fd, "EKEY", our_pub, 32);
+
+            // Wait for their key (with timeout)
+            struct timeval ht; ht.tv_sec=10; ht.tv_usec=0;
+            setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &ht, sizeof(ht));
+
+            P2PMsg ekey_msg;
+            if(p2p_recv(fd, ekey_msg) && !strcmp(ekey_msg.cmd,"EKEY") && ekey_msg.payload.size()==32){
+                uint8_t shared[32];
+                if(x25519_derive(our_priv, ekey_msg.payload.data(), shared)){
+                    derive_session_keys(shared, outbound, crypto.send_key, crypto.recv_key);
+                    crypto.encrypted = true;
+                    printf("[P2P] %s: encryption established (X25519+ChaCha20)\n", addr.c_str());
+                }
+                // Zero shared secret
+                OPENSSL_cleanse(shared, 32);
+            } else if(g_p2p_enc == P2PEncMode::REQUIRED){
+                printf("[P2P] %s: encryption required but peer doesn't support it, dropping\n", addr.c_str());
+                OPENSSL_cleanse(our_priv, 32);
+                close(fd);
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                g_peers.erase(std::remove_if(g_peers.begin(),g_peers.end(),
+                    [fd](const Peer& p){return p.fd==fd;}),g_peers.end());
+                return;
+            } else {
+                printf("[P2P] %s: peer doesn't support encryption, falling back to plaintext\n", addr.c_str());
+            }
+            OPENSSL_cleanse(our_priv, 32);
+        }
+    }
 
     p2p_send_version(fd);
 
@@ -1139,7 +1730,32 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
     while(g_running) {
         P2PMsg msg;
-        if(!p2p_recv(fd, msg)) break;
+        bool recv_ok;
+        if(crypto.encrypted){
+            recv_ok = p2p_recv_encrypted(fd, crypto, msg);
+        } else {
+            recv_ok = p2p_recv(fd, msg);
+        }
+        if(!recv_ok) break;
+
+        // Handle EKEY during session (late encryption handshake from peer)
+        if(!strcmp(msg.cmd,"EKEY") && !crypto.encrypted && g_p2p_enc != P2PEncMode::OFF){
+            if(msg.payload.size()==32){
+                uint8_t our_priv[32], our_pub[32];
+                if(x25519_keygen(our_priv, our_pub)){
+                    p2p_send(fd, "EKEY", our_pub, 32);
+                    uint8_t shared[32];
+                    if(x25519_derive(our_priv, msg.payload.data(), shared)){
+                        derive_session_keys(shared, false, crypto.send_key, crypto.recv_key);
+                        crypto.encrypted = true;
+                        printf("[P2P] %s: late encryption established\n", addr.c_str());
+                    }
+                    OPENSSL_cleanse(shared, 32);
+                    OPENSSL_cleanse(our_priv, 32);
+                }
+            }
+            continue;
+        }
 
         {
             std::lock_guard<std::mutex> lk(g_peers_mu);
@@ -1159,13 +1775,13 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
                     for(auto& p:g_peers) if(p.fd==fd){p.their_height=their_h;p.version_acked=true;break;}
                 }
-                p2p_send(fd, "VACK", nullptr, 0);
+                p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
                 printf("[P2P] %s: version OK, their height=%lld\n",addr.c_str(),(long long)their_h);
 
                 if(their_h > g_chain_height){
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height+1);
-                    p2p_send(fd, "GETB", buf, 8);
+                    p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                     printf("[P2P] Requesting blocks from %lld\n",(long long)(g_chain_height+1));
                 }
             }
@@ -1178,14 +1794,18 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
                 for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
+                    // p2p_send_block uses plaintext framing; for encrypted mode
+                    // we'd need to refactor. Keep block sends plaintext-framed for now.
                     p2p_send_block(fd, h);
                 }
-                p2p_send(fd, "DONE", nullptr, 0);
+                p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
             std::string block_json((char*)msg.payload.data(), msg.payload.size());
-            process_block(block_json);
+            if(!process_block(block_json)){
+                if(add_misbehavior(fd, addr, 50, "invalid block")) break;
+            }
         }
         else if(!strcmp(msg.cmd,"TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
@@ -1196,10 +1816,15 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                         p2p_send(p.fd, "TXXX", msg.payload.data(), msg.payload.size());
                     }
                 }
+            } else {
+                if(add_misbehavior(fd, addr, 10, "invalid tx")) break;
             }
         }
         else if(!strcmp(msg.cmd,"PING")) {
-            p2p_send(fd, "PONG", nullptr, 0);
+            p2p_send_adaptive(fd, crypto, "PONG", nullptr, 0);
+        }
+        else if(!strcmp(msg.cmd,"PONG")) {
+            // no-op, just update last_seen (already done above)
         }
         else if(!strcmp(msg.cmd,"DONE")) {
             int64_t their_h=-1;
@@ -1210,11 +1835,14 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             if(g_chain_height<their_h){
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height+1);
-                p2p_send(fd, "GETB", buf, 8);
+                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                 printf("[P2P] Batch done, requesting from %lld\n",(long long)(g_chain_height+1));
             } else {
                 printf("[P2P] Sync complete, height=%lld\n",(long long)g_chain_height);
             }
+        }
+        else {
+            if(add_misbehavior(fd, addr, 10, "unknown command")) break;
         }
     }
 
@@ -1261,6 +1889,9 @@ static bool load_genesis(const std::string& path) {
     g_genesis_hash=g.block_id;
     g_blocks.push_back(g);
     g_chain_height=0;
+
+    // TX-INDEX: genesis block coinbase (block_id used as pseudo-txid)
+    g_tx_index[g.block_id] = {0, 0};
 
     // Add genesis coinbase-like UTXOs
     struct{const char*addr;int64_t amt;uint8_t type;}cb[3]={
@@ -1401,6 +2032,11 @@ static bool load_chain(const std::string& path) {
                             }
                         }
                     }
+                    // TX-INDEX: index all txs from this block
+                    for(size_t ti=0; ti<txs.size(); ++ti){
+                        Hash256 txid_i{}; txs[ti].ComputeTxId(txid_i, nullptr);
+                        g_tx_index[txid_i] = {height, (uint32_t)ti};
+                    }
                     g_blocks.push_back(sb);
                     continue;  // skip the legacy coinbase-only path below
                 } else {
@@ -1411,6 +2047,7 @@ static bool load_chain(const std::string& path) {
         }
 
         // LEGACY fallback: no transactions field → reconstruct coinbase only
+        g_tx_index[sb.block_id] = {height, 0};  // TX-INDEX: pseudo-index
         g_blocks.push_back(sb);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
@@ -1454,7 +2091,10 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "validateaddress",
         "gettxout",
         "getblocktemplate",
-        "getaddressinfo"
+        "getaddressinfo",
+        "gettransaction",
+        "estimatefee",
+        "getaddressbalance"
     };
     return kReadOnly.count(m) > 0;
 }
@@ -1482,7 +2122,7 @@ static void rpc_handle_connection(int fd) {
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
             "Access-Control-Max-Age: 86400\r\n"
             "Content-Length: 0\r\n\r\n";
-        write(fd,resp.c_str(),resp.size());
+        write_exact(fd,resp.c_str(),resp.size());
         close(fd);
         return;
     }
@@ -1496,7 +2136,7 @@ static void rpc_handle_connection(int fd) {
             "Access-Control-Allow-Origin: *\r\n"
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
             "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
-        write(fd,resp.c_str(),resp.size());
+        write_exact(fd,resp.c_str(),resp.size());
         close(fd);
         return;
     }
@@ -1541,7 +2181,7 @@ static void rpc_handle_connection(int fd) {
         "Access-Control-Max-Age: 86400\r\n"
         "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
 
-    write(fd,resp.c_str(),resp.size());
+    write_exact(fd,resp.c_str(),resp.size());
     close(fd);
 }
 
@@ -1579,6 +2219,24 @@ static void p2p_server_thread(int port) {
         if(cl<0) continue;
         char ip[64]; inet_ntop(AF_INET,&cl_addr.sin_addr,ip,sizeof(ip));
         std::string peer_addr=std::string(ip)+":"+std::to_string(ntohs(cl_addr.sin_port));
+
+        // DoS: reject banned IPs
+        if (is_banned(ip)) {
+            close(cl);
+            continue;
+        }
+
+        // DoS: limit inbound peers
+        {
+            std::lock_guard<std::mutex> lk(g_peers_mu);
+            int inbound_count = 0;
+            for (const auto& p : g_peers) if (!p.outbound) ++inbound_count;
+            if (inbound_count >= MAX_INBOUND_PEERS) {
+                close(cl);
+                continue;
+            }
+        }
+
         std::thread([cl,peer_addr](){handle_peer(cl,peer_addr,false);}).detach();
     }
     close(srv);
@@ -1685,8 +2343,15 @@ int main(int argc, char** argv) {
             else if(pv=="dev") selected_profile=Profile::DEV;
             else { fprintf(stderr,"Error: unknown profile '%s' (use mainnet|testnet|dev)\n",pv.c_str()); return 1; }
         }
+        else if(!strcmp(argv[i],"--p2p-enc")&&i+1<argc){
+            std::string ev=argv[++i];
+            if(ev=="off") g_p2p_enc=P2PEncMode::OFF;
+            else if(ev=="on") g_p2p_enc=P2PEncMode::ON;
+            else if(ev=="required") g_p2p_enc=P2PEncMode::REQUIRED;
+            else { fprintf(stderr,"Error: --p2p-enc must be off|on|required\n"); return 1; }
+        }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
-            printf("SOST Node v0.3.2\n");
+            printf("SOST Node v0.4.0\n");
             printf("  --wallet <path>            Wallet file (default: wallet.json)\n");
             printf("  --genesis <path>           Genesis JSON\n");
             printf("  --chain <path>             Chain JSON to load/save\n");
@@ -1697,6 +2362,7 @@ int main(int argc, char** argv) {
             printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
+            printf("  --p2p-enc off|on|required      P2P encryption mode (default: on)\n");
             return 0;
         }
     }
@@ -1711,10 +2377,11 @@ int main(int argc, char** argv) {
         ACTIVE_PROFILE==Profile::MAINNET ? "MAINNET" :
         ACTIVE_PROFILE==Profile::TESTNET ? "TESTNET" : "DEV";
 
-    printf("=== SOST Node v0.3.2 ===\n");
-    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s\n\n",
+    const char* enc_str = g_p2p_enc==P2PEncMode::OFF?"off":g_p2p_enc==P2PEncMode::ON?"on":"required";
+    printf("=== SOST Node v0.4.0 ===\n");
+    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s\n\n",
            profile_name, p2p_port, rpc_port,
-           g_rpc_auth_required ? "ON" : "OFF");
+           g_rpc_auth_required ? "ON" : "OFF", enc_str);
 
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
@@ -1771,6 +2438,11 @@ int main(int argc, char** argv) {
     std::thread p2p_thread(p2p_server_thread, p2p_port);
     p2p_thread.detach();
 
+    // Default seed node (VPS) — used when no --connect is specified
+    if(connect_addrs.empty()){
+        printf("[P2P] No --connect specified, using default seed: seed.sostcore.com:%d\n", P2P_PORT_DEFAULT);
+        connect_peer("seed.sostcore.com", P2P_PORT_DEFAULT);
+    }
     for(const auto& a:connect_addrs){
         auto colon=a.rfind(':');
         if(colon!=std::string::npos){

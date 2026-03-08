@@ -76,8 +76,14 @@ public:
         std::string* err = nullptr);
 
     // --- Persistence ---
+    // Plaintext (v1)
     bool save(const std::string& path, std::string* err = nullptr) const;
     bool load(const std::string& path, std::string* err = nullptr);
+    // Encrypted (v2) — AES-256-GCM + scrypt
+    bool save_encrypted(const std::string& path, const std::string& passphrase,
+                        std::string* err = nullptr) const;
+    bool load_encrypted(const std::string& path, const std::string& passphrase,
+                        std::string* err = nullptr);
 
     // --- Info ---
     size_t num_keys() const { return keys_.size(); }

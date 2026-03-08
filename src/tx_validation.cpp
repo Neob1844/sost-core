@@ -52,7 +52,7 @@ static std::string HexU32(uint32_t v) {
 // Matches Phase 1 serialization format exactly:
 //   version(4) + tx_type(1) + CompactSize(nin) + inputs + CompactSize(nout) + outputs
 // Input: prev_txid(32) + prev_index(4) + signature(64) + pubkey(33) = 133
-// Output: amount(8) + type(1) + pubkey_hash(20) + payload_len(1) + payload(N)
+// Output: amount(8) + type(1) + pubkey_hash(20) + payload_len(2) + payload(N)
 
 size_t EstimateTxSerializedSize(const Transaction& tx) {
     size_t size = 0;
@@ -65,7 +65,7 @@ size_t EstimateTxSerializedSize(const Transaction& tx) {
         size += 8;   // amount
         size += 1;   // type
         size += 20;  // pubkey_hash
-        size += 1;   // payload_len
+        size += 2;   // payload_len (uint16 LE)
         size += out.payload.size();
     }
     return size;
@@ -136,8 +136,8 @@ static TxValidationResult ValidateStructure(
                 HexStr(&out.type, 1) + " is not active in v1", -1, (int32_t)i);
         }
 
-        // R13: payload_len <= 255 (enforced by uint8 but check vector)
-        if (out.payload.size() > 255) {
+        // R13: payload_len <= 512 (consensus limit)
+        if (out.payload.size() > 512) {
             return TxValidationResult::Fail(TxValCode::R13_PAYLOAD_TOO_LONG,
                 "R13: output[" + std::to_string(i) + "] payload too long (" +
                 std::to_string(out.payload.size()) + ")", -1, (int32_t)i);

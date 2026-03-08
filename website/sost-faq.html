@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — FAQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* FAQ ITEMS */
+  .faq-item { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; margin-bottom: 12px; overflow: hidden; transition: border-color 0.3s; }
+  .faq-item:hover { border-color: var(--border-med); }
+  .faq-q { padding: 18px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; user-select: none; }
+  .faq-q h3 { font-family: var(--font-display); font-size: 15px; font-weight: 500; color: var(--text-primary); }
+  .faq-q .toggle { font-size: 18px; color: var(--red-primary); transition: transform 0.3s; flex-shrink: 0; }
+  .faq-item.open .faq-q .toggle { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .faq-item.open .faq-a { max-height: 1200px; }
+  .faq-a-inner { padding: 0 20px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; border-top: 1px solid var(--border-dim); padding-top: 16px; }
+  .faq-a-inner strong { color: var(--text-primary); }
+  .faq-a-inner code { color: var(--cyan-primary); font-size: 12px; }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html" class="active">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Frequently Asked Questions</div>
+    <h1 class="fade-in delay-1">Common <span>Questions.</span><br>Direct <span>Answers.</span></h1>
+    <p class="hero-sub fade-in delay-2">Everything you need to know about SOST Protocol — mining, tokenomics, the gold reserve, PoPC, and the Foundation. Click any question to expand.</p>
+  </div>
+</section>
+
+<!-- GENERAL -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">GENERAL</div>
+      <h2 class="section-title">About <span class="accent">SOST</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 4 GB RAM and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Gold Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Was there a premine, ICO, or VC allocation?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> Zero premine, zero ICO, zero VC tokens. The only way to create SOST is to mine a valid block via ConvergenceX proof-of-work. Any block that mints more than the subsidy for its height is invalid by consensus.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What is the maximum supply?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10<sup>6</sup>). This is a hard cap enforced by construction — the emission formula mathematically converges to this upper bound. No tracking of cumulative supply is needed. ~95% will be mined in approximately 30 years (~12 epochs).</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Is SOST pegged to gold?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> SOST is not pegged to gold and does not promise price stability. The Metals Reserve is an observable metric (reserve_value / circulating_supply), not a redemption right. SOST holders have no claim on the gold reserve. Markets price this information as they see fit.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>When is the genesis block?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>March 13, 2026, 00:00:00 UTC.</strong> This is mainnet v2 — a clean regenesis following security and custody improvements.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MINING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">MINING</div>
+      <h2 class="section-title">Mining &amp; <span class="accent">Technology</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Can I mine SOST with a GPU or ASIC?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">ConvergenceX is designed to be <strong>CPU-friendly</strong>. Each attempt requires 4 GB RAM and 100,000 strictly sequential rounds — intra-attempt parallelism is eliminated by state dependency. GPUs and ASICs cannot speed up a single attempt. The only parallelism available is running multiple independent attempts, which is what CPU cores already do. Preliminary estimates suggest low ASIC advantage multiples compared to &gt;1000&times; for SHA-256.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What are the system requirements for mining?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Minimum:</strong> 4 GB RAM per mining thread, modern CPU, Linux (Ubuntu 24.04 recommended). Build dependencies: <code>build-essential cmake libssl-dev libsecp256k1-dev</code>. Each thread runs an independent mining attempt, so 4 threads need ~16 GB RAM.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What is the block reward and emission schedule?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST emission follows a smooth epoch-based decay governed by the mathematical constant q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Initial reward R&#8320; = <strong>7.85100863 SOST/block</strong> (785,100,863 stocks)<br>&bull; Each epoch is exactly 131,553 blocks (~2.502907875095892 years — the Feigenbaum alpha constant &alpha;)<br>&bull; Decay: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) where epoch = height &divide; 131,553<br>&bull; No halvings, no cliffs — continuous ~9.03% annual decay<br>&bull; Asymptotic maximum supply: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, strict limit by mathematical construction)<br>&bull; ~95% mined in ~30 years (~12 epochs)<br>&bull; Split: 50% miner &middot; 25% Gold Vault &middot; 25% PoPC Pool<br>&bull; All arithmetic is deterministic integer-only (Q16.16 fixed-point). No floating-point operations — that would be a consensus failure.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses two layers of difficulty adjustment:<br><br><strong>ASERT</strong> (Absolutely Scheduled Exponentially Rising Targets): adjusts the actual difficulty block by block based on chain speed, with a 24-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT</strong> (Constitutional ASERT overlay): acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), cASERT tightens ConvergenceX stability requirements across 5 levels (L1 neutral &rarr; L5 maximum). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. ASERT corrects speed; cASERT protects emission.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What is the smallest unit of SOST?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>1 stock</strong> = 0.00000001 SOST (10<sup>-8</sup>), analogous to Bitcoin's satoshi. All internal arithmetic uses stocks (integer-only, zero floating-point).</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GOLD RESERVE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">RESERVE</div>
+      <h2 class="section-title">Metals <span class="accent">Reserve</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>How does the gold reserve work?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Metals Funding Vault</strong> by consensus. The Foundation periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve Vault</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Can anyone access or move the gold reserve?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Reserve Vault is Heritage sealed. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;60% miner signaling (87 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>When do gold purchases begin?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">No earlier than <strong>6 months after genesis</strong> (approximately June 2026), and only once market readiness is met — meaning at least one verifiable execution venue with demonstrated liquidity. First purchases target a 50/50 split between XAUt and PAXG.<br><br>A rotation proposal between allowlisted metals (E1) can also be submitted following the same dual-gate process: &ge;60% miner signaling + Foundation Execution Order.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Can I redeem SOST for gold?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> The Metals Reserve does not represent a claim on gold by SOST holders. There are no redemption rights. The reserve is a structural property of the protocol — an observable metric, not a financial product.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PoPC -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PoPC</div>
+      <h2 class="section-title">Proof of Personal <span class="accent">Custody</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (March 13, 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Gold Vault: <code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code>) to support the protocol and endow it with perpetual added value.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>When does PoPC launch?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">Target activation: <strong>February 2027</strong> (Epoch 2). By that time, the PoPC Pool will have accumulated approximately 103,160 SOST from coinbase allocations. The escrow contract will be published, verified, and independently audited before activation.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Are PoPC rewards guaranteed?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> Reward rates are operational reference parameters, not guaranteed. They may be adjusted, budgeted per epoch, or paused for security without changing consensus rules. They do not constitute interest, promised yield, or a financial obligation of the protocol.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What happens if I fail a PoPC audit?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Gold Vault. Your address is permanently blacklisted. No human can reverse the slash or remove the blacklist once triggered. The protocol has no appeal mechanism.<br><br><strong>Model B:</strong> immutable escrow deposit — you recover 100% of your metals at maturity, with no slash risk.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDATION & GOVERNANCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">GOVERNANCE</div>
+      <h2 class="section-title">Foundation &amp; <span class="accent">Governance</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Can the Foundation change the rules?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> No entity — including the Foundation — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. The Foundation can only execute a narrow set of operational actions (gold conversion, purchase pauses, PoPC management) under constitutional constraints and public attestation.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What happens if the chain dies?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">If the chain produces zero blocks for 90 consecutive days, the dead-man switch triggers and a 60-day Dissolution notice begins. <strong>Critical constraint:</strong> if no Emergency Catastrophe was authorized before the chain stopped (no blocks = no miner signaling possible), the reserve remains in Heritage state. Dissolution is a network lifecycle event, not a reserve liquidation mechanism.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Is SOST an investment product?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> SOST is a protocol. It is not an investment product, security, or financial instrument. The Foundation makes no representations about future price, utility, or availability. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECHNICAL -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">TECHNICAL</div>
+      <h2 class="section-title">Technical <span class="accent">Details</span></h2>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What consensus rules does SOST enforce?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">Full validation includes rules R1-R14 (block structure), S1-S12 (script/signature), and CB1-CB10 (coinbase). All consensus arithmetic is 100% integer — zero floating-point in any consensus path. The emission schedule, coinbase split, and difficulty algorithm are immutable at genesis. 15 constitutional rules (C1-C15) define the boundaries.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What ports does SOST use?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>P2P:</strong> port 19333 (default). <strong>RPC:</strong> port 18232 (default). The node connects to <code>seed.sostcore.com:19333</code> automatically. RPC requires authentication via <code>--rpc-user</code> and <code>--rpc-pass</code>.<br><br>To create your RPC credentials, choose any username and password when starting the node with <code>--rpc-user=&lt;youruser&gt; --rpc-pass=&lt;yourpass&gt;</code>. These are set by you — there is no central registration. The seed node at <code>seed.sostcore.com:19333</code> connects automatically on first launch.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Contact &amp; Support</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>GitHub:</strong> <a href="https://github.com/Neob1844/sost-core/issues" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core/issues</a><br>For security disclosures, use GitHub's private vulnerability reporting.<br><strong>General contact:</strong> contact@sostcore.com</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>What license is SOST released under?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>MIT License.</strong> Use, modify, and distribute freely. Source code is public at <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core</a>.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.faq-q').forEach(function(q) {
+  q.addEventListener('click', function() {
+    this.parentElement.classList.toggle('open');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     params.stab_scale = 3;
     params.stab_k = 4;
     params.stab_margin = 180;
-    params.stab_steps = 3;
+    params.stab_steps = 4;
     params.stab_lr_shift = params.cx_lr_shift + 2;
 
     // Genesis inputs
