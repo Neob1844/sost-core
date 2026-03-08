@@ -303,6 +303,199 @@
   </div>
 </section>
 
+<!-- WORKED EXAMPLE — Block #1 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01.1 &mdash; WORKED EXAMPLE</div>
+      <h2 class="section-title">Worked Example &mdash; <span class="accent">Block #1</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Mining Pipeline Step-by-Step</span>
+        </div>
+        <span class="spec-tag consensus">EDUCATIONAL</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Concrete walkthrough of mining Block #1 with genesis parameters:
+          <code>prev_hash = 0000...0000</code>, <code>bitsQ = 353,075</code> &rarr; difficulty = 5.2737
+        </p>
+
+        <div class="code-snippet" data-label="STEP 1 — DATASET (once per block)">
+<span class="cmt">// Generate 4GB persistent dataset from prev_block_hash</span>
+seed = <span class="fn">epoch_scratch_key</span>(epoch=<span class="num">0</span>)
+memory[<span class="num">0</span>] = <span class="fn">hash</span>(seed)
+memory[i] = <span class="fn">hash</span>(memory[i-<span class="num">1</span>])     <span class="cmt">// 512M entries, sequential</span>
+<span class="cmt">// Cost: ~30s on modern CPU — ASICs cannot skip this step</span>
+        </div>
+
+        <div class="code-snippet" data-label="STEP 2 — PROGRAM (once per block)">
+<span class="cmt">// Derive 256-op program from block_hash</span>
+program[<span class="num">0</span>] = ops[block_hash[<span class="num">0</span>] % <span class="num">8</span>]  <span class="cmt">// e.g. MUL imm=0xA3F2...</span>
+program[<span class="num">1</span>] = ops[block_hash[<span class="num">1</span>] % <span class="num">8</span>]  <span class="cmt">// e.g. XOR imm=0x17C8...</span>
+<span class="cmt">// ...256 ops derived deterministically</span>
+        </div>
+
+        <div class="code-snippet" data-label="STEP 3 — ITERATION (×100,000)">
+state = dataset[nonce % <span class="num">512</span>M]
+state = <span class="fn">program.execute</span>(state, step=<span class="num">0</span>)  <span class="cmt">// MUL operation</span>
+scratchpad[page] = <span class="fn">transform</span>(state)
+        </div>
+
+        <div class="code-snippet" data-label="STEP 4 — CHECKPOINT (every 6,250 rounds)">
+checkpoint[<span class="num">0</span>] = <span class="fn">SHA256</span>(state || iteration)
+<span class="cmt">// → committed to Merkle tree (16 total checkpoints)</span>
+        </div>
+
+        <div class="code-snippet" data-label="STEP 5 — STABILITY TEST">
+<span class="cmt">// After 100,000 iterations:</span>
+<span class="kw">for</span> k = <span class="num">0</span>..<span class="num">3</span>:
+    x_perturbed = x + <span class="fn">random_perturbation</span>(<span class="num">&epsilon;</span>)
+    <span class="kw">for</span> s = <span class="num">0</span>..<span class="num">3</span>:
+        x_perturbed = <span class="fn">gradient_step</span>(x_perturbed)
+    <span class="kw">assert</span> |x_perturbed - x_original| &lt; <span class="num">180</span>  <span class="cmt">// STABLE ✓</span>
+        </div>
+
+        <div class="code-snippet" data-label="STEP 6 — TARGET CHECK">
+commit = <span class="fn">finalize</span>(state || checkpoints)
+<span class="kw">if</span> commit &lt; <span class="fn">target</span>(bitsQ=<span class="num">353075</span>):
+    <span class="cmt">// BLOCK FOUND ✓</span>
+<span class="kw">else</span>:
+    nonce++   <span class="cmt">// repeat from Step 3</span>
+        </div>
+
+        <p class="spec-desc" style="margin-top:16px;color:#4ade80">
+          Steps 1 &amp; 2 execute <b>once per block</b>. Only Steps 3&ndash;6 repeat per nonce attempt.
+          This is the core v2.0 efficiency gain.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ASIC RESISTANCE ANALYSIS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01.2 &mdash; ASIC RESISTANCE</div>
+      <h2 class="section-title">ASIC Resistance <span class="accent">Analysis</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">ConvergenceX v2.0 vs Bitcoin SHA-256</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr>
+            <td class="key" style="width:180px">Attack Vector</td>
+            <td class="val" style="width:160px">Bitcoin SHA-256</td>
+            <td class="val">ConvergenceX v2.0</td>
+          </tr>
+          <tr>
+            <td class="key">Custom silicon</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> Trivial</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> Requires 4GB on-chip memory</td>
+          </tr>
+          <tr>
+            <td class="key">Parallel hashing</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> Easy</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> Sequential dataset dependency</td>
+          </tr>
+          <tr>
+            <td class="key">Fixed circuit</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> Optimal</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> Program changes every block</td>
+          </tr>
+          <tr>
+            <td class="key">Memory reduction</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> N/A</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> Checkpoints catch shortcuts</td>
+          </tr>
+          <tr>
+            <td class="key">GPU advantage</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> Moderate</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> Penalized by memory latency</td>
+          </tr>
+          <tr>
+            <td class="key">CPU advantage</td>
+            <td class="val"><span style="color:#e63946">&#10008;</span> None</td>
+            <td class="val"><span style="color:#22c55e">&#10004;</span> L3 cache reuse, sequential access</td>
+          </tr>
+        </table>
+
+        <div style="margin-top:16px;padding:14px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #e63946">
+          <p class="spec-desc" style="margin:0;line-height:1.8">
+            An ASIC for ConvergenceX v2.0 would require: <b>4GB LPDDR5</b> on-package,
+            a <b>general-purpose ALU</b> for 8 operation types, and full re-fabrication
+            for every block. This is economically equivalent to building a CPU &mdash;
+            the entire point of the design.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOSTCOMPACT Q16.16 DECODING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01.3 &mdash; SOSTCOMPACT</div>
+      <h2 class="section-title">SOSTCompact Q16.16 <span class="accent">Decoding</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Difficulty Encoding Example</span>
+        </div>
+        <span class="spec-tag overlay">ENCODING</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet" data-label="GENESIS DECODE">
+<span class="cmt">// bitsQ = 353,075</span>
+integer  = <span class="num">353075</span> &gt;&gt; <span class="num">16</span>       = <span class="num">5</span>
+fraction = <span class="num">353075</span> &amp; <span class="num">0xFFFF</span>    = <span class="num">17,939</span>
+real     = <span class="num">5</span> + <span class="num">17939</span>/<span class="num">65536</span>    = <span class="str">5.2737</span>
+        </div>
+
+        <table class="code-table">
+          <tr>
+            <td class="key">MIN</td>
+            <td class="val">bitsQ = <code>65,536</code> &rarr; difficulty <span style="color:#22c55e">1.0000</span> <span class="comment">// network near-dead</span></td>
+          </tr>
+          <tr>
+            <td class="key">GENESIS</td>
+            <td class="val">bitsQ = <code>353,075</code> &rarr; difficulty <span style="color:#67e8f9">5.2737</span> <span class="comment">// genesis block</span></td>
+          </tr>
+          <tr>
+            <td class="key">MAX</td>
+            <td class="val">bitsQ = <code>16,711,680</code> &rarr; difficulty <span style="color:#e63946">255.000</span> <span class="comment">// theoretical max</span></td>
+          </tr>
+        </table>
+
+        <div style="margin-top:16px;padding:14px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #67e8f9">
+          <p class="spec-desc" style="margin:0">
+            <b>ASERT clamp per block:</b><br>
+            Max DOWN: <span style="color:#22c55e">&minus;2 units</span> &rarr; &asymp; &minus;3.0% per block<br>
+            Max UP: <span style="color:#e63946">+3 units</span> &rarr; &asymp; +4.6% per block<br>
+            After 24h of 2&times; faster blocks &rarr; difficulty doubles
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ASERT DIFFICULTY -->
 <section class="section">
   <div class="container">
