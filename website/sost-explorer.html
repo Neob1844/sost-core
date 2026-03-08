@@ -852,6 +852,71 @@ function showCXInfo(){
   '<div class="k">λ (LAMBDA)</div><div class="v"><span style="color:var(--purple)">100</span> regularization ensures unique solution</div>'+
   '<div class="k">LR SHIFT</div><div class="v">18 // learning rate = 2<sup>-18</sup></div>'+
   '</div>'+
+  // ── WORKED EXAMPLE — Block #1 ──
+  '<div style="margin:20px 0;padding:16px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #e63946">'+
+  '<div style="font-size:11px;color:#e63946;letter-spacing:2px;margin-bottom:10px">WORKED EXAMPLE — BLOCK #1</div>'+
+  '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
+  '<span style="color:var(--text3)">prev_hash = 0000...0000 (genesis) &nbsp;|&nbsp; bitsQ = 353,075 → difficulty = 5.2737</span><br><br>'+
+  '<b style="color:var(--cyan)">Step 1 — Dataset</b> (once per block):<br>'+
+  '&nbsp;&nbsp;seed = epoch_scratch_key(epoch=0)<br>'+
+  '&nbsp;&nbsp;memory[0] = hash(seed)<br>'+
+  '&nbsp;&nbsp;memory[i] = hash(memory[i-1]) ← 512M entries, sequential<br>'+
+  '&nbsp;&nbsp;<span style="color:var(--text3)">Cost: ~30s on modern CPU — ASICs cannot skip this step</span><br><br>'+
+  '<b style="color:var(--orange)">Step 2 — Program</b> (once per block):<br>'+
+  '&nbsp;&nbsp;program[0] = ops[block_hash[0] % 8] → e.g. MUL imm=0xA3F2...<br>'+
+  '&nbsp;&nbsp;program[1] = ops[block_hash[1] % 8] → e.g. XOR imm=0x17C8...<br>'+
+  '&nbsp;&nbsp;<span style="color:var(--text3)">...256 ops derived deterministically from block_hash</span><br><br>'+
+  '<b style="color:var(--green)">Step 3 — Iteration</b> 0 of 100,000:<br>'+
+  '&nbsp;&nbsp;state = dataset[nonce % 512M]<br>'+
+  '&nbsp;&nbsp;state = program.execute(state, step=0) → MUL operation<br>'+
+  '&nbsp;&nbsp;scratchpad[page] = transform(state)<br><br>'+
+  '<b style="color:var(--purple)">Step 4 — Checkpoint</b> at iteration 6,250:<br>'+
+  '&nbsp;&nbsp;checkpoint[0] = SHA256(state || iteration)<br>'+
+  '&nbsp;&nbsp;<span style="color:var(--text3)">→ committed to Merkle tree (16 total checkpoints)</span><br><br>'+
+  '<b style="color:#fbbf24">Step 5 — Stability test</b> (after 100,000 iterations):<br>'+
+  '&nbsp;&nbsp;perturb x by ε × 4 times, run 4 gradient steps each<br>'+
+  '&nbsp;&nbsp;|x_perturbed - x_original| &lt; 180 → <span style="color:var(--green)">STABLE ✓</span><br><br>'+
+  '<b style="color:var(--cyan)">Step 6 — Target check</b>:<br>'+
+  '&nbsp;&nbsp;commit = finalize(state || checkpoints)<br>'+
+  '&nbsp;&nbsp;if commit &lt; target(bitsQ=353075) → <span style="color:var(--green)">BLOCK FOUND ✓</span><br>'+
+  '&nbsp;&nbsp;else → nonce++, repeat from Step 3<br><br>'+
+  '<span style="color:#4ade80">Steps 1 &amp; 2 execute ONCE per block. Only Steps 3–6 repeat per nonce attempt.</span>'+
+  '</div></div>'+
+  // ── ASIC RESISTANCE ANALYSIS ──
+  '<div style="margin:20px 0;padding:16px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #e63946">'+
+  '<div style="font-size:11px;color:#e63946;letter-spacing:2px;margin-bottom:10px">ASIC RESISTANCE ANALYSIS</div>'+
+  '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">'+
+  '<tr style="border-bottom:1px solid #1a1a1a"><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">ATTACK VECTOR</td><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">BITCOIN SHA-256</td><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">CONVERGENCEX v2.0</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Custom silicon</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Trivial</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> Requires 4GB on-chip memory</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Parallel hashing</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Easy</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> Sequential dataset dependency</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Fixed circuit</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Optimal</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> Program changes every block</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Memory reduction</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> N/A</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> Checkpoints catch shortcuts</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">GPU advantage</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Moderate</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> Penalized by memory latency</td></tr>'+
+  '<tr><td style="padding:6px 10px;color:var(--text)">CPU advantage</td><td style="padding:6px 10px"><span style="color:#e63946">✗</span> None</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> L3 cache reuse, sequential access</td></tr>'+
+  '</table>'+
+  '<div style="font-size:11px;color:var(--text);line-height:1.6;padding-top:8px;border-top:1px solid #1a1a1a">'+
+  'An ASIC for ConvergenceX v2.0 would require: <b>4GB LPDDR5</b> on-package, '+
+  'a <b>general-purpose ALU</b> for 8 operation types, and full re-fabrication '+
+  'for every block. This is economically equivalent to building a CPU — the entire point of the design.</div>'+
+  '</div>'+
+  // ── SOSTCompact Q16.16 DECODING ──
+  '<div style="margin:20px 0;padding:16px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #67e8f9">'+
+  '<div style="font-size:11px;color:#67e8f9;letter-spacing:2px;margin-bottom:10px">SOSTCOMPACT Q16.16 DECODING</div>'+
+  '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
+  '<b style="color:var(--cyan)">Genesis example:</b><br>'+
+  '&nbsp;&nbsp;bitsQ &nbsp;&nbsp;&nbsp;= 353,075<br>'+
+  '&nbsp;&nbsp;integer &nbsp;= 353075 &gt;&gt; 16 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span style="color:var(--green)">5</span><br>'+
+  '&nbsp;&nbsp;fraction = 353075 &amp; 0xFFFF &nbsp;= <span style="color:var(--green)">17,939</span><br>'+
+  '&nbsp;&nbsp;real &nbsp;&nbsp;&nbsp;&nbsp;= 5 + 17939/65536 &nbsp;= <span style="color:var(--cyan)">5.2737</span><br><br>'+
+  '<b style="color:var(--text3)">Full range:</b><br>'+
+  '&nbsp;&nbsp;<span style="color:#22c55e">MIN</span> &nbsp;bitsQ=65,536 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ difficulty 1.0000 &nbsp;<span style="color:var(--text3)">(network near-dead)</span><br>'+
+  '&nbsp;&nbsp;<span style="color:#67e8f9">GEN</span> &nbsp;bitsQ=353,075 &nbsp;&nbsp;&nbsp;→ difficulty 5.2737 &nbsp;<span style="color:var(--text3)">(genesis)</span><br>'+
+  '&nbsp;&nbsp;<span style="color:#e63946">MAX</span> &nbsp;bitsQ=16,711,680 → difficulty 255.000 <span style="color:var(--text3)">(theoretical max)</span><br><br>'+
+  '<b style="color:var(--text3)">ASERT clamp per block:</b><br>'+
+  '&nbsp;&nbsp;Max DOWN: <span style="color:#22c55e">-2 units</span> → ≈ -3.0% per block<br>'+
+  '&nbsp;&nbsp;Max UP: &nbsp;<span style="color:#e63946">+3 units</span> → ≈ +4.6% per block<br>'+
+  '&nbsp;&nbsp;After 24h of 2× faster blocks → difficulty doubles'+
+  '</div></div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
   '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">DUAL DIFFICULTY SYSTEM</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
