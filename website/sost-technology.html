@@ -432,6 +432,25 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           <tr><td class="key">CX_STB_LR</td><td class="val"><code>20</code> <span class="comment">// LR_SHIFT + 2</span></td></tr>
           <tr><td class="key">Direction</td><td class="val">Unidirectional &mdash; hardening only, never easing</td></tr>
         </table>
+
+        <div style="margin-top:20px;padding:16px;background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2);border-left:3px solid #4ade80">
+          <div style="font-size:10px;letter-spacing:2px;color:#4ade80;margin-bottom:10px;font-weight:600">DECAY ANTI-STALL (v5.1)</div>
+          <p class="spec-desc" style="margin:0">
+            If no block is found for <b>2 hours</b> (7200s), cASERT level decays downward
+            to prevent chain stall:
+          </p>
+          <table class="code-table" style="margin-top:12px">
+            <tr><td class="key">L8+</td><td class="val">drops 1 level every <code>10 min</code> <span class="comment">// fast recovery from extreme levels</span></td></tr>
+            <tr><td class="key">L4&ndash;L7</td><td class="val">drops 1 level every <code>20 min</code> <span class="comment">// medium recovery</span></td></tr>
+            <tr><td class="key">L2&ndash;L3</td><td class="val">drops 1 level every <code>30 min</code> <span class="comment">// cautious near neutral</span></td></tr>
+            <tr><td class="key">L1</td><td class="val">floor &mdash; no further decay</td></tr>
+            <tr><td class="key">Scope</td><td class="val">Mining only &mdash; block validation always uses raw schedule level</td></tr>
+          </table>
+          <p class="spec-desc" style="margin:12px 0 0">
+            When mining resumes, decay stops instantly &mdash; raw schedule level takes over.
+            Example: L14 (525 ahead) &rarr; 2h wait + L14&rarr;L8 (60m) + L8&rarr;L4 (80m) + L4&rarr;L1 (90m) = 5h50m to neutral.
+          </p>
+        </div>
       </div>
     </div>
 

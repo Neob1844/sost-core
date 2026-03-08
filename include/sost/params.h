@@ -78,6 +78,18 @@ inline constexpr int32_t CASERT_L10_BLOCKS = 301;  // new
 // Above L10: level = 5 + (blocks_ahead - 76) / 50
 // scale = level + 1 — unbounded, no ceiling
 
+// cASERT Decay Anti-Stall parameters
+// Activates when no block found for CASERT_DECAY_ACTIVATION seconds
+inline constexpr int64_t CASERT_DECAY_ACTIVATION  = 7200;  // 2 hours without block
+inline constexpr int64_t CASERT_DECAY_FAST_SECS   = 600;   // 10 min/level for L8+
+inline constexpr int64_t CASERT_DECAY_MEDIUM_SECS = 1200;  // 20 min/level for L4-L7
+inline constexpr int64_t CASERT_DECAY_SLOW_SECS   = 1800;  // 30 min/level for L2-L3
+// Decay tiers:
+//   L8+  → drop 1 level every 10 min (fast recovery from extreme levels)
+//   L4–L7 → drop 1 level every 20 min (medium recovery)
+//   L2–L3 → drop 1 level every 30 min (cautious near neutral)
+//   L1   → floor, no further decay
+
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;
 inline constexpr int32_t CX_ROUNDS_M  = 100000;

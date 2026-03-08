@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <chrono>
+#include <ctime>
 #include <string>
 #include <vector>
 #include <sys/socket.h>
@@ -489,7 +490,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
     uint32_t bits_q = asert_next_difficulty(g_chain, h);
     ConsensusParams params = get_consensus_params(prof, h);
-    auto cdec = casert_mode_from_chain(g_chain, h);
+    auto cdec = casert_mode_from_chain(g_chain, h, std::time(nullptr));
     params = casert_apply_overlay(params, cdec);
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
