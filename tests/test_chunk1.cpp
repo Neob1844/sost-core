@@ -96,15 +96,15 @@ void test_casert() {
         chain.push_back({ZERO_HASH(), i, GENESIS_TIME + i * TARGET_SPACING, GENESIS_BITSQ});
     }
     auto dec2 = casert_mode_from_chain(chain, 10);
-    TEST("on-target -> NORMAL", dec2.mode == CasertMode::NORMAL);
+    TEST("on-target -> L1", dec2.mode == CasertMode::L1);
 
-    // Build slow chain -> should be OPEN
+    // Build slow chain -> should be L1 (cASERT only hardens, never relaxes)
     std::vector<BlockMeta> slow;
     for (int i = 0; i < 10; ++i) {
         slow.push_back({ZERO_HASH(), i, GENESIS_TIME + i * 2000, GENESIS_BITSQ});
     }
     auto dec3 = casert_mode_from_chain(slow, 10);
-    TEST("slow chain -> OPEN", dec3.mode == CasertMode::OPEN);
+    TEST("slow chain -> L1", dec3.mode == CasertMode::L1);
 }
 
 void test_crypto() {

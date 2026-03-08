@@ -223,6 +223,8 @@ static void print_usage() {
     printf("  createtx <to> <amt>    Create and sign a transaction (auto fee)\n");
     printf("  send <to> <amt>        Create, sign and broadcast to node (auto fee)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
+    printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
+    printf("  wallet-import          Import encrypted wallet backup\n");
     printf("  info                   Wallet summary\n");
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
@@ -746,6 +748,111 @@ int main(int argc, char** argv) {
         }
         printf("%s\n", to_hex(key->privkey.data(), 32).c_str());
         printf("\n*** KEEP THIS KEY SECRET — ANYONE WITH IT CAN SPEND YOUR SOST ***\n");
+        return 0;
+    }
+
+    // =====================================================================
+    // wallet-export --encrypted --output <file>
+    // =====================================================================
+    if (cmd == "wallet-export") {
+        std::string output_path;
+        bool encrypted = false;
+        for (int i = arg_start + 1; i < argc; ++i) {
+            if (!strcmp(argv[i], "--encrypted")) encrypted = true;
+            else if (!strcmp(argv[i], "--output") && i + 1 < argc) output_path = argv[++i];
+        }
+        if (output_path.empty()) {
+            fprintf(stderr, "Usage: sost-cli wallet-export --encrypted --output <file>\n");
+            return 1;
+        }
+        if (!encrypted) {
+            fprintf(stderr, "Error: only --encrypted export is supported (plaintext export is a security risk)\n");
+            return 1;
+        }
+
+        // Prompt passphrase twice
+        printf("Enter passphrase for encrypted backup: ");
+        fflush(stdout);
+        char pass1[256]{}, pass2[256]{};
+        if (!fgets(pass1, sizeof(pass1), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
+        pass1[strcspn(pass1, "\r\n")] = 0;
+
+        printf("Confirm passphrase: ");
+        fflush(stdout);
+        if (!fgets(pass2, sizeof(pass2), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
+        pass2[strcspn(pass2, "\r\n")] = 0;
+
+        if (strcmp(pass1, pass2) != 0) {
+            fprintf(stderr, "Error: passphrases do not match\n");
+            return 1;
+        }
+        if (strlen(pass1) < 8) {
+            fprintf(stderr, "Error: passphrase must be at least 8 characters\n");
+            return 1;
+        }
+
+        std::string err;
+        if (!w.save_encrypted(output_path, std::string(pass1), &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
+            return 1;
+        }
+        printf("Encrypted wallet backup saved to: %s\n", output_path.c_str());
+        printf("  Keys:    %zu\n", w.num_keys());
+        printf("  UTXOs:   %zu\n", w.num_utxos());
+        printf("  KDF:     scrypt (N=32768, r=8, p=1)\n");
+        printf("  Cipher:  AES-256-GCM\n");
+        printf("\n*** REMEMBER YOUR PASSPHRASE — IT CANNOT BE RECOVERED ***\n");
+
+        // Zero passphrase memory
+        memset(pass1, 0, sizeof(pass1));
+        memset(pass2, 0, sizeof(pass2));
+        return 0;
+    }
+
+    // =====================================================================
+    // wallet-import --encrypted --input <file>
+    // =====================================================================
+    if (cmd == "wallet-import") {
+        std::string input_path;
+        bool encrypted = false;
+        for (int i = arg_start + 1; i < argc; ++i) {
+            if (!strcmp(argv[i], "--encrypted")) encrypted = true;
+            else if (!strcmp(argv[i], "--input") && i + 1 < argc) input_path = argv[++i];
+        }
+        if (input_path.empty()) {
+            fprintf(stderr, "Usage: sost-cli wallet-import --encrypted --input <file>\n");
+            return 1;
+        }
+        if (!encrypted) {
+            fprintf(stderr, "Error: only --encrypted import is supported\n");
+            return 1;
+        }
+
+        printf("Enter passphrase for encrypted backup: ");
+        fflush(stdout);
+        char pass[256]{};
+        if (!fgets(pass, sizeof(pass), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
+        pass[strcspn(pass, "\r\n")] = 0;
+
+        sost::Wallet imported;
+        std::string err;
+        if (!imported.load_encrypted(input_path, std::string(pass), &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
+            memset(pass, 0, sizeof(pass));
+            return 1;
+        }
+        memset(pass, 0, sizeof(pass));
+
+        // Save as the active wallet (plaintext format for node use)
+        if (!imported.save(wallet_path, &err)) {
+            fprintf(stderr, "Error saving wallet: %s\n", err.c_str());
+            return 1;
+        }
+        printf("Wallet imported from: %s\n", input_path.c_str());
+        printf("  Saved to:  %s\n", wallet_path.c_str());
+        printf("  Keys:      %zu\n", imported.num_keys());
+        printf("  UTXOs:     %zu\n", imported.num_utxos());
+        printf("  Balance:   %s SOST\n", format_sost(imported.balance()).c_str());
         return 0;
     }
 

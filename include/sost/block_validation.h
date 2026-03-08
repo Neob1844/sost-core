@@ -47,7 +47,7 @@ inline constexpr int64_t MAX_FUTURE_BLOCK_TIME    = 10 * 60; // 600 seconds
 // - No ODR/redefinition hazards when including pow headers.
 // - Lower risk of accidental consensus divergence.
 //
-inline constexpr int64_t GENESIS_TIMESTAMP = 1772236800; // 2026-02-28 00:00:00 UTC
+inline constexpr int64_t GENESIS_TIMESTAMP = 1773360000; // 2026-03-13 00:00:00 UTC
 // GENESIS_BITSQ: defined in <sost/params.h>
 
 // ---------------------------------------------------------------------------

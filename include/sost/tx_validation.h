@@ -22,7 +22,7 @@ inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_DEV     = 1;
 inline constexpr int32_t  MAX_TX_BYTES_STANDARD    = 16000;
 inline constexpr uint16_t MAX_INPUTS_STANDARD      = 128;
 inline constexpr uint16_t MAX_OUTPUTS_STANDARD     = 32;
-inline constexpr uint16_t MAX_PAYLOAD_STANDARD     = 255;  // per-type limits in capsule validator
+inline constexpr uint16_t MAX_PAYLOAD_STANDARD     = 512;  // per-type limits in capsule validator
 inline constexpr uint8_t  MAX_PAYLOAD_OUTPUTS_STD  = 1;
 inline constexpr int64_t  MIN_RELAY_FEE_PER_BYTE   = 1;  // stocks/byte
 inline constexpr int64_t  DUST_THRESHOLD           = 10000; // stocks
@@ -52,7 +52,7 @@ struct UTXOEntry {
     int64_t  amount{0};
     uint8_t  type{0};
     PubKeyHash pubkey_hash{};
-    uint8_t  payload_len{0};
+    uint16_t payload_len{0};
     std::vector<Byte> payload;
     int64_t  height{0};        // height of the block containing this UTXO
     bool     is_coinbase{false};

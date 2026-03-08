@@ -4,7 +4,7 @@
 
 ### Genesis
 - Mainnet genesis block: `0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793`
-- Genesis timestamp: 2026-02-28 00:00:00 UTC
+- Genesis timestamp: 2026-03-13 00:00:00 UTC
 - Initial block reward: 7.85100863 SOST (785,100,863 stocks)
 - Coinbase split: 50% miner / 25% Gold Vault / 25% PoPC Pool
 

@@ -61,7 +61,7 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
 
     out.stab_scale  = level;
     out.stab_k      = 4;
-    out.stab_steps  = 3;
+    out.stab_steps  = 4;
     out.stab_margin = CX_STB_MARGIN;
     return out;
 }

@@ -246,9 +246,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1f559e05f39486582231179a4985366961d8f8313')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost144cc82d3c711b5a9322640c66b94a520497ac40d')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -300,7 +300,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   </div>
   <div class="chain-sync-wrap" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
     <div style="background:var(--bg2);border:1px solid var(--border);padding:14px 20px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-02-28 00:00:00 UTC</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-13 00:00:00 UTC</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
@@ -329,7 +329,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   </div>
 </div>
 <div class="footer">
-  <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
+  <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="s-comment">--&gt;</span>
 </div>
 <script>
 let RPC='http://localhost:18232',RPC_USER='TU_USER',RPC_PASS='TU_PASS',H=0,prevH=0,off=0;
@@ -342,16 +342,16 @@ var _lastBlockTime=0;
 var _avgBlockTime=120;
 var _countdownInterval=null;
 const ROLES={
-  'sost1be2302d89daef55af4162127b9656f7604948efa':'GOLD VAULT',
-  'sost18a222922bba5ac84979a74d76c392fdeaa59f505':'POPC POOL',
-  'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
+  'sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724':'GOLD VAULT',
+  'sost144cc82d3c711b5a9322640c66b94a520497ac40d':'POPC POOL',
+  'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:3},
-  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:3},
-  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:3},
-  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:3},
-  {signal:'75+ ahead',level:5,scale:5,k:4,steps:3},
+  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
+  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:4},
+  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:4},
+  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:4},
+  {signal:'75+ ahead',level:5,scale:5,k:4,steps:4},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -469,9 +469,9 @@ async function updateDashboard(info){
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   drawReserveBars();
   try{
-    var ADDR_MINER='sost1f559e05f39486582231179a4985366961d8f8313';
-    var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
-    var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
+    var ADDR_MINER='sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429';
+    var ADDR_GOLD='sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724';
+    var ADDR_POPC='sost144cc82d3c711b5a9322640c66b94a520497ac40d';
     var am=await rpc('getaddressinfo',[ADDR_MINER]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
@@ -519,7 +519,7 @@ function drawReserveBars(){
   makeBar(document.getElementById('goldBar'),'gold-bar-seg',intervals,maxIv);
   makeBar(document.getElementById('popcBar'),'popc-bar-seg',intervals,maxIv);
 }
-var GENESIS_TS=1772236800;
+var GENESIS_TS=1773360000;
 function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);var p=[];if(d>0)p.push(d+'d');if(h>0)p.push(h+'h');if(m>0)p.push(m+'m');p.push(s+'s');return p.join(' ');}
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
@@ -662,6 +662,7 @@ async function showTxDetail(txid){
   pushNav('tx','TX '+sH(txid),txid);
   c.innerHTML='<div class="ld">loading transaction</div>';
   try{var tx=await rpc('getrawtransaction',[txid,'true']);renderMempoolTx(tx,c);window.scrollTo({top:0,behavior:'smooth'});return;}catch(e){}
+  try{var gtx=await rpc('gettransaction',{txid:txid});renderGettransaction(gtx,c);window.scrollTo({top:0,behavior:'smooth'});return;}catch(e){}
   try{
     var outputs=[];
     for(var v=0;v<20;v++){try{var o=await rpc('gettxout',[txid,String(v)]);if(!o||o==='null')break;outputs.push({vout:v,address:o.address,amount:o.value,type:o.type,confirmations:o.confirmations,coinbase:o.coinbase,height:H-(o.confirmations||0)+1});}catch(e2){break;}}
@@ -694,6 +695,18 @@ function renderMempoolTx(tx,c){
   for(var oi=0;oi<tx.vout.length;oi++){var o=tx.vout[oi];var amt=typeof o.value==='number'?o.value.toFixed(8):o.value;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--green)">OUTPUT \u00B7 vout:'+(o.n!==undefined?o.n:oi)+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div></div>';}
   c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div><div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div><div class="k">inputs</div><div class="v">'+tx.vin.length+'</div><div class="k">outputs</div><div class="v">'+tx.vout.length+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
 }
+function renderGettransaction(tx,c){
+  var confs=tx.confirmations||0;var bh=tx.block_height||0;var isCB=tx.coinbase||false;
+  var fee=typeof tx.fee==='number'?tx.fee:0;
+  var totalIn=0,totalOut=0;
+  var inputsHtml='';
+  if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div></div>';}
+  else if(tx.inputs&&tx.inputs.length>0){for(var ii=0;ii<tx.inputs.length;ii++){var inp=tx.inputs[ii];var iamt=typeof inp.amount==='number'?inp.amount:parseFloat(inp.amount||'0');totalIn+=iamt;inputsHtml+='<div class="tx-io-item"><div class="tx-io-label">INPUT #'+ii+'</div><div class="tx-io-addr" onclick="showTxDetail(\''+inp.txid+'\')">'+sH(inp.txid)+'<span style="color:var(--text3)">:'+inp.vout+'</span></div><div class="tx-io-amt">'+iamt.toFixed(8)+' SOST</div><div class="tx-io-meta" onclick="showAddress(\''+inp.address+'\')">'+inp.address+'</div></div>';}}
+  var outputsHtml='';
+  if(tx.outputs&&tx.outputs.length>0){for(var oi=0;oi<tx.outputs.length;oi++){var o=tx.outputs[oi];var amt=typeof o.amount==='number'?o.amount:parseFloat(o.amount||'0');totalOut+=amt;outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--green)">OUTPUT \u00B7 vout:'+oi+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+amt.toFixed(8)+' SOST</div></div>';}}
+  var feeHtml=fee>0?'<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fee.toFixed(8)+' SOST</span></div>':'';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase (block reward)</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div>'+feeHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="font-size:9px;color:var(--text3)">via tx-index</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+}
 async function showAddress(addr){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('addr',sH(addr),addr);
@@ -723,7 +736,7 @@ async function showAddress(addr){
     // Constitutional protection info
     var protectionHtml='';
     if(role==='GOLD VAULT'){
-      protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--gold);font-weight:600">\u{1F512} CONSTITUTIONAL LOCK</span> <span style="color:var(--text3)">// funds reserved for XAUT/PAXG acquisition \u2014 cannot be spent as SOST</span></div>';
+      protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--gold);font-weight:600">\u{1F512} CONSTITUTIONAL LOCK</span> <span style="color:var(--text3)">// funds constitutionally reserved \u2014 cannot be spent as SOST</span></div>';
     } else if(role==='POPC POOL'){
       protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--cyan);font-weight:600">\u{1F551} CONSTITUTIONAL RESERVE</span> <span style="color:var(--text3)">// accumulates rewards for PoPC participants \u2014 distributed after audit cycle</span></div>';
     }
@@ -773,7 +786,7 @@ async function showAddress(addr){
       '<div class="fee-note" style="margin-top:16px;border-left-color:var(--cyan)">'+
         '<b style="color:var(--cyan)">\u2139 About maturity:</b> Coinbase UTXOs (block rewards) require <b>'+COINBASE_MATURITY+' confirmations</b> before they can be spent. '+
         'This protects the network against chain reorganizations. Standard transfer outputs are spendable immediately.'+
-        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> for purchasing XAUT/PAXG tokens and cannot be spent as SOST on-chain.':'')+
+        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> and cannot be spent as SOST on-chain.':'')+
         (role==='POPC POOL'?' <b style="color:var(--cyan)">PoPC Pool funds accumulate</b> and are distributed to participants who complete the Proof of Personal Custody audit protocol.':'')+
       '</div>';
     _navStack[_navStack.length-1].label=sH(addr);renderNav();
@@ -796,6 +809,7 @@ async function doSearch(){
     try{await rpc('getblock',[q]);showBlock(q);return;}catch(e){}
     try{var o=await rpc('gettxout',[q,'0']);if(o){showTxDetail(q);return;}}catch(e){}
     try{await rpc('getrawtransaction',[q,'true']);showTxDetail(q);return;}catch(e){}
+    try{await rpc('gettransaction',{txid:q});showTxDetail(q);return;}catch(e){}
     showSearchError('Hash not found as block or tx');return;
   }
   if(/^[0-9a-fA-F]{4,63}$/.test(q)){var ql=q.toLowerCase();var sm=Math.min(H+1,500);
@@ -851,7 +865,7 @@ function showCXInfo(){
   '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
-  '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
+  '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
   '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-75)+' (75+ blocks ahead of schedule)</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
@@ -861,7 +875,7 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   'Every block reward (subsidy + fees) is split constitutionally:<br>'+
   '<span style="color:var(--orange)">50%</span> → Miner &nbsp;&nbsp;'+
-  '<span style="color:var(--gold)">25%</span> → Gold Vault (automatic XAUT/PAXG purchase) &nbsp;&nbsp;'+
+  '<span style="color:var(--gold)">25%</span> → Gold Vault &nbsp;&nbsp;'+
   '<span style="color:var(--cyan)">25%</span> → PoPC Pool (Proof of Personal Custody rewards)<br><br>'+
   'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>';
 }

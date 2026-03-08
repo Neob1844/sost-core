@@ -5,6 +5,8 @@
 
 #include <openssl/sha.h>
 #include <openssl/rand.h>
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
 
 #include <fstream>
 #include <sstream>
@@ -244,9 +246,9 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
     }
 
     const char* addrs[3] = {
-        "sost1f559e05f39486582231179a4985366961d8f8313",
-        "sost1be2302d89daef55af4162127b9656f7604948efa",
-        "sost18a222922bba5ac84979a74d76c392fdeaa59f505",
+        "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429",
+        "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724",
+        "sost144cc82d3c711b5a9322640c66b94a520497ac40d",
     };
     int64_t amounts[3] = { miner_amt, gold_amt, popc_amt };
 
@@ -320,8 +322,8 @@ bool Wallet::create_transaction(
         if (!find_key_by_pkh(u.pkh)) continue;
         // Never spend constitutional UTXOs (gold vault, popc pool) in transfers
         std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost1be2302d89daef55af4162127b9656f7604948efa" ||  // GOLD VAULT
-            utxo_addr == "sost18a222922bba5ac84979a74d76c392fdeaa59f505") {  // POPC POOL
+        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||  // GOLD VAULT
+            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") {  // POPC POOL
             continue;
         }
         selected.push_back(i);
@@ -609,6 +611,307 @@ bool Wallet::load(const std::string& path, std::string* err) {
     auto utxos_pos = json.find("\"utxos\"");
     if (utxos_pos != std::string::npos) {
         pos = utxos_pos;
+        while (true) {
+            auto txid_pos = json.find("\"txid\"", pos);
+            if (txid_pos == std::string::npos) break;
+
+            auto obj_start = json.rfind('{', txid_pos);
+            auto obj_end = json.find('}', txid_pos);
+            if (obj_start == std::string::npos || obj_end == std::string::npos) break;
+
+            std::string obj = json.substr(obj_start, obj_end - obj_start + 1);
+
+            WalletUTXO utxo{};
+
+            std::string txid_hex = json_string_value(obj, "txid");
+            if (txid_hex.size() == 64) {
+                from_hex_bytes(txid_hex, utxo.txid.data(), 32);
+            }
+
+            utxo.vout = (uint32_t)json_int_value(obj, "vout");
+            utxo.amount = json_int_value(obj, "amount");
+            utxo.output_type = (uint8_t)json_int_value(obj, "output_type");
+
+            std::string pkh_hex = json_string_value(obj, "pkh");
+            if (pkh_hex.size() == 40) {
+                from_hex_bytes(pkh_hex, utxo.pkh.data(), 20);
+            }
+
+            utxo.height = json_int_value(obj, "height");
+            utxo.spent = (obj.find("\"spent\": true") != std::string::npos ||
+                          obj.find("\"spent\":true") != std::string::npos);
+
+            utxos_.push_back(utxo);
+            pos = obj_end + 1;
+        }
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Encrypted persistence — AES-256-GCM + scrypt (v2 format)
+// =============================================================================
+
+static const uint64_t SCRYPT_N = 32768;  // 2^15
+static const uint64_t SCRYPT_R = 8;
+static const uint64_t SCRYPT_P = 1;
+static const size_t   SCRYPT_KEYLEN = 32;  // AES-256
+static const size_t   SALT_LEN = 32;
+static const size_t   IV_LEN   = 12;      // GCM standard
+static const size_t   TAG_LEN  = 16;      // GCM tag
+
+static bool derive_key_scrypt(const std::string& passphrase,
+                               const uint8_t* salt, size_t salt_len,
+                               uint8_t* key_out) {
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SCRYPT, nullptr);
+    if (!ctx) return false;
+    bool ok = false;
+    do {
+        if (EVP_PKEY_derive_init(ctx) <= 0) break;
+        if (EVP_PKEY_CTX_set1_pbe_pass(ctx, passphrase.data(), passphrase.size()) <= 0) break;
+        if (EVP_PKEY_CTX_set1_scrypt_salt(ctx, salt, salt_len) <= 0) break;
+        if (EVP_PKEY_CTX_set_scrypt_N(ctx, SCRYPT_N) <= 0) break;
+        if (EVP_PKEY_CTX_set_scrypt_r(ctx, SCRYPT_R) <= 0) break;
+        if (EVP_PKEY_CTX_set_scrypt_p(ctx, SCRYPT_P) <= 0) break;
+        size_t outlen = SCRYPT_KEYLEN;
+        if (EVP_PKEY_derive(ctx, key_out, &outlen) <= 0) break;
+        ok = true;
+    } while (false);
+    EVP_PKEY_CTX_free(ctx);
+    return ok;
+}
+
+static bool aes256gcm_encrypt(const uint8_t* key, const uint8_t* iv,
+                               const uint8_t* plaintext, size_t pt_len,
+                               std::vector<uint8_t>& ciphertext,
+                               uint8_t* tag_out) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return false;
+    bool ok = false;
+    ciphertext.resize(pt_len + 16);  // GCM doesn't expand, but be safe
+    int outlen = 0, tmplen = 0;
+    do {
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) != 1) break;
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, IV_LEN, nullptr) != 1) break;
+        if (EVP_EncryptInit_ex(ctx, nullptr, nullptr, key, iv) != 1) break;
+        if (EVP_EncryptUpdate(ctx, ciphertext.data(), &outlen, plaintext, (int)pt_len) != 1) break;
+        if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + outlen, &tmplen) != 1) break;
+        outlen += tmplen;
+        ciphertext.resize(outlen);
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_LEN, tag_out) != 1) break;
+        ok = true;
+    } while (false);
+    EVP_CIPHER_CTX_free(ctx);
+    return ok;
+}
+
+static bool aes256gcm_decrypt(const uint8_t* key, const uint8_t* iv,
+                               const uint8_t* ciphertext, size_t ct_len,
+                               const uint8_t* tag,
+                               std::vector<uint8_t>& plaintext) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) return false;
+    bool ok = false;
+    plaintext.resize(ct_len);
+    int outlen = 0, tmplen = 0;
+    do {
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) != 1) break;
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, IV_LEN, nullptr) != 1) break;
+        if (EVP_DecryptInit_ex(ctx, nullptr, nullptr, key, iv) != 1) break;
+        if (EVP_DecryptUpdate(ctx, plaintext.data(), &outlen, ciphertext, (int)ct_len) != 1) break;
+        if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_LEN,
+                                 const_cast<uint8_t*>(tag)) != 1) break;
+        if (EVP_DecryptFinal_ex(ctx, plaintext.data() + outlen, &tmplen) != 1) break;
+        outlen += tmplen;
+        plaintext.resize(outlen);
+        ok = true;
+    } while (false);
+    EVP_CIPHER_CTX_free(ctx);
+    return ok;
+}
+
+bool Wallet::save_encrypted(const std::string& path, const std::string& passphrase,
+                             std::string* err) const {
+    if (passphrase.empty()) {
+        if (err) *err = "passphrase must not be empty";
+        return false;
+    }
+
+    // Build plaintext keys blob: each key as "privkey_hex:label\n"
+    std::string keys_plain;
+    for (const auto& k : keys_) {
+        keys_plain += to_hex(k.privkey.data(), 32) + ":" + k.label + "\n";
+    }
+
+    // Generate salt + IV
+    uint8_t salt[SALT_LEN], iv[IV_LEN];
+    if (RAND_bytes(salt, SALT_LEN) != 1 || RAND_bytes(iv, IV_LEN) != 1) {
+        if (err) *err = "RAND_bytes failed";
+        return false;
+    }
+
+    // Derive key
+    uint8_t key[SCRYPT_KEYLEN];
+    if (!derive_key_scrypt(passphrase, salt, SALT_LEN, key)) {
+        if (err) *err = "scrypt key derivation failed";
+        return false;
+    }
+
+    // Encrypt
+    std::vector<uint8_t> ct;
+    uint8_t tag[TAG_LEN];
+    if (!aes256gcm_encrypt(key, iv,
+                            reinterpret_cast<const uint8_t*>(keys_plain.data()),
+                            keys_plain.size(), ct, tag)) {
+        if (err) *err = "AES-256-GCM encryption failed";
+        return false;
+    }
+
+    // Zeroize key material
+    OPENSSL_cleanse(key, SCRYPT_KEYLEN);
+    OPENSSL_cleanse(&keys_plain[0], keys_plain.size());
+
+    // Write file
+    std::ofstream f(path);
+    if (!f) {
+        if (err) *err = "cannot open " + path + " for writing";
+        return false;
+    }
+
+    f << "{\n";
+    f << "  \"version\": 2,\n";
+    f << "  \"encrypted\": true,\n";
+    f << "  \"scrypt_N\": " << SCRYPT_N << ",\n";
+    f << "  \"scrypt_r\": " << SCRYPT_R << ",\n";
+    f << "  \"scrypt_p\": " << SCRYPT_P << ",\n";
+    f << "  \"salt\": \"" << to_hex(salt, SALT_LEN) << "\",\n";
+    f << "  \"iv\": \"" << to_hex(iv, IV_LEN) << "\",\n";
+    f << "  \"tag\": \"" << to_hex(tag, TAG_LEN) << "\",\n";
+    f << "  \"keys_ct\": \"" << to_hex(ct.data(), ct.size()) << "\",\n";
+    f << "  \"num_addresses\": " << keys_.size() << ",\n";
+
+    // Public info (addresses) — not secret, useful for watch-only
+    f << "  \"addresses\": [\n";
+    for (size_t i = 0; i < keys_.size(); ++i) {
+        f << "    \"" << keys_[i].address << "\"" << (i + 1 < keys_.size() ? "," : "") << "\n";
+    }
+    f << "  ],\n";
+
+    // UTXOs — not encrypted
+    f << "  \"utxos\": [\n";
+    size_t utxo_count = 0;
+    for (size_t i = 0; i < utxos_.size(); ++i) {
+        const auto& u = utxos_[i];
+        if (i > 0) f << ",\n";
+        f << "    {\n";
+        f << "      \"txid\": \"" << to_hex(u.txid.data(), 32) << "\",\n";
+        f << "      \"vout\": " << u.vout << ",\n";
+        f << "      \"amount\": " << u.amount << ",\n";
+        f << "      \"output_type\": " << (int)u.output_type << ",\n";
+        f << "      \"pkh\": \"" << to_hex(u.pkh.data(), 20) << "\",\n";
+        f << "      \"height\": " << u.height << ",\n";
+        f << "      \"spent\": " << (u.spent ? "true" : "false") << "\n";
+        f << "    }";
+        ++utxo_count;
+    }
+    if (utxo_count > 0) f << "\n";
+    f << "  ]\n";
+    f << "}\n";
+
+    return true;
+}
+
+bool Wallet::load_encrypted(const std::string& path, const std::string& passphrase,
+                              std::string* err) {
+    if (passphrase.empty()) {
+        if (err) *err = "passphrase must not be empty";
+        return false;
+    }
+
+    std::ifstream f(path);
+    if (!f) {
+        if (err) *err = "cannot open " + path;
+        return false;
+    }
+
+    std::string json((std::istreambuf_iterator<char>(f)),
+                      std::istreambuf_iterator<char>());
+
+    // Check version
+    int64_t ver = json_int_value(json, "version");
+    if (ver != 2) {
+        if (err) *err = "not an encrypted wallet (version " + std::to_string(ver) + ")";
+        return false;
+    }
+
+    // Read crypto params
+    std::string salt_hex = json_string_value(json, "salt");
+    std::string iv_hex   = json_string_value(json, "iv");
+    std::string tag_hex  = json_string_value(json, "tag");
+    std::string ct_hex   = json_string_value(json, "keys_ct");
+
+    if (salt_hex.size() != SALT_LEN * 2 || iv_hex.size() != IV_LEN * 2 ||
+        tag_hex.size() != TAG_LEN * 2 || ct_hex.empty()) {
+        if (err) *err = "invalid encrypted wallet format";
+        return false;
+    }
+
+    uint8_t salt[SALT_LEN], iv[IV_LEN], tag[TAG_LEN];
+    from_hex_bytes(salt_hex, salt, SALT_LEN);
+    from_hex_bytes(iv_hex, iv, IV_LEN);
+    from_hex_bytes(tag_hex, tag, TAG_LEN);
+
+    std::vector<uint8_t> ct(ct_hex.size() / 2);
+    if (!from_hex_bytes(ct_hex, ct.data(), ct.size())) {
+        if (err) *err = "invalid ciphertext hex";
+        return false;
+    }
+
+    // Derive key
+    uint8_t key[SCRYPT_KEYLEN];
+    if (!derive_key_scrypt(passphrase, salt, SALT_LEN, key)) {
+        if (err) *err = "scrypt key derivation failed";
+        return false;
+    }
+
+    // Decrypt
+    std::vector<uint8_t> plaintext;
+    if (!aes256gcm_decrypt(key, iv, ct.data(), ct.size(), tag, plaintext)) {
+        OPENSSL_cleanse(key, SCRYPT_KEYLEN);
+        if (err) *err = "decryption failed — wrong passphrase or corrupted file";
+        return false;
+    }
+    OPENSSL_cleanse(key, SCRYPT_KEYLEN);
+
+    // Parse decrypted keys: "privkey_hex:label\n" per line
+    keys_.clear();
+    utxos_.clear();
+    addr_index_.clear();
+
+    std::string pt(reinterpret_cast<const char*>(plaintext.data()), plaintext.size());
+    std::istringstream ss(pt);
+    std::string line;
+    while (std::getline(ss, line)) {
+        if (line.empty()) continue;
+        auto colon = line.find(':');
+        std::string priv_hex = (colon != std::string::npos) ? line.substr(0, colon) : line;
+        std::string label = (colon != std::string::npos) ? line.substr(colon + 1) : "";
+
+        PrivKey priv{};
+        if (from_hex_bytes(priv_hex, priv.data(), 32)) {
+            try {
+                import_privkey(priv, label);
+            } catch (...) {}
+        }
+    }
+    OPENSSL_cleanse(&pt[0], pt.size());
+    OPENSSL_cleanse(plaintext.data(), plaintext.size());
+
+    // Load UTXOs (same parsing as v1)
+    auto utxos_pos = json.find("\"utxos\"");
+    if (utxos_pos != std::string::npos) {
+        size_t pos = utxos_pos;
         while (true) {
             auto txid_pos = json.find("\"txid\"", pos);
             if (txid_pos == std::string::npos) break;

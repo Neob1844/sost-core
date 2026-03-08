@@ -10,7 +10,7 @@ int main() {
     
     Bytes32 prev{}; prev.fill(0);
     Bytes32 mrkl{}; mrkl.fill(0x11);
-    uint32_t ts = 1772236800;
+    uint32_t ts = 1773360000;
     uint32_t diff = GENESIS_BITSQ;
     
     auto bk = compute_block_key(prev);

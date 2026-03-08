@@ -41,7 +41,7 @@ inline Profile ACTIVE_PROFILE = Profile::DEV;
 inline const uint8_t* MAGIC_STR_BYTES() { return magic_for_profile(ACTIVE_PROFILE); }
 
 // Time / schedule
-inline constexpr int64_t GENESIS_TIME     = 1772236800; // 2026-02-28 00:00:00 UTC
+inline constexpr int64_t GENESIS_TIME     = 1773360000; // 2026-03-13 00:00:00 UTC
 inline constexpr int64_t TARGET_SPACING   = 600;
 inline constexpr int64_t BLOCKS_PER_EPOCH = 131553;
 
@@ -83,7 +83,7 @@ inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
 inline constexpr int32_t CX_STB_SCALE  = 1;    // L1 neutral = scale 1
 inline constexpr int32_t CX_STB_K      = 4;
 inline constexpr int32_t CX_STB_MARGIN = 180;
-inline constexpr int32_t CX_STB_STEPS  = 3;
+inline constexpr int32_t CX_STB_STEPS  = 4;
 inline constexpr int32_t CX_STB_LR     = 20;   // LR_SHIFT+2
 
 inline constexpr int32_t CX_C_NUM = 7;
@@ -102,9 +102,9 @@ inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
-constexpr const char* ADDR_MINER_FOUNDER = "sost1f559e05f39486582231179a4985366961d8f8313";
-constexpr const char* ADDR_GOLD_VAULT    = "sost1be2302d89daef55af4162127b9656f7604948efa";
-constexpr const char* ADDR_POPC_POOL     = "sost18a222922bba5ac84979a74d76c392fdeaa59f505";
+constexpr const char* ADDR_MINER_FOUNDER = "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429";
+constexpr const char* ADDR_GOLD_VAULT    = "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724";
+constexpr const char* ADDR_POPC_POOL     = "sost144cc82d3c711b5a9322640c66b94a520497ac40d";
 
 // Timestamp rules
 inline constexpr int32_t MTP_WINDOW       = 11;
