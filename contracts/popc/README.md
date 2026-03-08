@@ -6,7 +6,7 @@ Proof of Personal Custody (PoPC) contract implementations for Ethereum.
 
 | Phase | Timeline | Description |
 |---|---|---|
-| Manual verification | Now | Foundation commitments verified via `scripts/verify_popc_balance.py`. Rewards paid manually from PoPC Pool. |
+| Manual verification | Now | Foundation commitments verified via `scripts/verify_popc_balance.py`. Rewards paid manually from PoPC Pool. Transitional by design — automation is a constitutional commitment, not a discretionary goal. |
 | Sepolia testnet | Q2 2026 | Model A (bond + audit) and Model B (escrow timelock) deployed on Sepolia for public testing. |
 | Ethereum mainnet | Q3 2026 | Production deployment. First third-party custody contracts active. |
 
@@ -33,15 +33,19 @@ Proof of Personal Custody (PoPC) contract implementations for Ethereum.
 
 | Model | Fee rate | Timing |
 |---|---|---|
-| A (bond + audit) | 5% of gross reward | At completion |
-| B (timelocked escrow) | 10% of gross reward | At payout |
+| A (bond + audit) | 5% of gross reward | At commitment creation (upfront) |
+| B (timelocked escrow) | 10% of gross reward | At commitment creation (upfront) |
 
-Fees are deducted from the gross reward — participants receive `reward × (1 - fee_rate)`.
-Fee goes to the Foundation fee wallet. Both transactions sourced from the PoPC Pool.
+Fees are collected **upfront at commitment creation** — deducted from the gross reward before any payout.
+Participants receive `reward × (1 - fee_rate)` at completion. Fee goes to the Foundation fee wallet.
+Both transactions sourced from the PoPC Pool.
 
-### Phase 1 (current): Manual payout
+### Phase 1 (current): Manual two-step process
 
 Script: `scripts/popc_reward_payout.py`
+
+**Step 1 — At creation** (`--action create`): Collects protocol fee upfront.
+**Step 2 — At completion** (`--action complete`): Pays net reward to participant.
 
 - Generates `sost-cli send` commands (does NOT execute)
 - Integer arithmetic only (stocks + basis points, no floats)
