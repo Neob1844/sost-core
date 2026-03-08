@@ -322,7 +322,7 @@
       <div class="spec-body">
         <p class="spec-desc">
           Concrete walkthrough of mining Block #1 with genesis parameters:
-          <code>prev_hash = 0000...0000</code>, <code>bitsQ = 353,075</code> &rarr; difficulty = 5.2737
+          <code>prev_hash = 0000...0000</code>, <code>bitsQ = 353,075</code> &rarr; difficulty = 5.3875
         </p>
 
         <div class="code-snippet" data-label="STEP 1 — DATASET (once per block)">
@@ -464,8 +464,8 @@ commit = <span class="fn">finalize</span>(state || checkpoints)
         <div class="code-snippet" data-label="GENESIS DECODE">
 <span class="cmt">// bitsQ = 353,075</span>
 integer  = <span class="num">353075</span> &gt;&gt; <span class="num">16</span>       = <span class="num">5</span>
-fraction = <span class="num">353075</span> &amp; <span class="num">0xFFFF</span>    = <span class="num">17,939</span>
-real     = <span class="num">5</span> + <span class="num">17939</span>/<span class="num">65536</span>    = <span class="str">5.2737</span>
+fraction = <span class="num">353075</span> &amp; <span class="num">0xFFFF</span>    = <span class="num">25,395</span>
+real     = <span class="num">5</span> + <span class="num">25395</span>/<span class="num">65536</span>    = <span class="str">5.3875</span>
         </div>
 
         <table class="code-table">
@@ -475,7 +475,7 @@ real     = <span class="num">5</span> + <span class="num">17939</span>/<span cla
           </tr>
           <tr>
             <td class="key">GENESIS</td>
-            <td class="val">bitsQ = <code>353,075</code> &rarr; difficulty <span style="color:#67e8f9">5.2737</span> <span class="comment">// genesis block</span></td>
+            <td class="val">bitsQ = <code>353,075</code> &rarr; difficulty <span style="color:#67e8f9">5.3875</span> <span class="comment">// genesis block</span></td>
           </tr>
           <tr>
             <td class="key">MAX</td>
