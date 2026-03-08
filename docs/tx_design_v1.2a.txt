@@ -25,7 +25,7 @@
 //   - PoPC Pool funding (25% of every block, forever)
 //   - Future bond locking (Model A)
 //   - Future escrow deposits (Model B)
-//   - Slash burns (deflationary by constitution)
+//   - Slash redistribution (50% PoPC Pool, 50% Gold Vault — no supply destruction)
 //
 // The transaction format reflects this with Typed Outputs: every output
 // carries a purpose byte and an extensible payload at the consensus level.
@@ -33,7 +33,7 @@
 //
 // This enables:
 //   1. Consensus-level constitutional validation (correct coinbase splits)
-//   2. Self-documenting UTXO set (instant vault/pool/bond/burn tallies)
+//   2. Self-documenting UTXO set (instant vault/pool/bond tallies)
 //   3. Future PoPC bond/escrow at Layer 1 (no smart contracts needed)
 //   4. Forward-compatible output format (payload avoids future format breaks)
 //   5. Simpler wallet and explorer semantics
@@ -96,7 +96,7 @@
 //
 //   0x10  BOND_LOCK       (PoPC Model A — target: v2, Jan 2027)
 //   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Jan 2027)
-//   0x20  BURN            (slash burns, voluntary burns — target: v2)
+//   0x20  BURN            (reserved, NOT activated — supply is immutable, no burns)
 //
 //   Consensus rule: any output with a reserved type (0x10-0xFF) is INVALID
 //   until the corresponding activation height is reached. A node that sees
@@ -109,7 +109,7 @@
 //
 //   0x00-0x0F: Core transaction types
 //   0x10-0x1F: PoPC-related types
-//   0x20-0x2F: Special operations (burn, etc.)
+//   0x20-0x2F: Special operations (reserved, not planned for activation)
 //   0x30-0xFF: Reserved for future use (invalid until activated)
 //
 // --- Forward-compatibility note (normative design note) ---
@@ -126,14 +126,13 @@
 //   Any future typed metadata is therefore consensus-bound and signed by
 //   every input, preventing tampering without introducing new sighash modes.
 //
-// --- BURN (0x20) design notes (for activation in v2) ---
+// --- BURN (0x20) design notes (reserved, NOT planned for activation) ---
 //
-//   When activated, BURN outputs are non-spendable BY CONSENSUS RULE.
-//   The rule is: "No input may reference an output of type 0x20. Period."
-//   Enforced in validation, not by probability.
-//   pubkey_hash = 0x00*20 is a visual marker; non-spendability comes from
-//   the consensus rule exclusively.
-//   payload_len may be 0 unless a future burn subtype requires metadata.
+//   NOTE: OUT_BURN (0x20) is reserved but NOT planned for activation.
+//   SOST supply is immutable by construction — no token destruction mechanism
+//   exists or is planned. All slashing redistributes funds (50% PoPC Pool,
+//   50% Gold Vault); nothing is ever burned. The type code is retained for
+//   forward-compatibility but has no activation timeline.
 //
 // --- Planned v2 BOND_LOCK payload (draft, non-normative until activation) ---
 //
@@ -397,9 +396,9 @@
 //        MIN_FEE = serialized_tx_size_bytes * MIN_FEE_PER_BYTE.
 //   S9:  All output types must be 0x00 (TRANSFER) in v1, and each such
 //        output MUST have payload_len = 0.
-//        Standard transactions cannot create coinbase/bond/escrow/burn outputs.
-//        (When BURN is activated in v2, S9 expands to allow {0x00, 0x20},
-//        with payload rules defined at activation.)
+//        Standard transactions cannot create coinbase/bond/escrow outputs.
+//        (OUT_BURN 0x20 is reserved but not planned for activation.
+//        SOST supply is immutable — no burn mechanism exists.)
 //   S10: If any input references a coinbase output (types 0x01/0x02/0x03),
 //        that UTXO must have >= COINBASE_MATURITY (100) confirmations.
 //   S11: If any input references a BOND_LOCK output (type 0x10, when active),
@@ -555,9 +554,7 @@
 //   total_gold_vault()  → sum of all unspent type 0x02 amounts
 //   total_popc_pool()   → sum of all unspent type 0x03 amounts
 //   total_bonds()       → sum of all unspent type 0x10 amounts (when active)
-//   total_burned()      → cumulative type 0x20 amounts (tracked separately;
-//                          burns are never in UTXO set)
-//   circulating()       → total_mined - gold_vault - popc_pool - bonds - burned
+//   circulating()       → total_mined - gold_vault - popc_pool - bonds
 //
 //   These are first-class protocol queries, not application-layer hacks.
 //
@@ -854,7 +851,7 @@
 //   Maturity:     100 blocks for coinbase outputs
 //   Fee:          1 stockshi/byte minimum, implicit (inputs - outputs)
 //   Storage:      LevelDB (production), in-memory (test)
-//   Future:       Bond/escrow/burn reserved, activated by height, payload-ready
+//   Future:       Bond/escrow reserved, activated by height, payload-ready (burn reserved but not planned)
 //   Domain sep:   genesis_hash in every sighash (anti-replay)
 //   Emergency:    Compact binary "EM1|" + proposalId in coinbase (36 bytes)
 //   Payload:      Forward-compatible field in TxOutput (empty in v1)

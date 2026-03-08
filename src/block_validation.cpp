@@ -1,3 +1,6 @@
+// SOST Protocol — Copyright (c) 2026 SOST Foundation
+// Licensed under the Business Source License 1.1. See LICENSE file.
+//
 // =============================================================================
 // SOST — Phase 5.5: Block Validation Implementation
 // Compatible with Phase 3 (tx_validation) + Phase 4 (utxo_set)

@@ -1,3 +1,6 @@
+// SOST Protocol — Copyright (c) 2026 SOST Foundation
+// Licensed under the Business Source License 1.1. See LICENSE file.
+//
 // sost-node.cpp — SOST Full Node v0.3.2
 //
 // Full node: P2P + JSON-RPC + chain sync + tx relay

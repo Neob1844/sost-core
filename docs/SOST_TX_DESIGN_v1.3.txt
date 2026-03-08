@@ -26,7 +26,7 @@
 //   - PoPC Pool funding (25% of every block, forever)
 //   - Future bond locking (Model A)
 //   - Future escrow deposits (Model B)
-//   - Slash burns (deflationary by constitution)
+//   - Slash redistribution (50% PoPC Pool, 50% Gold Vault — no supply destruction)
 //
 // The transaction format reflects this with Typed Outputs: every output
 // carries a purpose byte and an extensible payload at the consensus level.
@@ -34,7 +34,7 @@
 //
 // This enables:
 //   1. Consensus-level constitutional validation (correct coinbase splits)
-//   2. Self-documenting UTXO set (instant vault/pool/bond/burn tallies)
+//   2. Self-documenting UTXO set (instant vault/pool/bond tallies)
 //   3. Future PoPC bond/escrow at Layer 1 (no smart contracts needed)
 //   4. Forward-compatible output format (payload avoids future format breaks)
 //   5. Simpler wallet and explorer semantics
@@ -84,7 +84,7 @@
 //
 //   0x10  BOND_LOCK       (PoPC Model A — target: v2, Jan 2027)
 //   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Jan 2027)
-//   0x20  BURN            (slash burns, voluntary burns — target: v2)
+//   0x20  BURN            (reserved, NOT activated — supply is immutable, no burns)
 //
 // =============================================================================
 // 4. DATA STRUCTURES
@@ -452,7 +452,7 @@
 //   Maturity:     100 blocks for coinbase outputs
 //   Fee:          1 stock/byte minimum
 //   Storage:      LevelDB (prod), in-memory (test)
-//   Future:       Bond/escrow/burn reserved, payload-ready
+//   Future:       Bond/escrow reserved, payload-ready (burn reserved but not planned)
 //   Status:       161/161 tests passing
 //   Migration:    OpenSSL -> libsecp256k1 (Mar 1-7, 2026)
 //

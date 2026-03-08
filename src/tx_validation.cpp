@@ -1,3 +1,6 @@
+// SOST Protocol — Copyright (c) 2026 SOST Foundation
+// Licensed under the Business Source License 1.1. See LICENSE file.
+//
 // =============================================================================
 // tx_validation.cpp — SOST Transaction Validation (Phase 3)
 // Design v1.2a Section 7 — Consensus rules R1-R14, S1-S12, CB1-CB10
