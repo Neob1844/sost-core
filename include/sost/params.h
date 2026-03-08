@@ -63,13 +63,20 @@ inline constexpr int64_t  ASERT_HALF_LIFE  = 86400;
 inline constexpr int32_t  ASERT_DOWN_STEPS = 2; // log2(4)
 inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
 
-// cASERT v3 thresholds (blocks ahead of schedule)
-//   0– 4 → L1 neutral   | 5–19 → L2 light
-//  20–49 → L3 moderate  | 50–74 → L4 strong  | 75+ → L5 max (cap)
-inline constexpr int32_t CASERT_L2_BLOCKS = 5;
-inline constexpr int32_t CASERT_L3_BLOCKS = 20;
-inline constexpr int32_t CASERT_L4_BLOCKS = 50;
-inline constexpr int32_t CASERT_L5_BLOCKS = 75;
+// cASERT v5 thresholds (blocks ahead of schedule)
+//   0– 4 → L1 neutral   | 5–25 → L2 light   | 26–50 → L3 moderate
+//  51–75 → L4 strong    | 76+ → L5+ unbounded (scale = level + 1)
+inline constexpr int32_t CASERT_L2_BLOCKS  = 5;    // unchanged
+inline constexpr int32_t CASERT_L3_BLOCKS  = 26;   // was 20
+inline constexpr int32_t CASERT_L4_BLOCKS  = 51;   // was 50
+inline constexpr int32_t CASERT_L5_BLOCKS  = 76;   // was 75
+inline constexpr int32_t CASERT_L6_BLOCKS  = 101;  // new
+inline constexpr int32_t CASERT_L7_BLOCKS  = 151;  // new
+inline constexpr int32_t CASERT_L8_BLOCKS  = 201;  // new
+inline constexpr int32_t CASERT_L9_BLOCKS  = 251;  // new
+inline constexpr int32_t CASERT_L10_BLOCKS = 301;  // new
+// Above L10: level = 5 + (blocks_ahead - 76) / 50
+// scale = level + 1 — unbounded, no ceiling
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;

@@ -159,6 +159,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 .casert-tbl tr.casert-active td{background:rgba(192,132,252,.1);border-left:2px solid var(--purple)}
 .casert-tbl .cl{color:var(--purple);font-weight:600}
 .casert-tbl .cn{color:var(--orange)}.casert-tbl .cg{color:var(--green)}
+.casert-pulse td{animation:casertPulse 1.5s ease-in-out infinite}
+@keyframes casertPulse{0%,100%{background:rgba(255,0,64,.05)}50%{background:rgba(255,0,64,.18)}}
 .lv-1{color:#4ade80;font-weight:600}.lv-2{color:#67e8f9;font-weight:600}
 .lv-3{color:#fbbf24;font-weight:600}.lv-4{color:#fb923c;font-weight:600}
 .lv-5{color:#e63946;font-weight:600}.lv-6{color:#ff2040;font-weight:700}
@@ -347,11 +349,12 @@ const ROLES={
   'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:3},
-  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:3},
-  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:3},
-  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:3},
-  {signal:'75+ ahead',level:5,scale:5,k:4,steps:3},
+  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
+  {signal:'5\u201325 ahead',level:2,scale:2,k:4,steps:4},
+  {signal:'26\u201350 ahead',level:3,scale:3,k:4,steps:4},
+  {signal:'51\u201375 ahead',level:4,scale:4,k:4,steps:4},
+  {signal:'76\u2013100 ahead',level:5,scale:6,k:4,steps:4},
+  {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -361,22 +364,33 @@ function computeCurrentLag(){
   return expected-H; // lag = expected - actual
 }
 function getCasertLevel(signal){
+  // cASERT v5 — Unbounded dynamic scale
   // signal = lag in blocks. Negative = ahead of schedule.
-  // Unidirectional: only harden when ahead (signal < 0).
   if(signal>=0)return 1;  // behind or on-time → L1 (neutral)
   var ahead=-signal;
   if(ahead<5)return 1;    // L1: 0-4 ahead (neutral)
-  if(ahead<20)return 2;   // L2: 5-19 ahead
-  if(ahead<50)return 3;   // L3: 20-49 ahead
-  if(ahead<75)return 4;   // L4: 50-74 ahead
-  return 5;               // L5: 75+ ahead (max, capped)
+  if(ahead<26)return 2;   // L2: 5-25 ahead
+  if(ahead<51)return 3;   // L3: 26-50 ahead
+  if(ahead<76)return 4;   // L4: 51-75 ahead
+  return 5+(ahead-76)/50|0; // L5+: unbounded, every 50 blocks adds 1
+}
+function getCasertScale(signal){
+  if(signal>=0)return 1;
+  var ahead=-signal;
+  if(ahead<5)return 1;
+  if(ahead<26)return 2;
+  if(ahead<51)return 3;
+  if(ahead<76)return 4;
+  var level=5+(ahead-76)/50|0;
+  return level+1; // scale = level + 1 above L4
 }
 function getLevelColor(lv){
   if(lv<=1)return '#4ade80';  // L1 = green (neutral/base)
   if(lv===2)return '#67e8f9'; // L2 = cyan (light)
   if(lv===3)return '#fbbf24'; // L3 = yellow (moderate)
   if(lv===4)return '#fb923c'; // L4 = orange (strong)
-  return '#e63946';           // L5 = red (maximum)
+  if(lv===5)return '#e63946'; // L5 = red (emergency)
+  return '#ff0040';           // L6+ = bright red (unbounded)
 }
 function getLevelLabel(signal){
   var lv=getCasertLevel(signal);
@@ -442,15 +456,19 @@ function renderNav(){
 }
 function renderCasertPanel(signal,mode){
   var activeLevel=getCasertLevel(signal);
-  var activeScale=1;
-  for(var si=0;si<CASERT_LEVELS.length;si++){if(CASERT_LEVELS[si].level===activeLevel){activeScale=CASERT_LEVELS[si].scale;break;}}
+  var activeScale=getCasertScale(signal);
   var tableRows='';
   for(var li=0;li<CASERT_LEVELS.length;li++){
     var lv=CASERT_LEVELS[li];var active=lv.level===activeLevel;
-    var compute=lv.scale*lv.k*lv.steps;
-    tableRows+='<tr class="'+(active?'casert-active':'')+'"><td style="color:var(--text3)">'+lv.signal+'</td><td style="color:'+getLevelColor(lv.level)+';font-weight:600">L'+lv.level+'</td><td class="cn">'+lv.scale+'</td><td class="cn">'+lv.k+'</td><td class="cn">'+lv.steps+'</td><td class="cg">'+compute+' tests</td></tr>';
+    var sc=lv.scale;var scLabel=''+sc;
+    if(lv.level>=6){sc=activeLevel>=6?activeScale:7;scLabel='L+1';} // L6+ dynamic
+    var compute=sc*lv.k*lv.steps;var compLabel=lv.level>=6?'UNBOUNDED':''+compute+' tests';
+    var rowStyle=active?'casert-active':'';
+    if(lv.level>=6)rowStyle+=(rowStyle?' ':'')+'casert-pulse';
+    tableRows+='<tr class="'+rowStyle+'"><td style="color:var(--text3)">'+lv.signal+'</td><td style="color:'+getLevelColor(lv.level)+';font-weight:600">L'+lv.level+(lv.level>=6?'+':'')+'</td><td class="cn">'+scLabel+'</td><td class="cn">'+lv.k+'</td><td class="cn">'+lv.steps+'</td><td class="cg">'+compLabel+'</td></tr>';
   }
-  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">adaptive PoW difficulty overlay</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val">4</div><div class="casert-param-desc">Number of independent stability tests per hash. Each pushes the solution from a random direction and checks if it returns. Fixed at k=4.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val">3</div><div class="casert-param-desc">Gradient steps per perturbation to verify convergence. Each step checks "did the solution return to the attractor?". Fixed at 3 steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(activeLevel)+'">'+activeScale+'</div><div class="casert-param-desc">How far the solution is pushed. Scale='+activeScale+' means the miner must find solutions in deeper valleys. Rises with difficulty level.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">LEVEL TABLE <span style="color:var(--purple)">\u00B7 compute = scale \u00D7 k \u00D7 steps</span></div><table class="casert-tbl"><thead><tr><th>SIGNAL</th><th>LEVEL</th><th>SCALE</th><th>K</th><th>STEPS</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  tableRows+='<tr><td colspan="6" style="font-size:9px;color:var(--text3);padding:8px 10px;border:none">System is unbounded above L5 \u2014 scale = level + 1, growing every 50 blocks ahead of schedule</td></tr>';
+  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">adaptive PoW difficulty overlay (cASERT v5)</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val">4</div><div class="casert-param-desc">Number of independent stability tests per hash. Each pushes the solution from a random direction and checks if it returns. Fixed at k=4.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val">4</div><div class="casert-param-desc">Gradient steps per perturbation to verify convergence. Each step checks "did the solution return to the attractor?". Fixed at 4 steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(activeLevel)+'">'+activeScale+'</div><div class="casert-param-desc">How far the solution is pushed. Scale='+activeScale+' means the miner must find solutions in deeper valleys. Rises with difficulty level.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">LEVEL TABLE <span style="color:var(--purple)">\u00B7 compute = scale \u00D7 k \u00D7 steps</span></div><table class="casert-tbl"><thead><tr><th>SIGNAL</th><th>LEVEL</th><th>SCALE</th><th>K</th><th>STEPS</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 function renderStats(i){
   document.getElementById('statsCode').innerHTML='<span class="s-comment">// SOST network status</span>\n<span class="s-type">const</span> <span class="s-key">chain</span> <span class="s-sep">=</span> <span class="s-bracket">{</span>\n  <span class="s-key">height</span><span class="s-sep">:</span>    <span class="s-red">'+i.blocks.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">bits_q</span><span class="s-sep">:</span>    <span class="s-num">'+i.difficulty.toLocaleString()+'</span><span class="s-sep">,</span>    <span class="s-comment">// SOSTCompact Q16.16</span>\n  <span class="s-key">bits_real</span><span class="s-sep">:</span>  <span class="s-num">'+(i.difficulty/65536).toFixed(3)+'</span><span class="s-sep">,</span>    <span class="s-comment">// bits_q \u00F7 65536</span>\n  <span class="s-key">peers</span><span class="s-sep">:</span>      <span class="s-num">'+i.connections+'</span><span class="s-sep">,</span>\n  <span class="s-key">mempool</span><span class="s-sep">:</span>    <span class="s-num">'+i.mempool_size+'</span><span class="s-sep">,</span>\n  <span class="s-key">utxo_set</span><span class="s-sep">:</span>  <span class="s-num">'+i.utxo_count.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">version</span><span class="s-sep">:</span>   <span class="s-str">"'+i.version+'"</span><span class="s-sep">,</span>\n  <span class="s-key">balance</span><span class="s-sep">:</span>   <span class="s-str">"'+i.balance+' SOST"</span>\n<span class="s-bracket">}</span><span class="s-sep">;</span>';
@@ -851,9 +869,9 @@ function showCXInfo(){
   '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
-  '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
+  '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
-  '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-75)+' (75+ blocks ahead of schedule)</div>'+
+  '<div class="k">MAX LEVEL</div><div class="v">UNBOUNDED — scale = level + 1 above L4, growing every 50 blocks ahead</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+

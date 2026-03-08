@@ -1,10 +1,53 @@
 #pragma once
+// ConvergenceX v2.0: Persistent dataset cache + per-block program generation
+// ASIC-resistance: O(4GB) memory required, no fixed pattern to optimize
+#define CONVERGENCEX_VERSION "2.0"
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/serialize.h"
 #include "sost/crypto.h"
 #include <vector>
+#include <array>
 namespace sost {
+
+// ConvergenceX v2 — Persistent Dataset Cache
+// Dataset is computed once per block_prev_hash and reused
+// across all nonce attempts. Eliminates redundant 4GB generation.
+struct CXDataset {
+    std::vector<uint64_t> memory;   // 4GB dataset (512M uint64_t entries)
+    Bytes32 seed_hash;              // block_prev_hash that generated this dataset
+    bool initialized = false;
+
+    void generate(const Bytes32& block_prev_hash);
+    bool is_valid_for(const Bytes32& block_prev_hash) const;
+};
+
+// Global dataset — reused across mining attempts for same block
+extern thread_local CXDataset g_cx_dataset;
+
+// ConvergenceX v2 — Per-Block Program Generation
+// Each block_hash generates a unique sequence of operations.
+// Makes ASIC optimization impossible — no fixed pattern to hardcode.
+enum class CXOp : uint8_t {
+    MUL   = 0,   // multiply
+    XOR   = 1,   // xor
+    ADD   = 2,   // add
+    ROT   = 3,   // rotate left
+    AND   = 4,   // bitwise and
+    OR    = 5,   // bitwise or
+    NOT   = 6,   // bitwise not
+    SUB   = 7    // subtract
+};
+
+struct CXProgram {
+    static constexpr size_t PROGRAM_LENGTH = 256;  // operations per round
+    std::array<CXOp, PROGRAM_LENGTH> ops;
+    std::array<uint64_t, PROGRAM_LENGTH> immediates;
+    Bytes32 block_hash;
+
+    void generate(const Bytes32& block_hash);
+    uint64_t execute(uint64_t state, size_t step) const;
+};
 
 struct CXProblem {
     int32_t M[32][32];
