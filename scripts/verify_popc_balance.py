@@ -8,7 +8,8 @@ Outputs a JSON attestation with balances, block number, and pass/fail status.
 Usage:
     python3 verify_popc_balance.py [--rpc URL]
 
-Default RPC: https://eth.llamarpc.com (public, no key required)
+Default RPC: https://rpc.ankr.com/eth (public, no key required)
+Fallback RPC: https://1rpc.io/eth (used automatically if primary fails)
 For production use, set your own RPC via Infura/Alchemy/etc.
 
 Requirements:
@@ -46,7 +47,8 @@ COMMITMENTS = [
     },
 ]
 
-DEFAULT_RPC = "https://eth.llamarpc.com"
+DEFAULT_RPC = "https://rpc.ankr.com/eth"
+FALLBACK_RPC = "https://1rpc.io/eth"
 
 # =============================================================================
 # Ethereum RPC helpers
@@ -126,11 +128,23 @@ def main():
     print(f"Wallet: {FOUNDATION_WALLET}")
     print()
 
+    # Try primary RPC, fall back if it fails (only when using defaults)
     try:
         block_num = get_block_number(rpc_url)
     except Exception as e:
-        print(f"ERROR: Cannot connect to RPC: {e}", file=sys.stderr)
-        sys.exit(1)
+        if rpc_url == DEFAULT_RPC:
+            print(f"  Primary RPC failed ({e}), trying fallback: {FALLBACK_RPC}", file=sys.stderr)
+            rpc_url = FALLBACK_RPC
+            try:
+                block_num = get_block_number(rpc_url)
+                print(f"  Fallback RPC connected successfully.")
+            except Exception as e2:
+                print(f"ERROR: Both RPCs failed. Primary: {DEFAULT_RPC}, Fallback: {FALLBACK_RPC}", file=sys.stderr)
+                print(f"  Last error: {e2}", file=sys.stderr)
+                sys.exit(1)
+        else:
+            print(f"ERROR: Cannot connect to RPC: {e}", file=sys.stderr)
+            sys.exit(1)
 
     timestamp = int(time.time())
     timestamp_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
