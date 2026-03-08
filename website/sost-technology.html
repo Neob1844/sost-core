@@ -135,6 +135,7 @@
   /* ANIMATIONS */
   .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
   @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100%{opacity:.6}50%{opacity:1} }
   .delay-1 { animation-delay: 0.1s; }
   .delay-2 { animation-delay: 0.2s; }
   .delay-3 { animation-delay: 0.3s; }
@@ -402,13 +403,14 @@ real_difficulty = integer_part + fractional / <span class="num">65536.0</span>
         <div class="code-snippet" data-label="cASERT LOGIC">
 <span class="cmt">// blocks_ahead = chain_height - expected_height_from_elapsed_time</span>
 <span class="kw">if</span> blocks_ahead &lt; <span class="num">5</span>:    level = <span class="str">L1</span>  <span class="cmt">// WARMUP &mdash; no scaling</span>
-<span class="kw">elif</span> blocks_ahead &lt; <span class="num">20</span>:  level = <span class="str">L2</span>  <span class="cmt">// scale = 2</span>
-<span class="kw">elif</span> blocks_ahead &lt; <span class="num">50</span>:  level = <span class="str">L3</span>  <span class="cmt">// scale = 3</span>
-<span class="kw">elif</span> blocks_ahead &lt; <span class="num">75</span>:  level = <span class="str">L4</span>  <span class="cmt">// scale = 4</span>
-<span class="kw">else</span>:                   level = <span class="str">L5</span>  <span class="cmt">// scale = 5</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">26</span>:  level = <span class="str">L2</span>  <span class="cmt">// scale = 2</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">51</span>:  level = <span class="str">L3</span>  <span class="cmt">// scale = 3</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">76</span>:  level = <span class="str">L4</span>  <span class="cmt">// scale = 4</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">101</span>: level = <span class="str">L5</span>  <span class="cmt">// scale = 6</span>
+<span class="kw">else</span>:                   level = <span class="str">L6+</span> <span class="cmt">// scale = unbounded</span>
 
 <span class="cmt">// Parameters scaled by level</span>
-stab_scale  = level               <span class="cmt">// 1-5</span>
+stab_scale  = level + 1            <span class="cmt">// unbounded above L4</span>
 stab_k      = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_steps  = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_margin = <span class="num">180</span>                 <span class="cmt">// fixed</span>
@@ -416,9 +418,10 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
 
         <table class="code-table">
           <tr><td class="key">CASERT_L2_BLOCKS</td><td class="val"><code>5</code> blocks ahead <span class="comment">// scale = 2</span></td></tr>
-          <tr><td class="key">CASERT_L3_BLOCKS</td><td class="val"><code>20</code> blocks ahead <span class="comment">// scale = 3</span></td></tr>
-          <tr><td class="key">CASERT_L4_BLOCKS</td><td class="val"><code>50</code> blocks ahead <span class="comment">// scale = 4</span></td></tr>
-          <tr><td class="key">CASERT_L5_BLOCKS</td><td class="val"><code>75</code> blocks ahead <span class="comment">// scale = 5</span></td></tr>
+          <tr><td class="key">CASERT_L3_BLOCKS</td><td class="val"><code>26</code> blocks ahead <span class="comment">// scale = 3</span></td></tr>
+          <tr><td class="key">CASERT_L4_BLOCKS</td><td class="val"><code>51</code> blocks ahead <span class="comment">// scale = 4</span></td></tr>
+          <tr><td class="key">CASERT_L5_BLOCKS</td><td class="val"><code>76</code> blocks ahead <span class="comment">// scale = 6</span></td></tr>
+          <tr><td class="key">CASERT_L6+</td><td class="val"><code>101+</code> blocks ahead <span class="comment">// scale = unbounded (grows every 50 blocks)</span></td></tr>
           <tr><td class="key">CX_STB_K</td><td class="val"><code>4</code> <span class="comment">// stability constant</span></td></tr>
           <tr><td class="key">CX_STB_STEPS</td><td class="val"><code>4</code> <span class="comment">// convergence steps per iteration</span></td></tr>
           <tr><td class="key">CX_STB_MARGIN</td><td class="val"><code>180</code> <span class="comment">// stability margin parameter</span></td></tr>
@@ -447,7 +450,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           L2 &mdash; Elevated
         </div>
         <div class="mode-params">
-          <span>5&ndash;19 blocks ahead</span><br>
+          <span>5&ndash;25 blocks ahead</span><br>
           scale=2, moderate hardening<br>
           Increased computational cost
         </div>
@@ -458,7 +461,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           L3 &mdash; Active
         </div>
         <div class="mode-params">
-          <span>20&ndash;49 blocks ahead</span><br>
+          <span>26&ndash;50 blocks ahead</span><br>
           scale=3, significant hardening<br>
           Fast-chain response engaged
         </div>
@@ -469,7 +472,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           L4 &mdash; High
         </div>
         <div class="mode-params">
-          <span>50&ndash;74 blocks ahead</span><br>
+          <span>51&ndash;75 blocks ahead</span><br>
           scale=4, heavy hardening<br>
           Sustained fast-chain pressure
         </div>
@@ -477,12 +480,23 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
       <div class="mode-card">
         <div class="mode-name">
           <span class="indicator" style="background:var(--red-primary)"></span>
-          L5 &mdash; Maximum
+          L5 &mdash; Emergency
         </div>
         <div class="mode-params">
-          <span>&ge;75 blocks ahead</span><br>
-          scale=5, maximum hardening<br>
-          Full progressive response
+          <span>76&ndash;100 blocks ahead</span><br>
+          scale=6, emergency hardening<br>
+          Severe fast-chain response
+        </div>
+      </div>
+      <div class="mode-card" style="border:1px solid #ff0040">
+        <div class="mode-name">
+          <span class="indicator" style="background:#ff0040;animation:pulse 1.5s ease-in-out infinite"></span>
+          L6+ &mdash; Unbounded
+        </div>
+        <div class="mode-params">
+          <span>101+ blocks ahead</span><br>
+          scale=unbounded (grows every 50 blocks)<br>
+          Maximum progressive response
         </div>
       </div>
     </div>
