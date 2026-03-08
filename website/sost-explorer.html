@@ -865,7 +865,12 @@ function showCXInfo(){
   '<span style="color:#fbbf24">L3</span> (26–50) → '+
   '<span style="color:#fb923c">L4</span> (51–75) → '+
   '<span style="color:#e63946">L5</span> (76–100, scale=6) → '+
-  '<span style="color:#ff0040">L6+</span> (101+ ahead, unbounded — scale grows every 50 blocks). '+
+  '<span style="color:#ff0040">L6+</span> (101+ ahead, unbounded — scale grows every 50 blocks).<br><br>'+
+  '<b style="color:var(--green)">DECAY ANTI-STALL:</b> If no block is found for <b>2 hours</b>, cASERT level decays downward to prevent chain stall:<br>'+
+  '&bull; <span style="color:#e63946">L8+</span> → drops 1 level every 10 min (fast recovery)<br>'+
+  '&bull; <span style="color:#fb923c">L4–L7</span> → drops 1 level every 20 min (medium)<br>'+
+  '&bull; <span style="color:#67e8f9">L2–L3</span> → drops 1 level every 30 min (cautious)<br>'+
+  'When mining resumes, decay stops instantly — raw schedule level takes over. Decay affects mining only, never block validation.<br><br>'+
   'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
   'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
   '<div class="dtl-grid">'+
