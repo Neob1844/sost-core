@@ -4,6 +4,14 @@ This document records all Foundation Proof of Personal Custody commitments.
 The Foundation participates under the same rules as any third-party participant,
 including the standard 5% protocol fee. No exceptions.
 
+## Progressive Decentralization
+
+The Foundation commits to progressive decentralization and full automation of all operational
+processes as soon as technically viable. Manual operations in Phase 1 — including PoPC
+verification, reward payouts, and vault conversions — are transitional by design, not permanent.
+Every manual process has a planned automation path documented in the protocol roadmap. This is a
+constitutional commitment, not a discretionary goal.
+
 ## Active Commitments
 
 ### FOUND-001 — XAUT (Model A)
@@ -69,16 +77,25 @@ PoPC protocol fees fund the SOST ecosystem. Fees are deducted from the gross rew
 | Parameter | Model A | Model B |
 |---|---|---|
 | Fee rate | 5% of gross reward | 10% of gross reward |
-| Fee timing | At commitment completion | At reward payout |
+| Fee timing | At commitment creation (upfront) | At commitment creation (upfront) |
 
 ### How fees are collected (Phase 1 — Manual)
 
-1. Operator runs `scripts/popc_reward_payout.py` with commitment details.
-2. Script calculates: `net_payout = reward × 0.95`, `fee = reward × 0.05` (integer stocks, no floats).
-3. Script generates two `sost-cli send` commands (does NOT execute them):
-   - **TX 1**: PoPC Pool → Participant (95% net payout)
-   - **TX 2**: PoPC Pool → Foundation fee wallet (5% fee)
-4. Operator reviews, executes manually, records TX hashes in `popc_payouts.json`.
+Fees are collected **upfront at commitment creation**, not at completion. This is a two-step process:
+
+**Step 1 — At commitment creation** (`--action create`):
+1. Operator runs `scripts/popc_reward_payout.py --action create` with commitment details.
+2. Script calculates fee from gross reward (integer stocks, no floats).
+3. Script generates one `sost-cli send` command (does NOT execute):
+   - **TX**: PoPC Pool → Foundation fee wallet (5% or 10% fee)
+4. Operator reviews, executes manually, records TX hash in `popc_payouts.json`.
+
+**Step 2 — At commitment completion** (`--action complete`):
+1. Operator runs `scripts/popc_reward_payout.py --action complete` with commitment details.
+2. Script calculates net reward (gross minus already-collected fee).
+3. Script generates one `sost-cli send` command (does NOT execute):
+   - **TX**: PoPC Pool → Participant (net reward)
+4. Operator reviews, executes manually, records TX hash in `popc_payouts.json`.
 
 The Foundation pays the same 5% fee as any participant — no exceptions.
 
@@ -104,11 +121,12 @@ No floating-point arithmetic is used in monetary calculations.
 Until PoPC smart contracts automate reward distribution:
 
 1. At contract creation, the exact SOST reward amount is calculated and published here.
-2. At successful completion, two transactions are executed from the PoPC Pool:
-   - Net reward (gross minus fee) to the participant's SOST address.
-   - Protocol fee to the Foundation fee wallet.
-3. Both transaction IDs are recorded here and are verifiable on-chain.
-4. Payout log is maintained at `popc_payouts.json` with full audit trail.
+2. At contract creation, the protocol fee is collected upfront from the PoPC Pool:
+   - **TX 1** (upfront): PoPC Pool → Foundation fee wallet (5% or 10% of gross reward).
+3. At successful completion, the net reward is paid from the PoPC Pool:
+   - **TX 2** (completion): PoPC Pool → Participant (gross reward minus fee).
+4. All transaction IDs are recorded here and are verifiable on-chain.
+5. Payout log is maintained at `popc_payouts.json` with full audit trail.
 
 ## Disclaimer
 

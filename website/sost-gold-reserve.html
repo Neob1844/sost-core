@@ -284,7 +284,7 @@
           <tr><td class="gold">G6</td><td class="value">Allowlist v2 &mdash; Reserve limited to allowlisted precious-metal tokens: PAXG and XAUt only. USDC/USDT permitted only as temporary staging (&le;72 hours).</td></tr>
           <tr><td class="gold">G7</td><td class="value">Default 50/50 &mdash; Default acquisition targets 50/50 XAUt/PAXG. Adjustable for future purchases only; must be disclosed in batch reports. No rebalancing of existing reserves.</td></tr>
           <tr><td class="gold">G8</td><td class="value">Issuer Risk &mdash; Foundation may redirect future purchases from a threatened issuer without consensus. Previously purchased reserves remain sealed.</td></tr>
-          <tr><td class="gold">G9</td><td class="value">Emergency Catastrophe &mdash; Dual gate required: &ge;60% miner signaling (87/144 blocks in 24h window) + Foundation Execution Order. Actions limited to E1 ROTATE and E2 LIQUIDATE.</td></tr>
+          <tr><td class="gold">G9</td><td class="value">Emergency Catastrophe &mdash; Dual gate required: &ge;75% miner signaling (108/144 blocks in 24h window) + Foundation Execution Order. Actions limited to E1 ROTATE and E2 LIQUIDATE.</td></tr>
           <tr><td class="gold">G10</td><td class="value">Transparency &mdash; Both vault addresses, all batch reports, and all relevant transaction proofs MUST be publicly published in a reproducible format.</td></tr>
         </table>
       </div>
@@ -480,9 +480,9 @@ Type:  limit orders with explicit slippage tolerance
         <div class="code-snippet"><span class="comment">// Emergency Catastrophe — Dual Gate</span>
 <span class="comment">// BOTH gates must be satisfied. Neither alone is sufficient.</span>
 
-<span class="keyword">Gate 1</span>: SOST PoW miner signaling &ge; <span class="num">60%</span>
+<span class="keyword">Gate 1</span>: SOST PoW miner signaling &ge; <span class="num">75%</span>
   Window:  <span class="num">144</span> blocks (<span class="num">24</span> hours at 600s target)
-  Quorum:  YES &ge; <span class="fn">ceil</span>(<span class="num">0.60</span> &times; <span class="num">144</span>) = <span class="num">87</span> signaled blocks
+  Quorum:  YES &ge; <span class="fn">ceil</span>(<span class="num">0.75</span> &times; <span class="num">144</span>) = <span class="num">108</span> signaled blocks
   Record:  <span class="fn">EmergencyApproved</span>(proposalId, paramsHash, startHeight, endHeight)
 
 <span class="keyword">Gate 2</span>: Foundation Execution Order (signature)
@@ -637,7 +637,7 @@ Type:  limit orders with explicit slippage tolerance
           <tr><td class="label">Coinbase allocation</td><td class="green">Trustless</td><td class="value">Consensus-enforced (hardcoded validation rules)</td></tr>
           <tr><td class="label">SOST &rarr; metals conversion</td><td class="value">Auditable</td><td class="value">Foundation-executed, public batch records, TWAP policy</td></tr>
           <tr><td class="label">Reserve Vault custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses, on-chain proof</td></tr>
-          <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;60% miner signal + Foundation Execution Order</td></tr>
+          <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;75% miner signal + Foundation Execution Order</td></tr>
           <tr><td class="label">Cross-chain bridge</td><td class="green">None required</td><td class="value">No bridge, no wSOST, no smart contract dependency</td></tr>
         </table>
       </div>
