@@ -234,7 +234,7 @@ ctest --output-on-failure</div>
         <table class="code-table">
           <tr><th>Binary</th><th>Version</th><th>Description</th></tr>
           <tr><td class="highlight">sost-node</td><td class="value">v0.4.0</td><td class="value">Full node — P2P networking, JSON-RPC, chain validation, mempool</td></tr>
-          <tr><td class="highlight">sost-miner</td><td class="value">v0.5</td><td class="value">ConvergenceX PoW miner with mempool integration</td></tr>
+          <tr><td class="highlight">sost-miner</td><td class="value">v0.6</td><td class="value">ConvergenceX PoW miner with mempool integration</td></tr>
           <tr><td class="highlight">sost-cli</td><td class="value">v1.3</td><td class="value">Wallet CLI — create keys, send transactions, auto fees</td></tr>
           <tr><td class="highlight">sost-rpc</td><td class="value">v0.1</td><td class="value">Standalone RPC client for node queries</td></tr>
         </table>
@@ -424,9 +424,11 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
       </div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Start mining with RPC mode (recommended)</span>
+<span class="comment"># --address is REQUIRED: your wallet address to receive mining rewards</span>
 <span class="comment"># --blocks 10 mines 10 blocks then stops; omit for continuous mining</span>
-./sost-miner --genesis genesis_block.json --chain chain.json \
-    --wallet wallet.json --rpc 127.0.0.1:18232 \
+./sost-miner --address sost1YOUR_ADDRESS_HERE \
+    --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 \
     --rpc-user myuser --rpc-pass mypass \
     --threads 4 --blocks 10
 
@@ -443,14 +445,14 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <div class="spec-icon cyan"></div>
           <span class="spec-label">Miner Options</span>
         </div>
-        <span class="spec-tag">v0.5</span>
+        <span class="spec-tag">v0.6</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--address &lt;sost1..&gt;</td><td class="highlight">required</td><td class="value">Your wallet address to receive mining rewards</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--genesis &lt;path&gt;</td><td class="highlight">required</td><td class="value">Genesis block JSON</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--chain &lt;path&gt;</td><td class="highlight">required</td><td class="value">Chain state file</td></tr>
-          <tr><td class="value" style="font-family:var(--font-mono)">--wallet &lt;path&gt;</td><td class="highlight">required (RPC)</td><td class="value">Wallet file for mining address</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--rpc &lt;host:port&gt;</td><td class="label">—</td><td class="value">Submit blocks to node via RPC</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--blocks &lt;n&gt;</td><td class="label">5</td><td class="value">Number of blocks to mine</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--threads &lt;n&gt;</td><td class="label">1</td><td class="value">Mining threads</td></tr>

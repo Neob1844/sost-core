@@ -58,6 +58,10 @@ static std::string g_rpc_url = "";
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
 
+// Miner payout address
+static std::string g_miner_address = "";
+static PubKeyHash  g_miner_pkh{};
+
 // =============================================================================
 // Full header builder (same as genesis.cpp / node.cpp)
 // =============================================================================
@@ -126,7 +130,8 @@ static std::string rpc_auth_header() {
 // =============================================================================
 // Coinbase transaction builder
 // =============================================================================
-static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split) {
+static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split,
+                                     const PubKeyHash& miner_pkh) {
     Transaction tx;
     tx.version = 1;
     tx.tx_type = TX_TYPE_COINBASE;
@@ -143,7 +148,7 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
     TxOutput out_miner;
     out_miner.amount = split.miner;
     out_miner.type = OUT_COINBASE_MINER;
-    address_decode(ADDR_MINER_FOUNDER, out_miner.pubkey_hash);
+    out_miner.pubkey_hash = miner_pkh;
     tx.outputs.push_back(out_miner);
 
     TxOutput out_gold;
@@ -529,7 +534,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     // Coinbase = subsidy + fees, split 50/25/25
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
-    Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split);
+    Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
 
     std::vector<Transaction> block_txs;
     block_txs.push_back(coinbase_tx);
@@ -680,13 +685,15 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--rpc") && i + 1 < argc) g_rpc_url = argv[++i];
         else if (!strcmp(argv[i], "--rpc-user") && i + 1 < argc) g_rpc_user = argv[++i];
         else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) g_rpc_pass = argv[++i];
+        else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
             else if (!strcmp(argv[i], "dev")) prof = Profile::DEV;
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.5\n");
+            printf("SOST Miner v0.6\n");
+            printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce (default: 500000)\n");
             printf("  --genesis <path>   Genesis JSON\n");
@@ -700,7 +707,23 @@ int main(int argc, char** argv) {
         }
     }
 
-    printf("=== SOST Miner v0.5 (FULL submitblock) ===\n");
+    // Validate --address (REQUIRED)
+    if (g_miner_address.empty()) {
+        fprintf(stderr, "ERROR: --address required. Use your wallet address to receive mining rewards.\n");
+        fprintf(stderr, "  Example: --address sost1your40hexcharaddresshere1234567890ab\n");
+        return 1;
+    }
+    if (!address_valid(g_miner_address)) {
+        fprintf(stderr, "ERROR: invalid address '%s'. Must be sost1 + 40 hex chars.\n", g_miner_address.c_str());
+        return 1;
+    }
+    if (!address_decode(g_miner_address, g_miner_pkh)) {
+        fprintf(stderr, "ERROR: failed to decode address '%s'.\n", g_miner_address.c_str());
+        return 1;
+    }
+
+    printf("=== SOST Miner v0.6 (FULL submitblock) ===\n");
+    printf("Miner address: %s\n", g_miner_address.c_str());
     printf("Profile: %s | Blocks: %d | Max nonce: %u%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
            num_blocks, max_nonce,

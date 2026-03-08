@@ -28,12 +28,13 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 ./sost-node --genesis genesis_block.json --chain chain.json \
     --rpc-user <user> --rpc-pass <pass> --profile mainnet
 
-# 5. Start mining (terminal 2)
-./sost-miner --genesis genesis_block.json --chain chain.json \
-    --wallet wallet.json --rpc 127.0.0.1:18232 \
+# 5. Start mining (terminal 2) — use YOUR wallet address
+./sost-miner --address $(./sost-cli listaddresses | head -1) \
+    --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 \
     --rpc-user <user> --rpc-pass <pass> --threads 4 --blocks 100
 
-# 6. Send SOST (requires 100+ confirmations on coinbase UTXOs)
+# 6. Send SOST (requires 1,000+ confirmations on coinbase UTXOs)
 ./sost-cli --wallet wallet.json --rpc-user <user> --rpc-pass <pass> \
     send <destination_address> 10.0
 ```
@@ -43,7 +44,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 | Binary | Version | Description |
 |--------|---------|-------------|
 | sost-node | v0.3.2 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
-| sost-miner | v0.5 | ConvergenceX PoW miner with mempool integration via RPC |
+| sost-miner | v0.6 | ConvergenceX PoW miner with mempool integration via RPC |
 | sost-cli | v1.3 | Wallet CLI — create keys, send transactions, automatic fee calculation |
 | sost-rpc | v0.1 | Standalone RPC client for node queries |
 
@@ -75,14 +76,13 @@ The node:
 
 ```
 ./sost-miner [options]
+  --address <sost1..>    REQUIRED: your wallet address to receive mining rewards
   --genesis <path>       Genesis block JSON (required)
   --chain <path>         Chain state file (required)
-  --wallet <path>        Wallet file (required for RPC mode)
   --rpc <host:port>      Submit blocks to node via RPC (recommended)
   --rpc-user <user>      RPC authentication username
   --rpc-pass <pass>      RPC authentication password
   --blocks <n>           Number of blocks to mine (default: 5)
-  --threads <n>          Mining threads (default: 1)
   --max-nonce <n>        Max nonce per round (default: 500000)
   --profile <p>          Network profile: mainnet|testnet|dev
   --realtime             Use real timestamps (default)
@@ -112,7 +112,7 @@ The node:
 
 **Fee calculation:** CLI v1.3 calculates fees automatically based on transaction size (default: 1 stock/byte, minimum relay fee: 1,000 stocks). Use `--fee-rate <n>` to override.
 
-**Coinbase maturity:** Coinbase UTXOs require 100 confirmations before they can be spent. The CLI automatically filters immature UTXOs and shows clear error messages.
+**Coinbase maturity:** Coinbase UTXOs require 1,000 confirmations before they can be spent. The CLI automatically filters immature UTXOs and shows clear error messages.
 
 **Wallet encryption:** AES-256-GCM with scrypt key derivation (N=32768, r=8, p=1). Encrypt via `save_encrypted()` / decrypt via `load_encrypted()`.
 
@@ -124,7 +124,7 @@ The node:
 4. Node validates the transaction and accepts it to the mempool
 5. `sost-miner` fetches mempool via `getblocktemplate` and includes transactions in the next block
 6. Node confirms the transaction when the block is accepted
-7. Transaction outputs become spendable immediately (coinbase outputs require 100 blocks)
+7. Transaction outputs become spendable immediately (coinbase outputs require 1,000 blocks)
 
 ## RPC API (port 18232)
 
@@ -160,14 +160,14 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5, k=4) |
+| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5+, unbounded, k=4) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
 | Max supply | ~4,669,201 SOST (Feigenbaum delta x 10^6) |
 | 95% supply | ~12 epochs (~30 years) |
 | Reward split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
-| Coinbase maturity | 100 blocks |
+| Coinbase maturity | 1,000 blocks |
 | Min relay fee | 1,000 stocks (0.00001 SOST) |
 | Address format | sost1 + 40 hex chars (20-byte pubkey hash) |
 | Signature | ECDSA secp256k1 (libsecp256k1) with LOW-S |
@@ -192,7 +192,7 @@ Gold Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L5), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L5+, unbounded), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 
@@ -200,11 +200,11 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| ASERT + cASERT difficulty adjustment (L1-L5, k=4) | Complete |
+| ASERT + cASERT difficulty adjustment (L1-L5+, unbounded) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |
-| Coinbase maturity filter (100 blocks) | Complete |
+| Coinbase maturity filter (1,000 blocks) | Complete |
 | Dynamic fee calculation (CLI v1.3) | Complete |
 | Wallet encryption (AES-256-GCM + scrypt) | Complete |
 | P2P DoS protection (ban scoring, peer limits) | Complete |
