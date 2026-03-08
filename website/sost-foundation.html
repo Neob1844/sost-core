@@ -199,17 +199,31 @@
         <span class="spec-tag">ENFORCED BY CONSENSUS</span>
       </div>
       <div class="spec-body">
+        <p style="color:var(--text-dim);font-size:12px;line-height:1.7;margin-bottom:16px;padding:12px 16px;background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:4px;">
+          These constraints apply to the base PoW consensus layer.
+          PoPC participation is opt-in &mdash; bond and escrow mechanics
+          are constitutionally defined but voluntarily accepted.
+        </p>
         <table class="code-table">
           <tr><th>Action</th><th>Status</th></tr>
-          <tr><td class="label">Modify consensus rules</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Alter emission schedule</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Change coinbase split</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Redirect coinbase allocations</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Increase supply beyond hard cap</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Access reserve assets (normal operation)</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Override slash mechanics</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Create a governance token or DAO</td><td class="highlight">Impossible</td></tr>
-          <tr><td class="label">Add admin key, pause, or upgrade proxy to chain</td><td class="highlight">Impossible</td></tr>
+          <tr><td class="label">Modify consensus rules</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Alter emission schedule</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Change coinbase split</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Redirect coinbase allocations</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Increase supply beyond hard cap</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Access reserve assets (normal operation)</td><td class="highlight">Immutable</td></tr>
+          <tr>
+            <td class="label" style="position:relative">
+              Override slash mechanics (PoW consensus layer)
+              <span style="display:block;font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;font-style:italic;">
+                PoPC bond/escrow penalties are opt-in &mdash; you choose to participate.
+                Your UTXOs outside PoPC are always yours and cannot be touched.
+              </span>
+            </td>
+            <td class="highlight">Immutable</td>
+          </tr>
+          <tr><td class="label">Create a governance token or DAO</td><td class="highlight">Immutable</td></tr>
+          <tr><td class="label">Add admin key, pause, or upgrade proxy to chain</td><td class="highlight">Immutable</td></tr>
         </table>
       </div>
     </div>
