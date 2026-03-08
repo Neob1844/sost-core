@@ -1,0 +1,1293 @@
+
+
+==============================
+FILE: src/node.cpp
+==============================
+
+     1	#include "sost/node.h"
+     2	#include <cstdio>
+     3	#include <sstream>
+     4	#include <sys/socket.h>
+     5	#include <netinet/in.h>
+     6	#include <unistd.h>
+     7	#include <cstring>
+     8	namespace sost {
+     9	
+    10	Node::Node(Profile prof) : prof_(prof) {
+    11	    ACTIVE_PROFILE = prof; // Set global for MAGIC derivation
+    12	    cs_.tip_height = -1; cs_.total_work = 0; cs_.tip_hash.fill(0);
+    13	}
+    14	
+    15	bool Node::accept_block(const Block& blk) {
+    16	    std::lock_guard<std::mutex> lk(mu_);
+    17	    int64_t now = blk.timestamp + 7200;
+    18	    auto vr = verify_block(blk, cs_.metas, now, prof_, true);
+    19	    if (!vr.ok) { printf("[NODE] reject %lld: %s\n",(long long)blk.height,vr.reason.c_str()); return false; }
+    20	    cs_.blocks.push_back(blk); cs_.metas.push_back(to_meta(blk));
+    21	    cs_.tip_hash = blk.block_id; cs_.tip_height = blk.height;
+    22	    return true;
+    23	}
+    24	
+    25	Block Node::get_block(int64_t h) const {
+    26	    std::lock_guard<std::mutex> lk(mu_); if(h<0||h>=(int64_t)cs_.blocks.size()) return Block{}; return cs_.blocks[h];
+    27	}
+    28	
+    29	int64_t Node::height() const { std::lock_guard<std::mutex> lk(mu_); return cs_.tip_height; }
+    30	Bytes32 Node::tip() const { std::lock_guard<std::mutex> lk(mu_); return cs_.tip_hash; }
+    31	ChainState Node::state() const { std::lock_guard<std::mutex> lk(mu_); return cs_; }
+    32	
+    33	#include <mutex>
+    34	#include <ctime>   // time(nullptr)
+    35	
+    36	MineResult Node::mine_next(Wallet& w, uint32_t max_nonce) {
+    37	    std::unique_lock<std::mutex> lk(mu_);
+    38	
+    39	    const int64_t h = (int64_t)cs_.metas.size();
+    40	    const Bytes32 prev = (h==0) ? ZERO_HASH() : cs_.tip_hash;
+    41	
+    42	    Bytes32 mrkl{}; 
+    43	    mrkl.fill(0x11);
+    44	
+    45	    const int64_t ts = (h==0)
+    46	        ? GENESIS_TIME
+    47	        : cs_.blocks.back().timestamp + TARGET_SPACING;
+    48	
+    49	    const uint32_t diff = asert_next_difficulty(cs_.metas, h);
+    50	
+    51	    // Snapshot to mine without holding the lock
+    52	    const auto metas_snapshot = cs_.metas;
+    53	    lk.unlock();
+    54	
+    55	    // Try extra_nonce expansion (like mine_chain)
+    56	    MineResult mr{};
+    57	    for (uint32_t extra = 0; extra <= 1000; ++extra) {
+    58	        mr = mine_block(
+    59	            metas_snapshot,
+    60	            prev,
+    61	            mrkl,
+    62	            ts,
+    63	            diff,
+    64	            max_nonce,
+    65	            extra,
+    66	            prof_);
+    67	
+    68	        if (mr.found) break;
+    69	
+    70	        // If it's not the classic "ran out of nonces", stop early
+    71	        if (mr.error != "exhausted-nonces") break;
+    72	    }
+    73	
+    74	    lk.lock();
+    75	
+    76	    // If chain moved while we mined, reject as stale
+    77	    if ((int64_t)cs_.metas.size() != h || cs_.tip_hash != prev) {
+    78	        mr.found = false;
+    79	        mr.error = "stale-work";
+    80	        return mr;
+    81	    }
+    82	
+    83	    if (mr.found) {
+    84	        const int64_t now = (int64_t)time(nullptr);  // or: ts + 7200
+    85	        auto vr = verify_block(mr.block, cs_.metas, now, prof_, true);
+    86	        if (vr.ok) {
+    87	            cs_.blocks.push_back(mr.block);
+    88	            cs_.metas.push_back(to_meta(mr.block));
+    89	            cs_.tip_hash = mr.block.block_id;
+    90	            cs_.tip_height = mr.block.height;
+    91	
+    92	            w.credit_coinbase(h, mr.block.subsidy_stocks, mr.block.block_id);
+    93	
+    94	            printf("[NODE] block %lld mined id=%s nonce=%u extra=%u\n",
+    95	                   (long long)h,
+    96	                   hex(mr.block.block_id).substr(0,16).c_str(),
+    97	                   mr.block.nonce,
+    98	                   mr.block.extra_nonce);
+    99	        } else {
+   100	            mr.found = false;
+   101	            mr.error = vr.reason;
+   102	        }
+   103	    }
+   104	
+   105	    return mr;
+   106	}
+   107	
+   108	int Node::mine_loop(int32_t count, Wallet& w, uint32_t max_nonce) {
+   109	    for(int32_t i=0;count==0||i<count;++i) {
+   110	        auto mr = mine_next(w, max_nonce);
+   111	        if(!mr.found) { printf("[NODE] fail: %s\n",mr.error.c_str()); return 1; }
+   112	    }
+   113	    return 0;
+   114	}
+   115	
+   116	std::string Node::info_json() const {
+   117	    std::lock_guard<std::mutex> lk(mu_);
+   118	    std::ostringstream s;
+   119	    s<<"{\"height\":"<<cs_.tip_height<<",\"tip\":\""<<hex(cs_.tip_hash).substr(0,16)<<"...\",\"blocks\":"<<cs_.blocks.size()<<"}\n";
+   120	    return s.str();
+   121	}
+   122	
+   123	std::string Node::block_json(int64_t h) const {
+   124	    std::lock_guard<std::mutex> lk(mu_);
+   125	    if(h<0||h>=(int64_t)cs_.blocks.size()) return "{\"error\":\"not found\"}";
+   126	    auto& b=cs_.blocks[h]; auto sp=coinbase_split(b.subsidy_stocks);
+   127	    std::ostringstream s;
+   128	    s<<"{\"height\":"<<b.height<<",\"id\":\""<<hex(b.block_id)<<"\",\"nonce\":"<<b.nonce
+   129	     <<",\"subsidy\":"<<b.subsidy_stocks<<",\"miner\":"<<sp.miner
+   130	     <<",\"gold_vault\":"<<sp.gold_vault<<",\"popc_pool\":"<<sp.popc_pool
+   131	     <<",\"metric\":"<<b.stability_metric<<"}";
+   132	    return s.str();
+   133	}
+   134	
+   135	static std::string handle_rpc(Node& n, Wallet& w, const std::string& path) {
+   136	    if(path=="/info"||path=="/") return n.info_json();
+   137	    if(path.rfind("/block/",0)==0) return n.block_json(std::stoll(path.substr(7)));
+   138	    if(path=="/wallet/balance") { std::ostringstream s; s<<"{\"balance\":"<<w.balance()<<",\"address\":\""<<w.default_address()<<"\"}"; return s.str(); }
+   139	    if(path=="/wallet/utxos") {
+   140	        auto us=w.utxos(); std::ostringstream s; s<<"{\"count\":"<<us.size()<<",\"utxos\":[";
+   141	        for(size_t i=0;i<us.size();++i){if(i)s<<",";s<<"{\"amount\":"<<us[i].amount<<",\"h\":"<<us[i].height<<"}";} s<<"]}"; return s.str();
+   142	    }
+   143	    return "{\"error\":\"unknown\"}";
+   144	}
+   145	
+   146	int run_rpc_server(Node& node, Wallet& wallet, int port) {
+   147	    int srv=socket(AF_INET,SOCK_STREAM,0); if(srv<0){perror("socket");return 1;}
+   148	    int opt=1; setsockopt(srv,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
+   149	    struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
+   150	    if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("bind");return 1;}
+   151	    listen(srv,5); printf("[RPC] port %d\n",port);
+   152	    while(true){
+   153	        int cl=accept(srv,nullptr,nullptr); if(cl<0)continue;
+   154	        char buf[4096]{}; read(cl,buf,sizeof(buf)-1);
+   155	        std::string req(buf),path="/";
+   156	        auto sp=req.find(' '); if(sp!=std::string::npos){auto s2=req.find(' ',sp+1);if(s2!=std::string::npos)path=req.substr(sp+1,s2-sp-1);}
+   157	        auto body=handle_rpc(node,wallet,path);
+   158	        std::string resp="HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: "+std::to_string(body.size())+"\r\n\r\n"+body;
+   159	        write(cl,resp.c_str(),resp.size()); close(cl);
+   160	    }
+   161	    return 0;
+   162	}
+   163	} // namespace sost
+
+
+==============================
+FILE: include/sost/node.h
+==============================
+
+     1	#pragma once
+     2	#include "block.h"
+     3	#include "wallet.h"
+     4	#include "miner.h"
+     5	#include <vector>
+     6	#include <string>
+     7	#include <functional>
+     8	#include <mutex>
+     9	namespace sost {
+    10	
+    11	struct ChainState {
+    12	    std::vector<Block> blocks;
+    13	    std::vector<BlockMeta> metas;
+    14	    Bytes32 tip_hash;
+    15	    int64_t tip_height;
+    16	    int64_t total_work;
+    17	};
+    18	
+    19	struct PeerInfo {
+    20	    std::string addr;
+    21	    int64_t tip_height;
+    22	    bool connected;
+    23	};
+    24	
+    25	class Node {
+    26	public:
+    27	    Node(Profile prof);
+    28	    // Chain
+    29	    bool accept_block(const Block& blk);
+    30	    Block get_block(int64_t h) const;
+    31	    int64_t height() const;
+    32	    Bytes32 tip() const;
+    33	    ChainState state() const;
+    34	    // Mining
+    35	    MineResult mine_next(Wallet& w, uint32_t max_nonce=500000);
+    36	    int mine_loop(int32_t count, Wallet& w, uint32_t max_nonce=500000);
+    37	    // Info
+    38	    std::string info_json() const;
+    39	    std::string block_json(int64_t h) const;
+    40	private:
+    41	    Profile prof_;
+    42	    ChainState cs_;
+    43	    mutable std::mutex mu_;
+    44	};
+    45	
+    46	// Simple HTTP RPC server (single-threaded)
+    47	int run_rpc_server(Node& node, Wallet& wallet, int port);
+    48	
+    49	} // namespace sost
+
+
+==============================
+FILE: src/main_node.cpp
+==============================
+
+     1	#include "sost/node.h"
+     2	#include <cstdio>
+     3	#include <cstring>
+     4	#include <cstdlib>
+     5	#include <unistd.h>
+     6	#include <thread>
+     7	using namespace sost;
+     8	int main(int argc, char** argv) {
+     9	    int blocks=5; int port=0; Profile prof=Profile::DEV; uint32_t mn=500000;
+    10	    for(int i=1;i<argc;++i){
+    11	        if(!strcmp(argv[i],"--blocks")&&i+1<argc) blocks=atoi(argv[++i]);
+    12	        else if(!strcmp(argv[i],"--port")&&i+1<argc) port=atoi(argv[++i]);
+    13	        else if(!strcmp(argv[i],"--profile")&&i+1<argc){
+    14	            ++i; if(!strcmp(argv[i],"mainnet"))prof=Profile::MAINNET;
+    15	            else if(!strcmp(argv[i],"testnet"))prof=Profile::TESTNET;
+    16	        }
+    17	        else if(!strcmp(argv[i],"--max-nonce")&&i+1<argc) mn=(uint32_t)atoi(argv[++i]);
+    18	    }
+    19	    printf("SOST Node v0.1\nProfile: %s | Blocks: %d | RPC: %d\n\n",
+    20	        prof==Profile::MAINNET?"mainnet":(prof==Profile::TESTNET?"testnet":"dev"), blocks, port);
+    21	    Node node(prof); Wallet wallet; wallet.generate_key();
+    22	    printf("Miner address: %s\n\n", wallet.default_address().c_str());
+    23	    if(port>0){
+    24	        std::thread rpc([&](){ run_rpc_server(node, wallet, port); });
+    25	        rpc.detach();
+    26	        printf("[RPC] Started on port %d\n", port);
+    27	    }
+    28	    int rc = node.mine_loop(blocks, wallet, mn);
+    29	    printf("\nFinal balance: %lld stocks\n", (long long)wallet.balance());
+    30	    printf("Chain height: %lld\n", (long long)node.height());
+    31	    if(port>0){printf("[RPC] still running, Ctrl+C to stop\n");while(true)sleep(1);}
+    32	    return rc;
+    33	}
+
+
+==============================
+FILE: include/sost/params.h
+==============================
+
+     1	#pragma once
+     2	#include <cstdint>
+     3	#include "sost/consensus_constants.h"
+     4	
+     5	namespace sost {
+     6	
+     7	// -----------------------------------------------------------------------------
+     8	// ConvergenceX domain-separation tag (CONSENSUS-CRITICAL).
+     9	// NOTE: This is NOT Bitcoin P2P "message magic".
+    10	// It is used as a hash domain separator across ConvergenceX (scratchpad keys,
+    11	// seeds, commit, stability context, etc.), so that dev/testnet/mainnet have
+    12	// different consensus domains.
+    13	//
+    14	// Matches Python:
+    15	//   MAGIC = b"CXPOW3" + SHA256("SOST/CONVERGENCEX/" + network)[:4]
+    16	// -----------------------------------------------------------------------------
+    17	
+    18	enum class Profile : uint8_t { DEV=0, TESTNET=1, MAINNET=2 };
+    19	
+    20	// MAGIC = "CXPOW3" + SHA256("SOST/CONVERGENCEX/" + network)[:4]  (10 bytes)
+    21	inline constexpr uint32_t MAGIC_LEN = 10;
+    22	
+    23	// Precomputed per profile (verified against Python reference):
+    24	//   dev:     4358504f5733 f950f94b
+    25	//   testnet: 4358504f5733 39014c33
+    26	//   mainnet: 4358504f5733 c6e88538
+    27	inline const uint8_t MAGIC_DEV[10]     = {0x43,0x58,0x50,0x4f,0x57,0x33, 0xf9,0x50,0xf9,0x4b};
+    28	inline const uint8_t MAGIC_TESTNET[10] = {0x43,0x58,0x50,0x4f,0x57,0x33, 0x39,0x01,0x4c,0x33};
+    29	inline const uint8_t MAGIC_MAINNET[10] = {0x43,0x58,0x50,0x4f,0x57,0x33, 0xc6,0xe8,0x85,0x38};
+    30	
+    31	inline const uint8_t* magic_for_profile(Profile p) {
+    32	    switch(p) {
+    33	        case Profile::DEV:     return MAGIC_DEV;
+    34	        case Profile::TESTNET: return MAGIC_TESTNET;
+    35	        default:               return MAGIC_MAINNET;
+    36	    }
+    37	}
+    38	
+    39	// Global default (set by first mine/node invocation)
+    40	inline Profile ACTIVE_PROFILE = Profile::DEV;
+    41	inline const uint8_t* MAGIC_STR_BYTES() { return magic_for_profile(ACTIVE_PROFILE); }
+    42	
+    43	// Time / schedule
+    44	inline constexpr int64_t GENESIS_TIME     = 1772236800; // 2026-02-28 00:00:00 UTC
+    45	inline constexpr int64_t TARGET_SPACING   = 600;
+    46	inline constexpr int64_t BLOCKS_PER_EPOCH = 131553;
+    47	
+    48	// Emission math (integer-only)
+    49	inline constexpr int64_t R0_STOCKS      = 785100863;           // 7.85100863 SOST in stocks
+    50	inline constexpr int64_t EMISSION_Q_NUM = 7788007830714049LL;
+    51	inline constexpr int64_t EMISSION_Q_DEN = 10000000000000000LL;
+    52	
+    53	// Q16.16 difficulty
+    54	inline constexpr uint32_t Q16_SHIFT     = 16;
+    55	inline constexpr uint32_t Q16_ONE       = 1u << Q16_SHIFT;
+    56	inline constexpr uint32_t LUT_ENTRIES   = 256;
+    57	inline constexpr uint32_t GENESIS_BITSQ = 353075;
+    58	inline constexpr uint32_t MIN_BITSQ     = Q16_ONE;
+    59	inline constexpr uint32_t MAX_BITSQ     = 255u * Q16_ONE;
+    60	
+    61	// ASERT
+    62	inline constexpr int64_t  ASERT_HALF_LIFE  = 86400;
+    63	inline constexpr int32_t  ASERT_DOWN_STEPS = 2; // log2(4)
+    64	inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
+    65	
+    66	// cASERT v3 thresholds (blocks ahead of schedule)
+    67	//   0– 4 → L1 neutral   | 5–19 → L2 light
+    68	//  20–49 → L3 moderate  | 50–74 → L4 strong  | 75+ → L5 max (cap)
+    69	inline constexpr int32_t CASERT_L2_BLOCKS = 5;
+    70	inline constexpr int32_t CASERT_L3_BLOCKS = 20;
+    71	inline constexpr int32_t CASERT_L4_BLOCKS = 50;
+    72	inline constexpr int32_t CASERT_L5_BLOCKS = 75;
+    73	
+    74	// ConvergenceX mainnet baseline (match Python)
+    75	inline constexpr int32_t CX_N         = 32;
+    76	inline constexpr int32_t CX_ROUNDS_M  = 100000;
+    77	inline constexpr int32_t CX_SCRATCH_M = 4096;
+    78	inline constexpr int32_t CX_LR_SHIFT  = 18;
+    79	inline constexpr int32_t CX_LAM       = 100;
+    80	inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
+    81	
+    82	// ConvergenceX mainnet baseline
+    83	inline constexpr int32_t CX_STB_SCALE  = 1;    // L1 neutral = scale 1
+    84	inline constexpr int32_t CX_STB_K      = 4;
+    85	inline constexpr int32_t CX_STB_MARGIN = 180;
+    86	inline constexpr int32_t CX_STB_STEPS  = 3;
+    87	inline constexpr int32_t CX_STB_LR     = 20;   // LR_SHIFT+2
+    88	
+    89	inline constexpr int32_t CX_C_NUM = 7;
+    90	inline constexpr int32_t CX_C_DEN = 10;
+    91	inline constexpr int32_t CX_M_NUM = 1;
+    92	inline constexpr int32_t CX_M_DEN = 1;
+    93	
+    94	// CX dev
+    95	inline constexpr int32_t CX_ROUNDS_D  = 512;
+    96	inline constexpr int32_t CX_SCRATCH_D = 32;
+    97	inline constexpr int32_t CX_CP_D      = 64;
+    98	
+    99	// CX testnet
+   100	inline constexpr int32_t CX_ROUNDS_T  = 1200;
+   101	inline constexpr int32_t CX_SCRATCH_T = 64;
+   102	inline constexpr int32_t CX_CP_T      = 128;
+   103	
+   104	// Constitutional addresses (hardcoded at genesis, immutable)
+   105	constexpr const char* ADDR_MINER_FOUNDER = "sost1f559e05f39486582231179a4985366961d8f8313";
+   106	constexpr const char* ADDR_GOLD_VAULT    = "sost1be2302d89daef55af4162127b9656f7604948efa";
+   107	constexpr const char* ADDR_POPC_POOL     = "sost18a222922bba5ac84979a74d76c392fdeaa59f505";
+   108	
+   109	// Timestamp rules
+   110	inline constexpr int32_t MTP_WINDOW       = 11;
+   111	inline constexpr int64_t MAX_FUTURE_DRIFT = 600;
+   112	
+   113	} // namespace sost
+
+
+==============================
+FILE: include/sost/consensus_constants.h
+==============================
+
+     1	#pragma once
+     2	#include <cstdint>
+     3	#include <cstddef>
+     4	
+     5	namespace sost {
+     6	
+     7	// Monetary unit
+     8	inline constexpr int64_t STOCKS_PER_SOST   = 100'000'000LL;              // 1e-8 SOST
+     9	inline constexpr int64_t SUPPLY_MAX_STOCKS = 466'920'160'910'299LL;      // ~4.669M SOST
+    10	
+    11	// Consensus limits
+    12	inline constexpr int64_t  COINBASE_MATURITY         = 100;
+    13	inline constexpr int32_t  MAX_TX_BYTES_CONSENSUS    = 100'000;
+    14	inline constexpr int32_t  MAX_BLOCK_BYTES_CONSENSUS = 1'000'000;
+    15	inline constexpr uint16_t MAX_INPUTS_CONSENSUS      = 256;
+    16	inline constexpr uint16_t MAX_OUTPUTS_CONSENSUS     = 256;
+    17	
+    18	} // namespace sost
+
+
+==============================
+FILE: src/mempool.cpp
+==============================
+
+     1	// =============================================================================
+     2	// SOST — Phase 6: Mempool Implementation
+     3	// =============================================================================
+     4	
+     5	#include <sost/mempool.h>
+     6	#include <algorithm>
+     7	#include <limits>
+     8	#include <ctime>
+     9	#include <set>
+    10	
+    11	namespace sost {
+    12	
+    13	Mempool::Mempool(size_t max_entries)
+    14	    : max_entries_(max_entries)
+    15	{}
+    16	
+    17	// ---------------------------------------------------------------------------
+    18	// Index management
+    19	// ---------------------------------------------------------------------------
+    20	
+    21	void Mempool::AddToIndexes(const MempoolEntry& entry) {
+    22	    fee_rate_index_.insert({entry.fee, entry.size, entry.txid});
+    23	    for (const auto& op : entry.spent_outpoints) {
+    24	        spent_index_[op] = entry.txid;
+    25	    }
+    26	}
+    27	
+    28	void Mempool::RemoveFromIndexes(const MempoolEntry& entry) {
+    29	    fee_rate_index_.erase({entry.fee, entry.size, entry.txid});
+    30	    for (const auto& op : entry.spent_outpoints) {
+    31	        spent_index_.erase(op);
+    32	    }
+    33	}
+    34	
+    35	// ---------------------------------------------------------------------------
+    36	// ComputeFee (hardened with int128 accumulation)
+    37	// ---------------------------------------------------------------------------
+    38	
+    39	bool Mempool::ComputeFee(
+    40	    const Transaction& tx,
+    41	    const IUtxoView& utxos,
+    42	    int64_t& out_fee,
+    43	    std::string* err)
+    44	{
+    45	    __int128 sum_in = 0;
+    46	    for (size_t i = 0; i < tx.inputs.size(); ++i) {
+    47	        OutPoint op{tx.inputs[i].prev_txid, tx.inputs[i].prev_index};
+    48	        auto entry = utxos.GetUTXO(op);
+    49	        if (!entry) {
+    50	            if (err) *err = "ComputeFee: input[" + std::to_string(i) + "] UTXO not found";
+    51	            return false;
+    52	        }
+    53	        sum_in += (__int128)entry->amount;
+    54	    }
+    55	
+    56	    __int128 sum_out = 0;
+    57	    for (const auto& txout : tx.outputs) {
+    58	        sum_out += (__int128)txout.amount;
+    59	    }
+    60	
+    61	    __int128 fee128 = sum_in - sum_out;
+    62	    if (fee128 < (__int128)std::numeric_limits<int64_t>::min() ||
+    63	        fee128 > (__int128)std::numeric_limits<int64_t>::max()) {
+    64	        if (err) *err = "ComputeFee: fee overflow";
+    65	        return false;
+    66	    }
+    67	
+    68	    out_fee = (int64_t)fee128;
+    69	    return true;
+    70	}
+    71	
+    72	// ---------------------------------------------------------------------------
+    73	// AcceptToMempool
+    74	// ---------------------------------------------------------------------------
+    75	
+    76	MempoolAcceptResult Mempool::AcceptToMempool(
+    77	    const Transaction& tx,
+    78	    const UtxoSet& utxos,
+    79	    const TxValidationContext& ctx,
+    80	    int64_t current_time)
+    81	{
+    82	    if (tx.tx_type == TX_TYPE_COINBASE) {
+    83	        return MempoolAcceptResult::Fail(
+    84	            MempoolAcceptCode::COINBASE_REJECT,
+    85	            "coinbase transactions cannot enter the mempool");
+    86	    }
+    87	
+    88	    if (current_time == 0) {
+    89	        current_time = (int64_t)std::time(nullptr);
+    90	    }
+    91	
+    92	    // txid
+    93	    Hash256 txid{};
+    94	    std::string err;
+    95	    if (!tx.ComputeTxId(txid, &err)) {
+    96	        return MempoolAcceptResult::Fail(
+    97	            MempoolAcceptCode::INTERNAL_ERROR,
+    98	            "failed to compute txid: " + err);
+    99	    }
+   100	
+   101	    if (entries_.count(txid)) {
+   102	        return MempoolAcceptResult::Fail(
+   103	            MempoolAcceptCode::ALREADY_IN_POOL,
+   104	            "transaction already in mempool", txid);
+   105	    }
+   106	
+   107	    // Double-spend vs mempool
+   108	    for (const auto& txin : tx.inputs) {
+   109	        OutPoint op{txin.prev_txid, txin.prev_index};
+   110	        auto it = spent_index_.find(op);
+   111	        if (it != spent_index_.end()) {
+   112	            return MempoolAcceptResult::Fail(
+   113	                MempoolAcceptCode::DOUBLE_SPEND,
+   114	                "input " + HexStr(op.txid) + ":" + std::to_string(op.index) +
+   115	                " already spent by mempool tx " + HexStr(it->second),
+   116	                txid);
+   117	        }
+   118	    }
+   119	
+   120	    // Consensus validation
+   121	    auto cres = ValidateTransactionConsensus(tx, utxos, ctx);
+   122	    if (!cres.ok) {
+   123	        return MempoolAcceptResult::Fail(
+   124	            MempoolAcceptCode::CONSENSUS_FAIL,
+   125	            "consensus: " + cres.message, txid);
+   126	    }
+   127	
+   128	    // Policy validation
+   129	    auto pres = ValidateTransactionPolicy(tx, utxos, ctx);
+   130	    if (!pres.ok) {
+   131	        return MempoolAcceptResult::Fail(
+   132	            MempoolAcceptCode::POLICY_FAIL,
+   133	            "policy: " + pres.message, txid);
+   134	    }
+   135	
+   136	    // Fee
+   137	    int64_t fee = 0;
+   138	    if (!ComputeFee(tx, utxos, fee, &err)) {
+   139	        return MempoolAcceptResult::Fail(
+   140	            MempoolAcceptCode::INTERNAL_ERROR,
+   141	            "fee computation failed: " + err, txid);
+   142	    }
+   143	    if (fee < 0) {
+   144	        // no debería pasar si consenso pasó, pero hardening
+   145	        return MempoolAcceptResult::Fail(
+   146	            MempoolAcceptCode::INTERNAL_ERROR,
+   147	            "negative fee after consensus (unexpected)", txid);
+   148	    }
+   149	
+   150	    // Size
+   151	    size_t tx_size = EstimateTxSerializedSize(tx);
+   152	    if (tx_size == 0) tx_size = 1;
+   153	
+   154	    // Informativo para UI (no para ordenar)
+   155	    double fee_rate = (double)fee / (double)tx_size;
+   156	
+   157	    // Capacity / eviction
+   158	    if (entries_.size() >= max_entries_) {
+   159	        if (!fee_rate_index_.empty()) {
+   160	            auto lowest = fee_rate_index_.begin(); // peor fee/size
+   161	            FeeRateKey incoming{fee, tx_size, txid};
+   162	
+   163	            if (!( *lowest < incoming )) {
+   164	                // incoming <= lowest
+   165	                return MempoolAcceptResult::Fail(
+   166	                    MempoolAcceptCode::POOL_FULL,
+   167	                    "mempool full and fee-rate too low to evict", txid);
+   168	            }
+   169	
+   170	            // Evict worst
+   171	            RemoveTransaction(lowest->txid);
+   172	        }
+   173	    }
+   174	
+   175	    // Build entry
+   176	    MempoolEntry entry;
+   177	    entry.tx = tx;
+   178	    entry.txid = txid;
+   179	    entry.fee = fee;
+   180	    entry.size = tx_size;
+   181	    entry.time_added = current_time;
+   182	
+   183	    for (const auto& txin : tx.inputs) {
+   184	        entry.spent_outpoints.push_back({txin.prev_txid, txin.prev_index});
+   185	    }
+   186	
+   187	    AddToIndexes(entry);
+   188	    entries_[txid] = std::move(entry);
+   189	
+   190	    return MempoolAcceptResult::Ok(txid, fee, fee_rate);
+   191	}
+   192	
+   193	// ---------------------------------------------------------------------------
+   194	// RemoveTransaction
+   195	// ---------------------------------------------------------------------------
+   196	
+   197	bool Mempool::RemoveTransaction(const Hash256& txid) {
+   198	    auto it = entries_.find(txid);
+   199	    if (it == entries_.end()) return false;
+   200	
+   201	    RemoveFromIndexes(it->second);
+   202	    entries_.erase(it);
+   203	    return true;
+   204	}
+   205	
+   206	// ---------------------------------------------------------------------------
+   207	// RemoveForBlock
+   208	// ---------------------------------------------------------------------------
+   209	
+   210	size_t Mempool::RemoveForBlock(const std::vector<Transaction>& block_txs) {
+   211	    std::set<OutPoint> block_spends;
+   212	    for (const auto& tx : block_txs) {
+   213	        if (tx.tx_type == TX_TYPE_COINBASE) continue;
+   214	        for (const auto& txin : tx.inputs) {
+   215	            block_spends.insert({txin.prev_txid, txin.prev_index});
+   216	        }
+   217	    }
+   218	
+   219	    std::set<Hash256> confirmed_txids;
+   220	    for (const auto& tx : block_txs) {
+   221	        Hash256 txid{};
+   222	        if (tx.ComputeTxId(txid, nullptr)) {
+   223	            confirmed_txids.insert(txid);
+   224	        }
+   225	    }
+   226	
+   227	    std::vector<Hash256> to_remove;
+   228	    for (const auto& [txid, entry] : entries_) {
+   229	        if (confirmed_txids.count(txid)) {
+   230	            to_remove.push_back(txid);
+   231	            continue;
+   232	        }
+   233	        for (const auto& op : entry.spent_outpoints) {
+   234	            if (block_spends.count(op)) {
+   235	                to_remove.push_back(txid);
+   236	                break;
+   237	            }
+   238	        }
+   239	    }
+   240	
+   241	    for (const auto& id : to_remove) {
+   242	        RemoveTransaction(id);
+   243	    }
+   244	    return to_remove.size();
+   245	}
+   246	
+   247	// ---------------------------------------------------------------------------
+   248	// BuildBlockTemplate
+   249	// ---------------------------------------------------------------------------
+   250	
+   251	Mempool::BlockTemplate Mempool::BuildBlockTemplate(
+   252	    size_t max_txs,
+   253	    size_t max_block_size) const
+   254	{
+   255	    BlockTemplate tmpl;
+   256	
+   257	    for (auto it = fee_rate_index_.rbegin(); it != fee_rate_index_.rend(); ++it) {
+   258	        if (tmpl.txs.size() >= max_txs) break;
+   259	
+   260	        auto e_it = entries_.find(it->txid);
+   261	        if (e_it == entries_.end()) continue;
+   262	
+   263	        const auto& entry = e_it->second;
+   264	        if (tmpl.total_size + entry.size > max_block_size) continue;
+   265	
+   266	        tmpl.txs.push_back(entry.tx);
+   267	        tmpl.txids.push_back(entry.txid);
+   268	        tmpl.total_fees += entry.fee;
+   269	        tmpl.total_size += entry.size;
+   270	    }
+   271	
+   272	    return tmpl;
+   273	}
+   274	
+   275	// ---------------------------------------------------------------------------
+   276	// Queries
+   277	// ---------------------------------------------------------------------------
+   278	
+   279	bool Mempool::HasTransaction(const Hash256& txid) const {
+   280	    return entries_.count(txid) > 0;
+   281	}
+   282	
+   283	const MempoolEntry* Mempool::GetEntry(const Hash256& txid) const {
+   284	    auto it = entries_.find(txid);
+   285	    return (it == entries_.end()) ? nullptr : &it->second;
+   286	}
+   287	
+   288	bool Mempool::IsSpent(const OutPoint& op) const {
+   289	    return spent_index_.count(op) > 0;
+   290	}
+   291	
+   292	int64_t Mempool::TotalFees() const {
+   293	    int64_t total = 0;
+   294	    for (const auto& [_, e] : entries_) total += e.fee;
+   295	    return total;
+   296	}
+   297	
+   298	size_t Mempool::TotalSize() const {
+   299	    size_t total = 0;
+   300	    for (const auto& [_, e] : entries_) total += e.size;
+   301	    return total;
+   302	}
+   303	
+   304	void Mempool::Clear() {
+   305	    entries_.clear();
+   306	    fee_rate_index_.clear();
+   307	    spent_index_.clear();
+   308	}
+   309	
+   310	} // namespace sost
+
+
+==============================
+FILE: src/tx_validation.cpp
+==============================
+
+     1	// =============================================================================
+     2	// tx_validation.cpp — SOST Transaction Validation (Phase 3)
+     3	// Design v1.2a Section 7 — Consensus rules R1-R14, S1-S12, CB1-CB10
+     4	// =============================================================================
+     5	
+     6	#include "sost/tx_validation.h"
+     7	#include "sost/capsule.h"
+     8	
+     9	#include <algorithm>
+    10	#include <cstring>
+    11	#include <set>
+    12	#include <sstream>
+    13	#include <iomanip>
+    14	
+    15	namespace sost {
+    16	
+    17	// =============================================================================
+    18	// Helpers
+    19	// =============================================================================
+    20	
+    21	// Active output types in v1 — types that are valid for consensus acceptance
+    22	static bool IsActiveOutputType(uint8_t type) {
+    23	    return type == OUT_TRANSFER ||
+    24	           type == OUT_COINBASE_MINER ||
+    25	           type == OUT_COINBASE_GOLD ||
+    26	           type == OUT_COINBASE_POPC;
+    27	}
+    28	
+    29	// CompactSize encoded length (matching Phase 1 WriteCompactSize)
+    30	static size_t CompactSizeLen(uint64_t n) {
+    31	    if (n < 0xFD) return 1;
+    32	    if (n <= 0xFFFF) return 3;
+    33	    if (n <= 0xFFFFFFFFULL) return 5;
+    34	    return 9;
+    35	}
+    36	
+    37	static bool IsAllZeros(const uint8_t* data, size_t len) {
+    38	    for (size_t i = 0; i < len; ++i)
+    39	        if (data[i] != 0) return false;
+    40	    return true;
+    41	}
+    42	
+    43	static std::string HexU32(uint32_t v) {
+    44	    std::ostringstream oss;
+    45	    oss << std::hex << std::setw(8) << std::setfill('0') << (uint64_t)v;
+    46	    return oss.str();
+    47	}
+    48	
+    49	// =============================================================================
+    50	// EstimateTxSerializedSize
+    51	// =============================================================================
+    52	// Matches Phase 1 serialization format exactly:
+    53	//   version(4) + tx_type(1) + CompactSize(nin) + inputs + CompactSize(nout) + outputs
+    54	// Input: prev_txid(32) + prev_index(4) + signature(64) + pubkey(33) = 133
+    55	// Output: amount(8) + type(1) + pubkey_hash(20) + payload_len(1) + payload(N)
+    56	
+    57	size_t EstimateTxSerializedSize(const Transaction& tx) {
+    58	    size_t size = 0;
+    59	    size += 4;  // version
+    60	    size += 1;  // tx_type
+    61	    size += CompactSizeLen(tx.inputs.size());
+    62	    size += tx.inputs.size() * 133;  // fixed per input
+    63	    size += CompactSizeLen(tx.outputs.size());
+    64	    for (const auto& out : tx.outputs) {
+    65	        size += 8;   // amount
+    66	        size += 1;   // type
+    67	        size += 20;  // pubkey_hash
+    68	        size += 1;   // payload_len
+    69	        size += out.payload.size();
+    70	    }
+    71	    return size;
+    72	}
+    73	
+    74	// =============================================================================
+    75	// Structural validation (R1-R14) — no UTXO access needed
+    76	// =============================================================================
+    77	
+    78	static TxValidationResult ValidateStructure(
+    79	    const Transaction& tx,
+    80	    const TxValidationContext& ctx)
+    81	{
+    82	    // R1: version == 1
+    83	    if (tx.version != 1) {
+    84	        return TxValidationResult::Fail(TxValCode::R1_BAD_VERSION,
+    85	            "R1: version must be 1, got " + std::to_string(tx.version));
+    86	    }
+    87	
+    88	    // R2: tx_type in {0x00, 0x01}
+    89	    if (tx.tx_type != TX_TYPE_STANDARD && tx.tx_type != TX_TYPE_COINBASE) {
+    90	        return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
+    91	            "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+    92	    }
+    93	
+    94	    // R3: 1 <= num_inputs <= 256
+    95	    if (tx.inputs.empty() || tx.inputs.size() > MAX_INPUTS_CONSENSUS) {
+    96	        return TxValidationResult::Fail(TxValCode::R3_INPUT_COUNT,
+    97	            "R3: input count " + std::to_string(tx.inputs.size()) + " out of range [1,256]");
+    98	    }
+    99	
+   100	    // R4: 1 <= num_outputs <= 256
+   101	    if (tx.outputs.empty() || tx.outputs.size() > MAX_OUTPUTS_CONSENSUS) {
+   102	        return TxValidationResult::Fail(TxValCode::R4_OUTPUT_COUNT,
+   103	            "R4: output count " + std::to_string(tx.outputs.size()) + " out of range [1,256]");
+   104	    }
+   105	
+   106	    // Per-output checks: R5, R6, R11, R13, R14
+   107	    int64_t sum_outputs = 0;
+   108	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   109	        const auto& out = tx.outputs[i];
+   110	
+   111	        // R5: every output amount > 0
+   112	        if (out.amount <= 0) {
+   113	            return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
+   114	                "R5: output[" + std::to_string(i) + "] amount <= 0", -1, (int32_t)i);
+   115	        }
+   116	
+   117	        // R6: every output amount <= SUPPLY_MAX_STOCKS
+   118	        if (out.amount > SUPPLY_MAX_STOCKS) {
+   119	            return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
+   120	                "R6: output[" + std::to_string(i) + "] amount exceeds supply max",
+   121	                -1, (int32_t)i);
+   122	        }
+   123	
+   124	        // R7: accumulate for overflow check
+   125	        sum_outputs += out.amount;
+   126	        if (sum_outputs > SUPPLY_MAX_STOCKS || sum_outputs < 0) {
+   127	            return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+   128	                "R7: sum of outputs exceeds supply max at output[" +
+   129	                std::to_string(i) + "]", -1, (int32_t)i);
+   130	        }
+   131	
+   132	        // R11: output type must be active
+   133	        if (!IsActiveOutputType(out.type)) {
+   134	            return TxValidationResult::Fail(TxValCode::R11_INACTIVE_TYPE,
+   135	                "R11: output[" + std::to_string(i) + "] type 0x" +
+   136	                HexStr(&out.type, 1) + " is not active in v1", -1, (int32_t)i);
+   137	        }
+   138	
+   139	        // R13: payload_len <= 255 (enforced by uint8 but check vector)
+   140	        if (out.payload.size() > 255) {
+   141	            return TxValidationResult::Fail(TxValCode::R13_PAYLOAD_TOO_LONG,
+   142	                "R13: output[" + std::to_string(i) + "] payload too long (" +
+   143	                std::to_string(out.payload.size()) + ")", -1, (int32_t)i);
+   144	        }
+   145	
+   146	        // R14: pre-activation payload forbidden; post-activation only OUT_TRANSFER may carry payload
+   147	        if (!out.payload.empty()) {
+   148	            bool payload_allowed = false;
+   149	            if (ctx.spend_height >= ctx.capsule_activation_height) {
+   150	                if (out.type == OUT_TRANSFER) payload_allowed = true;
+   151	            }
+   152	            if (!payload_allowed) {
+   153	                return TxValidationResult::Fail(TxValCode::R14_PAYLOAD_FORBIDDEN,
+   154	                    "R14: output[" + std::to_string(i) + "] type 0x" +
+   155	                    HexStr(&out.type, 1) +
+   156	                    (ctx.spend_height < ctx.capsule_activation_height
+   157	                        ? " payload forbidden before capsule activation"
+   158	                        : " only OUT_TRANSFER may carry payload"),
+   159	                    -1, (int32_t)i);
+   160	            }
+   161	        }
+   162	    }
+   163	
+   164	    // R9: serialized size <= MAX_TX_BYTES_CONSENSUS
+   165	    size_t est_size = EstimateTxSerializedSize(tx);
+   166	    if (est_size > (size_t)MAX_TX_BYTES_CONSENSUS) {
+   167	        return TxValidationResult::Fail(TxValCode::R9_OVERSIZE_TX,
+   168	            "R9: estimated tx size " + std::to_string(est_size) +
+   169	            " exceeds consensus max " + std::to_string(MAX_TX_BYTES_CONSENSUS));
+   170	    }
+   171	
+   172	    return TxValidationResult::Ok();
+   173	}
+   174	
+   175	// =============================================================================
+   176	// Duplicate input detection (R8)
+   177	// =============================================================================
+   178	
+   179	static TxValidationResult CheckDuplicateInputs(const Transaction& tx) {
+   180	    std::set<OutPoint> seen;
+   181	    for (size_t i = 0; i < tx.inputs.size(); ++i) {
+   182	        OutPoint op;
+   183	        op.txid = tx.inputs[i].prev_txid;
+   184	        op.index = tx.inputs[i].prev_index;
+   185	        if (!seen.insert(op).second) {
+   186	            return TxValidationResult::Fail(TxValCode::R8_DUPLICATE_INPUT,
+   187	                "R8: duplicate input at index " + std::to_string(i), (int32_t)i);
+   188	        }
+   189	    }
+   190	    return TxValidationResult::Ok();
+   191	}
+   192	
+   193	// =============================================================================
+   194	// UTXO lookup + signature verification (S1-S6, S10, S12)
+   195	// =============================================================================
+   196	
+   197	static TxValidationResult ValidateInputs(
+   198	    const Transaction& tx,
+   199	    const IUtxoView& utxos,
+   200	    const TxValidationContext& ctx,
+   201	    int64_t& out_input_sum)
+   202	{
+   203	    out_input_sum = 0;
+   204	
+   205	    for (size_t i = 0; i < tx.inputs.size(); ++i) {
+   206	        const auto& txin = tx.inputs[i];
+   207	
+   208	        OutPoint op;
+   209	        op.txid = txin.prev_txid;
+   210	        op.index = txin.prev_index;
+   211	
+   212	        auto utxo_opt = utxos.GetUTXO(op);
+   213	        if (!utxo_opt.has_value()) {
+   214	            return TxValidationResult::Fail(TxValCode::S1_UTXO_NOT_FOUND,
+   215	                "S1: input[" + std::to_string(i) + "] references missing UTXO",
+   216	                (int32_t)i);
+   217	        }
+   218	        const UTXOEntry& utxo = utxo_opt.value();
+   219	
+   220	        if (utxo.type == OUT_BURN) {
+   221	            return TxValidationResult::Fail(TxValCode::S12_BURN_UNSPENDABLE,
+   222	                "S12: input[" + std::to_string(i) + "] references burned output",
+   223	                (int32_t)i);
+   224	        }
+   225	
+   226	        if (utxo.type == OUT_BOND_LOCK || utxo.type == OUT_ESCROW_LOCK) {
+   227	            return TxValidationResult::Fail(TxValCode::S11_BOND_LOCKED,
+   228	                "S11: input[" + std::to_string(i) + "] references locked output",
+   229	                (int32_t)i);
+   230	        }
+   231	
+   232	        if (utxo.is_coinbase) {
+   233	            int64_t confirmations = ctx.spend_height - utxo.height;
+   234	            if (confirmations < COINBASE_MATURITY) {
+   235	                return TxValidationResult::Fail(TxValCode::S10_COINBASE_IMMATURE,
+   236	                    "S10: input[" + std::to_string(i) + "] coinbase immature (" +
+   237	                    std::to_string(confirmations) + " < " +
+   238	                    std::to_string(COINBASE_MATURITY) + ")", (int32_t)i);
+   239	            }
+   240	        }
+   241	
+   242	        SpentOutput spent;
+   243	        spent.amount = utxo.amount;
+   244	        spent.type = utxo.type;
+   245	
+   246	        std::string verify_err;
+   247	        if (!VerifyTransactionInput(tx, i, spent, ctx.genesis_hash,
+   248	                                    utxo.pubkey_hash, &verify_err)) {
+   249	            TxValCode code = TxValCode::S6_VERIFY_FAIL;
+   250	            if (verify_err.find("hash mismatch") != std::string::npos)
+   251	                code = TxValCode::S2_PKH_MISMATCH;
+   252	            else if (verify_err.find("all zeros") != std::string::npos)
+   253	                code = TxValCode::S4_ZERO_SIGNATURE;
+   254	            else if (verify_err.find("LOW-S") != std::string::npos ||
+   255	                     verify_err.find("low-S") != std::string::npos ||
+   256	                     verify_err.find("High-S") != std::string::npos)
+   257	                code = TxValCode::S5_HIGH_S;
+   258	
+   259	            return TxValidationResult::Fail(code,
+   260	                "input[" + std::to_string(i) + "]: " + verify_err, (int32_t)i);
+   261	        }
+   262	
+   263	        out_input_sum += utxo.amount;
+   264	        if (out_input_sum > SUPPLY_MAX_STOCKS || out_input_sum < 0) {
+   265	            return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+   266	                "input sum overflow at input[" + std::to_string(i) + "]",
+   267	                (int32_t)i);
+   268	        }
+   269	    }
+   270	
+   271	    return TxValidationResult::Ok();
+   272	}
+   273	
+   274	// =============================================================================
+   275	// ValidateTransactionConsensus (R1-R14, S1-S12)
+   276	// =============================================================================
+   277	
+   278	TxValidationResult ValidateTransactionConsensus(
+   279	    const Transaction& tx,
+   280	    const IUtxoView& utxos,
+   281	    const TxValidationContext& ctx)
+   282	{
+   283	    if (tx.tx_type == TX_TYPE_COINBASE) {
+   284	        return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
+   285	            "use ValidateCoinbaseConsensus for coinbase transactions");
+   286	    }
+   287	
+   288	    auto r = ValidateStructure(tx, ctx);
+   289	    if (!r.ok) return r;
+   290	
+   291	    r = CheckDuplicateInputs(tx);
+   292	    if (!r.ok) return r;
+   293	
+   294	    int64_t input_sum = 0;
+   295	    r = ValidateInputs(tx, utxos, ctx, input_sum);
+   296	    if (!r.ok) return r;
+   297	
+   298	    int64_t output_sum = 0;
+   299	    for (const auto& out : tx.outputs) output_sum += out.amount;
+   300	
+   301	    if (input_sum < output_sum) {
+   302	        return TxValidationResult::Fail(TxValCode::S7_INPUTS_LT_OUTPUTS,
+   303	            "S7: input sum " + std::to_string(input_sum) +
+   304	            " < output sum " + std::to_string(output_sum));
+   305	    }
+   306	
+   307	    int64_t fee = input_sum - output_sum;
+   308	    size_t tx_size = EstimateTxSerializedSize(tx);
+   309	    int64_t min_fee = (int64_t)tx_size * 1;
+   310	    if (fee < min_fee) {
+   311	        return TxValidationResult::Fail(TxValCode::S8_FEE_TOO_LOW,
+   312	            "S8: fee " + std::to_string(fee) + " < min " + std::to_string(min_fee) +
+   313	            " (" + std::to_string(tx_size) + " bytes × 1)");
+   314	    }
+   315	
+   316	    // S9: standard tx outputs must be OUT_TRANSFER in v1.
+   317	    // Payload allowance is governed by R14 (pre/post capsule activation).
+   318	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   319	        if (tx.outputs[i].type != OUT_TRANSFER) {
+   320	            return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,
+   321	                "S9: standard tx output[" + std::to_string(i) +
+   322	                "] must be OUT_TRANSFER, got 0x" +
+   323	                HexStr(&tx.outputs[i].type, 1), -1, (int32_t)i);
+   324	        }
+   325	    }
+   326	
+   327	    return TxValidationResult::Ok();
+   328	}
+   329	
+   330	// =============================================================================
+   331	// ValidateTransactionPolicy (relay/mining policy checks)
+   332	// PRECONDICIÓN: debe llamarse DESPUÉS de ValidateTransactionConsensus.
+   333	// =============================================================================
+   334	
+   335	TxValidationResult ValidateTransactionPolicy(
+   336	    const Transaction& tx,
+   337	    const IUtxoView& utxos,
+   338	    const TxValidationContext& ctx)
+   339	{
+   340	    size_t tx_size = EstimateTxSerializedSize(tx);
+   341	    if (tx_size > (size_t)MAX_TX_BYTES_STANDARD) {
+   342	        return TxValidationResult::Fail(TxValCode::P_TX_TOO_LARGE,
+   343	            "Policy: tx size " + std::to_string(tx_size) +
+   344	            " exceeds standard limit " + std::to_string(MAX_TX_BYTES_STANDARD));
+   345	    }
+   346	
+   347	    if (tx.inputs.size() > MAX_INPUTS_STANDARD) {
+   348	        return TxValidationResult::Fail(TxValCode::P_TOO_MANY_INPUTS,
+   349	            "Policy: " + std::to_string(tx.inputs.size()) +
+   350	            " inputs exceeds standard " + std::to_string(MAX_INPUTS_STANDARD));
+   351	    }
+   352	
+   353	    if (tx.outputs.size() > MAX_OUTPUTS_STANDARD) {
+   354	        return TxValidationResult::Fail(TxValCode::P_TOO_MANY_OUTPUTS,
+   355	            "Policy: " + std::to_string(tx.outputs.size()) +
+   356	            " outputs exceeds standard " + std::to_string(MAX_OUTPUTS_STANDARD));
+   357	    }
+   358	
+   359	    int payload_count = 0;
+   360	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   361	        if (!tx.outputs[i].payload.empty()) {
+   362	            ++payload_count;
+   363	
+   364	            if (tx.outputs[i].payload.size() > MAX_PAYLOAD_STANDARD) {
+   365	                return TxValidationResult::Fail(TxValCode::P_PAYLOAD_TOO_LARGE,
+   366	                    "Policy: output[" + std::to_string(i) + "] payload " +
+   367	                    std::to_string(tx.outputs[i].payload.size()) +
+   368	                    " exceeds standard " + std::to_string(MAX_PAYLOAD_STANDARD),
+   369	                    -1, (int32_t)i);
+   370	            }
+   371	
+   372	            if (ctx.spend_height >= ctx.capsule_activation_height) {
+   373	                auto cap_result = ValidateCapsulePolicy(tx.outputs[i].payload);
+   374	                if (!cap_result.ok) {
+   375	                    return TxValidationResult::Fail(TxValCode::P_BAD_CAPSULE,
+   376	                        "Policy: output[" + std::to_string(i) +
+   377	                        "] bad capsule: " + cap_result.message,
+   378	                        -1, (int32_t)i);
+   379	                }
+   380	            }
+   381	        }
+   382	    }
+   383	
+   384	    if (payload_count > MAX_PAYLOAD_OUTPUTS_STD) {
+   385	        return TxValidationResult::Fail(TxValCode::P_TOO_MANY_PAYLOADS,
+   386	            "Policy: " + std::to_string(payload_count) +
+   387	            " outputs with payload exceeds standard " +
+   388	            std::to_string(MAX_PAYLOAD_OUTPUTS_STD));
+   389	    }
+   390	
+   391	    // relay fee: require all inputs resolvable (no silent skipping)
+   392	    int64_t input_sum = 0;
+   393	    for (size_t i = 0; i < tx.inputs.size(); ++i) {
+   394	        OutPoint op{tx.inputs[i].prev_txid, tx.inputs[i].prev_index};
+   395	        auto utxo_opt = utxos.GetUTXO(op);
+   396	        if (!utxo_opt.has_value()) {
+   397	            return TxValidationResult::Fail(TxValCode::INTERNAL_ERROR,
+   398	                "Policy: missing UTXO for input[" + std::to_string(i) +
+   399	                "] (precondition: call ValidateTransactionConsensus first)");
+   400	        }
+   401	        input_sum += utxo_opt->amount;
+   402	    }
+   403	
+   404	    int64_t output_sum = 0;
+   405	    for (const auto& out : tx.outputs) output_sum += out.amount;
+   406	
+   407	    int64_t fee = input_sum - output_sum;
+   408	    int64_t min_relay_fee = (int64_t)tx_size * MIN_RELAY_FEE_PER_BYTE;
+   409	    if (fee < min_relay_fee) {
+   410	        return TxValidationResult::Fail(TxValCode::P_FEE_BELOW_RELAY,
+   411	            "Policy: fee " + std::to_string(fee) + " < relay min " +
+   412	            std::to_string(min_relay_fee));
+   413	    }
+   414	
+   415	    // dust
+   416	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   417	        if (tx.outputs[i].amount < DUST_THRESHOLD) {
+   418	            return TxValidationResult::Fail(TxValCode::P_DUST_OUTPUT,
+   419	                "Policy: output[" + std::to_string(i) + "] amount " +
+   420	                std::to_string(tx.outputs[i].amount) + " below dust threshold " +
+   421	                std::to_string(DUST_THRESHOLD), -1, (int32_t)i);
+   422	        }
+   423	    }
+   424	
+   425	    return TxValidationResult::Ok();
+   426	}
+   427	
+   428	// =============================================================================
+   429	// ValidateCoinbaseConsensus (CB1-CB10)
+   430	// =============================================================================
+   431	
+   432	TxValidationResult ValidateCoinbaseConsensus(
+   433	    const Transaction& tx,
+   434	    int64_t height,
+   435	    int64_t subsidy,
+   436	    int64_t total_fees,
+   437	    const PubKeyHash& gold_vault_pkh,
+   438	    const PubKeyHash& popc_pool_pkh)
+   439	{
+   440	    if (tx.tx_type != TX_TYPE_COINBASE) {
+   441	        return TxValidationResult::Fail(TxValCode::CB1_MISSING_COINBASE,
+   442	            "CB1: tx_type must be COINBASE (0x01)");
+   443	    }
+   444	
+   445	    if (tx.version != 1) {
+   446	        return TxValidationResult::Fail(TxValCode::R1_BAD_VERSION,
+   447	            "R1: coinbase version must be 1");
+   448	    }
+   449	
+   450	    if (tx.inputs.size() != 1) {
+   451	        return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
+   452	            "CB2: coinbase must have exactly 1 input, got " +
+   453	            std::to_string(tx.inputs.size()));
+   454	    }
+   455	
+   456	    const auto& cbin = tx.inputs[0];
+   457	    Hash256 zero_hash{};
+   458	    if (cbin.prev_txid != zero_hash) {
+   459	        return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
+   460	            "CB2: coinbase prev_txid must be all zeros");
+   461	    }
+   462	    if (cbin.prev_index != 0xFFFFFFFFu) {
+   463	        return TxValidationResult::Fail(TxValCode::CB2_BAD_CB_INPUT,
+   464	            "CB2: coinbase prev_index must be 0xFFFFFFFF, got 0x" + HexU32(cbin.prev_index));
+   465	    }
+   466	
+   467	    // CB3: signature[0..7] = height as uint64 LE (portable)
+   468	    uint64_t encoded_height = 0;
+   469	    for (int i = 0; i < 8; ++i) {
+   470	        encoded_height |= (uint64_t)cbin.signature[i] << (8 * i);
+   471	    }
+   472	    if ((int64_t)encoded_height != height) {
+   473	        return TxValidationResult::Fail(TxValCode::CB3_BAD_CB_SIG_FIELD,
+   474	            "CB3: coinbase height mismatch: encoded " +
+   475	            std::to_string(encoded_height) + " != block height " +
+   476	            std::to_string(height));
+   477	    }
+   478	
+   479	    // CB9: pubkey must be 0x00*33
+   480	    if (!IsAllZeros(cbin.pubkey.data(), 33)) {
+   481	        return TxValidationResult::Fail(TxValCode::CB9_CB_PUBKEY_NONZERO,
+   482	            "CB9: coinbase input pubkey must be all zeros");
+   483	    }
+   484	
+   485	    // CB7: exactly 3 outputs
+   486	    if (tx.outputs.size() != 3) {
+   487	        return TxValidationResult::Fail(TxValCode::CB7_CB_OUTPUT_COUNT,
+   488	            "CB7: coinbase must have exactly 3 outputs, got " +
+   489	            std::to_string(tx.outputs.size()));
+   490	    }
+   491	
+   492	    // CB4: output type order
+   493	    if (tx.outputs[0].type != OUT_COINBASE_MINER) {
+   494	        return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+   495	            "CB4: output[0] must be OUT_COINBASE_MINER (0x01)", -1, 0);
+   496	    }
+   497	    if (tx.outputs[1].type != OUT_COINBASE_GOLD) {
+   498	        return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+   499	            "CB4: output[1] must be OUT_COINBASE_GOLD (0x02)", -1, 1);
+   500	    }
+   501	    if (tx.outputs[2].type != OUT_COINBASE_POPC) {
+   502	        return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+   503	            "CB4: output[2] must be OUT_COINBASE_POPC (0x03)", -1, 2);
+   504	    }
+   505	
+   506	    // CB5: exact split of (subsidy + fees): quarter, quarter, remainder-to-miner
+   507	    int64_t total_reward = subsidy + total_fees;
+   508	    int64_t quarter = total_reward / 4;
+   509	    int64_t expected_gold = quarter;
+   510	    int64_t expected_popc = quarter;
+   511	    int64_t expected_miner = total_reward - expected_gold - expected_popc;
+   512	
+   513	    if (tx.outputs[0].amount != expected_miner) {
+   514	        return TxValidationResult::Fail(TxValCode::CB5_CB_AMOUNT_MISMATCH,
+   515	            "CB5: miner amount " + std::to_string(tx.outputs[0].amount) +
+   516	            " != expected " + std::to_string(expected_miner), -1, 0);
+   517	    }
+   518	    if (tx.outputs[1].amount != expected_gold) {
+   519	        return TxValidationResult::Fail(TxValCode::CB5_CB_AMOUNT_MISMATCH,
+   520	            "CB5: gold amount " + std::to_string(tx.outputs[1].amount) +
+   521	            " != expected " + std::to_string(expected_gold), -1, 1);
+   522	    }
+   523	    if (tx.outputs[2].amount != expected_popc) {
+   524	        return TxValidationResult::Fail(TxValCode::CB5_CB_AMOUNT_MISMATCH,
+   525	            "CB5: popc amount " + std::to_string(tx.outputs[2].amount) +
+   526	            " != expected " + std::to_string(expected_popc), -1, 2);
+   527	    }
+   528	
+   529	    // CB6: vault destinations must match constitutional PKHs
+   530	    if (tx.outputs[1].pubkey_hash != gold_vault_pkh) {
+   531	        return TxValidationResult::Fail(TxValCode::CB6_CB_VAULT_MISMATCH,
+   532	            "CB6: gold vault pubkey_hash mismatch", -1, 1);
+   533	    }
+   534	    if (tx.outputs[2].pubkey_hash != popc_pool_pkh) {
+   535	        return TxValidationResult::Fail(TxValCode::CB6_CB_VAULT_MISMATCH,
+   536	            "CB6: popc pool pubkey_hash mismatch", -1, 2);
+   537	    }
+   538	
+   539	    // CB10: coinbase outputs payload must be empty
+   540	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   541	        if (!tx.outputs[i].payload.empty()) {
+   542	            return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
+   543	                "CB10: coinbase output[" + std::to_string(i) +
+   544	                "] must have empty payload", -1, (int32_t)i);
+   545	        }
+   546	    }
+   547	
+   548	    // R5/R6 on coinbase outputs
+   549	    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+   550	        if (tx.outputs[i].amount <= 0) {
+   551	            return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
+   552	                "R5: coinbase output[" + std::to_string(i) + "] amount <= 0",
+   553	                -1, (int32_t)i);
+   554	        }
+   555	        if (tx.outputs[i].amount > SUPPLY_MAX_STOCKS) {
+   556	            return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
+   557	                "R6: coinbase output[" + std::to_string(i) + "] amount exceeds supply max",
+   558	                -1, (int32_t)i);
+   559	        }
+   560	    }
+   561	
+   562	    return TxValidationResult::Ok();
+   563	}
+   564	
+   565	} // namespace sost
