@@ -233,11 +233,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 </div></div>
 <div class="config">
   <span class="config-label">RPC&gt;</span>
-  <input id="rpcUrl" value="http://212.132.108.244/rpc" spellcheck="false"/>
+  <input id="rpcUrl" value="https://explorer.sostcore.com/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
-  <input id="rpcUser" value="NeoB_1_248" spellcheck="false" style="width:120px"/>
+  <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
-  <input id="rpcPass" value="sost1b3f7a2c9e5d14b08f6a3c7e9d2b4f1a8c5e3d07b" type="password" spellcheck="false" style="width:120px"/>
+  <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" style="width:120px"/>
   <button onclick="connectRPC()">CONNECT</button>
 </div>
 <div class="search"><div class="search-box">
@@ -335,7 +335,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-let RPC='http://212.132.108.244/rpc',RPC_USER='NeoB_1_248',RPC_PASS='sost1b3f7a2c9e5d14b08f6a3c7e9d2b4f1a8c5e3d07b',H=0,prevH=0,off=0;
+let RPC='https://explorer.sostcore.com/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
 const COINBASE_MATURITY=1000;
 const PS=10;
 let _loading=false;
