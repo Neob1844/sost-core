@@ -830,19 +830,24 @@ function showCXInfo(){
   var c=document.getElementById('detailContent');
   _navStack=[];pushNav('cx','ConvergenceX','');
   var targetSec=600;
-  c.innerHTML='<div class="dtl-head"><b>ConvergenceX Proof-of-Work</b> <span style="font-size:10px;color:var(--text3)">consensus engine</span></div>'+
+  c.innerHTML='<div class="dtl-head"><b>ConvergenceX v2.0 Proof-of-Work</b> <span style="font-size:10px;color:var(--text3)">memory-hard CPU-friendly consensus engine</span></div>'+
   '<div style="margin:16px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple)">'+
   '<div style="font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">SYSTEM ARCHITECTURE</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-  'ConvergenceX is a <b style="color:var(--cyan)">Proof of Irreversible Convergence</b> algorithm. '+
+  'ConvergenceX v2.0 is a <b style="color:var(--cyan)">Proof of Irreversible Convergence</b> algorithm. '+
   'Miners must solve a linear system A(x)=b and prove the solution sits in a <b style="color:var(--green)">stable basin</b> — '+
-  'meaning small perturbations converge back to the same attractor. This is verified via the <b style="color:var(--orange)">cASERT stability test</b>.</div></div>'+
+  'meaning small perturbations converge back to the same attractor. This is verified via the <b style="color:var(--orange)">cASERT stability test</b>.<br><br>'+
+  '<b style="color:var(--green)">v2.0 improvements:</b><br>'+
+  '&bull; <b style="color:var(--cyan)">Persistent Dataset Cache</b> — 4GB working memory generated once per block (from prev_block_hash), reused across all nonce attempts. CPU miners benefit from cache reuse; ASICs cannot reduce the memory requirement.<br>'+
+  '&bull; <b style="color:var(--orange)">Per-Block Program Generation</b> — Each block generates a unique 256-operation program derived from the block hash. The 100,000 iterations execute this program — since it changes every block, no fixed ASIC circuit can be optimized. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types, 256-op sequence).'+
+  '</div></div>'+
   '<div class="dtl-grid">'+
-  '<div class="k">ALGORITHM</div><div class="v"><span style="color:var(--purple)">ConvergenceX</span> // Proof of Irreversible Convergence</div>'+
+  '<div class="k">ALGORITHM</div><div class="v"><span style="color:var(--purple)">ConvergenceX v2.0</span> // Proof of Irreversible Convergence</div>'+
   '<div class="k">PROBLEM</div><div class="v">A(x) = M<sup>T</sup>(Mx) + λx = b // n×n SPD system, n='+32+'</div>'+
   '<div class="k">DIMENSION</div><div class="v"><span style="color:var(--cyan)">n = 32</span> // 32×32 matrix per block</div>'+
   '<div class="k">ROUNDS</div><div class="v"><span style="color:var(--green)">100,000</span> gradient iterations per attempt</div>'+
-  '<div class="k">SCRATCHPAD</div><div class="v"><span style="color:var(--orange)">4 GB</span> memory-hard scratchpad per epoch</div>'+
+  '<div class="k">DATASET</div><div class="v"><span style="color:var(--orange)">4 GB</span> persistent cache — generated once per block, reused across all nonce attempts (v2.0)</div>'+
+  '<div class="k">PROGRAM</div><div class="v"><span style="color:var(--cyan)">256 ops</span> per-block program (MUL/XOR/ADD/ROT/AND/OR/NOT/SUB) — changes every block (v2.0)</div>'+
   '<div class="k">CHECKPOINTS</div><div class="v"><span style="color:var(--cyan)">16</span> Merkle-committed state snapshots (every 6,250 rounds)</div>'+
   '<div class="k">λ (LAMBDA)</div><div class="v"><span style="color:var(--purple)">100</span> regularization ensures unique solution</div>'+
   '<div class="k">LR SHIFT</div><div class="v">18 // learning rate = 2<sup>-18</sup></div>'+

@@ -200,7 +200,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">CPU-MINED</span>
       <span class="sep">|</span>
-      <span class="val">4GB scratchpad &middot; 100,000 sequential rounds &middot; No GPU advantage</span>
+      <span class="val">4GB dataset cache &middot; 256-op program &middot; 100K rounds &middot; No GPU advantage</span>
     </div>
   </div>
 </section>
@@ -216,8 +216,8 @@
     <div class="arch-flow fade-in delay-1">
       <div class="arch-node">
         <div class="node-label">Layer 1</div>
-        <div class="node-name">ConvergenceX</div>
-        <div class="node-detail">Memory-hard hash<br>4GB scratchpad<br>100K rounds</div>
+        <div class="node-name">ConvergenceX v2.0</div>
+        <div class="node-detail">Memory-hard hash<br>4GB dataset cache<br>256-op program + 100K rounds</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 2</div>
@@ -227,7 +227,7 @@
       <div class="arch-node">
         <div class="node-label">Layer 3</div>
         <div class="node-name">cASERT</div>
-        <div class="node-detail">Progressive hardening<br>L1&ndash;L5 levels<br>k=4, steps=4</div>
+        <div class="node-detail">Progressive hardening<br>L1&ndash;L5+ unbounded<br>k=4, steps=4</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Output</div>
@@ -249,7 +249,7 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">// 01 &mdash; CONVERGENCEX</div>
-      <h2 class="section-title">ConvergenceX <span class="accent">Algorithm</span></h2>
+      <h2 class="section-title">ConvergenceX v2.0 <span class="accent">Algorithm</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
@@ -262,21 +262,24 @@
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          ConvergenceX is a memory-hard hash function requiring a 4GB scratchpad and 100,000
-          sequential iterations. Each iteration reads/writes pseudorandom 4KB pages across the
-          scratchpad, creating data dependencies that prevent parallelization.
-          The sequential nature means GPU cores cannot pipeline &mdash;
-          making CPU mining competitive by design.
+          ConvergenceX v2.0 is a memory-hard, CPU-friendly proof-of-work algorithm with two key
+          improvements over v1.0: a <b>persistent dataset cache</b> (4GB generated once per block from
+          prev_block_hash, reused across all nonce attempts) and <b>per-block program generation</b>
+          (256-operation program derived from block hash, executed within each iteration).
+          CPU miners benefit from dataset cache reuse; ASICs cannot reduce the memory requirement
+          or pre-optimize for the random program that changes every block.
         </p>
 
-        <div class="code-snippet" data-label="ALGORITHM">
-<span class="cmt">// ConvergenceX hash computation</span>
-<span class="kw">scratchpad</span> = allocate(<span class="num">4096</span> MB)     <span class="cmt">// 4GB memory requirement</span>
-<span class="kw">fill</span>(scratchpad, seed_from_header)  <span class="cmt">// deterministic initialization</span>
+        <div class="code-snippet" data-label="ALGORITHM v2.0">
+<span class="cmt">// ConvergenceX v2.0 — dataset cache + per-block program</span>
+<span class="kw">dataset</span> = generate_or_reuse(<span class="num">4096</span> MB, prev_block_hash)  <span class="cmt">// persistent 4GB cache</span>
+<span class="kw">program</span> = derive_program(block_hash, <span class="num">256</span> ops)          <span class="cmt">// unique per block</span>
 
 <span class="kw">for</span> round = <span class="num">0</span> .. <span class="num">99,999</span>:
     page_idx = <span class="fn">f</span>(state, round) <span class="kw">mod</span> num_pages
     state = <span class="fn">mix</span>(state, scratchpad[page_idx])
+    prog_out = <span class="fn">program.execute</span>(dataset[round <span class="kw">mod</span> size], round)
+    state = state <span class="kw">XOR</span> prog_out                          <span class="cmt">// program output mixed in</span>
     scratchpad[page_idx] = <span class="fn">transform</span>(state)
 
 <span class="kw">commit</span> = <span class="fn">finalize</span>(state)              <span class="cmt">// 32-byte PoW output</span>
@@ -284,14 +287,15 @@
         </div>
 
         <table class="code-table">
-          <tr><td class="key">CX_SCRATCH_M</td><td class="val"><code>4096</code> MB <span class="comment">// 4GB scratchpad per thread</span></td></tr>
+          <tr><td class="key">CX_SCRATCH_M</td><td class="val"><code>4096</code> MB <span class="comment">// 4GB dataset per block (persistent cache, v2.0)</span></td></tr>
           <tr><td class="key">CX_ROUNDS_M</td><td class="val"><code>100,000</code> sequential iterations</td></tr>
+          <tr><td class="key">CX_PROGRAM</td><td class="val"><code>256</code> ops <span class="comment">// per-block program: MUL/XOR/ADD/ROT/AND/OR/NOT/SUB (v2.0)</span></td></tr>
           <tr><td class="key">CX_N</td><td class="val"><code>32</code> <span class="comment">// internal state width</span></td></tr>
           <tr><td class="key">CX_LR_SHIFT</td><td class="val"><code>18</code> <span class="comment">// base learning-rate shift</span></td></tr>
           <tr><td class="key">CX_LAM</td><td class="val"><code>100</code> <span class="comment">// convergence lambda parameter</span></td></tr>
           <tr><td class="key">CX_CP_M</td><td class="val"><code>6250</code> checkpoints <span class="comment">// 100000 / 16</span></td></tr>
-          <tr><td class="key">Page size</td><td class="val"><code>4 KB</code> per scratchpad access</td></tr>
-          <tr><td class="key">ASIC resistance</td><td class="val">Sequential data dependencies + large memory footprint</td></tr>
+          <tr><td class="key">Dataset</td><td class="val">Generated once per block, reused across all nonce attempts (v2.0)</td></tr>
+          <tr><td class="key">ASIC resistance</td><td class="val">Random program changes every block &mdash; no fixed circuit optimization</td></tr>
           <tr><td class="key">GPU resistance</td><td class="val">4GB VRAM per thread &mdash; no pipelining advantage</td></tr>
         </table>
       </div>
@@ -559,8 +563,8 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="key">CPU fairness</td><td class="val">4GB scratchpad requires commodity hardware. No specialized silicon advantage.</td></tr>
-          <tr><td class="key">Sequential hardness</td><td class="val">100,000 rounds with data-dependent memory accesses. No meaningful parallelism within a single hash.</td></tr>
+          <tr><td class="key">CPU fairness</td><td class="val">4GB dataset cache requires commodity hardware. Persistent per-block &mdash; CPU miners benefit from reuse.</td></tr>
+          <tr><td class="key">Sequential hardness</td><td class="val">100,000 rounds with data-dependent memory accesses + per-block 256-op program. No meaningful parallelism.</td></tr>
           <tr><td class="key">Verification efficiency</td><td class="val">Checkpoints every 16 rounds (6,250 total) allow fast verification without repeating full computation.</td></tr>
           <tr><td class="key">Deterministic difficulty</td><td class="val">Q16.16 fixed-point encoding eliminates cross-platform floating-point divergence.</td></tr>
           <tr><td class="key">Adaptive response</td><td class="val">cASERT overlay provides real-time hardening without protocol-level forks or governance votes.</td></tr>
