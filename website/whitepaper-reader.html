@@ -2332,6 +2332,44 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 <div class="wp-spacer"></div>
 <hr class="wp-hr">
 <div class="wp-spacer"></div>
+<h2 id="sec-nfp" class="wp-h">10. Native Financial Primitives — Technical Roadmap</h2>
+<div class="wp-spacer"></div>
+<p class="wp-p">SOST does not support smart contracts — there is no virtual machine, no user-deployed bytecode, and no Turing-complete execution. Instead, SOST implements purpose-built transaction types that provide specific financial primitives directly in the consensus layer. These are deterministic, auditable, and cannot be exploited through contract bugs because they are not programmable — they are protocol rules.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">This approach follows the model established by Ravencoin (native assets on UTXO without VM) and is consistent with Bitcoin&#x27;s OP_CHECKLOCKTIMEVERIFY — consensus rules, not smart contracts.</p>
+<div class="wp-spacer"></div>
+<h4 id="sec-nfp-1" class="wp-h">10.1 Reserved Transaction Types</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">The following output types are reserved in the codebase (include/sost/transaction.h):</p>
+<div class="wp-spacer"></div>
+<pre class="wp-code">  OUT_BOND_LOCK   (0x10) — Time-locked bond for PoPC Model A
+  OUT_ESCROW_LOCK (0x11) — Time-locked escrow for PoPC Model B
+  OUT_BURN        (0x20) — Reserved, NOT activated. SOST supply is immutable.
+                           No token destruction mechanism exists or is planned.
+
+  Future types (not yet reserved in code):
+  OUT_TOKEN_ISSUE    — Create native metal-backed tokens
+  OUT_TOKEN_TRANSFER — Transfer native metal-backed tokens</pre>
+<div class="wp-spacer"></div>
+<h4 id="sec-nfp-2" class="wp-h">10.2 Activation Roadmap</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Phase 1 — Bond Lock + Escrow (Q3-Q4 2026, ~12 weeks):</strong></p>
+<p class="wp-p">Activate BOND_LOCK and ESCROW_LOCK transaction types via block height activation. Enables native PoPC bonds and escrow on the SOST chain without Ethereum dependency. Changes limited to consensus validation (R11, S9, S11) and wallet CLI.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):</strong></p>
+<p class="wp-p">Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially. Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings. Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal acquisition. Token registration fees are paid to the Gold Vault, not burned.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Phase 3 — Fully Native PoPC (Q4 2027):</strong></p>
+<p class="wp-p">Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow, verification, and reward distribution fully on-chain. No Ethereum dependency for any core protocol operation.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Target: 18 months to full sovereignty.</strong></p>
+<div class="wp-spacer"></div>
+<p class="wp-p">All activation heights will be announced at least 30 days in advance. Each phase requires stability of the previous phase on mainnet for a minimum of 3 months before activation.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">The supply of SOST is immutable by construction. No minting, burning, or destruction mechanism exists in the protocol. All slashing operations redistribute funds — they never destroy them.</p>
+<div class="wp-spacer"></div>
+<hr class="wp-hr">
+<div class="wp-spacer"></div>
 <h3 id="sec-73" class="wp-h">Appendix A: Canonical Constants (Normative)</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">All values below are consensus-critical. Any deviation constitutes a consensus failure.</p>
@@ -2575,7 +2613,7 @@ RECORD:
   3. Verify expiry &gt;= block.timestamp
   4. Verify actionType is 1 or 2 (no other actions possible)
   5. Verify target tokens are on allowlist
-  6. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + burn)</pre>
+  6. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + redistribute to vaults)</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-83" class="wp-h">G.5 Mandatory Audit Trail</h4>
 <div class="wp-spacer"></div>
@@ -2586,7 +2624,7 @@ RECORD:
   2. Proof of approval: EmergencyApproved record on SOST chain
   3. Ethereum transaction hashes for all Reserve Vault operations
   4. Batch report: amounts moved, tokens involved, execution timestamps
-  5. If E2 (burn): proof of SOST burn (burn address or contract event)
+  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Gold Vault)
   6. All data published on project website, GitHub, and IPFS mirror</pre>
 <div class="wp-spacer"></div>
 <hr class="wp-hr">

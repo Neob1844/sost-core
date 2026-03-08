@@ -375,11 +375,49 @@
   </div>
 </section>
 
+<!-- NATIVE FINANCIAL PRIMITIVES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Native Financial <span class="accent">Primitives</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">SOST does not support smart contracts &mdash; no virtual machine, no user-deployed bytecode, no Turing-complete execution. Instead, purpose-built transaction types provide financial primitives directly in the consensus layer. Deterministic, auditable, and not exploitable through contract bugs &mdash; they are protocol rules, not programs.</p>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">PHASE 1 &middot; Q3-Q4 2026</div>
+        <h3 style="color:var(--red-primary)">Bond Lock + Escrow</h3>
+        <p>Activate BOND_LOCK (0x10) and ESCROW_LOCK (0x11) transaction types via block height. Native PoPC bonds and escrow on the SOST chain without Ethereum dependency. ~12 weeks development.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">PHASE 2 &middot; Q2-Q3 2027</div>
+        <h3 style="color:var(--cyan-primary)">Native Metal Tokens</h3>
+        <p>TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance. Native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings. Each issuance includes Capsule attestation. ~6 months development.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">PHASE 3 &middot; Q4 2027</div>
+        <h3 style="color:var(--green-primary)">Fully Native PoPC</h3>
+        <p>All PoPC operations migrate from Ethereum to SOST chain. Bond locks, escrow, verification, and reward distribution fully on-chain. Zero Ethereum dependency. Target: 18 months to full sovereignty.</p>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2">
+      <strong>Supply immutability:</strong> The supply of SOST is immutable by construction. No minting, burning, or destruction mechanism exists in the protocol. All slashing operations redistribute funds &mdash; they never destroy them. OUT_BURN (0x20) is reserved in code but has no activation timeline.
+    </div>
+
+    <div class="notice fade-in delay-3" style="border-left-color:var(--cyan-primary);">
+      <strong>Activation policy:</strong> All activation heights will be announced at least 30 days in advance. Each phase requires stability of the previous phase on mainnet for a minimum of 3 months before activation.
+    </div>
+  </div>
+</section>
+
 <!-- EPOCH STRUCTURE -->
 <section class="section" style="border-bottom:none;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 03</div>
+      <div class="section-id">SECTION 04</div>
       <h2 class="section-title">Epoch <span class="accent">Structure</span></h2>
     </div>
 

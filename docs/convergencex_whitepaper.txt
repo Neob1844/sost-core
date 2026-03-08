@@ -941,8 +941,9 @@ appropriate for the long-term security of the protocol.
 
 Emergency actions are limited to exactly two action types:
   (E1) ROTATE: rotate reserve holdings to other allowlisted precious-metal tokens (including XAUt↔PAXG).
-  (E2) LIQUIDATE→BUY→BURN: liquidate precious-metal tokens to acquire SOST and burn it,
-       with a fully auditable trail.
+  (E2) LIQUIDATE→BUY→REDISTRIBUTE: liquidate precious-metal tokens to acquire SOST and
+       redistribute it to PoPC Pool (50%) and Gold Vault (50%), with a fully auditable trail.
+       No supply is destroyed — SOST supply is immutable by construction.
 
 The Foundation may pause purchases or adjust future purchase policy operationally without consensus,
 disclosed via batch reports.
@@ -1996,7 +1997,7 @@ CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which i
 |---|---|
 | Critical bug | Foundation pauses new PoPC contracts. Existing contracts continue unaffected. |
 | Exchange hack | Gold Vault is a cold wallet with no exchange connection. Independent and safe. |
-| XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-burn (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order. |
+| XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-redistribute (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order. |
 | Issuer risk (future purchases only) | Foundation redirects future purchases without consensus. Previously purchased assets remain sealed. |
 | Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. Reserve remains in Heritage if no emergency was authorized before chain death. |
 
@@ -2019,7 +2020,7 @@ C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold
 C3:  Gold Vault coinbase destination is immutable at genesis. Reserve Vault is Heritage sealed;
      Emergency Catastrophe dual gate (≥75% miner signaling + Foundation Execution Order) is the
      only mechanism to move previously purchased reserve assets.
-C4:  Metals Reserve (tokenized, allowlisted) shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-burn)
+C4:  Metals Reserve (tokenized, allowlisted) shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-redistribute)
      or formally declared Dissolution.
 C5:  Dissolution requires 90 days of zero blocks + 60-day public timelock.
 C6:  Dissolution is one-way and irreversible.
@@ -2035,7 +2036,7 @@ C14: Default 50/50 XAUt/PAXG acquisition split; adjustable operationally by Foun
      for future purchases only. Previously purchased assets are not rebalanced.
 C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES≥108)
      + Foundation Execution Order. Only two actions permitted: E1 (ROTATE) and
-     E2 (LIQUIDATE→BUY→BURN). No other mechanism to move reserve assets.
+     E2 (LIQUIDATE→BUY→REDISTRIBUTE). No other mechanism to move reserve assets.
 ```
 
 ## 11. Roadmap
@@ -2080,7 +2081,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 | Reserve chain | Ethereum mainnet |
 | Reserve mode | Heritage (sealed by default) |
 | Emergency | PoW ≥75% (W=144) + Foundation Execution Order |
-| Emergency actions | E1: ROTATE / E2: LIQUIDATE→BUY→BURN |
+| Emergency actions | E1: ROTATE / E2: LIQUIDATE→BUY→REDISTRIBUTE |
 | Default gold split | 50/50 XAUt/PAXG (adjustable operationally, future purchases only) |
 | Premine | 0 SOST — zero |
 | ICO / VCs | None |
@@ -2110,6 +2111,59 @@ This document is for informational purposes only. SOST is not an investment prod
 **NO BROKER / NO TRADING / NO CUSTODY:** SOST does not provide brokerage, does not execute trades on behalf of users, does not offer arbitrage, and does not custody user assets. Any Vault conversion (SOST → allowlisted tokenized metals) is a transparent, auditable operational procedure and does not constitute active management or promised returns. SOST is a protocol; third-party venues (exchanges, issuers, custodians) may impose their own KYC/AML requirements.
 
 **Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Epoch 2 activation (target: February 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
+
+---
+
+## 10. Native Financial Primitives — Technical Roadmap
+
+SOST does not support smart contracts — there is no virtual machine, no user-deployed
+bytecode, and no Turing-complete execution. Instead, SOST implements purpose-built
+transaction types that provide specific financial primitives directly in the consensus
+layer. These are deterministic, auditable, and cannot be exploited through contract bugs
+because they are not programmable — they are protocol rules.
+
+This approach follows the model established by Ravencoin (native assets on UTXO without VM)
+and is consistent with Bitcoin's OP_CHECKLOCKTIMEVERIFY — consensus rules, not smart contracts.
+
+### 10.1 Reserved Transaction Types
+
+The following output types are reserved in the codebase (include/sost/transaction.h):
+
+  OUT_BOND_LOCK   (0x10) — Time-locked bond for PoPC Model A
+  OUT_ESCROW_LOCK (0x11) — Time-locked escrow for PoPC Model B
+  OUT_BURN        (0x20) — Reserved, NOT activated. SOST supply is immutable by construction.
+                           No token destruction mechanism exists or is planned.
+
+Future types (not yet reserved in code):
+  OUT_TOKEN_ISSUE    — Create native metal-backed tokens
+  OUT_TOKEN_TRANSFER — Transfer native metal-backed tokens
+
+### 10.2 Activation Roadmap
+
+Phase 1 — Bond Lock + Escrow (Q3-Q4 2026, ~12 weeks):
+  Activate BOND_LOCK and ESCROW_LOCK transaction types via block height activation.
+  Enables native PoPC bonds and escrow on the SOST chain without Ethereum dependency.
+  Changes limited to consensus validation (R11, S9, S11) and wallet CLI.
+
+Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):
+  Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially.
+  Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings.
+  Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal
+  acquisition. Token registration fees are paid to the Gold Vault, not burned.
+
+Phase 3 — Fully Native PoPC (Q4 2027):
+  Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow,
+  verification, and reward distribution fully on-chain. No Ethereum dependency for
+  any core protocol operation.
+
+Target: 18 months to full sovereignty.
+
+All activation heights will be announced at least 30 days in advance. Each phase requires
+stability of the previous phase on mainnet for a minimum of 3 months before activation.
+
+The supply of SOST is immutable by construction. No minting, burning, or destruction
+mechanism exists in the protocol. All slashing operations redistribute funds — they
+never destroy them.
 
 ---
 
@@ -2311,7 +2365,7 @@ An emergency proposal is initiated by broadcasting a special transaction or coin
 ```
 EmergencyProposal:
   proposalId:      bytes32    // unique identifier (hash of proposal content)
-  actionType:      uint8      // 1 = E1 (ROTATE), 2 = E2 (LIQUIDATE→BUY→BURN)
+  actionType:      uint8      // 1 = E1 (ROTATE), 2 = E2 (LIQUIDATE→BUY→REDISTRIBUTE)
   paramsHash:      bytes32    // hash of action parameters (target tokens, amounts, etc.)
   startHeight:     uint64     // first block of signaling window
   expiresAtHeight: uint64     // last block of signaling window (startHeight + W - 1)
@@ -2350,7 +2404,7 @@ After on-chain approval is confirmed on SOST, the Foundation signs an Execution 
 ExecutionOrder:
   proposalId:    bytes32
   paramsHash:    bytes32
-  actionType:    uint8        // 1 = ROTATE, 2 = LIQUIDATE→BUY→BURN
+  actionType:    uint8        // 1 = ROTATE, 2 = LIQUIDATE→BUY→REDISTRIBUTE
   expiry:        uint256      // Ethereum block.timestamp deadline
   nonce:         uint256      // replay protection
   params:        bytes        // action-specific parameters (target tokens, amounts)
@@ -2368,7 +2422,7 @@ VERIFICATION STEPS:
   3. Verify expiry >= block.timestamp
   4. Verify actionType is 1 or 2 (no other actions possible)
   5. Verify target tokens are on allowlist
-  6. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + burn)
+  6. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + redistribute to vaults)
 ```
 
 ### G.5 Mandatory Audit Trail
@@ -2381,7 +2435,7 @@ AUDIT REQUIREMENTS:
   2. Proof of approval: EmergencyApproved record on SOST chain
   3. Ethereum transaction hashes for all Reserve Vault operations
   4. Batch report: amounts moved, tokens involved, execution timestamps
-  5. If E2 (burn): proof of SOST burn (burn address or contract event)
+  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Gold Vault)
   6. All data published on project website, GitHub, and IPFS mirror
 ```
 
@@ -2448,7 +2502,7 @@ RESERVE MODEL:
 45) Emergency Catastrophe dual gate added (G9, C15, Appendix G)
     Reserve movements require both: ≥75% miner signaling in a 24-hour
     window (W=144 blocks, YES≥108) AND Foundation Execution Order.
-    Only two actions: E1 (ROTATE) and E2 (LIQUIDATE→BUY→BURN).
+    Only two actions: E1 (ROTATE) and E2 (LIQUIDATE→BUY→REDISTRIBUTE).
 
 46) Default 50/50 XAUt/PAXG split (G7, C14)
     Foundation may adjust split operationally for future purchases only.

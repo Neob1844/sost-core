@@ -190,6 +190,18 @@ These addresses receive coinbase rewards at every block. Hardcoded at genesis, i
 
 Gold Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
 
+## Native Financial Primitives
+
+SOST does not support smart contracts. Instead, purpose-built transaction types provide financial primitives directly in the consensus layer — deterministic, auditable, and not exploitable through contract bugs.
+
+| Phase | Timeline | Description |
+|-------|----------|-------------|
+| 1 | Q3-Q4 2026 | Bond Lock + Escrow — native PoPC on SOST chain |
+| 2 | Q2-Q3 2027 | Native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) |
+| 3 | Q4 2027 | Fully native PoPC — zero Ethereum dependency |
+
+Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
+
 ## Explorer (v4.2)
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
@@ -238,4 +250,10 @@ ctest --output-on-failure
 
 ## License
 
-MIT
+Business Source License 1.1 (BSL 1.1). See [LICENSE](LICENSE) for full terms.
+
+**Permitted:** Reading and auditing the code, running nodes and miners on the SOST network, personal non-commercial use, contributing via pull requests.
+
+**Prohibited:** Forking the code to create competing blockchains, commercial use without written authorization, redistribution of modified versions, unauthorized trademark use.
+
+The Licensor may re-license under MIT or Apache 2.0 on or after 2030-03-13. Contact license@sostcore.com for commercial licensing inquiries.
