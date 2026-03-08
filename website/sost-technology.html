@@ -789,6 +789,38 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
   </div>
 </section>
 
+<!-- NATIVE FINANCIAL PRIMITIVES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 06 &mdash; FINANCIAL PRIMITIVES</div>
+      <h2 class="section-title">No Smart Contracts &mdash; <span class="accent">Native Primitives</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Design Philosophy</span>
+        </div>
+        <span class="spec-tag">NO VM</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">SOST does not support smart contracts &mdash; no virtual machine, no user-deployed bytecode, no Turing-complete execution. Instead, purpose-built transaction types provide financial primitives directly in the consensus layer. Deterministic, auditable, and not exploitable through contract bugs &mdash; they are protocol rules, not programs.</p>
+        <table class="code-table">
+          <tr><th>Output Type</th><th>Code</th><th>Purpose</th><th>Status</th></tr>
+          <tr><td class="key">OUT_BOND_LOCK</td><td class="val">0x10</td><td class="val">Time-locked bond for PoPC Model A</td><td class="val">Reserved (Phase 1)</td></tr>
+          <tr><td class="key">OUT_ESCROW_LOCK</td><td class="val">0x11</td><td class="val">Time-locked escrow for PoPC Model B</td><td class="val">Reserved (Phase 1)</td></tr>
+          <tr><td class="key">OUT_BURN</td><td class="val">0x20</td><td class="val">Reserved &mdash; NOT activated</td><td class="val">No activation planned</td></tr>
+          <tr><td class="key">OUT_TOKEN_ISSUE</td><td class="val">TBD</td><td class="val">Native metal-backed token issuance</td><td class="val">Future (Phase 2)</td></tr>
+          <tr><td class="key">OUT_TOKEN_TRANSFER</td><td class="val">TBD</td><td class="val">Native metal-backed token transfer</td><td class="val">Future (Phase 2)</td></tr>
+        </table>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.6;">This approach follows the model established by Ravencoin (native assets on UTXO without VM) and is consistent with Bitcoin's OP_CHECKLOCKTIMEVERIFY &mdash; consensus rules, not smart contracts. The supply of SOST is immutable by construction. No minting, burning, or destruction mechanism exists in the protocol.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>

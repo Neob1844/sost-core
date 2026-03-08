@@ -1,3 +1,6 @@
+// SOST Protocol — Copyright (c) 2026 SOST Foundation
+// Licensed under the Business Source License 1.1. See LICENSE file.
+//
 // sost-miner.cpp — SOST Block Miner v0.5
 //
 // Miner ConvergenceX with:

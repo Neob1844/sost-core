@@ -1,3 +1,6 @@
+// SOST Protocol — Copyright (c) 2026 SOST Foundation
+// Licensed under the Business Source License 1.1. See LICENSE file.
+//
 // wallet.cpp — SOST Wallet (real secp256k1 keys via tx_signer)
 #include "sost/wallet.h"
 #include "sost/serialize.h"
