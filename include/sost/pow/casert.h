@@ -3,6 +3,6 @@
 #include "sost/params.h"
 #include <vector>
 namespace sost {
-CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain, int64_t next_height);
+CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain, int64_t next_height, int64_t now_time = 0);
 ConsensusParams casert_apply_overlay(const ConsensusParams& base, const CasertDecision& dec);
 } // namespace sost

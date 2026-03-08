@@ -43,7 +43,7 @@ inline const char* casert_mode_str(CasertMode m) {
     }
     return "?";
 }
-struct CasertDecision { CasertMode mode; int32_t signal_s, samples; };
+struct CasertDecision { CasertMode mode; int32_t signal_s, samples; int32_t effective_level = 0; };
 struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };
 struct CXAttemptResult {
     Bytes32 commit, checkpoints_root;
