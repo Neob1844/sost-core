@@ -286,11 +286,78 @@
   </div>
 </section>
 
-<!-- THE CONSTITUTION -->
+<!-- FOUNDATION POPC COMMITMENTS -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">SECTION 03</div>
+      <h2 class="section-title">Foundation <span class="accent">PoPC Commitments</span></h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The Foundation is the first PoPC participant &mdash; a protocol validation commitment to demonstrate the system end-to-end before opening to external participants. Same rules apply. No exceptions.</p>
+
+    <div class="notice fade-in delay-1" style="border-left-color:var(--cyan-primary);">
+      <strong>Equal treatment:</strong> The Foundation pays the standard 5% protocol fee on all PoPC commitments &mdash; the same rate as any third-party participant. No exceptions.
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Active Commitments</span>
+        </div>
+        <span class="spec-tag">MODEL A &mdash; AUTOCUSTODY</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Field</th><th>FOUND-001</th><th>FOUND-002</th></tr>
+          <tr><td class="label">Model</td><td class="value">A (bond + audit)</td><td class="value">A (bond + audit)</td></tr>
+          <tr><td class="label">Asset</td><td class="highlight">XAUT</td><td class="highlight">PAXG</td></tr>
+          <tr><td class="label">Amount</td><td class="value">0.4 oz</td><td class="value">0.4 oz</td></tr>
+          <tr><td class="label">Duration</td><td class="value">3 months</td><td class="value">3 months</td></tr>
+          <tr><td class="label">Start</td><td class="value">2026-03-28</td><td class="value">2026-03-28</td></tr>
+          <tr><td class="label">Expiry</td><td class="value">2026-06-28</td><td class="value">2026-06-28</td></tr>
+          <tr><td class="label">Protocol fee</td><td class="value">5% (standard)</td><td class="value">5% (standard)</td></tr>
+          <tr>
+            <td class="label">Status</td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-001">PENDING</span></td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-002">PENDING</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Verification</span>
+        </div>
+        <span class="spec-tag">PUBLICLY AUDITABLE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="label">Foundation ETH wallet</td><td class="value"><a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">0xd389...C7a6</a></td></tr>
+          <tr><td class="label">XAUT contract</td><td class="value"><a href="https://etherscan.io/token/0x68749665FF8D2d112Fa859AA293F07A622782F38" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">0x6874...2F38</a></td></tr>
+          <tr><td class="label">PAXG contract</td><td class="value"><a href="https://etherscan.io/token/0x45804880De22913dAFE09f4980848ECE6EcbAf78" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">0x4580...Af78</a></td></tr>
+          <tr><td class="label">Verification method</td><td class="value">balanceOf(wallet) &ge; committed amount, checked against Ethereum mainnet</td></tr>
+          <tr><td class="label">Audit entropy</td><td class="value">ConvergenceX block entropy (block_id, commit, checkpoints_root)</td></tr>
+          <tr><td class="label">Last verified</td><td class="value" id="last-verified">&mdash;</td></tr>
+        </table>
+        <div class="notice" style="margin-top:16px;border-left-color:var(--green-primary);">
+          <strong>Anyone can verify:</strong> Check the Foundation wallet on <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6#tokentxns" target="_blank" rel="noopener" style="color:var(--cyan-primary);">Etherscan</a> at any time. The XAUT and PAXG balances must remain &ge; 0.4 oz each for the full commitment period.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE CONSTITUTION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
       <h2 class="section-title">The <span class="accent">Constitution</span></h2>
     </div>
 
@@ -332,7 +399,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 04</div>
+      <div class="section-id">SECTION 05</div>
       <h2 class="section-title">Emergency <span class="accent">Catastrophe</span></h2>
     </div>
 
@@ -371,7 +438,7 @@
 <section class="section" style="border-bottom:none;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 05</div>
+      <div class="section-id">SECTION 06</div>
       <h2 class="section-title">Heritage &amp; <span class="accent">Dissolution</span></h2>
     </div>
 

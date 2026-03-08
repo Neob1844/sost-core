@@ -51,7 +51,7 @@ Tests use a simple `TEST(name, condition)` macro — no external framework.
 The core static library contains all consensus, crypto, and data structures. Four binaries link against it:
 
 - **sost-node** (`src/sost-node.cpp`) — Full node: P2P (port 19333), JSON-RPC (port 18232), chain validation, mempool
-- **sost-miner** (`src/sost-miner.cpp`) — ConvergenceX PoW miner, multi-threaded, submits via RPC
+- **sost-miner** (`src/sost-miner.cpp`) — ConvergenceX PoW miner, `--address` required, submits via RPC
 - **sost-cli** (`src/sost-cli.cpp`) — Wallet CLI: key management, tx creation/signing/broadcast, fee calculation
 - **sost-rpc** (`src/sost-rpc.cpp`) — Standalone RPC client for node queries
 

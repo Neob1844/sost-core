@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SOST Protocol — BitcoinTalk ANN Preview</title>
+<style>
+  body { font-family: Verdana, Geneva, sans-serif; font-size: 13px; color: #333; background: #f5f5f5; max-width: 800px; margin: 40px auto; padding: 20px; }
+  .center { text-align: center; }
+  hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  h1 { font-size: 18pt; margin: 8px 0; }
+  h2 { font-size: 14pt; margin: 20px 0 10px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  th { background: #eee; }
+  code, pre { background: #1a1a2e; color: #0f0; font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; display: block; white-space: pre-wrap; border-radius: 4px; margin: 8px 0; }
+  ul { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  .disclaimer { font-size: 10pt; color: #777; font-style: italic; margin-top: 24px; }
+  a { color: #0066cc; }
+  img { max-width: 200px; }
+</style>
+</head>
+<body>
+
+<div class="center">
+  <img src="https://sostcore.com/sost-logo.png" alt="SOST Logo">
+  <h1>SOST Protocol</h1>
+  <p>Gold-backed Proof-of-Work protocol. Native chain. No bridges. No smart contracts. No governance tokens.</p>
+  <p><b>Genesis Block: March 13, 2026 — 00:00:00 UTC</b></p>
+</div>
+
+<hr>
+
+<h2>Quick Specs</h2>
+
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Algorithm</td><td>ConvergenceX v2.0 (memory-hard, CPU-friendly)</td></tr>
+  <tr><td>Block time</td><td>600s (10 min)</td></tr>
+  <tr><td>Max supply</td><td>4,669,201 SOST (hard cap by construction)</td></tr>
+  <tr><td>Emission</td><td>Exponential decay, q = e<sup>(-1/4)</sup> &asymp; 0.7788</td></tr>
+  <tr><td>Coinbase split</td><td>50% miner / 25% Gold Vault / 25% PoPC Pool</td></tr>
+  <tr><td>Difficulty</td><td>ASERT (24h half-life) + cASERT overlay (unbounded)</td></tr>
+  <tr><td>Encoding</td><td>SOSTCompact Q16.16 fixed-point</td></tr>
+  <tr><td>Coinbase maturity</td><td>1,000 blocks (~7 days)</td></tr>
+  <tr><td>Premine</td><td>NONE</td></tr>
+  <tr><td>ICO / IEO</td><td>NONE</td></tr>
+  <tr><td>Dev tax</td><td>NONE</td></tr>
+  <tr><td>Source</td><td>GitHub (public at launch)</td></tr>
+</table>
+
+<hr>
+
+<h2>The Problem</h2>
+
+<p>Gold has 5,000 years of monetary history. It is the most trusted store of value across civilizations. But gold has zero programmability &mdash; you cannot send it over TCP/IP, you cannot split it into eight decimal places, and you cannot verify its custody without a trusted third party.</p>
+
+<p>Existing gold-backed tokens (XAUT, PAXG) attempt to bridge this gap. They are ERC-20 tokens on Ethereum &mdash; centralized custodians hold the gold, the tokens can be frozen by the issuer, and the entire scheme depends on counterparty trust in a single entity. If Paxos or Tether Gold decides your tokens are problematic, they disappear. This is not sound money.</p>
+
+<p>The trust model is the fundamental failure. XAUT holders trust Tether to maintain 1:1 reserves in a Swiss vault. PAXG holders trust Paxos to not freeze their tokens. Both trust their respective custodians to survive regulatory action, remain solvent, and not selectively enforce terms of service. The gold exists in a vault you cannot visit, managed by a company you cannot audit, under a jurisdiction that may change its rules. Every gold-backed ERC-20 is a bearer instrument for counterparty risk dressed up as sound money.</p>
+
+<p>These tokens also inherit every weakness of the host chain. XAUT and PAXG are ERC-20 contracts &mdash; upgradeable, pausable, and subject to Ethereum gas economics. A congested Ethereum network means your gold is stuck. A regulatory order means your gold is frozen. The issuer can blacklist addresses, block transfers, and claw back tokens. None of this is hypothetical &mdash; Tether has frozen USDT on hundreds of addresses, and the same legal mechanism applies to XAUT. The custody model is broken because it replaces one trusted third party (a bank) with another (a token issuer).</p>
+
+<p>There is also no mechanism for individuals to prove they hold gold and be rewarded for it. The entire gold tokenization ecosystem flows in one direction: custodian holds gold, user holds a claim. There is no protocol-level incentive for self-custody of physical or tokenized gold. The custodian model concentrates gold in fewer hands, which is the opposite of what sound money requires.</p>
+
+<p>Bitcoin solved digital scarcity through proof-of-work. But Bitcoin has no structural connection to physical reserves. SOST connects PoW scarcity to physical gold accumulation at the protocol level &mdash; not through promises or governance votes, but through consensus rules that are immutable at genesis.</p>
+
+<hr>
+
+<h2>The Solution</h2>
+
+<p>Every SOST block automatically allocates 25% of the coinbase reward to a Gold Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
+
+<p>The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve Vault on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 60% PoW miner signaling and a Foundation Execution Order.</p>
+
+<p>The remaining 25% flows to a PoPC Pool powering Proof of Personal Custody &mdash; a mechanism that rewards holders who self-custody gold and prove it. PoPC operates in two models:</p>
+
+<p><b>Model A &mdash; Bond with Autocustody.</b> For crypto natives and miners. The participant declares an Ethereum wallet holding XAUT or PAXG, locks a SOST bond (12-30% of gold value, dynamically scaled), and commits to maintain custody for 1 to 12 months. ConvergenceX block entropy schedules random audits. A script verifies the XAUT/PAXG balance via Ethereum RPC. On successful completion, the participant recovers their full bond plus a reward from the PoPC Pool (up to 22% APR for 12-month commitments). On failure &mdash; if the gold balance drops below the committed amount &mdash; the bond is slashed automatically: 50% to the PoPC Pool, 50% to the Gold Vault. The gold never leaves the user's wallet. Only the SOST bond is at risk.</p>
+
+<p><b>Model B &mdash; Timelocked Escrow.</b> For gold holders who want zero slash risk. The participant deposits XAUT or PAXG into an immutable escrow contract on Ethereum &mdash; no admin key, no upgrade proxy, no pause function. The SOST reward is paid immediately at deposit (up to 7% APR for 12-month terms). At contract expiry, the depositor withdraws 100% of their gold. No audits. No bond. No slash. Custody is enforced by the escrow contract, not by trust.</p>
+
+<p>The two models serve complementary populations. Model A attracts crypto-native participants who already hold SOST and want yield on their gold without giving up custody. Model B attracts traditional gold holders who want exposure to SOST without selling their metal. Together, they create a two-sided flywheel: Model A generates buy pressure for SOST (participants must acquire SOST for bonds), while Model B distributes SOST to gold holders who may never have interacted with cryptocurrency. Anti-whale caps limit per-wallet participation to prevent pool depletion &mdash; 50 oz per wallet per epoch for Model A, 10 oz for Model B.</p>
+
+<p>Both models use prices frozen at contract creation from a public Price Bulletin. No on-chain oracle is required for consensus. PoPC launches post-genesis as Ethereum smart contracts using ConvergenceX block entropy for audit randomness.</p>
+
+<p>SOST is not pegged to gold. Holders have no redemption right against the reserve. The reserve ratio (reserve_value / circulating_supply) is an observable metric that markets price as they see fit. There is no stablecoin mechanic, no oracle dependency for consensus, and no algorithmic peg.</p>
+
+<hr>
+
+<h2>ConvergenceX v2.0 &mdash; Technical Details</h2>
+
+<p>ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32&times;32 linear system A(x) = b through 100,000 sequential rounds of integer-only gradient descent, then proving the solution sits in a stable basin of attraction. The proof is a verifiable mathematical certificate, not a lucky hash.</p>
+
+<p><b>Memory-hard dataset:</b> A 4GB persistent dataset (512M uint64_t entries) is generated once per block from the previous block hash. It is reused across all nonce attempts for that block. CPU miners benefit from L3 cache reuse. ASICs cannot reduce the memory requirement &mdash; checkpoints every 6,250 rounds commit intermediate state to a Merkle tree, catching any attempt to shortcut memory reads.</p>
+
+<p><b>Per-block program:</b> Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 4GB LPDDR5 on-package and a general-purpose ALU &mdash; economically equivalent to building a CPU.</p>
+
+<p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT levels are unbounded &mdash; L1 through L5 have fixed thresholds, and above L5 the scale grows every 50 blocks with no ceiling. If no block is found for 2 hours, a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
+
+<p>All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.</p>
+
+<hr>
+
+<h2>Fair Launch</h2>
+
+<ul>
+  <li><b>Genesis:</b> March 13, 2026, 00:00:00 UTC</li>
+  <li><b>Genesis difficulty:</b> 5.3875 (bitsQ = 353,075)</li>
+  <li><b>Block 0 reward:</b> 7.85100863 SOST, split 50/25/25 to constitutional addresses</li>
+  <li><b>No coins pre-mined.</b> No coins reserved for founders, team, or investors</li>
+  <li><b>Anyone can mine from block 1.</b> CPU-competitive at launch &mdash; no ASIC advantage</li>
+  <li><b>Coinbase maturity:</b> 1,000 blocks (~7 days) before mined coins are spendable</li>
+  <li><b>No dev tax.</b> 100% of the miner's 50% goes to the miner's address</li>
+</ul>
+
+<hr>
+
+<h2>Tokenomics</h2>
+
+<ul>
+  <li>Epoch 0 reward: <b>7.85100863 SOST</b> per block (785,100,863 stocks)</li>
+  <li>Decay factor: q = e<sup>(-1/4)</sup> &asymp; 0.7788 per epoch (~22.12% reduction)</li>
+  <li>Epoch length: 131,553 blocks (~2.5 years, derived from Feigenbaum alpha)</li>
+  <li>~95% of supply mined in ~30 years (~12 epochs)</li>
+  <li>Hard cap: <b>4,669,201 SOST</b> (asymptotic, enforced by construction &mdash; no counter needed)</li>
+  <li>No inflation mechanism exists in the protocol. No minting function. No governance override</li>
+  <li>Smallest unit: 1 stock = 10<sup>-8</sup> SOST</li>
+</ul>
+
+<p>The emission formula: reward(height) = floor(R0 &times; q<sup>epoch</sup>), where epoch = height / 131,553. All arithmetic uses __int128 floor-division. The maximum supply is a mathematical consequence of the geometric series &mdash; not a tracked variable.</p>
+
+<p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The Foundation operates exclusively from protocol fees charged on PoPC contracts (5% on Model A, 10% on Model B) &mdash; never from minted coins.</p>
+
+<hr>
+
+<h2>Roadmap</h2>
+
+<table>
+  <tr><th>Phase</th><th>Date</th><th>Milestone</th></tr>
+  <tr><td>1</td><td>March 13, 2026</td><td>GENESIS BLOCK &mdash; 00:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.</td></tr>
+  <tr><td>2</td><td>Q2 2026</td><td>PoPC smart contracts deployed on Ethereum Sepolia testnet. Model A (bond + audit) and Model B (escrow timelock) open for public testing.</td></tr>
+  <tr><td>3</td><td>Q3 2026</td><td>PoPC mainnet launch on Ethereum. First custody contracts active. XAUT/PAXG reserve purchases begin. Heritage Reserve Vault deployed. Public reserve dashboard.</td></tr>
+  <tr><td>4</td><td>2027+</td><td>Exchange listing (TradeOgre target). Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research begins.</td></tr>
+</table>
+
+<hr>
+
+<h2>How to Mine</h2>
+
+<p><b>Requirements:</b></p>
+<ul>
+  <li>Linux x86_64 (Ubuntu 24.04 recommended)</li>
+  <li>4 GB RAM per mining thread (4 threads = 16 GB)</li>
+  <li>CPU &mdash; GPU provides no meaningful advantage</li>
+  <li>Dependencies: build-essential cmake libssl-dev libsecp256k1-dev</li>
+</ul>
+
+<p><b>Build:</b></p>
+<pre>git clone https://github.com/Neob1844/sost-core.git
+cd sost-core &amp;&amp; mkdir build &amp;&amp; cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
+
+<p><b>Run node (terminal 1):</b></p>
+<pre>./sost-node --genesis genesis_block.json --chain chain.json \
+    --rpc-user YOUR_USER --rpc-pass YOUR_PASS --profile mainnet</pre>
+
+<p><b>Run miner (terminal 2):</b></p>
+<pre>./sost-miner --address sost1YOUR_ADDRESS_HERE \
+    --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 \
+    --rpc-user YOUR_USER --rpc-pass YOUR_PASS --threads 4</pre>
+
+<p>The miner connects to your local node via RPC, fetches mempool transactions via getblocktemplate, and submits solved blocks via submitblock. First solo miner to solve a valid ConvergenceX proof gets the block reward.</p>
+
+<hr>
+
+<h2>Links</h2>
+
+<ul>
+  <li><b>Website:</b> <a href="https://sostcore.com">https://sostcore.com</a></li>
+  <li><b>Explorer:</b> <a href="https://explorer.sostcore.com">https://explorer.sostcore.com</a></li>
+  <li><b>Whitepaper:</b> <a href="https://explorer.sostcore.com/whitepaper.pdf">https://explorer.sostcore.com/whitepaper.pdf</a></li>
+  <li><b>GitHub:</b> <a href="https://github.com/Neob1844/sost-core">https://github.com/Neob1844/sost-core</a> (public at launch)</li>
+  <li><b>Wallet:</b> <a href="https://wallet.sostcore.com">https://wallet.sostcore.com</a></li>
+</ul>
+
+<hr>
+
+<p class="disclaimer">SOST is experimental software. Mine and hold at your own risk. The gold reserve mechanism depends on market availability of XAUT/PAXG. The reserve is not a redemption right &mdash; SOST is not pegged to gold. This is not financial advice.</p>
+
+</body>
+</html>

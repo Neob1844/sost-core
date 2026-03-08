@@ -121,6 +121,9 @@ inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
+// NOTE: ADDR_MINER_FOUNDER is the genesis block miner address (founder).
+// It is NOT used for mining rewards — miners specify their own address via --address.
+// Retained for genesis UTXO reconstruction and PoPC fee routing.
 constexpr const char* ADDR_MINER_FOUNDER = "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429";
 constexpr const char* ADDR_GOLD_VAULT    = "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724";
 constexpr const char* ADDR_POPC_POOL     = "sost144cc82d3c711b5a9322640c66b94a520497ac40d";

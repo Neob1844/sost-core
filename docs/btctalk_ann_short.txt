@@ -1,0 +1,62 @@
+[center][img]https://sostcore.com/sost-logo.png[/img]
+
+[size=18pt][b]SOST Protocol[/b][/size]
+[size=11pt]Gold-backed Proof-of-Work. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
+
+[b]Genesis: March 13, 2026 — 00:00:00 UTC[/b]
+[/center]
+
+[hr]
+
+[size=14pt][b]What is SOST?[/b][/size]
+
+SOST is a CPU-mineable cryptocurrency where every block automatically allocates 25% of the coinbase reward to a Gold Vault. This is a consensus rule — not a governance decision. Any block without the correct 50/25/25 split is rejected by every node. No premine, no ICO, no dev tax.
+
+The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP policy and deposited into a sealed Heritage Reserve Vault on Ethereum mainnet. SOST is not pegged to gold — there is no redemption right. The reserve ratio is a market-observable metric.
+
+[hr]
+
+[size=14pt][b]Key Specs[/b][/size]
+
+[table]
+[tr][td][b]Algorithm[/b][/td][td]ConvergenceX v2.0 (memory-hard, CPU-friendly)[/td][/tr]
+[tr][td][b]Block time[/b][/td][td]600s (10 min)[/td][/tr]
+[tr][td][b]Max supply[/b][/td][td]4,669,201 SOST (hard cap)[/td][/tr]
+[tr][td][b]Emission[/b][/td][td]Exponential decay, q ≈ 0.7788, epoch = 131,553 blocks (~2.5 yr)[/td][/tr]
+[tr][td][b]Coinbase split[/b][/td][td]50% miner / 25% Gold Vault / 25% PoPC Pool[/td][/tr]
+[tr][td][b]Difficulty[/b][/td][td]ASERT (24h half-life) + cASERT overlay (unbounded levels)[/td][/tr]
+[tr][td][b]Maturity[/b][/td][td]1,000 blocks (~7 days)[/td][/tr]
+[tr][td][b]Premine / ICO / Dev tax[/b][/td][td]NONE[/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]ConvergenceX v2.0[/b][/size]
+
+Not a hash lottery. Each attempt solves a 32×32 linear system via 100,000 rounds of integer-only gradient descent. A 4GB dataset (generated once per block) ensures memory-hardness. A unique 256-operation program per block (8 op types) prevents ASIC optimization. All consensus arithmetic is integer-only — zero floating-point in any consensus path.
+
+[hr]
+
+[size=14pt][b]How to Mine[/b][/size]
+
+[code]
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
+./sost-node --genesis genesis_block.json --chain chain.json --rpc-user USER --rpc-pass PASS --profile mainnet
+./sost-miner --address sost1YOUR_ADDRESS --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS --threads 4
+[/code]
+
+Requirements: Linux x86_64, 4 GB RAM per thread, CPU only (GPU provides no advantage).
+
+[hr]
+
+[size=14pt][b]Links[/b][/size]
+
+[list]
+[li][url=https://sostcore.com]Website[/url] · [url=https://explorer.sostcore.com]Explorer[/url] · [url=https://explorer.sostcore.com/whitepaper.pdf]Whitepaper[/url] · [url=https://github.com/Neob1844/sost-core]GitHub[/url] · [url=https://wallet.sostcore.com]Wallet[/url][/li]
+[/list]
+
+[hr]
+
+[size=10pt][i]SOST is experimental software. Mine and hold at your own risk. Not financial advice.[/i][/size]
