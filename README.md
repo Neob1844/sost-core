@@ -4,6 +4,8 @@ Sovereign Gold-Backed Cryptocurrency
 
 CPU-friendly Proof-of-Work blockchain with constitutional gold reserves. Every block mined automatically allocates 25% to purchase physical gold (XAUT/PAXG) and 25% to Proof of Personal Custody rewards — hardcoded at genesis, immutable forever.
 
+The Foundation's manual operations during Phase 1 are transitional by design, not permanent — progressive decentralization toward full automation is a constitutional commitment, not a discretionary goal.
+
 - **Website:** https://sostcore.com
 - **Explorer:** https://explorer.sostcore.com
 - **GitHub:** https://github.com/Neob1844/sost-core

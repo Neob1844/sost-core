@@ -484,8 +484,8 @@
 //   space are action_type and flags (miner_data[36..37]); bytes [46..63]
 //   remain free-form (pool tags, human-readable text, etc.).
 //
-//   Approval: YES >= ceil(0.60 * W)
-//   With default W = 144: YES >= 87 blocks.
+//   Approval: YES >= ceil(0.75 * W)
+//   With default W = 144: YES >= 108 blocks.
 //
 // --- Notes ---
 //
@@ -717,8 +717,8 @@
 //   EMERG_SIGNAL_MAGIC        = "EM1|"  (4-byte ASCII prefix)
 //   EMERG_SIGNAL_MIN_LEN      = 36 bytes (magic + proposalId)
 //   EMERG_WINDOW_BLOCKS        = 144
-//   EMERG_THRESHOLD_PERCENT   = 60
-//   EMERG_YES_REQUIRED        = 87  // ceil(0.60 * 144)
+//   EMERG_THRESHOLD_PERCENT   = 75
+//   EMERG_YES_REQUIRED        = 108 // ceil(0.75 * 144)
 //     // Derived: ceil(EMERG_THRESHOLD_PERCENT * EMERG_WINDOW_BLOCKS / 100)
 //     // MUST be recomputed if EMERG_WINDOW_BLOCKS or EMERG_THRESHOLD_PERCENT
 //     // changes by consensus.

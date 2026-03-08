@@ -13,7 +13,7 @@
 > Consensus rules (Section 10) remain immutable at genesis. Updated versions will be published with
 > full errata documentation.
 
-SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Reserve Vault on Ethereum mainnet. The Reserve Vault is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥60%) and executed by a Foundation Execution Order.
+SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Reserve Vault on Ethereum mainnet. The Reserve Vault is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.
 
 ALLOWLIST (v2 — conservative scope)
 In mainnet v2, the reserve is limited to tokenized precious metals with public audits and verifiable liquidity.
@@ -76,7 +76,7 @@ Every block splits the coinbase reward by consensus:
 
 25% to a PoPC Pool powering Proof of Personal Custody.
 
-Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve Vault (sealed by default). The Foundation may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally, but previously purchased reserve assets are intended to remain perpetual and cannot be moved except under the Emergency Catastrophe procedure (≥60% miner signaling + Foundation Execution Order).
+Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve Vault (sealed by default). The Foundation may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally, but previously purchased reserve assets are intended to remain perpetual and cannot be moved except under the Emergency Catastrophe procedure (≥75% miner signaling + Foundation Execution Order).
 
 PoPC audit randomness derives exclusively from ConvergenceX block entropy: (block_id, commit, checkpoints_root). No external oracle is required for consensus-critical validation; off-chain data is used only for operational PoPC policy and settlement.
 
@@ -925,16 +925,19 @@ is authorized.
 G9 (Emergency Catastrophe — Dual Gate):
 Reserve movements are permitted only under a narrowly defined catastrophe procedure intended for
 issuer failure/migration events or existential reserve-safety events. Emergency execution requires both:
-  (i) SOST PoW miner signaling ≥60% in a defined activation window, recorded on-chain as
+  (i) SOST PoW miner signaling ≥75% in a defined activation window, recorded on-chain as
       EmergencyApproved(proposalId, paramsHash, startHeight, endHeight), and
   (ii) a Foundation Execution Order (signature) authorizing the corresponding Ethereum execution.
 
 Signaling window (default): Approval is measured over a window of 24 hours, equivalent to
 W = 144 blocks with a target of 600s per block (10 minutes).
-Qualified majority (3/5): The emergency shall be considered approved if, within that window,
-at least 60% of blocks include the support signal (YES ≥ ceil(0.60 × W)). With the default
-value W = 144, this requires YES ≥ 87 signaled blocks. (W may be defined in the network
-profile if the block target is adjusted or for operational reasons, without altering the 60% threshold.)
+Qualified majority (3/4): The emergency shall be considered approved if, within that window,
+at least 75% of blocks include the support signal (YES ≥ ceil(0.75 × W)). With the default
+value W = 144, this requires YES ≥ 108 signaled blocks. (W may be defined in the network
+profile if the block target is adjusted or for operational reasons, without altering the 75% threshold.)
+
+Note: The Foundation may propose increasing this threshold to 90% or 95% if deemed
+appropriate for the long-term security of the protocol.
 
 Emergency actions are limited to exactly two action types:
   (E1) ROTATE: rotate reserve holdings to other allowlisted precious-metal tokens (including XAUt↔PAXG).
@@ -1462,8 +1465,8 @@ EXAMPLE: Model A — Slash (failure)
 
 ### 6.7.1 Protocol Fee — Model A
 
-A protocol fee of 5% is deducted from the reward at contract completion. The fee is taken
-from the calculated reward before disbursement; the user's bond is returned in full regardless.
+A protocol fee of 5% is collected upfront at commitment creation. The fee is deducted from
+the calculated reward; the user's bond is returned in full regardless.
 
   base_reward    = bond_sost × reward_table[duration]
   protocol_fee   = base_reward × 0.05
@@ -1670,7 +1673,7 @@ MODEL A vs MODEL B COMPARISON:
 
 ### 6.9.1 Protocol Fee — Model B
 
-A protocol fee of 10% is deducted from the reward at payout. Model B has a higher fee
+A protocol fee of 10% is collected upfront at commitment creation. Model B has a higher fee
 because participants bear no slash risk and the Foundation assumes greater operational
 burden (watcher, immediate payout, escrow monitoring).
 
@@ -1771,7 +1774,7 @@ REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
   Pool solvency rule:
     A new PoPC contract can only be opened if the PoPC Pool has
     sufficient balance to cover the full reward amount at creation.
-    - Model A: reward is accounted for (paid at contract completion)
+    - Model A: fee collected upfront at creation; reward paid at completion
     - Model B: reward is paid immediately from pool at deposit
     If the pool is underfunded, new contracts are temporarily paused
     until replenished (via block inflows or slash income).
@@ -1895,9 +1898,15 @@ Operational scope (exhaustive):
 - **PoPC contract management:** Foundation may pause new PoPC contracts in case of critical bugs. Existing contracts continue unaffected.
 - **Dissolution declaration:** Foundation declares dissolution only after the dead-man switch triggers (90 days of zero blocks), with 60-day public timelock.
 
-Moving previously purchased reserve assets requires Emergency Catastrophe authorization (≥60% miner signaling + Foundation Execution Order). No other mechanism exists.
+Moving previously purchased reserve assets requires Emergency Catastrophe authorization (≥75% miner signaling + Foundation Execution Order). No other mechanism exists.
 
 No operational action can modify consensus rules, alter the emission schedule, redirect coinbase allocations, or access the Metals Reserve (tokenized, allowlisted) outside of Emergency Catastrophe or formally declared Dissolution.
+
+### 7.3 Progressive Decentralization
+
+The Foundation commits to progressive decentralization and full automation of all operational processes as soon as technically viable. Manual operations during Phase 1 — PoPC balance verification, reward payouts, vault batch conversions, and reporting — are transitional by design, not permanent. Each process has a documented automation path: PoPC verification moves to on-chain smart contracts, reward payouts to the sost-popc-daemon, and vault conversions to a deterministic execution stack with public attestations.
+
+This is a constitutional commitment (C16), not a discretionary goal. As each operational process is automated and independently verified, the Foundation permanently relinquishes manual control over that process. The trajectory is irreversible: decentralization only moves forward.
 
 ## 8. Economic Model
 
@@ -1987,7 +1996,7 @@ CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which i
 |---|---|
 | Critical bug | Foundation pauses new PoPC contracts. Existing contracts continue unaffected. |
 | Exchange hack | Gold Vault is a cold wallet with no exchange connection. Independent and safe. |
-| XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-burn (E2). Requires dual gate: ≥60% miner signaling + Foundation Execution Order. |
+| XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-burn (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order. |
 | Issuer risk (future purchases only) | Foundation redirects future purchases without consensus. Previously purchased assets remain sealed. |
 | Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. Reserve remains in Heritage if no emergency was authorized before chain death. |
 
@@ -2008,7 +2017,7 @@ C1:  Total supply is upper-bounded by SUPPLY_MAX_STOCKS by construction of the e
 C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.
      Exact integer conservation guaranteed: miner + gold + popc == reward always.
 C3:  Gold Vault coinbase destination is immutable at genesis. Reserve Vault is Heritage sealed;
-     Emergency Catastrophe dual gate (≥60% miner signaling + Foundation Execution Order) is the
+     Emergency Catastrophe dual gate (≥75% miner signaling + Foundation Execution Order) is the
      only mechanism to move previously purchased reserve assets.
 C4:  Metals Reserve (tokenized, allowlisted) shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-burn)
      or formally declared Dissolution.
@@ -2024,7 +2033,7 @@ C13: Model B escrow contracts must be non-upgradeable, have no admin key, and al
      withdrawal only by the original depositor after expiry.
 C14: Default 50/50 XAUt/PAXG acquisition split; adjustable operationally by Foundation
      for future purchases only. Previously purchased assets are not rebalanced.
-C15: Emergency Catastrophe dual gate: ≥60% miner signaling (W=144 blocks, YES≥87)
+C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES≥108)
      + Foundation Execution Order. Only two actions permitted: E1 (ROTATE) and
      E2 (LIQUIDATE→BUY→BURN). No other mechanism to move reserve assets.
 ```
@@ -2070,7 +2079,7 @@ C15: Emergency Catastrophe dual gate: ≥60% miner signaling (W=144 blocks, YES�
 | Consensus arithmetic | 100% integer (zero floating-point) |
 | Reserve chain | Ethereum mainnet |
 | Reserve mode | Heritage (sealed by default) |
-| Emergency | PoW ≥60% (W=144) + Foundation Execution Order |
+| Emergency | PoW ≥75% (W=144) + Foundation Execution Order |
 | Emergency actions | E1: ROTATE / E2: LIQUIDATE→BUY→BURN |
 | Default gold split | 50/50 XAUt/PAXG (adjustable operationally, future purchases only) |
 | Premine | 0 SOST — zero |
@@ -2084,7 +2093,7 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 **Proof-of-Work that produces a mathematical certificate.** ConvergenceX replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is not just a hash below a target — it is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.
 
-**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Gold Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥60% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
+**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Gold Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
 
 **Voluntary custody commitments audited by PoW-derived entropy.** PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.
 
@@ -2147,9 +2156,9 @@ CASERT PARAMETERS (blocks-ahead thresholds):
 
 EMERGENCY PARAMETERS:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
-  EMERGENCY_THRESHOLD_NUM      = 60        // 60%
+  EMERGENCY_THRESHOLD_NUM      = 75        // 75%
   EMERGENCY_THRESHOLD_DEN      = 100
-  EMERGENCY_YES_REQUIRED       = 87        // ceil(0.60 × 144)
+  EMERGENCY_YES_REQUIRED       = 108       // ceil(0.75 × 144)
 ```
 
 ## Appendix B: Serialization (Normative)
@@ -2325,8 +2334,8 @@ SIGNALING WINDOW:
 APPROVAL CONDITION:
   YES = number of blocks in window containing the signaling tag
   TOTAL = W
-  Approved if: YES >= ceil(0.60 × W)
-  With W = 144: YES >= 87
+  Approved if: YES >= ceil(0.75 × W)
+  With W = 144: YES >= 108
 
 RECORD:
   EmergencyApproved(proposalId, paramsHash, startHeight, endHeight)
@@ -2437,8 +2446,8 @@ RESERVE MODEL:
     and untouched while SOST exists. No fixed expiry date.
 
 45) Emergency Catastrophe dual gate added (G9, C15, Appendix G)
-    Reserve movements require both: ≥60% miner signaling in a 24-hour
-    window (W=144 blocks, YES≥87) AND Foundation Execution Order.
+    Reserve movements require both: ≥75% miner signaling in a 24-hour
+    window (W=144 blocks, YES≥108) AND Foundation Execution Order.
     Only two actions: E1 (ROTATE) and E2 (LIQUIDATE→BUY→BURN).
 
 46) Default 50/50 XAUt/PAXG split (G7, C14)
@@ -2476,7 +2485,7 @@ RESERVE MODEL:
 
 55) Tech Specs: Reserve chain, Heritage mode, Emergency parameters added.
 
-56) Appendix A: Emergency parameters added (W=144, threshold=60%, YES≥87).
+56) Appendix A: Emergency parameters added (W=144, threshold=75%, YES≥108).
 
 SERIALIZATION (consensus-critical fix):
 
@@ -2512,8 +2521,8 @@ Changes from v3.4 to v3.5:
   62) Section 8.2 updated: "Slash burn" → "Slash recycling".
 
   PROTOCOL FEES:
-  63) Section 6.7.1 added: Model A protocol fee (5% of reward at completion).
-  64) Section 6.9.1 added: Model B protocol fee (10% of reward at payout).
+  63) Section 6.7.1 added: Model A protocol fee (5% of reward, collected upfront at creation).
+  64) Section 6.9.1 added: Model B protocol fee (10% of reward, collected upfront at creation).
       Fees fund Foundation operations. 30-day notice for changes.
       Existing contracts locked at creation fee rate.
 

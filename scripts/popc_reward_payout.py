@@ -2,11 +2,22 @@
 """
 SOST PoPC Reward Payout Generator — Phase 1 (Manual)
 
-Generates payout commands for completed PoPC commitments.
+Two-step process: fee collected upfront at creation, reward paid at completion.
 Does NOT execute transactions — operator reviews and runs manually.
 
 Usage:
-    python3 popc_reward_payout.py \
+    # Step 1: At commitment creation — collect fee upfront
+    python3 popc_reward_payout.py --action create \
+        --contract-id FOUND-001 \
+        --participant sost1abc...def \
+        --reward 1.50000000 \
+        [--fee-rate 0.05] \
+        [--wallet wallet.json] \
+        [--rpc-user USER --rpc-pass PASS] \
+        [--log popc_payouts.json]
+
+    # Step 2: At commitment completion — pay net reward
+    python3 popc_reward_payout.py --action complete \
         --contract-id FOUND-001 \
         --participant sost1abc...def \
         --reward 1.50000000 \
@@ -16,15 +27,14 @@ Usage:
         [--log popc_payouts.json]
 
 Output:
-    - Prints the two sost-cli send commands to stdout
+    - Prints the sost-cli send command to stdout
     - Appends a JSON entry to the payout log file
-    - Operator copies commands, reviews, and executes manually
+    - Operator copies command, reviews, and executes manually
 
 Fee logic:
     - Default fee rate: 5% of gross reward (Model A)
-    - Participant receives: reward * (1 - fee_rate)
-    - Foundation receives: reward * fee_rate
-    - Both transactions sourced from PoPC Pool balance
+    - Fee collected upfront at commitment creation (--action create)
+    - Net reward paid at completion (--action complete)
     - All participants pay the same fee — no exceptions
 """
 
@@ -64,6 +74,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="SOST PoPC Reward Payout Generator (Phase 1 — Manual)"
     )
+    parser.add_argument("--action", required=True, choices=["create", "complete"],
+                        help="'create' = collect fee upfront; 'complete' = pay net reward")
     parser.add_argument("--contract-id", required=True, help="Commitment ID (e.g., FOUND-001)")
     parser.add_argument("--participant", required=True, help="Participant SOST address")
     parser.add_argument("--reward", required=True, help="Gross reward amount in SOST (e.g., 1.50000000)")
@@ -92,8 +104,7 @@ def main():
         print(f"ERROR: Fee rate must be 0-1, got {fee_rate}", file=sys.stderr)
         sys.exit(1)
 
-    # Integer fee calculation: fee = floor(gross * fee_rate_num / fee_rate_den)
-    # Use integer math to avoid float consensus issues
+    # Integer fee calculation
     fee_rate_bps = int(fee_rate * 10000)  # basis points
     fee_stocks = (gross_stocks * fee_rate_bps) // 10000
     payout_stocks = gross_stocks - fee_stocks
@@ -105,60 +116,94 @@ def main():
     timestamp = int(time.time())
     timestamp_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
 
-    # Print summary
-    print("=" * 60)
-    print(f"SOST PoPC Reward Payout — {args.contract_id}")
-    print("=" * 60)
-    print(f"  Contract ID:   {args.contract_id}")
-    print(f"  Participant:   {args.participant}")
-    print(f"  Gross reward:  {gross_sost} SOST ({gross_stocks} stocks)")
-    print(f"  Fee rate:      {fee_rate*100:.1f}%")
-    print(f"  Fee amount:    {fee_sost} SOST ({fee_stocks} stocks)")
-    print(f"  Net payout:    {payout_sost} SOST ({payout_stocks} stocks)")
-    print(f"  Fee recipient: {FOUNDATION_FEE_ADDRESS}")
-    print(f"  Source:        {POPC_POOL_ADDRESS} (PoPC Pool)")
-    print(f"  Timestamp:     {timestamp_iso}")
-    print()
-
-    # Generate commands
     cli_base = f"./sost-cli --wallet {args.wallet} --rpc-user={args.rpc_user} --rpc-pass={args.rpc_pass}"
 
-    print("COMMANDS TO EXECUTE (review before running):")
-    print("-" * 60)
+    if args.action == "create":
+        # Step 1: Collect fee upfront at commitment creation
+        print("=" * 60)
+        print(f"SOST PoPC Fee Collection (UPFRONT) — {args.contract_id}")
+        print("=" * 60)
+        print(f"  Contract ID:   {args.contract_id}")
+        print(f"  Participant:   {args.participant}")
+        print(f"  Gross reward:  {gross_sost} SOST ({gross_stocks} stocks)")
+        print(f"  Fee rate:      {fee_rate*100:.1f}%")
+        print(f"  Fee amount:    {fee_sost} SOST ({fee_stocks} stocks)")
+        print(f"  Net reward:    {payout_sost} SOST (to be paid at completion)")
+        print(f"  Fee recipient: {FOUNDATION_FEE_ADDRESS}")
+        print(f"  Source:        {POPC_POOL_ADDRESS} (PoPC Pool)")
+        print(f"  Timestamp:     {timestamp_iso}")
+        print()
+        print("COMMAND TO EXECUTE (review before running):")
+        print("-" * 60)
 
-    # Command 1: payout to participant
-    cmd_payout = f"{cli_base} send {args.participant} {payout_sost}"
-    print(f"\n# 1. Payout to participant ({payout_sost} SOST = 95% of reward)")
-    print(cmd_payout)
+        cmd_fee = f"{cli_base} send {FOUNDATION_FEE_ADDRESS} {fee_sost}"
+        print(f"\n# Upfront fee to Foundation ({fee_sost} SOST = {fee_rate*100:.0f}% of gross reward)")
+        print(cmd_fee)
 
-    # Command 2: fee to Foundation
-    cmd_fee = f"{cli_base} send {FOUNDATION_FEE_ADDRESS} {fee_sost}"
-    print(f"\n# 2. Protocol fee to Foundation ({fee_sost} SOST = {fee_rate*100:.0f}% of reward)")
-    print(cmd_fee)
+        print("\n" + "-" * 60)
+        print("After executing, record the TX hash and update the log.")
+        print()
 
-    print("\n" + "-" * 60)
-    print("After executing, record the TX hashes below and update the log.")
-    print()
+        entry = {
+            "contract_id": args.contract_id,
+            "action": "create",
+            "participant": args.participant,
+            "gross_reward_sost": gross_sost,
+            "gross_reward_stocks": gross_stocks,
+            "fee_rate": fee_rate,
+            "fee_sost": fee_sost,
+            "fee_stocks": fee_stocks,
+            "net_reward_sost": payout_sost,
+            "net_reward_stocks": payout_stocks,
+            "fee_recipient": FOUNDATION_FEE_ADDRESS,
+            "source": POPC_POOL_ADDRESS,
+            "timestamp": timestamp,
+            "timestamp_iso": timestamp_iso,
+            "fee_txid": "PENDING — fill after execution",
+            "status": "FEE_GENERATED",
+        }
 
-    # Build log entry
-    entry = {
-        "contract_id": args.contract_id,
-        "participant": args.participant,
-        "gross_reward_sost": gross_sost,
-        "gross_reward_stocks": gross_stocks,
-        "fee_rate": fee_rate,
-        "fee_sost": fee_sost,
-        "fee_stocks": fee_stocks,
-        "payout_sost": payout_sost,
-        "payout_stocks": payout_stocks,
-        "fee_recipient": FOUNDATION_FEE_ADDRESS,
-        "source": POPC_POOL_ADDRESS,
-        "timestamp": timestamp,
-        "timestamp_iso": timestamp_iso,
-        "payout_txid": "PENDING — fill after execution",
-        "fee_txid": "PENDING — fill after execution",
-        "status": "GENERATED",
-    }
+    else:
+        # Step 2: Pay net reward at commitment completion
+        print("=" * 60)
+        print(f"SOST PoPC Reward Payout (COMPLETION) — {args.contract_id}")
+        print("=" * 60)
+        print(f"  Contract ID:   {args.contract_id}")
+        print(f"  Participant:   {args.participant}")
+        print(f"  Gross reward:  {gross_sost} SOST ({gross_stocks} stocks)")
+        print(f"  Fee (already collected): {fee_sost} SOST ({fee_stocks} stocks)")
+        print(f"  Net payout:    {payout_sost} SOST ({payout_stocks} stocks)")
+        print(f"  Source:        {POPC_POOL_ADDRESS} (PoPC Pool)")
+        print(f"  Timestamp:     {timestamp_iso}")
+        print()
+        print("COMMAND TO EXECUTE (review before running):")
+        print("-" * 60)
+
+        cmd_payout = f"{cli_base} send {args.participant} {payout_sost}"
+        print(f"\n# Net reward to participant ({payout_sost} SOST = {100-fee_rate*100:.0f}% of gross reward)")
+        print(cmd_payout)
+
+        print("\n" + "-" * 60)
+        print("After executing, record the TX hash and update the log.")
+        print()
+
+        entry = {
+            "contract_id": args.contract_id,
+            "action": "complete",
+            "participant": args.participant,
+            "gross_reward_sost": gross_sost,
+            "gross_reward_stocks": gross_stocks,
+            "fee_rate": fee_rate,
+            "fee_already_collected_sost": fee_sost,
+            "fee_already_collected_stocks": fee_stocks,
+            "payout_sost": payout_sost,
+            "payout_stocks": payout_stocks,
+            "source": POPC_POOL_ADDRESS,
+            "timestamp": timestamp,
+            "timestamp_iso": timestamp_iso,
+            "payout_txid": "PENDING — fill after execution",
+            "status": "PAYOUT_GENERATED",
+        }
 
     # Append to log
     log_path = args.log
@@ -175,7 +220,10 @@ def main():
         f.write("\n")
 
     print(f"Log entry appended to {log_path}")
-    print(f"Status: GENERATED (update to COMPLETED after TX confirmation)")
+    if args.action == "create":
+        print(f"Status: FEE_GENERATED (update to FEE_COLLECTED after TX confirmation)")
+    else:
+        print(f"Status: PAYOUT_GENERATED (update to COMPLETED after TX confirmation)")
 
 
 if __name__ == "__main__":
