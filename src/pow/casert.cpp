@@ -3,18 +3,21 @@
 namespace sost {
 
 // ---------------------------------------------------------------------------
-// cASERT v4 — Unidirectional hardening (chain-ahead only)
+// cASERT v5 — Unbounded dynamic scale (chain-ahead only)
 //
 // Computes "lag" = how many blocks the chain is ahead of the ideal schedule.
 //   lag > 0  → chain behind  (ASERT handles this alone, no CX overlay)
 //   lag ≤ 0  → chain on-time or ahead  (apply CX hardening levels)
 //
-// Levels (stab_scale = level number):
-//   L1 (base)  = 0–4   blocks ahead  → scale=1, neutral
-//   L2         = 5–19  blocks ahead  → scale=2, light
-//   L3         = 20–49 blocks ahead  → scale=3, moderate
-//   L4         = 50–74 blocks ahead  → scale=4, strong
-//   L5 (max)   = 75+   blocks ahead  → scale=5, maximum
+// Levels:
+//   L1 (neutral) = 0–4   blocks ahead  → scale=1
+//   L2           = 5–25  blocks ahead  → scale=2
+//   L3           = 26–50 blocks ahead  → scale=3
+//   L4           = 51–75 blocks ahead  → scale=4
+//   L5+          = 76+   blocks ahead  → UNBOUNDED
+//     level = 5 + (blocks_ahead - 76) / 50
+//     scale = level + 1
+//     No ceiling — the faster the attack, the harder the brake.
 // ---------------------------------------------------------------------------
 
 CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain,
@@ -52,14 +55,28 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
 
     int32_t ahead = -dec.signal_s;
 
-    int32_t level;
-    if      (ahead < CASERT_L2_BLOCKS) level = 1;   // L1 — neutral  (0–4)
-    else if (ahead < CASERT_L3_BLOCKS) level = 2;   // L2 — light    (5–19)
-    else if (ahead < CASERT_L4_BLOCKS) level = 3;   // L3 — moderate (20–49)
-    else if (ahead < CASERT_L5_BLOCKS) level = 4;   // L4 — strong   (50–74)
-    else                               level = 5;   // L5 — maximum  (75+)
+    int32_t level, scale;
+    if      (ahead < CASERT_L2_BLOCKS) { level = 1; scale = 1; }   // L1 — neutral  (0–4)
+    else if (ahead < CASERT_L3_BLOCKS) { level = 2; scale = 2; }   // L2 — light    (5–25)
+    else if (ahead < CASERT_L4_BLOCKS) { level = 3; scale = 3; }   // L3 — moderate (26–50)
+    else if (ahead < CASERT_L5_BLOCKS) { level = 4; scale = 4; }   // L4 — strong   (51–75)
+    else {
+        // Dynamic unbounded formula above L4
+        // Every 50 blocks beyond 76 adds 1 to level and scale
+        level = 5 + (ahead - CASERT_L5_BLOCKS) / 50;
+        scale = level + 1;  // scale always = level + 1 above L4
+        // Examples:
+        //   76-125: level=5, scale=6
+        //   126-175: level=6, scale=7
+        //   176-225: level=7, scale=8
+        //   326-375: level=10, scale=11
+        //   500+: level=13+, scale=14+
+    }
 
-    out.stab_scale  = level;
+    // If level == 1: skip overlay entirely (ASERT handles it)
+    if (level <= 1) return out;
+
+    out.stab_scale  = scale;
     out.stab_k      = 4;
     out.stab_steps  = 4;
     out.stab_margin = CX_STB_MARGIN;

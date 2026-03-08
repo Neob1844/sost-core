@@ -1,9 +1,67 @@
-// convergencex.cpp - ConvergenceX Proof of Irreversible Convergence
+// convergencex.cpp - ConvergenceX v2.0 Proof of Irreversible Convergence
 // Consensus-critical: integer-only, deterministic, sequential.
+// v2.0: Persistent dataset cache + per-block program generation
 #include "sost/pow/convergencex.h"
 #include <cstring>
 #include <algorithm>
 namespace sost {
+
+// ---- CXDataset: Persistent 4GB dataset cache ----
+thread_local CXDataset g_cx_dataset;
+
+void CXDataset::generate(const Bytes32& block_prev_hash) {
+    seed_hash = block_prev_hash;
+    memory.resize(512ULL * 1024 * 1024); // 4GB as uint64_t
+    // Initialize dataset from seed using sequential hash chain
+    // Each entry depends on previous — cannot parallelize
+    uint64_t state = 0;
+    for (int i = 0; i < 8 && i < 32; ++i)
+        state |= (uint64_t)block_prev_hash[i] << (i * 8);
+    for (size_t i = 0; i < memory.size(); i++) {
+        state = state * 6364136223846793005ULL + 1442695040888963407ULL;
+        state ^= (state >> 33);
+        state *= 0xff51afd7ed558ccdULL;
+        state ^= (state >> 33);
+        memory[i] = state;
+    }
+    initialized = true;
+}
+
+bool CXDataset::is_valid_for(const Bytes32& block_prev_hash) const {
+    return initialized && seed_hash == block_prev_hash;
+}
+
+// ---- CXProgram: Per-block program generation ----
+void CXProgram::generate(const Bytes32& bh) {
+    block_hash = bh;
+    // Derive program deterministically from block_hash
+    // Any node can regenerate the same program for validation
+    const uint8_t* data = bh.data();
+    for (size_t i = 0; i < PROGRAM_LENGTH; i++) {
+        ops[i] = static_cast<CXOp>(data[i % 32] % 8);
+        uint64_t imm = 0;
+        for (int b = 0; b < 8; b++) {
+            imm = (imm << 8) | data[(i * 8 + b) % 32];
+        }
+        immediates[i] = imm | 1; // ensure non-zero
+    }
+}
+
+uint64_t CXProgram::execute(uint64_t state, size_t step) const {
+    const CXOp op = ops[step % PROGRAM_LENGTH];
+    const uint64_t imm = immediates[step % PROGRAM_LENGTH];
+    switch (op) {
+        case CXOp::MUL: return state * imm;
+        case CXOp::XOR: return state ^ imm;
+        case CXOp::ADD: return state + imm;
+        case CXOp::ROT: return (state << (imm % 63 + 1)) | (state >> (63 - imm % 63));
+        case CXOp::AND: return state & (imm | 0xFFFFFFFF00000000ULL);
+        case CXOp::OR:  return state | imm;
+        case CXOp::NOT: return ~state ^ imm;
+        case CXOp::SUB: return state - imm;
+        default:        return state ^ imm;
+    }
+}
 
 // ---- Problem Derivation (Section 3.2 Phase 1) ----
 CXProblem derive_M_and_b(const Bytes32& block_key, int32_t n, int32_t lam) {
@@ -184,7 +242,7 @@ static int32_t mix_from_scratch(const uint8_t* scratch, size_t slen, uint32_t id
     return read_i32_le(scratch + off);
 }
 
-// ---- Full ConvergenceX attempt (Section 3.2) ----
+// ---- Full ConvergenceX v2.0 attempt (Section 3.2) ----
 CXAttemptResult convergencex_attempt(
     const uint8_t* scratch, size_t scratch_len,
     const Bytes32& block_key, uint32_t nonce, uint32_t extra_nonce,
@@ -196,6 +254,19 @@ CXAttemptResult convergencex_attempt(
     int32_t rounds = params.cx_rounds;
     int32_t lr_shift = params.cx_lr_shift;
     int32_t cp_interval = params.cx_checkpoint_interval > 0 ? params.cx_checkpoint_interval : 1;
+
+    // v2.0: Ensure dataset is cached for this block's prev_hash
+    // Extract prev_hash from header_core (first 32 bytes)
+    Bytes32 prev_hash;
+    std::memcpy(prev_hash.data(), header_core, 32);
+    if (!g_cx_dataset.is_valid_for(prev_hash)) {
+        g_cx_dataset.generate(prev_hash);
+    }
+
+    // v2.0: Generate per-block program from block_key
+    CXProgram program;
+    program.generate(block_key);
+
     // Seed
     std::vector<uint8_t> sbuf;
     append_magic(sbuf); append(sbuf, "SEED", 4);
@@ -218,6 +289,7 @@ CXAttemptResult convergencex_attempt(
     Bytes32 state = sha256(stbuf);
     uint32_t scratch_words = (uint32_t)(scratch_len / 4);
     if (scratch_words == 0) scratch_words = 1;
+    size_t dataset_size = g_cx_dataset.memory.size();
     std::vector<Checkpoint> checkpoints;
     // Main loop
     for (int32_t r = 1; r <= rounds; ++r) {
@@ -232,6 +304,14 @@ CXAttemptResult convergencex_attempt(
         int32_t m1 = mix_from_scratch(scratch, scratch_len, idx1);
         int32_t m2 = mix_from_scratch(scratch, scratch_len, idx2);
         int32_t m3 = mix_from_scratch(scratch, scratch_len, idx3);
+
+        // v2.0: Execute per-block program with dataset memory
+        uint64_t prog_state = program.execute(
+            g_cx_dataset.memory[(size_t)r % dataset_size], (size_t)r);
+        // Mix program output into scratchpad values
+        m0 ^= (int32_t)(prog_state & 0xFFFFFFFF);
+        m1 ^= (int32_t)(prog_state >> 32);
+
         for (int i = 0; i < n; ++i)
             x[i] = clamp_i32((int64_t)x[i] - (int64_t)asr_i32(clamp_i32((int64_t)Ax[i]-(int64_t)prob.b[i]), lr_shift));
         uint32_t j0 = w0 % n, j1 = w1 % n, j2 = (w0^w1) % n, j3 = (w0+u32(r)) % n;
