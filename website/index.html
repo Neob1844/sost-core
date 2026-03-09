@@ -569,6 +569,19 @@
       <span class="sep">|</span>
       <span class="val">No ICO &middot; No Premine &middot; No VCs &middot; No Governance</span>
     </div>
+
+    <!-- COUNTDOWN TIMERS -->
+    <div class="countdown-section fade-in delay-3" style="margin:32px 0 8px;text-align:center;">
+      <div id="countdown-genesis" style="margin-bottom:24px;">
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:10px;text-transform:uppercase;">Genesis Block</div>
+        <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+      </div>
+      <div id="countdown-launch">
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:10px;text-transform:uppercase;">Official Public Launch</div>
+        <div id="launch-timer" style="font-family:'Courier New',monospace;font-size:clamp(22px,4vw,36px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+      </div>
+    </div>
+
     <div class="hero-actions fade-in delay-4">
       <a href="sost-explorer.html" class="dl-btn">Open Explorer</a>
       <a href="sost-quickstart.html" class="dl-btn secondary">Quick Start</a>
@@ -819,5 +832,36 @@
   </div>
 </footer>
 
+<script>
+(function(){
+  var GENESIS = new Date('2026-03-13T00:00:00Z').getTime();
+  var LAUNCH  = new Date('2026-05-13T00:00:00Z').getTime();
+  var genesisEl = document.getElementById('genesis-timer');
+  var launchEl  = document.getElementById('launch-timer');
+
+  function fmt(diff){
+    if(diff<=0) return null;
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#fff">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#fff">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#fff">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#fff">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC</span>';
+  }
+
+  function tick(){
+    var now=Date.now();
+    var gDiff=GENESIS-now, lDiff=LAUNCH-now;
+    var gHtml=fmt(gDiff);
+    genesisEl.innerHTML = gHtml || '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">GENESIS BLOCK LIVE</span>';
+    var lHtml=fmt(lDiff);
+    launchEl.innerHTML = lHtml || '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">PUBLIC LAUNCH LIVE</span>';
+  }
+  tick();
+  setInterval(tick,1000);
+})();
+</script>
 </body>
 </html>
