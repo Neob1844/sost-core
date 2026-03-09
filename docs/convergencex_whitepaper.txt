@@ -1281,7 +1281,7 @@ AUDIT PROBABILITY BY REPUTATION:
 
 VERIFICATION (script, no humans):
   1. User signs message with Ethereum wallet
-  2. ecrecover() confirms identity (no trust needed)
+  2. ecrecover() confirms control of the declared wallet (no trust needed)
   3. Verifier uses multiple independent RPC endpoints with a
      deterministic retry schedule; results are logged and attested:
      token.balanceOf(user_wallet) >= committed_amount
@@ -1318,7 +1318,8 @@ Model A: For crypto natives, miners, traders
 8. On failure: bond slashed automatically
 
 In Model A, the gold NEVER leaves the user's wallet.
-Only the SOST bond is at risk. The Foundation has no access
+Your gold never leaves your wallet. Only the posted SOST bond
+is at risk. The Foundation has no access
 to, custody of, or control over the user's gold tokens.
 
 Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)
@@ -1342,7 +1343,7 @@ DYNAMIC BOND CALCULATION:
   0.4    <= ratio < 0.5       →  bond = 29%
   ratio >= 0.5                →  bond = 30%  (maximum)
 
-  bond_sost = bond_usd / sost_price_TWAP_7d
+  bond_sost = bond_fiat / sost_price_TWAP_7d
 
 RATIO THRESHOLDS (price-independent):
 
@@ -1457,11 +1458,11 @@ PRICE BULLETIN (off-chain, publicly auditable):
 BOND TERMS (client-side calculation + user consent):
 
   Given user commitment (gold_amt, duration, model):
-    gold_value_usd = gold_amt × P_gold
-    ratio          = P_sost / P_gold
-    bond_pct       = constitutional_table(ratio)
-    bond_usd       = bond_pct × gold_value_usd
-    bond_sost      = bond_usd / P_sost
+    gold_value_fiat = gold_amt × P_gold
+    ratio           = P_sost / P_gold
+    bond_pct        = constitutional_table(ratio)
+    bond_fiat       = bond_pct × gold_value_fiat
+    bond_sost       = bond_fiat / P_sost
 
   The client constructs a Bond Terms package:
     terms = {
@@ -1628,7 +1629,7 @@ Model B: For holders of XAUT/PAXG — precious metal investors
 4. At expiry: ONLY the original depositor can withdraw full XAUT/PAXG.
 5. SOST received are the user's to keep immediately. No return required.
    The user may sell, hold, or use the SOST freely from day 1.
-6. No audits. No slash. No bond. Gold is enforced by escrow, not by trust.
+6. No audits, no slash risk, and no bond requirement. Gold is enforced by escrow, not by trust.
 
 NO EARLY EXIT (Model B — gold escrow):
   Users cannot unlock escrowed gold before maturity. The gold stays
@@ -1647,7 +1648,8 @@ ESCROW ARCHITECTURE:
   - NO EXTENSION: the escrow term is immutable once created. There is
     no renew(), extend(), or modify() function. To commit again after
     maturity, the user must create a new contract at current terms.
-  - Source code published, verified on explorer, independently audited
+  - Source code: published and verified on explorer. Independent
+    audit planned before mainnet activation of Model B.
 
 FOUNDATION ROLE IN MODEL B:
   - The Foundation does NOT custody, control, or access escrowed gold.
@@ -1856,7 +1858,7 @@ REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
   Pool solvency rule:
     A new PoPC contract can only be opened if the PoPC Pool has
     sufficient balance to cover the full reward amount at creation.
-    - Model A: fee collected upfront at creation; reward paid at completion
+    - Model A: fee calculated at creation; reward + fee disbursed at completion
     - Model B: reward is paid immediately from pool at deposit
     If the pool is underfunded, new contracts are temporarily paused
     until replenished (via block inflows or slash income).
@@ -2168,7 +2170,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder) |
-| CASERT | Unidirectional block-lag overlay, L1-L5, k=4, steps=4, scale=level, hardening only when ahead of schedule |
+| CASERT | Unidirectional block-lag overlay, L1-L5+, k=4, steps=4, scale=level (L1-L4) or level+1 (L5+), hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2694,8 +2696,8 @@ Changes from v3.4 to v3.5:
   62) Section 8.2 updated: "Slash burn" → "Slash recycling".
 
   PROTOCOL FEES:
-  63) Section 6.7.1 added: Model A protocol fee (5% of reward, collected upfront at creation).
-  64) Section 6.9.1 added: Model B protocol fee (10% of reward, collected upfront at creation).
+  63) Section 6.7.1 added: Model A protocol fee (5% of reward, calculated at creation, disbursed at completion).
+  64) Section 6.9.1 added: Model B protocol fee (10% of reward, deducted from immediate payout).
       Fees fund Foundation operations. 30-day notice for changes.
       Existing contracts locked at creation fee rate.
 

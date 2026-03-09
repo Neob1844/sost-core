@@ -2,7 +2,7 @@
 """
 SOST PoPC Reward Payout Generator — Phase 1 (Manual)
 
-Two-step process: fee collected upfront at creation, reward paid at completion.
+Two-step process: fee calculated at creation, fee + reward disbursed at completion.
 Does NOT execute transactions — operator reviews and runs manually.
 
 Usage:
@@ -33,7 +33,7 @@ Output:
 
 Fee logic:
     - Default fee rate: 5% of gross reward (Model A)
-    - Fee collected upfront at commitment creation (--action create)
+    - Fee calculated at commitment creation (--action create)
     - Net reward paid at completion (--action complete)
     - All participants pay the same fee — no exceptions
 """
