@@ -1,118 +1,21 @@
-Business Source License 1.1 — SOST Protocol
+MIT License
 
-License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved.
-"Business Source License" is a trademark of MariaDB Corporation Ab.
+Copyright (c) 2026 SOST Foundation
 
--------------------------------------------------------------------------------
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Parameters
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Licensor:             SOST Foundation
-Licensed Work:        SOST Protocol (sost-core)
-                      The Licensed Work is (c) 2026 SOST Foundation.
-Additional Use Grant: You may use the Licensed Work for the following purposes
-                      without requiring a separate commercial license:
-
-                      1. Reading, studying, and auditing the source code for
-                         educational, research, or security review purposes.
-
-                      2. Compiling and running the software for personal,
-                         non-commercial use.
-
-                      3. Operating nodes and miners on the SOST network.
-
-                      4. Contributing improvements to the official SOST
-                         repository via pull requests.
-
-Change Date:          2030-03-13 (four years after mainnet genesis)
-Change License:       The Licensor may, at its sole discretion, re-license the
-                      Licensed Work under the MIT License or the Apache License
-                      2.0 on or after the Change Date. Until the Licensor
-                      publishes a notice of such re-licensing, the terms of
-                      this Business Source License continue to apply.
-
--------------------------------------------------------------------------------
-
-Terms
-
-The Licensor hereby grants you the right to copy, modify, create derivative
-works, redistribute, and make non-production use of the Licensed Work. The
-Licensor may make an Additional Use Grant, above, permitting limited production
-use.
-
-Effective on the Change Date, or the fourth anniversary of the first publicly
-available distribution of a specific version of the Licensed Work under this
-License, whichever comes first, the Licensor may grant you additional rights
-under a Change License, as stated above. Until such grant is made, the terms
-below apply.
-
-PROHIBITED USES
-
-The following uses of the Licensed Work are expressly prohibited without prior
-written authorization from the Licensor:
-
-1. FORKING AND COMPETING NETWORKS. You may not use the Licensed Work, in whole
-   or in part, to create, launch, or operate any cryptocurrency, blockchain,
-   distributed ledger, or digital currency project other than the SOST network.
-   This includes copying, adapting, or deriving from the Licensed Work's
-   consensus rules, proof-of-work algorithm (ConvergenceX), emission schedule,
-   transaction validation logic, or block structure to build a competing or
-   alternative network.
-
-2. COMMERCIAL USE. You may not use the Licensed Work, in whole or in part, in
-   any commercial product, service, or offering without a separate commercial
-   license from the Licensor. This includes, but is not limited to:
-   incorporating the code into proprietary software, offering hosted services
-   based on the Licensed Work, or selling modified versions.
-
-3. REDISTRIBUTION OF MODIFIED VERSIONS. You may not distribute, publish, or
-   make available any modified version of the Licensed Work. You may submit
-   modifications to the official repository via pull requests, which are subject
-   to review and acceptance by the Licensor.
-
-4. TRADEMARK USE. You may not use the names "SOST", "SOST Protocol",
-   "SOST Foundation", "ConvergenceX", "cASERT", or any associated logos,
-   trademarks, or branding in any manner that suggests endorsement by, or
-   affiliation with, the Licensor, except as required for accurate attribution
-   in unmodified copies of the Licensed Work.
-
-CONTRIBUTIONS
-
-By submitting a pull request, patch, or other contribution to the official SOST
-repository, you agree that your contribution is licensed under the same terms as
-this License. You represent that you have the right to grant this license and
-that your contribution does not infringe on any third-party rights.
-
-REQUESTING PERMISSIONS
-
-To request a commercial license, authorization for uses not covered by the
-Additional Use Grant, or clarification of permitted uses, contact:
-
-    SOST Foundation
-    Website: https://sostcore.com
-    Email:   license@sostcore.com
-    GitHub:  https://github.com/Neob1844/sost-core
-
--------------------------------------------------------------------------------
-
-NOTICE
-
-THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR BE
-LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
-LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
-
-THE LICENSED WORK IS EXPERIMENTAL SOFTWARE. IT MAY CONTAIN BUGS, ERRORS, OR
-SECURITY VULNERABILITIES. USE AT YOUR OWN RISK. THE LICENSOR MAKES NO
-REPRESENTATION REGARDING THE SUITABILITY, RELIABILITY, OR ACCURACY OF THE
-LICENSED WORK FOR ANY PURPOSE. THE LICENSOR DOES NOT GUARANTEE THE VALUE,
-STABILITY, OR PERFORMANCE OF ANY DIGITAL ASSET CREATED OR MANAGED BY THE
-LICENSED WORK.
-
-PARTICIPANTS IN THE SOST NETWORK ASSUME ALL RISKS ASSOCIATED WITH
-CRYPTOCURRENCY MINING, HOLDING, AND TRANSACTING, INCLUDING BUT NOT LIMITED TO
-LOSS OF FUNDS, REGULATORY ACTION, AND MARKET VOLATILITY.
-
--------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

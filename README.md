@@ -250,10 +250,6 @@ ctest --output-on-failure
 
 ## License
 
-Business Source License 1.1 (BSL 1.1). See [LICENSE](LICENSE) for full terms.
+MIT License. See [LICENSE](LICENSE) for full terms.
 
-**Permitted:** Reading and auditing the code, running nodes and miners on the SOST network, personal non-commercial use, contributing via pull requests.
-
-**Prohibited:** Forking the code to create competing blockchains, commercial use without written authorization, redistribution of modified versions, unauthorized trademark use.
-
-The Licensor may re-license under MIT or Apache 2.0 on or after 2030-03-13. Contact license@sostcore.com for commercial licensing inquiries.
+The SOST name and ConvergenceX algorithm name are trademarks of the SOST Foundation. The MIT license covers the source code only — use of the SOST and ConvergenceX names in derivative projects requires written permission.

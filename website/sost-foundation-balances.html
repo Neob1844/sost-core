@@ -18,11 +18,11 @@
     --border-dim: #1a1a1a;
     --border-med: #2a2a2a;
     --border-bright: #3a3a3a;
-    --red-primary: #e63946;
+    --red-primary: #fb010d;
     --red-bright: #ff2d3b;
     --red-dim: #8b1a22;
-    --red-glow: #e6394633;
-    --red-subtle: #e6394618;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
     --green-primary: #4ade80;
     --green-dim: #22c55e44;
     --cyan-primary: #22d3ee;
@@ -55,7 +55,7 @@
   .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
 
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
-  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
   .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .hero-label::before { content: '//'; color: var(--text-muted); }
   .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
@@ -296,7 +296,7 @@
   <div class="container">
     <p style="margin-bottom:8px">SOST PROTOCOL &mdash; <a href="https://sostcore.com">sostcore.com</a></p>
     <p style="color:var(--text-muted);font-size:10px;line-height:1.6">Data updated manually. On-chain balances verified via <a href="https://explorer.sostcore.com" target="_blank" rel="noopener">explorer.sostcore.com</a>. Ethereum contract addresses published upon deployment (est. Mar 28, 2026).</p>
-    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">BSL 1.1</a> &mdash; See LICENSE</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
 
@@ -410,12 +410,12 @@ const RESERVE_DATA = {
         {
           label: 'PoPC Pool (25%)',
           data: popcData,
-          borderColor: '#e63946',
-          backgroundColor: 'rgba(230,57,70,0.1)',
+          borderColor: '#fb010d',
+          backgroundColor: 'rgba(251,1,13,0.1)',
           fill: true,
           tension: 0.3,
           pointRadius: 4,
-          pointBackgroundColor: '#e63946'
+          pointBackgroundColor: '#fb010d'
         }
       ]
     },
