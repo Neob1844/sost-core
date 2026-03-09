@@ -52,21 +52,50 @@ Script: `scripts/popc_reward_payout.py`
 - Appends JSON log entry to `popc_payouts.json`
 - Operator reviews and executes manually
 
-### Phase 2 (planned): Automated payout daemon
+### Phase 1.5 (current): PoPC Daemon
 
-Architecture for `sost-popc-daemon`:
+Script: `scripts/popc_daemon.py` — lifecycle manager for PoPC commitments.
+
+**Contract Registry**: `scripts/popc_contracts.json` — pre-populated with FOUND-001 (XAUT) and FOUND-002 (PAXG).
+
+**Actions:**
+
+```bash
+# Activate a commitment — collect upfront fee, status → FEE_PENDING
+python3 scripts/popc_daemon.py --action activate --contract-id FOUND-001
+
+# Check all active commitments — verify Ethereum balances
+python3 scripts/popc_daemon.py --action check-all --eth-rpc https://eth-mainnet.g.alchemy.com/v2/KEY
+
+# Complete a commitment — generate net reward payout command
+python3 scripts/popc_daemon.py --action complete --contract-id FOUND-001
+
+# Show status of all contracts
+python3 scripts/popc_daemon.py --action status
+
+# Dry run — preview without state changes
+python3 scripts/popc_daemon.py --action check-all --dry-run
+```
+
+**Lifecycle:**
+1. `PENDING` → activate → `FEE_PENDING` (operator executes fee TX) → manual update to `ACTIVE`
+2. `ACTIVE` → check-all verifies Ethereum balances periodically
+3. `ACTIVE`/`EXPIRED` → complete → `PAYOUT_PENDING` (operator executes reward TX) → manual update to `COMPLETED`
+
+**Balance verification**: Queries ERC-20 `balanceOf()` via Ethereum JSON-RPC. Pass = balance >= committed amount.
+
+The daemon does NOT execute transactions — generates `sost-cli send` commands for operator review. All state changes are logged to `popc_payouts.json`.
+
+### Phase 2 (planned): Full automation
+
+Architecture for future `sost-popc-daemon` auto mode:
 
 1. **Monitor**: Watch commitment registry for expiring contracts.
 2. **Verify**: At expiry, query Ethereum RPC for `balanceOf()` — pass/fail determination.
 3. **Calculate**: Compute net payout and fee in integer stocks.
-4. **Execute**: Submit two `sost-cli send` transactions via SOST node RPC.
+4. **Execute**: Submit `sost-cli send` transactions via SOST node RPC.
 5. **Attest**: Publish Capsule attestation on-chain (commitment ID, result, TX hashes).
 6. **Log**: Append structured entry to payout ledger.
-
-Operational modes:
-- `--dry-run`: Generate and display commands without executing.
-- `--auto`: Full automated execution (requires operator key configuration).
-- `--verify-only`: Check balances without processing payouts.
 
 The daemon will NOT handle bond slashing — slash events require separate governance review.
 

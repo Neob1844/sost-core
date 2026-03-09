@@ -958,7 +958,8 @@ function showCXInfo(){
   '<span style="color:var(--orange)">50%</span> → Miner &nbsp;&nbsp;'+
   '<span style="color:var(--gold)">25%</span> → Gold Vault (automatic XAUT/PAXG purchase) &nbsp;&nbsp;'+
   '<span style="color:var(--cyan)">25%</span> → PoPC Pool (Proof of Personal Custody rewards)<br><br>'+
-  'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>';
+  'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>'+
+  '<div style="margin-top:12px;padding:10px 16px;font-size:11px;color:rgba(255,255,255,.35);border-top:1px solid rgba(255,255,255,.06)">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan)">BSL 1.1</a> \u2014 Business Source License. Open for review, audit, and node operation.</div>';
 }
 
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}

@@ -21,12 +21,18 @@ namespace sost {
 // Helpers
 // =============================================================================
 
-// Active output types in v1 — types that are valid for consensus acceptance
-static bool IsActiveOutputType(uint8_t type) {
-    return type == OUT_TRANSFER ||
-           type == OUT_COINBASE_MINER ||
-           type == OUT_COINBASE_GOLD ||
-           type == OUT_COINBASE_POPC;
+// Active output types — types valid for consensus acceptance.
+// BOND_LOCK and ESCROW_LOCK are active only after bond_activation_height.
+static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activation_height) {
+    if (type == OUT_TRANSFER ||
+        type == OUT_COINBASE_MINER ||
+        type == OUT_COINBASE_GOLD ||
+        type == OUT_COINBASE_POPC)
+        return true;
+    if ((type == OUT_BOND_LOCK || type == OUT_ESCROW_LOCK) &&
+        height >= bond_activation_height)
+        return true;
+    return false;
 }
 
 // CompactSize encoded length (matching Phase 1 WriteCompactSize)
@@ -132,11 +138,50 @@ static TxValidationResult ValidateStructure(
                 std::to_string(i) + "]", -1, (int32_t)i);
         }
 
-        // R11: output type must be active
-        if (!IsActiveOutputType(out.type)) {
+        // R11: output type must be active (BOND_LOCK/ESCROW_LOCK require bond_activation_height)
+        if (!IsActiveOutputType(out.type, ctx.spend_height, ctx.bond_activation_height)) {
             return TxValidationResult::Fail(TxValCode::R11_INACTIVE_TYPE,
                 "R11: output[" + std::to_string(i) + "] type 0x" +
-                HexStr(&out.type, 1) + " is not active in v1", -1, (int32_t)i);
+                HexStr(&out.type, 1) + " is not active at height " +
+                std::to_string(ctx.spend_height), -1, (int32_t)i);
+        }
+
+        // R15: BOND_LOCK payload must be exactly 8 bytes (lock_until)
+        if (out.type == OUT_BOND_LOCK) {
+            if (out.payload.size() != BOND_LOCK_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R12_PAYLOAD_MISMATCH,
+                    "R15: BOND_LOCK output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(BOND_LOCK_PAYLOAD_LEN) +
+                    " bytes, got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            uint64_t lock_until = ReadLockUntil(out.payload);
+            if (lock_until <= (uint64_t)ctx.spend_height) {
+                return TxValidationResult::Fail(TxValCode::R12_PAYLOAD_MISMATCH,
+                    "R15: BOND_LOCK output[" + std::to_string(i) +
+                    "] lock_until " + std::to_string(lock_until) +
+                    " must be > current height " + std::to_string(ctx.spend_height),
+                    -1, (int32_t)i);
+            }
+        }
+
+        // R16: ESCROW_LOCK payload must be exactly 28 bytes (lock_until + beneficiary_pkh)
+        if (out.type == OUT_ESCROW_LOCK) {
+            if (out.payload.size() != ESCROW_LOCK_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R12_PAYLOAD_MISMATCH,
+                    "R16: ESCROW_LOCK output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(ESCROW_LOCK_PAYLOAD_LEN) +
+                    " bytes, got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            uint64_t lock_until = ReadLockUntil(out.payload);
+            if (lock_until <= (uint64_t)ctx.spend_height) {
+                return TxValidationResult::Fail(TxValCode::R12_PAYLOAD_MISMATCH,
+                    "R16: ESCROW_LOCK output[" + std::to_string(i) +
+                    "] lock_until " + std::to_string(lock_until) +
+                    " must be > current height " + std::to_string(ctx.spend_height),
+                    -1, (int32_t)i);
+            }
         }
 
         // R13: payload_len <= 512 (consensus limit)
@@ -146,10 +191,15 @@ static TxValidationResult ValidateStructure(
                 std::to_string(out.payload.size()) + ")", -1, (int32_t)i);
         }
 
-        // R14: pre-activation payload forbidden; post-activation only OUT_TRANSFER may carry payload
+        // R14: payload rules by output type
+        //   - BOND_LOCK/ESCROW_LOCK: payload required (checked above in R15/R16)
+        //   - OUT_TRANSFER: payload allowed only after capsule activation
+        //   - All others: payload forbidden
         if (!out.payload.empty()) {
             bool payload_allowed = false;
-            if (ctx.spend_height >= ctx.capsule_activation_height) {
+            if (out.type == OUT_BOND_LOCK || out.type == OUT_ESCROW_LOCK) {
+                payload_allowed = true; // validated in R15/R16 above
+            } else if (ctx.spend_height >= ctx.capsule_activation_height) {
                 if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
             if (!payload_allowed) {
@@ -158,7 +208,7 @@ static TxValidationResult ValidateStructure(
                     HexStr(&out.type, 1) +
                     (ctx.spend_height < ctx.capsule_activation_height
                         ? " payload forbidden before capsule activation"
-                        : " only OUT_TRANSFER may carry payload"),
+                        : " only OUT_TRANSFER/BOND_LOCK/ESCROW_LOCK may carry payload"),
                     -1, (int32_t)i);
             }
         }
@@ -227,9 +277,15 @@ static TxValidationResult ValidateInputs(
         }
 
         if (utxo.type == OUT_BOND_LOCK || utxo.type == OUT_ESCROW_LOCK) {
-            return TxValidationResult::Fail(TxValCode::S11_BOND_LOCKED,
-                "S11: input[" + std::to_string(i) + "] references locked output",
-                (int32_t)i);
+            uint64_t lock_until = ReadLockUntil(utxo.payload);
+            if ((uint64_t)ctx.spend_height < lock_until) {
+                return TxValidationResult::Fail(TxValCode::S11_BOND_LOCKED,
+                    "S11: input[" + std::to_string(i) + "] locked until height " +
+                    std::to_string(lock_until) + " (current: " +
+                    std::to_string(ctx.spend_height) + ")",
+                    (int32_t)i);
+            }
+            // Lock expired — output is spendable by the owner (pubkey_hash match)
         }
 
         if (utxo.is_coinbase) {
@@ -316,14 +372,18 @@ TxValidationResult ValidateTransactionConsensus(
             " (" + std::to_string(tx_size) + " bytes × 1)");
     }
 
-    // S9: standard tx outputs must be OUT_TRANSFER in v1.
-    // Payload allowance is governed by R14 (pre/post capsule activation).
+    // S9: standard tx outputs must be OUT_TRANSFER, or BOND_LOCK/ESCROW_LOCK (post-activation).
+    // Payload allowance is governed by R14/R15/R16.
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
-        if (tx.outputs[i].type != OUT_TRANSFER) {
+        uint8_t t = tx.outputs[i].type;
+        bool allowed = (t == OUT_TRANSFER);
+        if (!allowed && ctx.spend_height >= ctx.bond_activation_height) {
+            allowed = (t == OUT_BOND_LOCK || t == OUT_ESCROW_LOCK);
+        }
+        if (!allowed) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,
                 "S9: standard tx output[" + std::to_string(i) +
-                "] must be OUT_TRANSFER, got 0x" +
-                HexStr(&tx.outputs[i].type, 1), -1, (int32_t)i);
+                "] type 0x" + HexStr(&t, 1) + " not allowed", -1, (int32_t)i);
         }
     }
 
