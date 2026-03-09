@@ -179,6 +179,32 @@ int64_t Wallet::balance(const std::string& addr, int64_t chain_height) const {
     return total;
 }
 
+int64_t Wallet::locked_balance(int64_t chain_height) const {
+    int64_t total = 0;
+    for (const auto& u : utxos_) {
+        if (u.spent) continue;
+        if (u.output_type != OUT_BOND_LOCK && u.output_type != OUT_ESCROW_LOCK) continue;
+        if (chain_height >= 0 && (uint64_t)chain_height >= u.lock_until) continue; // unlocked
+        total += u.amount;
+    }
+    return total;
+}
+
+int64_t Wallet::available_balance(int64_t chain_height) const {
+    return balance(chain_height) - locked_balance(chain_height);
+}
+
+std::vector<WalletUTXO> Wallet::list_bonds(int64_t chain_height) const {
+    std::vector<WalletUTXO> result;
+    for (const auto& u : utxos_) {
+        if (u.spent) continue;
+        if (u.output_type != OUT_BOND_LOCK && u.output_type != OUT_ESCROW_LOCK) continue;
+        if (!is_mature(u, chain_height)) continue;
+        result.push_back(u);
+    }
+    return result;
+}
+
 size_t Wallet::num_utxos() const {
     size_t count = 0;
     for (const auto& u : utxos_) {
@@ -483,6 +509,204 @@ bool Wallet::create_transaction(
 }
 
 // =============================================================================
+// Bond/Escrow transaction creation
+// =============================================================================
+
+bool Wallet::create_bond_transaction(
+    int64_t amount,
+    int64_t fee,
+    uint64_t lock_until,
+    const Hash256& genesis_hash,
+    Transaction& out_tx,
+    int64_t chain_height,
+    std::string* err)
+{
+    if (amount <= 0) { if (err) *err = "amount must be positive"; return false; }
+    if (fee < 0) { if (err) *err = "fee must be non-negative"; return false; }
+
+    int64_t needed = amount + fee;
+    auto unspent = list_unspent(chain_height);
+
+    // Select spendable UTXOs (exclude locked bonds, constitutional addresses)
+    std::vector<size_t> selected;
+    int64_t total_in = 0;
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
+        if (!find_key_by_pkh(u.pkh)) continue;
+        // Skip constitutional
+        std::string utxo_addr = address_encode(u.pkh);
+        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||
+            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") continue;
+        // Skip still-locked bonds/escrows
+        if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
+            chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+        selected.push_back(i);
+        total_in += u.amount;
+        if (total_in >= needed) break;
+    }
+
+    if (total_in < needed) {
+        if (err) {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                "insufficient funds: have %lld stocks, need %lld",
+                (long long)total_in, (long long)needed);
+            *err = buf;
+        }
+        return false;
+    }
+
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = TX_TYPE_STANDARD;
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        TxInput inp{};
+        inp.prev_txid = u.txid;
+        inp.prev_index = u.vout;
+        out_tx.inputs.push_back(inp);
+    }
+
+    // Output 0: BOND_LOCK — locks to the sender's own address
+    {
+        const WalletKey* sender_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        TxOutput out{};
+        out.amount = amount;
+        out.type = OUT_BOND_LOCK;
+        out.pubkey_hash = sender_key->pkh;
+        WriteLockUntil(out.payload, lock_until);
+        out_tx.outputs.push_back(out);
+    }
+
+    // Output 1: change
+    int64_t change = total_in - needed;
+    if (change > 0) {
+        const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        TxOutput out{};
+        out.amount = change;
+        out.type = OUT_TRANSFER;
+        out.pubkey_hash = change_key->pkh;
+        out_tx.outputs.push_back(out);
+    }
+
+    // Sign
+    for (size_t i = 0; i < selected.size(); ++i) {
+        const auto& u = unspent[selected[i]];
+        const WalletKey* key = find_key_by_pkh(u.pkh);
+        SpentOutput spent;
+        spent.amount = u.amount;
+        spent.type = u.output_type;
+        if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err))
+            return false;
+    }
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        mark_spent(u.txid, u.vout);
+    }
+    return true;
+}
+
+bool Wallet::create_escrow_transaction(
+    int64_t amount,
+    int64_t fee,
+    uint64_t lock_until,
+    const PubKeyHash& beneficiary_pkh,
+    const Hash256& genesis_hash,
+    Transaction& out_tx,
+    int64_t chain_height,
+    std::string* err)
+{
+    if (amount <= 0) { if (err) *err = "amount must be positive"; return false; }
+    if (fee < 0) { if (err) *err = "fee must be non-negative"; return false; }
+
+    int64_t needed = amount + fee;
+    auto unspent = list_unspent(chain_height);
+
+    std::vector<size_t> selected;
+    int64_t total_in = 0;
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
+        if (!find_key_by_pkh(u.pkh)) continue;
+        std::string utxo_addr = address_encode(u.pkh);
+        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||
+            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") continue;
+        if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
+            chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+        selected.push_back(i);
+        total_in += u.amount;
+        if (total_in >= needed) break;
+    }
+
+    if (total_in < needed) {
+        if (err) {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                "insufficient funds: have %lld stocks, need %lld",
+                (long long)total_in, (long long)needed);
+            *err = buf;
+        }
+        return false;
+    }
+
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = TX_TYPE_STANDARD;
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        TxInput inp{};
+        inp.prev_txid = u.txid;
+        inp.prev_index = u.vout;
+        out_tx.inputs.push_back(inp);
+    }
+
+    // Output 0: ESCROW_LOCK — locks to sender, with beneficiary in payload
+    {
+        const WalletKey* sender_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        TxOutput out{};
+        out.amount = amount;
+        out.type = OUT_ESCROW_LOCK;
+        out.pubkey_hash = sender_key->pkh;
+        // Payload: lock_until (8 bytes) + beneficiary_pkh (20 bytes) = 28 bytes
+        WriteLockUntil(out.payload, lock_until);
+        out.payload.resize(28);
+        std::copy(beneficiary_pkh.begin(), beneficiary_pkh.end(),
+                  out.payload.begin() + 8);
+        out_tx.outputs.push_back(out);
+    }
+
+    // Output 1: change
+    int64_t change = total_in - needed;
+    if (change > 0) {
+        const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        TxOutput out{};
+        out.amount = change;
+        out.type = OUT_TRANSFER;
+        out.pubkey_hash = change_key->pkh;
+        out_tx.outputs.push_back(out);
+    }
+
+    // Sign
+    for (size_t i = 0; i < selected.size(); ++i) {
+        const auto& u = unspent[selected[i]];
+        const WalletKey* key = find_key_by_pkh(u.pkh);
+        SpentOutput spent;
+        spent.amount = u.amount;
+        spent.type = u.output_type;
+        if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err))
+            return false;
+    }
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        mark_spent(u.txid, u.vout);
+    }
+    return true;
+}
+
+// =============================================================================
 // Persistence — simple JSON format
 // =============================================================================
 
@@ -549,7 +773,14 @@ bool Wallet::save(const std::string& path, std::string* err) const {
         f << "      \"output_type\": " << (int)u.output_type << ",\n";
         f << "      \"pkh\": \"" << to_hex(u.pkh.data(), 20) << "\",\n";
         f << "      \"height\": " << u.height << ",\n";
-        f << "      \"spent\": " << (u.spent ? "true" : "false") << "\n";
+        f << "      \"spent\": " << (u.spent ? "true" : "false");
+        if (u.lock_until > 0) {
+            f << ",\n      \"lock_until\": " << u.lock_until;
+            if (u.output_type == OUT_ESCROW_LOCK) {
+                f << ",\n      \"beneficiary\": \"" << to_hex(u.beneficiary.data(), 20) << "\"";
+            }
+        }
+        f << "\n";
         f << "    }";
         ++utxo_count;
     }
@@ -643,6 +874,14 @@ bool Wallet::load(const std::string& path, std::string* err) {
             utxo.height = json_int_value(obj, "height");
             utxo.spent = (obj.find("\"spent\": true") != std::string::npos ||
                           obj.find("\"spent\":true") != std::string::npos);
+
+            int64_t lu = json_int_value(obj, "lock_until");
+            utxo.lock_until = (lu > 0) ? (uint64_t)lu : 0;
+
+            std::string ben_hex = json_string_value(obj, "beneficiary");
+            if (ben_hex.size() == 40) {
+                from_hex_bytes(ben_hex, utxo.beneficiary.data(), 20);
+            }
 
             utxos_.push_back(utxo);
             pos = obj_end + 1;
@@ -814,7 +1053,14 @@ bool Wallet::save_encrypted(const std::string& path, const std::string& passphra
         f << "      \"output_type\": " << (int)u.output_type << ",\n";
         f << "      \"pkh\": \"" << to_hex(u.pkh.data(), 20) << "\",\n";
         f << "      \"height\": " << u.height << ",\n";
-        f << "      \"spent\": " << (u.spent ? "true" : "false") << "\n";
+        f << "      \"spent\": " << (u.spent ? "true" : "false");
+        if (u.lock_until > 0) {
+            f << ",\n      \"lock_until\": " << u.lock_until;
+            if (u.output_type == OUT_ESCROW_LOCK) {
+                f << ",\n      \"beneficiary\": \"" << to_hex(u.beneficiary.data(), 20) << "\"";
+            }
+        }
+        f << "\n";
         f << "    }";
         ++utxo_count;
     }
@@ -944,6 +1190,14 @@ bool Wallet::load_encrypted(const std::string& path, const std::string& passphra
             utxo.height = json_int_value(obj, "height");
             utxo.spent = (obj.find("\"spent\": true") != std::string::npos ||
                           obj.find("\"spent\":true") != std::string::npos);
+
+            int64_t lu = json_int_value(obj, "lock_until");
+            utxo.lock_until = (lu > 0) ? (uint64_t)lu : 0;
+
+            std::string ben_hex = json_string_value(obj, "beneficiary");
+            if (ben_hex.size() == 40) {
+                from_hex_bytes(ben_hex, utxo.beneficiary.data(), 20);
+            }
 
             utxos_.push_back(utxo);
             pos = obj_end + 1;

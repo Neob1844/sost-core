@@ -666,9 +666,14 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
 }
 
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
-    double bal=(double)g_wallet.balance(g_chain_height)/(double)sost::STOCKS_PER_SOST;
-    char buf[64]; snprintf(buf,sizeof(buf),"%.8f",bal);
-    return rpc_result(id,buf);
+    int64_t total=g_wallet.balance(g_chain_height);
+    int64_t locked=g_wallet.locked_balance(g_chain_height);
+    int64_t avail=total-locked;
+    std::ostringstream s;
+    s<<"{\"total\":"<<format_sost(total)
+     <<",\"available\":"<<format_sost(avail)
+     <<",\"locked\":"<<format_sost(locked)<<"}";
+    return rpc_result(id,s.str());
 }
 
 static std::string handle_getnewaddress(const std::string& id, const std::vector<std::string>& p) {
@@ -691,9 +696,13 @@ static std::string handle_listunspent(const std::string& id, const std::vector<s
     auto utxos=g_wallet.list_unspent(g_chain_height); std::ostringstream s; s<<"[";
     for(size_t i=0;i<utxos.size();++i){
         if(i)s<<","; const auto& u=utxos[i];
+        bool isLocked=(u.output_type==0x10||u.output_type==0x11)&&(uint64_t)g_chain_height<u.lock_until;
         s<<"{\"txid\":\""<<to_hex(u.txid.data(),32)<<"\",\"vout\":"<<u.vout
          <<",\"address\":\""<<address_encode(u.pkh)<<"\",\"amount\":"<<format_sost(u.amount)
-         <<",\"confirmations\":"<<(g_chain_height-u.height+1)<<",\"spendable\":true}";
+         <<",\"confirmations\":"<<(g_chain_height-u.height+1)<<",\"spendable\":"<<(isLocked?"false":"true");
+        if(u.output_type==0x10)s<<",\"type\":\"bond\",\"lock_until\":"<<u.lock_until;
+        else if(u.output_type==0x11)s<<",\"type\":\"escrow\",\"lock_until\":"<<u.lock_until;
+        s<<"}";
     }
     s<<"]"; return rpc_result(id,s.str());
 }
@@ -1101,6 +1110,26 @@ static std::string handle_getaddressinfo(const std::string& id, const std::vecto
     return rpc_result(id, s.str());
 }
 
+static std::string handle_listbonds(const std::string& id, const std::vector<std::string>&) {
+    auto bonds=g_wallet.list_bonds(g_chain_height);
+    std::ostringstream s; s<<"[";
+    for(size_t i=0;i<bonds.size();++i){
+        if(i)s<<","; const auto& u=bonds[i];
+        bool locked=(g_chain_height>=0&&(uint64_t)g_chain_height<u.lock_until);
+        s<<"{\"txid\":\""<<to_hex(u.txid.data(),32)<<"\",\"vout\":"<<u.vout
+         <<",\"type\":"<<(u.output_type==0x10?"\"bond\"":"\"escrow\"")
+         <<",\"amount\":"<<format_sost(u.amount)
+         <<",\"lock_until\":"<<u.lock_until
+         <<",\"status\":\""<<(locked?"locked":"unlocked")<<"\"";
+        if(u.output_type==0x11)
+            s<<",\"beneficiary\":\""<<address_encode(u.beneficiary)<<"\"";
+        if(locked&&g_chain_height>=0)
+            s<<",\"blocks_remaining\":"<<(u.lock_until-(uint64_t)g_chain_height);
+        s<<"}";
+    }
+    s<<"]"; return rpc_result(id,s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -1124,6 +1153,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"gettransaction",handle_gettransaction},
     {"estimatefee",handle_estimatefee},
     {"getaddressbalance",handle_getaddressbalance},
+    {"listbonds",handle_listbonds},
 };
 
 static std::string dispatch_rpc(const std::string& req) {

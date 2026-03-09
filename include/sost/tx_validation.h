@@ -128,6 +128,7 @@ enum class TxValCode : int {
     P_FEE_BELOW_RELAY      = 406,
     P_DUST_OUTPUT          = 407,
     P_BAD_CAPSULE          = 408,   // capsule header/body validation failed
+    P_BAD_BOND_PAYLOAD     = 409,   // BOND_LOCK/ESCROW_LOCK payload format invalid
 
     // Internal
     INTERNAL_ERROR         = 999,
@@ -161,6 +162,7 @@ struct TxValidationContext {
     Hash256  genesis_hash{};
     int64_t  spend_height{0};   // height of the block being validated
     int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_MAINNET};
+    int64_t  bond_activation_height{BOND_ACTIVATION_HEIGHT_MAINNET};
 };
 
 // =============================================================================

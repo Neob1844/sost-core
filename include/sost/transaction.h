@@ -114,6 +114,32 @@ struct Transaction {
 // Utility helpers
 // -----------------------------------------------------------------------------
 
+// Lock payload helpers for BOND_LOCK (0x10) and ESCROW_LOCK (0x11)
+// BOND_LOCK payload:   [0..7]  = lock_until (uint64_t LE, block height)
+// ESCROW_LOCK payload: [0..7]  = lock_until (uint64_t LE, block height)
+//                      [8..27] = beneficiary pubkey hash (20 bytes)
+
+inline uint64_t ReadLockUntil(const std::vector<Byte>& payload) {
+    if (payload.size() < 8) return 0;
+    uint64_t v = 0;
+    for (int i = 0; i < 8; ++i)
+        v |= (static_cast<uint64_t>(payload[i]) << (8 * i));
+    return v;
+}
+
+inline void WriteLockUntil(std::vector<Byte>& payload, uint64_t lock_until) {
+    payload.resize(payload.size() < 8 ? 8 : payload.size());
+    for (int i = 0; i < 8; ++i)
+        payload[i] = static_cast<Byte>((lock_until >> (8 * i)) & 0xFF);
+}
+
+inline std::array<Byte, 20> ReadBeneficiaryPkh(const std::vector<Byte>& payload) {
+    std::array<Byte, 20> pkh{};
+    if (payload.size() >= 28)
+        std::copy(payload.begin() + 8, payload.begin() + 28, pkh.begin());
+    return pkh;
+}
+
 // CompactSize (Bitcoin varint) encode/decode (canonical)
 void WriteCompactSize(std::vector<Byte>& out, uint64_t n);
 

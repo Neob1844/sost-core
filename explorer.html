@@ -675,10 +675,11 @@ async function showTxDetail(txid){
     else{inputsHtml='<div class="tx-io-item"><div class="tx-io-label">INPUTS</div><div style="font-size:11px;color:var(--text2)">Spent outputs (input detail requires tx-index)</div><div class="tx-io-meta">total input \u2265 '+totalOut.toFixed(8)+' SOST + fee</div></div>';}
     var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
     var typeColors2=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
+    function getTypeLabelColor(t){if(t===16)return{label:'BOND_LOCK',color:'var(--purple)'};if(t===17)return{label:'ESCROW_LOCK',color:'var(--purple)'};return{label:(typeLabels[t]||'output').toUpperCase(),color:typeColors2[t]||'var(--green)'};}
     var changeIdx=-1;
     if(!isCB&&outputs.length>=2){var minAmt=Infinity,minI=-1;for(var ci=0;ci<outputs.length;ci++){var a=typeof outputs[ci].amount==='number'?outputs[ci].amount:parseFloat(outputs[ci].amount);if(a<minAmt){minAmt=a;minI=ci;}}if(outputs.length===2)changeIdx=minI;}
     var outputsHtml='';
-    for(var oi=0;oi<outputs.length;oi++){var o2=outputs[oi];var tl=typeLabels[o2.type]||'output';var tc=typeColors2[o2.type]||'var(--green)';var amt=typeof o2.amount==='number'?o2.amount.toFixed(8):o2.amount;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&outputs.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+o2.vout+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o2.address+'\')">'+o2.address+addrTag(o2.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div><div class="tx-io-meta">block #'+o2.height+' \u00B7 '+o2.confirmations+' confirmations</div></div>';}
+    for(var oi=0;oi<outputs.length;oi++){var o2=outputs[oi];var tlc=getTypeLabelColor(o2.type);var tl=tlc.label;var tc=tlc.color;var amt=typeof o2.amount==='number'?o2.amount.toFixed(8):o2.amount;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&outputs.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var lockBadge='';if(o2.type===16)lockBadge='<span style="color:var(--purple);font-size:8px;border:1px solid var(--purple);padding:1px 5px;letter-spacing:1px;margin-left:6px">\u{1F512} BOND</span>';if(o2.type===17)lockBadge='<span style="color:var(--purple);font-size:8px;border:1px solid var(--purple);padding:1px 5px;letter-spacing:1px;margin-left:6px">\u{1F512} ESCROW</span>';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl+' \u00B7 vout:'+o2.vout+' '+changeBadge+payLabel+lockBadge+'</div><div class="tx-io-addr" onclick="showAddress(\''+o2.address+'\')">'+o2.address+addrTag(o2.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div><div class="tx-io-meta">block #'+o2.height+' \u00B7 '+o2.confirmations+' confirmations</div></div>';}
     var feeNote=!isCB?'<div class="fee-note"><b>\u2691 About fees & change:</b> In UTXO-based blockchains, you spend entire outputs. If you have 11.77 SOST and send 10.00, the remaining ~1.77 returns to you as <b>change</b> (like paying with a large bill). The <b>fee</b> is the difference between total inputs and total outputs \u2014 it goes to the miner inside the coinbase of block #'+bh+'. Without tx-index, exact fee cannot be displayed yet for confirmed TXs.</div>':'';
     c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase (block reward)</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div><div class="k">outputs</div><div class="v">'+outputs.length+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>'+feeNote;
     window.scrollTo({top:0,behavior:'smooth'});
@@ -721,9 +722,9 @@ async function showAddress(addr){
     var sorted=a.utxos.slice().sort(function(x,y){return y.height-x.height;});
     var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
     var typeColors=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
-    // Compute mature/immature balances
-    var matureBalance=0,immatureBalance=0,totalBalance=0;
-    var matureCount=0,immatureCount=0;
+    // Compute mature/immature/locked balances
+    var matureBalance=0,immatureBalance=0,totalBalance=0,lockedBalance=0;
+    var matureCount=0,immatureCount=0,lockedCount=0;
     for(var mi=0;mi<sorted.length;mi++){
       var u=sorted[mi];
       var confs=H-u.height+1;
@@ -731,7 +732,8 @@ async function showAddress(addr){
       var isMature=!isCoinbase||(confs>=COINBASE_MATURITY);
       var amt=typeof u.amount==='number'?u.amount:parseFloat(u.amount);
       totalBalance+=amt;
-      if(isMature){matureBalance+=amt;matureCount++;}
+      if(u.type===16||u.type===17){lockedBalance+=amt;lockedCount++;}
+      else if(isMature){matureBalance+=amt;matureCount++;}
       else{immatureBalance+=amt;immatureCount++;}
     }
     // Constitutional protection info
@@ -743,9 +745,10 @@ async function showAddress(addr){
     }
     // Balance section with mature/immature breakdown
     var balHtml='<div class="k">total balance</div><div class="v"><span style="color:var(--green);font-size:16px;font-weight:600">'+totalBalance.toFixed(8)+' SOST</span></div>';
-    if(immatureCount>0){
+    if(immatureCount>0||lockedCount>0){
       balHtml+='<div class="k">\u2705 spendable</div><div class="v"><span style="color:var(--green);font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' UTXOs)</span></div>';
-      balHtml+='<div class="k">\u23F3 immature</div><div class="v"><span style="color:var(--yellow);font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
+      if(immatureCount>0) balHtml+='<div class="k">\u23F3 immature</div><div class="v"><span style="color:var(--yellow);font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
+      if(lockedCount>0) balHtml+='<div class="k">\u{1F512} locked</div><div class="v"><span style="color:var(--purple);font-weight:600">'+lockedBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lockedCount+' bond/escrow UTXOs)</span></div>';
     }
     // UTXO rows with maturity indicators
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
@@ -767,8 +770,7 @@ async function showAddress(addr){
       }
       var isLikelyChange=txidCounts[txid]>1&&u.vout>0;
       var changeBadge=isLikelyChange?'<span class="change-badge">CHANGE</span>':'';
-      var tl=typeLabels[u.type]||'output';
-      var tc=typeColors[u.type]||'var(--green)';
+      var tl,tc;if(u.type===16){tl='BOND_LOCK';tc='var(--purple)';}else if(u.type===17){tl='ESCROW_LOCK';tc='var(--purple)';}else{tl=typeLabels[u.type]||'output';tc=typeColors[u.type]||'var(--green)';}
       utxoRows+='<tr><td><span class="td-link" onclick="showTxDetail(\''+txid+'\')">'+sH(txid)+':'+u.vout+'</span>'+cpBtn(txid)+'</td><td><span class="td-amt">'+(typeof u.amount==='number'?u.amount.toFixed(8):u.amount)+' SOST</span> '+changeBadge+'</td><td><span style="color:'+tc+';font-size:9px;font-weight:600">'+tl.toUpperCase()+'</span></td><td><span class="td-height" onclick="showBlockByHeight('+u.height+')">#'+u.height+'</span></td><td><span style="color:'+matColor+'">'+matIcon+' '+confs+'</span> '+matLabel+matBar+'</td></tr>';
     }
     c.innerHTML='<div class="dtl-head"><b>Address</b> '+roleBadge+' '+mineBadge+'</div>'+
@@ -878,7 +880,8 @@ function showCXInfo(){
   '<span style="color:var(--orange)">50%</span> → Miner &nbsp;&nbsp;'+
   '<span style="color:var(--gold)">25%</span> → Gold Vault &nbsp;&nbsp;'+
   '<span style="color:var(--cyan)">25%</span> → PoPC Pool (Proof of Personal Custody rewards)<br><br>'+
-  'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>';
+  'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>'+
+  '<div style="margin-top:12px;padding:10px 16px;font-size:11px;color:rgba(255,255,255,.35);border-top:1px solid rgba(255,255,255,.06)">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan)">BSL 1.1</a> \u2014 Business Source License. Open for review, audit, and node operation.</div>';
 }
 
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}

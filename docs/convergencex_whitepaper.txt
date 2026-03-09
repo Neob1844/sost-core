@@ -2603,3 +2603,9 @@ Changes from v3.4 to v3.5:
       (naming aligned with code).
 
 **SOST Protocol — Technical Whitepaper v3.5 — March 2026**
+
+LICENSE: SOST source code is published under the Business Source License 1.1
+(BSL 1.1). The code is fully auditable and open for review, compilation, and
+execution of nodes and miners. Forking, commercial reuse, and redistribution
+of modified versions require written authorization from the SOST Foundation.
+See LICENSE file for full terms. Contact: license@sostcore.com
