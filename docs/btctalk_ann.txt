@@ -114,6 +114,8 @@ The emission formula: reward(height) = floor(R0 × q^epoch), where epoch = heigh
 
 Of the total supply, approximately 50% goes to miners, 25% to the Gold Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The Foundation operates exclusively from protocol fees charged on PoPC contracts (5% on Model A, 10% on Model B) — never from minted coins.
 
+[b]End of emission:[/b] The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 — the integer arithmetic truncates sub-stock values to zero. There is [b]no tail emission[/b] (unlike Monero). The hard cap is not a counter that can be changed — it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split applies to fees: 50% to the miner, 25% to the Gold Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic model as Bitcoin — long-term security funded by fee revenue — but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.
+
 [hr]
 
 [size=14pt][b]Roadmap[/b][/size]
