@@ -224,7 +224,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | P2P DoS protection (ban scoring, peer limits) | Complete |
 | Checkpoints + reorg limit (100 blocks) | Complete |
 | write_exact() reliable socket writes | Complete |
-| P2P encryption | Post-launch |
+| P2P encryption (X25519 + ChaCha20-Poly1305) | Active (default on) |
 
 ## Build from Source
 

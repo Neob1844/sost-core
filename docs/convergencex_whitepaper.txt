@@ -1327,7 +1327,9 @@ Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)
 
 ### 6.5 Dynamic Bond — Model A
 
-The bond is always denominated in USD value, converted to SOST at market price (7-day TWAP). As SOST appreciates relative to gold, the bond percentage increases gradually to maintain deterrence. The bond is designed to create deterrence and alignment, not to fully collateralize the committed asset. Sub-collateralization is intentional and compensated by layered deterrence (bond + reputation + blacklist + size limits).
+All fiat-denominated values use USD as the reference currency for documentation. The protocol is currency-agnostic — bond sizing depends on the SOST/gold ratio, not on any specific fiat currency.
+
+The bond is always denominated in fiat value, converted to SOST at market price (7-day TWAP). As SOST appreciates relative to gold, the bond percentage increases gradually to maintain deterrence. The bond is designed to create deterrence and alignment, not to fully collateralize the committed asset. Sub-collateralization is intentional and compensated by layered deterrence (bond + reputation + blacklist + size limits).
 ```
 DYNAMIC BOND CALCULATION:
 
@@ -2207,7 +2209,7 @@ This document is for informational purposes only. SOST is not an investment prod
 
 **NO BROKER / NO TRADING / NO CUSTODY:** SOST does not provide brokerage, does not execute trades on behalf of users, does not offer arbitrage, and does not custody user assets. Any Vault conversion (SOST → allowlisted tokenized metals) is a transparent, auditable operational procedure and does not constitute active management or promised returns. SOST is a protocol; third-party venues (exchanges, issuers, custodians) may impose their own KYC/AML requirements.
 
-**Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Epoch 2 activation (target: February 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
+**Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Phase 2 activation (target: February 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
 
 ---
 
