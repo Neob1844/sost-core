@@ -297,15 +297,15 @@
         <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">The bond percentage scales with the SOST/gold price ratio. System is ratio-based, not price-based — works at any gold/SOST price in any currency.</p>
         <div class="code-snippet"><span class="keyword">ratio</span> = sost_price / gold_oz_price
 
-<span class="keyword">if</span> ratio &lt; <span class="num">0.0001</span>  &rarr;  bond = <span class="num">12%</span>  <span class="comment">// early stage</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.001</span>   &rarr;  bond = <span class="num">15%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.01</span>    &rarr;  bond = <span class="num">20%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.1</span>     &rarr;  bond = <span class="num">25%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.2</span>     &rarr;  bond = <span class="num">26%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.3</span>     &rarr;  bond = <span class="num">27%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.4</span>     &rarr;  bond = <span class="num">28%</span>
-<span class="keyword">if</span> ratio &lt; <span class="num">0.5</span>     &rarr;  bond = <span class="num">29%</span>
-<span class="keyword">if</span> ratio &ge; <span class="num">0.5</span>     &rarr;  bond = <span class="num">30%</span>  <span class="comment">// maximum</span>
+<span class="keyword">if</span> ratio &lt; <span class="num">0.0001</span>              &rarr;  bond = <span class="num">12%</span>  <span class="comment">// early stage</span>
+<span class="keyword">if</span> <span class="num">0.0001</span> &le; ratio &lt; <span class="num">0.001</span>   &rarr;  bond = <span class="num">15%</span>
+<span class="keyword">if</span> <span class="num">0.001</span>  &le; ratio &lt; <span class="num">0.01</span>    &rarr;  bond = <span class="num">20%</span>
+<span class="keyword">if</span> <span class="num">0.01</span>   &le; ratio &lt; <span class="num">0.1</span>     &rarr;  bond = <span class="num">25%</span>
+<span class="keyword">if</span> <span class="num">0.1</span>    &le; ratio &lt; <span class="num">0.2</span>     &rarr;  bond = <span class="num">26%</span>
+<span class="keyword">if</span> <span class="num">0.2</span>    &le; ratio &lt; <span class="num">0.3</span>     &rarr;  bond = <span class="num">27%</span>
+<span class="keyword">if</span> <span class="num">0.3</span>    &le; ratio &lt; <span class="num">0.4</span>     &rarr;  bond = <span class="num">28%</span>
+<span class="keyword">if</span> <span class="num">0.4</span>    &le; ratio &lt; <span class="num">0.5</span>     &rarr;  bond = <span class="num">29%</span>
+<span class="keyword">if</span> ratio &ge; <span class="num">0.5</span>              &rarr;  bond = <span class="num">30%</span>  <span class="comment">// maximum</span>
 
 bond_sost = bond_usd / sost_price_TWAP_7d</div>
         <table class="code-table">
@@ -437,7 +437,7 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
           <tr><td class="label">Escrowed gold on balance sheet</td><td class="value">Off-balance-sheet, transparency only</td></tr>
           <tr><td class="label">Watcher can steal gold</td><td class="highlight">Impossible (escrow is autonomous)</td></tr>
           <tr><td class="label">Watcher can delay payout</td><td class="value">Yes (liveness risk, not safety risk)</td></tr>
-          <tr><td class="label">Autonomous claim fallback</td><td class="green">claimReward(depositId) after 72h</td></tr>
+          <tr><td class="label">Autonomous claim fallback</td><td class="green">claimReward(depositId) after 72h &mdash; pays NET reward (gross minus fee); fee routed to Foundation; idempotent (repeat calls are no-ops)</td></tr>
         </table>
       </div>
     </div>
@@ -454,12 +454,12 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-label">Time Extension</span>
+          <span class="spec-label">Immutable Term</span>
         </div>
         <span class="spec-tag">MODEL B</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;">Before expiry you may extend the duration and earn a loyalty bonus on the additional reward period. Fee applies to the extra reward only (10%). The escrow is immutable &mdash; to add more metals, open a new parallel contract.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;">The escrow term is immutable &mdash; no renew, extend, or modify function exists in the contract. Once a deposit is made, the unlock time is fixed and cannot be changed. To commit additional metals or a different duration, open a new parallel contract.</p>
       </div>
     </div>
   </div>
@@ -574,7 +574,7 @@ user_reward  = SOST_reward - protocol_fee
         <span class="spec-tag">NEVER AT COMPLETION</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">All fees are charged at the moment of each operation &mdash; never at completion.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">All fees are calculated at creation and locked; disbursement occurs at completion &mdash; never collected upfront.</p>
         <table class="code-table">
           <tr><th>Model</th><th>Fee</th><th>Charged on</th></tr>
           <tr><td class="highlight">Model A</td><td class="value">5% of bond</td><td class="value">Per operation (opening or top-up increment)</td></tr>
@@ -598,7 +598,7 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
       <h2 class="section-title">Reputation <span class="accent">System</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Reputation stars (0-5) determine audit frequency and maximum commitment size. Stars are earned through successful contract completions and destroyed on slash.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Reputation uses 4 discrete levels: <strong style="color:var(--text-primary)">0, 1, 3, and 5 stars</strong>. Stars determine audit frequency and maximum per-contract commitment size. Progression: 0&rarr;1 after first successful completion, 1&rarr;3 after 3 cumulative completions, 3&rarr;5 after 5 cumulative completions. Any slash resets to 0.</p>
 
     <div class="star-grid fade-in delay-1">
       <div class="star-card">
@@ -627,6 +627,10 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
       </div>
     </div>
 
+    <div class="notice fade-in delay-2" style="margin-top:16px;">
+      <strong>Anti-whale caps &amp; reputation interaction:</strong> The per-contract oz limits above are the reputation ceiling. A separate protocol-wide anti-whale cap (e.g., max 5% of pool per address per epoch) may further restrict large participants. The effective limit is the <em>minimum</em> of the reputation tier limit and the anti-whale cap. Both are enforced independently.
+    </div>
+
     <div class="spec-block fade-in delay-2" style="margin-top:24px;">
       <div class="spec-header">
         <div class="spec-header-left">
@@ -636,16 +640,17 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
         <span class="spec-tag">NO ON-CHAIN ORACLE</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Bond sizing uses a Price Bulletin model with explicit user consent. No on-chain oracle. No discretionary Foundation pricing.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Bond sizing uses a Price Bulletin model with dual consent. The contract verifies the Foundation EIP-712 signature on the bulletin, then the user co-signs the exact bond terms (dual-consent: Foundation attests the price, user accepts it). No on-chain oracle. No discretionary Foundation pricing.</p>
         <table class="code-table">
           <tr><th>Property</th><th>Value</th></tr>
           <tr><td class="label">Published by</td><td class="value">Foundation (daily)</td></tr>
+          <tr><td class="label">Signature</td><td class="green">EIP-712 typed structured data — verified on-chain</td></tr>
           <tr><td class="label">Data</td><td class="value">SOST/USD 7d TWAP, Gold/USD 7d TWAP</td></tr>
           <tr><td class="label">Sources</td><td class="value">Public exchange APIs (reproducible)</td></tr>
           <tr><td class="label">Distribution</td><td class="value">Website + GitHub + IPFS mirror</td></tr>
-          <tr><td class="label">User consent</td><td class="green">Required — user signs exact bond terms</td></tr>
+          <tr><td class="label">Dual consent</td><td class="green">Foundation EIP-712 signs bulletin; user co-signs exact bond terms</td></tr>
           <tr><td class="label">On-chain prices</td><td class="highlight">None — not consensus-critical</td></tr>
-          <tr><td class="label">Malicious bulletin</td><td class="value">Users simply refuse to sign — no funds at risk</td></tr>
+          <tr><td class="label">Malicious bulletin</td><td class="value">Users simply refuse to co-sign — no funds at risk</td></tr>
         </table>
       </div>
     </div>
@@ -666,12 +671,12 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">SLASH TRIGGER</div>
         <h3 style="color:var(--red-primary)">Custody Violation</h3>
-        <p>XAUT/PAXG balance below committed amount at audit time, or no response after 48h grace period (with confirmed RPC availability).</p>
+        <p>XAUT/PAXG balance below committed amount at audit time, or no response within the 48h grace window &mdash; the sole window for response (with confirmed RPC availability). No additional grace period.</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">SLASH SPLIT</div>
         <h3 style="color:var(--cyan-primary)">50/50 Distribution</h3>
-        <p>50% of slashed bond goes to PoPC Pool (funds future rewards). 50% goes to Gold Vault (buys more gold collateral). No supply is burned.</p>
+        <p>50% of slashed bond goes to PoPC Pool (funds future rewards). 50% goes to Funding Vault (buys more gold collateral). No supply is burned.</p>
       </div>
     </div>
 
@@ -686,7 +691,7 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Consequence</th><th>Detail</th></tr>
-          <tr><td class="label">Bond</td><td class="highlight">Lost — split 50/50 between PoPC Pool and Gold Vault</td></tr>
+          <tr><td class="label">Bond</td><td class="highlight">Lost — split 50/50 between PoPC Pool and Funding Vault</td></tr>
           <tr><td class="label">Reputation</td><td class="highlight">Destroyed (reset to 0 stars)</td></tr>
           <tr><td class="label">Address</td><td class="highlight">Blacklisted</td></tr>
           <tr><td class="label">Supply effect</td><td class="green">No burn — slashed SOST recycled into vaults</td></tr>
@@ -723,9 +728,9 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
           <tr><td class="label">Target activation</td><td class="highlight">February 2027</td></tr>
           <tr><td class="label">Consensus changes</td><td class="green">None — PoPC is application-layer</td></tr>
           <tr><td class="label">Pool funding</td><td class="value">25% of every block reward from genesis</td></tr>
-          <tr><td class="label">Pool at activation (~1 year)</td><td class="value">~103,160 SOST accumulated</td></tr>
+          <tr><td class="label">Pool at activation (~1 year)</td><td class="value">~103,160 SOST accumulated (~8,597 SOST/month)</td></tr>
           <tr><td class="label">Escrow contract</td><td class="value">Immutable, published and audited before activation</td></tr>
-          <tr><td class="label">Adaptive rule</td><td class="value">If SOST/gold ratio &gt; 1.5 for 30 days, PoPC accepts SOST as custody asset</td></tr>
+          <tr><td class="label">Adaptive rule</td><td class="value">Removed — PoPC requires gold custody only (see Whitepaper Appendix M)</td></tr>
         </table>
       </div>
     </div>
@@ -740,7 +745,7 @@ Total: <span class="num">7.5</span> SOST <span class="comment">// same cost as t
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><th>Scenario</th><th>Annual Rewards</th><th>Pool Usage</th></tr>
+          <tr><th>Scenario</th><th>Annual Rewards</th><th>Pool Usage (of ~103,160 SOST/year)</th></tr>
           <tr><td class="label">200 active contracts</td><td class="value">~6,000 SOST</td><td class="green">5.8% of annual intake</td></tr>
           <tr><td class="label">1,000 contracts</td><td class="value">~30,000 SOST</td><td class="green">29% of annual intake</td></tr>
           <tr><td class="label">30-year total pool</td><td class="value" colspan="2">~1,167,300 SOST + slash income</td></tr>

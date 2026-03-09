@@ -171,11 +171,11 @@
   <div class="container">
     <div class="hero-label fade-in">Technical Whitepaper</div>
     <h1 class="fade-in delay-1">Proof of <span>Irreversible</span><br><span>Convergence.</span></h1>
-    <p class="hero-sub fade-in delay-2">The complete technical specification of SOST Protocol — ConvergenceX proof-of-work, Feigenbaum emission schedule, Metals Reserve architecture, and Proof of Personal Custody. Version 3.7, March 2026.</p>
+    <p class="hero-sub fade-in delay-2">The complete technical specification of SOST Protocol — ConvergenceX proof-of-work, Feigenbaum emission schedule, Metals Reserve architecture, and Proof of Personal Custody. Version 4.0, March 2026.</p>
     <div class="dl-area fade-in delay-3">
       <a href="whitepaper.pdf" class="dl-btn" download>DOWNLOAD PDF</a>
       <a href="whitepaper-reader.html" class="dl-btn" style="background:var(--bg-card);border:1px solid var(--border-med);color:var(--text-primary);margin-left:12px">READ IN DARK MODE</a>
-      <span class="dl-meta">v3.7 &middot; March 2026 &middot; Living document</span>
+      <span class="dl-meta">v4.0 &middot; March 2026 &middot; Normative Specification</span>
     </div>
   </div>
 </section>
@@ -195,7 +195,7 @@
       </div>
       <div class="pillar-card">
         <h3 style="color:#b8860b">Metals Reserve</h3>
-        <p>Automatic, constitutional accumulation of gold reserve. Every mined block allocates 25% to a Gold Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default.</p>
+        <p>Automatic, constitutional accumulation of gold reserve. Every mined block allocates 25% to a Funding Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default.</p>
       </div>
       <div class="pillar-card">
         <h3 style="color:var(--cyan-primary)">Proof of Personal Custody</h3>
@@ -260,7 +260,7 @@
         <span class="toc-num">7</span>
         <div>
           <div class="toc-text">Governance Model</div>
-          <div class="toc-desc">No consensus governance, operational scope</div>
+          <div class="toc-desc">No ongoing parameter governance, operational scope</div>
         </div>
       </div>
       <div class="toc-item">
@@ -325,7 +325,7 @@
           <tr><td class="label">Block time</td><td class="value">600 seconds target</td></tr>
           <tr><td class="label">Max supply</td><td class="highlight">4,669,201 SOST (hard cap by construction)</td></tr>
           <tr><td class="label">Initial reward</td><td class="value">7.85100863 SOST/block</td></tr>
-          <tr><td class="label">Coinbase split</td><td class="value">50% miner / 25% Gold Vault / 25% PoPC Pool</td></tr>
+          <tr><td class="label">Coinbase split</td><td class="value">50% miner / 25% Funding Vault / 25% PoPC Pool</td></tr>
           <tr><td class="label">Annual decay</td><td class="value">~9.03% (smooth exponential, no halvings)</td></tr>
           <tr><td class="label">Epoch length</td><td class="value">131,553 blocks (~2.503 years)</td></tr>
           <tr><td class="label">Difficulty</td><td class="value">ASERT Q16.16, 24h half-life, per-block adjustment</td></tr>
@@ -372,7 +372,7 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-label">No Consensus Governance</span>
+          <span class="spec-label">No Ongoing Parameter Governance</span>
         </div>
         <span class="spec-tag">IMMUTABLE</span>
       </div>
@@ -401,7 +401,7 @@
         <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Foundation executes operational actions under constitutional constraints and public attestations. No operational action can modify consensus rules.</p>
         <table class="code-table">
           <tr><th>Action</th><th>Scope</th></tr>
-          <tr><td class="label">Gold Vault conversion</td><td class="value">SOST&rarr;XAUT/PAXG purchases, every batch attested on-chain</td></tr>
+          <tr><td class="label">Funding Vault conversion</td><td class="value">SOST&rarr;XAUT/PAXG purchases, every batch attested on-chain</td></tr>
           <tr><td class="label">50/50 split adjustment</td><td class="value">Future purchases only, disclosed in batch reports</td></tr>
           <tr><td class="label">Purchase pause</td><td class="value">May pause without consensus, disclosed via batch reports</td></tr>
           <tr><td class="label">PoPC contract management</td><td class="value">May pause new contracts for critical bugs; existing unaffected</td></tr>
@@ -451,7 +451,7 @@
         <table class="code-table">
           <tr><th>Mechanic</th><th>Effect</th></tr>
           <tr><td class="label">Smooth exponential decay</td><td class="value">9.03% annual reduction in new issuance — no cliff events</td></tr>
-          <tr><td class="label">Slash recycling</td><td class="value">100% redistributed to PoPC Pool (50%) and Gold Vault (50%)</td></tr>
+          <tr><td class="label">Slash recycling</td><td class="value">100% redistributed to PoPC Pool (50%) and Funding Vault (50%)</td></tr>
           <tr><td class="label">Reputation limits</td><td class="value">Large commitments require proven track record</td></tr>
           <tr><td class="label">Long contracts</td><td class="value">9-12 month commitments remove SOST from circulation</td></tr>
         </table>
