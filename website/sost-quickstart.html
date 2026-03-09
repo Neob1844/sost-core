@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Quick Start</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #e63946;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.5px; }
+  .spec-meta { font-size: 11px; color: var(--text-dim); }
+  .spec-body { padding: 20px; }
+  .spec-body p { color: var(--text-secondary); margin-bottom: 12px; font-weight: 300; }
+  .spec-body p:last-child { margin-bottom: 0; }
+
+  /* CODE BLOCK */
+  .code-block { background: #0c0c0c; border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--green-primary); overflow-x: auto; margin-bottom: 16px; line-height: 1.9; }
+  .code-block .comment { color: var(--text-muted); }
+  .code-block .cmd { color: var(--text-primary); }
+  .code-block .flag { color: var(--cyan-primary); }
+  .code-block .val { color: var(--red-primary); }
+  .code-block .prompt { color: var(--text-dim); user-select: none; }
+
+  /* TABLE */
+  .code-table { width: 100%; border-collapse: collapse; }
+  .code-table th { text-align: left; font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 16px; border-bottom: 1px solid var(--border-dim); font-weight: 500; }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); font-size: 13px; vertical-align: top; }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); }
+  .code-table .value { color: var(--text-secondary); }
+  .code-table .highlight { color: var(--red-primary); font-weight: 500; }
+  .code-table .ok { color: var(--green-primary); }
+
+  /* QUICK COMMANDS */
+  .quick-cmd { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px 24px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 16px; transition: border-color 0.3s; }
+  .quick-cmd:hover { border-color: var(--border-med); }
+  .quick-cmd .num { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--red-primary); min-width: 32px; line-height: 1; padding-top: 2px; }
+  .quick-cmd .content { flex: 1; }
+  .quick-cmd .desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 300; }
+  .quick-cmd code { display: block; font-family: var(--font-mono); font-size: 13px; color: var(--green-primary); background: #0c0c0c; padding: 10px 14px; border-radius: 4px; border: 1px solid var(--border-dim); overflow-x: auto; }
+
+  /* FLOW DIAGRAM */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; padding: 20px 0; }
+  .flow-step { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 140px; }
+  .flow-step .flow-icon { font-size: 20px; margin-bottom: 6px; }
+  .flow-step .flow-label { font-size: 11px; color: var(--text-primary); font-weight: 600; letter-spacing: 0.5px; }
+  .flow-step .flow-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+  .flow-arrow { color: var(--red-primary); font-size: 20px; padding: 0 8px; font-weight: 700; }
+
+  /* NOTICE */
+  .notice { padding: 16px 20px; border-left: 3px solid var(--red-primary); background: var(--bg-card); border-radius: 0 6px 6px 0; margin-bottom: 16px; font-size: 13px; color: var(--text-secondary); }
+  .notice.green { border-left-color: var(--green-primary); }
+  .notice.cyan { border-left-color: var(--cyan-primary); }
+  .notice strong { color: var(--text-primary); font-weight: 600; }
+
+  /* STEP CARDS */
+  .step-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 20px; transition: border-color 0.3s; }
+  .step-card:hover { border-color: var(--border-med); }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--red-primary); border-radius: 4px; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #fff; }
+  .step-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .step-body { padding: 20px; }
+
+  /* LEVELS */
+  .level-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; margin-bottom: 16px; transition: border-color 0.3s; }
+  .level-card:hover { border-color: var(--border-med); }
+  .level-tag { font-size: 10px; letter-spacing: 2px; font-weight: 600; margin-bottom: 8px; }
+  .level-name { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .level-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-weight: 300; }
+  .level-cmd { margin-top: 12px; font-family: var(--font-mono); font-size: 12px; color: var(--green-primary); background: #0c0c0c; padding: 10px 14px; border-radius: 4px; border: 1px solid var(--border-dim); overflow-x: auto; }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .nav-links { display: none; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html" class="active">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 01 — HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Quick Start</div>
+    <h1 class="fade-in delay-1">Mine <span>SOST</span> in<br>5 commands</h1>
+    <p class="hero-sub fade-in delay-2">From zero to mining your first block. No GPU required &mdash; SOST uses <a href="sost-technology.html" style="color:var(--red-primary);text-decoration:none;border-bottom:1px solid var(--red-dim);">ConvergenceX</a>, a CPU-friendly proof-of-work algorithm designed for commodity hardware.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">CPU MINING</span>
+      <span class="sep">|</span>
+      <span class="val">Ubuntu 24.04 &middot; 4GB RAM &middot; Any x86_64 CPU</span>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — QUICK MINING: 5 COMMANDS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01 &mdash; QUICK MINING</div>
+      <h2 class="section-title">Five commands to <span class="accent">mine</span></h2>
+    </div>
+
+    <div class="notice green fade-in delay-1">
+      <strong>Copy &amp; paste these 5 commands</strong> to go from a fresh Ubuntu system to mining SOST. That's it.
+    </div>
+
+    <div class="fade-in delay-2">
+      <div class="quick-cmd">
+        <div class="num">1</div>
+        <div class="content">
+          <div class="desc">Install dependencies</div>
+          <code>sudo apt install -y build-essential cmake libssl-dev libsecp256k1-dev git</code>
+        </div>
+      </div>
+      <div class="quick-cmd">
+        <div class="num">2</div>
+        <div class="content">
+          <div class="desc">Clone and build</div>
+          <code>git clone <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--cyan-primary)">https://github.com/Neob1844/sost-core</a>.git &amp;&amp; cd sost-core &amp;&amp; mkdir build &amp;&amp; cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</code>
+        </div>
+      </div>
+      <div class="quick-cmd">
+        <div class="num">3</div>
+        <div class="content">
+          <div class="desc">Generate your wallet</div>
+          <code>./sost-cli --genesis ../genesis.json newaddress</code>
+        </div>
+      </div>
+      <div class="quick-cmd">
+        <div class="num">4</div>
+        <div class="content">
+          <div class="desc">Start the node</div>
+          <code>./sost-node --genesis ../genesis.json --chain chain.dat</code>
+        </div>
+      </div>
+      <div class="quick-cmd">
+        <div class="num">5</div>
+        <div class="content">
+          <div class="desc">Start mining (in a new terminal)</div>
+          <code>./sost-miner --genesis ../genesis.json --chain chain.dat --address sost1YOUR_ADDRESS_HERE --rpc 127.0.0.1:18232</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-3">
+      <strong>Replace</strong> <span style="color:var(--red-primary)">sost1YOUR_ADDRESS_HERE</span> with the address from step 3. The miner is single-threaded by design &mdash; one instance per CPU core for maximum efficiency.
+    </div>
+  </div>
+</section>
+
+<!-- 03 — REQUIREMENTS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02 &mdash; REQUIREMENTS</div>
+      <h2 class="section-title">What you <span class="accent">need</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">System Requirements</span>
+        </div>
+        <span class="spec-meta">minimum specs</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Component</th><th>Minimum</th><th>Recommended</th></tr>
+          <tr><td class="value">OS</td><td class="value">Ubuntu 22.04+</td><td class="ok">Ubuntu 24.04 LTS</td></tr>
+          <tr><td class="value">CPU</td><td class="value">Any x86_64</td><td class="ok">4+ cores (run multiple miners)</td></tr>
+          <tr><td class="value">RAM</td><td class="highlight">4 GB</td><td class="ok">8 GB+</td></tr>
+          <tr><td class="value">Disk</td><td class="value">2 GB free</td><td class="ok">10 GB SSD</td></tr>
+          <tr><td class="value">Network</td><td class="value">Internet connection</td><td class="ok">Low-latency broadband</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Build Dependencies</span>
+        </div>
+        <span class="spec-meta">apt packages</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">sudo apt install -y</span> <span class="flag">build-essential cmake libssl-dev libsecp256k1-dev git</span>
+        </div>
+        <table class="code-table">
+          <tr><th>Package</th><th>Purpose</th></tr>
+          <tr><td class="value">build-essential</td><td class="label">GCC/G++ compiler, make</td></tr>
+          <tr><td class="value">cmake</td><td class="label">Build system (3.16+)</td></tr>
+          <tr><td class="value">libssl-dev</td><td class="label">SHA-256 hashing (OpenSSL)</td></tr>
+          <tr><td class="value">libsecp256k1-dev</td><td class="label">ECDSA signatures (secp256k1)</td></tr>
+          <tr><td class="value">git</td><td class="label">Clone the repository</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — STEP BY STEP -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 03 &mdash; STEP BY STEP</div>
+      <h2 class="section-title">Detailed <span class="accent">walkthrough</span></h2>
+    </div>
+
+    <!-- Step 1: Clone -->
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <span class="step-title">Clone the repository</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">git clone</span> <span class="flag">https://github.com/Neob1844/sost-core.git</span>
+<span class="prompt">$ </span><span class="cmd">cd</span> <span class="val">sost-core</span>
+        </div>
+        <p>The repository includes genesis.json in the project root &mdash; this is the mainnet genesis block, required by all binaries.</p>
+      </div>
+    </div>
+
+    <!-- Step 2: Build -->
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <span class="step-title">Build from source</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">mkdir</span> <span class="val">build</span> <span class="cmd">&amp;&amp; cd</span> <span class="val">build</span>
+<span class="prompt">$ </span><span class="cmd">cmake</span> <span class="flag">..</span> <span class="flag">-DCMAKE_BUILD_TYPE=Release</span>
+<span class="prompt">$ </span><span class="cmd">make</span> <span class="flag">-j$(nproc)</span>
+        </div>
+        <p>This produces four binaries: <span style="color:var(--cyan-primary)">sost-node</span>, <span style="color:var(--cyan-primary)">sost-miner</span>, <span style="color:var(--cyan-primary)">sost-cli</span>, and <span style="color:var(--cyan-primary)">sost-rpc</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Run tests -->
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <span class="step-title">Verify the build (optional)</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">ctest</span> <span class="flag">--output-on-failure</span>
+        </div>
+        <p>Runs the full test suite. All tests should pass &mdash; if any fail, check that dependencies are installed correctly.</p>
+      </div>
+    </div>
+
+    <!-- Step 4: Generate wallet -->
+    <div class="step-card fade-in delay-2">
+      <div class="step-header">
+        <span class="step-num">4</span>
+        <span class="step-title">Generate your wallet and address</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="flag">--genesis ../genesis.json</span> <span class="val">newaddress</span>
+<span class="comment"># Output: sost1a3b7f9e2d... (your unique address)</span>
+        </div>
+        <p>This creates a <span style="color:var(--cyan-primary)">wallet.json</span> file with your private key. Your address starts with <span style="color:var(--red-primary)">sost1</span> followed by 40 hex characters. You can also manage funds from the <a href="https://wallet.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Web Wallet</a>.</p>
+        <div class="notice" style="margin-top:12px;">
+          <strong>Back up wallet.json immediately.</strong> If you lose this file, you lose access to your coins. There is no recovery mechanism.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Start node -->
+    <div class="step-card fade-in delay-2">
+      <div class="step-header">
+        <span class="step-num">5</span>
+        <span class="step-title">Start the full node</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--genesis ../genesis.json</span> <span class="flag">--chain chain.dat</span>
+<span class="comment"># Node starts on P2P port 19333, RPC port 18232</span>
+        </div>
+        <p>The node syncs the blockchain and exposes a JSON-RPC interface for the miner and CLI. Keep it running in its own terminal or use <span style="color:var(--cyan-primary)">tmux</span>/<span style="color:var(--cyan-primary)">screen</span>. Need peers? Join the <a href="sost-community.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">community</a>.</p>
+      </div>
+    </div>
+
+    <!-- Step 6: Mine -->
+    <div class="step-card fade-in delay-3">
+      <div class="step-header">
+        <span class="step-num">6</span>
+        <span class="step-title">Start mining</span>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--genesis ../genesis.json</span> <span class="flag">--chain chain.dat</span> \
+    <span class="flag">--address</span> <span class="val">sost1YOUR_ADDRESS</span> <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span>
+        </div>
+        <p>The miner connects to your local node via RPC and starts solving ConvergenceX puzzles. When a block is found, it's automatically submitted to the network. Track your blocks in the <a href="sost-explorer.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Explorer</a>.</p>
+        <div class="notice green" style="margin-top:12px;">
+          <strong>Multi-core mining:</strong> The miner is single-threaded. To use all CPU cores, run one miner instance per core in separate terminals &mdash; all with the same address and RPC endpoint.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 — HOW IT WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 04 &mdash; HOW IT WORKS</div>
+      <h2 class="section-title">Block <span class="accent">lifecycle</span></h2>
+    </div>
+
+    <div class="fade-in delay-1">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-icon" style="color:var(--cyan-primary)">&#9638;</div>
+          <div class="flow-label">MINER</div>
+          <div class="flow-sub">Solves ConvergenceX<br>CPU proof-of-work</div>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">
+          <div class="flow-icon" style="color:var(--green-primary)">&#9670;</div>
+          <div class="flow-label">BLOCK</div>
+          <div class="flow-sub">Header + coinbase<br>+ mempool txs</div>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">
+          <div class="flow-icon" style="color:var(--red-primary)">&#9654;</div>
+          <div class="flow-label">NODE</div>
+          <div class="flow-sub">Validates L1&ndash;L4<br>updates UTXO set</div>
+        </div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">
+          <div class="flow-icon" style="color:var(--cyan-primary)">&#9733;</div>
+          <div class="flow-label">NETWORK</div>
+          <div class="flow-sub">Propagated to<br>all peers via P2P</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Coinbase Distribution</span>
+        </div>
+        <span class="spec-meta">every block, immutable</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Output</th><th>Recipient</th><th>Share</th></tr>
+          <tr><td class="value">[0]</td><td class="highlight">Miner (you)</td><td class="ok">50%</td></tr>
+          <tr><td class="value">[1]</td><td class="label">Gold Vault</td><td class="label">25%</td></tr>
+          <tr><td class="value">[2]</td><td class="label"><a href="sost-popc.html" style="color:var(--text-dim);text-decoration:none;border-bottom:1px solid var(--border-med);">PoPC Pool</a></td><td class="label">25%</td></tr>
+        </table>
+        <p style="margin-top:12px;">This split is hardcoded in the protocol and enforced by consensus rules. No governance can change it. See <a href="sost-tokenomics.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Tokenomics</a> for full emission schedule.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 — TROUBLESHOOTING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 05 &mdash; TROUBLESHOOTING</div>
+      <h2 class="section-title">Common <span class="accent">issues</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Error Reference</span>
+        </div>
+        <span class="spec-meta">quick fixes</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Problem</th><th>Cause</th><th>Solution</th></tr>
+          <tr>
+            <td class="highlight">cmake: command not found</td>
+            <td class="label">Missing build tools</td>
+            <td class="value">sudo apt install build-essential cmake</td>
+          </tr>
+          <tr>
+            <td class="highlight">openssl/sha.h: No such file</td>
+            <td class="label">Missing OpenSSL headers</td>
+            <td class="value">sudo apt install libssl-dev</td>
+          </tr>
+          <tr>
+            <td class="highlight">secp256k1.h: No such file</td>
+            <td class="label">Missing libsecp256k1</td>
+            <td class="value">sudo apt install libsecp256k1-dev</td>
+          </tr>
+          <tr>
+            <td class="highlight">Connection refused (RPC)</td>
+            <td class="label">Node not running</td>
+            <td class="value">Start sost-node first, then the miner</td>
+          </tr>
+          <tr>
+            <td class="highlight">genesis mismatch</td>
+            <td class="label">Wrong genesis.json path</td>
+            <td class="value">Use --genesis ../genesis.json from build/</td>
+          </tr>
+          <tr>
+            <td class="highlight">wallet.json not found</td>
+            <td class="label">No wallet created yet</td>
+            <td class="value">Run sost-cli newaddress first</td>
+          </tr>
+          <tr>
+            <td class="highlight">Miner shows 0 H/s</td>
+            <td class="label">Waiting for chain sync</td>
+            <td class="value">Wait for node to sync, check RPC connection</td>
+          </tr>
+        </table>
+        <p style="margin-top:12px;color:var(--text-dim);font-size:12px;">Still stuck? Check the <a href="sost-faq.html" style="color:var(--text-secondary);text-decoration:none;border-bottom:1px solid var(--border-med);">FAQ</a> or reach out via <a href="sost-contact.html" style="color:var(--text-secondary);text-decoration:none;border-bottom:1px solid var(--border-med);">Contact</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 — SECURITY TIPS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 06 &mdash; SECURITY</div>
+      <h2 class="section-title">Protect your <span class="accent"><a href="sost-security.html" style="color:var(--red-primary);text-decoration:none;">coins</a></span></h2>
+    </div>
+
+    <div class="fade-in delay-1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div class="spec-block" style="margin-bottom:0;">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon red"></div>
+            <span class="spec-label">Wallet Security</span>
+          </div>
+        </div>
+        <div class="spec-body">
+          <p><strong style="color:var(--red-primary)">Back up wallet.json</strong> to offline storage immediately after creation. This file contains your private key &mdash; losing it means losing your coins permanently.</p>
+          <p>Encrypt the wallet using the CLI:</p>
+          <div class="code-block" style="margin-bottom:0;">
+<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="flag">--genesis ../genesis.json</span> <span class="val">encrypt</span>
+          </div>
+        </div>
+      </div>
+      <div class="spec-block" style="margin-bottom:0;">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon green"></div>
+            <span class="spec-label">Node Security</span>
+          </div>
+        </div>
+        <div class="spec-body">
+          <p><strong style="color:var(--green-primary)">Firewall configuration:</strong> Open port <span style="color:var(--cyan-primary)">19333</span> (P2P) for network participation. Keep RPC port <span style="color:var(--cyan-primary)">18232</span> restricted to localhost only.</p>
+          <div class="code-block" style="margin-bottom:0;">
+<span class="prompt">$ </span><span class="cmd">sudo ufw allow</span> <span class="val">19333/tcp</span>
+<span class="comment"># Do NOT expose 18232 to the internet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-2" style="margin-top:16px;">
+      <strong>Coinbase maturity:</strong> Mined coins require <a href="sost-tokenomics.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">1000 block confirmations</a> (~7 days) before they can be spent. This is a consensus rule and cannot be bypassed.
+    </div>
+  </div>
+</section>
+
+<!-- 08 — THREE LEVELS -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 07 &mdash; THREE LEVELS</div>
+      <h2 class="section-title">Choose your <span class="accent">depth</span></h2>
+    </div>
+
+    <div class="fade-in delay-1">
+      <div class="level-card" style="border-left:3px solid var(--green-primary);">
+        <div class="level-tag" style="color:var(--green-primary);">LEVEL 1</div>
+        <div class="level-name">Solo Miner</div>
+        <div class="level-desc">Mine SOST with a single node and miner. The simplest setup &mdash; just the 5 commands above. You receive 50% of each block reward directly to your <a href="sost-wallet.html" style="color:var(--green-primary);text-decoration:none;border-bottom:1px solid var(--green-dim);">wallet</a> address. Ideal for getting started and learning the protocol.</div>
+        <div class="level-cmd">
+./sost-miner --genesis ../genesis.json --chain chain.dat --address sost1... --rpc 127.0.0.1:18232
+        </div>
+      </div>
+
+      <div class="level-card" style="border-left:3px solid var(--cyan-primary);">
+        <div class="level-tag" style="color:var(--cyan-primary);">LEVEL 2</div>
+        <div class="level-name">Full Node Operator</div>
+        <div class="level-desc">Run a persistent full node that validates the entire chain and serves peers. Use systemd for auto-restart, configure firewall rules, and monitor chain health via the RPC interface. See <a href="sost-infrastructure.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Infrastructure</a> for deployment guides. Strengthens the network for everyone.</div>
+        <div class="level-cmd">
+./sost-node --genesis ../genesis.json --chain chain.dat --port 19333 --rpc-port 18232
+        </div>
+      </div>
+
+      <div class="level-card" style="border-left:3px solid var(--red-primary);">
+        <div class="level-tag" style="color:var(--red-primary);">LEVEL 3</div>
+        <div class="level-name">Protocol Developer</div>
+        <div class="level-desc">Dive into the C++17 source code. Understand the UTXO model, ConvergenceX PoW, ASERT/cASERT difficulty adjustment, and the 4-layer block validation pipeline. Run the test suite, read the <a href="sost-whitepaper.html" style="color:var(--red-primary);text-decoration:none;border-bottom:1px solid var(--red-dim);">whitepaper</a>, and <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--red-primary);text-decoration:none;border-bottom:1px solid var(--red-dim);">contribute on GitHub</a>.</div>
+        <div class="level-cmd">
+cd build &amp;&amp; ctest --output-on-failure &amp;&amp; ./test-transaction &amp;&amp; ./test-utxo-set
+        </div>
+      </div>
+    </div>
+
+    <div class="notice cyan fade-in delay-2" style="margin-top:8px;">
+      <strong>Full documentation:</strong> See <a href="sost-getting-started.html" style="color:var(--cyan-primary)">Getting Started</a> for detailed CLI flags, <a href="sost-technology.html" style="color:var(--cyan-primary)">Technology</a> for protocol internals, and the <a href="sost-whitepaper.html" style="color:var(--cyan-primary)">Whitepaper</a> for the full specification.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">BSL 1.1</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+</body>
+</html>
