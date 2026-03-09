@@ -213,7 +213,7 @@
       <h2 class="section-title">Two-Vault <span class="gold">Architecture</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy precious-metal tokens. The Reserve Vault needs maximum immutability. Splitting them achieves both without mixing hot and cold functions.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy precious-metal tokens. The Heritage Reserve needs maximum immutability. Splitting them achieves both without mixing hot and cold functions.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -232,7 +232,7 @@
         <span class="arrow">&rarr;</span>
       </div>
       <div class="arch-layer">
-        <h3 style="color:var(--green-primary)">Reserve Vault</h3>
+        <h3 style="color:var(--green-primary)">Heritage Reserve</h3>
         <p>Heritage sealed (Ethereum)</p>
       </div>
     </div>
@@ -245,13 +245,13 @@
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ETHEREUM MAINNET</div>
-        <h3 style="color:var(--green-primary)">Heritage Reserve Vault</h3>
+        <h3 style="color:var(--green-primary)">Heritage Reserve</h3>
         <p>Holds allowlisted precious-metal tokens (XAUt and PAXG). Sealed by default &mdash; no outbound transfers in normal operation. Reserve assets are intended to remain perpetual and untouched while SOST exists, except under Emergency Catastrophe authorization.</p>
       </div>
     </div>
 
     <div class="notice fade-in delay-3">
-      <strong>No bridge, no wSOST.</strong> No trustless cross-chain mechanism is used. Automation is achieved through a deterministic execution stack with public attestations at every stage. No smart contract dependency between chains beyond the Reserve Vault itself.
+      <strong>No bridge, no wSOST.</strong> No trustless cross-chain mechanism is used. Automation is achieved through a deterministic execution stack with public attestations at every stage. No smart contract dependency between chains beyond the Heritage Reserve itself.
     </div>
   </div>
 </section>
@@ -264,7 +264,7 @@
       <h2 class="section-title">Constitutional <span class="gold">Rules</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Project-level commitments enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Reserve Vault behavior and reporting). Immutable at genesis.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Project-level commitments enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting). Immutable at genesis.</p>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -278,8 +278,8 @@
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="gold">G1</td><td class="value">Consensus Allocation &mdash; Every valid block MUST pay the Funding Vault exactly q = reward // 4. Any block that fails to do so is invalid.</td></tr>
-          <tr><td class="gold">G2</td><td class="value">Two-Vault Separation &mdash; Funding Vault is operational; Reserve Vault is cold storage. All purchased XAUT/PAXG MUST be deposited into the Reserve Vault.</td></tr>
-          <tr><td class="gold">G3</td><td class="value">Heritage Reserve &mdash; Reserve Vault deployed on Ethereum mainnet, sealed by default. No outbound transfers in normal operation. Perpetual while SOST exists.</td></tr>
+          <tr><td class="gold">G2</td><td class="value">Two-Vault Separation &mdash; Funding Vault is operational; Heritage Reserve is sealed storage. All purchased XAUT/PAXG MUST be deposited into the Heritage Reserve.</td></tr>
+          <tr><td class="gold">G3</td><td class="value">Heritage Reserve &mdash; Heritage Reserve deployed on Ethereum mainnet, sealed by default. No outbound transfers in normal operation. Perpetual while SOST exists.</td></tr>
           <tr><td class="gold">G4</td><td class="value">Purchase Start Delay &mdash; Purchases begin no earlier than 6 months after genesis (2026-03-13) and only once market readiness is met with verifiable execution venue.</td></tr>
           <tr><td class="gold">G5</td><td class="value">Batching / Anti-Momentum &mdash; Purchases executed in batches following rule-based TWAP policy, not discretionary market-timing.</td></tr>
           <tr><td class="gold">G6</td><td class="value">Allowlist v2 &mdash; Reserve limited to allowlisted precious-metal tokens: PAXG and XAUt only. USDC/USDT permitted only as temporary staging (&le;72 hours).</td></tr>
@@ -316,7 +316,7 @@
           <tr><th>Stage</th><th>Role</th><th>Detail</th></tr>
           <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Funding Vault balance on SOST chain, detects batch threshold</td></tr>
           <tr><td class="gold">Batcher</td><td class="value">Order</td><td class="value">Creates signed execution order when threshold is met</td></tr>
-          <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips via CEX/OTC/DEX, purchases XAUT/PAXG, deposits to Reserve Vault</td></tr>
+          <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips via CEX/OTC/DEX, purchases XAUT/PAXG, deposits to Heritage Reserve</td></tr>
           <tr><td class="gold">Attestor</td><td class="value">Audit</td><td class="value">Publishes public batch record with full transaction proofs</td></tr>
         </table>
       </div>
@@ -369,7 +369,7 @@ Type:  limit orders with explicit slippage tolerance
           <tr><td class="label">Venue(s)</td><td class="value">Exchange or OTC counterparties used</td></tr>
           <tr><td class="label">Realized TWAP/VWAP</td><td class="value">Average execution price and total slippage</td></tr>
           <tr><td class="label">Purchase proof</td><td class="value">XAUT/PAXG acquisition records</td></tr>
-          <tr><td class="label">Deposit hash</td><td class="value">Transaction hash proving deposit into Reserve Vault</td></tr>
+          <tr><td class="label">Deposit hash</td><td class="value">Transaction hash proving deposit into Heritage Reserve</td></tr>
         </table>
       </div>
     </div>
@@ -492,7 +492,7 @@ Type:  limit orders with explicit slippage tolerance
         <table class="code-table">
           <tr><th>Action</th><th>Code</th><th>Description</th></tr>
           <tr><td class="highlight">ROTATE</td><td class="gold">E1</td><td class="value">Rotate reserve holdings to other allowlisted precious-metal tokens (e.g. XAUt &harr; PAXG)</td></tr>
-          <tr><td class="highlight">LIQUIDATE&rarr;BUY&rarr;REDISTRIBUTE</td><td class="gold">E2</td><td class="value">Liquidate precious-metal tokens to acquire SOST and redistribute to PoPC Pool (50%) and Gold Vault (50%), with a fully auditable trail. No supply is destroyed.</td></tr>
+          <tr><td class="highlight">LIQUIDATE&rarr;BUY&rarr;REDISTRIBUTE</td><td class="gold">E2</td><td class="value">Liquidate precious-metal tokens to acquire SOST and redistribute to PoPC Pool (50%) and Funding Vault (50%), with a fully auditable trail. No supply is destroyed.</td></tr>
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.6;">No other action types are permitted. The Foundation may pause purchases or adjust future purchase policy operationally without consensus, disclosed via batch reports.</p>
       </div>
@@ -512,7 +512,7 @@ Type:  limit orders with explicit slippage tolerance
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--gold-dim);color:var(--gold-primary);">DEFAULT STATE</div>
         <h3 style="color:var(--gold-primary)">Heritage (Sealed)</h3>
-        <p>The Reserve Vault remains sealed by default. No outbound transfers occur in normal operation. The precious-metal tokens remain a permanent, publicly verifiable reserve record. Decades of collective work &mdash; converted to metals exposure &mdash; preserved.</p>
+        <p>The Heritage Reserve remains sealed by default. No outbound transfers occur in normal operation. The precious-metal tokens remain a permanent, publicly verifiable reserve record. Decades of collective work &mdash; converted to metals exposure &mdash; preserved.</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">NETWORK LIFECYCLE</div>
@@ -567,7 +567,7 @@ Type:  limit orders with explicit slippage tolerance
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--gold-dim);color:var(--gold-primary);">PHASE 1 &middot; GENESIS &ndash; YEAR 3</div>
         <h3 style="color:var(--gold-primary)">Tokenized Reserve</h3>
-        <p>Reserve Vault holds XAUT/PAXG tokens on Ethereum mainnet. No infrastructure needed. Liquid, auditable, immediate. Risks: issuer dependency (Tether, Paxos), counterparty risk.</p>
+        <p>Heritage Reserve holds XAUT/PAXG tokens on Ethereum mainnet. No infrastructure needed. Liquid, auditable, immediate. Risks: issuer dependency (Tether, Paxos), counterparty risk.</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">PHASE 2 &middot; YEAR 3&ndash;5</div>
@@ -637,7 +637,7 @@ Type:  limit orders with explicit slippage tolerance
           <tr><th>Layer</th><th>Trust Level</th><th>Mechanism</th></tr>
           <tr><td class="label">Coinbase allocation</td><td class="green">Trustless</td><td class="value">Consensus-enforced (hardcoded validation rules)</td></tr>
           <tr><td class="label">SOST &rarr; metals conversion</td><td class="value">Auditable</td><td class="value">Foundation-executed, public batch records, TWAP policy</td></tr>
-          <tr><td class="label">Reserve Vault custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses, on-chain proof</td></tr>
+          <tr><td class="label">Heritage Reserve custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses, on-chain proof</td></tr>
           <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;75% miner signal + Foundation Execution Order</td></tr>
           <tr><td class="label">Cross-chain bridge</td><td class="green">None required</td><td class="value">No bridge, no wSOST, no smart contract dependency</td></tr>
         </table>

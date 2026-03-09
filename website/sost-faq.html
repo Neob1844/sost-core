@@ -145,7 +145,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 4 GB RAM and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Gold Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 4 GB RAM and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -190,7 +190,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is the block reward and emission schedule?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST emission follows a smooth epoch-based decay governed by the mathematical constant q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Initial reward R&#8320; = <strong>7.85100863 SOST/block</strong> (785,100,863 stocks)<br>&bull; Each epoch is exactly 131,553 blocks (~2.502907875095892 years — the Feigenbaum alpha constant &alpha;)<br>&bull; Decay: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) where epoch = height &divide; 131,553<br>&bull; No halvings, no cliffs — continuous ~9.03% annual decay<br>&bull; Asymptotic maximum supply: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, strict limit by mathematical construction)<br>&bull; ~95% mined in ~30 years (~12 epochs)<br>&bull; Split: 50% miner &middot; 25% Gold Vault &middot; 25% PoPC Pool<br>&bull; All arithmetic is deterministic integer-only (Q16.16 fixed-point). No floating-point operations — that would be a consensus failure.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST emission follows a smooth epoch-based decay governed by the mathematical constant q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Initial reward R&#8320; = <strong>7.85100863 SOST/block</strong> (785,100,863 stocks)<br>&bull; Each epoch is exactly 131,553 blocks (~2.502907875095892 years — the Feigenbaum alpha constant &alpha;)<br>&bull; Decay: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) where epoch = height &divide; 131,553<br>&bull; No halvings, no cliffs — continuous ~9.03% annual decay<br>&bull; Asymptotic maximum supply: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, strict limit by mathematical construction)<br>&bull; ~95% mined in ~30 years (~12 epochs)<br>&bull; Split: 50% miner &middot; 25% Funding Vault &middot; 25% PoPC Pool<br>&bull; All arithmetic is deterministic integer-only (Q16.16 fixed-point). No floating-point operations — that would be a consensus failure.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -215,12 +215,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does the gold reserve work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Metals Funding Vault</strong> by consensus. The Foundation periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve Vault</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Metals Funding Vault</strong> by consensus. The Foundation periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can anyone access or move the gold reserve?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Reserve Vault is Heritage sealed. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Heritage Reserve is sealed by default. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -245,7 +245,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (March 13, 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Gold Vault: <code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code>) to support the protocol and endow it with perpetual added value.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (March 13, 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Funding Vault: <code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code>) to support the protocol and endow it with perpetual added value.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -260,7 +260,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What happens if I fail a PoPC audit?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Gold Vault. Your address is permanently blacklisted. No human can reverse the slash or remove the blacklist once triggered. The protocol has no appeal mechanism.<br><br><strong>Model B:</strong> immutable escrow deposit — you recover 100% of your metals at maturity, with no slash risk.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Model A only:</strong> your SOST bond is automatically slashed — 50% goes to the PoPC Pool, 50% to the Funding Vault. Your address is permanently blacklisted. No human can reverse the slash or remove the blacklist once triggered. The protocol has no appeal mechanism.<br><br><strong>Model B:</strong> immutable escrow deposit — you recover 100% of your metals at maturity, with no slash risk.</div></div>
     </div>
   </div>
 </section>
