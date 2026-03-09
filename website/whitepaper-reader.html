@@ -1474,7 +1474,7 @@ Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-45" class="wp-h">6.5 Dynamic Bond — Model A</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The bond is always denominated in USD value, converted to SOST at market price (7-day TWAP). As SOST appreciates relative to gold, the bond percentage increases gradually to maintain deterrence. The bond is designed to create deterrence and alignment, not to fully collateralize the committed asset. Sub-collateralization is intentional and compensated by layered deterrence (bond + reputation + blacklist + size limits).</p>
+<p class="wp-p">All fiat-denominated values use USD as the reference currency for documentation. The protocol is currency-agnostic — bond sizing depends on the SOST/gold ratio, not on any specific fiat currency. The bond is always denominated in fiat value, converted to SOST at market price (7-day TWAP). As SOST appreciates relative to gold, the bond percentage increases gradually to maintain deterrence. The bond is designed to create deterrence and alignment, not to fully collateralize the committed asset. Sub-collateralization is intentional and compensated by layered deterrence (bond + reputation + blacklist + size limits).</p>
 <pre class="wp-code">DYNAMIC BOND CALCULATION:
 
   ratio = sost_price / gold_oz_price

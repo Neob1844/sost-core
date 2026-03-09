@@ -90,7 +90,7 @@ location /rpc {
 - [ ] **DoS protection / peer banning:** rate-limit connections per IP, ban invalid block/tx senders
 - [ ] **Misbehavior scoring:** track bad peer behavior, auto-disconnect at threshold
 - [ ] **Max peers limit:** cap inbound connections (e.g., 125 like Bitcoin)
-- [ ] **P2P encryption (optional):** X25519 + ChaCha20-Poly1305 (Noise-lite protocol)
+- [x] **P2P encryption (default on):** X25519 + ChaCha20-Poly1305 (Noise-lite protocol)
   - Add `--p2p-enc off|on|required` flag
   - EKEY handshake → derive shared secret → encrypt all messages
   - File to modify: `src/sost-node.cpp` (p2p_send/p2p_recv + handle_peer)
