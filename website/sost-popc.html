@@ -256,7 +256,7 @@
       <h2 class="section-title">Model A — <span class="accent">Self-Custody Bonds</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For crypto natives, miners, and traders. Your gold <strong style="color:var(--text-primary)">never leaves your wallet</strong>. Only the SOST bond is at risk.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For crypto natives, miners, and traders. Your gold <strong style="color:var(--text-primary)">never leaves your wallet</strong>. Only the posted SOST bond is at risk.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -307,7 +307,7 @@
 <span class="keyword">if</span> <span class="num">0.4</span>    &le; ratio &lt; <span class="num">0.5</span>     &rarr;  bond = <span class="num">29%</span>
 <span class="keyword">if</span> ratio &ge; <span class="num">0.5</span>              &rarr;  bond = <span class="num">30%</span>  <span class="comment">// maximum</span>
 
-bond_sost = bond_usd / sost_price_TWAP_7d</div>
+bond_sost = bond_fiat / sost_price_TWAP_7d</div>
         <table class="code-table">
           <tr><th>Gold Price</th><th>SOST Price</th><th>Ratio</th><th>Bond %</th></tr>
           <tr><td class="value">$2,700</td><td class="value">$1</td><td class="cyan">0.00037</td><td class="highlight">15%</td></tr>
@@ -335,11 +335,11 @@ bond_sost = bond_usd / sost_price_TWAP_7d</div>
 r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
 <span class="keyword">if</span> r &lt; <span class="fn">p</span>(reputation_stars):
     <span class="keyword">AUDIT REQUIRED</span></div>
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Verification is fully scripted — no humans involved:</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Verification is rule-based and script-driven. In Phase 1, operational steps are executed by the Foundation's verifier infrastructure until full automation is deployed:</p>
         <table class="code-table">
           <tr><th>Step</th><th>Action</th></tr>
           <tr><td class="label">1</td><td class="value">User signs message with Ethereum wallet</td></tr>
-          <tr><td class="label">2</td><td class="value">ecrecover() confirms identity</td></tr>
+          <tr><td class="label">2</td><td class="value">ecrecover() confirms control of the declared wallet</td></tr>
           <tr><td class="label">3</td><td class="value">Verifier checks: token.balanceOf(wallet) &ge; committed_amount</td></tr>
           <tr><td class="label">4</td><td class="value">EOA verification: extcodesize == 0 (no smart contracts)</td></tr>
           <tr><td class="label">5</td><td class="value">Continuous custody check via historical balance sampling</td></tr>
@@ -375,7 +375,7 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
       <h2 class="section-title">Model B — <span class="accent">Timelocked Escrow</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For precious metal investors and gold holders. Deposit XAUT/PAXG into an immutable escrow contract. Receive SOST <strong style="color:var(--green-primary)">immediately</strong>. No audits. No slash. No bond.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For precious metal investors and gold holders. Deposit XAUT/PAXG into an immutable escrow contract. Receive SOST <strong style="color:var(--green-primary)">immediately</strong>. No audits, no slash risk, and no bond requirement.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -416,7 +416,7 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
           <tr><td class="label">Admin key</td><td class="highlight">None</td></tr>
           <tr><td class="label">Emergency withdrawal</td><td class="highlight">None</td></tr>
           <tr><td class="label">Early exit</td><td class="highlight">Not possible</td></tr>
-          <tr><td class="label">Source code</td><td class="value">Published, verified on explorer, independently audited</td></tr>
+          <tr><td class="label">Source code</td><td class="value">Published and verified on explorer. Independent audit planned before mainnet activation of Model B.</td></tr>
         </table>
       </div>
     </div>
