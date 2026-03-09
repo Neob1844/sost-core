@@ -792,7 +792,7 @@ async function showAddress(addr){
       '<div class="fee-note" style="margin-top:16px;border-left-color:var(--cyan)">'+
         '<b style="color:var(--cyan)">\u2139 About maturity:</b> Coinbase UTXOs (block rewards) require <b>'+COINBASE_MATURITY+' confirmations (~7 days)</b> before they can be spent. '+
         'This reinforces SOST\u2019s store-of-value character and protects against chain reorganizations. Standard transfer outputs are spendable immediately.'+
-        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Gold Vault funds are constitutionally reserved</b> for purchasing XAUT/PAXG tokens and cannot be spent as SOST on-chain.':'')+
+        (role==='GOLD VAULT'?' <b style="color:var(--gold)">Funding Vault funds are constitutionally reserved</b> for purchasing XAUT/PAXG tokens and cannot be spent as SOST on-chain.':'')+
         (role==='POPC POOL'?' <b style="color:var(--cyan)">PoPC Pool funds accumulate</b> and are distributed to participants who complete the Proof of Personal Custody audit protocol.':'')+
       '</div>';
     _navStack[_navStack.length-1].label=sH(addr);renderNav();
@@ -956,7 +956,7 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   'Every block reward (subsidy + fees) is split constitutionally:<br>'+
   '<span style="color:var(--orange)">50%</span> → Miner &nbsp;&nbsp;'+
-  '<span style="color:var(--gold)">25%</span> → Gold Vault (automatic XAUT/PAXG purchase) &nbsp;&nbsp;'+
+  '<span style="color:var(--gold)">25%</span> → Funding Vault (automatic XAUT/PAXG purchase) &nbsp;&nbsp;'+
   '<span style="color:var(--cyan)">25%</span> → PoPC Pool (Proof of Personal Custody rewards)<br><br>'+
   'Emission: R(e) = R₀ × q<sup>e</sup> where q = e<sup>-1/4</sup> ≈ 0.7788 (exponential decay, q = e\u207B\u00B9\u2044\u2084). Max supply: ~4,669,201 SOST.</div></div>'+
   '<div style="margin-top:12px;padding:10px 16px;font-size:11px;color:rgba(255,255,255,.35);border-top:1px solid rgba(255,255,255,.06)">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan)">MIT License</a> \u2014 Open source. Free to use, modify, and distribute.</div>';

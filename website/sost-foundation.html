@@ -258,7 +258,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Operation</th><th>Constraint</th></tr>
-          <tr><td class="label">Gold Vault conversion</td><td class="value">Execute SOST&rarr;XAUT/PAXG purchases. Every batch attested on-chain.</td></tr>
+          <tr><td class="label">Funding Vault conversion</td><td class="value">Execute SOST&rarr;XAUT/PAXG purchases. Every batch attested on-chain.</td></tr>
           <tr><td class="label">50/50 split adjustment</td><td class="value">Change XAUt/PAXG acquisition split for future purchases only. Disclosed in batch reports.</td></tr>
           <tr><td class="label">Purchase pause</td><td class="value">May pause gold purchases without consensus. Disclosed via batch reports.</td></tr>
           <tr><td class="label">Purchase redirection</td><td class="value">Redirect future purchases between issuers (e.g., if issuer risk increases).</td></tr>
@@ -414,12 +414,12 @@
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="highlight">C1</td><td class="value">Total supply upper-bounded by ~4,669,201 SOST by construction. Only issuance is subsidy(height).</td></tr>
           <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.</td></tr>
-          <tr><td class="highlight">C3</td><td class="value">Gold Vault destination immutable. Reserve Vault Heritage sealed. Emergency dual gate only.</td></tr>
+          <tr><td class="highlight">C3</td><td class="value">Funding Vault destination immutable. Heritage Reserve sealed. Emergency dual gate only.</td></tr>
           <tr><td class="highlight">C4</td><td class="value">Reserve shall not be sold except under Emergency Catastrophe (E2) or Dissolution.</td></tr>
           <tr><td class="highlight">C5</td><td class="value">Dissolution requires 90 days zero blocks + 60-day public timelock.</td></tr>
           <tr><td class="highlight">C6</td><td class="value">Dissolution is one-way and irreversible.</td></tr>
           <tr><td class="highlight">C7</td><td class="value">Slash is automatic. No human can override once triggered.</td></tr>
-          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Gold Vault). No burn. Immutable.</td></tr>
+          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Funding Vault). No burn. Immutable.</td></tr>
           <tr><td class="highlight">C9</td><td class="value">Dynamic bond table: 12% to 30% based on SOST/gold ratio.</td></tr>
           <tr><td class="highlight">C10</td><td class="value">No admin key, pause function, or upgrade proxy on PoW chain.</td></tr>
           <tr><td class="highlight">C11</td><td class="value">ConvergenceX parameters fixed at genesis for epoch 0.</td></tr>
@@ -490,7 +490,7 @@
         <span class="spec-tag">PERPETUAL</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;">The Reserve Vault remains sealed by default. No outbound transfers occur in normal operation. The gold tokens remain a permanent, publicly verifiable reserve record. Heritage is the default — the absence of consensus activity cannot authorize reserve movements.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;">The Heritage Reserve remains sealed by default. No outbound transfers occur in normal operation. The gold tokens remain a permanent, publicly verifiable reserve record. Heritage is the default — the absence of consensus activity cannot authorize reserve movements.</p>
       </div>
     </div>
 

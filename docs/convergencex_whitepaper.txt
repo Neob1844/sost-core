@@ -4,7 +4,7 @@
 
 **ConvergenceX  •  PoPC  •  Metals Reserve (tokenized, allowlisted)**
 
-**Technical Whitepaper v3.5**
+**Technical Whitepaper v4.0**
 
 > **Living Document Notice:** This whitepaper reflects the genesis design of SOST Protocol. SOST is a
 > dynamic project under continuous development, with ongoing improvements in narrative, DeFi mechanics,
@@ -13,7 +13,7 @@
 > Consensus rules (Section 10) remain immutable at genesis. Updated versions will be published with
 > full errata documentation.
 
-SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Reserve Vault on Ethereum mainnet. The Reserve Vault is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.
+SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Heritage Reserve on Ethereum mainnet. The Heritage Reserve is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.
 
 ALLOWLIST (v2 — conservative scope)
 In mainnet v2, the reserve is limited to tokenized precious metals with public audits and verifiable liquidity.
@@ -23,7 +23,7 @@ An asset may be added only if it satisfies: (1) verifiable custody/audits, (2) s
 
 A mathematically grounded Proof-of-Work based on verifiable dynamical-system certificates.
 
-No ICO • No Premine • No VCs • No Consensus Governance
+No ICO • No Premine • No VCs • No Ongoing Parameter Governance
 
 The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.
 
@@ -63,6 +63,12 @@ Appendix B — Serialization (Normative)
 Appendix C — PRNG Specification (Normative)
 Appendix D — Test Vectors (Normative)
 Appendix G — Emergency Authorization & Execution Order (Normative)
+Appendix M — Removed: Adaptive Mode (Historical, Non-Normative)
+
+Historical Appendices (Non-Normative):
+Appendix F — Errata v3.3
+Appendix H — Errata v3.4
+Appendix I — Errata v3.5
 
 1. Abstract
 
@@ -76,7 +82,7 @@ Every block splits the coinbase reward by consensus:
 
 25% to a PoPC Pool powering Proof of Personal Custody.
 
-Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve Vault (sealed by default). The Foundation may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally, but previously purchased reserve assets are intended to remain perpetual and cannot be moved except under the Emergency Catastrophe procedure (≥75% miner signaling + Foundation Execution Order).
+Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve (sealed by default). The Foundation may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally, but previously purchased reserve assets are intended to remain perpetual and cannot be moved except under the Emergency Catastrophe procedure (≥75% miner signaling + Foundation Execution Order).
 
 PoPC audit randomness derives exclusively from ConvergenceX block entropy: (block_id, commit, checkpoints_root). No external oracle is required for consensus-critical validation; off-chain data is used only for operational PoPC policy and settlement.
 
@@ -107,7 +113,7 @@ RandomX and Ethash advanced ASIC-resistance via memory-hardness and reduced spec
 
 2.3 Crypto Has Limited Structural Reserves
 
-Many systems discuss reserves or backing, but few embed structural accumulation as a constitutional side effect of mining. SOST implements a consensus-enforced allocation to an on-chain vault (Funding Vault), with an operational conversion pipeline into a separate Heritage sealed Reserve Vault on Ethereum mainnet, with an emergency catastrophe procedure for exceptional circumstances.
+Many systems discuss reserves or backing, but few embed structural accumulation as a constitutional side effect of mining. SOST implements a consensus-enforced allocation to an on-chain vault (Funding Vault), with an operational conversion pipeline into a separate Heritage Reserve (sealed) on Ethereum mainnet, with an emergency catastrophe procedure for exceptional circumstances.
 
 3. ConvergenceX: Proof of Irreversible Convergence
 
@@ -290,36 +296,37 @@ The stability context `stctx` is derived from `header_core`, `seed`, and `checkp
 #### CASERT Stability Parameters
 
 The intensity of perturbation probes adapts to network conditions through the CASERT
-overlay (Section 3.12). CASERT computes how many blocks the chain is ahead of
-the ideal schedule (genesis + height × TARGET_SPACING) and assigns levels L1-L5:
+overlay (Section 3.12). CASERT is a miner-side overlay (not consensus-critical
+for validation). It computes how many blocks the chain is ahead of the ideal
+schedule (genesis + height × TARGET_SPACING) and assigns levels:
 
-  ahead = 0–4   → L1  (neutral, base verification)
-  ahead = 5–19  → L2  (light hardening)
-  ahead = 20–49 → L3  (moderate hardening)
-  ahead = 50–74 → L4  (strong hardening)
-  ahead = 75+   → L5  (maximum CX cost)
+  ahead = 0–4    → L1   (neutral, base verification)
+  ahead = 5–25   → L2   (light hardening)
+  ahead = 26–50  → L3   (moderate hardening)
+  ahead = 51–75  → L4   (strong hardening)
+  ahead = 76+    → L5+  (unbounded hardening, scale = level + 1)
 
 Stability parameters by level:
 
-  scale  = level  (L1=1, L2=2, L3=3, L4=4, L5=5)
-  k      = 4      (fixed: always 4 probes)
-  steps  = 4      (fixed: always 4 refinement steps per probe)
-  margin = 180    (fixed)
+  scale  = level + 1  (L1→1, L2→2, L3→3, ... unbounded)
+  k      = 4          (fixed: always 4 probes)
+  steps  = 4          (fixed: always 4 refinement steps per probe)
+  margin = 180        (fixed)
 
 Examples:
 
 | Condition | Level | Scale | k | Steps | Margin |
 |---|---|---|---|---|---|
 | On-time or behind (ahead 0–4) | L1 | 1 | 4 | 4 | 180 |
-| Slightly ahead (5–19 blocks) | L2 | 2 | 4 | 4 | 180 |
-| Moderately ahead (20–49 blocks) | L3 | 3 | 4 | 4 | 180 |
-| Significantly ahead (50–74 blocks) | L4 | 4 | 4 | 4 | 180 |
-| Far ahead (75+ blocks) | L5 | 5 | 4 | 4 | 180 |
+| Slightly ahead (5–25 blocks) | L2 | 2 | 4 | 4 | 180 |
+| Moderately ahead (26–50 blocks) | L3 | 3 | 4 | 4 | 180 |
+| Significantly ahead (51–75 blocks) | L4 | 4 | 4 | 4 | 180 |
+| Far ahead (76+ blocks) | L5+ | 6+ | 4 | 4 | 180 |
 
 At L1 (neutral), 4 independent probes each run 4 gradient steps with
 perturbation scale ±1. This is the lightest configuration. When the chain is
 behind schedule, ASERT alone handles difficulty reduction — CASERT stays at L1.
-When the chain runs ahead, scale increases through L2-L5
+When the chain runs ahead, scale increases through L2 and beyond with no ceiling
 — an attacker mining blocks quickly faces increasingly strict stability requirements,
 gaining no advantage. This asymmetric policy ensures that relaxation is only available
 when the chain genuinely needs help, never when an attacker is dominating hashrate.
@@ -398,7 +405,7 @@ The seed combines `header_core` (binding all header fields), the block key (shar
 
 #### Tree Structure
 
-ConvergenceX produces 16 checkpoints during the 100,000-round convergence loop, one every 6,250 rounds (plus a final checkpoint at round 100,000 if not already aligned). Each checkpoint captures a snapshot of the computation state:
+ConvergenceX produces 16 checkpoints during the 100,000-round convergence loop, one every 6,250 rounds (100,000 / 6,250 = 16 exactly). Each checkpoint captures a snapshot of the computation state:
 
 ```
 CHECKPOINT SCHEMA:
@@ -447,7 +454,7 @@ INTEGER ARITHMETIC PRIMITIVES (consensus-critical):
     return max(-2^31, min(2^31 - 1, x))
 
   u32(x):  return x & 0xFFFFFFFF
-  u64(x):  return x & 0xFFFFFFFFFFFF
+  u64(x):  return x & 0xFFFFFFFFFFFFFFFF
 
   sat_u64_add(a, b):
     return min(a + b, 2^64 - 1)
@@ -524,7 +531,11 @@ MEMORY ACCESS ANALYSIS (per attempt):
 
   Access pattern:      Pseudo-random, state-dependent
   Predictability:      Zero — each index depends on state from prior round
-  Locality:            None — uniform distribution across 4 GB
+  Locality:            None during mining — uniform distribution across 4 GB
+                       (L3 cache reuse applies to dataset/scratchpad CONSTRUCTION,
+                       which is sequential. During MINING, accesses are pseudo-random.
+                       CPU advantage comes from ALU operations and dataset generation,
+                       not from access locality during mining.)
 
   Required bandwidth:  400,000 × 4 bytes = 1.6 MB read per attempt
   Working set:         The access pattern is state-dependent and unpredictable;
@@ -558,12 +569,13 @@ An ASIC for SHA-256 can compute billions of independent hashes in parallel becau
 
 **ASIC advantage estimate:** A custom ASIC could potentially optimize the SHA-256 operations within each round and achieve tighter memory bus timing. The design is intended to minimize ASIC advantage; preliminary estimates suggest low multiples over modern CPUs, compared to >1000× advantage for SHA-256 ASICs. **Formal, reproducible benchmarks** will be published separately (methodology, hardware baselines, energy per attempt, and RAM latency profiles).
 
-#### Scratchpad Construction
+#### Scratchpad Construction (Epoch-Based)
 
-The scratchpad is deterministic, epoch-specific, and constructed via a sequential SHA-256 chain:
+The scratchpad is deterministic, epoch-specific, and constructed via a sequential SHA-256 chain.
+It is built once per epoch and reused across all blocks within that epoch:
 
 ```
-SCRATCHPAD CONSTRUCTION (deterministic):
+SCRATCHPAD CONSTRUCTION (deterministic, epoch-based):
 
   epoch_key(epoch=0):
     SHA256(MAGIC || "EPOCH" || epoch_u32)
@@ -588,6 +600,56 @@ SCRATCHPAD CONSTRUCTION (deterministic):
 ```
 
 **Epoch anchor innovation:** For epoch > 0, the scratchpad key depends on the `block_id` of the last block of the previous epoch. Since `block_id` commits to the full header (including timestamp), it is sufficient for uniqueness without separately including `anchor_timestamp` — which would create a timestamp-grinding vector. This means the scratchpad for a new epoch cannot be pre-computed — miners must wait for the epoch transition block to be mined before building the new scratchpad.
+
+#### Dataset Cache (Per-Block, v2.0)
+
+In addition to the epoch-based scratchpad, ConvergenceX v2.0 introduces a persistent
+4 GB dataset that is generated once per block from `prev_hash` and cached across all
+nonce attempts for the same tip:
+
+```
+DATASET (v2.0, per-block):
+
+  CXDataset.generate(prev_hash):
+    Deterministic 4GB (512M uint64_t entries) derived from prev_hash.
+    Cached and reused across all nonce attempts for this block.
+    Regenerated only when prev_hash changes (new tip).
+
+  Properties:
+    - Per-block: derived from prev_hash (NOT from block_hash — no circularity)
+    - Cached: generated once per tip, amortized across all mining attempts
+    - Memory-hard: 4 GB residency required
+```
+
+#### Per-Block Program (v2.0)
+
+Each block generates a unique 256-operation program from the block_key (which is
+derived from prev_hash). This program executes during each round, mixing its output
+into the scratchpad values. The program makes ASIC optimization impractical because
+the operation sequence changes every block:
+
+```
+PROGRAM (v2.0, per-block):
+
+  CXProgram.generate(block_key):
+    256 operations derived deterministically from block_key
+    Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB
+    Each operation has a unique immediate value
+
+  During each round r:
+    prog_state = program.execute(dataset[r % dataset_size], r)
+    Mix prog_state into scratchpad values (XOR into m0, m1)
+
+  Properties:
+    - Derived from block_key (= SHA256(prev_hash || "BLOCK_KEY"))
+    - NOT derived from block_hash (no circularity)
+    - Changes every block → no fixed pattern to optimize in hardware
+```
+
+The v2.0 architecture layers three memory-hard components: the epoch scratchpad
+(traditional sequential reads), the per-block dataset (4GB cached), and the per-block
+program (variable ALU operations). Together they create a mining workload that changes
+its character every block while maintaining deterministic reproducibility for validation.
 
 ### 3.8 ConvergenceX as Entropy Engine
 
@@ -649,9 +711,9 @@ Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       ASERT, 24h half-life
 Clamp (easier)             4× per block
 Clamp (harder)             8× per block
-CASERT window              50 intervals
-CASERT model               blocks-ahead-of-schedule, L1–L5
-CASERT thresholds          L2=5, L3=20, L4=50, L5=75 blocks ahead
+CASERT model               blocks-ahead-of-schedule, L1–L5+ (unbounded)
+CASERT thresholds          L2=5, L3=26, L4=51, L5=76 blocks ahead (L5+ unbounded)
+CASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
 Block target spacing       600s
 Stability baseline (L1)    scale=1, k=4, margin=180, steps=4, stab_shift=20
 
@@ -666,7 +728,13 @@ Per-block clamps bound the response:
 max 4× easier per block
 max 8× harder per block
 
-3.12 CASERT Adaptive Overlay (Consensus-Critical)
+3.12 CASERT Adaptive Overlay (Miner-Side)
+
+IMPORTANT: CASERT is a miner-side overlay, NOT consensus-critical for block
+validation. The miner adjusts ConvergenceX stability parameters according to
+the CASERT level before mining. Block validation does NOT verify the CASERT
+level — a valid block is valid regardless of which CASERT level the miner used.
+Only ASERT difficulty (powDiffQ) is consensus-critical for validation.
 
 CASERT does not change difficulty. It adjusts stability verification
 intensity based on how far ahead the chain is relative to the ideal schedule.
@@ -678,31 +746,48 @@ SIGNAL COMPUTATION (deterministic, block-timestamp based):
   lag           = expected_h - current_height
   ahead         = max(0, -lag)
 
-LEVEL ASSIGNMENT (L1–L5):
-  ahead = 0–4   → L1  (neutral, base verification)
-  ahead = 5–19  → L2  (light hardening)
-  ahead = 20–49 → L3  (moderate hardening)
-  ahead = 50–74 → L4  (strong hardening)
-  ahead = 75+   → L5  (maximum CX cost)
+LEVEL ASSIGNMENT (cASERT v5 — L1–L5+, unbounded):
+  ahead = 0–4    → L1   (neutral, base verification)
+  ahead = 5–25   → L2   (light hardening)
+  ahead = 26–50  → L3   (moderate hardening)
+  ahead = 51–75  → L4   (strong hardening)
+  ahead = 76+    → L5+  (unbounded: level = 5 + (ahead - 76) / 50)
+
+  Above L5, the level continues to increase without ceiling.
+  Named thresholds exist for L6=101, L7=151, L8=201, L9=251, L10=301
+  but the formula is general and unbounded.
 
 STABILITY PARAMETERS BY LEVEL:
-  scale  = level  (L1=1, L2=2, L3=3, L4=4, L5=5)
-  k      = 4      (fixed: always 4 probes)
-  steps  = 4      (fixed: always 4 refinement steps)
-  margin = 180    (fixed)
+  scale  = level + 1  (L1→scale 1, L2→scale 2, ..., L10→scale 11, ...)
+  k      = 4          (fixed: always 4 probes)
+  steps  = 4          (fixed: always 4 refinement steps)
+  margin = 180        (fixed)
 
-DETERMINISM: CASERT derives its signal only from on-chain block data
+DECAY ANTI-STALL (miner-side, uses wall-clock time):
+  If no block found for 2 hours (CASERT_DECAY_ACTIVATION = 7200s):
+    L8+  : drop 1 level every 10 minutes (fast recovery from extreme levels)
+    L4–L7: drop 1 level every 20 minutes (medium recovery)
+    L2–L3: drop 1 level every 30 minutes (cautious near neutral)
+    L1   : floor, no further decay
+
+  Decay uses real time (std::time), not block timestamps.
+  This prevents permanent stall if CASERT levels become too high for
+  any miner to solve.
+
+DETERMINISM: CASERT derives its signal from on-chain block data
 (height, timestamp) and consensus constants. Timestamp manipulation
-is bounded by MTP and MAX_FUTURE_DRIFT.
+is bounded by MTP and MAX_FUTURE_DRIFT. The decay component uses
+wall-clock time for mining only — it does not affect block validation.
 
 ASYMMETRIC POLICY:
   When the chain is ahead of schedule, CASERT increases the scale
-  through L2-L5, making stability verification harder. An attacker
-  with high hashrate mining blocks quickly pushes ahead count up,
-  which increases scale. The attacker gains nothing: stability
-  requirements grow stricter. CASERT only stays at L1 (neutral)
-  when the chain is on-time or behind — which is when ASERT alone
-  handles difficulty reduction to maintain liveness.
+  through L2 and beyond, making stability verification progressively
+  harder with no ceiling. An attacker with high hashrate mining blocks
+  quickly pushes the ahead count up, which increases scale unboundedly.
+  The attacker gains nothing: stability requirements grow strictly
+  stricter. CASERT only stays at L1 (neutral) when the chain is
+  on-time or behind — which is when ASERT alone handles difficulty
+  reduction to maintain liveness.
 
 3.13 Node Synchronization and Verification Policy
 
@@ -721,7 +806,7 @@ merkle_root: 32 bytes
 timestamp ts = 1,771,700,109
 MedianTimePast MTP = 1,771,697,922
 powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits
-CASERT selected stability parameters (L3, 20–49 blocks ahead):
+CASERT selected stability parameters (L3, 26–50 blocks ahead):
 scale=3, k=4, margin=180, steps=4, stab_shift=20
 
 3.14.2 Timestamp Rules (MTP + Future Drift)
@@ -812,21 +897,21 @@ Invariant: miner + gold + popc == reward
 
 Exactly 3 outputs in canonical order:
 miner
-GOLD_FUNDING_VAULT_ADDR
+FUNDING_VAULT_ADDR
 POPC_POOL_ADDR
 
 Amounts must match the split exactly. Any deviation → invalid block.
 
 4.4 Supply Projections
 
-VAULT ACCUMULATION (PoPC Pool & Gold Vault each receive 25%):
+VAULT ACCUMULATION (PoPC Pool & Funding Vault each receive 25%):
 
   Epoch 0 (years 0-2.502):  258,210 SOST per vault
   Year 1 alone:             103,160 SOST per vault
 
   TOTAL SUPPLY BREAKDOWN:
   Miners:     2,334,600 SOST (50%)
-  Gold Vault: 1,167,300 SOST (25%)
+  Funding Vault: 1,167,300 SOST (25%)
   PoPC Pool:  1,167,300 SOST (25%)
   Maximum:    4,669,201 SOST (hard cap)
 
@@ -853,15 +938,15 @@ SOST uses a two-vault architecture to separate **operational liquidity** from **
 
 TWO-VAULT ARCHITECTURE
 
-GOLD FUNDING VAULT (operational, on SOST chain):
+FUNDING VAULT (operational, on SOST chain):
 - Hardcoded destination in genesis consensus rules (coinbase output).
 - Receives exactly 25% of each block subsidy by consensus (q = reward // 4).
 - Consensus-enforced: any block without the correct vault output is invalid.
 - Accumulates SOST and periodically converts it into tokenized gold exposure (XAUT/PAXG)
   via publicly auditable operational execution (Section 5.3).
 
-RESERVE VAULT (Heritage, Ethereum mainnet):
-- The Reserve Vault is an Ethereum mainnet smart contract that holds allowlisted
+HERITAGE RESERVE (sealed, Ethereum mainnet):
+- The Heritage Reserve is an Ethereum mainnet smart contract that holds allowlisted
   precious-metal tokens (default: XAUt and PAXG).
 - Default state is Heritage (sealed): no outbound transfers occur in normal operation.
 - Reserve assets are intended to remain perpetual and untouched while SOST exists,
@@ -870,12 +955,12 @@ RESERVE VAULT (Heritage, Ethereum mainnet):
 FLOW:
 Block reward (coinbase) →
 [Metals Funding Vault (Gold-first) (SOST)] → sell SOST (TWAP) → buy XAUT/PAXG →
-[Reserve Vault (XAUT/PAXG)] → HERITAGE / SEALED — Perpetual by default;
+[Heritage Reserve (XAUT/PAXG)] → HERITAGE / SEALED — Perpetual by default;
 movable only via Emergency Catastrophe.
 
 WHY TWO VAULTS:
 - Funding Vault needs operational flexibility (sell SOST, buy gold tokens).
-- Reserve Vault needs maximum immutability (Heritage sealed).
+- Heritage Reserve needs maximum immutability (Heritage sealed).
 - Splitting them achieves both without mixing "hot" and "cold" functions.
 
 ASSET POLICY:
@@ -886,17 +971,17 @@ Previously purchased reserve assets are not rebalanced except under Emergency Ca
 
 ### 5.2 Constitutional Rules — Metals Reserve (tokenized, allowlisted)
 
-The following rules are **constitutional** (project-level commitments) and are enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Reserve Vault behavior and reporting).
+The following rules are **constitutional** (project-level commitments) and are enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting).
 
 Metals Reserve (tokenized, allowlisted) Constitution (immutable at genesis)
 
 G1 (Consensus Allocation): Every valid block MUST pay the Metals Funding Vault (Gold-first) exactly q = reward // 4.
 Any block that fails to do so is invalid.
 
-G2 (Two-Vault Separation): Funding Vault is operational; Reserve Vault is cold storage.
-All purchased XAUT/PAXG MUST be deposited into the Reserve Vault.
+G2 (Two-Vault Separation): Funding Vault is operational; Heritage Reserve is sealed storage.
+All purchased XAUT/PAXG MUST be deposited into the Heritage Reserve.
 
-G3 (Heritage Reserve): The Reserve Vault is deployed on Ethereum mainnet and is sealed by default.
+G3 (Heritage Reserve): The Heritage Reserve is deployed on Ethereum mainnet and is sealed by default.
 No outbound transfers occur in normal operation. Reserve assets are intended to remain perpetual
 and untouched while SOST exists, except under Emergency Catastrophe authorization.
 
@@ -942,7 +1027,7 @@ appropriate for the long-term security of the protocol.
 Emergency actions are limited to exactly two action types:
   (E1) ROTATE: rotate reserve holdings to other allowlisted precious-metal tokens (including XAUt↔PAXG).
   (E2) LIQUIDATE→BUY→REDISTRIBUTE: liquidate precious-metal tokens to acquire SOST and
-       redistribute it to PoPC Pool (50%) and Gold Vault (50%), with a fully auditable trail.
+       redistribute it to PoPC Pool (50%) and Funding Vault (50%), with a fully auditable trail.
        No supply is destroyed — SOST supply is immutable by construction.
 
 The Foundation may pause purchases or adjust future purchase policy operationally without consensus,
@@ -967,7 +1052,7 @@ BATCHER:
 EXECUTOR (CEX / OTC / DEX where feasible):
   Sells SOST in TWAP clips per policy (Section 5.3.1).
   Purchases XAUT and/or PAXG with proceeds.
-  Deposits purchased tokens into the Reserve Vault (Heritage sealed).
+  Deposits purchased tokens into the Heritage Reserve (sealed).
 
 ATTESTOR:
   Publishes a public batch record.
@@ -978,7 +1063,7 @@ TRUST MODEL:
   parameters (including the default 50/50 split) and may pause purchases at any time.
   Movements of previously purchased reserve assets require Emergency Catastrophe
   authorization (Appendix G).
-  No bridge, no wSOST, no smart contract dependency between chains beyond the Reserve Vault itself.
+  No bridge, no wSOST, no smart contract dependency between chains beyond the Heritage Reserve itself.
 
 #### 5.3.1 Execution Policy: TWAP Batch Sales (Operational, Non-Consensus)
 
@@ -1023,7 +1108,7 @@ Each batch record MUST include:
 - Venue(s) used (exchange or OTC counterparties),
 - Realized TWAP/VWAP and total slippage,
 - Purchase proof for XAUT/PAXG,
-- Transaction hash proving deposit into the Reserve Vault.
+- Transaction hash proving deposit into the Heritage Reserve.
 
 This framework exists to prevent the common criticism that a Foundation "dumps whenever it wants."
 Execution is rate-limited, rule-based, and publicly auditable.
@@ -1032,7 +1117,7 @@ Execution is rate-limited, rule-based, and publicly auditable.
 
 #### Heritage (default state, perpetual)
 
-The Reserve Vault remains sealed by default. No outbound transfers occur in normal operation.
+The Heritage Reserve remains sealed by default. No outbound transfers occur in normal operation.
 The gold tokens remain a permanent, publicly verifiable reserve record.
 "Decades of collective work — converted to gold exposure — preserved."
 
@@ -1042,10 +1127,16 @@ Trigger: 90 consecutive days with zero blocks (dead-man switch).
 A 60-day public notice window begins.
 The chain is declared terminated operationally ("project wind-down").
 
-IMPORTANT: If the network dies and no Emergency Catastrophe was authorized before
-the chain stopped producing blocks (no new blocks → no miner signaling possible),
-the reserve remains in Heritage state. This is by design: Heritage is the default,
-and the absence of consensus activity cannot authorize reserve movements.
+Reserve assets may only be accessed under:
+(a) Emergency Catastrophe: ≥75% miner signaling + Foundation Execution Order
+(b) Formal Dissolution: declared by Foundation when chain is irreversibly dead,
+    subject to public attestation and maximum 90-day notice period
+(c) Reserve Lifecycle transitions: planned custody migrations per Section 5.5,
+    with 30-day notice
+
+Dissolution enables access to the reserve for orderly wind-down. The Foundation
+is responsible for distributing reserve assets transparently after the 60-day
+public notice window expires.
 
 #### 5.4.1 Liveness Monitoring and Dissolution Process (Operational, Non-Consensus)
 
@@ -1074,14 +1165,16 @@ The protocol distinguishes between **consensus rules (immutable)** and **operati
 - Day 150: wind-down execution (network lifecycle / operational shutdown).
 
 **Important constraint**
-If the chain dies and no Emergency Catastrophe was authorized before the chain stopped producing blocks,
-the reserve remains in Heritage state. Dissolution is a network lifecycle event, not a reserve liquidation mechanism.
+Dissolution enables orderly access to reserve assets for wind-down and distribution.
+If the chain dies, the Foundation declares Formal Dissolution after the 90-day dead-man
+switch triggers, followed by a 60-day public notice period. After notice expires, the
+Foundation may access the reserve for transparent distribution to stakeholders.
 
 ### 5.5 Reserve Evolution Path
 
 Phase 1 — Tokenized Reserve (Genesis - Year 3):
 ┌─────────────────────────────────────────┐
-│ Reserve Vault holds XAUT/PAXG tokens    │
+│ Heritage Reserve holds XAUT/PAXG tokens    │
 │ on Ethereum mainnet.                    │
 │                                         │
 │ Advantages:                             │
@@ -1204,9 +1297,9 @@ VERIFICATION (script, no humans):
      triggers a slash — even if the balance was restored before the audit.
   6. If all checks pass: checkpoint passed
   7. If any check fails: SLASH
-  6. If no response within 48h: enter GRACE mode (additional 24h window
-     + redundant RPC checks). Slash only if non-response persists and
-     RPC availability is confirmed by multiple independent endpoints.
+  6. If no response within 48h: SLASH. The 48h GRACE period is the sole
+     window. Redundant RPC checks confirm availability before slash
+     execution. No additional grace periods beyond 48h.
 ```
 
 ### 6.4 Model A — Commitment with SOST Bond (Autocustody)
@@ -1237,15 +1330,15 @@ DYNAMIC BOND CALCULATION:
 
   ratio = sost_price / gold_oz_price
 
-  ratio < 0.0001  →  bond = 12%  of gold value
-  ratio < 0.001   →  bond = 15%
-  ratio < 0.01    →  bond = 20%
-  ratio < 0.1     →  bond = 25%
-  ratio < 0.2     →  bond = 26%
-  ratio < 0.3     →  bond = 27%
-  ratio < 0.4     →  bond = 28%
-  ratio < 0.5     →  bond = 29%
-  ratio >= 0.5    →  bond = 30%  (maximum)
+  ratio <  0.0001              →  bond = 12%  of gold value
+  0.0001 <= ratio < 0.001     →  bond = 15%
+  0.001  <= ratio < 0.01      →  bond = 20%
+  0.01   <= ratio < 0.1       →  bond = 25%
+  0.1    <= ratio < 0.2       →  bond = 26%
+  0.2    <= ratio < 0.3       →  bond = 27%
+  0.3    <= ratio < 0.4       →  bond = 28%
+  0.4    <= ratio < 0.5       →  bond = 29%
+  ratio >= 0.5                →  bond = 30%  (maximum)
 
   bond_sost = bond_usd / sost_price_TWAP_7d
 
@@ -1262,13 +1355,12 @@ RATIO THRESHOLDS (price-independent):
   │ $2,700             │ $1,350             │ 0.50    │ 30%     │
   │ $5,000             │ $185               │ 0.037   │ 25%     │
   │ $5,000             │ $2,500             │ 0.50    │ 30%     │
-  │ €40,000            │ €5,000             │ 0.125   │ 26%     │
-  │ €40,000            │ €20,000            │ 0.50    │ 30%     │
   └────────────────────┴────────────────────┴─────────┴─────────┘
 
-  Note: The ratio determines the bond %, regardless of currency or
-  absolute prices. If gold doubles in price, the SOST threshold for
-  each bond tier also doubles proportionally.
+  Note: The ratio determines the bond %, regardless of absolute prices.
+  If gold doubles in price, the SOST threshold for each bond tier also
+  doubles proportionally. All examples use USD; the system is
+  ratio-based and currency-agnostic.
 
 EXAMPLES (assuming 1oz gold = $2,700 at time of contract):
 
@@ -1302,13 +1394,6 @@ EXAMPLES (assuming 1oz gold = $2,700 at time of contract):
     bond_usd = 30% × $2,700 = $810
     bond_sost = $810 / $2,000 = 0.405 SOST
 
-  Example 6: Different gold price (1oz gold = €40,000)
-    SOST = €5,000
-    ratio = €5,000 / €40,000 = 0.125
-    0.125 < 0.2 → bond = 26%
-    bond_usd = 26% × €40,000 = €10,400
-    bond_sost = €10,400 / €5,000 = 2.08 SOST
-
 DESIGN RATIONALE:
   - Gradual scale (25% → 26% → 27% → 28% → 29% → 30%) avoids sudden jumps
   - Maximum bond (30%) only reached when ratio >= 0.5 (SOST worth half an oz)
@@ -1316,11 +1401,29 @@ DESIGN RATIONALE:
   - Low SOST price → many SOST deposited (but low fiat value)
   - High SOST price → few SOST deposited (but high fiat value)
   - System is RATIO-based, not price-based: works at any gold/SOST price
-  - Currency-agnostic: works in USD, EUR, or any fiat denomination
 
 REPUTATION LIMITS (max oz per contract):
   0 stars: max 0.5 oz   |  3 stars: max 3 oz
   1 star:  max 1 oz     |  5 stars: max 10 oz
+
+REPUTATION TIERS (4 discrete levels):
+
+  ┌────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Level  │ 0 stars      │ 1 star       │ 3 stars      │ 5 stars      │
+  │        │ (new)        │ (established)│ (trusted)    │ (veteran)    │
+  ├────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+  │ Max oz │ 0.5 oz       │ 1 oz         │ 3 oz         │ 10 oz        │
+  │ Audit  │ 30%          │ 20%          │ 10%          │ 5%           │
+  └────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+  Progression: 0→1 after 1 successful contract, 1→3 after 3 cumulative
+  successful contracts, 3→5 after 5 cumulative successful contracts.
+  Any slash resets reputation to 0 stars.
+
+REPUTATION SCOPE:
+  Reputation is wallet-level. Each completed contract contributes to the
+  wallet's reputation score. Stars represent the wallet's cumulative track
+  record, not individual contract performance.
 ```
 
 ### 6.6 Price Bulletin and Bond Consent (Normative)
@@ -1343,7 +1446,7 @@ PRICE BULLETIN (off-chain, publicly auditable):
                          publicly accessible and reproducible API],
       method:           "TWAP_7d",
       bulletin_hash:    SHA256(canonical_json(bulletin)),
-      foundation_sig:   Ed25519_sign(foundation_key, bulletin_hash)
+      foundation_sig:   EIP-712_sign(foundation_key, bulletin_typed_data)
     }
 
   Publication: website + GitHub + IPFS mirror (redundant, immutable).
@@ -1369,11 +1472,12 @@ BOND TERMS (client-side calculation + user consent):
 
 ON-CHAIN FINALIZATION (no oracle, no daily updates):
 
-  The PoPC contract accepts (terms + user_sig) and verifies:
-    1. ecrecover(user_sig, terms_hash) == user_wallet
-    2. terms.expiry >= block.timestamp  (freshness / anti-replay)
-    3. bond_pct matches constitutional table for provided ratio
-    4. bond_sost transferred from user and locked
+  The PoPC contract accepts (terms + foundation_sig + user_sig) and verifies:
+    1. EIP-712_recover(foundation_sig, terms_typed_data) == foundation_key
+    2. ecrecover(user_sig, terms_hash) == user_wallet
+    3. terms.expiry >= block.timestamp  (freshness / anti-replay)
+    4. bond_pct matches constitutional table for provided ratio
+    5. bond_sost transferred from user and locked
 
   Once accepted:
     - Contract stores bond_sost and commitment parameters.
@@ -1391,19 +1495,32 @@ PRICE VOLATILITY DURING CONTRACT:
       at entry price. No repricing during the term.
   This eliminates oracle risk and discretionary pricing entirely.
 
+FOUNDATION SIGNATURE (EIP-712 typed data):
+
+  Terms (including P_sost, P_gold, bond_pct, and reward) are signed by
+  an authorized Foundation key using EIP-712 typed data signatures. The
+  smart contract verifies the Foundation signature before accepting any
+  commitment. Users cannot submit self-signed terms.
+
+  The Foundation signature guarantees that the bulletin data used to
+  calculate bond terms has been reviewed and published by the Foundation.
+  Combined with the user's own signature, this creates dual-consent:
+  both Foundation (price attestation) and user (term acceptance) must
+  agree before a contract is created.
+
 SECURITY PROPERTIES:
   - No on-chain oracle: pricing is not consensus-critical.
-  - No discretionary pricing: Foundation cannot set a user's bond.
-  - User consent: every contract requires user signature on exact terms.
+  - No discretionary pricing: Foundation cannot unilaterally impose terms.
+  - Dual consent: every contract requires both Foundation signature
+    (EIP-712 on bulletin terms) and user signature on exact terms.
   - Auditability: any party can reproduce bond sizing from bulletin + terms.
   - Permissionless verification: bulletin data + sources are public.
-  - Non-authoritative: any party may independently publish compatible
-    price bulletins. The PoPC contract does not recognize any privileged
-    price source. The Foundation bulletin is informational only.
+  - Foundation-attested: the PoPC contract verifies EIP-712 Foundation
+    signature on price terms. Unsigned or self-signed terms are rejected.
   - Malicious bulletin protection: because the user must explicitly sign
-    the bond terms, the Foundation cannot impose pricing. A malicious or
-    incorrect bulletin simply results in participants refusing to sign
-    contracts based on it. No funds are at risk from a bad bulletin.
+    the bond terms, the Foundation cannot impose unfavorable pricing. A
+    bulletin the user disagrees with simply results in the user refusing
+    to sign. No funds are at risk from a disputed bulletin.
 ```
 
 ### 6.7 Model A Rewards
@@ -1460,20 +1577,22 @@ EXAMPLE: Model A — Slash (failure)
     - User loses: 6.75 SOST (entire bond)
     - Distribution:
       • 3.375 SOST → PoPC Pool (funds future rewards)
-      • 3.375 SOST → Gold Vault (buys more gold)
+      • 3.375 SOST → Funding Vault (buys more gold)
     - User's reputation: destroyed
     - User's address: blacklisted
 
 ### 6.7.1 Protocol Fee — Model A
 
-A protocol fee of 5% is collected upfront at commitment creation. The fee is deducted from
-the calculated reward; the user's bond is returned in full regardless.
+A protocol fee of 5% is applied to the reward. The fee is calculated at commitment
+creation and locked; disbursement occurs at successful completion. The user's bond
+is returned in full regardless.
 
   base_reward    = bond_sost × reward_table[duration]
   protocol_fee   = base_reward × 0.05
   user_reward    = base_reward - protocol_fee
 
-  Disbursement (single atomic operation):
+  Fee is locked at creation (immutable for the contract's lifetime).
+  Disbursement at completion (single atomic operation):
     user receives:       bond_sost + user_reward
     foundation receives: protocol_fee
 
@@ -1523,6 +1642,9 @@ ESCROW ARCHITECTURE:
   - withdraw() callable ONLY by original depositor
   - withdraw() reverts if block.timestamp < unlockTime
   - No Foundation key, no multisig, no emergency withdrawal
+  - NO EXTENSION: the escrow term is immutable once created. There is
+    no renew(), extend(), or modify() function. To commit again after
+    maturity, the user must create a new contract at current terms.
   - Source code published, verified on explorer, independently audited
 
 FOUNDATION ROLE IN MODEL B:
@@ -1550,14 +1672,17 @@ WATCHER TRUST MODEL:
     reward within 72 hours of deposit confirmation, the depositor may
     invoke claimReward(depositId) on a publicly deployed claims contract.
     The claims contract verifies the escrow deposit on-chain (event log +
-    deposit parameters) and disburses the reward directly from the PoPC Pool,
-    bypassing the watcher entirely. The watcher is a convenience for instant
-    payouts; the autonomous claim is the trustless fallback that guarantees
-    delivery regardless of Foundation liveness.
-  - DISPUTE RESOLUTION: if the autonomous claim is contested (e.g., duplicate
-    payout attempt), the claims contract enforces idempotency (one claim per
-    depositId). All claims and resolutions are recorded on-chain and included
-    in the public audit record. Any discrepancy is a constitutional violation.
+    deposit parameters) and disburses the NET reward (after protocol fee)
+    directly from the PoPC Pool, bypassing the watcher entirely.
+    Fee routing: protocol_fee is routed to the Foundation operational
+    wallet in the same atomic transaction as the user payout.
+    The watcher is a convenience for instant payouts; the autonomous claim
+    is the trustless fallback that guarantees delivery regardless of
+    Foundation liveness.
+  - IDEMPOTENCY: the claims contract enforces one claim per depositId.
+    Duplicate invocations revert. All claims are recorded on-chain and
+    included in the public audit record. Any discrepancy is a
+    constitutional violation.
   - Watcher source code and payout logs are published for independent
     verification. Any discrepancy is a constitutional violation (G-rules).
 
@@ -1636,28 +1761,6 @@ EXAMPLE: Model B — 3 month commitment
     - Received: 0.0675 SOST immediately
     - Returned: 1 oz gold at maturity
 
-EXAMPLE: Model B — Different prices (gold = €40,000, SOST = €500)
-
-  Assumptions at contract creation:
-    - Gold price: €40,000/oz (from Price Bulletin)
-    - SOST price: €500 (from Price Bulletin)
-    - User deposits: 1 oz XAUT into escrow
-    - Duration: 12 months
-    - Reward rate (reference): 7%
-  
-  CALCULATION:
-    total_reward_pct = 7% × (12/12) = 7%
-    reward_eur = €40,000 × 7% = €2,800
-    reward_sost = €2,800 / €500 = 5.6 SOST
-  
-  SUMMARY:
-    - Locked: 1 oz gold for 12 months
-    - Received: 5.6 SOST immediately
-    - Returned: 1 oz gold at maturity
-
-  Note: The reward in SOST adjusts automatically based on the ratio
-  between gold price and SOST price. The system is price-agnostic.
-
 MODEL A vs MODEL B COMPARISON:
 
   ┌─────────────────┬─────────────────┬─────────────────┐
@@ -1696,11 +1799,11 @@ for changes, existing contracts locked at creation fee rate.
 ```
 SLASH TRIGGER (Model A only):
   - XAUT/PAXG balance < committed amount at audit time, OR
-  - No response to audit after 48h GRACE period (with confirmed RPC availability)
+  - No response to audit after 48h GRACE period (sole window; confirmed RPC availability)
 
 SLASH SPLIT (automatic, no human override):
   50% → PoPC Pool (funds future rewards)
-  50% → Gold Vault (buys more gold collateral)
+  50% → Funding Vault (buys more gold collateral)
 
   No supply is burned. With a maximum supply of ~4.67M SOST, every
   token has long-term utility. Slashed bonds are recycled into the
@@ -1710,33 +1813,9 @@ SLASH SPLIT (automatic, no human override):
 
 Every fraud detected strengthens the protocol: half funds future honest participants, half buys more gold. No supply is destroyed — it is recycled where it creates the most value.
 
-### 6.11 When SOST > Gold (Adaptive Rule)
+### 6.11 [Reserved — See Appendix M]
 
-If the ratio SOST/gold exceeds 1.5 for 30 consecutive days, the protocol activates an adaptive rule: PoPC also accepts SOST itself as the custody asset. Users demonstrate custody of SOST (locked in their wallet) rather than gold. The same bond, audit, and reward mechanics apply.
-```
-ADAPTIVE MODE TRIGGER:
-  ratio = sost_price / gold_oz_price
-  If ratio > 1.5 for 30 consecutive days → ADAPTIVE MODE ACTIVE
-
-EXAMPLE:
-  Gold price: $2,700/oz
-  SOST price: $5,300
-  ratio = $5,300 / $2,700 = 1.96 (> 1.5, day 35)
-
-  ADAPTIVE MODE ACTIVE:
-    User declares: 'I hold 1 SOST in wallet 0xABC...'
-    ratio = 1.96 >= 0.5 → bond = 30%
-    Bond: 30% of SOST value = $1,590 / $5,300 = 0.30 SOST
-    Commitment: maintain 1 SOST for 12 months
-    Script audits: sost_chain_balance(0xABC) >= 1 SOST
-    Reward: 22% of bond = 0.066 SOST
-
-  Note: This example assumes gold = $2,700, but the adaptive rule
-  triggers based on the RATIO (> 1.5), not on fixed prices.
-  If gold = €40,000, adaptive mode triggers when SOST > €60,000.
-```
-
-When SOST surpasses gold in value, the protocol recognizes SOST as the new premium asset. No governance needed. It was written into genesis.
+Section 6.11 previously described an "Adaptive Mode" where PoPC would accept SOST as a custody asset when the SOST/gold ratio exceeded 1.5. This mode has been removed from the normative specification because it contradicts the core purpose of PoPC as a proof of gold custody. Accepting SOST as a custody asset would create circular staking dynamics incompatible with the protocol's design. See Appendix M for the original text, retained for historical completeness.
 
 ### 6.12 PoPC Pool Sustainability
 ```
@@ -1760,7 +1839,7 @@ SCENARIO: 1,000 contracts (optimistic):
 SLASH INCOME extends pool beyond 30 years:
   5% failure rate, 200 contracts, 200 SOST avg bond:
   Pool receives: 10 × 200 × 50% = 1,000 SOST/year extra
-  Gold Vault receives: 10 × 200 × 50% = 1,000 SOST/year extra
+  Funding Vault receives: 10 × 200 × 50% = 1,000 SOST/year extra
 
 REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
 
@@ -1791,17 +1870,29 @@ REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
 
 ANTI-WHALE CAPS (Model A):
 
-  Per-wallet cap: 50 oz maximum per wallet per epoch
+  Per-wallet epoch cap: 50 oz maximum per wallet per epoch
   Global cap: 10% of PoPC Pool balance per epoch
-  
+
+  The per-wallet epoch cap is an absolute ceiling. The reputation
+  per-contract limit (0.5/1/3/10 oz) applies per individual contract.
+  A 5-star wallet may open multiple contracts up to the epoch cap:
+    e.g., 5 × 10 oz = 50 oz across 5 contracts in one epoch.
+  A 0-star wallet is limited to 0.5 oz per contract AND 50 oz per
+  epoch — effectively 0.5 oz since reputation constrains first.
+
   Rationale: Model A includes slash risk, which naturally
   limits demand and returns 50% of slashed bonds to pool.
 
 ANTI-WHALE CAPS (Model B):
 
-  Per-wallet cap: 10 oz maximum per wallet per epoch
+  Per-wallet epoch cap: 10 oz maximum per wallet per epoch
   Global cap: 5% of PoPC Pool balance per epoch
-  
+
+  Same interaction: reputation per-contract limits apply first,
+  then the epoch cap limits total activity. A 5-star wallet can
+  commit up to 10 oz/epoch (e.g., 1 × 10 oz), while a 0-star
+  wallet is limited to 0.5 oz/contract (reputation-constrained).
+
   Rationale: Model B has no slash risk, making it more
   attractive. Tighter caps protect pool sustainability.
 
@@ -1820,9 +1911,9 @@ SUSTAINABILITY EXAMPLE (Year 1):
   Model A monthly cap: 10% × 50,000 = 5,000 SOST
   Maximum combined outflow: 7,500 SOST/month
   
-  Monthly pool income: ~8,600 SOST (from block rewards)
+  Monthly pool income: ~8,597 SOST (103,160 ÷ 12, from block rewards)
   
-  Net monthly growth: 8,600 - 7,500 = +1,100 SOST
+  Net monthly growth: 8,597 - 7,500 = +1,097 SOST
   
   System: sustainable indefinitely, even at maximum demand
 ```
@@ -1880,9 +1971,9 @@ a non-negotiable prerequisite — not a trade-off.
 
 ## 7. Governance Model
 
-### 7.1 No Consensus Governance
+### 7.1 No Ongoing Parameter Governance
 
-No entity — including the Foundation, its members, or any future organization — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. All consensus rules — emission schedule, coinbase split, difficulty algorithm, supply cap, constitutional constraints — are immutable at genesis. No mechanism exists to alter them after block 0.
+No entity — including the Foundation, its members, or any future organization — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. All consensus rules — emission schedule, coinbase split, difficulty algorithm, supply cap, constitutional constraints — are immutable at genesis. No mechanism exists to alter them after block 0. Only narrow emergency authorization signaling exists, requiring ≥75% miner supermajority (Section 5.2, Appendix G).
 
 Emergency Catastrophe authorization does not modify consensus rules or monetary policy; it only gates movements of external reserve assets held on Ethereum.
 
@@ -1892,7 +1983,7 @@ Foundation executes operational actions under constitutional constraints and pub
 
 Operational scope (exhaustive):
 
-- **Gold Vault conversion:** Foundation executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). Every batch is attested on-chain.
+- **Funding Vault conversion:** Foundation executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). Every batch is attested on-chain.
 - **50/50 split adjustment:** Foundation may change the XAUt/PAXG acquisition split for future purchases at any time. Adjustments apply only to future purchases and must be disclosed in batch reports.
 - **Purchase pause:** Foundation may pause purchases without consensus, disclosed via batch reports.
 - **Future purchase redirection:** Foundation may redirect future purchases from one issuer to another without consensus (e.g., if issuer risk increases).
@@ -1901,7 +1992,7 @@ Operational scope (exhaustive):
 
 Moving previously purchased reserve assets requires Emergency Catastrophe authorization (≥75% miner signaling + Foundation Execution Order). No other mechanism exists.
 
-No operational action can modify consensus rules, alter the emission schedule, redirect coinbase allocations, or access the Metals Reserve (tokenized, allowlisted) outside of Emergency Catastrophe or formally declared Dissolution.
+No operational action can modify consensus rules, alter the emission schedule, or redirect coinbase allocations. Reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned Reserve Lifecycle transitions (Section 5.5).
 
 ### 7.3 Progressive Decentralization
 
@@ -1922,7 +2013,7 @@ This is a constitutional commitment (C16), not a discretionary goal. As each ope
 ### 8.2 Deflationary Mechanics
 
 - **Smooth exponential decay:** 9.03% annual reduction in new issuance — no cliff events.
-- **Slash recycling:** 100% of every slashed bond is redistributed to PoPC Pool (50%) and Gold Vault (50%), strengthening both systems without destroying scarce supply.
+- **Slash recycling:** 100% of every slashed bond is redistributed to PoPC Pool (50%) and Funding Vault (50%), strengthening both systems without destroying scarce supply.
 - **Reputation limits:** large commitments require proven track record — slow unlock of supply pressure.
 - **Long contracts:** 9 and 12-month commitments remove SOST from circulation for extended periods.
 
@@ -1944,7 +2035,7 @@ Markets may price this information as they see fit.
 
 If SOST price significantly exceeds gold price, three automatic corrective forces activate:
 
-- **Gold Vault force:** With expensive SOST, each vault sale buys more gold. Gold demand increases. Gold price rises. Ratio compresses.
+- **Funding Vault force:** With expensive SOST, each vault sale buys more gold. Gold demand increases. Gold price rises. Ratio compresses.
 - **Model B force:** With low SOST yield in unit terms, fewer users deposit gold. Pool accumulates. Supply pressure falls.
 - **Model A force:** With SOST worth more than gold, bonding SOST to custody gold loses economic sense. Participation drops naturally.
 
@@ -1979,7 +2070,7 @@ A user who moves their gold immediately after passing an audit faces another ran
 
 No external oracle is required for consensus-critical validation. All consensus operations (block validation, emission, difficulty) use only chain-internal data.
 
-Bond calculations use a 7-day TWAP of CEX prices — resistant to single-block manipulation. The gold ratio check uses the same TWAP. Price data is advisory for PoPC bond sizing and settlement, not consensus-critical.
+Bond calculations use a 7-day TWAP from exchanges with verifiable liquidity (consistent with the Price Bulletin model in Section 6.6) — resistant to single-block manipulation. The gold ratio check uses the same TWAP. Price data is advisory for PoPC bond sizing and settlement, not consensus-critical.
 
 ### 9.5 CASERT Security Properties
 
@@ -1996,10 +2087,10 @@ CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which i
 | Scenario | Response |
 |---|---|
 | Critical bug | Foundation pauses new PoPC contracts. Existing contracts continue unaffected. |
-| Exchange hack | Gold Vault is a cold wallet with no exchange connection. Independent and safe. |
+| Exchange hack | The Heritage Reserve on Ethereum operates as a sealed vault with no operational interaction. The Funding Vault on SOST chain interacts with execution venues via the conversion pipeline but is not a hot wallet — all operations require Foundation authorization. |
 | XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-redistribute (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order. |
 | Issuer risk (future purchases only) | Foundation redirects future purchases without consensus. Previously purchased assets remain sealed. |
-| Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. Reserve remains in Heritage if no emergency was authorized before chain death. |
+| Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. After notice period, Foundation may access reserve for orderly wind-down and transparent distribution (Section 5.4). |
 
 ### 9.7 Key Hygiene (operational)
 
@@ -2017,9 +2108,10 @@ C1:  Total supply is upper-bounded by SUPPLY_MAX_STOCKS by construction of the e
      The only issuance mechanism is subsidy(height). Any block that mints more is invalid.
 C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.
      Exact integer conservation guaranteed: miner + gold + popc == reward always.
-C3:  Gold Vault coinbase destination is immutable at genesis. Reserve Vault is Heritage sealed;
-     Emergency Catastrophe dual gate (≥75% miner signaling + Foundation Execution Order) is the
-     only mechanism to move previously purchased reserve assets.
+C3:  Funding Vault coinbase destination is immutable at genesis. Heritage Reserve is sealed;
+     reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling +
+     Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned
+     Reserve Lifecycle transitions (Section 5.5).
 C4:  Metals Reserve (tokenized, allowlisted) shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-redistribute)
      or formally declared Dissolution.
 C5:  Dissolution requires 90 days of zero blocks + 60-day public timelock.
@@ -2028,7 +2120,8 @@ C7:  Slash is automatic. No human can override once triggered.
 C8:  Slash split is 50/50 (pool/gold). No supply is burned. Immutable.
 C9:  Bond dynamic table: <0.0001→12%, <0.001→15%, <0.01→20%, <0.1→25%, <0.2→26%, <0.3→27%, <0.4→28%, <0.5→29%, >=0.5→30%
 C10: No admin key, pause function, or upgrade proxy exists for the PoW chain.
-C11: ConvergenceX parameters fixed at genesis for epoch 0.
+C11: ConvergenceX parameters are fixed at genesis and apply to all epochs.
+     Deterministic epoch transitions are derived from consensus constants defined at genesis.
 C12: All consensus arithmetic is integer-only. No floating-point in any consensus path.
 C13: Model B escrow contracts must be non-upgradeable, have no admin key, and allow
      withdrawal only by the original depositor after expiry.
@@ -2045,7 +2138,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 |---|---|
 | Mar 13, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. CEX listing request. C++ miner released. GitHub public. |
-| Jun 2026 | Gold purchases begin. First XAUT/PAXG acquired. Reserve Vault deployed on Ethereum mainnet. Dashboard published. |
+| Q4 2026 | Gold purchases begin (6 months post-genesis per G4). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
 | Jan 2027 | PoPC Model A + B launch. First custody contracts active. |
 | Jun 2027 | Physical gold extension. Mobile app for audit challenges. Verifier network. |
 | 2028 | ZK R&D begins. Physical proof system research. |
@@ -2065,7 +2158,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 | Algorithm | ConvergenceX (4GB RAM, 100k rounds, sequential, stability certificate) |
 | Block time | 600 seconds target |
 | Supply cap enforcement | Subsidy-by-height (hard cap by construction) |
-| Max supply | 4,669,201.609 SOST (hard cap) |
+| Max supply | ~4,669,201 SOST (466,920,160,910,299 stocks) |
 | Min unit | 1 stock = 0.00000001 SOST |
 | Epoch | 131,553 blocks (~2.502 years, Feigenbaum alpha) |
 | ~95% mined | ~12 epochs (~30 years) |
@@ -2073,7 +2166,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder) |
-| CASERT | 4 modes (warmup/normal/degraded/open), MAX_INTERVALS=64, E_CAP=1800s, asymmetric |
+| CASERT | Unidirectional block-lag overlay, L1-L5, k=4, steps=4, scale=level, hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2094,7 +2187,7 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 **Proof-of-Work that produces a mathematical certificate.** ConvergenceX replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is not just a hash below a target — it is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.
 
-**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Gold Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
+**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Funding Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
 
 **Voluntary custody commitments audited by PoW-derived entropy.** PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.
 
@@ -2149,7 +2242,7 @@ Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):
   Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially.
   Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings.
   Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal
-  acquisition. Token registration fees are paid to the Gold Vault, not burned.
+  acquisition. Token registration fees are paid to the Funding Vault, not burned.
 
 Phase 3 — Fully Native PoPC (Q4 2027):
   Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow,
@@ -2179,7 +2272,7 @@ CONVERGENCEX PARAMETERS:
   CX_LR_SHIFT                  = 18
   CX_LAM                       = 100
   CX_CHECKPOINT_INTERVAL       = 6,250
-  CX_STABILITY_PERTURBATION_SCALE = 3
+  CX_STABILITY_PERTURBATION_SCALE = 1  // L1 neutral baseline
   CX_STABILITY_K               = 4
   CX_STABILITY_MARGIN          = 180
   CX_STABILITY_GRADIENT_STEPS  = 4
@@ -2199,14 +2292,26 @@ DIFFICULTY PARAMETERS:
   HALF_LIFE                    = 86,400
   MAX_FUTURE_DRIFT             = 600
 
-CASERT PARAMETERS (blocks-ahead thresholds):
-  CASERT_L2_BLOCKS             = 5     // 5–19 ahead → L2
-  CASERT_L3_BLOCKS             = 20    // 20–49 ahead → L3
-  CASERT_L4_BLOCKS             = 50    // 50–74 ahead → L4
-  CASERT_L5_BLOCKS             = 75    // 75+ ahead → L5
+CASERT v5 PARAMETERS (miner-side overlay, NOT consensus-critical):
+  CASERT_L2_BLOCKS             = 5     // 5–25 ahead → L2
+  CASERT_L3_BLOCKS             = 26    // 26–50 ahead → L3
+  CASERT_L4_BLOCKS             = 51    // 51–75 ahead → L4
+  CASERT_L5_BLOCKS             = 76    // 76+ ahead → L5+ (unbounded)
+  CASERT_L6_BLOCKS             = 101   // named thresholds continue
+  CASERT_L7_BLOCKS             = 151
+  CASERT_L8_BLOCKS             = 201
+  CASERT_L9_BLOCKS             = 251
+  CASERT_L10_BLOCKS            = 301
+  // Above L10: level = 5 + (blocks_ahead - 76) / 50
   FIXED_K                      = 4
   FIXED_STEPS                  = 4
   FIXED_MARGIN                 = 180
+
+CASERT DECAY ANTI-STALL:
+  CASERT_DECAY_ACTIVATION      = 7,200  // 2 hours without block
+  CASERT_DECAY_FAST_SECS       = 600    // 10 min/level for L8+
+  CASERT_DECAY_MEDIUM_SECS     = 1,200  // 20 min/level for L4-L7
+  CASERT_DECAY_SLOW_SECS       = 1,800  // 30 min/level for L2-L3
 
 EMERGENCY PARAMETERS:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
@@ -2398,7 +2503,7 @@ RECORD:
 
 ### G.3 Foundation Execution Order (Ethereum)
 
-After on-chain approval is confirmed on SOST, the Foundation signs an Execution Order for the Ethereum Reserve Vault contract:
+After on-chain approval is confirmed on SOST, the Foundation signs an Execution Order for the Ethereum Heritage Reserve contract:
 
 ```
 ExecutionOrder:
@@ -2413,7 +2518,7 @@ ExecutionOrder:
 
 ### G.4 Ethereum Contract Verification
 
-The Reserve Vault contract on Ethereum mainnet verifies:
+The Heritage Reserve contract on Ethereum mainnet verifies:
 
 ```
 VERIFICATION STEPS:
@@ -2433,11 +2538,23 @@ Every emergency execution MUST produce a complete, publicly verifiable audit tra
 AUDIT REQUIREMENTS:
   1. Proof of signaling: list of blocks with YES signal, block hashes, explorer links
   2. Proof of approval: EmergencyApproved record on SOST chain
-  3. Ethereum transaction hashes for all Reserve Vault operations
+  3. Ethereum transaction hashes for all Heritage Reserve operations
   4. Batch report: amounts moved, tokens involved, execution timestamps
-  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Gold Vault)
+  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Funding Vault)
   6. All data published on project website, GitHub, and IPFS mirror
 ```
+
+---
+
+---
+
+HISTORICAL APPENDICES — NOT NORMATIVE
+
+The following appendices (F, H, I) document the evolution of the protocol
+specification. They are retained for transparency and historical reference.
+The normative specification is contained in the main body of this document
+(Sections 1-12) and normative appendices (A-D, G). In case of conflict
+between a historical appendix and the main body, the main body prevails.
 
 ---
 
@@ -2481,7 +2598,7 @@ MODEL B CONSISTENCY (CTO review):
 38) Section 6.9: table confirms "received immediately" + reward rate proration
 39) Section 6.12: REWARD BUDGET + SOLVENCY SAFEGUARDS added
 40) Legal Disclaimer: added Operational Limits & Pauses paragraph
-41) Section 5.1: TWO-VAULT ARCHITECTURE (Metals Funding Vault (Gold-first) + Reserve Vault)
+41) Section 5.1: TWO-VAULT ARCHITECTURE (Metals Funding Vault (Gold-first) + Heritage Reserve)
 42) Section 4.3: COINBASE TRANSACTION FORMAT (normative)
 43) Section 3.13: BASIC MODE TIP REJECTION (normative box)
 ```
@@ -2496,7 +2613,7 @@ ERRATA v3.4
 RESERVE MODEL:
 
 44) Timelock 30 years eliminated → Heritage sealed by default
-    Reserve Vault is now a Heritage reserve: sealed by default, perpetual
+    Heritage Reserve: sealed by default, perpetual
     and untouched while SOST exists. No fixed expiry date.
 
 45) Emergency Catastrophe dual gate added (G9, C15, Appendix G)
@@ -2570,7 +2687,7 @@ Changes from v3.4 to v3.5:
   SLASH REFORM:
   60) Slash split changed: 33/33/33 (burn/pool/gold) → 50/50 (pool/gold).
       No supply is burned. With ~4.67M max supply, every token has utility.
-      Slashed bonds are recycled into PoPC Pool and Gold Vault.
+      Slashed bonds are recycled into PoPC Pool and Funding Vault.
   61) Constitution C8 updated to reflect 50/50 slash split.
   62) Section 8.2 updated: "Slash burn" → "Slash recycling".
 
@@ -2602,7 +2719,32 @@ Changes from v3.4 to v3.5:
   71) CASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
       (naming aligned with code).
 
-**SOST Protocol — Technical Whitepaper v3.5 — March 2026**
+## Appendix M: Removed — Adaptive Mode (Historical, Non-Normative)
+
+This appendix preserves the original Adaptive Mode specification (formerly Section 6.11)
+for theoretical completeness. This mode is NOT planned for activation. It is documented
+for historical reference only.
+
+Potential future extension — requires governance evaluation.
+
+The Adaptive Mode proposed that when the SOST/gold ratio exceeded 1.5 for 30 consecutive
+days, PoPC would also accept SOST as a custody asset. This was removed from the normative
+specification in v4.0 because accepting SOST as a custody asset creates circular staking
+dynamics that contradict PoPC's core purpose as a proof of external gold custody.
+
+```
+ADAPTIVE MODE (REMOVED — historical reference only):
+  ratio = sost_price / gold_oz_price
+  If ratio > 1.5 for 30 consecutive days → mode would have activated
+  Users would demonstrate custody of SOST rather than gold
+  Same bond, audit, and reward mechanics would apply
+```
+
+---
+
+SOST Protocol Whitepaper v4.0 — Normative Specification
+Last updated: March 2026
+Previous versions: v3.7 (deprecated)
 
 LICENSE: SOST source code is published under the MIT License. The code is
 fully open-source and free to use, modify, and distribute.

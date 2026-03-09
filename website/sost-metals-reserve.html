@@ -204,7 +204,7 @@
       <h2 class="section-title">Two-Vault <span class="gold">Architecture</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy gold. The Reserve Vault needs maximum immutability.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy gold. The Heritage Reserve needs maximum immutability.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -223,7 +223,7 @@
         <span class="arrow">&rarr;</span>
       </div>
       <div class="arch-layer">
-        <h3 style="color:var(--green-primary)">Reserve Vault</h3>
+        <h3 style="color:var(--green-primary)">Heritage Reserve</h3>
         <p>Heritage sealed (Ethereum)</p>
       </div>
     </div>
@@ -236,7 +236,7 @@
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ETHEREUM MAINNET</div>
-        <h3 style="color:var(--green-primary)">Heritage Reserve Vault</h3>
+        <h3 style="color:var(--green-primary)">Heritage Reserve</h3>
         <p>Holds allowlisted precious-metal tokens (XAUt and PAXG). Sealed by default — no outbound transfers in normal operation. Reserve assets are intended to remain perpetual and untouched while SOST exists.</p>
       </div>
     </div>
@@ -263,8 +263,8 @@
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="gold">G1</td><td class="value">Every valid block MUST pay the Funding Vault exactly q = reward // 4. Otherwise invalid.</td></tr>
-          <tr><td class="gold">G2</td><td class="value">Two-vault separation: Funding Vault is operational; Reserve Vault is cold storage.</td></tr>
-          <tr><td class="gold">G3</td><td class="value">Reserve Vault deployed on Ethereum mainnet. Heritage sealed by default.</td></tr>
+          <tr><td class="gold">G2</td><td class="value">Two-vault separation: Funding Vault is operational; Heritage Reserve is sealed storage.</td></tr>
+          <tr><td class="gold">G3</td><td class="value">Heritage Reserve deployed on Ethereum mainnet. Heritage sealed by default.</td></tr>
           <tr><td class="gold">G4</td><td class="value">Purchases begin no earlier than 6 months after genesis, only once market readiness is met.</td></tr>
           <tr><td class="gold">G5</td><td class="value">Purchases executed in batches following rule-based TWAP policy, not discretionary timing.</td></tr>
           <tr><td class="gold">G6</td><td class="value">Reserve limited to allowlisted tokens (XAUt/PAXG). USDC/USDT only as staging (&le;72h).</td></tr>
@@ -301,7 +301,7 @@
           <tr><th>Stage</th><th>Role</th><th>Detail</th></tr>
           <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Funding Vault balance, detects batch threshold</td></tr>
           <tr><td class="gold">Batcher</td><td class="value">Order</td><td class="value">Creates signed execution order when threshold is met</td></tr>
-          <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips, purchases XAUT/PAXG, deposits to Reserve Vault</td></tr>
+          <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips, purchases XAUT/PAXG, deposits to Heritage Reserve</td></tr>
           <tr><td class="gold">Attestor</td><td class="value">Audit</td><td class="value">Publishes public batch record with full transaction proofs</td></tr>
         </table>
       </div>
@@ -355,7 +355,7 @@ Type:  limit orders with explicit slippage tolerance
           <tr><td class="label">Venue(s)</td><td class="value">Exchange or OTC counterparties used</td></tr>
           <tr><td class="label">Realized TWAP/VWAP</td><td class="value">Average execution price and total slippage</td></tr>
           <tr><td class="label">Purchase proof</td><td class="value">XAUT/PAXG acquisition records</td></tr>
-          <tr><td class="label">Deposit hash</td><td class="value">Transaction hash proving deposit into Reserve Vault</td></tr>
+          <tr><td class="label">Deposit hash</td><td class="value">Transaction hash proving deposit into Heritage Reserve</td></tr>
         </table>
       </div>
     </div>
@@ -406,7 +406,7 @@ Type:  limit orders with explicit slippage tolerance
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon gold"></div>
-          <span class="spec-label">Gold Vault Projections</span>
+          <span class="spec-label">Funding Vault Projections</span>
         </div>
         <span class="spec-tag">25% OF COINBASE</span>
       </div>
@@ -465,7 +465,7 @@ Type:  limit orders with explicit slippage tolerance
           <tr><th>Layer</th><th>Trust Level</th><th>Mechanism</th></tr>
           <tr><td class="label">Coinbase allocation</td><td class="green">Trustless</td><td class="value">Consensus-enforced (hardcoded validation rules)</td></tr>
           <tr><td class="label">SOST&rarr;gold conversion</td><td class="value">Auditable</td><td class="value">Foundation-executed, public batch records</td></tr>
-          <tr><td class="label">Reserve Vault custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses</td></tr>
+          <tr><td class="label">Heritage Reserve custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses</td></tr>
           <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;75% miner signal + Foundation order</td></tr>
           <tr><td class="label">Cross-chain bridge</td><td class="green">None required</td><td class="value">No bridge, no wSOST, no smart contract dependency</td></tr>
         </table>
