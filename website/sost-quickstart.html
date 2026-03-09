@@ -239,27 +239,27 @@
         <div class="num">3</div>
         <div class="content">
           <div class="desc">Generate your wallet</div>
-          <code>./sost-cli --genesis ../genesis.json newaddress</code>
+          <code>./sost-cli newwallet &amp;&amp; ./sost-cli getnewaddress "mining"</code>
         </div>
       </div>
       <div class="quick-cmd">
         <div class="num">4</div>
         <div class="content">
           <div class="desc">Start the node</div>
-          <code>./sost-node --genesis ../genesis.json --chain chain.dat</code>
+          <code>./sost-node --wallet wallet.json --genesis genesis_block.json --chain chain.json --rpc-user miner --rpc-pass miner123 --profile mainnet</code>
         </div>
       </div>
       <div class="quick-cmd">
         <div class="num">5</div>
         <div class="content">
           <div class="desc">Start mining (in a new terminal)</div>
-          <code>./sost-miner --genesis ../genesis.json --chain chain.dat --address sost1YOUR_ADDRESS_HERE --rpc 127.0.0.1:18232</code>
+          <code>./sost-miner --address sost1YOUR_ADDRESS_HERE --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --rpc-user miner --rpc-pass miner123 --blocks 0 --profile mainnet --realtime</code>
         </div>
       </div>
     </div>
 
     <div class="notice fade-in delay-3">
-      <strong>Replace</strong> <span style="color:var(--red-primary)">sost1YOUR_ADDRESS_HERE</span> with the address from step 3. The miner is single-threaded by design &mdash; one instance per CPU core for maximum efficiency.
+      <strong>Replace</strong> <span style="color:var(--red-primary)">sost1YOUR_ADDRESS_HERE</span> with the address from step 3. Replace <span style="color:var(--cyan-primary)">miner/miner123</span> with your own RPC credentials. The miner is single-threaded by design &mdash; one instance per CPU core for maximum efficiency.
     </div>
   </div>
 </section>
@@ -336,7 +336,7 @@
 <span class="prompt">$ </span><span class="cmd">git clone</span> <span class="flag">https://github.com/Neob1844/sost-core.git</span>
 <span class="prompt">$ </span><span class="cmd">cd</span> <span class="val">sost-core</span>
         </div>
-        <p>The repository includes genesis.json in the project root &mdash; this is the mainnet genesis block, required by all binaries.</p>
+        <p>The repository includes <span style="color:var(--cyan-primary)">genesis_block.json</span> in the project root &mdash; this is the mainnet genesis block, required by all binaries.</p>
       </div>
     </div>
 
@@ -378,7 +378,9 @@
       </div>
       <div class="step-body">
         <div class="code-block">
-<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="flag">--genesis ../genesis.json</span> <span class="val">newaddress</span>
+<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="val">newwallet</span>
+<span class="comment"># Creates wallet.json with your private key</span>
+<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="val">getnewaddress</span> <span class="flag">"mining"</span>
 <span class="comment"># Output: sost1a3b7f9e2d... (your unique address)</span>
         </div>
         <p>This creates a <span style="color:var(--cyan-primary)">wallet.json</span> file with your private key. Your address starts with <span style="color:var(--red-primary)">sost1</span> followed by 40 hex characters. You can also manage funds from the <a href="https://wallet.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Web Wallet</a>.</p>
@@ -396,7 +398,8 @@
       </div>
       <div class="step-body">
         <div class="code-block">
-<span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--genesis ../genesis.json</span> <span class="flag">--chain chain.dat</span>
+<span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--wallet wallet.json</span> <span class="flag">--genesis genesis_block.json</span> <span class="flag">--chain chain.json</span> \
+    <span class="flag">--rpc-user</span> <span class="val">miner</span> <span class="flag">--rpc-pass</span> <span class="val">miner123</span> <span class="flag">--profile</span> <span class="val">mainnet</span>
 <span class="comment"># Node starts on P2P port 19333, RPC port 18232</span>
         </div>
         <p>The node syncs the blockchain and exposes a JSON-RPC interface for the miner and CLI. Keep it running in its own terminal or use <span style="color:var(--cyan-primary)">tmux</span>/<span style="color:var(--cyan-primary)">screen</span>. Need peers? Join the <a href="sost-community.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">community</a>.</p>
@@ -411,8 +414,10 @@
       </div>
       <div class="step-body">
         <div class="code-block">
-<span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--genesis ../genesis.json</span> <span class="flag">--chain chain.dat</span> \
-    <span class="flag">--address</span> <span class="val">sost1YOUR_ADDRESS</span> <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span>
+<span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--address</span> <span class="val">sost1YOUR_ADDRESS</span> \
+    <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
+    <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> <span class="flag">--rpc-user</span> <span class="val">miner</span> <span class="flag">--rpc-pass</span> <span class="val">miner123</span> \
+    <span class="flag">--blocks</span> <span class="val">0</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--realtime</span>
         </div>
         <p>The miner connects to your local node via RPC and starts solving ConvergenceX puzzles. When a block is found, it's automatically submitted to the network. Track your blocks in the <a href="sost-explorer.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Explorer</a>.</p>
         <div class="notice green" style="margin-top:12px;">
@@ -521,13 +526,13 @@
           </tr>
           <tr>
             <td class="highlight">genesis mismatch</td>
-            <td class="label">Wrong genesis.json path</td>
-            <td class="value">Use --genesis ../genesis.json from build/</td>
+            <td class="label">Wrong genesis_block.json path</td>
+            <td class="value">Use --genesis genesis_block.json from build/</td>
           </tr>
           <tr>
             <td class="highlight">wallet.json not found</td>
             <td class="label">No wallet created yet</td>
-            <td class="value">Run sost-cli newaddress first</td>
+            <td class="value">Run sost-cli newwallet first</td>
           </tr>
           <tr>
             <td class="highlight">Miner shows 0 H/s</td>
@@ -561,7 +566,7 @@
           <p><strong style="color:var(--red-primary)">Back up wallet.json</strong> to offline storage immediately after creation. This file contains your private key &mdash; losing it means losing your coins permanently.</p>
           <p>Encrypt the wallet using the CLI:</p>
           <div class="code-block" style="margin-bottom:0;">
-<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="flag">--genesis ../genesis.json</span> <span class="val">encrypt</span>
+<span class="prompt">$ </span><span class="cmd">./sost-cli</span> <span class="val">wallet-export</span>
           </div>
         </div>
       </div>
@@ -602,7 +607,7 @@
         <div class="level-name">Solo Miner</div>
         <div class="level-desc">Mine SOST with a single node and miner. The simplest setup &mdash; just the 5 commands above. You receive 50% of each block reward directly to your <a href="sost-wallet.html" style="color:var(--green-primary);text-decoration:none;border-bottom:1px solid var(--green-dim);">wallet</a> address. Ideal for getting started and learning the protocol.</div>
         <div class="level-cmd">
-./sost-miner --genesis ../genesis.json --chain chain.dat --address sost1... --rpc 127.0.0.1:18232
+./sost-miner --address sost1... --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --rpc-user miner --rpc-pass miner123 --blocks 0 --profile mainnet --realtime
         </div>
       </div>
 
@@ -611,7 +616,7 @@
         <div class="level-name">Full Node Operator</div>
         <div class="level-desc">Run a persistent full node that validates the entire chain and serves peers. Use systemd for auto-restart, configure firewall rules, and monitor chain health via the RPC interface. See <a href="sost-infrastructure.html" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">Infrastructure</a> for deployment guides. Strengthens the network for everyone.</div>
         <div class="level-cmd">
-./sost-node --genesis ../genesis.json --chain chain.dat --port 19333 --rpc-port 18232
+./sost-node --wallet wallet.json --genesis genesis_block.json --chain chain.json --rpc-user miner --rpc-pass miner123 --profile mainnet
         </div>
       </div>
 
