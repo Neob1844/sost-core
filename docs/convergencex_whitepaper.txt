@@ -304,11 +304,12 @@ schedule (genesis + height × TARGET_SPACING) and assigns levels:
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
-  ahead = 76+    → L5+  (unbounded hardening, scale = level + 1)
+  ahead = 76+    → L5+  (unbounded hardening)
 
 Stability parameters by level:
 
-  scale  = level + 1  (L1→1, L2→2, L3→3, ... unbounded)
+  scale  = level       for L1–L4  (L1→1, L2→2, L3→3, L4→4)
+  scale  = level + 1   for L5+   (L5→6, L6→7, ... unbounded)
   k      = 4          (fixed: always 4 probes)
   steps  = 4          (fixed: always 4 refinement steps per probe)
   margin = 180        (fixed)
@@ -758,7 +759,8 @@ LEVEL ASSIGNMENT (cASERT v5 — L1–L5+, unbounded):
   but the formula is general and unbounded.
 
 STABILITY PARAMETERS BY LEVEL:
-  scale  = level + 1  (L1→scale 1, L2→scale 2, ..., L10→scale 11, ...)
+  scale  = level       for L1–L4  (L1→1, L2→2, L3→3, L4→4)
+  scale  = level + 1   for L5+   (L5→6, L6→7, ..., L10→11, ...)
   k      = 4          (fixed: always 4 probes)
   steps  = 4          (fixed: always 4 refinement steps)
   margin = 180        (fixed)
@@ -2714,8 +2716,8 @@ Changes from v3.4 to v3.5:
   CASERT MODIFICATIONS:
   70) CASERT rewritten: discrete 3-mode system replaced by continuous
       signal-based levels. k=4 and steps=4 are fixed. Scale equals
-      level and increases without bound under fast-chain conditions
-      (progressive hardening). MAX_INTERVALS corrected from 64 to 50.
+      level for L1-L4, level+1 for L5+ — increases without bound
+      under fast-chain conditions (progressive hardening).
   71) CASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
       (naming aligned with code).
 
