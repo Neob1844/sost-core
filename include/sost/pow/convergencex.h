@@ -1,5 +1,5 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
-// Licensed under the Business Source License 1.1. See LICENSE file.
+// MIT License. See LICENSE file.
 #pragma once
 // ConvergenceX v2.0: Persistent dataset cache + per-block program generation
 // ASIC-resistance: O(4GB) memory required, no fixed pattern to optimize

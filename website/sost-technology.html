@@ -17,11 +17,11 @@
     --border-dim: #1a1a1a;
     --border-med: #2a2a2a;
     --border-bright: #3a3a3a;
-    --red-primary: #e63946;
+    --red-primary: #fb010d;
     --red-bright: #ff2d3b;
     --red-dim: #8b1a22;
-    --red-glow: #e6394633;
-    --red-subtle: #e6394618;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
     --green-primary: #4ade80;
     --green-dim: #22c55e44;
     --cyan-primary: #22d3ee;
@@ -53,7 +53,7 @@
 
   /* HERO */
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
-  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
   .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .hero-label::before { content: '//'; color: var(--text-muted); }
   .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
@@ -405,36 +405,36 @@ commit = <span class="fn">finalize</span>(state || checkpoints)
           <tr>
             <td class="key">Custom silicon</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> Trivial</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> Requires 4GB on-chip memory</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> Requires 4GB on-chip memory</td>
           </tr>
           <tr>
             <td class="key">Parallel hashing</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> Easy</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> Sequential dataset dependency</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> Sequential dataset dependency</td>
           </tr>
           <tr>
             <td class="key">Fixed circuit</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> Optimal</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> Program changes every block</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> Program changes every block</td>
           </tr>
           <tr>
             <td class="key">Memory reduction</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> N/A</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> Checkpoints catch shortcuts</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> Checkpoints catch shortcuts</td>
           </tr>
           <tr>
             <td class="key">GPU advantage</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> Moderate</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> Penalized by memory latency</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> Penalized by memory latency</td>
           </tr>
           <tr>
             <td class="key">CPU advantage</td>
-            <td class="val"><span style="color:#e63946">&#10008;</span> None</td>
+            <td class="val"><span style="color:#fb010d">&#10008;</span> None</td>
             <td class="val"><span style="color:#22c55e">&#10004;</span> L3 cache reuse, sequential access</td>
           </tr>
         </table>
 
-        <div style="margin-top:16px;padding:14px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #e63946">
+        <div style="margin-top:16px;padding:14px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #fb010d">
           <p class="spec-desc" style="margin:0;line-height:1.8">
             An ASIC for ConvergenceX v2.0 would require: <b>4GB LPDDR5</b> on-package,
             a <b>general-purpose ALU</b> for 8 operation types, and full re-fabrication
@@ -482,7 +482,7 @@ real     = <span class="num">5</span> + <span class="num">25395</span>/<span cla
           </tr>
           <tr>
             <td class="key">MAX</td>
-            <td class="val">bitsQ = <code>16,711,680</code> &rarr; difficulty <span style="color:#e63946">255.000</span> <span class="comment">// theoretical max</span></td>
+            <td class="val">bitsQ = <code>16,711,680</code> &rarr; difficulty <span style="color:#fb010d">255.000</span> <span class="comment">// theoretical max</span></td>
           </tr>
         </table>
 
@@ -490,7 +490,7 @@ real     = <span class="num">5</span> + <span class="num">25395</span>/<span cla
           <p class="spec-desc" style="margin:0">
             <b>ASERT clamp per block:</b><br>
             Max DOWN: <span style="color:#22c55e">&minus;2 units</span> &rarr; &asymp; &minus;3.0% per block<br>
-            Max UP: <span style="color:#e63946">+3 units</span> &rarr; &asymp; +4.6% per block<br>
+            Max UP: <span style="color:#fb010d">+3 units</span> &rarr; &asymp; +4.6% per block<br>
             After 24h of 2&times; faster blocks &rarr; difficulty doubles
           </p>
         </div>
@@ -826,7 +826,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
   <div class="container">
     <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:20px;">
       <p style="font-size:11px;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px;">// SOURCE CODE LICENSE</p>
-      <p style="font-size:12px;color:var(--text-dim);line-height:1.7;">SOST source code is published under the <strong style="color:var(--cyan-primary);">Business Source License 1.1</strong> (BSL 1.1). The code is fully auditable and open for review, compilation, and execution of nodes and miners. Forking, commercial reuse, and redistribution of modified versions require written authorization from the SOST Foundation. See <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> for full terms.</p>
+      <p style="font-size:12px;color:var(--text-dim);line-height:1.7;">SOST source code is published under the <strong style="color:var(--cyan-primary);">MIT License</strong>. The code is fully open-source and free to use, modify, and distribute. See <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> for full terms.</p>
     </div>
   </div>
 </section>
@@ -836,7 +836,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
-    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">BSL 1.1</a> &mdash; See LICENSE</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
 
