@@ -1,5 +1,5 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
-// Licensed under the Business Source License 1.1. See LICENSE file.
+// MIT License. See LICENSE file.
 //
 // sost-cli.cpp — SOST Wallet CLI v1.3
 //
