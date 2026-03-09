@@ -17,4 +17,14 @@ inline constexpr int32_t  MAX_BLOCK_BYTES_CONSENSUS = 1'000'000;
 inline constexpr uint16_t MAX_INPUTS_CONSENSUS      = 256;
 inline constexpr uint16_t MAX_OUTPUTS_CONSENSUS     = 256;
 
+// Bond/Escrow activation — BOND_LOCK (0x10) and ESCROW_LOCK (0x11) become valid
+// output types after this height. Before activation, R11 rejects them.
+inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_MAINNET = 5000;
+inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_TESTNET = 100;
+inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_DEV     = 1;
+
+// Payload sizes for lock outputs
+inline constexpr uint16_t BOND_LOCK_PAYLOAD_LEN   = 8;   // lock_until (uint64 LE)
+inline constexpr uint16_t ESCROW_LOCK_PAYLOAD_LEN = 28;  // lock_until (8) + beneficiary_pkh (20)
+
 } // namespace sost

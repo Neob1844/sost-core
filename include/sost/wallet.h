@@ -32,6 +32,8 @@ struct WalletUTXO {
     PubKeyHash pkh;           // owner
     int64_t  height;          // block height (-1 = unconfirmed)
     bool     spent;
+    uint64_t lock_until{0};   // BOND_LOCK/ESCROW_LOCK: height at which output unlocks (0 = no lock)
+    PubKeyHash beneficiary{}; // ESCROW_LOCK only: beneficiary pubkey hash
 };
 
 // -------------------------------------------------------------------------
@@ -62,6 +64,13 @@ public:
     int64_t balance(int64_t chain_height = -1) const;
     int64_t balance(const std::string& addr, int64_t chain_height = -1) const;
 
+    // v1.4: locked balance — BOND_LOCK and ESCROW_LOCK UTXOs still within lock period
+    int64_t locked_balance(int64_t chain_height) const;
+    int64_t available_balance(int64_t chain_height) const;
+
+    // v1.4: list bond/escrow UTXOs
+    std::vector<WalletUTXO> list_bonds(int64_t chain_height = -1) const;
+
     // --- Genesis import ---
     bool import_genesis(const std::string& genesis_json_path, std::string* err = nullptr);
 
@@ -73,6 +82,27 @@ public:
         const Hash256& genesis_hash,
         Transaction& out_tx,
         int64_t chain_height = -1,       // maturity filter
+        std::string* err = nullptr);
+
+    // v1.4: create BOND_LOCK transaction (locks funds until lock_until height)
+    bool create_bond_transaction(
+        int64_t amount,
+        int64_t fee,
+        uint64_t lock_until,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
+    // v1.4: create ESCROW_LOCK transaction (locks funds with beneficiary)
+    bool create_escrow_transaction(
+        int64_t amount,
+        int64_t fee,
+        uint64_t lock_until,
+        const PubKeyHash& beneficiary_pkh,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
         std::string* err = nullptr);
 
     // --- Persistence ---

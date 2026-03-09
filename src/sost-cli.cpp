@@ -29,12 +29,16 @@
 //   sost-cli listunspent [address]      Show unspent outputs
 //   sost-cli createtx <to> <amount>     Create and sign transaction (auto fee)
 //   sost-cli send <to> <amount>         Create, sign and broadcast (auto fee)
+//   sost-cli create-bond <amt> <blocks> Create BOND_LOCK transaction
+//   sost-cli create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK tx
+//   sost-cli list-bonds                 List bond/escrow UTXOs
 //   sost-cli dumpprivkey <address>      Show private key (DANGER)
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
 #include "sost/types.h"
 #include "sost/params.h"
+#include "sost/address.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -225,6 +229,9 @@ static void print_usage() {
     printf("  listunspent [addr]     List unspent transaction outputs\n");
     printf("  createtx <to> <amt>    Create and sign a transaction (auto fee)\n");
     printf("  send <to> <amt>        Create, sign and broadcast to node (auto fee)\n");
+    printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
+    printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
+    printf("  list-bonds             List active bond/escrow UTXOs\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
@@ -430,11 +437,19 @@ int main(int argc, char** argv) {
     // getbalance [address]
     // =====================================================================
     if (cmd == "getbalance") {
+        int64_t chain_height = query_chain_height();
         if (argc > arg_start + 1) {
             std::string addr = argv[arg_start + 1];
             printf("%s SOST\n", format_sost(w.balance(addr)).c_str());
         } else {
-            printf("%s SOST\n", format_sost(w.balance()).c_str());
+            int64_t total = w.balance(chain_height);
+            int64_t locked = w.locked_balance(chain_height);
+            int64_t avail = total - locked;
+            printf("Total:     %s SOST\n", format_sost(total).c_str());
+            if (locked > 0) {
+                printf("Available: %s SOST\n", format_sost(avail).c_str());
+                printf("Locked:    %s SOST (bonds/escrows)\n", format_sost(locked).c_str());
+            }
         }
         return 0;
     }
@@ -454,11 +469,14 @@ int main(int argc, char** argv) {
             return 0;
         }
         for (const auto& u : utxos) {
-            printf("txid: %s  vout: %u  amount: %s SOST  height: %lld\n",
+            printf("txid: %s  vout: %u  amount: %s SOST  height: %lld",
                    to_hex(u.txid.data(), 32).c_str(),
                    u.vout,
                    format_sost(u.amount).c_str(),
                    (long long)u.height);
+            if (u.output_type == 0x10) printf("  [BOND locked until %llu]", (unsigned long long)u.lock_until);
+            if (u.output_type == 0x11) printf("  [ESCROW locked until %llu]", (unsigned long long)u.lock_until);
+            printf("\n");
         }
         printf("\nTotal: %zu UTXOs\n", utxos.size());
         return 0;
@@ -732,6 +750,184 @@ int main(int argc, char** argv) {
             }
             return 1;
         }
+        return 0;
+    }
+
+    // =====================================================================
+    // create-bond <amount_sost> <lock_blocks>
+    // =====================================================================
+    if (cmd == "create-bond") {
+        if (argc < arg_start + 3) {
+            fprintf(stderr, "Usage: sost-cli create-bond <amount_sost> <lock_blocks>\n");
+            fprintf(stderr, "  Creates a BOND_LOCK output locked for <lock_blocks> blocks\n");
+            fprintf(stderr, "  Example: sost-cli create-bond 100 1000  (lock 100 SOST for 1000 blocks)\n");
+            return 1;
+        }
+        int64_t amount = parse_amount(argv[arg_start + 1]);
+        int64_t lock_blocks = std::stoll(argv[arg_start + 2]);
+        if (lock_blocks <= 0) {
+            fprintf(stderr, "Error: lock_blocks must be positive\n");
+            return 1;
+        }
+
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) {
+            fprintf(stderr, "Error: cannot connect to node (need chain height for lock_until)\n");
+            return 1;
+        }
+        uint64_t lock_until = (uint64_t)chain_height + (uint64_t)lock_blocks;
+
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+
+        // Two-pass fee calculation
+        int64_t est_fee = MIN_FEE_STOCKS;
+        sost::Transaction tx;
+        std::string err;
+        if (!w.create_bond_transaction(amount, est_fee, lock_until, genesis_hash,
+                                       tx, chain_height, &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
+            return 1;
+        }
+
+        std::vector<sost::Byte> raw;
+        std::string ser_err;
+        tx.Serialize(raw, &ser_err);
+        int64_t real_fee = calculate_fee((int64_t)raw.size());
+        if (real_fee != est_fee) {
+            sost::Transaction tx2;
+            if (!w.create_bond_transaction(amount, real_fee, lock_until, genesis_hash,
+                                           tx2, chain_height, &err)) {
+                fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
+                return 1;
+            }
+            tx = tx2;
+            raw.clear();
+            tx.Serialize(raw, &ser_err);
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
+        sost::Hash256 txid;
+        tx.ComputeTxId(txid);
+        printf("BOND_LOCK transaction created.\n");
+        printf("  Amount:     %s SOST\n", format_sost(amount).c_str());
+        printf("  Lock until: height %llu (current: %lld, +%lld blocks)\n",
+               (unsigned long long)lock_until, (long long)chain_height, (long long)lock_blocks);
+        printf("  Fee:        %s SOST (%zu bytes)\n", format_sost(real_fee).c_str(), raw.size());
+        printf("  Txid:       %s\n", to_hex(txid.data(), 32).c_str());
+        printf("  Raw hex:    %s\n", to_hex(raw.data(), raw.size()).c_str());
+        return 0;
+    }
+
+    // =====================================================================
+    // create-escrow <amount_sost> <lock_blocks> <beneficiary_address>
+    // =====================================================================
+    if (cmd == "create-escrow") {
+        if (argc < arg_start + 4) {
+            fprintf(stderr, "Usage: sost-cli create-escrow <amount_sost> <lock_blocks> <beneficiary>\n");
+            fprintf(stderr, "  Creates an ESCROW_LOCK output with a beneficiary address\n");
+            return 1;
+        }
+        int64_t amount = parse_amount(argv[arg_start + 1]);
+        int64_t lock_blocks = std::stoll(argv[arg_start + 2]);
+        std::string beneficiary_addr = argv[arg_start + 3];
+
+        if (lock_blocks <= 0) {
+            fprintf(stderr, "Error: lock_blocks must be positive\n");
+            return 1;
+        }
+
+        sost::PubKeyHash beneficiary_pkh{};
+        if (!sost::address_decode(beneficiary_addr, beneficiary_pkh)) {
+            fprintf(stderr, "Error: invalid beneficiary address: %s\n", beneficiary_addr.c_str());
+            return 1;
+        }
+
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) {
+            fprintf(stderr, "Error: cannot connect to node (need chain height for lock_until)\n");
+            return 1;
+        }
+        uint64_t lock_until = (uint64_t)chain_height + (uint64_t)lock_blocks;
+
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+
+        int64_t est_fee = MIN_FEE_STOCKS;
+        sost::Transaction tx;
+        std::string err;
+        if (!w.create_escrow_transaction(amount, est_fee, lock_until, beneficiary_pkh,
+                                         genesis_hash, tx, chain_height, &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
+            return 1;
+        }
+
+        std::vector<sost::Byte> raw;
+        std::string ser_err;
+        tx.Serialize(raw, &ser_err);
+        int64_t real_fee = calculate_fee((int64_t)raw.size());
+        if (real_fee != est_fee) {
+            sost::Transaction tx2;
+            if (!w.create_escrow_transaction(amount, real_fee, lock_until, beneficiary_pkh,
+                                             genesis_hash, tx2, chain_height, &err)) {
+                fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
+                return 1;
+            }
+            tx = tx2;
+            raw.clear();
+            tx.Serialize(raw, &ser_err);
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
+        sost::Hash256 txid;
+        tx.ComputeTxId(txid);
+        printf("ESCROW_LOCK transaction created.\n");
+        printf("  Amount:      %s SOST\n", format_sost(amount).c_str());
+        printf("  Lock until:  height %llu (current: %lld, +%lld blocks)\n",
+               (unsigned long long)lock_until, (long long)chain_height, (long long)lock_blocks);
+        printf("  Beneficiary: %s\n", beneficiary_addr.c_str());
+        printf("  Fee:         %s SOST (%zu bytes)\n", format_sost(real_fee).c_str(), raw.size());
+        printf("  Txid:        %s\n", to_hex(txid.data(), 32).c_str());
+        printf("  Raw hex:     %s\n", to_hex(raw.data(), raw.size()).c_str());
+        return 0;
+    }
+
+    // =====================================================================
+    // list-bonds
+    // =====================================================================
+    if (cmd == "list-bonds") {
+        int64_t chain_height = query_chain_height();
+        auto bonds = w.list_bonds(chain_height);
+        if (bonds.empty()) {
+            printf("No active bond/escrow UTXOs.\n");
+            return 0;
+        }
+        for (const auto& u : bonds) {
+            const char* type_str = (u.output_type == 0x10) ? "BOND" : "ESCROW";
+            bool locked = (chain_height >= 0 && (uint64_t)chain_height < u.lock_until);
+            printf("[%s] %s SOST  lock_until: %llu  status: %s\n",
+                   type_str,
+                   format_sost(u.amount).c_str(),
+                   (unsigned long long)u.lock_until,
+                   locked ? "LOCKED" : "UNLOCKED");
+            printf("  txid: %s  vout: %u\n",
+                   to_hex(u.txid.data(), 32).c_str(), u.vout);
+            if (u.output_type == 0x11) {
+                printf("  beneficiary: sost1%s\n",
+                       to_hex(u.beneficiary.data(), 20).c_str());
+            }
+            if (locked && chain_height >= 0) {
+                printf("  blocks remaining: %llu\n",
+                       (unsigned long long)(u.lock_until - (uint64_t)chain_height));
+            }
+        }
+        printf("\nTotal: %zu bond/escrow UTXOs\n", bonds.size());
         return 0;
     }
 

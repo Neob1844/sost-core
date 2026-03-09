@@ -98,6 +98,10 @@ add_executable(test-mempool tests/test_mempool.cpp)
 target_link_libraries(test-mempool PRIVATE sost-core)
 add_test(NAME mempool COMMAND test-mempool)
 
+add_executable(test-bond-lock tests/test_bond_lock.cpp)
+target_link_libraries(test-bond-lock PRIVATE sost-core)
+add_test(NAME bond-lock COMMAND test-bond-lock)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
