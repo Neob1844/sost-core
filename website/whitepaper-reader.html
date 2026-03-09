@@ -499,7 +499,8 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">Stability parameters by level:</p>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  scale  = level + 1  (L1→1, L2→2, ... unbounded)</pre>
+<pre class="wp-code-inline">  scale  = level     for L1–L4 (L1→1, L2→2, L3→3, L4→4)</pre>
+<pre class="wp-code-inline">  scale  = level + 1 for L5+   (L5→6, L6→7, ... unbounded)</pre>
 <pre class="wp-code-inline">  k      = 4      (fixed: always 4 probes)</pre>
 <pre class="wp-code-inline">  steps  = 4      (fixed: always 4 refinement steps per probe)</pre>
 <pre class="wp-code-inline">  margin = 180    (fixed)</pre>
@@ -879,7 +880,8 @@ PROPERTIES:
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 76          → L5+ (unbounded: level = 5 + (ahead - 76) / 50)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">STABILITY PARAMETERS BY LEVEL:</p>
-<pre class="wp-code-inline">  scale  = level + 1  (L1→1, L2→2, ... unbounded)</pre>
+<pre class="wp-code-inline">  scale  = level     for L1–L4 (L1→1, L2→2, L3→3, L4→4)</pre>
+<pre class="wp-code-inline">  scale  = level + 1 for L5+   (L5→6, L6→7, ... unbounded)</pre>
 <pre class="wp-code-inline">  k      = 4      (fixed: always 4 probes)</pre>
 <pre class="wp-code-inline">  steps  = 4      (fixed: always 4 refinement steps)</pre>
 <pre class="wp-code-inline">  margin = 180    (fixed)</pre>
@@ -1429,7 +1431,7 @@ AUDIT PROBABILITY BY REPUTATION:
 
 VERIFICATION (script, no humans):
   1. User signs message with Ethereum wallet
-  2. ecrecover() confirms identity (no trust needed)
+  2. ecrecover() confirms control of the declared wallet (no trust needed)
   3. Verifier uses multiple independent RPC endpoints with a
      deterministic retry schedule; results are logged and attested:
      token.balanceOf(user_wallet) &gt;= committed_amount
@@ -1465,7 +1467,7 @@ VERIFICATION (script, no humans):
 8. On failure: bond slashed automatically
 
 In Model A, the gold NEVER leaves the user&#x27;s wallet.
-Only the SOST bond is at risk. The Foundation has no access
+Your gold never leaves your wallet. Only the posted SOST bond is at risk. The Foundation has no access
 to, custody of, or control over the user&#x27;s gold tokens.
 
 Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)</pre>
@@ -1487,7 +1489,7 @@ Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)</pre>
   0.4    &lt;= ratio &lt; 0.5      →  bond = 29%
   ratio &gt;= 0.5               →  bond = 30%  (maximum)
 
-  bond_sost = bond_usd / sost_price_TWAP_7d
+  bond_sost = bond_fiat / sost_price_TWAP_7d
 
 RATIO THRESHOLDS (price-independent):
 
@@ -1597,11 +1599,11 @@ REPUTATION SCOPE:
 BOND TERMS (client-side calculation + user consent):
 
   Given user commitment (gold_amt, duration, model):
-    gold_value_usd = gold_amt × P_gold
+    gold_value_fiat = gold_amt × P_gold
     ratio          = P_sost / P_gold
     bond_pct       = constitutional_table(ratio)
-    bond_usd       = bond_pct × gold_value_usd
-    bond_sost      = bond_usd / P_sost
+    bond_fiat       = bond_pct × gold_value_fiat
+    bond_sost      = bond_fiat / P_sost
 
   The client constructs a Bond Terms package:
     terms = {
@@ -1759,7 +1761,7 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <div class="wp-bullet">4. At expiry: ONLY the original depositor can withdraw full XAUT/PAXG.</div>
 <div class="wp-bullet">5. SOST received are the user&#x27;s to keep immediately. No return required.</div>
 <pre class="wp-code-inline">   The user may sell, hold, or use the SOST freely from day 1.</pre>
-<div class="wp-bullet">6. No audits. No slash. No bond. Gold is enforced by escrow, not by trust.</div>
+<div class="wp-bullet">6. No audits, no slash risk, and no bond requirement. Gold is enforced by escrow, not by trust.</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">NO EARLY EXIT (Model B — gold escrow):</p>
 <pre class="wp-code-inline">  Users cannot unlock escrowed gold before maturity. The gold stays</pre>
@@ -1775,7 +1777,7 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <div class="wp-bullet">withdraw() callable ONLY by original depositor</div>
 <div class="wp-bullet">withdraw() reverts if block.timestamp &lt; unlockTime</div>
 <div class="wp-bullet">No Foundation key, no multisig, no emergency withdrawal</div>
-<div class="wp-bullet">Source code published, verified on explorer, independently audited</div>
+<div class="wp-bullet">Source code: published and verified on explorer. Independent audit planned before mainnet activation of Model B.</div>
 <div class="wp-bullet">NO EXTENSION: the escrow term is immutable once created. There is no
     renew(), extend(), or modify() function. To commit again after maturity,
     the user must create a new contract at current terms.</div>
@@ -1977,7 +1979,7 @@ REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
   Pool solvency rule:
     A new PoPC contract can only be opened if the PoPC Pool has
     sufficient balance to cover the full reward amount at creation.
-    - Model A: fee collected upfront at creation; reward paid at completion
+    - Model A: fee calculated at creation; reward + fee disbursed at completion
     - Model B: reward is paid immediately from pool at deposit
     If the pool is underfunded, new contracts are temporarily paused
     until replenished (via block inflows or slash income).
@@ -2294,7 +2296,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder)</td></tr>
-<tr><td>CASERT</td><td>Unidirectional block-lag overlay, L1–L5+, k=4, steps=4, scale=level+1, hardening only, unbounded</td></tr>
+<tr><td>CASERT</td><td>Unidirectional block-lag overlay, L1–L5+, k=4, steps=4, scale=level (L1-L4) or level+1 (L5+), hardening only, unbounded</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2771,8 +2773,8 @@ SERIALIZATION (consensus-critical fix):
 <div class="wp-bullet">  62) Section 8.2 updated: &quot;Slash burn&quot; → &quot;Slash recycling&quot;.</div>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  PROTOCOL FEES:</pre>
-<div class="wp-bullet">  63) Section 6.7.1 added: Model A protocol fee (5% of reward, collected upfront at creation).</div>
-<div class="wp-bullet">  64) Section 6.9.1 added: Model B protocol fee (10% of reward, collected upfront at creation).</div>
+<div class="wp-bullet">  63) Section 6.7.1 added: Model A protocol fee (5% of reward, calculated at creation, disbursed at completion).</div>
+<div class="wp-bullet">  64) Section 6.9.1 added: Model B protocol fee (10% of reward, deducted from immediate payout).</div>
 <pre class="wp-code-inline">      Fees fund Foundation operations. 30-day notice for changes.</pre>
 <pre class="wp-code-inline">      Existing contracts locked at creation fee rate.</pre>
 <div class="wp-spacer"></div>
@@ -2796,24 +2798,24 @@ SERIALIZATION (consensus-critical fix):
 <pre class="wp-code-inline">    (expected − actual) using wall-clock time vs genesis schedule.</pre>
 <pre class="wp-code-inline">    Only hardens when chain is ahead of schedule (emission protection).</pre>
 <pre class="wp-code-inline">    Levels: L1 (neutral, 0–4 ahead), L2 (5–25), L3 (26–50), L4 (51–75), L5+ (76+, unbounded).</pre>
-<pre class="wp-code-inline">    k changed from 3 to 4. Scale = level number (1 through 5).</pre>
+<pre class="wp-code-inline">    k changed from 3 to 4. Scale = level for L1–L4 (1–4), level + 1 for L5+ (6+).</pre>
 <pre class="wp-code-inline">    MAX_INTERVALS and E_CAP eliminated (no sliding window needed).</pre>
 <div class="wp-bullet">  71) CASERT parameters: replaced by</div>
 <pre class="wp-code-inline">      L2_THRESHOLD=5, L3_THRESHOLD=26, L4_THRESHOLD=51, L5_THRESHOLD=76 (blocks ahead, unbounded).</pre>
 <div class="wp-spacer"></div>
-<h3 id="sec-87" class="wp-h">Appendix J: Errata v3.7 (cASERT v4 — Scale = Level)</h3>
+<h3 id="sec-87" class="wp-h">Appendix J: Errata v3.7 (cASERT v4 — Scale = Level, L5+ Exception)</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">Changes from v3.6 to v3.7:</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  CASERT LEVEL SYSTEM:</pre>
 <div class="wp-bullet">  72) Level names: L3–L6 → L1–L5. L1 is neutral default. L5 is maximum.</div>
 <div class="wp-bullet">  73) Thresholds: 21/51/101 → 5/20/50/75. Earlier response to hashrate surges.</div>
-<div class="wp-bullet">  74) Scale = level + 1: L1→1, L2→2, ... unbounded. Clean mapping.</div>
+<div class="wp-bullet">  74) Scale = level for L1–L4 (L1→1, L2→2, L3→3, L4→4); scale = level + 1 for L5+ (L5→6, L6→7, ... unbounded).</div>
 <pre class="wp-code-inline">      Baseline compute reduced from 36 (scale=3) to 12 (scale=1).</pre>
 <div class="wp-bullet">  75) CasertMode enum: NORMAL/DEGRADED/OPEN → L1/L2/L3/L4/L5.</div>
 <div class="wp-bullet">  76) params.h: CX_STB_SCALE changed from 3 to 1.</div>
 <pre class="wp-code-inline">      CASERT_L2_BLOCKS=5, L3=26, L4=51, L5=76 (unbounded beyond L5).</pre>
-<div class="wp-bullet">  77) Explorer v4.2 aligned with C++ L1–L5+, scale=level+1.</div>
+<div class="wp-bullet">  77) Explorer v4.2 aligned with C++ L1–L5+, scale=level (L1-L4) or level+1 (L5+).</div>
 <div class="wp-spacer"></div>
 <div class="wp-spacer"></div>
 <hr class="wp-hr">

@@ -610,7 +610,7 @@ real_difficulty = integer_part + fractional / <span class="num">65536.0</span>
 <span class="kw">else</span>:                   level = <span class="str">L6+</span> <span class="cmt">// scale = unbounded</span>
 
 <span class="cmt">// Parameters scaled by level</span>
-stab_scale  = level + 1            <span class="cmt">// unbounded above L4</span>
+stab_scale  = (level &lt;= 4) ? level : level + 1  <span class="cmt">// L1-L4: scale=level, L5+: scale=level+1</span>
 stab_k      = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_steps  = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_margin = <span class="num">180</span>                 <span class="cmt">// fixed</span>
