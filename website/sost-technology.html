@@ -607,11 +607,11 @@ real_difficulty = integer_part + fractional / <span class="num">65536.0</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">26</span>:  level = <span class="str">L2</span>  <span class="cmt">// scale = 2</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">51</span>:  level = <span class="str">L3</span>  <span class="cmt">// scale = 3</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">76</span>:  level = <span class="str">L4</span>  <span class="cmt">// scale = 4</span>
-<span class="kw">elif</span> blocks_ahead &lt; <span class="num">101</span>: level = <span class="str">L5</span>  <span class="cmt">// scale = 6</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">101</span>: level = <span class="str">L5</span>  <span class="cmt">// scale = 5</span>
 <span class="kw">else</span>:                   level = <span class="str">L6+</span> <span class="cmt">// scale = unbounded</span>
 
 <span class="cmt">// Parameters scaled by level</span>
-stab_scale  = (level &lt;= 4) ? level : level + 1  <span class="cmt">// L1-L4: scale=level, L5+: scale=level+1</span>
+stab_scale  = level  <span class="cmt">// scale = level for ALL levels (linear)</span>
 stab_k      = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_steps  = <span class="num">4</span>                   <span class="cmt">// fixed</span>
 stab_margin = <span class="num">180</span>                 <span class="cmt">// fixed</span>
@@ -621,7 +621,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           <tr><td class="key">CASERT_L2_BLOCKS</td><td class="val"><code>5</code> blocks ahead <span class="comment">// scale = 2</span></td></tr>
           <tr><td class="key">CASERT_L3_BLOCKS</td><td class="val"><code>26</code> blocks ahead <span class="comment">// scale = 3</span></td></tr>
           <tr><td class="key">CASERT_L4_BLOCKS</td><td class="val"><code>51</code> blocks ahead <span class="comment">// scale = 4</span></td></tr>
-          <tr><td class="key">CASERT_L5_BLOCKS</td><td class="val"><code>76</code> blocks ahead <span class="comment">// scale = 6</span></td></tr>
+          <tr><td class="key">CASERT_L5_BLOCKS</td><td class="val"><code>76</code> blocks ahead <span class="comment">// scale = 5</span></td></tr>
           <tr><td class="key">CASERT_L6+</td><td class="val"><code>101+</code> blocks ahead <span class="comment">// scale = unbounded (grows every 50 blocks)</span></td></tr>
           <tr><td class="key">CX_STB_K</td><td class="val"><code>4</code> <span class="comment">// stability constant</span></td></tr>
           <tr><td class="key">CX_STB_STEPS</td><td class="val"><code>4</code> <span class="comment">// convergence steps per iteration</span></td></tr>
@@ -704,7 +704,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
         </div>
         <div class="mode-params">
           <span>76&ndash;100 blocks ahead</span><br>
-          scale=6, emergency hardening<br>
+          scale=5, emergency hardening<br>
           Severe fast-chain response
         </div>
       </div>

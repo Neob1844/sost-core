@@ -304,13 +304,12 @@ schedule (genesis + height × TARGET_SPACING) and assigns levels:
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
-  ahead = 76–100 → L5   (strong hardening, scale = level + 1)
+  ahead = 76–100 → L5   (strong hardening)
   ahead = 101+   → L6+  (unbounded hardening, grows every 50 blocks)
 
 Stability parameters by level:
 
-  scale  = level       for L1–L4  (L1→1, L2→2, L3→3, L4→4)
-  scale  = level + 1   for L5+   (L5→6, L6→7, ... unbounded)
+  scale  = level       for ALL levels  (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ...)
   k      = 4          (fixed: always 4 probes)
   steps  = 4          (fixed: always 4 refinement steps per probe)
   margin = 180        (fixed)
@@ -323,8 +322,8 @@ Level table:
 | Slightly ahead (5–25 blocks) | L2 | 2 | 4 | 4 | 180 |
 | Moderately ahead (26–50 blocks) | L3 | 3 | 4 | 4 | 180 |
 | Significantly ahead (51–75 blocks) | L4 | 4 | 4 | 4 | 180 |
-| Far ahead (76–100 blocks) | L5 | 6 | 4 | 4 | 180 |
-| Extreme (101+ blocks) | L6+ | 7+ | 4 | 4 | 180 |
+| Far ahead (76–100 blocks) | L5 | 5 | 4 | 4 | 180 |
+| Extreme (101+ blocks) | L6+ | 6+ | 4 | 4 | 180 |
 
 Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
 
@@ -765,7 +764,7 @@ LEVEL ASSIGNMENT (cASERT v5.1 — L1–L6+, unbounded):
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
-  ahead = 76–100 → L5   (strong hardening, scale = level + 1)
+  ahead = 76–100 → L5   (strong hardening)
   ahead = 101+   → L6+  (unbounded: level = 5 + (ahead - 76) / 50)
 
   Above L5, the level continues to increase without ceiling.
@@ -773,8 +772,7 @@ LEVEL ASSIGNMENT (cASERT v5.1 — L1–L6+, unbounded):
   but the formula is general and unbounded.
 
 STABILITY PARAMETERS BY LEVEL:
-  scale  = level       for L1–L4  (L1→1, L2→2, L3→3, L4→4)
-  scale  = level + 1   for L5+   (L5→6, L6→7, ..., L10→11, ...)
+  scale  = level       for ALL levels  (L1→1, L2→2, ..., L5→5, L6→6, ...)
   k      = 4          (fixed: always 4 probes)
   steps  = 4          (fixed: always 4 refinement steps)
   margin = 180        (fixed)
@@ -2186,7 +2184,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder) |
-| CASERT | Unidirectional block-lag overlay, L1-L5+, k=4, steps=4, scale=level (L1-L4) or level+1 (L5+), hardening only when ahead of schedule |
+| CASERT | Unidirectional block-lag overlay, L1-L5+, k=4, steps=4, scale=level (all levels), hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2734,8 +2732,8 @@ Changes from v3.4 to v3.5:
   CASERT MODIFICATIONS:
   70) CASERT rewritten: discrete 3-mode system replaced by continuous
       signal-based levels. k=4 and steps=4 are fixed. Scale equals
-      level for L1-L4, level+1 for L5+ — increases without bound
-      under fast-chain conditions (progressive hardening).
+      level for all levels (linear: L1→1, L2→2, ..., L5→5, L6→6, ...).
+      Increases without bound under fast-chain conditions.
   71) CASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
       (naming aligned with code).
 
