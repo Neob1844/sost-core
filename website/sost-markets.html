@@ -89,6 +89,10 @@
   .data-table .price-val { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
   .data-table .price-na { color: var(--text-muted); font-style: italic; }
 
+  /* REGION HEADER */
+  .data-table .region-header td { background: #111111; color: var(--red-primary); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 12px 16px; border-top: 2px solid var(--border-dim); border-bottom: 1px solid var(--border-dim); }
+  .data-table .region-header:hover td { background: #111111; }
+
   /* PLACEHOLDER */
   .placeholder-box { background: var(--bg-card); border: 1px dashed var(--border-med); border-radius: 8px; padding: 48px 24px; text-align: center; }
   .placeholder-box .ph-title { font-family: var(--font-display); font-size: 18px; color: var(--text-dim); margin-bottom: 8px; }
@@ -143,7 +147,7 @@
   <div class="container">
     <div class="hero-label">Live Data Dashboard</div>
     <h1>Global <span>Markets</span></h1>
-    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 21 fiat currencies and 10 cryptocurrencies. Data refreshed every 60 seconds.</p>
+    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 12 cryptocurrencies. Data refreshed every 60 seconds.</p>
     <div class="status-bar">
       <div class="live-badge"><span class="live-dot"></span>LIVE</div>
       <span class="status-time" id="lastUpdate">loading...</span>
@@ -157,7 +161,7 @@
     <div class="section-header">
       <div class="section-id">SECTION 01</div>
       <div class="section-title">Currency Exchange <span class="accent">Rates</span></div>
-      <div class="section-sub">20 major currencies vs USD — source: open.er-api.com</div>
+      <div class="section-sub">59 currencies vs USD grouped by continent — source: open.er-api.com</div>
     </div>
     <table class="data-table" id="forexTable">
       <thead>
@@ -176,14 +180,14 @@
     <div class="section-header">
       <div class="section-id">SECTION 02</div>
       <div class="section-title">Gold Price in <span class="gold">World Currencies</span></div>
-      <div class="section-sub">1 troy oz gold (XAUT/PAXG average) in 21 currencies — source: CoinGecko</div>
+      <div class="section-sub">1 troy oz gold — XAUT &amp; PAXG prices with spread in 60 currencies — source: CoinGecko + forex</div>
     </div>
     <table class="data-table" id="goldFiatTable">
       <thead>
-        <tr><th>Currency</th><th>Code</th><th>Gold Price</th></tr>
+        <tr><th>Currency</th><th>Code</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
       </thead>
       <tbody id="goldFiatBody">
-        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Loading gold prices...</td></tr>
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading gold prices...</td></tr>
       </tbody>
     </table>
   </div>
@@ -195,7 +199,7 @@
     <div class="section-header">
       <div class="section-id">SECTION 03</div>
       <div class="section-title">SOST Price in <span class="accent">World Currencies</span></div>
-      <div class="section-sub">SOST value in 21 fiat currencies — source: CoinGecko (if listed)</div>
+      <div class="section-sub">SOST value in 60 fiat currencies — source: CoinGecko (if listed) + forex</div>
     </div>
     <table class="data-table" id="sostFiatTable">
       <thead>
@@ -214,14 +218,14 @@
     <div class="section-header">
       <div class="section-id">SECTION 04</div>
       <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
-      <div class="section-sub">1 troy oz gold priced in 10 major cryptocurrencies — source: CoinGecko</div>
+      <div class="section-sub">1 troy oz gold priced in 12 cryptocurrencies — source: CoinGecko</div>
     </div>
     <table class="data-table" id="goldCryptoTable">
       <thead>
-        <tr><th>Cryptocurrency</th><th>Symbol</th><th>Gold Price</th></tr>
+        <tr><th>Cryptocurrency</th><th>Symbol</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
       </thead>
       <tbody id="goldCryptoBody">
-        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
       </tbody>
     </table>
   </div>
@@ -253,45 +257,119 @@
 (function() {
   'use strict';
 
-  var FIAT_CURRENCIES = [
-    { code: 'EUR', name: 'Euro', symbol: '\u20AC' },
-    { code: 'GBP', name: 'British Pound', symbol: '\u00A3' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '\u00A5' },
-    { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
-    { code: 'CNY', name: 'Chinese Yuan', symbol: '\u00A5' },
-    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-    { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$' },
-    { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-    { code: 'KRW', name: 'South Korean Won', symbol: '\u20A9' },
-    { code: 'INR', name: 'Indian Rupee', symbol: '\u20B9' },
-    { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
-    { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
-    { code: 'SAR', name: 'Saudi Riyal', symbol: '\uFDFC' },
-    { code: 'AED', name: 'UAE Dirham', symbol: '\u062F.\u0625' },
-    { code: 'TRY', name: 'Turkish Lira', symbol: '\u20BA' },
-    { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
-    { code: 'RUB', name: 'Russian Ruble', symbol: '\u20BD' },
-    { code: 'NOK', name: 'Norwegian Krone', symbol: 'kr' },
-    { code: 'SEK', name: 'Swedish Krona', symbol: 'kr' }
+  var CURRENCY_GROUPS = [
+    { region: '\uD83C\uDF0E AMERICAS (NORTH)', currencies: [
+      { code: 'USD', name: 'United States Dollar', symbol: '$' },
+      { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' }
+    ]},
+    { region: '\uD83C\uDF0E AMERICAS (LATIN)', currencies: [
+      { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
+      { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
+      { code: 'ARS', name: 'Argentine Peso', symbol: '$' },
+      { code: 'CLP', name: 'Chilean Peso', symbol: '$' },
+      { code: 'COP', name: 'Colombian Peso', symbol: '$' },
+      { code: 'PEN', name: 'Peruvian Sol', symbol: 'S/' },
+      { code: 'UYU', name: 'Uruguayan Peso', symbol: '$' },
+      { code: 'CRC', name: 'Costa Rican Col\u00F3n', symbol: '\u20A1' },
+      { code: 'DOP', name: 'Dominican Peso', symbol: 'RD$' },
+      { code: 'GTQ', name: 'Guatemalan Quetzal', symbol: 'Q' },
+      { code: 'PYG', name: 'Paraguayan Guaran\u00ED', symbol: '\u20B2' },
+      { code: 'BOB', name: 'Bolivian Boliviano', symbol: 'Bs' },
+      { code: 'NIO', name: 'Nicaraguan C\u00F3rdoba', symbol: 'C$' },
+      { code: 'HNL', name: 'Honduran Lempira', symbol: 'L' },
+      { code: 'HTG', name: 'Haitian Gourde', symbol: 'G' }
+    ]},
+    { region: '\uD83C\uDF0D EUROPE (WEST)', currencies: [
+      { code: 'EUR', name: 'Euro (Eurozone)', symbol: '\u20AC' },
+      { code: 'GBP', name: 'British Pound', symbol: '\u00A3' },
+      { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
+      { code: 'NOK', name: 'Norwegian Krone', symbol: 'kr' },
+      { code: 'SEK', name: 'Swedish Krona', symbol: 'kr' },
+      { code: 'DKK', name: 'Danish Krone', symbol: 'kr' },
+      { code: 'ISK', name: 'Icelandic Kr\u00F3na', symbol: 'kr' },
+      { code: 'PLN', name: 'Polish Z\u0142oty', symbol: 'z\u0142' },
+      { code: 'CZK', name: 'Czech Koruna', symbol: 'K\u010D' }
+    ]},
+    { region: '\uD83C\uDF0D EUROPE (EAST) & CENTRAL ASIA', currencies: [
+      { code: 'RUB', name: 'Russian Ruble', symbol: '\u20BD' },
+      { code: 'TRY', name: 'Turkish Lira', symbol: '\u20BA' },
+      { code: 'ILS', name: 'Israeli Shekel', symbol: '\u20AA' }
+    ]},
+    { region: '\uD83C\uDF0F ASIA (EAST)', currencies: [
+      { code: 'JPY', name: 'Japanese Yen', symbol: '\u00A5' },
+      { code: 'CNY', name: 'Chinese Yuan', symbol: '\u00A5' },
+      { code: 'KRW', name: 'South Korean Won', symbol: '\u20A9' },
+      { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$' },
+      { code: 'TWD', name: 'Taiwan Dollar', symbol: 'NT$' }
+    ]},
+    { region: '\uD83C\uDF0F ASIA (SOUTHEAST)', currencies: [
+      { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+      { code: 'THB', name: 'Thai Baht', symbol: '\u0E3F' },
+      { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' },
+      { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp' },
+      { code: 'PHP', name: 'Philippine Peso', symbol: '\u20B1' },
+      { code: 'VND', name: 'Vietnamese Dong', symbol: '\u20AB' }
+    ]},
+    { region: '\uD83C\uDF0F ASIA (SOUTH)', currencies: [
+      { code: 'INR', name: 'Indian Rupee', symbol: '\u20B9' },
+      { code: 'PKR', name: 'Pakistani Rupee', symbol: 'Rs' }
+    ]},
+    { region: '\uD83C\uDF0D MIDDLE EAST & GULF', currencies: [
+      { code: 'AED', name: 'UAE Dirham', symbol: '\u062F.\u0625' },
+      { code: 'SAR', name: 'Saudi Riyal', symbol: '\uFDFC' },
+      { code: 'KWD', name: 'Kuwaiti Dinar', symbol: '\u062F.\u0643' },
+      { code: 'QAR', name: 'Qatari Riyal', symbol: '\uFDFC' },
+      { code: 'BHD', name: 'Bahraini Dinar', symbol: '.\u062F.\u0628' },
+      { code: 'OMR', name: 'Omani Rial', symbol: '\uFDFC' }
+    ]},
+    { region: '\uD83C\uDF0F OCEANIA', currencies: [
+      { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+      { code: 'NZD', name: 'New Zealand Dollar', symbol: 'NZ$' }
+    ]},
+    { region: '\uD83C\uDF0D AFRICA', currencies: [
+      { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
+      { code: 'NGN', name: 'Nigerian Naira', symbol: '\u20A6' },
+      { code: 'EGP', name: 'Egyptian Pound', symbol: 'E\u00A3' },
+      { code: 'KES', name: 'Kenyan Shilling', symbol: 'KSh' },
+      { code: 'GHS', name: 'Ghanaian Cedi', symbol: 'GH\u20B5' },
+      { code: 'MAD', name: 'Moroccan Dirham', symbol: '\u062F.\u0645.' },
+      { code: 'TZS', name: 'Tanzanian Shilling', symbol: 'TSh' },
+      { code: 'ETB', name: 'Ethiopian Birr', symbol: 'Br' },
+      { code: 'XOF', name: 'West African CFA', symbol: 'CFA' },
+      { code: 'CDF', name: 'Congolese Franc', symbol: 'FC' }
+    ]}
   ];
 
-  var CRYPTO_CURRENCIES = [
+  // Flat list for iteration
+  var ALL_FIAT = [];
+  CURRENCY_GROUPS.forEach(function(g) { ALL_FIAT = ALL_FIAT.concat(g.currencies); });
+
+  // Cryptos available via vs_currencies (CoinGecko native)
+  var CRYPTO_NATIVE = [
     { code: 'BTC', name: 'Bitcoin' },
     { code: 'ETH', name: 'Ethereum' },
     { code: 'BNB', name: 'BNB' },
     { code: 'SOL', name: 'Solana' },
     { code: 'XRP', name: 'XRP' },
-    { code: 'ADA', name: 'Cardano' },
-    { code: 'AVAX', name: 'Avalanche' },
     { code: 'DOT', name: 'Polkadot' },
     { code: 'LINK', name: 'Chainlink' },
-    { code: 'TON', name: 'Toncoin' }
+    { code: 'LTC', name: 'Litecoin' },
+    { code: 'DOGE', name: 'Dogecoin' },
+    { code: 'TRX', name: 'TRON' }
   ];
 
-  var fiatCodes = FIAT_CURRENCIES.map(function(c) { return c.code.toLowerCase(); });
-  var cryptoCodes = CRYPTO_CURRENCIES.map(function(c) { return c.code.toLowerCase(); });
-  var allVsCurrencies = ['usd'].concat(fiatCodes).concat(cryptoCodes).join(',');
+  // Stablecoins calculated manually via USD price
+  var CRYPTO_STABLE = [
+    { code: 'USDC', name: 'USD Coin', cgId: 'usd-coin' },
+    { code: 'USDT', name: 'Tether', cgId: 'tether' }
+  ];
+
+  var fiatCodes = ALL_FIAT.map(function(c) { return c.code.toLowerCase(); });
+  var nativeCryptoCodes = CRYPTO_NATIVE.map(function(c) { return c.code.toLowerCase(); });
+  // CoinGecko vs_currencies — supported fiat codes; unsupported ones fallback via forex
+  var cgFiatCodes = ['usd','cad','mxn','brl','ars','clp','cop','pen','eur','gbp','chf','nok','sek','dkk','pln','czk','rub','try','ils','jpy','cny','krw','hkd','twd','sgd','thb','myr','idr','php','vnd','inr','pkr','aed','sar','kwd','qar','bhd','aud','nzd','zar','ngn','egp'];
+  var allVsCurrencies = cgFiatCodes.concat(nativeCryptoCodes).join(',');
+  var forexRates = {}; // cached from open.er-api for manual gold/SOST conversion
 
   function fmt(n, decimals) {
     if (n === null || n === undefined) return '--';
@@ -307,25 +385,34 @@
     document.getElementById('lastUpdate').textContent = 'Last update: ' + now.toUTCString();
   }
 
+  function regionRow(label, cols) {
+    return '<tr class="region-header"><td colspan="' + cols + '">' + label + '</td></tr>';
+  }
+
   // ---- SECTION 01: Forex ----
   function fetchForex() {
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
+        forexRates = data.rates;
         var tbody = document.getElementById('forexBody');
         var html = '';
-        FIAT_CURRENCIES.forEach(function(c) {
-          var rate = data.rates[c.code];
-          if (rate === undefined) {
-            html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">N/A</td><td class="price-na">N/A</td></tr>';
-            return;
-          }
-          var inv = 1 / rate;
-          html += '<tr><td><span class="currency-name">' + c.name + '</span></td>' +
-            '<td>' + c.code + '</td>' +
-            '<td class="price-val">' + c.symbol + ' ' + fmt(rate, rate < 10 ? 4 : 2) + '</td>' +
-            '<td class="price-val">$' + fmt(inv, inv < 1 ? 6 : 4) + '</td></tr>';
+        CURRENCY_GROUPS.forEach(function(g) {
+          html += regionRow(g.region, 4);
+          g.currencies.forEach(function(c) {
+            if (c.code === 'USD') return; // skip base currency in forex table
+            var rate = data.rates[c.code];
+            if (rate === undefined) {
+              html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">N/A</td><td class="price-na">N/A</td></tr>';
+              return;
+            }
+            var inv = 1 / rate;
+            html += '<tr><td><span class="currency-name">' + c.name + '</span></td>' +
+              '<td>' + c.code + '</td>' +
+              '<td class="price-val">' + c.symbol + ' ' + fmt(rate, rate < 10 ? 4 : 2) + '</td>' +
+              '<td class="price-val">$' + fmt(inv, inv < 1 ? 6 : 4) + '</td></tr>';
+          });
         });
         tbody.innerHTML = html;
       })
@@ -334,54 +421,115 @@
       });
   }
 
+  function spreadHtml(a, b) {
+    if (!a || !b) return '<span class="price-na">--</span>';
+    var pct = ((a - b) / b * 100);
+    var abs = Math.abs(pct);
+    var color = abs < 0.5 ? 'var(--green-primary)' : abs < 1 ? '#eab308' : 'var(--red-primary)';
+    var sign = pct >= 0 ? '+' : '';
+    return '<span style="color:' + color + ';font-weight:500;">' + sign + pct.toFixed(2) + '%</span>';
+  }
+
+  function fmtPrice(val, symbol, decimals) {
+    if (val === null || val === undefined) return '<span class="price-na">N/A</span>';
+    if (typeof decimals === 'undefined') decimals = val > 1000 ? 0 : 2;
+    return symbol + ' ' + fmt(val, decimals);
+  }
+
+  function fmtCrypto(val, code, decimals) {
+    if (val === null || val === undefined) return '<span class="price-na">N/A</span>';
+    if (typeof decimals === 'undefined') decimals = val < 1 ? 8 : val < 100 ? 4 : 2;
+    return fmt(val, decimals) + ' ' + code;
+  }
+
+  // Get gold price in a currency: prefer CoinGecko direct, fallback to USD * forex rate
+  function goldInCurrency(goldObj, code) {
+    var key = code.toLowerCase();
+    if (goldObj[key] !== undefined) return goldObj[key];
+    if (goldObj.usd && forexRates[code]) return goldObj.usd * forexRates[code];
+    return null;
+  }
+
   // ---- SECTION 02 & 04: Gold prices ----
   function fetchGold() {
-    var url = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
-    fetch(url)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var xaut = data['tether-gold'] || {};
-        var paxg = data['pax-gold'] || {};
+    var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
+    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether&vs_currencies=usd';
 
-        // Section 02: Gold in fiat
+    Promise.all([
+      fetch(goldUrl).then(function(r) { return r.json(); }),
+      fetch(stableUrl).then(function(r) { return r.json(); })
+    ])
+      .then(function(results) {
+        var goldData = results[0];
+        var stableData = results[1];
+        var xaut = goldData['tether-gold'] || {};
+        var paxg = goldData['pax-gold'] || {};
+
+        // Section 02: Gold in fiat — XAUT | PAXG | Spread with region headers
         var tbody2 = document.getElementById('goldFiatBody');
         var html2 = '';
-        // USD first
-        var avgUsd = avgPrice(xaut.usd, paxg.usd);
-        html2 += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-val">$' + fmt(avgUsd) + '</td></tr>';
-        FIAT_CURRENCIES.forEach(function(c) {
-          var key = c.code.toLowerCase();
-          var avg = avgPrice(xaut[key], paxg[key]);
-          html2 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-            '<td class="price-val">' + (avg !== null ? c.symbol + ' ' + fmt(avg, avg > 1000 ? 0 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+        CURRENCY_GROUPS.forEach(function(g) {
+          html2 += regionRow(g.region, 5);
+          g.currencies.forEach(function(c) {
+            var xv, pv;
+            if (c.code === 'USD') {
+              xv = xaut.usd; pv = paxg.usd;
+            } else {
+              xv = goldInCurrency(xaut, c.code);
+              pv = goldInCurrency(paxg, c.code);
+            }
+            var dec = (xv && xv > 1000) ? 0 : 2;
+            html2 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+              '<td class="price-val">' + fmtPrice(xv, c.symbol, dec) + '</td>' +
+              '<td class="price-val">' + fmtPrice(pv, c.symbol, dec) + '</td>' +
+              '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+          });
         });
         tbody2.innerHTML = html2;
 
-        // Section 04: Gold in crypto
+        // Section 04: Gold in crypto — XAUT | PAXG | Spread
         var tbody4 = document.getElementById('goldCryptoBody');
         var html4 = '';
-        CRYPTO_CURRENCIES.forEach(function(c) {
+        CRYPTO_NATIVE.forEach(function(c) {
           var key = c.code.toLowerCase();
-          var avg = avgPrice(xaut[key], paxg[key]);
+          var xv = xaut[key], pv = paxg[key];
           html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-            '<td class="price-val">' + (avg !== null ? fmt(avg, avg < 1 ? 8 : avg < 100 ? 4 : 2) + ' ' + c.code : '<span class="price-na">N/A</span>') + '</td></tr>';
+            '<td class="price-val">' + fmtCrypto(xv, c.code) + '</td>' +
+            '<td class="price-val">' + fmtCrypto(pv, c.code) + '</td>' +
+            '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+        });
+        CRYPTO_STABLE.forEach(function(c) {
+          var stablePrice = (stableData[c.cgId] && stableData[c.cgId].usd) ? stableData[c.cgId].usd : 1;
+          var xv = xaut.usd ? xaut.usd / stablePrice : null;
+          var pv = paxg.usd ? paxg.usd / stablePrice : null;
+          html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+            '<td class="price-val">' + fmtCrypto(xv, c.code, 2) + '</td>' +
+            '<td class="price-val">' + fmtCrypto(pv, c.code, 2) + '</td>' +
+            '<td>' + spreadHtml(xv, pv) + '</td></tr>';
         });
         tbody4.innerHTML = html4;
       })
       .catch(function(e) {
-        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--red-primary);">Error loading gold prices — retrying in 1 min</td></tr>';
-        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--red-primary);">Error loading crypto prices — retrying in 1 min</td></tr>';
+        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);">Error loading gold prices — retrying in 1 min</td></tr>';
+        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);">Error loading crypto prices — retrying in 1 min</td></tr>';
       });
   }
 
   // ---- SECTION 03: SOST price ----
   function fetchSost() {
-    var fiatStr = ['usd'].concat(fiatCodes).join(',');
-    tryFetchSost('sost-protocol', fiatStr, function() {
-      tryFetchSost('sost', fiatStr, function() {
+    var vs = cgFiatCodes.join(',');
+    tryFetchSost('sost-protocol', vs, function() {
+      tryFetchSost('sost', vs, function() {
         showSostNotListed();
       });
     });
+  }
+
+  function sostInCurrency(prices, code) {
+    var key = code.toLowerCase();
+    if (prices[key] !== undefined) return prices[key];
+    if (prices.usd && forexRates[code]) return prices.usd * forexRates[code];
+    return undefined;
   }
 
   function tryFetchSost(id, vs, fallback) {
@@ -392,12 +540,13 @@
         var prices = data[id];
         var tbody = document.getElementById('sostFiatBody');
         var html = '';
-        html += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-val">$' + fmt(prices.usd, 8) + '</td></tr>';
-        FIAT_CURRENCIES.forEach(function(c) {
-          var key = c.code.toLowerCase();
-          var p = prices[key];
-          html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-            '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+        CURRENCY_GROUPS.forEach(function(g) {
+          html += regionRow(g.region, 3);
+          g.currencies.forEach(function(c) {
+            var p = (c.code === 'USD') ? prices.usd : sostInCurrency(prices, c.code);
+            html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+              '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+          });
         });
         tbody.innerHTML = html;
       })
@@ -407,18 +556,14 @@
   function showSostNotListed() {
     var tbody = document.getElementById('sostFiatBody');
     var html = '';
-    html += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-na">Not Listed &mdash; est. mining cost ~$0.01</td></tr>';
-    FIAT_CURRENCIES.forEach(function(c) {
-      html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">Not Listed</td></tr>';
+    CURRENCY_GROUPS.forEach(function(g) {
+      html += regionRow(g.region, 3);
+      g.currencies.forEach(function(c) {
+        var label = (c.code === 'USD') ? 'Not Listed &mdash; est. mining cost ~$0.01' : 'Not Listed';
+        html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">' + label + '</td></tr>';
+      });
     });
     tbody.innerHTML = html;
-  }
-
-  function avgPrice(a, b) {
-    if (a && b) return (a + b) / 2;
-    if (a) return a;
-    if (b) return b;
-    return null;
   }
 
   function refreshAll() {

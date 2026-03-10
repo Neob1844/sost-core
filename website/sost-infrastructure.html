@@ -216,33 +216,31 @@
   </div>
 </section>
 
-<!-- SECTION 02: VPS NODE SPECS -->
+<!-- SECTION 02: INFRASTRUCTURE OVERVIEW -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">SECTION 02</div>
-      <h2 class="section-title">VPS Node <span class="accent">Specifications</span></h2>
+      <h2 class="section-title">Infrastructure <span class="accent">Overview</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-label">Primary Server</span>
+          <span class="spec-label">Production Environment</span>
         </div>
-        <span class="spec-tag">STRATO VC 2-4</span>
+        <span class="spec-tag">DEDICATED VPS</span>
       </div>
       <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Parameter</th><th>Value</th></tr>
-          <tr><td class="label">Provider</td><td class="value">Strato VC 2-4</td></tr>
-          <tr><td class="label">OS</td><td class="value">Ubuntu 24.04 LTS</td></tr>
-          <tr><td class="label">RAM</td><td class="value">4 GB + 4 GB swap</td></tr>
+        <p style="color:var(--text-secondary);line-height:1.8;">SOST runs on dedicated infrastructure with hardened Linux, automated SSL via Let's Encrypt, and defense-in-depth security. The node process is managed by systemd with automatic restarts, and RPC is bound to localhost only, proxied through nginx for public read-only access.</p>
+        <table class="code-table" style="margin-top:16px;">
+          <tr><th>Component</th><th>Details</th></tr>
           <tr><td class="label">Ports open</td><td class="value">22 (SSH), 80 (HTTP), 443 (HTTPS), 19333 (P2P)</td></tr>
           <tr><td class="label">Process manager</td><td class="value">systemd service (sost-node.service)</td></tr>
           <tr><td class="label">SSL</td><td class="value">Let's Encrypt (auto-renewal via certbot)</td></tr>
           <tr><td class="label">Reverse proxy</td><td class="value">nginx &mdash; static files + RPC proxy</td></tr>
-          <tr><td class="label">RPC binding</td><td class="highlight">localhost only (127.0.0.1:18232)</td></tr>
+          <tr><td class="label">RPC binding</td><td class="highlight">localhost only &mdash; not directly exposed</td></tr>
         </table>
       </div>
     </div>
@@ -269,12 +267,12 @@
         <table class="code-table">
           <tr><th>Layer</th><th>Configuration</th></tr>
           <tr><td class="label">SSH</td><td class="value">Key-only authentication (password auth disabled)</td></tr>
-          <tr><td class="label">fail2ban</td><td class="value">SSH brute-force protection (5 attempts &rarr; 24h ban)</td></tr>
+          <tr><td class="label">fail2ban</td><td class="value">Brute-force protection active</td></tr>
           <tr><td class="label">UFW firewall</td><td class="value">Allow 22/80/443/19333 only &mdash; deny all other inbound</td></tr>
-          <tr><td class="label">nginx rate limiting</td><td class="value">RPC endpoint: 30 req/min per IP, burst 10</td></tr>
+          <tr><td class="label">nginx rate limiting</td><td class="value">Rate-limited</td></tr>
           <tr><td class="label">RPC access</td><td class="highlight">localhost only &mdash; nginx proxies selected read-only methods</td></tr>
-          <tr><td class="label">RPC auth</td><td class="value">Basic Auth required for state-changing methods (send, submit)</td></tr>
-          <tr><td class="label">P2P DoS</td><td class="value">Ban scoring (100 points &rarr; 24h ban), max 64 inbound peers, 4MB message limit</td></tr>
+          <tr><td class="label">RPC auth</td><td class="value">Basic Auth required for state-changing methods</td></tr>
+          <tr><td class="label">P2P DoS</td><td class="value">Automatic ban scoring with peer limits enforced</td></tr>
           <tr><td class="label">P2P encryption</td><td class="value">X25519 + ChaCha20-Poly1305 (default: on)</td></tr>
         </table>
       </div>
@@ -314,13 +312,9 @@
       </div>
     </div>
 
-    <div class="code-snippet fade-in delay-2"><span class="comment"># nginx.conf — explorer RPC proxy</span>
-<span class="keyword">location</span> /rpc {
-    <span class="fn">proxy_pass</span> http://127.0.0.1:<span class="num">18232</span>;
-    <span class="fn">proxy_set_header</span> Host $host;
-    <span class="fn">limit_req</span> zone=rpc burst=<span class="num">10</span> nodelay;
-    <span class="fn">add_header</span> Access-Control-Allow-Origin *;
-}</div>
+    <div class="notice fade-in delay-2">
+      RPC is proxied through nginx with rate limiting and CORS headers. Read-only methods are public; state-changing methods require authentication.
+    </div>
 
     <div class="spec-block fade-in delay-3">
       <div class="spec-header">
@@ -393,10 +387,8 @@
           <tr><th>Parameter</th><th>Value</th></tr>
           <tr><td class="label">Magic bytes</td><td class="value">0x534F5354 ("SOST")</td></tr>
           <tr><td class="label">Default port</td><td class="value">19333</td></tr>
-          <tr><td class="label">Max inbound peers</td><td class="value">64</td></tr>
-          <tr><td class="label">Max message size</td><td class="value">4 MB</td></tr>
-          <tr><td class="label">Ban threshold</td><td class="value">100 points</td></tr>
-          <tr><td class="label">Ban duration</td><td class="value">24 hours</td></tr>
+          <tr><td class="label">Peer limits</td><td class="value">Enforced (inbound + outbound)</td></tr>
+          <tr><td class="label">DoS protection</td><td class="value">Automatic ban scoring</td></tr>
           <tr><td class="label">Ping interval</td><td class="value">30 seconds</td></tr>
           <tr><td class="label">Encryption</td><td class="value">X25519 + ChaCha20-Poly1305 (default: on)</td></tr>
           <tr><td class="label">Block batch size</td><td class="value">500 blocks per GETB request</td></tr>
