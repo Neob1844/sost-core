@@ -24,7 +24,8 @@
     { title: 'PoPC Contracts', desc: 'Public registry of all PoPC contracts', url: 'sost-popc-contracts.html', kw: 'popc contracts registry active completed slashed bond escrow model a model b' },
     { title: 'Infrastructure', desc: 'VPS, nodes, deployment infrastructure', url: 'sost-infrastructure.html', kw: 'infrastructure vps nodes deployment server' },
     { title: 'Metals Reserve', desc: 'Multi-metal reserve — silver, platinum, palladium', url: 'sost-metals-reserve.html', kw: 'metals silver platinum palladium multi-metal reserve' },
-    { title: 'BTCTalk Announcement', desc: 'Official BTCTalk ANN thread — pre-genesis draft', url: 'sost-btctalk-ann.html', kw: 'btctalk announcement ann launch genesis mining pow' }
+    { title: 'BTCTalk Announcement', desc: 'Official BTCTalk ANN thread — pre-genesis draft', url: 'sost-btctalk-ann.html', kw: 'btctalk announcement ann launch genesis mining pow' },
+    { title: 'Markets', desc: 'Live forex, gold prices, SOST in 21 currencies + 10 cryptos', url: 'sost-markets.html', kw: 'markets forex gold price currency exchange rates crypto bitcoin ethereum live dashboard' }
   ];
 
   function init() {
