@@ -339,17 +339,6 @@ const RESERVE_DATA = {
   });
 })();
 
-// Render Registry table
-(function() {
-  var tb = document.getElementById('registryTable');
-  RESERVE_DATA.foundationContracts.forEach(function(c, i) {
-    var tr = document.createElement('tr');
-    var statusClass = c.status === 'PENDING' ? 'pending' : 'green';
-    tr.innerHTML = '<td>FOUND-' + String(i+1).padStart(3,'0') + '</td><td class="highlight">' + c.model + '</td><td class="gold">' + c.asset + '</td><td>' + c.amount + '</td><td>' + c.duration + '</td><td>' + c.start + '</td><td class="' + statusClass + '">' + c.status + '</td><td style="font-size:10px">' + c.contract + '</td>';
-    tb.appendChild(tr);
-  });
-})();
-
 // Accumulation Chart
 (function() {
   var rewardPerBlock = RESERVE_DATA.genesisReward;

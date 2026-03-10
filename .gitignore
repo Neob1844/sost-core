@@ -1,21 +1,32 @@
+# Build
 build/
 *.o
-*.tar.gz
-wallet.json
-node_log.txt
-wallet.json
-wallet.json.*
-chain.json
-*.swp
-
-# Secrets
-wallet.json
-*.dat
-
-# Binaries/build
-build/
-sost-v*/
 *.exe
 *.dll
 *.so
 *.dylib
+
+# Secrets / wallet
+wallet.json
+wallet.json.*
+*.dat
+
+# Chain data
+chain.json
+chain_v2.json
+
+# Logs / debug
+node_log.txt
+sost_p2p_dump.txt
+
+# Internal data
+popc_payouts.json
+reserves.json
+
+# Binaries / releases
+sost-v*/
+*.tar.gz
+
+# Editor / backup
+*.swp
+*.bak
