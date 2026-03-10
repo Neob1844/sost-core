@@ -39,7 +39,7 @@
   <tr><td>Block time</td><td>600s (10 min)</td></tr>
   <tr><td>Max supply</td><td>4,669,201 SOST (hard cap by construction)</td></tr>
   <tr><td>Emission</td><td>Exponential decay, q = e<sup>(-1/4)</sup> &asymp; 0.7788</td></tr>
-  <tr><td>Coinbase split</td><td>50% miner / 25% Gold Vault / 25% PoPC Pool</td></tr>
+  <tr><td>Coinbase split</td><td>50% miner / 25% Funding Vault / 25% PoPC Pool</td></tr>
   <tr><td>Difficulty</td><td>ASERT (24h half-life) + cASERT overlay (unbounded)</td></tr>
   <tr><td>Encoding</td><td>SOSTCompact Q16.16 fixed-point</td></tr>
   <tr><td>Coinbase maturity</td><td>1,000 blocks (~7 days)</td></tr>
@@ -69,13 +69,13 @@
 
 <h2>The Solution</h2>
 
-<p>Every SOST block automatically allocates 25% of the coinbase reward to a Gold Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
+<p>Every SOST block automatically allocates 25% of the coinbase reward to a Funding Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
 
-<p>The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve Vault on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Foundation Execution Order.</p>
+<p>The Funding Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Foundation Execution Order.</p>
 
 <p>The remaining 25% flows to a PoPC Pool powering Proof of Personal Custody &mdash; a mechanism that rewards holders who self-custody gold and prove it. PoPC operates in two models:</p>
 
-<p><b>Model A &mdash; Bond with Autocustody.</b> For crypto natives and miners. The participant declares an Ethereum wallet holding XAUT or PAXG, locks a SOST bond (12-30% of gold value, dynamically scaled), and commits to maintain custody for 1 to 12 months. ConvergenceX block entropy schedules random audits. A script verifies the XAUT/PAXG balance via Ethereum RPC. On successful completion, the participant recovers their full bond plus a reward from the PoPC Pool (up to 22% APR for 12-month commitments). On failure &mdash; if the gold balance drops below the committed amount &mdash; the bond is slashed automatically: 50% to the PoPC Pool, 50% to the Gold Vault. The gold never leaves the user's wallet. Only the SOST bond is at risk.</p>
+<p><b>Model A &mdash; Bond with Autocustody.</b> For crypto natives and miners. The participant declares an Ethereum wallet holding XAUT or PAXG, locks a SOST bond (12-30% of gold value, dynamically scaled), and commits to maintain custody for 1 to 12 months. ConvergenceX block entropy schedules random audits. A script verifies the XAUT/PAXG balance via Ethereum RPC. On successful completion, the participant recovers their full bond plus a reward from the PoPC Pool (up to 22% APR for 12-month commitments). On failure &mdash; if the gold balance drops below the committed amount &mdash; the bond is slashed automatically: 50% to the PoPC Pool, 50% to the Funding Vault. The gold never leaves the user's wallet. Only the SOST bond is at risk.</p>
 
 <p><b>Model B &mdash; Timelocked Escrow.</b> For gold holders who want zero slash risk. The participant deposits XAUT or PAXG into an immutable escrow contract on Ethereum &mdash; no admin key, no upgrade proxy, no pause function. The SOST reward is paid immediately at deposit (up to 7% APR for 12-month terms). At contract expiry, the depositor withdraws 100% of their gold. No audits. No bond. No slash. Custody is enforced by the escrow contract, not by trust.</p>
 
@@ -129,9 +129,9 @@
 
 <p>The emission formula: reward(height) = floor(R0 &times; q<sup>epoch</sup>), where epoch = height / 131,553. All arithmetic uses __int128 floor-division. The maximum supply is a mathematical consequence of the geometric series &mdash; not a tracked variable.</p>
 
-<p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The Foundation operates exclusively from protocol fees charged on PoPC contracts (5% on Model A, 10% on Model B) &mdash; never from minted coins.</p>
+<p>Of the total supply, approximately 50% goes to miners, 25% to the Funding Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The Foundation operates exclusively from protocol fees charged on PoPC contracts (5% on Model A, 10% on Model B) &mdash; never from minted coins.</p>
 
-<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split applies to fees: 50% to the miner, 25% to the Gold Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic model as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
+<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split applies to fees: 50% to the miner, 25% to the Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic model as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
 
 <hr>
 
@@ -141,8 +141,8 @@
   <tr><th>Phase</th><th>Date</th><th>Milestone</th></tr>
   <tr><td>1</td><td>March 13, 2026</td><td>GENESIS BLOCK &mdash; 00:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.</td></tr>
   <tr><td>2</td><td>Q2 2026</td><td>PoPC smart contracts deployed on Ethereum Sepolia testnet. Model A (bond + audit) and Model B (escrow timelock) open for public testing.</td></tr>
-  <tr><td>3</td><td>Q3 2026</td><td>PoPC mainnet launch on Ethereum. First custody contracts active. XAUT/PAXG reserve purchases begin. Heritage Reserve Vault deployed. Public reserve dashboard.</td></tr>
-  <tr><td>4</td><td>2027+</td><td>Exchange listing (TradeOgre target). Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research begins.</td></tr>
+  <tr><td>3</td><td>Q3 2026</td><td>PoPC mainnet launch on Ethereum. First custody contracts active. XAUT/PAXG reserve purchases begin. Heritage Reserve deployed. Public reserve dashboard.</td></tr>
+  <tr><td>4</td><td>2027+</td><td>Exchange listings. Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research begins.</td></tr>
 </table>
 
 <hr>
@@ -152,7 +152,7 @@
 <p><b>Requirements:</b></p>
 <ul>
   <li>Linux x86_64 (Ubuntu 24.04 recommended)</li>
-  <li>4 GB RAM per mining thread (4 threads = 16 GB)</li>
+  <li>4 GB RAM per mining instance</li>
   <li>CPU &mdash; GPU provides no meaningful advantage</li>
   <li>Dependencies: build-essential cmake libssl-dev libsecp256k1-dev</li>
 </ul>
@@ -170,7 +170,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <pre>./sost-miner --address sost1YOUR_ADDRESS_HERE \
     --genesis genesis_block.json --chain chain.json \
     --rpc 127.0.0.1:18232 \
-    --rpc-user YOUR_USER --rpc-pass YOUR_PASS --threads 4</pre>
+    --rpc-user YOUR_USER --rpc-pass YOUR_PASS</pre>
 
 <p>The miner connects to your local node via RPC, fetches mempool transactions via getblocktemplate, and submits solved blocks via submitblock. First solo miner to solve a valid ConvergenceX proof gets the block reward.</p>
 
