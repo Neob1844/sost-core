@@ -1,6 +1,6 @@
 # SOST Protocol — Changelog
 
-## v1.0.0 — March 15, 2026 (Public Launch)
+## v1.0.0 — May 13, 2026 (Public Launch)
 
 ### Genesis
 - Mainnet genesis block: `0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793`
