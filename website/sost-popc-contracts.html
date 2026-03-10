@@ -8,6 +8,7 @@
 <title>SOST Protocol — PoPC Contracts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -97,6 +98,14 @@
   .notice strong { color: var(--text-primary); }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .chart-donut-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+  .chart-donut-wrap canvas { max-width: 300px; max-height: 300px; }
+  .chart-bar-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; }
+  .chart-bar-wrap canvas { max-height: 300px; }
+  .chart-label { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; font-weight: 500; }
+  .chart-placeholder { display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--text-muted); font-size: 12px; text-align: center; line-height: 1.8; }
+  @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
 
   footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
   footer a { color: var(--red-dim); text-decoration: none; }
@@ -182,6 +191,19 @@
         <div class="stat-label">Total Participants</div>
         <div class="stat-val">0</div>
         <div class="stat-sub">Unique wallets</div>
+      </div>
+    </div>
+
+    <div class="chart-grid fade-in delay-3">
+      <div class="chart-donut-wrap">
+        <div class="chart-label">Contracts by Model</div>
+        <div id="popcDonutPlaceholder"></div>
+        <canvas id="popcDonut"></canvas>
+      </div>
+      <div class="chart-bar-wrap">
+        <div class="chart-label">Monthly Rewards Paid</div>
+        <div id="popcBarPlaceholder"></div>
+        <canvas id="popcBarChart"></canvas>
       </div>
     </div>
   </div>
@@ -302,6 +324,102 @@
   </div>
 </footer>
 
+<script>
+const popcStats = {
+  model_a_count: 0,
+  model_b_count: 0,
+  model_a_oz: 0,
+  model_b_oz: 0,
+  total_rewards_paid: 0,
+  monthly_rewards: [0,0,0,0,0,0,0,0,0,0,0,0]
+};
+
+// PoPC Donut Chart
+(function() {
+  var canvas = document.getElementById('popcDonut');
+  var placeholder = document.getElementById('popcDonutPlaceholder');
+  var hasData = popcStats.model_a_count > 0 || popcStats.model_b_count > 0;
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'No active contracts yet';
+    return;
+  }
+  placeholder.style.display = 'none';
+  new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Model A (' + popcStats.model_a_count + ')', 'Model B (' + popcStats.model_b_count + ')'],
+      datasets: [{
+        data: [popcStats.model_a_count, popcStats.model_b_count],
+        backgroundColor: ['#fb010d', '#22d3ee'],
+        borderColor: ['#0a0a0a', '#0a0a0a'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '60%',
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+      }
+    }
+  });
+})();
+
+// PoPC Monthly Rewards Bar Chart
+(function() {
+  var canvas = document.getElementById('popcBarChart');
+  var placeholder = document.getElementById('popcBarPlaceholder');
+  var hasData = popcStats.monthly_rewards.some(function(v) { return v > 0; });
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'Rewards tracking begins after<br>first contract completion';
+    return;
+  }
+  placeholder.style.display = 'none';
+  var labels = [];
+  for (var m = 1; m <= 12; m++) labels.push('M' + m);
+  new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'SOST Rewards Paid',
+        data: popcStats.monthly_rewards,
+        backgroundColor: 'rgba(34,211,238,0.7)',
+        borderColor: '#22d3ee',
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' SOST'; } } }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+          grid: { color: '#1a1a1a' }
+        },
+        y: {
+          ticks: {
+            color: '#64748b',
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            callback: function(v) { return v.toLocaleString(); }
+          },
+          grid: { color: '#1a1a1a' }
+        }
+      }
+    }
+  });
+})();
+</script>
 <script src="sost-search.js"></script>
 </body>
 </html>
