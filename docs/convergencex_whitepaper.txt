@@ -304,7 +304,8 @@ schedule (genesis + height × TARGET_SPACING) and assigns levels:
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
-  ahead = 76+    → L5+  (unbounded hardening)
+  ahead = 76–100 → L5   (strong hardening, scale = level + 1)
+  ahead = 101+   → L6+  (unbounded hardening, grows every 50 blocks)
 
 Stability parameters by level:
 
@@ -314,7 +315,7 @@ Stability parameters by level:
   steps  = 4          (fixed: always 4 refinement steps per probe)
   margin = 180        (fixed)
 
-Examples:
+Level table:
 
 | Condition | Level | Scale | k | Steps | Margin |
 |---|---|---|---|---|---|
@@ -322,7 +323,19 @@ Examples:
 | Slightly ahead (5–25 blocks) | L2 | 2 | 4 | 4 | 180 |
 | Moderately ahead (26–50 blocks) | L3 | 3 | 4 | 4 | 180 |
 | Significantly ahead (51–75 blocks) | L4 | 4 | 4 | 4 | 180 |
-| Far ahead (76+ blocks) | L5+ | 6+ | 4 | 4 | 180 |
+| Far ahead (76–100 blocks) | L5 | 6 | 4 | 4 | 180 |
+| Extreme (101+ blocks) | L6+ | 7+ | 4 | 4 | 180 |
+
+Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
+
+  If no block found for 2 hours (CASERT_DECAY_ACTIVATION = 7200s),
+  the effective level decays downward to prevent permanent stall:
+    L8+  : drop 1 level every 10 minutes (fast recovery)
+    L4–L7: drop 1 level every 20 minutes (medium recovery)
+    L2–L3: drop 1 level every 30 minutes (cautious near neutral)
+    L1   : floor, no further decay
+  When mining resumes, decay stops instantly. Block validation
+  always uses the raw schedule level (no decay applied).
 
 At L1 (neutral), 4 independent probes each run 4 gradient steps with
 perturbation scale ±1. This is the lightest configuration. When the chain is
@@ -747,12 +760,13 @@ SIGNAL COMPUTATION (deterministic, block-timestamp based):
   lag           = expected_h - current_height
   ahead         = max(0, -lag)
 
-LEVEL ASSIGNMENT (cASERT v5 — L1–L5+, unbounded):
+LEVEL ASSIGNMENT (cASERT v5.1 — L1–L6+, unbounded):
   ahead = 0–4    → L1   (neutral, base verification)
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
-  ahead = 76+    → L5+  (unbounded: level = 5 + (ahead - 76) / 50)
+  ahead = 76–100 → L5   (strong hardening, scale = level + 1)
+  ahead = 101+   → L6+  (unbounded: level = 5 + (ahead - 76) / 50)
 
   Above L5, the level continues to increase without ceiling.
   Named thresholds exist for L6=101, L7=151, L8=201, L9=251, L10=301

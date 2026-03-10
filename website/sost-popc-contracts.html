@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — PoPC Contracts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold: #b8860b;
+    --gold-dim: rgba(184,134,11,0.2);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo img { height: 72px; filter: drop-shadow(0 0 6px rgba(251,1,13,.5)); }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+  .spec-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); gap: 10px; flex-wrap: wrap; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-icon.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-left: auto; }
+  .spec-body { padding: 20px; }
+
+  .code-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .code-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .gold { color: var(--gold); }
+  .code-table .pending { color: var(--text-muted); font-style: italic; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-card .stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html" class="active">PoPC Contracts</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Protocol Transparency</div>
+    <h1 class="fade-in delay-1">PoPC <span>Contracts</span></h1>
+    <p class="hero-sub fade-in delay-2">Public registry of all Proof of Personal Custody contracts. Model A (autocustody bonds) and Model B (escrow timelocks). All data publicly verifiable on-chain.</p>
+  </div>
+</section>
+
+<!-- SECTION 01: Overview Stats -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 01</div>
+      <div class="section-title">Overview <span class="accent">Stats</span></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card fade-in delay-1">
+        <div class="stat-label">Total Gold Committed</div>
+        <div class="stat-val" style="color:var(--gold)">TBD oz</div>
+        <div class="stat-sub">XAUT + PAXG combined</div>
+      </div>
+      <div class="stat-card fade-in delay-2">
+        <div class="stat-label">Active Contracts</div>
+        <div class="stat-val" style="color:var(--cyan-primary)">0</div>
+        <div class="stat-sub">Model A + Model B</div>
+      </div>
+      <div class="stat-card fade-in delay-1">
+        <div class="stat-label">Total Rewards Paid</div>
+        <div class="stat-val" style="color:var(--green-primary)">0 SOST</div>
+        <div class="stat-sub">From PoPC Pool</div>
+      </div>
+      <div class="stat-card fade-in delay-2">
+        <div class="stat-label">Total Participants</div>
+        <div class="stat-val">0</div>
+        <div class="stat-sub">Unique wallets</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: Active Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 02</div>
+      <div class="section-title">Active <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon green"></div>
+        <span class="spec-label">Active Contract Registry</span>
+        <span class="spec-tag">ON-CHAIN VERIFIED</span>
+      </div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr>
+            <th>Contract ID</th><th>Model</th><th>Asset</th><th>Amount (oz)</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Address</th>
+          </tr>
+          <tr>
+            <td class="highlight">FOUND-001</td><td>Model A</td><td class="gold">XAUT</td><td>TBD</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+          </tr>
+          <tr>
+            <td class="highlight">FOUND-002</td><td>Model B</td><td class="gold">PAXG</td><td>TBD</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      Foundation contracts shown first. Community contracts will appear here as participants join.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 03: Completed Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 03</div>
+      <div class="section-title">Completed <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon cyan"></div>
+        <span class="spec-label">Completed Contract History</span>
+        <span class="spec-tag">VERIFIED</span>
+      </div>
+      <div class="spec-body">
+        <div class="empty-state">No completed contracts yet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 04: Slashed Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 04</div>
+      <div class="section-title">Slashed <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon red"></div>
+        <span class="spec-label">Slash Record</span>
+        <span class="spec-tag">AUTOMATIC</span>
+      </div>
+      <div class="spec-body">
+        <div class="empty-state">No slashed contracts.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 05: Contract Verification -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
+      <div class="section-title">Contract <span class="accent">Verification</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon cyan"></div>
+        <span class="spec-label">Independent Verification</span>
+        <span class="spec-tag">TRUSTLESS</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Every PoPC contract is independently verifiable:</p>
+        <table class="code-table">
+          <tr><td class="highlight">Model A</td><td>SOST bond locked on SOST chain, gold balance verified via Ethereum RPC</td></tr>
+          <tr><td class="highlight">Model B</td><td>Gold locked in immutable escrow on Ethereum, SOST reward delivered immediately</td></tr>
+          <tr><td class="highlight">Registry</td><td>All contract addresses, transaction hashes, and audit results are published in this registry</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Verification tools:</strong> SOST bond status is verifiable via <a href="sost-explorer.html" style="color:var(--cyan-primary)">SOST Explorer</a>. Ethereum escrow and gold balances are verifiable on <a href="https://etherscan.io" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a>. All source data is public and reproducible.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px">SOST PROTOCOL &mdash; <a href="https://sostcore.com">sostcore.com</a></p>
+    <p style="color:var(--text-muted);font-size:10px;line-height:1.6">Contract data updated as deployments occur. On-chain balances verified via <a href="https://explorer.sostcore.com" target="_blank" rel="noopener">explorer.sostcore.com</a>.</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+<script src="sost-search.js"></script>
+</body>
+</html>
