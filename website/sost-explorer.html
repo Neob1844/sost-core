@@ -99,11 +99,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .gold-icon{font-size:16px}
 .gold-big{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:4px}
 .gold-sub{font-size:11px;color:var(--text3);margin-bottom:12px}
-.gold-bar{display:flex;gap:2px;height:32px;align-items:flex-end}
-.gold-bar-seg{background:var(--gold);opacity:.6;min-width:3px;border-radius:1px 1px 0 0;transition:opacity .15s}
-.gold-bar-seg:hover{opacity:1}
-.popc-bar-seg{background:var(--cyan);opacity:.6;min-width:3px;border-radius:1px 1px 0 0;transition:opacity .15s}
-.popc-bar-seg:hover{opacity:1}
+.price-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.price-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
+.price-card:hover{border-color:var(--border2)}
+.price-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.price-card-title{font-size:10px;letter-spacing:2px;color:var(--text3)}
+.price-card-title b{font-weight:600}
+.price-card-badge{font-size:8px;border:1px solid rgba(74,222,128,.3);border-radius:2px;padding:2px 6px;color:var(--green);letter-spacing:1px;display:flex;align-items:center;gap:4px}
+.price-card-badge .pdot{width:4px;height:4px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
+.price-card-val{font-size:22px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.price-card-range{font-size:9px;color:var(--text3);margin-top:8px;letter-spacing:.5px}
+@media(max-width:768px){.price-cards{grid-template-columns:1fr}}
 .emission-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
 .emission-title{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:12px}
 .emission-title b{color:var(--purple)}
@@ -276,23 +282,36 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div id="detailNav"></div>
     <div id="detailContent"></div>
   </div>
-  <div class="two-col" id="chartsRow">
-    <div style="display:flex;flex-direction:column;gap:20px">
-    <div class="gold-card">
-      <div class="gold-title"><span class="gold-icon">⬙</span> // <b>GOLD RESERVES</b> <span style="font-size:10px;color:var(--text3)">constitutional treasury</span></div>
-      <div class="gold-big" id="goldTotal">—</div>
-      <div class="gold-sub" id="goldSub">accumulated from 25% of every block reward since genesis</div>
-      <div class="gold-bar" id="goldBar"></div>
-      <div style="font-size:8px;color:var(--text3);margin-top:4px;letter-spacing:1px">▮ bar height = block interval · last 50 blocks · hover for detail</div>
+  <div class="price-cards" id="priceChartsRow">
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--gold)">XAUT PRICE</b> — Tether Gold</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="xautPrice" style="color:var(--gold)">—</div>
+      <canvas id="xautChart" style="width:100%;height:120px"></canvas>
+      <div class="price-card-range" id="xautRange"></div>
     </div>
-    <div class="gold-card">
-      <div class="gold-title"><span style="font-size:16px;color:var(--cyan)">⏱</span> // <b style="color:var(--cyan)">POPC POOL</b> <span style="font-size:10px;color:var(--text3)">proof of personal custody rewards</span></div>
-      <div class="gold-big" id="popcTotal" style="color:var(--cyan)">—</div>
-      <div class="gold-sub" id="popcSub">accumulated for PoPC participants · 25% of every block reward</div>
-      <div class="gold-bar" id="popcBar"></div>
-      <div style="font-size:8px;color:var(--text3);margin-top:4px;letter-spacing:1px">▮ bar height = block interval · last 50 blocks · hover for detail</div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--green)">PAXG PRICE</b> — Pax Gold</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="paxgPrice" style="color:var(--green)">—</div>
+      <canvas id="paxgChart" style="width:100%;height:120px"></canvas>
+      <div class="price-card-range" id="paxgRange"></div>
     </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--red)">SOST PRICE</b></div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="sostPrice" style="color:var(--red)">—</div>
+      <canvas id="sostChart" style="width:100%;height:120px"></canvas>
+      <div class="price-card-range" id="sostRange"></div>
     </div>
+  </div>
+  <div style="margin-bottom:24px">
     <div class="emission-card">
       <div class="emission-title">// <b>EMISSION CURVE</b> <span style="font-size:10px;color:var(--text3)">smooth exponential decay · q = e<sup>-¼</sup> · Feigenbaum α epochs · δ supply cap</span></div>
       <canvas class="emission-canvas" id="emissionCanvas" style="height:220px"></canvas>
@@ -502,7 +521,7 @@ async function updateDashboard(info){
     _lastBlockTime=times[0];startCountdown();}}catch(e){}
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
-  drawReserveBars();
+  /* drawReserveBars() removed — replaced by price charts */
   try{
     var ADDR_MINER='sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429';
     var ADDR_GOLD='sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724';
@@ -514,46 +533,14 @@ async function updateDashboard(info){
     document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
-    document.getElementById('goldTotal').textContent=bg.toFixed(4)+' SOST';
-    document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
-    document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
-    document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
+    /* goldTotal/popcTotal cards removed — replaced by price charts */
   }catch(e){}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
   updateChainSync();
 }
-function drawReserveBars(){
-  if(!_diffHistory||_diffHistory.length<2)return;
-  var dh=_diffHistory;
-  var intervals=[];
-  var goldPerBlock=(EMI.R0*0.25)/1e8;
-  for(var i=1;i<dh.length;i++){
-    var iv=dh[i].t-dh[i-1].t;
-    if(iv<0)iv=0;if(iv>3600)iv=3600;
-    intervals.push({h:dh[i].h,iv:iv,gold:goldPerBlock});
-  }
-  var maxIv=Math.max.apply(null,intervals.map(function(x){return x.iv;}))||1;
-  var minH=4,maxH=32;
-  function makeBar(el,cls,intervals2,maxIv2){
-    el.innerHTML='';
-    for(var i=0;i<intervals2.length;i++){
-      var d=intervals2[i];
-      var pct=d.iv/maxIv2;
-      var h=minH+pct*(maxH-minH);
-      var seg=document.createElement('div');
-      seg.className=cls;
-      seg.style.height=h+'px';
-      seg.style.flex='1';
-      seg.style.opacity=(0.4+pct*0.6).toFixed(2);
-      seg.title='#'+d.h+' \u00B7 '+d.iv+'s interval \u00B7 +'+d.gold.toFixed(4)+' SOST';
-      el.appendChild(seg);
-    }
-  }
-  makeBar(document.getElementById('goldBar'),'gold-bar-seg',intervals,maxIv);
-  makeBar(document.getElementById('popcBar'),'popc-bar-seg',intervals,maxIv);
-}
+/* drawReserveBars removed — replaced by price charts */
 var GENESIS_TS=1772236800;
 function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);var p=[];if(d>0)p.push(d+'d');if(h>0)p.push(h+'h');if(m>0)p.push(m+'m');p.push(s+'s');return p.join(' ');}
 function updateChainSync(){
@@ -1035,6 +1022,87 @@ async function loadLatestTxs(){
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
+/* ---- PRICE CHARTS ---- */
+(function(){
+var xautHistory=[],paxgHistory=[],sostHistory=[];
+var MAX_PTS=60;
+var sostListed=null;
+function fmtUsd(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function drawMiniChart(canvasId,data,color){
+  var c=document.getElementById(canvasId);if(!c)return;
+  var ctx=c.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  var w=c.offsetWidth,h=c.offsetHeight;
+  c.width=w*dpr;c.height=h*dpr;
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  // grid
+  ctx.strokeStyle='#111';ctx.lineWidth=1;
+  for(var i=0;i<4;i++){var y=h*i/3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  if(data.length<2)return;
+  var min=Math.min.apply(null,data),max=Math.max.apply(null,data);
+  var range=max-min||1;
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.lineJoin='round';
+  ctx.beginPath();
+  for(var j=0;j<data.length;j++){
+    var x=j/(data.length-1)*w;
+    var y2=h-((data[j]-min)/range)*(h-8)-4;
+    if(j===0)ctx.moveTo(x,y2);else ctx.lineTo(x,y2);
+  }
+  ctx.stroke();
+  // gradient fill
+  var grd=ctx.createLinearGradient(0,0,0,h);
+  grd.addColorStop(0,color+'33');grd.addColorStop(1,color+'00');
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+}
+function updateRange(elId,data){
+  var el=document.getElementById(elId);if(!el||data.length===0)return;
+  var hi=Math.max.apply(null,data),lo=Math.min.apply(null,data);
+  el.textContent='High: '+fmtUsd(hi)+' | Low: '+fmtUsd(lo)+' | Points: '+data.length+'/60';
+}
+function fetchPrices(){
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var xp=(d['tether-gold']&&d['tether-gold'].usd)||null;
+    var pp=(d['pax-gold']&&d['pax-gold'].usd)||null;
+    if(xp){xautHistory.push(xp);if(xautHistory.length>MAX_PTS)xautHistory.shift();document.getElementById('xautPrice').textContent=fmtUsd(xp);drawMiniChart('xautChart',xautHistory,'#b8860b');updateRange('xautRange',xautHistory);}
+    if(pp){paxgHistory.push(pp);if(paxgHistory.length>MAX_PTS)paxgHistory.shift();document.getElementById('paxgPrice').textContent=fmtUsd(pp);drawMiniChart('paxgChart',paxgHistory,'#4ade80');updateRange('paxgRange',paxgHistory);}
+  }).catch(function(){});
+  // SOST
+  if(sostListed===false){return;}
+  fetchSost('sost-protocol',function(){fetchSost('sost',function(){
+    sostListed=false;
+    document.getElementById('sostPrice').textContent='Awaiting market data';
+    document.getElementById('sostPrice').style.color='#444';
+    document.getElementById('sostPrice').style.fontSize='16px';
+    document.getElementById('sostRange').innerHTML='Mining cost estimate: ~$0.01<br><span style="color:#333">Price tracking activates upon market availability</span>';
+    drawMiniChart('sostChart',[0,0],'#333');
+  });});
+}
+function fetchSost(id,fallback){
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids='+id+'&vs_currencies=usd')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d[id]||!d[id].usd){fallback();return;}
+    sostListed=true;
+    var sp=d[id].usd;
+    sostHistory.push(sp);if(sostHistory.length>MAX_PTS)sostHistory.shift();
+    document.getElementById('sostPrice').textContent=fmtUsd(sp);
+    document.getElementById('sostPrice').style.color='var(--red)';
+    document.getElementById('sostPrice').style.fontSize='';
+    drawMiniChart('sostChart',sostHistory,'#fb010d');
+    updateRange('sostRange',sostHistory);
+  }).catch(function(){fallback();});
+}
+fetchPrices();setInterval(fetchPrices,60000);
+window.addEventListener('resize',function(){
+  if(xautHistory.length)drawMiniChart('xautChart',xautHistory,'#b8860b');
+  if(paxgHistory.length)drawMiniChart('paxgChart',paxgHistory,'#4ade80');
+  if(sostHistory.length)drawMiniChart('sostChart',sostHistory,'#fb010d');
+  else if(sostListed===false)drawMiniChart('sostChart',[0,0],'#333');
+});
+})();
 </script>
 <script src="sost-search.js"></script>
 </body>
