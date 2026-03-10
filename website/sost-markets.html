@@ -502,7 +502,7 @@
             var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
             var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
             var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
-            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">SOST</span></td><td style="color:#fb010d;font-weight:600">SOST</td>' +
+            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span></td><td style="color:#fb010d;font-weight:600">SOST</td>' +
               '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (spv !== null ? fmtCrypto(spv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td></tr>';
