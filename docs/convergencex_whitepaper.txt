@@ -2169,7 +2169,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 | Mar 13, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public. |
 | Q4 2026 | Gold purchases begin (6 months post-genesis per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
-| Jan 2027 | PoPC Model A + B launch. First custody contracts active. |
+| Q3 2026 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
 | Jun 2027 | Physical gold extension. Mobile app for audit challenges. Verifier network. |
 | 2028 | ZK R&D begins. Physical proof system research. |
 | 2029-2030 | ZK physical custody proofs. Full privacy-preserving audit system. |
