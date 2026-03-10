@@ -179,7 +179,7 @@
     <div class="spec-block">
       <div class="spec-header">
         <div class="spec-icon gold"></div>
-        <span class="spec-label">Funding Vault On-Chain Address</span>
+        <span class="spec-label">Gold Funding Vault On-Chain Address</span>
         <span class="spec-tag">SOST CHAIN</span>
       </div>
       <div class="spec-body">
@@ -260,7 +260,7 @@
         <canvas id="reserveDonut"></canvas>
       </div>
       <div class="chart-bar-wrap">
-        <div class="chart-label">Funding Vault Accumulation (Year 1)</div>
+        <div class="chart-label">Gold Funding Vault Accumulation (Year 1)</div>
         <canvas id="vaultBarChart"></canvas>
       </div>
     </div>
@@ -280,7 +280,7 @@
     </div>
 
     <div class="notice">
-      <strong>Projection basis:</strong> 25% of genesis reward (7.85100863 SOST/block) at 6 blocks/hour, 24h/day. Funding Vault and PoPC Pool each receive 25% of every block reward. Actual accumulation depends on block times and emission decay.
+      <strong>Projection basis:</strong> 25% of genesis reward (7.85100863 SOST/block) at 6 blocks/hour, 24h/day. Gold Funding Vault and PoPC Pool each receive 25% of every block reward. Actual accumulation depends on block times and emission decay.
     </div>
   </div>
 </section>
@@ -394,7 +394,7 @@ const RESERVE_DATA = {
       labels: labels,
       datasets: [
         {
-          label: 'Funding Vault (25%)',
+          label: 'Gold Funding Vault (25%)',
           data: goldData,
           borderColor: '#b8860b',
           backgroundColor: 'rgba(184,134,11,0.1)',
@@ -479,7 +479,7 @@ const RESERVE_DATA = {
   });
 })();
 
-// Funding Vault Bar Chart (Year 1 projection)
+// Gold Funding Vault Bar Chart (Year 1 projection)
 (function() {
   var sostPerMonth = 8597;
   var labels = [];
@@ -493,7 +493,7 @@ const RESERVE_DATA = {
     data: {
       labels: labels,
       datasets: [{
-        label: 'Funding Vault SOST',
+        label: 'Gold Funding Vault SOST',
         data: data,
         backgroundColor: 'rgba(251,1,13,0.7)',
         borderColor: '#fb010d',
