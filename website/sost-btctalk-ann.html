@@ -4,20 +4,41 @@
 <meta charset="UTF-8">
 <title>SOST Protocol — BitcoinTalk ANN Preview</title>
 <style>
-  body { font-family: Verdana, Geneva, sans-serif; font-size: 13px; color: #333; background: #f5f5f5; max-width: 800px; margin: 40px auto; padding: 20px; }
+  body { font-family: Verdana, Geneva, sans-serif; font-size: 13px; max-width: 800px; margin: 40px auto; padding: 20px; transition: background 0.3s, color 0.3s; }
   .center { text-align: center; }
-  hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  hr { border: none; border-top: 1px solid; margin: 24px 0; transition: border-color 0.3s; }
   h1 { font-size: 18pt; margin: 8px 0; }
   h2 { font-size: 14pt; margin: 20px 0 10px; }
   table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-  td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-  th { background: #eee; }
-  code, pre { background: #1a1a2e; color: #0f0; font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; display: block; white-space: pre-wrap; border-radius: 4px; margin: 8px 0; }
+  td, th { padding: 6px 10px; text-align: left; transition: border-color 0.3s, background 0.3s; }
+  code, pre { font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; display: block; white-space: pre-wrap; border-radius: 4px; margin: 8px 0; transition: background 0.3s; }
   ul { margin: 8px 0; padding-left: 24px; }
   li { margin: 4px 0; }
-  .disclaimer { font-size: 10pt; color: #777; font-style: italic; margin-top: 24px; }
-  a { color: #0066cc; }
-  img { max-width: 200px; }
+  .disclaimer { font-size: 10pt; font-style: italic; margin-top: 24px; transition: color 0.3s; }
+  img { max-width: 180px; }
+  .theme-toggle { position: fixed; top: 16px; right: 16px; background: none; border: 1px solid; padding: 6px 14px; border-radius: 4px; font-family: Verdana, Geneva, sans-serif; font-size: 11px; cursor: pointer; z-index: 100; transition: all 0.3s; }
+
+  /* DARK (default) */
+  body { background: #0a0a0a; color: #e2e8f0; }
+  hr { border-color: #2a2a2a; }
+  td, th { border: 1px solid #2a2a2a; }
+  th { background: #111; }
+  code, pre { background: #111; color: #0f0; }
+  a { color: #22d3ee; }
+  .disclaimer { color: #64748b; }
+  .theme-toggle { color: #94a3b8; border-color: #2a2a2a; }
+  .theme-toggle:hover { color: #e2e8f0; border-color: #3a3a3a; }
+
+  /* LIGHT */
+  body.light { background: #f5f5f5; color: #333; }
+  body.light hr { border-color: #ccc; }
+  body.light td, body.light th { border: 1px solid #ccc; }
+  body.light th { background: #eee; }
+  body.light code, body.light pre { background: #1a1a2e; color: #0f0; }
+  body.light a { color: #0066cc; }
+  body.light .disclaimer { color: #777; }
+  body.light .theme-toggle { color: #555; border-color: #ccc; }
+  body.light .theme-toggle:hover { color: #333; border-color: #999; }
 </style>
 </head>
 <body>
@@ -142,7 +163,7 @@
   <tr><td>1</td><td>March 13, 2026</td><td>GENESIS BLOCK &mdash; 00:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.</td></tr>
   <tr><td>2</td><td>Q2 2026</td><td>PoPC smart contracts deployed on Ethereum Sepolia testnet. Model A (bond + audit) and Model B (escrow timelock) open for public testing.</td></tr>
   <tr><td>3</td><td>Q3 2026</td><td>PoPC mainnet launch on Ethereum. First custody contracts active. XAUT/PAXG reserve purchases begin. Heritage Reserve deployed. Public reserve dashboard.</td></tr>
-  <tr><td>4</td><td>2027+</td><td>Exchange listings. Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research begins.</td></tr>
+  <tr><td>4</td><td>2027+</td><td>Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research.</td></tr>
 </table>
 
 <hr>
@@ -190,5 +211,17 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 
 <p class="disclaimer">SOST is experimental software. Mine and hold at your own risk. The gold reserve mechanism depends on market availability of XAUT/PAXG. The reserve is not a redemption right &mdash; SOST is not pegged to gold. This is not financial advice.</p>
 
+<button class="theme-toggle" id="themeToggle">Light Mode</button>
+<script>
+(function(){
+  var isDark = true;
+  var btn = document.getElementById('themeToggle');
+  btn.addEventListener('click', function(){
+    isDark = !isDark;
+    document.body.classList.toggle('light', !isDark);
+    btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  });
+})();
+</script>
 </body>
 </html>

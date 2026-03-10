@@ -574,12 +574,14 @@
     <!-- COUNTDOWN TIMERS -->
     <div class="countdown-section fade-in delay-3" style="margin:32px 0 8px;text-align:center;">
       <div id="countdown-genesis" style="margin-bottom:24px;">
-        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:10px;text-transform:uppercase;">Genesis Block</div>
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Genesis Block</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 13, 2026 &mdash; 00:00:00 UTC</div>
         <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
       </div>
       <div id="countdown-launch">
-        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:10px;text-transform:uppercase;">Official Public Launch</div>
-        <div id="launch-timer" style="font-family:'Courier New',monospace;font-size:clamp(22px,4vw,36px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Official Public Launch</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">May 13, 2026 &mdash; 00:00:00 UTC</div>
+        <div id="launch-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
       </div>
     </div>
 
@@ -840,8 +842,7 @@
   var genesisEl = document.getElementById('genesis-timer');
   var launchEl  = document.getElementById('launch-timer');
 
-  function fmt(diff){
-    if(diff<=0) return null;
+  function fmtDown(diff){
     var d=Math.floor(diff/86400000);
     var h=Math.floor((diff%86400000)/3600000);
     var m=Math.floor((diff%3600000)/60000);
@@ -852,43 +853,31 @@
       +'<span style="color:#fff">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC</span>';
   }
 
-  var genesisHidden = false, launchHidden = false;
-  var genesisZeroAt = 0, launchZeroAt = 0;
-  var genesisWrap = document.getElementById('countdown-genesis');
-  var launchWrap  = document.getElementById('countdown-launch');
+  function fmtUp(diff){
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#00ff88">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#00ff88">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#00ff88">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#00ff88">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC ago</span>';
+  }
 
   function tick(){
     var now=Date.now();
     var gDiff=GENESIS-now, lDiff=LAUNCH-now;
 
-    if(!genesisHidden){
-      var gHtml=fmt(gDiff);
-      if(gHtml){
-        genesisEl.innerHTML = gHtml;
-      } else {
-        if(!genesisZeroAt) genesisZeroAt = now;
-        if(now - genesisZeroAt < 10000){
-          genesisEl.innerHTML = '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">GENESIS BLOCK LIVE</span>';
-        } else {
-          genesisWrap.style.display = 'none';
-          genesisHidden = true;
-        }
-      }
+    if(gDiff>0){
+      genesisEl.innerHTML = fmtDown(gDiff);
+    } else {
+      genesisEl.innerHTML = fmtUp(-gDiff);
     }
 
-    if(!launchHidden){
-      var lHtml=fmt(lDiff);
-      if(lHtml){
-        launchEl.innerHTML = lHtml;
-      } else {
-        if(!launchZeroAt) launchZeroAt = now;
-        if(now - launchZeroAt < 10000){
-          launchEl.innerHTML = '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">PUBLIC LAUNCH LIVE</span>';
-        } else {
-          launchWrap.style.display = 'none';
-          launchHidden = true;
-        }
-      }
+    if(lDiff>0){
+      launchEl.innerHTML = fmtDown(lDiff);
+    } else {
+      launchEl.innerHTML = fmtUp(-lDiff);
     }
   }
   tick();
