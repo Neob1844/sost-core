@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Global Markets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold-primary: #b8860b;
+    --gold-dim: #b8860b33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  /* STATUS BAR */
+  .status-bar { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+  .live-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 4px; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); font-size: 11px; color: var(--green-primary); font-weight: 600; letter-spacing: 1px; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-primary); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .status-time { font-size: 11px; color: var(--text-muted); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+  .section-title .gold { color: var(--gold-primary); }
+  .section-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; }
+  .data-table th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; background: var(--bg-panel); border-bottom: 1px solid var(--border-dim); font-weight: 500; }
+  .data-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg-hover); }
+  .data-table .currency-name { color: var(--text-primary); font-weight: 500; }
+  .data-table .currency-code { color: var(--text-dim); font-size: 11px; margin-left: 6px; }
+  .data-table .price-val { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .data-table .price-na { color: var(--text-muted); font-style: italic; }
+
+  /* PLACEHOLDER */
+  .placeholder-box { background: var(--bg-card); border: 1px dashed var(--border-med); border-radius: 8px; padding: 48px 24px; text-align: center; }
+  .placeholder-box .ph-title { font-family: var(--font-display); font-size: 18px; color: var(--text-dim); margin-bottom: 8px; }
+  .placeholder-box .ph-sub { font-size: 13px; color: var(--text-muted); }
+
+  /* FOOTER */
+  footer { padding: 40px 0; text-align: center; }
+  footer p { font-size: 12px; color: var(--text-muted); }
+  footer a { color: var(--text-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .data-table { font-size: 12px; }
+    .data-table th, .data-table td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html" class="active">Markets</a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label">Live Data Dashboard</div>
+    <h1>Global <span>Markets</span></h1>
+    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 21 fiat currencies and 10 cryptocurrencies. Data refreshed every 60 seconds.</p>
+    <div class="status-bar">
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+      <span class="status-time" id="lastUpdate">loading...</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 01: Forex Rates -->
+<section class="section" id="forex">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 01</div>
+      <div class="section-title">Currency Exchange <span class="accent">Rates</span></div>
+      <div class="section-sub">20 major currencies vs USD — source: open.er-api.com</div>
+    </div>
+    <table class="data-table" id="forexTable">
+      <thead>
+        <tr><th>Currency</th><th>Code</th><th>1 USD =</th><th>1 Unit = USD</th></tr>
+      </thead>
+      <tbody id="forexBody">
+        <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Loading forex rates...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 02: Gold in Fiat -->
+<section class="section" id="goldFiat">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 02</div>
+      <div class="section-title">Gold Price in <span class="gold">World Currencies</span></div>
+      <div class="section-sub">1 troy oz gold (XAUT/PAXG average) in 21 currencies — source: CoinGecko</div>
+    </div>
+    <table class="data-table" id="goldFiatTable">
+      <thead>
+        <tr><th>Currency</th><th>Code</th><th>Gold Price</th></tr>
+      </thead>
+      <tbody id="goldFiatBody">
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Loading gold prices...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 03: SOST in Fiat -->
+<section class="section" id="sostFiat">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 03</div>
+      <div class="section-title">SOST Price in <span class="accent">World Currencies</span></div>
+      <div class="section-sub">SOST value in 21 fiat currencies — source: CoinGecko (if listed)</div>
+    </div>
+    <table class="data-table" id="sostFiatTable">
+      <thead>
+        <tr><th>Currency</th><th>Code</th><th>SOST Price</th></tr>
+      </thead>
+      <tbody id="sostFiatBody">
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Loading SOST prices...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 04: Gold in Crypto -->
+<section class="section" id="goldCrypto">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 04</div>
+      <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
+      <div class="section-sub">1 troy oz gold priced in 10 major cryptocurrencies — source: CoinGecko</div>
+    </div>
+    <table class="data-table" id="goldCryptoTable">
+      <thead>
+        <tr><th>Cryptocurrency</th><th>Symbol</th><th>Gold Price</th></tr>
+      </thead>
+      <tbody id="goldCryptoBody">
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 05: SOST Pairs -->
+<section class="section" id="sostPairs">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">SECTION 05</div>
+      <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
+      <div class="section-sub">Exchange listings and trading pairs — coming soon</div>
+    </div>
+    <div class="placeholder-box">
+      <div class="ph-title">Trading pairs will appear here</div>
+      <div class="ph-sub">SOST is not yet listed on exchanges. Once listed, live order book data and trading pairs will be displayed in this section.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>SOST Protocol &mdash; auto-refresh every 1 min &mdash; <a href="index.html">Back to Home</a></p>
+  </div>
+</footer>
+
+<script src="sost-search.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  var FIAT_CURRENCIES = [
+    { code: 'EUR', name: 'Euro', symbol: '\u20AC' },
+    { code: 'GBP', name: 'British Pound', symbol: '\u00A3' },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '\u00A5' },
+    { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
+    { code: 'CNY', name: 'Chinese Yuan', symbol: '\u00A5' },
+    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+    { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$' },
+    { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+    { code: 'KRW', name: 'South Korean Won', symbol: '\u20A9' },
+    { code: 'INR', name: 'Indian Rupee', symbol: '\u20B9' },
+    { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
+    { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
+    { code: 'SAR', name: 'Saudi Riyal', symbol: '\uFDFC' },
+    { code: 'AED', name: 'UAE Dirham', symbol: '\u062F.\u0625' },
+    { code: 'TRY', name: 'Turkish Lira', symbol: '\u20BA' },
+    { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
+    { code: 'RUB', name: 'Russian Ruble', symbol: '\u20BD' },
+    { code: 'NOK', name: 'Norwegian Krone', symbol: 'kr' },
+    { code: 'SEK', name: 'Swedish Krona', symbol: 'kr' }
+  ];
+
+  var CRYPTO_CURRENCIES = [
+    { code: 'BTC', name: 'Bitcoin' },
+    { code: 'ETH', name: 'Ethereum' },
+    { code: 'BNB', name: 'BNB' },
+    { code: 'SOL', name: 'Solana' },
+    { code: 'XRP', name: 'XRP' },
+    { code: 'ADA', name: 'Cardano' },
+    { code: 'AVAX', name: 'Avalanche' },
+    { code: 'DOT', name: 'Polkadot' },
+    { code: 'LINK', name: 'Chainlink' },
+    { code: 'TON', name: 'Toncoin' }
+  ];
+
+  var fiatCodes = FIAT_CURRENCIES.map(function(c) { return c.code.toLowerCase(); });
+  var cryptoCodes = CRYPTO_CURRENCIES.map(function(c) { return c.code.toLowerCase(); });
+  var allVsCurrencies = ['usd'].concat(fiatCodes).concat(cryptoCodes).join(',');
+
+  function fmt(n, decimals) {
+    if (n === null || n === undefined) return '--';
+    if (typeof decimals === 'undefined') decimals = 2;
+    if (Math.abs(n) >= 1000) return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    if (Math.abs(n) < 0.01) return n.toFixed(8);
+    if (Math.abs(n) < 1) return n.toFixed(6);
+    return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function updateTime() {
+    var now = new Date();
+    document.getElementById('lastUpdate').textContent = 'Last update: ' + now.toUTCString();
+  }
+
+  // ---- SECTION 01: Forex ----
+  function fetchForex() {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
+        var tbody = document.getElementById('forexBody');
+        var html = '';
+        FIAT_CURRENCIES.forEach(function(c) {
+          var rate = data.rates[c.code];
+          if (rate === undefined) {
+            html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">N/A</td><td class="price-na">N/A</td></tr>';
+            return;
+          }
+          var inv = 1 / rate;
+          html += '<tr><td><span class="currency-name">' + c.name + '</span></td>' +
+            '<td>' + c.code + '</td>' +
+            '<td class="price-val">' + c.symbol + ' ' + fmt(rate, rate < 10 ? 4 : 2) + '</td>' +
+            '<td class="price-val">$' + fmt(inv, inv < 1 ? 6 : 4) + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function(e) {
+        document.getElementById('forexBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);">Error loading forex rates — retrying in 1 min</td></tr>';
+      });
+  }
+
+  // ---- SECTION 02 & 04: Gold prices ----
+  function fetchGold() {
+    var url = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var xaut = data['tether-gold'] || {};
+        var paxg = data['pax-gold'] || {};
+
+        // Section 02: Gold in fiat
+        var tbody2 = document.getElementById('goldFiatBody');
+        var html2 = '';
+        // USD first
+        var avgUsd = avgPrice(xaut.usd, paxg.usd);
+        html2 += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-val">$' + fmt(avgUsd) + '</td></tr>';
+        FIAT_CURRENCIES.forEach(function(c) {
+          var key = c.code.toLowerCase();
+          var avg = avgPrice(xaut[key], paxg[key]);
+          html2 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+            '<td class="price-val">' + (avg !== null ? c.symbol + ' ' + fmt(avg, avg > 1000 ? 0 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+        });
+        tbody2.innerHTML = html2;
+
+        // Section 04: Gold in crypto
+        var tbody4 = document.getElementById('goldCryptoBody');
+        var html4 = '';
+        CRYPTO_CURRENCIES.forEach(function(c) {
+          var key = c.code.toLowerCase();
+          var avg = avgPrice(xaut[key], paxg[key]);
+          html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+            '<td class="price-val">' + (avg !== null ? fmt(avg, avg < 1 ? 8 : avg < 100 ? 4 : 2) + ' ' + c.code : '<span class="price-na">N/A</span>') + '</td></tr>';
+        });
+        tbody4.innerHTML = html4;
+      })
+      .catch(function(e) {
+        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--red-primary);">Error loading gold prices — retrying in 1 min</td></tr>';
+        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--red-primary);">Error loading crypto prices — retrying in 1 min</td></tr>';
+      });
+  }
+
+  // ---- SECTION 03: SOST price ----
+  function fetchSost() {
+    var fiatStr = ['usd'].concat(fiatCodes).join(',');
+    tryFetchSost('sost-protocol', fiatStr, function() {
+      tryFetchSost('sost', fiatStr, function() {
+        showSostNotListed();
+      });
+    });
+  }
+
+  function tryFetchSost(id, vs, fallback) {
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data[id] || !data[id].usd) { fallback(); return; }
+        var prices = data[id];
+        var tbody = document.getElementById('sostFiatBody');
+        var html = '';
+        html += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-val">$' + fmt(prices.usd, 8) + '</td></tr>';
+        FIAT_CURRENCIES.forEach(function(c) {
+          var key = c.code.toLowerCase();
+          var p = prices[key];
+          html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+            '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+        });
+        tbody.innerHTML = html;
+      })
+      .catch(function() { fallback(); });
+  }
+
+  function showSostNotListed() {
+    var tbody = document.getElementById('sostFiatBody');
+    var html = '';
+    html += '<tr><td><span class="currency-name">US Dollar</span></td><td>USD</td><td class="price-na">Not Listed &mdash; est. mining cost ~$0.01</td></tr>';
+    FIAT_CURRENCIES.forEach(function(c) {
+      html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">Not Listed</td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  function avgPrice(a, b) {
+    if (a && b) return (a + b) / 2;
+    if (a) return a;
+    if (b) return b;
+    return null;
+  }
+
+  function refreshAll() {
+    fetchForex();
+    fetchGold();
+    fetchSost();
+    updateTime();
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 60000);
+})();
+</script>
+</body>
+</html>
