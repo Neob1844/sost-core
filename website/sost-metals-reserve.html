@@ -188,7 +188,7 @@
   <div class="container">
     <div class="hero-label fade-in">Metals Reserve Protocol</div>
     <h1 class="fade-in delay-1">Every Block Buys <span>Gold.</span><br>Heritage <span>Sealed.</span></h1>
-    <p class="hero-sub fade-in delay-2">25% of every block reward flows to the Metals Funding Vault by consensus. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an auditable execution pipeline. Purchased reserves are deposited into a Heritage Vault on Ethereum mainnet — sealed by default, perpetual.</p>
+    <p class="hero-sub fade-in delay-2">25% of every block reward flows to the Gold Funding Vault by consensus. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an auditable execution pipeline. Purchased reserves are deposited into a Heritage Vault on Ethereum mainnet — sealed by default, perpetual.</p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">GOLD-FIRST</span>
       <span class="sep">|</span>
@@ -205,7 +205,7 @@
       <h2 class="section-title">Two-Vault <span class="gold">Architecture</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy gold. The Heritage Reserve needs maximum immutability.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Gold Funding Vault needs flexibility to sell SOST and buy gold. The Heritage Reserve needs maximum immutability.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -214,7 +214,7 @@
         <span class="arrow">&rarr;</span>
       </div>
       <div class="arch-layer">
-        <h3 style="color:var(--gold-primary)">Funding Vault</h3>
+        <h3 style="color:var(--gold-primary)">Gold Funding Vault</h3>
         <p>25% accumulates (SOST chain)</p>
         <span class="arrow">&rarr;</span>
       </div>
@@ -232,7 +232,7 @@
     <div class="mode-grid fade-in delay-2">
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--gold-dim);color:var(--gold-primary);">SOST CHAIN</div>
-        <h3 style="color:var(--gold-primary)">Metals Funding Vault</h3>
+        <h3 style="color:var(--gold-primary)">Gold Funding Vault</h3>
         <p>Hardcoded coinbase destination. Receives exactly 25% of each block subsidy by consensus (q = reward // 4). Any block without the correct vault output is invalid. Accumulates SOST for periodic conversion.</p>
       </div>
       <div class="mode-card">
@@ -263,8 +263,8 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
-          <tr><td class="gold">G1</td><td class="value">Every valid block MUST pay the Funding Vault exactly q = reward // 4. Otherwise invalid.</td></tr>
-          <tr><td class="gold">G2</td><td class="value">Two-vault separation: Funding Vault is operational; Heritage Reserve is sealed storage.</td></tr>
+          <tr><td class="gold">G1</td><td class="value">Every valid block MUST pay the Gold Funding Vault exactly q = reward // 4. Otherwise invalid.</td></tr>
+          <tr><td class="gold">G2</td><td class="value">Two-vault separation: Gold Funding Vault is operational; Heritage Reserve is sealed storage.</td></tr>
           <tr><td class="gold">G3</td><td class="value">Heritage Reserve deployed on Ethereum mainnet. Heritage sealed by default.</td></tr>
           <tr><td class="gold">G4</td><td class="value">Purchases begin no earlier than 6 months after genesis, only once market readiness is met.</td></tr>
           <tr><td class="gold">G5</td><td class="value">Purchases executed in batches following rule-based TWAP policy, not discretionary timing.</td></tr>
@@ -300,7 +300,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Stage</th><th>Role</th><th>Detail</th></tr>
-          <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Funding Vault balance, detects batch threshold</td></tr>
+          <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Gold Funding Vault balance, detects batch threshold</td></tr>
           <tr><td class="gold">Batcher</td><td class="value">Order</td><td class="value">Creates signed execution order when threshold is met</td></tr>
           <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips, purchases XAUT/PAXG, deposits to Heritage Reserve</td></tr>
           <tr><td class="gold">Attestor</td><td class="value">Audit</td><td class="value">Publishes public batch record with full transaction proofs</td></tr>
@@ -317,7 +317,7 @@
         <span class="spec-tag">ANTI-MOMENTUM</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Convert Funding Vault SOST into XAUT/PAXG with minimal market impact, maximum traceability, and rule-based execution.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Convert Gold Funding Vault SOST into XAUT/PAXG with minimal market impact, maximum traceability, and rule-based execution.</p>
         <div class="code-snippet"><span class="comment">// Daily sell budget (rate-limited)</span>
 <span class="fn">DailySell</span> = <span class="keyword">min</span>(VaultBalance &times; <span class="num">0.25%</span>, DailyVolume &times; <span class="num">2%</span>)
 
@@ -407,7 +407,7 @@ Type:  limit orders with explicit slippage tolerance
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon gold"></div>
-          <span class="spec-label">Funding Vault Projections</span>
+          <span class="spec-label">Gold Funding Vault Projections</span>
         </div>
         <span class="spec-tag">25% OF COINBASE</span>
       </div>
