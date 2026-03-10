@@ -766,6 +766,51 @@ user receives: <span class="num">6.75</span> + <span class="num">1.411</span> = 
   </div>
 </footer>
 
+<script>
+(function(){
+  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var rewardSection=document.querySelector('#goldSpotBanner');
+  if(!rewardSection){
+    var banner=document.createElement('div');
+    banner.id='goldSpotBanner';
+    banner.style.cssText='background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:14px 20px;margin:20px 0;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;font-size:13px;';
+    banner.innerHTML='<span style="color:#475569">Loading gold spot...</span>';
+    var notices=document.querySelectorAll('.notice');
+    for(var i=0;i<notices.length;i++){
+      if(notices[i].textContent.indexOf('Non-guaranteed')!==-1){
+        notices[i].parentNode.insertBefore(banner,notices[i].nextSibling);
+        break;
+      }
+    }
+    rewardSection=banner;
+  }
+
+  function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
+
+  function fetchPrices(){
+    fetch(COINGECKO_URL).then(function(r){return r.json();}).then(function(d){
+      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
+      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
+      var avg=(xaut&&paxg)?((xaut+paxg)/2):0;
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      rewardSection.innerHTML='<span style="color:#64748b;font-size:11px;letter-spacing:1px;">GOLD SPOT</span>'
+        +'<span style="color:#b8860b;font-weight:600;">XAUT: $'+fmt(xaut)+'</span>'
+        +'<span style="color:#2a2a2a;">|</span>'
+        +'<span style="color:#4ade80;font-weight:600;">PAXG: $'+fmt(paxg)+'</span>'
+        +'<span style="color:#2a2a2a;">|</span>'
+        +'<span style="color:#e2e8f0;">Avg: $'+fmt(avg)+'</span>'
+        +liveBadge()
+        +'<span style="color:#475569;font-size:10px;margin-left:8px;">'+ts+'</span>';
+    }).catch(function(){
+      rewardSection.innerHTML='<span style="color:#64748b;">Gold spot price unavailable</span>';
+    });
+  }
+  fetchPrices();
+  setInterval(fetchPrices,300000);
+})();
+</script>
 <script src="sost-search.js"></script>
 </body>
 </html>

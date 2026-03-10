@@ -678,6 +678,42 @@ Type:  limit orders with explicit slippage tolerance
   </div>
 </footer>
 
+<script>
+(function(){
+  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var banner=document.createElement('div');
+  banner.id='goldPriceBanner';
+  banner.style.cssText='background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:16px 24px;margin:24px auto;max-width:1100px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;position:relative;z-index:1;';
+  banner.innerHTML='<span style="color:#475569">Loading gold prices...</span>';
+  var hero=document.querySelector('.hero');
+  if(hero&&hero.nextElementSibling)hero.parentNode.insertBefore(banner,hero.nextElementSibling);
+  else document.body.appendChild(banner);
+
+  function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
+
+  function fetchPrices(){
+    fetch(COINGECKO_URL).then(function(r){return r.json();}).then(function(d){
+      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
+      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
+      var avg=(xaut&&paxg)?((xaut+paxg)/2):0;
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      banner.innerHTML='<span style="color:#b8860b;font-weight:600;">XAUT: $'+fmt(xaut)+'</span>'
+        +'<span style="color:#2a2a2a;">|</span>'
+        +'<span style="color:#4ade80;font-weight:600;">PAXG: $'+fmt(paxg)+'</span>'
+        +'<span style="color:#2a2a2a;">|</span>'
+        +'<span style="color:#e2e8f0;">Avg: $'+fmt(avg)+'</span>'
+        +liveBadge()
+        +'<span style="color:#475569;font-size:10px;margin-left:8px;">'+ts+'</span>';
+    }).catch(function(){
+      banner.innerHTML='<span style="color:#64748b;">Price unavailable</span>';
+    });
+  }
+  fetchPrices();
+  setInterval(fetchPrices,300000);
+})();
+</script>
 <script src="sost-search.js"></script>
 </body>
 </html>
