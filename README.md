@@ -162,13 +162,13 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5+, unbounded, k=4) |
+| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L6+ (unbounded), k=4) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
 | Max supply | ~4,669,201 SOST (Feigenbaum delta x 10^6) |
 | 95% supply | ~12 epochs (~30 years) |
-| Reward split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
+| Reward split | 50% miner / 25% Gold Funding Vault / 25% PoPC Pool |
 | Coinbase maturity | 1,000 blocks |
 | Min relay fee | 1,000 stocks (0.00001 SOST) |
 | Address format | sost1 + 40 hex chars (20-byte pubkey hash) |
@@ -185,10 +185,10 @@ These addresses receive coinbase rewards at every block. Hardcoded at genesis, i
 | Role | Allocation |
 |------|-----------|
 | Miner reward | 50% to miner's configured address |
-| Gold Vault | 25% to automatic XAUT/PAXG purchases (auditable on-chain) |
+| Gold Funding Vault | 25% to automatic XAUT/PAXG purchases (auditable on-chain) |
 | PoPC Pool | 25% to Proof of Personal Custody rewards |
 
-Gold Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
+Gold Funding Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
 
 ## Native Financial Primitives
 
@@ -206,7 +206,7 @@ Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BU
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L5+, unbounded), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L6+ (unbounded)), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 
@@ -214,7 +214,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| ASERT + cASERT difficulty adjustment (L1-L5+, unbounded) | Complete |
+| ASERT + cASERT difficulty adjustment (L1-L6+ (unbounded)) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |
