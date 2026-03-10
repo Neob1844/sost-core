@@ -265,6 +265,41 @@
   </div>
 </section>
 
+<!-- 02B — SENDING SOST -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01B &mdash; SENDING SOST</div>
+      <h2 class="section-title">Sending <span class="accent">SOST</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Transfers &amp; Balances</span>
+        </div>
+        <span class="spec-meta">CLI wallet</span>
+      </div>
+      <div class="spec-body">
+        <p>After mining, your coinbase rewards require <strong style="color:var(--red-primary)">1,000 block confirmations</strong> (~7 days) before they become spendable. This is the coinbase maturity period. Regular transfers received from other users are spendable immediately.</p>
+        <p style="margin-top:16px;font-weight:500;color:var(--text-primary);">Send SOST using the CLI:</p>
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">./sost-cli send</span> <span class="flag">--to</span> <span class="val">sost1RECIPIENT_ADDRESS</span> <span class="flag">--amount</span> <span class="val">1.5</span> \
+    <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span>
+        </div>
+        <p style="margin-top:16px;font-weight:500;color:var(--text-primary);">Check your balance (showing available vs locked):</p>
+        <div class="code-block">
+<span class="prompt">$ </span><span class="cmd">./sost-cli getbalance</span> <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span>
+        </div>
+        <p>The balance command shows: <span style="color:var(--green-primary)">total</span> / <span style="color:var(--cyan-primary)">available</span> / <span style="color:var(--red-primary)">locked (immature)</span>. You can also use the web wallet at <a href="https://wallet.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">wallet.sostcore.com</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 03 — REQUIREMENTS -->
 <section class="section">
   <div class="container">
