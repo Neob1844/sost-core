@@ -147,7 +147,7 @@
   <div class="container">
     <div class="hero-label">Live Data Dashboard</div>
     <h1>Global <span>Markets</span></h1>
-    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 12 cryptocurrencies. Data refreshed every 60 seconds.</p>
+    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 13 cryptocurrencies. Data refreshed every 60 seconds.</p>
     <div class="status-bar">
       <div class="live-badge"><span class="live-dot"></span>LIVE</div>
       <span class="status-time" id="lastUpdate">loading...</span>
@@ -218,7 +218,7 @@
     <div class="section-header">
       <div class="section-id">SECTION 04</div>
       <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
-      <div class="section-sub">1 troy oz gold priced in 12 cryptocurrencies — source: CoinGecko</div>
+      <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko</div>
     </div>
     <table class="data-table" id="goldCryptoTable">
       <thead>
@@ -241,7 +241,7 @@
     </div>
     <div class="placeholder-box">
       <div class="ph-title">Trading pairs will appear here</div>
-      <div class="ph-sub">SOST market data will populate automatically once live trading activity is detected. Initial planned pairs include SOST/USDC, SOST/USDT, SOST/BTC, SOST/ETH, SOST/XAUT, and SOST/PAXG. Additional pairs may be introduced over time, subject to market conditions, liquidity availability, and the evolving operational needs of the ecosystem.</div>
+      <div class="ph-sub">SOST market data will populate automatically once live trading activity is detected. Initial planned pairs include SOST/USDC, SOST/USDT, SOST/BTC, SOST/ETH, SOST/XAUT, and SOST/PAXG. All listed pairs and any additional pairs that may be introduced over time are subject to market conditions, liquidity availability, and the evolving operational needs of the ecosystem.</div>
     </div>
   </div>
 </section>
@@ -453,7 +453,7 @@
   // ---- SECTION 02 & 04: Gold prices ----
   function fetchGold() {
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
-    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether&vs_currencies=usd';
+    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
 
     Promise.all([
       fetch(goldUrl).then(function(r) { return r.json(); }),
@@ -490,13 +490,23 @@
         // Section 04: Gold in crypto — XAUT | PAXG | Spread
         var tbody4 = document.getElementById('goldCryptoBody');
         var html4 = '';
-        CRYPTO_NATIVE.forEach(function(c) {
+        CRYPTO_NATIVE.forEach(function(c, i) {
           var key = c.code.toLowerCase();
           var xv = xaut[key], pv = paxg[key];
           html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code) + '</td>' +
             '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+          // Insert SOST row after BNB (index 2)
+          if (i === 2) {
+            var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
+            var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
+            var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
+            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">SOST</span></td><td style="color:#fb010d;font-weight:600">SOST</td>' +
+              '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
+              '<td class="price-val">' + (spv !== null ? fmtCrypto(spv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
+              '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td></tr>';
+          }
         });
         CRYPTO_STABLE.forEach(function(c) {
           var stablePrice = (stableData[c.cgId] && stableData[c.cgId].usd) ? stableData[c.cgId].usd : 1;
