@@ -537,7 +537,8 @@
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
       <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Balances</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="sost-explorer.html">Explorer</a>
@@ -851,13 +852,44 @@
       +'<span style="color:#fff">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC</span>';
   }
 
+  var genesisHidden = false, launchHidden = false;
+  var genesisZeroAt = 0, launchZeroAt = 0;
+  var genesisWrap = document.getElementById('countdown-genesis');
+  var launchWrap  = document.getElementById('countdown-launch');
+
   function tick(){
     var now=Date.now();
     var gDiff=GENESIS-now, lDiff=LAUNCH-now;
-    var gHtml=fmt(gDiff);
-    genesisEl.innerHTML = gHtml || '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">GENESIS BLOCK LIVE</span>';
-    var lHtml=fmt(lDiff);
-    launchEl.innerHTML = lHtml || '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">PUBLIC LAUNCH LIVE</span>';
+
+    if(!genesisHidden){
+      var gHtml=fmt(gDiff);
+      if(gHtml){
+        genesisEl.innerHTML = gHtml;
+      } else {
+        if(!genesisZeroAt) genesisZeroAt = now;
+        if(now - genesisZeroAt < 10000){
+          genesisEl.innerHTML = '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">GENESIS BLOCK LIVE</span>';
+        } else {
+          genesisWrap.style.display = 'none';
+          genesisHidden = true;
+        }
+      }
+    }
+
+    if(!launchHidden){
+      var lHtml=fmt(lDiff);
+      if(lHtml){
+        launchEl.innerHTML = lHtml;
+      } else {
+        if(!launchZeroAt) launchZeroAt = now;
+        if(now - launchZeroAt < 10000){
+          launchEl.innerHTML = '<span style="color:#00ff88;font-weight:700;letter-spacing:4px;">PUBLIC LAUNCH LIVE</span>';
+        } else {
+          launchWrap.style.display = 'none';
+          launchHidden = true;
+        }
+      }
+    }
   }
   tick();
   setInterval(tick,1000);
