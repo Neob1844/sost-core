@@ -172,27 +172,28 @@
     </div>
 
     <div class="stat-grid">
-      <div class="stat-card fade-in delay-1">
+      <div class="stat-card fade-in delay-1" id="popcCardGold">
         <div class="stat-label">Total Gold Committed</div>
-        <div class="stat-val" style="color:var(--gold)">TBD oz</div>
-        <div class="stat-sub">XAUT + PAXG combined</div>
+        <div class="stat-val" style="color:var(--gold)">...</div>
+        <div class="stat-sub">loading</div>
       </div>
-      <div class="stat-card fade-in delay-2">
+      <div class="stat-card fade-in delay-2" id="popcCardActive">
         <div class="stat-label">Active Contracts</div>
         <div class="stat-val" style="color:var(--cyan-primary)">0</div>
         <div class="stat-sub">Model A + Model B</div>
       </div>
-      <div class="stat-card fade-in delay-1">
+      <div class="stat-card fade-in delay-1" id="popcCardRewards">
         <div class="stat-label">Total Rewards Paid</div>
         <div class="stat-val" style="color:var(--green-primary)">0 SOST</div>
         <div class="stat-sub">From PoPC Pool</div>
       </div>
-      <div class="stat-card fade-in delay-2">
+      <div class="stat-card fade-in delay-2" id="popcCardParticipants">
         <div class="stat-label">Total Participants</div>
         <div class="stat-val">0</div>
         <div class="stat-sub">Unique wallets</div>
       </div>
     </div>
+    <div id="popcLiveStatus" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;"></div>
 
     <div class="chart-grid fade-in delay-3">
       <div class="chart-donut-wrap">
@@ -229,10 +230,10 @@
             <th>Contract ID</th><th>Model</th><th>Asset</th><th>Amount (oz)</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Address</th>
           </tr>
           <tr>
-            <td class="highlight">FOUND-001</td><td>Model A</td><td class="gold">XAUT</td><td>TBD</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+            <td class="highlight">FOUND-001</td><td>Model A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
           </tr>
           <tr>
-            <td class="highlight">FOUND-002</td><td>Model B</td><td class="gold">PAXG</td><td>TBD</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+            <td class="highlight">FOUND-002</td><td>Model B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
           </tr>
         </table>
       </div>
@@ -325,7 +326,73 @@
 </footer>
 
 <script>
-const popcStats = {
+/* ── Ethereum RPC Config ── */
+var FOUNDATION_WALLET = '0xd38955822b88867CD010946F0Ba25680B9DfC7a6';
+var XAUT_CONTRACT = '0x68749665FF8D2d112Fa859AA293F07A622782F38';
+var PAXG_CONTRACT = '0x45804880De22913dAFE09f4980848ECE6EcbAf78';
+var XAUT_DECIMALS = 6;
+var PAXG_DECIMALS = 18;
+var RPC_ENDPOINTS = ['https://rpc.ankr.com/eth', 'https://1rpc.io/eth'];
+var REFRESH_MS = 300000;
+
+function ethCallPopc(rpcUrl, tokenContract, walletAddress) {
+  var selector = '0x70a08231';
+  var paddedAddr = '000000000000000000000000' + walletAddress.replace('0x', '');
+  return fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: tokenContract, data: selector + paddedAddr }, 'latest'] })
+  }).then(function(r) { return r.json(); })
+    .then(function(j) { if (j.error) throw new Error(j.error.message); return j.result; });
+}
+
+function fetchBalancePopc(tokenContract, walletAddress) {
+  return ethCallPopc(RPC_ENDPOINTS[0], tokenContract, walletAddress)
+    .catch(function() { return ethCallPopc(RPC_ENDPOINTS[1], tokenContract, walletAddress); });
+}
+
+function hexToFloatPopc(hex, decimals) {
+  if (!hex || hex === '0x' || hex === '0x0') return 0;
+  var big = BigInt(hex);
+  var divisor = BigInt(10) ** BigInt(decimals);
+  var whole = big / divisor;
+  var frac = big % divisor;
+  return parseFloat(whole.toString() + '.' + frac.toString().padStart(decimals, '0'));
+}
+
+function updatePopcCard(id, val, sub) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.querySelector('.stat-val').textContent = val;
+  if (sub !== undefined) el.querySelector('.stat-sub').textContent = sub;
+}
+
+function fetchPopcLiveData() {
+  var statusEl = document.getElementById('popcLiveStatus');
+  statusEl.textContent = 'Fetching live balances...';
+  Promise.all([
+    fetchBalancePopc(XAUT_CONTRACT, FOUNDATION_WALLET),
+    fetchBalancePopc(PAXG_CONTRACT, FOUNDATION_WALLET)
+  ]).then(function(results) {
+    var xautOz = hexToFloatPopc(results[0], XAUT_DECIMALS);
+    var paxgOz = hexToFloatPopc(results[1], PAXG_DECIMALS);
+    var totalOz = xautOz + paxgOz;
+    updatePopcCard('popcCardGold',
+      totalOz > 0 ? totalOz.toFixed(4) + ' oz' : '0.0000 oz',
+      'XAUT: ' + xautOz.toFixed(4) + ' + PAXG: ' + paxgOz.toFixed(4));
+    var now = new Date();
+    statusEl.textContent = 'Last updated: ' + now.getUTCHours().toString().padStart(2,'0') + ':' + now.getUTCMinutes().toString().padStart(2,'0') + ' UTC — via Ethereum RPC';
+  }).catch(function(err) {
+    updatePopcCard('popcCardGold', 'ERR', 'RPC unavailable');
+    statusEl.textContent = 'RPC error — retrying in 5 min. (' + err.message + ')';
+  });
+}
+
+fetchPopcLiveData();
+setInterval(fetchPopcLiveData, REFRESH_MS);
+
+/* ── Static Chart Data ── */
+var popcStats = {
   model_a_count: 0,
   model_b_count: 0,
   model_a_oz: 0,

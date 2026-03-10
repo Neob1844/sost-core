@@ -252,6 +252,7 @@
     </div>
 
     <div class="stat-grid" id="statGrid"></div>
+    <div id="liveStatus" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;"></div>
 
     <div class="chart-grid fade-in delay-2">
       <div class="chart-donut-wrap">
@@ -292,90 +293,215 @@
 <footer>
   <div class="container">
     <p style="margin-bottom:8px">SOST PROTOCOL &mdash; <a href="https://sostcore.com">sostcore.com</a></p>
-    <p style="color:var(--text-muted);font-size:10px;line-height:1.6">Data updated manually. On-chain balances verified via <a href="https://explorer.sostcore.com" target="_blank" rel="noopener">explorer.sostcore.com</a>. Ethereum contract addresses published upon deployment (est. Mar 28, 2026).</p>
+    <p style="color:var(--text-muted);font-size:10px;line-height:1.6">Live data via Ethereum RPC (auto-refresh every 5 min). On-chain balances verified via <a href="https://explorer.sostcore.com" target="_blank" rel="noopener">explorer.sostcore.com</a>. Ethereum contract addresses published upon deployment (est. Mar 28, 2026).</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
 
 <script>
-const reserveData = {
-  xaut_oz: 0,
-  paxg_oz: 0,
-  xaut_usd: 0,
-  paxg_usd: 0,
-  contracts_active: 0,
-  contracts_completed: 0,
-  contracts_slashed: 0
-};
+/* ── Configuration ── */
+var FOUNDATION_WALLET = '0xd38955822b88867CD010946F0Ba25680B9DfC7a6';
+var XAUT_CONTRACT = '0x68749665FF8D2d112Fa859AA293F07A622782F38';
+var PAXG_CONTRACT = '0x45804880De22913dAFE09f4980848ECE6EcbAf78';
+var XAUT_DECIMALS = 6;
+var PAXG_DECIMALS = 18;
+var RPC_ENDPOINTS = ['https://rpc.ankr.com/eth', 'https://1rpc.io/eth'];
+var COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+var REFRESH_MS = 300000; // 5 minutes
 
-const RESERVE_DATA = {
-  foundationContracts: [
-    {
-      model: 'Model A',
-      asset: 'XAUT',
-      amount: 'TBD oz',
-      duration: '3 months',
-      start: 'Mar 28, 2026',
-      end: 'Jun 28, 2026',
-      status: 'PENDING',
-      contract: 'TBD (Ethereum mainnet)',
-      etherscan: 'TBD'
-    },
-    {
-      model: 'Model B',
-      asset: 'PAXG',
-      amount: 'TBD oz',
-      duration: '3 months',
-      start: 'Mar 28, 2026',
-      end: 'Jun 28, 2026',
-      status: 'PENDING',
-      contract: 'TBD (Ethereum mainnet)',
-      etherscan: 'TBD'
-    }
-  ],
-  summary: {
-    totalXAUT: 'TBD',
-    totalPAXG: 'TBD',
-    combinedUSD: 'TBD',
-    activeContracts: 0
-  },
-  genesisReward: 7.85100863,
-  blocksPerHour: 6
-};
+var GENESIS_REWARD = 7.85100863;
+var BLOCKS_PER_HOUR = 6;
 
-// Render Foundation Contracts table
+var FOUNDATION_CONTRACTS = [
+  { model: 'Model A', asset: 'XAUT', amount: '0.5 oz', duration: '3 months', start: 'Mar 28, 2026', end: 'Jun 28, 2026', status: 'PENDING', contract: '0x68749665FF8D2d112Fa859AA293F07A622782F38', etherscan: 'etherscan.io/token/0x6874...2F38' },
+  { model: 'Model B', asset: 'PAXG', amount: '0.5 oz', duration: '3 months', start: 'Mar 28, 2026', end: 'Jun 28, 2026', status: 'PENDING', contract: '0x45804880De22913dAFE09f4980848ECE6EcbAf78', etherscan: 'etherscan.io/token/0x4580...bAf78' }
+];
+
+/* ── Live Data State ── */
+var liveData = { xaut_oz: 0, paxg_oz: 0, xaut_usd: 0, paxg_usd: 0 };
+var donutChart = null;
+
+/* ── Render Foundation Contracts Table ── */
 (function() {
   var tb = document.getElementById('foundationTable');
-  RESERVE_DATA.foundationContracts.forEach(function(c) {
+  FOUNDATION_CONTRACTS.forEach(function(c) {
     var tr = document.createElement('tr');
-    var statusClass = c.status === 'PENDING' ? 'pending' : (c.status === 'ACTIVE' ? 'green' : '');
-    tr.innerHTML = '<td class="highlight">' + c.model + '</td><td class="gold">' + c.asset + '</td><td>' + c.amount + '</td><td>' + c.duration + '</td><td>' + c.start + '</td><td>' + c.end + '</td><td class="' + statusClass + '">' + c.status + '</td><td style="font-size:10px">' + c.contract + '</td><td style="font-size:10px">' + c.etherscan + '</td>';
+    var cls = c.status === 'PENDING' ? 'pending' : (c.status === 'ACTIVE' ? 'green' : '');
+    tr.innerHTML = '<td class="highlight">' + c.model + '</td><td class="gold">' + c.asset + '</td><td>' + c.amount + '</td><td>' + c.duration + '</td><td>' + c.start + '</td><td>' + c.end + '</td><td class="' + cls + '">' + c.status + '</td><td style="font-size:10px">' + c.contract + '</td><td style="font-size:10px">' + c.etherscan + '</td>';
     tb.appendChild(tr);
   });
 })();
 
-// Render Summary cards
+/* ── Render Initial Stat Cards (loading state) ── */
 (function() {
   var grid = document.getElementById('statGrid');
   var cards = [
-    { label: 'Total XAUT Committed', val: RESERVE_DATA.summary.totalXAUT, sub: 'troy ounces', color: 'var(--gold)' },
-    { label: 'Total PAXG Committed', val: RESERVE_DATA.summary.totalPAXG, sub: 'troy ounces', color: 'var(--gold)' },
-    { label: 'Combined USD Value', val: RESERVE_DATA.summary.combinedUSD, sub: 'at current spot', color: 'var(--green-primary)' },
-    { label: 'Active Contracts', val: RESERVE_DATA.summary.activeContracts, sub: 'PENDING', color: 'var(--red-primary)' }
+    { id: 'cardXAUT', label: 'XAUT Balance', val: '...', sub: 'loading', color: 'var(--gold)' },
+    { id: 'cardPAXG', label: 'PAXG Balance', val: '...', sub: 'loading', color: 'var(--gold)' },
+    { id: 'cardUSD', label: 'Combined USD Value', val: '...', sub: 'loading', color: 'var(--green-primary)' },
+    { id: 'cardContracts', label: 'Active Contracts', val: '0', sub: 'PENDING', color: 'var(--red-primary)' }
   ];
   cards.forEach(function(c) {
     var div = document.createElement('div');
     div.className = 'stat-card';
+    div.id = c.id;
     div.innerHTML = '<div class="stat-label">' + c.label + '</div><div class="stat-val" style="color:' + c.color + '">' + c.val + '</div><div class="stat-sub">' + c.sub + '</div>';
     grid.appendChild(div);
   });
 })();
 
-// Accumulation Chart
+/* ── ERC-20 balanceOf via Ethereum RPC ── */
+function ethCall(rpcUrl, tokenContract, walletAddress) {
+  var selector = '0x70a08231';
+  var paddedAddr = '000000000000000000000000' + walletAddress.replace('0x', '');
+  var callData = selector + paddedAddr;
+  return fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0', id: 1, method: 'eth_call',
+      params: [{ to: tokenContract, data: callData }, 'latest']
+    })
+  }).then(function(r) { return r.json(); })
+    .then(function(j) {
+      if (j.error) throw new Error(j.error.message);
+      return j.result;
+    });
+}
+
+function fetchBalanceWithFallback(tokenContract, walletAddress) {
+  return ethCall(RPC_ENDPOINTS[0], tokenContract, walletAddress)
+    .catch(function() {
+      return ethCall(RPC_ENDPOINTS[1], tokenContract, walletAddress);
+    });
+}
+
+function hexToFloat(hex, decimals) {
+  if (!hex || hex === '0x' || hex === '0x0') return 0;
+  var big = BigInt(hex);
+  var divisor = BigInt(10) ** BigInt(decimals);
+  var whole = big / divisor;
+  var frac = big % divisor;
+  var fracStr = frac.toString().padStart(decimals, '0');
+  return parseFloat(whole.toString() + '.' + fracStr);
+}
+
+/* ── Fetch USD Prices from CoinGecko ── */
+function fetchPrices() {
+  return fetch(COINGECKO_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      return {
+        xaut: (d['tether-gold'] && d['tether-gold'].usd) || 0,
+        paxg: (d['pax-gold'] && d['pax-gold'].usd) || 0
+      };
+    })
+    .catch(function() { return { xaut: 0, paxg: 0 }; });
+}
+
+/* ── Update Card Helper ── */
+function updateCard(id, val, sub) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.querySelector('.stat-val').textContent = val;
+  if (sub !== undefined) el.querySelector('.stat-sub').textContent = sub;
+}
+
+/* ── Update Donut Chart ── */
+function updateDonut(xautOz, paxgOz) {
+  var canvas = document.getElementById('reserveDonut');
+  var placeholder = document.getElementById('reserveDonutPlaceholder');
+  var hasData = xautOz > 0 || paxgOz > 0;
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'No balances detected<br>Awaiting contract deployment — March 28, 2026';
+    if (donutChart) { donutChart.destroy(); donutChart = null; }
+    return;
+  }
+
+  placeholder.style.display = 'none';
+  canvas.style.display = '';
+
+  if (donutChart) {
+    donutChart.data.labels = ['XAUT (' + xautOz.toFixed(4) + ' oz)', 'PAXG (' + paxgOz.toFixed(4) + ' oz)'];
+    donutChart.data.datasets[0].data = [xautOz, paxgOz];
+    donutChart.update();
+  } else {
+    donutChart = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['XAUT (' + xautOz.toFixed(4) + ' oz)', 'PAXG (' + paxgOz.toFixed(4) + ' oz)'],
+        datasets: [{
+          data: [xautOz, paxgOz],
+          backgroundColor: ['#b8860b', '#4ade80'],
+          borderColor: ['#0a0a0a', '#0a0a0a'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '60%',
+        plugins: {
+          legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+        }
+      }
+    });
+  }
+}
+
+/* ── Main Fetch & Update ── */
+function fetchLiveData() {
+  var statusEl = document.getElementById('liveStatus');
+  statusEl.textContent = 'Fetching live data...';
+
+  Promise.all([
+    fetchBalanceWithFallback(XAUT_CONTRACT, FOUNDATION_WALLET),
+    fetchBalanceWithFallback(PAXG_CONTRACT, FOUNDATION_WALLET),
+    fetchPrices()
+  ]).then(function(results) {
+    var xautHex = results[0];
+    var paxgHex = results[1];
+    var prices = results[2];
+
+    liveData.xaut_oz = hexToFloat(xautHex, XAUT_DECIMALS);
+    liveData.paxg_oz = hexToFloat(paxgHex, PAXG_DECIMALS);
+    liveData.xaut_usd = liveData.xaut_oz * prices.xaut;
+    liveData.paxg_usd = liveData.paxg_oz * prices.paxg;
+    var totalUSD = liveData.xaut_usd + liveData.paxg_usd;
+
+    updateCard('cardXAUT', liveData.xaut_oz.toFixed(4) + ' oz',
+      prices.xaut > 0 ? '$' + liveData.xaut_usd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : 'price unavailable');
+    updateCard('cardPAXG', liveData.paxg_oz.toFixed(4) + ' oz',
+      prices.paxg > 0 ? '$' + liveData.paxg_usd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : 'price unavailable');
+    updateCard('cardUSD',
+      totalUSD > 0 ? '$' + totalUSD.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '$0.00',
+      'at current spot');
+    updateCard('cardContracts', '0', 'PENDING');
+
+    updateDonut(liveData.xaut_oz, liveData.paxg_oz);
+
+    var now = new Date();
+    statusEl.textContent = 'Last updated: ' + now.getUTCHours().toString().padStart(2,'0') + ':' + now.getUTCMinutes().toString().padStart(2,'0') + ' UTC — via Ethereum RPC';
+  }).catch(function(err) {
+    statusEl.textContent = 'RPC error — retrying in 5 min. (' + err.message + ')';
+    updateCard('cardXAUT', 'ERR', 'RPC unavailable');
+    updateCard('cardPAXG', 'ERR', 'RPC unavailable');
+    updateCard('cardUSD', 'ERR', 'RPC unavailable');
+    updateDonut(0, 0);
+  });
+}
+
+/* ── Init: fetch immediately, then every 5 minutes ── */
+fetchLiveData();
+setInterval(fetchLiveData, REFRESH_MS);
+
+/* ── Accumulation Chart (static projection) ── */
 (function() {
-  var rewardPerBlock = RESERVE_DATA.genesisReward;
+  var rewardPerBlock = GENESIS_REWARD;
   var vaultShare = 0.25;
-  var blocksPerDay = RESERVE_DATA.blocksPerHour * 24;
+  var blocksPerDay = BLOCKS_PER_HOUR * 24;
   var labels = [];
   var goldData = [];
   var popcData = [];
@@ -387,99 +513,30 @@ const RESERVE_DATA = {
     goldData.push(Math.round(vaultAccum * 100) / 100);
     popcData.push(Math.round(vaultAccum * 100) / 100);
   }
-  var ctx = document.getElementById('accChart').getContext('2d');
-  new Chart(ctx, {
+  new Chart(document.getElementById('accChart').getContext('2d'), {
     type: 'line',
     data: {
       labels: labels,
       datasets: [
-        {
-          label: 'Gold Funding Vault (25%)',
-          data: goldData,
-          borderColor: '#b8860b',
-          backgroundColor: 'rgba(184,134,11,0.1)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: '#b8860b'
-        },
-        {
-          label: 'PoPC Pool (25%)',
-          data: popcData,
-          borderColor: '#fb010d',
-          backgroundColor: 'rgba(251,1,13,0.1)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointBackgroundColor: '#fb010d'
-        }
+        { label: 'Gold Funding Vault (25%)', data: goldData, borderColor: '#b8860b', backgroundColor: 'rgba(184,134,11,0.1)', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#b8860b' },
+        { label: 'PoPC Pool (25%)', data: popcData, borderColor: '#fb010d', backgroundColor: 'rgba(251,1,13,0.1)', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#fb010d' }
       ]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: {
-          labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + ' SOST'; }
-          }
-        }
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + ' SOST'; } } }
       },
       scales: {
-        x: {
-          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
-          grid: { color: '#333333' }
-        },
-        y: {
-          ticks: {
-            color: '#64748b',
-            font: { family: "'JetBrains Mono', monospace", size: 10 },
-            callback: function(v) { return v.toLocaleString() + ' SOST'; }
-          },
-          grid: { color: '#333333' }
-        }
+        x: { ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } }, grid: { color: '#333333' } },
+        y: { ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 }, callback: function(v) { return v.toLocaleString() + ' SOST'; } }, grid: { color: '#333333' } }
       }
     }
   });
 })();
 
-// Reserve Donut Chart
-(function() {
-  var canvas = document.getElementById('reserveDonut');
-  var placeholder = document.getElementById('reserveDonutPlaceholder');
-  var hasData = reserveData.xaut_oz > 0 || reserveData.paxg_oz > 0;
-
-  if (!hasData) {
-    canvas.style.display = 'none';
-    placeholder.className = 'chart-placeholder';
-    placeholder.innerHTML = 'Awaiting contract deployment<br>March 28, 2026';
-    return;
-  }
-  placeholder.style.display = 'none';
-  new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: ['XAUT (' + reserveData.xaut_oz + ' oz)', 'PAXG (' + reserveData.paxg_oz + ' oz)'],
-      datasets: [{
-        data: [reserveData.xaut_oz, reserveData.paxg_oz],
-        backgroundColor: ['#b8860b', '#4ade80'],
-        borderColor: ['#0a0a0a', '#0a0a0a'],
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '60%',
-      plugins: {
-        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
-      }
-    }
-  });
-})();
-
-// Gold Funding Vault Bar Chart (Year 1 projection)
+/* ── Gold Funding Vault Bar Chart (Year 1 projection) ── */
 (function() {
   var sostPerMonth = 8597;
   var labels = [];
@@ -493,12 +550,8 @@ const RESERVE_DATA = {
     data: {
       labels: labels,
       datasets: [{
-        label: 'Gold Funding Vault SOST',
-        data: data,
-        backgroundColor: 'rgba(251,1,13,0.7)',
-        borderColor: '#fb010d',
-        borderWidth: 1,
-        borderRadius: 3
+        label: 'Gold Funding Vault SOST', data: data,
+        backgroundColor: 'rgba(251,1,13,0.7)', borderColor: '#fb010d', borderWidth: 1, borderRadius: 3
       }]
     },
     options: {
@@ -508,18 +561,8 @@ const RESERVE_DATA = {
         tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' SOST'; } } }
       },
       scales: {
-        x: {
-          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
-          grid: { color: '#1a1a1a' }
-        },
-        y: {
-          ticks: {
-            color: '#64748b',
-            font: { family: "'JetBrains Mono', monospace", size: 10 },
-            callback: function(v) { return v.toLocaleString(); }
-          },
-          grid: { color: '#1a1a1a' }
-        }
+        x: { ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } }, grid: { color: '#1a1a1a' } },
+        y: { ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 }, callback: function(v) { return v.toLocaleString(); } }, grid: { color: '#1a1a1a' } }
       }
     }
   });
