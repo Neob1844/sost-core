@@ -98,6 +98,16 @@
 
   .chart-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
   .chart-wrap canvas { max-height: 350px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .chart-donut-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+  .chart-donut-wrap canvas { max-width: 300px; max-height: 300px; }
+  .chart-bar-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; }
+  .chart-bar-wrap canvas { max-height: 300px; }
+  .chart-label { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; font-weight: 500; }
+  .chart-placeholder { display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--text-muted); font-size: 12px; text-align: center; line-height: 1.8; }
+  @media (max-width: 768px) {
+    .chart-grid { grid-template-columns: 1fr; }
+  }
 
   .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
   .notice strong { color: var(--text-primary); }
@@ -242,6 +252,18 @@
     </div>
 
     <div class="stat-grid" id="statGrid"></div>
+
+    <div class="chart-grid fade-in delay-2">
+      <div class="chart-donut-wrap">
+        <div class="chart-label">Reserve Composition</div>
+        <div id="reserveDonutPlaceholder"></div>
+        <canvas id="reserveDonut"></canvas>
+      </div>
+      <div class="chart-bar-wrap">
+        <div class="chart-label">Funding Vault Accumulation (Year 1)</div>
+        <canvas id="vaultBarChart"></canvas>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -276,6 +298,16 @@
 </footer>
 
 <script>
+const reserveData = {
+  xaut_oz: 0,
+  paxg_oz: 0,
+  xaut_usd: 0,
+  paxg_usd: 0,
+  contracts_active: 0,
+  contracts_completed: 0,
+  contracts_slashed: 0
+};
+
 const RESERVE_DATA = {
   foundationContracts: [
     {
@@ -407,6 +439,86 @@ const RESERVE_DATA = {
             callback: function(v) { return v.toLocaleString() + ' SOST'; }
           },
           grid: { color: '#333333' }
+        }
+      }
+    }
+  });
+})();
+
+// Reserve Donut Chart
+(function() {
+  var canvas = document.getElementById('reserveDonut');
+  var placeholder = document.getElementById('reserveDonutPlaceholder');
+  var hasData = reserveData.xaut_oz > 0 || reserveData.paxg_oz > 0;
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'Awaiting contract deployment<br>March 28, 2026';
+    return;
+  }
+  placeholder.style.display = 'none';
+  new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['XAUT (' + reserveData.xaut_oz + ' oz)', 'PAXG (' + reserveData.paxg_oz + ' oz)'],
+      datasets: [{
+        data: [reserveData.xaut_oz, reserveData.paxg_oz],
+        backgroundColor: ['#b8860b', '#4ade80'],
+        borderColor: ['#0a0a0a', '#0a0a0a'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '60%',
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+      }
+    }
+  });
+})();
+
+// Funding Vault Bar Chart (Year 1 projection)
+(function() {
+  var sostPerMonth = 8597;
+  var labels = [];
+  var data = [];
+  for (var m = 1; m <= 12; m++) {
+    labels.push('M' + m);
+    data.push(sostPerMonth * m);
+  }
+  new Chart(document.getElementById('vaultBarChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Funding Vault SOST',
+        data: data,
+        backgroundColor: 'rgba(251,1,13,0.7)',
+        borderColor: '#fb010d',
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' SOST'; } } }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+          grid: { color: '#1a1a1a' }
+        },
+        y: {
+          ticks: {
+            color: '#64748b',
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            callback: function(v) { return v.toLocaleString(); }
+          },
+          grid: { color: '#1a1a1a' }
         }
       }
     }
