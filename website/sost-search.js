@@ -23,7 +23,8 @@
     { title: 'Foundation Balances', desc: 'Foundation transparency and reserve balances', url: 'sost-foundation-balances.html', kw: 'balances transparency foundation audit reserve' },
     { title: 'PoPC Contracts', desc: 'Public registry of all PoPC contracts', url: 'sost-popc-contracts.html', kw: 'popc contracts registry active completed slashed bond escrow model a model b' },
     { title: 'Infrastructure', desc: 'VPS, nodes, deployment infrastructure', url: 'sost-infrastructure.html', kw: 'infrastructure vps nodes deployment server' },
-    { title: 'Metals Reserve', desc: 'Multi-metal reserve — silver, platinum, palladium', url: 'sost-metals-reserve.html', kw: 'metals silver platinum palladium multi-metal reserve' }
+    { title: 'Metals Reserve', desc: 'Multi-metal reserve — silver, platinum, palladium', url: 'sost-metals-reserve.html', kw: 'metals silver platinum palladium multi-metal reserve' },
+    { title: 'BTCTalk Announcement', desc: 'Official BTCTalk ANN thread — pre-genesis draft', url: 'sost-btctalk-ann.html', kw: 'btctalk announcement ann launch genesis mining pow' }
   ];
 
   function init() {
