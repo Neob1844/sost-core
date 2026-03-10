@@ -20,7 +20,8 @@
     { title: 'FAQ', desc: 'Frequently asked questions', url: 'sost-faq.html', kw: 'faq questions help answers' },
     { title: 'Community', desc: 'Telegram, BitcoinTalk, community links', url: 'sost-community.html', kw: 'community telegram btctalk social links' },
     { title: 'Contact', desc: 'Contact and support', url: 'sost-contact.html', kw: 'contact email support' },
-    { title: 'Balances', desc: 'Foundation transparency and PoPC balances', url: 'sost-foundation-balances.html', kw: 'balances transparency popc foundation audit' },
+    { title: 'Foundation Balances', desc: 'Foundation transparency and reserve balances', url: 'sost-foundation-balances.html', kw: 'balances transparency foundation audit reserve' },
+    { title: 'PoPC Contracts', desc: 'Public registry of all PoPC contracts', url: 'sost-popc-contracts.html', kw: 'popc contracts registry active completed slashed bond escrow model a model b' },
     { title: 'Infrastructure', desc: 'VPS, nodes, deployment infrastructure', url: 'sost-infrastructure.html', kw: 'infrastructure vps nodes deployment server' },
     { title: 'Metals Reserve', desc: 'Multi-metal reserve — silver, platinum, palladium', url: 'sost-metals-reserve.html', kw: 'metals silver platinum palladium multi-metal reserve' }
   ];
