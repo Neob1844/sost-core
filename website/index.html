@@ -633,6 +633,11 @@
         <div class="stat-value" style="font-size:18px;">2026-03-13</div>
         <div class="stat-sub">00:00:00 UTC</div>
       </div>
+      <div class="stat-card" id="goldPriceCard">
+        <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
+        <div class="stat-value" style="font-size:20px;color:#b8860b;" id="goldPriceVal">...</div>
+        <div class="stat-sub" id="goldPriceSub">loading</div>
+      </div>
     </div>
   </div>
 </section>
@@ -835,6 +840,30 @@
   </div>
 </footer>
 
+<script>
+(function(){
+  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var valEl=document.getElementById('goldPriceVal');
+  var subEl=document.getElementById('goldPriceSub');
+  function fmt(n){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fetchGold(){
+    fetch(COINGECKO_URL).then(function(r){return r.json();}).then(function(d){
+      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
+      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
+      var avg=(xaut&&paxg)?((xaut+paxg)/2):0;
+      valEl.textContent=avg>0?fmt(avg):'N/A';
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      subEl.innerHTML='XAUT '+fmt(xaut)+' | PAXG '+fmt(paxg)+' <span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span> '+ts;
+    }).catch(function(){
+      valEl.textContent='N/A';
+      subEl.textContent='Price unavailable';
+    });
+  }
+  fetchGold();
+  setInterval(fetchGold,300000);
+})();
+</script>
 <script>
 (function(){
   var GENESIS = new Date('2026-03-13T00:00:00Z').getTime();
