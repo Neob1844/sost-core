@@ -8,7 +8,7 @@
     { title: 'Technology', desc: 'ConvergenceX PoW, ASERT, cASERT difficulty', url: 'sost-technology.html', kw: 'convergencex algorithm mining cpu asert casert difficulty pow proof work' },
     { title: 'Tokenomics', desc: 'Supply, emission, epoch decay, stocks', url: 'sost-tokenomics.html', kw: 'supply emission epoch decay stocks tokenomics monetary policy' },
     { title: 'PoPC', desc: 'Proof of Personal Custody — gold bond and escrow', url: 'sost-popc.html', kw: 'proof custody gold bond escrow model a model b popc audit slash' },
-    { title: 'Gold Reserve', desc: 'Heritage Reserve, Funding Vault, XAUT, PAXG', url: 'sost-gold-reserve.html', kw: 'reserve heritage funding vault xaut paxg gold metals' },
+    { title: 'Gold Reserve', desc: 'Heritage Reserve, Gold Funding Vault, XAUT, PAXG', url: 'sost-gold-reserve.html', kw: 'reserve heritage funding vault xaut paxg gold metals' },
     { title: 'Foundation', desc: 'Foundation constitution and commitments', url: 'sost-foundation.html', kw: 'foundation constitution commitment governance rules' },
     { title: 'Quick Start', desc: 'Mine, build, install, wallet CLI', url: 'sost-quickstart.html', kw: 'mine start build install wallet cli quick' },
     { title: 'Getting Started', desc: 'Technical guide — node, miner, RPC', url: 'sost-getting-started.html', kw: 'technical node miner rpc getting started setup' },

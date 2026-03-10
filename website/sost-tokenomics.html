@@ -279,7 +279,7 @@
       <div class="spec-body">
         <div class="code-snippet"><span class="comment">// Coinbase split — immutable at genesis</span>
 q     = reward // <span class="num">4</span>
-gold  = q                    <span class="comment">// 25% to Metals Funding Vault</span>
+gold  = q                    <span class="comment">// 25% to Gold Funding Vault</span>
 popc  = q                    <span class="comment">// 25% to PoPC Pool</span>
 miner = reward - gold - popc <span class="comment">// 50% + remainder to miner</span>
 
@@ -288,7 +288,7 @@ miner = reward - gold - popc <span class="comment">// 50% + remainder to miner</
         <table class="code-table">
           <tr><th>Output</th><th>Recipient</th><th>Allocation</th></tr>
           <tr><td class="value">Output 0</td><td class="value">Miner's configured address</td><td class="highlight">50% + remainder</td></tr>
-          <tr><td class="value">Output 1</td><td class="value">Metals Funding Vault (Gold-first)</td><td class="cyan">25% (q = reward // 4)</td></tr>
+          <tr><td class="value">Output 1</td><td class="value">Gold Funding Vault (Gold-first)</td><td class="cyan">25% (q = reward // 4)</td></tr>
           <tr><td class="value">Output 2</td><td class="value">PoPC Pool</td><td class="cyan">25% (q = reward // 4)</td></tr>
         </table>
       </div>
@@ -396,7 +396,7 @@ miner = reward - gold - popc <span class="comment">// 50% + remainder to miner</
         <table class="code-table">
           <tr><th>Recipient</th><th>Total SOST</th><th>Share</th></tr>
           <tr><td class="label">Miners</td><td class="highlight">2,334,600</td><td class="value">50%</td></tr>
-          <tr><td class="label">Funding Vault</td><td class="cyan">1,167,300</td><td class="value">25%</td></tr>
+          <tr><td class="label">Gold Funding Vault</td><td class="cyan">1,167,300</td><td class="value">25%</td></tr>
           <tr><td class="label">PoPC Pool</td><td class="cyan">1,167,300</td><td class="value">25%</td></tr>
           <tr><td class="label" style="border-top:1px solid var(--border-med)"><strong style="color:var(--text-primary)">Maximum</strong></td><td style="border-top:1px solid var(--border-med)" class="highlight">4,669,201</td><td style="border-top:1px solid var(--border-med)" class="value">100%</td></tr>
         </table>

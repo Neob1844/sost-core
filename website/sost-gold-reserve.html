@@ -197,7 +197,7 @@
   <div class="container">
     <div class="hero-label fade-in">Metals Reserve Protocol</div>
     <h1 class="fade-in delay-1">Every Block Builds the <span>Reserve.</span><br>Heritage <span>Sealed.</span></h1>
-    <p class="hero-sub fade-in delay-2">25% of every block reward flows to the Metals Funding Vault by consensus. Accumulated SOST is converted to tokenized precious-metal exposure (XAUT/PAXG) through an auditable TWAP execution pipeline. Purchased reserves are deposited into a Heritage Vault on Ethereum mainnet &mdash; sealed by default, perpetual by design.</p>
+    <p class="hero-sub fade-in delay-2">25% of every block reward flows to the Gold Funding Vault by consensus. Accumulated SOST is converted to tokenized precious-metal exposure (XAUT/PAXG) through an auditable TWAP execution pipeline. Purchased reserves are deposited into a Heritage Vault on Ethereum mainnet &mdash; sealed by default, perpetual by design.</p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">METALS RESERVE</span>
       <span class="sep">|</span>
@@ -214,7 +214,7 @@
       <h2 class="section-title">Two-Vault <span class="gold">Architecture</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Funding Vault needs flexibility to sell SOST and buy precious-metal tokens. The Heritage Reserve needs maximum immutability. Splitting them achieves both without mixing hot and cold functions.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Operational liquidity is separated from permanent reserve storage. The Gold Funding Vault needs flexibility to sell SOST and buy precious-metal tokens. The Heritage Reserve needs maximum immutability. Splitting them achieves both without mixing hot and cold functions.</p>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-layer">
@@ -223,7 +223,7 @@
         <span class="arrow">&rarr;</span>
       </div>
       <div class="arch-layer">
-        <h3 style="color:var(--gold-primary)">Funding Vault</h3>
+        <h3 style="color:var(--gold-primary)">Gold Funding Vault</h3>
         <p>25% accumulates (SOST chain)</p>
         <span class="arrow">&rarr;</span>
       </div>
@@ -241,7 +241,7 @@
     <div class="mode-grid fade-in delay-2">
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--gold-dim);color:var(--gold-primary);">SOST CHAIN</div>
-        <h3 style="color:var(--gold-primary)">Metals Funding Vault</h3>
+        <h3 style="color:var(--gold-primary)">Gold Funding Vault</h3>
         <p>Hardcoded coinbase destination. Receives exactly 25% of each block subsidy by consensus (q = reward // 4). Any block without the correct vault output is invalid. Accumulates SOST for periodic conversion to tokenized precious metals.</p>
       </div>
       <div class="mode-card">
@@ -265,7 +265,7 @@
       <h2 class="section-title">Constitutional <span class="gold">Rules</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Project-level commitments enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting). Immutable at genesis.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Project-level commitments enforced either by SOST consensus (Gold Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting). Immutable at genesis.</p>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -278,8 +278,8 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
-          <tr><td class="gold">G1</td><td class="value">Consensus Allocation &mdash; Every valid block MUST pay the Funding Vault exactly q = reward // 4. Any block that fails to do so is invalid.</td></tr>
-          <tr><td class="gold">G2</td><td class="value">Two-Vault Separation &mdash; Funding Vault is operational; Heritage Reserve is sealed storage. All purchased XAUT/PAXG MUST be deposited into the Heritage Reserve.</td></tr>
+          <tr><td class="gold">G1</td><td class="value">Consensus Allocation &mdash; Every valid block MUST pay the Gold Funding Vault exactly q = reward // 4. Any block that fails to do so is invalid.</td></tr>
+          <tr><td class="gold">G2</td><td class="value">Two-Vault Separation &mdash; Gold Funding Vault is operational; Heritage Reserve is sealed storage. All purchased XAUT/PAXG MUST be deposited into the Heritage Reserve.</td></tr>
           <tr><td class="gold">G3</td><td class="value">Heritage Reserve &mdash; Heritage Reserve deployed on Ethereum mainnet, sealed by default. No outbound transfers in normal operation. Perpetual while SOST exists.</td></tr>
           <tr><td class="gold">G4</td><td class="value">Purchase Start Delay &mdash; Purchases begin no earlier than 6 months after genesis (2026-03-13) and only once market readiness is met with verifiable execution venue.</td></tr>
           <tr><td class="gold">G5</td><td class="value">Batching / Anti-Momentum &mdash; Purchases executed in batches following rule-based TWAP policy, not discretionary market-timing.</td></tr>
@@ -302,7 +302,7 @@
       <h2 class="section-title">TWAP Execution <span class="accent">Pipeline</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Convert Funding Vault SOST into XAUT/PAXG with minimal market impact, maximum traceability, and rule-based execution. First purchases begin no earlier than September 2026 (&ge;6 months after genesis 2026-03-13).</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Convert Gold Funding Vault SOST into XAUT/PAXG with minimal market impact, maximum traceability, and rule-based execution. First purchases begin no earlier than September 2026 (&ge;6 months after genesis 2026-03-13).</p>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -315,7 +315,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Stage</th><th>Role</th><th>Detail</th></tr>
-          <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Funding Vault balance on SOST chain, detects batch threshold</td></tr>
+          <tr><td class="gold">Watcher</td><td class="value">Monitor</td><td class="value">Monitors Gold Funding Vault balance on SOST chain, detects batch threshold</td></tr>
           <tr><td class="gold">Batcher</td><td class="value">Order</td><td class="value">Creates signed execution order when threshold is met</td></tr>
           <tr><td class="gold">Executor</td><td class="value">Trade</td><td class="value">Sells SOST in TWAP clips via CEX/OTC/DEX, purchases XAUT/PAXG, deposits to Heritage Reserve</td></tr>
           <tr><td class="gold">Attestor</td><td class="value">Audit</td><td class="value">Publishes public batch record with full transaction proofs</td></tr>
@@ -493,7 +493,7 @@ Type:  limit orders with explicit slippage tolerance
         <table class="code-table">
           <tr><th>Action</th><th>Code</th><th>Description</th></tr>
           <tr><td class="highlight">ROTATE</td><td class="gold">E1</td><td class="value">Rotate reserve holdings to other allowlisted precious-metal tokens (e.g. XAUt &harr; PAXG)</td></tr>
-          <tr><td class="highlight">LIQUIDATE&rarr;BUY&rarr;REDISTRIBUTE</td><td class="gold">E2</td><td class="value">Liquidate precious-metal tokens to acquire SOST and redistribute to PoPC Pool (50%) and Funding Vault (50%), with a fully auditable trail. No supply is destroyed.</td></tr>
+          <tr><td class="highlight">LIQUIDATE&rarr;BUY&rarr;REDISTRIBUTE</td><td class="gold">E2</td><td class="value">Liquidate precious-metal tokens to acquire SOST and redistribute to PoPC Pool (50%) and Gold Funding Vault (50%), with a fully auditable trail. No supply is destroyed.</td></tr>
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.6;">No other action types are permitted. The Foundation may pause purchases or adjust future purchase policy operationally without consensus, disclosed via batch reports.</p>
       </div>

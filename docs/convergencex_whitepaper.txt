@@ -13,7 +13,7 @@
 > Consensus rules (Section 10) remain immutable at genesis. Updated versions will be published with
 > full errata documentation.
 
-SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Metals Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Heritage Reserve on Ethereum mainnet. The Heritage Reserve is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.
+SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Gold Funding Vault (Gold-first) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Heritage Reserve on Ethereum mainnet. The Heritage Reserve is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.
 
 ALLOWLIST (v2 — conservative scope)
 In mainnet v2, the reserve is limited to tokenized precious metals with public audits and verifiable liquidity.
@@ -78,7 +78,7 @@ Every block splits the coinbase reward by consensus:
 
 50% + remainder to the miner,
 
-25% to a Metals Funding Vault (Gold-first),
+25% to a Gold Funding Vault (Gold-first),
 
 25% to a PoPC Pool powering Proof of Personal Custody.
 
@@ -113,7 +113,7 @@ RandomX and Ethash advanced ASIC-resistance via memory-hardness and reduced spec
 
 2.3 Crypto Has Limited Structural Reserves
 
-Many systems discuss reserves or backing, but few embed structural accumulation as a constitutional side effect of mining. SOST implements a consensus-enforced allocation to an on-chain vault (Funding Vault), with an operational conversion pipeline into a separate Heritage Reserve (sealed) on Ethereum mainnet, with an emergency catastrophe procedure for exceptional circumstances.
+Many systems discuss reserves or backing, but few embed structural accumulation as a constitutional side effect of mining. SOST implements a consensus-enforced allocation to an on-chain vault (Gold Funding Vault), with an operational conversion pipeline into a separate Heritage Reserve (sealed) on Ethereum mainnet, with an emergency catastrophe procedure for exceptional circumstances.
 
 3. ConvergenceX: Proof of Irreversible Convergence
 
@@ -918,14 +918,14 @@ Amounts must match the split exactly. Any deviation → invalid block.
 
 4.4 Supply Projections
 
-VAULT ACCUMULATION (PoPC Pool & Funding Vault each receive 25%):
+VAULT ACCUMULATION (PoPC Pool & Gold Funding Vault each receive 25%):
 
   Epoch 0 (years 0-2.502):  258,210 SOST per vault
   Year 1 alone:             103,160 SOST per vault
 
   TOTAL SUPPLY BREAKDOWN:
   Miners:     2,334,600 SOST (50%)
-  Funding Vault: 1,167,300 SOST (25%)
+  Gold Funding Vault: 1,167,300 SOST (25%)
   PoPC Pool:  1,167,300 SOST (25%)
   Maximum:    4,669,201 SOST (hard cap)
 
@@ -968,12 +968,12 @@ HERITAGE RESERVE (sealed, Ethereum mainnet):
 
 FLOW:
 Block reward (coinbase) →
-[Metals Funding Vault (Gold-first) (SOST)] → sell SOST (TWAP) → buy XAUT/PAXG →
+[Gold Funding Vault (Gold-first) (SOST)] → sell SOST (TWAP) → buy XAUT/PAXG →
 [Heritage Reserve (XAUT/PAXG)] → HERITAGE / SEALED — Perpetual by default;
 movable only via Emergency Catastrophe.
 
 WHY TWO VAULTS:
-- Funding Vault needs operational flexibility (sell SOST, buy gold tokens).
+- Gold Funding Vault needs operational flexibility (sell SOST, buy gold tokens).
 - Heritage Reserve needs maximum immutability (Heritage sealed).
 - Splitting them achieves both without mixing "hot" and "cold" functions.
 
@@ -985,14 +985,14 @@ Previously purchased reserve assets are not rebalanced except under Emergency Ca
 
 ### 5.2 Constitutional Rules — Metals Reserve (tokenized, allowlisted)
 
-The following rules are **constitutional** (project-level commitments) and are enforced either by SOST consensus (Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting).
+The following rules are **constitutional** (project-level commitments) and are enforced either by SOST consensus (Gold Funding Vault inflow) or by immutable smart contracts and public auditability (Heritage Reserve behavior and reporting).
 
 Metals Reserve (tokenized, allowlisted) Constitution (immutable at genesis)
 
-G1 (Consensus Allocation): Every valid block MUST pay the Metals Funding Vault (Gold-first) exactly q = reward // 4.
+G1 (Consensus Allocation): Every valid block MUST pay the Gold Funding Vault (Gold-first) exactly q = reward // 4.
 Any block that fails to do so is invalid.
 
-G2 (Two-Vault Separation): Funding Vault is operational; Heritage Reserve is sealed storage.
+G2 (Two-Vault Separation): Gold Funding Vault is operational; Heritage Reserve is sealed storage.
 All purchased XAUT/PAXG MUST be deposited into the Heritage Reserve.
 
 G3 (Heritage Reserve): The Heritage Reserve is deployed on Ethereum mainnet and is sealed by default.
@@ -1041,7 +1041,7 @@ appropriate for the long-term security of the protocol.
 Emergency actions are limited to exactly two action types:
   (E1) ROTATE: rotate reserve holdings to other allowlisted precious-metal tokens (including XAUt↔PAXG).
   (E2) LIQUIDATE→BUY→REDISTRIBUTE: liquidate precious-metal tokens to acquire SOST and
-       redistribute it to PoPC Pool (50%) and Funding Vault (50%), with a fully auditable trail.
+       redistribute it to PoPC Pool (50%) and Gold Funding Vault (50%), with a fully auditable trail.
        No supply is destroyed — SOST supply is immutable by construction.
 
 The Foundation may pause purchases or adjust future purchase policy operationally without consensus,
@@ -1052,12 +1052,12 @@ MUST be publicly published in a reproducible format.
 
 ### 5.3 Automated Vault Execution Architecture
 
-The Metals Funding Vault (Gold-first) conversion pipeline is designed to be operationally automated and fully auditable, without requiring a cross-chain bridge or wrapped SOST (wSOST). No trustless cross-chain mechanism is used; instead, automation is achieved through a deterministic execution stack with public attestations at every stage.
+The Gold Funding Vault (Gold-first) conversion pipeline is designed to be operationally automated and fully auditable, without requiring a cross-chain bridge or wrapped SOST (wSOST). No trustless cross-chain mechanism is used; instead, automation is achieved through a deterministic execution stack with public attestations at every stage.
 
 VAULT EXECUTION PIPELINE (no bridge, no wSOST)
 
 WATCHER (SOST chain):
-  Monitors the Metals Funding Vault (Gold-first) balance continuously.
+  Monitors the Gold Funding Vault (Gold-first) balance continuously.
   Detects when accumulated SOST exceeds a batch threshold.
 
 BATCHER:
@@ -1072,7 +1072,7 @@ ATTESTOR:
   Publishes a public batch record.
 
 TRUST MODEL:
-  Consensus-level allocation to the Funding Vault: trustless (hardcoded by validation rules).
+  Consensus-level allocation to the Gold Funding Vault: trustless (hardcoded by validation rules).
   Conversions and purchases are operational and auditable. The Foundation may adjust execution
   parameters (including the default 50/50 split) and may pause purchases at any time.
   Movements of previously purchased reserve assets require Emergency Catastrophe
@@ -1083,11 +1083,11 @@ TRUST MODEL:
 
 #### 5.3.1 Execution Policy: TWAP Batch Sales (Operational, Non-Consensus)
 
-SOST's Metals Funding Vault (Gold-first) accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.
+SOST's Gold Funding Vault (Gold-first) accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.
 
 TWAP (Time-Weighted Average Price) means executing a daily sell budget as many small, evenly spaced limit orders over time (e.g., across 24 hours), so the realized execution price approximates the market's average price over that window and minimizes market impact.
 
-**Objective.** Convert a portion of the Funding Vault's SOST into XAUT/PAXG with:
+**Objective.** Convert a portion of the Gold Funding Vault's SOST into XAUT/PAXG with:
 - Minimal market impact (avoid large, price-disruptive sells),
 - Maximum traceability (verifiable logs and transaction proofs),
 - Rule-based execution (avoid discretionary "sell whenever we want" behavior).
@@ -1598,7 +1598,7 @@ EXAMPLE: Model A — Slash (failure)
     - User loses: 6.75 SOST (entire bond)
     - Distribution:
       • 3.375 SOST → PoPC Pool (funds future rewards)
-      • 3.375 SOST → Funding Vault (buys more gold)
+      • 3.375 SOST → Gold Funding Vault (buys more gold)
     - User's reputation: destroyed
     - User's address: blacklisted
 
@@ -1827,7 +1827,7 @@ SLASH TRIGGER (Model A only):
 
 SLASH SPLIT (automatic, no human override):
   50% → PoPC Pool (funds future rewards)
-  50% → Funding Vault (buys more gold collateral)
+  50% → Gold Funding Vault (buys more gold collateral)
 
   No supply is burned. With a maximum supply of ~4.67M SOST, every
   token has long-term utility. Slashed bonds are recycled into the
@@ -1863,7 +1863,7 @@ SCENARIO: 1,000 contracts (optimistic):
 SLASH INCOME extends pool beyond 30 years:
   5% failure rate, 200 contracts, 200 SOST avg bond:
   Pool receives: 10 × 200 × 50% = 1,000 SOST/year extra
-  Funding Vault receives: 10 × 200 × 50% = 1,000 SOST/year extra
+  Gold Funding Vault receives: 10 × 200 × 50% = 1,000 SOST/year extra
 
 REWARD BUDGET + SOLVENCY SAFEGUARDS (non-consensus, operational safety valves):
 
@@ -2007,7 +2007,7 @@ Foundation executes operational actions under constitutional constraints and pub
 
 Operational scope (exhaustive):
 
-- **Funding Vault conversion:** Foundation executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). Every batch is attested on-chain.
+- **Gold Funding Vault conversion:** Foundation executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). Every batch is attested on-chain.
 - **50/50 split adjustment:** Foundation may change the XAUt/PAXG acquisition split for future purchases at any time. Adjustments apply only to future purchases and must be disclosed in batch reports.
 - **Purchase pause:** Foundation may pause purchases without consensus, disclosed via batch reports.
 - **Future purchase redirection:** Foundation may redirect future purchases from one issuer to another without consensus (e.g., if issuer risk increases).
@@ -2040,7 +2040,7 @@ This is a constitutional commitment (C16), not a discretionary goal. As each ope
 ### 8.2 Deflationary Mechanics
 
 - **Smooth exponential decay:** 9.03% annual reduction in new issuance — no cliff events.
-- **Slash recycling:** 100% of every slashed bond is redistributed to PoPC Pool (50%) and Funding Vault (50%), strengthening both systems without destroying scarce supply.
+- **Slash recycling:** 100% of every slashed bond is redistributed to PoPC Pool (50%) and Gold Funding Vault (50%), strengthening both systems without destroying scarce supply.
 - **Reputation limits:** large commitments require proven track record — slow unlock of supply pressure.
 - **Long contracts:** 9 and 12-month commitments remove SOST from circulation for extended periods.
 
@@ -2062,7 +2062,7 @@ Markets may price this information as they see fit.
 
 If SOST price significantly exceeds gold price, three automatic corrective forces activate:
 
-- **Funding Vault force:** With expensive SOST, each vault sale buys more gold. Gold demand increases. Gold price rises. Ratio compresses.
+- **Gold Funding Vault force:** With expensive SOST, each vault sale buys more gold. Gold demand increases. Gold price rises. Ratio compresses.
 - **Model B force:** With low SOST yield in unit terms, fewer users deposit gold. Pool accumulates. Supply pressure falls.
 - **Model A force:** With SOST worth more than gold, bonding SOST to custody gold loses economic sense. Participation drops naturally.
 
@@ -2114,7 +2114,7 @@ CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which i
 | Scenario | Response |
 |---|---|
 | Critical bug | Foundation pauses new PoPC contracts. Existing contracts continue unaffected. |
-| Exchange hack | The Heritage Reserve on Ethereum operates as a sealed vault with no operational interaction. The Funding Vault on SOST chain interacts with execution venues via the conversion pipeline but is not a hot wallet — all operations require Foundation authorization. |
+| Exchange hack | The Heritage Reserve on Ethereum operates as a sealed vault with no operational interaction. The Gold Funding Vault on SOST chain interacts with execution venues via the conversion pipeline but is not a hot wallet — all operations require Foundation authorization. |
 | XAUT/PAXG issuer risk | Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-redistribute (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order. |
 | Issuer risk (future purchases only) | Foundation redirects future purchases without consensus. Previously purchased assets remain sealed. |
 | Chain death (90 days) | Dead-man switch activates. 60-day public Dissolution notice begins. After notice period, Foundation may access reserve for orderly wind-down and transparent distribution (Section 5.4). |
@@ -2135,7 +2135,7 @@ C1:  Total supply is upper-bounded by SUPPLY_MAX_STOCKS by construction of the e
      The only issuance mechanism is subsidy(height). Any block that mints more is invalid.
 C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.
      Exact integer conservation guaranteed: miner + gold + popc == reward always.
-C3:  Funding Vault coinbase destination is immutable at genesis. Heritage Reserve is sealed;
+C3:  Gold Funding Vault coinbase destination is immutable at genesis. Heritage Reserve is sealed;
      reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling +
      Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned
      Reserve Lifecycle transitions (Section 5.5).
@@ -2217,7 +2217,7 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 **Proof-of-Work that produces a mathematical certificate.** ConvergenceX replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is not just a hash below a target — it is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.
 
-**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Funding Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
+**Automatic, constitutional accumulation of gold reserve.** Every mined block allocates 25% to a Gold Funding Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.
 
 **Voluntary custody commitments audited by PoW-derived entropy.** PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.
 
@@ -2272,7 +2272,7 @@ Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):
   Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially.
   Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings.
   Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal
-  acquisition. Token registration fees are paid to the Funding Vault, not burned.
+  acquisition. Token registration fees are paid to the Gold Funding Vault, not burned.
 
 Phase 3 — Fully Native PoPC (Q4 2027):
   Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow,
@@ -2570,7 +2570,7 @@ AUDIT REQUIREMENTS:
   2. Proof of approval: EmergencyApproved record on SOST chain
   3. Ethereum transaction hashes for all Heritage Reserve operations
   4. Batch report: amounts moved, tokens involved, execution timestamps
-  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Funding Vault)
+  5. If E2 (redistribute): proof of SOST redistribution (TX hashes to PoPC Pool and Gold Funding Vault)
   6. All data published on project website, GitHub, and IPFS mirror
 ```
 
@@ -2628,7 +2628,7 @@ MODEL B CONSISTENCY (CTO review):
 38) Section 6.9: table confirms "received immediately" + reward rate proration
 39) Section 6.12: REWARD BUDGET + SOLVENCY SAFEGUARDS added
 40) Legal Disclaimer: added Operational Limits & Pauses paragraph
-41) Section 5.1: TWO-VAULT ARCHITECTURE (Metals Funding Vault (Gold-first) + Heritage Reserve)
+41) Section 5.1: TWO-VAULT ARCHITECTURE (Gold Funding Vault (Gold-first) + Heritage Reserve)
 42) Section 4.3: COINBASE TRANSACTION FORMAT (normative)
 43) Section 3.13: BASIC MODE TIP REJECTION (normative box)
 ```
@@ -2717,7 +2717,7 @@ Changes from v3.4 to v3.5:
   SLASH REFORM:
   60) Slash split changed: 33/33/33 (burn/pool/gold) → 50/50 (pool/gold).
       No supply is burned. With ~4.67M max supply, every token has utility.
-      Slashed bonds are recycled into PoPC Pool and Funding Vault.
+      Slashed bonds are recycled into PoPC Pool and Gold Funding Vault.
   61) Constitution C8 updated to reflect 50/50 slash split.
   62) Section 8.2 updated: "Slash burn" → "Slash recycling".
 

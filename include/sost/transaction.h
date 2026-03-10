@@ -34,7 +34,7 @@ constexpr uint8_t OUT_BOND_LOCK     = 0x10;
 constexpr uint8_t OUT_ESCROW_LOCK   = 0x11;
 // Reserved. NOT activated. SOST supply is immutable — no token destruction
 // mechanism exists or is planned. All slashing redistributes funds (50% PoPC
-// Pool, 50% Funding Vault); nothing is ever burned.
+// Pool, 50% Gold Funding Vault); nothing is ever burned.
 constexpr uint8_t OUT_BURN          = 0x20;
 
 // -----------------------------------------------------------------------------
