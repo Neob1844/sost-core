@@ -380,11 +380,9 @@ Transport: [MAGIC:4]["ENC1":4][LEN:4][CTR:8][CIPHERTEXT+TAG:N+16]
 - [ ] **Reddit posts:** r/CryptoCurrency, r/CryptoMining, r/altcoin
 - [ ] **Whitepaper PDF:** host on `sostcore.com/whitepaper.pdf` and GitHub releases
 
-### Exchange Listings (post-launch)
-- [ ] FreiExchange (free, PoW-focused)
-- [ ] SafeTrade (low-cost, community)
-- [ ] Exbitron / Finexbox (secondary)
-- [ ] CoinGecko / CoinMarketCap tracking (once listed on 1+ exchange)
+### Community Growth (post-launch)
+- [ ] CoinGecko / CoinMarketCap tracking
+- [ ] Ecosystem development and outreach
 
 ---
 
@@ -497,7 +495,7 @@ location / {
 
 ### Block E — Post-Launch
 24. Web wallet with TOTP 2FA (wallet.sostcore.com)
-25. Exchange listings
+25. Community growth and ecosystem development
 26. TX index + estimatefee
 27. Desktop wallet with 2FA + offline signing
 28. Gold reserve infrastructure
