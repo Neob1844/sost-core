@@ -542,6 +542,7 @@
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets</a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-wallet.html">Wallet</a>
       <a href="sost-contact.html">Contact</a>
@@ -637,6 +638,12 @@
         <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
         <div class="stat-value" style="font-size:20px;color:#b8860b;" id="goldPriceVal">...</div>
         <div class="stat-sub" id="goldPriceSub">loading</div>
+      </div>
+      <div class="stat-card" id="sostPriceCard" style="position:relative;">
+        <div class="stat-label">SOST Price</div>
+        <div class="stat-value" style="font-size:20px;color:var(--red-primary);" id="sostPriceVal">...</div>
+        <div class="stat-sub" id="sostPriceSub">loading</div>
+        <div id="sostCurrBtn" title="Click to change currency" style="position:absolute;bottom:10px;right:12px;width:28px;height:28px;border-radius:4px;border:1px solid #2a2a2a;background:#0a0a0a;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;">$</div>
       </div>
     </div>
   </div>
@@ -861,7 +868,92 @@
     });
   }
   fetchGold();
-  setInterval(fetchGold,300000);
+  setInterval(fetchGold,60000);
+})();
+</script>
+<script>
+(function(){
+  var SOST_IDS=['sost-protocol','sost'];
+  var CURRENCIES=['usd','eur','gbp','chf','jpy','cny','rub','aed'];
+  var SYMBOLS={usd:'$',eur:'\u20AC',gbp:'\u00A3',chf:'Fr',jpy:'\u00A5',cny:'\u00A5',rub:'\u20BD',aed:'\u062F.\u0625'};
+  var LABELS={usd:'USD',eur:'EUR',gbp:'GBP',chf:'CHF',jpy:'JPY',cny:'CNY',rub:'RUB',aed:'AED'};
+  var curIdx=0;
+  var sostPrices=null; // null=not fetched, false=not listed, object=prices
+
+  var valEl=document.getElementById('sostPriceVal');
+  var subEl=document.getElementById('sostPriceSub');
+  var btnEl=document.getElementById('sostCurrBtn');
+
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
+
+  function fmtPrice(n,cur){
+    var sym=SYMBOLS[cur]||'$';
+    if(cur==='jpy'||cur==='cny'||cur==='rub') return sym+Math.round(n).toLocaleString();
+    return sym+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});
+  }
+
+  function renderSost(){
+    var cur=CURRENCIES[curIdx];
+    btnEl.textContent=SYMBOLS[cur];
+    if(sostPrices===null){
+      valEl.textContent='...';
+      subEl.textContent='loading';
+      return;
+    }
+    if(sostPrices===false){
+      valEl.textContent='Not Listed';
+      valEl.style.color='#475569';
+      valEl.style.fontSize='18px';
+      subEl.innerHTML='Price available after exchange listing<br><span style="color:#64748b;font-size:10px;">Mining cost estimate: ~$0.01</span>';
+      return;
+    }
+    var price=sostPrices[cur]||0;
+    if(price>0){
+      valEl.textContent=fmtPrice(price,cur);
+      valEl.style.color='var(--red-primary)';
+      valEl.style.fontSize='20px';
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      subEl.innerHTML=LABELS[cur]+liveBadge()+' '+ts;
+    } else {
+      valEl.textContent='N/A';
+      subEl.textContent=LABELS[cur]+' — rate unavailable';
+    }
+  }
+
+  function fetchSost(){
+    var vsStr=CURRENCIES.join(',');
+    var tries=SOST_IDS.slice();
+    function tryNext(){
+      if(tries.length===0){
+        sostPrices=false;
+        renderSost();
+        return;
+      }
+      var id=tries.shift();
+      var url='https://api.coingecko.com/api/v3/simple/price?ids='+id+'&vs_currencies='+vsStr;
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        var obj=d[id];
+        if(obj&&obj.usd&&obj.usd>0){
+          sostPrices=obj;
+          renderSost();
+        } else {
+          tryNext();
+        }
+      }).catch(function(){tryNext();});
+    }
+    tryNext();
+  }
+
+  btnEl.addEventListener('click',function(){
+    curIdx=(curIdx+1)%CURRENCIES.length;
+    renderSost();
+  });
+  btnEl.addEventListener('mouseenter',function(){btnEl.style.borderColor='#fb010d';btnEl.style.color='#fb010d';});
+  btnEl.addEventListener('mouseleave',function(){btnEl.style.borderColor='#2a2a2a';btnEl.style.color='#94a3b8';});
+
+  fetchSost();
+  setInterval(fetchSost,60000);
 })();
 </script>
 <script>
