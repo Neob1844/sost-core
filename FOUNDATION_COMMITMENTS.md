@@ -20,7 +20,7 @@ constitutional commitment, not a discretionary goal.
 |---|---|
 | Model | A (bond + autocustody audit) |
 | Asset | XAUT (Tether Gold) |
-| Amount | 0.4 oz |
+| Amount | 0.5 oz |
 | Duration | 3 months |
 | Start date | 2026-03-28 |
 | Expiry date | 2026-06-28 |
@@ -34,7 +34,7 @@ constitutional commitment, not a discretionary goal.
 |---|---|
 | Model | A (bond + autocustody audit) |
 | Asset | PAXG (Paxos Gold) |
-| Amount | 0.4 oz |
+| Amount | 0.5 oz |
 | Duration | 3 months |
 | Start date | 2026-03-28 |
 | Expiry date | 2026-06-28 |
@@ -53,8 +53,8 @@ constitutional commitment, not a discretionary goal.
 During the commitment period, the Foundation wallet balance is checked against committed amounts:
 
 ```
-XAUT: balanceOf(0xd389...C7a6) >= 0.4 * 10^18  (0.4 oz)
-PAXG: balanceOf(0xd389...C7a6) >= 0.4 * 10^18  (0.4 oz)
+XAUT: balanceOf(0xd389...C7a6) >= 0.5 * 10^18  (0.5 oz)
+PAXG: balanceOf(0xd389...C7a6) >= 0.5 * 10^18  (0.5 oz)
 ```
 
 Verification runs are logged with: Ethereum block number, timestamp, balance values, pass/fail.

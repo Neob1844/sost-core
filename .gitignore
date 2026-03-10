@@ -22,6 +22,7 @@ sost_p2p_dump.txt
 # Internal data
 popc_payouts.json
 reserves.json
+price_history.csv
 
 # Binaries / releases
 sost-v*/
