@@ -1079,6 +1079,8 @@ TRUST MODEL:
   authorization (Appendix G).
   No bridge, no wSOST, no smart contract dependency between chains beyond the Heritage Reserve itself.
 
+(Subject to progressive decentralization per C16.)
+
 #### 5.3.1 Execution Policy: TWAP Batch Sales (Operational, Non-Consensus)
 
 SOST's Metals Funding Vault (Gold-first) accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.
@@ -1538,6 +1540,8 @@ SECURITY PROPERTIES:
     the bond terms, the Foundation cannot impose unfavorable pricing. A
     bulletin the user disagrees with simply results in the user refusing
     to sign. No funds are at risk from a disputed bulletin.
+
+(Subject to progressive decentralization per C16.)
 ```
 
 ### 6.7 Model A Rewards
@@ -1706,6 +1710,8 @@ WATCHER TRUST MODEL:
 
 Trust required: MEDIUM (non-custodial escrow; risks: smart contract,
       token issuer XAUT/PAXG, EVM chain, and SOST market price).
+
+(Subject to progressive decentralization per C16.)
 ```
 
 ### 6.9 Model B Rewards by Duration
@@ -2012,6 +2018,9 @@ Moving previously purchased reserve assets requires Emergency Catastrophe author
 
 No operational action can modify consensus rules, alter the emission schedule, or redirect coinbase allocations. Reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned Reserve Lifecycle transitions (Section 5.5).
 
+DECENTRALIZATION COMMITMENT (C16):
+Every operational function described in this section — vault execution, purchase management, PoPC verification, and reporting — is designed for progressive automation and decentralization. The Foundation holds these roles as a transitional necessity during Phase 1. As each process is automated, tested, and independently verified, the Foundation permanently relinquishes manual control. This trajectory is irreversible: decentralization only moves forward. See Section 7.3 for the full commitment.
+
 ### 7.3 Progressive Decentralization
 
 The Foundation commits to progressive decentralization and full automation of all operational processes as soon as technically viable. Manual operations during Phase 1 — PoPC balance verification, reward payouts, vault batch conversions, and reporting — are transitional by design, not permanent. Each process has a documented automation path: PoPC verification moves to on-chain smart contracts, reward payouts to the sost-popc-daemon, and vault conversions to a deterministic execution stack with public attestations.
@@ -2148,6 +2157,9 @@ C14: Default 50/50 XAUt/PAXG acquisition split; adjustable operationally by Foun
 C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES≥108)
      + Foundation Execution Order. Only two actions permitted: E1 (ROTATE) and
      E2 (LIQUIDATE→BUY→REDISTRIBUTE). No other mechanism to move reserve assets.
+C16: Progressive decentralization is irreversible. All operational roles held by the
+     Foundation are transitional. As each process is automated and independently verified,
+     manual control is permanently relinquished. Decentralization only moves forward.
 ```
 
 ## 11. Roadmap
