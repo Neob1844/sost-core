@@ -184,6 +184,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .pager{margin-top:8px;display:flex;gap:6px;justify-content:center}
 .pager button{background:transparent;border:1px solid var(--border);color:var(--text3);font-size:10px;padding:6px 16px;cursor:pointer;font-family:var(--code);letter-spacing:1px;transition:all .15s}
 .pager button:hover{border-color:var(--red);color:var(--red)}
+.tx-filter{background:transparent;border:1px solid var(--border);color:var(--text3);font-size:10px;padding:5px 14px;cursor:pointer;font-family:var(--code);letter-spacing:1px;transition:all .15s}
+.tx-filter:hover{border-color:var(--cyan);color:var(--cyan)}
+.tx-filter.active{border-color:var(--red);color:var(--red);background:rgba(251,1,13,0.08)}
 .ld{text-align:center;padding:28px;color:var(--text3);font-size:11px;letter-spacing:2px}
 .ld::after{content:'_';animation:blink .6s step-end infinite}
 @keyframes blink{50%{opacity:0}}
@@ -323,6 +326,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <button onclick="oldestPage()" id="btnLast">OLDEST ⟫</button>
     </div>
   </div>
+  <div class="section" id="txSection">
+    <div class="sec-head"><div class="sec-title">// <b>LATEST TRANSACTIONS</b></div><div class="sec-meta" id="txInfo"></div></div>
+    <div class="tx-filters" style="margin-bottom:8px;display:flex;gap:4px">
+      <button class="tx-filter active" data-filter="ALL" onclick="setTxFilter('ALL')">ALL</button>
+      <button class="tx-filter" data-filter="TRANSFER" onclick="setTxFilter('TRANSFER')">TRANSFERS</button>
+      <button class="tx-filter" data-filter="COINBASE" onclick="setTxFilter('COINBASE')">COINBASE</button>
+      <button class="tx-filter" data-filter="BOND" onclick="setTxFilter('BOND')">BONDS</button>
+    </div>
+    <table class="tbl"><thead><tr><th>TXID</th><th>BLOCK</th><th>TYPE</th><th>IN</th><th>OUT</th><th>AMOUNT</th><th>FEE</th></tr></thead>
+    <tbody id="txBody"><tr><td colspan="7" class="ld">loading transactions</td></tr></tbody></table>
+  </div>
   <div class="section" id="mpSection">
     <div class="sec-head"><div class="sec-title">// <b>MEMPOOL</b></div><div class="sec-meta" id="mpInfo"></div></div>
     <table class="tbl"><thead><tr><th>TXID</th><th>SIZE</th><th>FEE</th></tr></thead>
@@ -410,6 +424,7 @@ function openDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.add('show');
   document.getElementById('blocksSection').style.display='none';
+  document.getElementById('txSection').style.display='none';
   document.getElementById('mpSection').style.display='none';
   document.getElementById('chartsRow').style.display='none';
 }
@@ -417,6 +432,7 @@ function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
   document.getElementById('blocksSection').style.display='';
+  document.getElementById('txSection').style.display='';
   document.getElementById('mpSection').style.display='';
   document.getElementById('chartsRow').style.display='';
   _navStack=[];
@@ -884,8 +900,62 @@ function showCXInfo(){
   '<div style="margin-top:12px;padding:10px 16px;font-size:11px;color:rgba(255,255,255,.35);border-top:1px solid rgba(255,255,255,.06)">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan)">MIT License</a> \u2014 Open source. Free to use, modify, and distribute.</div>';
 }
 
-async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}
-refresh();setInterval(refresh,10000);
+var _allTxRows=[];
+var _txFilter='ALL';
+function setTxFilter(f){
+  _txFilter=f;
+  var btns=document.querySelectorAll('.tx-filter');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-filter')===f);
+  renderTxTable();
+}
+function classifyTx(tx){
+  if(!tx.vin||tx.vin.length===0||tx.vin[0].coinbase)return'COINBASE';
+  for(var i=0;i<(tx.vout||[]).length;i++){var t=tx.vout[i].type;if(t===16||t===17||t===0x10||t===0x11)return'BOND';}
+  return'TRANSFER';
+}
+function renderTxTable(){
+  var tb=document.getElementById('txBody');
+  var filtered=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
+  document.getElementById('txInfo').textContent=filtered.length+' of '+_allTxRows.length+' transactions';
+  if(filtered.length===0){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">no '+_txFilter.toLowerCase()+' transactions</td></tr>';return;}
+  tb.innerHTML='';
+  for(var i=0;i<filtered.length;i++){
+    var r=filtered[i];
+    var typeColor=r.type==='COINBASE'?'var(--yellow)':r.type==='BOND'?'var(--purple)':'var(--green)';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt">'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
+    tb.appendChild(tr);
+  }
+}
+async function loadLatestTxs(){
+  try{
+    _allTxRows=[];
+    var collected=0;
+    for(var h=H;h>=Math.max(0,H-20)&&collected<50;h--){
+      var hash=await rpc('getblockhash',[String(h)]);
+      var b=await rpc('getblock',[hash]);
+      var txids=b.txids||[];
+      for(var t=0;t<txids.length&&collected<50;t++){
+        var txid=txids[t];
+        try{
+          var tx=await rpc('getrawtransaction',[txid,'true']);
+          var type=classifyTx(tx);
+          var totalOut=0;
+          for(var v=0;v<(tx.vout||[]).length;v++){var a=tx.vout[v].value;totalOut+=(typeof a==='number'?a:parseFloat(a));}
+          var fee=typeof tx.fee==='number'?fS(tx.fee)+' SOST':'\u2014';
+          _allTxRows.push({txid:txid,height:h,type:type,inputs:(tx.vin||[]).length,outputs:(tx.vout||[]).length,amount:totalOut.toFixed(4)+' SOST',fee:fee});
+          collected++;
+        }catch(e){
+          _allTxRows.push({txid:txid,height:h,type:t===0?'COINBASE':'TRANSFER',inputs:t===0?0:'?',outputs:'?',amount:fS(b.subsidy)+' SOST',fee:'\u2014'});
+          collected++;
+        }
+      }
+    }
+    renderTxTable();
+  }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
+}
+async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
+refresh();setInterval(refresh,30000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
 </script>
 </body>
