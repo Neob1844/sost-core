@@ -67,7 +67,7 @@ inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
 
 // cASERT v5 thresholds (blocks ahead of schedule)
 //   0– 4 → L1 neutral   | 5–25 → L2 light   | 26–50 → L3 moderate
-//  51–75 → L4 strong    | 76+ → L5+ unbounded (scale = level + 1)
+//  51–75 → L4 strong    | 76+ → L5+ unbounded (scale = level)
 inline constexpr int32_t CASERT_L2_BLOCKS  = 5;    // unchanged
 inline constexpr int32_t CASERT_L3_BLOCKS  = 26;   // was 20
 inline constexpr int32_t CASERT_L4_BLOCKS  = 51;   // was 50
@@ -78,7 +78,7 @@ inline constexpr int32_t CASERT_L8_BLOCKS  = 201;  // new
 inline constexpr int32_t CASERT_L9_BLOCKS  = 251;  // new
 inline constexpr int32_t CASERT_L10_BLOCKS = 301;  // new
 // Above L10: level = 5 + (blocks_ahead - 76) / 50
-// scale = level + 1 — unbounded, no ceiling
+// scale = level — linear, unbounded, no ceiling
 
 // cASERT Decay Anti-Stall parameters
 // Activates when no block found for CASERT_DECAY_ACTIVATION seconds

@@ -496,13 +496,12 @@
 <pre class="wp-code-inline">  lag &lt; 0, 5 ≤ |lag| ≤ 25          → L2  (light hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 26 ≤ |lag| ≤ 50         → L3  (moderate hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 51 ≤ |lag| ≤ 75         → L4  (strong hardening)</pre>
-<pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100        → L5  (strong hardening, scale = level + 1)</pre>
+<pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100        → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101              → L6+ (unbounded: level = 5 + (ahead - 76) / 50)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Stability parameters by level:</p>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  scale  = level     for L1–L4 (L1→1, L2→2, L3→3, L4→4)</pre>
-<pre class="wp-code-inline">  scale  = level + 1 for L5+   (L5→6, L6→7, ... unbounded)</pre>
+<pre class="wp-code-inline">  scale  = level     for ALL levels (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ...)</pre>
 <pre class="wp-code-inline">  k      = 4      (fixed: always 4 probes)</pre>
 <pre class="wp-code-inline">  steps  = 4      (fixed: always 4 refinement steps per probe)</pre>
 <pre class="wp-code-inline">  margin = 180    (fixed)</pre>
@@ -516,8 +515,8 @@
 <tr><td>5-25 blocks ahead</td><td>L2</td><td>2</td><td>4</td><td>4</td><td>180</td></tr>
 <tr><td>26-50 blocks ahead</td><td>L3</td><td>3</td><td>4</td><td>4</td><td>180</td></tr>
 <tr><td>51-75 blocks ahead</td><td>L4</td><td>4</td><td>4</td><td>4</td><td>180</td></tr>
-<tr><td>76-100 blocks ahead</td><td>L5</td><td>6</td><td>4</td><td>4</td><td>180</td></tr>
-<tr><td>101+ blocks ahead</td><td>L6+</td><td>7+</td><td>4</td><td>4</td><td>180</td></tr>
+<tr><td>76-100 blocks ahead</td><td>L5</td><td>5</td><td>4</td><td>4</td><td>180</td></tr>
+<tr><td>101+ blocks ahead</td><td>L6+</td><td>6+</td><td>4</td><td>4</td><td>180</td></tr>
 </table></div>
 <div class="wp-spacer"></div>
 <p class="wp-p">At L1 (neutral operation), 4 independent probes each run 4 gradient steps with</p>
@@ -883,12 +882,11 @@ PROPERTIES:
 <pre class="wp-code-inline">  lag &lt; 0, 5 ≤ |lag| ≤ 25     → L2  (light hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 26 ≤ |lag| ≤ 50    → L3  (moderate hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 51 ≤ |lag| ≤ 75    → L4  (strong hardening)</pre>
-<pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100   → L5  (strong hardening, scale = level + 1)</pre>
+<pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100   → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101         → L6+ (unbounded: level = 5 + (ahead - 76) / 50)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">STABILITY PARAMETERS BY LEVEL:</p>
-<pre class="wp-code-inline">  scale  = level     for L1–L4 (L1→1, L2→2, L3→3, L4→4)</pre>
-<pre class="wp-code-inline">  scale  = level + 1 for L5+   (L5→6, L6→7, ... unbounded)</pre>
+<pre class="wp-code-inline">  scale  = level     for ALL levels (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ...)</pre>
 <pre class="wp-code-inline">  k      = 4      (fixed: always 4 probes)</pre>
 <pre class="wp-code-inline">  steps  = 4      (fixed: always 4 refinement steps)</pre>
 <pre class="wp-code-inline">  margin = 180    (fixed)</pre>
@@ -899,8 +897,8 @@ PROPERTIES:
 <pre class="wp-code-inline">  L2: 2 × 4 × 4 = 32  (100% harder than baseline)</pre>
 <pre class="wp-code-inline">  L3: 3 × 4 × 4 = 48  (200% harder than baseline)</pre>
 <pre class="wp-code-inline">  L4: 4 × 4 × 4 = 64  (300% harder than baseline)</pre>
-<pre class="wp-code-inline">  L5: 6 × 4 × 4 = 96  (500% harder than baseline, scale = level + 1)</pre>
-<pre class="wp-code-inline">  L6: 7 × 4 × 4 = 112 (600% harder, unbounded continues...)</pre>
+<pre class="wp-code-inline">  L5: 5 × 4 × 4 = 80  (400% harder than baseline)</pre>
+<pre class="wp-code-inline">  L6: 6 × 4 × 4 = 96  (500% harder, unbounded continues...)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">UNIDIRECTIONAL POLICY (emission protection):</p>
 <pre class="wp-code-inline">  CASERT addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
@@ -2303,7 +2301,7 @@ C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES�
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder)</td></tr>
-<tr><td>CASERT</td><td>Unidirectional block-lag overlay, L1–L5–L6+, k=4, steps=4, scale=level (L1-L4) or level+1 (L5+), hardening only, unbounded</td></tr>
+<tr><td>CASERT</td><td>Unidirectional block-lag overlay, L1–L5–L6+, k=4, steps=4, scale=level (all levels), hardening only, unbounded</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2417,7 +2415,7 @@ CASERT PARAMETERS:
   CASERT_L2_THRESHOLD          = 5     // 5-25 blocks ahead → L2 (scale=2)
   CASERT_L3_THRESHOLD          = 26    // 26-50 blocks ahead → L3 (scale=3)
   CASERT_L4_THRESHOLD          = 51    // 51-75 blocks ahead → L4 (scale=4)
-  CASERT_L5_THRESHOLD          = 76    // 76-100 blocks ahead → L5 (scale=6)
+  CASERT_L5_THRESHOLD          = 76    // 76-100 blocks ahead → L5 (scale=5)
   CASERT_L6_THRESHOLD          = 101
   CASERT_L7_THRESHOLD          = 151
   CASERT_L8_THRESHOLD          = 201
@@ -2805,7 +2803,7 @@ SERIALIZATION (consensus-critical fix):
 <pre class="wp-code-inline">    (expected − actual) using wall-clock time vs genesis schedule.</pre>
 <pre class="wp-code-inline">    Only hardens when chain is ahead of schedule (emission protection).</pre>
 <pre class="wp-code-inline">    Levels: L1 (neutral, 0–4 ahead), L2 (5–25), L3 (26–50), L4 (51–75), L5 (76–100), L6+ (101+, unbounded).</pre>
-<pre class="wp-code-inline">    k changed from 3 to 4. Scale = level for L1–L4 (1–4), level + 1 for L5+ (6+).</pre>
+<pre class="wp-code-inline">    k changed from 3 to 4. Scale = level for ALL levels (linear: L1→1, L2→2, ..., L5→5, L6→6, ...).</pre>
 <pre class="wp-code-inline">    MAX_INTERVALS and E_CAP eliminated (no sliding window needed).</pre>
 <div class="wp-bullet">  71) CASERT parameters: replaced by</div>
 <pre class="wp-code-inline">      L2_THRESHOLD=5, L3_THRESHOLD=26, L4_THRESHOLD=51, L5_THRESHOLD=76, L6_THRESHOLD=101 (blocks ahead, unbounded beyond L5).</pre>
@@ -2817,12 +2815,12 @@ SERIALIZATION (consensus-critical fix):
 <pre class="wp-code-inline">  CASERT LEVEL SYSTEM:</pre>
 <div class="wp-bullet">  72) Level names: L3–L6 → L1–L5. L1 is neutral default. L5 is maximum.</div>
 <div class="wp-bullet">  73) Thresholds: 21/51/101 → 5/20/50/75. Earlier response to hashrate surges.</div>
-<div class="wp-bullet">  74) Scale = level for L1–L4 (L1→1, L2→2, L3→3, L4→4); scale = level + 1 for L5+ (L5→6, L6→7, ... unbounded).</div>
+<div class="wp-bullet">  74) Scale = level for ALL levels (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ... linear, unbounded).</div>
 <pre class="wp-code-inline">      Baseline compute reduced from 36 (scale=3) to 12 (scale=1).</pre>
 <div class="wp-bullet">  75) CasertMode enum: NORMAL/DEGRADED/OPEN → L1/L2/L3/L4/L5/L6+.</div>
 <div class="wp-bullet">  76) params.h: CX_STB_SCALE changed from 3 to 1.</div>
 <pre class="wp-code-inline">      CASERT_L2_BLOCKS=5, L3=26, L4=51, L5=76, L6=101 (unbounded beyond L5).</pre>
-<div class="wp-bullet">  77) Explorer v4.2 aligned with C++ L1–L5–L6+, scale=level (L1-L4) or level+1 (L5+).</div>
+<div class="wp-bullet">  77) Explorer v4.2 aligned with C++ L1–L5–L6+, scale=level (all levels, linear).</div>
 <div class="wp-spacer"></div>
 <div class="wp-spacer"></div>
 <hr class="wp-hr">

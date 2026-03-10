@@ -16,7 +16,7 @@ namespace sost {
 //   L4           = 51–75 blocks ahead  → scale=4
 //   L5+          = 76+   blocks ahead  → UNBOUNDED
 //     level = 5 + (blocks_ahead - 76) / 50
-//     scale = level + 1
+//     scale = level
 //     No ceiling — the faster the attack, the harder the brake.
 //
 // Decay Anti-Stall (v5.1):
@@ -133,8 +133,8 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
         level = level_from_ahead(ahead);
     }
 
-    // scale = level for L1-L4, level+1 for L5+
-    int32_t scale = (level <= 4) ? level : level + 1;
+    // scale = level (linear, all levels)
+    int32_t scale = level;
 
     // If level == 1: skip overlay entirely (ASERT handles it)
     if (level <= 1) return out;

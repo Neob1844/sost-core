@@ -368,7 +368,7 @@ const CASERT_LEVELS=[
   {signal:'5\u201325 ahead',level:2,scale:2,k:4,steps:4},
   {signal:'26\u201350 ahead',level:3,scale:3,k:4,steps:4},
   {signal:'51\u201375 ahead',level:4,scale:4,k:4,steps:4},
-  {signal:'76\u2013100 ahead',level:5,scale:6,k:4,steps:4},
+  {signal:'76\u2013100 ahead',level:5,scale:5,k:4,steps:4},
   {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
 ];
 function computeCurrentLag(){
@@ -397,7 +397,7 @@ function getCasertScale(signal){
   if(ahead<51)return 3;
   if(ahead<76)return 4;
   var level=5+(ahead-76)/50|0;
-  return level+1; // scale = level + 1 above L4
+  return level; // scale = level (linear, all levels)
 }
 function getLevelColor(lv){
   if(lv<=1)return '#4ade80';  // L1 = green (neutral/base)
@@ -484,7 +484,7 @@ function renderCasertPanel(signal,mode){
     if(lv.level>=6)rowStyle+=(rowStyle?' ':'')+'casert-pulse';
     tableRows+='<tr class="'+rowStyle+'"><td style="color:var(--text3)">'+lv.signal+'</td><td style="color:'+getLevelColor(lv.level)+';font-weight:600">L'+lv.level+(lv.level>=6?'+':'')+'</td><td class="cn">'+scLabel+'</td><td class="cn">'+lv.k+'</td><td class="cn">'+lv.steps+'</td><td class="cg">'+compLabel+'</td></tr>';
   }
-  tableRows+='<tr><td colspan="6" style="font-size:9px;color:var(--text3);padding:8px 10px;border:none">System is unbounded above L5 \u2014 scale = level + 1, growing every 50 blocks ahead of schedule</td></tr>';
+  tableRows+='<tr><td colspan="6" style="font-size:9px;color:var(--text3);padding:8px 10px;border:none">System is unbounded above L5 \u2014 scale = level (linear), growing every 50 blocks ahead of schedule</td></tr>';
   return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">adaptive PoW difficulty overlay (cASERT v5)</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val">4</div><div class="casert-param-desc">Number of independent stability tests per hash. Each pushes the solution from a random direction and checks if it returns. Fixed at k=4.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val">4</div><div class="casert-param-desc">Gradient steps per perturbation to verify convergence. Each step checks "did the solution return to the attractor?". Fixed at 4 steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(activeLevel)+'">'+activeScale+'</div><div class="casert-param-desc">How far the solution is pushed. Scale='+activeScale+' means the miner must find solutions in deeper valleys. Rises with difficulty level.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">LEVEL TABLE <span style="color:var(--purple)">\u00B7 compute = scale \u00D7 k \u00D7 steps</span></div><table class="casert-tbl"><thead><tr><th>SIGNAL</th><th>LEVEL</th><th>SCALE</th><th>K</th><th>STEPS</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 function renderStats(i){
@@ -946,7 +946,7 @@ function showCXInfo(){
   '<span style="color:#67e8f9">L2</span> (5–25) → '+
   '<span style="color:#fbbf24">L3</span> (26–50) → '+
   '<span style="color:#fb923c">L4</span> (51–75) → '+
-  '<span style="color:#fb010d">L5</span> (76–100, scale=6) → '+
+  '<span style="color:#fb010d">L5</span> (76–100, scale=5) → '+
   '<span style="color:#ff0040">L6+</span> (101+ ahead, unbounded — scale grows every 50 blocks).<br><br>'+
   '<b style="color:var(--green)">DECAY ANTI-STALL:</b> If no block is found for <b>2 hours</b>, cASERT level decays downward to prevent chain stall:<br>'+
   '&bull; <span style="color:#fb010d">L8+</span> → drops 1 level every 10 min (fast recovery)<br>'+
@@ -964,7 +964,7 @@ function showCXInfo(){
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
   '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
-  '<div class="k">MAX LEVEL</div><div class="v">UNBOUNDED — scale = level + 1 above L4, growing every 50 blocks ahead</div>'+
+  '<div class="k">MAX LEVEL</div><div class="v">UNBOUNDED — scale = level (linear), growing every 50 blocks ahead</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+
