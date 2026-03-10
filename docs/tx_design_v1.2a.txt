@@ -94,8 +94,8 @@
 //
 // --- Reserved (inactive until activation height) ---
 //
-//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Jan 2027)
-//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Jan 2027)
+//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Q3 2026)
+//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Q3 2026)
 //   0x20  BURN            (reserved, NOT activated — supply is immutable, no burns)
 //
 //   Consensus rule: any output with a reserved type (0x10-0xFF) is INVALID
@@ -537,7 +537,7 @@
 // --- Storage ---
 //
 //   Development/testing: in-memory std::unordered_map
-//   Production (March 15): LevelDB on disk
+//   Production (May 13): LevelDB on disk
 //
 //   The UTXOSet interface is storage-agnostic:
 //
@@ -765,7 +765,7 @@
 //
 // Total: ~10 days (March 1-10)
 // Integration + stress testing: March 11-14
-// Public launch with transactions: March 15
+// Public launch with transactions: May 13
 //
 // =============================================================================
 // 16. CHANGELOG
