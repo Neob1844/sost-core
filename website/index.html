@@ -8,6 +8,7 @@
 <title>SOST — Sovereign Stock Token | Proof-of-Work Protocol</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -288,11 +289,59 @@
     padding: 24px 20px;
     text-align: center;
     transition: border-color 0.3s, transform 0.2s;
+    cursor: pointer;
+    user-select: none;
   }
   .stat-card:hover {
     border-color: var(--border-med);
     transform: translateY(-2px);
   }
+  .stat-card.card-active {
+    border-color: var(--border-bright);
+    transform: translateY(0);
+  }
+  .stat-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+    background: #0d0d0d;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0 16px;
+    margin-top: 0;
+    opacity: 0;
+  }
+  .stat-panel.panel-open {
+    max-height: 420px;
+    border-color: var(--border-dim);
+    padding: 16px;
+    margin-top: 12px;
+    opacity: 1;
+  }
+  .stat-panel .panel-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .stat-panel .panel-link {
+    display: inline-block;
+    color: var(--cyan-primary);
+    text-decoration: none;
+    font-size: 12px;
+    margin-top: 10px;
+    transition: color 0.2s;
+  }
+  .stat-panel .panel-link:hover { color: var(--red-primary); }
+  .stat-panel canvas { max-height: 150px; }
+  .stat-panel table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .stat-panel th { text-align: left; padding: 6px 10px; color: var(--text-muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); font-weight: 400; }
+  .stat-panel td { padding: 6px 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .stat-panel tr:last-child td { border-bottom: none; }
+  .stat-panel .spec-line { font-size: 12px; color: var(--text-secondary); line-height: 2; }
+  .stat-panel .spec-line b { color: var(--text-primary); }
   .stat-label {
     font-size: 10px;
     color: var(--text-muted);
@@ -605,47 +654,114 @@
     </div>
 
     <div class="stat-grid fade-in delay-1">
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-supply',this)">
         <div class="stat-label">Max Supply</div>
         <div class="stat-value">~4,669,201<span class="unit">SOST</span></div>
         <div class="stat-sub">Feigenbaum &delta; &times; 10&sup6;</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-blocktime',this)">
         <div class="stat-label">Block Time</div>
         <div class="stat-value">10<span class="unit">min</span></div>
         <div class="stat-sub">ASERT + cASERT targeting</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-reward',this)">
         <div class="stat-label">Initial Reward</div>
         <div class="stat-value">7.8510<span class="unit">SOST</span></div>
         <div class="stat-sub">Smooth exponential decay</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-split',this)">
         <div class="stat-label">Coinbase Split</div>
         <div class="stat-value">50/25/25</div>
         <div class="stat-sub">Miner / Gold / PoPC</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-algo',this)">
         <div class="stat-label">Algorithm</div>
         <div class="stat-value" style="font-size:20px;">ConvergenceX</div>
         <div class="stat-sub">CPU-mined, 4GB RAM, ASIC-resistant</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="togglePanel('panel-genesis',this)">
         <div class="stat-label">Genesis</div>
         <div class="stat-value" style="font-size:18px;">2026-03-13</div>
         <div class="stat-sub">00:00:00 UTC</div>
       </div>
-      <div class="stat-card" id="goldPriceCard">
+      <div class="stat-card" id="goldPriceCard" onclick="togglePanel('panel-gold',this)">
         <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
         <div class="stat-value" style="font-size:20px;color:#b8860b;" id="goldPriceVal">...</div>
         <div class="stat-sub" id="goldPriceSub">loading</div>
       </div>
-      <div class="stat-card" id="sostPriceCard" style="position:relative;">
+      <div class="stat-card" id="sostPriceCard" onclick="togglePanel('panel-sost',this)" style="position:relative;">
         <div class="stat-label">SOST Price</div>
         <div class="stat-value" style="font-size:20px;color:var(--red-primary);" id="sostPriceVal">...</div>
         <div class="stat-sub" id="sostPriceSub">loading</div>
         <div id="sostCurrBtn" title="Click to change currency" style="position:absolute;bottom:10px;right:12px;width:28px;height:28px;border-radius:4px;border:1px solid #2a2a2a;background:#0a0a0a;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;">$</div>
       </div>
+    </div>
+
+    <!-- Expandable Panels -->
+    <div class="stat-panel" id="panel-supply">
+      <div class="panel-title">Emission Curve &mdash; Feigenbaum Decay</div>
+      <canvas id="chartSupply"></canvas>
+    </div>
+    <div class="stat-panel" id="panel-blocktime">
+      <div class="panel-title">Live Block Data</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Target block spacing is <b style="color:var(--text-primary)">600 seconds (10 minutes)</b>, maintained by the dual ASERT + cASERT difficulty adjustment system. ASERT handles long-term hashrate changes; cASERT prevents short-term emission acceleration.</p>
+      <a class="panel-link" href="sost-explorer.html">View live block data on Explorer &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-reward">
+      <div class="panel-title">Reward Decay Schedule</div>
+      <table>
+        <tr><th>Epoch</th><th>Years</th><th>Reward / Block</th><th>Decay</th></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">0</td><td>0 &ndash; 2.5</td><td style="color:var(--text-primary);font-weight:500">7.85100863 SOST</td><td style="color:var(--text-muted)">&mdash;</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">1</td><td>2.5 &ndash; 5</td><td style="color:var(--text-primary);font-weight:500">~6.1145 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">2</td><td>5 &ndash; 7.5</td><td style="color:var(--text-primary);font-weight:500">~4.7613 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">3</td><td>7.5 &ndash; 10</td><td style="color:var(--text-primary);font-weight:500">~3.7084 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">4</td><td>10 &ndash; 12.5</td><td style="color:var(--text-primary);font-weight:500">~2.8882 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">5</td><td>12.5 &ndash; 15</td><td style="color:var(--text-primary);font-weight:500">~2.2492 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+      </table>
+      <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">q = e<sup>-1/4</sup> &asymp; 0.7788 &middot; Epoch = 131,553 blocks (&asymp;2.5 years)</p>
+    </div>
+    <div class="stat-panel" id="panel-split">
+      <div class="panel-title">Constitutional Split &mdash; Every Block</div>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <canvas id="chartSplit" style="max-width:180px;max-height:180px;"></canvas>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fb010d;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> Miner</div>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#b8860b;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> Gold Funding Vault</div>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22d3ee;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> PoPC Pool</div>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;">Hardcoded at genesis. Immutable.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-panel" id="panel-algo">
+      <div class="panel-title">ConvergenceX v2.0 &mdash; Proof of Irreversible Convergence</div>
+      <div class="spec-line"><b>4GB</b> memory scratchpad &middot; <b>100,000</b> gradient rounds &middot; <b>32&times;32</b> matrix per block</div>
+      <div class="spec-line"><b>256-op</b> per-block program &middot; <b>8</b> ALU operation types &middot; <b>ASIC-resistant</b> by design</div>
+      <div class="spec-line" style="margin-top:6px;"><b>4</b> stability perturbation tests &middot; Contraction factor c = 7/10 &middot; CPU L3 cache optimized</div>
+      <a class="panel-link" href="sost-technology.html">Full technical details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-genesis">
+      <div class="panel-title">Genesis Block</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 13, 2026 at 00:00:00 UTC</b>. First reward: 7.85100863 SOST split constitutionally between miner, Gold Funding Vault, and PoPC Pool.</p>
+      <a class="panel-link" href="sost-genesis.html">View genesis block details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-gold">
+      <div class="panel-title">Gold Price &mdash; Last 24 Hours</div>
+      <canvas id="chartGold"></canvas>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle;"></span>XAUT</span>
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#4ade80;margin-right:4px;vertical-align:middle;"></span>PAXG</span>
+        <span id="goldChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
+      </div>
+      <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-sost">
+      <div class="panel-title">SOST Market Data</div>
+      <div id="sostPanelContent">
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:8px;">SOST is not yet trading. Price chart will activate automatically when market data is available.</p>
+        <p style="font-size:12px;color:var(--text-dim);">Mining cost estimate: <b style="color:var(--text-primary)">~$0.01 USD</b></p>
+      </div>
+      <canvas id="chartSost" style="display:none;"></canvas>
+      <a class="panel-link" href="sost-markets.html">View markets &rarr;</a>
     </div>
   </div>
 </section>
@@ -946,7 +1062,8 @@
     tryNext();
   }
 
-  btnEl.addEventListener('click',function(){
+  btnEl.addEventListener('click',function(e){
+    e.stopPropagation();
     curIdx=(curIdx+1)%CURRENCIES.length;
     renderSost();
   });
@@ -1005,6 +1122,147 @@
   tick();
   setInterval(tick,1000);
 })();
+</script>
+<script>
+/* ── Card Panel Toggle ── */
+var _activePanel=null,_activeCard=null;
+var _chartInstances={};
+
+function togglePanel(id,cardEl){
+  if(id==='panel-sost'&&cardEl){
+    var btn=document.getElementById('sostCurrBtn');
+    if(btn&&event&&btn.contains(event.target))return;
+  }
+  var panel=document.getElementById(id);
+  if(!panel)return;
+
+  if(_activePanel&&_activePanel!==panel){
+    _activePanel.classList.remove('panel-open');
+    if(_activeCard)_activeCard.classList.remove('card-active');
+  }
+
+  var opening=!panel.classList.contains('panel-open');
+  if(opening){
+    panel.classList.add('panel-open');
+    cardEl.classList.add('card-active');
+    _activePanel=panel;_activeCard=cardEl;
+    initPanelChart(id);
+  } else {
+    panel.classList.remove('panel-open');
+    cardEl.classList.remove('card-active');
+    _activePanel=null;_activeCard=null;
+  }
+}
+
+function initPanelChart(id){
+  if(id==='panel-supply'&&!_chartInstances.supply){
+    var q=Math.exp(-0.25);
+    var R0=7.85100863,B=131553,labels=[],data=[],cum=0;
+    for(var e=0;e<=12;e++){
+      labels.push('E'+e);
+      var reward=R0*Math.pow(q,e);
+      cum+=reward*B;
+      data.push(Math.round(cum));
+    }
+    var ctx=document.getElementById('chartSupply').getContext('2d');
+    var grad=ctx.createLinearGradient(0,0,0,150);
+    grad.addColorStop(0,'rgba(251,1,13,0.3)');
+    grad.addColorStop(1,'rgba(251,1,13,0)');
+    _chartInstances.supply=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[{label:'Cumulative Supply',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#fb010d',borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y.toLocaleString()+' SOST';}}}},scales:{x:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10},callback:function(v){return (v/1e6).toFixed(1)+'M';}},grid:{color:'#1a1a1a'}}}}
+    });
+  }
+  if(id==='panel-split'&&!_chartInstances.split){
+    _chartInstances.split=new Chart(document.getElementById('chartSplit').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:['Miner 50%','Gold Vault 25%','PoPC Pool 25%'],datasets:[{data:[50,25,25],backgroundColor:['#fb010d','#b8860b','#22d3ee'],borderColor:['#0d0d0d','#0d0d0d','#0d0d0d'],borderWidth:2}]},
+      options:{responsive:true,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label;}}}}}
+    });
+  }
+  if(id==='panel-gold'&&!_chartInstances.gold){
+    fetchGoldChart();
+  }
+  if(id==='panel-sost'){
+    fetchSostChart();
+  }
+}
+
+/* ── Gold 24h Chart ── */
+var _goldChartTimer=null;
+function fetchGoldChart(){
+  var statusEl=document.getElementById('goldChartStatus');
+  if(statusEl)statusEl.textContent='loading...';
+  Promise.all([
+    fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();}),
+    fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();})
+  ]).then(function(res){
+    var xautPrices=res[0].prices||[];
+    var paxgPrices=res[1].prices||[];
+    var labels=[],xData=[],pData=[];
+    xautPrices.forEach(function(p){
+      var d=new Date(p[0]);
+      labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
+      xData.push(p[1]);
+    });
+    paxgPrices.forEach(function(p){pData.push(p[1]);});
+
+    var ctx=document.getElementById('chartGold').getContext('2d');
+    if(_chartInstances.gold){_chartInstances.gold.destroy();}
+    _chartInstances.gold=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[
+        {label:'XAUT',data:xData,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+        {label:'PAXG',data:pData,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toLocaleString();}},grid:{color:'#1a1a1a'}}}}
+    });
+    var now=new Date();
+    if(statusEl)statusEl.textContent=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+
+    if(_goldChartTimer)clearInterval(_goldChartTimer);
+    _goldChartTimer=setInterval(function(){
+      var panel=document.getElementById('panel-gold');
+      if(panel&&panel.classList.contains('panel-open'))fetchGoldChart();
+    },60000);
+  }).catch(function(){
+    if(statusEl)statusEl.textContent='chart unavailable';
+  });
+}
+
+/* ── SOST 24h Chart (activates when listed) ── */
+function fetchSostChart(){
+  var contentEl=document.getElementById('sostPanelContent');
+  var canvasEl=document.getElementById('chartSost');
+  fetch('https://api.coingecko.com/api/v3/coins/sost-protocol/market_chart?vs_currency=usd&days=1')
+    .then(function(r){if(!r.ok)throw new Error('not listed');return r.json();})
+    .then(function(d){
+      var prices=d.prices||[];
+      if(prices.length<2)throw new Error('no data');
+      contentEl.style.display='none';
+      canvasEl.style.display='';
+      var labels=[],data=[];
+      prices.forEach(function(p){
+        var dt=new Date(p[0]);
+        labels.push(dt.getUTCHours().toString().padStart(2,'0')+':'+dt.getUTCMinutes().toString().padStart(2,'0'));
+        data.push(p[1]);
+      });
+      var ctx=canvasEl.getContext('2d');
+      var grad=ctx.createLinearGradient(0,0,0,150);
+      grad.addColorStop(0,'rgba(251,1,13,0.25)');
+      grad.addColorStop(1,'rgba(251,1,13,0)');
+      if(_chartInstances.sost){_chartInstances.sost.destroy();}
+      _chartInstances.sost=new Chart(ctx,{
+        type:'line',
+        data:{labels:labels,datasets:[{label:'SOST/USD',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:1.5,pointRadius:0,tension:0.3}]},
+        options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v;}},grid:{color:'#1a1a1a'}}}}
+      });
+    }).catch(function(){
+      contentEl.style.display='';
+      canvasEl.style.display='none';
+    });
+}
 </script>
 <script src="sost-search.js"></script>
 </body>
