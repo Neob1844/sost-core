@@ -1305,6 +1305,16 @@ setInterval(refresh,60000);
 window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawChart);});
 })();
 </script>
+<script>
+// Auto-search from sessionStorage (e.g. from genesis page)
+(function(){
+  var q=sessionStorage.getItem('sost_search');
+  if(q){sessionStorage.removeItem('sost_search');
+    var inp=document.getElementById('searchIn');
+    if(inp){inp.value=q;setTimeout(doSearch,500);}
+  }
+})();
+</script>
 <script src="sost-search.js"></script>
 </body>
 </html>
