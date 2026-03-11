@@ -357,23 +357,23 @@
 
     <div class="fade-in delay-2" style="margin-top:32px;">
       <h3 style="font-size:14px;color:var(--text-primary);margin-bottom:16px;">Merkle Tree &amp; SPV Verification</h3>
-      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:4px;padding:20px;font-family:var(--font-mono);font-size:11px;line-height:1.9;color:var(--text-dim);overflow-x:auto;">
-<pre style="margin:0;color:inherit;">                    ┌─────────────────────┐
-                    │    <span style="color:var(--red-primary);">merkle_root</span>       │
-                    │  H(H01 ║ H23)       │
-                    └─────────┬───────────┘
-                   ┌──────────┴──────────┐
-              ┌────┴────┐           ┌────┴────┐
-              │  H01    │           │  H23    │
-              │H(H0║H1) │           │H(H2║H3) │
-              └────┬────┘           └────┬────┘
-             ┌─────┴─────┐         ┌─────┴─────┐
-          ┌──┴──┐     ┌──┴──┐   ┌──┴──┐     ┌──┴──┐
-          │ H0  │     │ H1  │   │ H2  │     │ H3  │
-          │TX 0 │     │TX 1 │   │TX 2 │     │TX 3 │
-          └─────┘     └─────┘   └─────┘     └─────┘
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:4px;padding:20px;font-family:var(--font-mono);font-size:11px;line-height:1.9;overflow-x:auto;">
+<pre style="margin:0;"><span style="color:#444;">                    ┌─────────────────────┐</span>
+<span style="color:#444;">                    │    </span><span style="color:#fb010d;">merkle_root</span><span style="color:#444;">       │</span>
+<span style="color:#444;">                    │  </span><span style="color:#fff;">H(H01 ║ H23)</span><span style="color:#444;">       │</span>
+<span style="color:#444;">                    └─────────┬───────────┘</span>
+<span style="color:#444;">                   ┌──────────┴──────────┐</span>
+<span style="color:#444;">              ┌────┴────┐           ┌────┴────┐</span>
+<span style="color:#444;">              │  </span><span style="color:#fff;">H01</span><span style="color:#444;">    │           │  </span><span style="color:#fff;">H23</span><span style="color:#444;">    │</span>
+<span style="color:#444;">              │</span><span style="color:#fff;">H(H0║H1)</span><span style="color:#444;"> │           │</span><span style="color:#fff;">H(H2║H3)</span><span style="color:#444;"> │</span>
+<span style="color:#444;">              └────┬────┘           └────┬────┘</span>
+<span style="color:#444;">             ┌─────┴─────┐         ┌─────┴─────┐</span>
+<span style="color:#444;">          ┌──┴──┐     ┌──┴──┐   ┌──┴──┐     ┌──┴──┐</span>
+<span style="color:#444;">          │ </span><span style="color:#fff;">H0</span><span style="color:#444;">  │     │ </span><span style="color:#fff;">H1</span><span style="color:#444;">  │   │ </span><span style="color:#fff;">H2</span><span style="color:#444;">  │     │ </span><span style="color:#fff;">H3</span><span style="color:#444;">  │</span>
+<span style="color:#444;">          │</span><span style="color:#fff;">TX 0</span><span style="color:#444;"> │     │</span><span style="color:#fff;">TX 1</span><span style="color:#444;"> │   │</span><span style="color:#fff;">TX 2</span><span style="color:#444;"> │     │</span><span style="color:#fff;">TX 3</span><span style="color:#444;"> │</span>
+<span style="color:#444;">          └─────┘     └─────┘   └─────┘     └─────┘</span>
 
-H(x) = SHA-256(SHA-256(x))    ║ = concatenation</pre>
+<span style="color:#444;">H(x) = SHA-256(SHA-256(x))    ║ = concatenation</span></pre>
       </div>
       <p style="margin-top:12px;font-size:12px;color:var(--text-dim);line-height:1.8;">The merkle root commits to every transaction in the block. To verify a single transaction (SPV), a node only needs the transaction hash and the sibling hashes along the path to the root — <strong style="color:var(--text-secondary);">O(log n)</strong> data instead of the full block. The genesis block uses a placeholder root (all 1s) because its single coinbase transaction is implicit.</p>
     </div>
