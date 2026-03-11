@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <chrono>
+#include <ctime>
 
 namespace sost {
 
@@ -23,8 +24,8 @@ MineResult mine_block(
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
     ConsensusParams params = get_consensus_params(prof, h);
-    auto cdec = casert_mode_from_chain(chain, h);
-    params = casert_apply_overlay(params, cdec.mode);
+    auto cdec = casert_mode_from_chain(chain, h, std::time(nullptr));
+    params = casert_apply_overlay(params, cdec);
 
     uint32_t expected = asert_next_difficulty(chain, h);
     if (powDiffQ != expected) {

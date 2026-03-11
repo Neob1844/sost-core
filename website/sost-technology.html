@@ -233,7 +233,7 @@
       <div class="arch-node">
         <div class="node-label">Layer 3</div>
         <div class="node-name">cASERT</div>
-        <div class="node-detail">Progressive hardening<br>L1&ndash;L5+ unbounded<br>k=4, steps=4</div>
+        <div class="node-detail">Progressive hardening<br>L1&ndash;L5 fixed, L6+ unbounded<br>k=4, steps=4</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Output</div>
@@ -609,7 +609,8 @@ real_difficulty = integer_part + fractional / <span class="num">65536.0</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">26</span>:  level = <span class="str">L2</span>  <span class="cmt">// scale = 2</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">51</span>:  level = <span class="str">L3</span>  <span class="cmt">// scale = 3</span>
 <span class="kw">elif</span> blocks_ahead &lt; <span class="num">76</span>:  level = <span class="str">L4</span>  <span class="cmt">// scale = 4</span>
-<span class="kw">else</span>:                   level = <span class="str">L5+</span> <span class="cmt">// scale = 5 + (ahead-76)/50, unbounded</span>
+<span class="kw">elif</span> blocks_ahead &lt; <span class="num">101</span>: level = <span class="str">L5</span>  <span class="cmt">// scale = 5</span>
+<span class="kw">else</span>:                   level = <span class="str">L6+</span> <span class="cmt">// scale = 6 + (ahead-101)/50, unbounded</span>
 
 <span class="cmt">// Parameters scaled by level</span>
 stab_scale  = level  <span class="cmt">// scale = level for ALL levels (linear)</span>
@@ -622,7 +623,8 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
           <tr><td class="key">CASERT_L2_BLOCKS</td><td class="val"><code>5</code> blocks ahead <span class="comment">// scale = 2</span></td></tr>
           <tr><td class="key">CASERT_L3_BLOCKS</td><td class="val"><code>26</code> blocks ahead <span class="comment">// scale = 3</span></td></tr>
           <tr><td class="key">CASERT_L4_BLOCKS</td><td class="val"><code>51</code> blocks ahead <span class="comment">// scale = 4</span></td></tr>
-          <tr><td class="key">CASERT_L5+</td><td class="val"><code>76+</code> blocks ahead <span class="comment">// scale = 5 + (ahead-76)/50, unbounded</span></td></tr>
+          <tr><td class="key">CASERT_L5_BLOCKS</td><td class="val"><code>76</code> blocks ahead <span class="comment">// scale = 5 (76&ndash;100)</span></td></tr>
+          <tr><td class="key">CASERT_L6+</td><td class="val"><code>101+</code> blocks ahead <span class="comment">// scale = 6 + (ahead-101)/50, unbounded</span></td></tr>
           <tr><td class="key">CX_STB_K</td><td class="val"><code>4</code> <span class="comment">// stability constant</span></td></tr>
           <tr><td class="key">CX_STB_STEPS</td><td class="val"><code>4</code> <span class="comment">// convergence steps per iteration</span></td></tr>
           <tr><td class="key">CX_STB_MARGIN</td><td class="val"><code>180</code> <span class="comment">// stability margin parameter</span></td></tr>

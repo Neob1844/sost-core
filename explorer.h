@@ -313,19 +313,24 @@ const ROLES={
   'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
-  {signal:'> +200',level:1,scale:1,k:3,steps:3},
-  {signal:'0 to +200',level:2,scale:2,k:3,steps:3},
-  {signal:'-200 to 0',level:3,scale:3,k:3,steps:3},
-  {signal:'-400 to -200',level:4,scale:4,k:3,steps:3},
-  {signal:'-600 to -400',level:5,scale:5,k:3,steps:3},
+  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
+  {signal:'5\u201325 ahead',level:2,scale:2,k:4,steps:4},
+  {signal:'26\u201350 ahead',level:3,scale:3,k:4,steps:4},
+  {signal:'51\u201375 ahead',level:4,scale:4,k:4,steps:4},
+  {signal:'76\u2013100 ahead',level:5,scale:5,k:4,steps:4},
+  {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
 ];
 function getCasertLevel(signal){
-  if(signal>200)return 1;if(signal>0)return 2;if(signal>-200)return 3;
-  return 3+Math.floor((-signal-200)/200);
+  // cASERT v5.2 — L1-L5 fixed bands, L6+ unbounded
+  if(signal>=0)return 1;
+  var ahead=-signal;
+  if(ahead<5)return 1;if(ahead<26)return 2;if(ahead<51)return 3;
+  if(ahead<76)return 4;if(ahead<101)return 5;
+  return 6+(ahead-101)/50|0;
 }
 function getLevelColor(lv){
   if(lv<=1)return '#4ade80';if(lv===2)return '#67e8f9';if(lv===3)return '#fbbf24';
-  if(lv===4)return '#fb923c';if(lv===5)return '#e63946';return '#ff2040';
+  if(lv===4)return '#fb923c';if(lv===5)return '#fb010d';return '#ff0040';
 }
 function getLevelLabel(signal){
   var lv=getCasertLevel(signal);
@@ -651,20 +656,20 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">ASERT</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
   'Half-life: <b>24 hours</b>. Clamp: ±2-3 per block. Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT</b> — Adaptive <b>stability overlay</b> monitoring last <b>50 blocks</b>. '+
-  'Adjusts the perturbation <b>scale</b> (L1–L11+) based on how fast blocks arrive vs target. '+
-  'Signal > +200 → L1 (easy). Signal < -1800 → L11 (hardest).<br><br>'+
+  '<b style="color:var(--orange)">cASERT</b> — Adaptive <b>stability overlay</b> based on blocks ahead of schedule. '+
+  'L1-L5 fixed bands (thresholds 5/26/51/76), L6+ unbounded from 101+. '+
+  'Scale = level. k=4, steps=4. Unidirectional — hardening only.<br><br>'+
   'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
   '<div class="k">ASERT HALF-LIFE</div><div class="v">86,400s (24 hours)</div>'+
-  '<div class="k">CASERT WINDOW</div><div class="v">Last <span style="color:var(--orange)">50</span> block intervals</div>'+
-  '<div class="k">CASERT E_CAP</div><div class="v">±1,800s error cap per interval</div>'+
-  '<div class="k">STABILITY K</div><div class="v">3 perturbation tests per hash</div>'+
-  '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
+  '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
+  '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
+  '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
+  '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
-  '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-1800)+' (theoretical max at signal = -1800)</div>'+
+  '<div class="k">MAX FIXED LEVEL</div><div class="v">'+getLevelLabel(-76)+' (76–100 ahead); L6+ unbounded from 101+</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+

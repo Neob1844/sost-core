@@ -26,7 +26,7 @@
 - Genesis: 2026-03-13 00:00:00 UTC
 - Current height: ~777 blocks
 - Emission: 7.8510 SOST per block, 50/25/25 split (miner/gold/popc)
-- cASERT: L1-L5 with thresholds 5/20/50/75 (matches params.h)
+- cASERT: L1-L5 fixed (thresholds 5/26/51/76), L6+ unbounded at 101+ (matches params.h)
 
 ### Code Repository
 - GitHub: `github.com/Neob1844/sost-core` (PRIVATE)
@@ -456,7 +456,7 @@ location / {
     try_files $uri $uri/ /index.html;
 }
 ```
-4. **Whitepaper v3.6 says L3-L6 with 21/51/101 thresholds:** code actually uses L1-L5 with 5/20/50/75. Whitepaper needs correction to match code.
+4. **Whitepaper v3.6 said L3-L6 with 21/51/101 thresholds:** RESOLVED — canonical spec is L1-L5 fixed (5/26/51/76), L6+ unbounded from 101+.
 
 ---
 
@@ -490,7 +490,7 @@ location / {
 19. GitHub organization + repo transfer
 20. README cleanup + tag v1.0.0
 21. BitcoinTalk ANN + Reddit
-22. Whitepaper PDF on website (corrected to match code: L1-L5, payload 512)
+22. Whitepaper PDF on website (corrected to match code: L1-L5 fixed, L6+ unbounded, payload 512)
 23. Monitor first external connections
 
 ### Block E — Post-Launch

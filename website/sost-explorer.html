@@ -457,7 +457,7 @@ function computeCurrentLag(){
   return expected-H; // lag = expected - actual
 }
 function getCasertLevel(signal){
-  // cASERT v5 — Unbounded dynamic scale
+  // cASERT v5.2 — L1-L5 fixed bands, L6+ unbounded
   // signal = lag in blocks. Negative = ahead of schedule.
   if(signal>=0)return 1;  // behind or on-time → L1 (neutral)
   var ahead=-signal;
@@ -465,7 +465,8 @@ function getCasertLevel(signal){
   if(ahead<26)return 2;   // L2: 5-25 ahead
   if(ahead<51)return 3;   // L3: 26-50 ahead
   if(ahead<76)return 4;   // L4: 51-75 ahead
-  return 5+(ahead-76)/50|0; // L5+: unbounded, every 50 blocks adds 1
+  if(ahead<101)return 5;  // L5: 76-100 ahead
+  return 6+(ahead-101)/50|0; // L6+: unbounded, every 50 blocks adds 1
 }
 function getCasertScale(signal){
   if(signal>=0)return 1;
@@ -474,7 +475,8 @@ function getCasertScale(signal){
   if(ahead<26)return 2;
   if(ahead<51)return 3;
   if(ahead<76)return 4;
-  var level=5+(ahead-76)/50|0;
+  if(ahead<101)return 5;
+  var level=6+(ahead-101)/50|0;
   return level; // scale = level (linear, all levels)
 }
 function getLevelColor(lv){

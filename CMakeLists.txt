@@ -102,6 +102,10 @@ add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)
 
+add_executable(test-casert tests/test_casert.cpp)
+target_link_libraries(test-casert PRIVATE sost-core)
+add_test(NAME casert COMMAND test-casert)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
