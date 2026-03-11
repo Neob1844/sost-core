@@ -3,23 +3,24 @@
 namespace sost {
 
 // ---------------------------------------------------------------------------
-// cASERT v5.1 — Unbounded dynamic scale + Decay Anti-Stall
+// cASERT v5.2 — Fixed bands L1-L5, unbounded L6+, Decay Anti-Stall
 //
 // Computes "lag" = how many blocks the chain is ahead of the ideal schedule.
 //   lag > 0  → chain behind  (ASERT handles this alone, no CX overlay)
 //   lag ≤ 0  → chain on-time or ahead  (apply CX hardening levels)
 //
-// Levels:
-//   L1 (neutral) = 0–4   blocks ahead  → scale=1
-//   L2           = 5–25  blocks ahead  → scale=2
-//   L3           = 26–50 blocks ahead  → scale=3
-//   L4           = 51–75 blocks ahead  → scale=4
-//   L5+          = 76+   blocks ahead  → UNBOUNDED
-//     level = 5 + (blocks_ahead - 76) / 50
+// Levels (canonical spec):
+//   L1 (neutral) =   0–4   blocks ahead  → scale=1
+//   L2           =   5–25  blocks ahead  → scale=2
+//   L3           =  26–50  blocks ahead  → scale=3
+//   L4           =  51–75  blocks ahead  → scale=4
+//   L5           =  76–100 blocks ahead  → scale=5
+//   L6+          = 101+    blocks ahead  → UNBOUNDED
+//     level = 6 + floor((blocks_ahead - 101) / 50)
 //     scale = level
 //     No ceiling — the faster the attack, the harder the brake.
 //
-// Decay Anti-Stall (v5.1):
+// Decay Anti-Stall:
 //   When no block found for 2+ hours, effective level decays downward:
 //     L8+:  1 level per 10 min (fast recovery from extreme)
 //     L4-7: 1 level per 20 min (medium recovery)
@@ -28,14 +29,16 @@ namespace sost {
 //   Decay applies to MINING only (now_time > 0). Validation uses now_time=0.
 // ---------------------------------------------------------------------------
 
-// Returns raw cASERT level from blocks_ahead (same as existing logic)
+// Returns raw cASERT level from blocks_ahead
+// L1-L5 are fixed bands; L6+ is unbounded (scale = level)
 static int level_from_ahead(int ahead) {
-    if (ahead < CASERT_L2_BLOCKS) return 1;
-    if (ahead < CASERT_L3_BLOCKS) return 2;
-    if (ahead < CASERT_L4_BLOCKS) return 3;
-    if (ahead < CASERT_L5_BLOCKS) return 4;
-    // Dynamic unbounded above L4
-    return 5 + (ahead - CASERT_L5_BLOCKS) / 50;
+    if (ahead < CASERT_L2_BLOCKS) return 1;   //   0– 4 → L1
+    if (ahead < CASERT_L3_BLOCKS) return 2;   //   5–25 → L2
+    if (ahead < CASERT_L4_BLOCKS) return 3;   //  26–50 → L3
+    if (ahead < CASERT_L5_BLOCKS) return 4;   //  51–75 → L4
+    if (ahead < CASERT_L6_BLOCKS) return 5;   //  76–100 → L5
+    // Dynamic unbounded above L5
+    return 6 + (ahead - CASERT_L6_BLOCKS) / 50;
 }
 
 // Applies adaptive decay based on time without a block.
@@ -94,7 +97,7 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain,
     int effective_level = raw_level;
     if (now_time > 0 && !chain.empty()) {
         int64_t last_block_time = chain.back().time;
-        int64_t stall_seconds = now_time - last_block_time;
+        int64_t stall_seconds = std::max<int64_t>(0, now_time - last_block_time);
         effective_level = apply_decay(raw_level, stall_seconds);
     }
 
@@ -103,7 +106,8 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain,
     else if (effective_level == 2) mode = CasertMode::L2;
     else if (effective_level == 3) mode = CasertMode::L3;
     else if (effective_level == 4) mode = CasertMode::L4;
-    else                           mode = CasertMode::L5;
+    else if (effective_level == 5) mode = CasertMode::L5;
+    else                           mode = CasertMode::L6;
 
     CasertDecision dec;
     dec.mode = mode;
@@ -140,8 +144,8 @@ ConsensusParams casert_apply_overlay(const ConsensusParams& base,
     if (level <= 1) return out;
 
     out.stab_scale  = scale;
-    out.stab_k      = 4;
-    out.stab_steps  = 4;
+    out.stab_k      = CX_STB_K;
+    out.stab_steps  = CX_STB_STEPS;
     out.stab_margin = CX_STB_MARGIN;
     return out;
 }

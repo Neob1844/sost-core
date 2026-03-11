@@ -36,13 +36,16 @@
 - Transaction validation: 42 rules (R1-R14, S1-S12, CB1-CB10), all passing
 - Block validation: 4 layers (L1 structure, L2 header, L3 consensus, L4 UTXO)
 - ASERT difficulty adjustment with 24-hour half-life
-- cASERT v3 unidirectional overlay:
-  - L3 (neutral): 0-20 blocks ahead
-  - L4 (light hardening): 21-50 blocks ahead
-  - L5 (moderate): 51-100 blocks ahead
-  - L6 (maximum): 101+ blocks ahead
-- Operator: `<` (not `<=`) for threshold comparisons
-- Constants: CASERT_L4_BLOCKS=21, L5=51, L6=101
+- cASERT v5.2 unidirectional overlay (canonical):
+  - L1 (neutral): 0-4 blocks ahead, scale=1
+  - L2 (light): 5-25 blocks ahead, scale=2
+  - L3 (moderate): 26-50 blocks ahead, scale=3
+  - L4 (strong): 51-75 blocks ahead, scale=4
+  - L5 (severe): 76-100 blocks ahead, scale=5
+  - L6+ (unbounded): 101+ blocks ahead, level = 6 + floor((ahead-101)/50), scale=level
+- Constants: CASERT_L2_BLOCKS=5, L3=26, L4=51, L5=76, L6=101
+- Fixed parameters: k=4, steps=4, margin=180
+- Decay anti-stall: activates at 7200s (2h), tiered recovery (L8+ 10min, L4-L7 20min, L2-L3 30min)
 
 ### Cryptography
 - Transaction signing: libsecp256k1 (migrated from OpenSSL EC_KEY)
@@ -51,7 +54,7 @@
 
 ### Explorer (v4.2)
 - Dashboard: height, block time, supply, hashrate, mempool, countdown
-- cASERT panel with L3-L6 color-coded display (unidirectional)
+- cASERT panel with L1-L5/L6+ color-coded display (unidirectional)
 - Gold Reserves and PoPC Pool charts with real block-interval data
 - Emission curve chart (12 epochs, interactive tooltip)
 - Chain timing panel with expected vs actual blocks, lag display

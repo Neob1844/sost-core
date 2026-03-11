@@ -724,8 +724,8 @@ Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       ASERT, 24h half-life
 Clamp (easier)             4× per block
 Clamp (harder)             8× per block
-CASERT model               blocks-ahead-of-schedule, L1–L5+ (unbounded)
-CASERT thresholds          L2=5, L3=26, L4=51, L5=76 blocks ahead (L5+ unbounded)
+CASERT model               blocks-ahead-of-schedule, L1–L5 fixed, L6+ unbounded
+CASERT thresholds          L2=5, L3=26, L4=51, L5=76, L6+=101 blocks ahead
 CASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
 Block target spacing       600s
 Stability baseline (L1)    scale=1, k=4, margin=180, steps=4, stab_shift=20
@@ -765,7 +765,7 @@ LEVEL ASSIGNMENT (cASERT v5.1 — L1–L6+, unbounded):
   ahead = 26–50  → L3   (moderate hardening)
   ahead = 51–75  → L4   (strong hardening)
   ahead = 76–100 → L5   (strong hardening)
-  ahead = 101+   → L6+  (unbounded: level = 5 + (ahead - 76) / 50)
+  ahead = 101+   → L6+  (unbounded: level = 6 + floor((ahead - 101) / 50))
 
   Above L5, the level continues to increase without ceiling.
   Named thresholds exist for L6=101, L7=151, L8=201, L9=251, L10=301
@@ -2196,7 +2196,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder) |
-| CASERT | Unidirectional block-lag overlay, L1-L5+, k=4, steps=4, scale=level (all levels), hardening only when ahead of schedule |
+| CASERT | Unidirectional block-lag overlay, L1-L5 fixed, L6+ unbounded, k=4, steps=4, scale=level (all levels), hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2326,13 +2326,9 @@ CASERT v5 PARAMETERS (miner-side overlay, NOT consensus-critical):
   CASERT_L2_BLOCKS             = 5     // 5–25 ahead → L2
   CASERT_L3_BLOCKS             = 26    // 26–50 ahead → L3
   CASERT_L4_BLOCKS             = 51    // 51–75 ahead → L4
-  CASERT_L5_BLOCKS             = 76    // 76+ ahead → L5+ (unbounded)
-  CASERT_L6_BLOCKS             = 101   // named thresholds continue
-  CASERT_L7_BLOCKS             = 151
-  CASERT_L8_BLOCKS             = 201
-  CASERT_L9_BLOCKS             = 251
-  CASERT_L10_BLOCKS            = 301
-  // Above L10: level = 5 + (blocks_ahead - 76) / 50
+  CASERT_L5_BLOCKS             = 76    // 76–100 ahead → L5 (fixed)
+  CASERT_L6_BLOCKS             = 101   // 101+ ahead → L6+ (unbounded)
+  // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
   FIXED_K                      = 4
   FIXED_STEPS                  = 4
   FIXED_MARGIN                 = 180

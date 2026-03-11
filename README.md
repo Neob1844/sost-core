@@ -162,7 +162,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L6+ (unbounded), k=4) |
+| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5 fixed, L6+ unbounded at 101+, k=4) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
@@ -206,7 +206,7 @@ Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BU
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L6+ (unbounded)), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L5 fixed, L6+ unbounded), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 
@@ -214,7 +214,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| ASERT + cASERT difficulty adjustment (L1-L6+ (unbounded)) | Complete |
+| ASERT + cASERT difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |

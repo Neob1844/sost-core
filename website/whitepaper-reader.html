@@ -499,7 +499,7 @@
 <pre class="wp-code-inline">  lag &lt; 0, 26 ≤ |lag| ≤ 50         → L3  (moderate hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 51 ≤ |lag| ≤ 75         → L4  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100        → L5  (strong hardening)</pre>
-<pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101              → L6+ (unbounded: level = 5 + (ahead - 76) / 50)</pre>
+<pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101              → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Stability parameters by level:</p>
 <div class="wp-spacer"></div>
@@ -885,7 +885,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  lag &lt; 0, 26 ≤ |lag| ≤ 50    → L3  (moderate hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 51 ≤ |lag| ≤ 75    → L4  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100   → L5  (strong hardening)</pre>
-<pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101         → L6+ (unbounded: level = 5 + (ahead - 76) / 50)</pre>
+<pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101         → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">STABILITY PARAMETERS BY LEVEL:</p>
 <pre class="wp-code-inline">  scale  = level     for ALL levels (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ...)</pre>
@@ -2432,11 +2432,8 @@ CASERT PARAMETERS:
   CASERT_L3_THRESHOLD          = 26    // 26-50 blocks ahead → L3 (scale=3)
   CASERT_L4_THRESHOLD          = 51    // 51-75 blocks ahead → L4 (scale=4)
   CASERT_L5_THRESHOLD          = 76    // 76-100 blocks ahead → L5 (scale=5)
-  CASERT_L6_THRESHOLD          = 101
-  CASERT_L7_THRESHOLD          = 151
-  CASERT_L8_THRESHOLD          = 201
-  CASERT_L9_THRESHOLD          = 251
-  CASERT_L10_THRESHOLD         = 301
+  CASERT_L6_THRESHOLD          = 101   // 101+ blocks ahead → L6+ (unbounded)
+  // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
   CASERT_DECAY_STEP            = 50    // blocks per additional level beyond L5
   FIXED_K                      = 4
   FIXED_STEPS                  = 4

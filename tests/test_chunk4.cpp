@@ -39,7 +39,7 @@ void test_mine_and_verify() {
     ConsensusParams params = get_consensus_params(prof, 0);
     // Apply CASERT overlay (must match verifier)
     auto cdec = casert_mode_from_chain(chain, 0);
-    params = casert_apply_overlay(params, cdec.mode);
+    params = casert_apply_overlay(params, cdec);
     Bytes32 skey = epoch_scratch_key(0);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
     Bytes32 bk = compute_block_key(prev);
