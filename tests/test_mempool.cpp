@@ -134,8 +134,8 @@ static Hash256 SeedUtxo(
 
 /// Set up a standard test environment:
 /// - keypair
-/// - utxo set with matured coinbase at height 0 (confirmed at height 101+)
-/// - validation context at spend_height = 200
+/// - utxo set with matured coinbase at height 0 (confirmed at height 1000+)
+/// - validation context at spend_height = 1200
 struct TestEnv {
     PrivKey priv;
     PubKey pub;
@@ -164,8 +164,9 @@ struct TestEnv {
         env.cb_txid = SeedUtxo(env.utxos, 0, subsidy,
                                 env.pkh, env.gold_pkh, env.popc_pkh);
 
-        // Context: spend_height=200 (well past coinbase maturity of 100)
-        env.ctx.spend_height = 200;
+        // Context: spend_height=1200 (well past coinbase maturity of 1000)
+        env.ctx.genesis_hash = Hash256{};          // must match MakeSignedTx()
+        env.ctx.spend_height = 1200;
         env.ctx.capsule_activation_height = 5000;  // mainnet default
 
         return env;
