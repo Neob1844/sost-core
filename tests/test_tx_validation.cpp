@@ -482,7 +482,7 @@ TEST(T20_S10_coinbase_immature) {
     auto it = b.utxos.db.begin();
     it->second.is_coinbase = true;
     it->second.height = 150;
-    // spend_height = 200, so confirmations = 200-150 = 50 < 100
+    // spend_height = 200, so confirmations = 200-150 = 50 < COINBASE_MATURITY(1000)
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::S10_COINBASE_IMMATURE);
     g_pass++;
 }
@@ -496,7 +496,10 @@ TEST(T21_S10_coinbase_mature) {
     auto it = b.utxos.db.begin();
     it->second.is_coinbase = true;
     it->second.height = 50;
-    // spend_height = 200, confirmations = 150 >= 100 → ok
+
+    // 1050 - 50 = 1000 >= COINBASE_MATURITY(1000)
+    b.ctx.spend_height = 1050;
+
     EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
     g_pass++;
 }
