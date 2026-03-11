@@ -52,12 +52,12 @@
   .nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
   .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); font-weight: 600; }
 
-  .hero { padding: 80px 0 48px; text-align: center; border-bottom: 1px solid var(--border-dim); }
-  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .hero { padding: 80px 0 48px; text-align: left; border-bottom: 1px solid var(--border-dim); }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .hero-label::before { content: '//'; color: var(--text-muted); }
   .hero h1 { font-family: var(--font-display); font-size: 48px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; margin-bottom: 20px; color: var(--text-primary); }
   .hero h1 span { color: var(--red-primary); }
-  .hero-sub { font-size: 14px; color: var(--text-secondary); max-width: 700px; margin: 0 auto; line-height: 1.8; }
+  .hero-sub { font-size: 14px; color: var(--text-secondary); max-width: 700px; line-height: 1.8; }
 
   .section { padding: 48px 0; border-bottom: 1px solid var(--border-dim); }
   .section-header { margin-bottom: 32px; }
@@ -272,11 +272,119 @@
   </div>
 </section>
 
-<!-- SECTION 04 — Verification -->
+<!-- SECTION 04 — Block Anatomy -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">SECTION 04</div>
+      <div class="section-title">Block <span class="accent">Anatomy</span></div>
+      <div class="section-sub">Every field in the genesis block, explained.</div>
+    </div>
+
+    <div class="fade-in delay-1" style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;line-height:1.7;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border-med);text-align:left;">
+            <th style="padding:10px 12px;color:var(--text-muted);font-weight:500;width:180px;">Field</th>
+            <th style="padding:10px 12px;color:var(--text-muted);font-weight:500;width:200px;">Value</th>
+            <th style="padding:10px 12px;color:var(--text-muted);font-weight:500;">Meaning</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-secondary);">
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">timestamp</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">1773360000</td>
+            <td style="padding:10px 12px;">Unix epoch of genesis block creation. All subsequent block timestamps must be greater than or equal to the median of the last 11 blocks.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">bits_q</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">353075</td>
+            <td style="padding:10px 12px;">Encoded difficulty in Q16.16 fixed-point format. Represents difficulty 5.3875. Used by ASERT and cASERT to calculate target adjustments.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">prev_hash</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0000...0000</td>
+            <td style="padding:10px 12px;">All zeros — there is no previous block. This is the cryptographic root of the chain.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">merkle_root</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">1111...1111</td>
+            <td style="padding:10px 12px;">Placeholder merkle root for the genesis coinbase transaction. Real blocks compute this from the binary merkle tree of all transaction hashes.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">nonce</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">47</td>
+            <td style="padding:10px 12px;">The value that, combined with the header, produces a valid ConvergenceX proof-of-work solution.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">extra_nonce</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0</td>
+            <td style="padding:10px 12px;">Secondary nonce for expanding the search space when the primary nonce range is exhausted. Not needed for genesis.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">block_id</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0a6c8e...d793</td>
+            <td style="padding:10px 12px;">SHA-256 hash of the serialized block header. This is the unique identifier for block 0 — the anchor hash that all nodes agree on.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">commit</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">050698...5711</td>
+            <td style="padding:10px 12px;">ConvergenceX commitment hash. Binds the miner's work to the block content — prevents proof reuse across different blocks.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">checkpoints_root</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">699740...d7a1</td>
+            <td style="padding:10px 12px;">Merkle root of the ConvergenceX checkpoint tree. Enables compact proof verification — a verifier can check the work without repeating 100,000 rounds.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">stability_metric</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">215</td>
+            <td style="padding:10px 12px;">Measures convergence quality of the gradient descent solution. Higher is better. Must meet the minimum threshold for the current difficulty level.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">subsidy_stocks</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">785,100,863</td>
+            <td style="padding:10px 12px;">Total block reward in stocks (1 SOST = 100,000,000 stocks). Equals 7.85100863 SOST — the epoch 0 base reward.</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">coinbase_split</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">50 / 25 / 25</td>
+            <td style="padding:10px 12px;">Immutable distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). Enforced by consensus rules CB4–CB7.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fade-in delay-2" style="margin-top:32px;">
+      <h3 style="font-size:14px;color:var(--text-primary);margin-bottom:16px;">Merkle Tree &amp; SPV Verification</h3>
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:4px;padding:20px;font-family:var(--font-mono);font-size:11px;line-height:1.9;color:var(--text-dim);overflow-x:auto;">
+<pre style="margin:0;color:inherit;">                    ┌─────────────────────┐
+                    │    <span style="color:var(--red-primary);">merkle_root</span>       │
+                    │  H(H01 ║ H23)       │
+                    └─────────┬───────────┘
+                   ┌──────────┴──────────┐
+              ┌────┴────┐           ┌────┴────┐
+              │  H01    │           │  H23    │
+              │H(H0║H1) │           │H(H2║H3) │
+              └────┬────┘           └────┬────┘
+             ┌─────┴─────┐         ┌─────┴─────┐
+          ┌──┴──┐     ┌──┴──┐   ┌──┴──┐     ┌──┴──┐
+          │ H0  │     │ H1  │   │ H2  │     │ H3  │
+          │TX 0 │     │TX 1 │   │TX 2 │     │TX 3 │
+          └─────┘     └─────┘   └─────┘     └─────┘
+
+H(x) = SHA-256(SHA-256(x))    ║ = concatenation</pre>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-dim);line-height:1.8;">The merkle root commits to every transaction in the block. To verify a single transaction (SPV), a node only needs the transaction hash and the sibling hashes along the path to the root — <strong style="color:var(--text-secondary);">O(log n)</strong> data instead of the full block. The genesis block uses a placeholder root (all 1s) because its single coinbase transaction is implicit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 05 — Verification -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECTION 05</div>
       <div class="section-title">Verify the Genesis <span class="accent">Block</span></div>
       <div class="section-sub">Trust no one. Verify everything.</div>
     </div>
@@ -295,11 +403,11 @@ grep -n ADDR_POPC_POOL include/sost/params.h</span></li>
   </div>
 </section>
 
-<!-- SECTION 05 — Genesis Significance -->
+<!-- SECTION 06 — Genesis Significance -->
 <section class="section" style="border-bottom:none;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 05</div>
+      <div class="section-id">SECTION 06</div>
       <div class="section-title">Why This <span class="accent">Matters</span></div>
     </div>
 
