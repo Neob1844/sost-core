@@ -104,6 +104,38 @@
   footer a { color: var(--text-dim); text-decoration: none; }
   footer a:hover { color: var(--red-primary); }
 
+  /* EXPANDABLE CHARTS */
+  .chart-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: rgba(251,1,13,0.08); border: 1px solid rgba(251,1,13,0.2); border-radius: 4px; font-size: 10px; color: var(--red-primary); cursor: pointer; transition: all 0.2s; letter-spacing: 1px; font-family: var(--font-mono); margin-top: 12px; }
+  .chart-toggle:hover { background: rgba(251,1,13,0.15); border-color: rgba(251,1,13,0.4); }
+  .chart-toggle.open { background: rgba(251,1,13,0.12); border-color: rgba(251,1,13,0.4); }
+  .chart-toggle.open .ct-arrow { transform: rotate(90deg); }
+  .ct-arrow { display: inline-block; transition: transform 0.2s; }
+  .chart-panel { display: none; background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+  .chart-panel.open { display: block; }
+  .cp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cp-title { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); }
+  .cp-title b { font-weight: 600; }
+  .cp-badge { font-size: 8px; border: 1px solid rgba(74,222,128,0.3); border-radius: 2px; padding: 2px 6px; color: var(--green-primary); letter-spacing: 1px; display: flex; align-items: center; gap: 4px; }
+  .cp-badge .pdot { width: 4px; height: 4px; border-radius: 50%; background: var(--green-primary); animation: pulse 2s ease infinite; }
+  .cp-val { font-size: 22px; font-weight: 700; margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .cp-change { font-size: 11px; margin-bottom: 6px; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  .cp-tf-btns { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+  .cp-tf-btn { background: #1a1a1a; border: 1px solid #222; color: #555; font-family: var(--font-mono); font-size: 9px; padding: 3px 8px; cursor: pointer; letter-spacing: 1px; transition: all 0.15s; line-height: 1; }
+  .cp-tf-btn:hover { color: #888; border-color: #333; }
+  .cp-tf-btn.active { background: rgba(251,1,13,0.12); border-color: rgba(251,1,13,0.4); color: #fb010d; }
+  .cp-tf-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+  .cp-chart-wrap { position: relative; }
+  .cp-chart-overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
+  .cp-tooltip { position: absolute; background: rgba(10,10,10,0.95); border: 1px solid #333; padding: 6px 10px; font-size: 10px; pointer-events: none; z-index: 10; white-space: nowrap; display: none; line-height: 1.5; }
+  .cp-tooltip-date { color: #666; }
+  .cp-tooltip-val { color: #c8c8c8; font-weight: 600; }
+  .cp-range { font-size: 9px; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.5px; }
+  .clickable-crypto { cursor: pointer; transition: color 0.15s; }
+  .clickable-crypto:hover { color: var(--red-primary) !important; }
+  .error-retry { cursor: pointer; text-decoration: underline; }
+  .error-retry:hover { color: var(--red-bright) !important; }
+  .crypto-expand { padding: 16px !important; background: var(--bg-panel); }
+
   @media (max-width: 768px) {
     .nav-links { display: none; }
     .data-table { font-size: 12px; }
@@ -136,7 +168,7 @@
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="sost-explorer.html">Explorer</a>
-      <a href="sost-markets.html" class="active">Markets</a>
+      <a href="sost-markets.html" class="active">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-wallet.html">Wallet</a>
       <a href="sost-contact.html">Contact</a>
@@ -148,7 +180,7 @@
   <div class="container">
     <div class="hero-label">Live Data Dashboard</div>
     <h1>Global <span>Markets</span></h1>
-    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 13 cryptocurrencies. Data refreshed every 60 seconds.</p>
+    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 13 cryptocurrencies. <span style="color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.5),0 0 20px rgba(74,222,128,0.2);">Data refreshes automatically every 60 seconds.</span></p>
     <div class="status-bar">
       <div class="live-badge"><span class="live-dot"></span>LIVE</div>
       <span class="status-time" id="lastUpdate">loading...</span>
@@ -182,6 +214,32 @@
       <div class="section-id">SECTION 02</div>
       <div class="section-title">Gold Price in <span class="gold">World Currencies</span></div>
       <div class="section-sub">1 troy oz gold — XAUT &amp; PAXG prices with spread in 60 currencies — source: CoinGecko + forex</div>
+      <button class="chart-toggle" id="goldChartToggle"><span class="ct-arrow">&#9656;</span> GOLD SPOT CHART</button>
+    </div>
+    <div class="chart-panel" id="goldChartPanel">
+      <div class="cp-head">
+        <div><div class="cp-title">// <b style="color:var(--gold-primary)">GOLD SPOT</b> — XAUT/USD</div></div>
+        <div class="cp-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="cp-val" id="cpGoldPrice" style="color:var(--gold-primary)">&mdash;</div>
+      <div class="cp-change" id="cpGoldChange">&mdash;</div>
+      <div class="cp-tf-btns" id="cpGoldTfBtns">
+        <button class="cp-tf-btn" data-tf="1H">1H</button>
+        <button class="cp-tf-btn" data-tf="4H">4H</button>
+        <button class="cp-tf-btn" data-tf="8H">8H</button>
+        <button class="cp-tf-btn active" data-tf="24H">24H</button>
+        <button class="cp-tf-btn" data-tf="3D">3D</button>
+        <button class="cp-tf-btn" data-tf="7D">7D</button>
+        <button class="cp-tf-btn" data-tf="30D">30D</button>
+        <button class="cp-tf-btn" data-tf="6M">6M</button>
+        <button class="cp-tf-btn" data-tf="1Y">1Y</button>
+      </div>
+      <div class="cp-chart-wrap">
+        <canvas id="cpGoldChart" style="width:100%;height:200px"></canvas>
+        <canvas id="cpGoldOverlay" class="cp-chart-overlay" style="width:100%;height:200px"></canvas>
+        <div class="cp-tooltip" id="cpGoldTooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>
+      </div>
+      <div class="cp-range" id="cpGoldRange"></div>
     </div>
     <table class="data-table" id="goldFiatTable">
       <thead>
@@ -201,6 +259,32 @@
       <div class="section-id">SECTION 03</div>
       <div class="section-title">SOST Price in <span class="accent">World Currencies</span></div>
       <div class="section-sub">SOST value in 60 fiat currencies — source: CoinGecko (if listed) + forex</div>
+      <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST PRICE CHART</button>
+    </div>
+    <div class="chart-panel" id="sostChartPanel">
+      <div class="cp-head">
+        <div><div class="cp-title">// <b style="color:var(--red-primary)">SOST PRICE</b> — USD</div></div>
+        <div class="cp-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="cp-val" id="cpSostPrice" style="color:var(--red-primary)">&mdash;</div>
+      <div class="cp-change" id="cpSostChange">&mdash;</div>
+      <div class="cp-tf-btns" id="cpSostTfBtns">
+        <button class="cp-tf-btn disabled" data-tf="1H">1H</button>
+        <button class="cp-tf-btn disabled" data-tf="4H">4H</button>
+        <button class="cp-tf-btn disabled" data-tf="8H">8H</button>
+        <button class="cp-tf-btn active disabled" data-tf="24H">24H</button>
+        <button class="cp-tf-btn disabled" data-tf="3D">3D</button>
+        <button class="cp-tf-btn disabled" data-tf="7D">7D</button>
+        <button class="cp-tf-btn disabled" data-tf="30D">30D</button>
+        <button class="cp-tf-btn disabled" data-tf="6M">6M</button>
+        <button class="cp-tf-btn disabled" data-tf="1Y">1Y</button>
+      </div>
+      <div class="cp-chart-wrap">
+        <canvas id="cpSostChart" style="width:100%;height:200px"></canvas>
+        <canvas id="cpSostOverlay" class="cp-chart-overlay" style="width:100%;height:200px"></canvas>
+        <div class="cp-tooltip" id="cpSostTooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>
+      </div>
+      <div class="cp-range" id="cpSostRange"></div>
     </div>
     <table class="data-table" id="sostFiatTable">
       <thead>
@@ -219,14 +303,14 @@
     <div class="section-header">
       <div class="section-id">SECTION 04</div>
       <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
-      <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko</div>
+      <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko — click any name or symbol for USD chart</div>
     </div>
     <table class="data-table" id="goldCryptoTable">
       <thead>
-        <tr><th>Cryptocurrency</th><th>Symbol</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
+        <tr><th>Cryptocurrency</th><th>Symbol</th><th>Live USD Price</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
       </thead>
       <tbody id="goldCryptoBody">
-        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
+        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
       </tbody>
     </table>
   </div>
@@ -258,6 +342,7 @@
 (function() {
   'use strict';
 
+  // ===== CURRENCY DATA =====
   var CURRENCY_GROUPS = [
     { region: '\uD83C\uDF0E AMERICAS (NORTH)', currencies: [
       { code: 'USD', name: 'United States Dollar', symbol: '$' },
@@ -341,17 +426,15 @@
     ]}
   ];
 
-  // Flat list for iteration
   var ALL_FIAT = [];
   CURRENCY_GROUPS.forEach(function(g) { ALL_FIAT = ALL_FIAT.concat(g.currencies); });
 
-  // Cryptos available via vs_currencies (CoinGecko native)
   var CRYPTO_NATIVE = [
     { code: 'BTC', name: 'Bitcoin' },
     { code: 'ETH', name: 'Ethereum' },
     { code: 'BNB', name: 'BNB' },
     { code: 'SOL', name: 'Solana' },
-    { code: 'XRP', name: 'XRP' },
+    { code: 'XRP', name: 'Ripple' },
     { code: 'DOT', name: 'Polkadot' },
     { code: 'LINK', name: 'Chainlink' },
     { code: 'LTC', name: 'Litecoin' },
@@ -359,19 +442,38 @@
     { code: 'XLM', name: 'Stellar' }
   ];
 
-  // Stablecoins calculated manually via USD price
   var CRYPTO_STABLE = [
     { code: 'USDC', name: 'USD Coin', cgId: 'usd-coin' },
     { code: 'USDT', name: 'Tether', cgId: 'tether' }
   ];
 
+  var CRYPTO_IDS = {
+    BTC:'bitcoin',ETH:'ethereum',BNB:'binancecoin',SOL:'solana',
+    XRP:'ripple',DOT:'polkadot',LINK:'chainlink',LTC:'litecoin',
+    BCH:'bitcoin-cash',XLM:'stellar'
+  };
+
   var fiatCodes = ALL_FIAT.map(function(c) { return c.code.toLowerCase(); });
   var nativeCryptoCodes = CRYPTO_NATIVE.map(function(c) { return c.code.toLowerCase(); });
-  // CoinGecko vs_currencies — supported fiat codes; unsupported ones fallback via forex
   var cgFiatCodes = ['usd','cad','mxn','brl','ars','clp','cop','pen','eur','gbp','chf','nok','sek','dkk','pln','czk','rub','try','ils','jpy','cny','krw','hkd','twd','sgd','thb','myr','idr','php','vnd','inr','pkr','aed','sar','kwd','qar','bhd','aud','nzd','zar','ngn','egp'];
   var allVsCurrencies = cgFiatCodes.concat(nativeCryptoCodes).join(',');
-  var forexRates = {}; // cached from open.er-api for manual gold/SOST conversion
+  var forexRates = {};
+  var cryptoUsdPrices = {};
 
+  // ===== CHART INFRASTRUCTURE =====
+  var TF_MAP = {
+    '1H':{days:1,ms:3600000},'4H':{days:1,ms:14400000},'8H':{days:1,ms:28800000},
+    '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
+    '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null}
+  };
+  var chartCache = {};
+  var activeTfs = { cpGold:'24H', cpSost:'24H' };
+  var MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var fontMono = "'JetBrains Mono',monospace";
+  var sostChartId = null;
+  var sostChartChecked = false;
+
+  // ===== FORMATTERS =====
   function fmt(n, decimals) {
     if (n === null || n === undefined) return '--';
     if (typeof decimals === 'undefined') decimals = 2;
@@ -380,6 +482,11 @@
     if (Math.abs(n) < 1) return n.toFixed(6);
     return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   }
+
+  function fmtUsd(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtTip(ts) { var d = new Date(ts); return MO[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + ('0' + d.getUTCHours()).slice(-2) + ':' + ('0' + d.getUTCMinutes()).slice(-2) + ' UTC'; }
+  function shortTf(tf) { return tf === '1H' || tf === '4H' || tf === '8H' || tf === '24H'; }
+  function fmtAx(ts, s) { var d = new Date(ts); if (s) return ('0' + d.getUTCHours()).slice(-2) + ':' + ('0' + d.getUTCMinutes()).slice(-2); return MO[d.getUTCMonth()] + ' ' + d.getUTCDate(); }
 
   function updateTime() {
     var now = new Date();
@@ -390,7 +497,7 @@
     return '<tr class="region-header"><td colspan="' + cols + '">' + label + '</td></tr>';
   }
 
-  // ---- SECTION 01: Forex ----
+  // ===== SECTION 01: FOREX =====
   function fetchForex() {
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(function(r) { return r.json(); })
@@ -402,7 +509,7 @@
         CURRENCY_GROUPS.forEach(function(g) {
           html += regionRow(g.region, 4);
           g.currencies.forEach(function(c) {
-            if (c.code === 'USD') return; // skip base currency in forex table
+            if (c.code === 'USD') return;
             var rate = data.rates[c.code];
             if (rate === undefined) {
               html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">N/A</td><td class="price-na">N/A</td></tr>';
@@ -418,10 +525,11 @@
         tbody.innerHTML = html;
       })
       .catch(function(e) {
-        document.getElementById('forexBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);">Error loading forex rates — retrying in 1 min</td></tr>';
+        document.getElementById('forexBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryForex()">Error loading forex rates \u2014 click to retry</span></td></tr>';
       });
   }
 
+  // ===== HELPERS =====
   function spreadHtml(a, b) {
     if (!a || !b) return '<span class="price-na">--</span>';
     var pct = ((a - b) / b * 100);
@@ -443,7 +551,6 @@
     return fmt(val, decimals) + ' ' + code;
   }
 
-  // Get gold price in a currency: prefer CoinGecko direct, fallback to USD * forex rate
   function goldInCurrency(goldObj, code) {
     var key = code.toLowerCase();
     if (goldObj[key] !== undefined) return goldObj[key];
@@ -451,34 +558,49 @@
     return null;
   }
 
-  // ---- SECTION 02 & 04: Gold prices ----
+  // ===== SECTIONS 02 & 04: GOLD + CRYPTO =====
   function fetchGold() {
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
     var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
+    var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
+    var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd';
 
     Promise.all([
       fetch(goldUrl).then(function(r) { return r.json(); }),
-      fetch(stableUrl).then(function(r) { return r.json(); })
+      fetch(stableUrl).then(function(r) { return r.json(); }),
+      fetch(cryptoUsdUrl).then(function(r) { return r.json(); })
     ])
       .then(function(results) {
         var goldData = results[0];
         var stableData = results[1];
+        var cryptoData = results[2];
         var xaut = goldData['tether-gold'] || {};
         var paxg = goldData['pax-gold'] || {};
 
-        // Section 02: Gold in fiat — XAUT | PAXG | Spread with region headers
+        // Store crypto USD prices
+        cryptoUsdPrices = {};
+        CRYPTO_NATIVE.forEach(function(c) {
+          var cgId = CRYPTO_IDS[c.code];
+          if (cgId && cryptoData[cgId] && cryptoData[cgId].usd !== undefined) {
+            cryptoUsdPrices[c.code] = cryptoData[cgId].usd;
+          }
+        });
+
+        // Update Gold Spot chart price
+        if (xaut.usd) {
+          var gEl = document.getElementById('cpGoldPrice');
+          if (gEl) gEl.textContent = fmtUsd(xaut.usd);
+        }
+
+        // Section 02: Gold in fiat
         var tbody2 = document.getElementById('goldFiatBody');
         var html2 = '';
         CURRENCY_GROUPS.forEach(function(g) {
           html2 += regionRow(g.region, 5);
           g.currencies.forEach(function(c) {
             var xv, pv;
-            if (c.code === 'USD') {
-              xv = xaut.usd; pv = paxg.usd;
-            } else {
-              xv = goldInCurrency(xaut, c.code);
-              pv = goldInCurrency(paxg, c.code);
-            }
+            if (c.code === 'USD') { xv = xaut.usd; pv = paxg.usd; }
+            else { xv = goldInCurrency(xaut, c.code); pv = goldInCurrency(paxg, c.code); }
             var dec = (xv && xv > 1000) ? 0 : 2;
             html2 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
               '<td class="price-val">' + fmtPrice(xv, c.symbol, dec) + '</td>' +
@@ -488,22 +610,32 @@
         });
         tbody2.innerHTML = html2;
 
-        // Section 04: Gold in crypto — XAUT | PAXG | Spread
+        // Section 04: Gold in crypto — with Live USD Price and clickable names
         var tbody4 = document.getElementById('goldCryptoBody');
         var html4 = '';
         CRYPTO_NATIVE.forEach(function(c, i) {
           var key = c.code.toLowerCase();
           var xv = xaut[key], pv = paxg[key];
-          html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+          var usdP = cryptoUsdPrices[c.code];
+          var cgId = CRYPTO_IDS[c.code];
+          html4 += '<tr><td><span class="currency-name clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.name + '</span></td>' +
+            '<td><span class="clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.code + '</span></td>' +
+            '<td class="price-val">' + (usdP !== undefined ? '$' + fmt(usdP, usdP < 1 ? 8 : usdP < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code) + '</td>' +
             '<td>' + spreadHtml(xv, pv) + '</td></tr>';
-          // Insert SOST row after BNB (index 2)
+          // SOST row after BNB (index 2)
           if (i === 2) {
             var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
             var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
             var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
-            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span></td><td style="color:#fb010d;font-weight:600">SOST</td>' +
+            if (sostUsd) {
+              var sEl = document.getElementById('cpSostPrice');
+              if (sEl) sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4);
+            }
+            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span></td>' +
+              '<td style="color:#fb010d;font-weight:600">SOST</td>' +
+              '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (spv !== null ? fmtCrypto(spv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td></tr>';
@@ -514,19 +646,24 @@
           var xv = xaut.usd ? xaut.usd / stablePrice : null;
           var pv = paxg.usd ? paxg.usd / stablePrice : null;
           html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
+            '<td class="price-val">$' + fmt(stablePrice, 4) + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code, 2) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code, 2) + '</td>' +
             '<td>' + spreadHtml(xv, pv) + '</td></tr>';
         });
         tbody4.innerHTML = html4;
+        setupCryptoClicks();
       })
       .catch(function(e) {
-        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);">Error loading gold prices — retrying in 1 min</td></tr>';
-        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);">Error loading crypto prices — retrying in 1 min</td></tr>';
+        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading gold prices \u2014 click to retry</span></td></tr>';
+        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
       });
   }
 
-  // ---- SECTION 03: SOST price ----
+  window._mktRetryGold = function() { fetchGold(); };
+  window._mktRetryForex = function() { fetchForex(); };
+
+  // ===== SECTION 03: SOST PRICE =====
   function fetchSost() {
     var vs = cgFiatCodes.join(',');
     tryFetchSost('sost-protocol', vs, function() {
@@ -577,15 +714,336 @@
     tbody.innerHTML = html;
   }
 
+  // ===== CHART DRAWING ENGINE =====
+  function getChartData(prefix, cgId) {
+    if (!cgId) return [];
+    var tf = activeTfs[prefix] || '24H';
+    var def = TF_MAP[tf];
+    var raw = (chartCache[cgId] && chartCache[cgId][def.days]) || [];
+    if (!raw.length) return [];
+    if (def.ms) { var cut = Date.now() - def.ms; return raw.filter(function(p) { return p[0] >= cut; }); }
+    return raw;
+  }
+
+  function fetchChartHist(cgId, days, cb) {
+    fetch('https://api.coingecko.com/api/v3/coins/' + cgId + '/market_chart?vs_currency=usd&days=' + days)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d && d.prices) { if (!chartCache[cgId]) chartCache[cgId] = {}; chartCache[cgId][days] = d.prices; }
+        if (cb) cb();
+      }).catch(function() { if (cb) cb(); });
+  }
+
+  function drawMktChart(prefix, cgId, color) {
+    var c = document.getElementById(prefix + 'Chart');
+    if (!c) return;
+    var data = getChartData(prefix, cgId);
+    var tf = activeTfs[prefix] || '24H';
+    var ctx = c.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.offsetWidth, h = c.offsetHeight;
+    c.width = w * dpr; c.height = h * dpr; ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
+    var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
+    // Grid lines
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
+    if (data.length < 2) {
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(pL, pT + ch / 2); ctx.lineTo(pL + cw, pT + ch / 2); ctx.stroke();
+      updMktChange(prefix, null); updMktRange(prefix, null); return;
+    }
+    var prices = data.map(function(d) { return d[1]; });
+    var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
+    var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
+    mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
+    // Y labels
+    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 4, yp + 3); }
+    // X labels
+    var sh = shortTf(tf), nL = sh ? 5 : 4; if (nL > data.length) nL = data.length;
+    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    for (var xi = 0; xi < nL; xi++) { var di = Math.round(xi / (nL - 1) * (data.length - 1)); var xp = pL + di / (data.length - 1) * cw; ctx.fillText(fmtAx(data[di][0], sh), xp, h - 3); }
+    // Line
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    for (var j = 0; j < data.length; j++) { var px = pL + j / (data.length - 1) * cw; var py = pT + ch - ((data[j][1] - mn) / rng) * ch; if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    ctx.stroke();
+    // Gradient fill
+    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch); grd.addColorStop(0, color + '1a'); grd.addColorStop(1, color + '00');
+    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+    updMktChange(prefix, data); updMktRange(prefix, prices);
+  }
+
+  function updMktChange(prefix, data) {
+    var el = document.getElementById(prefix + 'Change'); if (!el) return;
+    if (!data || data.length < 2) { el.textContent = '\u2014'; el.style.color = 'var(--text-muted)'; return; }
+    var f = data[0][1], l = data[data.length - 1][1], d = l - f, a = Math.abs(d), ap = Math.abs(d / f * 100);
+    if (d >= 0) { el.style.color = 'var(--green-primary)'; el.textContent = '+' + fmtUsd(a) + ' (+' + ap.toFixed(2) + '%)'; }
+    else { el.style.color = 'var(--red-primary)'; el.textContent = '\u2212' + fmtUsd(a) + ' (\u2212' + ap.toFixed(2) + '%)'; }
+  }
+
+  function updMktRange(prefix, prices) {
+    var el = document.getElementById(prefix + 'Range'); if (!el) return;
+    if (!prices || !prices.length) { el.textContent = ''; return; }
+    el.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length;
+  }
+
+  function clearMktOv(prefix) {
+    var ov = document.getElementById(prefix + 'Overlay'); if (!ov) return;
+    var dpr = window.devicePixelRatio || 1; var w = ov.offsetWidth, h = ov.offsetHeight;
+    ov.width = w * dpr; ov.height = h * dpr;
+  }
+
+  function setupChartTooltip(prefix, cgId, color) {
+    var cv = document.getElementById(prefix + 'Chart');
+    var ov = document.getElementById(prefix + 'Overlay');
+    var tip = document.getElementById(prefix + 'Tooltip');
+    if (!cv || !ov || !tip) return;
+    cv.style.cursor = 'crosshair';
+    cv.addEventListener('mousemove', function(e) {
+      var data = getChartData(prefix, cgId);
+      if (data.length < 2) { tip.style.display = 'none'; clearMktOv(prefix); return; }
+      var rect = cv.getBoundingClientRect();
+      var mx = e.clientX - rect.left;
+      var w = cv.offsetWidth, h = cv.offsetHeight;
+      var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
+      var rel = (mx - pL) / cw;
+      if (rel < 0 || rel > 1) { tip.style.display = 'none'; clearMktOv(prefix); return; }
+      var idx = Math.round(rel * (data.length - 1));
+      var pt = data[idx];
+      var prices = data.map(function(d) { return d[1]; });
+      var mn = Math.min.apply(null, prices), mx2 = Math.max.apply(null, prices);
+      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.03; mx2 += rng * 0.03; rng = mx2 - mn;
+      var px = pL + idx / (data.length - 1) * cw;
+      var py = pT + ch - ((pt[1] - mn) / rng) * ch;
+      // Overlay
+      var dpr = window.devicePixelRatio || 1;
+      ov.width = w * dpr; ov.height = h * dpr;
+      var octx = ov.getContext('2d'); octx.scale(dpr, dpr); octx.clearRect(0, 0, w, h);
+      octx.strokeStyle = '#333'; octx.lineWidth = 1; octx.setLineDash([3, 3]);
+      octx.beginPath(); octx.moveTo(px, pT); octx.lineTo(px, pT + ch); octx.stroke();
+      octx.setLineDash([]);
+      octx.beginPath(); octx.arc(px, py, 3.5, 0, Math.PI * 2); octx.fillStyle = color; octx.fill();
+      octx.strokeStyle = '#000'; octx.lineWidth = 1; octx.stroke();
+      // Tooltip
+      tip.querySelector('.cp-tooltip-date').textContent = fmtTip(pt[0]);
+      tip.querySelector('.cp-tooltip-val').textContent = fmtUsd(pt[1]);
+      tip.style.display = 'block';
+      var tx = px + 12, ty = py - 30;
+      if (tx + 130 > w) tx = px - 140; if (ty < 0) ty = py + 10;
+      tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+    });
+    cv.addEventListener('mouseleave', function() { tip.style.display = 'none'; clearMktOv(prefix); });
+  }
+
+  function setupChartTfBtns(prefix, cgId, color) {
+    var cont = document.getElementById(prefix + 'TfBtns'); if (!cont) return;
+    var btns = cont.querySelectorAll('.cp-tf-btn');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (btn.classList.contains('disabled')) return;
+        btns.forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        activeTfs[prefix] = btn.getAttribute('data-tf');
+        var days = TF_MAP[activeTfs[prefix]].days;
+        if (chartCache[cgId] && chartCache[cgId][days]) { drawMktChart(prefix, cgId, color); }
+        else { fetchChartHist(cgId, days, function() { drawMktChart(prefix, cgId, color); }); }
+      });
+    });
+  }
+
+  // ===== CHART TOGGLES =====
+  function setupChartToggle(toggleId, panelId, initFn) {
+    var toggle = document.getElementById(toggleId);
+    var panel = document.getElementById(panelId);
+    if (!toggle || !panel) return;
+    toggle.addEventListener('click', function() {
+      var opening = !panel.classList.contains('open');
+      toggle.classList.toggle('open');
+      panel.classList.toggle('open');
+      if (opening && initFn) initFn();
+    });
+  }
+
+  // ===== GOLD SPOT CHART =====
+  var goldChartInited = false;
+  function initGoldChart() {
+    if (goldChartInited) { drawMktChart('cpGold', 'tether-gold', '#b8860b'); return; }
+    goldChartInited = true;
+    setupChartTfBtns('cpGold', 'tether-gold', '#b8860b');
+    setupChartTooltip('cpGold', 'tether-gold', '#b8860b');
+    fetchChartHist('tether-gold', 1, function() {
+      var d = chartCache['tether-gold'] && chartCache['tether-gold'][1];
+      if (d && d.length) {
+        document.getElementById('cpGoldPrice').textContent = fmtUsd(d[d.length - 1][1]);
+      }
+      drawMktChart('cpGold', 'tether-gold', '#b8860b');
+    });
+  }
+
+  // ===== SOST CHART =====
+  var sostChartInited = false;
+  function initSostChart() {
+    if (sostChartInited && sostChartId) { drawMktChart('cpSost', sostChartId, '#fb010d'); return; }
+    if (sostChartChecked && !sostChartId) return;
+    sostChartInited = true;
+    setupChartTfBtns('cpSost', sostChartId || 'sost-protocol', '#fb010d');
+    setupChartTooltip('cpSost', sostChartId || 'sost-protocol', '#fb010d');
+    fetchChartHist('sost-protocol', 1, function() {
+      if (chartCache['sost-protocol'] && chartCache['sost-protocol'][1] && chartCache['sost-protocol'][1].length) {
+        sostChartId = 'sost-protocol'; activateSostChart(); return;
+      }
+      fetchChartHist('sost', 1, function() {
+        if (chartCache['sost'] && chartCache['sost'][1] && chartCache['sost'][1].length) {
+          sostChartId = 'sost'; activateSostChart(); return;
+        }
+        sostChartChecked = true;
+        var pEl = document.getElementById('cpSostPrice');
+        if (pEl) { pEl.textContent = 'Awaiting market data'; pEl.style.fontSize = '16px'; }
+        drawMktChart('cpSost', null, '#fb010d');
+      });
+    });
+  }
+
+  function activateSostChart() {
+    sostChartChecked = true;
+    var btns = document.querySelectorAll('#cpSostTfBtns .cp-tf-btn');
+    btns.forEach(function(b) { b.classList.remove('disabled'); });
+    // Re-setup buttons with correct ID
+    setupChartTfBtns('cpSost', sostChartId, '#fb010d');
+    setupChartTooltip('cpSost', sostChartId, '#fb010d');
+    var d1 = chartCache[sostChartId][1];
+    var latest = d1[d1.length - 1][1];
+    var pEl = document.getElementById('cpSostPrice');
+    if (pEl) { pEl.textContent = fmtUsd(latest); pEl.style.fontSize = ''; }
+    drawMktChart('cpSost', sostChartId, '#fb010d');
+  }
+
+  // ===== SECTION 04: CLICKABLE CRYPTO CHARTS =====
+  function setupCryptoClicks() {
+    var cells = document.querySelectorAll('#goldCryptoBody .clickable-crypto');
+    cells.forEach(function(cell) {
+      cell.addEventListener('click', function() {
+        var cgId = cell.getAttribute('data-cgid');
+        var code = cell.getAttribute('data-code');
+        if (!cgId) return;
+        var row = cell.closest('tr');
+        toggleCryptoChart(row, cgId, code);
+      });
+    });
+  }
+
+  function toggleCryptoChart(row, cgId, code) {
+    var next = row.nextElementSibling;
+    if (next && next.classList.contains('crypto-chart-row') && next.getAttribute('data-for') === code) {
+      next.style.display = next.style.display === 'none' ? '' : 'none';
+      if (next.style.display !== 'none') {
+        drawMktChart('cc_' + code, cgId, '#e2e8f0');
+      }
+      return;
+    }
+    // Remove any existing open chart rows
+    var existing = document.querySelectorAll('.crypto-chart-row');
+    existing.forEach(function(r) { r.style.display = 'none'; });
+
+    // Check if already created but hidden
+    var prev = document.querySelector('.crypto-chart-row[data-for="' + code + '"]');
+    if (prev) {
+      prev.style.display = '';
+      drawMktChart('cc_' + code, cgId, '#e2e8f0');
+      return;
+    }
+
+    var prefix = 'cc_' + code;
+    var tr = document.createElement('tr');
+    tr.className = 'crypto-chart-row';
+    tr.setAttribute('data-for', code);
+    var tfs = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y'];
+    var btnsHtml = tfs.map(function(tf) {
+      return '<button class="cp-tf-btn' + (tf === '24H' ? ' active' : '') + '" data-tf="' + tf + '">' + tf + '</button>';
+    }).join('');
+    tr.innerHTML = '<td colspan="6" class="crypto-expand">' +
+      '<div class="cp-head"><div class="cp-title">// <b>' + code + '/USD</b></div><div class="cp-badge"><span class="pdot"></span>LIVE</div></div>' +
+      '<div class="cp-val" id="' + prefix + 'Price" style="color:var(--text-primary)">\u2014</div>' +
+      '<div class="cp-change" id="' + prefix + 'Change">\u2014</div>' +
+      '<div class="cp-tf-btns" id="' + prefix + 'TfBtns">' + btnsHtml + '</div>' +
+      '<div class="cp-chart-wrap">' +
+        '<canvas id="' + prefix + 'Chart" style="width:100%;height:180px"></canvas>' +
+        '<canvas id="' + prefix + 'Overlay" class="cp-chart-overlay" style="width:100%;height:180px"></canvas>' +
+        '<div class="cp-tooltip" id="' + prefix + 'Tooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>' +
+      '</div>' +
+      '<div class="cp-range" id="' + prefix + 'Range"></div>' +
+    '</td>';
+    row.after(tr);
+    activeTfs[prefix] = '24H';
+    setupChartTfBtns(prefix, cgId, '#e2e8f0');
+    setupChartTooltip(prefix, cgId, '#e2e8f0');
+    fetchChartHist(cgId, 1, function() {
+      var d = chartCache[cgId] && chartCache[cgId][1];
+      if (d && d.length) {
+        document.getElementById(prefix + 'Price').textContent = fmtUsd(d[d.length - 1][1]);
+      }
+      drawMktChart(prefix, cgId, '#e2e8f0');
+    });
+  }
+
+  // ===== REFRESH =====
   function refreshAll() {
     fetchForex();
     fetchGold();
     fetchSost();
     updateTime();
+    refreshCharts();
   }
 
+  function refreshCharts() {
+    // Refresh Gold Spot chart if open
+    var goldPanel = document.getElementById('goldChartPanel');
+    if (goldPanel && goldPanel.classList.contains('open')) {
+      var gDays = TF_MAP[activeTfs.cpGold || '24H'].days;
+      fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); });
+    }
+    // Refresh SOST chart if open
+    var sostPanel = document.getElementById('sostChartPanel');
+    if (sostPanel && sostPanel.classList.contains('open') && sostChartId) {
+      var sDays = TF_MAP[activeTfs.cpSost || '24H'].days;
+      fetchChartHist(sostChartId, sDays, function() { drawMktChart('cpSost', sostChartId, '#fb010d'); });
+    }
+    // Refresh any open crypto charts
+    var openRows = document.querySelectorAll('.crypto-chart-row');
+    openRows.forEach(function(row) {
+      if (row.style.display === 'none') return;
+      var code = row.getAttribute('data-for');
+      var cgId = CRYPTO_IDS[code];
+      if (!cgId) return;
+      var prefix = 'cc_' + code;
+      var days = TF_MAP[activeTfs[prefix] || '24H'].days;
+      fetchChartHist(cgId, days, function() {
+        var d = chartCache[cgId] && chartCache[cgId][days];
+        if (d && d.length) {
+          var pEl = document.getElementById(prefix + 'Price');
+          if (pEl) pEl.textContent = fmtUsd(d[d.length - 1][1]);
+        }
+        drawMktChart(prefix, cgId, '#e2e8f0');
+      });
+    });
+  }
+
+  // ===== INIT =====
   refreshAll();
   setInterval(refreshAll, 60000);
+
+  setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
+  setupChartToggle('sostChartToggle', 'sostChartPanel', initSostChart);
+
+  window.addEventListener('resize', function() {
+    if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
+    if (sostChartId && document.getElementById('sostChartPanel').classList.contains('open')) drawMktChart('cpSost', sostChartId, '#fb010d');
+    document.querySelectorAll('.crypto-chart-row').forEach(function(row) {
+      if (row.style.display === 'none') return;
+      var code = row.getAttribute('data-for');
+      var cgId = CRYPTO_IDS[code];
+      if (cgId) drawMktChart('cc_' + code, cgId, '#e2e8f0');
+    });
+  });
 })();
 </script>
 </body>

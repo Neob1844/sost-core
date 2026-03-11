@@ -145,7 +145,7 @@
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="sost-explorer.html">Explorer</a>
-      <a href="sost-markets.html">Markets</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-wallet.html">Wallet</a>
       <a href="sost-contact.html">Contact</a>
@@ -293,62 +293,62 @@
         <tbody style="color:var(--text-secondary);">
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">timestamp</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">1773360000</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">1773360000</td>
             <td style="padding:10px 12px;">Unix epoch of genesis block creation. All subsequent block timestamps must be greater than or equal to the median of the last 11 blocks.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">bits_q</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">353075</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">353075</td>
             <td style="padding:10px 12px;">Encoded difficulty in Q16.16 fixed-point format. Represents difficulty 5.3875. Used by ASERT and cASERT to calculate target adjustments.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">prev_hash</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0000...0000</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">0000...0000</td>
             <td style="padding:10px 12px;">All zeros — there is no previous block. This is the cryptographic root of the chain.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">merkle_root</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">1111...1111</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">1111...1111</td>
             <td style="padding:10px 12px;">Placeholder merkle root for the genesis coinbase transaction. Real blocks compute this from the binary merkle tree of all transaction hashes.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">nonce</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">47</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">47</td>
             <td style="padding:10px 12px;">The value that, combined with the header, produces a valid ConvergenceX proof-of-work solution.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">extra_nonce</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">0</td>
             <td style="padding:10px 12px;">Secondary nonce for expanding the search space when the primary nonce range is exhausted. Not needed for genesis.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">block_id</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">0a6c8e...d793</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">0a6c8e...d793</td>
             <td style="padding:10px 12px;">SHA-256 hash of the serialized block header. This is the unique identifier for block 0 — the anchor hash that all nodes agree on.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">commit</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">050698...5711</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">050698...5711</td>
             <td style="padding:10px 12px;">ConvergenceX commitment hash. Binds the miner's work to the block content — prevents proof reuse across different blocks.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">checkpoints_root</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">699740...d7a1</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">699740...d7a1</td>
             <td style="padding:10px 12px;">Merkle root of the ConvergenceX checkpoint tree. Enables compact proof verification — a verifier can check the work without repeating 100,000 rounds.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">stability_metric</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">215</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">215</td>
             <td style="padding:10px 12px;">Measures convergence quality of the gradient descent solution. Higher is better. Must meet the minimum threshold for the current difficulty level.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">subsidy_stocks</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">785,100,863</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">785,100,863</td>
             <td style="padding:10px 12px;">Total block reward in stocks (1 SOST = 100,000,000 stocks). Equals 7.85100863 SOST — the epoch 0 base reward.</td>
           </tr>
           <tr>
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">coinbase_split</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--text-dim);">50 / 25 / 25</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">50 / 25 / 25</td>
             <td style="padding:10px 12px;">Immutable distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). Enforced by consensus rules CB4–CB7.</td>
           </tr>
         </tbody>
