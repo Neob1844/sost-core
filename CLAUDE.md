@@ -41,6 +41,7 @@ ctest -R transaction           # by CTest name pattern
 | utxo-set | test-utxo-set | tests/test_utxo_set.cpp |
 | merkle-block | test-merkle-block | tests/test_merkle_block.cpp |
 | mempool | test-mempool | tests/test_mempool.cpp |
+| casert | test-casert | tests/test_casert.cpp |
 
 Tests use a simple `TEST(name, condition)` macro — no external framework.
 
@@ -74,7 +75,7 @@ Defined in `include/sost/tx_validation.h`:
 
 1. **ConvergenceX** (`include/sost/pow/convergencex.h`) — CPU-friendly gradient descent over random 32x32 matrix with 4GB scratchpad. ASIC-resistant. Checkpoint merkle tree for verification.
 2. **ASERT** (`include/sost/pow/asert.h`) — Long-term difficulty: exponential moving average, 24h half-life, asymmetric k (down=2, up=3)
-3. **cASERT** (`include/sost/pow/casert.h`) — Short-term overlay: 5 levels (L1-L5), thresholds at 5/20/50/75 blocks ahead, unidirectional hardening only. Scales ConvergenceX parameters.
+3. **cASERT** (`include/sost/pow/casert.h`) — Short-term overlay: L1-L5 fixed bands (thresholds at 5/26/51/76 blocks ahead), L6+ unbounded from 101+ (level = 6 + floor((ahead-101)/50)). Unidirectional hardening only, scale=level. Decay anti-stall after 7200s.
 
 Difficulty encoded as Q16.16 fixed-point (`include/sost/sostcompact.h`).
 

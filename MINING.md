@@ -133,7 +133,7 @@ Then mine at least 1 block to confirm the transaction:
 | Parameter | Value |
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
-| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5, k=4) |
+| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5 fixed, L6+ unbounded at 101+, k=4) |
 | Block time | 10 minutes target |
 | Initial reward | 7.85100863 SOST |
 | Coinbase split | 50% miner / 25% Gold Vault / 25% PoPC Pool |

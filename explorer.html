@@ -441,10 +441,11 @@ const ROLES={
 };
 const CASERT_LEVELS=[
   {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
-  {signal:'5\u201319 ahead',level:2,scale:2,k:4,steps:4},
-  {signal:'20\u201349 ahead',level:3,scale:3,k:4,steps:4},
-  {signal:'50\u201374 ahead',level:4,scale:4,k:4,steps:4},
-  {signal:'75+ ahead',level:5,scale:5,k:4,steps:4},
+  {signal:'5\u201325 ahead',level:2,scale:2,k:4,steps:4},
+  {signal:'26\u201350 ahead',level:3,scale:3,k:4,steps:4},
+  {signal:'51\u201375 ahead',level:4,scale:4,k:4,steps:4},
+  {signal:'76\u2013100 ahead',level:5,scale:5,k:4,steps:4},
+  {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
 ];
 function computeCurrentLag(){
   // Block lag computed locally from wall clock — independent of node's casert_signal
@@ -454,22 +455,24 @@ function computeCurrentLag(){
   return expected-H; // lag = expected - actual
 }
 function getCasertLevel(signal){
+  // cASERT v5.2 — L1-L5 fixed bands, L6+ unbounded
   // signal = lag in blocks. Negative = ahead of schedule.
-  // Unidirectional: only harden when ahead (signal < 0).
   if(signal>=0)return 1;  // behind or on-time → L1 (neutral)
   var ahead=-signal;
   if(ahead<5)return 1;    // L1: 0-4 ahead (neutral)
-  if(ahead<20)return 2;   // L2: 5-19 ahead
-  if(ahead<50)return 3;   // L3: 20-49 ahead
-  if(ahead<75)return 4;   // L4: 50-74 ahead
-  return 5;               // L5: 75+ ahead (max, capped)
+  if(ahead<26)return 2;   // L2: 5-25 ahead
+  if(ahead<51)return 3;   // L3: 26-50 ahead
+  if(ahead<76)return 4;   // L4: 51-75 ahead
+  if(ahead<101)return 5;  // L5: 76-100 ahead
+  return 6+(ahead-101)/50|0; // L6+: unbounded, every 50 blocks adds 1
 }
 function getLevelColor(lv){
   if(lv<=1)return '#4ade80';  // L1 = green (neutral/base)
   if(lv===2)return '#67e8f9'; // L2 = cyan (light)
   if(lv===3)return '#fbbf24'; // L3 = yellow (moderate)
   if(lv===4)return '#fb923c'; // L4 = orange (strong)
-  return '#fb010d';           // L5 = red (maximum)
+  if(lv===5)return '#fb010d'; // L5 = red (emergency)
+  return '#ff0040';           // L6+ = bright red (unbounded)
 }
 function getLevelLabel(signal){
   var lv=getCasertLevel(signal);
@@ -917,10 +920,11 @@ function showCXInfo(){
   'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
   'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
   'Levels: <span style="color:#4ade80">L1</span> (neutral, 0–4 ahead) → '+
-  '<span style="color:#67e8f9">L2</span> (5–19) → '+
-  '<span style="color:#fbbf24">L3</span> (20–49) → '+
-  '<span style="color:#fb923c">L4</span> (50–74) → '+
-  '<span style="color:#fb010d">L5</span> (75+ ahead, maximum CX cost). '+
+  '<span style="color:#67e8f9">L2</span> (5–25) → '+
+  '<span style="color:#fbbf24">L3</span> (26–50) → '+
+  '<span style="color:#fb923c">L4</span> (51–75) → '+
+  '<span style="color:#fb010d">L5</span> (76–100, scale=5) → '+
+  '<span style="color:#ff0040">L6+</span> (101+ ahead, unbounded — scale grows every 50 blocks). '+
   'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
   'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
   '<div class="dtl-grid">'+
@@ -932,7 +936,7 @@ function showCXInfo(){
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
   '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+
-  '<div class="k">MAX LEVEL</div><div class="v">'+getLevelLabel(-75)+' (75+ blocks ahead of schedule)</div>'+
+  '<div class="k">MAX FIXED LEVEL</div><div class="v">'+getLevelLabel(-76)+' (76–100 ahead); L6+ unbounded from 101+</div>'+
   '<div class="k">CONTRACTION</div><div class="v">c = 7/10 // d_final ≤ 0.7 × d_initial + margin</div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green)">'+
