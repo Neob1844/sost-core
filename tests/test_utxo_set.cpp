@@ -620,11 +620,10 @@ TEST(U18_coinbase_maturity_integration) {
     EXPECT(!r1.ok, "should fail: immature coinbase");
     EXPECT(r1.code == TxValCode::S10_COINBASE_IMMATURE, "S10 code");
 
-    // Now try at height 151 (151 - 50 = 101 >= 100)
-    ctx.spend_height = 151;
+    // Now try at height 1050 (1050 - 50 = 1000 >= COINBASE_MATURITY(1000))
+    ctx.spend_height = 1050;
     auto r2 = ValidateTransactionConsensus(tx, utxos, ctx);
     EXPECT(r2.ok, "should pass: mature coinbase: " + r2.message);
-    g_pass++;
 }
 
 // =============================================================================
