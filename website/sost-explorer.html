@@ -109,7 +109,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .price-card-badge .pdot{width:4px;height:4px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
 .price-card-val{font-size:22px;font-weight:700;margin-bottom:2px;font-variant-numeric:tabular-nums}
 .price-change{font-size:11px;margin-bottom:6px;font-variant-numeric:tabular-nums;color:var(--text3)}
-.tf-btns{display:flex;gap:4px;margin-bottom:8px}
+.tf-btns{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
 .tf-btn{background:#1a1a1a;border:1px solid #222;color:#555;font-family:var(--code);font-size:9px;padding:3px 8px;cursor:pointer;letter-spacing:1px;transition:all .15s;line-height:1}
 .tf-btn:hover{color:#888;border-color:#333}
 .tf-btn.active{background:rgba(251,1,13,.12);border-color:rgba(251,1,13,.4);color:#fb010d}
@@ -308,6 +308,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <button class="tf-btn active" data-tf="24H">24H</button>
         <button class="tf-btn" data-tf="3D">3D</button>
         <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
       </div>
       <div class="chart-wrap">
         <canvas id="xautChart" style="width:100%;height:150px"></canvas>
@@ -330,6 +333,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <button class="tf-btn active" data-tf="24H">24H</button>
         <button class="tf-btn" data-tf="3D">3D</button>
         <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
       </div>
       <div class="chart-wrap">
         <canvas id="paxgChart" style="width:100%;height:150px"></canvas>
@@ -352,6 +358,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <button class="tf-btn active disabled" data-tf="24H">24H</button>
         <button class="tf-btn disabled" data-tf="3D">3D</button>
         <button class="tf-btn disabled" data-tf="7D">7D</button>
+        <button class="tf-btn disabled" data-tf="30D">30D</button>
+        <button class="tf-btn disabled" data-tf="6M">6M</button>
+        <button class="tf-btn disabled" data-tf="1Y">1Y</button>
       </div>
       <div class="chart-wrap">
         <canvas id="sostChart" style="width:100%;height:150px"></canvas>
@@ -1081,7 +1090,8 @@ var COINS=[
 ];
 var TF_MAP={
   '1H':{days:1,ms:3600000},'4H':{days:1,ms:14400000},'8H':{days:1,ms:28800000},
-  '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null}
+  '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
+  '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null}
 };
 var cache={},activeTf={xaut:'24H',paxg:'24H',sost:'24H'},sostId=null,sostChecked=false;
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
