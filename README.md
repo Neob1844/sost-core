@@ -72,7 +72,7 @@ The node:
 - Rescans wallet UTXOs on startup and persists to disk
 - Auto-saves chain state after every accepted block
 - P2P block/tx relay with DoS protection (ban scoring, 64 inbound peer limit)
-- Checkpoint validation and max reorg depth (100 blocks)
+- Checkpoint validation and max reorg depth (500 blocks)
 
 ## Miner
 
@@ -222,9 +222,26 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | Dynamic fee calculation (CLI v1.3) | Complete |
 | Wallet encryption (AES-256-GCM + scrypt) | Complete |
 | P2P DoS protection (ban scoring, peer limits) | Complete |
-| Checkpoints + reorg limit (100 blocks) | Complete |
+| Checkpoints + reorg limit (500 blocks) | Complete |
 | write_exact() reliable socket writes | Complete |
 | P2P encryption (X25519 + ChaCha20-Poly1305) | Active (default on) |
+
+## Fast Sync (Checkpoint-Based)
+
+New nodes sync faster using hardcoded checkpoints. Blocks at or below the last checkpoint height skip full ConvergenceX recomputation — only header, timestamp, difficulty, target, and coinbase rules are verified.
+
+This does not change consensus rules. All blocks are validated identically regardless of sync mode. The only difference is computational cost during initial sync.
+
+Flags:
+- `--fast-sync`: Enable checkpoint sync (default: on)
+- `--full-verify`: Force full ConvergenceX recomputation for every block (paranoid mode)
+
+Checkpoints are updated with each source code release.
+
+| Sync mode | 10K blocks | 50K blocks | 100K blocks |
+|-----------|-----------|-----------|------------|
+| --full-verify | ~3 days | ~15 days | ~30 days |
+| --fast-sync | ~2 min | ~5 min | ~10 min |
 
 ## Build from Source
 

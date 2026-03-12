@@ -809,6 +809,36 @@ FULL: recompute full ConvergenceX proof for each block.
 ADAPTIVE (default): FULL on recent tail + sampling; BASIC deep history.
 BASIC: header/difficulty/time/target checks only; MUST NOT accept tip blocks.
 
+3.13.1 Checkpoint-Based Fast Sync
+
+New nodes joining the network can optionally skip full ConvergenceX
+recomputation for blocks below the last hardcoded checkpoint. This
+optimization reduces initial sync time from days to minutes without
+compromising security.
+
+Verification layers always performed (all blocks):
+- Header structure and magic bytes
+- Timestamp validation (MTP monotonicity + future drift)
+- ASERT difficulty compliance
+- SOSTCompact target threshold (commit <= target)
+- Coinbase split correctness (50/25/25)
+- Constitutional address verification
+- UTXO set updates
+
+Verification skipped (checkpointed blocks only):
+- Full 100,000-round gradient descent recomputation
+- 4GB scratchpad reconstruction
+- Stability basin re-verification
+
+Any node operator can force full verification with --full-verify.
+Checkpoints are committed in source code, reviewed by the development
+team, and updated with each release. A block must have been fully
+verified by at least one trusted node before being added as a
+checkpoint.
+
+This mechanism is equivalent to Bitcoin Core's hardcoded checkpoints
+and assumevalid functionality.
+
 3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)
 
 This section provides a technical but simple walkthrough of how a SOST block is constructed and validated, using real-looking values as an example.
@@ -2287,6 +2317,129 @@ stability of the previous phase on mainnet for a minimum of 3 months before acti
 The supply of SOST is immutable by construction. No minting, burning, or destruction
 mechanism exists in the protocol. All slashing operations redistribute funds — they
 never destroy them.
+
+---
+
+## 11. EXPERIMENTAL: SOST Materials Discovery Engine
+
+### 11.1 Overview
+
+The SOST Materials Discovery Engine is an experimental project that extends the SOST
+ecosystem beyond financial infrastructure into scientific discovery. It is a computational
+platform for predicting, generating, and evaluating novel material compositions — with a
+focus on materials derived from abundant, low-cost, or recycled precursors.
+
+This project has a natural relationship with the SOST protocol: SOST is built on the
+premise that physical metals (gold, silver, platinum) have intrinsic value derived from
+their atomic properties. The Materials Engine explores this same domain — the physics and
+chemistry of elements, their combinations, and the emergent properties of their structures.
+
+### 11.2 Architecture
+
+The engine operates in layers:
+
+Layer 1 — Data: A curated database of ~150,000 known materials sourced from open
+repositories (Materials Project, JARVIS, AFLOW). Each entry includes composition, crystal
+structure, and computed properties (hardness, density, conductivity, bandgap, thermal
+stability, corrosion resistance, cost estimate, toxicity, and elemental abundance).
+
+Layer 2 — Inverse Search: Users specify desired properties and constraints. The engine
+returns ranked candidates from known materials, scored by match percentage.
+
+Layer 3 — Property Prediction: Machine learning models (gradient boosting, neural
+networks) trained on known materials predict properties of hypothetical compositions not
+yet in the database. Each prediction includes a confidence interval and uncertainty
+estimate.
+
+Layer 4 — Generative Discovery: An evolutionary algorithm generates random material
+compositions within user-defined constraints (element availability, cost, toxicity). A
+genetic algorithm iterates over generations, mutating and combining successful candidates.
+The predictor estimates properties for each candidate. Top candidates are ranked by fitness
+against the user's requirements.
+
+Layer 5 — Continuous Learning: The system improves over time. User queries, community
+feedback, and published experimental results are incorporated into the training data. The
+models retrain periodically, expanding coverage and improving accuracy.
+
+### 11.3 Access via SOST Escrow
+
+Access to the Materials Engine requires a SOST escrow deposit — the same mechanism used by
+PoPC Model B. Users deposit SOST into an immutable timelock contract for 1 to 6 months.
+During the escrow period, the user has full access to the engine. At expiry, 100% of the
+deposit is returned. The Foundation charges a protocol fee (5-10%) on the escrow amount.
+
+This creates organic demand for SOST: researchers, engineers, and materials scientists need
+SOST tokens to access the service. The escrow model ensures tokens are locked during use,
+reducing circulating supply. The fee funds ongoing development and infrastructure.
+
+Access tiers (preliminary):
+- Tier 1 (10 SOST, 1 month): Search + prediction
+- Tier 2 (50 SOST, 3 months): + generative discovery
+- Tier 3 (200 SOST, 6 months): + DFT validation + export
+
+### 11.4 Relationship to SOST Protocol
+
+The Materials Engine does not modify the SOST blockchain or its consensus rules. It is an
+application-layer service that reads the blockchain to verify escrow deposits. The SOST
+protocol provides:
+
+- Escrow infrastructure (BOND_LOCK / Model B contracts)
+- Payment rail (SOST token)
+- Immutable access verification (on-chain escrow state)
+- Economic alignment (locked tokens reduce sell pressure)
+
+The blockchain provides the trust layer. The Materials Engine provides the utility layer.
+Together, they create a feedback loop: scientific utility drives SOST demand, SOST demand
+strengthens the gold reserve, the gold reserve underpins the token's value.
+
+### 11.5 Output Specification
+
+For each candidate material, the engine produces a standardized report:
+
+- Candidate ID (SOST-MAT-XXXXX)
+- Composition (formula + elemental percentages)
+- Predicted structure (crystal system, space group)
+- Property estimates with confidence intervals:
+  hardness, bulk modulus, shear modulus, bandgap, density, melting point,
+  thermal conductivity, electrical conductivity, corrosion resistance,
+  magnetic properties
+- Stability assessment (formation energy, hull distance)
+- Synthesizability estimate (temperature, pressure, method)
+- Cost estimate (based on elemental prices)
+- Toxicity classification
+- Elemental abundance check
+- Similar known materials (nearest neighbors)
+- Suggested applications
+- Risk assessment (prediction confidence)
+
+### 11.6 Disclaimer
+
+EXPERIMENTAL PROJECT: The SOST Materials Discovery Engine is a research initiative, not a
+guaranteed deliverable. Implementation will proceed only if the following conditions are
+met:
+
+(a) The underlying machine learning models demonstrate verified accuracy against
+    independent test datasets with published benchmarks.
+
+(b) The prediction pipeline produces no systematic errors that could mislead users into
+    pursuing dangerous or impossible synthesis paths.
+
+(c) The escrow integration passes independent security audit with zero critical
+    vulnerabilities.
+
+(d) The system's computational requirements are sustainable within the Foundation's
+    operational budget.
+
+(e) The technology does not introduce any attack vector against the SOST blockchain or
+    its users.
+
+The Foundation commits to full transparency: if the project does not meet these criteria,
+it will be discontinued or restructured rather than deployed in an unsafe or misleading
+state. No timeline is guaranteed. The Materials Engine is a vision, not a promise.
+
+This project does not affect the SOST blockchain, its consensus rules, emission schedule,
+or any constitutional parameter. It is an independent application-layer service that can be
+added or removed without any protocol change.
 
 ---
 

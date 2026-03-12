@@ -97,7 +97,7 @@ location /rpc {
 
 ### Chain Security
 - [ ] **Checkpoints:** hardcode known block hashes at key heights to prevent long-range attacks
-- [ ] **Reorg depth limit:** reject reorganizations deeper than 100 blocks
+- [x] **Reorg depth limit:** reject reorganizations deeper than 500 blocks (~3.5 days)
 - [ ] **PoW verification on submitblock:** already implemented, verify it's airtight
 - [ ] **write_exact() fix:** replace `write()` with loop-based `write_exact()` in P2P send (prevents partial writes on large BLCK messages). File: `src/sost-node.cpp`
 
@@ -479,6 +479,8 @@ location / {
 12. Checkpoints + reorg limit
 13. P2P encryption X25519 + ChaCha20-Poly1305 (sost-node.cpp)
 14. Encrypted wallet backup export
+
+**[DONE] Checkpoint fast sync implemented. Checkpoints array empty at genesis — update with first releases.**
 
 ### Block C — Network Ready
 15. Hardcoded seeds in binary

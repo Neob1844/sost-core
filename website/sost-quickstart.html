@@ -416,14 +416,14 @@
 
   <div class="container" style="margin-top:24px;">
     <div class="notice" style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;">
-      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync</strong>
-      <span style="color:var(--text-secondary);">When the node starts for the first time, it downloads and validates the entire blockchain from other peers. Estimated sync times:</span>
+      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync Enabled by Default)</strong>
+      <span style="color:var(--text-secondary);">Your node uses checkpoint-based fast sync by default. Old blocks verified by the development team sync with header-only verification — dramatically faster.</span>
       <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
-        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;Fresh network (early days): <strong style="color:var(--text-primary);">seconds to minutes</strong></li>
-        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Mature chain (~100k blocks): <strong style="color:var(--text-primary);">30–60 minutes</strong></li>
-        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Full history (1M+ blocks): <strong style="color:var(--text-primary);">several hours</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>
+        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Multiple years: <strong style="color:var(--text-primary);">5–15 minutes</strong></li>
       </ul>
-      <span style="color:var(--text-dim);font-size:11px;">Your node validates every block independently — no trust required. Once synced, you are running a fully sovereign copy of the SOST blockchain.</span>
+      <span style="color:var(--text-dim);font-size:11px;">For paranoid full verification: add <code style="color:var(--cyan-primary);">--full-verify</code> flag. This recomputes every ConvergenceX proof from scratch. Your node validates every block independently — no trust required.</span>
     </div>
   </div>
 </section>
