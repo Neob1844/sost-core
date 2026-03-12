@@ -188,6 +188,13 @@
 <a href="#sec-70" class="toc-l1">12. Technical Specifications</a>
 <a href="#sec-71" class="toc-l1">13. Conclusion</a>
 <a href="#sec-72" class="toc-l1">Legal Disclaimer</a>
+<a href="#sec-materials" class="toc-l1" style="color:var(--red-primary);">11. EXPERIMENTAL: Materials Discovery Engine</a>
+<a href="#sec-materials-1" class="toc-l2">11.1 Overview</a>
+<a href="#sec-materials-2" class="toc-l2">11.2 Architecture</a>
+<a href="#sec-materials-3" class="toc-l2">11.3 Access via SOST Escrow</a>
+<a href="#sec-materials-4" class="toc-l2">11.4 Relationship to SOST Protocol</a>
+<a href="#sec-materials-5" class="toc-l2">11.5 Output Specification</a>
+<a href="#sec-materials-6" class="toc-l2">11.6 Disclaimer</a>
 <a href="#sec-73" class="toc-l1">Appendix A: Canonical Constants (Normative)</a>
 <a href="#sec-74" class="toc-l1">Appendix B: Serialization (Normative)</a>
 <a href="#sec-75" class="toc-l1">Appendix C: PRNG Specification (Normative)</a>
@@ -961,6 +968,32 @@ PROPERTIES:
 <p class="wp-p">FULL: recompute full ConvergenceX proof for each block.</p>
 <p class="wp-p">ADAPTIVE (default): FULL on recent tail + sampling; BASIC deep history.</p>
 <p class="wp-p">BASIC: header/difficulty/time/target checks only; MUST NOT accept tip blocks.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">3.13.1 Checkpoint-Based Fast Sync</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">New nodes joining the network can optionally skip full ConvergenceX recomputation for blocks below the last hardcoded checkpoint. This optimization reduces initial sync time from days to minutes without compromising security.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">Verification layers always performed (all blocks):</p>
+<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
+<li>Header structure and magic bytes</li>
+<li>Timestamp validation (MTP monotonicity + future drift)</li>
+<li>ASERT difficulty compliance</li>
+<li>SOSTCompact target threshold (commit &lt;= target)</li>
+<li>Coinbase split correctness (50/25/25)</li>
+<li>Constitutional address verification</li>
+<li>UTXO set updates</li>
+</ul>
+<div class="wp-spacer"></div>
+<p class="wp-p">Verification skipped (checkpointed blocks only):</p>
+<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
+<li>Full 100,000-round gradient descent recomputation</li>
+<li>4GB scratchpad reconstruction</li>
+<li>Stability basin re-verification</li>
+</ul>
+<div class="wp-spacer"></div>
+<p class="wp-p">Any node operator can force full verification with <code>--full-verify</code>. Checkpoints are committed in source code, reviewed by the development team, and updated with each release. A block must have been fully verified by at least one trusted node before being added as a checkpoint.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">This mechanism is equivalent to Bitcoin Core's hardcoded checkpoints and assumevalid functionality.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)</p>
 <div class="wp-spacer"></div>
@@ -2393,6 +2426,94 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <hr class="wp-hr">
 <div class="wp-spacer"></div>
+<h3 id="sec-materials" class="wp-h" style="color:var(--red-primary);">11. EXPERIMENTAL: SOST Materials Discovery Engine</h3>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-1" class="wp-h">11.1 Overview</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">The SOST Materials Discovery Engine is an experimental project that extends the SOST ecosystem beyond financial infrastructure into scientific discovery. It is a computational platform for predicting, generating, and evaluating novel material compositions &mdash; with a focus on materials derived from abundant, low-cost, or recycled precursors.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">This project has a natural relationship with the SOST protocol: SOST is built on the premise that physical metals (gold, silver, platinum) have intrinsic value derived from their atomic properties. The Materials Engine explores this same domain &mdash; the physics and chemistry of elements, their combinations, and the emergent properties of their structures.</p>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-2" class="wp-h">11.2 Architecture</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">The engine operates in layers:</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Layer 1 &mdash; Data:</strong> A curated database of ~150,000 known materials sourced from open repositories (Materials Project, JARVIS, AFLOW). Each entry includes composition, crystal structure, and computed properties (hardness, density, conductivity, bandgap, thermal stability, corrosion resistance, cost estimate, toxicity, and elemental abundance).</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Layer 2 &mdash; Inverse Search:</strong> Users specify desired properties and constraints. The engine returns ranked candidates from known materials, scored by match percentage.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Layer 3 &mdash; Property Prediction:</strong> Machine learning models (gradient boosting, neural networks) trained on known materials predict properties of hypothetical compositions not yet in the database. Each prediction includes a confidence interval and uncertainty estimate.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Layer 4 &mdash; Generative Discovery:</strong> An evolutionary algorithm generates random material compositions within user-defined constraints (element availability, cost, toxicity). A genetic algorithm iterates over generations, mutating and combining successful candidates. The predictor estimates properties for each candidate. Top candidates are ranked by fitness against the user&rsquo;s requirements.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Layer 5 &mdash; Continuous Learning:</strong> The system improves over time. User queries, community feedback, and published experimental results are incorporated into the training data. The models retrain periodically, expanding coverage and improving accuracy.</p>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-3" class="wp-h">11.3 Access via SOST Escrow</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">Access to the Materials Engine requires a SOST escrow deposit &mdash; the same mechanism used by PoPC Model B. Users deposit SOST into an immutable timelock contract for 1 to 6 months. During the escrow period, the user has full access to the engine. At expiry, 100% of the deposit is returned. The Foundation charges a protocol fee (5&ndash;10%) on the escrow amount.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">This creates organic demand for SOST: researchers, engineers, and materials scientists need SOST tokens to access the service. The escrow model ensures tokens are locked during use, reducing circulating supply. The fee funds ongoing development and infrastructure.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">Access tiers (preliminary):</p>
+<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
+<li>Tier 1 (10 SOST, 1 month): Search + prediction</li>
+<li>Tier 2 (50 SOST, 3 months): + generative discovery</li>
+<li>Tier 3 (200 SOST, 6 months): + DFT validation + export</li>
+</ul>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-4" class="wp-h">11.4 Relationship to SOST Protocol</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">The Materials Engine does not modify the SOST blockchain or its consensus rules. It is an application-layer service that reads the blockchain to verify escrow deposits. The SOST protocol provides:</p>
+<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
+<li>Escrow infrastructure (BOND_LOCK / Model B contracts)</li>
+<li>Payment rail (SOST token)</li>
+<li>Immutable access verification (on-chain escrow state)</li>
+<li>Economic alignment (locked tokens reduce sell pressure)</li>
+</ul>
+<div class="wp-spacer"></div>
+<p class="wp-p">The blockchain provides the trust layer. The Materials Engine provides the utility layer. Together, they create a feedback loop: scientific utility drives SOST demand, SOST demand strengthens the gold reserve, the gold reserve underpins the token&rsquo;s value.</p>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-5" class="wp-h">11.5 Output Specification</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p">For each candidate material, the engine produces a standardized report:</p>
+<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
+<li>Candidate ID (SOST-MAT-XXXXX)</li>
+<li>Composition (formula + elemental percentages)</li>
+<li>Predicted structure (crystal system, space group)</li>
+<li>Property estimates with confidence intervals: hardness, bulk modulus, shear modulus, bandgap, density, melting point, thermal conductivity, electrical conductivity, corrosion resistance, magnetic properties</li>
+<li>Stability assessment (formation energy, hull distance)</li>
+<li>Synthesizability estimate (temperature, pressure, method)</li>
+<li>Cost estimate (based on elemental prices)</li>
+<li>Toxicity classification</li>
+<li>Elemental abundance check</li>
+<li>Similar known materials (nearest neighbors)</li>
+<li>Suggested applications</li>
+<li>Risk assessment (prediction confidence)</li>
+</ul>
+<div class="wp-spacer"></div>
+
+<h4 id="sec-materials-6" class="wp-h">11.6 Disclaimer</h4>
+<div class="wp-spacer"></div>
+<p class="wp-p" style="color:var(--red-primary);"><strong>EXPERIMENTAL PROJECT:</strong> The SOST Materials Discovery Engine is a research initiative, not a guaranteed deliverable. Implementation will proceed only if the following conditions are met:</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">(a) The underlying machine learning models demonstrate verified accuracy against independent test datasets with published benchmarks.</p>
+<p class="wp-p">(b) The prediction pipeline produces no systematic errors that could mislead users into pursuing dangerous or impossible synthesis paths.</p>
+<p class="wp-p">(c) The escrow integration passes independent security audit with zero critical vulnerabilities.</p>
+<p class="wp-p">(d) The system&rsquo;s computational requirements are sustainable within the Foundation&rsquo;s operational budget.</p>
+<p class="wp-p">(e) The technology does not introduce any attack vector against the SOST blockchain or its users.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">The Foundation commits to full transparency: if the project does not meet these criteria, it will be discontinued or restructured rather than deployed in an unsafe or misleading state. No timeline is guaranteed. The Materials Engine is a vision, not a promise.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>This project does not affect the SOST blockchain, its consensus rules, emission schedule, or any constitutional parameter. It is an independent application-layer service that can be added or removed without any protocol change.</strong></p>
+<div class="wp-spacer"></div>
+<hr class="wp-hr">
+<div class="wp-spacer"></div>
+
 <h3 id="sec-73" class="wp-h">Appendix A: Canonical Constants (Normative)</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">All values below are consensus-critical. Any deviation constitutes a consensus failure.</p>

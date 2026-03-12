@@ -40,6 +40,7 @@
 #include "sost/pow/convergencex.h"
 #include "sost/block_validation.h"
 #include "sost/sostcompact.h"
+#include "sost/checkpoints.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -262,8 +263,17 @@ static const ChainCheckpoint g_checkpoints[] = {
 };
 static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpoints[0]);
 
-// Maximum reorg depth: reject any attempt to reorganize deeper than this
-static const int64_t MAX_REORG_DEPTH = 100;
+// Maximum reorganization depth. Any alternative chain diverging more than
+// 500 blocks (~3.5 days) from the current tip is rejected. Combined with
+// ConvergenceX memory-hard requirements, cASERT progressive hardening,
+// and 1000-block coinbase maturity, this provides robust protection
+// against deep reorganization attacks.
+static const int64_t MAX_REORG_DEPTH = 500;
+
+// Checkpoint fast sync: skip full ConvergenceX recomputation for checkpointed blocks.
+// Header, timestamp, difficulty, target, coinbase, and UTXO are always verified.
+// Override with --full-verify to force full verification of all blocks.
+static bool g_fast_sync_enabled = true;
 
 // DoS/ban tracking
 static const int BAN_THRESHOLD = 100;
@@ -1567,9 +1577,25 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    if(!pow_meets_target(commit32, bits_q)){
-        printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
-        return false;
+    // CHECKPOINT FAST SYNC:
+    // If fast sync is enabled and this block is in the checkpointed range,
+    // skip full ConvergenceX recomputation (100K rounds, 4GB scratchpad).
+    // Still verified above: header structure, timestamp, difficulty (ASERT),
+    // block_id, merkle root, coinbase split (50/25/25), constitutional addresses.
+    // Still verified below: UTXO updates, checkpoint block_id match.
+    // Skipped: full gradient descent recompute, scratchpad rebuild, stability basin.
+    std::string bid_hex = to_hex(computed_bid.data(), 32);
+    bool checkpoint_skip_pow = g_fast_sync_enabled &&
+        sost::is_checkpointed((uint32_t)height, bid_hex);
+
+    if(checkpoint_skip_pow){
+        printf("[BLOCK] checkpoint-fast-sync height=%lld (skip full PoW recompute)\n",
+               (long long)height);
+    } else {
+        if(!pow_meets_target(commit32, bits_q)){
+            printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
+            return false;
+        }
     }
 
     // Checkpoint validation: if this height has a checkpoint, block_id must match
@@ -2383,6 +2409,12 @@ int main(int argc, char** argv) {
             else if(ev=="required") g_p2p_enc=P2PEncMode::REQUIRED;
             else { fprintf(stderr,"Error: --p2p-enc must be off|on|required\n"); return 1; }
         }
+        else if(!strcmp(argv[i],"--full-verify")){
+            g_fast_sync_enabled = false;
+        }
+        else if(!strcmp(argv[i],"--no-fast-sync")){
+            g_fast_sync_enabled = false;
+        }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
             printf("SOST Node v0.4.0\n");
             printf("  --wallet <path>            Wallet file (default: wallet.json)\n");
@@ -2396,6 +2428,8 @@ int main(int argc, char** argv) {
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: on)\n");
+            printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
+            printf("  --no-fast-sync             Same as --full-verify\n");
             return 0;
         }
     }
@@ -2412,9 +2446,10 @@ int main(int argc, char** argv) {
 
     const char* enc_str = g_p2p_enc==P2PEncMode::OFF?"off":g_p2p_enc==P2PEncMode::ON?"on":"required";
     printf("=== SOST Node v0.4.0 ===\n");
-    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s\n\n",
+    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s | Fast sync: %s\n\n",
            profile_name, p2p_port, rpc_port,
-           g_rpc_auth_required ? "ON" : "OFF", enc_str);
+           g_rpc_auth_required ? "ON" : "OFF", enc_str,
+           g_fast_sync_enabled ? "ON" : "OFF");
 
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());

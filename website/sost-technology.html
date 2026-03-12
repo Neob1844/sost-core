@@ -783,7 +783,7 @@ stab_margin = <span class="num">180</span>                 <span class="cmt">// 
         <table class="code-table">
           <tr><td class="key">CPU fairness</td><td class="val">4GB dataset cache requires commodity hardware. Persistent per-block &mdash; CPU miners benefit from reuse.</td></tr>
           <tr><td class="key">Sequential hardness</td><td class="val">100,000 rounds with data-dependent memory accesses + per-block 256-op program. No meaningful parallelism.</td></tr>
-          <tr><td class="key">Verification efficiency</td><td class="val">Checkpoints every 16 rounds (6,250 total) allow fast verification without repeating full computation.</td></tr>
+          <tr><td class="key">Verification efficiency</td><td class="val">Checkpoints every 16 rounds (6,250 total) allow fast verification without repeating full computation. New nodes use checkpoint-based fast sync by default. Full recomputation available with <code>--full-verify</code>.</td></tr>
           <tr><td class="key">Deterministic difficulty</td><td class="val">Q16.16 fixed-point encoding eliminates cross-platform floating-point divergence.</td></tr>
           <tr><td class="key">Adaptive response</td><td class="val">cASERT overlay provides real-time hardening without protocol-level forks or governance votes.</td></tr>
           <tr><td class="key">Simplicity</td><td class="val">Three layers, each with well-defined responsibilities. No opaque multi-algorithm mixing.</td></tr>

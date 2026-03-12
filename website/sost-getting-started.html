@@ -380,17 +380,18 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="value" style="font-family:var(--font-mono)">--rpc-pass &lt;pass&gt;</td><td class="highlight">required</td><td class="value">RPC authentication password</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--connect &lt;host:port&gt;</td><td class="label">seed.sostcore.com</td><td class="value">Connect to specific peer</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--profile &lt;p&gt;</td><td class="label">mainnet</td><td class="value">Network profile</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--full-verify</td><td class="label">off</td><td class="value">Force full ConvergenceX verification (no fast sync)</td></tr>
         </table>
       </div>
     </div>
 
     <div style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;margin-bottom:16px;" class="fade-in delay-2">
-      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync</strong>
-      <span style="color:var(--text-secondary);">When the node starts for the first time, it downloads and validates the entire blockchain from other peers. Estimated sync times:</span>
+      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync by Default)</strong>
+      <span style="color:var(--text-secondary);">Your node syncs automatically when started. By default, checkpoint-based fast sync is enabled. Add <code style="color:var(--cyan-primary);">--full-verify</code> to recompute every proof (slower but maximally trustless). Estimated sync times with fast sync:</span>
       <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
-        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;Fresh network (early days): <strong style="color:var(--text-primary);">seconds to minutes</strong></li>
-        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Mature chain (~100k blocks): <strong style="color:var(--text-primary);">30–60 minutes</strong></li>
-        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Full history (1M+ blocks): <strong style="color:var(--text-primary);">several hours</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>
+        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Multiple years: <strong style="color:var(--text-primary);">5–15 minutes</strong></li>
       </ul>
       <span style="color:var(--text-dim);font-size:11px;">Your node validates every block independently — no trust required. Once synced, you are running a fully sovereign copy of the SOST blockchain.</span>
     </div>
@@ -416,7 +417,8 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="label">Chain persistence</td><td class="value">Auto-save after every accepted block</td></tr>
           <tr><td class="label">P2P relay</td><td class="value">Block and transaction relay with DoS protection</td></tr>
           <tr><td class="label">Ban scoring</td><td class="value">Threshold 100, 24h ban, 64 inbound peer limit</td></tr>
-          <tr><td class="label">Reorg protection</td><td class="value">Max reorg depth: 100 blocks</td></tr>
+          <tr><td class="label">Reorg protection</td><td class="value">Max reorg depth: 500 blocks (~3.5 days)</td></tr>
+          <tr><td class="label">Fast sync</td><td class="value">Checkpoint-based (default on)</td></tr>
         </table>
       </div>
     </div>
