@@ -82,6 +82,60 @@ void test_asert() {
     chain1.push_back({ZERO_HASH(), 0, GENESIS_TIME, GENESIS_BITSQ});
     uint32_t d1 = asert_next_difficulty(chain1, 1);
     TEST("single block -> close to genesis", d1 == GENESIS_BITSQ);
+
+    // On-schedule chain (600s spacing) -> difficulty unchanged
+    {
+        std::vector<BlockMeta> on_sched;
+        for (int i = 0; i < 50; ++i)
+            on_sched.push_back({ZERO_HASH(), i, GENESIS_TIME + (int64_t)i * TARGET_SPACING, GENESIS_BITSQ});
+        uint32_t d = asert_next_difficulty(on_sched, 50);
+        TEST("50 blocks on-schedule -> GENESIS_BITSQ", d == GENESIS_BITSQ);
+    }
+
+    // Exponential response: 100 blocks at 25s each -> difficulty rises >= 50%
+    {
+        std::vector<BlockMeta> fast;
+        uint32_t diff = GENESIS_BITSQ;
+        for (int i = 0; i < 100; ++i) {
+            fast.push_back({ZERO_HASH(), i, GENESIS_TIME + (int64_t)i * 25, diff});
+            if (i > 0) diff = asert_next_difficulty(fast, i + 1);
+        }
+        // After 100 blocks at 25s, chain is ~57500s ahead of schedule
+        // Exponential ASERT should raise difficulty by ~58%
+        uint32_t final_d = asert_next_difficulty(fast, 100);
+        char buf[128];
+        snprintf(buf, sizeof(buf), "100 blocks @25s: diff %u -> %u (%.1f%% increase >= 50%%)",
+                 GENESIS_BITSQ, final_d, 100.0 * (final_d - GENESIS_BITSQ) / GENESIS_BITSQ);
+        TEST(buf, final_d >= GENESIS_BITSQ * 3 / 2);  // at least +50%
+    }
+
+    // Slow blocks (1200s each) -> difficulty drops
+    {
+        std::vector<BlockMeta> slow;
+        for (int i = 0; i < 50; ++i)
+            slow.push_back({ZERO_HASH(), i, GENESIS_TIME + (int64_t)i * 1200, GENESIS_BITSQ});
+        uint32_t d = asert_next_difficulty(slow, 50);
+        TEST("50 blocks @1200s -> difficulty drops", d < GENESIS_BITSQ);
+    }
+
+    // Difficulty never goes below MIN_BITSQ
+    {
+        std::vector<BlockMeta> very_slow;
+        for (int i = 0; i < 10; ++i)
+            very_slow.push_back({ZERO_HASH(), i, GENESIS_TIME + (int64_t)i * 86400, GENESIS_BITSQ});
+        uint32_t d = asert_next_difficulty(very_slow, 10);
+        TEST("extremely slow blocks -> clamped to MIN_BITSQ", d >= MIN_BITSQ);
+    }
+
+    // Difficulty never exceeds MAX_BITSQ
+    {
+        std::vector<BlockMeta> ultra_fast;
+        // All 500 blocks with timestamp = GENESIS_TIME (0s apart, 500 blocks ahead)
+        for (int i = 0; i < 500; ++i)
+            ultra_fast.push_back({ZERO_HASH(), i, GENESIS_TIME, GENESIS_BITSQ});
+        uint32_t d = asert_next_difficulty(ultra_fast, 500);
+        TEST("500 blocks instant -> clamped to MAX_BITSQ", d <= MAX_BITSQ);
+    }
 }
 
 void test_casert() {
