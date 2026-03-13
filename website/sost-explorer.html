@@ -269,7 +269,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429')"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub">50% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
   <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost144cc82d3c711b5a9322640c66b94a520497ac40d')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
@@ -428,6 +428,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div>
 <script>
 let RPC='https://explorer.sostcore.com/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
+var _activeMiner='';
 const COINBASE_MATURITY=1000;
 const PS=10;
 let _loading=false;
@@ -586,17 +587,21 @@ async function updateDashboard(info){
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   /* drawReserveBars() removed — replaced by price charts */
   try{
-    var ADDR_MINER='sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429';
+    // Discover active miner address from tip block's coinbase output[0]
+    var tipHash=await rpc('getblockhash',[String(info.blocks)]);
+    var tipBlock=await rpc('getblock',[tipHash]);
+    var minerAddr=tipBlock.miner_address||'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429';
+    _activeMiner=minerAddr;
     var ADDR_GOLD='sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724';
     var ADDR_POPC='sost144cc82d3c711b5a9322640c66b94a520497ac40d';
-    var am=await rpc('getaddressinfo',[ADDR_MINER]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
+    var am=await rpc('getaddressinfo',[minerAddr]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
+    document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
-    /* goldTotal/popcTotal cards removed — replaced by price charts */
   }catch(e){}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
@@ -888,7 +893,7 @@ async function doSearch(){
     try{var txids=await rpc('getrawmempool');for(var ti=0;ti<txids.length;ti++){if(txids[ti].toLowerCase().includes(ql)){showTxDetail(txids[ti]);return;}}}catch(e){}
     showSearchError('No match for "'+q+'"');return;
   }
-  if(q.startsWith('sost1')&&q.length>5&&q.length<46){showSearchError('Incomplete address \u2014 need 46 chars (got '+q.length+')');return;}
+  if(q.startsWith('sost1')&&q.length>5&&q.length<45){showSearchError('Incomplete address \u2014 need 45 chars: sost1 + 40 hex (got '+q.length+')');return;}
   showSearchError('Invalid search. Try: height, hash, txid, or sost1 address.');
 }
 function showSearchError(msg){openDetail();var c=document.getElementById('detailContent');_navStack=[];pushNav('err','Search','');c.innerHTML='<div style="text-align:center;padding:40px"><div style="font-size:14px;color:var(--red);margin-bottom:12px">\u2717 NOT FOUND</div><div style="font-size:12px;color:var(--text2)">'+msg+'</div></div>';}
@@ -1330,6 +1335,5 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
   }
 })();
 </script>
-<script src="sost-search.js"></script>
 </body>
 </html>
