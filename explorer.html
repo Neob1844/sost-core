@@ -412,16 +412,14 @@ function openDetail(){
   var p=document.getElementById('detailPanel');
   p.style.display='';
   p.classList.add('show');
-  document.getElementById('blocksSection').style.display='none';
-  document.getElementById('mpSection').style.display='none';
-  document.getElementById('chartsRow').style.display='none';
+  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','mpSection','chartsRow'];
+  for(var i=0;i<hide.length;i++){var el=document.getElementById(hide[i])||document.querySelector('.'+hide[i]);if(el)el.style.display='none';}
 }
 function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
-  document.getElementById('blocksSection').style.display='';
-  document.getElementById('mpSection').style.display='';
-  document.getElementById('chartsRow').style.display='';
+  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','mpSection','chartsRow'];
+  for(var i=0;i<show.length;i++){var el=document.getElementById(show[i])||document.querySelector('.'+show[i]);if(el)el.style.display='';}
   _navStack=[];
   document.getElementById('detailNav').innerHTML='';
   setTimeout(function(){p.style.display='';},50);
