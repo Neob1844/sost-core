@@ -567,11 +567,17 @@ static bool rpc_check_basic_auth(const std::string& req) {
 }
 
 static void rpc_reply_401(int fd) {
-    const std::string resp =
+    const char* body = "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-401,\"message\":\"Authentication required\"}}";
+    int blen = (int)strlen(body);
+    std::string resp =
         "HTTP/1.1 401 Unauthorized\r\n"
         "WWW-Authenticate: Basic realm=\"sost\"\r\n"
-        "Content-Length: 0\r\n"
-        "Connection: close\r\n\r\n";
+        "Content-Type: application/json\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Methods: POST,GET,OPTIONS\r\n"
+        "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
+        "Content-Length: " + std::to_string(blen) + "\r\n"
+        "Connection: close\r\n\r\n" + body;
     write_exact(fd, resp.c_str(), resp.size());
 }
 
@@ -2155,6 +2161,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getblockcount",
         "getblockhash",
         "getblock",
+        "getbestblockhash",
         "getmempoolinfo",
         "getrawmempool",
         "getrawtransaction",
@@ -2165,7 +2172,8 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getaddressinfo",
         "gettransaction",
         "estimatefee",
-        "getaddressbalance"
+        "getaddressbalance",
+        "listbonds"
     };
     return kReadOnly.count(m) > 0;
 }
