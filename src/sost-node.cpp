@@ -649,7 +649,7 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
              <<",\"gold_vault_reward\":"<<b.gold_vault_reward
              <<",\"popc_pool_reward\":"<<b.popc_pool_reward
              <<",\"tx_count\":"<<b.tx_hexes.size();
-            // Decode coinbase tx to extract miner address
+            // Extract miner address from coinbase tx, or from UTXO set for genesis
             if(!b.tx_hexes.empty()){
                 std::vector<Byte> cbraw; std::string cberr;
                 if(decode_tx_hex(b.tx_hexes[0],cbraw)){
@@ -673,6 +673,14 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                     }
                 }
                 s<<"]";
+            } else {
+                // Genesis block has no tx_hexes — look up miner from UTXO set
+                OutPoint op; op.txid=b.block_id; op.index=0;
+                auto entry=g_utxo_set.GetUTXO(op);
+                if(entry){
+                    s<<",\"miner_address\":\""<<address_encode(entry->pubkey_hash)<<"\"";
+                }
+                s<<",\"txids\":[\""<<to_hex(b.block_id.data(),32)<<"\"]";
             }
             std::vector<BlockMeta> meta;
             for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){

@@ -475,23 +475,29 @@ async function updateDashboard(info){
     // Discover active miner address from tip block's coinbase output[0]
     var tipHash=await rpc('getblockhash',[String(info.blocks)]);
     var tipBlock=await rpc('getblock',[tipHash]);
-    var minerAddr=tipBlock.miner_address||'sost1f559e05f39486582231179a4985366961d8f8313';
+    var minerAddr=tipBlock.miner_address||'';
     _activeMiner=minerAddr;
     var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
     var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
-    var am=await rpc('getaddressinfo',[minerAddr]);var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
-    var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    if(minerAddr){
+      var am=await rpc('getaddressinfo',[minerAddr]);
+      var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+      document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
+      document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
+    } else {
+      document.getElementById('dMinerBal').textContent='\u2014';
+      document.getElementById('dMinerSub').textContent='50% \u00B7 awaiting miner_address';
+    }
+    var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
-    document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
-    document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
     document.getElementById('goldTotal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
     document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
     document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
-  }catch(e){}
+  }catch(e){console.error('dashboard balance error:',e);}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
@@ -798,8 +804,9 @@ async function loadMempool(){
 }
 async function doSearch(){
   var q=document.getElementById('searchIn').value.trim();if(!q)return;
-  if(/^\d+$/.test(q)){var h=parseInt(q);if(h>=0&&h<=H){try{showBlock(await rpc('getblockhash',[q]));return;}catch(e){}}showSearchError('Block #'+q+' not found (height: '+H+')');return;}
-  if(/^sost1[0-9a-fA-F]{40}$/.test(q)){try{await showAddress(q);return;}catch(e){showSearchError('Address not found');return;}}
+  console.log('[search] query="'+q+'" len='+q.length+' H='+H);
+  if(/^\d+$/.test(q)){var h=parseInt(q);if(h>=0&&h<=H){try{showBlock(await rpc('getblockhash',[q]));return;}catch(e){console.error('[search] getblockhash error:',e);}}showSearchError('Block #'+q+' not found (height: '+H+')');return;}
+  if(/^sost1[0-9a-fA-F]{40}$/.test(q)){try{console.log('[search] address lookup:',q);await showAddress(q);return;}catch(e){console.error('[search] showAddress error:',e);showSearchError('Address not found: '+e.message);return;}}
   if(/^[0-9a-fA-F]{64}$/.test(q)){
     try{await rpc('getblock',[q]);showBlock(q);return;}catch(e){}
     try{var o=await rpc('gettxout',[q,'0']);if(o){showTxDetail(q);return;}}catch(e){}
