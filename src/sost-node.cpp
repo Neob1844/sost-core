@@ -644,7 +644,36 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
              <<",\"subsidy\":"<<b.subsidy
              <<",\"commit\":\""<<to_hex(b.commit.data(),32)<<"\""
              <<",\"checkpoints_root\":\""<<to_hex(b.checkpoints_root.data(),32)<<"\""
-             <<",\"stability_metric\":"<<b.stability_metric;
+             <<",\"stability_metric\":"<<b.stability_metric
+             <<",\"miner_reward\":"<<b.miner_reward
+             <<",\"gold_vault_reward\":"<<b.gold_vault_reward
+             <<",\"popc_pool_reward\":"<<b.popc_pool_reward
+             <<",\"tx_count\":"<<b.tx_hexes.size();
+            // Decode coinbase tx to extract miner address
+            if(!b.tx_hexes.empty()){
+                std::vector<Byte> cbraw; std::string cberr;
+                if(decode_tx_hex(b.tx_hexes[0],cbraw)){
+                    Transaction cbtx;
+                    if(Transaction::Deserialize(cbraw,cbtx,&cberr)&&!cbtx.outputs.empty()){
+                        s<<",\"miner_address\":\""<<address_encode(cbtx.outputs[0].pubkey_hash)<<"\"";
+                    }
+                }
+                // Include txids
+                s<<",\"txids\":[";
+                for(size_t ti=0;ti<b.tx_hexes.size();++ti){
+                    std::vector<Byte> traw; std::string terr;
+                    if(decode_tx_hex(b.tx_hexes[ti],traw)){
+                        Transaction ttx;
+                        if(Transaction::Deserialize(traw,ttx,&terr)){
+                            Hash256 tid; if(ttx.ComputeTxId(tid,&terr)){
+                                if(ti>0)s<<",";
+                                s<<"\""<<to_hex(tid.data(),32)<<"\"";
+                            }
+                        }
+                    }
+                }
+                s<<"]";
+            }
             std::vector<BlockMeta> meta;
             for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){
                 BlockMeta bm; bm.block_id=g_blocks[j].block_id;
