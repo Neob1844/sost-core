@@ -247,8 +247,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="cursor:pointer;display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
-  <div class="dash-card auth-only" style="cursor:pointer;display:none" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card auth-only" style="cursor:pointer;display:none" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">◇ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -471,23 +471,10 @@ async function updateDashboard(info){
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   drawReserveBars();
-  // Balance cards only with auth credentials
-  if(RPC_USER&&RPC_PASS){try{
-    var tipHash=await rpc('getblockhash',[String(info.blocks)]);
-    var tipBlock=await rpc('getblock',[tipHash]);
-    var minerAddr=tipBlock.miner_address||'';
-    _activeMiner=minerAddr;
-    var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
-    var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
-    if(minerAddr){
-      var am=await rpc('getaddressinfo',[minerAddr]);
-      var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
-      document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
-      document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
-    } else {
-      document.getElementById('dMinerBal').textContent='\u2014';
-      document.getElementById('dMinerSub').textContent='50% \u00B7 awaiting miner_address';
-    }
+  // Constitutional balances (public, no auth needed)
+  var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
+  var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
+  try{
     var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
@@ -497,7 +484,23 @@ async function updateDashboard(info){
     document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
     document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
     document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
-  }catch(e){console.error('dashboard balance error:',e);}}
+  }catch(e){console.error('gold/popc balance error:',e);}
+  // Miner balance (requires auth)
+  if(RPC_USER&&RPC_PASS){try{
+    var tipHash=await rpc('getblockhash',[String(info.blocks)]);
+    var tipBlock=await rpc('getblock',[tipHash]);
+    var minerAddr=tipBlock.miner_address||'';
+    _activeMiner=minerAddr;
+    if(minerAddr){
+      var am=await rpc('getaddressinfo',[minerAddr]);
+      var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+      document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
+      document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
+    } else {
+      document.getElementById('dMinerBal').textContent='\u2014';
+      document.getElementById('dMinerSub').textContent='50% \u00B7 awaiting miner_address';
+    }
+  }catch(e){console.error('miner balance error:',e);}}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
