@@ -246,9 +246,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" style="cursor:pointer" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card auth-only" style="cursor:pointer;display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
+  <div class="dash-card auth-only" style="cursor:pointer;display:none" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">⬙ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card auth-only" style="cursor:pointer;display:none" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">⏱ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -396,7 +396,7 @@ async function rpc(m,p){
     var d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
   }catch(e){if(a===2)throw e;await new Promise(function(r){setTimeout(r,200*(a+1));});}}
 }
-function connectRPC(){RPC=document.getElementById('rpcUrl').value.trim().replace(/\/+$/,'');RPC_USER=document.getElementById('rpcUser').value.trim();RPC_PASS=document.getElementById('rpcPass').value.trim();off=0;prevH=0;refresh();}
+function connectRPC(){RPC=document.getElementById('rpcUrl').value.trim().replace(/\/+$/,'');RPC_USER=document.getElementById('rpcUser').value.trim();RPC_PASS=document.getElementById('rpcPass').value.trim();off=0;prevH=0;var authCards=document.querySelectorAll('.auth-only');for(var i=0;i<authCards.length;i++)authCards[i].style.display=(RPC_USER&&RPC_PASS)?'':'none';refresh();}
 function fT(ts){var d=Date.now()/1000-ts;if(d<60)return Math.floor(d)+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h ago';return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
 function fTFull(ts){return new Date(ts*1000).toISOString().replace('T',' ').slice(0,19)+' UTC';}
 function sH(h){return h&&h.length>=16?h.slice(0,10)+'\u00B7\u00B7\u00B7'+h.slice(-6):h||'';}
@@ -471,8 +471,8 @@ async function updateDashboard(info){
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   drawReserveBars();
-  try{
-    // Discover active miner address from tip block's coinbase output[0]
+  // Balance cards only with auth credentials
+  if(RPC_USER&&RPC_PASS){try{
     var tipHash=await rpc('getblockhash',[String(info.blocks)]);
     var tipBlock=await rpc('getblock',[tipHash]);
     var minerAddr=tipBlock.miner_address||'';
@@ -497,7 +497,7 @@ async function updateDashboard(info){
     document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
     document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
     document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
-  }catch(e){console.error('dashboard balance error:',e);}
+  }catch(e){console.error('dashboard balance error:',e);}}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
