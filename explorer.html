@@ -410,6 +410,7 @@ function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+a
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 function openDetail(){
   var p=document.getElementById('detailPanel');
+  p.style.display='';
   p.classList.add('show');
   document.getElementById('blocksSection').style.display='none';
   document.getElementById('mpSection').style.display='none';
