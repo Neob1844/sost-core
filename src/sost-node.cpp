@@ -270,10 +270,12 @@ static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpo
 // against deep reorganization attacks.
 static const int64_t MAX_REORG_DEPTH = 500;
 
-// Checkpoint fast sync: skip full ConvergenceX recomputation for checkpointed blocks.
-// Header, timestamp, difficulty, target, coinbase, and UTXO are always verified.
-// Override with --full-verify to force full verification of all blocks.
-static bool g_fast_sync_enabled = true;
+// Fast sync: skip expensive ConvergenceX recomputation for trusted historical blocks.
+// Structural, semantic, and economic validation (header, timestamp, ASERT, commit<=target,
+// coinbase, UTXO) ALWAYS runs. Only the expensive CX recompute is conditionally skipped.
+// Trust requires exact hard checkpoint match OR assumevalid anchor on active chain.
+// --full-verify forces full CX recomputation for all blocks.
+static bool g_full_verify_mode = false;
 
 // DoS/ban tracking
 static const int BAN_THRESHOLD = 100;
@@ -1577,26 +1579,36 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // CHECKPOINT FAST SYNC:
-    // If fast sync is enabled and this block is in the checkpointed range,
-    // skip full ConvergenceX recomputation (100K rounds, 4GB scratchpad).
-    // Still verified above: header structure, timestamp, difficulty (ASERT),
-    // block_id, merkle root, coinbase split (50/25/25), constitutional addresses.
-    // Still verified below: UTXO updates, checkpoint block_id match.
-    // Skipped: full gradient descent recompute, scratchpad rebuild, stability basin.
-    std::string bid_hex = to_hex(computed_bid.data(), 32);
-    bool checkpoint_skip_pow = g_fast_sync_enabled &&
-        sost::is_checkpointed((uint32_t)height, bid_hex);
-
-    if(checkpoint_skip_pow){
-        printf("[BLOCK] checkpoint-fast-sync height=%lld (skip full PoW recompute)\n",
-               (long long)height);
-    } else {
-        if(!pow_meets_target(commit32, bits_q)){
-            printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
-            return false;
-        }
+    // ALWAYS verify commit <= target (cheap PoW inequality check).
+    // This runs regardless of fast sync mode.
+    if(!pow_meets_target(commit32, bits_q)){
+        printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
+        return false;
     }
+
+    // FAST SYNC DECISION:
+    // Determine if we can skip expensive ConvergenceX recomputation.
+    // Trust requires: exact hard checkpoint match OR assumevalid anchor on active chain.
+    // Lower height alone is NEVER sufficient.
+    // Even when CX recompute is skipped, all cheap/semantic checks above still ran:
+    // header, timestamp, ASERT difficulty, block_id, merkle root, commit<=target,
+    // coinbase split, constitutional addresses. UTXO connect runs below.
+    std::string bid_hex = to_hex(computed_bid.data(), 32);
+    bool anchor_on_chain = false;
+    if(sost::has_assumevalid_anchor() && sost::ASSUMEVALID_HEIGHT < g_blocks.size()){
+        std::string chain_hash = to_hex(g_blocks[sost::ASSUMEVALID_HEIGHT].block_id.data(), 32);
+        anchor_on_chain = (chain_hash == sost::ASSUMEVALID_BLOCK_HASH);
+    }
+    bool skip_cx = sost::can_skip_cx_recomputation(
+        (uint32_t)height, bid_hex, anchor_on_chain, g_full_verify_mode);
+    if(skip_cx){
+        printf("[BLOCK] fast-sync height=%lld (skip CX recompute, all other checks passed)\n",
+               (long long)height);
+    }
+    // NOTE: Full ConvergenceX recomputation is not currently performed during
+    // block acceptance (the node verifies commit<=target, not the full 100K-round
+    // gradient descent). When full CX verification is added in the future, the
+    // skip_cx flag will gate that expensive path. For now this is infrastructure.
 
     // Checkpoint validation: if this height has a checkpoint, block_id must match
     for(size_t ci=0; ci<g_num_checkpoints; ++ci){
@@ -2410,10 +2422,10 @@ int main(int argc, char** argv) {
             else { fprintf(stderr,"Error: --p2p-enc must be off|on|required\n"); return 1; }
         }
         else if(!strcmp(argv[i],"--full-verify")){
-            g_fast_sync_enabled = false;
+            g_full_verify_mode = true;
         }
         else if(!strcmp(argv[i],"--no-fast-sync")){
-            g_fast_sync_enabled = false;
+            g_full_verify_mode = true;
         }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
             printf("SOST Node v0.4.0\n");
@@ -2449,7 +2461,7 @@ int main(int argc, char** argv) {
     printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s | Fast sync: %s\n\n",
            profile_name, p2p_port, rpc_port,
            g_rpc_auth_required ? "ON" : "OFF", enc_str,
-           g_fast_sync_enabled ? "ON" : "OFF");
+           g_full_verify_mode ? "OFF (--full-verify)" : "ON");
 
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
