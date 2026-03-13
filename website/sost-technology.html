@@ -1500,9 +1500,9 @@ signal = score / n_samples                   <span class="cmt">// average timing
       <div class="principle-card fade-in delay-3" style="--card-accent:#a78bfa;">
         <div class="p-label" style="color:#a78bfa;">VERIFIABLE</div>
         <div class="p-desc">
-          Two-stage verification pipeline: structural and semantic checks always run,
-          expensive ConvergenceX recomputation skipped for trusted historical blocks.
-          Merkle-committed checkpoints enable SPV-friendly proof structures.
+          Two-stage verification pipeline: cheap header/target checks for fast sync,
+          full ConvergenceX recomputation for deep validation. Merkle-committed
+          checkpoints enable SPV-friendly proof structures.
         </div>
       </div>
       <div class="principle-card fade-in delay-3" style="--card-accent:#f472b6;">
