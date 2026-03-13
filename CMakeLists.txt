@@ -107,7 +107,7 @@ target_link_libraries(test-casert PRIVATE sost-core)
 add_test(NAME casert COMMAND test-casert)
 
 add_executable(test-checkpoints tests/test_checkpoints.cpp)
-target_include_directories(test-checkpoints PRIVATE include)
+target_link_libraries(test-checkpoints PRIVATE sost-core)
 add_test(NAME checkpoints COMMAND test-checkpoints)
 
 add_executable(sost-genesis src/genesis.cpp)

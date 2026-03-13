@@ -226,22 +226,30 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | write_exact() reliable socket writes | Complete |
 | P2P encryption (X25519 + ChaCha20-Poly1305) | Active (default on) |
 
-## Fast Sync (Checkpoint-Based)
+## Fast Sync
 
-New nodes sync faster using hardcoded checkpoints. Blocks at or below the last checkpoint height skip full ConvergenceX recomputation — only header, timestamp, difficulty, target, and coinbase rules are verified.
+New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad, stability basin) is conditionally skipped.
 
-This does not change consensus rules. All blocks are validated identically regardless of sync mode. The only difference is computational cost during initial sync.
+This does not change consensus rules. A block that passes fast sync verification would also pass full verification. The only difference is computational cost.
+
+**Trust model** (two independent mechanisms):
+1. **Hard checkpoints**: A block is trusted ONLY if its height AND block hash match a hardcoded checkpoint exactly. Lower height alone is never sufficient.
+2. **Assumevalid anchor**: If a known block hash exists on the active chain, ancestors of that branch can skip expensive CX recomputation. If the anchor is not on the active chain, no fast trust.
+
+**Always verified** (all blocks, all modes): header structure, timestamps/MTP, ASERT difficulty, commit<=target, coinbase split (50/25/25), constitutional addresses, transaction semantics, UTXO updates.
+
+**Skipped** (trusted historical blocks only): full 100K-round gradient descent, 4GB scratchpad rebuild, stability basin re-verification.
 
 Flags:
-- `--fast-sync`: Enable checkpoint sync (default: on)
-- `--full-verify`: Force full ConvergenceX recomputation for every block (paranoid mode)
+- `--full-verify`: Force full ConvergenceX recomputation for every block
+- `--no-fast-sync`: Same as --full-verify
 
-Checkpoints are updated with each source code release.
+Checkpoints and assumevalid anchor are updated with each source code release.
 
 | Sync mode | 10K blocks | 50K blocks | 100K blocks |
 |-----------|-----------|-----------|------------|
 | --full-verify | ~3 days | ~15 days | ~30 days |
-| --fast-sync | ~2 min | ~5 min | ~10 min |
+| default (fast) | ~2 min | ~5 min | ~10 min |
 
 ## Build from Source
 

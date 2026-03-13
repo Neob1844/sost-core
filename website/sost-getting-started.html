@@ -387,7 +387,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
 
     <div style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;margin-bottom:16px;" class="fade-in delay-2">
       <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync by Default)</strong>
-      <span style="color:var(--text-secondary);">Your node syncs automatically when started. By default, checkpoint-based fast sync is enabled. Add <code style="color:var(--cyan-primary);">--full-verify</code> to recompute every proof (slower but maximally trustless). Estimated sync times with fast sync:</span>
+      <span style="color:var(--text-secondary);">Your node syncs automatically when started. Fast sync skips expensive ConvergenceX recomputation for trusted historical blocks while all structural, economic, and semantic validation still runs. Add <code style="color:var(--cyan-primary);">--full-verify</code> to force full CX recomputation. Estimated sync times:</span>
       <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
         <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
         <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>
@@ -418,7 +418,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="label">P2P relay</td><td class="value">Block and transaction relay with DoS protection</td></tr>
           <tr><td class="label">Ban scoring</td><td class="value">Threshold 100, 24h ban, 64 inbound peer limit</td></tr>
           <tr><td class="label">Reorg protection</td><td class="value">Max reorg depth: 500 blocks (~3.5 days)</td></tr>
-          <tr><td class="label">Fast sync</td><td class="value">Checkpoint-based (default on)</td></tr>
+          <tr><td class="label">Fast sync</td><td class="value">Hard checkpoints + assumevalid (default on)</td></tr>
         </table>
       </div>
     </div>

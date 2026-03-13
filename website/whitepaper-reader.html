@@ -969,11 +969,17 @@ PROPERTIES:
 <p class="wp-p">ADAPTIVE (default): FULL on recent tail + sampling; BASIC deep history.</p>
 <p class="wp-p">BASIC: header/difficulty/time/target checks only; MUST NOT accept tip blocks.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.13.1 Checkpoint-Based Fast Sync</p>
+<p class="wp-p">3.13.1 Fast Sync &mdash; Hard Checkpoints and Assumevalid Anchor</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">New nodes joining the network can optionally skip full ConvergenceX recomputation for blocks below the last hardcoded checkpoint. This optimization reduces initial sync time from days to minutes without compromising security.</p>
+<p class="wp-p">New nodes joining the network can skip expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs &mdash; only the expensive CX recompute is conditionally skipped.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">Verification layers always performed (all blocks):</p>
+<p class="wp-p"><strong>Trust model</strong> (two independent mechanisms):</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>1. Hard checkpoints:</strong> A block is trusted ONLY if its height AND block hash match a hardcoded checkpoint exactly. Lower height alone is never sufficient to grant trust.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>2. Assumevalid anchor:</strong> Similar to Bitcoin Core&rsquo;s <code>-assumevalid</code> flag. If a known block hash exists on the active chain, ancestors of that branch can skip expensive CX recomputation. If the anchor is not on the active chain (e.g. during a chain split), no fast trust is granted.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">Verification always performed (all blocks, all modes):</p>
 <ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
 <li>Header structure and magic bytes</li>
 <li>Timestamp validation (MTP monotonicity + future drift)</li>
@@ -981,19 +987,20 @@ PROPERTIES:
 <li>SOSTCompact target threshold (commit &lt;= target)</li>
 <li>Coinbase split correctness (50/25/25)</li>
 <li>Constitutional address verification</li>
-<li>UTXO set updates</li>
+<li>Transaction structure and semantic rules</li>
+<li>UTXO set updates (ConnectBlock)</li>
 </ul>
 <div class="wp-spacer"></div>
-<p class="wp-p">Verification skipped (checkpointed blocks only):</p>
+<p class="wp-p">Verification skipped (trusted historical blocks only):</p>
 <ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
 <li>Full 100,000-round gradient descent recomputation</li>
 <li>4GB scratchpad reconstruction</li>
 <li>Stability basin re-verification</li>
 </ul>
 <div class="wp-spacer"></div>
-<p class="wp-p">Any node operator can force full verification with <code>--full-verify</code>. Checkpoints are committed in source code, reviewed by the development team, and updated with each release. A block must have been fully verified by at least one trusted node before being added as a checkpoint.</p>
+<p class="wp-p">Any node operator can force full verification with <code>--full-verify</code>. Checkpoints and the assumevalid anchor are committed in source code, reviewed by the development team, and updated with each release. A block must have been fully verified by at least one trusted node before being added as a checkpoint or set as the assumevalid anchor.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">This mechanism is equivalent to Bitcoin Core's hardcoded checkpoints and assumevalid functionality.</p>
+<p class="wp-p">This mechanism does not change consensus rules. A block that passes fast sync verification would also pass full verification.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)</p>
 <div class="wp-spacer"></div>

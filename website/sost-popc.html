@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/png" href="sost-logo.png">
-<link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Protocol — Proof of Personal Custody</title>
+<title>SOST Protocol — PoPC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -17,15 +15,16 @@
     --border-dim: #1a1a1a;
     --border-med: #2a2a2a;
     --border-bright: #3a3a3a;
-    --red-primary: #fb010d;
+    --red-primary: #e63946;
     --red-bright: #ff2d3b;
     --red-dim: #8b1a22;
-    --red-glow: #fb010d33;
-    --red-subtle: #fb010d18;
+    --red-glow: #e6394633;
+    --red-subtle: #e6394618;
     --green-primary: #4ade80;
     --green-dim: #22c55e44;
     --cyan-primary: #22d3ee;
     --cyan-dim: #22d3ee33;
+    --red-accent: #e63946;
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --text-dim: #64748b;
@@ -35,217 +34,721 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
-  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
-  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
-  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
-  /* NAV */
-  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-  .nav-logo .brand-sost { color: var(--red-primary); }
-  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
-  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
-  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-med) var(--bg-deep);
+  }
 
-  /* HERO */
-  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
-  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
-  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-  .hero-label::before { content: '//'; color: var(--text-muted); }
-  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
-  .hero h1 span { color: var(--red-primary); }
-  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
-  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
-  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
-  .protocol-badge .sep { color: var(--text-muted); }
-  .protocol-badge .val { color: var(--text-secondary); }
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
 
-  /* SECTION */
-  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
-  .section-header { margin-bottom: 40px; }
-  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
-  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
-  .section-title .accent { color: var(--red-primary); }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-  /* SPEC BLOCK */
-  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
-  .spec-block:hover { border-color: var(--border-med); }
-  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
-  .spec-header-left { display: flex; align-items: center; gap: 10px; }
-  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    border-bottom: 1px solid var(--border-dim);
+    backdrop-filter: blur(16px);
+    padding: 12px 0;
+  }
+  nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(230,57,70,0.4));
+  }
+  .nav-logo .brand-sost {
+    color: var(--red-primary);
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 5px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+  .nav-links a.active {
+    color: var(--red-primary);
+    background: var(--red-subtle);
+    border-bottom: none;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border-dim);
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 11px;
+    color: var(--red-primary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-label::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .hero h1 span {
+    color: var(--red-primary);
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .protocol-badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    background: var(--bg-card);
+    font-size: 12px;
+  }
+  .protocol-badge .tag {
+    color: var(--green-primary);
+    font-weight: 600;
+  }
+  .protocol-badge .sep {
+    color: var(--text-muted);
+  }
+  .protocol-badge .val {
+    color: var(--text-secondary);
+  }
+
+  /* ---- DOWNLOAD BAR ---- */
+  .download-bar {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--red-dim);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(230,57,70,0.04));
+    color: var(--red-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .dl-btn:hover {
+    background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.10));
+    border-color: var(--red-primary);
+    box-shadow: 0 0 16px rgba(230,57,70,0.15);
+    transform: translateY(-1px);
+  }
+  .dl-btn svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .dl-btn.secondary {
+    border-color: var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .dl-btn.secondary:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .section-title .accent {
+    color: var(--red-primary);
+  }
+
+  /* ---- SPEC BLOCK ---- */
+  .spec-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+  .spec-block:hover {
+    border-color: var(--border-med);
+  }
+  .spec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
   .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
   .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
   .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
-  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
-  .spec-body { padding: 20px; }
 
-  /* CODE TABLE */
-  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
-  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
-  .code-table tr:last-child td { border-bottom: none; }
-  .code-table .label { color: var(--text-dim); font-weight: 400; }
-  .code-table .value { color: var(--text-primary); font-weight: 500; }
-  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
-  .code-table .green { color: var(--green-primary); }
-  .code-table .cyan { color: var(--cyan-primary); }
+  .spec-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .spec-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .spec-tag.consensus { color: var(--green-primary); border-color: var(--green-dim); }
+  .spec-tag.overlay { color: var(--cyan-primary); border-color: var(--cyan-dim); }
+  .spec-tag.immutable { color: var(--red-primary); border-color: var(--red-glow); }
 
-  /* CODE SNIPPET */
-  .code-snippet { background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; margin: 16px 0; white-space: pre; font-family: var(--font-mono); }
-  .code-snippet .keyword { color: var(--red-primary); }
-  .code-snippet .fn { color: var(--cyan-primary); }
-  .code-snippet .comment { color: var(--text-muted); font-style: italic; }
-  .code-snippet .num { color: var(--green-primary); }
+  .spec-body {
+    padding: 20px;
+  }
+  .spec-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
 
-  /* MODE CARDS */
-  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
-  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
-  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
-  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+  /* ---- CODE TABLE ---- */
+  .code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .code-table tr {
+    border-bottom: 1px solid var(--border-dim);
+    transition: background 0.15s;
+  }
+  .code-table tr:last-child { border-bottom: none; }
+  .code-table tr:hover { background: var(--bg-hover); }
+  .code-table td {
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .code-table .key {
+    color: var(--red-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    width: 240px;
+    min-width: 180px;
+  }
+  .code-table .val {
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .code-table .val code {
+    color: var(--green-primary);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .code-table .val .comment {
+    color: var(--text-muted);
+    font-style: italic;
+  }
 
-  /* COMPARISON TABLE */
-  .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
-  .compare-table th { text-align: left; padding: 12px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); }
-  .compare-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
-  .compare-table tr:last-child td { border-bottom: none; }
+  /* ---- ARCH DIAGRAM ---- */
+  .arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 32px 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .arch-node {
+    flex: 1;
+    min-width: 160px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+  .arch-node:first-child { border-radius: 8px 0 0 8px; }
+  .arch-node:last-child { border-radius: 0 8px 8px 0; }
+  .arch-node:hover {
+    border-color: var(--red-primary);
+    z-index: 2;
+    transform: translateY(-2px);
+  }
+  .arch-node::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    z-index: 3;
+  }
+  .arch-node:last-child::after { display: none; }
+  .arch-node .node-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+  }
+  .arch-node .node-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .arch-node .node-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
 
-  /* ARCH FLOW */
-  .arch-flow { display: flex; align-items: stretch; gap: 0; margin: 24px 0; flex-wrap: wrap; }
-  .arch-layer { flex: 1; min-width: 200px; padding: 20px; border: 1px solid var(--border-dim); background: var(--bg-card); text-align: center; position: relative; }
-  .arch-layer:first-child { border-radius: 8px 0 0 8px; }
-  .arch-layer:last-child { border-radius: 0 8px 8px 0; }
-  .arch-layer h3 { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-  .arch-layer p { font-size: 12px; color: var(--text-dim); }
-  .arch-layer .arrow { position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--red-primary); font-size: 18px; z-index: 2; }
+  /* ---- CODE SNIPPET ---- */
+  .code-snippet {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.8;
+    position: relative;
+  }
+  .code-snippet::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0; right: 0;
+    background: var(--border-dim);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 0 6px 0 4px;
+    letter-spacing: 1px;
+  }
+  .code-snippet .kw { color: var(--cyan-primary); }
+  .code-snippet .fn { color: var(--red-primary); }
+  .code-snippet .str { color: var(--green-primary); }
+  .code-snippet .num { color: var(--red-primary); }
+  .code-snippet .cmt { color: var(--text-muted); font-style: italic; }
 
-  /* STAR RATING */
-  .star-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
-  .star-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 16px; text-align: center; transition: border-color 0.3s; }
-  .star-card:hover { border-color: var(--border-med); }
-  .star-card .stars { font-size: 18px; margin-bottom: 8px; }
-  .star-card .star-label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
-  .star-card .star-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .star-card .star-detail { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  /* ---- MODE GRID ---- */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .mode-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px;
+    transition: border-color 0.3s;
+  }
+  .mode-card:hover { border-color: var(--border-med); }
+  .mode-card .mode-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-card .mode-name .indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .mode-card .mode-params {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .mode-card .mode-params span {
+    color: var(--text-secondary);
+  }
 
-  /* NOTICE */
-  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
-  .notice strong { color: var(--text-primary); }
+  /* ---- PRINCIPLE CARDS ---- */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .principle-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--red-primary));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .principle-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .principle-card:hover::before { opacity: 1; }
+  .principle-card .p-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .principle-card .p-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
 
-  /* FOOTER */
-  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
-  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer a {
+    color: var(--red-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
   footer a:hover { color: var(--red-primary); }
+  .footer-logo {
+    width: 32px; height: 32px;
+    margin: 0 auto 12px;
+    opacity: 0.4;
+    filter: grayscale(0.3);
+  }
 
-  /* ANIMATIONS */
-  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
-  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  /* ---- ANIMATIONS ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
   .delay-1 { animation-delay: 0.1s; }
   .delay-2 { animation-delay: 0.2s; }
   .delay-3 { animation-delay: 0.3s; }
   .delay-4 { animation-delay: 0.4s; }
 
+  /* ---- RESPONSIVE ---- */
   @media (max-width: 768px) {
-    .nav-links { display: none; }
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
     .arch-flow { flex-direction: column; }
-    .arch-layer { border-radius: 0; }
-    .arch-layer:first-child { border-radius: 8px 8px 0 0; }
-    .arch-layer:last-child { border-radius: 0 0 8px 8px; }
-    .arch-layer .arrow { display: none; }
+    .arch-node { border-radius: 0 !important; }
+    .arch-node:first-child { border-radius: 8px 8px 0 0 !important; }
+    .arch-node:last-child { border-radius: 0 0 8px 8px !important; }
+    .arch-node::after {
+      content: '↓';
+      right: 50%; top: auto; bottom: -8px;
+      transform: translateX(50%);
+    }
+    .code-table .key { width: auto; min-width: 140px; }
+    .nav-links { display: none; }
+    .download-bar { flex-direction: column; }
   }
 </style>
+
 </head>
 <body>
 
 <nav>
   <div class="container">
-    <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    <a href="#" class="nav-logo">
+      <img src="data:image/png;base64,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" alt="SOST">
+      <span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="sost-genesis.html">Genesis</a>
+      <a href="#">Home</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-gold-reserve.html">Gold Reserve</a>
       <a href="sost-popc.html" class="active">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
-      <a href="sost-getting-started.html">Getting Started</a>
-      <a href="sost-quickstart.html">Quick Start</a>
-      <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
-      <a href="sost-popc-contracts.html">PoPC Contracts</a>
-      <a href="sost-security.html">Security</a>
-      <a href="sost-faq.html">FAQ</a>
-      <a href="sost-explorer.html">Explorer</a>
-      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
-      <a href="sost-infrastructure.html">Infrastructure</a>
-      <a href="sost-wallet.html">Wallet</a>
-      <a href="sost-contact.html">Contact</a>
+      <a href="#">Community</a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
+
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">Proof of Personal Custody</div>
-    <h1 class="fade-in delay-1">Prove Your <span>Gold.</span><br>Earn Your <span>Reward.</span></h1>
-    <p class="hero-sub fade-in delay-2">A voluntary time-bound commitment protocol. Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool — 25% of every block, hardcoded at genesis. No custody of user gold. No bridges. Rule-based verification.</p>
+    <div class="hero-label fade-in">SECTION 04 &mdash; CUSTODY PROTOCOL</div>
+    <h1 class="fade-in delay-1">
+      <span>Proof of</span><br>
+      Personal Custody
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      A voluntary time-bound commitment protocol with automatic economic consequences.
+      Participants prove custody of precious metals, backed by SOST bonds, audited by
+      ConvergenceX block entropy. No oracle. No custodian. No governance.
+    </p>
     <div class="protocol-badge fade-in delay-3">
-      <span class="tag">PHASE 2</span>
+      <span class="tag">PoPC</span>
       <span class="sep">|</span>
-      <span class="val">Activation target: February 2027</span>
+      <span class="val">25% of coinbase &middot; ConvergenceX entropy audits &middot; Automatic slashing</span>
     </div>
   </div>
 </section>
 
-<!-- WHAT IS PoPC -->
+<!-- WHAT IT IS -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 01</div>
-      <h2 class="section-title">What Is <span class="accent">PoPC</span></h2>
+      <div class="section-id">// 00 &mdash; OVERVIEW</div>
+      <h2 class="section-title">What PoPC <span class="accent">Is</span></h2>
+    </div>
+
+    <div class="principles-grid">
+      <div class="principle-card fade-in delay-1" style="--card-accent:var(--red-primary);">
+        <div class="p-label" style="color:var(--red-primary);">NOT A GOLD TOKEN</div>
+        <div class="p-desc">
+          PoPC does not tokenize gold. Does not promise yield, stability, or redeemability.
+          It is a commitment protocol with automatic consequences.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-1" style="--card-accent:var(--green-primary);">
+        <div class="p-label" style="color:var(--green-primary);">VOLUNTARY COMMITMENT</div>
+        <div class="p-desc">
+          A participant promises to maintain custody of precious metals for a defined period,
+          backs that promise with a SOST bond, and is rewarded if they keep their word.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-2" style="--card-accent:var(--cyan-primary);">
+        <div class="p-label" style="color:var(--cyan-primary);">AUTOMATIC ENFORCEMENT</div>
+        <div class="p-desc">
+          If they break their commitment, their bond is slashed automatically &mdash;
+          no human judge involved. Audit schedule derived from PoW entropy.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-2" style="--card-accent:var(--red-primary);">
+        <div class="p-label" style="color:var(--red-primary);">UNIQUE IN CRYPTO</div>
+        <div class="p-desc">
+          Lock SOST bond &rarr; prove custody of real gold (XAUT/PAXG). Audited by PoW entropy.
+          No custodian. No bridge. Unlike MakerDAO, Compound, or any staking protocol.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENTROPY AUDITS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01 &mdash; AUDIT SYSTEM</div>
+      <h2 class="section-title">ConvergenceX <span class="accent">Entropy Audits</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-label">Definition</span>
+          <span class="spec-name">Deterministic Audit Schedule</span>
         </div>
-        <span class="spec-tag">NOT TOKENIZATION</span>
+        <span class="spec-tag consensus">ENTROPY-DERIVED</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">PoPC is <strong style="color:var(--text-primary)">not</strong> a tokenization of gold. It does not promise yield, stability, or redeemability. It is a voluntary time-bound commitment protocol with automatic economic consequences.</p>
-        <p style="color:var(--text-secondary);line-height:1.8;">A participant promises to maintain custody of precious metals for a defined period, backs that promise with a SOST bond, and is rewarded if they keep their word. If they break it, their bond is slashed automatically — no human judge involved.</p>
-      </div>
-    </div>
+        <p class="spec-desc">
+          No party &mdash; not the Foundation, not any server &mdash; decides when a user
+          gets audited. The schedule is derived deterministically from the ConvergenceX
+          entropy triple: <code>(block_id, commit, checkpoints_root)</code>.
+        </p>
 
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-label">How PoPC Differs</span>
+        <div class="code-snippet" data-label="AUDIT">
+<span class="cmt">// Audit seed from ConvergenceX proof</span>
+seed = <span class="fn">SHA256</span>( block_id || commit || checkpoints_root )
+
+<span class="cmt">// Per-contract trigger</span>
+r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
+<span class="kw">if</span> r &lt; p(reputation_stars):
+    <span class="str">AUDIT REQUIRED</span>
+
+<span class="cmt">// Verification (script, no humans)</span>
+<span class="num">1.</span> User signs message with Ethereum wallet
+<span class="num">2.</span> <span class="fn">ecrecover</span>() confirms identity
+<span class="num">3.</span> <span class="fn">token.balanceOf</span>(wallet) &ge; committed_amount
+<span class="num">4.</span> <span class="kw">if</span> true: checkpoint passed
+<span class="num">5.</span> <span class="kw">if</span> false: <span class="fn">SLASH</span>
         </div>
-        <span class="spec-tag">COMPARISON</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Protocol</th><th>Mechanism</th></tr>
-          <tr><td class="label">MakerDAO</td><td class="value">Deposit ETH (volatile crypto) &rarr; receive DAI. Collateral is crypto. Goal: price stability.</td></tr>
-          <tr><td class="label">Compound / Aave</td><td class="value">Deposit crypto &rarr; borrow crypto. All digital. No physical world connection.</td></tr>
-          <tr><td class="label">Staking protocols</td><td class="value">Lock token X &rarr; earn token X. Circular. No external asset backing.</td></tr>
-          <tr><td class="label highlight">SOST PoPC</td><td class="value" style="color:var(--green-primary)">Lock SOST bond &rarr; prove custody of real gold (XAUT/PAXG). Audited by PoW entropy. No custodian. No bridge.</td></tr>
-        </table>
+
+        <div class="mode-grid">
+          <div class="mode-card">
+            <div class="mode-name"><span class="indicator" style="background:var(--text-muted)"></span> 0 stars (new)</div>
+            <div class="mode-params">p = <span>0.30</span> &mdash; 30% of periods audited</div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name"><span class="indicator" style="background:var(--red-primary)"></span> 1 star</div>
+            <div class="mode-params">p = <span>0.20</span> &mdash; 20% of periods audited</div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name"><span class="indicator" style="background:var(--red-primary)"></span> 3 stars</div>
+            <div class="mode-params">p = <span>0.10</span> &mdash; 10% of periods audited</div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> 5 stars (veteran)</div>
+            <div class="mode-params">p = <span>0.05</span> &mdash; 5% of periods audited</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -255,117 +758,67 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 02</div>
-      <h2 class="section-title">Model A — <span class="accent">Self-Custody Bonds</span></h2>
+      <div class="section-id">// 02 &mdash; MODEL A</div>
+      <h2 class="section-title">Commitment with <span class="accent">SOST Bond</span></h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For crypto natives, miners, and traders. Your gold <strong style="color:var(--text-primary)">never leaves your wallet</strong>. Only the posted SOST bond is at risk.</p>
-
-    <div class="arch-flow fade-in delay-1">
-      <div class="arch-layer">
-        <h3 style="color:var(--red-primary)">1. Declare</h3>
-        <p>Declare Ethereum wallet holding XAUT/PAXG</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--cyan-primary)">2. Bond</h3>
-        <p>Lock SOST bond (12-30% of gold value)</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--green-primary)">3. Commit</h3>
-        <p>Maintain custody for 1-12 months</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--text-primary)">4. Audit</h3>
-        <p>ConvergenceX entropy schedules random audits</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--green-primary)">5. Reward</h3>
-        <p>Bond returned + reward from PoPC Pool</p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2">
+    <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-label">Dynamic Bond Calculation</span>
+          <span class="spec-name">Model A &mdash; Autocustody</span>
         </div>
-        <span class="spec-tag">RATIO-BASED</span>
+        <span class="spec-tag overlay">FOR CRYPTO NATIVES</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:8px;">The bond percentage scales with the SOST/gold price ratio. System is ratio-based, not price-based — works at any gold/SOST price in any currency.</p>
-        <p style="color:var(--text-dim);font-size:12px;line-height:1.6;margin-bottom:16px;">All fiat-denominated values use USD as the reference currency for documentation. The protocol is currency-agnostic.</p>
-        <div class="code-snippet"><span class="keyword">ratio</span> = sost_price / gold_oz_price
+        <p class="spec-desc">
+          The gold <strong>never leaves</strong> the user&rsquo;s wallet. Only the SOST bond is at risk.
+          The Foundation has no access to, custody of, or control over the user&rsquo;s gold tokens.
+        </p>
 
-<span class="keyword">if</span> ratio &lt; <span class="num">0.0001</span>              &rarr;  bond = <span class="num">12%</span>  <span class="comment">// early stage</span>
-<span class="keyword">if</span> <span class="num">0.0001</span> &le; ratio &lt; <span class="num">0.001</span>   &rarr;  bond = <span class="num">15%</span>
-<span class="keyword">if</span> <span class="num">0.001</span>  &le; ratio &lt; <span class="num">0.01</span>    &rarr;  bond = <span class="num">20%</span>
-<span class="keyword">if</span> <span class="num">0.01</span>   &le; ratio &lt; <span class="num">0.1</span>     &rarr;  bond = <span class="num">25%</span>
-<span class="keyword">if</span> <span class="num">0.1</span>    &le; ratio &lt; <span class="num">0.2</span>     &rarr;  bond = <span class="num">26%</span>
-<span class="keyword">if</span> <span class="num">0.2</span>    &le; ratio &lt; <span class="num">0.3</span>     &rarr;  bond = <span class="num">27%</span>
-<span class="keyword">if</span> <span class="num">0.3</span>    &le; ratio &lt; <span class="num">0.4</span>     &rarr;  bond = <span class="num">28%</span>
-<span class="keyword">if</span> <span class="num">0.4</span>    &le; ratio &lt; <span class="num">0.5</span>     &rarr;  bond = <span class="num">29%</span>
-<span class="keyword">if</span> ratio &ge; <span class="num">0.5</span>              &rarr;  bond = <span class="num">30%</span>  <span class="comment">// maximum</span>
+        <div class="code-snippet" data-label="FLOW">
+<span class="num">1.</span> User buys SOST on CEX
+<span class="num">2.</span> Declares Ethereum wallet holding XAUT/PAXG
+<span class="num">3.</span> Locks SOST bond (dynamic, based on ratio SOST/gold)
+<span class="num">4.</span> Commits to maintain custody for <span class="str">1/3/6/9/12</span> months
+<span class="num">5.</span> ConvergenceX entropy schedules random audits
+<span class="num">6.</span> Script verifies XAUT/PAXG balance via Ethereum RPC
+<span class="num">7.</span> On completion: recovers bond + reward from PoPC Pool
+<span class="num">8.</span> On failure: bond <span class="fn">SLASHED</span> automatically
+        </div>
 
-bond_sost = bond_fiat / sost_price_TWAP_7d</div>
-        <table class="code-table">
-          <tr><th>Gold Price</th><th>SOST Price</th><th>Ratio</th><th>Bond %</th></tr>
-          <tr><td class="value">$2,700</td><td class="value">$1</td><td class="cyan">0.00037</td><td class="highlight">15%</td></tr>
-          <tr><td class="value">$2,700</td><td class="value">$100</td><td class="cyan">0.037</td><td class="highlight">25%</td></tr>
-          <tr><td class="value">$2,700</td><td class="value">$1,350</td><td class="cyan">0.50</td><td class="highlight">30%</td></tr>
-          <tr><td class="value">$5,000</td><td class="value">$2,500</td><td class="cyan">0.50</td><td class="highlight">30%</td></tr>
+        <table class="code-table" style="margin-top:16px;">
+          <tr><td class="key">1 month</td><td class="val"><code>5%</code> of bond in SOST</td></tr>
+          <tr><td class="key">3 months</td><td class="val"><code>12%</code> of bond in SOST</td></tr>
+          <tr><td class="key">6 months</td><td class="val"><code>20%</code> of bond in SOST</td></tr>
+          <tr><td class="key">9 months</td><td class="val"><code>28%</code> of bond in SOST</td></tr>
+          <tr><td class="key">12 months</td><td class="val"><code>35%</code> of bond in SOST</td></tr>
         </table>
       </div>
     </div>
 
-    <div class="spec-block fade-in delay-3">
+    <!-- DYNAMIC BOND -->
+    <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-label">ConvergenceX Entropy Audits</span>
+          <span class="spec-name">Dynamic Bond Sizing</span>
         </div>
-        <span class="spec-tag">DETERMINISTIC</span>
+        <span class="spec-tag immutable">CONSTITUTIONAL C9</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">No party — not the Foundation, not any server — decides when a user is audited. The schedule is derived deterministically from ConvergenceX block entropy.</p>
-        <div class="code-snippet"><span class="comment">// Audit seed derived from PoW entropy triple</span>
-<span class="fn">seed</span> = <span class="fn">SHA256</span>(block_id || commit || checkpoints_root)
-
-<span class="comment">// Audit trigger per contract, per period</span>
-r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
-<span class="keyword">if</span> r &lt; <span class="fn">p</span>(reputation_stars):
-    <span class="keyword">AUDIT REQUIRED</span></div>
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Verification is rule-based and script-driven. In Phase 1, operational steps are executed by the Foundation's verifier infrastructure until full automation is deployed:</p>
+        <p class="spec-desc">
+          Bond is denominated in USD value, converted to SOST at 7-day TWAP. As SOST
+          appreciates relative to gold, the bond percentage increases to maintain deterrence.
+          Sub-collateralization is intentional &mdash; compensated by layered deterrence.
+        </p>
         <table class="code-table">
-          <tr><th>Step</th><th>Action</th></tr>
-          <tr><td class="label">1</td><td class="value">User signs message with Ethereum wallet</td></tr>
-          <tr><td class="label">2</td><td class="value">ecrecover() confirms control of the declared wallet</td></tr>
-          <tr><td class="label">3</td><td class="value">Verifier checks: token.balanceOf(wallet) &ge; committed_amount</td></tr>
-          <tr><td class="label">4</td><td class="value">EOA verification: extcodesize == 0 (no smart contracts)</td></tr>
-          <tr><td class="label">5</td><td class="value">Continuous custody check via historical balance sampling</td></tr>
-          <tr><td class="label">6</td><td class="value">Pass &rarr; checkpoint recorded. Fail &rarr; SLASH</td></tr>
+          <tr><td class="key">ratio &lt; 0.0001</td><td class="val"><code>10%</code> bond <span class="comment">// SOST &lt; $0.27</span></td></tr>
+          <tr><td class="key">ratio &lt; 0.001</td><td class="val"><code>15%</code> bond <span class="comment">// SOST &lt; $2.70</span></td></tr>
+          <tr><td class="key">ratio &lt; 0.01</td><td class="val"><code>20%</code> bond <span class="comment">// SOST &lt; $27</span></td></tr>
+          <tr><td class="key">ratio &lt; 0.1</td><td class="val"><code>25%</code> bond <span class="comment">// SOST &lt; $270</span></td></tr>
+          <tr><td class="key">ratio &ge; 0.1</td><td class="val"><code>30%</code> bond (maximum) <span class="comment">// SOST &gt; $270</span></td></tr>
         </table>
-      </div>
-    </div>
-
-    <div class="notice fade-in delay-4">
-      <strong>EOA Requirement:</strong> The declared wallet must be an Externally Owned Account. Smart contract wallets, multisig wallets, and proxy contracts are not eligible. EOA status is verified at contract creation and at every audit. CREATE2 deployment after commitment triggers automatic slash.
-    </div>
-
-    <div class="spec-block fade-in delay-4" style="margin-top:24px;">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-label">Top-up &amp; Extend</span>
-        </div>
-        <span class="spec-tag">MODEL A</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;">At any point before expiry you can increase your SOST bond and extend the contract duration. The contract restructures from the top-up moment &mdash; prior time settles proportionally, new period begins with the combined bond. Fee applies only to the new increment (5%). One contract, one reputation record.</p>
       </div>
     </div>
   </div>
@@ -375,444 +828,171 @@ r = <span class="fn">PRF</span>(seed, contractId, periodIndex)
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">SECTION 03</div>
-      <h2 class="section-title">Model B — <span class="accent">Timelocked Escrow</span></h2>
-    </div>
-
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">For precious metal investors and gold holders. Deposit XAUT/PAXG into an immutable escrow contract. Receive SOST <strong style="color:var(--green-primary)">immediately</strong>. No audits, no slash risk, and no bond requirement.</p>
-
-    <div class="arch-flow fade-in delay-1">
-      <div class="arch-layer">
-        <h3 style="color:var(--red-primary)">1. Deposit</h3>
-        <p>Lock XAUT/PAXG into immutable escrow</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--green-primary)">2. Receive</h3>
-        <p>Get SOST reward immediately</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--text-dim)">3. Wait</h3>
-        <p>Gold locked for full term</p>
-        <span class="arrow">&rarr;</span>
-      </div>
-      <div class="arch-layer">
-        <h3 style="color:var(--cyan-primary)">4. Withdraw</h3>
-        <p>Full gold returned at maturity</p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-label">Escrow Architecture</span>
-        </div>
-        <span class="spec-tag">IMMUTABLE</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Property</th><th>Value</th></tr>
-          <tr><td class="label">Contract type</td><td class="value">Immutable (no proxy, no UUPS, no admin)</td></tr>
-          <tr><td class="label">Functions</td><td class="value" style="font-family:var(--font-mono)">deposit(token, amount, unlockTime) + withdraw(depositId)</td></tr>
-          <tr><td class="label">Withdrawal</td><td class="value">Only original depositor, only after unlockTime</td></tr>
-          <tr><td class="label">Admin key</td><td class="highlight">None</td></tr>
-          <tr><td class="label">Emergency withdrawal</td><td class="highlight">None</td></tr>
-          <tr><td class="label">Early exit</td><td class="highlight">Not possible</td></tr>
-          <tr><td class="label">Source code</td><td class="value">Published and verified on explorer. Independent audit planned before mainnet activation of Model B.</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-3">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-label">Foundation Role in Model B</span>
-        </div>
-        <span class="spec-tag">NON-CUSTODIAL</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Action</th><th>Status</th></tr>
-          <tr><td class="label">Custody of escrowed gold</td><td class="highlight">NO access, NO control</td></tr>
-          <tr><td class="label">Watcher operation</td><td class="green">Detects deposits, triggers SOST payout</td></tr>
-          <tr><td class="label">Escrowed gold on balance sheet</td><td class="value">Off-balance-sheet, transparency only</td></tr>
-          <tr><td class="label">Watcher can steal gold</td><td class="highlight">Impossible (escrow is autonomous)</td></tr>
-          <tr><td class="label">Watcher can delay payout</td><td class="value">Yes (liveness risk, not safety risk)</td></tr>
-          <tr><td class="label">Autonomous claim fallback</td><td class="green">claimReward(depositId) after 72h &mdash; pays NET reward (gross minus fee); fee routed to Foundation; idempotent (repeat calls are no-ops)</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div class="notice fade-in delay-4">
-      <strong>The fundamental trade:</strong> Gold liquidity for SOST liquidity. Users cannot unlock escrowed gold before maturity. However, the SOST reward is delivered immediately at deposit — full liquidity from day 1.
-    </div>
-
-    <div class="notice fade-in delay-4" style="border-left-color:var(--cyan-primary);">
-      <strong>Transitional by design:</strong> The Foundation's watcher role in Model B and manual verification in Model A are Phase 1 operational processes with planned automation paths. This is a constitutional commitment &mdash; as smart contracts and the sost-popc-daemon are deployed, Foundation manual involvement is permanently retired.
-    </div>
-
-    <div class="spec-block fade-in delay-4" style="margin-top:24px;">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-label">Immutable Term</span>
-        </div>
-        <span class="spec-tag">MODEL B</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;">The escrow term is immutable &mdash; no renew, extend, or modify function exists in the contract. Once a deposit is made, the unlock time is fixed and cannot be changed. To commit additional metals or a different duration, open a new parallel contract.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- REWARD STRUCTURES -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">SECTION 04</div>
-      <h2 class="section-title">Reward <span class="accent">Structures</span></h2>
-    </div>
-
-    <div class="notice fade-in">
-      <strong>Non-guaranteed:</strong> Reward rates are operational reference parameters. They may be adjusted, budgeted per epoch, or paused for security without changing consensus rules. They do not constitute interest, promised yield, or a financial obligation of the protocol.
-    </div>
-
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-label">Model A — Reward Rates (Reference)</span>
-        </div>
-        <span class="spec-tag">% OF BOND</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Rewards denominated in SOST as a percentage of bond. Bond is fully recoverable upon successful completion. Protocol fee: 5% of reward.</p>
-        <table class="code-table">
-          <tr><th>Duration</th><th>Reward (% of bond)</th><th>Protocol Fee</th></tr>
-          <tr><td class="value">1 month</td><td class="green">1%</td><td class="label">5%</td></tr>
-          <tr><td class="value">3 months</td><td class="green">4%</td><td class="label">5%</td></tr>
-          <tr><td class="value">6 months</td><td class="green">9%</td><td class="label">5%</td></tr>
-          <tr><td class="value">9 months</td><td class="green">15%</td><td class="label">5%</td></tr>
-          <tr><td class="value">12 months</td><td class="green">22%</td><td class="label">5%</td></tr>
-        </table>
-        <div class="code-snippet"><span class="comment">// Model A reward calculation</span>
-base_reward  = bond_sost &times; reward_table[duration]
-protocol_fee = base_reward &times; <span class="num">0.05</span>
-user_reward  = base_reward - protocol_fee
-
-<span class="comment">// User receives: bond_sost + user_reward</span></div>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-label">Model B — Reward Rates (Reference)</span>
-        </div>
-        <span class="spec-tag">% OF GOLD VALUE</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Lower rates than Model A because there is no slash risk. SOST reward delivered immediately at deposit. Protocol fee: 10% of reward.</p>
-        <table class="code-table">
-          <tr><th>Duration</th><th>Total Reward</th><th>Protocol Fee</th></tr>
-          <tr><td class="value">1 month</td><td class="green">0.02% of gold value</td><td class="label">10%</td></tr>
-          <tr><td class="value">3 months</td><td class="green">0.25% of gold value</td><td class="label">10%</td></tr>
-          <tr><td class="value">6 months</td><td class="green">1.5% of gold value</td><td class="label">10%</td></tr>
-          <tr><td class="value">9 months</td><td class="green">3.75% of gold value</td><td class="label">10%</td></tr>
-          <tr><td class="value">12 months</td><td class="green">7% of gold value</td><td class="label">10%</td></tr>
-        </table>
-        <div class="code-snippet"><span class="comment">// Model B reward calculation</span>
-<span class="fn">SOST_reward</span> = gold_value &times; rate &times; (duration/<span class="num">12</span>) / sost_price
-protocol_fee = SOST_reward &times; <span class="num">0.10</span>
-user_reward  = SOST_reward - protocol_fee
-
-<span class="comment">// User receives SOST immediately at deposit</span></div>
-      </div>
-    </div>
-
-    <!-- MODEL COMPARISON -->
-    <div class="spec-block fade-in delay-3">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-label">Model A vs Model B</span>
-        </div>
-        <span class="spec-tag">COMPARISON</span>
-      </div>
-      <div class="spec-body">
-        <table class="compare-table">
-          <tr><th>Aspect</th><th>Model A</th><th>Model B</th></tr>
-          <tr><td class="label">What you lock</td><td class="value">SOST (bond)</td><td class="value">Gold (escrow)</td></tr>
-          <tr><td class="label">Your gold</td><td class="green">In YOUR wallet</td><td class="value">In escrow contract</td></tr>
-          <tr><td class="label">Bond required</td><td class="value">Yes (12-30%)</td><td class="green">No</td></tr>
-          <tr><td class="label">Reward timing</td><td class="value">At completion if pass</td><td class="green">Immediately</td></tr>
-          <tr><td class="label">Slash risk</td><td class="highlight">Lose bond</td><td class="green">None</td></tr>
-          <tr><td class="label">12-month rate (reference)</td><td class="value">22% of bond</td><td class="value">7% of gold value</td></tr>
-          <tr><td class="label">Protocol fee</td><td class="value">5%</td><td class="value">10%</td></tr>
-          <tr><td class="label">Best for</td><td class="value">Crypto natives</td><td class="value">Gold holders</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEE STRUCTURE -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">FEE DESIGN</div>
-      <h2 class="section-title">Fee <span class="accent">Structure</span></h2>
-    </div>
-
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-label">Protocol Fee</span>
-        </div>
-        <span class="spec-tag">ON REWARD</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Fee is calculated at contract creation and locked for the contract's lifetime. The fee amount is deducted from the reward at successful completion. The user's bond is returned in full. If slashed, the fee is not collected (entire bond goes to 50/50 redistribution).</p>
-        <table class="code-table">
-          <tr><th>Model</th><th>Fee</th><th>Charged on</th></tr>
-          <tr><td class="highlight">Model A</td><td class="value">5% of reward</td><td class="value">Deducted at completion (or per top-up increment)</td></tr>
-          <tr><td class="highlight">Model B</td><td class="value">10% of gross reward</td><td class="value">Deducted from immediate payout</td></tr>
-        </table>
-        <div class="code-snippet"><span class="comment">// Example &mdash; Model A, 12-month:</span>
-bond <span class="num">6.75</span> SOST, reward 22% = <span class="num">1.485</span> SOST
-fee = 5% of <span class="num">1.485</span> = <span class="num">0.074</span> SOST
-user receives: <span class="num">6.75</span> + <span class="num">1.411</span> = <span class="num">8.161</span> SOST
-<span class="comment">// bond returned in full + net reward</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- REPUTATION SYSTEM -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">SECTION 05</div>
-      <h2 class="section-title">Reputation <span class="accent">System</span></h2>
-    </div>
-
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">Reputation uses 4 discrete levels: <strong style="color:var(--text-primary)">0, 1, 3, and 5 stars</strong>. Stars determine audit frequency and maximum per-contract commitment size. Progression: 0&rarr;1 after first successful completion, 1&rarr;3 after 3 cumulative completions, 3&rarr;5 after 5 cumulative completions. Any slash resets to 0.</p>
-
-    <div class="star-grid fade-in delay-1">
-      <div class="star-card">
-        <div class="stars" style="color:var(--text-muted);">&#9734;&#9734;&#9734;&#9734;&#9734;</div>
-        <div class="star-label">0 STARS — NEW</div>
-        <div class="star-value">Max 0.5 oz</div>
-        <div class="star-detail">30% audit probability</div>
-      </div>
-      <div class="star-card">
-        <div class="stars" style="color:var(--red-primary);">&#9733;&#9734;&#9734;&#9734;&#9734;</div>
-        <div class="star-label">1 STAR</div>
-        <div class="star-value">Max 1 oz</div>
-        <div class="star-detail">20% audit probability</div>
-      </div>
-      <div class="star-card">
-        <div class="stars" style="color:var(--red-primary);">&#9733;&#9733;&#9733;&#9734;&#9734;</div>
-        <div class="star-label">3 STARS</div>
-        <div class="star-value">Max 3 oz</div>
-        <div class="star-detail">10% audit probability</div>
-      </div>
-      <div class="star-card">
-        <div class="stars" style="color:var(--green-primary);">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <div class="star-label">5 STARS — VETERAN</div>
-        <div class="star-value">Max 10 oz</div>
-        <div class="star-detail">5% audit probability</div>
-      </div>
-    </div>
-
-    <div class="notice fade-in delay-2" style="margin-top:16px;">
-      <strong>Anti-whale caps &amp; reputation interaction:</strong> The per-contract oz limits above are the reputation ceiling. A separate protocol-wide anti-whale cap (e.g., max 5% of pool per address per epoch) may further restrict large participants. The effective limit is the <em>minimum</em> of the reputation tier limit and the anti-whale cap. Both are enforced independently.
-    </div>
-
-    <div class="spec-block fade-in delay-2" style="margin-top:24px;">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-label">Price Bulletin</span>
-        </div>
-        <span class="spec-tag">NO ON-CHAIN ORACLE</span>
-      </div>
-      <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Bond sizing uses a Price Bulletin model with dual consent. The contract verifies the Foundation EIP-712 signature on the bulletin, then the user co-signs the exact bond terms (dual-consent: Foundation attests the price, user accepts it). No on-chain oracle. No discretionary Foundation pricing.</p>
-        <table class="code-table">
-          <tr><th>Property</th><th>Value</th></tr>
-          <tr><td class="label">Published by</td><td class="value">Foundation (daily)</td></tr>
-          <tr><td class="label">Signature</td><td class="green">EIP-712 typed structured data — verified on-chain</td></tr>
-          <tr><td class="label">Data</td><td class="value">SOST/USD 7d TWAP, Gold/USD 7d TWAP</td></tr>
-          <tr><td class="label">Sources</td><td class="value">Public exchange APIs (reproducible)</td></tr>
-          <tr><td class="label">Distribution</td><td class="value">Website + GitHub + IPFS mirror</td></tr>
-          <tr><td class="label">Dual consent</td><td class="green">Foundation EIP-712 signs bulletin; user co-signs exact bond terms</td></tr>
-          <tr><td class="label">On-chain prices</td><td class="highlight">None — not consensus-critical</td></tr>
-          <tr><td class="label">Malicious bulletin</td><td class="value">Users simply refuse to co-sign — no funds at risk</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SLASHING MECHANICS -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">SECTION 06</div>
-      <h2 class="section-title">Slashing <span class="accent">Mechanics</span></h2>
-    </div>
-
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:8px;" class="fade-in">Model A only. Model B has no slash risk — gold custody is enforced by the escrow contract.</p>
-
-    <div class="mode-grid fade-in delay-1">
-      <div class="mode-card">
-        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">SLASH TRIGGER</div>
-        <h3 style="color:var(--red-primary)">Custody Violation</h3>
-        <p>XAUT/PAXG balance below committed amount at audit time, or no response within the 48h grace window &mdash; the sole window for response (with confirmed RPC availability). No additional grace period.</p>
-      </div>
-      <div class="mode-card">
-        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">SLASH SPLIT</div>
-        <h3 style="color:var(--cyan-primary)">50/50 Distribution</h3>
-        <p>50% of slashed bond goes to PoPC Pool (funds future rewards). 50% goes to Gold Funding Vault (buys more gold collateral). No supply is burned.</p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2" style="margin-top:24px;">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-label">Slash Consequences</span>
-        </div>
-        <span class="spec-tag">AUTOMATIC</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Consequence</th><th>Detail</th></tr>
-          <tr><td class="label">Bond</td><td class="highlight">Lost — split 50/50 between PoPC Pool and Gold Funding Vault</td></tr>
-          <tr><td class="label">Reputation</td><td class="highlight">Destroyed (reset to 0 stars)</td></tr>
-          <tr><td class="label">Address</td><td class="highlight">Blacklisted</td></tr>
-          <tr><td class="label">Supply effect</td><td class="green">No burn — slashed SOST recycled into vaults</td></tr>
-          <tr><td class="label">Human override</td><td class="value">None — fully automatic</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div class="notice fade-in delay-3">
-      <strong>Design principle:</strong> Every fraud detected strengthens the protocol. Half funds future honest participants, half buys more gold. No supply is destroyed — it is recycled where it creates the most value.
-    </div>
-  </div>
-</section>
-
-<!-- PHASE 2 ACTIVATION -->
-<section class="section" style="border-bottom:none;">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">SECTION 07</div>
-      <h2 class="section-title">Phase 2 <span class="accent">Activation</span></h2>
+      <div class="section-id">// 03 &mdash; MODEL B</div>
+      <h2 class="section-title">Timelocked <span class="accent">Escrow</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-label">Activation Timeline</span>
+          <span class="spec-name">Model B &mdash; No Audits, No Slash</span>
         </div>
-        <span class="spec-tag">FEBRUARY 2027</span>
+        <span class="spec-tag overlay">FOR GOLD INVESTORS</span>
       </div>
       <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Parameter</th><th>Value</th></tr>
-          <tr><td class="label">Target activation</td><td class="highlight">February 2027</td></tr>
-          <tr><td class="label">Consensus changes</td><td class="green">None — PoPC is application-layer</td></tr>
-          <tr><td class="label">Pool funding</td><td class="value">25% of every block reward from genesis</td></tr>
-          <tr><td class="label">Pool at activation (~1 year)</td><td class="value">~103,160 SOST accumulated (~8,597 SOST/month)</td></tr>
-          <tr><td class="label">Escrow contract</td><td class="value">Immutable, published and audited before activation</td></tr>
-          <tr><td class="label">Adaptive rule</td><td class="value">Removed — PoPC requires gold custody only (see Whitepaper Appendix M)</td></tr>
-        </table>
-      </div>
-    </div>
+        <p class="spec-desc">
+          User deposits XAUT/PAXG into an <strong>immutable</strong> escrow timelock contract
+          (no admin key, no upgrade proxy, no pause function). Receives SOST immediately.
+          At expiry, only the original depositor can withdraw full gold. No early exit.
+        </p>
 
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-label">Pool Sustainability</span>
+        <div class="code-snippet" data-label="ESCROW">
+<span class="cmt">// Escrow architecture</span>
+contract = <span class="str">immutable</span>        <span class="cmt">// no proxy, no UUPS, no admin</span>
+functions: <span class="fn">deposit</span>(token, amount, unlockTime) + <span class="fn">withdraw</span>(depositId)
+withdraw  = ONLY by original depositor
+withdraw  <span class="kw">reverts if</span> block.timestamp &lt; unlockTime
+Foundation <span class="kw">CANNOT</span> access escrowed gold
+
+<span class="cmt">// SOST reward delivered IMMEDIATELY at deposit</span>
+SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="num">12</span>) / sost_price
+<span class="cmt">// User keeps SOST from day 1 — no vesting, no clawback</span>
         </div>
-        <span class="spec-tag">LONG-TERM</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><th>Scenario</th><th>Annual Rewards</th><th>Pool Usage (of ~103,160 SOST/year)</th></tr>
-          <tr><td class="label">200 active contracts</td><td class="value">~6,000 SOST</td><td class="green">5.8% of annual intake</td></tr>
-          <tr><td class="label">1,000 contracts</td><td class="value">~30,000 SOST</td><td class="green">29% of annual intake</td></tr>
-          <tr><td class="label">30-year total pool</td><td class="value" colspan="2">~1,167,300 SOST + slash income</td></tr>
+
+        <table class="code-table" style="margin-top:16px;">
+          <tr><td class="key">1 month</td><td class="val"><code>3%</code> APR on gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">3 months</td><td class="val"><code>4%</code> APR on gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">6 months</td><td class="val"><code>5%</code> APR on gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">9 months</td><td class="val"><code>6%</code> APR on gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">12 months</td><td class="val"><code>7%</code> APR on gold value, paid in SOST at deposit</td></tr>
         </table>
       </div>
     </div>
   </div>
 </section>
+
+<!-- SLASH -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 04 &mdash; ENFORCEMENT</div>
+      <h2 class="section-title">Slash <span class="accent">Mechanics</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Automatic Slashing (Model A only)</span>
+        </div>
+        <span class="spec-tag immutable">CONSTITUTIONAL C7/C8</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Every fraud detected burns supply, rewards honest participants, and buys more gold
+          for the reserve. Dishonesty strengthens the protocol. No human can override once triggered.
+        </p>
+
+        <div class="arch-flow" style="margin:16px 0;">
+          <div class="arch-node">
+            <div class="node-label">Trigger</div>
+            <div class="node-name">Balance &lt; Committed</div>
+            <div class="node-detail">or 48h no-response<br>after GRACE</div>
+          </div>
+          <div class="arch-node">
+            <div class="node-label">33.33%</div>
+            <div class="node-name" style="color:var(--red-primary)">BURN</div>
+            <div class="node-detail">Permanent deflation</div>
+          </div>
+          <div class="arch-node">
+            <div class="node-label">33.33%</div>
+            <div class="node-name">PoPC Pool</div>
+            <div class="node-detail">Future rewards</div>
+          </div>
+          <div class="arch-node">
+            <div class="node-label">33.33%</div>
+            <div class="node-name">Gold Vault</div>
+            <div class="node-detail">Buys more gold</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 05 &mdash; EXTENSIONS</div>
+      <h2 class="section-title">Physical Gold <span class="accent">&amp; ZK Proofs</span></h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">
+      <div class="spec-block fade-in delay-1">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon cyan"></div>
+            <span class="spec-name">Year 2&ndash;3: Physical Gold</span>
+          </div>
+          <span class="spec-tag overlay">EXTENSION</span>
+        </div>
+        <div class="spec-body">
+          <p class="spec-desc">
+            PoPC extends to physical gold (bars, coins, ingots). Users commit to custody
+            of physical precious metals. Audit challenges derived from ConvergenceX entropy,
+            executed via mobile app. No gold amount, location, or identity on-chain.
+          </p>
+        </div>
+      </div>
+      <div class="spec-block fade-in delay-2">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon green"></div>
+            <span class="spec-name">Year 3+: ZK Proofs</span>
+          </div>
+          <span class="spec-tag overlay">R&amp;D</span>
+        </div>
+        <div class="spec-body">
+          <p class="spec-desc">
+            Zero-Knowledge proofs certify that the correct challenge algorithm executed
+            correctly &mdash; without revealing data. Scope extends to platinum, palladium,
+            rhodium. Will not deploy in a degraded state. Participants&rsquo; physical
+            security is a non-negotiable prerequisite.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <footer>
   <div class="container">
-    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>SOST PROTOCOL &middot; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
-    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+    <img class="footer-logo" src="data:image/png;base64,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" alt="SOST" style="display:block;">
+    <p>SOST PROTOCOL &middot; <a href="#">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk</a></p>
+    <p style="margin-top:8px;">Genesis block: 2026-02-28 00:00:00 UTC &middot; Built for sovereign proof-of-work</p>
   </div>
 </footer>
 
 <script>
-(function(){
-  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
-  var rewardSection=document.querySelector('#goldSpotBanner');
-  if(!rewardSection){
-    var banner=document.createElement('div');
-    banner.id='goldSpotBanner';
-    banner.style.cssText='background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:14px 20px;margin:20px 0;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;font-size:13px;';
-    banner.innerHTML='<span style="color:#475569">Loading gold spot...</span>';
-    var notices=document.querySelectorAll('.notice');
-    for(var i=0;i<notices.length;i++){
-      if(notices[i].textContent.indexOf('Non-guaranteed')!==-1){
-        notices[i].parentNode.insertBefore(banner,notices[i].nextSibling);
-        break;
-      }
-    }
-    rewardSection=banner;
-  }
-
-  function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
-
-  function fetchPrices(){
-    fetch(COINGECKO_URL).then(function(r){return r.json();}).then(function(d){
-      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
-      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
-      var avg=(xaut&&paxg)?((xaut+paxg)/2):0;
-      var now=new Date();
-      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
-      rewardSection.innerHTML='<span style="color:#64748b;font-size:11px;letter-spacing:1px;">GOLD SPOT</span>'
-        +'<span style="color:#b8860b;font-weight:600;">XAUT: $'+fmt(xaut)+'</span>'
-        +'<span style="color:#2a2a2a;">|</span>'
-        +'<span style="color:#4ade80;font-weight:600;">PAXG: $'+fmt(paxg)+'</span>'
-        +'<span style="color:#2a2a2a;">|</span>'
-        +'<span style="color:#e2e8f0;">Avg: $'+fmt(avg)+'</span>'
-        +liveBadge()
-        +'<span style="color:#475569;font-size:10px;margin-left:8px;">'+ts+'</span>';
-    }).catch(function(){
-      rewardSection.innerHTML='<span style="color:#64748b;">Gold spot price unavailable</span>';
-    });
-  }
-  fetchPrices();
-  setInterval(fetchPrices,60000);
-})();
+document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var html = document.documentElement.outerHTML;
+    var blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = btn.getAttribute('data-download');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+});
 </script>
-<script src="sost-search.js"></script>
+
 </body>
 </html>

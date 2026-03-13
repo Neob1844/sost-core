@@ -480,7 +480,7 @@ location / {
 13. P2P encryption X25519 + ChaCha20-Poly1305 (sost-node.cpp)
 14. Encrypted wallet backup export
 
-**[DONE] Checkpoint fast sync implemented. Checkpoints array empty at genesis — update with first releases.**
+**[DONE] Fast sync implemented with hard checkpoints (exact match) and assumevalid anchor. Lower height alone never grants trust. Checkpoint/anchor arrays empty at genesis — update with first releases.**
 
 ### Block C — Network Ready
 15. Hardcoded seeds in binary

@@ -809,35 +809,48 @@ FULL: recompute full ConvergenceX proof for each block.
 ADAPTIVE (default): FULL on recent tail + sampling; BASIC deep history.
 BASIC: header/difficulty/time/target checks only; MUST NOT accept tip blocks.
 
-3.13.1 Checkpoint-Based Fast Sync
+3.13.1 Fast Sync — Hard Checkpoints and Assumevalid Anchor
 
-New nodes joining the network can optionally skip full ConvergenceX
-recomputation for blocks below the last hardcoded checkpoint. This
-optimization reduces initial sync time from days to minutes without
-compromising security.
+New nodes joining the network can skip expensive ConvergenceX
+recomputation for trusted historical blocks. Structural, semantic,
+and economic validation always runs — only the expensive CX recompute
+is conditionally skipped.
 
-Verification layers always performed (all blocks):
+Trust model (two independent mechanisms):
+
+1. Hard checkpoints: A block is trusted ONLY if its height AND block
+   hash match a hardcoded checkpoint exactly. Lower height alone is
+   never sufficient to grant trust.
+
+2. Assumevalid anchor: Similar to Bitcoin Core's -assumevalid flag.
+   If a known block hash exists on the active chain, ancestors of that
+   branch can skip expensive CX recomputation. If the anchor is not on
+   the active chain (e.g. during a chain split), no fast trust is
+   granted.
+
+Verification always performed (all blocks, all modes):
 - Header structure and magic bytes
 - Timestamp validation (MTP monotonicity + future drift)
 - ASERT difficulty compliance
 - SOSTCompact target threshold (commit <= target)
 - Coinbase split correctness (50/25/25)
 - Constitutional address verification
-- UTXO set updates
+- Transaction structure and semantic rules
+- UTXO set updates (ConnectBlock)
 
-Verification skipped (checkpointed blocks only):
+Verification skipped (trusted historical blocks only):
 - Full 100,000-round gradient descent recomputation
 - 4GB scratchpad reconstruction
 - Stability basin re-verification
 
 Any node operator can force full verification with --full-verify.
-Checkpoints are committed in source code, reviewed by the development
-team, and updated with each release. A block must have been fully
-verified by at least one trusted node before being added as a
-checkpoint.
+Checkpoints and the assumevalid anchor are committed in source code,
+reviewed by the development team, and updated with each release. A
+block must have been fully verified by at least one trusted node before
+being added as a checkpoint or set as the assumevalid anchor.
 
-This mechanism is equivalent to Bitcoin Core's hardcoded checkpoints
-and assumevalid functionality.
+This mechanism does not change consensus rules. A block that passes
+fast sync verification would also pass full verification.
 
 3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)
 

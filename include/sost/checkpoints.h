@@ -1,5 +1,33 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
 // MIT License. See LICENSE file.
+//
+// checkpoints.h — Hard checkpoints and assumevalid anchor for fast sync.
+//
+// This file is SEPARATE from params.h by design.
+// These mechanisms do NOT change consensus — they only control whether
+// expensive ConvergenceX recomputation is skipped for historical blocks
+// during initial sync.
+//
+// Trust model:
+//   1. Hard checkpoints: exact height + hash match required.
+//      Lower height alone is NEVER sufficient.
+//   2. Assumevalid anchor: if a known block hash exists on the active
+//      chain, ancestors of that branch can skip expensive CX recomputation.
+//      If the anchor is not on the active chain, no fast trust.
+//
+// What is ALWAYS verified (even during fast sync):
+//   - Header structure and magic bytes
+//   - Timestamp / MTP / future drift
+//   - ASERT difficulty compliance
+//   - Commit <= target (PoW inequality)
+//   - Coinbase split (50/25/25) and constitutional addresses
+//   - Transaction structure and semantic rules
+//   - UTXO set updates (ConnectBlock)
+//
+// What is skipped (trusted historical blocks only):
+//   - Full 100,000-round ConvergenceX gradient descent recomputation
+//   - 4GB scratchpad reconstruction
+//   - Stability basin re-verification
 #pragma once
 #include <string>
 #include <vector>
@@ -7,41 +35,87 @@
 
 namespace sost {
 
-struct SyncCheckpoint {
+struct HardCheckpoint {
     uint32_t height;
     std::string block_hash;
 };
 
-// Hardcoded checkpoints verified by the development team.
-// Blocks at or below LAST_CHECKPOINT_HEIGHT can skip full
-// ConvergenceX recomputation during initial sync.
-// Header, timestamp, difficulty, target, coinbase split,
-// and UTXO updates are ALWAYS verified regardless.
-//
-// To force full verification: --full-verify
-//
+// Hard checkpoints: a block is checkpoint-trusted ONLY if its height
+// AND hash match exactly. Lower height alone is NOT enough.
 // Empty at genesis. Updated with each source release.
-static const std::vector<SyncCheckpoint> SYNC_CHECKPOINTS = {
+static const std::vector<HardCheckpoint> HARD_CHECKPOINTS = {
     // {height, "block_hash_hex"},
     // Example (do NOT add until blocks exist):
-    // {1000, "abc123..."},
+    // {1000, "0000abcd..."},
 };
 
-static const uint32_t LAST_CHECKPOINT_HEIGHT = 0;
+// Quick range pre-check before iterating checkpoints.
+// Do NOT use this alone to trust blocks.
+static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 0;
 
-// Returns true if the given height+hash matches a checkpoint
-inline bool is_checkpointed(uint32_t height,
-                             const std::string& hash) {
-    if (height > LAST_CHECKPOINT_HEIGHT) return false;
-    for (const auto& cp : SYNC_CHECKPOINTS) {
+// Assumevalid anchor: if this block hash exists on the active chain,
+// ancestors of that branch can skip expensive ConvergenceX recomputation
+// (but NOT cheap/semantic verification).
+// Empty string = no assumevalid anchor = no fast trust.
+static const std::string ASSUMEVALID_BLOCK_HASH = "";
+static const uint32_t ASSUMEVALID_HEIGHT = 0;
+
+// ═══════════════════════════════════════════════════════════════════
+// Functions — explicit, non-ambiguous
+// ═══════════════════════════════════════════════════════════════════
+
+// Returns true ONLY if height matches a checkpoint AND hash matches
+// exactly. Returns false for: wrong hash, lower height without exact
+// match, or lower height alone.
+inline bool is_hard_checkpoint(uint32_t height, const std::string& hash) {
+    if (height > LAST_HARD_CHECKPOINT_HEIGHT) return false;
+    for (const auto& cp : HARD_CHECKPOINTS) {
         if (cp.height == height && cp.block_hash == hash) {
             return true;
         }
     }
-    // Blocks below last checkpoint but not in the list:
-    // Also skip full verify (trusted range)
-    return (height <= LAST_CHECKPOINT_HEIGHT &&
-            LAST_CHECKPOINT_HEIGHT > 0);
+    return false;
+}
+
+// Returns true only if an assumevalid anchor is configured
+// (non-empty hash and height > 0).
+inline bool has_assumevalid_anchor() {
+    return !ASSUMEVALID_BLOCK_HASH.empty() && ASSUMEVALID_HEIGHT > 0;
+}
+
+// Returns true if a block can skip expensive CX recomputation because
+// it is an ancestor of the assumevalid anchor on the active chain.
+//
+// chain_contains_anchor: the caller MUST verify this by checking that
+// the active chain at ASSUMEVALID_HEIGHT has hash == ASSUMEVALID_BLOCK_HASH.
+// If the anchor is NOT on the active chain, this returns false.
+inline bool is_block_under_assumevalid(uint32_t block_height,
+                                        bool chain_contains_anchor) {
+    if (!has_assumevalid_anchor()) return false;
+    if (!chain_contains_anchor) return false;
+    return block_height <= ASSUMEVALID_HEIGHT;
+}
+
+// Master decision: should we skip expensive CX recomputation?
+// Returns true ONLY if one of:
+//   1. Block matches a hard checkpoint exactly (height + hash)
+//   2. Block is under assumevalid anchor AND anchor is on active chain
+// Returns false in ALL other cases (including full-verify mode).
+inline bool can_skip_cx_recomputation(uint32_t block_height,
+                                       const std::string& block_hash,
+                                       bool chain_contains_anchor,
+                                       bool full_verify_mode) {
+    // --full-verify overrides everything
+    if (full_verify_mode) return false;
+
+    // Hard checkpoint exact match
+    if (is_hard_checkpoint(block_height, block_hash)) return true;
+
+    // Assumevalid ancestor trust
+    if (is_block_under_assumevalid(block_height, chain_contains_anchor))
+        return true;
+
+    return false;
 }
 
 } // namespace sost
