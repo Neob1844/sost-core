@@ -615,6 +615,7 @@
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html" class="active">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -947,93 +948,121 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
       <div class="spec-body">
         <p class="spec-desc">
           cASERT (Controlled ASERT) is a consensus-critical stability overlay that adapts
-          ConvergenceX's stability verification parameters based on real-time block interval
-          error signals. It acts as a retarget stabilizer for abnormal network conditions:
-          thin hashrate, erratic timestamps, startup instability, or burst mining.
+          ConvergenceX's stability verification parameters based on how far ahead the chain
+          is running vs the ideal schedule (genesis + height &times; 600s). Unidirectional: only
+          hardens when chain is ahead of schedule. When behind, ASERT alone handles difficulty.
         </p>
 
-        <div class="code-snippet" data-label="SIGNAL">
-<span class="cmt">// Error signal from last 64 inter-block deltas</span>
-<span class="kw">for each</span> delta <span class="kw">in</span> recent_intervals:
-    err = delta - <span class="num">600</span>                        <span class="cmt">// deviation from target</span>
-    err = <span class="fn">clamp</span>( err, -<span class="num">1800</span>, +<span class="num">1800</span> )       <span class="cmt">// anti-outlier cap</span>
-    score += err
+        <div class="code-snippet" data-label="LEVEL COMPUTATION">
+<span class="cmt">// Lag: positive = behind, negative = ahead</span>
+elapsed   = latest_time - GENESIS_TIME
+expected  = elapsed / <span class="num">600</span>
+lag       = expected - (next_height - <span class="num">1</span>)
+ahead     = (lag &lt; <span class="num">0</span>) ? -lag : <span class="num">0</span>
 
-signal = score / n_samples                   <span class="cmt">// average timing error (seconds)</span>
-
-<span class="cmt">// Mode selection</span>
-<span class="kw">if</span> signal &gt; <span class="num">200</span>  → <span class="str">"open"</span>                   <span class="cmt">// severe slowdown → relax stability</span>
-<span class="kw">if</span> signal &gt;  <span class="num">50</span>  → <span class="str">"degraded"</span>               <span class="cmt">// moderate slowdown → partial relax</span>
-<span class="kw">else</span>            → <span class="str">"normal"</span>                 <span class="cmt">// on-target → full enforcement</span>
+<span class="cmt">// Level from blocks ahead (fixed bands L1-L5, unbounded L6+)</span>
+<span class="kw">if</span> ahead &lt;   <span class="num">5</span> → L1 (neutral, scale=<span class="num">1</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">26</span> → L2 (scale=<span class="num">2</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">51</span> → L3 (scale=<span class="num">3</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">76</span> → L4 (scale=<span class="num">4</span>)
+<span class="kw">if</span> ahead &lt; <span class="num">101</span> → L5 (scale=<span class="num">5</span>)
+<span class="kw">else</span>          → L6+ (scale = <span class="num">6</span> + floor((ahead-<span class="num">101</span>)/<span class="num">50</span>))  <span class="cmt">// unbounded</span>
         </div>
 
         <div class="mode-grid">
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--green-primary)"></span>
-              NORMAL
+              L1 NEUTRAL
             </div>
             <div class="mode-params">
-              scale=<span>3</span> · k=<span>4</span> · margin=<span>180</span> · steps=<span>3</span><br>
-              <em>Full stability enforcement. On-target timing.</em>
+              0&ndash;4 blocks ahead &middot; scale=1<br>
+              <em>ASERT handles everything. No CX overlay.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
-              <span class="indicator" style="background:var(--red-accent)"></span>
-              DEGRADED
+              <span class="indicator" style="background:#67e8f9"></span>
+              L2
             </div>
             <div class="mode-params">
-              scale=<span>2</span> · k=<span>3</span> · margin=<span>180</span> · steps=<span>2</span><br>
-              <em>Partial relaxation. Signal &gt; 50s avg error.</em>
+              5&ndash;25 blocks ahead &middot; scale=2<br>
+              <em>Light hardening. k=4 &middot; margin=180 &middot; steps=4</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:#fbbf24"></span>
+              L3
+            </div>
+            <div class="mode-params">
+              26&ndash;50 blocks ahead &middot; scale=3<br>
+              <em>Moderate hardening.</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:#fb923c"></span>
+              L4&ndash;L5
+            </div>
+            <div class="mode-params">
+              51&ndash;100 blocks ahead &middot; scale=4&ndash;5<br>
+              <em>Strong/severe hardening.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--red-primary)"></span>
-              OPEN
+              L6+ UNBOUNDED
             </div>
             <div class="mode-params">
-              scale=<span>1</span> · k=<span>2</span> · margin=<span>180</span> · steps=<span>1</span><br>
-              <em>Maximum relaxation. Signal &gt; 200s avg error.</em>
-            </div>
-          </div>
-          <div class="mode-card">
-            <div class="mode-name">
-              <span class="indicator" style="background:var(--text-muted)"></span>
-              WARMUP
-            </div>
-            <div class="mode-params">
-              scale=<span>3</span> · k=<span>4</span> · margin=<span>180</span> · steps=<span>3</span><br>
-              <em>Pre-activation. Height &lt; 2 (insufficient data).</em>
+              101+ blocks ahead &middot; scale grows every 50 blocks<br>
+              <em>No ceiling. The faster the attack, the harder the brake.</em>
             </div>
           </div>
         </div>
 
+        <div class="code-snippet" data-label="DECAY ANTI-STALL" style="margin-top:16px;">
+<span class="cmt">// Activates after 7200s (2 hours) without a block</span>
+<span class="cmt">// Mining only — validation uses raw level</span>
+stall_time = now - last_block_time - <span class="num">7200</span>
+
+<span class="kw">while</span> effective_level &gt; <span class="num">1</span> and stall_time &gt; <span class="num">0</span>:
+    <span class="kw">if</span> level &gt;= <span class="num">8</span>: cost = <span class="num">600</span>s   <span class="cmt">// L8+: 10 min/level (fast)</span>
+    <span class="kw">elif</span> level &gt;= <span class="num">4</span>: cost = <span class="num">1200</span>s  <span class="cmt">// L4-L7: 20 min/level (medium)</span>
+    <span class="kw">else</span>:           cost = <span class="num">1800</span>s  <span class="cmt">// L2-L3: 30 min/level (cautious)</span>
+    effective_level -= <span class="num">1</span>
+    stall_time -= cost
+        </div>
+
         <table class="code-table" style="margin-top:16px;">
           <tbody><tr>
-            <td class="key">MAX_INTERVALS</td>
-            <td class="val"><code>64</code> <span class="comment">// sliding window (balanced reactivity)</span></td>
+            <td class="key">CASERT_L2_BLOCKS</td>
+            <td class="val"><code>5</code> <span class="comment">// blocks ahead to enter L2</span></td>
           </tr>
           <tr>
-            <td class="key">E_CAP</td>
-            <td class="val"><code>1,800</code> seconds <span class="comment">// per-sample error clamp</span></td>
+            <td class="key">CASERT_L3_BLOCKS</td>
+            <td class="val"><code>26</code> <span class="comment">// blocks ahead to enter L3</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_OPEN_TH</td>
-            <td class="val"><code>200</code> seconds <span class="comment">// threshold for open mode</span></td>
+            <td class="key">CASERT_L4_BLOCKS</td>
+            <td class="val"><code>51</code> <span class="comment">// blocks ahead to enter L4</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_DEGRADED_TH</td>
-            <td class="val"><code>50</code> seconds <span class="comment">// threshold for degraded mode</span></td>
+            <td class="key">CASERT_L5_BLOCKS</td>
+            <td class="val"><code>76</code> <span class="comment">// blocks ahead to enter L5</span></td>
           </tr>
           <tr>
-            <td class="key">Activation</td>
-            <td class="val">Height ≥ 2 <span class="comment">// first dt requires two timestamps</span></td>
+            <td class="key">CASERT_L6_BLOCKS</td>
+            <td class="val"><code>101</code> <span class="comment">// L6+ unbounded starts here</span></td>
+          </tr>
+          <tr>
+            <td class="key">DECAY_ACTIVATION</td>
+            <td class="val"><code>7,200</code> seconds <span class="comment">// 2 hours without block</span></td>
           </tr>
           <tr>
             <td class="key">Directionality</td>
-            <td class="val">Opens only when slow <span class="comment">// fast chain (signal ≤ 0) stays normal</span></td>
+            <td class="val">Unidirectional <span class="comment">// only hardens when chain is ahead</span></td>
           </tr>
         </tbody></table>
       </div>
@@ -1144,7 +1173,7 @@ signal = score / n_samples                   <span class="cmt">// average timing
         <table class="code-table">
           <tbody><tr>
             <td class="key">MAINNET_GENESIS_UTC</td>
-            <td class="val"><code>1772236800</code> <span class="comment">// 2026-02-28 00:00:00 UTC</span></td>
+            <td class="val"><code>1773360000</code> <span class="comment">// 2026-03-13 00:00:00 UTC</span></td>
           </tr>
           <tr>
             <td class="key">BLOCKS_PER_EPOCH</td>

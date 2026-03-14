@@ -5,7 +5,7 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Protocol — Tokenomics</title>
+<title>SOST Protocol — Materials Discovery Engine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +26,6 @@
     --green-dim: #22c55e44;
     --cyan-primary: #22d3ee;
     --cyan-dim: #22d3ee33;
-    --red-accent: #fb010d;
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --text-dim: #64748b;
@@ -147,7 +146,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 300px;
-    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
   .hero-label {
@@ -412,7 +411,7 @@
     transform: translateY(-2px);
   }
   .arch-node::after {
-    content: '→';
+    content: '\2192';
     position: absolute;
     right: -8px;
     top: 50%;
@@ -441,35 +440,6 @@
     color: var(--text-dim);
     line-height: 1.5;
   }
-
-  /* ---- CODE SNIPPET ---- */
-  .code-snippet {
-    background: var(--bg-panel);
-    border: 1px solid var(--border-dim);
-    border-radius: 6px;
-    padding: 16px 20px;
-    margin: 16px 0;
-    overflow-x: auto;
-    font-size: 12px;
-    line-height: 1.8;
-    position: relative;
-  }
-  .code-snippet::before {
-    content: attr(data-label);
-    position: absolute;
-    top: 0; right: 0;
-    background: var(--border-dim);
-    color: var(--text-muted);
-    font-size: 10px;
-    padding: 2px 10px;
-    border-radius: 0 6px 0 4px;
-    letter-spacing: 1px;
-  }
-  .code-snippet .kw { color: var(--cyan-primary); }
-  .code-snippet .fn { color: var(--red-primary); }
-  .code-snippet .str { color: var(--green-primary); }
-  .code-snippet .num { color: var(--red-primary); }
-  .code-snippet .cmt { color: var(--text-muted); font-style: italic; }
 
   /* ---- MODE GRID ---- */
   .mode-grid {
@@ -507,43 +477,15 @@
     color: var(--text-secondary);
   }
 
-  /* ---- PRINCIPLE CARDS ---- */
-  .principles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
-  }
-  .principle-card {
+  /* ---- DISCLAIMER ---- */
+  .disclaimer-box {
     background: var(--bg-card);
-    border: 1px solid var(--border-dim);
+    border: 2px solid #fb010d;
     border-radius: 8px;
     padding: 24px;
-    transition: border-color 0.3s, transform 0.2s;
-    position: relative;
-    overflow: hidden;
+    margin-top: 16px;
   }
-  .principle-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--card-accent, var(--red-primary));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .principle-card:hover {
-    border-color: var(--border-med);
-    transform: translateY(-2px);
-  }
-  .principle-card:hover::before { opacity: 1; }
-  .principle-card .p-label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-  .principle-card .p-desc {
+  .disclaimer-box p {
     color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.8;
@@ -563,12 +505,6 @@
     transition: color 0.2s;
   }
   footer a:hover { color: var(--red-primary); }
-  .footer-logo {
-    width: 32px; height: 32px;
-    margin: 0 auto 12px;
-    opacity: 0.4;
-    filter: grayscale(0.3);
-  }
 
   /* ---- ANIMATIONS ---- */
   .fade-in {
@@ -593,7 +529,7 @@
     .arch-node:first-child { border-radius: 8px 8px 0 0 !important; }
     .arch-node:last-child { border-radius: 0 0 8px 8px !important; }
     .arch-node::after {
-      content: '↓';
+      content: '\2193';
       right: 50%; top: auto; bottom: -8px;
       transform: translateX(50%);
     }
@@ -615,10 +551,10 @@
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-materials-engine.html" class="active">Materials Engine</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
-      <a href="sost-tokenomics.html" class="active">Tokenomics</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-getting-started.html">Getting Started</a>
@@ -642,242 +578,308 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">TOKENOMICS</div>
+    <div class="hero-label fade-in">MATERIALS ENGINE</div>
     <h1 class="fade-in delay-1">
-      <span>Feigenbaum</span><br>
-      Emission Model
+      <span>Materials Discovery</span><br>
+      Engine
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Smooth epoch-based emission with exponential decay. No halvings, no cliffs.
-      Epoch length derived from the Feigenbaum constant &alpha;. All arithmetic is
-      integer-only, consensus-safe, and deterministic across all implementations.
+      Repurposing ConvergenceX Proof-of-Work for Scientific Computing
     </p>
     <div class="protocol-badge fade-in delay-3">
-      <span class="tag">CONSENSUS</span>
+      <span class="tag">RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">4,669,201 SOST hard cap &middot; ~9.03% annual decay &middot; 30-year ~95% emission</span>
+      <span class="val">ConvergenceX compute &middot; Materials simulation &middot; SOST escrow access</span>
+    </div>
+
+    <div class="download-bar fade-in delay-4">
+      <a class="dl-btn" id="downloadPageBtn" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download this page
+      </a>
+      <a class="dl-btn secondary" href="#overview">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        Explore specification
+      </a>
     </div>
   </div>
 </section>
 
-<!-- EMISSION -->
-<section class="section">
+<!-- OVERVIEW -->
+<section class="section" id="overview">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">EMISSION SCHEDULE</div>
-      <h2 class="section-title">Smooth Exponential <span class="accent">Decay</span></h2>
-    </div>
-
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">subsidy(height)</span>
-        </div>
-        <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
-      </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          Epoch-constant subsidy with smooth exponential decay. The decay factor
-          <code>q = exp(&minus;1/4) &approx; 0.7788</code> is implemented as fixed-point
-          with explicit floor division. O(log epoch) via exponentiation-by-squaring.
-          Zero floating-point &mdash; any float operation would be a consensus failure.
-        </p>
-
-        <div class="code-snippet" data-label="EMISSION RULE">
-<span class="cmt">// Consensus rule (integer-only)</span>
-epoch  = height // <span class="num">131,553</span>
-reward = <span class="fn">floor</span>( R0 &times; q<sup>epoch</sup> )
-
-<span class="cmt">// Fixed-point exponentiation by squaring</span>
-Q_NUM = <span class="num">7,788,007,830,714,049</span>
-Q_DEN = <span class="num">10,000,000,000,000,000</span>
-
-<span class="fn">_qpow_floor</span>(base, exp):
-    result = Q_DEN
-    x = base
-    <span class="kw">while</span> exp &gt; 0:
-        <span class="kw">if</span> exp &amp; 1: result = (result &times; x) // Q_DEN
-        x = (x &times; x) // Q_DEN
-        exp &gt;&gt;= 1
-    <span class="kw">return</span> result
-
-subsidy = (R0 &times; <span class="fn">_qpow_floor</span>(Q_NUM, epoch)) // Q_DEN
-        </div>
-
-        <table class="code-table">
-          <tr><td class="key">TARGET_SPACING</td><td class="val"><code>600</code> seconds <span class="comment">// 10-minute blocks</span></td></tr>
-          <tr><td class="key">BLOCKS_PER_YEAR</td><td class="val"><code>52,560</code></td></tr>
-          <tr><td class="key">BLOCKS_PER_EPOCH</td><td class="val"><code>131,553</code> <span class="comment">// round(52,560 &times; &alpha;)</span></td></tr>
-          <tr><td class="key">Feigenbaum &alpha;</td><td class="val"><code>2.502907875095892</code> years/epoch</td></tr>
-          <tr><td class="key">Decay factor q</td><td class="val"><code>exp(&minus;1/4) &approx; 0.7788</code> <span class="comment">// ~9.03% annual decay</span></td></tr>
-          <tr><td class="key">R0_STOCKSHIS</td><td class="val"><code>785,100,863</code> <span class="comment">// 7.85100863 SOST initial reward</span></td></tr>
-          <tr><td class="key">SUPPLY_MAX_STOCKSHIS</td><td class="val"><code>466,920,160,910,299</code> <span class="comment">// &approx; 4,669,201 SOST</span></td></tr>
-          <tr><td class="key">~95% emission</td><td class="val">~12 epochs <span class="comment">// &approx; 30 years</span></td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- COINBASE SPLIT -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">COINBASE SPLIT</div>
-      <h2 class="section-title">Block Reward <span class="accent">Distribution</span></h2>
-    </div>
-
-    <div class="arch-flow fade-in delay-1">
-      <div class="arch-node">
-        <div class="node-label">50% + remainder</div>
-        <div class="node-name" style="color:var(--red-primary)">Miner</div>
-        <div class="node-detail">reward - gold - popc</div>
-      </div>
-      <div class="arch-node">
-        <div class="node-label">25%</div>
-        <div class="node-name">Gold Vault</div>
-        <div class="node-detail">q = reward // 4</div>
-      </div>
-      <div class="arch-node">
-        <div class="node-label">25%</div>
-        <div class="node-name">PoPC Pool</div>
-        <div class="node-detail">q = reward // 4</div>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">Conservation Invariant</span>
-        </div>
-        <span class="spec-tag immutable">CONSTITUTIONAL C2</span>
-      </div>
-      <div class="spec-body">
-        <div class="code-snippet" data-label="SPLIT">
-q     = reward // <span class="num">4</span>
-gold  = q
-popc  = q
-miner = reward - gold - popc
-
-<span class="cmt">// Invariant (always holds):</span>
-miner + gold + popc == reward    <span class="cmt">// exact integer conservation</span>
-
-<span class="cmt">// Example at height 0:</span>
-reward = <span class="num">785,100,863</span>
-gold   = <span class="num">196,275,215</span>
-popc   = <span class="num">196,275,215</span>
-miner  = <span class="num">392,550,433</span>
-sum    = <span class="num">785,100,863</span> &check;
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SUPPLY PROJECTIONS -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">PROJECTIONS</div>
-      <h2 class="section-title">Supply <span class="accent">Breakdown</span></h2>
-    </div>
-
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">30-Year Total Distribution</span>
-        </div>
-        <span class="spec-tag consensus">BY CONSTRUCTION</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><td class="key">Miners (50%)</td><td class="val"><code>2,334,600</code> SOST</td></tr>
-          <tr><td class="key">Gold Vault (25%)</td><td class="val"><code>1,167,300</code> SOST</td></tr>
-          <tr><td class="key">PoPC Pool (25%)</td><td class="val"><code>1,167,300</code> SOST</td></tr>
-          <tr><td class="key">Maximum supply</td><td class="val"><code>4,669,201</code> SOST (hard cap)</td></tr>
-          <tr><td class="key">Premine</td><td class="val"><code>0</code> SOST &mdash; zero</td></tr>
-          <tr><td class="key">ICO / VCs</td><td class="val">None</td></tr>
-        </table>
-
-        <table class="code-table" style="margin-top:16px;">
-          <tr><td class="key">Epoch 0 per vault</td><td class="val"><code>258,210</code> SOST <span class="comment">// years 0&ndash;2.5</span></td></tr>
-          <tr><td class="key">Year 1 per vault</td><td class="val"><code>103,160</code> SOST</td></tr>
-          <tr><td class="key">Year 5 per vault</td><td class="val"><code>~75,000</code> SOST</td></tr>
-          <tr><td class="key">Year 10 per vault</td><td class="val"><code>~52,000</code> SOST</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- COMPARISON -->
-<section class="section">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">COMPARISON</div>
-      <h2 class="section-title">SOST vs <span class="accent">Bitcoin</span></h2>
+      <div class="section-id">01 &mdash; OVERVIEW</div>
+      <h2 class="section-title">Materials Discovery <span class="accent">Platform</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">Emission Model Comparison</span>
+          <span class="spec-name">Extending SOST Beyond Finance</span>
         </div>
-        <span class="spec-tag overlay">REFERENCE</span>
+        <span class="spec-tag overlay">RESEARCH</span>
       </div>
       <div class="spec-body">
-        <table class="code-table">
-          <tr><td class="key">Max supply</td><td class="val">BTC: <code>21,000,000</code> &middot; SOST: <code>4,669,201</code></td></tr>
-          <tr><td class="key">Initial reward</td><td class="val">BTC: <code>50</code>/block &middot; SOST: <code>7.851</code>/block</td></tr>
-          <tr><td class="key">Decay method</td><td class="val">BTC: halving every 210k blocks &middot; SOST: smooth 9.03% annual</td></tr>
-          <tr><td class="key">Decay events</td><td class="val">BTC: cliff (50% overnight) &middot; SOST: continuous (no cliffs)</td></tr>
-          <tr><td class="key">Mining allocation</td><td class="val">BTC: 100% miner &middot; SOST: 50% miner, 25% gold, 25% PoPC</td></tr>
-          <tr><td class="key">Smallest unit</td><td class="val">BTC: 1 satoshi (10&#x207B;&#x2078;) &middot; SOST: 1 stockshi (10&#x207B;&#x2078;)</td></tr>
-          <tr><td class="key">~95% emission</td><td class="val">BTC: ~2036 (year 28) &middot; SOST: ~2056 (year 30)</td></tr>
-        </table>
+        <p class="spec-desc">
+          The SOST Materials Discovery Engine extends the SOST ecosystem beyond financial
+          infrastructure into scientific discovery. A computational platform for predicting,
+          generating, and evaluating novel material compositions. By repurposing the
+          ConvergenceX proof-of-work architecture &mdash; originally designed for CPU-friendly
+          mining &mdash; the engine applies gradient-descent optimization to the problem space
+          of materials science.
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- HARD CAP -->
+<!-- CONVERGENCEX AS COMPUTATION -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">CAP ENFORCEMENT</div>
-      <h2 class="section-title">Hard Cap <span class="accent">by Construction</span></h2>
+      <div class="section-id">02 &mdash; COMPUTATION</div>
+      <h2 class="section-title">ConvergenceX as <span class="accent">Computation</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">Mathematical Guarantee</span>
+          <span class="spec-name">PoW &rarr; Materials Simulation Mapping</span>
         </div>
-        <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
+        <span class="spec-tag consensus">CORE MAPPING</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          SOST enforces maximum supply by construction, not by tracking cumulative supply.
-          Since <code>floor(x) &le; x</code>, the geometric series of epoch emissions is
-          upper-bounded. No other minting path exists. Any block that mints more than
-          <code>subsidy(height)</code> is invalid. Any shortfall due to flooring remains
-          permanently unissued.
+          ConvergenceX&rsquo;s proof-of-work primitives map naturally to the computational
+          requirements of materials simulation. Each PoW component has a direct analogue
+          in molecular dynamics and energy optimization.
         </p>
+        <table class="code-table">
+          <tr><td class="key">4GB Scratchpad</td><td class="val">Working memory for molecular data <span class="comment">// atomic positions, forces, potentials</span></td></tr>
+          <tr><td class="key">32&times;32 Matrix</td><td class="val">Atomic interaction representation <span class="comment">// pairwise element correlations</span></td></tr>
+          <tr><td class="key">100K Gradient Iterations</td><td class="val">Energy minimization steps <span class="comment">// converge toward ground-state configuration</span></td></tr>
+          <tr><td class="key">Stability Basin</td><td class="val">Physical convergence criterion <span class="comment">// thermodynamic equilibrium detection</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <div class="code-snippet" data-label="PROOF">
-TotalIssued &le; B &times; &Sigma;<sub>e&ge;0</sub>( R0 &times; q<sup>e</sup> )
-            = B &times; R0 / (1 - q)
-            &le; SUPPLY_MAX_STOCKSHIS
+<!-- ARCHITECTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">03 &mdash; ARCHITECTURE</div>
+      <h2 class="section-title">Five-Layer <span class="accent">Architecture</span></h2>
+    </div>
 
-<span class="cmt">// Because R0 was chosen as:</span>
-R0 = <span class="fn">floor</span>( SUPPLY_MAX_STOCKSHIS &times; (1 - q) / B )
+    <div class="arch-flow fade-in delay-1">
+      <div class="arch-node">
+        <div class="node-label">Layer 1</div>
+        <div class="node-name">Data</div>
+        <div class="node-detail">~150K known materials<br>from public databases</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 2</div>
+        <div class="node-name">Inverse Search</div>
+        <div class="node-detail">Specify properties<br>get ranked candidates</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 3</div>
+        <div class="node-name">Prediction</div>
+        <div class="node-detail">ML models predict<br>hypothetical properties</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 4</div>
+        <div class="node-name">Discovery</div>
+        <div class="node-detail">Evolutionary algorithm<br>generates candidates</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 5</div>
+        <div class="node-name">Learning</div>
+        <div class="node-detail">Continuous improvement<br>from feedback loops</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Layer 1 &mdash; Data Foundation</span>
+        </div>
+        <span class="spec-tag overlay">DATABASE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Approximately 150,000 known materials sourced from leading open-access databases.
+          Provides the training data for prediction models and the reference set for inverse search.
+        </p>
+        <table class="code-table">
+          <tr><td class="key">Materials Project</td><td class="val">Inorganic crystal structures + computed properties</td></tr>
+          <tr><td class="key">JARVIS</td><td class="val">DFT-computed properties, 2D materials, heterostructures</td></tr>
+          <tr><td class="key">AFLOW</td><td class="val">Autonomous high-throughput materials discovery library</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Layer 2 &mdash; Inverse Search</span>
+        </div>
+        <span class="spec-tag consensus">SEARCH</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Specify desired material properties (band gap, hardness, thermal conductivity, etc.)
+          and receive a ranked list of candidate compositions from the database. Enables
+          property-driven discovery rather than composition-driven trial and error.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Layer 3 &mdash; Property Prediction</span>
+        </div>
+        <span class="spec-tag consensus">ML MODELS</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Machine learning models trained on the Layer 1 database predict physical, electronic,
+          and mechanical properties of hypothetical compositions that have never been synthesized.
+          Enables rapid screening of candidate materials before expensive DFT or experimental validation.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-4">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Layer 4 &mdash; Generative Discovery</span>
+        </div>
+        <span class="spec-tag immutable">GENERATIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          An evolutionary algorithm generates novel material candidates by mutating and
+          recombining known compositions. Fitness is evaluated using Layer 3 prediction models.
+          The ConvergenceX gradient-descent engine drives the optimization loop toward
+          compositions with target properties.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-4">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Layer 5 &mdash; Continuous Learning</span>
+        </div>
+        <span class="spec-tag overlay">FEEDBACK</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The system improves from feedback: validated predictions refine ML models,
+          user-submitted experimental data enriches the database, and discovered materials
+          become seeds for further generative exploration. A self-improving loop that
+          increases accuracy and coverage over time.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACCESS VIA SOST ESCROW -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">04 &mdash; ACCESS</div>
+      <h2 class="section-title">Access via SOST <span class="accent">Escrow</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">SOST Deposit Tiers</span>
+        </div>
+        <span class="spec-tag immutable">ESCROW</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Access to the Materials Discovery Engine requires a SOST deposit using the same
+          escrow mechanism as PoPC Model B. Deposits are locked for the tier duration and
+          returned upon expiry. Tiers determine available engine capabilities.
+        </p>
+        <table class="code-table">
+          <tr><td class="key">Tier 1</td><td class="val"><code>10 SOST</code> &middot; 1 month &mdash; Search + prediction <span class="comment">// Layers 1-3</span></td></tr>
+          <tr><td class="key">Tier 2</td><td class="val"><code>50 SOST</code> &middot; 3 months &mdash; + generative discovery <span class="comment">// Layers 1-4</span></td></tr>
+          <tr><td class="key">Tier 3</td><td class="val"><code>200 SOST</code> &middot; 6 months &mdash; + DFT validation + export <span class="comment">// Layers 1-5 + full access</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-2">
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--green-primary)"></span>
+          Tier 1: Search + Predict
+        </div>
+        <div class="mode-params">
+          <span>10 SOST</span> deposit, 1 month lock.<br>
+          Query the database, run inverse search, predict properties of known and hypothetical compositions.
         </div>
       </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          Tier 2: + Generative
+        </div>
+        <div class="mode-params">
+          <span>50 SOST</span> deposit, 3 month lock.<br>
+          Everything in Tier 1 plus evolutionary candidate generation and optimization runs.
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--red-primary)"></span>
+          Tier 3: Full Access
+        </div>
+        <div class="mode-params">
+          <span>200 SOST</span> deposit, 6 month lock.<br>
+          All capabilities including DFT validation queue, data export, and priority compute allocation.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">05 &mdash; DISCLAIMER</div>
+      <h2 class="section-title">Research <span class="accent">Disclaimer</span></h2>
+    </div>
+
+    <div class="disclaimer-box fade-in delay-1">
+      <p>
+        The Materials Discovery Engine represents an aspirational application of ConvergenceX&rsquo;s
+        gradient-descent proof-of-work architecture. Practical deployment as a materials simulation
+        platform requires significant additional research in mapping real-world molecular dynamics
+        to the ConvergenceX computational model. SOST commits to exploring this application without
+        making premature claims about timelines or capabilities. Any deployment will be contingent
+        on peer-reviewed validation of the computational methodology and demonstration of
+        scientifically meaningful results. This is a research direction, not a product commitment.
+      </p>
     </div>
   </div>
 </section>
@@ -892,20 +894,19 @@ R0 = <span class="fn">floor</span>( SUPPLY_MAX_STOCKSHIS &times; (1 - q) / B )
   </div>
 </footer>
 <script>
-document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    var html = document.documentElement.outerHTML;
-    var blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = btn.getAttribute('data-download');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
+// Self-download functionality
+document.getElementById('downloadPageBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sost-materials-engine.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 });
 </script>
 
