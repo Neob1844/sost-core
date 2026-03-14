@@ -370,8 +370,8 @@
 //   R3:  1 <= num_inputs <= MAX_INPUTS_PER_TX (256).
 //   R4:  1 <= num_outputs <= MAX_OUTPUTS_PER_TX (256).
 //   R5:  Every output amount > 0.
-//   R6:  Every output amount <= SUPPLY_MAX_STOCKSHIS.
-//   R7:  Sum of all output amounts <= SUPPLY_MAX_STOCKSHIS (no overflow).
+//   R6:  Every output amount <= SUPPLY_MAX_STOCKS.
+//   R7:  Sum of all output amounts <= SUPPLY_MAX_STOCKS (no overflow).
 //   R8:  No duplicate inputs (no two inputs share prev_txid + prev_index).
 //   R9:  Serialized transaction size <= MAX_TX_SIZE (100,000 bytes).
 //   R10: txid is unique within the block (no duplicate transactions).
@@ -695,10 +695,10 @@
 //
 //   --- Supply (consensus, immutable) ---
 //
-//   STOCKSHIS_PER_SOST        = 100,000,000
+//   STOCKS_PER_SOST        = 100,000,000
 //   SUPPLY_MAX_SOST           = 4,669,201
-//   SUPPLY_MAX_STOCKSHIS      = 466,920,100,000,000
-//     // = SUPPLY_MAX_SOST * STOCKSHIS_PER_SOST
+//   SUPPLY_MAX_STOCKS      = 466,920,100,000,000
+//     // = SUPPLY_MAX_SOST * STOCKS_PER_SOST
 //     // Used in validation rules R6, R7
 //
 //   --- Constitutional addresses (from genesis) ---
@@ -795,9 +795,9 @@
 //       "EM1|" (4 bytes) + proposalId raw (32 bytes) = 36 bytes.
 //       Previous ASCII format ("SOST_EMERG|" + hex) exceeded 56-byte limit.
 //
-//   13. SUPPLY_MAX_STOCKSHIS explicitly defined (Section 14).
+//   13. SUPPLY_MAX_STOCKS explicitly defined (Section 14).
 //       466,920,100,000,000 stocks. Used in rules R6/R7.
-//       STOCKSHIS_PER_SOST = 100,000,000 also declared.
+//       STOCKS_PER_SOST = 100,000,000 also declared.
 //
 //   14. Signature endianness made explicit (Section 4, Section 13).
 //       r = signature[0..31] big-endian. s = signature[32..63] big-endian.

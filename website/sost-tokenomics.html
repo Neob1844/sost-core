@@ -712,8 +712,8 @@ subsidy = (R0 &times; <span class="fn">_qpow_floor</span>(Q_NUM, epoch)) // Q_DE
           <tr><td class="key">BLOCKS_PER_EPOCH</td><td class="val"><code>131,553</code> <span class="comment">// round(52,560 &times; &alpha;)</span></td></tr>
           <tr><td class="key">Feigenbaum &alpha;</td><td class="val"><code>2.502907875095892</code> years/epoch</td></tr>
           <tr><td class="key">Decay factor q</td><td class="val"><code>exp(&minus;1/4) &approx; 0.7788</code> <span class="comment">// ~9.03% annual decay</span></td></tr>
-          <tr><td class="key">R0_STOCKSHIS</td><td class="val"><code>785,100,863</code> <span class="comment">// 7.85100863 SOST initial reward</span></td></tr>
-          <tr><td class="key">SUPPLY_MAX_STOCKSHIS</td><td class="val"><code>466,920,160,910,299</code> <span class="comment">// &approx; 4,669,201 SOST</span></td></tr>
+          <tr><td class="key">R0_STOCKS</td><td class="val"><code>785,100,863</code> <span class="comment">// 7.85100863 SOST initial reward</span></td></tr>
+          <tr><td class="key">SUPPLY_MAX_STOCKS</td><td class="val"><code>466,920,160,910,299</code> <span class="comment">// &approx; 4,669,201 SOST</span></td></tr>
           <tr><td class="key">~95% emission</td><td class="val">~12 epochs <span class="comment">// &approx; 30 years</span></td></tr>
         </table>
       </div>
@@ -873,10 +873,10 @@ sum    = <span class="num">785,100,863</span> &check;
         <div class="code-snippet" data-label="PROOF">
 TotalIssued &le; B &times; &Sigma;<sub>e&ge;0</sub>( R0 &times; q<sup>e</sup> )
             = B &times; R0 / (1 - q)
-            &le; SUPPLY_MAX_STOCKSHIS
+            &le; SUPPLY_MAX_STOCKS
 
 <span class="cmt">// Because R0 was chosen as:</span>
-R0 = <span class="fn">floor</span>( SUPPLY_MAX_STOCKSHIS &times; (1 - q) / B )
+R0 = <span class="fn">floor</span>( SUPPLY_MAX_STOCKS &times; (1 - q) / B )
         </div>
       </div>
     </div>
