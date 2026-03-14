@@ -261,23 +261,23 @@ void test_antistall_trigger() {
 
     // At exactly 7199s: decay should NOT activate
     {
-        int64_t now = last_block_time + 7199;
+        int64_t now = last_block_time + 28799;
         auto dec = casert_mode_from_chain(chain, 500, now);
-        TEST("7199s stall: no decay (level=8)", dec.effective_level == 8);
+        TEST("28799s stall: no decay (level=8)", dec.effective_level == 8);
     }
 
     // At exactly 7200s: decay should NOT yet drop (activation point, 0 decay time)
     {
-        int64_t now = last_block_time + 7200;
+        int64_t now = last_block_time + 28800;
         auto dec = casert_mode_from_chain(chain, 500, now);
-        TEST("7200s stall: decay activates but 0 time => level=8", dec.effective_level == 8);
+        TEST("28800s stall: decay activates but 0 time => level=8", dec.effective_level == 8);
     }
 
     // At 7200 + 600 = 7800s: L8+ drops at 600s/level, so 1 level down => 7
     {
-        int64_t now = last_block_time + 7800;
+        int64_t now = last_block_time + 29400;
         auto dec = casert_mode_from_chain(chain, 500, now);
-        TEST("7800s stall: L8 drops to 7", dec.effective_level == 7);
+        TEST("29400s stall: L8 drops to 7", dec.effective_level == 7);
     }
 
     // Validation path (now_time=0): always uses raw level, no decay
@@ -313,49 +313,49 @@ void test_decay_cadence() {
 
     // After 7200 + 600s => 10->9
     {
-        int64_t now = last_block_time + 7200 + 600;
+        int64_t now = last_block_time + 28800 + 600;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, +600s decay: level=9 (fast tier)", dec.effective_level == 9);
     }
 
     // After 7200 + 1200s => 10->9->8 (two fast drops)
     {
-        int64_t now = last_block_time + 7200 + 1200;
+        int64_t now = last_block_time + 28800 + 1200;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, +1200s decay: level=8 (two fast drops)", dec.effective_level == 8);
     }
 
     // After 7200 + 1800s => 10->9->8->7 (three fast drops)
     {
-        int64_t now = last_block_time + 7200 + 1800;
+        int64_t now = last_block_time + 28800 + 1800;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, +1800s decay: level=7 (three fast drops)", dec.effective_level == 7);
     }
 
     // After 7200 + 1800 + 1200 => 7->6 (medium tier)
     {
-        int64_t now = last_block_time + 7200 + 1800 + 1200;
+        int64_t now = last_block_time + 28800 + 1800 + 1200;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, +3000s decay: level=6 (enters medium tier)", dec.effective_level == 6);
     }
 
     // After 7200 + 1800 + 4*1200 => 7->6->5->4->3 (four medium drops)
     {
-        int64_t now = last_block_time + 7200 + 1800 + 4 * 1200;
+        int64_t now = last_block_time + 28800 + 1800 + 4 * 1200;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, +6600s decay: level=3 (enters slow tier)", dec.effective_level == 3);
     }
 
     // After full decay to L1: 7200 + 1800 + 4*1200 + 2*1800
     {
-        int64_t now = last_block_time + 7200 + 1800 + 4 * 1200 + 2 * 1800;
+        int64_t now = last_block_time + 28800 + 1800 + 4 * 1200 + 2 * 1800;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, full decay: level=1 (floor)", dec.effective_level == 1);
     }
 
     // Even more time: still L1 (floor)
     {
-        int64_t now = last_block_time + 7200 + 100000;
+        int64_t now = last_block_time + 28800 + 100000;
         auto dec = casert_mode_from_chain(chain, 500, now);
         TEST("L10, excessive decay: still level=1 (floor)", dec.effective_level == 1);
     }
@@ -380,10 +380,10 @@ void test_mining_vs_validation() {
 
     // Mining with stall (now_time > 0, 8000s stall): decay applies
     {
-        int64_t now = last_block_time + 8000;
+        int64_t now = last_block_time + 29400;
         auto dec = casert_mode_from_chain(chain, 500, now);
-        // 8000 - 7200 = 800s decay time. L8+ costs 600s => one drop: 8->7
-        TEST("mining with 8000s stall: decay applies, level=7", dec.effective_level == 7);
+        // 29400 - 28800 = 600s decay time. L8+ costs 600s => one drop: 8->7
+        TEST("mining with 29400s stall: decay applies, level=7", dec.effective_level == 7);
     }
 
     // Mining without stall (now_time > 0, recent block): no decay
@@ -409,12 +409,12 @@ void test_resume_behavior() {
     auto chain_stalled = make_ahead_chain(400, 200);
     int64_t last_block_stalled = chain_stalled.back().time;
 
-    // During stall: decayed
+    // During stall: decayed (ahead=200 > 100, activation=28800s)
     {
-        int64_t now = last_block_stalled + 10000;
+        int64_t now = last_block_stalled + 31600; // 28800+2800 = 31600
         auto dec = casert_mode_from_chain(chain_stalled, 400, now);
-        // 10000 - 7200 = 2800s decay. L8: 600+600+600=1800s => 8->7->6->5, 2800-1800=1000s
-        // At effective=5: cost=1200 (medium, 5>=4), 1000 < 1200 => stops at 5
+        // 31600 - 28800 = 2800s decay time. L8+: 600s/level => 4 drops in 2400s, 400s remains
+        // 8->7->6->5(=2400s) then 5>=4 costs 1200, 400<1200 => stops at 5
         TEST("stalled chain: decayed to level=5", dec.effective_level == 5);
     }
 
@@ -552,20 +552,20 @@ void test_edge_cases() {
         TEST("behind schedule => L1 (no hardening)", dec.mode == CasertMode::L1);
     }
 
-    // Time boundary: 7199/7200 seconds stall
+    // Time boundary: ahead=100 (L5, <=100 blocks => activation=14400s)
     {
         auto chain = make_ahead_chain(200, 100);
         int64_t last = chain.back().time;
 
-        auto d_before = casert_mode_from_chain(chain, 200, last + 7199);
-        TEST("7199s stall: no decay", d_before.effective_level == 5);
+        auto d_before = casert_mode_from_chain(chain, 200, last + 14399);
+        TEST("14399s stall: no decay", d_before.effective_level == 5);
 
-        auto d_at = casert_mode_from_chain(chain, 200, last + 7200);
-        TEST("7200s stall: decay activates but 0 time", d_at.effective_level == 5);
+        auto d_at = casert_mode_from_chain(chain, 200, last + 14400);
+        TEST("14400s stall: decay activates but 0 time", d_at.effective_level == 5);
 
-        // 7200 + 1800 = 9000s. L5: cost=1200 (5>=4, medium) => one drop at 8400
-        auto d_after = casert_mode_from_chain(chain, 200, last + 7200 + 1200);
-        TEST("8400s stall: L5->L4 (medium tier)", d_after.effective_level == 4);
+        // 14400 + 1200 = 15600s. L5: cost=1200 (5>=4, medium) => one drop
+        auto d_after = casert_mode_from_chain(chain, 200, last + 14400 + 1200);
+        TEST("15600s stall: L5->L4 (medium tier)", d_after.effective_level == 4);
     }
 
     // Verify constants match canonical spec

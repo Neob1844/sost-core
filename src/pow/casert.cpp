@@ -45,11 +45,12 @@ static int level_from_ahead(int ahead) {
 // Returns effective level after decay (never below 1).
 // decay_seconds = now_time - last_block_timestamp
 // raw_level = level computed from blocks_ahead schedule
-static int apply_decay(int raw_level, int64_t decay_seconds) {
-    // Decay not yet active
-    if (decay_seconds < CASERT_DECAY_ACTIVATION) return raw_level;
+static int apply_decay(int raw_level, int64_t decay_seconds, int ahead) {
+    // Dynamic activation: higher levels need more patience before decay
+    int64_t activation = (ahead > 100) ? 28800 : 14400;  // 8h for L6+, 4h for L1-L5
+    if (decay_seconds < activation) return raw_level;
 
-    int64_t decay_time = decay_seconds - CASERT_DECAY_ACTIVATION;
+    int64_t decay_time = decay_seconds - activation;
     int effective = raw_level;
 
     // Apply decay level by level, tier by tier
@@ -98,7 +99,7 @@ CasertDecision casert_mode_from_chain(const std::vector<BlockMeta>& chain,
     if (now_time > 0 && !chain.empty()) {
         int64_t last_block_time = chain.back().time;
         int64_t stall_seconds = std::max<int64_t>(0, now_time - last_block_time);
-        effective_level = apply_decay(raw_level, stall_seconds);
+        effective_level = apply_decay(raw_level, stall_seconds, ahead);
     }
 
     CasertMode mode;
