@@ -27,7 +27,7 @@ uint32_t asert_next_difficulty(const std::vector<BlockMeta>& chain, int64_t next
         anchor_idx = (size_t)std::max<int64_t>(0, std::min<int64_t>(ai, (int64_t)chain.size()-1));
     }
     auto anchor_time = chain[anchor_idx].time;
-    auto anchor_bitsq = chain[anchor_idx].powDiffQ ? chain[anchor_idx].powDiffQ : GENESIS_BITSQ;
+    auto anchor_bitsq = (anchor_idx == 0) ? GENESIS_BITSQ : chain[anchor_idx].powDiffQ;
 
     // Time delta: negative when blocks arrive faster than target
     int64_t parent_idx = (int64_t)chain.size() - 1;
