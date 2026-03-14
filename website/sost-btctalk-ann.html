@@ -116,7 +116,7 @@
 
 <p><b>Per-block program:</b> Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 4GB LPDDR5 on-package and a general-purpose ALU &mdash; economically equivalent to building a CPU.</p>
 
-<p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for 2 hours, a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
+<p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for an extended period (4 hours for L1-L5, 8 hours for L6+), a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
 
 <p>All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.</p>
 
@@ -180,7 +180,7 @@
 </ul>
 
 <p><b>Build:</b></p>
-<pre>git clone https://github.com/Neob1844/sost-core.git
+<pre>git clone https://github.com/SOST-Protocol/sost-core.git
 cd sost-core &amp;&amp; mkdir build &amp;&amp; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 
@@ -198,13 +198,66 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 
 <hr>
 
+<h2>Transaction Architecture</h2>
+
+<ul>
+  <li><b>P2PKH payments</b> with ECDSA secp256k1 (compressed keys, LOW-S enforcement)</li>
+  <li><b>Fee market</b> with rational priority ordering (stocks/byte, no floating point)</li>
+  <li><b>Mempool</b> with double-spend detection and fee-rate indexed block template building</li>
+  <li><b>BOND_LOCK</b> &mdash; native time-locked outputs (lock until block height N). Activating at block 5000.</li>
+  <li><b>ESCROW_LOCK</b> &mdash; time-locked escrow with designated beneficiary. Activating at block 5000.</li>
+  <li><b>Capsule Protocol v1</b> &mdash; structured metadata in outputs (12-byte header + 243-byte body). Activating at block 5000.</li>
+  <li><b>Coinbase maturity:</b> 1000 blocks (~7 days)</li>
+  <li><b>Max block size:</b> 1 MB &middot; <b>Min relay fee:</b> 1 stock/byte &middot; <b>Dust threshold:</b> 10,000 stocks</li>
+  <li><b>Replay protection:</b> genesis hash committed in sighash (chain-specific signatures)</li>
+</ul>
+
+<hr>
+
+<h2>PoW Comparison</h2>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;">
+  <tr><th>Property</th><th>Bitcoin (SHA-256d)</th><th>Monero (RandomX)</th><th>SOST (ConvergenceX)</th></tr>
+  <tr><td>PoW verify cost</td><td>~1&mu;s</td><td>~50ms</td><td>~5-30s</td></tr>
+  <tr><td>Memory</td><td>Negligible</td><td>256MB-2GB</td><td>4GB scratchpad</td></tr>
+  <tr><td>ASIC resistance</td><td>None</td><td>High</td><td>Very high</td></tr>
+  <tr><td>Difficulty adjust</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (exp. ASERT)</td></tr>
+  <tr><td>Block time</td><td>600s</td><td>120s</td><td>600s</td></tr>
+  <tr><td>Anti-stall</td><td>None</td><td>LWMA</td><td>cASERT Decay (4h/8h tiered)</td></tr>
+  <tr><td>Emission</td><td>Halving / 210K blocks</td><td>Tail emission</td><td>Smooth exp. decay (q=e^-&frac14;)</td></tr>
+  <tr><td>Max supply</td><td>21M BTC</td><td>Infinite</td><td>~4,669,201 SOST</td></tr>
+  <tr><td>Constitutional reserve</td><td>None</td><td>None</td><td>25% gold + 25% PoPC</td></tr>
+</table>
+
+<hr>
+
+<h2>Verification &amp; Sync</h2>
+
+<p>SOST uses an 8-layer verification pipeline:</p>
+
+<ol>
+  <li><b>Header structure</b> (size, tx count, coinbase at [0]) &mdash; microseconds</li>
+  <li><b>Timestamps / MTP</b> (monotonicity, future drift) &mdash; microseconds</li>
+  <li><b>ASERT difficulty</b> (exponential target check) &mdash; microseconds</li>
+  <li><b>PoW inequality</b> (commit &le; target) &mdash; microseconds</li>
+  <li><b>Coinbase rules</b> (50/25/25 split, constitutional addresses) &mdash; microseconds</li>
+  <li><b>Transaction validation</b> (R/S/CB rules, ECDSA verify) &mdash; milliseconds</li>
+  <li><b>UTXO connect</b> (atomic state update with reorg support) &mdash; milliseconds</li>
+  <li><b>ConvergenceX recomputation</b> (100K gradient steps + 4GB scratchpad) &mdash; 5-30 seconds</li>
+</ol>
+
+<p><b>Fast sync:</b> Layers 1-7 always run. Layer 8 (CX recompute) is skipped for checkpointed blocks. Initial sync takes minutes, not days.</p>
+<p><b>Full verification:</b> With --full-verify, every block is fully recomputed. Takes weeks but provides maximum security.</p>
+
+<hr>
+
 <h2>Links</h2>
 
 <ul>
   <li><b>Website:</b> <a href="https://sostcore.com">https://sostcore.com</a></li>
   <li><b>Explorer:</b> <a href="https://explorer.sostcore.com">https://explorer.sostcore.com</a></li>
   <li><b>Whitepaper:</b> <a href="https://explorer.sostcore.com/whitepaper.pdf">https://explorer.sostcore.com/whitepaper.pdf</a></li>
-  <li><b>GitHub:</b> <a href="https://github.com/Neob1844/sost-core">https://github.com/Neob1844/sost-core</a> (public at launch)</li>
+  <li><b>GitHub:</b> <a href="https://github.com/SOST-Protocol/sost-core">https://github.com/SOST-Protocol/sost-core</a> (public at launch)</li>
   <li><b>Wallet:</b> <a href="https://wallet.sostcore.com">https://wallet.sostcore.com</a></li>
 </ul>
 

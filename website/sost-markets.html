@@ -566,7 +566,7 @@
         // Only show error if table has no real data yet
         var tbody = document.getElementById('forexBody');
         if (!tbody.querySelector('.currency-name')) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryForex()">Error loading forex rates \u2014 click to retry</span></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);"><span class="error-retry" onclick="window._mktRetryForex()">Loading... click to retry or wait 60s for auto-refresh</span></td></tr>';
         }
         if (cb) cb();
       })
@@ -738,10 +738,10 @@
         var tb2 = document.getElementById('goldFiatBody');
         var tb4 = document.getElementById('goldCryptoBody');
         if (!tb2.querySelector('.currency-name')) {
-          tb2.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading gold prices \u2014 click to retry</span></td></tr>';
+          tb2.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);"><span class="error-retry" onclick="window._mktRetryGold()">Loading... click to retry or wait 60s for auto-refresh</span></td></tr>';
         }
         if (!tb4.querySelector('.currency-name')) {
-          tb4.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
+          tb4.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);"><span class="error-retry" onclick="window._mktRetryGold()">Loading... click to retry or wait 60s for auto-refresh</span></td></tr>';
         }
         if (cb) cb();
       })
