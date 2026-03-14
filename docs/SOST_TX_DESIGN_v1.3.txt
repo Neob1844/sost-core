@@ -12,7 +12,7 @@
 //   v1.1  Review round 1: sighash, LOW-S, double SHA256, LevelDB, activations
 //   v1.2  Review round 2: payload field, emergency fix, SUPPLY_MAX, endianness
 //   v1.3  Implementation status: 161/161 tests, libsecp256k1 migration planned
-//         Terminology: stockshis → stocks throughout
+//         Terminology: stocks → stocks throughout
 //
 // =============================================================================
 // 1. PHILOSOPHY

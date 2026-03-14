@@ -161,7 +161,7 @@
 // --- TxOutput ---
 //
 //   struct TxOutput {
-//       int64_t   amount;               // Value in stockshis (must be > 0)
+//       int64_t   amount;               // Value in stocks (must be > 0)
 //       uint8_t   type;                 // Output type (Section 3)
 //       uint8_t   pubkey_hash[20];      // RIPEMD160(SHA256(compressed_pubkey))
 //       uint8_t   payload_len;          // Length of typed payload (0..255)
@@ -438,7 +438,7 @@
 // --- 7.4 Fee Rules ---
 //
 //   F1: fee = sum(input_amounts) - sum(output_amounts).
-//   F2: fee >= serialized_tx_size_bytes * MIN_FEE_PER_BYTE (1 stockshi/byte).
+//   F2: fee >= serialized_tx_size_bytes * MIN_FEE_PER_BYTE (1 stock/byte).
 //   F3: Fees collected by miner via coinbase (added to reward in CB5).
 //   F4: Coinbase transactions exempt from fee rules.
 //   F5: Zero-fee standard transactions are invalid.
@@ -633,7 +633,7 @@
 //      Valid → mempool. Invalid → rejected with error code.
 //
 //   4. BLOCK INCLUSION
-//      Miner selects from mempool by fee density (stockshis/byte).
+//      Miner selects from mempool by fee density (stocks/byte).
 //      Constructs coinbase with accumulated fees. Computes merkle_root.
 //      Mines via ConvergenceX.
 //
@@ -687,7 +687,7 @@
 //   COINBASE_MATURITY         = 100 blocks
 //   MAX_TX_SIZE               = 100,000 bytes
 //   MAX_BLOCK_TX_BYTES        = 1,000,000 bytes (1 MB, excluding coinbase)
-//   MIN_FEE_PER_BYTE          = 1 stockshi/byte
+//   MIN_FEE_PER_BYTE          = 1 stock/byte
 //   MAX_INPUTS_PER_TX         = 256
 //   MAX_OUTPUTS_PER_TX        = 256
 //   MAX_PAYLOAD_LEN           = 255 bytes (uint8)
@@ -796,7 +796,7 @@
 //       Previous ASCII format ("SOST_EMERG|" + hex) exceeded 56-byte limit.
 //
 //   13. SUPPLY_MAX_STOCKSHIS explicitly defined (Section 14).
-//       466,920,100,000,000 stockshis. Used in rules R6/R7.
+//       466,920,100,000,000 stocks. Used in rules R6/R7.
 //       STOCKSHIS_PER_SOST = 100,000,000 also declared.
 //
 //   14. Signature endianness made explicit (Section 4, Section 13).
@@ -849,7 +849,7 @@
 //   Hashing:      Double SHA256 everywhere (txid, sighash, Merkle)
 //   Coinbase:     3 typed outputs [miner/gold/popc], constitutional validation
 //   Maturity:     100 blocks for coinbase outputs
-//   Fee:          1 stockshi/byte minimum, implicit (inputs - outputs)
+//   Fee:          1 stock/byte minimum, implicit (inputs - outputs)
 //   Storage:      LevelDB (production), in-memory (test)
 //   Future:       Bond/escrow reserved, activated by height, payload-ready (burn reserved but not planned)
 //   Domain sep:   genesis_hash in every sighash (anti-replay)
