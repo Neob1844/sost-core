@@ -1340,6 +1340,13 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
     var inp=document.getElementById('searchIn');
     if(inp){inp.value=q;setTimeout(doSearch,500);}
   }
+  // URL parameter search: ?search=sost1...
+  var urlParams=new URLSearchParams(window.location.search);
+  var searchParam=urlParams.get('search');
+  if(searchParam&&!q){
+    var inp2=document.getElementById('searchIn');
+    if(inp2){inp2.value=searchParam;setTimeout(doSearch,800);}
+  }
 })();
 </script>
 </body>

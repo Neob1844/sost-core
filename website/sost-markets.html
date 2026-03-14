@@ -87,7 +87,7 @@
   .data-table .currency-name { color: var(--text-primary); font-weight: 500; }
   .data-table .currency-code { color: var(--text-dim); font-size: 11px; margin-left: 6px; }
   .data-table .price-val { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
-  .data-table .price-na { color: var(--text-muted); font-style: italic; }
+  .data-table .price-na { color: var(--text-muted); }
 
   /* REGION HEADER */
   .data-table .region-header td { background: #111111; color: var(--red-primary); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 12px 16px; border-top: 2px solid var(--border-dim); border-bottom: 1px solid var(--border-dim); }
@@ -152,7 +152,8 @@
   .coin-detail-title { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 6px; }
   .coin-detail-price { font-size: 28px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
   .coin-detail-change { font-size: 14px; font-weight: 500; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .coin-detail-chart-wrap { background: #050505; border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .coin-detail-chart-wrap { background: #050505; border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px; margin-bottom: 12px; position: relative; }
+  .coin-detail-tooltip { position: absolute; pointer-events: none; background: #111; border: 1px solid #333; border-radius: 4px; padding: 6px 10px; font-size: 10px; color: #e2e8f0; white-space: nowrap; z-index: 10; display: none; line-height: 1.5; }
   .coin-detail-label { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; }
   .coin-detail-range { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; margin-top: 8px; }
   .coin-detail-error { color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 0; }
@@ -544,7 +545,7 @@
             if (c.code === 'USD') return;
             var rate = data.rates[c.code];
             if (rate === undefined) {
-              html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">N/A</td><td class="price-na">N/A</td></tr>';
+              html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">&mdash;</td><td class="price-na">&mdash;</td></tr>';
               return;
             }
             var inv = 1 / rate;
@@ -579,13 +580,13 @@
   }
 
   function fmtPrice(val, symbol, decimals) {
-    if (val === null || val === undefined) return '<span class="price-na">N/A</span>';
+    if (val === null || val === undefined) return '<span class="price-na">&mdash;</span>';
     if (typeof decimals === 'undefined') decimals = val > 1000 ? 0 : 2;
     return symbol + ' ' + fmt(val, decimals);
   }
 
   function fmtCrypto(val, code, decimals) {
-    if (val === null || val === undefined) return '<span class="price-na">N/A</span>';
+    if (val === null || val === undefined) return '<span class="price-na">&mdash;</span>';
     if (typeof decimals === 'undefined') decimals = val < 1 ? 8 : val < 100 ? 4 : 2;
     return fmt(val, decimals) + ' ' + code;
   }
@@ -663,7 +664,7 @@
           var cgId = CRYPTO_IDS[c.code];
           html4 += '<tr><td><span class="currency-name clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.name + '</span></td>' +
             '<td><span class="clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.code + '</span></td>' +
-            '<td class="price-val">' + (usdP !== undefined ? '$' + fmt(usdP, usdP < 1 ? 8 : usdP < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td>' +
+            '<td class="price-val">' + (usdP !== undefined ? '$' + fmt(usdP, usdP < 1 ? 8 : usdP < 100 ? 4 : 2) : '<span class="price-na">&mdash;</span>') + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code) + '</td>' +
             '<td>' + spreadHtml(xv, pv) + '</td></tr>';
@@ -749,7 +750,7 @@
           g.currencies.forEach(function(c) {
             var p = (c.code === 'USD') ? prices.usd : sostInCurrency(prices, c.code);
             html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-              '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">N/A</span>') + '</td></tr>';
+              '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">&mdash;</span>') + '</td></tr>';
           });
         });
         tbody.innerHTML = html;
@@ -1013,7 +1014,13 @@
       '8H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=480',
       '24H': 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=24',
       '3D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=72',
-      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=168'
+      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=168',
+      '30D': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=30',
+      '6M':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=180',
+      '1Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=365',
+      '3Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1095',
+      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1825',
+      'ALL': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=2000'
     };
     return urls[period] || urls['7D'];
   }
@@ -1033,7 +1040,7 @@
     var usdPrice = cryptoUsdPrices[code];
     var priceStr = usdPrice !== undefined ? '$' + fmt(usdPrice, usdPrice < 1 ? 8 : usdPrice < 100 ? 4 : 2) : '--';
 
-    var periods = ['1H','4H','8H','24H','3D','7D'];
+    var periods = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y','3Y','5Y','ALL'];
     var periodBtnsHtml = '<div class="coin-detail-periods" id="coinDetailPeriods">';
     periods.forEach(function(p) {
       var activeClass = (p === '7D') ? ' active' : '';
@@ -1106,9 +1113,9 @@
       .finally(function() { clearTimeout(timeoutId); });
   }
 
-  function drawCoinDetailChart(data, code, period) {
-    var canvas = document.getElementById('coinDetailCanvas');
-    if (!canvas) return;
+  var _coinDetailChartState = null;
+
+  function _renderCoinDetailChartClean(canvas, data, code, period, color, pL, pR, pT, pB) {
     var ctx = canvas.getContext('2d');
     var dpr = window.devicePixelRatio || 1;
     var w = canvas.offsetWidth, h = canvas.offsetHeight;
@@ -1119,10 +1126,7 @@
     var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
     var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
     mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
-
-    var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
-    var first = data[0][1], last = data[data.length - 1][1];
-    var color = (last >= first) ? '#4ade80' : '#fb010d';
+    var cw = w - pL - pR, ch = h - pT - pB;
 
     // Grid
     ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
@@ -1157,6 +1161,29 @@
     ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
     ctx.fillStyle = grd; ctx.fill();
 
+    return { prices: prices, mn: mn, mx: mx, rng: rng, cw: cw, ch: ch };
+  }
+
+  function drawCoinDetailChart(data, code, period) {
+    var canvas = document.getElementById('coinDetailCanvas');
+    if (!canvas) return;
+
+    var prices = data.map(function(p) { return p[1]; });
+    var first = data[0][1], last = data[data.length - 1][1];
+
+    var color;
+    if (code === 'SOST') {
+      color = '#fb010d';
+    } else {
+      color = (last >= first) ? '#4ade80' : '#fb010d';
+    }
+
+    var pL = 4, pR = 58, pT = 6, pB = 20;
+    _renderCoinDetailChartClean(canvas, data, code, period, color, pL, pR, pT, pB);
+
+    // Store state for tooltip interaction
+    _coinDetailChartState = { data: data, code: code, period: period, color: color, pL: pL, pR: pR, pT: pT, pB: pB };
+
     // Update price & change
     var priceEl = document.getElementById('coinDetailPrice');
     if (priceEl) priceEl.textContent = '$' + fmt(last, last < 1 ? 8 : last < 100 ? 4 : 2);
@@ -1177,6 +1204,92 @@
     if (rangeEl) {
       rangeEl.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length;
     }
+
+    // Setup tooltip interaction
+    _setupCoinDetailTooltip(canvas);
+  }
+
+  function _setupCoinDetailTooltip(canvas) {
+    // Remove old listeners by replacing canvas event targets
+    var wrap = canvas.closest('.coin-detail-chart-wrap');
+    if (!wrap) return;
+
+    // Create or reuse tooltip div
+    var tooltip = wrap.querySelector('.coin-detail-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'coin-detail-tooltip';
+      wrap.appendChild(tooltip);
+    }
+    tooltip.style.display = 'none';
+
+    // Clone canvas to remove old event listeners
+    var newCanvas = canvas.cloneNode(true);
+    canvas.parentNode.replaceChild(newCanvas, canvas);
+    newCanvas.style.cursor = 'crosshair';
+
+    newCanvas.addEventListener('mousemove', function(e) {
+      var st = _coinDetailChartState;
+      if (!st || st.data.length < 2) { tooltip.style.display = 'none'; return; }
+      var rect = newCanvas.getBoundingClientRect();
+      var mouseX = e.clientX - rect.left;
+      var w = newCanvas.offsetWidth, h = newCanvas.offsetHeight;
+      var cw = w - st.pL - st.pR, ch = h - st.pT - st.pB;
+      var rel = (mouseX - st.pL) / cw;
+      if (rel < 0 || rel > 1) { tooltip.style.display = 'none'; _redrawClean(newCanvas, st); return; }
+      var idx = Math.round(rel * (st.data.length - 1));
+      var pt = st.data[idx];
+
+      var prices = st.data.map(function(d) { return d[1]; });
+      var mn = Math.min.apply(null, prices), mx2 = Math.max.apply(null, prices);
+      var rng = mx2 - mn; if (rng === 0) rng = mn * 0.001 || 1; mn -= rng * 0.03; mx2 += rng * 0.03; rng = mx2 - mn;
+
+      var px = st.pL + idx / (st.data.length - 1) * cw;
+      var py = st.pT + ch - ((pt[1] - mn) / rng) * ch;
+
+      // Redraw chart clean then add crosshair
+      _renderCoinDetailChartClean(newCanvas, st.data, st.code, st.period, st.color, st.pL, st.pR, st.pT, st.pB);
+      var dpr = window.devicePixelRatio || 1;
+      var ctx = newCanvas.getContext('2d');
+      ctx.save(); ctx.scale(dpr, dpr);
+
+      // Vertical dashed line
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(px, st.pT); ctx.lineTo(px, st.pT + ch); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Data point circle
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fillStyle = st.color; ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+
+      // Tooltip content
+      var firstPrice = st.data[0][1];
+      var changePct = ((pt[1] - firstPrice) / firstPrice * 100);
+      var changeStr = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
+      var d = new Date(pt[0]);
+      var dateStr = MO[d.getUTCMonth()] + ' ' + d.getUTCDate() + ' ' + ('0' + d.getUTCHours()).slice(-2) + ':' + ('0' + d.getUTCMinutes()).slice(-2);
+
+      tooltip.innerHTML = '<div style="color:#666">' + dateStr + '</div><div style="color:#e2e8f0;font-weight:600">' + fmtUsd(pt[1]) + '</div><div style="color:' + (changePct >= 0 ? '#4ade80' : '#fb010d') + '">' + changeStr + '</div>';
+      tooltip.style.display = 'block';
+
+      var tx = px + 16, ty = py - 40;
+      if (tx + 120 > w) tx = px - 130;
+      if (ty < 0) ty = py + 14;
+      tooltip.style.left = tx + 'px';
+      tooltip.style.top = ty + 'px';
+    });
+
+    newCanvas.addEventListener('mouseleave', function() {
+      tooltip.style.display = 'none';
+      var st = _coinDetailChartState;
+      if (st) _redrawClean(newCanvas, st);
+    });
+  }
+
+  function _redrawClean(canvas, st) {
+    _renderCoinDetailChartClean(canvas, st.data, st.code, st.period, st.color, st.pL, st.pR, st.pT, st.pB);
   }
 
   function coinDetailEscHandler(e) {
