@@ -156,6 +156,10 @@
   .coin-detail-label { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; }
   .coin-detail-range { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; margin-top: 8px; }
   .coin-detail-error { color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 0; }
+  .coin-detail-periods { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .coin-detail-period-btn { background: #111; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 11px; font-family: var(--font-mono); padding: 4px 10px; cursor: pointer; border-radius: 4px; transition: all 0.15s; letter-spacing: 1px; }
+  .coin-detail-period-btn:hover { border-color: var(--border-med); color: var(--text-secondary); }
+  .coin-detail-period-btn.active { background: #1a1a1a; border-color: var(--red-primary); color: var(--text-primary); font-weight: 600; }
 
   @media (max-width: 768px) {
     .nav-links { display: none; }
@@ -215,7 +219,7 @@
 <section class="section" id="forex">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SECTION 01</div>
+      <div class="section-id">FOREX RATES</div>
       <div class="section-title">Currency Exchange <span class="accent">Rates</span></div>
       <div class="section-sub">59 currencies vs USD grouped by continent — source: open.er-api.com</div>
     </div>
@@ -234,7 +238,7 @@
 <section class="section" id="goldFiat">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SECTION 02</div>
+      <div class="section-id">GOLD PRICES</div>
       <div class="section-title">Gold Price in <span class="gold">World Currencies</span></div>
       <div class="section-sub">1 troy oz gold — XAUT &amp; PAXG prices with spread in 60 currencies — source: CoinGecko + forex</div>
       <button class="chart-toggle" id="goldChartToggle"><span class="ct-arrow">&#9656;</span> GOLD SPOT CHART</button>
@@ -279,7 +283,7 @@
 <section class="section" id="sostFiat">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SECTION 03</div>
+      <div class="section-id">SOST PRICES</div>
       <div class="section-title">SOST Price in <span class="accent">World Currencies</span></div>
       <div class="section-sub">SOST value in 60 fiat currencies — source: CoinGecko (if listed) + forex</div>
       <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST PRICE CHART</button>
@@ -324,7 +328,7 @@
 <section class="section" id="goldCrypto">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SECTION 04</div>
+      <div class="section-id">GOLD IN CRYPTO</div>
       <div class="section-title">Gold Price in <span class="accent">Crypto</span></div>
       <div class="section-sub">1 troy oz gold priced in 13 cryptocurrencies — source: CoinGecko — click any name or symbol for USD chart</div>
     </div>
@@ -343,7 +347,7 @@
 <section class="section" id="sostPairs">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SECTION 05</div>
+      <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
       <div class="section-sub">SOST Market Data — pending</div>
     </div>
@@ -523,9 +527,11 @@
     return '<tr class="region-header"><td colspan="' + cols + '">' + label + '</td></tr>';
   }
 
-  // ===== SECTION 01: FOREX =====
+  // ===== FOREX RATES =====
   function fetchForex(cb) {
-    fetch('https://open.er-api.com/v6/latest/USD')
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
@@ -558,7 +564,8 @@
           tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryForex()">Error loading forex rates \u2014 click to retry</span></td></tr>';
         }
         if (cb) cb();
-      });
+      })
+      .finally(function() { clearTimeout(timeoutId); });
   }
 
   // ===== HELPERS =====
@@ -590,17 +597,21 @@
     return null;
   }
 
-  // ===== SECTIONS 02 & 04: GOLD + CRYPTO =====
+  // ===== GOLD + CRYPTO =====
   function fetchGold(cb) {
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
     var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
     var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
     var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd';
 
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var fetchOpts = { signal: controller.signal };
+
     Promise.all([
-      fetch(goldUrl).then(function(r) { return r.json(); }),
-      fetch(stableUrl).then(function(r) { return r.json(); }),
-      fetch(cryptoUsdUrl).then(function(r) { return r.json(); })
+      fetch(goldUrl, fetchOpts).then(function(r) { return r.json(); }),
+      fetch(stableUrl, fetchOpts).then(function(r) { return r.json(); }),
+      fetch(cryptoUsdUrl, fetchOpts).then(function(r) { return r.json(); })
     ])
       .then(function(results) {
         var goldData = results[0];
@@ -698,7 +709,8 @@
           tb4.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
         }
         if (cb) cb();
-      });
+      })
+      .finally(function() { clearTimeout(timeoutId); });
   }
 
   window._mktRetryGold = function() { fetchGold(); };
@@ -723,7 +735,9 @@
   }
 
   function tryFetchSost(id, vs, fallback, doneCb) {
-    fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs)
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data[id] || !data[id].usd) { fallback(); return; }
@@ -741,7 +755,8 @@
         tbody.innerHTML = html;
         if (doneCb) doneCb();
       })
-      .catch(function() { fallback(); });
+      .catch(function() { fallback(); })
+      .finally(function() { clearTimeout(timeoutId); });
   }
 
   function showSostNotListed() {
@@ -960,7 +975,7 @@
     drawMktChart('cpSost', sostChartId, '#fb010d');
   }
 
-  // ===== SECTION 04: CLICKABLE CRYPTO CHARTS =====
+  // ===== CLICKABLE CRYPTO CHARTS =====
   var COIN_DETAIL_IDS = {
     BTC:'bitcoin',ETH:'ethereum',BNB:'binancecoin',SOL:'solana',
     XRP:'ripple',DOT:'polkadot',LINK:'chainlink',LTC:'litecoin',
@@ -988,9 +1003,25 @@
     });
   }
 
+  var coinDetailActivePeriod = '7D';
+  var coinDetailActiveCode = '';
+
+  function getCoinDetailUrl(code, period) {
+    var urls = {
+      '1H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=60',
+      '4H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=240',
+      '8H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=480',
+      '24H': 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=24',
+      '3D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=72',
+      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=168'
+    };
+    return urls[period] || urls['7D'];
+  }
+
   function showCoinDetailModal(cgId, code) {
-    // Remove any existing modal
     closeCoinDetailModal();
+    coinDetailActiveCode = code;
+    coinDetailActivePeriod = '7D';
 
     var overlay = document.createElement('div');
     overlay.className = 'coin-detail-overlay';
@@ -1002,17 +1033,25 @@
     var usdPrice = cryptoUsdPrices[code];
     var priceStr = usdPrice !== undefined ? '$' + fmt(usdPrice, usdPrice < 1 ? 8 : usdPrice < 100 ? 4 : 2) : '--';
 
+    var periods = ['1H','4H','8H','24H','3D','7D'];
+    var periodBtnsHtml = '<div class="coin-detail-periods" id="coinDetailPeriods">';
+    periods.forEach(function(p) {
+      var activeClass = (p === '7D') ? ' active' : '';
+      periodBtnsHtml += '<button class="coin-detail-period-btn' + activeClass + '" data-period="' + p + '">' + p + '</button>';
+    });
+    periodBtnsHtml += '</div>';
+
     var panel = document.createElement('div');
     panel.className = 'coin-detail-panel';
     panel.innerHTML =
       '<button class="coin-detail-close" id="coinDetailClose">X</button>' +
       '<div class="coin-detail-header">' +
-        '<div class="coin-detail-title">// ' + code + '/USD &mdash; 7-DAY PRICE HISTORY</div>' +
+        '<div class="coin-detail-title">// ' + code + '/USD</div>' +
         '<div class="coin-detail-price" id="coinDetailPrice">' + priceStr + '</div>' +
         '<div class="coin-detail-change" id="coinDetailChange" style="color:var(--text-muted)">loading chart...</div>' +
       '</div>' +
+      periodBtnsHtml +
       '<div class="coin-detail-chart-wrap">' +
-        '<div class="coin-detail-label">7D SPARKLINE</div>' +
         '<canvas id="coinDetailCanvas" style="width:100%;height:160px"></canvas>' +
         '<div class="coin-detail-range" id="coinDetailRange"></div>' +
       '</div>';
@@ -1023,15 +1062,36 @@
     document.getElementById('coinDetailClose').addEventListener('click', closeCoinDetailModal);
     document.addEventListener('keydown', coinDetailEscHandler);
 
-    // Fetch 7-day chart data
-    fetch('https://api.coingecko.com/api/v3/coins/' + cgId + '/market_chart?vs_currency=usd&days=7')
+    // Setup period button clicks
+    var periodBtns = document.querySelectorAll('#coinDetailPeriods .coin-detail-period-btn');
+    periodBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        coinDetailActivePeriod = btn.getAttribute('data-period');
+        periodBtns.forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        fetchCoinDetailData(coinDetailActiveCode, coinDetailActivePeriod);
+      });
+    });
+
+    fetchCoinDetailData(code, '7D');
+  }
+
+  function fetchCoinDetailData(code, period) {
+    var changeEl = document.getElementById('coinDetailChange');
+    if (changeEl) { changeEl.textContent = 'loading chart...'; changeEl.style.color = 'var(--text-muted)'; }
+
+    var url = getCoinDetailUrl(code, period);
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+
+    fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (!d || !d.prices || d.prices.length < 2) throw new Error('No data');
-        drawCoinDetailChart(d.prices, code);
+        if (!d || !d.Data || !d.Data.Data || d.Data.Data.length < 2) throw new Error('No data');
+        var data = d.Data.Data.map(function(pt) { return [pt.time * 1000, pt.close]; });
+        drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
-        var changeEl = document.getElementById('coinDetailChange');
         if (changeEl) { changeEl.textContent = 'Chart data unavailable'; changeEl.style.color = 'var(--text-muted)'; }
         var canvas = document.getElementById('coinDetailCanvas');
         if (canvas) {
@@ -1042,10 +1102,11 @@
           ctx.fillStyle = '#333'; ctx.font = '12px ' + fontMono; ctx.textAlign = 'center';
           ctx.fillText('Chart data unavailable', w / 2, h / 2);
         }
-      });
+      })
+      .finally(function() { clearTimeout(timeoutId); });
   }
 
-  function drawCoinDetailChart(data, code) {
+  function drawCoinDetailChart(data, code, period) {
     var canvas = document.getElementById('coinDetailCanvas');
     if (!canvas) return;
     var ctx = canvas.getContext('2d');
@@ -1060,7 +1121,8 @@
     mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
 
     var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
-    var color = '#fb010d';
+    var first = data[0][1], last = data[data.length - 1][1];
+    var color = (last >= first) ? '#4ade80' : '#fb010d';
 
     // Grid
     ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
@@ -1071,11 +1133,13 @@
     for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 4, yp + 3); }
 
     // X labels
+    var isShort = (period === '1H' || period === '4H' || period === '8H' || period === '24H');
     ctx.fillStyle = '#333'; ctx.textAlign = 'center';
-    for (var xi = 0; xi < 4; xi++) {
-      var di = Math.round(xi / 3 * (data.length - 1));
+    var nLabels = isShort ? 5 : 4; if (nLabels > data.length) nLabels = data.length;
+    for (var xi = 0; xi < nLabels; xi++) {
+      var di = Math.round(xi / (nLabels - 1) * (data.length - 1));
       var xp = pL + di / (data.length - 1) * cw;
-      ctx.fillText(fmtAx(data[di][0], false), xp, h - 3);
+      ctx.fillText(fmtAx(data[di][0], isShort), xp, h - 3);
     }
 
     // Line
@@ -1094,7 +1158,6 @@
     ctx.fillStyle = grd; ctx.fill();
 
     // Update price & change
-    var first = data[0][1], last = data[data.length - 1][1];
     var priceEl = document.getElementById('coinDetailPrice');
     if (priceEl) priceEl.textContent = '$' + fmt(last, last < 1 ? 8 : last < 100 ? 4 : 2);
 
@@ -1102,11 +1165,11 @@
     if (changeEl) {
       var diff = last - first, pct = Math.abs(diff / first * 100);
       if (diff >= 0) {
-        changeEl.style.color = 'var(--green-primary)';
-        changeEl.textContent = '+$' + fmt(Math.abs(diff), 2) + ' (+' + pct.toFixed(2) + '%) 7d';
+        changeEl.style.color = '#4ade80';
+        changeEl.textContent = '+$' + fmt(Math.abs(diff), 2) + ' (+' + pct.toFixed(2) + '%) ' + period;
       } else {
-        changeEl.style.color = 'var(--red-primary)';
-        changeEl.textContent = '\u2212$' + fmt(Math.abs(diff), 2) + ' (\u2212' + pct.toFixed(2) + '%) 7d';
+        changeEl.style.color = '#fb010d';
+        changeEl.textContent = '\u2212$' + fmt(Math.abs(diff), 2) + ' (\u2212' + pct.toFixed(2) + '%) ' + period;
       }
     }
 
