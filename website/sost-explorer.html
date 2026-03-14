@@ -455,8 +455,48 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
   <div class="section" id="mpSection">
     <div class="sec-head"><div class="sec-title">// <b>MEMPOOL</b></div><div class="sec-meta" id="mpInfo"></div></div>
-    <table class="tbl"><thead><tr><th>TXID</th><th>SIZE</th><th>FEE</th></tr></thead>
-    <tbody id="mpBody"><tr><td colspan="3" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr></tbody></table>
+
+    <!-- Fee rate display -->
+    <div id="mpFeePanel" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">NO PRIORITY</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text2);" id="mpFeeNone">1</div>
+        <div style="font-size:9px;color:var(--text3);">stocks/byte</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">LOW</div>
+        <div style="font-size:16px;font-weight:600;color:var(--green);" id="mpFeeLow">1</div>
+        <div style="font-size:9px;color:var(--text3);">stocks/byte</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">MEDIUM</div>
+        <div style="font-size:16px;font-weight:600;color:var(--yellow);" id="mpFeeMed">1</div>
+        <div style="font-size:9px;color:var(--text3);">stocks/byte</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">HIGH</div>
+        <div style="font-size:16px;font-weight:600;color:var(--red);" id="mpFeeHigh">1</div>
+        <div style="font-size:9px;color:var(--text3);">stocks/byte</div>
+      </div>
+    </div>
+
+    <!-- Pending blocks visualization -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">NEXT BLOCKS ESTIMATE</div>
+      <div id="mpBlocksViz" style="display:flex;gap:8px;overflow-x:auto;"></div>
+    </div>
+
+    <!-- Treemap -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">TRANSACTION TREEMAP</div>
+      <div id="mpTreemap" style="position:relative;width:100%;height:160px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;">
+        <div id="mpTreemapTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div>
+      </div>
+    </div>
+
+    <!-- Transaction table -->
+    <table class="tbl"><thead><tr><th>TXID</th><th>SIZE</th><th>FEE</th><th>RATE</th></tr></thead>
+    <tbody id="mpBody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr></tbody></table>
   </div>
 </div>
 <div class="footer">
@@ -1155,11 +1195,156 @@ async function showAddress(addr){
 }
 
 async function loadMempool(){
-  try{var info=await rpc('getmempoolinfo');document.getElementById('mpInfo').textContent=info.size+' tx \u00B7 '+info.bytes+' bytes \u00B7 '+fS(info.total_fees)+' SOST fees';
-    var txids=await rpc('getrawmempool');var tb=document.getElementById('mpBody');
-    if(!txids.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr>';return;}
-    tb.innerHTML='';for(var mi=0;mi<Math.min(txids.length,20);mi++){var txid=txids[mi];try{var tx=await rpc('getrawtransaction',[txid,'true']);var tr=document.createElement('tr');tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+txid+'\')">'+sH(txid)+'</span>'+cpBtn(txid)+'</td><td>'+tx.size+' B</td><td><span class="td-amt">'+fS(tx.fee)+' SOST</span></td>';tb.appendChild(tr);}catch(e){}}
+  try{
+    var info=await rpc('getmempoolinfo');
+    document.getElementById('mpInfo').textContent=info.size+' tx \u00B7 '+info.bytes+' bytes \u00B7 '+fS(info.total_fees)+' SOST fees';
+    var txids=await rpc('getrawmempool');
+    var tb=document.getElementById('mpBody');
+
+    if(!txids.length){
+      tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">No pending transactions \u2014 solo mining</td></tr>';
+      renderMpEmpty();
+      return;
+    }
+
+    // Fetch tx details
+    var txs=[];
+    for(var mi=0;mi<Math.min(txids.length,50);mi++){
+      try{
+        var tx=await rpc('getrawtransaction',[txids[mi],'true']);
+        var fee=typeof tx.fee==='number'?tx.fee:0;
+        var rate=tx.size>0?Math.floor(fee/tx.size):0;
+        txs.push({txid:tx.txid,size:tx.size,fee:fee,rate:rate});
+      }catch(e){}
+    }
+    txs.sort(function(a,b){return b.rate-a.rate;});
+
+    // Fee rate display
+    renderMpFees(txs);
+
+    // Block estimate
+    renderMpBlocks(txs);
+
+    // Treemap
+    renderMpTreemap(txs);
+
+    // Table
+    tb.innerHTML='';
+    for(var ti=0;ti<Math.min(txs.length,20);ti++){
+      var t=txs[ti];
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+t.txid+'\')">'+sH(t.txid)+'</span>'+cpBtn(t.txid)+'</td><td>'+t.size+' B</td><td><span class="td-amt">'+fS(t.fee)+' SOST</span></td><td><span style="color:var(--cyan)">'+t.rate+' st/B</span></td>';
+      tb.appendChild(tr);
+    }
   }catch(e){}
+}
+
+function renderMpEmpty(){
+  document.getElementById('mpFeeNone').textContent='1';
+  document.getElementById('mpFeeLow').textContent='1';
+  document.getElementById('mpFeeMed').textContent='1';
+  document.getElementById('mpFeeHigh').textContent='1';
+  document.getElementById('mpBlocksViz').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);padding:20px;text-align:center;color:var(--text3);font-size:11px;flex:1;">No pending transactions \u2014 next block will contain only the coinbase reward</div>';
+  var tm=document.getElementById('mpTreemap');
+  tm.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:11px;"><div id="mpTreemapTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div>Mempool empty \u2014 all transactions confirmed</div>';
+}
+
+function renderMpFees(txs){
+  if(!txs.length)return;
+  var rates=txs.map(function(t){return t.rate;}).sort(function(a,b){return a-b;});
+  var p25=rates[Math.floor(rates.length*0.25)]||1;
+  var p50=rates[Math.floor(rates.length*0.50)]||1;
+  var p75=rates[Math.floor(rates.length*0.75)]||1;
+  var mx=rates[rates.length-1]||1;
+  document.getElementById('mpFeeNone').textContent=Math.max(1,p25);
+  document.getElementById('mpFeeLow').textContent=Math.max(1,p25);
+  document.getElementById('mpFeeMed').textContent=Math.max(1,p50);
+  document.getElementById('mpFeeHigh').textContent=Math.max(1,Math.max(p75,mx));
+}
+
+function renderMpBlocks(txs){
+  var viz=document.getElementById('mpBlocksViz');
+  if(!txs.length){viz.innerHTML='<div style="color:var(--text3);font-size:11px">Empty</div>';return;}
+  // Estimate blocks: ~1MB max, sort by fee rate desc
+  var sorted=txs.slice().sort(function(a,b){return b.rate-a.rate;});
+  var blocks=[],cur={txs:[],bytes:0,fees:0,minRate:Infinity,maxRate:0};
+  sorted.forEach(function(t){
+    if(cur.bytes+t.size>1000000){blocks.push(cur);cur={txs:[],bytes:0,fees:0,minRate:Infinity,maxRate:0};}
+    cur.txs.push(t);cur.bytes+=t.size;cur.fees+=t.fee;
+    if(t.rate<cur.minRate)cur.minRate=t.rate;if(t.rate>cur.maxRate)cur.maxRate=t.rate;
+  });
+  if(cur.txs.length)blocks.push(cur);
+  // Pad to at least 3
+  while(blocks.length<3)blocks.push({txs:[],bytes:0,fees:0,minRate:0,maxRate:0});
+  var html='';
+  for(var bi=0;bi<Math.min(blocks.length,6);bi++){
+    var b=blocks[bi];
+    var intensity=b.txs.length?Math.min(1,b.fees/(100*1e8)):0;
+    var bg='rgba(192,132,252,'+(.1+intensity*.5).toFixed(2)+')';
+    var border=b.txs.length?'rgba(192,132,252,.6)':'var(--border)';
+    html+='<div style="flex:1;min-width:100px;background:'+bg+';border:1px solid '+border+';padding:10px 12px;text-align:center;">';
+    html+='<div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;">BLOCK '+(H+1+bi)+'</div>';
+    if(b.txs.length){
+      html+='<div style="font-size:14px;font-weight:600;color:var(--text);">'+b.txs.length+' txs</div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:4px;">'+fS(b.fees)+' SOST fees</div>';
+      html+='<div style="font-size:9px;color:var(--text3);">'+b.minRate+'\u2013'+b.maxRate+' st/B</div>';
+    }else{
+      html+='<div style="font-size:11px;color:var(--text3);">coinbase only</div>';
+    }
+    html+='</div>';
+  }
+  viz.innerHTML=html;
+}
+
+function renderMpTreemap(txs){
+  var container=document.getElementById('mpTreemap');
+  var W=container.offsetWidth,Hc=container.offsetHeight;
+  // Clear but keep tooltip
+  var tipEl=document.getElementById('mpTreemapTip');
+  container.innerHTML='';
+  if(tipEl)container.appendChild(tipEl);
+  else{tipEl=document.createElement('div');tipEl.id='mpTreemapTip';tipEl.style.cssText='position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);';container.appendChild(tipEl);}
+
+  if(!txs.length){
+    var empty=document.createElement('div');
+    empty.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text3);font-size:11px;';
+    empty.textContent='Mempool empty';
+    container.appendChild(empty);return;
+  }
+
+  var totalFee=0;txs.forEach(function(t){totalFee+=Math.max(1,t.fee);});
+  var maxRate=Math.max.apply(null,txs.map(function(t){return t.rate;}))||1;
+
+  // Simple treemap: horizontal strips proportional to fee
+  var x=0;
+  txs.forEach(function(t){
+    var w=Math.max(2,(t.fee/totalFee)*W);
+    // Color by fee rate: green(low) → yellow → red(high)
+    var ratio=Math.min(1,t.rate/Math.max(1,maxRate));
+    var r=Math.floor(ratio>0.5?(ratio-0.5)*2*251:0);
+    var g=Math.floor(ratio<0.5?74+ratio*2*147:222-((ratio-0.5)*2*148));
+    var b2=Math.floor(ratio<0.5?128-ratio*48:0);
+    var color='rgb('+r+','+g+','+b2+')';
+
+    var el=document.createElement('div');
+    el.style.cssText='position:absolute;left:'+x+'px;top:0;width:'+w+'px;height:100%;background:'+color+';opacity:0.7;border-right:1px solid rgba(0,0,0,.3);cursor:pointer;transition:opacity .1s;';
+    el.setAttribute('data-txid',t.txid);
+    el.setAttribute('data-fee',t.fee);
+    el.setAttribute('data-size',t.size);
+    el.setAttribute('data-rate',t.rate);
+    el.addEventListener('mouseenter',function(e){
+      this.style.opacity='1';
+      tipEl.innerHTML='<span style="color:var(--cyan)">'+sH(t.txid)+'</span><br>Fee: <span style="color:var(--red)">'+fS(t.fee)+' SOST</span><br>Size: '+t.size+' B<br>Rate: <span style="color:var(--purple);font-weight:600">'+t.rate+' stocks/byte</span>';
+      tipEl.style.display='block';
+      var rect=container.getBoundingClientRect();
+      tipEl.style.left=Math.min(e.clientX-rect.left+10,W-180)+'px';
+      tipEl.style.top='10px';
+    });
+    el.addEventListener('mouseleave',function(){this.style.opacity='0.7';tipEl.style.display='none';});
+    el.addEventListener('click',function(){showTxDetail(t.txid);});
+    container.appendChild(el);
+    x+=w;
+  });
 }
 async function doSearch(){
   var q=document.getElementById('searchIn').value.trim();if(!q)return;
