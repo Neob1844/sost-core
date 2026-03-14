@@ -990,16 +990,17 @@ function showCXInfo(){
   '&nbsp;&nbsp;<span style="color:#22c55e">MIN</span> &nbsp;bitsQ=65,536 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ difficulty 1.0000 &nbsp;<span style="color:var(--text3)">(network near-dead)</span><br>'+
   '&nbsp;&nbsp;<span style="color:#67e8f9">GEN</span> &nbsp;bitsQ=353,075 &nbsp;&nbsp;&nbsp;→ difficulty 5.3875 &nbsp;<span style="color:var(--text3)">(genesis)</span><br>'+
   '&nbsp;&nbsp;<span style="color:#fb010d">MAX</span> &nbsp;bitsQ=16,711,680 → difficulty 255.000 <span style="color:var(--text3)">(theoretical max)</span><br><br>'+
-  '<b style="color:var(--text3)">ASERT clamp per block:</b><br>'+
-  '&nbsp;&nbsp;Max DOWN: <span style="color:#22c55e">-2 units</span> → ≈ -3.0% per block<br>'+
-  '&nbsp;&nbsp;Max UP: &nbsp;<span style="color:#fb010d">+3 units</span> → ≈ +4.6% per block<br>'+
+  '<b style="color:var(--text3)">ASERT adjustment:</b><br>'+
+  '&nbsp;&nbsp;Exponential: next_bitsq = anchor × 2<sup>(-td/halflife)</sup><br>'+
+  '&nbsp;&nbsp;No per-block clamps — smooth continuous adjustment<br>'+
+  '&nbsp;&nbsp;Global bounds: MIN_BITSQ=65,536 / MAX_BITSQ=16,711,680<br>'+
   '&nbsp;&nbsp;After 24h of 2× faster blocks → difficulty doubles'+
   '</div></div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
   '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">DUAL DIFFICULTY SYSTEM</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">ASERT</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
-  'Half-life: <b>24 hours</b>. Clamp: ±2-3 per block. Anchor-based per epoch ('+131553+' blocks).<br><br>'+
+  'Half-life: <b>24 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
   '<b style="color:var(--orange)">cASERT</b> — <b>Unidirectional</b> adaptive stability overlay. '+
   'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
   'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
