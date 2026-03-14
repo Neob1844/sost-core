@@ -429,6 +429,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         </div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;" id="miningStatus">searching nonce...</div>
       </div>
+      <div id="antiStallPanel" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:none;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span id="asIndicator" style="font-size:10px;letter-spacing:1px;font-weight:600;"></span>
+          <span id="asCountdown" style="font-size:10px;color:var(--text3);"></span>
+        </div>
+        <div id="asLog" style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;max-height:60px;overflow-y:auto;"></div>
+      </div>
     </div>
   </div>
   <div class="section" id="blocksSection">
@@ -998,6 +1005,36 @@ function startCountdown(){
     updateMiningPanel(elapsed);
   },1000);
 }
+var _asLogEntries=[];
+var _asLastLevel=null;
+function fmtCountdown(secs){
+  var s=Math.floor(secs);if(s<0)s=0;
+  var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  if(h>0)return h+'h '+('0'+m).slice(-2)+'m '+('0'+sec).slice(-2)+'s';
+  if(m>0)return m+'m '+('0'+sec).slice(-2)+'s';
+  return sec+'s';
+}
+function getDecayCost(level){
+  if(level>=8)return 600;
+  if(level>=4)return 1200;
+  return 1800;
+}
+function computeDecayLevel(rawLevel,ahead,elapsedSecs){
+  var threshold=(ahead>100)?28800:14400;
+  if(elapsedSecs<threshold)return{level:rawLevel,active:false,threshold:threshold,nextDrop:0};
+  var decayTime=elapsedSecs-threshold;
+  var eff=rawLevel;
+  var timeUsed=0;
+  while(eff>1&&decayTime>0){
+    var cost=getDecayCost(eff);
+    if(decayTime>=cost){decayTime-=cost;timeUsed+=cost;eff--;}
+    else break;
+  }
+  var nextCost=(eff>1)?getDecayCost(eff):0;
+  var timeInCurrent=decayTime;
+  var nextDrop=(eff>1)?nextCost-timeInCurrent:0;
+  return{level:eff,active:true,threshold:threshold,nextDrop:nextDrop,nextLevel:Math.max(1,eff-1)};
+}
 function updateMiningPanel(elapsed){
   var nextH=H+1;
   var mh=document.getElementById('miningHeight');
@@ -1005,17 +1042,24 @@ function updateMiningPanel(elapsed){
   var md=document.getElementById('miningDiff');
   if(md&&_lastBitsQ){md.textContent='~'+_lastBitsQ.toLocaleString()+' ('+(_lastBitsQ/65536).toFixed(2)+' Q16)';}
   var lag=computeCurrentLag();
+  var rawLevel=getCasertLevel(lag);
+  var ahead=(lag<0)?-lag:0;
+
+  // Decay calculation
+  var dc=computeDecayLevel(rawLevel,ahead,elapsed);
+  var effectiveLevel=dc.level;
+
   var ml=document.getElementById('miningLevel');
-  if(ml)ml.innerHTML=getLevelLabel(lag);
+  if(ml)ml.innerHTML=getLevelLabel(dc.active?-ahead:lag)+' <span style="font-size:9px;color:var(--text3)">(eff: L'+effectiveLevel+')</span>';
+
   var me=document.getElementById('miningElapsed');
   if(me){
     var es=Math.floor(elapsed);
     var mm=Math.floor(es/60),ss=es%60;
-    var txt=mm>0?mm+'m '+('0'+ss).slice(-2)+'s':ss+'s';
-    me.textContent=txt;
-    if(es<600){me.style.color='#4ade80';}
-    else if(es<1200){me.style.color='#fbbf24';}
-    else{me.style.color='#fb010d';}
+    me.textContent=mm>0?mm+'m '+('0'+ss).slice(-2)+'s':ss+'s';
+    if(es<600)me.style.color='#4ade80';
+    else if(es<1200)me.style.color='#fbbf24';
+    else me.style.color='#fb010d';
   }
   var ms=document.getElementById('miningStatus');
   if(ms){
@@ -1023,6 +1067,50 @@ function updateMiningPanel(elapsed){
     else if(elapsed<1200)ms.textContent='searching nonce... (slower than target)';
     else ms.textContent='searching nonce... (block overdue)';
   }
+
+  // Anti-stall panel
+  var asPanel=document.getElementById('antiStallPanel');
+  var asInd=document.getElementById('asIndicator');
+  var asCd=document.getElementById('asCountdown');
+  var asLog=document.getElementById('asLog');
+  if(!asPanel||!asInd)return;
+
+  if(ahead<5){
+    // L1 — no anti-stall relevant
+    asPanel.style.display='none';
+    return;
+  }
+  asPanel.style.display='block';
+
+  if(!dc.active){
+    // Anti-stall OFF — show countdown to activation
+    var remaining=dc.threshold-elapsed;
+    asInd.innerHTML='<span style="color:var(--red);">\u25CF</span> <span style="color:var(--red);">ANTI-STALL OFF</span>';
+    asCd.textContent='Activates in: '+fmtCountdown(remaining);
+  }else{
+    // Anti-stall ACTIVE
+    asInd.innerHTML='<span style="color:var(--green);animation:blink 1s infinite;">\u25CF</span> <span style="color:var(--green);">ANTI-STALL ACTIVE</span>';
+    if(effectiveLevel>1&&dc.nextDrop>0){
+      asCd.textContent='L'+effectiveLevel+' \u2192 L'+dc.nextLevel+' in '+fmtCountdown(dc.nextDrop);
+    }else if(effectiveLevel<=1){
+      asCd.textContent='L1 (floor) \u2014 maximum decay reached';
+    }else{
+      asCd.textContent='decaying...';
+    }
+  }
+
+  // Log entries
+  if(_asLastLevel===null)_asLastLevel=rawLevel;
+  if(dc.active&&_asLogEntries.length===0){
+    var now=new Date();var ts=('0'+now.getUTCHours()).slice(-2)+':'+('0'+now.getUTCMinutes()).slice(-2)+' UTC';
+    _asLogEntries.push(ts+' \u2014 Anti-stall activated (L'+rawLevel+')');
+  }
+  if(effectiveLevel!==_asLastLevel&&dc.active){
+    var now2=new Date();var ts2=('0'+now2.getUTCHours()).slice(-2)+':'+('0'+now2.getUTCMinutes()).slice(-2)+' UTC';
+    _asLogEntries.push(ts2+' \u2014 L'+_asLastLevel+' \u2192 L'+effectiveLevel+' (decay)');
+    _asLastLevel=effectiveLevel;
+  }
+  if(asLog&&_asLogEntries.length)asLog.innerHTML=_asLogEntries.join('<br>');
 }
 async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
 async function loadBlocks(){
@@ -1178,6 +1266,23 @@ async function showAddress(addr){
         balHtml+
         '<div class="k">utxos</div><div class="v">'+a.utxo_count+' unspent outputs</div>'+
       '</div>'+
+      '<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+
+        '<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;">'+
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">BALANCE HISTORY</div>'+
+          '<div style="position:relative;"><canvas id="addrBalCanvas" style="width:100%;height:100px;cursor:crosshair"></canvas>'+
+          '<div id="addrBalTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.5;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>'+
+        '</div>'+
+        '<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;">'+
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">INCOME PER BLOCK</div>'+
+          '<div style="position:relative;"><canvas id="addrIncCanvas" style="width:100%;height:100px;cursor:crosshair"></canvas>'+
+          '<div id="addrIncTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.5;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:12px;background:var(--bg2);border:1px solid var(--border);padding:12px;">'+
+        '<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">UTXO MATURITY</div>'+
+        '<div id="addrMatBar" style="display:flex;height:20px;border-radius:3px;overflow:hidden;"></div>'+
+        '<div id="addrMatLegend" style="font-size:9px;color:var(--text3);margin-top:4px;"></div>'+
+      '</div>'+
       '<div style="margin-top:16px">'+
         '<div class="sec-title" style="margin-bottom:6px">// <b>UTXOs</b> <span style="color:var(--text3);font-weight:400;font-size:10px">click outpoint \u2192 tx detail \u00B7 click height \u2192 block</span></div>'+
         '<table class="tbl"><thead><tr><th>OUTPOINT</th><th>AMOUNT</th><th>TYPE</th><th>HEIGHT</th><th>MATURITY</th></tr></thead>'+
@@ -1191,7 +1296,85 @@ async function showAddress(addr){
       '</div>';
     _navStack[_navStack.length-1].label=sH(addr);renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
+    // Render address charts
+    setTimeout(function(){renderAddrCharts(sorted);},100);
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
+}
+function renderAddrCharts(utxos){
+  if(!utxos||!utxos.length)return;
+  var byHeight=utxos.slice().sort(function(a,b){return a.height-b.height;});
+
+  // 1. Balance history
+  var cv1=document.getElementById('addrBalCanvas');
+  if(cv1){
+    var ctx=cv1.getContext('2d'),dpr=window.devicePixelRatio||1;
+    var W=cv1.offsetWidth,Hc=cv1.offsetHeight;
+    cv1.width=W*dpr;cv1.height=Hc*dpr;ctx.scale(dpr,dpr);
+    var cum=0,pts=[];
+    byHeight.forEach(function(u){var a=typeof u.amount==='number'?u.amount:parseFloat(u.amount);cum+=a;pts.push({h:u.height,bal:cum,amt:a});});
+    if(pts.length>1){
+      var mn=0,mx=pts[pts.length-1].bal;if(mx===0)mx=1;
+      var pad={l:50,r:8,t:6,b:16},cw=W-pad.l-pad.r,ch=Hc-pad.t-pad.b;
+      // Fill
+      ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch);
+      pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.bal/mx)*ch;ctx.lineTo(x,y);});
+      ctx.lineTo(pad.l+cw,pad.t+ch);ctx.closePath();
+      var grd=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);grd.addColorStop(0,'rgba(74,222,128,.15)');grd.addColorStop(1,'rgba(74,222,128,.02)');ctx.fillStyle=grd;ctx.fill();
+      // Line
+      ctx.beginPath();ctx.strokeStyle='rgba(74,222,128,.7)';ctx.lineWidth=1.5;
+      pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.bal/mx)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.stroke();
+      // Y labels
+      ctx.fillStyle='#444';ctx.font='8px monospace';ctx.textAlign='right';
+      for(var yi=0;yi<=3;yi++){var v=mx*yi/3;ctx.fillText(v.toFixed(2),pad.l-4,pad.t+ch-yi/3*ch+3);}
+      // Tooltip
+      setupDpTooltip('addrBalCanvas',pts,function(d){return '<span style="color:var(--green);font-weight:600">Block #'+d.h+'</span><br>Balance: <span style="color:var(--text)">'+d.bal.toFixed(4)+' SOST</span><br>Received: +'+d.amt.toFixed(4)+' SOST';});
+    }
+  }
+
+  // 2. Income per block (bar chart)
+  var cv2=document.getElementById('addrIncCanvas');
+  if(cv2){
+    var ctx2=cv2.getContext('2d'),dpr2=window.devicePixelRatio||1;
+    var W2=cv2.offsetWidth,Hc2=cv2.offsetHeight;
+    cv2.width=W2*dpr2;cv2.height=Hc2*dpr2;ctx2.scale(dpr2,dpr2);
+    var amts=byHeight.map(function(u){return{h:u.height,a:typeof u.amount==='number'?u.amount:parseFloat(u.amount)};});
+    var mxA=Math.max.apply(null,amts.map(function(d){return d.a;}))||1;
+    var pad2={l:40,r:8,t:6,b:16},cw2=W2-pad2.l-pad2.r,ch2=Hc2-pad2.t-pad2.b;
+    var bw2=Math.max(2,cw2/amts.length-1);
+    amts.forEach(function(d,i){
+      var x=pad2.l+i/(amts.length)*cw2;
+      var h=Math.max(1,(d.a/mxA)*ch2);
+      var ratio=d.a/mxA;
+      ctx2.fillStyle='rgba('+(Math.floor(ratio*251))+','+(Math.floor(146-ratio*72))+',60,.7)';
+      ctx2.fillRect(x,pad2.t+ch2-h,bw2,h);
+    });
+    ctx2.fillStyle='#444';ctx2.font='8px monospace';ctx2.textAlign='right';
+    for(var yi2=0;yi2<=2;yi2++){var v2=mxA*yi2/2;ctx2.fillText(v2.toFixed(2),pad2.l-4,pad2.t+ch2-yi2/2*ch2+3);}
+    setupDpTooltip('addrIncCanvas',amts,function(d){return '<span style="color:var(--orange);font-weight:600">Block #'+d.h+'</span><br>Amount: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span>';});
+  }
+
+  // 3. Maturity bar
+  var matBar=document.getElementById('addrMatBar');
+  var matLeg=document.getElementById('addrMatLegend');
+  if(matBar){
+    var mature=0,almost=0,immature=0;
+    byHeight.forEach(function(u){
+      var confs=H-u.height+1;
+      var isCb=u.coinbase;
+      if(!isCb||confs>=1000)mature++;
+      else if(confs>=500)almost++;
+      else immature++;
+    });
+    var total=mature+almost+immature;if(total===0)total=1;
+    var mPct=(mature/total*100).toFixed(1),aPct=(almost/total*100).toFixed(1),iPct=(immature/total*100).toFixed(1);
+    matBar.innerHTML=
+      (mature?'<div style="width:'+mPct+'%;background:var(--green);height:100%;" title="Mature: '+mature+'"></div>':'')+
+      (almost?'<div style="width:'+aPct+'%;background:#fbbf24;height:100%;" title="Almost mature: '+almost+'"></div>':'')+
+      (immature?'<div style="width:'+iPct+'%;background:var(--red);height:100%;" title="Immature: '+immature+'"></div>':'');
+    matLeg.innerHTML='<span style="color:var(--green);">\u25A0</span> Mature: '+mature+' &nbsp; '+(almost?'<span style="color:#fbbf24;">\u25A0</span> Almost: '+almost+' &nbsp; ':'')+
+      (immature?'<span style="color:var(--red);">\u25A0</span> Immature: '+immature:'');
+  }
 }
 
 async function loadMempool(){
