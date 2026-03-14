@@ -815,15 +815,21 @@
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Access to the Materials Discovery Engine requires a SOST deposit using the same
-          escrow mechanism as PoPC Model B. Deposits are locked for the tier duration and
-          returned upon expiry. Tiers determine available engine capabilities.
+          Access to the Materials Discovery Engine requires a SOST escrow deposit using the same
+          mechanism as PoPC Model B. Escrow deposits are denominated in USD and converted to SOST
+          at the current market rate at the time of deposit. This protects users from volatility &mdash;
+          whether SOST is worth $1 or $10,000, the access cost remains stable in real terms.
         </p>
         <table class="code-table">
-          <tr><td class="key">Tier 1</td><td class="val"><code>10 SOST</code> &middot; 1 month &mdash; Search + prediction <span class="comment">// Layers 1-3</span></td></tr>
-          <tr><td class="key">Tier 2</td><td class="val"><code>50 SOST</code> &middot; 3 months &mdash; + generative discovery <span class="comment">// Layers 1-4</span></td></tr>
-          <tr><td class="key">Tier 3</td><td class="val"><code>200 SOST</code> &middot; 6 months &mdash; + DFT validation + export <span class="comment">// Layers 1-5 + full access</span></td></tr>
+          <tr><td class="key">Tier 1</td><td class="val"><code>$10 USD</code> equivalent in SOST &middot; 1 month &mdash; Layers 1&ndash;3 <span class="comment">// Search + prediction</span></td></tr>
+          <tr><td class="key">Tier 2</td><td class="val"><code>$20 USD</code> equivalent in SOST &middot; 2 months &mdash; Layers 1&ndash;4 <span class="comment">// + generative discovery</span></td></tr>
+          <tr><td class="key">Tier 3</td><td class="val"><code>$50 USD</code> equivalent in SOST &middot; 6 months &mdash; Layers 1&ndash;5 <span class="comment">// full access</span></td></tr>
         </table>
+        <p class="spec-desc" style="margin-top:16px;padding:12px;border:1px solid var(--green-primary);border-radius:6px;background:rgba(74,222,128,0.05);">
+          <strong style="color:var(--green-primary);">The algorithm is FREE.</strong> The escrow deposit is a spam-prevention
+          mechanism, NOT a fee. 100% of the deposit is returned to the user upon tier expiry.
+          No portion is burned, redistributed, or retained by the protocol.
+        </p>
       </div>
     </div>
 
@@ -834,7 +840,7 @@
           Tier 1: Search + Predict
         </div>
         <div class="mode-params">
-          <span>10 SOST</span> deposit, 1 month lock.<br>
+          <span>$10 USD</span> in SOST, 1 month lock.<br>
           Query the database, run inverse search, predict properties of known and hypothetical compositions.
         </div>
       </div>
@@ -844,7 +850,7 @@
           Tier 2: + Generative
         </div>
         <div class="mode-params">
-          <span>50 SOST</span> deposit, 3 month lock.<br>
+          <span>$20 USD</span> in SOST, 2 month lock.<br>
           Everything in Tier 1 plus evolutionary candidate generation and optimization runs.
         </div>
       </div>
@@ -854,7 +860,7 @@
           Tier 3: Full Access
         </div>
         <div class="mode-params">
-          <span>200 SOST</span> deposit, 6 month lock.<br>
+          <span>$50 USD</span> in SOST, 6 month lock.<br>
           All capabilities including DFT validation queue, data export, and priority compute allocation.
         </div>
       </div>
