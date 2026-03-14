@@ -616,6 +616,7 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html" class="active">Technology</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -1025,7 +1026,7 @@ ahead     = (lag &lt; <span class="num">0</span>) ? -lag : <span class="num">0</
         <div class="code-snippet" data-label="DECAY ANTI-STALL" style="margin-top:16px;">
 <span class="cmt">// Activates after 7200s (2 hours) without a block</span>
 <span class="cmt">// Mining only — validation uses raw level</span>
-stall_time = now - last_block_time - <span class="num">7200</span>
+stall_time = now - last_block_time - activation  <span class="cmt">// 14400s (L1-L5) or 28800s (L6+)</span>
 
 <span class="kw">while</span> effective_level &gt; <span class="num">1</span> and stall_time &gt; <span class="num">0</span>:
     <span class="kw">if</span> level &gt;= <span class="num">8</span>: cost = <span class="num">600</span>s   <span class="cmt">// L8+: 10 min/level (fast)</span>

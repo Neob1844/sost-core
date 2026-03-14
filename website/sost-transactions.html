@@ -5,7 +5,7 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Protocol — Roadmap</title>
+<title>SOST Protocol — Transaction Architecture</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +26,6 @@
     --green-dim: #22c55e44;
     --cyan-primary: #22d3ee;
     --cyan-dim: #22d3ee33;
-    --red-accent: #fb010d;
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --text-dim: #64748b;
@@ -147,7 +146,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 300px;
-    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
   .hero-label {
@@ -385,92 +384,6 @@
     font-style: italic;
   }
 
-  /* ---- ARCH DIAGRAM ---- */
-  .arch-flow {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    margin: 32px 0;
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-  .arch-node {
-    flex: 1;
-    min-width: 160px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    padding: 20px 16px;
-    text-align: center;
-    position: relative;
-    transition: border-color 0.3s, transform 0.2s;
-  }
-  .arch-node:first-child { border-radius: 8px 0 0 8px; }
-  .arch-node:last-child { border-radius: 0 8px 8px 0; }
-  .arch-node:hover {
-    border-color: var(--red-primary);
-    z-index: 2;
-    transform: translateY(-2px);
-  }
-  .arch-node::after {
-    content: '→';
-    position: absolute;
-    right: -8px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 14px;
-    z-index: 3;
-  }
-  .arch-node:last-child::after { display: none; }
-  .arch-node .node-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 6px;
-  }
-  .arch-node .node-name {
-    font-family: var(--font-display);
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-  .arch-node .node-detail {
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  /* ---- CODE SNIPPET ---- */
-  .code-snippet {
-    background: var(--bg-panel);
-    border: 1px solid var(--border-dim);
-    border-radius: 6px;
-    padding: 16px 20px;
-    margin: 16px 0;
-    overflow-x: auto;
-    font-size: 12px;
-    line-height: 1.8;
-    position: relative;
-  }
-  .code-snippet::before {
-    content: attr(data-label);
-    position: absolute;
-    top: 0; right: 0;
-    background: var(--border-dim);
-    color: var(--text-muted);
-    font-size: 10px;
-    padding: 2px 10px;
-    border-radius: 0 6px 0 4px;
-    letter-spacing: 1px;
-  }
-  .code-snippet .kw { color: var(--cyan-primary); }
-  .code-snippet .fn { color: var(--red-primary); }
-  .code-snippet .str { color: var(--green-primary); }
-  .code-snippet .num { color: var(--red-primary); }
-  .code-snippet .cmt { color: var(--text-muted); font-style: italic; }
-
   /* ---- MODE GRID ---- */
   .mode-grid {
     display: grid;
@@ -507,43 +420,52 @@
     color: var(--text-secondary);
   }
 
-  /* ---- PRINCIPLE CARDS ---- */
-  .principles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
+  /* ---- COMPARISON TABLE ---- */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 16px;
   }
-  .principle-card {
+  .comparison-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--border-med);
+    background: var(--bg-panel);
+  }
+  .comparison-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-dim);
+    color: var(--text-secondary);
+    font-weight: 300;
+    vertical-align: top;
+  }
+  .comparison-table tr:hover td {
+    background: var(--bg-hover);
+  }
+  .comparison-table td:first-child {
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .comparison-table td:nth-child(3) {
+    color: var(--red-primary);
+  }
+
+  /* ---- DISCLAIMER ---- */
+  .disclaimer-box {
     background: var(--bg-card);
-    border: 1px solid var(--border-dim);
+    border: 2px solid #fb010d;
     border-radius: 8px;
     padding: 24px;
-    transition: border-color 0.3s, transform 0.2s;
-    position: relative;
-    overflow: hidden;
+    margin-top: 16px;
   }
-  .principle-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--card-accent, var(--red-primary));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .principle-card:hover {
-    border-color: var(--border-med);
-    transform: translateY(-2px);
-  }
-  .principle-card:hover::before { opacity: 1; }
-  .principle-card .p-label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  }
-  .principle-card .p-desc {
+  .disclaimer-box p {
     color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.8;
@@ -563,12 +485,6 @@
     transition: color 0.2s;
   }
   footer a:hover { color: var(--red-primary); }
-  .footer-logo {
-    width: 32px; height: 32px;
-    margin: 0 auto 12px;
-    opacity: 0.4;
-    filter: grayscale(0.3);
-  }
 
   /* ---- ANIMATIONS ---- */
   .fade-in {
@@ -588,18 +504,11 @@
   @media (max-width: 768px) {
     .hero { padding: 48px 0 40px; }
     .section { padding: 40px 0; }
-    .arch-flow { flex-direction: column; }
-    .arch-node { border-radius: 0 !important; }
-    .arch-node:first-child { border-radius: 8px 8px 0 0 !important; }
-    .arch-node:last-child { border-radius: 0 0 8px 8px !important; }
-    .arch-node::after {
-      content: '↓';
-      right: 50%; top: auto; bottom: -8px;
-      transform: translateX(50%);
-    }
     .code-table .key { width: auto; min-width: 140px; }
     .nav-links { display: none; }
     .download-bar { flex-direction: column; }
+    .comparison-table { font-size: 11px; }
+    .comparison-table th, .comparison-table td { padding: 8px 10px; }
   }
 </style>
 
@@ -616,11 +525,11 @@
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-transactions.html" class="active">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
-      <a href="sost-roadmap.html" class="active">Roadmap</a>
+      <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
@@ -643,58 +552,161 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">ROADMAP</div>
+    <div class="hero-label fade-in">TRANSACTIONS</div>
     <h1 class="fade-in delay-1">
-      <span>Development</span><br>
-      Timeline
+      <span>Transaction</span><br>
+      Architecture
     </h1>
     <p class="hero-sub fade-in delay-2">
-      From genesis block to Heritage Reserve. No ICO fundraising round &mdash;
-      development follows the chain&rsquo;s own timeline. Code first, capital never.
+      UTXO-based type model &mdash; no scripting engine
     </p>
-    <div class="protocol-badge fade-in delay-3">
-      <span class="tag">GENESIS</span>
-      <span class="sep">|</span>
-      <span class="val">March 13, 2026 &middot; 00:00:00 UTC</span>
+
+    <div class="download-bar fade-in delay-3">
+      <a class="dl-btn" id="downloadPageBtn" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download this page
+      </a>
+      <a class="dl-btn secondary" href="#what-works">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        Explore specification
+      </a>
     </div>
   </div>
 </section>
 
+<!-- WHAT WORKS TODAY -->
+<section class="section" id="what-works">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">01 &mdash; CURRENT</div>
+      <h2 class="section-title">What Works <span class="accent">Today</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">P2PKH Payments</span>
+        </div>
+        <span class="spec-tag consensus">LIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Single-key ECDSA secp256k1 with compressed pubkeys and mandatory LOW-S enforcement.
+          BIP143-simplified sighash with genesis hash for replay protection.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Fee Market</span>
+        </div>
+        <span class="spec-tag consensus">LIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Rational fee-rate ordering (fee/size as integer ratio, no floating point).
+          MIN_RELAY_FEE: 1 stock/byte. Mempool prioritizes by fee-rate.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">UTXO Model</span>
+        </div>
+        <span class="spec-tag consensus">LIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Full UTXO tracking with ConnectBlock/DisconnectBlock for reorg support.
+          BlockUndo preserves spent outputs for chain reorganization.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Batch Transactions</span>
+        </div>
+        <span class="spec-tag consensus">LIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Up to 256 inputs and 256 outputs per transaction (consensus).
+          Policy limits: 128 inputs, 32 outputs.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Coinbase</span>
+        </div>
+        <span class="spec-tag immutable">IMMUTABLE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          1000-block maturity (~7 days). Constitutional 50/25/25 split: miner, Gold Vault, PoPC Pool.
+          Immutable at genesis.
+        </p>
+      </div>
+    </div>
+
+    <!-- Consensus Limits -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Consensus Limits</span>
+        </div>
+        <span class="spec-tag overlay">PARAMETERS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="key">MAX_BLOCK_BYTES</td><td class="val"><code>1,000,000</code></td></tr>
+          <tr><td class="key">MAX_TX_BYTES</td><td class="val"><code>100,000</code> consensus / <code>16,000</code> policy</td></tr>
+          <tr><td class="key">COINBASE_MATURITY</td><td class="val"><code>1000</code> blocks</td></tr>
+          <tr><td class="key">MIN_RELAY_FEE</td><td class="val"><code>1</code> stock/byte</td></tr>
+          <tr><td class="key">DUST_THRESHOLD</td><td class="val"><code>10,000</code> stocks</td></tr>
+          <tr><td class="key">MAX_INPUTS</td><td class="val"><code>256</code> consensus / <code>128</code> policy</td></tr>
+          <tr><td class="key">MAX_OUTPUTS</td><td class="val"><code>256</code> consensus / <code>32</code> policy</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACTIVATING AT BLOCK 5000 -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">MILESTONES</div>
-      <h2 class="section-title">Project <span class="accent">Timeline</span></h2>
+      <div class="section-id">02 &mdash; ACTIVATION</div>
+      <h2 class="section-title">Activating at <span class="accent">Block 5000</span></h2>
+      <div style="margin-top:12px;"><span class="spec-tag consensus">CONSENSUS UPGRADE</span></div>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">Mar 13, 2026</span>
+          <span class="spec-name">BOND_LOCK (OUT_BOND_LOCK, 0x10)</span>
         </div>
-        <span class="spec-tag immutable">GENESIS</span>
+        <span class="spec-tag consensus">CONSENSUS</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>GENESIS BLOCK &mdash; 2026-03-13 00:00:00 UTC.</strong> ConvergenceX Proof-of-Work chain live. Solo mining begins with C++ reference miner. Constitutional rules encoded at genesis.
-          Chain starts. The genesis block is self-sufficient: it requires only a miner and a timestamp.
-        </p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">May 13, 2026</span>
-        </div>
-        <span class="spec-tag consensus">PUBLIC LAUNCH</span>
-      </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          <strong>PUBLIC LAUNCH.</strong> BTCTalk ANN thread. CEX listing request submitted. C++ miner released. GitHub repository public. Community mining begins.
-          C++ miner released. GitHub repository public. Community mining begins.
+          Time-locked output. Funds locked until specified block height. 8-byte payload:
+          lock_until as uint64_t LE. Used by PoPC Model B for custody bonds.
         </p>
       </div>
     </div>
@@ -702,31 +714,15 @@
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">Jun 2026</span>
+          <div class="spec-icon red"></div>
+          <span class="spec-name">ESCROW_LOCK (OUT_ESCROW_LOCK, 0x11)</span>
         </div>
-        <span class="spec-tag overlay">GOLD RESERVE</span>
+        <span class="spec-tag consensus">CONSENSUS</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>Gold purchases begin.</strong> First XAUT/PAXG acquired via TWAP pipeline.
-          Reserve Vault deployed on Ethereum mainnet. Public dashboard with real-time reserve tracking.
-        </p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-name">Jan 2027</span>
-        </div>
-        <span class="spec-tag overlay">PoPC LIVE</span>
-      </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          <strong>PoPC Model A + B launch.</strong> First custody contracts active.
-          Bond system operational. ConvergenceX entropy audits begin. Escrow contracts deployed.
+          Escrow with designated beneficiary. 28-byte payload: lock_until[8] + beneficiary_pkh[20].
+          Used by Materials Discovery Engine for access deposits.
         </p>
       </div>
     </div>
@@ -735,68 +731,161 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">Jun 2027</span>
+          <span class="spec-name">Capsule Protocol v1</span>
         </div>
-        <span class="spec-tag overlay">PHYSICAL GOLD</span>
+        <span class="spec-tag overlay">OVERLAY</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>Physical gold extension.</strong> Mobile app for audit challenges.
-          Verifier network operational. Users commit custody of physical bars, coins, and ingots.
+          Structured metadata in OUT_TRANSFER outputs. 12-byte header + up to 243-byte body.
+          Types: open notes, sealed notes, document references, certificate instructions.
+          Encryption: ECIES-secp256k1-AES256-GCM or X25519-AES256-GCM.
         </p>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="spec-block fade-in delay-3">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">2028</span>
+<!-- FUTURE RESEARCH -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">03 &mdash; FUTURE</div>
+      <h2 class="section-title">Future <span class="accent">Research</span></h2>
+    </div>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          Multisig (M-of-N)
         </div>
-        <span class="spec-tag overlay">ZK R&amp;D</span>
-      </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          <strong>Zero-Knowledge research initiative.</strong> Physical proof system R&amp;D.
-          This technology will only be deployed if and when the required cryptographic primitives reach production-grade maturity and demonstrate provable security guarantees under formal verification. Physical custody verification without identity disclosure remains an open research problem &mdash; SOST commits to pursuing it without compromising participant safety or deploying partial solutions.
-        </p>
-      </div>
-    </div>
-
-    <div class="spec-block fade-in delay-4">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-name">2029&ndash;2030</span>
+        <div class="mode-params">
+          <span>Fixed output type OUT_MULTISIG without full scripting. Medium complexity.</span>
         </div>
-        <span class="spec-tag overlay">ZK PROOFS</span>
       </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          <strong>ZK physical custody proofs.</strong> Full privacy-preserving audit system.
-          Extends to platinum, palladium, rhodium. No identity, location, or quantity on-chain.
-          Subject to successful completion of ZK R&amp;D milestones. Deployment contingent on achieving zero-knowledge proofs that meet SOST&rsquo;s non-negotiable security requirements for physical custody verification. Timeline is aspirational and will not be accelerated at the expense of cryptographic rigor.
-        </p>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          Relative Timelocks (CSV-like)
+        </div>
+        <div class="mode-params">
+          <span>Enables payment channels. Requires sequence number field. Medium complexity.</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--red-primary)"></span>
+          HTLC
+        </div>
+        <div class="mode-params">
+          <span>Hash timelock contracts for Lightning compatibility. High complexity.</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--green-primary)"></span>
+          RBF / CPFP
+        </div>
+        <div class="mode-params">
+          <span>Mempool-only changes, no consensus change needed. Low complexity.</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          Schnorr Signatures
+        </div>
+        <div class="mode-params">
+          <span>Key aggregation, batch verification. Could coexist with ECDSA. Medium complexity.</span>
+        </div>
       </div>
     </div>
 
-    <div class="spec-block fade-in delay-4">
+    <div class="disclaimer-box fade-in delay-2">
+      <p>
+        These features represent potential future upgrades to the SOST transaction architecture.
+        Implementation will follow the type-based activation pattern established by BOND_LOCK and
+        ESCROW_LOCK. No timeline commitments are made. Each upgrade requires a consensus change and
+        will only be deployed after thorough testing, formal verification where applicable, and
+        community review. SOST prioritizes correctness and security over feature velocity.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGN PHILOSOPHY -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">04 &mdash; PHILOSOPHY</div>
+      <h2 class="section-title">Design <span class="accent">Philosophy</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">Indefinite</span>
+          <span class="spec-name">Bitcoin Script vs SOST Types</span>
         </div>
-        <span class="spec-tag immutable">HERITAGE</span>
+        <span class="spec-tag immutable">COMPARISON</span>
       </div>
       <div class="spec-body">
-        <p class="spec-desc">
-          <strong>Heritage Reserve.</strong> Gold sealed by default. Emergency dual-gate if needed.
-          Chain runs on fees after emission approaches zero. Protocol operates perpetually
-          under constitutional rules encoded at genesis.
-        </p>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Aspect</th>
+              <th>Bitcoin (Script)</th>
+              <th>SOST (Types)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Model</td>
+              <td>Stack-based scripting</td>
+              <td>Fixed output types</td>
+            </tr>
+            <tr>
+              <td>Flexibility</td>
+              <td>Arbitrary programs</td>
+              <td>One type per capability</td>
+            </tr>
+            <tr>
+              <td>Attack surface</td>
+              <td>Large (script injection, witness malleability)</td>
+              <td>Minimal (no interpreter)</td>
+            </tr>
+            <tr>
+              <td>Validation speed</td>
+              <td>Variable (script execution)</td>
+              <td>Fast (type switch)</td>
+            </tr>
+            <tr>
+              <td>New features</td>
+              <td>Soft fork (new opcodes)</td>
+              <td>Hard fork (new output type)</td>
+            </tr>
+            <tr>
+              <td>Smart contracts</td>
+              <td>Limited (Bitcoin Script Turing-incomplete)</td>
+              <td>None (not a goal)</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-body">
+        <p class="spec-desc" style="margin-bottom:0;">
+          SOST chose a type-based model to minimize attack surface and maximize validation speed.
+          Each transaction capability is a distinct output type with consensus-defined semantics.
+          New capabilities activate at predetermined block heights, following the pattern established
+          by BOND_LOCK at height 5000. This design trades flexibility for safety &mdash; SOST is a
+          payment chain with constitutional reserves, not a smart contract platform.
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -810,20 +899,19 @@
   </div>
 </footer>
 <script>
-document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    var html = document.documentElement.outerHTML;
-    var blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = btn.getAttribute('data-download');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
+// Self-download functionality
+document.getElementById('downloadPageBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sost-transactions.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 });
 </script>
 

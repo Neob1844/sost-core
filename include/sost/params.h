@@ -78,7 +78,7 @@ inline constexpr int32_t CASERT_L6_BLOCKS  = 101;
 
 // cASERT Decay Anti-Stall parameters
 // Activates when no block found for CASERT_DECAY_ACTIVATION seconds
-inline constexpr int64_t CASERT_DECAY_ACTIVATION  = 7200;  // 2 hours without block
+inline constexpr int64_t CASERT_DECAY_ACTIVATION  = 7200;  // legacy default (overridden dynamically in casert.cpp)
 inline constexpr int64_t CASERT_DECAY_FAST_SECS   = 600;   // 10 min/level for L8+
 inline constexpr int64_t CASERT_DECAY_MEDIUM_SECS = 1200;  // 20 min/level for L4-L7
 inline constexpr int64_t CASERT_DECAY_SLOW_SECS   = 1800;  // 30 min/level for L2-L3
