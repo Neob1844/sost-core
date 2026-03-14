@@ -95,7 +95,7 @@
 
 <p><b>Per-block program:</b> Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 4GB LPDDR5 on-package and a general-purpose ALU &mdash; economically equivalent to building a CPU.</p>
 
-<p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for 2 hours, a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
+<p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for an extended period (4 hours for L1-L5, 8 hours for L6+), a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
 
 <p>All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.</p>
 
@@ -159,7 +159,7 @@
 </ul>
 
 <p><b>Build:</b></p>
-<pre>git clone https://github.com/Neob1844/sost-core.git
+<pre>git clone https://github.com/SOST-Protocol/sost-core.git
 cd sost-core &amp;&amp; mkdir build &amp;&amp; cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 
@@ -183,7 +183,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
   <li><b>Website:</b> <a href="https://sostcore.com">https://sostcore.com</a></li>
   <li><b>Explorer:</b> <a href="https://explorer.sostcore.com">https://explorer.sostcore.com</a></li>
   <li><b>Whitepaper:</b> <a href="https://explorer.sostcore.com/whitepaper.pdf">https://explorer.sostcore.com/whitepaper.pdf</a></li>
-  <li><b>GitHub:</b> <a href="https://github.com/Neob1844/sost-core">https://github.com/Neob1844/sost-core</a> (public at launch)</li>
+  <li><b>GitHub:</b> <a href="https://github.com/SOST-Protocol/sost-core">https://github.com/SOST-Protocol/sost-core</a> (public at launch)</li>
   <li><b>Wallet:</b> <a href="https://wallet.sostcore.com">https://wallet.sostcore.com</a></li>
 </ul>
 
