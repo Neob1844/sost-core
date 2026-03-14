@@ -2991,9 +2991,35 @@ SERIALIZATION (consensus-critical fix):
 <p class="wp-p" style="font-size:12px;color:#888;border-top:1px solid #333;padding-top:12px;">SOST source code is published under the MIT License. The code is fully open-source and free to use, modify, and distribute. See <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:#4ecdc4;">LICENSE</a> file for full terms.</p>
   </main>
 </div>
-<a id="tocFloatBtn" href="#sec-0" style="position:fixed;bottom:20px;right:20px;background:rgba(10,10,10,0.9);border:1px solid #333;color:#888;font-size:11px;font-family:monospace;padding:8px 14px;border-radius:6px;text-decoration:none;z-index:100;display:none;letter-spacing:1px;transition:all 0.2s;" onmouseover="this.style.color='#fb010d';this.style.borderColor='#fb010d'" onmouseout="this.style.color='#888';this.style.borderColor='#333'">&uarr; TABLE OF CONTENTS</a>
+<button id="tocFloatBtn" style="position:fixed;bottom:20px;right:20px;background:rgba(251,1,13,0.15);border:1px solid #fb010d;color:#fb010d;font-size:14px;font-family:monospace;padding:12px 20px;border-radius:6px;cursor:pointer;z-index:100;letter-spacing:1px;transition:all 0.2s;display:block;" onmouseover="this.style.background='rgba(251,1,13,0.3)'" onmouseout="this.style.background='rgba(251,1,13,0.15)'">&uarr; TABLE OF CONTENTS</button>
 <script>
-(function(){var btn=document.getElementById('tocFloatBtn');window.addEventListener('scroll',function(){btn.style.display=window.scrollY>400?'block':'none';});})();
+(function(){
+  var btn=document.getElementById('tocFloatBtn');
+  var savedPos=null;
+  var isBackMode=false;
+
+  // Intercept TOC link clicks
+  document.querySelectorAll('.toc a, .toc-l1, .toc-l2').forEach(function(link){
+    link.addEventListener('click',function(){
+      savedPos=window.scrollY;
+      isBackMode=true;
+      btn.innerHTML='&larr; BACK TO TOC';
+    });
+  });
+
+  btn.addEventListener('click',function(e){
+    e.preventDefault();
+    if(isBackMode&&savedPos!==null){
+      window.scrollTo({top:savedPos,behavior:'smooth'});
+      isBackMode=false;
+      savedPos=null;
+      btn.innerHTML='&uarr; TABLE OF CONTENTS';
+    }else{
+      var toc=document.querySelector('.toc')||document.getElementById('sec-0');
+      if(toc)toc.scrollIntoView({behavior:'smooth'});
+    }
+  });
+})();
 </script>
 <script src="sost-search.js"></script>
 </body>
