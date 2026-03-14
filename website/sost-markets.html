@@ -136,6 +136,27 @@
   .error-retry:hover { color: var(--red-bright) !important; }
   .crypto-expand { padding: 16px !important; background: var(--bg-panel); }
 
+  /* UPDATING INDICATOR */
+  .updating-indicator { display: none; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; animation: updPulse 1.2s ease infinite; }
+  .updating-indicator.visible { display: inline-block; }
+  @keyframes updPulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* COIN DETAIL MODAL */
+  .coin-detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .coin-detail-panel { background: #0a0a0a; border: 1px solid var(--border-med); border-radius: 8px; padding: 24px; width: 90%; max-width: 560px; position: relative; font-family: var(--font-mono); animation: slideUp 0.2s ease; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .coin-detail-close { position: absolute; top: 12px; right: 16px; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 16px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-family: var(--font-mono); transition: all 0.15s; }
+  .coin-detail-close:hover { color: var(--red-primary); border-color: var(--red-primary); }
+  .coin-detail-header { margin-bottom: 16px; }
+  .coin-detail-title { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 6px; }
+  .coin-detail-price { font-size: 28px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .coin-detail-change { font-size: 14px; font-weight: 500; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .coin-detail-chart-wrap { background: #050505; border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .coin-detail-label { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; }
+  .coin-detail-range { font-size: 9px; color: var(--text-muted); letter-spacing: 0.5px; margin-top: 8px; }
+  .coin-detail-error { color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 0; }
+
   @media (max-width: 768px) {
     .nav-links { display: none; }
     .data-table { font-size: 12px; }
@@ -167,6 +188,7 @@
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
       <a href="sost-explorer.html">Explorer</a>
       <a href="sost-markets.html" class="active">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
@@ -184,6 +206,7 @@
     <div class="status-bar">
       <div class="live-badge"><span class="live-dot"></span>LIVE</div>
       <span class="status-time" id="lastUpdate">loading...</span>
+      <span class="updating-indicator" id="updatingIndicator">updating...</span>
     </div>
   </div>
 </section>
@@ -498,7 +521,7 @@
   }
 
   // ===== SECTION 01: FOREX =====
-  function fetchForex() {
+  function fetchForex(cb) {
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -523,9 +546,15 @@
           });
         });
         tbody.innerHTML = html;
+        if (cb) cb();
       })
       .catch(function(e) {
-        document.getElementById('forexBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryForex()">Error loading forex rates \u2014 click to retry</span></td></tr>';
+        // Only show error if table has no real data yet
+        var tbody = document.getElementById('forexBody');
+        if (!tbody.querySelector('.currency-name')) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryForex()">Error loading forex rates \u2014 click to retry</span></td></tr>';
+        }
+        if (cb) cb();
       });
   }
 
@@ -559,7 +588,7 @@
   }
 
   // ===== SECTIONS 02 & 04: GOLD + CRYPTO =====
-  function fetchGold() {
+  function fetchGold(cb) {
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
     var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
     var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
@@ -653,10 +682,19 @@
         });
         tbody4.innerHTML = html4;
         setupCryptoClicks();
+        if (cb) cb();
       })
       .catch(function(e) {
-        document.getElementById('goldFiatBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading gold prices \u2014 click to retry</span></td></tr>';
-        document.getElementById('goldCryptoBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
+        // Only show error if tables have no real data yet
+        var tb2 = document.getElementById('goldFiatBody');
+        var tb4 = document.getElementById('goldCryptoBody');
+        if (!tb2.querySelector('.currency-name')) {
+          tb2.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading gold prices \u2014 click to retry</span></td></tr>';
+        }
+        if (!tb4.querySelector('.currency-name')) {
+          tb4.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
+        }
+        if (cb) cb();
       });
   }
 
@@ -664,13 +702,14 @@
   window._mktRetryForex = function() { fetchForex(); };
 
   // ===== SECTION 03: SOST PRICE =====
-  function fetchSost() {
+  function fetchSost(cb) {
     var vs = cgFiatCodes.join(',');
     tryFetchSost('sost-protocol', vs, function() {
       tryFetchSost('sost', vs, function() {
         showSostNotListed();
-      });
-    });
+        if (cb) cb();
+      }, cb);
+    }, cb);
   }
 
   function sostInCurrency(prices, code) {
@@ -680,7 +719,7 @@
     return undefined;
   }
 
-  function tryFetchSost(id, vs, fallback) {
+  function tryFetchSost(id, vs, fallback, doneCb) {
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs)
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -697,6 +736,7 @@
           });
         });
         tbody.innerHTML = html;
+        if (doneCb) doneCb();
       })
       .catch(function() { fallback(); });
   }
@@ -918,78 +958,194 @@
   }
 
   // ===== SECTION 04: CLICKABLE CRYPTO CHARTS =====
+  var COIN_DETAIL_IDS = {
+    BTC:'bitcoin',ETH:'ethereum',BNB:'binancecoin',SOL:'solana',
+    XRP:'ripple',DOT:'polkadot',LINK:'chainlink',LTC:'litecoin',
+    BCH:'bitcoin-cash',XLM:'stellar',DOGE:'dogecoin',ADA:'cardano',
+    AVAX:'avalanche-2',MATIC:'matic-network',SHIB:'shiba-inu',
+    ATOM:'cosmos',UNI:'uniswap',NEAR:'near',APT:'aptos',SUI:'sui'
+  };
+  // Merge with existing CRYPTO_IDS
+  Object.keys(CRYPTO_IDS).forEach(function(k) { if (!COIN_DETAIL_IDS[k]) COIN_DETAIL_IDS[k] = CRYPTO_IDS[k]; });
+
   function setupCryptoClicks() {
-    var cells = document.querySelectorAll('#goldCryptoBody .clickable-crypto');
-    cells.forEach(function(cell) {
-      cell.addEventListener('click', function() {
-        var cgId = cell.getAttribute('data-cgid');
-        var code = cell.getAttribute('data-code');
-        if (!cgId) return;
-        var row = cell.closest('tr');
-        toggleCryptoChart(row, cgId, code);
+    var rows = document.querySelectorAll('#goldCryptoBody tr');
+    rows.forEach(function(row) {
+      if (row.classList.contains('region-header') || row.classList.contains('crypto-chart-row')) return;
+      // Find the coin code from clickable-crypto or from the second td
+      var clickable = row.querySelector('.clickable-crypto');
+      var code = clickable ? clickable.getAttribute('data-code') : null;
+      var cgId = clickable ? clickable.getAttribute('data-cgid') : null;
+      if (!code || !cgId) return;
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showCoinDetailModal(cgId, code);
       });
     });
   }
 
-  function toggleCryptoChart(row, cgId, code) {
-    var next = row.nextElementSibling;
-    if (next && next.classList.contains('crypto-chart-row') && next.getAttribute('data-for') === code) {
-      next.style.display = next.style.display === 'none' ? '' : 'none';
-      if (next.style.display !== 'none') {
-        drawMktChart('cc_' + code, cgId, '#e2e8f0');
-      }
-      return;
-    }
-    // Remove any existing open chart rows
-    var existing = document.querySelectorAll('.crypto-chart-row');
-    existing.forEach(function(r) { r.style.display = 'none'; });
+  function showCoinDetailModal(cgId, code) {
+    // Remove any existing modal
+    closeCoinDetailModal();
 
-    // Check if already created but hidden
-    var prev = document.querySelector('.crypto-chart-row[data-for="' + code + '"]');
-    if (prev) {
-      prev.style.display = '';
-      drawMktChart('cc_' + code, cgId, '#e2e8f0');
-      return;
-    }
-
-    var prefix = 'cc_' + code;
-    var tr = document.createElement('tr');
-    tr.className = 'crypto-chart-row';
-    tr.setAttribute('data-for', code);
-    var tfs = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y'];
-    var btnsHtml = tfs.map(function(tf) {
-      return '<button class="cp-tf-btn' + (tf === '24H' ? ' active' : '') + '" data-tf="' + tf + '">' + tf + '</button>';
-    }).join('');
-    tr.innerHTML = '<td colspan="6" class="crypto-expand">' +
-      '<div class="cp-head"><div class="cp-title">// <b>' + code + '/USD</b></div><div class="cp-badge"><span class="pdot"></span>LIVE</div></div>' +
-      '<div class="cp-val" id="' + prefix + 'Price" style="color:var(--text-primary)">\u2014</div>' +
-      '<div class="cp-change" id="' + prefix + 'Change">\u2014</div>' +
-      '<div class="cp-tf-btns" id="' + prefix + 'TfBtns">' + btnsHtml + '</div>' +
-      '<div class="cp-chart-wrap">' +
-        '<canvas id="' + prefix + 'Chart" style="width:100%;height:180px"></canvas>' +
-        '<canvas id="' + prefix + 'Overlay" class="cp-chart-overlay" style="width:100%;height:180px"></canvas>' +
-        '<div class="cp-tooltip" id="' + prefix + 'Tooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>' +
-      '</div>' +
-      '<div class="cp-range" id="' + prefix + 'Range"></div>' +
-    '</td>';
-    row.after(tr);
-    activeTfs[prefix] = '24H';
-    setupChartTfBtns(prefix, cgId, '#e2e8f0');
-    setupChartTooltip(prefix, cgId, '#e2e8f0');
-    fetchChartHist(cgId, 1, function() {
-      var d = chartCache[cgId] && chartCache[cgId][1];
-      if (d && d.length) {
-        document.getElementById(prefix + 'Price').textContent = fmtUsd(d[d.length - 1][1]);
-      }
-      drawMktChart(prefix, cgId, '#e2e8f0');
+    var overlay = document.createElement('div');
+    overlay.className = 'coin-detail-overlay';
+    overlay.id = 'coinDetailOverlay';
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeCoinDetailModal();
     });
+
+    var usdPrice = cryptoUsdPrices[code];
+    var priceStr = usdPrice !== undefined ? '$' + fmt(usdPrice, usdPrice < 1 ? 8 : usdPrice < 100 ? 4 : 2) : '--';
+
+    var panel = document.createElement('div');
+    panel.className = 'coin-detail-panel';
+    panel.innerHTML =
+      '<button class="coin-detail-close" id="coinDetailClose">X</button>' +
+      '<div class="coin-detail-header">' +
+        '<div class="coin-detail-title">// ' + code + '/USD &mdash; 7-DAY PRICE HISTORY</div>' +
+        '<div class="coin-detail-price" id="coinDetailPrice">' + priceStr + '</div>' +
+        '<div class="coin-detail-change" id="coinDetailChange" style="color:var(--text-muted)">loading chart...</div>' +
+      '</div>' +
+      '<div class="coin-detail-chart-wrap">' +
+        '<div class="coin-detail-label">7D SPARKLINE</div>' +
+        '<canvas id="coinDetailCanvas" style="width:100%;height:160px"></canvas>' +
+        '<div class="coin-detail-range" id="coinDetailRange"></div>' +
+      '</div>';
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    document.getElementById('coinDetailClose').addEventListener('click', closeCoinDetailModal);
+    document.addEventListener('keydown', coinDetailEscHandler);
+
+    // Fetch 7-day chart data
+    fetch('https://api.coingecko.com/api/v3/coins/' + cgId + '/market_chart?vs_currency=usd&days=7')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || !d.prices || d.prices.length < 2) throw new Error('No data');
+        drawCoinDetailChart(d.prices, code);
+      })
+      .catch(function() {
+        var changeEl = document.getElementById('coinDetailChange');
+        if (changeEl) { changeEl.textContent = 'Chart data unavailable'; changeEl.style.color = 'var(--text-muted)'; }
+        var canvas = document.getElementById('coinDetailCanvas');
+        if (canvas) {
+          var ctx = canvas.getContext('2d');
+          var dpr = window.devicePixelRatio || 1;
+          var w = canvas.offsetWidth, h = canvas.offsetHeight;
+          canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+          ctx.fillStyle = '#333'; ctx.font = '12px ' + fontMono; ctx.textAlign = 'center';
+          ctx.fillText('Chart data unavailable', w / 2, h / 2);
+        }
+      });
+  }
+
+  function drawCoinDetailChart(data, code) {
+    var canvas = document.getElementById('coinDetailCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.offsetWidth, h = canvas.offsetHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    var prices = data.map(function(p) { return p[1]; });
+    var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
+    var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
+    mn -= rng * 0.03; mx += rng * 0.03; rng = mx - mn;
+
+    var pL = 4, pR = 58, pT = 6, pB = 20, cw = w - pL - pR, ch = h - pT - pB;
+    var color = '#fb010d';
+
+    // Grid
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
+    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
+
+    // Y labels
+    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
+    for (var yi = 0; yi < 4; yi++) { var yv = mx - rng * yi / 3; var yp = pT + ch * yi / 3; ctx.fillText(fmtUsd(yv), pL + cw + 4, yp + 3); }
+
+    // X labels
+    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    for (var xi = 0; xi < 4; xi++) {
+      var di = Math.round(xi / 3 * (data.length - 1));
+      var xp = pL + di / (data.length - 1) * cw;
+      ctx.fillText(fmtAx(data[di][0], false), xp, h - 3);
+    }
+
+    // Line
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    for (var j = 0; j < data.length; j++) {
+      var px = pL + j / (data.length - 1) * cw;
+      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
+      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Gradient fill
+    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
+    grd.addColorStop(0, color + '1a'); grd.addColorStop(1, color + '00');
+    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
+    ctx.fillStyle = grd; ctx.fill();
+
+    // Update price & change
+    var first = data[0][1], last = data[data.length - 1][1];
+    var priceEl = document.getElementById('coinDetailPrice');
+    if (priceEl) priceEl.textContent = '$' + fmt(last, last < 1 ? 8 : last < 100 ? 4 : 2);
+
+    var changeEl = document.getElementById('coinDetailChange');
+    if (changeEl) {
+      var diff = last - first, pct = Math.abs(diff / first * 100);
+      if (diff >= 0) {
+        changeEl.style.color = 'var(--green-primary)';
+        changeEl.textContent = '+$' + fmt(Math.abs(diff), 2) + ' (+' + pct.toFixed(2) + '%) 7d';
+      } else {
+        changeEl.style.color = 'var(--red-primary)';
+        changeEl.textContent = '\u2212$' + fmt(Math.abs(diff), 2) + ' (\u2212' + pct.toFixed(2) + '%) 7d';
+      }
+    }
+
+    var rangeEl = document.getElementById('coinDetailRange');
+    if (rangeEl) {
+      rangeEl.textContent = 'High: ' + fmtUsd(Math.max.apply(null, prices)) + ' | Low: ' + fmtUsd(Math.min.apply(null, prices)) + ' | Points: ' + prices.length;
+    }
+  }
+
+  function coinDetailEscHandler(e) {
+    if (e.key === 'Escape') closeCoinDetailModal();
+  }
+
+  function closeCoinDetailModal() {
+    var overlay = document.getElementById('coinDetailOverlay');
+    if (overlay) overlay.remove();
+    document.removeEventListener('keydown', coinDetailEscHandler);
   }
 
   // ===== REFRESH =====
+  var pendingFetches = 0;
+  function showUpdating() {
+    pendingFetches++;
+    var el = document.getElementById('updatingIndicator');
+    if (el) el.classList.add('visible');
+  }
+  function hideUpdating() {
+    pendingFetches--;
+    if (pendingFetches <= 0) {
+      pendingFetches = 0;
+      var el = document.getElementById('updatingIndicator');
+      if (el) el.classList.remove('visible');
+    }
+  }
+
   function refreshAll() {
-    fetchForex();
-    fetchGold();
-    fetchSost();
+    showUpdating();
+    var done = 0, total = 3;
+    function onDone() { done++; if (done >= total) hideUpdating(); }
+    fetchForex(onDone);
+    fetchGold(onDone);
+    fetchSost(onDone);
     updateTime();
     refreshCharts();
   }
