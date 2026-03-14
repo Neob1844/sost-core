@@ -327,7 +327,7 @@ Level table:
 
 Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
 
-  If no block found for 2 hours (CASERT_DECAY_ACTIVATION = 7200s),
+  If no block found for extended period (4h for L1-L5, 8h for L6+),
   the effective level decays downward to prevent permanent stall:
     L8+  : drop 1 level every 10 minutes (fast recovery)
     L4–L7: drop 1 level every 20 minutes (medium recovery)
@@ -778,7 +778,7 @@ STABILITY PARAMETERS BY LEVEL:
   margin = 180        (fixed)
 
 DECAY ANTI-STALL (miner-side, uses wall-clock time):
-  If no block found for 2 hours (CASERT_DECAY_ACTIVATION = 7200s):
+  If no block found for extended period (4h for L1-L5, 8h for L6+):
     L8+  : drop 1 level every 10 minutes (fast recovery from extreme levels)
     L4–L7: drop 1 level every 20 minutes (medium recovery)
     L2–L3: drop 1 level every 30 minutes (cautious near neutral)
@@ -2500,7 +2500,7 @@ CASERT v5 PARAMETERS (miner-side overlay, NOT consensus-critical):
   FIXED_MARGIN                 = 180
 
 CASERT DECAY ANTI-STALL:
-  CASERT_DECAY_ACTIVATION      = 7,200  // 2 hours without block
+  CASERT_DECAY_ACTIVATION      = dynamic // 14,400s (L1-L5) or 28,800s (L6+)
   CASERT_DECAY_FAST_SECS       = 600    // 10 min/level for L8+
   CASERT_DECAY_MEDIUM_SECS     = 1,200  // 20 min/level for L4-L7
   CASERT_DECAY_SLOW_SECS       = 1,800  // 30 min/level for L2-L3

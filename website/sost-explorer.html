@@ -487,11 +487,17 @@ const CASERT_LEVELS=[
   {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
 ];
 function computeCurrentLag(){
-  // Block lag computed locally from wall clock — independent of node's casert_signal
-  // Returns: positive = behind schedule, negative = ahead of schedule
+  // Block lag from wall clock for current chain tip
   var now=Math.floor(Date.now()/1000);
   var expected=Math.floor((now-GENESIS_TS)/600);
-  return expected-H; // lag = expected - actual
+  return expected-H;
+}
+function computeBlockLag(blockHeight,blockTime){
+  // Block lag at the time a specific block was mined
+  // Uses the block's own timestamp, not wall clock
+  var elapsed=blockTime-GENESIS_TS;
+  var expected=Math.floor(elapsed/600);
+  return expected-blockHeight;
 }
 function getCasertLevel(signal){
   // cASERT v5.2 — L1-L5 fixed bands, L6+ unbounded
@@ -809,7 +815,7 @@ function renderDashPanel(key,body,title){
   if(key==='height'){
     title.textContent='// BLOCKS PER HOUR (last 24h)';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
-    body.innerHTML='<canvas id="dpHeightCanvas" style="width:100%;height:140px"></canvas>';
+    body.innerHTML='<div style="position:relative"><canvas id="dpHeightCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpHeightCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
@@ -827,11 +833,13 @@ function renderDashPanel(key,body,title){
         ctx.fillStyle='rgba(192,132,252,.6)';ctx.fillRect(x+2,Hc-pad-h,bw-4,h);
         ctx.fillStyle='#444';ctx.fillText((i-23?-23+i+'h':'now'),x+bw/2,Hc-4);
       }
+      var tipData=[];for(var j=0;j<24;j++)tipData.push({hr:j===23?'now':(-23+j)+'h',count:vals[j]});
+      setupDpTooltip('dpHeightCanvas',tipData,function(d){return '<span style="color:var(--purple);font-weight:600">'+d.hr+'</span><br>Blocks: <span style="color:var(--text)">'+d.count+'</span>';});
     },50);
   } else if(key==='avgtime'){
     title.textContent='// BLOCK INTERVALS (last '+data.length+' blocks)';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
-    body.innerHTML='<canvas id="dpAvgCanvas" style="width:100%;height:140px"></canvas>';
+    body.innerHTML='<div style="position:relative"><canvas id="dpAvgCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpAvgCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
@@ -855,12 +863,13 @@ function renderDashPanel(key,body,title){
       // Y axis labels
       ctx.fillStyle='#444';ctx.font='8px monospace';ctx.textAlign='right';
       for(var y=0;y<=mx;y+=Math.ceil(mx/4)){var yp=pad.t+ch-(y/mx)*ch;ctx.fillText(y+'s',pad.l-4,yp+3);}
+      var _avgIntervals=intervals;setupDpTooltip("dpAvgCanvas",intervals,function(d){return "<span style=\"color:var(--purple);font-weight:600\">Block #"+d.h+"</span><br>Interval: <span style=\"color:var(--cyan)\">"+d.v+"s</span>"+(d.v>600?" <span style=\"color:var(--red)\">(slow)</span>":"");});
     },50);
   } else if(key==='supply'){
     title.textContent='// RECENT SUPPLY GROWTH';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
     var R0=785100863;
-    body.innerHTML='<canvas id="dpSupplyCanvas" style="width:100%;height:140px"></canvas>';
+    body.innerHTML='<div style="position:relative"><canvas id="dpSupplyCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpSupplyCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
@@ -873,11 +882,12 @@ function renderDashPanel(key,body,title){
       ctx.stroke();
       ctx.fillStyle='#444';ctx.font='8px monospace';ctx.textAlign='right';
       for(var i=0;i<=3;i++){var v=mn+rng*i/3;var yp=pad.t+ch-i/3*ch;ctx.fillText(Math.floor(v).toLocaleString(),pad.l-4,yp+3);}
+      setupDpTooltip("dpSupplyCanvas",pts,function(d){return "<span style=\"color:var(--purple);font-weight:600\">Block #"+d.h+"</span><br>Supply: <span style=\"color:var(--green)\">"+Math.floor(d.s).toLocaleString()+" SOST</span>";});
     },50);
   } else if(key==='hashrate'){
     title.textContent='// EST. HASHRATE (last '+data.length+' blocks)';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
-    body.innerHTML='<canvas id="dpHashCanvas" style="width:100%;height:140px"></canvas>';
+    body.innerHTML='<div style="position:relative"><canvas id="dpHashCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpHashCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
@@ -895,6 +905,7 @@ function renderDashPanel(key,body,title){
       for(var i=0;i<=3;i++){var v=mn+rng*i/3;var yp=pad.t+ch-i/3*ch;
         var lbl=v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.floor(v);
         ctx.fillText(lbl+' H/s',pad.l-4,yp+3);}
+      setupDpTooltip("dpHashCanvas",pts,function(d){var lbl=d.v>=1e6?(d.v/1e6).toFixed(1)+"M":d.v>=1e3?(d.v/1e3).toFixed(1)+"K":Math.floor(d.v);return "<span style=\"color:var(--purple);font-weight:600\">Block #"+d.h+"</span><br>Hashrate: <span style=\"color:var(--orange)\">"+lbl+" H/s</span>";});
     },50);
   } else if(key==='mempool'){
     title.textContent='// MEMPOOL';
@@ -917,6 +928,21 @@ function renderDashPanel(key,body,title){
       '<span style="color:var(--text3)">Time elapsed:</span> <span style="color:'+eClr+';font-weight:600">'+eStr+'</span> <span style="color:var(--text3)">/ target 10m 00s</span><br>'+
       '<span style="color:var(--text3)">Status:</span> <span style="color:#fbbf24">searching nonce\u2026</span></div>';
   }
+}
+function setupDpTooltip(canvasId,dataArr,fmtFn){
+  var cv=document.getElementById(canvasId);var tip=document.getElementById('dpTip');
+  if(!cv||!tip)return;
+  cv.addEventListener('mousemove',function(e){
+    if(!dataArr||!dataArr.length){tip.style.display='none';return;}
+    var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left,W=rect.width;
+    var idx=Math.round((mx/W)*(dataArr.length-1));
+    if(idx<0)idx=0;if(idx>=dataArr.length)idx=dataArr.length-1;
+    tip.innerHTML=fmtFn(dataArr[idx],idx);
+    tip.style.display='block';
+    var tx=mx+12;if(tx+160>W)tx=mx-170;
+    tip.style.left=tx+'px';tip.style.top='-10px';
+  });
+  cv.addEventListener('mouseleave',function(){tip.style.display='none';});
 }
 var _lastBitsQ=0;
 function startCountdown(){
@@ -968,7 +994,7 @@ async function loadBlocks(){
       var iv='\u2014';if(i<rows.length-1){var d=b.time-rows[i+1].time;iv=d<60?d+'s':Math.floor(d/60)+'m '+d%60+'s';}
       else if(b.height>0){try{var ph=await rpc('getblockhash',[String(b.height-1)]);var pb=await rpc('getblock',[ph]);var d2=b.time-pb.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}catch(ex){}}
       var tr=document.createElement('tr');if(b.height===H&&off===0&&i===0)tr.className='new-row';
-      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+getLevelLabel(computeCurrentLag())+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
+      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+getLevelLabel(computeBlockLag(b.height,b.time))+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
       tb.appendChild(tr);}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
   }catch(e){tb.innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
@@ -992,7 +1018,7 @@ async function showBlock(hash){
     if(b.txids&&b.txids.length>1){for(var t=1;t<b.txids.length;t++){txRows+='<tr><td><span style="color:var(--cyan)">transfer</span></td><td><span class="td-link" onclick="showTxDetail(\''+b.txids[t]+'\')">'+sH(b.txids[t])+'</span>'+cpBtn(b.txids[t])+'</td><td colspan="2"><span style="color:var(--text3)">click to view detail \u2192</span></td></tr>';}}
     else if(txC>1){txRows+='<tr><td><span style="color:var(--cyan)">transfer</span></td><td colspan="3" style="color:var(--text3)">'+(txC-1)+' standard tx(s) \u2014 search by txid for detail</td></tr>';}
     var prevLink=isGen?'<span style="color:var(--text3)">null // genesis</span>':'<span class="v-hash" onclick="showBlock(\''+b.previousblockhash+'\')">'+b.previousblockhash+'</span>'+cpBtn(b.previousblockhash);
-    var signal=b.casert_signal!==undefined?b.casert_signal:computeCurrentLag();
+    var signal=computeBlockLag(b.height,b.time);
     var lvl=getCasertLevel(signal);
     var casertDesc=(signal<0)?Math.abs(signal)+' blocks ahead':'on schedule';
     // Mining time: fetch prev block timestamp
