@@ -1662,6 +1662,7 @@ function showCXInfo(){
   '&bull; <span style="color:#fb923c">L4–L7</span> → drops 1 level every 20 min (medium)<br>'+
   '&bull; <span style="color:#67e8f9">L2–L3</span> → drops 1 level every 30 min (cautious)<br>'+
   'When mining resumes, decay stops instantly — raw schedule level takes over. Decay affects mining only, never block validation.<br><br>'+
+  '<b style="color:var(--green)">Worked Example — L10 (450 ahead):</b> Activation at max(450×600, 7200) = 270,000s (75h). Then: L10→L8 FAST (30min), L7→L4 MEDIUM (80min), L3→L1 SLOW (60min). Total decay: <b>170min</b>. Cost uses <b>current</b> effective level, not original.<br><br>'+
   'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
   'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
   '<div class="dtl-grid">'+

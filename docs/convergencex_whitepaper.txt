@@ -336,6 +336,15 @@ Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
   When mining resumes, decay stops instantly. Block validation
   always uses the raw schedule level (no decay applied).
 
+  Worked Example — L10 (450 blocks ahead):
+    Activation: max(450 * 600, 7200) = 270,000s (75 hours)
+    After activation, cost is based on CURRENT effective level:
+      L10->L9->L8: FAST (10min/level) = 30 min
+      L7->L6->L5->L4: MEDIUM (20min/level) = 80 min
+      L3->L2->L1: SLOW (30min/level) = 60 min
+    Total decay L10->L1: 170 min (2h 50m)
+    Total from mining start: 75h + 2h 50m = ~78 hours
+
 At L1 (neutral), 4 independent probes each run 4 gradient steps with
 perturbation scale ±1. This is the lightest configuration. When the chain is
 behind schedule, ASERT alone handles difficulty reduction — CASERT stays at L1.

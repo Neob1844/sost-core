@@ -1036,6 +1036,17 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
     stall_time -= cost
         </div>
 
+        <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
+          <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
+            <strong style="color:var(--green-primary);">Worked Example &mdash; L10 (450 ahead):</strong><br>
+            Activation: max(450&times;600, 7200) = 270,000s (75h)<br>
+            L10&rarr;L8: FAST (10min/level) = 30min &middot;
+            L7&rarr;L4: MEDIUM (20min/level) = 80min &middot;
+            L3&rarr;L1: SLOW (30min/level) = 60min<br>
+            Total decay: <strong>170min (2h 50m)</strong> &middot; Total from start: <strong>~78 hours</strong>
+          </p>
+        </div>
+
         <table class="code-table" style="margin-top:16px;">
           <tbody><tr>
             <td class="key">CASERT_L2_BLOCKS</td>

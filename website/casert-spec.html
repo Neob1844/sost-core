@@ -257,7 +257,19 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
         <h3 style="color:var(--green-primary)">Decay Anti-Stall</h3>
-        <p>If no block is found for an extended period, the cASERT level decays gradually. Activation: dynamic 2014 max(ahead 00D7 600s, 2h). No ceiling. 20 ahead = 3h 20m, 48+ ahead = 8h, 100 ahead = 16h 40m. This prevents mining deadlock when hashrate drops suddenly.</p>
+        <p>If no block is found for an extended period, the cASERT level decays gradually. Activation: dynamic &mdash; max(ahead &times; 600s, 2h). No ceiling. This prevents mining deadlock when hashrate drops suddenly.</p>
+        <div style="margin-top:12px;padding:12px 16px;background:var(--bg-hover);border:1px solid var(--border-dim);border-radius:6px;">
+          <div style="font-size:10px;letter-spacing:2px;color:var(--green-primary);margin-bottom:8px;">WORKED EXAMPLE &mdash; L10 (450 blocks ahead)</div>
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:0;">
+            <strong>Activation:</strong> max(450 &times; 600, 7200) = 270,000s (75 hours)<br><br>
+            After activation, decay uses <strong>current</strong> level tier (not original):<br>
+            <span style="color:#fb010d;">L10&rarr;L9&rarr;L8:</span> FAST (10min/level) &mdash; 30 min<br>
+            <span style="color:#fb923c;">L7&rarr;L6&rarr;L5&rarr;L4:</span> MEDIUM (20min/level) &mdash; 80 min<br>
+            <span style="color:#fbbf24;">L3&rarr;L2&rarr;L1:</span> SLOW (30min/level) &mdash; 60 min<br><br>
+            Total decay L10&rarr;L1: <strong>170 min (2h 50m)</strong><br>
+            Total from mining start: 75h + 2h 50m = <strong>~78 hours</strong>
+          </p>
+        </div>
       </div>
     </div>
   </div>
