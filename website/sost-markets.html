@@ -180,6 +180,7 @@
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -335,10 +336,10 @@
     </div>
     <table class="data-table" id="goldCryptoTable">
       <thead>
-        <tr><th>Cryptocurrency</th><th>Symbol</th><th>Live USD Price</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
+        <tr><th>Cryptocurrency</th><th>Symbol</th><th>Live USD Price</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th><th>24H</th></tr>
       </thead>
       <tbody id="goldCryptoBody">
-        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);">Loading crypto prices...</td></tr>
       </tbody>
     </table>
   </div>
@@ -490,6 +491,7 @@
   var allVsCurrencies = cgFiatCodes.concat(nativeCryptoCodes).join(',');
   var forexRates = {};
   var cryptoUsdPrices = {};
+  var cryptoUsd24hChange = {};
 
   // ===== CHART INFRASTRUCTURE =====
   var TF_MAP = {
@@ -556,6 +558,7 @@
           });
         });
         tbody.innerHTML = html;
+        setupFiatClicks();
         if (cb) cb();
       })
       .catch(function(e) {
@@ -603,7 +606,7 @@
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
     var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
     var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
-    var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd';
+    var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd&include_24hr_change=true';
 
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
@@ -623,10 +626,12 @@
 
         // Store crypto USD prices
         cryptoUsdPrices = {};
+        cryptoUsd24hChange = {};
         CRYPTO_NATIVE.forEach(function(c) {
           var cgId = CRYPTO_IDS[c.code];
-          if (cgId && cryptoData[cgId] && cryptoData[cgId].usd !== undefined) {
-            cryptoUsdPrices[c.code] = cryptoData[cgId].usd;
+          if (cgId && cryptoData[cgId]) {
+            if (cryptoData[cgId].usd !== undefined) cryptoUsdPrices[c.code] = cryptoData[cgId].usd;
+            if (cryptoData[cgId].usd_24h_change !== undefined) cryptoUsd24hChange[c.code] = cryptoData[cgId].usd_24h_change;
           }
         });
 
@@ -662,12 +667,23 @@
           var xv = xaut[key], pv = paxg[key];
           var usdP = cryptoUsdPrices[c.code];
           var cgId = CRYPTO_IDS[c.code];
+          var change24 = cryptoUsd24hChange[c.code];
+          var change24Html = '';
+          if (change24 !== undefined) {
+            var ch = change24.toFixed(2);
+            var chColor = change24 >= 0 ? 'var(--green-primary)' : 'var(--red-primary)';
+            var chSign = change24 >= 0 ? '+' : '';
+            change24Html = '<span style="color:' + chColor + ';font-weight:500">' + chSign + ch + '%</span>';
+          } else {
+            change24Html = '<span class="price-na">&mdash;</span>';
+          }
           html4 += '<tr><td><span class="currency-name clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.name + '</span></td>' +
             '<td><span class="clickable-crypto" data-cgid="' + cgId + '" data-code="' + c.code + '">' + c.code + '</span></td>' +
             '<td class="price-val">' + (usdP !== undefined ? '$' + fmt(usdP, usdP < 1 ? 8 : usdP < 100 ? 4 : 2) : '<span class="price-na">&mdash;</span>') + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code) + '</td>' +
-            '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+            '<td>' + spreadHtml(xv, pv) + '</td>' +
+            '<td>' + change24Html + '</td></tr>';
           // SOST row after BNB (index 2)
           if (i === 2) {
             var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
@@ -682,7 +698,8 @@
               '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (spv !== null ? fmtCrypto(spv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
-              '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td></tr>';
+              '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td>' +
+              '<td><span class="price-na">&mdash;</span></td></tr>';
           }
         });
         CRYPTO_STABLE.forEach(function(c) {
@@ -693,7 +710,8 @@
             '<td class="price-val">$' + fmt(stablePrice, 4) + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code, 2) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code, 2) + '</td>' +
-            '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+            '<td>' + spreadHtml(xv, pv) + '</td>' +
+            '<td><span class="price-na">&mdash;</span></td></tr>';
         });
         tbody4.innerHTML = html4;
         setupCryptoClicks();
@@ -707,7 +725,7 @@
           tb2.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading gold prices \u2014 click to retry</span></td></tr>';
         }
         if (!tb4.querySelector('.currency-name')) {
-          tb4.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
+          tb4.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red-primary);"><span class="error-retry" onclick="window._mktRetryGold()">Error loading crypto prices \u2014 click to retry</span></td></tr>';
         }
         if (cb) cb();
       })
@@ -1019,8 +1037,7 @@
       '6M':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=180',
       '1Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=365',
       '3Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1095',
-      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1825',
-      'ALL': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=2000'
+      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1825'
     };
     return urls[period] || urls['7D'];
   }
@@ -1040,7 +1057,7 @@
     var usdPrice = cryptoUsdPrices[code];
     var priceStr = usdPrice !== undefined ? '$' + fmt(usdPrice, usdPrice < 1 ? 8 : usdPrice < 100 ? 4 : 2) : '--';
 
-    var periods = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y','3Y','5Y','ALL'];
+    var periods = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y','3Y','5Y'];
     var periodBtnsHtml = '<div class="coin-detail-periods" id="coinDetailPeriods">';
     periods.forEach(function(p) {
       var activeClass = (p === '7D') ? ' active' : '';
@@ -1171,12 +1188,7 @@
     var prices = data.map(function(p) { return p[1]; });
     var first = data[0][1], last = data[data.length - 1][1];
 
-    var color;
-    if (code === 'SOST') {
-      color = '#fb010d';
-    } else {
-      color = (last >= first) ? '#4ade80' : '#fb010d';
-    }
+    var color = (last >= first) ? '#4ade80' : '#fb010d';
 
     var pL = 4, pR = 58, pT = 6, pB = 20;
     _renderCoinDetailChartClean(canvas, data, code, period, color, pL, pR, pT, pB);
@@ -1300,6 +1312,127 @@
     var overlay = document.getElementById('coinDetailOverlay');
     if (overlay) overlay.remove();
     document.removeEventListener('keydown', coinDetailEscHandler);
+  }
+
+  // ===== FIAT CHARTS =====
+  var FIAT_CHART_CODES = ['EUR','GBP','JPY','CHF','CAD','AUD','CNY','INR','BRL','MXN'];
+
+  function setupFiatClicks() {
+    var rows = document.querySelectorAll('#forexBody tr');
+    rows.forEach(function(row) {
+      var tds = row.querySelectorAll('td');
+      if (tds.length < 2) return;
+      var codeText = tds[1] ? tds[1].textContent.trim() : '';
+      if (FIAT_CHART_CODES.indexOf(codeText) === -1) return;
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', function() {
+        showFiatDetailModal(codeText);
+      });
+    });
+  }
+
+  function getFiatDetailUrl(code, period) {
+    var map = {
+      '1H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=60',
+      '4H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=240',
+      '8H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=480',
+      '24H': 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=24',
+      '3D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=72',
+      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=168',
+      '30D': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=30',
+      '6M':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=180',
+      '1Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=365',
+      '3Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=1095',
+      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=1825'
+    };
+    return map[period] || map['7D'];
+  }
+
+  function showFiatDetailModal(code) {
+    closeCoinDetailModal();
+    coinDetailActiveCode = code;
+    coinDetailActivePeriod = '7D';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'coin-detail-overlay';
+    overlay.id = 'coinDetailOverlay';
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeCoinDetailModal();
+    });
+
+    var invPrice = forexRates[code] ? (1 / forexRates[code]) : null;
+    var priceStr = invPrice !== null ? '$' + fmt(invPrice, invPrice < 1 ? 6 : 4) : '--';
+
+    var periods = ['1H','4H','8H','24H','3D','7D','30D','6M','1Y','3Y','5Y'];
+    var periodBtnsHtml = '<div class="coin-detail-periods" id="coinDetailPeriods">';
+    periods.forEach(function(p) {
+      var activeClass = (p === '7D') ? ' active' : '';
+      periodBtnsHtml += '<button class="coin-detail-period-btn' + activeClass + '" data-period="' + p + '">' + p + '</button>';
+    });
+    periodBtnsHtml += '</div>';
+
+    var panel = document.createElement('div');
+    panel.className = 'coin-detail-panel';
+    panel.innerHTML =
+      '<button class="coin-detail-close" id="coinDetailClose">X</button>' +
+      '<div class="coin-detail-header">' +
+        '<div class="coin-detail-title">// ' + code + '/USD</div>' +
+        '<div class="coin-detail-price" id="coinDetailPrice">' + priceStr + '</div>' +
+        '<div class="coin-detail-change" id="coinDetailChange" style="color:var(--text-muted)">loading chart...</div>' +
+      '</div>' +
+      periodBtnsHtml +
+      '<div class="coin-detail-chart-wrap">' +
+        '<canvas id="coinDetailCanvas" style="width:100%;height:160px"></canvas>' +
+        '<div class="coin-detail-range" id="coinDetailRange"></div>' +
+      '</div>';
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    document.getElementById('coinDetailClose').addEventListener('click', closeCoinDetailModal);
+    document.addEventListener('keydown', coinDetailEscHandler);
+
+    var periodBtns = document.querySelectorAll('#coinDetailPeriods .coin-detail-period-btn');
+    periodBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        coinDetailActivePeriod = btn.getAttribute('data-period');
+        periodBtns.forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        fetchFiatDetailData(code, coinDetailActivePeriod);
+      });
+    });
+
+    fetchFiatDetailData(code, '7D');
+  }
+
+  function fetchFiatDetailData(code, period) {
+    var changeEl = document.getElementById('coinDetailChange');
+    if (changeEl) { changeEl.textContent = 'loading chart...'; changeEl.style.color = 'var(--text-muted)'; }
+
+    var url = getFiatDetailUrl(code, period);
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+
+    fetch(url, { signal: controller.signal })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || !d.Data || !d.Data.Data || d.Data.Data.length < 2) throw new Error('No data');
+        var data = d.Data.Data.map(function(pt) { return [pt.time * 1000, 1 / pt.close]; });
+        drawCoinDetailChart(data, code, period);
+      })
+      .catch(function() {
+        if (changeEl) { changeEl.textContent = 'Chart data unavailable'; changeEl.style.color = 'var(--text-muted)'; }
+        var canvas = document.getElementById('coinDetailCanvas');
+        if (canvas) {
+          var ctx = canvas.getContext('2d');
+          var dpr = window.devicePixelRatio || 1;
+          var w = canvas.offsetWidth, h = canvas.offsetHeight;
+          canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+          ctx.fillStyle = '#333'; ctx.font = '12px ' + fontMono; ctx.textAlign = 'center';
+          ctx.fillText('Chart data unavailable', w / 2, h / 2);
+        }
+      })
+      .finally(function() { clearTimeout(timeoutId); });
   }
 
   // ===== REFRESH =====

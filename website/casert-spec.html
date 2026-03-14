@@ -136,6 +136,7 @@
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -232,7 +233,7 @@
         <table class="code-table">
           <tr><th>Level</th><th>Blocks Ahead</th><th>Threshold</th><th>Behavior</th></tr>
           <tr><td class="green">L1</td><td class="value">0 &ndash; 4</td><td class="label">NORMAL</td><td class="value">Standard operation, baseline stability requirements</td></tr>
-          <tr><td class="cyan">L2</td><td class="value">5 &ndash; 25</td><td class="value">CASERT_OPEN_TH = 5</td><td class="value">First hardening stage, scale = 2</td></tr>
+          <tr><td class="cyan">L2</td><td class="value">5 &ndash; 25</td><td class="value">CASERT_L2_BLOCKS = 5</td><td class="value">First hardening stage, scale = 2</td></tr>
           <tr><td class="cyan">L3</td><td class="value">26 &ndash; 50</td><td class="value">DEGRADED threshold = 26</td><td class="value">Increased stability requirements, scale = 3</td></tr>
           <tr><td class="highlight">L4</td><td class="value">51 &ndash; 75</td><td class="value">Threshold = 51</td><td class="value">Aggressive hardening, scale = 4</td></tr>
           <tr><td class="highlight">L5</td><td class="value">76 &ndash; 100</td><td class="value">Threshold = 76</td><td class="value">Near-maximum fixed hardening, scale = 5</td></tr>
@@ -375,8 +376,8 @@
           <tr><td class="label">GENESIS_BITSQ</td><td class="value">353,075</td><td class="value">Initial difficulty in Q16.16</td></tr>
           <tr><td class="label">MIN_BITSQ</td><td class="value">65,536</td><td class="value">Minimum difficulty (1.0 in Q16.16)</td></tr>
           <tr><td class="label">MAX_BITSQ</td><td class="value">16,711,680</td><td class="value">Maximum difficulty (255.0 in Q16.16)</td></tr>
-          <tr><td class="label">CASERT_OPEN_TH</td><td class="highlight">5</td><td class="value">Blocks ahead to enter L2</td></tr>
-          <tr><td class="label">CASERT_DEGRADED_TH</td><td class="highlight">26</td><td class="value">Blocks ahead to enter L3</td></tr>
+          <tr><td class="label">CASERT_L2_BLOCKS</td><td class="highlight">5</td><td class="value">Blocks ahead to enter L2</td></tr>
+          <tr><td class="label">CASERT_L3_BLOCKS</td><td class="highlight">26</td><td class="value">Blocks ahead to enter L3</td></tr>
           <tr><td class="label">WARMUP_BLOCKS</td><td class="value">3</td><td class="value">Blocks before cASERT activates</td></tr>
           <tr><td class="label">DECAY_START</td><td class="highlight">7,200s</td><td class="value">Seconds before anti-stall decay begins</td></tr>
           <tr><td class="label">CONTRACTION_C</td><td class="highlight">7/10</td><td class="value">Maximum stability reduction ratio</td></tr>
