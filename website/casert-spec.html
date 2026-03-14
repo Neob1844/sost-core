@@ -191,7 +191,7 @@
         <span class="spec-tag">BCH 2020</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">ASERT (Absolutely Scheduled Exponentially-weighted Rising Targets) was introduced by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (2020). It replaced the older DAA with a mathematically clean exponential moving average that retargets every block.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">ASERT (Absolutely Scheduled Exponentially-weighted Rising Targets) was designed by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork, aserti3-2d specification). It replaced the older DAA with a mathematically clean exponential moving average that retargets every block. cASERT extends their work with anti-stall decay and level-based hardening for ConvergenceX.</p>
         <table class="code-table">
           <tr><th>Property</th><th>Detail</th></tr>
           <tr><td class="label">Core formula</td><td class="value" style="font-family:var(--font-mono);">next_bitsq = anchor_bitsq * 2^(-td / halflife)</td></tr>
@@ -234,9 +234,9 @@
           <tr><th>Level</th><th>Blocks Ahead</th><th>Threshold</th><th>Behavior</th></tr>
           <tr><td class="green">L1</td><td class="value">0 &ndash; 4</td><td class="label">NORMAL</td><td class="value">Standard operation, baseline stability requirements</td></tr>
           <tr><td class="cyan">L2</td><td class="value">5 &ndash; 25</td><td class="value">CASERT_L2_BLOCKS = 5</td><td class="value">First hardening stage, scale = 2</td></tr>
-          <tr><td class="cyan">L3</td><td class="value">26 &ndash; 50</td><td class="value">DEGRADED threshold = 26</td><td class="value">Increased stability requirements, scale = 3</td></tr>
-          <tr><td class="highlight">L4</td><td class="value">51 &ndash; 75</td><td class="value">Threshold = 51</td><td class="value">Aggressive hardening, scale = 4</td></tr>
-          <tr><td class="highlight">L5</td><td class="value">76 &ndash; 100</td><td class="value">Threshold = 76</td><td class="value">Near-maximum fixed hardening, scale = 5</td></tr>
+          <tr><td class="cyan">L3</td><td class="value">26 &ndash; 50</td><td class="value">CASERT_L3_BLOCKS = 26</td><td class="value">Increased stability requirements, scale = 3</td></tr>
+          <tr><td class="highlight">L4</td><td class="value">51 &ndash; 75</td><td class="value">CASERT_L4_BLOCKS = 51</td><td class="value">Aggressive hardening, scale = 4</td></tr>
+          <tr><td class="highlight">L5</td><td class="value">76 &ndash; 100</td><td class="value">CASERT_L5_BLOCKS = 76</td><td class="value">Near-maximum fixed hardening, scale = 5</td></tr>
           <tr><td class="highlight">L6+</td><td class="value">101+</td><td class="value">level = 6 + floor((ahead-101)/50)</td><td class="value">Unbounded hardening, scale grows with distance</td></tr>
         </table>
       </div>
@@ -378,9 +378,15 @@
           <tr><td class="label">MAX_BITSQ</td><td class="value">16,711,680</td><td class="value">Maximum difficulty (255.0 in Q16.16)</td></tr>
           <tr><td class="label">CASERT_L2_BLOCKS</td><td class="highlight">5</td><td class="value">Blocks ahead to enter L2</td></tr>
           <tr><td class="label">CASERT_L3_BLOCKS</td><td class="highlight">26</td><td class="value">Blocks ahead to enter L3</td></tr>
-          <tr><td class="label">WARMUP_BLOCKS</td><td class="value">3</td><td class="value">Blocks before cASERT activates</td></tr>
-          <tr><td class="label">DECAY_START</td><td class="highlight">7,200s</td><td class="value">Seconds before anti-stall decay begins</td></tr>
-          <tr><td class="label">CONTRACTION_C</td><td class="highlight">7/10</td><td class="value">Maximum stability reduction ratio</td></tr>
+          <tr><td class="label">CASERT_L4_BLOCKS</td><td class="highlight">51</td><td class="value">Blocks ahead to enter L4</td></tr>
+          <tr><td class="label">CASERT_L5_BLOCKS</td><td class="highlight">76</td><td class="value">Blocks ahead to enter L5</td></tr>
+          <tr><td class="label">CASERT_L6_BLOCKS</td><td class="highlight">101</td><td class="value">L6+ unbounded starts here</td></tr>
+          <tr><td class="label">CASERT_DECAY_ACTIVATION</td><td class="highlight">7,200s</td><td class="value">Seconds without block before decay begins</td></tr>
+          <tr><td class="label">CASERT_DECAY_FAST_SECS</td><td class="value">600s</td><td class="value">L8+: 10 min/level (fast recovery)</td></tr>
+          <tr><td class="label">CASERT_DECAY_MEDIUM_SECS</td><td class="value">1,200s</td><td class="value">L4&ndash;L7: 20 min/level (medium)</td></tr>
+          <tr><td class="label">CASERT_DECAY_SLOW_SECS</td><td class="value">1,800s</td><td class="value">L2&ndash;L3: 30 min/level (cautious)</td></tr>
+          <tr><td class="label">Activation</td><td class="value">height &ge; 2</td><td class="value">Requires at least 2 blocks in chain</td></tr>
+          <tr><td class="label">CX_C_NUM / CX_C_DEN</td><td class="highlight">7/10</td><td class="value">Convergence ratio for stability test</td></tr>
         </table>
       </div>
     </div>

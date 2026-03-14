@@ -574,7 +574,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 printf("\r  nonce=%u extra=%u", nonce, extra_nonce);
                 fflush(stdout);
 
-                // Refresh timestamp every 30s to keep block time accurate
+                // Refresh timestamp and cASERT level every 30s
                 if (!sim_time) {
                     auto now_check = std::chrono::steady_clock::now();
                     auto since_update = std::chrono::duration_cast<std::chrono::seconds>(now_check - ts_last_update).count();
@@ -583,6 +583,16 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                             std::chrono::system_clock::now().time_since_epoch()).count();
                         build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
                         ts_last_update = now_check;
+
+                        // Recalculate cASERT with current wall-clock for decay
+                        auto new_cdec = casert_mode_from_chain(g_chain, h, ts);
+                        auto new_params = get_consensus_params(prof, h);
+                        new_params = casert_apply_overlay(new_params, new_cdec);
+                        if (new_params.stab_scale != params.stab_scale) {
+                            printf("\n[DECAY] cASERT level changed: scale %d -> %d\n",
+                                   params.stab_scale, new_params.stab_scale);
+                            params = new_params;
+                        }
                     }
                 }
             }
