@@ -256,8 +256,8 @@
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
-        <h3 style="color:var(--green-primary)">Decay After 7200s</h3>
-        <p>If no block is found for 7,200 seconds (2 hours), a decay_factor gradually reduces the cASERT scale. This prevents mining deadlock when hashrate drops suddenly.</p>
+        <h3 style="color:var(--green-primary)">Decay Anti-Stall</h3>
+        <p>If no block is found for an extended period, the cASERT level decays gradually. Activation: 14,400s (4 hours) for L1&ndash;L5, 28,800s (8 hours) for L6+. This prevents mining deadlock when hashrate drops suddenly.</p>
       </div>
     </div>
   </div>
@@ -317,7 +317,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Feature</th><th>Description</th></tr>
-          <tr><td class="label">Anti-stall decay</td><td class="value">After 7,200s without a block, cASERT gradually reduces its hardening to prevent mining deadlock</td></tr>
+          <tr><td class="label">Anti-stall decay</td><td class="value">Decay activates after 14,400s (L1&ndash;L5) or 28,800s (L6+) without a block</td></tr>
           <tr><td class="label">Level system</td><td class="value">Discrete levels (not continuous) for deterministic consensus &mdash; any two nodes compute the same level</td></tr>
           <tr><td class="label">Floor at L1</td><td class="value">Chain always gets at least L1 stability requirements, even when behind schedule</td></tr>
           <tr><td class="label">Stateless recalculation</td><td class="value">Any node can compute the cASERT level from the chain alone, no extra state needed</td></tr>
@@ -339,8 +339,8 @@
         <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">The anti-stall decay ensures liveness under sudden hashrate loss. If no valid block arrives for DECAY_START seconds, the cASERT hardening is gradually reduced. This decay is deterministic and computed from the timestamp of the previous block, making it fully verifiable by all nodes.</p>
         <table class="code-table">
           <tr><th>Condition</th><th>Response</th></tr>
-          <tr><td class="label">Block interval &lt; 7,200s</td><td class="green">No decay &mdash; cASERT level applies at full scale</td></tr>
-          <tr><td class="label">Block interval &gt;= 7,200s</td><td class="cyan">decay_factor reduces cASERT scale progressively</td></tr>
+          <tr><td class="label">Stall &lt; activation threshold</td><td class="green">No decay &mdash; cASERT level applies at full scale</td></tr>
+          <tr><td class="label">Stall &gt;= activation threshold</td><td class="cyan">decay_factor reduces cASERT scale progressively</td></tr>
           <tr><td class="label">Result</td><td class="value">Mining continues even if hashrate drops dramatically</td></tr>
         </table>
       </div>
