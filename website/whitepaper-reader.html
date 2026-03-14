@@ -540,7 +540,8 @@
 <p class="wp-p">the chain is struggling.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):</strong></p>
-<p class="wp-p">If no block found for 2 hours, effective level decays: L8+ drops 1/10min, L4-L7 drops 1/20min, L2-L3 drops 1/30min, L1 is floor. When mining resumes, decay stops instantly. Block validation uses raw schedule level.</p>
+<p class="wp-p">If no block found for max(ahead &times; 600s, 7200s) &mdash; proportional to blocks ahead, no ceiling &mdash; the effective level decays: L8+ drops 1/10min, L4&ndash;L7 drops 1/20min, L2&ndash;L3 drops 1/30min, L1 is floor. Cost uses the <strong>current</strong> effective level as it drops. When mining resumes, decay stops instantly. Block validation uses raw schedule level.</p>
+<p class="wp-p" style="background:rgba(74,222,128,0.05);border-left:3px solid #4ade80;padding:8px 12px;margin:8px 0;"><strong style="color:#4ade80;">Worked Example &mdash; L10 (450 blocks ahead):</strong><br>Activation: max(450 &times; 600, 7200) = 270,000s (75h). After activation: L10&rarr;L8 FAST (30min) &middot; L7&rarr;L4 MEDIUM (80min) &middot; L3&rarr;L1 SLOW (60min). Total decay: <strong>170 min (2h 50m)</strong>. Total from mining start: <strong>~78 hours</strong>.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-9" class="wp-h">3.4 Anti-Grinding and Proof Binding</h4>
 <div class="wp-spacer"></div>
