@@ -46,8 +46,8 @@ static int level_from_ahead(int ahead) {
 // decay_seconds = now_time - last_block_timestamp
 // raw_level = level computed from blocks_ahead schedule
 static int apply_decay(int raw_level, int64_t decay_seconds, int ahead) {
-    // Dynamic activation: higher levels need more patience before decay
-    int64_t activation = (ahead > 100) ? 28800 : 14400;  // 8h for L6+, 4h for L1-L5
+    // Dynamic activation: ahead × TARGET_SPACING, floor 2h, no ceiling
+    int64_t activation = std::max((int64_t)ahead * 600, (int64_t)7200);
     if (decay_seconds < activation) return raw_level;
 
     int64_t decay_time = decay_seconds - activation;
