@@ -699,7 +699,7 @@ async function updateDashboard(info){
   }catch(e){console.error('miner balance error:',e);}}
   var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
   document.getElementById('diffFill').style.width=pct+'%';
-  document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
+  document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' bits_q)';
   updateChainSync();
 }
 /* drawReserveBars removed — replaced by price charts */
@@ -964,7 +964,7 @@ function renderDashPanel(key,body,title){
     title.textContent='// NEXT BLOCK';
     var el=document.getElementById('miningHeight');
     var ht=el?el.textContent:'#'+(H+1);
-    var diff=_lastBitsQ?_lastBitsQ.toLocaleString()+' ('+ (_lastBitsQ/65536).toFixed(2)+' Q16)':'\u2014';
+    var diff=_lastBitsQ?_lastBitsQ.toLocaleString()+' ('+ (_lastBitsQ/65536).toFixed(2)+' bits)':'\u2014';
     var elapsed=_lastBlockTime?Math.floor(Date.now()/1000-_lastBlockTime):0;
     var em=Math.floor(elapsed/60),es=elapsed%60;
     var eStr=em>0?em+'m '+('0'+es).slice(-2)+'s':es+'s';
@@ -1040,7 +1040,7 @@ function updateMiningPanel(elapsed){
   var mh=document.getElementById('miningHeight');
   if(mh)mh.textContent='#'+nextH;
   var md=document.getElementById('miningDiff');
-  if(md&&_lastBitsQ){md.textContent='~'+_lastBitsQ.toLocaleString()+' ('+(_lastBitsQ/65536).toFixed(2)+' Q16)';}
+  if(md&&_lastBitsQ){md.textContent='~'+_lastBitsQ.toLocaleString()+' ('+(_lastBitsQ/65536).toFixed(2)+' bits)';}
   var lag=computeCurrentLag();
   var rawLevel=getCasertLevel(lag);
   var ahead=(lag<0)?-lag:0;
