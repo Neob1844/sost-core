@@ -272,7 +272,7 @@
     </div>
     <table class="data-table" id="goldFiatTable">
       <thead>
-        <tr><th>Currency</th><th>Code</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th></tr>
+        <tr><th>Currency</th><th>Code</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th><th>24H</th></tr>
       </thead>
       <tbody id="goldFiatBody">
         <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading gold prices...</td></tr>
@@ -355,7 +355,7 @@
     </div>
     <div class="placeholder-box">
       <div class="ph-title">Trading pairs will appear here</div>
-      <div class="ph-sub">SOST market data will populate automatically once live trading activity is detected. Initial planned pairs include SOST/USDC, SOST/USDT, SOST/BTC, SOST/ETH, SOST/XAUT, and SOST/PAXG. All pairs planned and mentioned above and any additional pairs that may be introduced over time are subject to market conditions, liquidity availability, and the evolving operational needs of the ecosystem.</div>
+      <div class="ph-sub">SOST market data will populate automatically once live trading activity is detected. Initial planned pairs include SOST/USDC, SOST/USDT, SOST/BTC, SOST/ETH, SOST/BNB, SOST/XAUT, and SOST/PAXG. All pairs planned and mentioned above and any additional pairs that may be introduced over time are subject to market conditions, liquidity availability, and the evolving operational needs of the ecosystem.</div>
     </div>
   </div>
 </section>
@@ -533,7 +533,7 @@
   // ===== FOREX RATES =====
   function fetchForex(cb) {
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
     fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -603,13 +603,13 @@
 
   // ===== GOLD + CRYPTO =====
   function fetchGold(cb) {
-    var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=' + allVsCurrencies;
-    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd';
+    var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&include_24hr_change=true&vs_currencies=' + allVsCurrencies;
+    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd&include_24hr_change=true';
     var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
     var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd&include_24hr_change=true';
 
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
     var fetchOpts = { signal: controller.signal };
 
     Promise.all([
@@ -645,16 +645,21 @@
         var tbody2 = document.getElementById('goldFiatBody');
         var html2 = '';
         CURRENCY_GROUPS.forEach(function(g) {
-          html2 += regionRow(g.region, 5);
+          html2 += regionRow(g.region, 6);
           g.currencies.forEach(function(c) {
             var xv, pv;
             if (c.code === 'USD') { xv = xaut.usd; pv = paxg.usd; }
             else { xv = goldInCurrency(xaut, c.code); pv = goldInCurrency(paxg, c.code); }
             var dec = (xv && xv > 1000) ? 0 : 2;
+            var xaut24 = xaut.usd_24h_change;
+            var g24Html = (xaut24 !== undefined && xaut24 !== null)
+              ? '<span style="color:' + (xaut24 >= 0 ? 'var(--green-primary)' : 'var(--red-primary)') + ';font-weight:500">' + (xaut24 >= 0 ? '+' : '') + xaut24.toFixed(2) + '%</span>'
+              : '<span class="price-na">&mdash;</span>';
             html2 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
               '<td class="price-val">' + fmtPrice(xv, c.symbol, dec) + '</td>' +
               '<td class="price-val">' + fmtPrice(pv, c.symbol, dec) + '</td>' +
-              '<td>' + spreadHtml(xv, pv) + '</td></tr>';
+              '<td>' + spreadHtml(xv, pv) + '</td>' +
+              '<td>' + g24Html + '</td></tr>';
           });
         });
         tbody2.innerHTML = html2;
@@ -706,12 +711,22 @@
           var stablePrice = (stableData[c.cgId] && stableData[c.cgId].usd) ? stableData[c.cgId].usd : 1;
           var xv = xaut.usd ? xaut.usd / stablePrice : null;
           var pv = paxg.usd ? paxg.usd / stablePrice : null;
+          var sc24 = (stableData[c.cgId] && stableData[c.cgId].usd_24h_change !== undefined) ? stableData[c.cgId].usd_24h_change : null;
+          var sc24Html = '';
+          if (sc24 !== null) {
+            var scCh = sc24.toFixed(2);
+            var scColor = sc24 >= 0 ? 'var(--green-primary)' : 'var(--red-primary)';
+            var scSign = sc24 >= 0 ? '+' : '';
+            sc24Html = '<span style="color:' + scColor + ';font-weight:500">' + scSign + scCh + '%</span>';
+          } else {
+            sc24Html = '<span class="price-na">&mdash;</span>';
+          }
           html4 += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
             '<td class="price-val">$' + fmt(stablePrice, 4) + '</td>' +
             '<td class="price-val">' + fmtCrypto(xv, c.code, 2) + '</td>' +
             '<td class="price-val">' + fmtCrypto(pv, c.code, 2) + '</td>' +
             '<td>' + spreadHtml(xv, pv) + '</td>' +
-            '<td><span class="price-na">&mdash;</span></td></tr>';
+            '<td>' + sc24Html + '</td></tr>';
         });
         tbody4.innerHTML = html4;
         setupCryptoClicks();
@@ -755,7 +770,7 @@
 
   function tryFetchSost(id, vs, fallback, doneCb) {
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -1106,7 +1121,7 @@
 
     var url = getCoinDetailUrl(code, period);
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
 
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
@@ -1315,15 +1330,15 @@
   }
 
   // ===== FIAT CHARTS =====
-  var FIAT_CHART_CODES = ['EUR','GBP','JPY','CHF','CAD','AUD','CNY','INR','BRL','MXN'];
 
   function setupFiatClicks() {
     var rows = document.querySelectorAll('#forexBody tr');
     rows.forEach(function(row) {
       var tds = row.querySelectorAll('td');
+      if (row.classList.contains('region-header')) return;
       if (tds.length < 2) return;
       var codeText = tds[1] ? tds[1].textContent.trim() : '';
-      if (FIAT_CHART_CODES.indexOf(codeText) === -1) return;
+      if (!codeText || codeText === 'USD') return;
       row.style.cursor = 'pointer';
       row.addEventListener('click', function() {
         showFiatDetailModal(codeText);
@@ -1411,7 +1426,7 @@
 
     var url = getFiatDetailUrl(code, period);
     var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
 
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })

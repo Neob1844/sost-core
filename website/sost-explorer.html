@@ -1165,7 +1165,7 @@ var TF_MAP={
   '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
   '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null},'3Y':{days:1095,ms:null},'5Y':{days:1825,ms:null}
 };
-var cache={},activeTf={xaut:'24H',paxg:'24H',sost:'24H'},sostId=null,sostChecked=false;
+var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',sost:'24H'},sostId=null,sostChecked=false;
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var codeFont;try{codeFont=getComputedStyle(document.documentElement).getPropertyValue('--code');}catch(e){}
 if(!codeFont)codeFont="'Fira Code',monospace";
@@ -1186,9 +1186,18 @@ function getData(key){
 }
 
 function fetchHist(id,days,cb){
+  // Check cache TTL (5 min for price-current, full TTL for historical)
+  var ck=id+'_'+days;
+  if(cache[id]&&cache[id][days]&&cacheTimes[ck]&&(Date.now()-cacheTimes[ck]<CACHE_TTL)){
+    if(cb)cb();return;
+  }
   fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days='+days)
   .then(function(r){return r.json();}).then(function(d){
-    if(d&&d.prices){if(!cache[id])cache[id]={};cache[id][days]=d.prices;}
+    if(d&&d.prices&&d.prices.length>0){
+      if(!cache[id])cache[id]={};
+      cache[id][days]=d.prices;
+      cacheTimes[ck]=Date.now();
+    }
     if(cb)cb();
   }).catch(function(){if(cb)cb();});
 }
@@ -1207,7 +1216,8 @@ function drawChart(key){
   ctx.strokeStyle='#111';ctx.lineWidth=1;
   for(var g=1;g<=3;g++){var gy=pT+ch*g/4;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+cw,gy);ctx.stroke();}
   if(data.length<2){
-    ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(pL,pT+ch/2);ctx.lineTo(pL+cw,pT+ch/2);ctx.stroke();
+    ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
+    ctx.fillText(data.length===0?'No data available for this period':'Insufficient data',pL+cw/2,pT+ch/2);
     updChange(key,null);updRange(key,null);return;
   }
   var prices=data.map(function(d){return d[1];});
@@ -1305,9 +1315,27 @@ function setupTfBtns(key){
       activeTf[key]=btn.getAttribute('data-tf');
       var id=cid(key);if(!id){drawChart(key);return;}
       var days=TF_MAP[activeTf[key]].days;
-      if(cache[id]&&cache[id][days]){drawChart(key);}
-      else{fetchHist(id,days,function(){drawChart(key);});}
+      if(cache[id]&&cache[id][days]){drawChart(key);checkTfAvail(key);}
+      else{fetchHist(id,days,function(){drawChart(key);checkTfAvail(key);});}
     });
+  });
+}
+
+function checkTfAvail(key){
+  var id=cid(key);if(!id)return;
+  var cont=document.getElementById(key+'TfBtns');if(!cont)return;
+  var btns=cont.querySelectorAll('.tf-btn');
+  btns.forEach(function(btn){
+    if(btn.classList.contains('disabled'))return; // skip permanently disabled (e.g. SOST)
+    var tf=btn.getAttribute('data-tf');
+    var days=TF_MAP[tf]&&TF_MAP[tf].days;
+    if(!days)return;
+    var d=cache[id]&&cache[id][days];
+    if(d&&d.length<10){
+      btn.style.opacity='0.3';btn.title='Not enough history for this period';
+    } else {
+      btn.style.opacity='';btn.title='';
+    }
   });
 }
 
