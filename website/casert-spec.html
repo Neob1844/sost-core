@@ -257,7 +257,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
         <h3 style="color:var(--green-primary)">Decay Anti-Stall</h3>
-        <p>If no block is found for an extended period, the cASERT level decays gradually. Activation: 14,400s (4 hours) for L1&ndash;L5, 28,800s (8 hours) for L6+. This prevents mining deadlock when hashrate drops suddenly.</p>
+        <p>If no block is found for an extended period, the cASERT level decays gradually. Activation: dynamic 2014 max(ahead 00D7 600s, 2h). No ceiling. 20 ahead = 3h 20m, 48+ ahead = 8h, 100 ahead = 16h 40m. This prevents mining deadlock when hashrate drops suddenly.</p>
       </div>
     </div>
   </div>
@@ -317,7 +317,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Feature</th><th>Description</th></tr>
-          <tr><td class="label">Anti-stall decay</td><td class="value">Decay activates after 14,400s (L1&ndash;L5) or 28,800s (L6+) without a block</td></tr>
+          <tr><td class="label">Anti-stall decay</td><td class="value">Decay activates after max(ahead 00D7 600s, 7200s) without a block 2014 proportional, no ceiling</td></tr>
           <tr><td class="label">Level system</td><td class="value">Discrete levels (not continuous) for deterministic consensus &mdash; any two nodes compute the same level</td></tr>
           <tr><td class="label">Floor at L1</td><td class="value">Chain always gets at least L1 stability requirements, even when behind schedule</td></tr>
           <tr><td class="label">Stateless recalculation</td><td class="value">Any node can compute the cASERT level from the chain alone, no extra state needed</td></tr>
@@ -382,7 +382,7 @@
           <tr><td class="label">CASERT_L4_BLOCKS</td><td class="highlight">51</td><td class="value">Blocks ahead to enter L4</td></tr>
           <tr><td class="label">CASERT_L5_BLOCKS</td><td class="highlight">76</td><td class="value">Blocks ahead to enter L5</td></tr>
           <tr><td class="label">CASERT_L6_BLOCKS</td><td class="highlight">101</td><td class="value">L6+ unbounded starts here</td></tr>
-          <tr><td class="label">CASERT_DECAY_ACTIVATION</td><td class="highlight">14,400s / 28,800s</td><td class="value">4h (L1-L5) or 8h (L6+) without block before decay</td></tr>
+          <tr><td class="label">CASERT_DECAY_ACTIVATION</td><td class="highlight">max(ahead00D7600, 7200)</td><td class="value">Dynamic: proportional to blocks ahead, floor 2h, no ceiling</td></tr>
           <tr><td class="label">CASERT_DECAY_FAST_SECS</td><td class="value">600s</td><td class="value">L8+: 10 min/level (fast recovery)</td></tr>
           <tr><td class="label">CASERT_DECAY_MEDIUM_SECS</td><td class="value">1,200s</td><td class="value">L4&ndash;L7: 20 min/level (medium)</td></tr>
           <tr><td class="label">CASERT_DECAY_SLOW_SECS</td><td class="value">1,800s</td><td class="value">L2&ndash;L3: 30 min/level (cautious)</td></tr>
