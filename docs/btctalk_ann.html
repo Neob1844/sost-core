@@ -97,6 +97,8 @@
 
 <p><b>Dual difficulty:</b> ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for an extended period (max(ahead 00D7 10min, 2 hours) 2014 proportional to blocks ahead, no ceiling), a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
 
+<p><b>Decay tiers:</b> L8+ drops 1 level every 10 min (fast), L4&ndash;L7 every 20 min (medium), L2&ndash;L3 every 30 min (cautious). Cost uses the <b>current</b> effective level as it drops. <b>Example &mdash; L10 (450 ahead):</b> Activation at 75h. Then: L10&rarr;L8 FAST (30min), L7&rarr;L4 MEDIUM (80min), L3&rarr;L1 SLOW (60min). Total decay: 170 min. Total from start: ~78 hours.</p>
+
 <p>All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.</p>
 
 <hr>
