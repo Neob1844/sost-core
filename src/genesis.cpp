@@ -160,11 +160,12 @@ int main(int argc, char** argv) {
     params.cx_lam = 100;
     params.cx_checkpoint_interval = std::max(1, rounds / 16);
 
-    params.stab_scale = 3;
-    params.stab_k = 4;
-    params.stab_margin = 180;
-    params.stab_steps = 4;
-    params.stab_lr_shift = params.cx_lr_shift + 2;
+    // B0 profile (genesis baseline)
+    params.stab_scale = CX_STB_SCALE;   // 1
+    params.stab_k = CX_STB_K;           // 4
+    params.stab_margin = CX_STB_MARGIN; // 180
+    params.stab_steps = CX_STB_STEPS;   // 4
+    params.stab_lr_shift = CX_STB_LR;   // 20
 
     // Genesis inputs
     Bytes32 prev = ZERO_HASH();
@@ -243,10 +244,22 @@ int main(int argc, char** argv) {
     int64_t subsidy = GetBlockSubsidy(0);
     auto split = coinbase_split_50_25_25(subsidy);
 
+    // Hex encode x_bytes and final_state
+    auto to_hex = [](const uint8_t* d, size_t n) -> std::string {
+        static const char* hx = "0123456789abcdef";
+        std::string s; s.reserve(n*2);
+        for(size_t i=0;i<n;++i){s+=hx[d[i]>>4];s+=hx[d[i]&0xF];}
+        return s;
+    };
+    std::string x_hex = to_hex(found_res.x_bytes.data(), found_res.x_bytes.size());
+    std::string fs_hex = hex(found_res.final_state);
+
     std::printf("\n=== GENESIS FOUND ===\n");
     std::printf("block_id         = %s\n", hex(block_id).c_str());
     std::printf("commit           = %s\n", hex(found_res.commit).c_str());
     std::printf("checkpoints_root = %s\n", hex(found_res.checkpoints_root).c_str());
+    std::printf("final_state      = %s\n", fs_hex.c_str());
+    std::printf("x_bytes          = %s\n", x_hex.c_str());
     std::printf("stability_metric = %llu\n", (unsigned long long)found_res.stability_metric);
     std::printf("nonce            = %u\n", (unsigned)found_nonce);
     std::printf("extra_nonce      = %u\n", (unsigned)extra_nonce);
@@ -274,6 +287,14 @@ int main(int argc, char** argv) {
         std::fprintf(f, "  \"commit\": \"%s\",\n", hex(found_res.commit).c_str());
         std::fprintf(f, "  \"checkpoints_root\": \"%s\",\n", hex(found_res.checkpoints_root).c_str());
         std::fprintf(f, "  \"stability_metric\": %llu,\n", (unsigned long long)found_res.stability_metric);
+        std::fprintf(f, "  \"x_bytes\": \"%s\",\n", x_hex.c_str());
+        std::fprintf(f, "  \"final_state\": \"%s\",\n", fs_hex.c_str());
+        std::fprintf(f, "  \"checkpoint_leaves\": [");
+        for (size_t i = 0; i < found_res.checkpoint_leaves.size(); ++i) {
+            if (i) std::fprintf(f, ",");
+            std::fprintf(f, "\"%s\"", hex(found_res.checkpoint_leaves[i]).c_str());
+        }
+        std::fprintf(f, "],\n");
         std::fprintf(f, "  \"subsidy_stocks\": %lld,\n", (long long)subsidy);
         std::fprintf(f, "  \"coinbase_split\": {\n");
         std::fprintf(f, "    \"miner\": %lld,\n", (long long)split.miner);

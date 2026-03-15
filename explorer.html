@@ -847,26 +847,24 @@ function showCXInfo(){
   '<div class="k">LR SHIFT</div><div class="v">18 // learning rate = 2<sup>-18</sup></div>'+
   '</div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
-  '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">DUAL DIFFICULTY SYSTEM</div>'+
+  '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">UNIFIED cASERT DIFFICULTY</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-  '<b style="color:var(--cyan)">ASERT</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
-  'Half-life: <b>24 hours</b>. Clamp: ±2-3 per block. Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT</b> — <b>Unidirectional</b> adaptive stability overlay. '+
+  '<b style="color:var(--cyan)">cASERT</b> is the unified consensus-rate control system combining three integrated components:<br><br>'+
+  '<b style="color:var(--cyan)">bitsQ Q16.16</b> — Primary hardness regulator. Exponential adjustment with <b>12-hour</b> half-life and 6.25% per-block delta cap. Anchor-based per epoch ('+131553+' blocks).<br><br>'+
+  '<b style="color:var(--orange)">Equalizer</b> — Structural correction via ConvergenceX stability profiles (E3 through H6). '+
   'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
-  'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
-  'Levels: <span style="color:#4ade80">L1</span> (neutral, 0–4 ahead) → '+
-  '<span style="color:#67e8f9">L2</span> (5–19) → '+
-  '<span style="color:#fbbf24">L3</span> (20–49) → '+
-  '<span style="color:#fb923c">L4</span> (50–74) → '+
-  '<span style="color:#e63946">L5</span> (75+ ahead, maximum CX cost). '+
-  'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
-  'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
+  'Profiles: <span style="color:#4ade80">B0</span> (baseline) → '+
+  '<span style="color:#67e8f9">H1-H2</span> (moderate) → '+
+  '<span style="color:#fbbf24">H3-H4</span> (elevated) → '+
+  '<span style="color:#e63946">H5-H6</span> (maximum hardening).<br><br>'+
+  '<b style="color:#4ade80">Anti-stall</b> — Progressive profile drop after prolonged mining gaps. '+
+  'When chain is behind schedule, bitsQ handles difficulty reduction alone.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
-  '<div class="k">ASERT HALF-LIFE</div><div class="v">86,400s (24 hours)</div>'+
-  '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
-  '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
+  '<div class="k">BITSQ HALF-LIFE</div><div class="v">43,200s (12 hours)</div>'+
+  '<div class="k">DELTA CAP</div><div class="v">6.25% per block (1/16)</div>'+
+  '<div class="k">EQUALIZER PROFILES</div><div class="v">E3(-3) through H6(+6), B0 baseline</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
   '<div class="k">STABILITY STEPS</div><div class="v">3 gradient descent steps per test</div>'+
   '<div class="k">STABILITY MARGIN</div><div class="v">180 convergence tolerance</div>'+

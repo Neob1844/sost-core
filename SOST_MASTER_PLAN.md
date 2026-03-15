@@ -23,7 +23,7 @@
 - Git: wallet.json purged from history with `git filter-repo`, `.gitignore` updated
 
 ### Blockchain
-- Genesis: 2026-03-13 00:00:00 UTC
+- Genesis: 2026-03-16 00:00:00 UTC
 - Current height: ~777 blocks
 - Emission: 7.8510 SOST per block, 50/25/25 split (miner/gold/popc)
 - cASERT: L1-L5 fixed (thresholds 5/26/51/76), L6+ unbounded at 101+ (matches params.h)

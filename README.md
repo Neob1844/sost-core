@@ -160,7 +160,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 
 | Parameter | Value |
 |-----------|-------|
-| Algorithm | ConvergenceX (CPU, 4GB RAM, ASIC-resistant) |
+| Algorithm | ConvergenceX (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation, ASIC-resistant) |
 | Block time | 10 minutes target |
 | Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5 fixed, L6+ unbounded at 101+, k=4) |
 | Initial block reward | 7.85100863 SOST |
@@ -176,7 +176,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 | P2P port | 19333 |
 | RPC port | 18232 |
 | Default seed | seed.sostcore.com:19333 |
-| Mainnet genesis | 2026-03-13 00:00:00 UTC |
+| Mainnet genesis | 2026-03-16 00:00:00 UTC |
 
 ## Constitutional Addresses
 
@@ -214,7 +214,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| ASERT + cASERT difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
+| ASERT + ccASERT bitsQ difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |
@@ -228,7 +228,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 
 ## Fast Sync
 
-New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad, stability basin) is conditionally skipped.
+New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad + 4GB dataset, stability basin) is conditionally skipped. Note: the scratchpad and dataset are miner-only; node validation requires ~500MB RAM (no scratchpad/dataset needed).
 
 This does not change consensus rules. A block that passes fast sync verification would also pass full verification. The only difference is computational cost.
 
@@ -236,9 +236,9 @@ This does not change consensus rules. A block that passes fast sync verification
 1. **Hard checkpoints**: A block is trusted ONLY if its height AND block hash match a hardcoded checkpoint exactly. Lower height alone is never sufficient.
 2. **Assumevalid anchor**: If a known block hash exists on the active chain, ancestors of that branch can skip expensive CX recomputation. If the anchor is not on the active chain, no fast trust.
 
-**Always verified** (all blocks, all modes): header structure, timestamps/MTP, ASERT difficulty, commit<=target, coinbase split (50/25/25), constitutional addresses, transaction semantics, UTXO updates.
+**Always verified** (all blocks, all modes): header structure, timestamps/MTP, cASERT bitsQ difficulty, commit<=target, coinbase split (50/25/25), constitutional addresses, transaction semantics, UTXO updates.
 
-**Skipped** (trusted historical blocks only): full 100K-round gradient descent, 4GB scratchpad rebuild, stability basin re-verification.
+**Skipped** (trusted historical blocks only): full 100K-round gradient descent, 4GB scratchpad + 4GB dataset rebuild (miner-only memory), stability basin re-verification.
 
 Flags:
 - `--full-verify`: Force full ConvergenceX recomputation for every block

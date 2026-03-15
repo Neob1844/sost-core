@@ -171,7 +171,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>When is the genesis block?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>March 13, 2026, 00:00:00 UTC.</strong> This is mainnet v2 — a clean regenesis following security and custody improvements.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>March 16, 2026, 00:00:00 UTC.</strong> This is mainnet v2 — a clean regenesis following security and custody improvements.</div></div>
     </div>
   </div>
 </section>
@@ -201,7 +201,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses two layers of difficulty adjustment:<br><br><strong>ASERT</strong> (Absolutely Scheduled Exponentially Rising Targets): adjusts the actual difficulty block by block based on chain speed, with a 24-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT</strong> (Constitutional ASERT overlay): acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), cASERT tightens ConvergenceX stability requirements across unbounded levels (L1 neutral &rarr; L5 &rarr; L6+ with no ceiling). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. If mining stalls for 2+ hours, a decay mechanism gradually reduces the level to prevent chain halt. ASERT corrects speed; cASERT protects emission.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): adjusts the actual difficulty block by block based on chain speed, with a 12-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer tightens ConvergenceX stability requirements across profiles (E3&ndash;H6). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. If mining stalls for 2+ hours, a decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -251,7 +251,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (March 13, 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code></a>) to support the protocol and endow it with perpetual added value.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol launched at regenesis (March 16, 2026). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code></a>) to support the protocol and endow it with perpetual added value.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -330,7 +330,7 @@
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>

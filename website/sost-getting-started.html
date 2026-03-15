@@ -399,8 +399,56 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
       <span style="color:var(--text-dim);font-size:11px;">Your node validates every block independently — no trust required. Once synced, you are running a fully sovereign copy of the SOST blockchain.</span>
     </div>
 
-    <div class="notice green fade-in delay-2">
-      <strong>RPC credentials:</strong> The <code style="color:var(--cyan-primary)">--rpc-user</code> and <code style="color:var(--cyan-primary)">--rpc-pass</code> values must match between the node, miner, and CLI. Use strong, unique credentials — these are not transmitted over the network but protect local RPC access.
+    <!-- RPC CREDENTIALS SECTION -->
+    <div class="spec-block fade-in delay-2" style="border-left:3px solid var(--cyan-primary);">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">RPC Credentials</span>
+        </div>
+        <span class="spec-tag">IMPORTANT</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">
+          RPC credentials are <strong style="color:var(--text-primary);">local and self-chosen</strong>. There is no central registry or account system.
+          Each operator picks their own username and password. The node and the miner must use <strong style="color:var(--text-primary);">the same credentials</strong> to communicate.
+        </p>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:2px;margin-bottom:8px;">GENERATE SECURE CREDENTIALS</div>
+          <div class="code-snippet"><span class="comment"># Run this once — save the output securely</span>
+echo "USER: $(openssl rand -hex 10)"
+echo "PASS: $(openssl rand -hex 20)"</div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:2px;margin-bottom:8px;">USAGE EXAMPLE</div>
+          <div class="code-snippet"><span class="comment"># Terminal 1 — Start node</span>
+./sost-node --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+    --genesis genesis_block.json --chain chain.json --profile mainnet
+
+<span class="comment"># Terminal 2 — Start miner (same credentials)</span>
+./sost-miner --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+    --rpc 127.0.0.1:18232 --address sost1... \
+    --genesis genesis_block.json --blocks 999999 --realtime</div>
+        </div>
+
+        <div style="background:rgba(251,1,13,0.08);border:1px solid var(--red-dim);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700;margin-bottom:8px;">SECURITY WARNINGS</div>
+          <ul style="margin:0;padding:0 0 0 16px;color:var(--text-secondary);font-size:12px;line-height:2;">
+            <li><strong style="color:var(--red-bright);">NEVER</strong> share your RPC credentials with anyone.</li>
+            <li><strong style="color:var(--red-bright);">NEVER</strong> commit credentials to git or put them in source code.</li>
+            <li><strong style="color:var(--red-bright);">NEVER</strong> use the example credentials from documentation.</li>
+            <li>If mining against a <strong style="color:var(--text-primary);">remote node</strong>, <strong style="color:var(--red-bright);">ALWAYS</strong> use an encrypted SSH tunnel:<br>
+              <code style="color:var(--cyan-primary);font-size:11px;">ssh -N -L 18232:127.0.0.1:18232 user@your-vps-ip</code></li>
+            <li>Credentials travel over <strong style="color:var(--text-primary);">HTTP</strong> (not HTTPS) inside the local machine. This is secure <strong style="color:var(--text-primary);">only</strong> if node and miner are on the same machine or connected via SSH tunnel.</li>
+          </ul>
+        </div>
+
+        <div style="background:rgba(74,222,128,0.06);border:1px solid var(--green-dim);border-left:3px solid var(--green-primary);padding:12px 16px;border-radius:4px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+          <strong style="color:var(--green-primary);">Same-machine setup (most common):</strong> If you run node and miner on the same computer, no tunnel is needed. Just use the same <code style="color:var(--cyan-primary);">--rpc-user</code> and <code style="color:var(--cyan-primary);">--rpc-pass</code> in both commands. The connection stays on localhost (127.0.0.1).
+        </div>
+      </div>
     </div>
 
     <div class="spec-block fade-in delay-3">
@@ -685,7 +733,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>

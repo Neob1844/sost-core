@@ -165,7 +165,7 @@ bool ValidateBlockHeaderContext(
         return false;
     }
 
-    // difficulty bits_q match expected (ASERT hook)
+    // difficulty bits_q match expected (cASERT bitsQ)
     if (header.bits_q != expected_bits_q) {
         if (err) *err = "ValidateBlockHeaderContext: bits_q mismatch (got="
                       + std::to_string(header.bits_q) + ", expected="

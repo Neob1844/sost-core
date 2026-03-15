@@ -13,7 +13,6 @@
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/pow/convergencex.h"
-#include "sost/pow/asert.h"
 #include "sost/pow/casert.h"
 #include "sost/pow/scratchpad.h"
 #include "sost/sostcompact.h"
@@ -53,6 +52,9 @@ struct MinedBlock {
     uint32_t bits_q, nonce, extra_nonce;
     uint64_t stability_metric;
     int64_t  miner_reward, gold_vault_reward, popc_pool_reward;
+    std::vector<uint8_t> x_bytes;         // CX solution vector (n*4 bytes)
+    Bytes32 final_state;                  // Final hash state after 100K rounds
+    std::vector<Bytes32> checkpoint_leaves; // Merkle leaves for CX proof
 };
 static std::vector<MinedBlock> g_mined_blocks;
 
@@ -398,7 +400,17 @@ static bool rpc_submit_block_full(
         + ",\"miner\":" + std::to_string(mb.miner_reward)
         + ",\"gold_vault\":" + std::to_string(mb.gold_vault_reward)
         + ",\"popc_pool\":" + std::to_string(mb.popc_pool_reward)
-        + ",\"stability_metric\":" + std::to_string(mb.stability_metric);
+        + ",\"stability_metric\":" + std::to_string(mb.stability_metric)
+        + ",\"x_bytes\":\"" + to_hex_str(mb.x_bytes.data(), mb.x_bytes.size()) + "\""
+        + ",\"final_state\":\"" + hex(mb.final_state) + "\"";
+
+    // Checkpoint leaves for CX proof verification
+    bj += ",\"checkpoint_leaves\":[";
+    for (size_t i = 0; i < mb.checkpoint_leaves.size(); ++i) {
+        if (i) bj += ",";
+        bj += "\"" + hex(mb.checkpoint_leaves[i]) + "\"";
+    }
+    bj += "]";
 
     bj += ",\"transactions\":[";
     for(size_t i=0;i<tx_hexes_including_coinbase.size();++i){
@@ -496,10 +508,10 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int64_t h = (int64_t)g_chain.size();
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
-    uint32_t bits_q = asert_next_difficulty(g_chain, h);
+    uint32_t bits_q = casert_next_bitsq(g_chain, h);
     ConsensusParams params = get_consensus_params(prof, h);
-    auto cdec = casert_mode_from_chain(g_chain, h, std::time(nullptr));
-    params = casert_apply_overlay(params, cdec);
+    auto cdec = casert_compute(g_chain, h, std::time(nullptr));
+    params = casert_apply_profile(params, cdec);
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
@@ -585,9 +597,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         ts_last_update = now_check;
 
                         // Recalculate cASERT with current wall-clock for decay
-                        auto new_cdec = casert_mode_from_chain(g_chain, h, ts);
+                        auto new_cdec = casert_compute(g_chain, h, ts);
                         auto new_params = get_consensus_params(prof, h);
-                        new_params = casert_apply_overlay(new_params, new_cdec);
+                        new_params = casert_apply_profile(new_params, new_cdec);
                         if (new_params.stab_scale != params.stab_scale) {
                             printf("\n[DECAY] cASERT level changed: scale %d -> %d\n",
                                    params.stab_scale, new_params.stab_scale);
@@ -633,6 +645,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.height = h; mb.timestamp = ts; mb.bits_q = bits_q;
                 mb.nonce = nonce; mb.extra_nonce = extra_nonce;
                 mb.stability_metric = res.stability_metric;
+                mb.x_bytes = res.x_bytes;
+                mb.final_state = res.final_state;
+                mb.checkpoint_leaves = res.checkpoint_leaves;
                 mb.subsidy = subsidy;
                 mb.miner_reward = split.miner;
                 mb.gold_vault_reward = split.gold_vault;

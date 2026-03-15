@@ -33,7 +33,6 @@
 #include "sost/tx_validation.h"
 #include "sost/emission.h"
 #include "sost/pow/casert.h"
-#include "sost/pow/asert.h"
 #include "sost/subsidy.h"
 #include "sost/merkle.h"
 #include "sost/serialize.h"
@@ -88,6 +87,7 @@ static std::mutex   g_chain_mu;
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
 static bool        g_rpc_auth_required = true;
+static bool        g_rpc_public = false; // default: bind to 127.0.0.1 only
 
 // Block record
 struct StoredBlock {
@@ -101,6 +101,8 @@ struct StoredBlock {
     int64_t subsidy;
     int64_t miner_reward, gold_vault_reward, popc_pool_reward;
     uint64_t stability_metric;
+    std::string x_bytes_hex;     // CX solution vector (hex)
+    std::string final_state_hex; // Final hash state (hex)
     std::vector<std::string> tx_hexes;  // ALL serialized txs (coinbase + transfers)
 };
 static std::vector<StoredBlock> g_blocks;
@@ -271,7 +273,7 @@ static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpo
 static const int64_t MAX_REORG_DEPTH = 500;
 
 // Fast sync: skip expensive ConvergenceX recomputation for trusted historical blocks.
-// Structural, semantic, and economic validation (header, timestamp, ASERT, commit<=target,
+// Structural, semantic, and economic validation (header, timestamp, cASERT bitsQ, commit<=target,
 // coinbase, UTXO) ALWAYS runs. Only the expensive CX recompute is conditionally skipped.
 // Trust requires exact hard checkpoint match OR assumevalid anchor on active chain.
 // --full-verify forces full CX recomputation for all blocks.
@@ -282,6 +284,7 @@ static const int BAN_THRESHOLD = 100;
 static const int BAN_DURATION  = 86400;  // 24 hours
 static const size_t MAX_P2P_MSG_SIZE = 4 * 1024 * 1024;  // 4MB max message
 static const int MAX_INBOUND_PEERS = 64;
+static const int MAX_PEERS_PER_IP  = 4;
 static std::map<std::string, time_t> g_banned;  // IP → ban expiry
 static std::mutex g_ban_mu;
 
@@ -688,9 +691,9 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                 bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
                 bm.powDiffQ=g_blocks[j].bits_q; meta.push_back(bm);
             }
-            auto cd=casert_mode_from_chain(meta,b.height+1);
-            s<<",\"casert_mode\":\""<<casert_mode_str(cd.mode)
-             <<"\",\"casert_signal\":"<<cd.signal_s<<"}";
+            auto cd=casert_compute(meta,b.height+1);
+            s<<",\"casert_mode\":\""<<casert_profile_name(cd.profile_index)
+             <<"\",\"casert_signal\":"<<cd.lag<<"}";
             return rpc_result(id,s.str());
         }
     }
@@ -1458,6 +1461,33 @@ static bool process_block(const std::string& block_json) {
     int64_t gold_r = jint(block_json,"gold_vault");
     int64_t popc_r = jint(block_json,"popc_pool");
     uint64_t stb   = (uint64_t)jint(block_json,"stability_metric");
+    std::string x_bytes_hex = jstr(block_json,"x_bytes");
+    std::string final_state_hex = jstr(block_json,"final_state");
+
+    // Parse checkpoint_leaves array (for CX proof verification)
+    std::vector<Bytes32> checkpoint_leaves_vec;
+    {
+        // Simple JSON array parser for checkpoint_leaves
+        auto cl_start = block_json.find("\"checkpoint_leaves\"");
+        if (cl_start != std::string::npos) {
+            auto arr_start = block_json.find('[', cl_start);
+            auto arr_end = block_json.find(']', arr_start);
+            if (arr_start != std::string::npos && arr_end != std::string::npos) {
+                std::string arr = block_json.substr(arr_start + 1, arr_end - arr_start - 1);
+                size_t pos = 0;
+                while (pos < arr.size()) {
+                    auto q1 = arr.find('"', pos);
+                    if (q1 == std::string::npos) break;
+                    auto q2 = arr.find('"', q1 + 1);
+                    if (q2 == std::string::npos) break;
+                    std::string leaf_hex = arr.substr(q1 + 1, q2 - q1 - 1);
+                    if (leaf_hex.size() == 64)
+                        checkpoint_leaves_vec.push_back(from_hex(leaf_hex));
+                    pos = q2 + 1;
+                }
+            }
+        }
+    }
 
     if(height != (int64_t)g_blocks.size()){
         printf("[BLOCK] REJECTED: height %lld != expected %zu\n",(long long)height,g_blocks.size());
@@ -1482,14 +1512,14 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // Difficulty must match ASERT
+    // Difficulty must match cASERT bitsQ
     std::vector<BlockMeta> chain_meta;
     chain_meta.reserve(g_blocks.size());
     for(const auto& b:g_blocks){
         BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q;
         chain_meta.push_back(bm);
     }
-    uint32_t expected_diff = asert_next_difficulty(chain_meta, height);
+    uint32_t expected_diff = casert_next_bitsq(chain_meta, height);
     if(bits_q != expected_diff){
         printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
         return false;
@@ -1629,13 +1659,49 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // CONVERGENCEX PROOF VERIFICATION (lightweight, ~1ms, no dataset/scratchpad)
+    // Verifies: (1) commit hash matches components, (2) stability basin on x_bytes.
+    // This prevents fabricated commits without doing actual ConvergenceX work.
+    if (!x_bytes_hex.empty() && !final_state_hex.empty()) {
+        // Decode x_bytes and final_state
+        std::vector<uint8_t> x_bytes_raw;
+        x_bytes_raw.reserve(x_bytes_hex.size() / 2);
+        for (size_t i = 0; i + 1 < x_bytes_hex.size(); i += 2) {
+            auto hx = [](char c) -> uint8_t {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+                if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+                return 0;
+            };
+            x_bytes_raw.push_back((hx(x_bytes_hex[i]) << 4) | hx(x_bytes_hex[i + 1]));
+        }
+        Bytes32 fstate = from_hex(final_state_hex);
+
+        // Get consensus params for this height's profile
+        ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
+
+        if (checkpoint_leaves_vec.empty()) {
+            printf("[BLOCK] REJECTED: missing checkpoint_leaves for CX proof verification\n");
+            return false;
+        }
+
+        if (!sost::verify_cx_proof(hc72, nonce, extra,
+                commit32, croot32, fstate,
+                x_bytes_raw.data(), x_bytes_raw.size(),
+                stb, checkpoint_leaves_vec, cx_params)) {
+            printf("[BLOCK] REJECTED: CX proof verification failed\n");
+            return false;
+        }
+        printf("[BLOCK] CX proof verified (merkle + commit + stability)\n");
+    } else if (height > 0) {
+        // x_bytes/final_state/checkpoint_leaves missing — reject
+        printf("[BLOCK] REJECTED: missing CX proof data (x_bytes/final_state/checkpoint_leaves)\n");
+        return false;
+    }
+
     // FAST SYNC DECISION:
-    // Determine if we can skip expensive ConvergenceX recomputation.
-    // Trust requires: exact hard checkpoint match OR assumevalid anchor on active chain.
-    // Lower height alone is NEVER sufficient.
-    // Even when CX recompute is skipped, all cheap/semantic checks above still ran:
-    // header, timestamp, ASERT difficulty, block_id, merkle root, commit<=target,
-    // coinbase split, constitutional addresses. UTXO connect runs below.
+    // Hard checkpoints and assumevalid anchors allow skipping expensive full CX recomputation
+    // (100K rounds), but the lightweight proof verification above always runs.
     std::string bid_hex = to_hex(computed_bid.data(), 32);
     bool anchor_on_chain = false;
     if(sost::has_assumevalid_anchor() && sost::ASSUMEVALID_HEIGHT < g_blocks.size()){
@@ -1645,13 +1711,9 @@ static bool process_block(const std::string& block_json) {
     bool skip_cx = sost::can_skip_cx_recomputation(
         (uint32_t)height, bid_hex, anchor_on_chain, g_full_verify_mode);
     if(skip_cx){
-        printf("[BLOCK] fast-sync height=%lld (skip CX recompute, all other checks passed)\n",
+        printf("[BLOCK] fast-sync height=%lld (lightweight CX proof passed, full recompute skipped)\n",
                (long long)height);
     }
-    // NOTE: Full ConvergenceX recomputation is not currently performed during
-    // block acceptance (the node verifies commit<=target, not the full 100K-round
-    // gradient descent). When full CX verification is added in the future, the
-    // skip_cx flag will gate that expensive path. For now this is infrastructure.
 
     // Checkpoint validation: if this height has a checkpoint, block_id must match
     for(size_t ci=0; ci<g_num_checkpoints; ++ci){
@@ -1708,6 +1770,8 @@ static bool process_block(const std::string& block_json) {
     sb.gold_vault_reward = gold_r;
     sb.popc_pool_reward = popc_r;
     sb.stability_metric = stb;
+    sb.x_bytes_hex = x_bytes_hex;
+    sb.final_state_hex = final_state_hex;
     sb.tx_hexes = tx_hexes;  // PERSIST all transaction hex strings
 
     g_blocks.push_back(sb);
@@ -2304,10 +2368,13 @@ static void rpc_handle_connection(int fd) {
 static void rpc_server_thread(int port) {
     int srv=socket(AF_INET,SOCK_STREAM,0); if(srv<0){perror("rpc socket");return;}
     int opt=1; setsockopt(srv,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
-    struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
+    struct sockaddr_in addr{}; addr.sin_family=AF_INET;
+    addr.sin_addr.s_addr = g_rpc_public ? INADDR_ANY : htonl(INADDR_LOOPBACK);
+    addr.sin_port=htons(port);
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("rpc bind");close(srv);return;}
     listen(srv,128);
-    printf("[RPC] Listening on port %d — %zu methods (auth=%s)\n",port,g_handlers.size(),
+    printf("[RPC] Listening on %s:%d — %zu methods (auth=%s)\n",
+           g_rpc_public ? "0.0.0.0" : "127.0.0.1", port, g_handlers.size(),
            g_rpc_auth_required ? "ON" : "OFF");
     while(g_running){
         int cl=accept(srv,nullptr,nullptr);
@@ -2342,12 +2409,16 @@ static void p2p_server_thread(int port) {
             continue;
         }
 
-        // DoS: limit inbound peers
+        // DoS: limit inbound peers (total + per-IP)
         {
             std::lock_guard<std::mutex> lk(g_peers_mu);
             int inbound_count = 0;
-            for (const auto& p : g_peers) if (!p.outbound) ++inbound_count;
-            if (inbound_count >= MAX_INBOUND_PEERS) {
+            int ip_count = 0;
+            for (const auto& p : g_peers) {
+                if (!p.outbound) ++inbound_count;
+                if (p.addr.find(std::string(ip) + ":") == 0) ++ip_count;
+            }
+            if (inbound_count >= MAX_INBOUND_PEERS || ip_count >= MAX_PEERS_PER_IP) {
                 close(cl);
                 continue;
             }
@@ -2452,6 +2523,7 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
         else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
         else if(!strcmp(argv[i],"--rpc-noauth")) g_rpc_auth_required=false;
+        else if(!strcmp(argv[i],"--rpc-public")) g_rpc_public=true;
         else if(!strcmp(argv[i],"--profile")&&i+1<argc){
             std::string pv=argv[++i];
             if(pv=="mainnet") selected_profile=Profile::MAINNET;
@@ -2483,6 +2555,7 @@ int main(int argc, char** argv) {
             printf("  --rpc-user <u>             RPC Basic Auth user (required by default)\n");
             printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
+            printf("  --rpc-public               Bind RPC to 0.0.0.0 (default: 127.0.0.1)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: on)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");

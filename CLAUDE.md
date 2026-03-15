@@ -71,13 +71,12 @@ Defined in `include/sost/tx_validation.h`:
 - **S-rules (S1-S12)**: Spend — UTXO lookup, pubkey hash match, ECDSA verify, fees, maturity
 - **CB-rules (CB1-CB10)**: Coinbase — output order, exact subsidy split, constitutional addresses
 
-### PoW system (three layers)
+### PoW system (two layers)
 
-1. **ConvergenceX** (`include/sost/pow/convergencex.h`) — CPU-friendly gradient descent over random 32x32 matrix with 4GB scratchpad. ASIC-resistant. Checkpoint merkle tree for verification.
-2. **ASERT** (`include/sost/pow/asert.h`) — Long-term difficulty: exponential moving average, 24h half-life, asymmetric k (down=2, up=3)
-3. **cASERT** (`include/sost/pow/casert.h`) — Short-term overlay: L1-L5 fixed bands (thresholds at 5/26/51/76 blocks ahead), L6+ unbounded from 101+ (level = 6 + floor((ahead-101)/50)). Unidirectional hardening only, scale=level. Decay anti-stall after 7200s.
+1. **ConvergenceX** (`include/sost/pow/convergencex.h`) — CPU-friendly gradient descent over random 32x32 matrix. Mining requires ~8GB RAM total (4GB dataset + 4GB scratchpad); node validation requires only ~500MB (no dataset/scratchpad). ASIC-resistant. Checkpoint merkle tree for verification.
+2. **cASERT** (`include/sost/pow/casert.h`) — Unified consensus-rate control system combining three integrated components: bitsQ Q16.16 primary hardness regulator (12h half-life, 6.25% per-block delta cap), equalizer profiles (E3 through H6 adjusting ConvergenceX stability parameters), and anti-stall recovery.
 
-Difficulty encoded as Q16.16 fixed-point (`include/sost/sostcompact.h`).
+Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 ### Key subsystems
 

@@ -200,7 +200,7 @@
           <tr><td class="label">Intra-attempt parallelism</td><td class="highlight">Eliminated by state dependency</td></tr>
           <tr><td class="label">Inter-attempt parallelism</td><td class="value">Multiple cores = multiple independent attempts</td></tr>
           <tr><td class="label">ASIC advantage estimate</td><td class="value">Low multiples over modern CPUs</td></tr>
-          <tr><td class="label">Difficulty adjustment</td><td class="value">ASERT per-block, stable regardless of hashrate</td></tr>
+          <tr><td class="label">Difficulty adjustment</td><td class="value">cASERT per-block, stable regardless of hashrate</td></tr>
         </table>
       </div>
     </div>
@@ -397,7 +397,7 @@
           <tr><th>Component</th><th>Status</th></tr>
           <tr><td class="label">Transaction signing (libsecp256k1)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Consensus validation (R1-R14, S1-S12, CB1-CB10)</td><td class="green">Complete</td></tr>
-          <tr><td class="label">ASERT + cASERT difficulty (L1-L5 fixed, L6+ unbounded, k=4)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">cASERT unified difficulty (bitsQ + equalizer, E3-H6 profiles)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Mempool validation and relay</td><td class="green">Complete</td></tr>
           <tr><td class="label">Transaction confirmation in blocks</td><td class="green">Complete</td></tr>
           <tr><td class="label">RPC authentication (--rpc-user/--rpc-pass)</td><td class="green">Complete</td></tr>
@@ -474,7 +474,7 @@
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>

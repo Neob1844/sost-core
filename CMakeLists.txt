@@ -9,7 +9,7 @@ find_package(Threads REQUIRED)
 # Core library — Phase 0 (consensus base) + Phase 1-6
 add_library(sost-core STATIC
     # Phase 0: consensus base
-    src/crypto.cpp src/subsidy.cpp src/emission.cpp src/pow/asert.cpp src/pow/casert.cpp
+    src/crypto.cpp src/subsidy.cpp src/emission.cpp src/pow/casert.cpp
     src/sostcompact.cpp src/pow/convergencex.cpp src/pow/scratchpad.cpp
     
     # Phase 1: transaction serialization
@@ -122,3 +122,16 @@ add_executable(sost-miner src/sost-miner.cpp)
 target_link_libraries(sost-miner PRIVATE sost-core)
 add_executable(sost-node src/sost-node.cpp)
 target_link_libraries(sost-node PRIVATE sost-core)
+
+# Calibration tools
+add_executable(cx-benchmark tools/cx-benchmark.cpp)
+target_link_libraries(cx-benchmark PRIVATE sost-core)
+
+add_executable(casert-simulator tools/casert-simulator.cpp)
+target_link_libraries(casert-simulator PRIVATE sost-core)
+
+add_executable(cx-variance tools/cx-variance.cpp)
+target_link_libraries(cx-variance PRIVATE sost-core)
+
+add_executable(eq-benchmark tools/eq-benchmark.cpp)
+target_link_libraries(eq-benchmark PRIVATE sost-core)

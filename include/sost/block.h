@@ -17,7 +17,7 @@
 //
 // Key differences from Bitcoin (80-byte header):
 //   - timestamp:  int64 (future-proof, 2038-safe)
-//   - bits_q:     SOSTCompact Q16.16 (fine-grained ASERT adjustment)
+//   - bits_q:     SOSTCompact Q16.16 (cASERT primary hardness)
 //   - nonce:      uint64 (ConvergenceX needs larger search space)
 //   - height:     explicit in header (simplifies SPV, checkpoint validation)
 //

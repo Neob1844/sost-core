@@ -4,7 +4,7 @@
 
 ### Genesis
 - Mainnet genesis block: `0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793`
-- Genesis timestamp: 2026-03-13 00:00:00 UTC
+- Genesis timestamp: 2026-03-16 00:00:00 UTC
 - Initial block reward: 7.85100863 SOST (785,100,863 stocks)
 - Coinbase split: 50% miner / 25% Gold Vault / 25% PoPC Pool
 
@@ -35,9 +35,7 @@
 ### Consensus
 - Transaction validation: 42 rules (R1-R14, S1-S12, CB1-CB10), all passing
 - Block validation: 4 layers (L1 structure, L2 header, L3 consensus, L4 UTXO)
-- ASERT difficulty adjustment with 24-hour half-life
-- cASERT v5.2 unidirectional overlay (canonical):
-  - L1 (neutral): 0-4 blocks ahead, scale=1
+- cASERT unified difficulty system: bitsQ Q16.16 primary (12h half-life, 6.25% delta cap) + equalizer profiles (E3-H6) + anti-stall
   - L2 (light): 5-25 blocks ahead, scale=2
   - L3 (moderate): 26-50 blocks ahead, scale=3
   - L4 (strong): 51-75 blocks ahead, scale=4

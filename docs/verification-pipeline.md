@@ -17,13 +17,13 @@ The pipeline is sequential — each layer must pass before the next runs.
 - prev_block_hash links to chain tip
 - Height = prev.height + 1
 - Timestamp > MTP(11) and ≤ now + 600s
-- bits_q matches ASERT-computed expected difficulty
-- Genesis block: timestamp=1773360000, bits_q=353075
+- bits_q matches cASERT-computed expected difficulty
+- Genesis block: timestamp=1773619200, bits_q=765730
 
-### Layer 3 — ASERT Difficulty (CHEAP, ~microseconds)
-- Exponential ASERT: `next_bitsq = anchor × 2^(-td / 86400)`
+### Layer 3 — cASERT bitsQ Difficulty (CHEAP, ~microseconds)
+- Exponential cASERT bitsQ: `next_bitsq = anchor × 2^(-td / 43200)`
 - Cubic polynomial approximation of 2^x in Q16.16
-- Epoch 0 anchor always uses GENESIS_BITSQ (353,075)
+- Epoch 0 anchor always uses GENESIS_BITSQ (765,730)
 - Global bounds: MIN_BITSQ=65,536, MAX_BITSQ=16,711,680
 - No per-block clamps
 
@@ -75,8 +75,8 @@ Reorg depth limit: 500 blocks.
 | ASIC resistance | None (SHA-256 ASICs dominate) | High (random program execution) | Very high (gradient descent + memory-hard) |
 | Sync time (full verify) | ~hours (billions of SHA-256d) | ~days (RandomX JIT per block) | ~weeks (CX recompute per block) |
 | Sync time (fast/headers) | ~minutes (headers-first) | ~hours (pruned sync) | ~minutes (checkpoint skip, L1-L7 only) |
-| Verification layers | 4 (structure, scripts, UTXO, PoW) | 4 (structure, RingCT, UTXO, PoW) | 8 (structure, time, ASERT, PoW ineq, coinbase, txs, UTXO, CX recompute) |
-| Difficulty adjustment | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (exponential ASERT, 24h half-life) |
+| Verification layers | 4 (structure, scripts, UTXO, PoW) | 4 (structure, RingCT, UTXO, PoW) | 8 (structure, time, cASERT, PoW ineq, coinbase, txs, UTXO, CX recompute) |
+| Difficulty adjustment | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (exponential cASERT, 12h half-life) |
 | Block time target | 600s (10 min) | 120s (2 min) | 600s (10 min) |
 | Anti-stall mechanism | None (2-week retarget) | LWMA handles stalls | cASERT Decay: 2h activation, tiered level decay |
 | Anti-acceleration | None | LWMA handles acceleration | cASERT: L1-L5 fixed bands, L6+ unbounded hardening |

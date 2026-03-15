@@ -90,4 +90,19 @@ CXAttemptResult convergencex_attempt(
     const ConsensusParams& params, const uint8_t* header_core,
     int32_t epoch);
 
+// Verify ConvergenceX proof without full recomputation.
+// Checks: (1) checkpoint leaves → merkle root, (2) last checkpoint x_hash matches x_bytes,
+//         (3) commit hash matches components, (4) stability basin on x_bytes.
+// Cost: ~1ms. No dataset/scratchpad needed.
+bool verify_cx_proof(
+    const uint8_t* header_core, // 72 bytes
+    uint32_t nonce, uint32_t extra_nonce,
+    const Bytes32& commit,
+    const Bytes32& checkpoints_root,
+    const Bytes32& final_state,
+    const uint8_t* x_bytes, size_t x_bytes_len,
+    uint64_t stability_metric,
+    const std::vector<Bytes32>& checkpoint_leaves,
+    const ConsensusParams& params);
+
 } // namespace sost

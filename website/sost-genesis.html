@@ -161,7 +161,7 @@
   <div class="container">
     <div class="hero-label fade-in">Block Zero</div>
     <h1 class="fade-in delay-1">Genesis <span>Block</span></h1>
-    <p class="hero-sub fade-in delay-2">The origin of the SOST blockchain. Mined on March 13, 2026 at 00:00:00 UTC. Immutable. Irreversible. No premine. No ICO. No dev allocation.</p>
+    <p class="hero-sub fade-in delay-2">The origin of the SOST blockchain. Mined on March 16, 2026 at 00:00:00 UTC. Immutable. Irreversible. No premine. No ICO. No dev allocation.</p>
   </div>
 </section>
 
@@ -179,10 +179,10 @@
       </thead>
       <tbody>
         <tr><td class="param">Block Height</td><td class="val">0</td></tr>
-        <tr><td class="param">Timestamp</td><td class="val">1773360000 (2026-03-13 00:00:00 UTC)</td></tr>
+        <tr><td class="param">Timestamp</td><td class="val">1773619200 (2026-03-16 00:00:00 UTC)</td></tr>
         <tr><td class="param">Previous Hash</td><td class="val" style="font-size:11px;word-break:break-all;">0000000000000000000000000000000000000000000000000000000000000000</td></tr>
         <tr><td class="param">Block Hash</td><td class="val" style="font-size:11px;word-break:break-all;">0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793</td></tr>
-        <tr><td class="param">Difficulty</td><td class="val">5.3875 (bitsQ = 353,075)</td></tr>
+        <tr><td class="param">Difficulty</td><td class="val">11.6841 (bitsQ = 765,730)</td></tr>
         <tr><td class="param">Nonce</td><td class="val">47</td></tr>
         <tr><td class="param">Extra Nonce</td><td class="val">0</td></tr>
         <tr><td class="param">Subsidy</td><td class="val">7.85100863 SOST (785,100,863 stocks)</td></tr>
@@ -253,8 +253,8 @@
       </div>
       <div class="code-body">
 <pre id="genesisJson">{
-  <span class="cs">"timestamp"</span>: <span class="cn">1773360000</span>,
-  <span class="cs">"bits_q"</span>: <span class="cn">353075</span>,
+  <span class="cs">"timestamp"</span>: <span class="cn">1773619200</span>,
+  <span class="cs">"bits_q"</span>: <span class="cn">765730</span>,
   <span class="cs">"prev_hash"</span>: <span class="cv">"0000000000000000000000000000000000000000000000000000000000000000"</span>,
   <span class="cs">"merkle_root"</span>: <span class="cv">"1111111111111111111111111111111111111111111111111111111111111111"</span>,
   <span class="cs">"nonce"</span>: <span class="cn">47</span>,
@@ -296,13 +296,13 @@
         <tbody style="color:var(--text-secondary);">
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">timestamp</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">1773360000</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">1773619200</td>
             <td style="padding:10px 12px;">Unix epoch of genesis block creation. All subsequent block timestamps must be greater than or equal to the median of the last 11 blocks.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">bits_q</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">353075</td>
-            <td style="padding:10px 12px;">Encoded difficulty in Q16.16 fixed-point format. Represents difficulty 5.3875. Used by ASERT and cASERT to calculate target adjustments.</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">765730</td>
+            <td style="padding:10px 12px;">Encoded difficulty in Q16.16 fixed-point format. Represents difficulty 11.6841. Used by cASERT to calculate target adjustments.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">prev_hash</td>
@@ -425,7 +425,7 @@ grep -n ADDR_POPC_POOL include/sost/params.h</span></li>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
@@ -440,7 +440,7 @@ function copyAddr(id, btn) {
   });
 }
 function copyJson(btn) {
-  var raw = '{\n  "timestamp": 1773360000,\n  "bits_q": 353075,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 47,\n  "extra_nonce": 0,\n  "block_id": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",\n  "commit": "050698e32c3150d47b15507efb6b4100c0474417cda7196b074c64cc84ee5711",\n  "checkpoints_root": "699740822e55090e44f5ed87cbdb1d3e719892b6cb98a0910c9abad90990d7a1",\n  "stability_metric": 215,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
+  var raw = '{\n  "timestamp": 1773619200,\n  "bits_q": 765730,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 47,\n  "extra_nonce": 0,\n  "block_id": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",\n  "commit": "050698e32c3150d47b15507efb6b4100c0474417cda7196b074c64cc84ee5711",\n  "checkpoints_root": "699740822e55090e44f5ed87cbdb1d3e719892b6cb98a0910c9abad90990d7a1",\n  "stability_metric": 215,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
   navigator.clipboard.writeText(raw).then(function() {
     btn.textContent = 'Copied';
     setTimeout(function() { btn.textContent = 'Copy JSON'; }, 1500);
