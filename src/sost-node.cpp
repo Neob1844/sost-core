@@ -1677,14 +1677,141 @@ static bool process_block(const std::string& block_json) {
         Bytes32 fstate = from_hex(final_state_hex);
         Bytes32 sroot = from_hex(segments_root_hex);
 
-        // Parse segment_proofs and round_witnesses from JSON
-        // (For now, these are passed as empty for genesis block h=0;
-        //  full parsing implemented for h>0 blocks from miner submission)
+        // Parse segment_proofs from JSON
         std::vector<SegmentProof> seg_proofs_vec;
+        {
+            auto sp_start = block_json.find("\"segment_proofs\"");
+            if (sp_start != std::string::npos) {
+                auto arr_s = block_json.find('[', sp_start);
+                if (arr_s != std::string::npos) {
+                    // Parse array of segment proof objects
+                    size_t pos = arr_s + 1;
+                    while (pos < block_json.size()) {
+                        auto obj_s = block_json.find('{', pos);
+                        if (obj_s == std::string::npos || obj_s > block_json.find(']', arr_s)) break;
+                        auto obj_e = block_json.find('}', obj_s);
+                        if (obj_e == std::string::npos) break;
+                        std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
+                        SegmentProof sp;
+                        sp.leaf.segment_index = (uint32_t)jint(obj, "si");
+                        sp.leaf.round_start = (uint32_t)jint(obj, "rs");
+                        sp.leaf.round_end = (uint32_t)jint(obj, "re");
+                        sp.leaf.state_start = from_hex(jstr(obj, "ss"));
+                        sp.leaf.state_end = from_hex(jstr(obj, "se"));
+                        sp.leaf.x_start_hash = from_hex(jstr(obj, "xsh"));
+                        sp.leaf.x_end_hash = from_hex(jstr(obj, "xeh"));
+                        sp.leaf.residual_start = (uint64_t)jint(obj, "rrs");
+                        sp.leaf.residual_end = (uint64_t)jint(obj, "rre");
+                        // Parse merkle_path
+                        auto mp_s = obj.find("\"mp\"");
+                        if (mp_s != std::string::npos) {
+                            auto mp_arr = obj.find('[', mp_s);
+                            auto mp_end = obj.find(']', mp_arr);
+                            if (mp_arr != std::string::npos && mp_end != std::string::npos) {
+                                std::string mps = obj.substr(mp_arr+1, mp_end-mp_arr-1);
+                                size_t mpos = 0;
+                                while (mpos < mps.size()) {
+                                    auto q1 = mps.find('"', mpos);
+                                    if (q1 == std::string::npos) break;
+                                    auto q2 = mps.find('"', q1+1);
+                                    if (q2 == std::string::npos) break;
+                                    std::string lh = mps.substr(q1+1, q2-q1-1);
+                                    if (lh.size() == 64) sp.merkle_path.push_back(from_hex(lh));
+                                    mpos = q2+1;
+                                }
+                            }
+                        }
+                        seg_proofs_vec.push_back(sp);
+                        pos = obj_e + 1;
+                    }
+                }
+            }
+        }
+        // Parse round_witnesses from JSON
         std::vector<RoundWitness> round_witnesses_vec;
-        // TODO: Parse segment_proofs and round_witnesses from block_json
-        // For genesis (height 0), skip transcript V2 challenge verification
-        // For height > 0, full verification required
+        {
+            auto rw_start = block_json.find("\"round_witnesses\"");
+            if (rw_start != std::string::npos) {
+                auto arr_s = block_json.find('[', rw_start);
+                if (arr_s != std::string::npos) {
+                    size_t pos = arr_s + 1;
+                    while (pos < block_json.size()) {
+                        auto obj_s = block_json.find('{', pos);
+                        auto arr_end = block_json.find(']', arr_s);
+                        if (obj_s == std::string::npos || (arr_end != std::string::npos && obj_s > arr_end)) break;
+                        // Find matching closing brace (skip nested arrays)
+                        int depth = 0; size_t obj_e = obj_s;
+                        for (size_t k = obj_s; k < block_json.size(); ++k) {
+                            if (block_json[k] == '{') depth++;
+                            if (block_json[k] == '}') { depth--; if (depth == 0) { obj_e = k; break; } }
+                        }
+                        std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
+                        RoundWitness rw;
+                        rw.round_index = (uint32_t)jint(obj, "ri");
+                        rw.state_before = from_hex(jstr(obj, "sb"));
+                        rw.state_after = from_hex(jstr(obj, "sa"));
+                        rw.dataset_value = (uint64_t)jint(obj, "dv");
+                        rw.program_output = (uint64_t)jint(obj, "po");
+                        // Decode x_before (128 hex chars = 32 int32)
+                        std::string xb_hex = jstr(obj, "xb");
+                        auto hxd = [](const std::string& h) -> std::vector<uint8_t> {
+                            std::vector<uint8_t> o; auto hx=[](char c)->uint8_t{
+                                if(c>='0'&&c<='9')return c-'0';if(c>='a'&&c<='f')return 10+c-'a';
+                                if(c>='A'&&c<='F')return 10+c-'A';return 0;};
+                            for(size_t i=0;i+1<h.size();i+=2)o.push_back((hx(h[i])<<4)|hx(h[i+1]));
+                            return o;
+                        };
+                        auto xb_raw = hxd(xb_hex);
+                        for (int k = 0; k < 32 && k*4+3 < (int)xb_raw.size(); ++k)
+                            rw.x_before[k] = read_i32_le(xb_raw.data() + k*4);
+                        std::string xa_hex = jstr(obj, "xa");
+                        auto xa_raw = hxd(xa_hex);
+                        for (int k = 0; k < 32 && k*4+3 < (int)xa_raw.size(); ++k)
+                            rw.x_after[k] = read_i32_le(xa_raw.data() + k*4);
+                        // Parse scratch_values and scratch_indices arrays
+                        auto parse_i32_arr = [&](const std::string& key) -> std::array<int32_t,4> {
+                            std::array<int32_t,4> a{};
+                            auto ks = obj.find("\"" + key + "\"");
+                            if (ks == std::string::npos) return a;
+                            auto as = obj.find('[', ks); auto ae = obj.find(']', as);
+                            if (as == std::string::npos || ae == std::string::npos) return a;
+                            std::string arr = obj.substr(as+1, ae-as-1);
+                            int idx = 0; size_t p = 0;
+                            while (p < arr.size() && idx < 4) {
+                                while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
+                                if (p >= arr.size()) break;
+                                a[idx++] = (int32_t)std::strtol(arr.c_str()+p, nullptr, 10);
+                                while (p < arr.size() && arr[p]!=',') p++;
+                            }
+                            return a;
+                        };
+                        auto parse_u32_arr = [&](const std::string& key) -> std::array<uint32_t,4> {
+                            std::array<uint32_t,4> a{};
+                            auto ks = obj.find("\"" + key + "\"");
+                            if (ks == std::string::npos) return a;
+                            auto as = obj.find('[', ks); auto ae = obj.find(']', as);
+                            if (as == std::string::npos || ae == std::string::npos) return a;
+                            std::string arr = obj.substr(as+1, ae-as-1);
+                            int idx = 0; size_t p = 0;
+                            while (p < arr.size() && idx < 4) {
+                                while (p < arr.size() && (arr[p]==' '||arr[p]==',')) p++;
+                                if (p >= arr.size()) break;
+                                a[idx++] = (uint32_t)std::strtoul(arr.c_str()+p, nullptr, 10);
+                                while (p < arr.size() && arr[p]!=',') p++;
+                            }
+                            return a;
+                        };
+                        rw.scratch_values = parse_i32_arr("sv");
+                        rw.scratch_indices = parse_u32_arr("si2");
+                        round_witnesses_vec.push_back(rw);
+                        pos = obj_e + 1;
+                    }
+                }
+            }
+        }
+        fprintf(stderr, "[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
+                x_bytes_raw.size(), final_state_hex.substr(0,16).c_str(), segments_root_hex.substr(0,16).c_str(),
+                checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
 
         ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
 
