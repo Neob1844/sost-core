@@ -862,8 +862,10 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
 }
 
 static std::string handle_submitblock(const std::string& id, const std::vector<std::string>& p) {
-    if(p.empty()) return rpc_error(id,-1,"missing block JSON");
-    if(process_block(p[0])) return rpc_result(id,"true");
+    printf("[SUBMITBLOCK] Received block submission (params=%zu)\n", p.size()); fflush(stdout);
+    if(p.empty()) { printf("[SUBMITBLOCK] REJECTED: missing block JSON\n"); fflush(stdout); return rpc_error(id,-1,"missing block JSON"); }
+    if(process_block(p[0])) { printf("[SUBMITBLOCK] ACCEPTED\n"); fflush(stdout); return rpc_result(id,"true"); }
+    printf("[SUBMITBLOCK] REJECTED by process_block\n"); fflush(stdout);
     return rpc_error(id,-25,"Block rejected");
 }
 
@@ -1809,7 +1811,8 @@ static bool process_block(const std::string& block_json) {
                 }
             }
         }
-        fprintf(stderr, "[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
+        printf("[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
+        fflush(stdout);
                 x_bytes_raw.size(), final_state_hex.substr(0,16).c_str(), segments_root_hex.substr(0,16).c_str(),
                 checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
 
