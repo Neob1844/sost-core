@@ -240,7 +240,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
 <div class="wp-spacer"></div>
 <p class="wp-p">The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">Genesis Block: March 16, 2026 — 00:00:00 UTC</p>
+<p class="wp-p">Genesis Block: March 15, 2026 — 18:00:00 UTC</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Table of Contents</p>
 <div class="wp-spacer"></div>
@@ -2330,7 +2330,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Date</td><td>Milestone</td></tr>
-<tr><td>Mar 16, 2026</td><td>GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins.</td></tr>
+<tr><td>Mar 15, 2026</td><td>GENESIS BLOCK — 18:00:00 UTC. Solo mining (C++). Chain begins.</td></tr>
 <tr><td>Mar 28, 2026</td><td>PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public.</td></tr>
 <tr><td>Q2 2027</td><td>Gold purchases begin (per G4 8-month rule, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published.</td></tr>
 <tr><td>Q1 2027</td><td>PoPC Model A + B launch on Ethereum mainnet. First custody contracts active.</td></tr>
@@ -2351,7 +2351,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Parameter</td><td>Value</td></tr>
 <tr><td>Name / Symbol</td><td>SOST</td></tr>
-<tr><td>Genesis</td><td>2026-03-16 00:00:00 UTC (block 0)</td></tr>
+<tr><td>Genesis</td><td>2026-03-15 18:00:00 UTC (block 0)</td></tr>
 <tr><td>Algorithm</td><td>ConvergenceX (~8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node; 100k rounds, sequential, stability certificate)</td></tr>
 <tr><td>Block time</td><td>600 seconds target</td></tr>
 <tr><td>Supply cap enforcement</td><td>Subsidy-by-height (hard cap by construction)</td></tr>
@@ -2391,7 +2391,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <p class="wp-p">The genesis block is self-sufficient: it requires only a miner and a timestamp. Community growth and gold accumulation follow naturally from the protocol&#x27;s own mechanics. SOST launches from code, not from capital.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">00:00:00 UTC, March 16, 2026.</p>
+<p class="wp-p">18:00:00 UTC, March 15, 2026.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-72" class="wp-h">Legal Disclaimer</h3>
 <div class="wp-spacer"></div>
@@ -2545,7 +2545,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
   CX_STABILITY_LR_SHIFT        = 20
 
 MONETARY PARAMETERS:
-  GENESIS_TIME                 = 1,773,619,200  // 2026-03-16 00:00:00 UTC
+  GENESIS_TIME                 = 1,773,597,600  // 2026-03-15 18:00:00 UTC
   TARGET_SPACING               = 600
   BLOCKS_PER_EPOCH             = 131,553
   R0_STOCKS                 = 785,100,863
@@ -2668,7 +2668,7 @@ PARSING CONVENTIONS (normative):
 
   V2: header_core construction
     Input:  prev_hash = 0xAA×32, merkle_root = 0xBB×32,
-            timestamp = 1773619200, powDiffQ = GENESIS_BITSQ
+            timestamp = 1773597600, powDiffQ = GENESIS_BITSQ
     Output: 72 bytes (hex, published in repo)
 
   V3: seed derivation

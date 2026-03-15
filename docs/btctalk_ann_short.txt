@@ -3,7 +3,7 @@
 [size=18pt][b]SOST Protocol[/b][/size]
 [size=11pt]Gold-backed Proof-of-Work. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
 
-[b]Genesis: March 16, 2026 — 00:00:00 UTC[/b]
+[b]Genesis: March 15, 2026 — 18:00:00 UTC[/b]
 [/center]
 
 [hr]

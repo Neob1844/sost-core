@@ -60,7 +60,7 @@ cryptocurrency blockchain cpu-mining proof-of-work gold-backed cpp17 utxo
 
 ## 6. Releases
 
-After genesis (2026-03-16), create the first release:
+After genesis (2026-03-15), create the first release:
 
 ```bash
 git tag -a v0.4.0 -m "Mainnet genesis release"

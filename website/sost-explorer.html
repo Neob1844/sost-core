@@ -443,7 +443,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   </div>
   <div class="chain-sync-wrap" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
     <div style="background:var(--bg2);border:1px solid var(--border);padding:14px 20px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-16 00:00:00 UTC</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-15 18:00:00 UTC</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
@@ -745,7 +745,7 @@ async function updateDashboard(info){
   updateChainSync();
 }
 /* drawReserveBars removed — replaced by price charts */
-var GENESIS_TS=1773619200;
+var GENESIS_TS=1773597600;
 function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);var p=[];if(d>0)p.push(d+'d');if(h>0)p.push(h+'h');if(m>0)p.push(m+'m');p.push(s+'s');return p.join(' ');}
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
@@ -862,7 +862,7 @@ function drawSparkline(){
     var iv='\u2014';
     if(idx>0){var dt=pt.t-data[idx-1].t;iv=dt<60?dt+'s':Math.floor(dt/60)+'m '+dt%60+'s';}
     // cASERT level for this block
-    var elapsed=pt.t-1773619200;var expected=Math.floor(elapsed/600);
+    var elapsed=pt.t-1773597600;var expected=Math.floor(elapsed/600);
     var lag=expected-(pt.h);var ahead=(lag<0)?-lag:0;
     var lv=1;if(ahead>=5)lv=2;if(ahead>=26)lv=3;if(ahead>=51)lv=4;if(ahead>=76)lv=5;if(ahead>=101)lv=6+Math.floor((ahead-101)/50);
     var ts=new Date(pt.t*1000);

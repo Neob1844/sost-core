@@ -162,7 +162,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   <div class="container">
     <div class="hero-label fade-in">Block Zero</div>
     <h1 class="fade-in delay-1">Genesis <span>Block</span></h1>
-    <p class="hero-sub fade-in delay-2">The origin of the SOST blockchain. Mined on March 16, 2026 at 00:00:00 UTC. Immutable. Irreversible. No premine. No ICO. No dev allocation.</p>
+    <p class="hero-sub fade-in delay-2">The origin of the SOST blockchain. Mined on March 15, 2026 at 18:00:00 UTC. Immutable. Irreversible. No premine. No ICO. No dev allocation.</p>
   </div>
 </section>
 
@@ -180,7 +180,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
       </thead>
       <tbody>
         <tr><td class="param">Block Height</td><td class="val">0</td></tr>
-        <tr><td class="param">Timestamp</td><td class="val">1773619200 (2026-03-16 00:00:00 UTC)</td></tr>
+        <tr><td class="param">Timestamp</td><td class="val">1773597600 (2026-03-15 18:00:00 UTC)</td></tr>
         <tr><td class="param">Previous Hash</td><td class="val" style="font-size:11px;word-break:break-all;">0000000000000000000000000000000000000000000000000000000000000000</td></tr>
         <tr><td class="param">Block Hash</td><td class="val" style="font-size:11px;word-break:break-all;">a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164</td></tr>
         <tr><td class="param">Difficulty</td><td class="val">11.6841 (bitsQ = 765,730)</td></tr>
@@ -254,7 +254,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
       </div>
       <div class="code-body">
 <pre id="genesisJson">{
-  <span class="cs">"timestamp"</span>: <span class="cn">1773619200</span>,
+  <span class="cs">"timestamp"</span>: <span class="cn">1773597600</span>,
   <span class="cs">"bits_q"</span>: <span class="cn">765730</span>,
   <span class="cs">"prev_hash"</span>: <span class="cv">"0000000000000000000000000000000000000000000000000000000000000000"</span>,
   <span class="cs">"merkle_root"</span>: <span class="cv">"1111111111111111111111111111111111111111111111111111111111111111"</span>,
@@ -298,7 +298,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
         <tbody style="color:var(--text-secondary);">
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">timestamp</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">1773619200</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">1773597600</td>
             <td style="padding:10px 12px;">Unix epoch of genesis block creation. All subsequent block timestamps must be greater than or equal to the median of the last 11 blocks.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
@@ -432,7 +432,7 @@ grep -n ADDR_POPC_POOL include/sost/params.h</span></li>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
@@ -447,7 +447,7 @@ function copyAddr(id, btn) {
   });
 }
 function copyJson(btn) {
-  var raw = '{\n  "timestamp": 1773619200,\n  "bits_q": 765730,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 3288,\n  "extra_nonce": 0,\n  "block_id": "a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164",\n  "commit": "0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e",\n  "segments_root": "6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5",\n  "checkpoints_root": "3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc",\n  "stability_metric": 83,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
+  var raw = '{\n  "timestamp": 1773597600,\n  "bits_q": 765730,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 3288,\n  "extra_nonce": 0,\n  "block_id": "a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164",\n  "commit": "0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e",\n  "segments_root": "6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5",\n  "checkpoints_root": "3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc",\n  "stability_metric": 83,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
   navigator.clipboard.writeText(raw).then(function() {
     btn.textContent = 'Copied';
     setTimeout(function() { btn.textContent = 'Copy JSON'; }, 1500);
