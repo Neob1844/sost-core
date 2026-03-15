@@ -1094,6 +1094,8 @@ PROPERTIES:
 <p class="wp-p">No other minting path exists. Any block that mints more than subsidy(height) is invalid.</p>
 <p class="wp-p">Any shortfall due to flooring remains permanently unissued.</p>
 <div class="wp-spacer"></div>
+<p class="wp-p"><strong>Hard cap: 4,669,201 SOST enforced at consensus level. Subsidy drops to zero when cap is reached; miners earn fees only.</strong></p>
+<div class="wp-spacer"></div>
 <p class="wp-p">4.2 Coinbase Split — Constitutional Rule (Consensus-Critical)</p>
 <p class="wp-p">q     = reward // 4</p>
 <p class="wp-p">gold  = q</p>
@@ -1195,7 +1197,7 @@ PROPERTIES:
 <p class="wp-p">No outbound transfers occur in normal operation. Reserve assets are intended to remain perpetual</p>
 <p class="wp-p">and untouched while SOST exists, except under Emergency Catastrophe authorization.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">G4 (Purchase Start Delay + Market Readiness): Purchases begin no earlier than 6 months after genesis</p>
+<p class="wp-p">G4 (Purchase Start Delay + Market Readiness): Purchases begin no earlier than 8 months after public launch</p>
 <p class="wp-p">and only once market readiness is met. Market readiness requires at least one verifiable execution</p>
 <p class="wp-p">venue capable of selling SOST and acquiring XAUt/PAXG under the TWAP policy with bounded slippage.</p>
 <p class="wp-p">A venue may be a CEX, OTC desk, or a DEX with demonstrated liquidity, provided execution produces</p>
@@ -2328,9 +2330,9 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Date</td><td>Milestone</td></tr>
 <tr><td>Mar 16, 2026</td><td>GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins.</td></tr>
 <tr><td>Mar 28, 2026</td><td>PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public.</td></tr>
-<tr><td>Q4 2026</td><td>Gold purchases begin (per G4 6-month rule, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published.</td></tr>
-<tr><td>Q3 2026</td><td>PoPC Model A + B launch on Ethereum mainnet. First custody contracts active.</td></tr>
-<tr><td>Jun 2027</td><td>Physical gold extension. Mobile app for audit challenges. Verifier network.</td></tr>
+<tr><td>Q2 2027</td><td>Gold purchases begin (per G4 8-month rule, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published.</td></tr>
+<tr><td>Q1 2027</td><td>PoPC Model A + B launch on Ethereum mainnet. First custody contracts active.</td></tr>
+<tr><td>Aug 2027</td><td>Physical gold extension. Mobile app for audit challenges. Verifier network.</td></tr>
 <tr><td>2028</td><td>ZK R&amp;D begins. Physical proof system research.</td></tr>
 <tr><td>2029-2030</td><td>ZK physical custody proofs. Full privacy-preserving audit system.</td></tr>
 <tr><td>2030+</td><td><strong>Multi-Metal Tokenization Platform (Vision).</strong></td></tr>
@@ -2418,13 +2420,13 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <h4 id="sec-nfp-2" class="wp-h">10.2 Activation Roadmap</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Phase 1 — Bond Lock + Escrow (Q3-Q4 2026, ~12 weeks):</strong></p>
+<p class="wp-p"><strong>Phase 1 — Bond Lock + Escrow (Q1-Q2 2027, ~12 weeks):</strong></p>
 <p class="wp-p">Activate BOND_LOCK and ESCROW_LOCK transaction types via block height activation. Enables native PoPC bonds and escrow on the SOST chain without Ethereum dependency. Changes limited to consensus validation (R11, S9, S11) and wallet CLI.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):</strong></p>
+<p class="wp-p"><strong>Phase 2 — Native Metal Tokens (Q4 2027-Q1 2028, ~6 months):</strong></p>
 <p class="wp-p">Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially. Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings. Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal acquisition. Token registration fees are paid to the Gold Funding Vault, not burned.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Phase 3 — Fully Native PoPC (Q4 2027):</strong></p>
+<p class="wp-p"><strong>Phase 3 — Fully Native PoPC (Q2 2028):</strong></p>
 <p class="wp-p">Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow, verification, and reward distribution fully on-chain. No Ethereum dependency for any core protocol operation.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Target: 18 months to full sovereignty.</strong></p>

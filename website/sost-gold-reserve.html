@@ -621,6 +621,7 @@
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
@@ -779,7 +780,7 @@ max_slippage = <span class="num">0.5%&ndash;1.0%</span>       <span class="cmt">
           <tr><td class="key">Clips per day</td><td class="val"><code>48&ndash;96</code> micro-orders <span class="comment">// every 15&ndash;30 min</span></td></tr>
           <tr><td class="key">Max slippage</td><td class="val"><code>0.5%&ndash;1.0%</code> per clip</td></tr>
           <tr><td class="key">Cooldown trigger</td><td class="val">&minus;8% intraday drawdown <span class="comment">// pause or halve</span></td></tr>
-          <tr><td class="key">Purchase start</td><td class="val">&ge;6 months after genesis <span class="comment">// + market readiness</span></td></tr>
+          <tr><td class="key">Purchase start</td><td class="val">&ge;8 months after public launch <span class="comment">// + market readiness</span></td></tr>
           <tr><td class="key">Audit trail</td><td class="val">Mandatory per-batch report <span class="comment">// public, verifiable</span></td></tr>
         </table>
       </div>
@@ -944,7 +945,7 @@ expiry    = block.timestamp deadline
           <tr><td class="key">G1</td><td class="val">Every valid block MUST pay Gold Vault exactly <code>q = reward // 4</code></td></tr>
           <tr><td class="key">G2</td><td class="val">Two-vault separation: Funding (operational) + Reserve (cold)</td></tr>
           <tr><td class="key">G3</td><td class="val">Reserve Vault is Heritage sealed; no outbound in normal operation</td></tr>
-          <tr><td class="key">G4</td><td class="val">Purchases begin &ge;6 months after genesis + market readiness</td></tr>
+          <tr><td class="key">G4</td><td class="val">Purchases begin &ge;8 months after public launch + market readiness</td></tr>
           <tr><td class="key">G5</td><td class="val">TWAP batch execution only &mdash; no discretionary market-timing</td></tr>
           <tr><td class="key">G6</td><td class="val">Allowlisted assets only: XAUt, PAXG; USDC/USDT staging &le;72h</td></tr>
           <tr><td class="key">G7</td><td class="val">Default 50/50 split; adjustable for future purchases only</td></tr>

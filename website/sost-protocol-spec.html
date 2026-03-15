@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Technical Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:var(--mono);font-size:13px;line-height:1.8}
+.c{max-width:900px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--bdr);backdrop-filter:blur(16px);padding:10px 0}
+nav .c{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.logo{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--t1);text-decoration:none;letter-spacing:2px}
+.logo b{color:var(--red)}
+.nv{display:flex;gap:4px;flex-wrap:wrap}
+.nv a{color:var(--t3);text-decoration:none;font-size:10px;padding:3px 8px;border-radius:3px;transition:.2s}
+.nv a:hover{color:var(--t1);background:var(--bdr)}
+.nv a.on{color:var(--red);border-bottom:1px solid var(--red)}
+.hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--bdr)}
+.hero h1{font-family:var(--disp);font-size:28px;font-weight:600;letter-spacing:-1px}
+.hero h1 span{color:var(--red)}
+.hero p{color:var(--t2);font-size:12px;margin-top:10px;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.8}
+section{padding:48px 0;border-bottom:1px solid var(--bdr)}
+h2{font-family:var(--disp);font-size:20px;font-weight:600;margin-bottom:20px;color:var(--t1)}
+h2 span{color:var(--red)}
+h3{font-size:14px;font-weight:600;color:var(--cyan);margin:24px 0 10px;letter-spacing:1px}
+p,li{color:var(--t2);margin-bottom:10px}
+strong{color:var(--t1)}
+code{background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--cyan)}
+pre{background:var(--bg3);border:1px solid var(--bdr2);border-radius:4px;padding:14px;font-size:11px;line-height:1.7;overflow-x:auto;color:var(--t2);margin:12px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--bdr2);color:var(--t3);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase}
+td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--t2)}
+td:first-child{color:var(--t1);font-weight:500}
+.warn{background:rgba(251,1,13,.06);border:1px solid rgba(251,1,13,.2);border-left:3px solid var(--red);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+.note{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-left:3px solid var(--cyan);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+footer{padding:40px 0;text-align:center;font-size:11px;color:var(--t4);border-top:1px solid var(--bdr)}
+footer a{color:var(--t3);text-decoration:none}
+.toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
+.toc a{color:var(--cyan);text-decoration:none;display:block;padding:3px 0;font-size:12px}
+.toc a:hover{color:var(--t1)}
+@media(max-width:768px){.nv{display:none}h2{font-size:17px}pre{font-size:10px}}
+</style>
+</head>
+<body>
+<nav><div class="c">
+<a class="logo" href="index.html"><b>SOST</b> PROTOCOL</a>
+<div class="nv">
+<a href="index.html">Home</a>
+<a href="sost-genesis.html">Genesis</a>
+<a href="sost-technology.html">Technology</a>
+<a href="sost-protocol-spec.html" class="on">Protocol Spec</a>
+<a href="sost-tokenomics.html">Tokenomics</a>
+<a href="sost-roadmap.html">Roadmap</a>
+<a href="sost-whitepaper.html">Whitepaper</a>
+<a href="sost-getting-started.html">Getting Started</a>
+<a href="sost-community.html">Community</a>
+</div>
+</div></nav>
+
+<div class="hero"><div class="c">
+<h1>SOST <span>Technical Reference</span></h1>
+<p>Complete protocol specification derived from the C++ source code. Every constant, formula, and rule documented with exact file references. Genesis: 2026-03-16 00:00:00 UTC.</p>
+</div></div>
+
+<section><div class="c">
+<div class="toc">
+<strong style="color:var(--t1);display:block;margin-bottom:8px">TABLE OF CONTENTS</strong>
+<a href="#cx">1. ConvergenceX v2.0 &mdash; Proof of Work</a>
+<a href="#casert">2. cASERT &mdash; Unified Difficulty Control</a>
+<a href="#tx">3. Transaction System</a>
+<a href="#val">4. Block Validation (4 Layers)</a>
+<a href="#emission">5. Emission Model</a>
+<a href="#constitution">6. Constitutional Rules</a>
+<a href="#net">7. Network &mdash; P2P &amp; RPC</a>
+<a href="#sync">8. Synchronization</a>
+<a href="#req">9. System Requirements</a>
+<a href="#popc">10. Future: Proof of Personal Custody</a>
+</div>
+</div></section>
+
+<!-- 1. CONVERGENCEX -->
+<section id="cx"><div class="c">
+<h2>1. ConvergenceX <span>v2.0</span></h2>
+<p>CPU-friendly memory-hard Proof of Work based on gradient descent over a random 32&times;32 linear system, mixed with reads from a 4GB dataset and 4GB scratchpad.</p>
+
+<h3>Dataset (4GB, persistent per block)</h3>
+<p>512M <code>uint64_t</code> entries generated via sequential LCG from <code>prev_block_hash</code>. Multiplier: <code>6364136223846793005</code>, increment: <code>1442695040888963407</code>, plus SplitMix64 mixing. Thread-local; reused across all nonce attempts for the same block. <em>Source: convergencex.cpp:12-28</em></p>
+
+<h3>Scratchpad (4GB mainnet, per epoch)</h3>
+<p>Sequential SHA256 hash chain from epoch key: <code>h = SHA256(h || counter)</code> for counter = 0, 1, 2, ... filling 4096 MB. Each 32-byte block depends on the previous &mdash; cannot be parallelized. <em>Source: scratchpad.cpp:45-81</em></p>
+
+<h3>Per-Block Program (256 operations)</h3>
+<p>Each block generates a unique program from <code>block_key = SHA256(prev_hash || "BLOCK_KEY")</code>. 256 instructions, each one of 8 opcodes: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB. Immediates derived from block_hash bytes. Prevents ASIC optimization. <em>Source: convergencex.cpp:35-48</em></p>
+
+<h3>Main Loop (100,000 rounds)</h3>
+<p>Each round: compute <code>A(x) = M<sup>T</sup>(Mx) + &lambda;x</code> (two 32&times;32 matrix-vector multiplies), sample 4 scratchpad indices from state hash, execute per-block program on dataset entry, apply gradient step <code>x[i] -= (A(x)[i] - b[i]) >> 18</code>, mix scratchpad values into x, update state via SHA256. Every 6,250 rounds: save checkpoint (state_hash, x_hash, round, residual).</p>
+
+<h3>Stability Basin Test</h3>
+<p>B0 profile: scale=1, k=4, steps=4, margin=180. Generates 4 deterministic perturbations &delta; &isin; [-1, +1], applies 4 gradient steps to reference and perturbed copies, verifies L1 distance doesn't grow &gt; 180 per step. Large perturbations must compress to 70% ratio. <em>Source: convergencex.cpp:156-197</em></p>
+
+<h3>Commit Hash</h3>
+<pre>commit = SHA256(MAGIC || "COMMIT" || header_core[72] || seed || final_state || x_bytes[128] || checkpoints_root || stability_metric)</pre>
+<p>320 bytes hashed. Block accepted if <code>commit &le; target(bitsQ)</code>.</p>
+
+<h3>Target Computation</h3>
+<p><code>target_from_bitsQ()</code> uses a 256-entry LUT of precomputed <code>2<sup>256</sup> &times; 2<sup>-i/256</sup></code> values with linear interpolation. For bitsQ = 765730: integer part = 11, fractional = 44834. Target is LUT interpolation shifted right by 11 bits. <em>Source: sostcompact.cpp:73-105</em></p>
+
+<h3>Genesis Example</h3>
+<pre>timestamp:  1773619200 (2026-03-16 00:00:00 UTC)
+bitsQ:      765730 (11.6841)
+nonce:      657
+block_id:   e25e24c3e0a33f5e319fa9afeb27b414c40adf75305b20b2cc30105801876cc2
+commit:     0003ba8e2e230d29c578e2328cc868c1e8ab40573dd6e255b2c242defec85b80
+metric:     88
+subsidy:    785,100,863 stocks (7.85100863 SOST)
+split:      miner 392,550,433 | gold 196,275,215 | popc 196,275,215</pre>
+</div></section>
+
+<!-- 2. CASERT -->
+<section id="casert"><div class="c">
+<h2>2. cASERT &mdash; <span>Unified Difficulty</span></h2>
+<p>Single integrated controller for block timing combining bitsQ (primary hardness), equalizer (structural correction), and anti-stall (recovery).</p>
+
+<h3>bitsQ Q16.16</h3>
+<p>Difficulty encoded as 32-bit fixed-point: upper 16 bits = integer (leading zero bits in target), lower 16 = fraction. GENESIS_BITSQ = 765730 &rarr; 11 + 44834/65536 = 11.6841. Higher bitsQ = harder blocks.</p>
+
+<h3>casert_next_bitsq()</h3>
+<pre>td = actual_time - (anchor_time + blocks_since_anchor &times; 600)
+exponent = (-td &times; 65536) / 43200
+factor = 2^(frac/65536) via Horner cubic polynomial
+raw = anchor_bitsq &times; factor
+delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/16)
+result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
+<p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
+
+<h3>Equalizer</h3>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.25&middot;r + 0.10&middot;lag + 0.05&middot;I + 0.30&middot;burst + 0.10&middot;V</code>. Maps to profile index H &isin; [-3, 6].</p>
+
+<table>
+<tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
+<tr><td>E3</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Deep easing</td></tr>
+<tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>180</td><td><strong>Baseline</strong></td></tr>
+<tr><td>H3</td><td>2</td><td>5</td><td>5</td><td>155</td><td>Moderate hardening</td></tr>
+<tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>73% stability</td></tr>
+<tr><td>H6</td><td>3</td><td>7</td><td>6</td><td>125</td><td>Maximum hardening</td></tr>
+</table>
+
+<h3>Anti-Stall</h3>
+<p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), drops profile 1 level every 1200s. Allows progressively easier blocks during prolonged stalls. <em>Source: casert.cpp:204-215</em></p>
+</div></section>
+
+<!-- 3. TRANSACTIONS -->
+<section id="tx"><div class="c">
+<h2>3. Transaction <span>System</span></h2>
+
+<h3>Structure</h3>
+<p>version (u32, always 1), tx_type (0x00=standard, 0x01=coinbase), inputs (max 256, 133 bytes each: prev_txid[32] + prev_index[4] + signature[64] + pubkey[33]), outputs (max 256: amount[8] + type[1] + pubkey_hash[20] + payload_len[2] + payload[N]).</p>
+
+<h3>Output Types</h3>
+<table>
+<tr><th>Type</th><th>Code</th><th>Status</th></tr>
+<tr><td>OUT_TRANSFER</td><td>0x00</td><td>Active</td></tr>
+<tr><td>OUT_COINBASE_MINER</td><td>0x01</td><td>Active (coinbase only)</td></tr>
+<tr><td>OUT_COINBASE_GOLD</td><td>0x02</td><td>Active (coinbase only)</td></tr>
+<tr><td>OUT_COINBASE_POPC</td><td>0x03</td><td>Active (coinbase only)</td></tr>
+<tr><td>OUT_BOND_LOCK</td><td>0x10</td><td>After height 5000</td></tr>
+<tr><td>OUT_ESCROW_LOCK</td><td>0x11</td><td>After height 5000</td></tr>
+</table>
+
+<h3>ECDSA Signing (secp256k1)</h3>
+<p>Sighash preimage (146 bytes): version[4] || tx_type[1] || hashPrevouts[32] || prev_txid[32] || prev_index[4] || spent_amount[8] || spent_type[1] || hashOutputs[32] || genesis_hash[32]. Double SHA256. Compact 64-byte signature (r[32] || s[32]). LOW-S mandatory: s &le; n/2. <em>Source: tx_signer.cpp:154-182</em></p>
+
+<h3>Coinbase Split (50/25/25)</h3>
+<pre>q = (subsidy + fees) / 4
+miner = (subsidy + fees) - 2*q    // 50% + rounding remainder
+gold_vault = q                     // 25%
+popc_pool = q                      // 25%</pre>
+
+<h3>UTXO Model</h3>
+<p>Each output creates a UTXO indexed by (txid, output_index). ConnectBlock/DisconnectBlock with BlockUndo for reorgs. Coinbase maturity: 1000 blocks. Fee: sum(inputs) - sum(outputs) &ge; 1 stock/byte. <em>Source: utxo_set.cpp</em></p>
+</div></section>
+
+<!-- 4. VALIDATION -->
+<section id="val"><div class="c">
+<h2>4. Block Validation <span>(4 Layers)</span></h2>
+
+<h3>L1: Structure</h3>
+<p>Block &le; 1MB. 1&ndash;65536 txs. tx[0] = coinbase. tx[1..n] = standard. Merkle root verified. CVE-2012-2459 protection.</p>
+
+<h3>L2: Header Context</h3>
+<p>prev_block_hash links correctly. height = prev+1. Timestamp &gt; MTP(11) and &le; now+600s. bits_q = casert_next_bitsq(chain, height).</p>
+
+<h3>L3: Transaction Consensus</h3>
+<p><strong>R-rules (R1-R14):</strong> version=1, valid tx_type, input/output counts, amounts &gt; 0, no overflow, no duplicate inputs, size &le; 100KB, active output types, valid payloads.</p>
+<p><strong>S-rules (S1-S12):</strong> UTXO exists, PKH matches, valid pubkey, non-zero signature, LOW-S, ECDSA verifies, inputs &ge; outputs, fee &ge; 1 stock/byte, valid output types, coinbase maturity 1000, bond locked, burn unspendable.</p>
+<p><strong>CB-rules (CB1-CB10):</strong> coinbase tx_type, single null input, height in sig field, output order [miner, gold, popc], exact split, constitutional PKH, 3 outputs, zero pubkey, no payload.</p>
+
+<h3>L4: UTXO Connect</h3>
+<p>Atomic: spend all inputs, create all outputs, record BlockUndo for reorgs.</p>
+
+<h3>PoW Verification (verify_cx_proof)</h3>
+<p>The node does NOT recompute the full 100K-round gradient descent. Instead, it verifies a compact proof in ~1ms with 6 checks:</p>
+<pre>1. x_bytes length == 128 bytes (32 &times; 4)
+2. merkle_root_16(checkpoint_leaves) == checkpoints_root
+3. Recompute seed from header + nonce (deterministic)
+4. SHA256(MAGIC||COMMIT||header||seed||state||x_bytes||root||metric) == commit
+5. verify_stability_basin(x_bytes) passes
+6. stability_metric matches</pre>
+<p>Plus: <code>commit &le; target(bitsQ)</code>. No dataset or scratchpad needed. <em>Source: convergencex.cpp:374-442</em></p>
+</div></section>
+
+<!-- 5. EMISSION -->
+<section id="emission"><div class="c">
+<h2>5. Emission <span>Model</span></h2>
+<pre>subsidy(h) = floor(R0 &times; q^epoch)
+R0 = 785,100,863 stocks (7.85100863 SOST)
+q  = e^(-1/4) &asymp; 0.7788
+epoch = floor(h / 131,553)
+Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
+<p>Enforced in consensus: if cumulative emission would exceed cap, subsidy reduced to remainder. When exhausted, subsidy = 0 (fees only). <em>Source: subsidy.cpp:40-94</em></p>
+
+<table>
+<tr><th>Epoch</th><th>Blocks</th><th>Subsidy/block</th><th>Epoch Total</th><th>Cumulative</th><th>% Max</th></tr>
+<tr><td>0</td><td>0&ndash;131,552</td><td>7.851 SOST</td><td>1,032,535</td><td>1,032,535</td><td>22.1%</td></tr>
+<tr><td>1</td><td>131,553&ndash;263,105</td><td>6.114 SOST</td><td>804,286</td><td>1,836,821</td><td>39.3%</td></tr>
+<tr><td>2</td><td>263,106&ndash;394,658</td><td>4.761 SOST</td><td>626,250</td><td>2,463,071</td><td>52.7%</td></tr>
+<tr><td>3</td><td>394,659&ndash;526,211</td><td>3.708 SOST</td><td>487,684</td><td>2,950,755</td><td>63.2%</td></tr>
+<tr><td>4</td><td>526,212&ndash;657,764</td><td>2.888 SOST</td><td>379,811</td><td>3,330,566</td><td>71.3%</td></tr>
+</table>
+</div></section>
+
+<!-- 6. CONSTITUTION -->
+<section id="constitution"><div class="c">
+<h2>6. Constitutional <span>Rules</span></h2>
+<h3>Immutable Addresses</h3>
+<table>
+<tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
+<tr><td>Gold Funding Vault</td><td><code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code></td><td>25% of every block</td></tr>
+<tr><td>PoPC Pool</td><td><code>sost144cc82d3c711b5a9322640c66b94a520497ac40d</code></td><td>25% of every block</td></tr>
+<tr><td>Miner (founder)</td><td><code>sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429</code></td><td>50% of every block</td></tr>
+</table>
+<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the 50/25/25 split or sending to wrong addresses is rejected.</p>
+<p><strong>Hard cap:</strong> Total supply &le; 466,920,160,910,299 stocks (~4,669,201 SOST). Enforced in subsidy calculation at consensus level.</p>
+<p><strong>Coinbase maturity:</strong> 1000 blocks (~7 days). Coinbase outputs cannot be spent before this.</p>
+</div></section>
+
+<!-- 7. NETWORK -->
+<section id="net"><div class="c">
+<h2>7. Network &mdash; <span>P2P &amp; RPC</span></h2>
+
+<h3>P2P (port 19333)</h3>
+<p>Messages: EKEY (X25519), VERS/VACK (handshake), GETB (request blocks), BLCK (block data), TXXX (tx relay), PING/PONG, DONE. Encryption: X25519 + ChaCha20-Poly1305, ON by default. Limits: 64 inbound peers, 4 per IP, 4MB max message. Ban: 100 misbehavior points &rarr; 24h ban.</p>
+
+<h3>RPC (port 18232, localhost by default)</h3>
+<p>22 JSON-RPC methods. Auth required by default (Basic Auth). Read-only methods accessible without auth. Write methods (submitblock, sendrawtransaction) require auth. Key methods: getblocktemplate (mining), submitblock (block submission), getinfo, getblock, getbalance, listunspent, sendrawtransaction.</p>
+
+<h3>Mempool</h3>
+<p>Max 5000 entries. Fee-rate ordered with rational arithmetic (__int128, no floats). Acceptance: no coinbase, no duplicates, no double-spends (spent_index_ map), consensus validation (R1-R14, S1-S12), policy validation (size &le; 16KB, inputs &le; 128, outputs &le; 32, fee &ge; 1 stock/byte, dust &ge; 10000 stocks). BuildBlockTemplate selects by fee-rate descending up to 1MB.</p>
+</div></section>
+
+<!-- 8. SYNC -->
+<section id="sync"><div class="c">
+<h2>8. <span>Synchronization</span></h2>
+<p>New node flow: load genesis_block.json &rarr; connect to peers via P2P &rarr; VERS/VACK handshake &rarr; GETB for missing blocks &rarr; validate each block (L1-L4 + verify_cx_proof + pow_meets_target) &rarr; connect UTXO set &rarr; propagate.</p>
+<p><strong>Node validation requires ~500 MB RAM.</strong> No 4GB dataset or scratchpad needed. The compact proof model (commit hash + checkpoint merkle + stability basin) verifies PoW in ~1ms per block without recomputation.</p>
+<p><strong>Mining requires ~8 GB RAM</strong> (4GB dataset + 4GB scratchpad + ~100MB overhead). Scratchpad built once per epoch (~25s SHA256 chain). Dataset generated once per block (~3s LCG).</p>
+
+<h3>Comparison: SOST vs Bitcoin vs Monero</h3>
+<table>
+<tr><th>Aspect</th><th>Bitcoin</th><th>Monero (RandomX)</th><th>SOST (ConvergenceX)</th></tr>
+<tr><td>PoW algorithm</td><td>SHA256d</td><td>RandomX</td><td>Gradient descent + stability</td></tr>
+<tr><td>Mining hardware</td><td>ASICs</td><td>CPU (anti-ASIC)</td><td>CPU (8GB memory-hard)</td></tr>
+<tr><td>Mining memory</td><td>Negligible</td><td>~2GB</td><td>~8GB</td></tr>
+<tr><td>Node verification memory</td><td>Negligible</td><td><strong>~2GB (must build dataset)</strong></td><td><strong>~500MB (no dataset needed)</strong></td></tr>
+<tr><td>Verification method</td><td>Recompute hash</td><td>Recompute full RandomX</td><td>Compact proof (~1ms)</td></tr>
+<tr><td>Verification cost/block</td><td>~1&mu;s</td><td>~50-200ms</td><td>~1ms</td></tr>
+<tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT, 12h half-life)</td></tr>
+</table>
+</div></section>
+
+<!-- 9. REQUIREMENTS -->
+<section id="req"><div class="c">
+<h2>9. System <span>Requirements</span></h2>
+<table>
+<tr><th>Scenario</th><th>RAM Min</th><th>RAM Recommended</th><th>CPU</th><th>Disk</th></tr>
+<tr><td><strong>Node only</strong> (VPS)</td><td>2 GB</td><td>4 GB</td><td>1 core</td><td>10 GB</td></tr>
+<tr><td><strong>Miner only</strong></td><td>10 GB</td><td>16 GB</td><td>4+ cores</td><td>20 GB</td></tr>
+<tr><td><strong>Node + Miner</strong></td><td>12 GB</td><td>16 GB</td><td>4+ cores</td><td>20 GB</td></tr>
+</table>
+<p>The node uses ~500MB (UTXO set + mempool + P2P buffers). The miner uses ~8GB (4GB dataset + 4GB scratchpad). They don't overlap: the node does not need the mining dataset or scratchpad.</p>
+</div></section>
+
+<!-- 10. POPC -->
+<section id="popc"><div class="c">
+<h2>10. Future: Proof of <span>Personal Custody</span></h2>
+<div class="warn"><strong>Status:</strong> Output types OUT_BOND_LOCK (0x10) and OUT_ESCROW_LOCK (0x11) are declared in code but blocked before height 5000 (R11). Full PoPC audit/slash/reward logic is NOT yet implemented. Design only.</div>
+
+<h3>Model A &mdash; Self-Custody Bonds</h3>
+<p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 12-22% annualized (1-12 months).</p>
+
+<h3>Model B &mdash; Escrow Timelock</h3>
+<p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.25-7% annualized.</p>
+
+<h3>Activation Timeline</h3>
+<p>On-chain BOND_LOCK/ESCROW_LOCK: height 5000 (~35 days post-genesis). PoPC Ethereum contracts: Q1 2027 target. Full custody audit system: Q1 2027 target. Gold purchases: no earlier than Q2 2027 (8 months post public launch, per rule G4).</p>
+
+<div class="warn" style="margin-top:12px;"><strong>Timeline Flexibility Notice:</strong> The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div>
+</div></section>
+
+<footer><div class="c">
+<p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
+<p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+</div></footer>
+
+<script src="sost-search.js"></script>
+</body>
+</html>

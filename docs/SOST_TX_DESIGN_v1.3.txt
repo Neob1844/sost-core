@@ -82,8 +82,8 @@
 //
 // --- Reserved (inactive until activation height) ---
 //
-//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Q3 2026)
-//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Q3 2026)
+//   0x10  BOND_LOCK       (PoPC Model A — target: v2, Q1 2027)
+//   0x11  ESCROW_LOCK     (PoPC Model B — target: v2, Q1 2027)
 //   0x20  BURN            (reserved, NOT activated — supply is immutable, no burns)
 //
 // =============================================================================

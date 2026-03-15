@@ -21,7 +21,7 @@ The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAX
 [table]
 [tr][td][b]Algorithm[/b][/td][td]ConvergenceX v2.0 (memory-hard, CPU-friendly)[/td][/tr]
 [tr][td][b]Block time[/b][/td][td]600s (10 min)[/td][/tr]
-[tr][td][b]Max supply[/b][/td][td]4,669,201 SOST (hard cap)[/td][/tr]
+[tr][td][b]Max supply[/b][/td][td]4,669,201 SOST (hard cap, enforced at consensus level — subsidy drops to zero when cap is reached; miners earn fees only)[/td][/tr]
 [tr][td][b]Emission[/b][/td][td]Exponential decay, q ≈ 0.7788, epoch = 131,553 blocks (~2.5 yr)[/td][/tr]
 [tr][td][b]Coinbase split[/b][/td][td]50% miner / 25% Gold Vault / 25% PoPC Pool[/td][/tr]
 [tr][td][b]Difficulty[/b][/td][td]cASERT unified (12h bitsQ half-life + equalizer profiles)[/td][/tr]
