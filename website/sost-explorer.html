@@ -710,7 +710,7 @@ async function updateDashboard(info){
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;startCountdown();}}catch(e){}
-  var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks),tSOST=Number(ts2)/1e8;
+  var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks+1),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   /* drawReserveBars() removed — replaced by price charts */
   // Constitutional balances (public, no auth needed)

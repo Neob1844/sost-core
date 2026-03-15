@@ -7,15 +7,11 @@
 <title>SOST Protocol — Technical Reference</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
+:root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;--red-glow:#fb010d33;--red-subtle:#fb010d18;--green-primary:#4ade80;--cyan-primary:#22d3ee;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--t1);font-family:var(--mono);font-size:13px;line-height:1.8}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:13px;line-height:1.8}
 .c{max-width:900px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
-nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--bdr);backdrop-filter:blur(16px);padding:10px 0}
-nav .c{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.logo{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--t1);text-decoration:none;letter-spacing:2px}
-.logo b{color:var(--red)}
-.nv a.on{color:var(--red);border-bottom:1px solid var(--red)}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--bdr)}
 .hero h1{font-family:var(--disp);font-size:28px;font-weight:600;letter-spacing:-1px}
 .hero h1 span{color:var(--red)}

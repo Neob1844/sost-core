@@ -591,26 +591,15 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <div class="hero-label fade-in">MATERIALS ENGINE</div>
     <h1 class="fade-in delay-1">
       <span>Materials Discovery</span><br>
-      Engine
+      Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Repurposing ConvergenceX Proof-of-Work for Scientific Computing
+      An independent research platform for computational materials science, powered by the SOST ecosystem. Uses dedicated ML models and optimization algorithms &mdash; not ConvergenceX mining.
     </p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">ConvergenceX compute &middot; Materials simulation &middot; SOST escrow access</span>
-    </div>
-
-    <div class="download-bar fade-in delay-4">
-      <a class="dl-btn" id="downloadPageBtn" href="#">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Download this page
-      </a>
-      <a class="dl-btn secondary" href="#overview">
-        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        Explore specification
-      </a>
+      <span class="val">ML models &middot; Optimization algorithms &middot; SOST escrow access</span>
     </div>
   </div>
 </section>
@@ -627,52 +616,67 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">Extending SOST Beyond Finance</span>
+          <span class="spec-name">An Independent Research Platform</span>
         </div>
         <span class="spec-tag overlay">RESEARCH</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          The SOST Materials Discovery Engine extends the SOST ecosystem beyond financial
-          infrastructure into scientific discovery. A computational platform for predicting,
-          generating, and evaluating novel material compositions. By repurposing the
-          ConvergenceX proof-of-work architecture &mdash; originally designed for CPU-friendly
-          mining &mdash; the engine applies gradient-descent optimization to the problem space
-          of materials science.
+          The SOST Materials Discovery Platform is an independent research initiative within the SOST ecosystem.
+          It uses dedicated machine learning models, public materials databases, and optimization algorithms
+          to predict, generate, and evaluate novel material compositions. The platform is <strong>not</strong>
+          an extension of ConvergenceX mining &mdash; it operates as a separate computational service,
+          accessible via SOST escrow payments.
         </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CONVERGENCEX AS COMPUTATION -->
+<!-- COMPUTATION -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">02 &mdash; COMPUTATION</div>
-      <h2 class="section-title">ConvergenceX as <span class="accent">Computation</span></h2>
+      <h2 class="section-title">Computational <span class="accent">Approach</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">PoW &rarr; Materials Simulation Mapping</span>
+          <span class="spec-name">ML + Optimization + DFT Integration</span>
         </div>
-        <span class="spec-tag consensus">CORE MAPPING</span>
+        <span class="spec-tag overlay">METHODOLOGY</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          ConvergenceX&rsquo;s proof-of-work primitives map naturally to the computational
-          requirements of materials simulation. Each PoW component has a direct analogue
-          in molecular dynamics and energy optimization.
+          The platform combines multiple computational approaches for materials discovery,
+          each using purpose-built algorithms independent of the ConvergenceX mining engine.
         </p>
         <table class="code-table">
-          <tr><td class="key">4GB Scratchpad</td><td class="val">Working memory for molecular data <span class="comment">// atomic positions, forces, potentials</span></td></tr>
-          <tr><td class="key">32&times;32 Matrix</td><td class="val">Atomic interaction representation <span class="comment">// pairwise element correlations</span></td></tr>
-          <tr><td class="key">100K Gradient Iterations</td><td class="val">Energy minimization steps <span class="comment">// converge toward ground-state configuration</span></td></tr>
-          <tr><td class="key">Stability Basin</td><td class="val">Physical convergence criterion <span class="comment">// thermodynamic equilibrium detection</span></td></tr>
+          <tr><td class="key">ML Models</td><td class="val">Graph neural networks for property prediction <span class="comment">// CGCNN, MEGNet, ALIGNN</span></td></tr>
+          <tr><td class="key">Optimization</td><td class="val">Evolutionary algorithms and numerical optimization <span class="comment">// composition search, structure relaxation</span></td></tr>
+          <tr><td class="key">DFT Integration</td><td class="val">API access to VASP, Quantum ESPRESSO, GPAW <span class="comment">// ab initio validation</span></td></tr>
+          <tr><td class="key">Compute Donation</td><td class="val">Miners donate idle CPU cycles between blocks <span class="comment">// voluntary, opt-in community compute</span></td></tr>
         </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Community Compute Marketplace</span>
+        </div>
+        <span class="spec-tag overlay">FUTURE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Researchers publish materials discovery problems. The SOST mining community contributes
+          idle CPU time to run simulations, earning rewards from the PoPC Pool. All results are
+          published on-chain as immutable open data, creating a permanent public materials database.
+        </p>
       </div>
     </div>
   </div>
@@ -781,7 +785,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
         <p class="spec-desc">
           An evolutionary algorithm generates novel material candidates by mutating and
           recombining known compositions. Fitness is evaluated using Layer 3 prediction models.
-          The ConvergenceX gradient-descent engine drives the optimization loop toward
+          Evolutionary algorithms and numerical optimization drive the search toward
           compositions with target properties.
         </p>
       </div>
@@ -888,13 +892,12 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
 
     <div class="disclaimer-box fade-in delay-1">
       <p>
-        The Materials Discovery Engine represents an aspirational application of ConvergenceX&rsquo;s
-        gradient-descent proof-of-work architecture. Practical deployment as a materials simulation
-        platform requires significant additional research in mapping real-world molecular dynamics
-        to the ConvergenceX computational model. SOST commits to exploring this application without
-        making premature claims about timelines or capabilities. Any deployment will be contingent
-        on peer-reviewed validation of the computational methodology and demonstration of
-        scientifically meaningful results. This is a research direction, not a product commitment.
+        The Materials Discovery Platform is an independent research initiative within the SOST ecosystem.
+        It uses dedicated ML models and optimization algorithms, not the ConvergenceX mining engine.
+        Practical deployment requires significant additional research in computational materials science.
+        SOST commits to exploring this application without making premature claims about timelines or
+        capabilities. Any deployment will be contingent on peer-reviewed validation and demonstration
+        of scientifically meaningful results. This is a research direction, not a product commitment.
       </p>
     </div>
   </div>

@@ -548,22 +548,31 @@ bool verify_cx_proof(
     const ConsensusParams& params)
 {
     int32_t n = params.cx_n;
+    fprintf(stderr, "[CX-VERIFY] Phase 1: sanity (x_bytes_len=%zu, n*4=%d, cp_leaves=%zu)\n",
+            x_bytes_len, n*4, checkpoint_leaves.size());
     // Phase 1: Sanity
-    if ((int32_t)x_bytes_len != n * 4) return false;
-    if (checkpoint_leaves.empty()) return false;
+    if ((int32_t)x_bytes_len != n * 4) { fprintf(stderr, "[CX-VERIFY] Phase 1 FAILED: x_bytes_len=%zu != n*4=%d\n", x_bytes_len, n*4); return false; }
+    if (checkpoint_leaves.empty()) { fprintf(stderr, "[CX-VERIFY] Phase 1 FAILED: checkpoint_leaves empty\n"); return false; }
 
     // Phase 2: Checkpoint merkle root
+    fprintf(stderr, "[CX-VERIFY] Phase 2: checkpoint merkle (%zu leaves)\n", checkpoint_leaves.size());
     Bytes32 cp_root = merkle_root_16(checkpoint_leaves);
-    if (cp_root != checkpoints_root) return false;
+    if (cp_root != checkpoints_root) { fprintf(stderr, "[CX-VERIFY] Phase 2 FAILED: checkpoints_root mismatch expected=%s got=%s\n", hex(checkpoints_root).c_str(), hex(cp_root).c_str()); return false; }
 
     // Phase 3: Segment proofs → segments_root
-    for (const auto& sp : segment_proofs) {
+    fprintf(stderr, "[CX-VERIFY] Phase 3: segment merkle proofs (%zu proofs)\n", segment_proofs.size());
+    for (size_t spi = 0; spi < segment_proofs.size(); ++spi) {
+        const auto& sp = segment_proofs[spi];
         Bytes32 lh = hash_segment_leaf(sp.leaf);
-        if (!verify_merkle_proof(lh, sp.merkle_path, sp.leaf.segment_index, segments_root))
+        if (!verify_merkle_proof(lh, sp.merkle_path, sp.leaf.segment_index, segments_root)) {
+            fprintf(stderr, "[CX-VERIFY] Phase 3 FAILED: segment proof %zu invalid (seg_idx=%u, path_len=%zu, leaf=%s, root=%s)\n",
+                    spi, sp.leaf.segment_index, sp.merkle_path.size(), hex(lh).substr(0,16).c_str(), hex(segments_root).substr(0,16).c_str());
             return false;
+        }
     }
 
     // Phase 4: Seed
+    fprintf(stderr, "[CX-VERIFY] Phase 4: seed recompute (nonce=%u extra=%u)\n", nonce, extra_nonce);
     Bytes32 prev_hash;
     std::memcpy(prev_hash.data(), header_core, 32);
     Bytes32 block_key = compute_block_key(prev_hash);
@@ -574,23 +583,38 @@ bool verify_cx_proof(
     Bytes32 seed = sha256(sbuf);
 
     // Phase 5: Commit binding (V2 format: includes segments_root)
+    fprintf(stderr, "[CX-VERIFY] Phase 5: commit binding\n");
     std::vector<uint8_t> cbuf;
     append_magic(cbuf); append(cbuf, "COMMIT", 6);
     append(cbuf, header_core, 72); append(cbuf, seed); append(cbuf, final_state);
     append(cbuf, x_bytes, x_bytes_len);
     append(cbuf, checkpoints_root); append(cbuf, segments_root);
     append_u64_le(cbuf, stability_metric);
-    if (sha256(cbuf) != commit) return false;
+    Bytes32 computed_commit = sha256(cbuf);
+    if (computed_commit != commit) {
+        fprintf(stderr, "[CX-VERIFY] Phase 5 FAILED: commit mismatch expected=%s got=%s (cbuf_len=%zu metric=%llu)\n",
+                hex(commit).substr(0,16).c_str(), hex(computed_commit).substr(0,16).c_str(), cbuf.size(), (unsigned long long)stability_metric);
+        return false;
+    }
 
     // Phase 6: Challenge derivation — verify proofs correspond to correct challenges
+    fprintf(stderr, "[CX-VERIFY] Phase 6: challenge derivation (rounds=%d seg_len=%d)\n", params.cx_rounds, CX_SEGMENT_LEN);
     int32_t nseg = (params.cx_rounds + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
     Bytes32 challenge_seed = compute_challenge_seed(commit, segments_root);
     int32_t actual_chal = std::min((int32_t)CX_CHAL_SEGMENTS, nseg);
     std::vector<uint32_t> expected_seg_idx = derive_segment_indices(challenge_seed, nseg, actual_chal);
     // Verify segment proofs match expected indices
-    if ((int32_t)segment_proofs.size() != actual_chal) return false;
+    if ((int32_t)segment_proofs.size() != actual_chal) {
+        fprintf(stderr, "[CX-VERIFY] Phase 6 FAILED: segment_proofs.size()=%zu != actual_chal=%d (nseg=%d)\n",
+                segment_proofs.size(), actual_chal, nseg);
+        return false;
+    }
     for (int i = 0; i < actual_chal; ++i) {
-        if (segment_proofs[i].leaf.segment_index != expected_seg_idx[i]) return false;
+        if (segment_proofs[i].leaf.segment_index != expected_seg_idx[i]) {
+            fprintf(stderr, "[CX-VERIFY] Phase 6 FAILED: seg_proof[%d].segment_index=%u != expected=%u\n",
+                    i, segment_proofs[i].leaf.segment_index, expected_seg_idx[i]);
+            return false;
+        }
     }
     // Derive expected round indices using round_start/end from verified proofs
     std::vector<std::vector<uint32_t>> expected_round_idx(expected_seg_idx.size());
@@ -600,12 +624,16 @@ bool verify_cx_proof(
     }
 
     // Phase 7: Boundary coherence
-    for (const auto& sp : segment_proofs) {
-        if (sp.leaf.round_start > sp.leaf.round_end) return false;
-        if (sp.leaf.round_end > (uint32_t)params.cx_rounds) return false;
+    fprintf(stderr, "[CX-VERIFY] Phase 7: boundary coherence\n");
+    for (size_t spi = 0; spi < segment_proofs.size(); ++spi) {
+        const auto& sp = segment_proofs[spi];
+        if (sp.leaf.round_start > sp.leaf.round_end) { fprintf(stderr, "[CX-VERIFY] Phase 7 FAILED: seg %zu start %u > end %u\n", spi, sp.leaf.round_start, sp.leaf.round_end); return false; }
+        if (sp.leaf.round_end > (uint32_t)params.cx_rounds) { fprintf(stderr, "[CX-VERIFY] Phase 7 FAILED: seg %zu end %u > rounds %d\n", spi, sp.leaf.round_end, params.cx_rounds); return false; }
     }
 
     // Phase 8: Round witness verification
+    fprintf(stderr, "[CX-VERIFY] Phase 8: round witnesses (%zu total, %d chal segs, %d steps each)\n",
+            round_witnesses.size(), actual_chal, CX_CHAL_STEPS);
     CXProblem prob = derive_M_and_b(block_key, n, params.cx_lam);
     CXProgram program; program.generate(block_key);
     Bytes32 epoch_key = epoch_scratch_key(0, nullptr);
@@ -615,10 +643,10 @@ bool verify_cx_proof(
     size_t rw_idx = 0;
     for (int seg_i = 0; seg_i < actual_chal && seg_i < (int)expected_round_idx.size(); ++seg_i) {
         for (int step_j = 0; step_j < CX_CHAL_STEPS && step_j < (int)expected_round_idx[seg_i].size(); ++step_j) {
-            if (rw_idx >= round_witnesses.size()) return false;
+            if (rw_idx >= round_witnesses.size()) { fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: rw_idx=%zu >= rw.size=%zu\n", rw_idx, round_witnesses.size()); return false; }
             const auto& rw = round_witnesses[rw_idx++];
             uint32_t r = expected_round_idx[seg_i][step_j];
-            if (rw.round_index != r) return false;
+            if (rw.round_index != r) { fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: rw[%zu].round=%u != expected=%u (seg=%d step=%d)\n", rw_idx-1, rw.round_index, r, seg_i, step_j); return false; }
 
             // Recompute scratch indices from state_before
             uint32_t scratch_mb = params.cx_scratch_mb;
@@ -631,7 +659,12 @@ bool verify_cx_proof(
             uint32_t exp_idx2 = (u32(w0+w1) ^ u32((uint64_t)r * 0x27D4EB2Du)) % scratch_words;
             uint32_t exp_idx3 = (u32(w0-w1) ^ u32((uint64_t)r * 0x165667B1u)) % scratch_words;
             if (rw.scratch_indices[0] != exp_idx0 || rw.scratch_indices[1] != exp_idx1 ||
-                rw.scratch_indices[2] != exp_idx2 || rw.scratch_indices[3] != exp_idx3) return false;
+                rw.scratch_indices[2] != exp_idx2 || rw.scratch_indices[3] != exp_idx3) {
+                fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: scratch_indices mismatch at round %u (got [%u,%u,%u,%u] expected [%u,%u,%u,%u])\n",
+                        r, rw.scratch_indices[0],rw.scratch_indices[1],rw.scratch_indices[2],rw.scratch_indices[3],
+                        exp_idx0,exp_idx1,exp_idx2,exp_idx3);
+                return false;
+            }
 
             // Verify scratch values by recomputing from scratchpad (O(1) per value)
             for (int vi = 0; vi < 4; ++vi) {
@@ -640,16 +673,28 @@ bool verify_cx_proof(
                 uint32_t byte_within = byte_off % 32;
                 Bytes32 block = compute_single_scratch_block(epoch_key, block_idx);
                 int32_t expected_val = read_i32_le(block.data() + byte_within);
-                if (rw.scratch_values[vi] != expected_val) return false;
+                if (rw.scratch_values[vi] != expected_val) {
+                    fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: scratch_value[%d] mismatch at round %u idx=%u (got %d expected %d, byte_off=%u blk=%u within=%u)\n",
+                            vi, r, rw.scratch_indices[vi], rw.scratch_values[vi], expected_val, byte_off, block_idx, byte_within);
+                    return false;
+                }
             }
 
             // Verify dataset value
             uint64_t exp_ds = compute_single_dataset_value(prev_hash, (uint64_t)r % dataset_size);
-            if (rw.dataset_value != exp_ds) return false;
+            if (rw.dataset_value != exp_ds) {
+                fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: dataset_value mismatch at round %u (got %llu expected %llu, idx=%llu)\n",
+                        r, (unsigned long long)rw.dataset_value, (unsigned long long)exp_ds, (unsigned long long)((uint64_t)r % dataset_size));
+                return false;
+            }
 
             // Verify program output
             uint64_t exp_prog = program.execute(rw.dataset_value, (size_t)r);
-            if (rw.program_output != exp_prog) return false;
+            if (rw.program_output != exp_prog) {
+                fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: program_output mismatch at round %u (got %llu expected %llu)\n",
+                        r, (unsigned long long)rw.program_output, (unsigned long long)exp_prog);
+                return false;
+            }
 
             // Verify round transition: x_before → x_after
             int32_t Ax[32]; matvec_A(prob, rw.x_before.data(), Ax, n);
@@ -665,8 +710,12 @@ bool verify_cx_proof(
             x_exp[j1] = clamp_i32((int64_t)x_exp[j1] + (int64_t)asr_i32(m1, 7));
             x_exp[j2] = clamp_i32((int64_t)(x_exp[j2] ^ asr_i32(m2, 6)));
             x_exp[j3] = clamp_i32((int64_t)x_exp[j3] + (int64_t)asr_i32(m3, 8));
-            for (int i = 0; i < n; ++i)
-                if (x_exp[i] != rw.x_after[i]) return false;
+            for (int i = 0; i < n; ++i) {
+                if (x_exp[i] != rw.x_after[i]) {
+                    fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: x_after[%d] mismatch at round %u (got %d expected %d)\n", i, r, rw.x_after[i], x_exp[i]);
+                    return false;
+                }
+            }
 
             // Verify state transition
             std::vector<uint8_t> su;
@@ -677,22 +726,37 @@ bool verify_cx_proof(
             write_i32_le(xj_v+8, x_exp[j2]); write_i32_le(xj_v+12, x_exp[j3]); append(su, xj_v, 16);
             append_u32_le(su, r);
             Bytes32 exp_state = sha256(su);
-            if (exp_state != rw.state_after) return false;
+            if (exp_state != rw.state_after) {
+                fprintf(stderr, "[CX-VERIFY] Phase 8 FAILED: state_after mismatch at round %u (got=%s exp=%s)\n",
+                        r, hex(rw.state_after).substr(0,16).c_str(), hex(exp_state).substr(0,16).c_str());
+                return false;
+            }
+            fprintf(stderr, "[CX-VERIFY] Phase 8: round %u OK (seg=%d step=%d)\n", r, seg_i, step_j);
         }
     }
 
     // Phase 9: Stability basin
+    fprintf(stderr, "[CX-VERIFY] Phase 9: stability basin (scale=%d k=%d margin=%d steps=%d)\n",
+            params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps);
     int32_t x[32];
     for (int i = 0; i < n; ++i) x[i] = read_i32_le(x_bytes + i * 4);
     Bytes32 stctx = stability_ctx(header_core, seed, checkpoints_root);
     uint64_t metric_out = 0;
     if (!verify_stability_basin(x, prob, n, lr_shift, stctx,
             params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps,
-            params.stab_lr_shift, metric_out)) return false;
+            params.stab_lr_shift, metric_out)) {
+        fprintf(stderr, "[CX-VERIFY] Phase 9 FAILED: stability basin test failed (metric_out=%llu)\n", (unsigned long long)metric_out);
+        return false;
+    }
 
     // Phase 10: Metric
-    if (metric_out != stability_metric) return false;
+    fprintf(stderr, "[CX-VERIFY] Phase 10: metric check (got=%llu expected=%llu)\n", (unsigned long long)metric_out, (unsigned long long)stability_metric);
+    if (metric_out != stability_metric) {
+        fprintf(stderr, "[CX-VERIFY] Phase 10 FAILED: metric mismatch got=%llu expected=%llu\n", (unsigned long long)metric_out, (unsigned long long)stability_metric);
+        return false;
+    }
 
+    fprintf(stderr, "[CX-VERIFY] ALL PHASES PASSED\n");
     return true;
 }
 
