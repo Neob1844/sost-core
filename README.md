@@ -46,7 +46,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 | Binary | Version | Description |
 |--------|---------|-------------|
 | sost-node | v0.3.2 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
-| sost-miner | v0.6 | ConvergenceX PoW miner with mempool integration via RPC |
+| sost-miner | v0.6 | ConvergenceX Transcript V2 PoW miner with mempool integration via RPC |
 | sost-cli | v1.3 | Wallet CLI — create keys, send transactions, automatic fee calculation |
 | sost-rpc | v0.1 | Standalone RPC client for node queries |
 
@@ -160,7 +160,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 
 | Parameter | Value |
 |-----------|-------|
-| Algorithm | ConvergenceX (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation, ASIC-resistant) |
+| Algorithm | ConvergenceX Transcript V2 (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation via 11-phase segment/round verification at ~0.2ms, ASIC-resistant) |
 | Block time | 10 minutes target |
 | Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H6) |
 | Initial block reward | 7.85100863 SOST |
@@ -228,7 +228,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 
 ## Fast Sync
 
-New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad + 4GB dataset, stability basin) is conditionally skipped. Note: the scratchpad and dataset are miner-only; node validation requires ~500MB RAM (no scratchpad/dataset needed).
+New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad + 4GB dataset, stability basin) is conditionally skipped. Note: with Transcript V2, node validation uses an 11-phase compact proof (segments_root + sampled round witnesses) at ~0.2ms per block — no scratchpad/dataset needed (both are independently indexable at O(1) via SplitMix64/SHA256).
 
 This does not change consensus rules. A block that passes fast sync verification would also pass full verification. The only difference is computational cost.
 

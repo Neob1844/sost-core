@@ -601,6 +601,14 @@
     .nav-links { display: none; }
     .download-bar { flex-direction: column; }
   }
+nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.nav-logo .brand-sost { color: var(--red-primary); }
+.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
+.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
 </style>
 </head>
 <body>
@@ -740,9 +748,12 @@
       <div class="spec-body">
         <p class="spec-desc">
           Instead of brute-force hash collision, ConvergenceX requires miners to produce
-          <strong>verifiable convergence certificates</strong>. Each attempt solves a
+          <strong>verifiable convergence certificates</strong> using Transcript V2. Each attempt solves a
           tip-bound linear system via deterministic gradient descent, mixed with memory-hard
           scratchpad reads, and proves the solution lies in a stable convergence basin.
+          Transcript V2 adds segment commitments and sampled round witnesses, enabling
+          11-phase verification at ~0.2ms (vs ~1ms in V1). Dataset v2 (SplitMix64) and
+          Scratchpad v2 (SHA256-indexed) are independently indexable at O(1).
         </p>
 
         <div class="code-snippet" data-label="ALGORITHM">
@@ -763,7 +774,7 @@ seed       = <span class="fn">SHA256</span>( MAGIC || <span class="str">"SEED"</
 (is_stable, metric) = <span class="fn">verify_convergence_stability_basin</span>( x_final, M, b, ... )
 
 <span class="cmt">// 5. Compute commitment</span>
-commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</span> || header_core || seed || state || x || cp_root || metric )
+commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</span> || header_core || seed || state || x || segments_root || cp_root || metric )
 <span class="kw">require</span>  commit &lt;= target   <span class="kw">AND</span>   is_stable == <span class="num">true</span>
         </div>
 
@@ -1271,9 +1282,10 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
       <div class="principle-card fade-in delay-3" style="--card-accent:#a78bfa;">
         <div class="p-label" style="color:#a78bfa;">VERIFIABLE</div>
         <div class="p-desc">
-          Two-stage verification pipeline: cheap header/target checks for fast sync,
+          Transcript V2 verification: cheap header/target checks for fast sync,
+          11-phase segment + round witness verification (~0.2ms) for standard validation,
           full ConvergenceX recomputation for deep validation. Merkle-committed
-          checkpoints enable SPV-friendly proof structures.
+          segments and checkpoints enable SPV-friendly proof structures.
         </div>
       </div>
       <div class="principle-card fade-in delay-3" style="--card-accent:#f472b6;">
@@ -1358,4 +1370,5 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 
 
 
+<script src="sost-search.js"></script>
 </body></html>

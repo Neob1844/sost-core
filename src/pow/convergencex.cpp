@@ -2,25 +2,48 @@
 // Consensus-critical: integer-only, deterministic, sequential.
 // v2.0: Persistent dataset cache + per-block program generation
 #include "sost/pow/convergencex.h"
+#include "sost/pow/scratchpad.h"
 #include <cstring>
 #include <algorithm>
+#include <map>
 namespace sost {
 
-// ---- CXDataset: Persistent 4GB dataset cache ----
+// ---- CXDataset v2: O(1) single-value access + bulk generation ----
+// Each entry is independently computable from (prev_hash, index) via SplitMix64.
+// Miner builds full 4GB for speed; verifier recomputes individual entries.
 thread_local CXDataset g_cx_dataset;
+
+// Compute a single dataset value at given index (O(1), no 4GB needed)
+static uint64_t compute_dataset_seed(const Bytes32& prev_hash) {
+    uint64_t seed = 0;
+    for (int i = 0; i < 8; ++i)
+        seed |= (uint64_t)prev_hash[i] << (i * 8);
+    return seed;
+}
+
+uint64_t compute_single_dataset_value(const Bytes32& prev_hash, uint64_t index) {
+    // SplitMix64 indexed: each entry derived independently from (seed, index)
+    uint64_t seed = compute_dataset_seed(prev_hash);
+    uint64_t state = seed + (index + 1) * 0x9E3779B97F4A7C15ULL; // golden ratio
+    state ^= (state >> 33);
+    state *= 0xff51afd7ed558ccdULL;
+    state ^= (state >> 33);
+    state *= 0xc4ceb9fe1a85ec53ULL;
+    state ^= (state >> 33);
+    return state;
+}
 
 void CXDataset::generate(const Bytes32& block_prev_hash) {
     seed_hash = block_prev_hash;
     memory.resize(512ULL * 1024 * 1024); // 4GB as uint64_t
-    // Initialize dataset from seed using sequential hash chain
-    // Each entry depends on previous — cannot parallelize
-    uint64_t state = 0;
-    for (int i = 0; i < 8 && i < 32; ++i)
-        state |= (uint64_t)block_prev_hash[i] << (i * 8);
+    // Bulk generation: identical to compute_single_dataset_value for each index
+    uint64_t seed = compute_dataset_seed(block_prev_hash);
     for (size_t i = 0; i < memory.size(); i++) {
-        state = state * 6364136223846793005ULL + 1442695040888963407ULL;
+        uint64_t state = seed + (i + 1) * 0x9E3779B97F4A7C15ULL;
         state ^= (state >> 33);
         state *= 0xff51afd7ed558ccdULL;
+        state ^= (state >> 33);
+        state *= 0xc4ceb9fe1a85ec53ULL;
         state ^= (state >> 33);
         memory[i] = state;
     }
@@ -291,6 +314,20 @@ CXAttemptResult convergencex_attempt(
     if (scratch_words == 0) scratch_words = 1;
     size_t dataset_size = g_cx_dataset.memory.size();
     std::vector<Checkpoint> checkpoints;
+    int32_t seg_len = CX_SEGMENT_LEN;
+    int32_t nseg = (rounds + seg_len - 1) / seg_len;
+    // Segment boundary tracking
+    std::vector<SegmentLeaf> seg_leaves;
+    seg_leaves.reserve(nseg);
+    Bytes32 seg_state_start = state;
+    uint8_t seg_xbuf[128];
+    for (int i = 0; i < n; ++i) write_i32_le(seg_xbuf+i*4, x[i]);
+    Bytes32 seg_x_start_hash = sha256(seg_xbuf, n*4);
+    int32_t seg_Ax_start[32]; matvec_A(prob, x, seg_Ax_start, n);
+    uint64_t seg_residual_start = (uint64_t)safe_residual_l1(seg_Ax_start, prob.b, n);
+    int32_t cur_seg = 0;
+    int32_t cur_seg_start = 1;
+
     // Main loop
     for (int32_t r = 1; r <= rounds; ++r) {
         int32_t Ax[32]; matvec_A(prob, x, Ax, n);
@@ -305,10 +342,8 @@ CXAttemptResult convergencex_attempt(
         int32_t m2 = mix_from_scratch(scratch, scratch_len, idx2);
         int32_t m3 = mix_from_scratch(scratch, scratch_len, idx3);
 
-        // v2.0: Execute per-block program with dataset memory
         uint64_t prog_state = program.execute(
             g_cx_dataset.memory[(size_t)r % dataset_size], (size_t)r);
-        // Mix program output into scratchpad values
         m0 ^= (int32_t)(prog_state & 0xFFFFFFFF);
         m1 ^= (int32_t)(prog_state >> 32);
 
@@ -322,123 +357,531 @@ CXAttemptResult convergencex_attempt(
         // State update
         std::vector<uint8_t> su;
         su.insert(su.end(), state.begin(), state.end());
-        uint8_t mx[16]; write_i32_le(mx, m0); write_i32_le(mx+4, m1);
-        write_i32_le(mx+8, m2); write_i32_le(mx+12, m3); append(su, mx, 16);
-        uint8_t xj[16]; write_i32_le(xj, x[j0]); write_i32_le(xj+4, x[j1]);
-        write_i32_le(xj+8, x[j2]); write_i32_le(xj+12, x[j3]); append(su, xj, 16);
+        uint8_t mx_buf[16]; write_i32_le(mx_buf, m0); write_i32_le(mx_buf+4, m1);
+        write_i32_le(mx_buf+8, m2); write_i32_le(mx_buf+12, m3); append(su, mx_buf, 16);
+        uint8_t xj_buf[16]; write_i32_le(xj_buf, x[j0]); write_i32_le(xj_buf+4, x[j1]);
+        write_i32_le(xj_buf+8, x[j2]); write_i32_le(xj_buf+12, x[j3]); append(su, xj_buf, 16);
         append_u32_le(su, (uint32_t)r);
         state = sha256(su);
-        // Checkpoint
+        // Checkpoint (every cp_interval)
         if ((r % cp_interval) == 0 || r == rounds) {
             int32_t Axf[32]; matvec_A(prob, x, Axf, n);
             uint64_t residual = (uint64_t)safe_residual_l1(Axf, prob.b, n);
-            uint8_t xbytes[128]; for (int i = 0; i < n; ++i) write_i32_le(xbytes+i*4, x[i]);
-            Bytes32 xh = sha256(xbytes, n*4);
+            uint8_t xbytes_cp[128]; for (int i = 0; i < n; ++i) write_i32_le(xbytes_cp+i*4, x[i]);
+            Bytes32 xh = sha256(xbytes_cp, n*4);
             checkpoints.push_back({state, xh, (uint32_t)r, residual});
+        }
+        // Segment boundary: end of segment or end of rounds
+        int32_t seg_end_round = cur_seg_start + seg_len - 1;
+        if (seg_end_round > rounds) seg_end_round = rounds;
+        if (r == seg_end_round) {
+            uint8_t xb_end[128]; for (int i = 0; i < n; ++i) write_i32_le(xb_end+i*4, x[i]);
+            Bytes32 x_end_hash = sha256(xb_end, n*4);
+            int32_t Ax_end[32]; matvec_A(prob, x, Ax_end, n);
+            uint64_t res_end = (uint64_t)safe_residual_l1(Ax_end, prob.b, n);
+            SegmentLeaf sl;
+            sl.segment_index = (uint32_t)cur_seg;
+            sl.round_start = (uint32_t)cur_seg_start;
+            sl.round_end = (uint32_t)r;
+            sl.state_start = seg_state_start;
+            sl.state_end = state;
+            sl.x_start_hash = seg_x_start_hash;
+            sl.x_end_hash = x_end_hash;
+            sl.residual_start = seg_residual_start;
+            sl.residual_end = res_end;
+            seg_leaves.push_back(sl);
+            // Prepare next segment start
+            cur_seg++;
+            cur_seg_start = r + 1;
+            seg_state_start = state;
+            seg_x_start_hash = x_end_hash;
+            seg_residual_start = res_end;
         }
     }
     // x_bytes and final_state
     res.x_bytes.resize(n * 4);
     for (int i = 0; i < n; ++i) write_i32_le(res.x_bytes.data()+i*4, x[i]);
     res.final_state = state;
-    // Merkle
+    // Checkpoint merkle
     std::vector<Bytes32> leaves;
     for (auto& cp : checkpoints)
         leaves.push_back(checkpoint_leaf(cp.state_hash, cp.x_hash, cp.round, cp.residual));
     res.checkpoints_root = merkle_root_16(leaves);
     res.checkpoint_leaves = leaves;
+    // Segment merkle
+    res.segment_leaves = seg_leaves;
+    std::vector<Bytes32> seg_leaf_hashes;
+    for (auto& sl : seg_leaves) {
+        std::vector<uint8_t> lb;
+        append(lb, "SEG", 3);
+        append_u32_le(lb, sl.segment_index);
+        append_u32_le(lb, sl.round_start);
+        append_u32_le(lb, sl.round_end);
+        append(lb, sl.state_start); append(lb, sl.state_end);
+        append(lb, sl.x_start_hash); append(lb, sl.x_end_hash);
+        append_u64_le(lb, sl.residual_start); append_u64_le(lb, sl.residual_end);
+        seg_leaf_hashes.push_back(sha256(lb));
+    }
+    res.segments_root = merkle_root_16(seg_leaf_hashes);
     // Stability
     Bytes32 stctx = stability_ctx(header_core, seed, res.checkpoints_root);
     res.is_stable = verify_stability_basin(
         x, prob, n, lr_shift, stctx,
         params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps,
         params.stab_lr_shift, res.stability_metric);
-    // Commit
+    // Commit V2: includes segments_root
     std::vector<uint8_t> cbuf;
     append_magic(cbuf); append(cbuf, "COMMIT", 6);
     append(cbuf, header_core, HEADER_CORE_LEN);
     append(cbuf, seed); append(cbuf, state);
     append(cbuf, res.x_bytes.data(), res.x_bytes.size());
     append(cbuf, res.checkpoints_root);
+    append(cbuf, res.segments_root);
     append_u64_le(cbuf, res.stability_metric);
     res.commit = sha256(cbuf);
     return res;
 }
 
-// ---- Lightweight PoW verification (no dataset/scratchpad needed) ----
-// Verifies 4 properties:
-// 1. Checkpoint leaves → merkle root matches checkpoints_root
-// 2. Last checkpoint's x_hash matches SHA256(x_bytes) (transcript consistency)
-// 3. Commit hash matches all components
-// 4. Stability basin passes on x_bytes
+// ---- Segment leaf hash (consensus-critical serialization) ----
+static Bytes32 hash_segment_leaf(const SegmentLeaf& sl) {
+    std::vector<uint8_t> lb;
+    append(lb, "SEG", 3);
+    append_u32_le(lb, sl.segment_index);
+    append_u32_le(lb, sl.round_start);
+    append_u32_le(lb, sl.round_end);
+    append(lb, sl.state_start); append(lb, sl.state_end);
+    append(lb, sl.x_start_hash); append(lb, sl.x_end_hash);
+    append_u64_le(lb, sl.residual_start); append_u64_le(lb, sl.residual_end);
+    return sha256(lb);
+}
+
+// ---- Merkle proof verification ----
+static bool verify_merkle_proof(const Bytes32& leaf_hash, const std::vector<Bytes32>& path,
+                                 uint32_t index, const Bytes32& root) {
+    Bytes32 current = leaf_hash;
+    uint32_t idx = index;
+    for (const auto& sibling : path) {
+        std::vector<uint8_t> buf;
+        if (idx & 1) { append(buf, sibling); append(buf, current); }
+        else         { append(buf, current); append(buf, sibling); }
+        current = sha256(buf);
+        idx >>= 1;
+    }
+    return current == root;
+}
+
+// ---- Challenge derivation (deterministic from commit + segments_root) ----
+// Phase 1: derive segment indices (only needs nseg count)
+static Bytes32 compute_challenge_seed(const Bytes32& commit, const Bytes32& segments_root) {
+    std::vector<uint8_t> cseed_buf;
+    append_magic(cseed_buf); append(cseed_buf, "CHAL", 4);
+    append(cseed_buf, commit); append(cseed_buf, segments_root);
+    return sha256(cseed_buf);
+}
+
+static std::vector<uint32_t> derive_segment_indices(const Bytes32& challenge_seed,
+                                                      int32_t nseg, int32_t num_chal_segs) {
+    std::vector<uint32_t> indices;
+    uint32_t attempt = 0;
+    while ((int32_t)indices.size() < num_chal_segs && attempt < 1000) {
+        std::vector<uint8_t> ibuf;
+        append_magic(ibuf); append(ibuf, "CHIDX", 5);
+        append(ibuf, challenge_seed); append_u32_le(ibuf, attempt);
+        Bytes32 h = sha256(ibuf);
+        uint32_t idx = read_u32_le(h.data()) % (uint32_t)nseg;
+        bool dup = false;
+        for (auto si : indices) if (si == idx) { dup = true; break; }
+        if (!dup) indices.push_back(idx);
+        attempt++;
+    }
+    return indices;
+}
+
+// Phase 2: derive round indices (uses round_start/round_end from challenged segments)
+static std::vector<uint32_t> derive_round_indices(const Bytes32& challenge_seed,
+                                                    uint32_t chal_idx, uint32_t round_start,
+                                                    uint32_t round_end, int32_t steps_per_seg) {
+    std::vector<uint32_t> rounds;
+    uint32_t seg_actual_len = round_end - round_start + 1;
+    for (int32_t j = 0; j < steps_per_seg; ++j) {
+        std::vector<uint8_t> rbuf;
+        append_magic(rbuf); append(rbuf, "CHRD", 4);
+        append(rbuf, challenge_seed); append_u32_le(rbuf, chal_idx); append_u32_le(rbuf, (uint32_t)j);
+        Bytes32 rh = sha256(rbuf);
+        uint32_t round_off = read_u32_le(rh.data()) % seg_actual_len;
+        rounds.push_back(round_start + round_off);
+    }
+    return rounds;
+}
+
+// Combined helper for miner (has all segment leaves)
+static void derive_challenges(const Bytes32& commit, const Bytes32& segments_root,
+                               int32_t nseg, int32_t num_chal_segs, int32_t steps_per_seg,
+                               const std::vector<SegmentLeaf>& seg_leaves,
+                               std::vector<uint32_t>& out_seg_indices,
+                               std::vector<std::vector<uint32_t>>& out_round_indices) {
+    Bytes32 challenge_seed = compute_challenge_seed(commit, segments_root);
+    out_seg_indices = derive_segment_indices(challenge_seed, nseg, num_chal_segs);
+    out_round_indices.resize(out_seg_indices.size());
+    for (size_t i = 0; i < out_seg_indices.size(); ++i) {
+        uint32_t si = out_seg_indices[i];
+        out_round_indices[i] = derive_round_indices(challenge_seed, (uint32_t)i,
+            seg_leaves[si].round_start, seg_leaves[si].round_end, steps_per_seg);
+    }
+}
+
+// ---- Verify CX Proof V2 (Transcript V2) ----
+// 11-phase verification: sanity, checkpoints, segments, seed, commit, challenges,
+// boundaries, round witnesses, stability, metric, target
 bool verify_cx_proof(
     const uint8_t* header_core,
     uint32_t nonce, uint32_t extra_nonce,
     const Bytes32& commit,
     const Bytes32& checkpoints_root,
+    const Bytes32& segments_root,
     const Bytes32& final_state,
     const uint8_t* x_bytes, size_t x_bytes_len,
     uint64_t stability_metric,
     const std::vector<Bytes32>& checkpoint_leaves,
+    const std::vector<SegmentProof>& segment_proofs,
+    const std::vector<RoundWitness>& round_witnesses,
     const ConsensusParams& params)
 {
     int32_t n = params.cx_n;
+    // Phase 1: Sanity
     if ((int32_t)x_bytes_len != n * 4) return false;
-
-    // 1. Verify checkpoint leaves → merkle root
     if (checkpoint_leaves.empty()) return false;
-    Bytes32 computed_root = merkle_root_16(checkpoint_leaves);
-    if (computed_root != checkpoints_root) return false;
 
-    // 2. Verify last checkpoint x_hash matches SHA256(x_bytes)
-    // The last checkpoint leaf = SHA256("CP" || state_hash || x_hash || round || residual)
-    // We can't extract x_hash directly from the leaf (it's hashed), but we can
-    // verify the binding by recomputing: the commit hash binds x_bytes to checkpoints_root,
-    // and the merkle root binds to the checkpoint leaves. Together with step 3 and 4,
-    // this creates a complete verification chain.
+    // Phase 2: Checkpoint merkle root
+    Bytes32 cp_root = merkle_root_16(checkpoint_leaves);
+    if (cp_root != checkpoints_root) return false;
 
-    // 3. Recompute seed (deterministic from header + nonce)
+    // Phase 3: Segment proofs → segments_root
+    for (const auto& sp : segment_proofs) {
+        Bytes32 lh = hash_segment_leaf(sp.leaf);
+        if (!verify_merkle_proof(lh, sp.merkle_path, sp.leaf.segment_index, segments_root))
+            return false;
+    }
+
+    // Phase 4: Seed
     Bytes32 prev_hash;
     std::memcpy(prev_hash.data(), header_core, 32);
     Bytes32 block_key = compute_block_key(prev_hash);
-
     std::vector<uint8_t> sbuf;
     append_magic(sbuf); append(sbuf, "SEED", 4);
-    append(sbuf, header_core, 72);
-    append(sbuf, block_key);
+    append(sbuf, header_core, 72); append(sbuf, block_key);
     append_u32_le(sbuf, nonce); append_u32_le(sbuf, extra_nonce);
     Bytes32 seed = sha256(sbuf);
 
-    // 4. Verify commit hash
+    // Phase 5: Commit binding (V2 format: includes segments_root)
     std::vector<uint8_t> cbuf;
     append_magic(cbuf); append(cbuf, "COMMIT", 6);
-    append(cbuf, header_core, 72);
-    append(cbuf, seed); append(cbuf, final_state);
+    append(cbuf, header_core, 72); append(cbuf, seed); append(cbuf, final_state);
     append(cbuf, x_bytes, x_bytes_len);
-    append(cbuf, checkpoints_root);
+    append(cbuf, checkpoints_root); append(cbuf, segments_root);
     append_u64_le(cbuf, stability_metric);
-    Bytes32 expected_commit = sha256(cbuf);
+    if (sha256(cbuf) != commit) return false;
 
-    if (expected_commit != commit) return false;
+    // Phase 6: Challenge derivation — verify proofs correspond to correct challenges
+    int32_t nseg = (params.cx_rounds + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
+    Bytes32 challenge_seed = compute_challenge_seed(commit, segments_root);
+    int32_t actual_chal = std::min((int32_t)CX_CHAL_SEGMENTS, nseg);
+    std::vector<uint32_t> expected_seg_idx = derive_segment_indices(challenge_seed, nseg, actual_chal);
+    // Verify segment proofs match expected indices
+    if ((int32_t)segment_proofs.size() != actual_chal) return false;
+    for (int i = 0; i < actual_chal; ++i) {
+        if (segment_proofs[i].leaf.segment_index != expected_seg_idx[i]) return false;
+    }
+    // Derive expected round indices using round_start/end from verified proofs
+    std::vector<std::vector<uint32_t>> expected_round_idx(expected_seg_idx.size());
+    for (size_t i = 0; i < expected_seg_idx.size(); ++i) {
+        expected_round_idx[i] = derive_round_indices(challenge_seed, (uint32_t)i,
+            segment_proofs[i].leaf.round_start, segment_proofs[i].leaf.round_end, CX_CHAL_STEPS);
+    }
 
-    // 5. Verify stability basin on x_bytes
-    int32_t x[32];
-    for (int i = 0; i < n; ++i)
-        x[i] = read_i32_le(x_bytes + i * 4);
+    // Phase 7: Boundary coherence
+    for (const auto& sp : segment_proofs) {
+        if (sp.leaf.round_start > sp.leaf.round_end) return false;
+        if (sp.leaf.round_end > (uint32_t)params.cx_rounds) return false;
+    }
 
+    // Phase 8: Round witness verification
     CXProblem prob = derive_M_and_b(block_key, n, params.cx_lam);
+    CXProgram program; program.generate(block_key);
+    Bytes32 epoch_key = epoch_scratch_key(0, nullptr);
+    size_t dataset_size = 512ULL * 1024 * 1024;
+    int32_t lr_shift = params.cx_lr_shift;
 
+    size_t rw_idx = 0;
+    for (int seg_i = 0; seg_i < actual_chal && seg_i < (int)expected_round_idx.size(); ++seg_i) {
+        for (int step_j = 0; step_j < CX_CHAL_STEPS && step_j < (int)expected_round_idx[seg_i].size(); ++step_j) {
+            if (rw_idx >= round_witnesses.size()) return false;
+            const auto& rw = round_witnesses[rw_idx++];
+            uint32_t r = expected_round_idx[seg_i][step_j];
+            if (rw.round_index != r) return false;
+
+            // Recompute scratch indices from state_before
+            uint32_t scratch_mb = params.cx_scratch_mb;
+            uint32_t scratch_words = (uint32_t)((uint64_t)scratch_mb * 1024 * 1024 / 4);
+            if (scratch_words == 0) scratch_words = 1;
+            uint32_t w0 = read_u32_le(rw.state_before.data());
+            uint32_t w1 = read_u32_le(rw.state_before.data() + 4);
+            uint32_t exp_idx0 = (w0 ^ u32((uint64_t)r * 0x9E3779B1u)) % scratch_words;
+            uint32_t exp_idx1 = (w1 ^ u32((uint64_t)r * 0x85EBCA77u)) % scratch_words;
+            uint32_t exp_idx2 = (u32(w0+w1) ^ u32((uint64_t)r * 0x27D4EB2Du)) % scratch_words;
+            uint32_t exp_idx3 = (u32(w0-w1) ^ u32((uint64_t)r * 0x165667B1u)) % scratch_words;
+            if (rw.scratch_indices[0] != exp_idx0 || rw.scratch_indices[1] != exp_idx1 ||
+                rw.scratch_indices[2] != exp_idx2 || rw.scratch_indices[3] != exp_idx3) return false;
+
+            // Verify scratch values by recomputing from scratchpad (O(1) per value)
+            for (int vi = 0; vi < 4; ++vi) {
+                uint32_t byte_off = (rw.scratch_indices[vi] * 4) % ((uint32_t)scratch_mb * 1024 * 1024 - 4);
+                uint32_t block_idx = byte_off / 32;
+                uint32_t byte_within = byte_off % 32;
+                Bytes32 block = compute_single_scratch_block(epoch_key, block_idx);
+                int32_t expected_val = read_i32_le(block.data() + byte_within);
+                if (rw.scratch_values[vi] != expected_val) return false;
+            }
+
+            // Verify dataset value
+            uint64_t exp_ds = compute_single_dataset_value(prev_hash, (uint64_t)r % dataset_size);
+            if (rw.dataset_value != exp_ds) return false;
+
+            // Verify program output
+            uint64_t exp_prog = program.execute(rw.dataset_value, (size_t)r);
+            if (rw.program_output != exp_prog) return false;
+
+            // Verify round transition: x_before → x_after
+            int32_t Ax[32]; matvec_A(prob, rw.x_before.data(), Ax, n);
+            int32_t m0 = rw.scratch_values[0], m1 = rw.scratch_values[1];
+            int32_t m2 = rw.scratch_values[2], m3 = rw.scratch_values[3];
+            m0 ^= (int32_t)(rw.program_output & 0xFFFFFFFF);
+            m1 ^= (int32_t)(rw.program_output >> 32);
+            int32_t x_exp[32];
+            for (int i = 0; i < n; ++i)
+                x_exp[i] = clamp_i32((int64_t)rw.x_before[i] - (int64_t)asr_i32(clamp_i32((int64_t)Ax[i]-(int64_t)prob.b[i]), lr_shift));
+            uint32_t j0 = w0 % n, j1 = w1 % n, j2 = (w0^w1) % n, j3 = (w0+u32(r)) % n;
+            x_exp[j0] = clamp_i32((int64_t)(x_exp[j0] ^ asr_i32(m0, 5)));
+            x_exp[j1] = clamp_i32((int64_t)x_exp[j1] + (int64_t)asr_i32(m1, 7));
+            x_exp[j2] = clamp_i32((int64_t)(x_exp[j2] ^ asr_i32(m2, 6)));
+            x_exp[j3] = clamp_i32((int64_t)x_exp[j3] + (int64_t)asr_i32(m3, 8));
+            for (int i = 0; i < n; ++i)
+                if (x_exp[i] != rw.x_after[i]) return false;
+
+            // Verify state transition
+            std::vector<uint8_t> su;
+            su.insert(su.end(), rw.state_before.begin(), rw.state_before.end());
+            uint8_t mx_v[16]; write_i32_le(mx_v, m0); write_i32_le(mx_v+4, m1);
+            write_i32_le(mx_v+8, m2); write_i32_le(mx_v+12, m3); append(su, mx_v, 16);
+            uint8_t xj_v[16]; write_i32_le(xj_v, x_exp[j0]); write_i32_le(xj_v+4, x_exp[j1]);
+            write_i32_le(xj_v+8, x_exp[j2]); write_i32_le(xj_v+12, x_exp[j3]); append(su, xj_v, 16);
+            append_u32_le(su, r);
+            Bytes32 exp_state = sha256(su);
+            if (exp_state != rw.state_after) return false;
+        }
+    }
+
+    // Phase 9: Stability basin
+    int32_t x[32];
+    for (int i = 0; i < n; ++i) x[i] = read_i32_le(x_bytes + i * 4);
     Bytes32 stctx = stability_ctx(header_core, seed, checkpoints_root);
     uint64_t metric_out = 0;
-    bool stable = verify_stability_basin(
-        x, prob, n, params.cx_lr_shift, stctx,
-        params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps,
-        params.stab_lr_shift, metric_out);
+    if (!verify_stability_basin(x, prob, n, lr_shift, stctx,
+            params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps,
+            params.stab_lr_shift, metric_out)) return false;
 
-    if (!stable) return false;
+    // Phase 10: Metric
     if (metric_out != stability_metric) return false;
 
     return true;
+}
+
+// ---- Build merkle path for leaf at index ----
+std::vector<Bytes32> build_merkle_path(const std::vector<Bytes32>& leaf_hashes, uint32_t index) {
+    std::vector<Bytes32> path;
+    if (leaf_hashes.empty()) return path;
+    std::vector<Bytes32> tree = leaf_hashes;
+    uint32_t idx = index;
+    while (tree.size() > 1) {
+        if (tree.size() % 2 == 1) tree.push_back(tree.back());
+        std::vector<Bytes32> next;
+        for (size_t i = 0; i < tree.size(); i += 2) {
+            uint32_t pair_idx = idx & ~1u;
+            if (i == pair_idx) {
+                path.push_back(tree[(idx & 1) ? i : i + 1]);
+            }
+            std::vector<uint8_t> buf;
+            append(buf, tree[i]); append(buf, tree[i + 1]);
+            next.push_back(sha256(buf));
+        }
+        idx >>= 1;
+        tree = next;
+    }
+    return path;
+}
+
+// ---- Generate Transcript V2 witnesses by replaying challenged rounds ----
+void generate_transcript_witnesses(
+    CXAttemptResult& res,
+    const uint8_t* scratch, size_t scratch_len,
+    const Bytes32& block_key,
+    uint32_t nonce, uint32_t extra_nonce,
+    const ConsensusParams& params,
+    const uint8_t* header_core,
+    int32_t epoch)
+{
+    int32_t n = params.cx_n;
+    int32_t rounds = params.cx_rounds;
+    int32_t lr_shift = params.cx_lr_shift;
+    int32_t seg_len = CX_SEGMENT_LEN;
+    int32_t nseg = (rounds + seg_len - 1) / seg_len;
+
+    // Derive challenges from commit + segments_root
+    std::vector<uint32_t> chal_seg_idx;
+    std::vector<std::vector<uint32_t>> chal_round_idx;
+    int32_t actual_chal = std::min((int32_t)CX_CHAL_SEGMENTS, nseg);
+    derive_challenges(res.commit, res.segments_root, nseg,
+                      actual_chal, CX_CHAL_STEPS,
+                      res.segment_leaves, chal_seg_idx, chal_round_idx);
+
+    // Build segment leaf hashes for merkle paths
+    std::vector<Bytes32> seg_leaf_hashes;
+    for (auto& sl : res.segment_leaves)
+        seg_leaf_hashes.push_back(hash_segment_leaf(sl));
+
+    // Generate SegmentProofs
+    res.segment_proofs.clear();
+    for (auto si : chal_seg_idx) {
+        SegmentProof sp;
+        sp.leaf = res.segment_leaves[si];
+        sp.merkle_path = build_merkle_path(seg_leaf_hashes, si);
+        res.segment_proofs.push_back(sp);
+    }
+
+    // Collect all challenged rounds (sorted for efficient replay)
+    struct ChalRound { uint32_t round; size_t proof_idx; size_t step_idx; };
+    std::vector<ChalRound> all_rounds;
+    for (size_t i = 0; i < chal_seg_idx.size(); ++i)
+        for (size_t j = 0; j < chal_round_idx[i].size(); ++j)
+            all_rounds.push_back({chal_round_idx[i][j], i, j});
+    std::sort(all_rounds.begin(), all_rounds.end(),
+              [](const ChalRound& a, const ChalRound& b){ return a.round < b.round; });
+
+    // Replay the full loop, only capturing witnesses for challenged rounds
+    Bytes32 prev_hash;
+    std::memcpy(prev_hash.data(), header_core, 32);
+    if (!g_cx_dataset.is_valid_for(prev_hash)) g_cx_dataset.generate(prev_hash);
+    CXProgram program; program.generate(block_key);
+
+    std::vector<uint8_t> sbuf;
+    append_magic(sbuf); append(sbuf, "SEED", 4);
+    append(sbuf, header_core, HEADER_CORE_LEN); append(sbuf, block_key);
+    append_u32_le(sbuf, nonce); append_u32_le(sbuf, extra_nonce);
+    Bytes32 seed = sha256(sbuf);
+
+    std::vector<uint8_t> x0seed;
+    append_magic(x0seed); append(x0seed, "X0", 2); append(x0seed, seed);
+    auto rawx = prng_bytes(sha256(x0seed), n * 4);
+    int32_t x[32];
+    for (int i = 0; i < n; ++i) x[i] = asr_i32(read_i32_le(rawx.data() + i*4), 4);
+
+    CXProblem prob = derive_M_and_b(block_key, n, params.cx_lam);
+    std::vector<uint8_t> stbuf;
+    append_magic(stbuf); append(stbuf, "ST", 2); append(stbuf, seed);
+    Bytes32 state = sha256(stbuf);
+
+    uint32_t scratch_words = (uint32_t)(scratch_len / 4);
+    if (scratch_words == 0) scratch_words = 1;
+    size_t dataset_size = g_cx_dataset.memory.size();
+
+    // Map round → witness slots
+    std::map<uint32_t, std::vector<size_t>> round_to_slots;
+    for (size_t ri = 0; ri < all_rounds.size(); ++ri)
+        round_to_slots[all_rounds[ri].round].push_back(ri);
+
+    std::vector<RoundWitness> witnesses(all_rounds.size());
+
+    for (int32_t r = 1; r <= rounds; ++r) {
+        // Check if this round is challenged
+        auto it = round_to_slots.find((uint32_t)r);
+        bool is_challenged = (it != round_to_slots.end());
+
+        int32_t Ax[32]; matvec_A(prob, x, Ax, n);
+        uint32_t w0 = read_u32_le(state.data());
+        uint32_t w1 = read_u32_le(state.data() + 4);
+        uint32_t idx0 = (w0 ^ u32((uint64_t)r * 0x9E3779B1u)) % scratch_words;
+        uint32_t idx1 = (w1 ^ u32((uint64_t)r * 0x85EBCA77u)) % scratch_words;
+        uint32_t idx2 = (u32(w0+w1) ^ u32((uint64_t)r * 0x27D4EB2Du)) % scratch_words;
+        uint32_t idx3 = (u32(w0-w1) ^ u32((uint64_t)r * 0x165667B1u)) % scratch_words;
+        int32_t m0 = mix_from_scratch(scratch, scratch_len, idx0);
+        int32_t m1 = mix_from_scratch(scratch, scratch_len, idx1);
+        int32_t m2 = mix_from_scratch(scratch, scratch_len, idx2);
+        int32_t m3 = mix_from_scratch(scratch, scratch_len, idx3);
+
+        uint64_t ds_val = g_cx_dataset.memory[(size_t)r % dataset_size];
+        uint64_t prog_out = program.execute(ds_val, (size_t)r);
+
+        // Capture BEFORE program mixing (raw scratch values)
+        if (is_challenged) {
+            for (auto slot : it->second) {
+                auto& rw = witnesses[slot];
+                rw.round_index = (uint32_t)r;
+                std::copy(x, x + 32, rw.x_before.begin());
+                rw.state_before = state;
+                rw.scratch_indices = {idx0, idx1, idx2, idx3};
+                rw.scratch_values = {m0, m1, m2, m3}; // RAW, before program mixing
+                rw.dataset_value = ds_val;
+                rw.program_output = prog_out;
+            }
+        }
+
+        // Apply program mixing
+        m0 ^= (int32_t)(prog_out & 0xFFFFFFFF);
+        m1 ^= (int32_t)(prog_out >> 32);
+
+        // Apply round transition
+        for (int i = 0; i < n; ++i)
+            x[i] = clamp_i32((int64_t)x[i] - (int64_t)asr_i32(clamp_i32((int64_t)Ax[i]-(int64_t)prob.b[i]), lr_shift));
+        uint32_t j0 = w0 % n, j1 = w1 % n, j2 = (w0^w1) % n, j3 = (w0+u32(r)) % n;
+        x[j0] = clamp_i32((int64_t)(x[j0] ^ asr_i32(m0, 5)));
+        x[j1] = clamp_i32((int64_t)x[j1] + (int64_t)asr_i32(m1, 7));
+        x[j2] = clamp_i32((int64_t)(x[j2] ^ asr_i32(m2, 6)));
+        x[j3] = clamp_i32((int64_t)x[j3] + (int64_t)asr_i32(m3, 8));
+
+        // State update
+        std::vector<uint8_t> su;
+        su.insert(su.end(), state.begin(), state.end());
+        uint8_t mx_b[16]; write_i32_le(mx_b, m0); write_i32_le(mx_b+4, m1);
+        write_i32_le(mx_b+8, m2); write_i32_le(mx_b+12, m3); append(su, mx_b, 16);
+        uint8_t xj_b[16]; write_i32_le(xj_b, x[j0]); write_i32_le(xj_b+4, x[j1]);
+        write_i32_le(xj_b+8, x[j2]); write_i32_le(xj_b+12, x[j3]); append(su, xj_b, 16);
+        append_u32_le(su, (uint32_t)r);
+        state = sha256(su);
+
+        // Capture x_after and state_after if challenged
+        if (is_challenged) {
+            for (auto slot : it->second) {
+                auto& rw = witnesses[slot];
+                std::copy(x, x + 32, rw.x_after.begin());
+                rw.state_after = state;
+            }
+        }
+    }
+
+    // Reorder witnesses to match challenge order (seg_i, step_j)
+    res.round_witnesses.clear();
+    for (size_t i = 0; i < chal_seg_idx.size(); ++i) {
+        for (size_t j = 0; j < chal_round_idx[i].size(); ++j) {
+            uint32_t target_round = chal_round_idx[i][j];
+            for (auto& cr : all_rounds) {
+                if (cr.round == target_round && cr.proof_idx == i && cr.step_idx == j) {
+                    size_t slot = &cr - all_rounds.data();
+                    res.round_witnesses.push_back(witnesses[slot]);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 } // namespace sost

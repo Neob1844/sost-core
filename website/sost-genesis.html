@@ -44,13 +44,13 @@
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-  .nav-logo .brand-sost { color: var(--red-primary); }
-  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-  .nav-links a { color: var(--text-dim); font-size: 11px; padding: 4px 10px; text-decoration: none; transition: color 0.2s, background 0.2s; border-radius: 4px; letter-spacing: 0.5px; white-space: nowrap; }
-  .nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
-  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); font-weight: 600; }
+nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.nav-logo .brand-sost { color: var(--red-primary); }
+.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
+.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
 
   .hero { padding: 80px 0 48px; text-align: left; border-bottom: 1px solid var(--border-dim); }
   .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
@@ -182,16 +182,16 @@
         <tr><td class="param">Block Height</td><td class="val">0</td></tr>
         <tr><td class="param">Timestamp</td><td class="val">1773619200 (2026-03-16 00:00:00 UTC)</td></tr>
         <tr><td class="param">Previous Hash</td><td class="val" style="font-size:11px;word-break:break-all;">0000000000000000000000000000000000000000000000000000000000000000</td></tr>
-        <tr><td class="param">Block Hash</td><td class="val" style="font-size:11px;word-break:break-all;">0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793</td></tr>
+        <tr><td class="param">Block Hash</td><td class="val" style="font-size:11px;word-break:break-all;">a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164</td></tr>
         <tr><td class="param">Difficulty</td><td class="val">11.6841 (bitsQ = 765,730)</td></tr>
-        <tr><td class="param">Nonce</td><td class="val">47</td></tr>
+        <tr><td class="param">Nonce</td><td class="val">3288</td></tr>
         <tr><td class="param">Extra Nonce</td><td class="val">0</td></tr>
         <tr><td class="param">Subsidy</td><td class="val">7.85100863 SOST (785,100,863 stocks)</td></tr>
         <tr><td class="param">Miner Reward</td><td class="val">3.92550433 SOST (50%)</td></tr>
         <tr><td class="param">Gold Funding Vault</td><td class="val">1.96275215 SOST (25%)</td></tr>
         <tr><td class="param">PoPC Pool</td><td class="val">1.96275215 SOST (25%)</td></tr>
         <tr><td class="param">Profile</td><td class="val">mainnet</td></tr>
-        <tr><td class="param">Algorithm</td><td class="val">ConvergenceX v2.0</td></tr>
+        <tr><td class="param">Algorithm</td><td class="val">ConvergenceX v2.0 (Transcript V2)</td></tr>
       </tbody>
     </table>
   </div>
@@ -258,12 +258,13 @@
   <span class="cs">"bits_q"</span>: <span class="cn">765730</span>,
   <span class="cs">"prev_hash"</span>: <span class="cv">"0000000000000000000000000000000000000000000000000000000000000000"</span>,
   <span class="cs">"merkle_root"</span>: <span class="cv">"1111111111111111111111111111111111111111111111111111111111111111"</span>,
-  <span class="cs">"nonce"</span>: <span class="cn">47</span>,
+  <span class="cs">"nonce"</span>: <span class="cn">3288</span>,
   <span class="cs">"extra_nonce"</span>: <span class="cn">0</span>,
-  <span class="cs">"block_id"</span>: <span class="cv">"0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793"</span>,
-  <span class="cs">"commit"</span>: <span class="cv">"050698e32c3150d47b15507efb6b4100c0474417cda7196b074c64cc84ee5711"</span>,
-  <span class="cs">"checkpoints_root"</span>: <span class="cv">"699740822e55090e44f5ed87cbdb1d3e719892b6cb98a0910c9abad90990d7a1"</span>,
-  <span class="cs">"stability_metric"</span>: <span class="cn">215</span>,
+  <span class="cs">"block_id"</span>: <span class="cv">"a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164"</span>,
+  <span class="cs">"commit"</span>: <span class="cv">"0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e"</span>,
+  <span class="cs">"segments_root"</span>: <span class="cv">"6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5"</span>,
+  <span class="cs">"checkpoints_root"</span>: <span class="cv">"3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc"</span>,
+  <span class="cs">"stability_metric"</span>: <span class="cn">83</span>,
   <span class="cs">"subsidy_stocks"</span>: <span class="cn">785100863</span>,
   <span class="cs">"coinbase_split"</span>: {
     <span class="cs">"miner"</span>: <span class="cn">392550433</span>,
@@ -317,8 +318,8 @@
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">nonce</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">47</td>
-            <td style="padding:10px 12px;">The value that, combined with the header, produces a valid ConvergenceX proof-of-work solution.</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">3288</td>
+            <td style="padding:10px 12px;">The value that, combined with the header, produces a valid ConvergenceX Transcript V2 proof-of-work solution.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">extra_nonce</td>
@@ -327,22 +328,27 @@
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">block_id</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">0a6c8e...d793</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">a95478...5164</td>
             <td style="padding:10px 12px;">SHA-256 hash of the serialized block header. This is the unique identifier for block 0 — the anchor hash that all nodes agree on.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">commit</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">050698...5711</td>
-            <td style="padding:10px 12px;">ConvergenceX commitment hash. Binds the miner's work to the block content — prevents proof reuse across different blocks.</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">0006fe...544e</td>
+            <td style="padding:10px 12px;">ConvergenceX Transcript V2 commitment hash. Binds the miner's work (including segments_root) to the block content — prevents proof reuse across different blocks.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">segments_root</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">6614cb...b0d5</td>
+            <td style="padding:10px 12px;">Transcript V2 merkle root of segment commitments. Binds the full computation transcript, enabling sampled round verification via segment_proofs and round_witnesses.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">checkpoints_root</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">699740...d7a1</td>
-            <td style="padding:10px 12px;">Merkle root of the ConvergenceX checkpoint tree. Enables compact proof verification — a verifier can check the work without repeating 100,000 rounds.</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--green-primary);">3fdb1f...d7cc</td>
+            <td style="padding:10px 12px;">Merkle root of the ConvergenceX checkpoint tree. Together with segments_root and round_witnesses (Transcript V2), enables 11-phase compact proof verification (~0.2ms) without repeating 100,000 rounds.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">stability_metric</td>
-            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">215</td>
+            <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">83</td>
             <td style="padding:10px 12px;">Measures convergence quality of the gradient descent solution. Higher is better. Must meet the minimum threshold for the current difficulty level.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--border-dim);">
@@ -441,7 +447,7 @@ function copyAddr(id, btn) {
   });
 }
 function copyJson(btn) {
-  var raw = '{\n  "timestamp": 1773619200,\n  "bits_q": 765730,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 47,\n  "extra_nonce": 0,\n  "block_id": "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793",\n  "commit": "050698e32c3150d47b15507efb6b4100c0474417cda7196b074c64cc84ee5711",\n  "checkpoints_root": "699740822e55090e44f5ed87cbdb1d3e719892b6cb98a0910c9abad90990d7a1",\n  "stability_metric": 215,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
+  var raw = '{\n  "timestamp": 1773619200,\n  "bits_q": 765730,\n  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",\n  "merkle_root": "1111111111111111111111111111111111111111111111111111111111111111",\n  "nonce": 3288,\n  "extra_nonce": 0,\n  "block_id": "a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164",\n  "commit": "0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e",\n  "segments_root": "6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5",\n  "checkpoints_root": "3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc",\n  "stability_metric": 83,\n  "subsidy_stocks": 785100863,\n  "coinbase_split": {\n    "miner": 392550433,\n    "gold_vault": 196275215,\n    "popc_pool": 196275215\n  }\n}';
   navigator.clipboard.writeText(raw).then(function() {
     btn.textContent = 'Copied';
     setTimeout(function() { btn.textContent = 'Copy JSON'; }, 1500);

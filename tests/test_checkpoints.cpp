@@ -91,7 +91,7 @@ void test_can_skip_empty_state() {
 
 void test_consensus_params_unchanged() {
     // Verify critical consensus constants are not touched
-    assert(sost::GENESIS_TIME == 1773619200);
+    assert(sost::GENESIS_TIME == 1773597600);
     assert(sost::GENESIS_BITSQ == 765730);
     assert(sost::R0_STOCKS == 785100863);
     assert(sost::TARGET_SPACING == 600);

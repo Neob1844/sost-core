@@ -47,14 +47,16 @@ static std::vector<BlockMeta> g_chain;
 static Bytes32 g_tip_hash;
 
 struct MinedBlock {
-    Bytes32  block_id, prev_hash, merkle_root, commit, checkpoints_root;
+    Bytes32  block_id, prev_hash, merkle_root, commit, checkpoints_root, segments_root;
     int64_t  height, timestamp, subsidy;
     uint32_t bits_q, nonce, extra_nonce;
     uint64_t stability_metric;
     int64_t  miner_reward, gold_vault_reward, popc_pool_reward;
-    std::vector<uint8_t> x_bytes;         // CX solution vector (n*4 bytes)
-    Bytes32 final_state;                  // Final hash state after 100K rounds
-    std::vector<Bytes32> checkpoint_leaves; // Merkle leaves for CX proof
+    std::vector<uint8_t> x_bytes;
+    Bytes32 final_state;
+    std::vector<Bytes32> checkpoint_leaves;
+    std::vector<SegmentProof> segment_proofs;
+    std::vector<RoundWitness> round_witnesses;
 };
 static std::vector<MinedBlock> g_mined_blocks;
 
@@ -402,13 +404,57 @@ static bool rpc_submit_block_full(
         + ",\"popc_pool\":" + std::to_string(mb.popc_pool_reward)
         + ",\"stability_metric\":" + std::to_string(mb.stability_metric)
         + ",\"x_bytes\":\"" + to_hex_str(mb.x_bytes.data(), mb.x_bytes.size()) + "\""
-        + ",\"final_state\":\"" + hex(mb.final_state) + "\"";
+        + ",\"final_state\":\"" + hex(mb.final_state) + "\""
+        + ",\"segments_root\":\"" + hex(mb.segments_root) + "\"";
 
-    // Checkpoint leaves for CX proof verification
+    // Checkpoint leaves
     bj += ",\"checkpoint_leaves\":[";
     for (size_t i = 0; i < mb.checkpoint_leaves.size(); ++i) {
         if (i) bj += ",";
         bj += "\"" + hex(mb.checkpoint_leaves[i]) + "\"";
+    }
+    bj += "]";
+
+    // Segment proofs (Transcript V2)
+    bj += ",\"segment_proofs\":[";
+    for (size_t i = 0; i < mb.segment_proofs.size(); ++i) {
+        if (i) bj += ",";
+        const auto& sp = mb.segment_proofs[i];
+        bj += "{\"si\":" + std::to_string(sp.leaf.segment_index)
+            + ",\"rs\":" + std::to_string(sp.leaf.round_start)
+            + ",\"re\":" + std::to_string(sp.leaf.round_end)
+            + ",\"ss\":\"" + hex(sp.leaf.state_start) + "\""
+            + ",\"se\":\"" + hex(sp.leaf.state_end) + "\""
+            + ",\"xsh\":\"" + hex(sp.leaf.x_start_hash) + "\""
+            + ",\"xeh\":\"" + hex(sp.leaf.x_end_hash) + "\""
+            + ",\"rrs\":" + std::to_string(sp.leaf.residual_start)
+            + ",\"rre\":" + std::to_string(sp.leaf.residual_end)
+            + ",\"mp\":[";
+        for (size_t j = 0; j < sp.merkle_path.size(); ++j) {
+            if (j) bj += ",";
+            bj += "\"" + hex(sp.merkle_path[j]) + "\"";
+        }
+        bj += "]}";
+    }
+    bj += "]";
+
+    // Round witnesses (Transcript V2)
+    bj += ",\"round_witnesses\":[";
+    for (size_t i = 0; i < mb.round_witnesses.size(); ++i) {
+        if (i) bj += ",";
+        const auto& rw = mb.round_witnesses[i];
+        bj += "{\"ri\":" + std::to_string(rw.round_index)
+            + ",\"xb\":\""; for (int k = 0; k < 32; ++k) { uint8_t b[4]; write_i32_le(b, rw.x_before[k]); bj += to_hex_str(b, 4); }
+        bj += "\",\"xa\":\""; for (int k = 0; k < 32; ++k) { uint8_t b[4]; write_i32_le(b, rw.x_after[k]); bj += to_hex_str(b, 4); }
+        bj += "\",\"sb\":\"" + hex(rw.state_before) + "\""
+            + ",\"sa\":\"" + hex(rw.state_after) + "\""
+            + ",\"sv\":[" + std::to_string(rw.scratch_values[0]) + "," + std::to_string(rw.scratch_values[1])
+            + "," + std::to_string(rw.scratch_values[2]) + "," + std::to_string(rw.scratch_values[3]) + "]"
+            + ",\"si2\":[" + std::to_string(rw.scratch_indices[0]) + "," + std::to_string(rw.scratch_indices[1])
+            + "," + std::to_string(rw.scratch_indices[2]) + "," + std::to_string(rw.scratch_indices[3]) + "]"
+            + ",\"dv\":" + std::to_string(rw.dataset_value)
+            + ",\"po\":" + std::to_string(rw.program_output)
+            + "}";
     }
     bj += "]";
 
@@ -628,6 +674,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                        (long long)subsidy, (long long)total_fees,
                        (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
 
+                // Generate Transcript V2 witnesses (replays challenged rounds)
+                printf("  Generating Transcript V2 witnesses...\n");
+                generate_transcript_witnesses(res, scratch.data(), scratch.size(),
+                    bk, nonce, extra_nonce, params, hc72, epoch);
+                printf("  %zu segment proofs, %zu round witnesses\n",
+                       res.segment_proofs.size(), res.round_witnesses.size());
+
                 BlockMeta meta;
                 meta.block_id = block_id;
                 meta.height = h;
@@ -642,12 +695,15 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.merkle_root = mrkl;
                 mb.commit = res.commit;
                 mb.checkpoints_root = res.checkpoints_root;
+                mb.segments_root = res.segments_root;
                 mb.height = h; mb.timestamp = ts; mb.bits_q = bits_q;
                 mb.nonce = nonce; mb.extra_nonce = extra_nonce;
                 mb.stability_metric = res.stability_metric;
                 mb.x_bytes = res.x_bytes;
                 mb.final_state = res.final_state;
                 mb.checkpoint_leaves = res.checkpoint_leaves;
+                mb.segment_proofs = res.segment_proofs;
+                mb.round_witnesses = res.round_witnesses;
                 mb.subsidy = subsidy;
                 mb.miner_reward = split.miner;
                 mb.gold_vault_reward = split.gold_vault;

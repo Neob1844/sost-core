@@ -15,9 +15,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1
 nav .c{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .logo{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--t1);text-decoration:none;letter-spacing:2px}
 .logo b{color:var(--red)}
-.nv{display:flex;gap:4px;flex-wrap:wrap}
-.nv a{color:var(--t3);text-decoration:none;font-size:10px;padding:3px 8px;border-radius:3px;transition:.2s}
-.nv a:hover{color:var(--t1);background:var(--bdr)}
 .nv a.on{color:var(--red);border-bottom:1px solid var(--red)}
 .hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--bdr)}
 .hero h1{font-family:var(--disp);font-size:28px;font-weight:600;letter-spacing:-1px}
@@ -42,24 +39,52 @@ footer a{color:var(--t3);text-decoration:none}
 .toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
 .toc a{color:var(--cyan);text-decoration:none;display:block;padding:3px 0;font-size:12px}
 .toc a:hover{color:var(--t1)}
-@media(max-width:768px){.nv{display:none}h2{font-size:17px}pre{font-size:10px}}
+@media(max-width:768px){h2{font-size:17px}pre{font-size:10px}}
+nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.nav-logo .brand-sost { color: var(--red-primary); }
+.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
+.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
 </style>
 </head>
 <body>
-<nav><div class="c">
-<a class="logo" href="index.html"><b>SOST</b> PROTOCOL</a>
-<div class="nv">
-<a href="index.html">Home</a>
-<a href="sost-genesis.html">Genesis</a>
-<a href="sost-technology.html">Technology</a>
-<a href="sost-protocol-spec.html" class="on">Protocol Spec</a>
-<a href="sost-tokenomics.html">Tokenomics</a>
-<a href="sost-roadmap.html">Roadmap</a>
-<a href="sost-whitepaper.html">Whitepaper</a>
-<a href="sost-getting-started.html">Getting Started</a>
-<a href="sost-community.html">Community</a>
-</div>
-</div></nav>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html" class="active">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
 
 <div class="hero"><div class="c">
 <h1>SOST <span>Technical Reference</span></h1>
@@ -87,11 +112,11 @@ footer a{color:var(--t3);text-decoration:none}
 <h2>1. ConvergenceX <span>v2.0</span></h2>
 <p>CPU-friendly memory-hard Proof of Work based on gradient descent over a random 32&times;32 linear system, mixed with reads from a 4GB dataset and 4GB scratchpad.</p>
 
-<h3>Dataset (4GB, persistent per block)</h3>
-<p>512M <code>uint64_t</code> entries generated via sequential LCG from <code>prev_block_hash</code>. Multiplier: <code>6364136223846793005</code>, increment: <code>1442695040888963407</code>, plus SplitMix64 mixing. Thread-local; reused across all nonce attempts for the same block. <em>Source: convergencex.cpp:12-28</em></p>
+<h3>Dataset v2 (4GB, persistent per block)</h3>
+<p>512M <code>uint64_t</code> entries generated via sequential LCG from <code>prev_block_hash</code>. Multiplier: <code>6364136223846793005</code>, increment: <code>1442695040888963407</code>, plus SplitMix64 mixing. <strong>Dataset v2:</strong> independently indexable via SplitMix64 &mdash; O(1) per value, no full 4GB needed for verification. Thread-local; reused across all nonce attempts for the same block. <em>Source: convergencex.cpp:12-28</em></p>
 
-<h3>Scratchpad (4GB mainnet, per epoch)</h3>
-<p>Sequential SHA256 hash chain from epoch key: <code>h = SHA256(h || counter)</code> for counter = 0, 1, 2, ... filling 4096 MB. Each 32-byte block depends on the previous &mdash; cannot be parallelized. <em>Source: scratchpad.cpp:45-81</em></p>
+<h3>Scratchpad v2 (4GB mainnet, per epoch)</h3>
+<p>Sequential SHA256 hash chain from epoch key. <strong>Scratchpad v2:</strong> independently indexable via <code>SHA256(MAGIC||"SCR2"||seed||index)</code> &mdash; O(1) per block, no full 4GB needed for verification. Mining still uses the full 4GB for performance. <em>Source: scratchpad.cpp:45-81</em></p>
 
 <h3>Per-Block Program (256 operations)</h3>
 <p>Each block generates a unique program from <code>block_key = SHA256(prev_hash || "BLOCK_KEY")</code>. 256 instructions, each one of 8 opcodes: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB. Immediates derived from block_hash bytes. Prevents ASIC optimization. <em>Source: convergencex.cpp:35-48</em></p>
@@ -102,22 +127,24 @@ footer a{color:var(--t3);text-decoration:none}
 <h3>Stability Basin Test</h3>
 <p>B0 profile: scale=1, k=4, steps=4, margin=180. Generates 4 deterministic perturbations &delta; &isin; [-1, +1], applies 4 gradient steps to reference and perturbed copies, verifies L1 distance doesn't grow &gt; 180 per step. Large perturbations must compress to 70% ratio. <em>Source: convergencex.cpp:156-197</em></p>
 
-<h3>Commit Hash</h3>
-<pre>commit = SHA256(MAGIC || "COMMIT" || header_core[72] || seed || final_state || x_bytes[128] || checkpoints_root || stability_metric)</pre>
-<p>320 bytes hashed. Block accepted if <code>commit &le; target(bitsQ)</code>.</p>
+<h3>Commit V2 Hash</h3>
+<pre>commit = SHA256(MAGIC || "COMMIT" || header_core[72] || seed || final_state || x_bytes[128] || segments_root || checkpoints_root || stability_metric)</pre>
+<p>352 bytes hashed. Commit V2 includes <code>segments_root</code> binding the full computation transcript. Block also includes <code>segment_proofs</code> (merkle proofs for challenged segments) and <code>round_witnesses</code> for sampled round verification. Block accepted if <code>commit &le; target(bitsQ)</code>.</p>
 
 <h3>Target Computation</h3>
 <p><code>target_from_bitsQ()</code> uses a 256-entry LUT of precomputed <code>2<sup>256</sup> &times; 2<sup>-i/256</sup></code> values with linear interpolation. For bitsQ = 765730: integer part = 11, fractional = 44834. Target is LUT interpolation shifted right by 11 bits. <em>Source: sostcompact.cpp:73-105</em></p>
 
-<h3>Genesis Example</h3>
-<pre>timestamp:  1773619200 (2026-03-16 00:00:00 UTC)
-bitsQ:      765730 (11.6841)
-nonce:      657
-block_id:   e25e24c3e0a33f5e319fa9afeb27b414c40adf75305b20b2cc30105801876cc2
-commit:     0003ba8e2e230d29c578e2328cc868c1e8ab40573dd6e255b2c242defec85b80
-metric:     88
-subsidy:    785,100,863 stocks (7.85100863 SOST)
-split:      miner 392,550,433 | gold 196,275,215 | popc 196,275,215</pre>
+<h3>Genesis Example (Transcript V2)</h3>
+<pre>timestamp:        1773619200 (2026-03-16 00:00:00 UTC)
+bitsQ:            765730 (11.6841)
+nonce:            3288
+block_id:         a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164
+commit:           0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e
+segments_root:    6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5
+checkpoints_root: 3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc
+metric:           83
+subsidy:          785,100,863 stocks (7.85100863 SOST)
+split:            miner 392,550,433 | gold 196,275,215 | popc 196,275,215</pre>
 </div></section>
 
 <!-- 2. CASERT -->
@@ -202,15 +229,20 @@ popc_pool = q                      // 25%</pre>
 <h3>L4: UTXO Connect</h3>
 <p>Atomic: spend all inputs, create all outputs, record BlockUndo for reorgs.</p>
 
-<h3>PoW Verification (verify_cx_proof)</h3>
-<p>The node does NOT recompute the full 100K-round gradient descent. Instead, it verifies a compact proof in ~1ms with 6 checks:</p>
-<pre>1. x_bytes length == 128 bytes (32 &times; 4)
-2. merkle_root_16(checkpoint_leaves) == checkpoints_root
-3. Recompute seed from header + nonce (deterministic)
-4. SHA256(MAGIC||COMMIT||header||seed||state||x_bytes||root||metric) == commit
-5. verify_stability_basin(x_bytes) passes
-6. stability_metric matches</pre>
-<p>Plus: <code>commit &le; target(bitsQ)</code>. No dataset or scratchpad needed. <em>Source: convergencex.cpp:374-442</em></p>
+<h3>PoW Verification (verify_cx_proof V2)</h3>
+<p>The node does NOT recompute the full 100K-round gradient descent. Transcript V2 verifies a compact proof in ~0.2ms with an 11-phase pipeline:</p>
+<pre>1.  x_bytes length == 128 bytes (32 &times; 4)
+2.  merkle_root_16(checkpoint_leaves) == checkpoints_root
+3.  Recompute seed from header + nonce (deterministic)
+4.  Verify segments_root against segment_proofs (merkle proofs for challenged segments)
+5.  Derive challenge set from commit (deterministic challenge derivation)
+6.  For each challenged segment: verify local round transitions via round_witnesses
+7.  Dataset v2 spot-check: SplitMix64 indexing at O(1) per challenged value
+8.  Scratchpad v2 spot-check: SHA256(MAGIC||"SCR2"||seed||index) at O(1) per block
+9.  SHA256(MAGIC||COMMIT||header||seed||state||x_bytes||segments_root||root||metric) == commit
+10. verify_stability_basin(x_bytes) passes
+11. stability_metric matches</pre>
+<p>Plus: <code>commit &le; target(bitsQ)</code>. No dataset or scratchpad needed &mdash; both are independently indexable at O(1). <em>Source: convergencex.cpp:374-442</em></p>
 </div></section>
 
 <!-- 5. EMISSION -->
@@ -266,7 +298,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <section id="sync"><div class="c">
 <h2>8. <span>Synchronization</span></h2>
 <p>New node flow: load genesis_block.json &rarr; connect to peers via P2P &rarr; VERS/VACK handshake &rarr; GETB for missing blocks &rarr; validate each block (L1-L4 + verify_cx_proof + pow_meets_target) &rarr; connect UTXO set &rarr; propagate.</p>
-<p><strong>Node validation requires ~500 MB RAM.</strong> No 4GB dataset or scratchpad needed. The compact proof model (commit hash + checkpoint merkle + stability basin) verifies PoW in ~1ms per block without recomputation.</p>
+<p><strong>Node validation requires ~500 MB RAM.</strong> No 4GB dataset or scratchpad needed. Transcript V2 compact proof (commit V2 + segments_root + sampled round witnesses + checkpoint merkle + stability basin) verifies PoW in ~0.2ms per block without recomputation.</p>
 <p><strong>Mining requires ~8 GB RAM</strong> (4GB dataset + 4GB scratchpad + ~100MB overhead). Scratchpad built once per epoch (~25s SHA256 chain). Dataset generated once per block (~3s LCG).</p>
 
 <h3>Comparison: SOST vs Bitcoin vs Monero</h3>
@@ -276,8 +308,8 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>Mining hardware</td><td>ASICs</td><td>CPU (anti-ASIC)</td><td>CPU (8GB memory-hard)</td></tr>
 <tr><td>Mining memory</td><td>Negligible</td><td>~2GB</td><td>~8GB</td></tr>
 <tr><td>Node verification memory</td><td>Negligible</td><td><strong>~2GB (must build dataset)</strong></td><td><strong>~500MB (no dataset needed)</strong></td></tr>
-<tr><td>Verification method</td><td>Recompute hash</td><td>Recompute full RandomX</td><td>Compact proof (~1ms)</td></tr>
-<tr><td>Verification cost/block</td><td>~1&mu;s</td><td>~50-200ms</td><td>~1ms</td></tr>
+<tr><td>Verification method</td><td>Recompute hash</td><td>Recompute full RandomX</td><td>Transcript V2: segments + round witnesses (~0.2ms)</td></tr>
+<tr><td>Verification cost/block</td><td>~1&mu;s</td><td>~50-200ms</td><td>~0.2ms</td></tr>
 <tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT, 12h half-life)</td></tr>
 </table>
 </div></section>
