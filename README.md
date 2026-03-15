@@ -176,7 +176,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 | P2P port | 19333 |
 | RPC port | 18232 |
 | Default seed | seed.sostcore.com:19333 |
-| Mainnet genesis | 2026-03-16 00:00:00 UTC |
+| Mainnet genesis | 2026-03-15 18:00:00 UTC |
 
 ## Constitutional Addresses
 

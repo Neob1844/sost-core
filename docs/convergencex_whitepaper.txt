@@ -27,7 +27,7 @@ No ICO • No Premine • No VCs • No Ongoing Parameter Governance
 
 The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.
 
-Mainnet v2 Genesis: 2026-03-16 00:00:00 UTC
+Mainnet v2 Genesis: 2026-03-15 18:00:00 UTC
 Note: mainnet v2 is a clean regenesis following security and custody improvements.
 
 Table of Contents
@@ -2221,7 +2221,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 
 | Date | Milestone |
 |---|---|
-| Mar 16, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
+| Mar 15, 2026 | GENESIS BLOCK — 18:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public. |
 | Q2 2027 | Gold purchases begin (8 months post-public-launch per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
 | Q1 2027 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
@@ -2241,7 +2241,7 @@ NOTE: The Foundation reserves the right to accelerate or delay any committed tim
 | Parameter | Value |
 |---|---|
 | Name / Symbol | SOST |
-| Genesis | 2026-03-16 00:00:00 UTC (block 0) |
+| Genesis | 2026-03-15 18:00:00 UTC (block 0) |
 | Algorithm | ConvergenceX (~8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node; 100k rounds, sequential, stability certificate) |
 | Block time | 600 seconds target |
 | Supply cap enforcement | Subsidy-by-height (hard cap by construction) |
@@ -2280,7 +2280,7 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 The genesis block is self-sufficient: it requires only a miner and a timestamp. Community growth and gold accumulation follow naturally from the protocol's own mechanics. SOST launches from code, not from capital.
 
-00:00:00 UTC, March 16, 2026.
+18:00:00 UTC, March 15, 2026.
 
 ## Legal Disclaimer
 
@@ -2489,7 +2489,7 @@ CONVERGENCEX PARAMETERS:
   CX_STABILITY_LR_SHIFT        = 20
 
 MONETARY PARAMETERS:
-  GENESIS_TIME                 = 1,773,619,200  // 2026-03-16 00:00:00 UTC
+  GENESIS_TIME                 = 1,773,597,600  // 2026-03-15 18:00:00 UTC
   TARGET_SPACING               = 600
   BLOCKS_PER_EPOCH             = 131,553
   R0_STOCKS                 = 785,100,863
@@ -2620,7 +2620,7 @@ TEST VECTORS (minimum conformance set):
 
   V2: header_core construction
     Input:  prev_hash = 0xAA×32, merkle_root = 0xBB×32,
-            timestamp = 1773619200, powDiffQ = GENESIS_BITSQ
+            timestamp = 1773597600, powDiffQ = GENESIS_BITSQ
     Output: 72 bytes (hex, published in repo)
 
   V3: seed derivation

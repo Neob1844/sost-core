@@ -638,7 +638,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <div class="countdown-section fade-in delay-3" style="margin:32px 0 8px;text-align:center;">
       <div id="countdown-genesis" style="margin-bottom:24px;">
         <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Genesis Block</div>
-        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 16, 2026 &mdash; 00:00:00 UTC</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 15, 2026 &mdash; 18:00:00 UTC</div>
         <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
       </div>
       <div style="margin:20px auto;max-width:640px;padding:10px 20px;border:1px solid rgba(251,146,60,0.3);border-radius:6px;background:rgba(251,146,60,0.05);text-align:center;">
@@ -696,8 +696,8 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
       </div>
       <div class="stat-card" onclick="togglePanel('panel-genesis',this)">
         <div class="stat-label">Genesis</div>
-        <div class="stat-value" style="font-size:18px;">2026-03-16</div>
-        <div class="stat-sub">00:00:00 UTC</div>
+        <div class="stat-value" style="font-size:18px;">2026-03-15</div>
+        <div class="stat-sub">18:00:00 UTC</div>
       </div>
       <div class="stat-card" id="goldPriceCard" onclick="togglePanel('panel-gold',this)">
         <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
@@ -756,7 +756,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     </div>
     <div class="stat-panel" id="panel-genesis">
       <div class="panel-title">Genesis Block</div>
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 16, 2026 at 00:00:00 UTC</b>. First reward: 7.85100863 SOST split constitutionally between miner, Gold Funding Vault, and PoPC Pool.</p>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 15, 2026 at 18:00:00 UTC</b>. First reward: 7.85100863 SOST split constitutionally between miner, Gold Funding Vault, and PoPC Pool.</p>
       <a class="panel-link" href="sost-genesis.html">View genesis block details &rarr;</a>
     </div>
     <div class="stat-panel" id="panel-gold">
@@ -974,7 +974,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN (live)</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
@@ -1091,7 +1091,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
 </script>
 <script>
 (function(){
-  var GENESIS = new Date('2026-03-16T00:00:00Z').getTime();
+  var GENESIS = new Date('2026-03-15T18:00:00Z').getTime();
   var LAUNCH  = new Date('2026-06-16T00:00:00Z').getTime();
   var genesisEl = document.getElementById('genesis-timer');
   var launchEl  = document.getElementById('launch-timer');

@@ -18,7 +18,7 @@ The pipeline is sequential — each layer must pass before the next runs.
 - Height = prev.height + 1
 - Timestamp > MTP(11) and ≤ now + 600s
 - bits_q matches cASERT-computed expected difficulty
-- Genesis block: timestamp=1773619200, bits_q=765730
+- Genesis block: timestamp=1773597600, bits_q=765730
 
 ### Layer 3 — cASERT bitsQ Difficulty (CHEAP, ~microseconds)
 - Exponential cASERT bitsQ: `next_bitsq = anchor × 2^(-td / 43200)`
