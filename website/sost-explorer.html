@@ -312,22 +312,30 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   <div class="diff-bar-track"><div class="diff-bar-fill" id="diffFill" style="width:0%"></div></div>
   <span class="diff-bar-info" id="diffInfo">—</span>
 </div></div>
-<!-- cASERT EQUALIZER -->
-<div class="diff-bar-wrap" id="eqWrap"><div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;display:flex;align-items:flex-end;gap:6px;height:80px;position:relative;">
-  <div style="position:absolute;top:4px;left:12px;font-size:8px;color:var(--text3);letter-spacing:2px;">cASERT EQUALIZER</div>
-  <div class="eq-bar" id="eqBitsQ" title="bitsQ level"><div class="eq-fill" style="height:20%;background:var(--green)"></div><div class="eq-lbl">bitsQ</div></div>
-  <div class="eq-bar" id="eqProfile" title="Equalizer profile"><div class="eq-fill" style="height:10%;background:var(--green)"></div><div class="eq-lbl">H</div></div>
-  <div class="eq-bar" id="eqScale" title="Stability scale"><div class="eq-fill" style="height:15%;background:var(--green)"></div><div class="eq-lbl">scale</div></div>
-  <div class="eq-bar" id="eqK" title="k perturbations"><div class="eq-fill" style="height:25%;background:var(--cyan)"></div><div class="eq-lbl">k</div></div>
-  <div class="eq-bar" id="eqMargin" title="Stability margin"><div class="eq-fill" style="height:60%;background:var(--cyan)"></div><div class="eq-lbl">margin</div></div>
-  <div class="eq-bar" id="eqStall" title="Anti-stall"><div class="eq-fill" style="height:5%;background:var(--green)"></div><div class="eq-lbl">stall</div></div>
-  <div class="eq-bar" id="eqBurst" title="Burst score"><div class="eq-fill" style="height:10%;background:var(--green)"></div><div class="eq-lbl">burst</div></div>
-  <div class="eq-bar" id="eqVol" title="Volatility"><div class="eq-fill" style="height:8%;background:var(--green)"></div><div class="eq-lbl">vol</div></div>
+<!-- cASERT METRICS (collapsible) -->
+<div class="diff-bar-wrap" id="eqWrap">
+<div style="background:var(--bg2);border:1px solid var(--border);overflow:hidden;">
+  <button onclick="var p=document.getElementById('eqPanel');var a=this.querySelector('.eqa');if(p.style.display==='none'){p.style.display='grid';a.textContent='▼'}else{p.style.display='none';a.textContent='▶'}" style="width:100%;background:none;border:none;color:var(--text3);font-family:var(--code);font-size:9px;letter-spacing:2px;padding:8px 12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">
+    <span class="eqa">▶</span> cASERT METRICS
+    <span id="eqSummary" style="margin-left:auto;font-size:9px;color:var(--text3)">B0 · bitsQ —</span>
+  </button>
+  <div id="eqPanel" style="display:none;grid-template-columns:repeat(4,1fr);gap:1px;padding:0 12px 10px;">
+    <div class="eq-m"><span class="eq-k">bitsQ</span><span class="eq-v" id="eqBitsQ">—</span><div class="eq-track"><div class="eq-bar-h" id="eqBitsQBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">profile</span><span class="eq-v" id="eqProfile">B0</span><div class="eq-track"><div class="eq-bar-h" id="eqProfileBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">scale</span><span class="eq-v" id="eqScale">1</span><div class="eq-track"><div class="eq-bar-h" id="eqScaleBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">k</span><span class="eq-v" id="eqK">4</span><div class="eq-track"><div class="eq-bar-h" id="eqKBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">margin</span><span class="eq-v" id="eqMargin">180</span><div class="eq-track"><div class="eq-bar-h" id="eqMarginBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">burst</span><span class="eq-v" id="eqBurst">0</span><div class="eq-track"><div class="eq-bar-h" id="eqBurstBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">volatility</span><span class="eq-v" id="eqVol">0</span><div class="eq-track"><div class="eq-bar-h" id="eqVolBar"></div></div></div>
+    <div class="eq-m"><span class="eq-k">stall</span><span class="eq-v" id="eqStall">OFF</span><div class="eq-track"><div class="eq-bar-h" id="eqStallBar"></div></div></div>
+  </div>
 </div></div>
 <style>
-.eq-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
-.eq-fill{width:100%;border-radius:2px 2px 0 0;transition:height .8s ease,background .8s ease;min-height:2px}
-.eq-lbl{font-size:7px;color:var(--text3);letter-spacing:1px;margin-top:3px;text-transform:uppercase}
+.eq-m{padding:6px 8px}
+.eq-k{display:block;font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.eq-v{display:block;font-size:13px;font-weight:600;color:var(--text);margin:2px 0}
+.eq-track{height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
+.eq-bar-h{height:100%;border-radius:2px;transition:width .6s ease,background .6s ease;width:0;background:var(--green)}
 </style>
 <div class="sparkline-wrap"><div class="sparkline-box">
   <span class="sparkline-label">DIFF HISTORY</span>
@@ -1037,57 +1045,44 @@ var _lastBitsQ=0;
 function updateEqualizer(info, times, diffs) {
   try {
     var bq = info.difficulty || 765730;
-    var bqReal = bq / 65536;
-    // Estimate profile from block timing variance
+    var bqReal = (bq / 65536).toFixed(2);
     var avgBt = 600;
     if (times && times.length >= 2) {
       var td = 0; for (var i = 0; i < times.length - 1; i++) td += times[i] - times[i + 1];
       avgBt = td / (times.length - 1);
     }
-    var ratio = 600 / Math.max(avgBt, 1); // >1 = fast, <1 = slow
+    var ratio = 600 / Math.max(avgBt, 1);
     var profileEst = Math.max(-3, Math.min(6, Math.round((ratio - 1) * 10)));
-    // Profile → scale/k/margin from consensus table
+    var pnames = ['E3','E2','E1','B0','H1','H2','H3','H4','H5','H6'];
     var profiles = [{s:1,k:3,m:240},{s:1,k:4,m:220},{s:1,k:4,m:200},{s:1,k:4,m:180},{s:1,k:4,m:170},{s:1,k:5,m:160},{s:2,k:5,m:155},{s:2,k:5,m:145},{s:2,k:6,m:135},{s:3,k:6,m:125}];
     var pi = Math.max(0, Math.min(9, profileEst + 3));
     var prof = profiles[pi];
-    // Compute stall estimate
     var lastBt = (times && times.length >= 2) ? (times[0] - times[1]) : 600;
-    var stallPct = Math.min(100, Math.max(0, (lastBt / 7200) * 100));
-    // Burst: short vs long average
-    var burstPct = Math.min(100, Math.abs(ratio - 1) * 200);
-    // Volatility from diff changes
-    var volPct = 0;
+    var stallPct = Math.min(100, (lastBt / 7200) * 100);
+    var burstVal = ((ratio - 1) * 100).toFixed(1);
+    var volVal = 0;
     if (diffs && diffs.length > 2) {
-      var changes = 0;
-      for (var j = 1; j < Math.min(diffs.length, 10); j++) changes += Math.abs(diffs[j].d - diffs[j-1].d);
-      volPct = Math.min(100, (changes / Math.max(diffs[0].d, 1)) * 500);
+      var ch = 0; for (var j = 1; j < Math.min(diffs.length, 10); j++) ch += Math.abs(diffs[j].d - diffs[j-1].d);
+      volVal = ((ch / Math.max(diffs[0].d, 1)) * 100).toFixed(1);
     }
-    // Color function
-    function eqColor(pct) {
-      if (pct < 30) return 'var(--green)';
-      if (pct < 55) return 'var(--yellow)';
-      if (pct < 80) return 'var(--orange)';
-      return 'var(--red)';
-    }
-    // Set bars
-    var bqPct = Math.min(100, (bqReal / 30) * 100);
-    setEqBar('eqBitsQ', bqPct, eqColor(bqPct));
-    var hPct = Math.min(100, ((profileEst + 3) / 9) * 100);
-    setEqBar('eqProfile', hPct, eqColor(hPct));
-    setEqBar('eqScale', Math.min(100, (prof.s / 3) * 100), eqColor((prof.s / 3) * 100));
-    setEqBar('eqK', Math.min(100, (prof.k / 6) * 100), eqColor((prof.k / 6) * 50));
-    var marginPct = 100 - ((prof.m - 120) / (240 - 120)) * 100;
-    setEqBar('eqMargin', Math.max(5, marginPct), eqColor(marginPct));
-    setEqBar('eqStall', Math.max(3, stallPct), eqColor(stallPct));
-    setEqBar('eqBurst', Math.max(3, burstPct), eqColor(burstPct));
-    setEqBar('eqVol', Math.max(3, volPct), eqColor(volPct));
+    function mc(pct) { return pct < 30 ? 'var(--green)' : pct < 55 ? 'var(--yellow)' : pct < 80 ? 'var(--orange)' : 'var(--red)'; }
+    // Update text values
+    setEqMeter('eqBitsQ', 'eqBitsQBar', bqReal, Math.min(100, (bq/65536/30)*100), mc((bq/65536/30)*100));
+    setEqMeter('eqProfile', 'eqProfileBar', pnames[pi], ((pi)/9)*100, mc(((pi)/9)*100));
+    setEqMeter('eqScale', 'eqScaleBar', prof.s, (prof.s/3)*100, mc((prof.s/3)*100));
+    setEqMeter('eqK', 'eqKBar', prof.k, (prof.k/6)*100, mc((prof.k/6)*50));
+    setEqMeter('eqMargin', 'eqMarginBar', prof.m, 100-((prof.m-120)/(240-120))*100, mc(100-((prof.m-120)/(240-120))*100));
+    setEqMeter('eqBurst', 'eqBurstBar', burstVal+'%', Math.min(100,Math.abs(ratio-1)*200), mc(Math.min(100,Math.abs(ratio-1)*200)));
+    setEqMeter('eqVol', 'eqVolBar', volVal+'%', Math.min(100,parseFloat(volVal)*5), mc(Math.min(100,parseFloat(volVal)*5)));
+    setEqMeter('eqStall', 'eqStallBar', stallPct < 5 ? 'OFF' : Math.round(stallPct)+'%', stallPct, mc(stallPct));
+    // Summary
+    var sum = document.getElementById('eqSummary');
+    if (sum) sum.textContent = pnames[pi] + ' · bitsQ ' + bqReal + ' · avg ' + Math.round(avgBt) + 's';
   } catch(e) {}
 }
-function setEqBar(id, pct, color) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var fill = el.querySelector('.eq-fill');
-  if (fill) { fill.style.height = pct + '%'; fill.style.background = color; }
+function setEqMeter(valId, barId, val, pct, color) {
+  var v = document.getElementById(valId); if (v) v.textContent = val;
+  var b = document.getElementById(barId); if (b) { b.style.width = Math.max(2, pct) + '%'; b.style.background = color; }
 }
 
 function startCountdown(){
