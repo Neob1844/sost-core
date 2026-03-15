@@ -110,6 +110,10 @@ add_executable(test-checkpoints tests/test_checkpoints.cpp)
 target_link_libraries(test-checkpoints PRIVATE sost-core)
 add_test(NAME checkpoints COMMAND test-checkpoints)
 
+add_executable(test-transcript-v2 tests/test_transcript_v2.cpp)
+target_link_libraries(test-transcript-v2 PRIVATE sost-core)
+add_test(NAME transcript-v2 COMMAND test-transcript-v2)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 

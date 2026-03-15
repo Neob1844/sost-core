@@ -27,6 +27,9 @@ struct CXDataset {
 // Global dataset — reused across mining attempts for same block
 extern thread_local CXDataset g_cx_dataset;
 
+// O(1) single-value dataset access (for verification without 4GB)
+uint64_t compute_single_dataset_value(const Bytes32& prev_hash, uint64_t index);
+
 // ConvergenceX v2 — Per-Block Program Generation
 // Each block_hash generates a unique sequence of operations.
 // Makes ASIC optimization impossible — no fixed pattern to hardcode.
@@ -90,19 +93,37 @@ CXAttemptResult convergencex_attempt(
     const ConsensusParams& params, const uint8_t* header_core,
     int32_t epoch);
 
-// Verify ConvergenceX proof without full recomputation.
-// Checks: (1) checkpoint leaves → merkle root, (2) last checkpoint x_hash matches x_bytes,
-//         (3) commit hash matches components, (4) stability basin on x_bytes.
-// Cost: ~1ms. No dataset/scratchpad needed.
+// Generate Transcript V2 witnesses for a winning block.
+// Replays challenged rounds to build segment_proofs + round_witnesses.
+// Called ONCE per winning block (not per attempt).
+void generate_transcript_witnesses(
+    CXAttemptResult& res,
+    const uint8_t* scratch, size_t scratch_len,
+    const Bytes32& block_key,
+    uint32_t nonce, uint32_t extra_nonce,
+    const ConsensusParams& params,
+    const uint8_t* header_core,
+    int32_t epoch);
+
+// Build merkle path for a leaf at given index in a tree of leaf_hashes.
+std::vector<Bytes32> build_merkle_path(const std::vector<Bytes32>& leaf_hashes, uint32_t index);
+
+// Verify ConvergenceX Transcript V2 proof (11-phase verification).
+// Checks: checkpoints, segments, commit binding, challenge derivation,
+// round witnesses (dataset/scratch/program recomputed O(1)), stability basin.
+// Cost: ~10-20ms. No full dataset/scratchpad needed.
 bool verify_cx_proof(
     const uint8_t* header_core, // 72 bytes
     uint32_t nonce, uint32_t extra_nonce,
     const Bytes32& commit,
     const Bytes32& checkpoints_root,
+    const Bytes32& segments_root,
     const Bytes32& final_state,
     const uint8_t* x_bytes, size_t x_bytes_len,
     uint64_t stability_metric,
     const std::vector<Bytes32>& checkpoint_leaves,
+    const std::vector<SegmentProof>& segment_proofs,
+    const std::vector<RoundWitness>& round_witnesses,
     const ConsensusParams& params);
 
 } // namespace sost

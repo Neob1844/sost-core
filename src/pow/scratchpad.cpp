@@ -42,6 +42,21 @@ Bytes32 epoch_scratch_key(int32_t epoch, const std::vector<BlockMeta>* chain) {
     return sha256(buf);
 }
 
+// V2 scratchpad: each 32-byte block is independently derivable.
+// Miner builds full scratchpad for speed; verifier recomputes individual blocks.
+// block[i] = SHA256(MAGIC || "SCR2" || seed_key || u64_le(i))
+
+Bytes32 compute_single_scratch_block(const Bytes32& seed_key, uint64_t block_index) {
+    std::vector<uint8_t> buf;
+    append_magic(buf);
+    append(buf, "SCR2", 4);
+    append(buf, seed_key);
+    uint8_t idx_le[8];
+    for (int i = 0; i < 8; ++i) idx_le[i] = (uint8_t)((block_index >> (i * 8)) & 0xFF);
+    append(buf, idx_le, 8);
+    return sha256(buf);
+}
+
 std::vector<uint8_t> build_scratchpad(const Bytes32& seed_key, int32_t scratch_mb) {
     if (scratch_mb <= 0) scratch_mb = 1;
 
@@ -49,32 +64,13 @@ std::vector<uint8_t> build_scratchpad(const Bytes32& seed_key, int32_t scratch_m
     if (nbytes < 8) nbytes = 8;
 
     std::vector<uint8_t> out(nbytes);
+    size_t num_blocks = (nbytes + 31) / 32;
 
-    // h = sha256(MAGIC || "SCR" || seed_key)
-    std::vector<uint8_t> hseed;
-    append_magic(hseed);
-    append(hseed, "SCR", 3);
-    append(hseed, seed_key);
-
-    Bytes32 h = sha256(hseed);
-
-    uint32_t counter = 0;
-    size_t pos = 0;
-
-    // Sequential SHA256 chain:
-    // h = sha256(h || u32(counter))
-    // write h into scratchpad
-    while (pos < nbytes) {
-        uint8_t tmp[36];
-        std::memcpy(tmp, h.data(), 32);
-        write_u32_le(tmp + 32, counter);
-        h = sha256(tmp, 36);
-
-        const size_t take = std::min<size_t>(32, nbytes - pos);
-        std::memcpy(out.data() + pos, h.data(), take);
-
-        pos += take;
-        counter++;
+    for (size_t i = 0; i < num_blocks; ++i) {
+        Bytes32 block = compute_single_scratch_block(seed_key, (uint64_t)i);
+        size_t pos = i * 32;
+        size_t take = std::min<size_t>(32, nbytes - pos);
+        std::memcpy(out.data() + pos, block.data(), take);
     }
 
     return out;

@@ -43,7 +43,7 @@ inline Profile ACTIVE_PROFILE = Profile::DEV;
 inline const uint8_t* MAGIC_STR_BYTES() { return magic_for_profile(ACTIVE_PROFILE); }
 
 // Time / schedule
-inline constexpr int64_t GENESIS_TIME     = 1773619200; // 2026-03-16 00:00:00 UTC
+inline constexpr int64_t GENESIS_TIME     = 1773597600; // 2026-03-15 18:00:00 UTC
 inline constexpr int64_t TARGET_SPACING   = 600;
 inline constexpr int64_t BLOCKS_PER_EPOCH = 131553;
 
@@ -166,6 +166,15 @@ inline constexpr int32_t CX_CP_D      = 64;
 inline constexpr int32_t CX_ROUNDS_T  = 1200;
 inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
+
+// --- Transcript V2: segment commitments + sampled round verification ---
+inline constexpr int32_t CX_SEGMENT_LEN    = 1024;  // rounds per segment
+inline constexpr int32_t CX_CHAL_SEGMENTS  = 6;     // segments challenged per block
+inline constexpr int32_t CX_CHAL_STEPS     = 2;     // rounds challenged per segment
+// CX_NSEG derived: ceil(rounds / segment_len)
+inline constexpr int32_t CX_NSEG_M = (CX_ROUNDS_M + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
+inline constexpr int32_t CX_NSEG_T = (CX_ROUNDS_T + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
+inline constexpr int32_t CX_NSEG_D = (CX_ROUNDS_D + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
 constexpr const char* ADDR_MINER_FOUNDER = "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429";

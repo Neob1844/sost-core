@@ -50,12 +50,14 @@ The pipeline is sequential — each layer must pass before the next runs.
 - Generate BlockUndo for reorg support
 - Commit on success, discard on failure
 
-### Layer 8 — ConvergenceX Recomputation (EXPENSIVE, ~5-30 seconds)
+### Layer 8 — ConvergenceX Transcript V2 Recomputation (EXPENSIVE, ~5-30 seconds)
 - Derive 32×32 matrix M and vector b from block_key
 - 100,000 gradient descent rounds with 4GB scratchpad mixing
+- Transcript V2: segment commitments + segment_proofs (merkle proofs for challenged segments)
+- Round witnesses for sampled round verification (challenge derivation from commit)
 - 16 checkpoint leaves → Merkle root verification
 - Stability basin: 4 perturbation probes, margin=180
-- Commit = SHA256(solution || header)
+- Commit V2 = SHA256(solution || header || segments_root)
 
 ## Fast Sync
 
@@ -70,8 +72,8 @@ Reorg depth limit: 500 blocks.
 
 | Property | Bitcoin (SHA-256d) | Monero (RandomX) | SOST (ConvergenceX) |
 |---|---|---|---|
-| PoW verify cost | ~1μs (two SHA-256) | ~50ms (JIT compile + execute) | ~5-30s (100K gradient steps + 4GB scratchpad) |
-| Memory requirement | Negligible (~256 bytes) | 2GB (light) / 256MB (dataset) | 4GB scratchpad (mandatory) |
+| PoW verify cost | ~1μs (two SHA-256) | ~50ms (JIT compile + execute) | ~0.2ms (Transcript V2: 11-phase segment + round witness verification) / ~5-30s (full recomputation) |
+| Memory requirement | Negligible (~256 bytes) | 2GB (light) / 256MB (dataset) | ~500MB node (no scratchpad/dataset; Dataset v2 + Scratchpad v2 independently indexable at O(1)) / 8GB mining |
 | ASIC resistance | None (SHA-256 ASICs dominate) | High (random program execution) | Very high (gradient descent + memory-hard) |
 | Sync time (full verify) | ~hours (billions of SHA-256d) | ~days (RandomX JIT per block) | ~weeks (CX recompute per block) |
 | Sync time (fast/headers) | ~minutes (headers-first) | ~hours (pruned sync) | ~minutes (checkpoint skip, L1-L7 only) |

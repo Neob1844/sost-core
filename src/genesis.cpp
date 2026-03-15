@@ -258,6 +258,7 @@ int main(int argc, char** argv) {
     std::printf("block_id         = %s\n", hex(block_id).c_str());
     std::printf("commit           = %s\n", hex(found_res.commit).c_str());
     std::printf("checkpoints_root = %s\n", hex(found_res.checkpoints_root).c_str());
+    std::printf("segments_root    = %s\n", hex(found_res.segments_root).c_str());
     std::printf("final_state      = %s\n", fs_hex.c_str());
     std::printf("x_bytes          = %s\n", x_hex.c_str());
     std::printf("stability_metric = %llu\n", (unsigned long long)found_res.stability_metric);
@@ -289,6 +290,7 @@ int main(int argc, char** argv) {
         std::fprintf(f, "  \"stability_metric\": %llu,\n", (unsigned long long)found_res.stability_metric);
         std::fprintf(f, "  \"x_bytes\": \"%s\",\n", x_hex.c_str());
         std::fprintf(f, "  \"final_state\": \"%s\",\n", fs_hex.c_str());
+        std::fprintf(f, "  \"segments_root\": \"%s\",\n", hex(found_res.segments_root).c_str());
         std::fprintf(f, "  \"checkpoint_leaves\": [");
         for (size_t i = 0; i < found_res.checkpoint_leaves.size(); ++i) {
             if (i) std::fprintf(f, ",");

@@ -14,7 +14,7 @@ int main() {
     
     // V2: header_core
     Bytes32 mrkl{}; mrkl.fill(0x11);
-    uint32_t ts = 1773619200;
+    uint32_t ts = 1773597600;
     uint32_t diff = GENESIS_BITSQ;
     auto hc = build_header_core(prev, mrkl, ts, diff);
     printf("header_core_sha = %s\n", hex(sha256(hc.data(), hc.size())).c_str());

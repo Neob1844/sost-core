@@ -44,13 +44,13 @@
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-  nav .nav-inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-  .nav-logo .brand-sost { color: var(--red-primary); }
-  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 12px; font-weight: 400; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
-  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
-  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.nav-logo .brand-sost { color: var(--red-primary); }
+.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
+.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
 
   /* LAYOUT */
   .app-layout { display: flex; min-height: calc(100vh - 49px); position: relative; z-index: 1; }
@@ -190,13 +190,16 @@
 <body>
 
 <nav>
-  <div class="nav-inner">
+  <div class="container">
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
     <div class="nav-links">
       <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
@@ -204,6 +207,7 @@
       <a href="sost-protocol-spec.html">Protocol Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
       <a href="sost-foundation.html">Foundation</a>
       <a href="sost-foundation-balances.html">Foundation Balances</a>
@@ -214,7 +218,7 @@
       <a href="sost-explorer.html">Explorer</a>
       <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
-      <a href="sost-wallet.html" class="active">Wallet</a>
+      <a href="sost-wallet.html">Wallet</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>

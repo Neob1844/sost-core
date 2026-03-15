@@ -51,11 +51,37 @@ inline const char* casert_profile_name(int32_t idx) {
     return names[ai];
 }
 struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };
+// --- Transcript V2 structures ---
+struct SegmentLeaf {
+    uint32_t segment_index;
+    uint32_t round_start, round_end;
+    Bytes32 state_start, state_end;
+    Bytes32 x_start_hash, x_end_hash;
+    uint64_t residual_start, residual_end;
+};
+struct SegmentProof {
+    SegmentLeaf leaf;
+    std::vector<Bytes32> merkle_path;
+};
+struct RoundWitness {
+    uint32_t round_index;
+    std::array<int32_t, 32> x_before, x_after;
+    Bytes32 state_before, state_after;
+    std::array<int32_t, 4> scratch_values;
+    std::array<uint32_t, 4> scratch_indices;
+    uint64_t dataset_value;
+    uint64_t program_output;
+};
+
 struct CXAttemptResult {
-    Bytes32 commit, checkpoints_root, final_state;
+    Bytes32 commit, checkpoints_root, segments_root, final_state;
     uint64_t stability_metric; bool is_stable;
     std::vector<uint8_t> x_bytes;
-    std::vector<Bytes32> checkpoint_leaves; // merkle leaves for verification
+    std::vector<Bytes32> checkpoint_leaves;
+    std::vector<SegmentLeaf> segment_leaves;
+    // Populated after challenge derivation (only for winning attempt):
+    std::vector<SegmentProof> segment_proofs;
+    std::vector<RoundWitness> round_witnesses;
 };
 struct Checkpoint { Bytes32 state_hash, x_hash; uint32_t round; uint64_t residual; };
 } // namespace sost
