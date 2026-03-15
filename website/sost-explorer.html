@@ -571,14 +571,38 @@ const ROLES={
   'sost144cc82d3c711b5a9322640c66b94a520497ac40d':'POPC POOL',
   'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429':'GENESIS MINER'
 };
-const CASERT_LEVELS=[
-  {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
-  {signal:'5\u201325 ahead',level:2,scale:2,k:4,steps:4},
-  {signal:'26\u201350 ahead',level:3,scale:3,k:4,steps:4},
-  {signal:'51\u201375 ahead',level:4,scale:4,k:4,steps:4},
-  {signal:'76\u2013100 ahead',level:5,scale:5,k:4,steps:4},
-  {signal:'101+ ahead',level:6,scale:0,k:4,steps:4},
+// cASERT unified profiles (from params.h) — index = H+3
+const CASERT_PROFILES=[
+  {name:'E3',H:-3,scale:1,steps:3,k:3,margin:240},
+  {name:'E2',H:-2,scale:1,steps:3,k:4,margin:220},
+  {name:'E1',H:-1,scale:1,steps:4,k:4,margin:200},
+  {name:'B0',H:0,scale:1,steps:4,k:4,margin:180},
+  {name:'H1',H:1,scale:1,steps:5,k:4,margin:170},
+  {name:'H2',H:2,scale:1,steps:5,k:5,margin:160},
+  {name:'H3',H:3,scale:2,steps:5,k:5,margin:155},
+  {name:'H4',H:4,scale:2,steps:6,k:5,margin:145},
+  {name:'H5',H:5,scale:2,steps:6,k:6,margin:135},
+  {name:'H6',H:6,scale:3,steps:7,k:6,margin:125},
 ];
+function getProfile(signal) {
+  // Estimate H from block timing ratio (simplified equalizer model)
+  // In real consensus, H = clamp(U>>16, [-3,6]) from EWMA signals
+  // Here we approximate from lag
+  var H = 0; // default B0
+  if (signal < 0) { // ahead of schedule
+    var ahead = -signal;
+    if (ahead >= 20) H = Math.min(6, Math.floor(ahead / 10));
+    else if (ahead >= 5) H = 1;
+  } else if (signal > 5) { // behind schedule
+    H = Math.max(-3, -Math.floor(signal / 10));
+  }
+  var idx = Math.max(0, Math.min(9, H + 3));
+  return CASERT_PROFILES[idx];
+}
+// Legacy compat
+const CASERT_LEVELS = CASERT_PROFILES.map(function(p,i){
+  return {signal:p.name,level:p.H,scale:p.scale,k:p.k,steps:p.steps,margin:p.margin};
+});
 function computeCurrentLag(){
   // Block lag from wall clock for current chain tip
   var now=Math.floor(Date.now()/1000);
@@ -593,39 +617,23 @@ function computeBlockLag(blockHeight,blockTime){
   return expected-blockHeight;
 }
 function getCasertLevel(signal){
-  // cASERT v5.2 — L1-L5 fixed bands, L6+ unbounded
-  // signal = lag in blocks. Negative = ahead of schedule.
-  if(signal>=0)return 1;  // behind or on-time → L1 (neutral)
-  var ahead=-signal;
-  if(ahead<5)return 1;    // L1: 0-4 ahead (neutral)
-  if(ahead<26)return 2;   // L2: 5-25 ahead
-  if(ahead<51)return 3;   // L3: 26-50 ahead
-  if(ahead<76)return 4;   // L4: 51-75 ahead
-  if(ahead<101)return 5;  // L5: 76-100 ahead
-  return 6+(ahead-101)/50|0; // L6+: unbounded, every 50 blocks adds 1
+  return getProfile(signal).H;
 }
 function getCasertScale(signal){
-  if(signal>=0)return 1;
-  var ahead=-signal;
-  if(ahead<5)return 1;
-  if(ahead<26)return 2;
-  if(ahead<51)return 3;
-  if(ahead<76)return 4;
-  if(ahead<101)return 5;
-  var level=6+(ahead-101)/50|0;
-  return level; // scale = level (linear, all levels)
+  return getProfile(signal).scale;
 }
 function getLevelColor(lv){
-  if(lv<=1)return '#4ade80';  // L1 = green (neutral/base)
-  if(lv===2)return '#67e8f9'; // L2 = cyan (light)
-  if(lv===3)return '#fbbf24'; // L3 = yellow (moderate)
-  if(lv===4)return '#fb923c'; // L4 = orange (strong)
-  if(lv===5)return '#fb010d'; // L5 = red (emergency)
-  return '#ff0040';           // L6+ = bright red (unbounded)
+  if(lv<=-2)return '#67e8f9'; // E3/E2 = cyan (easing)
+  if(lv===-1)return '#4ade80';// E1 = green
+  if(lv===0)return '#4ade80'; // B0 = green (baseline)
+  if(lv===1)return '#67e8f9'; // H1 = cyan
+  if(lv===2)return '#fbbf24'; // H2 = yellow
+  if(lv<=4)return '#fb923c';  // H3/H4 = orange
+  return '#fb010d';           // H5/H6 = red
 }
 function getLevelLabel(signal){
-  var lv=getCasertLevel(signal);
-  return '<span style="color:'+getLevelColor(lv)+';font-weight:600">L'+lv+'</span>';
+  var p=getProfile(signal);
+  return '<span style="color:'+getLevelColor(p.H)+';font-weight:600">'+p.name+'</span>';
 }
 function cpBtn(t){return '<button class="cp-btn" onclick="event.stopPropagation();copyText(this,\''+t.replace(/'/g,"\\'")+'\')">\u29C9</button>';}
 function copyText(b,t){navigator.clipboard.writeText(t).then(function(){b.classList.add('copied');b.textContent='\u2713';setTimeout(function(){b.classList.remove('copied');b.textContent='\u29C9';},1500);});}
@@ -686,20 +694,15 @@ function renderNav(){
   html+='</div>';nav.innerHTML=html;
 }
 function renderCasertPanel(signal,mode){
-  var activeLevel=getCasertLevel(signal);
-  var activeScale=getCasertScale(signal);
+  var prof=getProfile(signal);
   var tableRows='';
-  for(var li=0;li<CASERT_LEVELS.length;li++){
-    var lv=CASERT_LEVELS[li];var active=lv.level===activeLevel;
-    var sc=lv.scale;var scLabel=''+sc;
-    if(lv.level>=6){sc=activeLevel>=6?activeScale:7;scLabel='L+1';} // L6+ dynamic
-    var compute=sc*lv.k*lv.steps;var compLabel=lv.level>=6?'UNBOUNDED':''+compute+' tests';
+  for(var li=0;li<CASERT_PROFILES.length;li++){
+    var p=CASERT_PROFILES[li];var active=p.H===prof.H;
+    var compute=p.scale*p.k*p.steps;
     var rowStyle=active?'casert-active':'';
-    if(lv.level>=6)rowStyle+=(rowStyle?' ':'')+'casert-pulse';
-    tableRows+='<tr class="'+rowStyle+'"><td style="color:var(--text3)">'+lv.signal+'</td><td style="color:'+getLevelColor(lv.level)+';font-weight:600">L'+lv.level+(lv.level>=6?'+':'')+'</td><td class="cn">'+scLabel+'</td><td class="cn">'+lv.k+'</td><td class="cn">'+lv.steps+'</td><td class="cg">'+compLabel+'</td></tr>';
+    tableRows+='<tr class="'+rowStyle+'"><td style="color:var(--text3)">'+p.name+'</td><td style="color:'+getLevelColor(p.H)+';font-weight:600">H='+p.H+'</td><td class="cn">'+p.scale+'</td><td class="cn">'+p.k+'</td><td class="cn">'+p.steps+'</td><td class="cn">'+p.margin+'</td><td class="cg">'+compute+'</td></tr>';
   }
-  tableRows+='<tr><td colspan="6" style="font-size:9px;color:var(--text3);padding:8px 10px;border:none">System is unbounded above L5 \u2014 scale = level (linear), growing every 50 blocks ahead of schedule</td></tr>';
-  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">adaptive PoW difficulty overlay (cASERT v5)</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val">4</div><div class="casert-param-desc">Number of independent stability tests per hash. Each pushes the solution from a random direction and checks if it returns. Fixed at k=4.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val">4</div><div class="casert-param-desc">Gradient steps per perturbation to verify convergence. Each step checks "did the solution return to the attractor?". Fixed at 4 steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(activeLevel)+'">'+activeScale+'</div><div class="casert-param-desc">How far the solution is pushed. Scale='+activeScale+' means the miner must find solutions in deeper valleys. Rises with difficulty level.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">LEVEL TABLE <span style="color:var(--purple)">\u00B7 compute = scale \u00D7 k \u00D7 steps</span></div><table class="casert-tbl"><thead><tr><th>SIGNAL</th><th>LEVEL</th><th>SCALE</th><th>K</th><th>STEPS</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">cASERT unified equalizer profiles</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.k+'</div><div class="casert-param-desc">Stability probes per hash. Current: k='+prof.k+' (profile '+prof.name+'). Varies by equalizer level.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.steps+'</div><div class="casert-param-desc">Gradient steps per perturbation. Current: '+prof.steps+' steps (profile '+prof.name+'). Harder profiles use more steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.scale+'</div><div class="casert-param-desc">Perturbation amplitude. Scale='+prof.scale+', margin='+prof.margin+'. Harder profiles push further with tighter margin.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">PROFILE TABLE <span style="color:var(--purple)">\u00B7 E3 (easing) \u2192 B0 (baseline) \u2192 H6 (max hardening)</span></div><table class="casert-tbl"><thead><tr><th>PROFILE</th><th>H</th><th>SCALE</th><th>K</th><th>STEPS</th><th>MARGIN</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 function renderStats(i){
   document.getElementById('statsCode').innerHTML='<span class="s-comment">// SOST network status</span>\n<span class="s-type">const</span> <span class="s-key">chain</span> <span class="s-sep">=</span> <span class="s-bracket">{</span>\n  <span class="s-key">height</span><span class="s-sep">:</span>    <span class="s-red">'+i.blocks.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">bits_q</span><span class="s-sep">:</span>    <span class="s-num">'+i.difficulty.toLocaleString()+'</span><span class="s-sep">,</span>    <span class="s-comment">// SOSTCompact Q16.16</span>\n  <span class="s-key">bits_real</span><span class="s-sep">:</span>  <span class="s-num">'+(i.difficulty/65536).toFixed(3)+'</span><span class="s-sep">,</span>    <span class="s-comment">// bits_q \u00F7 65536</span>\n  <span class="s-key">peers</span><span class="s-sep">:</span>      <span class="s-num">'+i.connections+'</span><span class="s-sep">,</span>\n  <span class="s-key">mempool</span><span class="s-sep">:</span>    <span class="s-num">'+i.mempool_size+'</span><span class="s-sep">,</span>\n  <span class="s-key">utxo_set</span><span class="s-sep">:</span>  <span class="s-num">'+i.utxo_count.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">version</span><span class="s-sep">:</span>   <span class="s-str">"'+i.version+'"</span><span class="s-sep">,</span>\n  <span class="s-key">balance</span><span class="s-sep">:</span>   <span class="s-str">"'+i.balance+' SOST"</span>\n<span class="s-bracket">}</span><span class="s-sep">;</span>';
@@ -767,7 +770,7 @@ function updateChainSync(){
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   if(lag>0){document.getElementById('csLag').textContent='+'+fComma(lag)+' behind';document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lag)+' blocks behind schedule';}
-  else if(lag<0){var ahead=-lag;var lvl=getCasertLevel(lag);document.getElementById('csLag').textContent=fComma(ahead)+' ahead \u00B7 L'+lvl;document.getElementById('csLag').style.color=getLevelColor(lvl);document.getElementById('csLagSub').textContent='chain is '+fComma(ahead)+' blocks ahead \u2192 cASERT L'+lvl;}
+  else if(lag<0){var ahead=-lag;var lvl=getCasertLevel(lag);document.getElementById('csLag').textContent=fComma(ahead)+' ahead \u00B7 '+getProfile(lag).name;document.getElementById('csLag').style.color=getLevelColor(lvl);document.getElementById('csLagSub').textContent='chain is '+fComma(ahead)+' blocks ahead \u2192 cASERT '+getProfile(lag).name;}
   else{document.getElementById('csLag').textContent='on schedule';document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync';}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
@@ -876,7 +879,7 @@ function drawSparkline(){
     var tsStr=ts.getUTCFullYear()+'-'+('0'+(ts.getUTCMonth()+1)).slice(-2)+'-'+('0'+ts.getUTCDate()).slice(-2)+' '+('0'+ts.getUTCHours()).slice(-2)+':'+('0'+ts.getUTCMinutes()).slice(-2)+':'+('0'+ts.getUTCSeconds()).slice(-2)+' UTC';
     tip.innerHTML='<span style="color:var(--purple);font-weight:600">Block #'+pt.h+'</span><br>'+
       '<span style="color:var(--text3)">Difficulty:</span> <span style="color:var(--orange);font-weight:600">'+(pt.d/65536).toFixed(3)+'</span> <span style="color:var(--text3)">(bits_q: '+pt.d.toLocaleString()+')</span><br>'+
-      '<span style="color:var(--text3)">cASERT:</span> <span style="color:'+getLevelColor(lv)+';font-weight:600">L'+lv+'</span>'+(ahead>0?' <span style="color:var(--text3)">\u00B7 '+ahead+' ahead</span>':'')+
+      '<span style="color:var(--text3)">cASERT:</span> <span style="color:'+getLevelColor(lv)+';font-weight:600">'+getProfile(-ahead).name+'</span>'+(ahead>0?' <span style="color:var(--text3)">\u00B7 '+ahead+' ahead</span>':'')+
       '<br><span style="color:var(--text3)">Time:</span> '+tsStr+
       '<br><span style="color:var(--text3)">Interval:</span> <span style="color:var(--cyan)">\u23F1 '+iv+'</span>';
     tip.style.display='block';
@@ -1246,7 +1249,7 @@ async function showBlock(hash){
     var miningTimeStr='\u2014';var mtSecs=0;var mtColor='var(--text3)';
     if(!isGen){try{var pb=await rpc('getblock',[b.previousblockhash]);mtSecs=b.time-pb.time;mtColor=mtSecs<120?'var(--green)':mtSecs<1200?'#fbbf24':mtSecs<3600?'var(--orange)':'var(--red)';miningTimeStr=mtSecs<60?mtSecs+'s':Math.floor(mtSecs/60)+'m '+mtSecs%60+'s';}catch(e){}}
     var asThreshold=Math.max(Math.abs(signal)*600,7200);var asActive=(!isGen&&mtSecs>=asThreshold);var asHtml=isGen?'<span style="color:var(--text3)">N/A</span>':(asActive?'<span style="color:var(--green);font-weight:600">\u26A1 ACTIVE \u2014 decay activated at '+fmtCountdown(asThreshold)+'</span>':(mtSecs>0?'<span style="color:#fb010d;font-weight:600">OFF \u2014 block found in '+miningTimeStr+'</span>':'<span style="color:var(--text3)">data unavailable</span>'));
-    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT</div><div class="v">'+getLevelLabel(signal)+' <span style="color:var(--text3)">// L'+lvl+' \u00B7 '+casertDesc+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div><div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
+    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT</div><div class="v">'+getLevelLabel(signal)+' <span style="color:var(--text3)">// '+getProfile(signal).name+' \u00B7 '+casertDesc+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div><div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
     _navStack[_navStack.length-1].label='Block #'+b.height;renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
