@@ -6,7 +6,7 @@
   var PAGES = [
     { title: 'Home', desc: 'SOST Protocol overview — Sovereign Stock Token', url: 'index.html', kw: 'home protocol gold pow sovereign stock token' },
     { title: 'Genesis Block', desc: 'Block zero — genesis parameters, constitutional addresses, raw data', url: 'sost-genesis.html', kw: 'genesis block zero origin first block constitutional addresses parameters verification founder vault' },
-    { title: 'Technology', desc: 'ConvergenceX PoW, ASERT, cASERT difficulty', url: 'sost-technology.html', kw: 'convergencex algorithm mining cpu asert casert difficulty pow proof work' },
+    { title: 'Technology', desc: 'ConvergenceX PoW, cASERT unified difficulty', url: 'sost-technology.html', kw: 'convergencex algorithm mining cpu asert casert difficulty pow proof work' },
     { title: 'Tokenomics', desc: 'Supply, emission, epoch decay, stocks', url: 'sost-tokenomics.html', kw: 'supply emission epoch decay stocks tokenomics monetary policy' },
     { title: 'PoPC', desc: 'Proof of Personal Custody — gold bond and escrow', url: 'sost-popc.html', kw: 'proof custody gold bond escrow model a model b popc audit slash' },
     { title: 'Gold Reserve', desc: 'Heritage Reserve, Gold Funding Vault, XAUT, PAXG', url: 'sost-gold-reserve.html', kw: 'reserve heritage funding vault xaut paxg gold metals' },

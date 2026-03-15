@@ -401,7 +401,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
   <div class="chain-sync-wrap" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
     <div style="background:var(--bg2);border:1px solid var(--border);padding:14px 20px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-13 00:00:00 UTC</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">// <span style="color:var(--cyan)">CHAIN TIMING</span> · genesis 2026-03-16 00:00:00 UTC</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
@@ -703,7 +703,7 @@ async function updateDashboard(info){
   updateChainSync();
 }
 /* drawReserveBars removed — replaced by price charts */
-var GENESIS_TS=1773360000;
+var GENESIS_TS=1773619200;
 function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);var p=[];if(d>0)p.push(d+'d');if(h>0)p.push(h+'h');if(m>0)p.push(m+'m');p.push(s+'s');return p.join(' ');}
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
@@ -820,7 +820,7 @@ function drawSparkline(){
     var iv='\u2014';
     if(idx>0){var dt=pt.t-data[idx-1].t;iv=dt<60?dt+'s':Math.floor(dt/60)+'m '+dt%60+'s';}
     // cASERT level for this block
-    var elapsed=pt.t-1773360000;var expected=Math.floor(elapsed/600);
+    var elapsed=pt.t-1773619200;var expected=Math.floor(elapsed/600);
     var lag=expected-(pt.h);var ahead=(lag<0)?-lag:0;
     var lv=1;if(ahead>=5)lv=2;if(ahead>=26)lv=3;if(ahead>=51)lv=4;if(ahead>=76)lv=5;if(ahead>=101)lv=6+Math.floor((ahead-101)/50);
     var ts=new Date(pt.t*1000);
@@ -1563,7 +1563,7 @@ function showCXInfo(){
   'Miners must solve a linear system A(x)=b and prove the solution sits in a <b style="color:var(--green)">stable basin</b> — '+
   'meaning small perturbations converge back to the same attractor. This is verified via the <b style="color:var(--orange)">cASERT stability test</b>.<br><br>'+
   '<b style="color:var(--green)">v2.0 improvements:</b><br>'+
-  '&bull; <b style="color:var(--cyan)">Persistent Dataset Cache</b> — 4GB working memory generated once per block (from prev_block_hash), reused across all nonce attempts. CPU miners benefit from cache reuse; ASICs cannot reduce the memory requirement.<br>'+
+  '&bull; <b style="color:var(--cyan)">Persistent Dataset Cache</b> — 4GB dataset generated once per block (from prev_block_hash), reused across all nonce attempts. Combined with the 4GB scratchpad, mining requires ~8GB RAM total. Node validation needs only ~500MB (no dataset/scratchpad). CPU miners benefit from cache reuse; ASICs cannot reduce the memory requirement.<br>'+
   '&bull; <b style="color:var(--orange)">Per-Block Program Generation</b> — Each block generates a unique 256-operation program derived from the block hash. The 100,000 iterations execute this program — since it changes every block, no fixed ASIC circuit can be optimized. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types, 256-op sequence).'+
   '</div></div>'+
   '<div class="dtl-grid">'+
@@ -1571,7 +1571,7 @@ function showCXInfo(){
   '<div class="k">PROBLEM</div><div class="v">A(x) = M<sup>T</sup>(Mx) + λx = b // n×n SPD system, n='+32+'</div>'+
   '<div class="k">DIMENSION</div><div class="v"><span style="color:var(--cyan)">n = 32</span> // 32×32 matrix per block</div>'+
   '<div class="k">ROUNDS</div><div class="v"><span style="color:var(--green)">100,000</span> gradient iterations per attempt</div>'+
-  '<div class="k">DATASET</div><div class="v"><span style="color:var(--orange)">4 GB</span> persistent cache — generated once per block, reused across all nonce attempts (v2.0)</div>'+
+  '<div class="k">DATASET</div><div class="v"><span style="color:var(--orange)">4 GB</span> persistent cache — generated once per block, reused across all nonce attempts (v2.0). Total mining memory: 8 GB (4 GB dataset + 4 GB scratchpad). Node validation: ~500 MB.</div>'+
   '<div class="k">PROGRAM</div><div class="v"><span style="color:var(--cyan)">256 ops</span> per-block program (MUL/XOR/ADD/ROT/AND/OR/NOT/SUB) — changes every block (v2.0)</div>'+
   '<div class="k">CHECKPOINTS</div><div class="v"><span style="color:var(--cyan)">16</span> Merkle-committed state snapshots (every 6,250 rounds)</div>'+
   '<div class="k">λ (LAMBDA)</div><div class="v"><span style="color:var(--purple)">100</span> regularization ensures unique solution</div>'+
@@ -1581,7 +1581,7 @@ function showCXInfo(){
   '<div style="margin:20px 0;padding:16px;background:#0d0d0d;border:1px solid #1a1a1a;border-left:3px solid #fb010d">'+
   '<div style="font-size:11px;color:#fb010d;letter-spacing:2px;margin-bottom:10px">WORKED EXAMPLE — BLOCK #1</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-  '<span style="color:var(--text3)">prev_hash = 0000...0000 (genesis) &nbsp;|&nbsp; bitsQ = 353,075 → difficulty = 5.3875</span><br><br>'+
+  '<span style="color:var(--text3)">prev_hash = 0000...0000 (genesis) &nbsp;|&nbsp; bitsQ = 765,730 → difficulty = 11.6841</span><br><br>'+
   '<b style="color:var(--cyan)">Step 1 — Dataset</b> (once per block):<br>'+
   '&nbsp;&nbsp;seed = epoch_scratch_key(epoch=0)<br>'+
   '&nbsp;&nbsp;memory[0] = hash(seed)<br>'+
@@ -1603,7 +1603,7 @@ function showCXInfo(){
   '&nbsp;&nbsp;|x_perturbed - x_original| &lt; 180 → <span style="color:var(--green)">STABLE ✓</span><br><br>'+
   '<b style="color:var(--cyan)">Step 6 — Target check</b>:<br>'+
   '&nbsp;&nbsp;commit = finalize(state || checkpoints)<br>'+
-  '&nbsp;&nbsp;if commit &lt; target(bitsQ=353075) → <span style="color:var(--green)">BLOCK FOUND ✓</span><br>'+
+  '&nbsp;&nbsp;if commit &lt; target(bitsQ=765730) → <span style="color:var(--green)">BLOCK FOUND ✓</span><br>'+
   '&nbsp;&nbsp;else → nonce++, repeat from Step 3<br><br>'+
   '<span style="color:#4ade80">Steps 1 &amp; 2 execute ONCE per block. Only Steps 3–6 repeat per nonce attempt.</span>'+
   '</div></div>'+
@@ -1612,7 +1612,7 @@ function showCXInfo(){
   '<div style="font-size:11px;color:#fb010d;letter-spacing:2px;margin-bottom:10px">ASIC RESISTANCE ANALYSIS</div>'+
   '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">'+
   '<tr style="border-bottom:1px solid #1a1a1a"><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">ATTACK VECTOR</td><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">BITCOIN SHA-256</td><td style="padding:6px 10px;color:var(--text3);font-size:9px;letter-spacing:2px">CONVERGENCEX v2.0</td></tr>'+
-  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Custom silicon</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Trivial</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> Requires 4GB on-chip memory</td></tr>'+
+  '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Custom silicon</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Trivial</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> Requires 8GB on-chip memory (4GB dataset + 4GB scratchpad)</td></tr>'+
   '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Parallel hashing</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Easy</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> Sequential dataset dependency</td></tr>'+
   '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Fixed circuit</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> Optimal</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> Program changes every block</td></tr>'+
   '<tr style="border-bottom:1px solid #111"><td style="padding:6px 10px;color:var(--text)">Memory reduction</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> N/A</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> Checkpoints catch shortcuts</td></tr>'+
@@ -1620,7 +1620,7 @@ function showCXInfo(){
   '<tr><td style="padding:6px 10px;color:var(--text)">CPU advantage</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> None</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> L3 cache reuse, sequential access</td></tr>'+
   '</table>'+
   '<div style="font-size:11px;color:var(--text);line-height:1.6;padding-top:8px;border-top:1px solid #1a1a1a">'+
-  'An ASIC for ConvergenceX v2.0 would require: <b>4GB LPDDR5</b> on-package, '+
+  'An ASIC for ConvergenceX v2.0 would require: <b>8GB LPDDR5</b> on-package (4GB dataset + 4GB scratchpad), '+
   'a <b>general-purpose ALU</b> for 8 operation types, and full re-fabrication '+
   'for every block. This is economically equivalent to building a CPU — the entire point of the design.</div>'+
   '</div>'+
@@ -1629,26 +1629,26 @@ function showCXInfo(){
   '<div style="font-size:11px;color:#67e8f9;letter-spacing:2px;margin-bottom:10px">SOSTCOMPACT Q16.16 DECODING</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">Genesis example:</b><br>'+
-  '&nbsp;&nbsp;bitsQ &nbsp;&nbsp;&nbsp;= 353,075<br>'+
-  '&nbsp;&nbsp;integer &nbsp;= 353075 &gt;&gt; 16 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span style="color:var(--green)">5</span><br>'+
-  '&nbsp;&nbsp;fraction = 353075 &amp; 0xFFFF &nbsp;= <span style="color:var(--green)">25,395</span><br>'+
-  '&nbsp;&nbsp;real &nbsp;&nbsp;&nbsp;&nbsp;= 5 + 25395/65536 &nbsp;= <span style="color:var(--cyan)">5.3875</span><br><br>'+
+  '&nbsp;&nbsp;bitsQ &nbsp;&nbsp;&nbsp;= 765,730<br>'+
+  '&nbsp;&nbsp;integer &nbsp;= 765730 &gt;&gt; 16 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span style="color:var(--green)">11</span><br>'+
+  '&nbsp;&nbsp;fraction = 765730 &amp; 0xFFFF &nbsp;= <span style="color:var(--green)">44,834</span><br>'+
+  '&nbsp;&nbsp;real &nbsp;&nbsp;&nbsp;&nbsp;= 11 + 44834/65536 &nbsp;= <span style="color:var(--cyan)">11.6841</span><br><br>'+
   '<b style="color:var(--text3)">Full range:</b><br>'+
   '&nbsp;&nbsp;<span style="color:#22c55e">MIN</span> &nbsp;bitsQ=65,536 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ difficulty 1.0000 &nbsp;<span style="color:var(--text3)">(network near-dead)</span><br>'+
-  '&nbsp;&nbsp;<span style="color:#67e8f9">GEN</span> &nbsp;bitsQ=353,075 &nbsp;&nbsp;&nbsp;→ difficulty 5.3875 &nbsp;<span style="color:var(--text3)">(genesis)</span><br>'+
+  '&nbsp;&nbsp;<span style="color:#67e8f9">GEN</span> &nbsp;bitsQ=765,730 &nbsp;&nbsp;&nbsp;→ difficulty 11.6841 <span style="color:var(--text3)">(genesis)</span><br>'+
   '&nbsp;&nbsp;<span style="color:#fb010d">MAX</span> &nbsp;bitsQ=16,711,680 → difficulty 255.000 <span style="color:var(--text3)">(theoretical max)</span><br><br>'+
-  '<b style="color:var(--text3)">ASERT adjustment:</b><br>'+
+  '<b style="color:var(--text3)">cASERT bitsQ adjustment:</b><br>'+
   '&nbsp;&nbsp;Exponential: next_bitsq = anchor × 2<sup>(-td/halflife)</sup><br>'+
   '&nbsp;&nbsp;No per-block clamps — smooth continuous adjustment<br>'+
   '&nbsp;&nbsp;Global bounds: MIN_BITSQ=65,536 / MAX_BITSQ=16,711,680<br>'+
-  '&nbsp;&nbsp;After 24h of 2× faster blocks → difficulty doubles'+
+  '&nbsp;&nbsp;After 12h of 2× faster blocks → difficulty doubles'+
   '</div></div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
-  '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">DUAL DIFFICULTY SYSTEM</div>'+
+  '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">UNIFIED cASERT DIFFICULTY</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-  '<b style="color:var(--cyan)">ASERT</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
-  'Half-life: <b>24 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT</b> — <b>Unidirectional</b> adaptive stability overlay. '+
+  '<b style="color:var(--cyan)">cASERT bitsQ</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
+  'Half-life: <b>12 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
+  '<b style="color:var(--orange)">cASERT equalizer</b> — <b>Unidirectional</b> adaptive stability overlay. '+
   'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
   'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
   'Levels: <span style="color:#4ade80">L1</span> (neutral, 0–4 ahead) → '+
@@ -1663,12 +1663,12 @@ function showCXInfo(){
   '&bull; <span style="color:#67e8f9">L2–L3</span> → drops 1 level every 30 min (cautious)<br>'+
   'When mining resumes, decay stops instantly — raw schedule level takes over. Decay affects mining only, never block validation.<br><br>'+
   '<b style="color:var(--green)">Worked Example — L10 (450 ahead):</b> Activation at max(450×600, 7200) = 270,000s (75h). Then: L10→L8 FAST (30min), L7→L4 MEDIUM (80min), L3→L1 SLOW (60min). Total decay: <b>170min</b>. Cost uses <b>current</b> effective level, not original.<br><br>'+
-  'When chain is behind schedule, ASERT alone handles difficulty reduction.<br><br>'+
-  'Together: ASERT handles <b>long-term</b> hashrate changes. cASERT handles <b>short-term</b> volatility by making the stability test harder.</div></div>'+
+  'When chain is behind schedule, cASERT bitsQ handles difficulty reduction.<br><br>'+
+  'cASERT is unified: bitsQ handles <b>long-term</b> hashrate changes. The equalizer handles <b>short-term</b> volatility by adjusting stability test parameters.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
-  '<div class="k">ASERT HALF-LIFE</div><div class="v">86,400s (24 hours)</div>'+
+  '<div class="k">BITSQ HALF-LIFE</div><div class="v">43,200s (12 hours)</div>'+
   '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+

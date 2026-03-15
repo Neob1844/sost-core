@@ -3,7 +3,7 @@
 [size=18pt][b]SOST Protocol[/b][/size]
 [size=11pt]Gold-backed Proof-of-Work. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
 
-[b]Genesis: March 13, 2026 — 00:00:00 UTC[/b]
+[b]Genesis: March 16, 2026 — 00:00:00 UTC[/b]
 [/center]
 
 [hr]
@@ -24,7 +24,7 @@ The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAX
 [tr][td][b]Max supply[/b][/td][td]4,669,201 SOST (hard cap)[/td][/tr]
 [tr][td][b]Emission[/b][/td][td]Exponential decay, q ≈ 0.7788, epoch = 131,553 blocks (~2.5 yr)[/td][/tr]
 [tr][td][b]Coinbase split[/b][/td][td]50% miner / 25% Gold Vault / 25% PoPC Pool[/td][/tr]
-[tr][td][b]Difficulty[/b][/td][td]ASERT (24h half-life) + cASERT overlay (unbounded levels)[/td][/tr]
+[tr][td][b]Difficulty[/b][/td][td]cASERT unified (12h bitsQ half-life + equalizer profiles)[/td][/tr]
 [tr][td][b]Maturity[/b][/td][td]1,000 blocks (~7 days)[/td][/tr]
 [tr][td][b]Premine / ICO / Dev tax[/b][/td][td]NONE[/td][/tr]
 [/table]
@@ -33,7 +33,7 @@ The Gold Vault accumulates SOST, which is periodically converted to XAUT and PAX
 
 [size=14pt][b]ConvergenceX v2.0[/b][/size]
 
-Not a hash lottery. Each attempt solves a 32×32 linear system via 100,000 rounds of integer-only gradient descent. A 4GB dataset (generated once per block) ensures memory-hardness. A unique 256-operation program per block (8 op types) prevents ASIC optimization. All consensus arithmetic is integer-only — zero floating-point in any consensus path.
+Not a hash lottery. Each attempt solves a 32x32 linear system via 100,000 rounds of integer-only gradient descent. Mining requires ~8GB RAM (4GB dataset + 4GB scratchpad); node validation needs only ~500MB. A unique 256-operation program per block (8 op types) prevents ASIC optimization. All consensus arithmetic is integer-only — zero floating-point in any consensus path.
 
 [hr]
 
@@ -47,7 +47,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 ./sost-miner --address sost1YOUR_ADDRESS --genesis genesis_block.json --chain chain.json --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS --threads 4
 [/code]
 
-Requirements: Linux x86_64, 4 GB RAM per thread, CPU only (GPU provides no advantage).
+Requirements: Linux x86_64, 8 GB RAM per mining instance (4 GB dataset + 4 GB scratchpad); 16 GB recommended. Node-only: ~500 MB, 4 GB VPS sufficient. CPU only (GPU provides no advantage).
 
 [hr]
 

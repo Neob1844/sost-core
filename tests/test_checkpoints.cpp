@@ -91,15 +91,15 @@ void test_can_skip_empty_state() {
 
 void test_consensus_params_unchanged() {
     // Verify critical consensus constants are not touched
-    assert(sost::GENESIS_TIME == 1773360000);
-    assert(sost::GENESIS_BITSQ == 353075);
+    assert(sost::GENESIS_TIME == 1773619200);
+    assert(sost::GENESIS_BITSQ == 765730);
     assert(sost::R0_STOCKS == 785100863);
     assert(sost::TARGET_SPACING == 600);
     assert(sost::BLOCKS_PER_EPOCH == 131553);
     assert(sost::CX_N == 32);
     assert(sost::CX_ROUNDS_M == 100000);
     assert(sost::CX_SCRATCH_M == 4096);
-    assert(sost::ASERT_HALF_LIFE == 86400);
+    assert(sost::BITSQ_HALF_LIFE == 43200);
     assert(sost::CASERT_L2_BLOCKS == 5);
     assert(sost::CASERT_L6_BLOCKS == 101);
     // Constitutional addresses

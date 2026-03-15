@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <algorithm>
 
 namespace sost {
 
@@ -36,6 +37,35 @@ static inline uint64_t pow_q(uint64_t exp) {
     return result;
 }
 
+// Hard cap: total cumulative emission must never exceed SUPPLY_MAX_STOCKS.
+// When the epoch-based formula would cause overshoot, subsidy is reduced
+// to the remaining amount. When supply = max, subsidy = 0 (fees only).
+static constexpr int64_t SUPPLY_CAP = 466'920'160'910'299LL; // ~4,669,201 SOST
+
+// Compute cumulative emission through end of given height (sum of all subsidies 0..height).
+// Uses the closed-form: sum = R0 * (1 - q^(E+1)) / (1 - q) * BLOCKS_PER_EPOCH
+// approximated by iterating epochs up to height.
+static int64_t cumulative_emission(int64_t height) {
+    if (height < 0) return 0;
+    int64_t total = 0;
+    int64_t h = 0;
+    while (h <= height) {
+        uint64_t epoch = (uint64_t)(h / BLOCKS_PER_EPOCH);
+        uint64_t qpow = pow_q(epoch);
+        __int128 r = (__int128)R0_STOCKS * (__int128)qpow;
+        r /= (__int128)Q_DEN;
+        int64_t sub = (r < 0) ? 0 : (int64_t)r;
+
+        // Remaining blocks in this epoch
+        int64_t epoch_end = (int64_t)((epoch + 1) * BLOCKS_PER_EPOCH - 1);
+        int64_t blocks_in_epoch = std::min(epoch_end, height) - h + 1;
+        total += sub * blocks_in_epoch;
+        if (total >= SUPPLY_CAP) return SUPPLY_CAP;
+        h += blocks_in_epoch;
+    }
+    return total;
+}
+
 int64_t sost_subsidy_stocks(int64_t height) {
     if (height < 0) return 0;
 
@@ -52,7 +82,15 @@ int64_t sost_subsidy_stocks(int64_t height) {
     if (r > ( __int128)std::numeric_limits<int64_t>::max())
         return std::numeric_limits<int64_t>::max();
 
-    return (int64_t)r;
+    int64_t base_subsidy = (int64_t)r;
+
+    // Hard cap enforcement: check if this subsidy would exceed max supply
+    int64_t emitted_before = cumulative_emission(height - 1);
+    if (emitted_before >= SUPPLY_CAP) return 0; // supply exhausted, fees only
+    int64_t remaining = SUPPLY_CAP - emitted_before;
+    if (base_subsidy > remaining) return remaining; // partial final subsidy
+
+    return base_subsidy;
 }
 
 } // namespace sost

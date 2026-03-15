@@ -689,13 +689,13 @@
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 02</div>
-        <div class="node-name">ASERT</div>
+        <div class="node-name">cASERT bitsQ</div>
         <div class="node-detail">Per-block difficulty<br>Q16.16 adjustment</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 03</div>
-        <div class="node-name">cASERT</div>
-        <div class="node-detail">Stability overlay<br>Adaptive mode control</div>
+        <div class="node-name">cASERT Equalizer</div>
+        <div class="node-detail">Structural correction<br>Adaptive mode control</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 04</div>
@@ -711,10 +711,11 @@
 
     <div class="spec-desc fade-in delay-2" style="max-width:780px;">
       The consensus stack is vertically integrated: ConvergenceX produces the proof-of-work,
-      ASERT adjusts difficulty every block in continuous Q16.16 log-space, cASERT applies a
-      real-time stability overlay when network conditions degrade, and MTP anchors all
-      timing decisions to validated chain history. Every layer is integer-only and
-      bit-for-bit reproducible across all implementations.
+      cASERT controls difficulty via three layers &mdash; bitsQ primary controller adjusts every
+      block in continuous Q16.16 log-space, the equalizer applies structural correction
+      via ConvergenceX stability profiles, and anti-stall ensures liveness &mdash; while MTP
+      anchors all timing decisions to validated chain history. Every layer is integer-only
+      and bit-for-bit reproducible across all implementations.
     </div>
   </div>
 </section>
@@ -768,7 +769,7 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
         <table class="code-table">
           <tbody><tr>
             <td class="key">CX_SCRATCH_MB</td>
-            <td class="val"><code>4096</code> <span class="comment">// 4 GB memory-hard scratchpad</span></td>
+            <td class="val"><code>4096</code> <span class="comment">// 4 GB memory-hard scratchpad (+ 4 GB dataset = 8 GB total mining memory)</span></td>
           </tr>
           <tr>
             <td class="key">CX_N</td>
@@ -851,38 +852,40 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
   </div>
 </section>
 
-<!-- ASERT -->
+<!-- cASERT bitsQ -->
 <section class="section" id="asert">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">DIFFICULTY ADJUSTMENT</div>
-      <h2 class="section-title">ASERT <span class="accent">Retargeting</span></h2>
+      <h2 class="section-title">cASERT bitsQ <span class="accent">Retargeting</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">asert_next_difficulty()</span>
+          <span class="spec-name">casert_next_difficulty()</span>
         </div>
         <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          SOST implements ASERT (Absolutely Scheduled Exponentially Rising Targets) for
-          per-block difficulty adjustment in continuous Q16.16 log-space. Unlike legacy
-          epoch-based retarget systems that wait for large windows, ASERT corrects
-          difficulty every single block, producing smooth transitions and faster convergence
-          to the target interval.
+          SOST implements cASERT bitsQ as the primary hardness regulator within the unified
+          cASERT consensus-rate control system. Inspired by BCH's ASERT, the bitsQ controller
+          performs per-block exponential difficulty adjustment in continuous Q16.16 log-space.
+          Unlike legacy epoch-based retarget systems that wait for large windows, bitsQ corrects
+          difficulty every single block with a 12-hour half-life and a per-block relative delta
+          cap of 6.25% (1/16), producing smooth transitions and faster convergence to the
+          target interval.
         </p>
 
-        <div class="code-snippet" data-label="ASERT CORE (EXPONENTIAL)">
+        <div class="code-snippet" data-label="cASERT bitsQ (EXPONENTIAL)">
 <span class="cmt">// Compute expected parent time from epoch anchor</span>
 expected_pt = anchor_time + (parent_idx - anchor_idx) * <span class="num">600</span>
 td          = prev_time - expected_pt
 
-<span class="cmt">// Exponential ASERT: next_bitsq = anchor_bitsq * 2^(-td / halflife)</span>
-exponent = (-td * Q16_ONE) / ASERT_HALF_LIFE
+<span class="cmt">// Exponential cASERT bitsQ: next_bitsq = anchor_bitsq * 2^(-td / halflife)</span>
+exponent = (-td * Q16_ONE) / CASERT_HALF_LIFE
 shifts   = exponent >> <span class="num">16</span>        <span class="cmt">// integer part</span>
 frac     = exponent & <span class="num">0xFFFF</span>     <span class="cmt">// fractional part</span>
 
@@ -891,7 +894,7 @@ factor   = Q16_ONE + polynomial_approx(frac)
 result   = (anchor_bitsq * factor) >> <span class="num">16</span>
 result   = result << shifts       <span class="cmt">// apply integer power-of-two</span>
 
-<span class="cmt">// Global bounds only — no per-block clamps</span>
+<span class="cmt">// Per-block relative delta cap: 6.25% (1/16)</span>
 new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
         </div>
 
@@ -901,8 +904,8 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
             <td class="val"><code>600</code> seconds <span class="comment">// 10-minute target block time</span></td>
           </tr>
           <tr>
-            <td class="key">ASERT Half-Life</td>
-            <td class="val"><code>86,400</code> seconds <span class="comment">// 24 hours</span></td>
+            <td class="key">bitsQ Half-Life</td>
+            <td class="val"><code>43,200</code> seconds <span class="comment">// 12 hours</span></td>
           </tr>
           <tr>
             <td class="key">MIN_BITSQ</td>
@@ -934,7 +937,7 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
 <section class="section" id="casert">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">STABILITY OVERLAY</div>
+      <div class="section-id">EQUALIZER</div>
       <h2 class="section-title">cASERT <span class="accent">Controller</span></h2>
     </div>
 
@@ -944,14 +947,15 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
           <div class="spec-icon cyan"></div>
           <span class="spec-name">casert_mode_from_chain()</span>
         </div>
-        <span class="spec-tag overlay">STABILITY OVERLAY</span>
+        <span class="spec-tag overlay">EQUALIZER LAYER</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          cASERT (Controlled ASERT) is a consensus-critical stability overlay that adapts
-          ConvergenceX's stability verification parameters based on how far ahead the chain
-          is running vs the ideal schedule (genesis + height &times; 600s). Unidirectional: only
-          hardens when chain is ahead of schedule. When behind, ASERT alone handles difficulty.
+          cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
+          consensus-rate control system. Its equalizer layer adapts ConvergenceX's stability
+          verification parameters based on how far ahead the chain is running vs the ideal
+          schedule (genesis + height &times; 600s). Unidirectional: only hardens when chain is
+          ahead of schedule. When behind, cASERT bitsQ handles difficulty without equalizer overlay.
         </p>
 
         <div class="code-snippet" data-label="LEVEL COMPUTATION">
@@ -978,7 +982,7 @@ ahead     = (lag &lt; <span class="num">0</span>) ? -lag : <span class="num">0</
             </div>
             <div class="mode-params">
               0&ndash;4 blocks ahead &middot; scale=1<br>
-              <em>ASERT handles everything. No CX overlay.</em>
+              <em>cASERT bitsQ handles difficulty. No equalizer overlay.</em>
             </div>
           </div>
           <div class="mode-card">
@@ -1113,7 +1117,7 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
             </tr>
             <tr>
               <td class="key">GENESIS_BITSQ</td>
-              <td class="val">Consensus-fixed anchor</td>
+              <td class="val"><code>765,730</code> (11.6841 in Q16.16, calibrated)</td>
             </tr>
             <tr>
               <td class="key">MIN_BITSQ</td>
@@ -1138,7 +1142,7 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
         <div class="spec-body">
           <p class="spec-desc">
             Block timestamps are validated against Median Time Past (MTP) to prevent
-            manipulation affecting difficulty. Combined with ASERT anchoring, this
+            manipulation affecting difficulty. Combined with cASERT anchoring, this
             creates stable timing even under individually noisy blocks.
           </p>
           <table class="code-table">
@@ -1185,7 +1189,7 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
         <table class="code-table">
           <tbody><tr>
             <td class="key">MAINNET_GENESIS_UTC</td>
-            <td class="val"><code>1773360000</code> <span class="comment">// 2026-03-13 00:00:00 UTC</span></td>
+            <td class="val"><code>1773619200</code> <span class="comment">// 2026-03-16 00:00:00 UTC</span></td>
           </tr>
           <tr>
             <td class="key">BLOCKS_PER_EPOCH</td>
@@ -1244,15 +1248,15 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
       <div class="principle-card fade-in delay-1" style="--card-accent:var(--green-primary);">
         <div class="p-label" style="color:var(--green-primary);">CPU-ORIENTED</div>
         <div class="p-desc">
-          4 GB memory-hard scratchpad with 100,000 sequential iterations. Throughput is
-          bounded by memory bandwidth and latency, not raw compute — making ASIC
-          development economically impractical.
+          8 GB total mining memory (4 GB scratchpad + 4 GB dataset) with 100,000 sequential
+          iterations. Node validation requires only ~500 MB. Throughput is bounded by memory
+          bandwidth and latency, not raw compute — making ASIC development economically impractical.
         </div>
       </div>
       <div class="principle-card fade-in delay-2" style="--card-accent:var(--cyan-primary);">
         <div class="p-label" style="color:var(--cyan-primary);">ADAPTIVE</div>
         <div class="p-desc">
-          Per-block ASERT retargeting with cASERT stability overlay. The chain converges
+          Per-block cASERT retargeting with bitsQ + equalizer. The chain converges
           to its target interval within hours, not days. No retarget whiplash.
         </div>
       </div>
@@ -1306,12 +1310,13 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
             <td class="val" style="width:25%;color:var(--red-primary);">SOST (ConvergenceX)</td>
           </tr>
           <tr><td class="key">PoW verify cost</td><td class="val">~1&mu;s</td><td class="val">~50ms</td><td class="val" style="color:var(--text-primary);">~5&ndash;30s</td></tr>
-          <tr><td class="key">Memory requirement</td><td class="val">Negligible</td><td class="val">256MB&ndash;2GB</td><td class="val" style="color:var(--text-primary);">4GB scratchpad</td></tr>
+          <tr><td class="key">Memory (mining)</td><td class="val">Negligible</td><td class="val">256MB&ndash;2GB</td><td class="val" style="color:var(--text-primary);">8GB (4GB scratchpad + 4GB dataset)</td></tr>
+          <tr><td class="key">Memory (node)</td><td class="val">Negligible</td><td class="val">~256MB</td><td class="val" style="color:var(--text-primary);">~500MB (no scratchpad/dataset)</td></tr>
           <tr><td class="key">ASIC resistance</td><td class="val" style="color:var(--red-primary);">None</td><td class="val" style="color:var(--green-primary);">High</td><td class="val" style="color:var(--green-primary);">Very high</td></tr>
           <tr><td class="key">Full sync time</td><td class="val">~hours</td><td class="val">~days</td><td class="val" style="color:var(--text-primary);">~weeks</td></tr>
           <tr><td class="key">Fast sync time</td><td class="val">~minutes</td><td class="val">~hours</td><td class="val" style="color:var(--green-primary);">~minutes</td></tr>
           <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>
-          <tr><td class="key">Difficulty adjust</td><td class="val">Every 2016 blocks</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--text-primary);">Every block (ASERT exp.)</td></tr>
+          <tr><td class="key">Difficulty adjust</td><td class="val">Every 2016 blocks</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--text-primary);">Every block (cASERT exp.)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
           <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Decay (2h&rarr;tiered)</td></tr>
           <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT L1&ndash;L6+ unbounded</td></tr>
@@ -1329,7 +1334,7 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>

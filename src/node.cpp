@@ -1,4 +1,5 @@
 #include "sost/node.h"
+#include "sost/pow/casert.h"
 #include <cstdio>
 #include <sstream>
 #include <sys/socket.h>
@@ -46,7 +47,7 @@ MineResult Node::mine_next(Wallet& w, uint32_t max_nonce) {
         ? GENESIS_TIME
         : cs_.blocks.back().timestamp + TARGET_SPACING;
 
-    const uint32_t diff = asert_next_difficulty(cs_.metas, h);
+    const uint32_t diff = casert_next_bitsq(cs_.metas, h);
 
     // Snapshot to mine without holding the lock
     const auto metas_snapshot = cs_.metas;

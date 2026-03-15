@@ -31,25 +31,31 @@ struct ConsensusParams {
     int32_t stab_scale, stab_k, stab_margin, stab_steps, stab_lr_shift;
 };
 struct CoinbaseSplit { int64_t miner, gold_vault, popc_pool, total; };
-enum class CasertMode : uint8_t { WARMUP=0, L1=1, L2=2, L3=3, L4=4, L5=5, L6=6 };
-inline const char* casert_mode_str(CasertMode m) {
-    switch(m) {
-        case CasertMode::WARMUP: return "warmup";
-        case CasertMode::L1:     return "L1";
-        case CasertMode::L2:     return "L2";
-        case CasertMode::L3:     return "L3";
-        case CasertMode::L4:     return "L4";
-        case CasertMode::L5:     return "L5";
-        case CasertMode::L6:     return "L6+";
-    }
-    return "?";
+// cASERT unified block-rate control decision
+struct CasertDecision {
+    uint32_t bitsq;           // primary hardness (Q16.16)
+    int32_t  profile_index;   // equalizer profile (-3=E3 .. 0=B0 .. 6=H6)
+    int32_t  lag;             // schedule lag (positive=ahead, negative=behind)
+    int32_t  r_q16;           // instantaneous log-ratio (Q16.16)
+    int32_t  ewma_short;      // short EWMA (Q16.16)
+    int32_t  ewma_long;       // long EWMA (Q16.16)
+    int32_t  burst_score;     // burst score (Q16.16)
+    int32_t  volatility;      // volatility (Q16.16)
+    int64_t  integrator;      // integrator (Q16.16)
+};
+
+inline const char* casert_profile_name(int32_t idx) {
+    static const char* names[] = {"E3","E2","E1","B0","H1","H2","H3","H4","H5","H6"};
+    int32_t ai = idx + 3;
+    if (ai < 0 || ai >= 10) return "?";
+    return names[ai];
 }
-struct CasertDecision { CasertMode mode; int32_t signal_s, samples; int32_t effective_level = 0; };
 struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };
 struct CXAttemptResult {
-    Bytes32 commit, checkpoints_root;
+    Bytes32 commit, checkpoints_root, final_state;
     uint64_t stability_metric; bool is_stable;
     std::vector<uint8_t> x_bytes;
+    std::vector<Bytes32> checkpoint_leaves; // merkle leaves for verification
 };
 struct Checkpoint { Bytes32 state_hash, x_hash; uint32_t round; uint64_t residual; };
 } // namespace sost

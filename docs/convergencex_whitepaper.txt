@@ -27,7 +27,7 @@ No ICO • No Premine • No VCs • No Ongoing Parameter Governance
 
 The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.
 
-Mainnet v2 Genesis: 2026-03-13 00:00:00 UTC
+Mainnet v2 Genesis: 2026-03-16 00:00:00 UTC
 Note: mainnet v2 is a clean regenesis following security and custody improvements.
 
 Table of Contents
@@ -72,7 +72,7 @@ Appendix I — Errata v3.5
 
 1. Abstract
 
-SOST is a Proof-of-Work cryptocurrency built on ConvergenceX, a consensus mechanism that replaces brute-force hash guessing with a mandatory sequential convergence process. Each mining attempt requires 4 GB RAM, 100,000 strictly sequential rounds of integer-only gradient descent over a deterministic random linear system, memory-hard scratchpad reads at every round, and a stability basin verification that produces a deterministic certificate.
+SOST is a Proof-of-Work cryptocurrency built on ConvergenceX, a consensus mechanism that replaces brute-force hash guessing with a mandatory sequential convergence process. Each mining attempt requires ~8 GB RAM (4 GB dataset + 4 GB scratchpad), 100,000 strictly sequential rounds of integer-only gradient descent over a deterministic random linear system, memory-hard scratchpad reads at every round, and a stability basin verification that produces a deterministic certificate. Node validation requires only ~500 MB RAM — no dataset or scratchpad is needed to verify blocks.
 
 Every block splits the coinbase reward by consensus:
 
@@ -194,7 +194,7 @@ local non-explosion, and
 
 global contraction for sufficiently large perturbations.
 
-CASERT adaptively selects (k, steps, scale) for liveness, with an asymmetric policy: it never relaxes under fast conditions.
+cASERT adaptively selects (k, steps, scale) for liveness, with an asymmetric policy: it never relaxes under fast conditions.
 
 Phase 5: Commitment & Target Check
 COMMITMENT (binds all proof components):
@@ -293,11 +293,11 @@ PERTURBATION GENERATION (consensus-critical, miner-unbiasable):
 
 The stability context `stctx` is derived from `header_core`, `seed`, and `checkpoints_root`. This means the perturbation vectors depend on the entire proof trajectory — a miner cannot choose a nonce that produces "easy" perturbations without first completing the full 100,000-round convergence.
 
-#### CASERT Stability Parameters
+#### cASERT Equalizer Parameters
 
-The intensity of perturbation probes adapts to network conditions through the CASERT
-overlay (Section 3.12). CASERT is a miner-side overlay (not consensus-critical
-for validation). It computes how many blocks the chain is ahead of the ideal
+The intensity of perturbation probes adapts to network conditions through the cASERT
+equalizer (Section 3.12). The equalizer is consensus-critical. It computes how many
+blocks the chain is ahead of the ideal
 schedule (genesis + height × TARGET_SPACING) and assigns levels:
 
   ahead = 0–4    → L1   (neutral, base verification)
@@ -347,7 +347,7 @@ Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
 
 At L1 (neutral), 4 independent probes each run 4 gradient steps with
 perturbation scale ±1. This is the lightest configuration. When the chain is
-behind schedule, ASERT alone handles difficulty reduction — CASERT stays at L1.
+behind schedule, cASERT bitsQ handles difficulty reduction — equalizer stays at B0.
 When the chain runs ahead, scale increases through L2 and beyond with no ceiling
 — an attacker mining blocks quickly faces increasingly strict stability requirements,
 gaining no advantage. This asymmetric policy ensures that relaxation is only available
@@ -392,7 +392,7 @@ HEADER CORE (binds all header fields into the proof):
 To get a different problem, the miner must change `prev_hash` — which requires reorganizing the chain. The other header fields are consensus-constrained:
 - `merkle_root`: determined by transaction selection (changes invalidate commit, not problem)
 - `timestamp`: constrained by MTP and future drift rules
-- `powDiffQ`: determined by ASERT consensus
+- `powDiffQ`: determined by cASERT bitsQ
 
 #### Stability Context Binding
 
@@ -714,52 +714,53 @@ Bitcoin's SHA-256 remains the canonical PoW baseline—simple, robust, and histo
 | Year introduced | 2009 | 2019 | 2015 (PoS migration 2022) | 2026 |
 | Proof nature | Hash below target | Hash below target | Hash below target | Convergence certificate + hash below target |
 | Core operation | Double SHA-256 | Random VM program execution | DAG read + Keccak hash | Gradient descent + scratchpad + stability check |
-| RAM required | ~0 MB | 2,048 MB (2 GB) | 1-4 GB (growing DAG) | 4,096 MB (4 GB, fixed) |
+| RAM required (mining) | ~0 MB | 2,048 MB (2 GB) | 1-4 GB (growing DAG) | ~8,192 MB (4 GB dataset + 4 GB scratchpad) |
+| RAM required (node) | ~0 MB | ~256 MB | ~256 MB | ~500 MB (no dataset/scratchpad) |
 | ASIC advantage | >1,000× | ~3-5× estimated | ~2-5× (Ethash ASICs exist) | Designed for low multiples (hypothesis; formal benchmark pending) |
-| Difficulty adjustment | Every 2,016 blocks (~2 weeks) | Every block (simple ratio) | Every block (bomb + ratio) | Every block (ASERT Q16.16, 24h half-life) |
+| Difficulty adjustment | Every 2,016 blocks (~2 weeks) | Every block (simple ratio) | Every block (bomb + ratio) | Every block (cASERT bitsQ Q16.16, 12h half-life) |
 | Mathematical certificate | None | None | None | Stability basin proof (k probes × g steps) |
 | Useful entropy output | Block hash only | Block hash only | Block hash only | Entropy triple (block_id + commit + cp_root) |
 | Consensus arithmetic | Integer (nBits, subsidy) | Integer + float (VM) | Integer | 100% integer (zero floating-point) |
 
 ### 3.10 Consensus Parameters
 Parameter                  Value
-RAM (scratchpad)           4,096 MB
+RAM (mining total)         ~8,192 MB (4,096 MB scratchpad + 4,096 MB dataset)
+RAM (node validation)      ~500 MB (no scratchpad/dataset needed)
 Rounds per attempt         100,000 sequential
 State dimension            32
 Learning rate shift         18
 Regularization λ           100
 Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
-Difficulty algorithm       ASERT, 24h half-life
-Clamp (easier)             4× per block
-Clamp (harder)             8× per block
-CASERT model               blocks-ahead-of-schedule, L1–L5 fixed, L6+ unbounded
-CASERT thresholds          L2=5, L3=26, L4=51, L5=76, L6+=101 blocks ahead
-CASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
+Difficulty algorithm       cASERT bitsQ, 12h half-life
+Per-block delta cap        6.25% (1/16)
+Equalizer profiles         E3(-3) through H6(+6), B0 baseline
+cASERT model               unified: bitsQ primary + equalizer + anti-stall
+cASERT thresholds          L2=5, L3=26, L4=51, L5=76, L6+=101 blocks ahead
+cASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
 Block target spacing       600s
 Stability baseline (L1)    scale=1, k=4, margin=180, steps=4, stab_shift=20
 
-3.11 ASERT Q16.16 Difficulty Adjustment (Consensus-Critical)
+3.11 cASERT bitsQ Difficulty Adjustment (Consensus-Critical)
 
-ASERT compares observed timing to expected schedule and adjusts powDiffQ deterministically.
+cASERT bitsQ compares observed timing to expected schedule and adjusts powDiffQ
+deterministically. Inspired by BCH ASERT but redesigned as a unified system with
+equalizer profiles and anti-stall.
 
 slow chain → decrease powDiffQ → larger target → easier
 fast chain → increase powDiffQ → smaller target → harder
 
-Per-block clamps bound the response:
-max 4× easier per block
-max 8× harder per block
+Half-life: 12h (43,200s). Per-block delta cap: 6.25% (1/16).
 
-3.12 CASERT Adaptive Overlay (Miner-Side)
+3.12 cASERT Equalizer (Consensus-Critical)
 
-IMPORTANT: CASERT is a miner-side overlay, NOT consensus-critical for block
-validation. The miner adjusts ConvergenceX stability parameters according to
-the CASERT level before mining. Block validation does NOT verify the CASERT
-level — a valid block is valid regardless of which CASERT level the miner used.
-Only ASERT difficulty (powDiffQ) is consensus-critical for validation.
+The cASERT equalizer is consensus-critical. It adjusts ConvergenceX stability
+parameters according to the equalizer profile. Block validation verifies the
+equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 
-CASERT does not change difficulty. It adjusts stability verification
-intensity based on how far ahead the chain is relative to the ideal schedule.
+The equalizer profiles range from E3(-3) through H6(+6), with B0 as baseline.
+It adjusts stability verification intensity based on how far ahead the chain
+is relative to the ideal schedule.
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
@@ -768,7 +769,7 @@ SIGNAL COMPUTATION (deterministic, block-timestamp based):
   lag           = expected_h - current_height
   ahead         = max(0, -lag)
 
-LEVEL ASSIGNMENT (cASERT v5.1 — L1–L6+, unbounded):
+LEVEL ASSIGNMENT (cASERT — L1–L6+, unbounded):
   ahead = 0–4    → L1   (neutral, base verification)
   ahead = 5–25   → L2   (light hardening)
   ahead = 26–50  → L3   (moderate hardening)
@@ -794,22 +795,22 @@ DECAY ANTI-STALL (miner-side, uses wall-clock time):
     L1   : floor, no further decay
 
   Decay uses real time (std::time), not block timestamps.
-  This prevents permanent stall if CASERT levels become too high for
+  This prevents permanent stall if cASERT levels become too high for
   any miner to solve.
 
-DETERMINISM: CASERT derives its signal from on-chain block data
+DETERMINISM: cASERT derives its signal from on-chain block data
 (height, timestamp) and consensus constants. Timestamp manipulation
 is bounded by MTP and MAX_FUTURE_DRIFT. The decay component uses
 wall-clock time for mining only — it does not affect block validation.
 
 ASYMMETRIC POLICY:
-  When the chain is ahead of schedule, CASERT increases the scale
+  When the chain is ahead of schedule, cASERT increases the scale
   through L2 and beyond, making stability verification progressively
   harder with no ceiling. An attacker with high hashrate mining blocks
   quickly pushes the ahead count up, which increases scale unboundedly.
   The attacker gains nothing: stability requirements grow strictly
-  stricter. CASERT only stays at L1 (neutral) when the chain is
-  on-time or behind — which is when ASERT alone handles difficulty
+  stricter. cASERT only stays at L1 (neutral) when the chain is
+  on-time or behind — which is when cASERT bitsQ handles difficulty
   reduction to maintain liveness.
 
 3.13 Node Synchronization and Verification Policy
@@ -840,7 +841,7 @@ Trust model (two independent mechanisms):
 Verification always performed (all blocks, all modes):
 - Header structure and magic bytes
 - Timestamp validation (MTP monotonicity + future drift)
-- ASERT difficulty compliance
+- cASERT bitsQ difficulty compliance
 - SOSTCompact target threshold (commit <= target)
 - Coinbase split correctness (50/25/25)
 - Constitutional address verification
@@ -849,7 +850,7 @@ Verification always performed (all blocks, all modes):
 
 Verification skipped (trusted historical blocks only):
 - Full 100,000-round gradient descent recomputation
-- 4GB scratchpad reconstruction
+- 4GB scratchpad + 4GB dataset reconstruction (miner-only memory)
 - Stability basin re-verification
 
 Any node operator can force full verification with --full-verify.
@@ -861,7 +862,7 @@ being added as a checkpoint or set as the assumevalid anchor.
 This mechanism does not change consensus rules. A block that passes
 fast sync verification would also pass full verification.
 
-3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)
+3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + cASERT)
 
 This section provides a technical but simple walkthrough of how a SOST block is constructed and validated, using real-looking values as an example.
 
@@ -872,7 +873,7 @@ merkle_root: 32 bytes
 timestamp ts = 1,771,700,109
 MedianTimePast MTP = 1,771,697,922
 powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits
-CASERT selected stability parameters (L3, 26–50 blocks ahead):
+cASERT equalizer selected stability parameters (L3, 26–50 blocks ahead):
 scale=3, k=4, margin=180, steps=4, stab_shift=20
 
 3.14.2 Timestamp Rules (MTP + Future Drift)
@@ -881,7 +882,7 @@ Rule A: ts > MTP
 Here: 1,771,700,109 > 1,771,697,922 → OK (difference 2,187s).
 Rule B: ts <= now + MAX_FUTURE_DRIFT (e.g., 600s) → prevents "future blocks".
 
-3.14.3 ASERT Difficulty (powDiffQ → target)
+3.14.3 cASERT bitsQ Difficulty (powDiffQ → target)
 
 Difficulty is encoded as Q16.16 log-space:
 bits ≈ powDiffQ / 65,536 ≈ 5.35
@@ -889,12 +890,12 @@ bits ≈ powDiffQ / 65,536 ≈ 5.35
 Validity requires:
 commit <= target(powDiffQ) (big-endian integer comparison)
 
-ASERT update intuition:
+cASERT bitsQ update intuition:
 if blocks slow → reduce powDiffQ → easier
 if blocks fast → increase powDiffQ → harder
 then clamp per-block change and global bounds.
 
-3.14.4 CASERT — What the stability parameters mean
+3.14.4 cASERT Equalizer — What the stability parameters mean
 
 scale=3: each perturbation component in [-3, +3] ("how far we poke")
 k=4: number of probes (more probes = stronger certificate)
@@ -909,14 +910,14 @@ block_key = SHA256(prev_hash || "BLOCK_KEY")
 seed = SHA256(MAGIC||"SEED"||header_core||block_key||nonce||extra_nonce)
 run 100k sequential rounds + scratch mixing + checkpoints
 compute checkpoints_root
-stability basin verification using CASERT params
+stability basin verification using cASERT equalizer params
 commit = SHA256(... all bound components ...)
 accept iff commit <= target(powDiffQ)
 block_id = SHA256(full_header || "ID" || commit)
 
 3.14.6 What a validator does
 
-BASIC: checks time, ASERT powDiffQ, commit<=target, and linkage.
+BASIC: checks time, cASERT bitsQ powDiffQ, commit<=target, and linkage.
 FULL: recomputes ConvergenceX proof and compares commit/cp_root/metric/block_id.
 
 ## 4. Monetary Policy
@@ -2124,9 +2125,9 @@ No governance required. The economics self-regulate through participant incentiv
 
 ### 9.1 51% Attack Resistance
 
-Each ConvergenceX attempt requires 4 GB RAM and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts. The sequential dependency chain is the fundamental defense: an attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000× faster on a single attempt.
+Each ConvergenceX attempt requires ~8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts. The sequential dependency chain is the fundamental defense: an attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000× faster on a single attempt.
 
-As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold. The ASERT difficulty adjustment ensures that block intervals remain stable regardless of hashrate level.
+As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold. The cASERT difficulty adjustment ensures that block intervals remain stable regardless of hashrate level.
 
 ### 9.2 Bond Deterrence Analysis
 
@@ -2151,15 +2152,15 @@ No external oracle is required for consensus-critical validation. All consensus 
 
 Bond calculations use a 7-day TWAP from exchanges with verifiable liquidity (consistent with the Price Bulletin model in Section 6.6) — resistant to single-block manipulation. The gold ratio check uses the same TWAP. Price data is advisory for PoPC bond sizing and settlement, not consensus-critical.
 
-### 9.5 CASERT Security Properties
+### 9.5 cASERT Security Properties
 
-The asymmetric policy (Section 3.12) prevents CASERT from being weaponized:
+The asymmetric policy (Section 3.12) prevents cASERT from being weaponized:
 
 - An attacker with high hashrate mining blocks quickly pushes the signal negative (chain fast).
-- Negative signal → CASERT stays in NORMAL mode. No relaxation.
+- Negative signal → cASERT stays in NORMAL mode. No relaxation.
 - The attacker gains nothing — stability requirements remain at maximum.
 
-CASERT only relaxes when the chain is genuinely slow (hashrate dropped), which is when relaxation is needed to maintain liveness. This is the correct security trade-off: relaxed stability is only available when the chain needs help, never when an attacker is dominating.
+cASERT only relaxes when the chain is genuinely slow (hashrate dropped), which is when relaxation is needed to maintain liveness. This is the correct security trade-off: relaxed stability is only available when the chain needs help, never when an attacker is dominating.
 
 ### 9.6 Emergency Procedures
 
@@ -2218,7 +2219,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 
 | Date | Milestone |
 |---|---|
-| Mar 13, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
+| Mar 16, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public. |
 | Q4 2026 | Gold purchases begin (6 months post-genesis per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
 | Q3 2026 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
@@ -2236,8 +2237,8 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 | Parameter | Value |
 |---|---|
 | Name / Symbol | SOST |
-| Genesis | 2026-03-13 00:00:00 UTC (block 0) |
-| Algorithm | ConvergenceX (4GB RAM, 100k rounds, sequential, stability certificate) |
+| Genesis | 2026-03-16 00:00:00 UTC (block 0) |
+| Algorithm | ConvergenceX (~8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node; 100k rounds, sequential, stability certificate) |
 | Block time | 600 seconds target |
 | Supply cap enforcement | Subsidy-by-height (hard cap by construction) |
 | Max supply | ~4,669,201 SOST (466,920,160,910,299 stocks) |
@@ -2247,8 +2248,8 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 | Initial reward | 7.85100863 SOST/block |
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
-| Difficulty | ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder) |
-| CASERT | Unidirectional block-lag overlay, L1-L5 fixed, L6+ unbounded, k=4, steps=4, scale=level (all levels), hardening only when ahead of schedule |
+| Difficulty | cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% delta cap |
+| cASERT equalizer | Consensus-critical, profiles E3(-3) through H6(+6), B0 baseline, hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2275,7 +2276,7 @@ SOST is built on three ideas that individually exist, but have never been combin
 
 The genesis block is self-sufficient: it requires only a miner and a timestamp. Community growth and gold accumulation follow naturally from the protocol's own mechanics. SOST launches from code, not from capital.
 
-00:00:00 UTC, March 13, 2026.
+00:00:00 UTC, March 16, 2026.
 
 ## Legal Disclaimer
 
@@ -2484,7 +2485,7 @@ CONVERGENCEX PARAMETERS:
   CX_STABILITY_LR_SHIFT        = 20
 
 MONETARY PARAMETERS:
-  GENESIS_TIME                 = 1,773,360,000  // 2026-03-13 00:00:00 UTC
+  GENESIS_TIME                 = 1,773,619,200  // 2026-03-16 00:00:00 UTC
   TARGET_SPACING               = 600
   BLOCKS_PER_EPOCH             = 131,553
   R0_STOCKS                 = 785,100,863
@@ -2494,25 +2495,25 @@ MONETARY PARAMETERS:
 
 DIFFICULTY PARAMETERS:
   Q16_ONE                      = 65,536
-  HALF_LIFE                    = 86,400
+  HALF_LIFE                    = 43,200
   MAX_FUTURE_DRIFT             = 600
 
-CASERT v5 PARAMETERS (miner-side overlay, NOT consensus-critical):
-  CASERT_L2_BLOCKS             = 5     // 5–25 ahead → L2
-  CASERT_L3_BLOCKS             = 26    // 26–50 ahead → L3
-  CASERT_L4_BLOCKS             = 51    // 51–75 ahead → L4
-  CASERT_L5_BLOCKS             = 76    // 76–100 ahead → L5 (fixed)
-  CASERT_L6_BLOCKS             = 101   // 101+ ahead → L6+ (unbounded)
+cASERT EQUALIZER PARAMETERS (consensus-critical):
+  cASERT_L2_BLOCKS             = 5     // 5–25 ahead → L2
+  cASERT_L3_BLOCKS             = 26    // 26–50 ahead → L3
+  cASERT_L4_BLOCKS             = 51    // 51–75 ahead → L4
+  cASERT_L5_BLOCKS             = 76    // 76–100 ahead → L5 (fixed)
+  cASERT_L6_BLOCKS             = 101   // 101+ ahead → L6+ (unbounded)
   // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
   FIXED_K                      = 4
   FIXED_STEPS                  = 4
   FIXED_MARGIN                 = 180
 
-CASERT DECAY ANTI-STALL:
-  CASERT_DECAY_ACTIVATION      = max(ahead*600, 7200) // proportional, no ceiling
-  CASERT_DECAY_FAST_SECS       = 600    // 10 min/level for L8+
-  CASERT_DECAY_MEDIUM_SECS     = 1,200  // 20 min/level for L4-L7
-  CASERT_DECAY_SLOW_SECS       = 1,800  // 30 min/level for L2-L3
+cASERT DECAY ANTI-STALL:
+  cASERT_DECAY_ACTIVATION      = max(ahead*600, 7200) // proportional, no ceiling
+  cASERT_DECAY_FAST_SECS       = 600    // 10 min/level for L8+
+  cASERT_DECAY_MEDIUM_SECS     = 1,200  // 20 min/level for L4-L7
+  cASERT_DECAY_SLOW_SECS       = 1,800  // 30 min/level for L2-L3
 
 EMERGENCY PARAMETERS:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
@@ -2615,7 +2616,7 @@ TEST VECTORS (minimum conformance set):
 
   V2: header_core construction
     Input:  prev_hash = 0xAA×32, merkle_root = 0xBB×32,
-            timestamp = 1773360000, powDiffQ = GENESIS_BITSQ
+            timestamp = 1773619200, powDiffQ = GENESIS_BITSQ
     Output: 72 bytes (hex, published in repo)
 
   V3: seed derivation
@@ -2912,12 +2913,12 @@ Changes from v3.4 to v3.5:
   69) Living Document Notice added. Non-consensus parameters may evolve.
       Consensus rules remain immutable at genesis.
   
-  CASERT MODIFICATIONS:
-  70) CASERT rewritten: discrete 3-mode system replaced by continuous
+  cASERT MODIFICATIONS:
+  70) cASERT rewritten: discrete 3-mode system replaced by continuous
       signal-based levels. k=4 and steps=4 are fixed. Scale equals
       level for all levels (linear: L1→1, L2→2, ..., L5→5, L6→6, ...).
       Increases without bound under fast-chain conditions.
-  71) CASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
+  71) cASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
       (naming aligned with code).
 
 ## Appendix M: Removed — Adaptive Mode (Historical, Non-Normative)

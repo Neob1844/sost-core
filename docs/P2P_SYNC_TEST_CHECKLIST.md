@@ -156,4 +156,4 @@ After adding checkpoints to `g_checkpoints[]` in sost-node.cpp:
 | Developer | | | |
 | Tester | | | |
 
-**All tests must PASS before mainnet genesis on 2026-03-13.**
+**All tests must PASS before mainnet genesis on 2026-03-16.**

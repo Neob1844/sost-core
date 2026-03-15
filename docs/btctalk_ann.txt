@@ -3,7 +3,7 @@
 [size=18pt][b]SOST Protocol[/b][/size]
 [size=11pt]Gold-backed Proof-of-Work protocol. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
 
-[b]Genesis Block: March 13, 2026 — 00:00:00 UTC[/b]
+[b]Genesis Block: March 16, 2026 — 00:00:00 UTC[/b]
 [/center]
 
 [hr]
@@ -17,7 +17,7 @@
 [tr][td]Max supply[/td][td]4,669,201 SOST (hard cap by construction)[/td][/tr]
 [tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788[/td][/tr]
 [tr][td]Coinbase split[/td][td]50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
-[tr][td]Difficulty[/td][td]ASERT (24h half-life) + cASERT overlay (unbounded)[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified (12h bitsQ half-life + equalizer profiles)[/td][/tr]
 [tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point[/td][/tr]
 [tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
 [tr][td]Premine[/td][td]NONE[/td][/tr]
@@ -68,11 +68,11 @@ SOST is not pegged to gold. Holders have no redemption right against the reserve
 
 ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×32 linear system A(x) = b through 100,000 sequential rounds of integer-only gradient descent, then proving the solution sits in a stable basin of attraction. The proof is a verifiable mathematical certificate, not a lucky hash.
 
-[b]Memory-hard dataset:[/b] A 4GB persistent dataset (512M uint64_t entries) is generated once per block from the previous block hash. It is reused across all nonce attempts for that block. CPU miners benefit from L3 cache reuse. ASICs cannot reduce the memory requirement — checkpoints every 6,250 rounds commit intermediate state to a Merkle tree, catching any attempt to shortcut memory reads.
+[b]Memory-hard dataset:[/b] A 4GB persistent dataset (512M uint64_t entries) is generated once per block from the previous block hash. Combined with the 4GB scratchpad, total mining memory is ~8GB. It is reused across all nonce attempts for that block. CPU miners benefit from L3 cache reuse. ASICs cannot reduce the memory requirement — checkpoints every 6,250 rounds commit intermediate state to a Merkle tree, catching any attempt to shortcut memory reads. Node validation requires only ~500MB RAM (no dataset or scratchpad needed).
 
-[b]Per-block program:[/b] Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 4GB LPDDR5 on-package and a general-purpose ALU — economically equivalent to building a CPU.
+[b]Per-block program:[/b] Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 8GB LPDDR5 on-package (4GB dataset + 4GB scratchpad) and a general-purpose ALU — economically equivalent to building a CPU.
 
-[b]Dual difficulty:[/b] ASERT handles long-term hashrate calibration with a 24-hour half-life and per-block adjustment. cASERT is a unidirectional overlay that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). cASERT has 5 fixed levels (L1-L5 at thresholds 5/26/51/76 blocks ahead), then L6+ unbounded from 101+ blocks (scale grows every 50 blocks with no ceiling). If no block is found for an extended period (max(ahead x 10min, 2 hours) -- proportional to blocks ahead, no ceiling), a decay mechanism gradually reduces the cASERT level to prevent permanent chain stall. Decay affects mining only, never block validation.
+[b]Unified cASERT difficulty:[/b] The bitsQ primary controller handles long-term hashrate calibration with a 12-hour half-life and per-block adjustment. The equalizer is a unidirectional component that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). The equalizer uses profiles (E3-H6) that progressively tighten stability requirements. If no block is found for an extended period (max(ahead x 10min, 2 hours) -- proportional to blocks ahead, no ceiling), a decay mechanism gradually reduces the equalizer level to prevent permanent chain stall. Decay affects mining only, never block validation.
 
 [b]Decay tiers:[/b] L8+ drops 1 level every 10 min (fast), L4-L7 every 20 min (medium), L2-L3 every 30 min (cautious). Cost uses the [b]current[/b] effective level as it drops. [b]Example -- L10 (450 ahead):[/b] Activation at 75h. Then: L10->L8 FAST (30min), L7->L4 MEDIUM (80min), L3->L1 SLOW (60min). Total decay: 170 min. Total from start: ~78 hours.
 
@@ -83,8 +83,8 @@ All consensus arithmetic is integer-only. Zero floating-point operations exist i
 [size=14pt][b]Fair Launch — Full Transparency[/b][/size]
 
 [list]
-[li][b]Genesis:[/b] March 13, 2026, 00:00:00 UTC[/li]
-[li][b]Genesis difficulty:[/b] 5.3875 (bitsQ = 353,075)[/li]
+[li][b]Genesis:[/b] March 16, 2026, 00:00:00 UTC[/li]
+[li][b]Genesis difficulty:[/b] 11.6841 (bitsQ = 765,730)[/li]
 [li][b]Block 0 reward:[/b] 7.85100863 SOST, split 50/25/25 to constitutional addresses[/li]
 [li][b]No coins pre-mined.[/b] No coins reserved for founders, team, or investors[/li]
 [li][b]Coinbase maturity:[/b] 1,000 blocks (~7 days) before mined coins are spendable[/li]
@@ -124,7 +124,7 @@ Of the total supply, approximately 50% goes to miners, 25% to the Gold Funding V
 
 [table]
 [tr][td][b]Phase[/b][/td][td][b]Date[/b][/td][td][b]Milestone[/b][/td][/tr]
-[tr][td]1[/td][td]March 13, 2026[/td][td]GENESIS BLOCK — 00:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.[/td][/tr]
+[tr][td]1[/td][td]March 16, 2026[/td][td]GENESIS BLOCK — 00:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.[/td][/tr]
 [tr][td]2[/td][td]Q2 2026[/td][td]PoPC smart contracts deployed on Ethereum Sepolia testnet. Model A (bond + audit) and Model B (escrow timelock) open for public testing.[/td][/tr]
 [tr][td]3[/td][td]Q3 2026[/td][td]PoPC mainnet launch on Ethereum. First custody contracts active.[/td][/tr]
 [tr][td]4[/td][td]Q4 2026[/td][td]XAUT/PAXG reserve purchases begin (6 months post-public-launch per G4, subject to sufficient SOST market liquidity). Heritage Reserve deployed on Ethereum mainnet. Public reserve dashboard.[/td][/tr]
@@ -151,7 +151,7 @@ This creates a wallet.json in the current directory with your address and privat
 Requirements:
 [list]
 [li]Linux x86_64 (Ubuntu 24.04 recommended)[/li]
-[li]4 GB RAM minimum (ConvergenceX dataset is 4 GB)[/li]
+[li]8 GB RAM minimum for mining (4 GB dataset + 4 GB scratchpad); 16 GB recommended. Node-only: ~500 MB, 4 GB VPS sufficient.[/li]
 [li]CPU — GPU provides no meaningful advantage[/li]
 [li]Dependencies: build-essential cmake libssl-dev libsecp256k1-dev[/li]
 [/list]

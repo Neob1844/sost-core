@@ -182,7 +182,7 @@
 <a href="#sec-63" class="toc-l2">9.2 Bond Deterrence Analysis</a>
 <a href="#sec-64" class="toc-l2">9.3 Audit Manipulation Resistance</a>
 <a href="#sec-65" class="toc-l2">9.4 Oracle Manipulation Resistance</a>
-<a href="#sec-66" class="toc-l2">9.5 CASERT Security Properties</a>
+<a href="#sec-66" class="toc-l2">9.5 cASERT Security Properties</a>
 <a href="#sec-67" class="toc-l2">9.6 Emergency Procedures</a>
 <a href="#sec-68" class="toc-l1">10. The Constitution</a>
 <a href="#sec-69" class="toc-l1">11. Roadmap</a>
@@ -238,7 +238,7 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">The protocol is permissionless by design. Third-party exchanges, custodians, or issuers may apply their own KYC/AML requirements.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">Genesis Block: March 13, 2026 — 00:00:00 UTC</p>
+<p class="wp-p">Genesis Block: March 16, 2026 — 00:00:00 UTC</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Table of Contents</p>
 <div class="wp-spacer"></div>
@@ -276,7 +276,7 @@
 <div class="wp-spacer"></div>
 <div class="wp-bullet">1. Abstract</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">SOST is a Proof-of-Work cryptocurrency built on ConvergenceX, a consensus mechanism that replaces brute-force hash guessing with a mandatory sequential convergence process. Each mining attempt requires 4 GB RAM, 100,000 strictly sequential rounds of integer-only gradient descent over a deterministic random linear system, memory-hard scratchpad reads at every round, and a stability basin verification that produces a deterministic certificate.</p>
+<p class="wp-p">SOST is a Proof-of-Work cryptocurrency built on ConvergenceX, a consensus mechanism that replaces brute-force hash guessing with a mandatory sequential convergence process. Each mining attempt requires ~8 GB RAM (4 GB dataset + 4 GB scratchpad), 100,000 strictly sequential rounds of integer-only gradient descent over a deterministic random linear system, memory-hard scratchpad reads at every round, and a stability basin verification that produces a deterministic certificate. Node validation requires only ~500 MB RAM — no dataset or scratchpad is needed to verify blocks.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Every block splits the coinbase reward by consensus:</p>
 <div class="wp-spacer"></div>
@@ -398,7 +398,7 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">global contraction for sufficiently large perturbations.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">CASERT adaptively selects (k, steps, scale) for liveness, with a unidirectional policy: it only hardens when the chain is ahead of schedule — never relaxes under fast conditions.</p>
+<p class="wp-p">The cASERT equalizer adaptively selects (k, steps, scale) for liveness, with a unidirectional policy: it only hardens when the chain is ahead of schedule — never relaxes under fast conditions.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Phase 5: Commitment &amp; Target Check</p>
 <p class="wp-p">COMMITMENT (binds all proof components):</p>
@@ -491,10 +491,10 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">The stability context <code>stctx</code> is derived from <code>header_core</code>, <code>seed</code>, and <code>checkpoints_root</code>. This means the perturbation vectors depend on the entire proof trajectory — a miner cannot choose a nonce that produces &quot;easy&quot; perturbations without first completing the full 100,000-round convergence.</p>
 <div class="wp-spacer"></div>
-<h4 id="sec-8" class="wp-h">CASERT Stability Parameters</h4>
+<h4 id="sec-8" class="wp-h">cASERT Equalizer Stability Parameters</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The intensity of perturbation probes adapts to network conditions through the CASERT</p>
-<p class="wp-p">overlay (Section 3.12). CASERT uses a <strong>unidirectional block-lag</strong> signal: it compares</p>
+<p class="wp-p">The intensity of perturbation probes adapts to network conditions through the cASERT</p>
+<p class="wp-p">equalizer (Section 3.12). The equalizer uses a <strong>unidirectional block-lag</strong> signal: it compares</p>
 <p class="wp-p">the actual number of blocks mined against the ideal schedule (genesis + height × 600s)</p>
 <p class="wp-p">and only increases computational cost when the chain is running <strong>ahead</strong> of schedule.</p>
 <div class="wp-spacer"></div>
@@ -531,15 +531,15 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">At L1 (neutral operation), 4 independent probes each run 4 gradient steps with</p>
 <p class="wp-p">perturbation scale ±1. This is the baseline configuration matching the genesis stability</p>
-<p class="wp-p">constants. When the chain is behind schedule, on time, or up to 4 blocks ahead, CASERT</p>
-<p class="wp-p">stays at L1 and lets ASERT handle difficulty adjustment alone. When the chain runs 5 or</p>
+<p class="wp-p">constants. When the chain is behind schedule, on time, or up to 4 blocks ahead, the equalizer</p>
+<p class="wp-p">stays at B0 (baseline) and lets cASERT bitsQ handle difficulty adjustment alone. When the chain runs 5 or</p>
 <p class="wp-p">more blocks ahead of schedule (excess hashrate producing blocks faster than 600s),</p>
-<p class="wp-p">CASERT progressively increases the perturbation scale from L2 through L5, making each</p>
+<p class="wp-p">the equalizer progressively increases the perturbation scale from L2 through L5, making each</p>
 <p class="wp-p">mining attempt more computationally expensive. This unidirectional policy ensures that</p>
 <p class="wp-p">hardening only activates when the chain genuinely needs emission protection — never when</p>
 <p class="wp-p">the chain is struggling.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):</strong></p>
+<p class="wp-p"><strong>Decay Anti-Stall (cASERT layer 3):</strong></p>
 <p class="wp-p">If no block found for max(ahead &times; 600s, 7200s) &mdash; proportional to blocks ahead, no ceiling &mdash; the effective level decays: L8+ drops 1/10min, L4&ndash;L7 drops 1/20min, L2&ndash;L3 drops 1/30min, L1 is floor. Cost uses the <strong>current</strong> effective level as it drops. When mining resumes, decay stops instantly. Block validation uses raw schedule level.</p>
 <p class="wp-p" style="background:rgba(74,222,128,0.05);border-left:3px solid #4ade80;padding:8px 12px;margin:8px 0;"><strong style="color:#4ade80;">Worked Example &mdash; L10 (450 blocks ahead):</strong><br>Activation: max(450 &times; 600, 7200) = 270,000s (75h). After activation: L10&rarr;L8 FAST (30min) &middot; L7&rarr;L4 MEDIUM (80min) &middot; L3&rarr;L1 SLOW (60min). Total decay: <strong>170 min (2h 50m)</strong>. Total from mining start: <strong>~78 hours</strong>.</p>
 <div class="wp-spacer"></div>
@@ -578,7 +578,7 @@
 <p class="wp-p">To get a different problem, the miner must change <code>prev_hash</code> — which requires reorganizing the chain. The other header fields are consensus-constrained:</p>
 <div class="wp-bullet"><code>merkle_root</code>: determined by transaction selection (changes invalidate commit, not problem)</div>
 <div class="wp-bullet"><code>timestamp</code>: constrained by MTP and future drift rules</div>
-<div class="wp-bullet"><code>powDiffQ</code>: determined by ASERT consensus</div>
+<div class="wp-bullet"><code>powDiffQ</code>: determined by cASERT bitsQ</div>
 <div class="wp-spacer"></div>
 <h4 id="sec-11" class="wp-h">Stability Context Binding</h4>
 <div class="wp-spacer"></div>
@@ -827,9 +827,10 @@ PROPERTIES:
 <tr><td>Year introduced</td><td>2009</td><td>2019</td><td>2015 (PoS migration 2022)</td><td>2026</td></tr>
 <tr><td>Proof nature</td><td>Hash below target</td><td>Hash below target</td><td>Hash below target</td><td>Convergence certificate + hash below target</td></tr>
 <tr><td>Core operation</td><td>Double SHA-256</td><td>Random VM program execution</td><td>DAG read + Keccak hash</td><td>Gradient descent + scratchpad + stability check</td></tr>
-<tr><td>RAM required</td><td>~0 MB</td><td>2,048 MB (2 GB)</td><td>1-4 GB (growing DAG)</td><td>4,096 MB (4 GB, fixed)</td></tr>
+<tr><td>RAM required (mining)</td><td>~0 MB</td><td>2,048 MB (2 GB)</td><td>1-4 GB (growing DAG)</td><td>~8,192 MB (4 GB dataset + 4 GB scratchpad)</td></tr>
+<tr><td>RAM required (node)</td><td>~0 MB</td><td>~256 MB</td><td>~256 MB</td><td>~500 MB (no dataset/scratchpad)</td></tr>
 <tr><td>ASIC advantage</td><td>&gt;1,000×</td><td>~3-5× estimated</td><td>~2-5× (Ethash ASICs exist)</td><td>Designed for low multiples (hypothesis; formal benchmark pending)</td></tr>
-<tr><td>Difficulty adjustment</td><td>Every 2,016 blocks (~2 weeks)</td><td>Every block (simple ratio)</td><td>Every block (bomb + ratio)</td><td>Every block (ASERT Q16.16, 24h half-life)</td></tr>
+<tr><td>Difficulty adjustment</td><td>Every 2,016 blocks (~2 weeks)</td><td>Every block (simple ratio)</td><td>Every block (bomb + ratio)</td><td>Every block (cASERT bitsQ Q16.16, 12h half-life)</td></tr>
 <tr><td>Mathematical certificate</td><td>None</td><td>None</td><td>None</td><td>Stability basin proof (k probes × g steps)</td></tr>
 <tr><td>Useful entropy output</td><td>Block hash only</td><td>Block hash only</td><td>Block hash only</td><td>Entropy triple (block_id + commit + cp_root)</td></tr>
 <tr><td>Consensus arithmetic</td><td>Integer (nBits, subsidy)</td><td>Integer + float (VM)</td><td>Integer</td><td>100% integer (zero floating-point)</td></tr>
@@ -837,42 +838,41 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <h4 id="sec-26" class="wp-h">3.10 Consensus Parameters</h4>
 <p class="wp-p">Parameter                  Value</p>
-<p class="wp-p">RAM (scratchpad)           4,096 MB</p>
+<p class="wp-p">RAM (mining total)         ~8,192 MB (4,096 MB scratchpad + 4,096 MB dataset)</p>
+<p class="wp-p">RAM (node validation)      ~500 MB (no scratchpad/dataset needed)</p>
 <p class="wp-p">Rounds per attempt         100,000 sequential</p>
 <p class="wp-p">State dimension            32</p>
 <p class="wp-p">Learning rate shift         18</p>
 <p class="wp-p">Regularization λ           100</p>
 <p class="wp-p">Checkpoint interval        6,250 (16 checkpoints)</p>
 <p class="wp-p">Difficulty encoding        SOSTCompact Q16.16</p>
-<p class="wp-p">Difficulty algorithm       ASERT, 24h half-life</p>
-<p class="wp-p">Clamp (easier)             4× per block</p>
-<p class="wp-p">Clamp (harder)             8× per block</p>
-<p class="wp-p">CASERT signal              Block lag vs ideal schedule (unidirectional)</p>
-<p class="wp-p">CASERT levels              L1 (neutral, 0-4) → L2 (5-25) → L3 (26-50) → L4 (51-75) → L5 (76-100) → L6+ (101+, unbounded)</p>
+<p class="wp-p">Difficulty algorithm       cASERT bitsQ, 12h half-life</p>
+<p class="wp-p">Per-block delta cap        6.25%</p>
+<p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (unidirectional)</p>
+<p class="wp-p">Equalizer profiles         E3(-3) through H6(+6), B0 is baseline</p>
 <p class="wp-p">Stability baseline         scale=1, k=4, margin=180, steps=4, stab_shift=20</p>
 <p class="wp-p">Block target spacing       600s</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.11 ASERT Q16.16 Difficulty Adjustment (Consensus-Critical)</p>
+<p class="wp-p">3.11 cASERT bitsQ Difficulty Adjustment (Consensus-Critical)</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">ASERT compares observed timing to expected schedule and adjusts powDiffQ deterministically.</p>
+<p class="wp-p">cASERT bitsQ compares observed timing to expected schedule and adjusts powDiffQ deterministically.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">slow chain → decrease powDiffQ → larger target → easier</p>
 <p class="wp-p">fast chain → increase powDiffQ → smaller target → harder</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">Per-block clamps bound the response:</p>
-<p class="wp-p">max 4× easier per block</p>
-<p class="wp-p">max 8× harder per block</p>
+<p class="wp-p">Per-block delta cap bounds the response:</p>
+<p class="wp-p">6.25% per-block delta cap</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.12 CASERT Adaptive Overlay (Miner-Side) — cASERT v5.1</p>
+<p class="wp-p">3.12 cASERT Equalizer — Consensus-Critical Structural Correction</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>IMPORTANT:</strong> CASERT is a miner-side overlay, NOT consensus-critical for block validation. The miner adjusts ConvergenceX stability parameters according to the CASERT level before mining. Block validation does NOT verify the CASERT level — a valid block is valid regardless of which CASERT level the miner used. Only ASERT difficulty (powDiffQ) is consensus-critical for validation.</p>
+<p class="wp-p"><strong>IMPORTANT:</strong> cASERT is the unified consensus-critical block-rate control system. Both the bitsQ primary controller and the equalizer profile are deterministic and consensus-critical. The equalizer adjusts ConvergenceX stability parameters according to the block-lag level, and validators enforce the correct equalizer profile for each block.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">CASERT does not change numerical difficulty. It adjusts stability verification</p>
+<p class="wp-p">The cASERT equalizer does not change numerical difficulty. It adjusts stability verification</p>
 <p class="wp-p">intensity based on <strong>block lag</strong> — the difference between the expected number of</p>
-<p class="wp-p">blocks since genesis and the actual chain height. CASERT is <strong>unidirectional</strong>: it</p>
+<p class="wp-p">blocks since genesis and the actual chain height. The equalizer is <strong>unidirectional</strong>: it</p>
 <p class="wp-p">only increases computational cost when the chain is ahead of schedule (emission</p>
-<p class="wp-p">protection). When the chain is behind schedule, CASERT remains at the neutral</p>
-<p class="wp-p">baseline and lets ASERT handle difficulty reduction alone.</p>
+<p class="wp-p">protection). When the chain is behind schedule, the equalizer remains at B0</p>
+<p class="wp-p">(baseline) and lets cASERT bitsQ handle difficulty reduction.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">SIGNAL COMPUTATION (block lag):</p>
 <pre class="wp-code-inline">  expected_blocks = floor((wall_clock_now - GENESIS_TIME) / TARGET_SPACING)</pre>
@@ -912,30 +912,30 @@ PROPERTIES:
 <pre class="wp-code-inline">  L6: 6 × 4 × 4 = 96  (500% harder, unbounded continues...)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">UNIDIRECTIONAL POLICY (emission protection):</p>
-<pre class="wp-code-inline">  CASERT addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
+<pre class="wp-code-inline">  The cASERT equalizer addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
 <pre class="wp-code-inline">  mining blocks much faster than the 600s target, which would accelerate coin</pre>
-<pre class="wp-code-inline">  emission before ASERT can fully compensate. ASERT adjusts numerical difficulty</pre>
-<pre class="wp-code-inline">  every block, but its response is bounded by per-block clamps (4× easier / 8×</pre>
-<pre class="wp-code-inline">  harder). A massive hashrate spike can outrun ASERT&#x27;s clamp for many blocks,</pre>
+<pre class="wp-code-inline">  emission before cASERT bitsQ can fully compensate. bitsQ adjusts numerical difficulty</pre>
+<pre class="wp-code-inline">  every block, but its response is bounded by the 6.25% per-block delta cap.</pre>
+<pre class="wp-code-inline">  A massive hashrate spike can outrun the bitsQ delta cap for many blocks,</pre>
 <pre class="wp-code-inline">  emitting coins ahead of the intended schedule.</pre>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  CASERT closes this gap by monitoring the **cumulative** effect: block lag</pre>
+<pre class="wp-code-inline">  The equalizer closes this gap by monitoring the **cumulative** effect: block lag</pre>
 <pre class="wp-code-inline">  measures whether the chain has drifted ahead of its ideal timeline since genesis.</pre>
-<pre class="wp-code-inline">  If the chain is 5+ blocks ahead, CASERT increases the perturbation scale,</pre>
+<pre class="wp-code-inline">  If the chain is 5+ blocks ahead, the equalizer increases the perturbation scale,</pre>
 <pre class="wp-code-inline">  making each ConvergenceX attempt more expensive regardless of the numerical</pre>
-<pre class="wp-code-inline">  difficulty. This slows down block production even if ASERT hasn&#x27;t caught up yet.</pre>
+<pre class="wp-code-inline">  difficulty. This slows down block production even if bitsQ hasn&#x27;t caught up yet.</pre>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  Critically, CASERT **never relaxes below L1**. When the chain is behind schedule (lag &gt; 0), </pre>
-<pre class="wp-code-inline">  it stays at L1 (the genesis baseline) and ASERT handles recovery by</pre>
+<pre class="wp-code-inline">  Critically, the equalizer **never relaxes below B0**. When the chain is behind schedule (lag &gt; 0), </pre>
+<pre class="wp-code-inline">  it stays at B0 (the genesis baseline) and cASERT bitsQ handles recovery by</pre>
 <pre class="wp-code-inline">  lowering numerical difficulty. This avoids double-penalizing a struggling chain:</pre>
-<pre class="wp-code-inline">  ASERT makes blocks easier to find, and CASERT stays out of the way.</pre>
+<pre class="wp-code-inline">  bitsQ makes blocks easier to find, and the equalizer stays out of the way.</pre>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  The result is an asymmetric safety net:</pre>
-<div class="wp-bullet">Ahead of schedule → CASERT hardens L1→L2→L3→L4→L5→L6+ (protects emission, unbounded)</div>
-<div class="wp-bullet">Behind schedule   → CASERT stays at L1 (neutral), ASERT softens (protects liveness)</div>
+<div class="wp-bullet">Ahead of schedule → equalizer hardens B0→H1→H2→H3→H4→H5→H6+ (protects emission, unbounded)</div>
+<div class="wp-bullet">Behind schedule   → equalizer stays at B0 (baseline), bitsQ softens (protects liveness)</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">WHY BLOCK LAG INSTEAD OF LOCAL TIMING:</p>
-<pre class="wp-code-inline">  Previous CASERT designs used a sliding window of recent inter-block intervals</pre>
+<pre class="wp-code-inline">  Previous cASERT designs used a sliding window of recent inter-block intervals</pre>
 <pre class="wp-code-inline">  to compute a timing-error signal. This approach had two limitations:</pre>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">  1. Local blindness: a 50-block window cannot detect slow cumulative drift.</div>
@@ -951,19 +951,19 @@ PROPERTIES:
 <pre class="wp-code-inline">  It requires no window, no averaging, and no error capping.</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">WALL-CLOCK SECURITY:</p>
-<pre class="wp-code-inline">  CASERT uses time(nullptr) (wall-clock time), not block timestamps. Block timestamps</pre>
+<pre class="wp-code-inline">  The cASERT equalizer uses time(nullptr) (wall-clock time), not block timestamps. Block timestamps</pre>
 <pre class="wp-code-inline">  are miner-controlled within MTP/future-drift bounds and could be manipulated to</pre>
 <pre class="wp-code-inline">  fake the lag signal. Wall-clock time is the node&#x27;s own system clock, which is not</pre>
 <pre class="wp-code-inline">  influenced by miners. Each node independently computes the same lag for a given</pre>
 <pre class="wp-code-inline">  height at a given real-world moment.</pre>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Note: nodes with significantly misconfigured clocks will compute different lag</pre>
-<pre class="wp-code-inline">  values. This is acceptable because CASERT affects stability verification intensity,</pre>
-<pre class="wp-code-inline">  not numerical difficulty — ASERT (which uses block timestamps) handles the</pre>
+<pre class="wp-code-inline">  values. This is acceptable because the equalizer affects stability verification intensity,</pre>
+<pre class="wp-code-inline">  not numerical difficulty — cASERT bitsQ (which uses block timestamps) handles the</pre>
 <pre class="wp-code-inline">  consensus-critical difficulty adjustment. A node with a clock off by a few minutes</pre>
 <pre class="wp-code-inline">  may compute L3 instead of L4, but the resulting block is still valid as long as</pre>
-<pre class="wp-code-inline">  commit &lt;= target(powDiffQ). CASERT is a miner-side optimization overlay, not a</pre>
-<pre class="wp-code-inline">  validity gate (the node validates blocks using the block&#x27;s own timestamp context).</pre>
+<pre class="wp-code-inline">  commit &lt;= target(powDiffQ). The equalizer is consensus-critical — validators enforce the</pre>
+<pre class="wp-code-inline">  correct equalizer profile for each block&#x27;s timestamp context.</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.13 Node Synchronization and Verification Policy</p>
 <div class="wp-spacer"></div>
@@ -985,7 +985,7 @@ PROPERTIES:
 <ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
 <li>Header structure and magic bytes</li>
 <li>Timestamp validation (MTP monotonicity + future drift)</li>
-<li>ASERT difficulty compliance</li>
+<li>cASERT bitsQ difficulty compliance</li>
 <li>SOSTCompact target threshold (commit &lt;= target)</li>
 <li>Coinbase split correctness (50/25/25)</li>
 <li>Constitutional address verification</li>
@@ -996,7 +996,7 @@ PROPERTIES:
 <p class="wp-p">Verification skipped (trusted historical blocks only):</p>
 <ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
 <li>Full 100,000-round gradient descent recomputation</li>
-<li>4GB scratchpad reconstruction</li>
+<li>4GB scratchpad + 4GB dataset reconstruction (miner-only memory)</li>
 <li>Stability basin re-verification</li>
 </ul>
 <div class="wp-spacer"></div>
@@ -1004,7 +1004,7 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">This mechanism does not change consensus rules. A block that passes fast sync verification would also pass full verification.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + ASERT + CASERT)</p>
+<p class="wp-p">3.14 Worked Example — How a Block Is Mined and Verified (ConvergenceX + cASERT)</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">This section provides a technical but simple walkthrough of how a SOST block is constructed and validated, using real-looking values as an example.</p>
 <div class="wp-spacer"></div>
@@ -1015,7 +1015,7 @@ PROPERTIES:
 <p class="wp-p">timestamp ts = 1,771,700,109</p>
 <p class="wp-p">MedianTimePast MTP = 1,771,697,922</p>
 <p class="wp-p">powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits</p>
-<p class="wp-p">CASERT selected stability parameters:</p>
+<p class="wp-p">cASERT equalizer selected stability parameters:</p>
 <p class="wp-p">scale=1, k=4, margin=180, steps=4, stab_shift=20</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14.2 Timestamp Rules (MTP + Future Drift)</p>
@@ -1024,7 +1024,7 @@ PROPERTIES:
 <p class="wp-p">Here: 1,771,700,109 &gt; 1,771,697,922 → OK (difference 2,187s).</p>
 <p class="wp-p">Rule B: ts &lt;= now + MAX_FUTURE_DRIFT (e.g., 600s) → prevents &quot;future blocks&quot;.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.14.3 ASERT Difficulty (powDiffQ → target)</p>
+<p class="wp-p">3.14.3 cASERT bitsQ Difficulty (powDiffQ → target)</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Difficulty is encoded as Q16.16 log-space:</p>
 <p class="wp-p">bits ≈ powDiffQ / 65,536 ≈ 5.35</p>
@@ -1032,12 +1032,12 @@ PROPERTIES:
 <p class="wp-p">Validity requires:</p>
 <p class="wp-p">commit &lt;= target(powDiffQ) (big-endian integer comparison)</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">ASERT update intuition:</p>
+<p class="wp-p">cASERT bitsQ update intuition:</p>
 <p class="wp-p">if blocks slow → reduce powDiffQ → easier</p>
 <p class="wp-p">if blocks fast → increase powDiffQ → harder</p>
 <p class="wp-p">then clamp per-block change and global bounds.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">3.14.4 CASERT — What the stability parameters mean</p>
+<p class="wp-p">3.14.4 cASERT Equalizer — What the stability parameters mean</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">scale=1: each perturbation component in [-1, +1] (&quot;how far we poke&quot;)</p>
 <p class="wp-p">k=4: number of probes (more probes = stronger certificate)</p>
@@ -1052,14 +1052,14 @@ PROPERTIES:
 <p class="wp-p">seed = SHA256(MAGIC||&quot;SEED&quot;||header_core||block_key||nonce||extra_nonce)</p>
 <p class="wp-p">run 100k sequential rounds + scratch mixing + checkpoints</p>
 <p class="wp-p">compute checkpoints_root</p>
-<p class="wp-p">stability basin verification using CASERT params</p>
+<p class="wp-p">stability basin verification using cASERT equalizer params</p>
 <p class="wp-p">commit = SHA256(... all bound components ...)</p>
 <p class="wp-p">accept iff commit &lt;= target(powDiffQ)</p>
 <p class="wp-p">block_id = SHA256(full_header || &quot;ID&quot; || commit)</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14.6 What a validator does</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">BASIC: checks time, ASERT powDiffQ, commit&lt;=target, and linkage.</p>
+<p class="wp-p">BASIC: checks time, cASERT bitsQ powDiffQ, commit&lt;=target, and linkage.</p>
 <p class="wp-p">FULL: recomputes ConvergenceX proof and compares commit/cp_root/metric/block_id.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-27" class="wp-h">4. Monetary Policy</h3>
@@ -2234,9 +2234,9 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-62" class="wp-h">9.1 51% Attack Resistance</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">Each ConvergenceX attempt requires 4 GB RAM and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts. The sequential dependency chain is the fundamental defense: an attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000× faster on a single attempt.</p>
+<p class="wp-p">Each ConvergenceX attempt requires ~8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts. The sequential dependency chain is the fundamental defense: an attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000× faster on a single attempt.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold. The ASERT difficulty adjustment ensures that block intervals remain stable regardless of hashrate level.</p>
+<p class="wp-p">As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold. The cASERT difficulty adjustment ensures that block intervals remain stable regardless of hashrate level.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-63" class="wp-h">9.2 Bond Deterrence Analysis</h4>
 <div class="wp-spacer"></div>
@@ -2261,17 +2261,17 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Bond calculations use a 7-day TWAP from exchanges with verifiable liquidity (consistent with the Price Bulletin model in Section 6.6) — resistant to single-block manipulation. The gold ratio check uses the same TWAP. Price data is advisory for PoPC bond sizing and settlement, not consensus-critical.</p>
 <div class="wp-spacer"></div>
-<h4 id="sec-66" class="wp-h">9.5 CASERT Security Properties</h4>
+<h4 id="sec-66" class="wp-h">9.5 cASERT Security Properties</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The unidirectional block-lag model (Section 3.12) prevents CASERT from being weaponized:</p>
+<p class="wp-p">The unidirectional block-lag model (Section 3.12) prevents the cASERT equalizer from being weaponized:</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">An attacker with high hashrate mining blocks quickly pushes the chain ahead of schedule.</div>
-<div class="wp-bullet">Ahead of schedule → CASERT escalates from L1 to L2 → L3 → L4 → L5 → L6+ (unbounded). Stability verification becomes progressively more expensive.</div>
+<div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → H3 → H4 → H5 → H6+ (unbounded). Stability verification becomes progressively more expensive.</div>
 <div class="wp-bullet">The attacker gains nothing — the faster they mine, the harder each attempt becomes.</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">When the chain is behind schedule, CASERT stays at L1 (neutral baseline).</p>
+<p class="wp-p">When the chain is behind schedule, the equalizer stays at B0 (baseline).</p>
 <p class="wp-p">There is no relaxation below L1 — the baseline stability check always applies.</p>
-<p class="wp-p">ASERT handles difficulty reduction alone, which is the correct liveness response.</p>
+<p class="wp-p">cASERT bitsQ handles difficulty reduction alone, which is the correct liveness response.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">The block-lag metric is objective, global, and tamper-resistant: it uses wall-clock time (not block timestamps) compared against genesis, so miners cannot manipulate the signal by setting favorable timestamps. Any observer can independently verify the lag at any moment.</p>
 <div class="wp-spacer"></div>
@@ -2326,7 +2326,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Date</td><td>Milestone</td></tr>
-<tr><td>Mar 13, 2026</td><td>GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins.</td></tr>
+<tr><td>Mar 16, 2026</td><td>GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins.</td></tr>
 <tr><td>Mar 28, 2026</td><td>PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public.</td></tr>
 <tr><td>Q4 2026</td><td>Gold purchases begin (per G4 6-month rule, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published.</td></tr>
 <tr><td>Q3 2026</td><td>PoPC Model A + B launch on Ethereum mainnet. First custody contracts active.</td></tr>
@@ -2347,8 +2347,8 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Parameter</td><td>Value</td></tr>
 <tr><td>Name / Symbol</td><td>SOST</td></tr>
-<tr><td>Genesis</td><td>2026-03-13 00:00:00 UTC (block 0)</td></tr>
-<tr><td>Algorithm</td><td>ConvergenceX (4GB RAM, 100k rounds, sequential, stability certificate)</td></tr>
+<tr><td>Genesis</td><td>2026-03-16 00:00:00 UTC (block 0)</td></tr>
+<tr><td>Algorithm</td><td>ConvergenceX (~8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node; 100k rounds, sequential, stability certificate)</td></tr>
 <tr><td>Block time</td><td>600 seconds target</td></tr>
 <tr><td>Supply cap enforcement</td><td>Subsidy-by-height (hard cap by construction)</td></tr>
 <tr><td>Max supply</td><td>~4,669,201 SOST (466,920,160,910,299 stocks)</td></tr>
@@ -2358,8 +2358,8 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Initial reward</td><td>7.85100863 SOST/block</td></tr>
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
-<tr><td>Difficulty</td><td>ASERT Q16.16, 24h half-life, per-block, asymmetric clamp (4× easier / 8× harder)</td></tr>
-<tr><td>CASERT</td><td>Unidirectional block-lag overlay, L1–L5–L6+, k=4, steps=4, scale=level (all levels), hardening only, unbounded</td></tr>
+<tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% per-block delta cap</td></tr>
+<tr><td>cASERT Equalizer</td><td>Consensus-critical block-lag profiles E3(-3) through H6(+6), B0 baseline, k=4, steps=4, scale=level, hardening only, unbounded</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2387,7 +2387,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <p class="wp-p">The genesis block is self-sufficient: it requires only a miner and a timestamp. Community growth and gold accumulation follow naturally from the protocol&#x27;s own mechanics. SOST launches from code, not from capital.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">00:00:00 UTC, March 13, 2026.</p>
+<p class="wp-p">00:00:00 UTC, March 16, 2026.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-72" class="wp-h">Legal Disclaimer</h3>
 <div class="wp-spacer"></div>
@@ -2541,7 +2541,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
   CX_STABILITY_LR_SHIFT        = 20
 
 MONETARY PARAMETERS:
-  GENESIS_TIME                 = 1,773,360,000  // 2026-03-13 00:00:00 UTC
+  GENESIS_TIME                 = 1,773,619,200  // 2026-03-16 00:00:00 UTC
   TARGET_SPACING               = 600
   BLOCKS_PER_EPOCH             = 131,553
   R0_STOCKS                 = 785,100,863
@@ -2551,10 +2551,10 @@ MONETARY PARAMETERS:
 
 DIFFICULTY PARAMETERS:
   Q16_ONE                      = 65,536
-  HALF_LIFE                    = 86,400
+  HALF_LIFE                    = 43,200
   MAX_FUTURE_DRIFT             = 600
 
-CASERT PARAMETERS:
+cASERT EQUALIZER PARAMETERS:
   CASERT_MODE                  = UNIDIRECTIONAL (block-lag, hardening only)
   CASERT_NEUTRAL_LEVEL         = 1  (L1, scale=1)
   CASERT_UNBOUNDED             = true  (levels extend beyond L5)
@@ -2664,7 +2664,7 @@ PARSING CONVENTIONS (normative):
 
   V2: header_core construction
     Input:  prev_hash = 0xAA×32, merkle_root = 0xBB×32,
-            timestamp = 1773360000, powDiffQ = GENESIS_BITSQ
+            timestamp = 1773619200, powDiffQ = GENESIS_BITSQ
     Output: 72 bytes (hex, published in repo)
 
   V3: seed derivation

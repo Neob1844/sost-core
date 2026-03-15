@@ -43,7 +43,7 @@ inline Profile ACTIVE_PROFILE = Profile::DEV;
 inline const uint8_t* MAGIC_STR_BYTES() { return magic_for_profile(ACTIVE_PROFILE); }
 
 // Time / schedule
-inline constexpr int64_t GENESIS_TIME     = 1773360000; // 2026-03-13 00:00:00 UTC
+inline constexpr int64_t GENESIS_TIME     = 1773619200; // 2026-03-16 00:00:00 UTC
 inline constexpr int64_t TARGET_SPACING   = 600;
 inline constexpr int64_t BLOCKS_PER_EPOCH = 131553;
 
@@ -52,41 +52,90 @@ inline constexpr int64_t R0_STOCKS      = 785100863;           // 7.85100863 SOS
 inline constexpr int64_t EMISSION_Q_NUM = 7788007830714049LL;
 inline constexpr int64_t EMISSION_Q_DEN = 10000000000000000LL;
 
-// Q16.16 difficulty
+// Q16.16 difficulty encoding
 inline constexpr uint32_t Q16_SHIFT     = 16;
 inline constexpr uint32_t Q16_ONE       = 1u << Q16_SHIFT;
 inline constexpr uint32_t LUT_ENTRIES   = 256;
-inline constexpr uint32_t GENESIS_BITSQ = 353075;
 inline constexpr uint32_t MIN_BITSQ     = Q16_ONE;
 inline constexpr uint32_t MAX_BITSQ     = 255u * Q16_ONE;
 
-// ASERT
-inline constexpr int64_t  ASERT_HALF_LIFE  = 86400;
-inline constexpr int32_t  ASERT_DOWN_STEPS = 2; // log2(4)
-inline constexpr int32_t  ASERT_UP_STEPS   = 3; // log2(8)
+// =========================================================================
+// cASERT — Unified consensus-rate control system
+//
+// cASERT includes:
+//   1. bitsQ Q16.16 — primary hardness regulator
+//   2. Equalizer    — structural correction (ConvergenceX profile)
+//   3. Anti-stall   — recovery mechanism
+//
+// bitsQ controls the numeric acceptance threshold (commit < target).
+// The equalizer adjusts ConvergenceX stability test parameters.
+// Together they form a single integrated controller for block timing.
+// =========================================================================
 
-// cASERT v5.2 thresholds (blocks ahead of schedule)
-//   0–  4 → L1 neutral   | 5–25 → L2 light     | 26–50 → L3 moderate
-//  51– 75 → L4 strong    | 76–100 → L5 severe   | 101+ → L6+ unbounded
-inline constexpr int32_t CASERT_L2_BLOCKS  = 5;
-inline constexpr int32_t CASERT_L3_BLOCKS  = 26;
-inline constexpr int32_t CASERT_L4_BLOCKS  = 51;
-inline constexpr int32_t CASERT_L5_BLOCKS  = 76;
-inline constexpr int32_t CASERT_L6_BLOCKS  = 101;
-// Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
-// scale = level — linear, unbounded, no ceiling
+// --- bitsQ primary controller ---
+// GENESIS_BITSQ: calibrated starting difficulty.
+// Determined by Phase A benchmark (5.48 att/s, 100% stability at B0)
+// and Phase C simulation (converges to ~600s mean block time).
+// bitsQ = log2(600 * 5.48 * 1.0) * 65536 = 11.6841 * 65536 = 765730
+inline constexpr uint32_t GENESIS_BITSQ         = 765730;  // 11.6841, calibrated
 
-// cASERT Decay Anti-Stall parameters
-// Activates when no block found for CASERT_DECAY_ACTIVATION seconds
-inline constexpr int64_t CASERT_DECAY_ACTIVATION  = 7200;  // legacy default (overridden dynamically in casert.cpp)
-inline constexpr int64_t CASERT_DECAY_FAST_SECS   = 600;   // 10 min/level for L8+
-inline constexpr int64_t CASERT_DECAY_MEDIUM_SECS = 1200;  // 20 min/level for L4-L7
-inline constexpr int64_t CASERT_DECAY_SLOW_SECS   = 1800;  // 30 min/level for L2-L3
-// Decay tiers:
-//   L8+  → drop 1 level every 10 min (fast recovery from extreme levels)
-//   L4–L7 → drop 1 level every 20 min (medium recovery)
-//   L2–L3 → drop 1 level every 30 min (cautious near neutral)
-//   L1   → floor, no further decay
+inline constexpr int64_t  BITSQ_HALF_LIFE       = 43200;   // 12 hours
+inline constexpr int32_t  BITSQ_MAX_DELTA_NUM   = 1;       // relative delta cap numerator
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN   = 16;      // relative delta cap denominator (6.25%)
+
+// --- cASERT equalizer ---
+// EWMA smoothing constants (denominator = 256 for shift-by-8 division)
+inline constexpr int32_t  CASERT_EWMA_SHORT_ALPHA = 32;    // 256/8  = 8-block window
+inline constexpr int32_t  CASERT_EWMA_LONG_ALPHA  = 3;     // 256/96 ≈ 96-block window
+inline constexpr int32_t  CASERT_EWMA_VOL_ALPHA   = 16;    // 16-block volatility window
+inline constexpr int32_t  CASERT_EWMA_DENOM       = 256;   // 2^8
+
+// Integrator
+inline constexpr int32_t  CASERT_INTEG_RHO        = 253;   // 253/256 ≈ 0.988 leak
+inline constexpr int32_t  CASERT_INTEG_ALPHA       = 1;     // integrator gain
+inline constexpr int64_t  CASERT_INTEG_MAX         = 6553600; // 100.0 in Q16.16
+
+// Control signal gains (Q16.16)
+inline constexpr int32_t  CASERT_K_R              = 16384;  // 0.25 — instantaneous error
+inline constexpr int32_t  CASERT_K_L              = 6554;   // 0.10 — schedule lag
+inline constexpr int32_t  CASERT_K_I              = 3277;   // 0.05 — integrator
+inline constexpr int32_t  CASERT_K_B              = 19661;  // 0.30 — burst score
+inline constexpr int32_t  CASERT_K_V              = 6554;   // 0.10 — volatility
+
+// Profile index bounds
+inline constexpr int32_t  CASERT_H_MIN            = -3;     // E3 (deep easing)
+inline constexpr int32_t  CASERT_H_MAX            = 6;      // H6 (v1 hard cap)
+inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
+
+// dt clamp for r_n calculation
+inline constexpr int64_t  CASERT_DT_MIN           = 1;      // prevent div by zero
+inline constexpr int64_t  CASERT_DT_MAX           = 86400;  // 24h cap
+
+// --- cASERT anti-stall ---
+inline constexpr int64_t  CASERT_ANTISTALL_FLOOR  = 7200;   // minimum 2 hours
+inline constexpr int64_t  CASERT_ANTISTALL_DROP_INTERVAL = 1200; // 1 profile level per 20 min
+inline constexpr int32_t  CASERT_ANTISTALL_INTEG_DECAY = 240; // I *= 240/256 per 600s
+
+// --- cASERT profile table ---
+// Each profile: { scale, steps, k, margin }
+// Index: -3=E3, -2=E2, -1=E1, 0=B0, 1=H1, ..., 6=H6
+struct CasertProfile {
+    int32_t scale, steps, k, margin;
+};
+
+inline constexpr CasertProfile CASERT_PROFILES[] = {
+    // E3   E2   E1   B0   H1    H2    H3    H4    H5    H6
+    // Easing: relaxed stability (wider margin, fewer tests)
+    {1,3,3,240}, {1,3,4,220}, {1,4,4,200}, {1,4,4,180},
+    // Hardening: gradual scale increase, smooth margin reduction
+    {1,5,4,170}, {1,5,5,160}, {2,5,5,155}, {2,6,5,145},
+    {2,6,6,135}, {3,7,6,125}
+};
+inline constexpr int32_t CASERT_PROFILE_COUNT = 10;
+// Index offset: profile_index + 3 = array index
+// profile_index -3 → array[0] (E3)
+// profile_index  0 → array[3] (B0)
+// profile_index  6 → array[9] (H6)
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;
@@ -96,8 +145,8 @@ inline constexpr int32_t CX_LR_SHIFT  = 18;
 inline constexpr int32_t CX_LAM       = 100;
 inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
 
-// ConvergenceX mainnet baseline
-inline constexpr int32_t CX_STB_SCALE  = 1;    // L1 neutral = scale 1
+// ConvergenceX baseline stability (B0 profile matches these)
+inline constexpr int32_t CX_STB_SCALE  = 1;
 inline constexpr int32_t CX_STB_K      = 4;
 inline constexpr int32_t CX_STB_MARGIN = 180;
 inline constexpr int32_t CX_STB_STEPS  = 4;
@@ -119,9 +168,6 @@ inline constexpr int32_t CX_SCRATCH_T = 64;
 inline constexpr int32_t CX_CP_T      = 128;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
-// NOTE: ADDR_MINER_FOUNDER is the genesis block miner address (founder).
-// It is NOT used for mining rewards — miners specify their own address via --address.
-// Retained for genesis UTXO reconstruction and PoPC fee routing.
 constexpr const char* ADDR_MINER_FOUNDER = "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429";
 constexpr const char* ADDR_GOLD_VAULT    = "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724";
 constexpr const char* ADDR_POPC_POOL     = "sost144cc82d3c711b5a9322640c66b94a520497ac40d";

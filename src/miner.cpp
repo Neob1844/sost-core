@@ -1,4 +1,5 @@
 #include "sost/miner.h"
+#include "sost/pow/casert.h"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
@@ -24,10 +25,10 @@ MineResult mine_block(
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
     ConsensusParams params = get_consensus_params(prof, h);
-    auto cdec = casert_mode_from_chain(chain, h, std::time(nullptr));
-    params = casert_apply_overlay(params, cdec);
+    auto cdec = casert_compute(chain, h, std::time(nullptr));
+    params = casert_apply_profile(params, cdec);
 
-    uint32_t expected = asert_next_difficulty(chain, h);
+    uint32_t expected = casert_next_bitsq(chain, h);
     if (powDiffQ != expected) {
         mr.error = "bad-difficulty";
         return mr;
@@ -116,7 +117,7 @@ int mine_chain(
     while (num_blocks == 0 || mined < num_blocks) {
 
         uint32_t powDiffQ =
-            asert_next_difficulty(chain, (int64_t)chain.size());
+            casert_next_bitsq(chain, (int64_t)chain.size());
 
         uint32_t extra = 0;
         bool found = false;

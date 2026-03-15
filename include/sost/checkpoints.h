@@ -18,7 +18,7 @@
 // What is ALWAYS verified (even during fast sync):
 //   - Header structure and magic bytes
 //   - Timestamp / MTP / future drift
-//   - ASERT difficulty compliance
+//   - cASERT bitsQ compliance
 //   - Commit <= target (PoW inequality)
 //   - Coinbase split (50/25/25) and constitutional addresses
 //   - Transaction structure and semantic rules

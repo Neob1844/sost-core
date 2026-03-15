@@ -32,3 +32,5 @@ sost-v*/
 *.swp
 *.bak
 sost-v0.4.1-linux-x86_64/
+chain.json.old-preregenesis
+chain_v2.json.old-preregenesis

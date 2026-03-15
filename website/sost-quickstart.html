@@ -431,6 +431,47 @@
   </div>
 </section>
 
+<!-- RPC CREDENTIALS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">RPC <span class="accent">Credentials</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num" style="background:var(--cyan-primary);">!</span>
+        <span class="step-title">About RPC credentials</span>
+      </div>
+      <div class="step-body">
+        <p>RPC credentials are <strong style="color:var(--text-primary);">local and self-chosen</strong>. There is no central registry or account system. Each operator picks their own username and password. The node and the miner must use <strong style="color:var(--text-primary);">the same credentials</strong>.</p>
+
+        <p style="margin-top:12px;">Generate secure credentials:</p>
+        <div class="code-block"><span class="prompt">$ </span>echo "USER: $(openssl rand -hex 10)"
+<span class="prompt">$ </span>echo "PASS: $(openssl rand -hex 20)"</div>
+        <p style="margin-top:8px;color:var(--text-dim);font-size:12px;">Save these values securely. Use them in both <code style="color:var(--cyan-primary)">--rpc-user</code> and <code style="color:var(--cyan-primary)">--rpc-pass</code> for node and miner.</p>
+
+        <div style="background:rgba(251,1,13,0.08);border:1px solid var(--red-dim);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin-top:16px;">
+          <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700;margin-bottom:8px;">SECURITY WARNINGS</div>
+          <ul style="margin:0;padding:0 0 0 16px;color:var(--text-secondary);font-size:12px;line-height:2;">
+            <li><strong style="color:var(--red-bright);">NEVER</strong> share your RPC credentials with anyone.</li>
+            <li><strong style="color:var(--red-bright);">NEVER</strong> commit credentials to git or put them in source code.</li>
+            <li><strong style="color:var(--red-bright);">NEVER</strong> use the example credentials from documentation.</li>
+            <li>If mining against a <strong style="color:var(--text-primary);">remote node</strong>, <strong style="color:var(--red-bright);">ALWAYS</strong> use an encrypted SSH tunnel:<br>
+              <code style="color:var(--cyan-primary);font-size:11px;">ssh -N -L 18232:127.0.0.1:18232 user@your-vps-ip</code></li>
+            <li>Credentials travel over <strong style="color:var(--text-primary);">HTTP</strong> (not HTTPS) inside the local machine. This is secure <strong style="color:var(--text-primary);">only</strong> if node and miner are on the same machine or connected via SSH tunnel.</li>
+          </ul>
+        </div>
+
+        <div style="background:rgba(74,222,128,0.06);border:1px solid var(--green-dim);border-left:3px solid var(--green-primary);padding:12px 16px;border-radius:4px;font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:12px;">
+          <strong style="color:var(--green-primary);">Same-machine setup (most common):</strong> If you run node and miner on the same computer, no tunnel is needed. Just use the same <code style="color:var(--cyan-primary);">--rpc-user</code> and <code style="color:var(--cyan-primary);">--rpc-pass</code> in both commands. The connection stays on localhost (127.0.0.1).
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- SECTION 05: START MINING -->
 <section class="section">
   <div class="container">
@@ -603,7 +644,7 @@
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
     <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:8px;">Genesis: 2026-03-16 00:00:00 UTC &middot; Sovereign proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
   </div>
 </footer>
