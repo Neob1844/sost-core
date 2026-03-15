@@ -1697,13 +1697,30 @@ static bool process_block(const std::string& block_json) {
             if (sp_start != std::string::npos) {
                 auto arr_s = block_json.find('[', sp_start);
                 if (arr_s != std::string::npos) {
+                    // Find the matching ] for the outer array (skip nested [] pairs)
+                    size_t arr_e = arr_s + 1;
+                    int depth = 1;
+                    while (arr_e < block_json.size() && depth > 0) {
+                        if (block_json[arr_e] == '[') depth++;
+                        else if (block_json[arr_e] == ']') depth--;
+                        if (depth > 0) arr_e++;
+                    }
+                    printf("[PARSE] segment_proofs array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                    fflush(stdout);
                     // Parse array of segment proof objects
                     size_t pos = arr_s + 1;
-                    while (pos < block_json.size()) {
+                    while (pos < arr_e) {
                         auto obj_s = block_json.find('{', pos);
-                        if (obj_s == std::string::npos || obj_s > block_json.find(']', arr_s)) break;
-                        auto obj_e = block_json.find('}', obj_s);
-                        if (obj_e == std::string::npos) break;
+                        if (obj_s == std::string::npos || obj_s >= arr_e) break;
+                        // Find matching } (skip nested {})
+                        size_t obj_e = obj_s + 1;
+                        int od = 1;
+                        while (obj_e < block_json.size() && od > 0) {
+                            if (block_json[obj_e] == '{') od++;
+                            else if (block_json[obj_e] == '}') od--;
+                            if (od > 0) obj_e++;
+                        }
+                        if (od != 0) break;
                         std::string obj = block_json.substr(obj_s, obj_e - obj_s + 1);
                         SegmentProof sp;
                         sp.leaf.segment_index = (uint32_t)jint(obj, "si");
@@ -1739,6 +1756,7 @@ static bool process_block(const std::string& block_json) {
                     }
                 }
             }
+            printf("[PARSE] Parsed %zu segment_proofs\n", seg_proofs_vec.size()); fflush(stdout);
         }
         // Parse round_witnesses from JSON
         std::vector<RoundWitness> round_witnesses_vec;
@@ -1747,12 +1765,16 @@ static bool process_block(const std::string& block_json) {
             if (rw_start != std::string::npos) {
                 auto arr_s = block_json.find('[', rw_start);
                 if (arr_s != std::string::npos) {
+                    // Find matching ] for outer array (skip nested [])
+                    size_t arr_e = arr_s + 1;
+                    { int d2 = 1; while (arr_e < block_json.size() && d2 > 0) { if (block_json[arr_e]=='[') d2++; else if (block_json[arr_e]==']') d2--; if (d2>0) arr_e++; } }
+                    printf("[PARSE] round_witnesses array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                    fflush(stdout);
                     size_t pos = arr_s + 1;
-                    while (pos < block_json.size()) {
+                    while (pos < arr_e) {
                         auto obj_s = block_json.find('{', pos);
-                        auto arr_end = block_json.find(']', arr_s);
-                        if (obj_s == std::string::npos || (arr_end != std::string::npos && obj_s > arr_end)) break;
-                        // Find matching closing brace (skip nested arrays)
+                        if (obj_s == std::string::npos || obj_s >= arr_e) break;
+                        // Find matching closing brace (skip nested {})
                         int depth = 0; size_t obj_e = obj_s;
                         for (size_t k = obj_s; k < block_json.size(); ++k) {
                             if (block_json[k] == '{') depth++;
