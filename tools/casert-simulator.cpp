@@ -12,6 +12,7 @@
 #include <numeric>
 #include <random>
 #include <cstring>
+#include <functional>
 
 using namespace sost;
 
