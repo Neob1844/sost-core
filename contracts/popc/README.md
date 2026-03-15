@@ -7,8 +7,8 @@ Proof of Personal Custody (PoPC) contract implementations for Ethereum.
 | Phase | Timeline | Description |
 |---|---|---|
 | Manual verification | Now | Foundation commitments verified via `scripts/verify_popc_balance.py`. Rewards paid manually from PoPC Pool. Transitional by design — automation is a constitutional commitment, not a discretionary goal. |
-| Sepolia testnet | Q2 2026 | Model A (bond + audit) and Model B (escrow timelock) deployed on Sepolia for public testing. |
-| Ethereum mainnet | Q3 2026 | Production deployment. First third-party custody contracts active. |
+| Sepolia testnet | Q4 2026 | Model A (bond + audit) and Model B (escrow timelock) deployed on Sepolia for public testing. |
+| Ethereum mainnet | Q1 2027 | Production deployment. First third-party custody contracts active. |
 
 ## Contract Architecture (planned)
 

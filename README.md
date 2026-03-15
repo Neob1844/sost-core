@@ -162,11 +162,11 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | ASERT (24h half-life) + cASERT overlay (L1-L5 fixed, L6+ unbounded at 101+, k=4) |
+| Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H6) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
-| Max supply | ~4,669,201 SOST (Feigenbaum delta x 10^6) |
+| Max supply | 4,669,201 SOST hard cap, enforced at consensus level (subsidy drops to zero when cap is reached; miners earn fees only) |
 | 95% supply | ~12 epochs (~30 years) |
 | Reward split | 50% miner / 25% Gold Funding Vault / 25% PoPC Pool |
 | Coinbase maturity | 1,000 blocks |
@@ -196,9 +196,9 @@ SOST does not support smart contracts. Instead, purpose-built transaction types 
 
 | Phase | Timeline | Description |
 |-------|----------|-------------|
-| 1 | Q3-Q4 2026 | Bond Lock + Escrow — native PoPC on SOST chain |
-| 2 | Q2-Q3 2027 | Native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) |
-| 3 | Q4 2027 | Fully native PoPC — zero Ethereum dependency |
+| 1 | Q1-Q2 2027 | Bond Lock + Escrow — native PoPC on SOST chain |
+| 2 | Q4 2027-Q1 2028 | Native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) |
+| 3 | Q2 2028 | Fully native PoPC — zero Ethereum dependency |
 
 Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
 
@@ -206,7 +206,7 @@ Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BU
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT levels (L1-L5 fixed, L6+ unbounded), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E3-H6), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 

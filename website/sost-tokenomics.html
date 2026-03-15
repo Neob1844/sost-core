@@ -621,6 +621,7 @@
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html" class="active">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
@@ -716,6 +717,10 @@ subsidy = (R0 &times; <span class="fn">_qpow_floor</span>(Q_NUM, epoch)) // Q_DE
           <tr><td class="key">SUPPLY_MAX_STOCKS</td><td class="val"><code>466,920,160,910,299</code> <span class="comment">// &approx; 4,669,201 SOST</span></td></tr>
           <tr><td class="key">~95% emission</td><td class="val">~12 epochs <span class="comment">// &approx; 30 years</span></td></tr>
         </table>
+
+        <div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:20px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+<strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
+</div>
       </div>
     </div>
   </div>
@@ -863,7 +868,9 @@ sum    = <span class="num">785,100,863</span> &check;
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          SOST enforces maximum supply by construction, not by tracking cumulative supply.
+          Hard cap: 4,669,201 SOST enforced at consensus level. Subsidy drops to zero
+          when cap is reached; miners earn fees only. SOST enforces maximum supply by
+          construction, not by tracking cumulative supply.
           Since <code>floor(x) &le; x</code>, the geometric series of epoch emissions is
           upper-bounded. No other minting path exists. Any block that mints more than
           <code>subsidy(height)</code> is invalid. Any shortfall due to flooring remains

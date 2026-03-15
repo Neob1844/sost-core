@@ -1,5 +1,7 @@
 # Foundation PoPC Commitments
 
+> **Timeline Flexibility Notice:** The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
+
 This document records all Foundation Proof of Personal Custody commitments.
 The Foundation participates under the same rules as any third-party participant,
 including the standard 5% protocol fee. No exceptions.
@@ -22,8 +24,8 @@ constitutional commitment, not a discretionary goal.
 | Asset | XAUT (Tether Gold) |
 | Amount | 0.5 oz |
 | Duration | 3 months |
-| Start date | 2026-03-28 |
-| Expiry date | 2026-06-28 |
+| Start date | 2026-05-28 |
+| Expiry date | 2026-08-28 |
 | Protocol fee | 5% (standard) |
 | Status | PENDING |
 | XAUT contract | `0x68749665FF8D2d112Fa859AA293F07A622782F38` |
@@ -36,8 +38,8 @@ constitutional commitment, not a discretionary goal.
 | Asset | PAXG (Paxos Gold) |
 | Amount | 0.5 oz |
 | Duration | 3 months |
-| Start date | 2026-03-28 |
-| Expiry date | 2026-06-28 |
+| Start date | 2026-05-28 |
+| Expiry date | 2026-08-28 |
 | Protocol fee | 5% (standard) |
 | Status | PENDING |
 | PAXG contract | `0x45804880De22913dAFE09f4980848ECE6EcbAf78` |

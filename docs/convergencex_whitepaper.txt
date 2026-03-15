@@ -952,6 +952,8 @@ because R0 is chosen from SUPPLY_MAX_STOCKS and q exactly as defined.
 No other minting path exists. Any block that mints more than subsidy(height) is invalid.
 Any shortfall due to flooring remains permanently unissued.
 
+Hard cap: 4,669,201 SOST enforced at consensus level. Subsidy drops to zero when cap is reached; miners earn fees only.
+
 4.2 Coinbase Split — Constitutional Rule (Consensus-Critical)
 q     = reward // 4
 gold  = q
@@ -1052,7 +1054,7 @@ G3 (Heritage Reserve): The Heritage Reserve is deployed on Ethereum mainnet and 
 No outbound transfers occur in normal operation. Reserve assets are intended to remain perpetual
 and untouched while SOST exists, except under Emergency Catastrophe authorization.
 
-G4 (Purchase Start Delay + Market Readiness): Purchases begin no earlier than 6 months after genesis
+G4 (Purchase Start Delay + Market Readiness): Purchases begin no earlier than 8 months after public launch
 and only once market readiness is met. Market readiness requires at least one verifiable execution
 venue capable of selling SOST and acquiring XAUt/PAXG under the TWAP policy with bounded slippage.
 A venue may be a CEX, OTC desk, or a DEX with demonstrated liquidity, provided execution produces
@@ -2221,9 +2223,9 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 |---|---|
 | Mar 16, 2026 | GENESIS BLOCK — 00:00:00 UTC. Solo mining (C++). Chain begins. |
 | Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public. |
-| Q4 2026 | Gold purchases begin (6 months post-genesis per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
-| Q3 2026 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
-| Jun 2027 | Physical gold extension. Mobile app for audit challenges. Verifier network. |
+| Q2 2027 | Gold purchases begin (8 months post-public-launch per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
+| Q1 2027 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
+| Aug 2027 | Physical gold extension. Mobile app for audit challenges. Verifier network. |
 | 2028 | ZK R&D begins. Physical proof system research. |
 | 2029-2030 | ZK physical custody proofs. Full privacy-preserving audit system. |
 | 2030+ | **Multi-Metal Tokenization Platform (Vision).** 
@@ -2231,6 +2233,8 @@ C16: Progressive decentralization is irreversible. All operational roles held by
   platinum, palladium, rhodium, iridium, ruthenium, osmium, and others as market conditions permit). 
   The goal is for every tokenized asset to be backed 1:1 by physical reserves in auditable vaults with independent proof of reserves. |
 | Indefinite | Heritage Reserve. Gold sealed by default. Emergency dual-gate if needed. Chain runs on fees. |
+
+NOTE: The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
 
 ## 12. Technical Specifications
 
@@ -2286,7 +2290,7 @@ This document is for informational purposes only. SOST is not an investment prod
 
 **NO BROKER / NO TRADING / NO CUSTODY:** SOST does not provide brokerage, does not execute trades on behalf of users, does not offer arbitrage, and does not custody user assets. Any Vault conversion (SOST → allowlisted tokenized metals) is a transparent, auditable operational procedure and does not constitute active management or promised returns. SOST is a protocol; third-party venues (exchanges, issuers, custodians) may impose their own KYC/AML requirements.
 
-**Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Phase 2 activation (target: February 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
+**Foundation Custody Commitment:** Tokenized gold reserves are held under Foundation Custody Commitment (Model A) on publicly disclosed, verifiable Ethereum addresses. Custody remains fully under Foundation control; no redeemability, backing, or price guarantee is implied. Reserve status and commitment periods are published on the SOST explorer. PoPC reward distribution and fee structures will be defined and published prior to Phase 2 activation (target: April 2027). The Foundation's long-term objective is to provide full protocol backing by contributing tokenized gold reserves to protocol virtual balances via a PoPC smart contract, subject to verifiable proof mechanisms as determined by the Foundation.
 
 ---
 
@@ -2316,18 +2320,18 @@ Future types (not yet reserved in code):
 
 ### 10.2 Activation Roadmap
 
-Phase 1 — Bond Lock + Escrow (Q3-Q4 2026, ~12 weeks):
+Phase 1 — Bond Lock + Escrow (Q1-Q2 2027, ~12 weeks):
   Activate BOND_LOCK and ESCROW_LOCK transaction types via block height activation.
   Enables native PoPC bonds and escrow on the SOST chain without Ethereum dependency.
   Changes limited to consensus validation (R11, S9, S11) and wallet CLI.
 
-Phase 2 — Native Metal Tokens (Q2-Q3 2027, ~6 months):
+Phase 2 — Native Metal Tokens (Q4 2027-Q1 2028, ~6 months):
   Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially.
   Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings.
   Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal
   acquisition. Token registration fees are paid to the Gold Funding Vault, not burned.
 
-Phase 3 — Fully Native PoPC (Q4 2027):
+Phase 3 — Fully Native PoPC (Q2 2028):
   Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow,
   verification, and reward distribution fully on-chain. No Ethereum dependency for
   any core protocol operation.
