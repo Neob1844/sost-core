@@ -472,7 +472,18 @@ static int64_t jint(const std::string& j,const std::string& k){
     p=j.find(':',p+n.size()); if(p==std::string::npos) return -1;
     p++;
     while(p<j.size()&&(j[p]==' '||j[p]=='\t')) p++;
-    return std::stoll(j.substr(p));
+    try { return std::stoll(j.substr(p)); }
+    catch(...) { printf("[JSON] stoll failed for key '%s' val='%.40s'\n", k.c_str(), j.substr(p,40).c_str()); fflush(stdout); return -1; }
+}
+// For uint64 fields that may exceed INT64_MAX (dataset_value, program_output, residuals)
+static uint64_t juint(const std::string& j,const std::string& k){
+    std::string n="\""+k+"\"";
+    auto p=j.find(n); if(p==std::string::npos) return 0;
+    p=j.find(':',p+n.size()); if(p==std::string::npos) return 0;
+    p++;
+    while(p<j.size()&&(j[p]==' '||j[p]=='\t')) p++;
+    try { return std::stoull(j.substr(p)); }
+    catch(...) { printf("[JSON] stoull failed for key '%s' val='%.40s'\n", k.c_str(), j.substr(p,40).c_str()); fflush(stdout); return 0; }
 }
 
 static std::string jstr(const std::string& j,const std::string& k){
@@ -1462,7 +1473,7 @@ static bool process_block(const std::string& block_json) {
     int64_t miner_r= jint(block_json,"miner");
     int64_t gold_r = jint(block_json,"gold_vault");
     int64_t popc_r = jint(block_json,"popc_pool");
-    uint64_t stb   = (uint64_t)jint(block_json,"stability_metric");
+    uint64_t stb   = juint(block_json,"stability_metric");
     std::string x_bytes_hex = jstr(block_json,"x_bytes");
     std::string final_state_hex = jstr(block_json,"final_state");
 
@@ -1702,8 +1713,8 @@ static bool process_block(const std::string& block_json) {
                         sp.leaf.state_end = from_hex(jstr(obj, "se"));
                         sp.leaf.x_start_hash = from_hex(jstr(obj, "xsh"));
                         sp.leaf.x_end_hash = from_hex(jstr(obj, "xeh"));
-                        sp.leaf.residual_start = (uint64_t)jint(obj, "rrs");
-                        sp.leaf.residual_end = (uint64_t)jint(obj, "rre");
+                        sp.leaf.residual_start = juint(obj, "rrs");
+                        sp.leaf.residual_end = juint(obj, "rre");
                         // Parse merkle_path
                         auto mp_s = obj.find("\"mp\"");
                         if (mp_s != std::string::npos) {
@@ -1752,8 +1763,8 @@ static bool process_block(const std::string& block_json) {
                         rw.round_index = (uint32_t)jint(obj, "ri");
                         rw.state_before = from_hex(jstr(obj, "sb"));
                         rw.state_after = from_hex(jstr(obj, "sa"));
-                        rw.dataset_value = (uint64_t)jint(obj, "dv");
-                        rw.program_output = (uint64_t)jint(obj, "po");
+                        rw.dataset_value = juint(obj, "dv");
+                        rw.program_output = juint(obj, "po");
                         // Decode x_before (128 hex chars = 32 int32)
                         std::string xb_hex = jstr(obj, "xb");
                         auto hxd = [](const std::string& h) -> std::vector<uint8_t> {
@@ -2213,7 +2224,7 @@ static bool load_genesis(const std::string& path) {
     g.extra_nonce=(uint32_t)jint(json,"extra_nonce");
     g.height=0;
     g.subsidy=jint(json,"subsidy_stocks");
-    g.stability_metric=(uint64_t)jint(json,"stability_metric");
+    g.stability_metric=juint(json,"stability_metric");
 
     auto sp=coinbase_split(g.subsidy);
     g.miner_reward=sp.miner;
@@ -2308,7 +2319,7 @@ static bool load_chain(const std::string& path) {
         sb.miner_reward=jint(bj,"miner");
         sb.gold_vault_reward=jint(bj,"gold_vault");
         sb.popc_pool_reward=jint(bj,"popc_pool");
-        sb.stability_metric=(uint64_t)jint(bj,"stability_metric");
+        sb.stability_metric=juint(bj,"stability_metric");
 
         // Parse transactions if present (v0.3.2+)
         sb.tx_hexes = json_get_tx_hexes(bj);
