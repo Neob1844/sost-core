@@ -460,6 +460,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   </div>
   <div class="section" id="miningSection" style="margin-bottom:16px;">
     <div id="miningPanel" style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid #fbbf24;padding:16px 20px;position:relative;">
+      <!-- Row 1: Header -->
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;">
           <span id="miningPickaxe" style="display:inline-block;animation:miningPulse 1.5s ease infinite;">&#9935;</span>
@@ -467,7 +468,6 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
         </div>
         <div style="font-size:11px;color:var(--text);">
           Difficulty: <span id="miningDiff" style="color:var(--purple);font-weight:600;">—</span>
-          &middot; cASERT <span id="miningLevel">—</span>
         </div>
         <div style="font-size:11px;color:var(--text);">
           Elapsed: <span id="miningElapsed" style="font-weight:600;">—</span>
@@ -475,12 +475,25 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
         </div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;" id="miningStatus">searching nonce...</div>
       </div>
-      <div id="antiStallPanel" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:none;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span id="asIndicator" style="font-size:10px;letter-spacing:1px;font-weight:600;"></span>
-          <span id="asCountdown" style="font-size:10px;color:#fbbf24;"></span>
-        </div>
-        <div id="asLog" style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;max-height:60px;overflow-y:auto;"></div>
+      <!-- Row 2: Profile -->
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>cASERT</span> <span id="miningLevel" style="font-weight:600;">—</span>
+        <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=180 steps=4)</span>
+        <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
+      </div>
+      <!-- Row 3: Probability -->
+      <div id="miningProbRow" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;color:var(--text3);line-height:1.7;font-family:var(--code);">
+        <span style="letter-spacing:1px;color:var(--text3);">PROBABILITY</span>
+        <span id="miningProb" style="margin-left:8px;">—</span><br>
+        <span id="miningProbTable" style="color:var(--text3);">—</span><br>
+        <span id="miningExpTime" style="color:var(--text);">—</span>
+        <span id="miningOverdue" style="color:#fbbf24;display:none;margin-left:8px;">&#9888; block overdue — unlucky variance</span>
+      </div>
+      <!-- Row 4: Anti-stall -->
+      <div id="antiStallPanel" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="letter-spacing:1px;color:var(--text3);font-size:9px;">ANTI-STALL:</span>
+        <span id="asIndicator" style="font-weight:600;"></span>
+        <span id="asCountdown" style="color:#fbbf24;"></span>
       </div>
     </div>
   </div>
@@ -716,7 +729,7 @@ async function updateDashboard(info){
     _diffHistory=diffs.reverse();drawSparkline();
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
-    _lastBlockTime=times[0];_lastBitsQ=info.difficulty;startCountdown();
+    _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
     // Update cASERT equalizer from block data
     updateEqualizer(info, times, diffs);
     }}catch(e){}
@@ -1044,6 +1057,7 @@ function setupDpTooltip(canvasId,dataArr,fmtFn){
   cv.addEventListener('mouseleave',function(){tip.style.display='none';});
 }
 var _lastBitsQ=0;
+var _nextBitsQ=0;
 
 function updateEqualizer(info, times, diffs) {
   try {
@@ -1133,80 +1147,60 @@ function computeDecayLevel(rawLevel,ahead,elapsedSecs){
 }
 function updateMiningPanel(elapsed){
   var nextH=H+1;
+  var bq=_nextBitsQ||_lastBitsQ||765730;
+  var bqReal=bq/65536;
   var mh=document.getElementById('miningHeight');
   if(mh)mh.textContent='#'+nextH;
   var md=document.getElementById('miningDiff');
-  if(md&&_lastBitsQ){md.textContent='~'+_lastBitsQ.toLocaleString()+' ('+(_lastBitsQ/65536).toFixed(2)+' bits)';}
-  var lag=computeCurrentLag();
-  var rawLevel=getCasertLevel(lag);
-  var ahead=(lag<0)?-lag:0;
-
-  // Decay calculation
-  var dc=computeDecayLevel(rawLevel,ahead,elapsed);
-  var effectiveLevel=dc.level;
-
-  var ml=document.getElementById('miningLevel');
-  if(ml)ml.innerHTML=getLevelLabel(dc.active?-ahead:lag)+' <span style="font-size:9px;color:var(--text3)">(eff: L'+effectiveLevel+')</span>';
-
+  if(md)md.textContent=bq.toLocaleString()+' ('+bqReal.toFixed(2)+' bits)';
   var me=document.getElementById('miningElapsed');
-  if(me){
-    var es=Math.floor(elapsed);
-    var mm=Math.floor(es/60),ss=es%60;
+  if(me){var es=Math.floor(elapsed);var mm=Math.floor(es/60),ss=es%60;
     me.textContent=mm>0?mm+'m '+('0'+ss).slice(-2)+'s':ss+'s';
-    if(es<600)me.style.color='#4ade80';
-    else if(es<1200)me.style.color='#fbbf24';
-    else me.style.color='#fb010d';
-  }
+    me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
-  if(ms){
-    if(elapsed<600)ms.textContent='searching nonce...';
-    else if(elapsed<1200)ms.textContent='searching nonce... (slower than target)';
-    else ms.textContent='searching nonce... (block overdue)';
-  }
-
-  // Anti-stall panel
-  var asPanel=document.getElementById('antiStallPanel');
+  if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
+  var lag=computeCurrentLag();
+  var ahead=(lag<0)?-lag:0;
+  var rawProf=getProfile(-ahead);
+  var dc=computeDecayLevel(getCasertLevel(lag),ahead,elapsed);
+  var effProf=rawProf;
+  if(dc.active){var decH=Math.max(-3,rawProf.H-Math.floor((elapsed-dc.threshold)/1200));var dI=Math.max(0,Math.min(9,decH+3));effProf=CASERT_PROFILES[dI];}
+  var ml=document.getElementById('miningLevel');
+  if(ml)ml.innerHTML='<span style="color:'+getLevelColor(effProf.H)+';font-weight:600">'+effProf.name+'</span>';
+  var pp=document.getElementById('miningProfileParams');
+  if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
+  var di=document.getElementById('miningDecayInfo');
+  if(di){if(dc.active&&effProf.name!==rawProf.name){di.style.display='inline';di.textContent='(decayed from '+rawProf.name+' \u2192 '+effProf.name+')';}else{di.style.display='none';}}
+  var probPerAttempt=Math.pow(2,-bqReal);
+  var expectedNonce=1/probPerAttempt;
+  var p50=Math.round(expectedNonce*Math.LN2);
+  var p75=Math.round(expectedNonce*Math.log(4));
+  var p90=Math.round(expectedNonce*Math.log(10));
+  var p95=Math.round(expectedNonce*Math.log(20));
+  var expTimeSec=expectedNonce*0.18;
+  var expM=Math.floor(expTimeSec/60),expS=Math.floor(expTimeSec%60);
+  var ep=document.getElementById('miningProb');
+  if(ep)ep.textContent='P(solve) = '+probPerAttempt.toExponential(2)+' per attempt \u00B7 E[nonce] = '+fComma(Math.round(expectedNonce));
+  var pt=document.getElementById('miningProbTable');
+  if(pt)pt.textContent='50% \u2192 ~'+fComma(p50)+' \u00B7 75% \u2192 ~'+fComma(p75)+' \u00B7 90% \u2192 ~'+fComma(p90)+' \u00B7 95% \u2192 ~'+fComma(p95);
+  var et=document.getElementById('miningExpTime');
+  if(et)et.innerHTML='Expected block time: <span style="color:var(--cyan);font-weight:600">~'+expM+'m '+('0'+expS).slice(-2)+'s</span> (at ~5.5 att/s)';
+  var od=document.getElementById('miningOverdue');
+  if(od){od.style.display=(elapsed>expTimeSec*Math.log(20))?'inline':'none';}
+  var threshold=Math.max(7200,ahead*600);
   var asInd=document.getElementById('asIndicator');
   var asCd=document.getElementById('asCountdown');
-  var asLog=document.getElementById('asLog');
-  if(!asPanel||!asInd)return;
-
-  if(ahead<5){
-    // L1 — no anti-stall relevant
-    asPanel.style.display='none';
-    return;
-  }
-  asPanel.style.display='block';
-
-  if(!dc.active){
-    // Anti-stall OFF — show countdown to activation
-    var remaining=dc.threshold-elapsed;
-    asInd.innerHTML='<span style="color:var(--red);">\u25CF</span> <span style="color:var(--red);">ANTI-STALL OFF</span>';
-    asCd.textContent='Activates in: '+fmtCountdown(remaining);asCd.style.color='#fbbf24';
-  }else{
-    // Anti-stall ACTIVE
-    asInd.innerHTML='<span style="color:var(--green);animation:blink 1s infinite;">\u25CF</span> <span style="color:var(--green);">ANTI-STALL ACTIVE</span>';
-    if(effectiveLevel>1&&dc.nextDrop>0){
-      asCd.style.color='#4ade80';asCd.textContent='L'+effectiveLevel+' \u2192 L'+dc.nextLevel+' in '+fmtCountdown(dc.nextDrop);
-    }else if(effectiveLevel<=1){
-      asCd.style.color='#4ade80';asCd.textContent='L1 (floor) \u2014 maximum decay reached';
+  if(asInd&&asCd){
+    if(elapsed<threshold){
+      var rem=threshold-elapsed;var rH=Math.floor(rem/3600),rM=Math.floor((rem%3600)/60),rS=Math.floor(rem%60);
+      asInd.innerHTML='<span style="color:var(--red);">\u25CF OFF</span>';
+      asCd.textContent='activates in '+rH+'h '+('0'+rM).slice(-2)+'m '+('0'+rS).slice(-2)+'s';asCd.style.color='var(--text3)';
     }else{
-      asCd.style.color='#4ade80';asCd.textContent='decaying...';
+      var decFor=elapsed-threshold;var dM=Math.floor(decFor/60),dS=Math.floor(decFor%60);
+      asInd.innerHTML='<span style="color:var(--green);animation:blink 1s infinite;">\u25CF ACTIVE</span>';
+      asCd.textContent='decay for '+dM+'m '+('0'+dS).slice(-2)+'s \u2014 profile drops every 1200s';asCd.style.color='var(--green)';
     }
   }
-
-  // Log entries
-  if(_asLastLevel===null)_asLastLevel=rawLevel;
-  if(dc.active&&_asLogEntries.length===0){
-    var now=new Date();var ts=('0'+now.getUTCHours()).slice(-2)+':'+('0'+now.getUTCMinutes()).slice(-2)+' UTC';
-    _asLogEntries.push(ts+' \u2014 Anti-stall activated (L'+rawLevel+')');
-  }
-  if(effectiveLevel!==_asLastLevel&&dc.active){
-    var now2=new Date();var ts2=('0'+now2.getUTCHours()).slice(-2)+':'+('0'+now2.getUTCMinutes()).slice(-2)+' UTC';
-    _asLogEntries.push(ts2+' \u2014 L'+_asLastLevel+' \u2192 L'+effectiveLevel+' (decay)');
-    _asLastLevel=effectiveLevel;
-  }
-  if(asLog&&_asLogEntries.length)asLog.innerHTML=_asLogEntries.join('<br>');
 }
 async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
 async function loadBlocks(){
