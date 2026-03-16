@@ -206,7 +206,7 @@ Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BU
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E3-H6), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E3-H5; H6 disabled), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 

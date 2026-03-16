@@ -114,6 +114,14 @@ add_executable(test-transcript-v2 tests/test_transcript_v2.cpp)
 target_link_libraries(test-transcript-v2 PRIVATE sost-core)
 add_test(NAME transcript-v2 COMMAND test-transcript-v2)
 
+add_executable(test-reorg tests/test_reorg.cpp)
+target_link_libraries(test-reorg PRIVATE sost-core)
+add_test(NAME reorg COMMAND test-reorg)
+
+add_executable(test-chainwork tests/test_chainwork.cpp)
+target_link_libraries(test-chainwork PRIVATE sost-core)
+add_test(NAME chainwork COMMAND test-chainwork)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 

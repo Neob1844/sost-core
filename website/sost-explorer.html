@@ -80,7 +80,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .sparkline-info{font-size:10px;color:var(--text2);white-space:nowrap}
 .countdown-val{font-variant-numeric:tabular-nums}
 .rich-section{margin-bottom:24px}
-.dash-val.blue{color:var(--blue)}.dash-val.orange{color:var(--orange)}
+.dash-val.blue{color:var(--blue)}.dash-val.orange{color:var(--orange)}.dash-val.yellow{color:var(--yellow)}
 .stats{max-width:1400px;margin:12px auto 0;padding:0 24px}
 .stats-code{background:var(--bg2);border:1px solid var(--border);padding:16px 20px;font-size:12px;line-height:2;overflow-x:auto}
 .s-comment{color:var(--text3)}.s-key{color:var(--purple)}.s-str{color:var(--green)}
@@ -179,6 +179,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .casert-tbl .cn{color:var(--orange)}.casert-tbl .cg{color:var(--green)}
 .casert-pulse td{animation:casertPulse 1.5s ease-in-out infinite}
 @keyframes casertPulse{0%,100%{background:rgba(255,0,64,.05)}50%{background:rgba(255,0,64,.18)}}
+@keyframes pulseGreen{0%,100%{background:rgba(74,222,128,.04)}50%{background:rgba(74,222,128,.14)}}
+@keyframes pulseYellow{0%,100%{background:rgba(251,191,36,.04)}50%{background:rgba(251,191,36,.14)}}
+@keyframes pulseOrange{0%,100%{background:rgba(251,146,60,.04)}50%{background:rgba(251,146,60,.14)}}
+@keyframes pulseRed{0%,100%{background:rgba(255,50,50,.04)}50%{background:rgba(255,50,50,.14)}}
+@keyframes pulseBlue{0%,100%{background:rgba(56,189,248,.04)}50%{background:rgba(56,189,248,.14)}}
+@keyframes pulsePurple{0%,100%{background:rgba(168,85,247,.04)}50%{background:rgba(168,85,247,.14)}}
 .lv-1{color:#4ade80;font-weight:600}.lv-2{color:#67e8f9;font-weight:600}
 .lv-3{color:#fbbf24;font-weight:600}.lv-4{color:#fb923c;font-weight:600}
 .lv-5{color:#fb010d;font-weight:600}.lv-6{color:#ff2040;font-weight:700}
@@ -282,7 +288,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
-  <div class="dash-card" data-panel="avgtime" onclick="toggleDashPanel('avgtime')"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
+  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub" id="dAvgTimeSub">last 72 blocks</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
@@ -732,9 +738,19 @@ async function updateDashboard(info){
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var diffs=[];for(var h=info.blocks;h>Math.max(0,info.blocks-50);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-10)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
+  try{var times=[];var diffs=[];var AVG_WINDOW=72;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
     _diffHistory=diffs.reverse();drawSparkline();
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
+    document.getElementById('dAvgTimeSub').textContent='last '+(times.length-1)+' blocks'+(times.length>=AVG_WINDOW?' (~12h)':'');
+    // Pulse effect based on avg block time range
+    var card=document.getElementById('avgTimeCard');var valEl=document.getElementById('dAvgTime');
+    card.style.animation='';valEl.className='dash-val';valEl.style.color='';
+    if(avg>=540&&avg<=660){valEl.classList.add('green');card.style.animation='pulseGreen 2.5s ease-in-out infinite';}
+    else if(avg<180){valEl.classList.add('purple');card.style.animation='pulsePurple 2.5s ease-in-out infinite';}
+    else if(avg<360){valEl.classList.add('blue');card.style.animation='pulseBlue 2.5s ease-in-out infinite';}
+    else if(avg<540){valEl.classList.add('yellow');card.style.animation='pulseYellow 2.5s ease-in-out infinite';}
+    else if(avg>840){valEl.classList.add('red');card.style.animation='pulseRed 2.5s ease-in-out infinite';}
+    else{valEl.classList.add('orange');card.style.animation='pulseOrange 2.5s ease-in-out infinite';}
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
     // Update cASERT equalizer from block data
@@ -1472,7 +1488,7 @@ function renderAddrCharts(utxos){
   if(!utxos||!utxos.length)return;
   var byHeight=utxos.slice().sort(function(a,b){return a.height-b.height;});
 
-  // 1. Balance history
+  // 1. Balance history — interactive with crosshair dot + click-to-navigate
   var cv1=document.getElementById('addrBalCanvas');
   if(cv1){
     var ctx=cv1.getContext('2d'),dpr=window.devicePixelRatio||1;
@@ -1495,12 +1511,54 @@ function renderAddrCharts(utxos){
       // Y labels
       ctx.fillStyle='#444';ctx.font='8px monospace';ctx.textAlign='right';
       for(var yi=0;yi<=3;yi++){var v=mx*yi/3;ctx.fillText(v.toFixed(2),pad.l-4,pad.t+ch-yi/3*ch+3);}
-      // Tooltip
-      setupDpTooltip('addrBalCanvas',pts,function(d){return '<span style="color:var(--green);font-weight:600">Block #'+d.h+'</span><br>Balance: <span style="color:var(--text)">'+d.bal.toFixed(4)+' SOST</span><br>Received: +'+d.amt.toFixed(4)+' SOST';});
+      // Interactive crosshair + tooltip + click
+      (function(canvas,data,padC,cwC,chC,mxC){
+        var baseImg=ctx.getImageData(0,0,canvas.width,canvas.height);
+        var tip=document.getElementById('dpTip');
+        canvas.style.cursor='crosshair';
+        canvas.addEventListener('mousemove',function(e){
+          if(!data||!data.length){if(tip)tip.style.display='none';return;}
+          var rect=canvas.getBoundingClientRect(),mouseX=e.clientX-rect.left,W2=rect.width;
+          var idx=Math.round(((mouseX-padC.l)/cwC)*(data.length-1));
+          if(idx<0)idx=0;if(idx>=data.length)idx=data.length-1;
+          var d=data[idx];
+          var dotX=padC.l+idx/(data.length-1)*cwC;
+          var dotY=padC.t+chC-(d.bal/mxC)*chC;
+          // Redraw base + crosshair
+          var ctxR=canvas.getContext('2d'),dprR=window.devicePixelRatio||1;
+          ctxR.putImageData(baseImg,0,0);ctxR.save();ctxR.scale(dprR,dprR);
+          // Vertical line
+          ctxR.strokeStyle='rgba(74,222,128,.3)';ctxR.lineWidth=1;ctxR.setLineDash([3,3]);
+          ctxR.beginPath();ctxR.moveTo(dotX,padC.t);ctxR.lineTo(dotX,padC.t+chC);ctxR.stroke();
+          ctxR.setLineDash([]);
+          // Dot
+          ctxR.beginPath();ctxR.arc(dotX,dotY,4,0,Math.PI*2);ctxR.fillStyle='#4ade80';ctxR.fill();
+          ctxR.strokeStyle='#fff';ctxR.lineWidth=1.5;ctxR.stroke();
+          ctxR.restore();
+          // Tooltip
+          if(tip){
+            var change=d.amt>=0?'+'+d.amt.toFixed(4):d.amt.toFixed(4);
+            tip.innerHTML='<span style="color:var(--green);font-weight:600">Block #'+d.h+'</span><br>Balance: <span style="color:var(--text)">'+d.bal.toFixed(4)+' SOST</span><br>Change: <span style="color:var(--cyan)">'+change+' SOST</span>';
+            tip.style.display='block';
+            var tx=mouseX+12;if(tx+170>W2)tx=mouseX-180;
+            tip.style.left=tx+'px';tip.style.top='-10px';
+          }
+        });
+        canvas.addEventListener('mouseleave',function(){
+          var ctxR=canvas.getContext('2d');ctxR.putImageData(baseImg,0,0);
+          if(tip)tip.style.display='none';
+        });
+        canvas.addEventListener('click',function(e){
+          var rect=canvas.getBoundingClientRect(),mouseX=e.clientX-rect.left;
+          var idx=Math.round(((mouseX-padC.l)/cwC)*(data.length-1));
+          if(idx<0)idx=0;if(idx>=data.length)idx=data.length-1;
+          showBlockByHeight(data[idx].h);
+        });
+      })(cv1,pts,pad,cw,ch,mx);
     }
   }
 
-  // 2. Income per block (bar chart)
+  // 2. Income per block — cyan bars + interactive tooltip + click-to-navigate
   var cv2=document.getElementById('addrIncCanvas');
   if(cv2){
     var ctx2=cv2.getContext('2d'),dpr2=window.devicePixelRatio||1;
@@ -1514,15 +1572,55 @@ function renderAddrCharts(utxos){
       var x=pad2.l+i/(amts.length)*cw2;
       var h=Math.max(1,(d.a/mxA)*ch2);
       var ratio=d.a/mxA;
-      ctx2.fillStyle='rgba('+(Math.floor(ratio*251))+','+(Math.floor(146-ratio*72))+',60,.7)';
+      var alpha=0.5+ratio*0.4;
+      ctx2.fillStyle='rgba(0,229,255,'+alpha.toFixed(2)+')';
       ctx2.fillRect(x,pad2.t+ch2-h,bw2,h);
     });
     ctx2.fillStyle='#444';ctx2.font='8px monospace';ctx2.textAlign='right';
     for(var yi2=0;yi2<=2;yi2++){var v2=mxA*yi2/2;ctx2.fillText(v2.toFixed(2),pad2.l-4,pad2.t+ch2-yi2/2*ch2+3);}
-    setupDpTooltip('addrIncCanvas',amts,function(d){return '<span style="color:var(--orange);font-weight:600">Block #'+d.h+'</span><br>Amount: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span>';});
+    // Interactive tooltip + highlight + click
+    (function(canvas,data,padI,cwI,chI,mxI,barW){
+      var baseImg=ctx2.getImageData(0,0,canvas.width,canvas.height);
+      var tip=document.getElementById('dpTip');
+      canvas.style.cursor='pointer';
+      canvas.addEventListener('mousemove',function(e){
+        if(!data||!data.length){if(tip)tip.style.display='none';return;}
+        var rect=canvas.getBoundingClientRect(),mouseX=e.clientX-rect.left,Wc=rect.width;
+        var idx=Math.floor(((mouseX-padI.l)/cwI)*data.length);
+        if(idx<0)idx=0;if(idx>=data.length)idx=data.length-1;
+        var d=data[idx];
+        // Redraw base + highlight bar
+        var ctxR=canvas.getContext('2d'),dprR=window.devicePixelRatio||1;
+        ctxR.putImageData(baseImg,0,0);ctxR.save();ctxR.scale(dprR,dprR);
+        var bx=padI.l+idx/(data.length)*cwI;
+        var bh=Math.max(1,(d.a/mxI)*chI);
+        ctxR.fillStyle='rgba(0,229,255,.95)';
+        ctxR.fillRect(bx,padI.t+chI-bh,barW,bh);
+        ctxR.strokeStyle='#fff';ctxR.lineWidth=1;
+        ctxR.strokeRect(bx,padI.t+chI-bh,barW,bh);
+        ctxR.restore();
+        // Tooltip
+        if(tip){
+          tip.innerHTML='<span style="color:#00e5ff;font-weight:600">Block #'+d.h+'</span><br>Reward: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span>';
+          tip.style.display='block';
+          var tx=mouseX+12;if(tx+160>Wc)tx=mouseX-170;
+          tip.style.left=tx+'px';tip.style.top='-10px';
+        }
+      });
+      canvas.addEventListener('mouseleave',function(){
+        var ctxR=canvas.getContext('2d');ctxR.putImageData(baseImg,0,0);
+        if(tip)tip.style.display='none';
+      });
+      canvas.addEventListener('click',function(e){
+        var rect=canvas.getBoundingClientRect(),mouseX=e.clientX-rect.left;
+        var idx=Math.floor(((mouseX-padI.l)/cwI)*data.length);
+        if(idx<0)idx=0;if(idx>=data.length)idx=data.length-1;
+        showBlockByHeight(data[idx].h);
+      });
+    })(cv2,amts,pad2,cw2,ch2,mxA,bw2);
   }
 
-  // 3. Maturity bar
+  // 3. Maturity bar — gold for immature, green for mature + tooltip
   var matBar=document.getElementById('addrMatBar');
   var matLeg=document.getElementById('addrMatLegend');
   if(matBar){
@@ -1537,11 +1635,12 @@ function renderAddrCharts(utxos){
     var total=mature+almost+immature;if(total===0)total=1;
     var mPct=(mature/total*100).toFixed(1),aPct=(almost/total*100).toFixed(1),iPct=(immature/total*100).toFixed(1);
     matBar.innerHTML=
-      (mature?'<div style="width:'+mPct+'%;background:var(--green);height:100%;" title="Mature: '+mature+'"></div>':'')+
-      (almost?'<div style="width:'+aPct+'%;background:#fbbf24;height:100%;" title="Almost mature: '+almost+'"></div>':'')+
-      (immature?'<div style="width:'+iPct+'%;background:var(--red);height:100%;" title="Immature: '+immature+'"></div>':'');
-    matLeg.innerHTML='<span style="color:var(--green);">\u25A0</span> Mature: '+mature+' &nbsp; '+(almost?'<span style="color:#fbbf24;">\u25A0</span> Almost: '+almost+' &nbsp; ':'')+
-      (immature?'<span style="color:var(--red);">\u25A0</span> Immature: '+immature:'');
+      (mature?'<div style="width:'+mPct+'%;background:var(--green);height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
+      (almost?'<div style="width:'+aPct+'%;background:#fbbf24;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
+      (immature?'<div style="width:'+iPct+'%;background:#ffd700;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
+    matLeg.innerHTML='<span style="color:var(--green);">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
+      (almost?'<span style="color:#fbbf24;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
+      (immature?'<span style="color:#ffd700;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
   }
 }
 
