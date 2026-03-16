@@ -746,23 +746,27 @@ async function updateDashboard(info){
     card.style.animation='';valEl.className='dash-val';valEl.style.color='';
     var dist=Math.abs(avg-600);
     var inRange=(avg>=540&&avg<=660);
-    // Text color based on proximity to 600s target
-    if(avg>=570&&avg<=630){valEl.style.color='#00ff88';}
-    else if(avg>=540&&avg<570){valEl.style.color='#ffdd00';}
-    else if(avg>630&&avg<=660){valEl.style.color='#ffdd00';}
-    else if(avg<540){valEl.style.color='#ff8800';}
-    else{valEl.style.color='#ff4444';}
-    // Pulse: only inside 540-660 range, red, intensity proportional to proximity to 600s
+    // Text: fixed blue color, never changes
+    valEl.style.color='#4488ff';
+    // Pulse color by range, intensity by proximity to 600s
+    var pr,pg,pb;
+    if(avg>=570&&avg<=630){pr=0;pg=255;pb=136;}       // green
+    else if(avg>=540&&avg<=660){pr=255;pg=221;pb=0;}   // yellow (edges of healthy)
+    else if(avg<540){pr=255;pg=136;pb=0;}              // orange (too fast)
+    else{pr=255;pg=68;pb=68;}                          // red (too slow)
     if(inRange){
       var ratio=Math.max(0,1-(dist/60));
       var pLo=0.03+ratio*0.12;
       var pHi=0.10+ratio*0.45;
       var pSpd=3.5-ratio*2.3;
-      card.style.setProperty('--ap-r',255);card.style.setProperty('--ap-g',0);card.style.setProperty('--ap-b',0);
+      card.style.setProperty('--ap-r',pr);card.style.setProperty('--ap-g',pg);card.style.setProperty('--ap-b',pb);
       card.style.setProperty('--ap-lo',pLo.toFixed(2));card.style.setProperty('--ap-hi',pHi.toFixed(2));
       card.style.animation='avgPulse '+pSpd.toFixed(1)+'s ease-in-out infinite';
     } else {
-      card.style.animation='none';
+      // Outside 540-660: gentle pulse in orange or red
+      card.style.setProperty('--ap-r',pr);card.style.setProperty('--ap-g',pg);card.style.setProperty('--ap-b',pb);
+      card.style.setProperty('--ap-lo','0.03');card.style.setProperty('--ap-hi','0.10');
+      card.style.animation='avgPulse 3.5s ease-in-out infinite';
     }
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
@@ -1228,7 +1232,7 @@ function updateMiningPanel(elapsed){
   // 3B: Dynamic probability with color transitions
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
-  var expectedNonce=1/probPerAttempt;
+  var expectedNonce=(1/probPerAttempt)*1.25;
   var p50=Math.round(expectedNonce*Math.LN2);
   var p75=Math.round(expectedNonce*Math.log(4));
   var p90=Math.round(expectedNonce*Math.log(10));
@@ -1269,7 +1273,7 @@ function updateMiningPanel(elapsed){
       var triedFraction=1-Math.pow(1-probPerAttempt,estNonce);
       var remainingProb=1-triedFraction;
       if(remainingProb>0.01){
-        var newExpNonce=Math.round(1/probPerAttempt);
+        var newExpNonce=Math.round((1/probPerAttempt)*1.25);
         var newExpSec=newExpNonce/attPerSec;
         var nM=Math.floor(newExpSec/60),nS=Math.floor(newExpSec%60);
         et.innerHTML='Expected in: <span style="color:#fbbf24;font-weight:600">~'+nM+'m '+('0'+nS).slice(-2)+'s</span> <span style="font-size:8px;color:var(--text3)">(recalculated)</span>';
