@@ -176,45 +176,67 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- WALLET FUNCTIONS -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">FEATURES</div>
+      <div class="section-id">FUNCTIONS</div>
       <div class="section-title">What's <span class="accent">Inside</span></div>
     </div>
 
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feature-icon" style="color:var(--green-primary)">&#9919;</div>
-        <h3>Generate Wallet</h3>
-        <p>Create a new wallet with cryptographically secure random entropy. Keys generated via crypto.getRandomValues — never transmitted anywhere.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="color:var(--cyan-primary)">&#8615;</div>
-        <h3>Import Wallet</h3>
-        <p>Import from seed phrase, raw private key hex, or encrypted backup file. Watch-only mode available for monitoring addresses without keys.</p>
-      </div>
-      <div class="feature-card">
         <div class="feature-icon" style="color:var(--red-primary)">&#9632;</div>
         <h3>Dashboard</h3>
-        <p>Real-time balance from getaddressbalance RPC. UTXO list, transaction history, and quick actions — all fetched directly from the SOST node.</p>
+        <p>Overview of your wallet: total balance, available UTXOs, recent transaction history, coinbase reward maturity status (1,000 blocks to become spendable). Connects to the SOST node via RPC.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Open wallet &rarr; Dashboard tab shows all data automatically</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="color:var(--green-primary)">&#8593;</div>
         <h3>Send SOST</h3>
-        <p>Automatic fee estimation via estimatefee RPC. Smallest-first UTXO coin selection. Client-side transaction signing and broadcast via sendrawtransaction.</p>
+        <p>Send SOST to any address. Select UTXOs, enter destination <code style="font-size:11px">sost1...</code> address and amount, sign the transaction with your private key. The signature never leaves your browser. Fee auto-calculated.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Send tab &rarr; Enter address + amount &rarr; Sign &amp; Broadcast</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="color:var(--cyan-primary)">&#8595;</div>
         <h3>Receive SOST</h3>
-        <p>Display your sost1 address with QR code. One-click copy to clipboard. Share your address safely — it reveals nothing about your private key.</p>
+        <p>Display your public <code style="font-size:11px">sost1...</code> address for receiving payments. Includes QR code and copy button. Your address is public &mdash; anyone can send SOST to it without seeing your private key.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Receive tab &rarr; Copy address or scan QR</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="color:var(--green-primary)">&#9919;</div>
+        <h3>Generate Wallet</h3>
+        <p>Create a new secp256k1 key pair. Generates a 12-word seed phrase. Keys encrypted with AES-256-GCM before being stored in your browser. <strong style="color:var(--red-primary)">NEVER share your seed phrase or private key.</strong></p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Generate &rarr; Set password &rarr; Save seed phrase securely</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="color:var(--cyan-primary)">&#8615;</div>
+        <h3>Import Wallet</h3>
+        <p>Import an existing wallet using your 12-word seed phrase or private key in hex format. Useful for recovering access from another device or restoring from a backup.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Import &rarr; Enter seed or hex key &rarr; Set password</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="color:var(--green-primary)">&#128190;</div>
+        <h3>Backup</h3>
+        <p>Export your encrypted wallet as a JSON file. Store it in a safe location. You will need your password to restore it. The backup contains your encrypted keys &mdash; without the password, it is useless.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Backup &rarr; Download encrypted JSON &rarr; Store safely</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="color:var(--red-primary)">&#128272;</div>
-        <h3>TOTP 2FA</h3>
-        <p>Optional two-factor authentication for every send transaction. Compatible with Google Authenticator and any standard TOTP app.</p>
+        <h3>2FA (TOTP)</h3>
+        <p>Add an extra security layer. Requires a TOTP code (Google Authenticator, Authy) to confirm transactions and access the dashboard. Optional but recommended.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">2FA tab &rarr; Scan QR with authenticator app &rarr; Enter code</div>
       </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="color:var(--text-dim)">&#9881;</div>
+        <h3>Settings</h3>
+        <p>Configure: RPC node URL, auto-lock timeout (default 5 minutes), change password, visual theme. All settings stored locally in your browser.</p>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px solid var(--border-dim);padding-top:8px;">Settings tab &rarr; Adjust preferences &rarr; Save</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid var(--red-primary);border-radius:0 6px 6px 0;padding:14px 18px;margin:24px 0;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+      <strong style="color:var(--text-primary)">How it works:</strong> The password is <strong>local only</strong> &mdash; it encrypts your keys with AES-256-GCM in the browser. It is never sent to any server. Your private keys never leave your device. The wallet connects to the SOST node via RPC (<code style="font-size:11px">getbalance</code>, <code style="font-size:11px">listunspent</code>, <code style="font-size:11px">sendrawtransaction</code>) for blockchain data and transaction broadcast.
     </div>
   </div>
 </section>

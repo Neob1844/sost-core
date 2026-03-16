@@ -722,9 +722,17 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     else if(ACTIVE_PROFILE == Profile::DEV) profile_str = "dev";
 
     std::ostringstream s;
+    // Compute next block difficulty
+    uint32_t next_diff = GENESIS_BITSQ;
+    if (!g_blocks.empty()) {
+        std::vector<BlockMeta> meta;
+        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
+        next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
+    }
     s<<"{\"version\":\"0.3.2\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
+     <<",\"next_difficulty\":"<<next_diff
      <<",\"profile\":\""<<profile_str<<"\""
      <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
      <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))
