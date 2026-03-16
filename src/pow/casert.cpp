@@ -196,10 +196,21 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // U is in Q16.16 * Q16.16 territory, normalize
     int32_t H_raw = (int32_t)(U >> 16);
 
-    // Per-block change limit (±1 from previous)
-    // For validation (now_time=0): we recompute from scratch, no memory of previous
-    // For simplicity in v1, just clamp to bounds
+    // Clamp to profile bounds
     int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H_raw));
+
+    // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
+    // This prevents fast individual blocks from triggering hardening when the chain
+    // is globally behind. Only harden when genuinely ahead of schedule.
+    if (lag >= 0) {
+        H = std::min<int32_t>(H, 0); // cap at B0
+    }
+
+    // Safety rule 2: require minimum chain depth before any hardening
+    // With < 10 blocks, EWMA signals are unreliable (dominated by noise)
+    if (chain.size() < 10) {
+        H = std::min<int32_t>(H, 0); // cap at B0 until chain stabilizes
+    }
 
     // ---- Anti-stall (mining only) ----
     if (now_time > 0 && !chain.empty()) {

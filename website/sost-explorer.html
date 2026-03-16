@@ -475,10 +475,12 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
         </div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;" id="miningStatus">searching nonce...</div>
       </div>
-      <!-- Row 2: Profile -->
-      <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span>cASERT</span> <span id="miningLevel" style="font-weight:600;">—</span>
-        <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=180 steps=4)</span>
+      <!-- Row 2: Block details -->
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
+        <span>prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a></span>
+        <span>bitsQ: <span id="miningBitsQRaw" style="color:var(--purple);font-weight:600;">—</span></span>
+        <span>profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=180 steps=4)</span></span>
+        <span>stability: <span id="miningStabRate" style="font-weight:600;">—</span></span>
         <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
       </div>
       <!-- Row 3: Probability -->
@@ -749,6 +751,7 @@ async function updateDashboard(info){
   // Miner balance (requires auth)
   if(RPC_USER&&RPC_PASS){try{
     var tipHash=await rpc('getblockhash',[String(info.blocks)]);
+    _tipBlockHash=tipHash; // store for mining panel
     var tipBlock=await rpc('getblock',[tipHash]);
     var minerAddr=tipBlock.miner_address||'';
     _activeMiner=minerAddr;
@@ -1058,6 +1061,7 @@ function setupDpTooltip(canvasId,dataArr,fmtFn){
 }
 var _lastBitsQ=0;
 var _nextBitsQ=0;
+var _tipBlockHash='';
 
 function updateEqualizer(info, times, diffs) {
   try {
@@ -1152,7 +1156,14 @@ function updateMiningPanel(elapsed){
   var mh=document.getElementById('miningHeight');
   if(mh)mh.textContent='#'+nextH;
   var md=document.getElementById('miningDiff');
-  if(md)md.textContent=bq.toLocaleString()+' ('+bqReal.toFixed(2)+' bits)';
+  if(md)md.textContent=bqReal.toFixed(3)+' bits';
+  // Prev hash
+  var mp=document.getElementById('miningPrev');
+  if(mp&&_tipBlockHash){mp.textContent=_tipBlockHash.substr(0,16)+'...';mp.onclick=function(){showBlock(_tipBlockHash);return false;};mp.style.cursor='pointer';}
+  else if(mp){mp.textContent='—';}
+  // BitsQ raw
+  var br=document.getElementById('miningBitsQRaw');
+  if(br)br.textContent=fComma(bq)+' ('+bqReal.toFixed(3)+')';
   var me=document.getElementById('miningElapsed');
   if(me){var es=Math.floor(elapsed);var mm=Math.floor(es/60),ss=es%60;
     me.textContent=mm>0?mm+'m '+('0'+ss).slice(-2)+'s':ss+'s';
@@ -1165,10 +1176,19 @@ function updateMiningPanel(elapsed){
   var dc=computeDecayLevel(getCasertLevel(lag),ahead,elapsed);
   var effProf=rawProf;
   if(dc.active){var decH=Math.max(-3,rawProf.H-Math.floor((elapsed-dc.threshold)/1200));var dI=Math.max(0,Math.min(9,decH+3));effProf=CASERT_PROFILES[dI];}
-  var ml=document.getElementById('miningLevel');
-  if(ml)ml.innerHTML='<span style="color:'+getLevelColor(effProf.H)+';font-weight:600">'+effProf.name+'</span>';
+  // Profile name + params + stability rate
+  var pn=document.getElementById('miningProfileName');
+  if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>';
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
+  // Stability rate estimate
+  var sr=document.getElementById('miningStabRate');
+  if(sr){
+    var stabEst='~100%';var stabColor='#4ade80';
+    if(effProf.H>=5){stabEst='~73%';stabColor='#fbbf24';}
+    if(effProf.H>=6){stabEst='~0%';stabColor='#fb010d';}
+    sr.innerHTML='<span style="color:'+stabColor+'">'+stabEst+'</span>';
+  }
   var di=document.getElementById('miningDecayInfo');
   if(di){if(dc.active&&effProf.name!==rawProf.name){di.style.display='inline';di.textContent='(decayed from '+rawProf.name+' \u2192 '+effProf.name+')';}else{di.style.display='none';}}
   var probPerAttempt=Math.pow(2,-bqReal);

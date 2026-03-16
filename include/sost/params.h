@@ -104,7 +104,7 @@ inline constexpr int32_t  CASERT_K_V              = 6554;   // 0.10 — volatili
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -3;     // E3 (deep easing)
-inline constexpr int32_t  CASERT_H_MAX            = 6;      // H6 (v1 hard cap)
+inline constexpr int32_t  CASERT_H_MAX            = 5;      // H5 max (H6 has 0% stability — chain halt)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
