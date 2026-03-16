@@ -35,8 +35,20 @@ footer a{color:var(--t3);text-decoration:none}
 .toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
 .toc a{color:var(--cyan);text-decoration:none;display:block;padding:3px 0;font-size:12px}
 .toc a:hover{color:var(--t1)}
-.nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
+
 @media(max-width:768px){h2{font-size:17px}pre{font-size:10px} .nav-links{display:none;width:100%} .nav-links.open{display:flex} .nav-hamburger{display:block} }
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
 </style>
 </head>
 <body>
@@ -47,7 +59,7 @@ footer a{color:var(--t3);text-decoration:none}
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
-      <a href="index.html">Home</a>
+            <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
@@ -75,6 +87,8 @@ footer a{color:var(--t3);text-decoration:none}
     </div>
   </div>
 </nav>
+
+
 
 <div class="hero"><div class="c">
 <h1>SOST <span>Technical Reference</span></h1>
