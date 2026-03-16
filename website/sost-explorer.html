@@ -283,7 +283,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
-  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub" id="dAvgTimeSub">last 72 blocks</div></div>
+  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 72 blocks</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
@@ -1232,7 +1232,7 @@ function updateMiningPanel(elapsed){
   // 3B: Dynamic probability with color transitions
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
-  var expectedNonce=(1/probPerAttempt)*1.25;
+  var expectedNonce=(1/probPerAttempt)*1.50;
   var p50=Math.round(expectedNonce*Math.LN2);
   var p75=Math.round(expectedNonce*Math.log(4));
   var p90=Math.round(expectedNonce*Math.log(10));
@@ -1273,7 +1273,7 @@ function updateMiningPanel(elapsed){
       var triedFraction=1-Math.pow(1-probPerAttempt,estNonce);
       var remainingProb=1-triedFraction;
       if(remainingProb>0.01){
-        var newExpNonce=Math.round((1/probPerAttempt)*1.25);
+        var newExpNonce=Math.round((1/probPerAttempt)*1.50);
         var newExpSec=newExpNonce/attPerSec;
         var nM=Math.floor(newExpSec/60),nS=Math.floor(newExpSec%60);
         et.innerHTML='Expected in: <span style="color:#fbbf24;font-weight:600">~'+nM+'m '+('0'+nS).slice(-2)+'s</span> <span style="font-size:8px;color:var(--text3)">(recalculated)</span>';
