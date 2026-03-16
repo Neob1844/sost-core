@@ -169,7 +169,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-3, 5] (H6 disabled). Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-3, 6]. Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
 
 <table>
 <tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
@@ -177,9 +177,9 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>180</td><td><strong>Baseline</strong></td></tr>
 <tr><td>H3</td><td>2</td><td>5</td><td>5</td><td>155</td><td>Moderate hardening</td></tr>
 <tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>73% stability</td></tr>
-<tr style="color:var(--t3);text-decoration:line-through;"><td>H6</td><td>3</td><td>7</td><td>6</td><td>125</td><td>Disabled (0% stability)</td></tr>
+<tr><td>H6</td><td>3</td><td>7</td><td>7</td><td>135</td><td>Maximum hardening</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">Maximum profile: H5. H6 disabled at consensus level — 0% stability rate would halt the chain.</p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">Maximum profile: H6 (scale=3, k=7, steps=7, margin=135).</p>
 
 <h3>Anti-Stall</h3>
 <p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), drops profile 1 level every 1200s. Allows progressively easier blocks during prolonged stalls. <em>Source: casert.cpp:204-215</em></p>
