@@ -95,12 +95,14 @@ inline constexpr int32_t  CASERT_INTEG_RHO        = 253;   // 253/256 ≈ 0.988 
 inline constexpr int32_t  CASERT_INTEG_ALPHA       = 1;     // integrator gain
 inline constexpr int64_t  CASERT_INTEG_MAX         = 6553600; // 100.0 in Q16.16
 
-// Control signal gains (Q16.16)
-inline constexpr int32_t  CASERT_K_R              = 16384;  // 0.25 — instantaneous error
-inline constexpr int32_t  CASERT_K_L              = 6554;   // 0.10 — schedule lag
-inline constexpr int32_t  CASERT_K_I              = 3277;   // 0.05 — integrator
-inline constexpr int32_t  CASERT_K_B              = 19661;  // 0.30 — burst score
-inline constexpr int32_t  CASERT_K_V              = 6554;   // 0.10 — volatility
+// Control signal gains (Q16.16) — tuned to prevent oscillation
+// Total: K_R(0.05) + K_L(0.40) + K_I(0.15) + K_B(0.05) + K_V(0.02) = 0.67
+// Lag dominates (60% of total), short-term signals heavily damped
+inline constexpr int32_t  CASERT_K_R              = 3277;   // 0.05 — instantaneous (was 0.25)
+inline constexpr int32_t  CASERT_K_L              = 26214;  // 0.40 — schedule lag (was 0.10)
+inline constexpr int32_t  CASERT_K_I              = 9830;   // 0.15 — integrator (was 0.05)
+inline constexpr int32_t  CASERT_K_B              = 3277;   // 0.05 — burst score (was 0.30)
+inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatility (was 0.10)
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -3;     // E3 (deep easing)
