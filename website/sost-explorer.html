@@ -742,22 +742,22 @@ async function updateDashboard(info){
     card.style.animation='';valEl.className='dash-val';valEl.style.color='';
     var dist=Math.abs(avg-600);
     var inRange=(avg>=540&&avg<=660);
-    // Color + text class
-    var pr,pg,pb; // pulse RGB
-    if(inRange){valEl.classList.add('green');pr=74;pg=222;pb=128;}
-    else if(avg<180){valEl.classList.add('purple');pr=168;pg=85;pb=247;}
-    else if(avg<360){valEl.classList.add('blue');pr=56;pg=189;pb=248;}
-    else if(avg<540){valEl.classList.add('yellow');pr=251;pg=191;pb=36;}
-    else if(avg>840){valEl.classList.add('red');pr=255;pg=50;pb=50;}
-    else{valEl.classList.add('orange');pr=251;pg=146;pb=60;}
-    // Compute intensity: 1.0 = exactly 600s, 0.0 = edge of 540/660
-    var ratio=inRange?Math.max(0,1-(dist/60)):0;
-    var pLo=inRange?(0.03+ratio*0.07):0.03;
-    var pHi=inRange?(0.12+ratio*0.28):0.12;
-    var pSpd=inRange?(3-ratio*1.5):3.5;
-    card.style.setProperty('--ap-r',pr);card.style.setProperty('--ap-g',pg);card.style.setProperty('--ap-b',pb);
-    card.style.setProperty('--ap-lo',pLo.toFixed(2));card.style.setProperty('--ap-hi',pHi.toFixed(2));
-    card.style.animation='avgPulse '+pSpd.toFixed(1)+'s ease-in-out infinite';
+    // Text color
+    if(inRange){valEl.classList.add('green');}
+    else if(avg<540){valEl.classList.add('yellow');}
+    else{valEl.classList.add('orange');}
+    // Pulse: only inside 540-660 range, red, intensity proportional to proximity to 600s
+    if(inRange){
+      var ratio=Math.max(0,1-(dist/60));
+      var pLo=0.03+ratio*0.07;
+      var pHi=0.12+ratio*0.28;
+      var pSpd=3-ratio*1.5;
+      card.style.setProperty('--ap-r',255);card.style.setProperty('--ap-g',0);card.style.setProperty('--ap-b',0);
+      card.style.setProperty('--ap-lo',pLo.toFixed(2));card.style.setProperty('--ap-hi',pHi.toFixed(2));
+      card.style.animation='avgPulse '+pSpd.toFixed(1)+'s ease-in-out infinite';
+    } else {
+      card.style.animation='none';
+    }
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
     // Update cASERT equalizer from block data
