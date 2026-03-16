@@ -491,7 +491,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span id="miningNonce" style="margin-left:8px;color:#c8c8c8;">~0</span>
         <span id="miningNonceMax" style="color:var(--text3);">/ —</span>
         <div id="nonceBarWrap" style="position:relative;height:8px;background:#1a1a1a;border-radius:4px;margin-top:6px;overflow:visible;cursor:crosshair;">
-          <div id="miningNonceBar" style="height:100%;width:0%;border-radius:4px;transition:width 1s linear;background:linear-gradient(90deg,#00ff88 0%,#00ff88 35%,#ffdd00 50%,#ff8800 65%,#ff0033 100%);"></div>
+          <div id="miningNonceBar" style="height:100%;width:0%;border-radius:4px;transition:width 1s linear;background:linear-gradient(90deg,#00ff88 0%,#00ff88 25%,#ffdd00 50%,#ff8800 75%,#ff0033 100%);"></div>
           <!-- probability marks rendered by JS -->
           <div id="nonceMarks" style="position:absolute;top:0;left:0;right:0;height:100%;pointer-events:none;"></div>
           <!-- tooltip -->
@@ -1287,52 +1287,57 @@ function updateMiningPanel(elapsed){
   if(mnMax)mnMax.textContent='/ '+fComma(Math.round(expectedNonce))+' expected';
   var mnBar=document.getElementById('miningNonceBar');
   if(mnBar){
-    // Scale: E[nonce] sits at 35% of bar. Total ref = E[nonce]/0.35
-    var barTotalRef=expectedNonce/0.35;
-    var pct=Math.min(100,(estNonce/barTotalRef)*100);
+    // Fixed range: 0 to 20,000 nonces
+    var BAR_MAX=20000;
+    var pct=Math.min(100,(estNonce/BAR_MAX)*100);
     mnBar.style.width=pct+'%';
-    // Gradient breakpoints match: 0%=green, 35%=green, 50%=yellow, 65%=orange, 100%=red
-    mnBar.style.background='linear-gradient(90deg,#00ff88 0%,#00ff88 '+(35/pct*100).toFixed(0)+'%,#ffdd00 '+(50/pct*100).toFixed(0)+'%,#ff8800 '+(65/pct*100).toFixed(0)+'%,#ff0033 100%)';
-    // Probability marks
+    // Gradient on the filled portion: 0-25%=green, 25-50%=yellow, 50-75%=orange, 75-100%=red
+    // Map absolute gradient stops into the filled width so colors align with the bar range
+    if(pct>0){
+      var g25=Math.min(100,(25/pct)*100),g50=Math.min(100,(50/pct)*100),g75=Math.min(100,(75/pct)*100);
+      mnBar.style.background='linear-gradient(90deg,#00ff88 0%,#00ff88 '+g25.toFixed(0)+'%,#ffdd00 '+g50.toFixed(0)+'%,#ff8800 '+g75.toFixed(0)+'%,#ff0033 100%)';
+    }
+    // Marks: E[n] (dynamic), 10K, 15K, 20K (fixed)
     var marks=document.getElementById('nonceMarks');
     if(marks){
-      var mkHtml='';
-      // E[nonce] mark at 35%
-      mkHtml+='<div style="position:absolute;left:35%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
-      mkHtml+='<div style="position:absolute;left:35%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
-      // p50, p75, p90, p95 marks
-      var pMarks=[{n:p50,l:'50%'},{n:p75,l:'75%'},{n:p90,l:'90%'},{n:p95,l:'95%'}];
-      for(var mi=0;mi<pMarks.length;mi++){
-        var mPct=(pMarks[mi].n/barTotalRef)*100;
-        if(mPct>0&&mPct<=100){
-          mkHtml+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;top:0;width:1px;height:100%;border-left:1px dashed rgba(255,255,255,.2);"></div>';
-          mkHtml+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;bottom:-11px;font-size:7px;color:rgba(255,255,255,.25);transform:translateX(-50%);">'+pMarks[mi].l+'</div>';
-        }
+      var mkH='';
+      // E[nonce] mark
+      var ePct=Math.min(100,(expectedNonce/BAR_MAX)*100);
+      if(ePct>0&&ePct<=100){
+        mkH+='<div style="position:absolute;left:'+ePct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
+        mkH+='<div style="position:absolute;left:'+ePct.toFixed(1)+'%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
       }
-      marks.innerHTML=mkHtml;
+      // Fixed marks: 10K at 50%, 15K at 75%, 20K at 100%
+      var fMarks=[{p:50,l:'10K'},{p:75,l:'15K'},{p:100,l:'20K'}];
+      for(var fi=0;fi<fMarks.length;fi++){
+        mkH+='<div style="position:absolute;left:'+fMarks[fi].p+'%;top:0;width:1px;height:100%;border-left:1px dashed rgba(255,255,255,.15);"></div>';
+        mkH+='<div style="position:absolute;left:'+fMarks[fi].p+'%;bottom:-11px;font-size:7px;color:rgba(255,255,255,.25);transform:translateX(-50%);">'+fMarks[fi].l+'</div>';
+      }
+      marks.innerHTML=mkH;
     }
-    // Tooltip on hover
+    // Tooltip — bind once, update state each tick
     var wrap=document.getElementById('nonceBarWrap');
     var tip=document.getElementById('nonceTip');
     if(wrap&&tip&&!wrap._tipBound){
       wrap._tipBound=true;
-      wrap._barTotalRef=barTotalRef;wrap._estNonce=estNonce;wrap._probPerAttempt=probPerAttempt;wrap._elapsed=0;
       wrap.addEventListener('mousemove',function(e){
-        var rect=wrap.getBoundingClientRect(),mx=e.clientX-rect.left,frac=mx/rect.width;
-        var hoverNonce=Math.round(frac*wrap._barTotalRef);
-        var cumP=1-Math.pow(1-wrap._probPerAttempt,hoverNonce);
-        var t='Nonce: ~'+fComma(hoverNonce)+' \u00B7 P(solve): '+(cumP*100).toFixed(1)+'%';
-        if(hoverNonce<=wrap._estNonce){
-          t+='\nCurrent: ~'+fComma(wrap._estNonce)+' tried';
-          if(wrap._elapsed>0){var em=Math.floor(wrap._elapsed/60),es=Math.floor(wrap._elapsed%60);t+=' \u00B7 '+em+'m '+('0'+es).slice(-2)+'s';}
-        }
-        tip.textContent=t;tip.style.display='block';
+        var rect=wrap.getBoundingClientRect(),mx=e.clientX-rect.left,frac=Math.max(0,Math.min(1,mx/rect.width));
+        // Nonce at cursor: linear 0-20000
+        var hNonce=Math.round(frac*20000);
+        // P(solve) = 1 - (1 - probPerAttempt)^hNonce
+        var ppa=wrap._ppa||0;
+        var cumP=ppa>0?(1-Math.pow(1-ppa,hNonce)):0;
+        var lines='Nonce: ~'+fComma(hNonce)+' \u00B7 P(solve): '+(cumP*100).toFixed(1)+'%';
+        lines+='\nCurrent: ~'+fComma(wrap._est||0)+' tried';
+        var el=wrap._elap||0;
+        if(el>0){var eM=Math.floor(el/60),eS=Math.floor(el%60);lines+=' \u00B7 Elapsed: '+eM+'m '+('0'+eS).slice(-2)+'s';}
+        tip.style.whiteSpace='pre';tip.textContent=lines;tip.style.display='block';
         var tx=mx-tip.offsetWidth/2;if(tx<0)tx=0;if(tx+tip.offsetWidth>rect.width)tx=rect.width-tip.offsetWidth;
         tip.style.left=tx+'px';
       });
       wrap.addEventListener('mouseleave',function(){tip.style.display='none';});
     }
-    if(wrap){wrap._barTotalRef=barTotalRef;wrap._estNonce=estNonce;wrap._probPerAttempt=probPerAttempt;wrap._elapsed=elapsed;}
+    if(wrap){wrap._ppa=probPerAttempt;wrap._est=estNonce;wrap._elap=elapsed;}
   }
   var threshold=Math.max(7200,ahead*600);
   var asInd=document.getElementById('asIndicator');
