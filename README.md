@@ -7,7 +7,7 @@ CPU-friendly Proof-of-Work blockchain with constitutional gold reserves. Every b
 The Foundation's manual operations during Phase 1 are transitional by design, not permanent — progressive decentralization toward full automation is a constitutional commitment, not a discretionary goal.
 
 - **Website:** https://sostcore.com
-- **Explorer:** https://explorer.sostcore.com
+- **Explorer:** https://sostcore.com/sost-explorer.html
 - **GitHub:** https://github.com/Neob1844/sost-core
 - **Whitepaper:** https://sostcore.com/whitepaper.pdf
 
