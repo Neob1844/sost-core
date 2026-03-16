@@ -1850,19 +1850,49 @@ static bool process_block(const std::string& block_json) {
         fflush(stdout);
 
         ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
-        // Apply cASERT profile — miner uses profile-adjusted params, verifier must match
+        // Use the miner's declared stability profile (includes anti-stall decay)
+        // The miner sends the exact params it used; we verify the proof with those params.
+        // Security: a miner using easier params gets easier stability but still needs commit<=target.
         {
-            std::vector<BlockMeta> meta;
-            for (size_t j = 0; j < g_blocks.size(); ++j) {
-                BlockMeta bm; bm.block_id = g_blocks[j].block_id;
-                bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
-                bm.powDiffQ = g_blocks[j].bits_q;
-                meta.push_back(bm);
+            int32_t declared_scale = (int32_t)jint(block_json, "stab_scale");
+            int32_t declared_k = (int32_t)jint(block_json, "stab_k");
+            int32_t declared_margin = (int32_t)jint(block_json, "stab_margin");
+            int32_t declared_steps = (int32_t)jint(block_json, "stab_steps");
+            int32_t declared_lr = (int32_t)jint(block_json, "stab_lr_shift");
+
+            if (declared_scale > 0 && declared_k > 0 && declared_margin > 0 && declared_steps > 0) {
+                // Validate: declared params must be within the E3-H6 range (not easier than E3)
+                bool valid_profile = declared_scale >= 1 && declared_scale <= 4
+                    && declared_k >= 3 && declared_k <= 7
+                    && declared_margin >= 120 && declared_margin <= 240
+                    && declared_steps >= 3 && declared_steps <= 7;
+                if (!valid_profile) {
+                    printf("[BLOCK] REJECTED: declared stability params out of valid range (scale=%d k=%d margin=%d steps=%d)\n",
+                           declared_scale, declared_k, declared_margin, declared_steps);
+                    fflush(stdout);
+                    return false;
+                }
+                cx_params.stab_scale = declared_scale;
+                cx_params.stab_k = declared_k;
+                cx_params.stab_margin = declared_margin;
+                cx_params.stab_steps = declared_steps;
+                if (declared_lr > 0) cx_params.stab_lr_shift = declared_lr;
+                printf("[BLOCK-V2] Using miner's declared profile: scale=%d k=%d margin=%d steps=%d lr=%d\n",
+                       cx_params.stab_scale, cx_params.stab_k, cx_params.stab_margin, cx_params.stab_steps, cx_params.stab_lr_shift);
+            } else {
+                // Fallback: recompute from chain (for blocks without declared profile)
+                std::vector<BlockMeta> meta;
+                for (size_t j = 0; j < g_blocks.size(); ++j) {
+                    BlockMeta bm; bm.block_id = g_blocks[j].block_id;
+                    bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
+                    bm.powDiffQ = g_blocks[j].bits_q;
+                    meta.push_back(bm);
+                }
+                auto cdec = sost::casert_compute(meta, height, 0);
+                cx_params = sost::casert_apply_profile(cx_params, cdec);
+                printf("[BLOCK-V2] Fallback cASERT: H=%d scale=%d k=%d margin=%d steps=%d\n",
+                       cdec.profile_index, cx_params.stab_scale, cx_params.stab_k, cx_params.stab_margin, cx_params.stab_steps);
             }
-            auto cdec = sost::casert_compute(meta, height, 0); // 0 = validation mode (no anti-stall)
-            cx_params = sost::casert_apply_profile(cx_params, cdec);
-            printf("[BLOCK-V2] cASERT profile applied: H=%d scale=%d k=%d margin=%d steps=%d\n",
-                   cdec.profile_index, cx_params.stab_scale, cx_params.stab_k, cx_params.stab_margin, cx_params.stab_steps);
             fflush(stdout);
         }
 
