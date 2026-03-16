@@ -321,6 +321,12 @@ static const int64_t MAX_REORG_DEPTH = 500;
 // --full-verify forces full CX recomputation for all blocks.
 static bool g_full_verify_mode = false;
 
+// Known blocks: blocks we've already accepted or stored as fork/orphan.
+// Used to silently ignore re-broadcast of blocks we already know about.
+// This prevents penalizing peers for normal relay behavior.
+static std::set<std::string> g_known_blocks; // block_id hex
+static std::mutex g_known_mu;
+
 // DoS/ban tracking
 static const int BAN_THRESHOLD = 100;
 static const int BAN_DURATION  = 86400;  // 24 hours
@@ -1543,6 +1549,14 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // Already known? Skip silently (normal relay behavior, NOT misbehavior)
+    {
+        std::lock_guard<std::mutex> lk2(g_known_mu);
+        if (g_known_blocks.count(bid)) {
+            return false; // silently ignore — not an error
+        }
+    }
+
     int64_t height = jint(block_json,"height");
     int64_t ts64   = jint(block_json,"timestamp");
     uint32_t bits_q= (uint32_t)jint(block_json,"bits_q");
@@ -1622,6 +1636,7 @@ static bool process_block(const std::string& block_json) {
                 entry.raw_json = block_json;
                 g_block_index[bid] = entry;
                 g_orphans_by_prev.insert({prev_hex, bid});
+                { std::lock_guard<std::mutex> lk3(g_known_mu); g_known_blocks.insert(bid); }
                 printf("[ORPHAN] Block h=%lld stored (parent %s unknown). %zu orphans total.\n",
                        (long long)height, prev_hex.substr(0,16).c_str(), g_orphans_by_prev.size());
             }
@@ -1658,6 +1673,7 @@ static bool process_block(const std::string& block_json) {
                 entry.status = BlockStatus::FORK;
                 entry.raw_json = block_json;
                 g_block_index[bid] = entry;
+                { std::lock_guard<std::mutex> lk3(g_known_mu); g_known_blocks.insert(bid); }
 
                 // Check if this fork has MORE cumulative work than active tip
                 Bytes32 active_tip_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
@@ -2240,9 +2256,16 @@ static bool process_block(const std::string& block_json) {
         if(removed>0) printf("[BLOCK] Mempool: %zu txs removed\n", removed);
     }
 
-    printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu, chainwork=%s)\n",
+    // Mark block as known (prevents re-processing on relay back from peers)
+    { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
+
+    // Show chainwork with significant bytes (skip leading zeros for readability)
+    std::string cw_hex = to_hex(sb.cumulative_work.data(), 32);
+    size_t cw_start = cw_hex.find_first_not_of('0');
+    std::string cw_short = (cw_start == std::string::npos) ? "0" : cw_hex.substr(cw_start);
+    printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu, chainwork=0x%s)\n",
            (long long)height, bid.substr(0,16).c_str(), txs.size(), (long long)total_fees,
-           g_utxo_set.Size(), to_hex(sb.cumulative_work.data(),32).substr(0,16).c_str());
+           g_utxo_set.Size(), cw_short.c_str());
 
     // Clean up fork blocks that are now too old
     cleanup_old_forks();
@@ -2800,20 +2823,39 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             }
 
             std::string block_json((char*)msg.payload.data(), msg.payload.size());
-            // Verify merkle root before full processing (cheap check for +100 ban)
-            std::string blk_mrkl = jstr(block_json, "merkle_root");
+
+            // Check if block is already known BEFORE expensive validation
+            // This is normal relay behavior — NOT misbehavior
+            std::string blk_bid_check = jstr(block_json, "block_id");
+            {
+                std::lock_guard<std::mutex> lk3(g_known_mu);
+                if (blk_bid_check.size() == 64 && g_known_blocks.count(blk_bid_check)) {
+                    continue; // silently skip — normal relay, no penalty
+                }
+            }
+
             auto t_start = std::chrono::steady_clock::now();
             if(!process_block(block_json)){
-                // Determine severity of failure for ban scoring
-                // Check if merkle root was bad (severe)
+                // process_block returned false — determine severity
+                // Only penalize for genuinely invalid blocks, NOT for forks with less work
                 std::string blk_bid = jstr(block_json, "block_id");
                 uint32_t blk_bitsq = (uint32_t)jint(block_json, "bits_q");
-                if (blk_bid.size() != 64) {
+
+                // Check if this block was stored as fork/orphan (not an error)
+                bool stored_as_fork = false;
+                {
+                    std::lock_guard<std::mutex> lk3(g_known_mu);
+                    stored_as_fork = g_known_blocks.count(blk_bid) > 0;
+                }
+
+                if (stored_as_fork) {
+                    // Block was valid but stored as fork/orphan — no penalty
+                } else if (blk_bid.size() != 64) {
                     if (add_misbehavior(fd, addr, 25, "malformed block")) break;
                 } else if (blk_bitsq == 0) {
                     if (add_misbehavior(fd, addr, 100, "zero difficulty")) break;
                 } else {
-                    // Standard invalid block: might be stale/duplicate during sync
+                    // Genuinely invalid block (failed validation)
                     if (add_misbehavior(fd, addr, 10, "invalid block")) break;
                 }
             } else {
@@ -2910,6 +2952,9 @@ static bool load_genesis(const std::string& path) {
     g_genesis_hash=g.block_id;
     g_blocks.push_back(g);
     g_chain_height=0;
+
+    // Mark genesis as known
+    { std::lock_guard<std::mutex> lk(g_known_mu); g_known_blocks.insert(to_hex(g.block_id.data(),32)); }
 
     // TX-INDEX: genesis block coinbase (block_id used as pseudo-txid)
     g_tx_index[g.block_id] = {0, 0};
@@ -3064,6 +3109,7 @@ static bool load_chain(const std::string& path) {
                     sb.cumulative_work = add_be256(parent_cw, bw);
                     g_block_undos.push_back(undo); // Store undo for reorg support
                     g_blocks.push_back(sb);
+                    { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
                     continue;  // skip the legacy coinbase-only path below
                 } else {
                     printf("[CHAIN-LOAD] Warning: ConnectBlock failed at height %lld: %s (falling back)\n",
@@ -3079,6 +3125,7 @@ static bool load_chain(const std::string& path) {
         Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
         sb.cumulative_work = add_be256(parent_cw, bw);
         g_blocks.push_back(sb);
+        { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
             {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
@@ -3098,11 +3145,16 @@ static bool load_chain(const std::string& path) {
         printf("[CHAIN-LOAD] Warning: JSON claimed height=%lld but loaded %lld blocks (using %lld)\n",
                (long long)ch, (long long)g_blocks.size(), (long long)g_chain_height);
     }
-    // Log chainwork for tip
+    // Log chainwork for tip (skip leading zeros for readability)
     if (!g_blocks.empty()) {
-        printf("[CHAIN-LOAD] Tip chainwork: %s (height=%lld)\n",
-               to_hex(g_blocks.back().cumulative_work.data(), 32).c_str(),
-               (long long)g_chain_height);
+        std::string cw_hex = to_hex(g_blocks.back().cumulative_work.data(), 32);
+        size_t cw_nz = cw_hex.find_first_not_of('0');
+        std::string cw_short = (cw_nz == std::string::npos) ? "0" : cw_hex.substr(cw_nz);
+        printf("[CHAIN-LOAD] Tip chainwork: 0x%s (height=%lld, work/block=0x%x)\n",
+               cw_short.c_str(), (long long)g_chain_height,
+               (unsigned)compute_block_work(g_blocks.back().bits_q)[31] |
+               ((unsigned)compute_block_work(g_blocks.back().bits_q)[30] << 8) |
+               ((unsigned)compute_block_work(g_blocks.back().bits_q)[29] << 16));
     }
     return true;
 }

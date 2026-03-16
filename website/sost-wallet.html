@@ -43,8 +43,7 @@
   body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
-  /* NAV */
-  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; min-height: 97px; }
+  /* NAV — canonical styles at line ~121 */
 
   /* HERO */
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
@@ -120,7 +119,8 @@
   /* === CANONICAL NAV CSS === */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; min-height: 97px; }
   nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 72px; }
+  .nav-logo img { width: 72px; height: 72px; aspect-ratio: 1; display: block; }
   .nav-logo .brand-sost { color: var(--red-primary); }
   .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }

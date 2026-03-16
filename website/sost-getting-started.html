@@ -554,7 +554,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
     </div>
 
     <div class="notice fade-in delay-4">
-      <strong>ConvergenceX requirements:</strong> Each mining attempt requires 4 GB RAM, 100,000 sequential rounds. CPU-only — no GPU or ASIC advantage. Multi-threading runs independent attempts on separate cores.
+      <strong>ConvergenceX requirements:</strong> Each mining attempt requires 8 GB RAM (4 GB dataset + 4 GB scratchpad), 100,000 sequential rounds. CPU-only — no GPU or ASIC advantage. Multi-threading runs independent attempts on separate cores.
     </div>
   </div>
 </section>
@@ -731,7 +731,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="label">No peers connected</td><td class="value">Check firewall allows port 19333; try --connect seed.sostcore.com:19333</td></tr>
           <tr><td class="label">Miner finds no template</td><td class="value">Node must be fully synced before mining; check getinfo height</td></tr>
           <tr><td class="label">"Immature coinbase" error</td><td class="value">Coinbase outputs require 1000 confirmations (~7 days) before spending</td></tr>
-          <tr><td class="label">Out of memory (miner)</td><td class="value">ConvergenceX requires 4GB RAM per thread; reduce --threads</td></tr>
+          <tr><td class="label">Out of memory (miner)</td><td class="value">ConvergenceX requires 8GB RAM per thread (4GB dataset + 4GB scratchpad); reduce --threads</td></tr>
         </table>
       </div>
     </div>
