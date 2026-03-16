@@ -11,11 +11,11 @@
 - verify_cx_proof V2: 11-phase verification pipeline, ~0.2ms (vs ~1ms in V1)
 
 ### New Genesis Block (Transcript V2)
-- block_id: `a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164`
-- commit: `0006fea7dc5625b5718851be426516dcb8c97d96041d7d7ffba5dd2165aa544e`
-- segments_root: `6614cbf6c64d03e15a0369e5217f0fb8c68c855a8a3d0efa378e5f88da29b0d5`
-- checkpoints_root: `3fdb1f5e336b540602e81aa6d16e0888c947b7676cd125efa33c2b3ec448d7cc`
-- nonce: 3288, stability_metric: 83
+- block_id: `fec8b671fe84391f3eb2ce0afb4cda11c5626755969fb49d34b8e3be27b236df`
+- commit: `0004477dd4f37e52734aaa975027a811433c2014d27a91afd4f56cc114666af1`
+- segments_root: `0e79f58aa065bd51d323aefe37793461a3a0495006221fedf5a2688ca5f6148f`
+- checkpoints_root: `621da01a2e4860970779c9c67a5627ef4520cdbca916c20394b2791d2e31db4a`
+- nonce: 9906, stability_metric: 82
 - timestamp: 1773597600, bitsQ: 765730 (unchanged)
 
 ---
@@ -23,7 +23,7 @@
 ## v1.0.0 — June 16, 2026 (Public Launch)
 
 ### Genesis
-- Mainnet genesis block: `a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164`
+- Mainnet genesis block: `fec8b671fe84391f3eb2ce0afb4cda11c5626755969fb49d34b8e3be27b236df`
 - Genesis timestamp: 2026-03-15 18:00:00 UTC
 - Initial block reward: 7.85100863 SOST (785,100,863 stocks)
 - Coinbase split: 50% miner / 25% Gold Vault / 25% PoPC Pool

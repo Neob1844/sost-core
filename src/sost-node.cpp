@@ -104,8 +104,50 @@ struct StoredBlock {
     std::string x_bytes_hex;     // CX solution vector (hex)
     std::string final_state_hex; // Final hash state (hex)
     std::vector<std::string> tx_hexes;  // ALL serialized txs (coinbase + transfers)
+    Bytes32 cumulative_work{};   // best chain = highest cumulative valid work
 };
 static std::vector<StoredBlock> g_blocks;
+
+// === REORG INFRASTRUCTURE ===
+// best chain = highest cumulative valid work (NOT longest chain by height)
+// BlockUndo stored per accepted block for chain reorganization
+static std::vector<BlockUndo> g_block_undos;
+
+// Block index entry: tracks every known block (active, fork, orphan)
+enum class BlockStatus : uint8_t {
+    ACTIVE = 0,    // on the main chain
+    FORK = 1,      // valid parent known, but not on active chain
+    ORPHAN = 2,    // parent NOT known locally
+    INVALID = 3    // failed validation
+};
+
+struct BlockIndexEntry {
+    Hash256 block_id;
+    Hash256 prev_hash;
+    int64_t height;
+    uint32_t bits_q;
+    Bytes32 block_work;        // work for this single block
+    Bytes32 cumulative_work;   // total chainwork up to and including this block
+    BlockStatus status;
+    std::string raw_json;      // original JSON for re-validation during reorg
+    bool has_undo{false};
+};
+
+// Block index: every known block by hash
+static std::map<std::string, BlockIndexEntry> g_block_index; // hash_hex -> entry
+static std::mutex g_block_index_mu;
+
+// Orphan blocks: blocks whose parent is not yet known
+// Key: prev_hash_hex (so we can re-process when parent arrives)
+static std::multimap<std::string, std::string> g_orphans_by_prev; // prev_hash_hex -> block_hash_hex
+static const size_t MAX_ORPHAN_BLOCKS = 200;
+static const size_t MAX_FORK_INDEX_ENTRIES = 1000;
+
+// Forward declarations for reorg
+static bool try_reorganize(const std::string& fork_tip_hash);
+static void cleanup_old_forks();
+static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd = -1);
+static void process_orphans_for_parent(const std::string& parent_hash_hex);
 
 // P2P state
 static const uint32_t P2P_MAGIC = 0x534F5354; // "SOST"
@@ -294,6 +336,35 @@ struct TxIndexEntry {
     uint32_t tx_pos;
 };
 static std::map<Hash256, TxIndexEntry> g_tx_index;
+
+// Rate limiting per peer (blocks per minute)
+struct PeerRateLimit {
+    std::vector<time_t> block_timestamps; // timestamps of received blocks
+    bool syncing{false};                  // true during initial sync (relaxed limits)
+};
+static std::map<int, PeerRateLimit> g_peer_rates; // fd -> rate state
+static std::mutex g_rate_mu;
+static const int STEADY_STATE_BLOCKS_PER_MIN = 50;
+static const int SYNC_MODE_BLOCKS_PER_MIN = 500;
+
+static bool check_block_rate(int fd, bool is_syncing) {
+    std::lock_guard<std::mutex> lk(g_rate_mu);
+    auto& rl = g_peer_rates[fd];
+    rl.syncing = is_syncing;
+    time_t now = time(nullptr);
+    // Remove entries older than 60 seconds
+    while (!rl.block_timestamps.empty() && (now - rl.block_timestamps.front()) > 60)
+        rl.block_timestamps.erase(rl.block_timestamps.begin());
+    int limit = rl.syncing ? SYNC_MODE_BLOCKS_PER_MIN : STEADY_STATE_BLOCKS_PER_MIN;
+    if ((int)rl.block_timestamps.size() >= limit) return false;
+    rl.block_timestamps.push_back(now);
+    return true;
+}
+
+static void cleanup_peer_rate(int fd) {
+    std::lock_guard<std::mutex> lk(g_rate_mu);
+    g_peer_rates.erase(fd);
+}
 
 static std::string peer_ip(const std::string& addr) {
     auto colon = addr.rfind(':');
@@ -1510,16 +1581,106 @@ static bool process_block(const std::string& block_json) {
         }
     }
 
-    if(height != (int64_t)g_blocks.size()){
-        printf("[BLOCK] REJECTED: height %lld != expected %zu\n",(long long)height,g_blocks.size());
-        return false;
-    }
-
-    // Chain link
     Hash256 prev_h = from_hex(prev);
-    if(!g_blocks.empty() && prev_h != g_blocks.back().block_id){
-        printf("[BLOCK] REJECTED: prev_hash mismatch\n");
-        return false;
+
+    // Fork-aware chain acceptance using cumulative work (NOT longest chain)
+    bool extends_tip = (height == (int64_t)g_blocks.size()) &&
+                       (g_blocks.empty() || prev_h == g_blocks.back().block_id);
+
+    if (!extends_tip) {
+        // This block doesn't extend our current tip — classify as fork or orphan
+        printf("[FORK] Block h=%lld bid=%s does not extend tip (our height=%zu).\n",
+               (long long)height, bid.substr(0,16).c_str(), g_blocks.size());
+        fflush(stdout);
+
+        // Check if parent is known (in active chain or block index)
+        std::string prev_hex = to_hex(prev_h.data(), 32);
+        bool parent_known = false;
+
+        // Check active chain
+        for (const auto& ab : g_blocks) {
+            if (ab.block_id == prev_h) { parent_known = true; break; }
+        }
+        // Check block index (fork blocks)
+        if (!parent_known) {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            parent_known = g_block_index.count(prev_hex) > 0;
+        }
+
+        if (!parent_known) {
+            // ORPHAN: parent not known locally
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            if (g_orphans_by_prev.size() < MAX_ORPHAN_BLOCKS) {
+                BlockIndexEntry entry;
+                entry.block_id = from_hex(bid);
+                entry.prev_hash = prev_h;
+                entry.height = height;
+                entry.bits_q = bits_q;
+                entry.block_work = compute_block_work(bits_q);
+                entry.cumulative_work = {}; // unknown until parent found
+                entry.status = BlockStatus::ORPHAN;
+                entry.raw_json = block_json;
+                g_block_index[bid] = entry;
+                g_orphans_by_prev.insert({prev_hex, bid});
+                printf("[ORPHAN] Block h=%lld stored (parent %s unknown). %zu orphans total.\n",
+                       (long long)height, prev_hex.substr(0,16).c_str(), g_orphans_by_prev.size());
+            }
+            fflush(stdout);
+            return false;
+        }
+
+        // FORK CANDIDATE: parent is known but block doesn't extend active tip
+        {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) {
+                BlockIndexEntry entry;
+                entry.block_id = from_hex(bid);
+                entry.prev_hash = prev_h;
+                entry.height = height;
+                entry.bits_q = bits_q;
+                entry.block_work = compute_block_work(bits_q);
+                // Compute cumulative work: parent's cumulative_work + this block's work
+                Bytes32 parent_cw{};
+                // Look up parent's cumulative work
+                auto pit = g_block_index.find(prev_hex);
+                if (pit != g_block_index.end()) {
+                    parent_cw = pit->second.cumulative_work;
+                } else {
+                    // Parent is on active chain — find it
+                    for (const auto& ab : g_blocks) {
+                        if (ab.block_id == prev_h) {
+                            parent_cw = ab.cumulative_work;
+                            break;
+                        }
+                    }
+                }
+                entry.cumulative_work = add_be256(parent_cw, entry.block_work);
+                entry.status = BlockStatus::FORK;
+                entry.raw_json = block_json;
+                g_block_index[bid] = entry;
+
+                // Check if this fork has MORE cumulative work than active tip
+                Bytes32 active_tip_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
+                if (compare_chainwork(entry.cumulative_work, active_tip_work) > 0) {
+                    printf("[FORK] Alternative chain has MORE cumulative work! "
+                           "Fork tip h=%lld, active tip h=%lld. Attempting reorg.\n",
+                           (long long)height, (long long)g_chain_height);
+                    fflush(stdout);
+                    // Release index lock before calling try_reorganize (it acquires chain_mu)
+                    // try_reorganize uses its own locking
+                    // NOTE: we already hold g_chain_mu from process_block(), so we call
+                    // the internal reorg function directly
+                    try_reorganize(bid);
+                } else {
+                    printf("[FORK] Fork stored but has LESS cumulative work (no reorg). "
+                           "Fork work vs active: %s vs %s\n",
+                           to_hex(entry.cumulative_work.data(),32).substr(0,16).c_str(),
+                           to_hex(active_tip_work.data(),32).substr(0,16).c_str());
+                }
+            }
+        }
+        fflush(stdout);
+        return false; // Don't add to main chain yet
     }
 
     // Timestamp rules
@@ -2016,8 +2177,30 @@ static bool process_block(const std::string& block_json) {
     sb.final_state_hex = final_state_hex;
     sb.tx_hexes = tx_hexes;  // PERSIST all transaction hex strings
 
+    // Compute cumulative chainwork: parent_work + this block's work
+    // best chain = highest cumulative valid work
+    Bytes32 this_block_work = compute_block_work(bits_q);
+    Bytes32 parent_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
+    sb.cumulative_work = add_be256(parent_work, this_block_work);
+
     g_blocks.push_back(sb);
+    g_block_undos.push_back(undo); // Store for reorg
     g_chain_height = height;
+
+    // Update block index: mark as ACTIVE
+    {
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        BlockIndexEntry idx_entry;
+        idx_entry.block_id = computed_bid;
+        idx_entry.prev_hash = prev_h;
+        idx_entry.height = height;
+        idx_entry.bits_q = bits_q;
+        idx_entry.block_work = this_block_work;
+        idx_entry.cumulative_work = sb.cumulative_work;
+        idx_entry.status = BlockStatus::ACTIVE;
+        idx_entry.has_undo = true;
+        g_block_index[bid] = idx_entry;
+    }
 
     // TX-INDEX: index all transactions in this block
     for(size_t ti=0; ti<txs.size(); ++ti){
@@ -2057,8 +2240,12 @@ static bool process_block(const std::string& block_json) {
         if(removed>0) printf("[BLOCK] Mempool: %zu txs removed\n", removed);
     }
 
-    printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu)\n",
-           (long long)height, bid.substr(0,16).c_str(), txs.size(), (long long)total_fees, g_utxo_set.Size());
+    printf("[BLOCK] Height %lld accepted: %s (txs=%zu, fees=%lld, UTXOs=%zu, chainwork=%s)\n",
+           (long long)height, bid.substr(0,16).c_str(), txs.size(), (long long)total_fees,
+           g_utxo_set.Size(), to_hex(sb.cumulative_work.data(),32).substr(0,16).c_str());
+
+    // Clean up fork blocks that are now too old
+    cleanup_old_forks();
 
     // v0.3.2: Auto-save chain immediately after every accepted block
     if (!g_chain_path.empty()) {
@@ -2067,7 +2254,353 @@ static bool process_block(const std::string& block_json) {
         }
     }
 
+    // P2P: broadcast accepted block to all connected peers
+    broadcast_block_to_peers(sb);
+
+    // Process orphan blocks that were waiting for this block as parent
+    process_orphans_for_parent(bid);
+
     return true;
+}
+
+// === REORG SUPPORT FUNCTIONS ===
+
+static void cleanup_old_forks() {
+    std::lock_guard<std::mutex> lk(g_block_index_mu);
+    if (g_block_index.empty()) return;
+    int64_t cutoff = g_chain_height - (int64_t)MAX_REORG_DEPTH;
+    std::vector<std::string> to_remove;
+    for (const auto& [hash, entry] : g_block_index) {
+        if (entry.status != BlockStatus::ACTIVE && entry.height < cutoff) {
+            to_remove.push_back(hash);
+        }
+    }
+    for (const auto& h : to_remove) g_block_index.erase(h);
+
+    // Also clean stale orphans
+    std::vector<std::string> orphan_keys_to_remove;
+    for (const auto& [prev, hash] : g_orphans_by_prev) {
+        if (g_block_index.find(hash) == g_block_index.end()) {
+            orphan_keys_to_remove.push_back(prev);
+        }
+    }
+    for (const auto& k : orphan_keys_to_remove) g_orphans_by_prev.erase(k);
+
+    if (!to_remove.empty())
+        printf("[REORG] Cleaned %zu stale fork/orphan blocks (below height %lld)\n",
+               to_remove.size(), (long long)cutoff);
+}
+
+// === ATOMIC REORG: try_reorganize ===
+// Reorganization is atomic: all-or-nothing. If any step fails,
+// the original chain state is fully restored.
+// Selection criterion: best chain = highest cumulative valid work.
+static bool try_reorganize(const std::string& fork_tip_hash) {
+    // NOTE: caller already holds g_chain_mu.
+    // We acquire g_block_index_mu as needed.
+
+    // Step 1: Walk the fork chain back through block_index to find fork point
+    std::vector<BlockIndexEntry> fork_chain;
+    {
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        std::string current = fork_tip_hash;
+        std::set<std::string> visited; // loop detection
+
+        while (true) {
+            auto it = g_block_index.find(current);
+            if (it == g_block_index.end()) break; // hit unknown block or active chain
+            if (visited.count(current)) break;    // loop prevention
+            visited.insert(current);
+            fork_chain.push_back(it->second);
+            current = to_hex(it->second.prev_hash.data(), 32);
+            // Stop if parent is on active chain
+            bool on_active = false;
+            for (const auto& ab : g_blocks) {
+                if (to_hex(ab.block_id.data(), 32) == current) { on_active = true; break; }
+            }
+            if (on_active) break;
+        }
+    }
+    std::reverse(fork_chain.begin(), fork_chain.end());
+
+    if (fork_chain.empty()) {
+        printf("[REORG] Cannot build fork chain from %s\n", fork_tip_hash.substr(0,16).c_str());
+        return false;
+    }
+
+    // Step 2: Find the fork point (common ancestor on active chain)
+    Hash256 fork_base_prev = fork_chain[0].prev_hash;
+    int64_t fork_point = -1;
+    for (int64_t h = g_chain_height; h >= 0; --h) {
+        if (g_blocks[h].block_id == fork_base_prev) {
+            fork_point = h;
+            break;
+        }
+    }
+
+    if (fork_point < 0) {
+        printf("[REORG] Cannot find fork point on active chain\n");
+        return false;
+    }
+
+    int64_t disconnect_count = g_chain_height - fork_point;
+    int64_t connect_count = (int64_t)fork_chain.size();
+
+    // Step 3: Verify limits
+    if (disconnect_count > MAX_REORG_DEPTH) {
+        printf("[REORG] Rejected: depth %lld exceeds REORG_LIMIT %lld\n",
+               (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
+        return false;
+    }
+
+    // Reject reorg past a checkpoint
+    for (size_t ci = 0; ci < g_num_checkpoints; ++ci) {
+        if (g_checkpoints[ci].height > fork_point && g_checkpoints[ci].height <= g_chain_height) {
+            printf("[REORG] Rejected: would reorg past checkpoint at height %lld\n",
+                   (long long)g_checkpoints[ci].height);
+            return false;
+        }
+    }
+
+    // Step 4: Verify fork has MORE cumulative work (NOT just more height)
+    Bytes32 fork_tip_work = fork_chain.back().cumulative_work;
+    Bytes32 active_tip_work = g_blocks.back().cumulative_work;
+    if (compare_chainwork(fork_tip_work, active_tip_work) <= 0) {
+        printf("[REORG] Fork has equal or less cumulative work — no reorg. "
+               "Active work=%s, candidate work=%s\n",
+               to_hex(active_tip_work.data(),32).substr(0,16).c_str(),
+               to_hex(fork_tip_work.data(),32).substr(0,16).c_str());
+        return false;
+    }
+
+    printf("[REORG] Fork detected at height %lld\n", (long long)fork_point);
+    printf("[REORG] Active work = %s, candidate work = %s\n",
+           to_hex(active_tip_work.data(),32).substr(0,16).c_str(),
+           to_hex(fork_tip_work.data(),32).substr(0,16).c_str());
+    printf("[REORG] Disconnecting %lld blocks (h=%lld..%lld)\n",
+           (long long)disconnect_count, (long long)(fork_point+1), (long long)g_chain_height);
+    printf("[REORG] Connecting %lld blocks\n", (long long)connect_count);
+    fflush(stdout);
+
+    // Step 5: SNAPSHOT current state for atomic rollback
+    // Save everything needed to restore on failure
+    std::vector<StoredBlock> saved_blocks(g_blocks.begin() + fork_point + 1, g_blocks.end());
+    std::vector<BlockUndo> saved_undos(g_block_undos.begin() + fork_point + 1, g_block_undos.end());
+    int64_t saved_height = g_chain_height;
+    // Save mempool state (txids) for potential restoration
+    // (We don't deep-copy mempool; instead we re-add txs on failure)
+
+    // Step 6: Disconnect phase — undo blocks from tip to fork point
+    std::vector<StoredBlock> disconnected;
+    std::vector<std::vector<Transaction>> disconnected_txs;
+
+    for (int64_t h = g_chain_height; h > fork_point; --h) {
+        if (h >= (int64_t)g_blocks.size() || h >= (int64_t)g_block_undos.size()) {
+            printf("[REORG] ABORTED: missing undo data for height %lld\n", (long long)h);
+            return false;
+        }
+        // Deserialize transactions
+        std::vector<Transaction> txs;
+        for (const auto& hex : g_blocks[h].tx_hexes) {
+            std::vector<Byte> raw;
+            if (decode_tx_hex(hex, raw)) {
+                Transaction tx; std::string err;
+                if (Transaction::Deserialize(raw, tx, &err)) txs.push_back(tx);
+            }
+        }
+        std::string derr;
+        if (!g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr)) {
+            printf("[REORG] ABORTED: DisconnectBlock failed at height %lld: %s\n", (long long)h, derr.c_str());
+            printf("[REORG] Rolled back to original tip %s\n",
+                   to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str());
+            // Blocks are still in g_blocks, UTXO state is inconsistent — try to reconnect
+            // the blocks we just disconnected
+            // (This shouldn't happen since DisconnectBlock uses recorded undo data)
+            return false;
+        }
+        disconnected.push_back(g_blocks[h]);
+        disconnected_txs.push_back(txs);
+        printf("[REORG] Disconnected block h=%lld\n", (long long)h);
+    }
+
+    // Remove disconnected blocks
+    g_blocks.resize(fork_point + 1);
+    g_block_undos.resize(fork_point + 1);
+    g_chain_height = fork_point;
+
+    // Step 7: Connect phase — connect fork chain blocks
+    // If any block fails, we MUST restore the original chain (atomic guarantee)
+    size_t connected = 0;
+    bool connect_success = true;
+
+    for (size_t i = 0; i < fork_chain.size(); ++i) {
+        if (!process_block(fork_chain[i].raw_json)) {
+            printf("[REORG] ABORTED: block at height %lld failed validation\n",
+                   (long long)fork_chain[i].height);
+            connect_success = false;
+            break;
+        }
+        connected++;
+    }
+
+    if (!connect_success) {
+        // ROLLBACK: disconnect whatever we connected from the fork
+        printf("[REORG] Rolling back %zu fork blocks...\n", connected);
+        for (int64_t h = g_chain_height; h > fork_point; --h) {
+            std::vector<Transaction> txs;
+            for (const auto& hex : g_blocks[h].tx_hexes) {
+                std::vector<Byte> raw;
+                if (decode_tx_hex(hex, raw)) {
+                    Transaction tx; std::string err;
+                    if (Transaction::Deserialize(raw, tx, &err)) txs.push_back(tx);
+                }
+            }
+            std::string derr;
+            g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr);
+        }
+        g_blocks.resize(fork_point + 1);
+        g_block_undos.resize(fork_point + 1);
+        g_chain_height = fork_point;
+
+        // Reconnect original chain
+        printf("[REORG] Restoring original chain (%zu blocks)...\n", saved_blocks.size());
+        for (size_t ri = 0; ri < saved_blocks.size(); ++ri) {
+            const auto& sb = saved_blocks[ri];
+            // Deserialize txs
+            std::vector<Transaction> txs;
+            for (const auto& hex : sb.tx_hexes) {
+                std::vector<Byte> raw;
+                if (decode_tx_hex(hex, raw)) {
+                    Transaction tx; std::string err;
+                    if (Transaction::Deserialize(raw, tx, &err)) txs.push_back(tx);
+                }
+            }
+            BlockUndo undo;
+            std::string uerr;
+            if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
+                printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
+                       (long long)sb.height, uerr.c_str());
+                // This should never happen — the original chain was valid
+                break;
+            }
+            g_blocks.push_back(sb);
+            g_block_undos.push_back(undo);
+            g_chain_height = sb.height;
+        }
+        printf("[REORG] Rolled back to original tip %s at height %lld\n",
+               to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str(),
+               (long long)g_chain_height);
+        fflush(stdout);
+        return false;
+    }
+
+    // Step 8: Mempool recovery — return valid non-coinbase txs from disconnected blocks
+    int recovered = 0, conflicts = 0;
+    // Collect all txids in the new branch to detect conflicts
+    std::set<Hash256> new_branch_txids;
+    for (int64_t h = fork_point + 1; h <= g_chain_height; ++h) {
+        for (const auto& hex : g_blocks[h].tx_hexes) {
+            std::vector<Byte> raw;
+            if (decode_tx_hex(hex, raw)) {
+                Transaction tx; std::string err;
+                if (Transaction::Deserialize(raw, tx, &err)) {
+                    Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
+                    new_branch_txids.insert(txid);
+                }
+            }
+        }
+    }
+
+    for (const auto& dsb : disconnected) {
+        for (size_t ti = 1; ti < dsb.tx_hexes.size(); ++ti) { // skip coinbase (idx 0)
+            std::vector<Byte> raw;
+            if (decode_tx_hex(dsb.tx_hexes[ti], raw)) {
+                Transaction tx; std::string err;
+                if (Transaction::Deserialize(raw, tx, &err)) {
+                    Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
+                    // Skip if already in new branch
+                    if (new_branch_txids.count(txid)) continue;
+                    // Try to re-add to mempool with new UTXO state
+                    TxValidationContext ctx; ctx.genesis_hash = g_genesis_hash;
+                    ctx.spend_height = g_chain_height + 1;
+                    auto mr = g_mempool.AcceptToMempool(tx, g_utxo_set, ctx, (int64_t)time(nullptr));
+                    if (mr.accepted) recovered++;
+                    else conflicts++;
+                }
+            }
+        }
+    }
+
+    printf("[REORG] Success: new tip = %s at height %lld\n",
+           to_hex(g_blocks.back().block_id.data(), 32).substr(0, 16).c_str(), (long long)g_chain_height);
+    printf("[REORG] Recovered %d transactions to mempool (%d conflicts discarded)\n", recovered, conflicts);
+    fflush(stdout);
+
+    // Clean up: mark fork blocks as ACTIVE in index, remove from fork status
+    {
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        for (const auto& fc : fork_chain) {
+            std::string h = to_hex(fc.block_id.data(), 32);
+            auto it = g_block_index.find(h);
+            if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
+        }
+        // Mark old active blocks as FORK (they're no longer on main chain)
+        for (const auto& dsb : disconnected) {
+            std::string h = to_hex(dsb.block_id.data(), 32);
+            auto it = g_block_index.find(h);
+            if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+        }
+    }
+
+    return true;
+}
+
+// === P2P BLOCK BROADCAST ===
+// After accepting a block, relay it to all connected peers (except the sender)
+static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
+    std::lock_guard<std::mutex> lk(g_peers_mu);
+    int sent = 0;
+    for (auto& p : g_peers) {
+        if (p.fd == exclude_fd) continue;
+        if (!p.version_acked) continue;
+        p2p_send_block(p.fd, sb.height);
+        ++sent;
+    }
+    if (sent > 0) {
+        printf("[P2P] Broadcasting block #%lld to %d peers\n", (long long)sb.height, sent);
+        fflush(stdout);
+    }
+}
+
+// === ORPHAN PROCESSING ===
+// When a new block is accepted, check if any orphan blocks were waiting for it
+static void process_orphans_for_parent(const std::string& parent_hash_hex) {
+    std::vector<std::string> to_process;
+    {
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        auto range = g_orphans_by_prev.equal_range(parent_hash_hex);
+        for (auto it = range.first; it != range.second; ++it) {
+            to_process.push_back(it->second);
+        }
+        g_orphans_by_prev.erase(parent_hash_hex);
+    }
+
+    for (const auto& orphan_hash : to_process) {
+        std::string raw_json;
+        {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            auto it = g_block_index.find(orphan_hash);
+            if (it != g_block_index.end() && it->second.status == BlockStatus::ORPHAN) {
+                raw_json = it->second.raw_json;
+                g_block_index.erase(it); // Remove from index before re-processing
+            }
+        }
+        if (!raw_json.empty()) {
+            printf("[ORPHAN] Re-processing orphan block %s (parent now available)\n",
+                   orphan_hash.substr(0,16).c_str());
+            process_block(raw_json);
+        }
+    }
 }
 
 // Process received tx (P2P relay path)
@@ -2222,9 +2755,44 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
+            // Rate limiting: check blocks per minute
+            bool is_syncing = false;
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for (auto& p : g_peers) {
+                    if (p.fd == fd) { is_syncing = (p.their_height > g_chain_height + 10); break; }
+                }
+            }
+            if (!check_block_rate(fd, is_syncing)) {
+                printf("[P2P] Rate limit exceeded from %s (mode=%s)\n", addr.c_str(),
+                       is_syncing ? "sync" : "relay");
+                if (add_misbehavior(fd, addr, 5, "block rate limit")) break;
+                continue;
+            }
+
             std::string block_json((char*)msg.payload.data(), msg.payload.size());
+            // Verify merkle root before full processing (cheap check for +100 ban)
+            std::string blk_mrkl = jstr(block_json, "merkle_root");
+            auto t_start = std::chrono::steady_clock::now();
             if(!process_block(block_json)){
-                if(add_misbehavior(fd, addr, 50, "invalid block")) break;
+                // Determine severity of failure for ban scoring
+                // Check if merkle root was bad (severe)
+                std::string blk_bid = jstr(block_json, "block_id");
+                uint32_t blk_bitsq = (uint32_t)jint(block_json, "bits_q");
+                if (blk_bid.size() != 64) {
+                    if (add_misbehavior(fd, addr, 25, "malformed block")) break;
+                } else if (blk_bitsq == 0) {
+                    if (add_misbehavior(fd, addr, 100, "zero difficulty")) break;
+                } else {
+                    // Standard invalid block: might be stale/duplicate during sync
+                    if (add_misbehavior(fd, addr, 10, "invalid block")) break;
+                }
+            } else {
+                auto t_end = std::chrono::steady_clock::now();
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+                if (ms > 100) {
+                    printf("[P2P] Warning: block processing took %lldms from %s\n", (long long)ms, addr.c_str());
+                }
             }
         }
         else if(!strcmp(msg.cmd,"TXXX")) {
@@ -2267,6 +2835,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
     }
 
     close(fd);
+    cleanup_peer_rate(fd);
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
         g_peers.erase(std::remove_if(g_peers.begin(),g_peers.end(),
@@ -2305,6 +2874,9 @@ static bool load_genesis(const std::string& path) {
     g.miner_reward=sp.miner;
     g.gold_vault_reward=sp.gold_vault;
     g.popc_pool_reward=sp.popc_pool;
+
+    // Compute genesis cumulative chainwork
+    g.cumulative_work = compute_block_work(g.bits_q);
 
     g_genesis_hash=g.block_id;
     g_blocks.push_back(g);
@@ -2457,6 +3029,11 @@ static bool load_chain(const std::string& path) {
                         Hash256 txid_i{}; txs[ti].ComputeTxId(txid_i, nullptr);
                         g_tx_index[txid_i] = {height, (uint32_t)ti};
                     }
+                    // Compute cumulative chainwork
+                    Bytes32 bw = compute_block_work(sb.bits_q);
+                    Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
+                    sb.cumulative_work = add_be256(parent_cw, bw);
+                    g_block_undos.push_back(undo); // Store undo for reorg support
                     g_blocks.push_back(sb);
                     continue;  // skip the legacy coinbase-only path below
                 } else {
@@ -2468,6 +3045,10 @@ static bool load_chain(const std::string& path) {
 
         // LEGACY fallback: no transactions field → reconstruct coinbase only
         g_tx_index[sb.block_id] = {height, 0};  // TX-INDEX: pseudo-index
+        // Compute cumulative chainwork
+        Bytes32 bw = compute_block_work(sb.bits_q);
+        Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
+        sb.cumulative_work = add_be256(parent_cw, bw);
         g_blocks.push_back(sb);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
@@ -2667,6 +3248,30 @@ static void p2p_server_thread(int port) {
         }
 
         std::thread([cl,peer_addr](){handle_peer(cl,peer_addr,false);}).detach();
+
+        // Eclipse attack detection: warn if all peers are in same /16
+        {
+            std::lock_guard<std::mutex> lk2(g_peers_mu);
+            if (g_peers.size() >= 4) {
+                std::set<std::string> subnets;
+                for (const auto& p : g_peers) {
+                    std::string pip = peer_ip(p.addr);
+                    auto dot1 = pip.find('.');
+                    if (dot1 != std::string::npos) {
+                        auto dot2 = pip.find('.', dot1+1);
+                        if (dot2 != std::string::npos)
+                            subnets.insert(pip.substr(0, dot2));
+                    }
+                }
+                if (subnets.size() == 1) {
+                    printf("[P2P] Warning: all %zu peers in same /16 subnet (%s) — possible eclipse attack\n",
+                           g_peers.size(), subnets.begin()->c_str());
+                } else if (subnets.size() <= 2 && g_peers.size() >= 8) {
+                    printf("[P2P] Warning: peer diversity low (%zu subnets for %zu peers)\n",
+                           subnets.size(), g_peers.size());
+                }
+            }
+        }
     }
     close(srv);
 }

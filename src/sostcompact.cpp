@@ -113,4 +113,145 @@ double bitsQ_to_double(uint32_t bitsQ) {
     return (double)bitsQ / 65536.0;
 }
 
+// =========================================================================
+// Chainwork computation — best chain = highest cumulative valid work
+// =========================================================================
+
+// Add two 256-bit big-endian values: result = a + b
+Bytes32 add_be256(const Bytes32& a, const Bytes32& b) {
+    Bytes32 r{};
+    uint16_t carry = 0;
+    for (int i = 31; i >= 0; --i) {
+        uint16_t s = (uint16_t)a[i] + (uint16_t)b[i] + carry;
+        r[i] = (uint8_t)(s & 0xFF);
+        carry = s >> 8;
+    }
+    return r;
+}
+
+// Compute the work represented by a block at difficulty bitsQ.
+// work = floor(2^256 / (target + 1))
+// This is the standard approach: higher bitsQ → smaller target → more work.
+Bytes32 compute_block_work(uint32_t bitsQ) {
+    Bytes32 target = target_from_bitsQ(bitsQ);
+
+    // target + 1 (256-bit addition of 1)
+    Bytes32 target_plus_1 = target;
+    uint16_t carry = 1;
+    for (int i = 31; i >= 0 && carry; --i) {
+        uint16_t s = (uint16_t)target_plus_1[i] + carry;
+        target_plus_1[i] = (uint8_t)(s & 0xFF);
+        carry = s >> 8;
+    }
+
+    // If target_plus_1 is zero (overflow — means target was all 0xFF),
+    // work is 1 (minimum).
+    bool is_zero_tp1 = true;
+    for (int i = 0; i < 32; ++i) {
+        if (target_plus_1[i] != 0) { is_zero_tp1 = false; break; }
+    }
+    if (is_zero_tp1) {
+        Bytes32 one{}; one.fill(0); one[31] = 1;
+        return one;
+    }
+
+    // Compute floor(2^256 / (target + 1)) using long division.
+    // 2^256 = (2^256 - target_plus_1) / target_plus_1 + 1
+    // = (~target_plus_1 + 1) / target_plus_1 + 1
+    // This avoids needing 257-bit arithmetic.
+    //
+    // ~target (bitwise NOT of target_plus_1)
+    Bytes32 not_tp{};
+    for (int i = 0; i < 32; ++i) not_tp[i] = ~target_plus_1[i];
+    // ~target_plus_1 + 1 = 2^256 - target_plus_1 (two's complement)
+    Bytes32 twos_comp = not_tp;
+    carry = 1;
+    for (int i = 31; i >= 0 && carry; --i) {
+        uint16_t s = (uint16_t)twos_comp[i] + carry;
+        twos_comp[i] = (uint8_t)(s & 0xFF);
+        carry = s >> 8;
+    }
+
+    // Now divide twos_comp by target_plus_1 using shift-and-subtract.
+    // For efficiency, use a simpler approximation that is exact for
+    // our use case: we only need relative ordering, not exact value.
+    //
+    // Use 128-bit division of the leading bytes for a good approximation.
+    // Since we only compare chainwork values, monotonicity is sufficient.
+    //
+    // Actually, for correctness we need a proper 256-bit division.
+    // Use schoolbook division with 64-bit limbs.
+
+    // Convert to 4 x uint64_t (big-endian limbs)
+    auto to_u64 = [](const Bytes32& v, int limb) -> uint64_t {
+        uint64_t r = 0;
+        for (int i = 0; i < 8; ++i)
+            r = (r << 8) | v[limb * 8 + i];
+        return r;
+    };
+
+    // Find the leading non-zero byte of target_plus_1 to determine shift
+    int lead = 0;
+    while (lead < 32 && target_plus_1[lead] == 0) ++lead;
+
+    if (lead >= 31) {
+        // target_plus_1 fits in 1-2 bytes, so work is huge
+        // work = twos_comp / target_plus_1 + 1
+        // For very small targets, the work is astronomically large.
+        // Use 64-bit approximation: take high 8 bytes of twos_comp
+        // divided by target_plus_1 value, shifted appropriately.
+        uint64_t denom = 0;
+        for (int i = 0; i < 32; ++i) denom = (denom << 8) | target_plus_1[i];
+        if (denom == 0) denom = 1;
+        // Result is approximately 2^256 / denom
+        // Just return twos_comp directly (close enough for ordering)
+        Bytes32 one{}; one.fill(0); one[31] = 1;
+        return add_be256(twos_comp, one); // twos_comp / 1 + 1 ≈ twos_comp
+    }
+
+    // For general case: use the approximation work ≈ 2^(bitsQ_double)
+    // encoded as a 256-bit fixed-point value.
+    // Since bitsQ is Q16.16 representing log2(expected_hashes),
+    // and we only need relative ordering, we can compute:
+    // work = target_from_bitsQ(0) / target_from_bitsQ(bitsQ)
+    //      ≈ 2^bitsQ_double
+    // Encode as: work_bytes[byte] where integer part selects the byte position.
+    //
+    // Better approach: proper 256/256 division.
+    // Implement using recursive subtraction with shift.
+
+    // Schoolbook: find quotient of twos_comp / target_plus_1
+    // We implement a simplified version sufficient for 256-bit values.
+
+    // Use binary long division
+    Bytes32 quotient{}; quotient.fill(0);
+    Bytes32 remainder{}; remainder.fill(0);
+
+    for (int bit = 0; bit < 256; ++bit) {
+        // Left shift remainder by 1
+        uint8_t carry_bit = 0;
+        for (int i = 31; i >= 0; --i) {
+            uint8_t new_carry = (remainder[i] >> 7) & 1;
+            remainder[i] = (remainder[i] << 1) | carry_bit;
+            carry_bit = new_carry;
+        }
+        // Bring in next bit from dividend (twos_comp)
+        int byte_idx = bit / 8;
+        int bit_idx = 7 - (bit % 8);
+        remainder[31] |= (twos_comp[byte_idx] >> bit_idx) & 1;
+
+        // If remainder >= target_plus_1, subtract and set quotient bit
+        if (cmp_be(remainder, target_plus_1) >= 0) {
+            remainder = sub_be(remainder, target_plus_1);
+            int q_byte = bit / 8;
+            int q_bit = 7 - (bit % 8);
+            quotient[q_byte] |= (1 << q_bit);
+        }
+    }
+
+    // work = quotient + 1
+    Bytes32 one{}; one.fill(0); one[31] = 1;
+    return add_be256(quotient, one);
+}
+
 } // namespace sost
