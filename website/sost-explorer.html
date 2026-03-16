@@ -746,10 +746,12 @@ async function updateDashboard(info){
     card.style.animation='';valEl.className='dash-val';valEl.style.color='';
     var dist=Math.abs(avg-600);
     var inRange=(avg>=540&&avg<=660);
-    // Text color
-    if(inRange){valEl.classList.add('green');}
-    else if(avg<540){valEl.classList.add('yellow');}
-    else{valEl.classList.add('orange');}
+    // Text color based on proximity to 600s target
+    if(avg>=570&&avg<=630){valEl.style.color='#00ff88';}
+    else if(avg>=540&&avg<570){valEl.style.color='#ffdd00';}
+    else if(avg>630&&avg<=660){valEl.style.color='#ffdd00';}
+    else if(avg<540){valEl.style.color='#ff8800';}
+    else{valEl.style.color='#ff4444';}
     // Pulse: only inside 540-660 range, red, intensity proportional to proximity to 600s
     if(inRange){
       var ratio=Math.max(0,1-(dist/60));
