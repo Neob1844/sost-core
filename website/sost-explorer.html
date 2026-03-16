@@ -749,9 +749,9 @@ async function updateDashboard(info){
     // Pulse: only inside 540-660 range, red, intensity proportional to proximity to 600s
     if(inRange){
       var ratio=Math.max(0,1-(dist/60));
-      var pLo=0.03+ratio*0.07;
-      var pHi=0.12+ratio*0.28;
-      var pSpd=3-ratio*1.5;
+      var pLo=0.03+ratio*0.12;
+      var pHi=0.10+ratio*0.45;
+      var pSpd=3.5-ratio*2.3;
       card.style.setProperty('--ap-r',255);card.style.setProperty('--ap-g',0);card.style.setProperty('--ap-b',0);
       card.style.setProperty('--ap-lo',pLo.toFixed(2));card.style.setProperty('--ap-hi',pHi.toFixed(2));
       card.style.animation='avgPulse '+pSpd.toFixed(1)+'s ease-in-out infinite';
