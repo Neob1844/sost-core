@@ -485,13 +485,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span id="miningExpTime" style="color:var(--text);">—</span>
         <span id="miningOverdue" style="color:#fbbf24;display:none;margin-left:8px;">&#9888; block overdue — unlucky variance</span>
       </div>
-      <!-- Row 4: Nonce counter -->
+      <!-- Row 4: Nonce counter + progress bar -->
       <div style="margin-top:6px;font-size:10px;color:#c8c8c8;font-family:var(--code);">
         <span style="letter-spacing:1px;color:var(--text3);font-size:9px;">NONCE</span>
         <span id="miningNonce" style="margin-left:8px;color:#c8c8c8;">~0</span>
         <span id="miningNonceMax" style="color:var(--text3);">/ —</span>
-        <div style="height:3px;background:var(--bg);border-radius:2px;margin-top:4px;overflow:hidden;max-width:400px;">
-          <div id="miningNonceBar" style="height:100%;width:0%;background:var(--green);border-radius:2px;transition:width 1s linear,background .5s;"></div>
+        <div id="nonceBarWrap" style="position:relative;height:8px;background:#1a1a1a;border-radius:4px;margin-top:6px;overflow:visible;cursor:crosshair;">
+          <div id="miningNonceBar" style="height:100%;width:0%;border-radius:4px;transition:width 1s linear;background:linear-gradient(90deg,#00ff88 0%,#00ff88 35%,#ffdd00 50%,#ff8800 65%,#ff0033 100%);"></div>
+          <!-- probability marks rendered by JS -->
+          <div id="nonceMarks" style="position:absolute;top:0;left:0;right:0;height:100%;pointer-events:none;"></div>
+          <!-- tooltip -->
+          <div id="nonceTip" style="display:none;position:absolute;top:-38px;background:#111;border:1px solid #333;border-radius:4px;padding:4px 8px;font-size:9px;color:#e2e8f0;white-space:nowrap;pointer-events:none;font-family:var(--code);z-index:10;"></div>
         </div>
       </div>
       <!-- Row 5: Anti-stall -->
@@ -1283,9 +1287,52 @@ function updateMiningPanel(elapsed){
   if(mnMax)mnMax.textContent='/ '+fComma(Math.round(expectedNonce))+' expected';
   var mnBar=document.getElementById('miningNonceBar');
   if(mnBar){
-    var pct=Math.min(100,(estNonce/expectedNonce)*100);
+    // Scale: E[nonce] sits at 35% of bar. Total ref = E[nonce]/0.35
+    var barTotalRef=expectedNonce/0.35;
+    var pct=Math.min(100,(estNonce/barTotalRef)*100);
     mnBar.style.width=pct+'%';
-    mnBar.style.background=pct<50?'var(--green)':pct<80?'var(--cyan)':pct<95?'#fbbf24':'#fb923c';
+    // Gradient breakpoints match: 0%=green, 35%=green, 50%=yellow, 65%=orange, 100%=red
+    mnBar.style.background='linear-gradient(90deg,#00ff88 0%,#00ff88 '+(35/pct*100).toFixed(0)+'%,#ffdd00 '+(50/pct*100).toFixed(0)+'%,#ff8800 '+(65/pct*100).toFixed(0)+'%,#ff0033 100%)';
+    // Probability marks
+    var marks=document.getElementById('nonceMarks');
+    if(marks){
+      var mkHtml='';
+      // E[nonce] mark at 35%
+      mkHtml+='<div style="position:absolute;left:35%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
+      mkHtml+='<div style="position:absolute;left:35%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
+      // p50, p75, p90, p95 marks
+      var pMarks=[{n:p50,l:'50%'},{n:p75,l:'75%'},{n:p90,l:'90%'},{n:p95,l:'95%'}];
+      for(var mi=0;mi<pMarks.length;mi++){
+        var mPct=(pMarks[mi].n/barTotalRef)*100;
+        if(mPct>0&&mPct<=100){
+          mkHtml+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;top:0;width:1px;height:100%;border-left:1px dashed rgba(255,255,255,.2);"></div>';
+          mkHtml+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;bottom:-11px;font-size:7px;color:rgba(255,255,255,.25);transform:translateX(-50%);">'+pMarks[mi].l+'</div>';
+        }
+      }
+      marks.innerHTML=mkHtml;
+    }
+    // Tooltip on hover
+    var wrap=document.getElementById('nonceBarWrap');
+    var tip=document.getElementById('nonceTip');
+    if(wrap&&tip&&!wrap._tipBound){
+      wrap._tipBound=true;
+      wrap._barTotalRef=barTotalRef;wrap._estNonce=estNonce;wrap._probPerAttempt=probPerAttempt;wrap._elapsed=0;
+      wrap.addEventListener('mousemove',function(e){
+        var rect=wrap.getBoundingClientRect(),mx=e.clientX-rect.left,frac=mx/rect.width;
+        var hoverNonce=Math.round(frac*wrap._barTotalRef);
+        var cumP=1-Math.pow(1-wrap._probPerAttempt,hoverNonce);
+        var t='Nonce: ~'+fComma(hoverNonce)+' \u00B7 P(solve): '+(cumP*100).toFixed(1)+'%';
+        if(hoverNonce<=wrap._estNonce){
+          t+='\nCurrent: ~'+fComma(wrap._estNonce)+' tried';
+          if(wrap._elapsed>0){var em=Math.floor(wrap._elapsed/60),es=Math.floor(wrap._elapsed%60);t+=' \u00B7 '+em+'m '+('0'+es).slice(-2)+'s';}
+        }
+        tip.textContent=t;tip.style.display='block';
+        var tx=mx-tip.offsetWidth/2;if(tx<0)tx=0;if(tx+tip.offsetWidth>rect.width)tx=rect.width-tip.offsetWidth;
+        tip.style.left=tx+'px';
+      });
+      wrap.addEventListener('mouseleave',function(){tip.style.display='none';});
+    }
+    if(wrap){wrap._barTotalRef=barTotalRef;wrap._estNonce=estNonce;wrap._probPerAttempt=probPerAttempt;wrap._elapsed=elapsed;}
   }
   var threshold=Math.max(7200,ahead*600);
   var asInd=document.getElementById('asIndicator');
