@@ -49,6 +49,8 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 
 Requirements: Linux x86_64, 8 GB RAM per mining instance (4 GB dataset + 4 GB scratchpad); 16 GB recommended. Node-only: ~500 MB, 4 GB VPS sufficient. CPU only (GPU provides no advantage).
 
+Chain selection: best chain by cumulative work (same as Bitcoin). Atomic fork resolution with full rollback. MAX_REORG_DEPTH = 500 blocks.
+
 [hr]
 
 [size=14pt][b]Links[/b][/size]

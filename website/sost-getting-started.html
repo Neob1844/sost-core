@@ -195,6 +195,21 @@
   </div>
 </section>
 
+<!-- SYSTEM REQUIREMENTS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PREREQUISITES</div>
+      <h2 class="section-title">System <span class="accent">Requirements</span></h2>
+    </div>
+    <div class="notice fade-in delay-1" style="border-left-color:var(--green-primary);">
+      <strong style="color:var(--green-primary);">Full Node</strong> (verify, send, receive): <strong>~500 MB RAM</strong>. Any modern CPU. Verifies blocks using Transcript V2 in ~0.2ms. No PoW computation needed. A 2 GB VPS is sufficient.<br><br>
+      <strong style="color:var(--red-primary);">Miner</strong> (find new blocks): <strong>8 GB RAM minimum</strong> (4 GB persistent dataset + 4 GB scratchpad). Modern multi-core CPU recommended. 16 GB total system RAM recommended for comfortable operation.<br><br>
+      <strong>Why the difference:</strong> The miner builds and holds the full 4 GB dataset + 4 GB scratchpad to solve the ConvergenceX puzzle. The node only verifies the compact Transcript V2 proof in each block &mdash; SHA256 hashes and merkle checks, no dataset required. Mining is memory-hard (ASIC resistant), but verification is lightweight (anyone can run a node).
+    </div>
+  </div>
+</section>
+
 <!-- STEP 1: BUILD -->
 <section class="section">
   <div class="container">

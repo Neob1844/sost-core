@@ -329,6 +329,10 @@
       RPC is proxied through nginx with rate limiting and CORS headers. Read-only methods are public; state-changing methods require authentication.
     </div>
 
+    <div class="notice fade-in delay-2" style="border-left-color:var(--green-primary);margin-top:16px;">
+      <strong style="color:var(--green-primary);">Node vs Miner resources:</strong> A full node needs only <strong>~500 MB RAM</strong> and any CPU &mdash; it verifies blocks via Transcript V2 in ~0.2ms with no dataset/scratchpad. A 2 GB VPS is sufficient. Mining requires <strong>8 GB RAM</strong> per thread (4 GB dataset + 4 GB scratchpad) and a modern multi-core CPU. Mining is memory-hard; verification is lightweight.
+    </div>
+
     <div class="spec-block fade-in delay-3">
       <div class="spec-header">
         <div class="spec-header-left">

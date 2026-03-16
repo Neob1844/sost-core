@@ -190,6 +190,14 @@ The miner connects to your node via RPC and submits solved blocks. Use [b]--bloc
 
 [hr]
 
+[size=14pt][b]Chain Selection & Fork Resolution[/b][/size]
+
+[b]Best chain by cumulative work[/b] (NOT longest chain). Each block contributes work = floor(2^256 / (target + 1)). The chain with the highest total accumulated work wins — same approach as Bitcoin. This prevents attacks using many easy blocks to outpace a shorter chain with more real work.
+
+[b]Atomic fork resolution:[/b] If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days).
+
+[hr]
+
 [size=14pt][b]Links[/b][/size]
 
 [list]

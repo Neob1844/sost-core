@@ -179,12 +179,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .casert-tbl .cn{color:var(--orange)}.casert-tbl .cg{color:var(--green)}
 .casert-pulse td{animation:casertPulse 1.5s ease-in-out infinite}
 @keyframes casertPulse{0%,100%{background:rgba(255,0,64,.05)}50%{background:rgba(255,0,64,.18)}}
-@keyframes pulseGreen{0%,100%{background:rgba(74,222,128,.04)}50%{background:rgba(74,222,128,.14)}}
-@keyframes pulseYellow{0%,100%{background:rgba(251,191,36,.04)}50%{background:rgba(251,191,36,.14)}}
-@keyframes pulseOrange{0%,100%{background:rgba(251,146,60,.04)}50%{background:rgba(251,146,60,.14)}}
-@keyframes pulseRed{0%,100%{background:rgba(255,50,50,.04)}50%{background:rgba(255,50,50,.14)}}
-@keyframes pulseBlue{0%,100%{background:rgba(56,189,248,.04)}50%{background:rgba(56,189,248,.14)}}
-@keyframes pulsePurple{0%,100%{background:rgba(168,85,247,.04)}50%{background:rgba(168,85,247,.14)}}
+@keyframes avgPulse{0%,100%{background:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-lo))}50%{background:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-hi))}}
 .lv-1{color:#4ade80;font-weight:600}.lv-2{color:#67e8f9;font-weight:600}
 .lv-3{color:#fbbf24;font-weight:600}.lv-4{color:#fb923c;font-weight:600}
 .lv-5{color:#fb010d;font-weight:600}.lv-6{color:#ff2040;font-weight:700}
@@ -741,16 +736,28 @@ async function updateDashboard(info){
   try{var times=[];var diffs=[];var AVG_WINDOW=72;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
     _diffHistory=diffs.reverse();drawSparkline();
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
-    document.getElementById('dAvgTimeSub').textContent='last '+(times.length-1)+' blocks'+(times.length>=AVG_WINDOW?' (~12h)':'');
-    // Pulse effect based on avg block time range
+    document.getElementById('dAvgTimeSub').textContent='last '+times.length+' blocks'+(times.length>=AVG_WINDOW?' (~12h)':'');
+    // Pulse effect — intensity proportional to proximity to 600s target
     var card=document.getElementById('avgTimeCard');var valEl=document.getElementById('dAvgTime');
     card.style.animation='';valEl.className='dash-val';valEl.style.color='';
-    if(avg>=540&&avg<=660){valEl.classList.add('green');card.style.animation='pulseGreen 2.5s ease-in-out infinite';}
-    else if(avg<180){valEl.classList.add('purple');card.style.animation='pulsePurple 2.5s ease-in-out infinite';}
-    else if(avg<360){valEl.classList.add('blue');card.style.animation='pulseBlue 2.5s ease-in-out infinite';}
-    else if(avg<540){valEl.classList.add('yellow');card.style.animation='pulseYellow 2.5s ease-in-out infinite';}
-    else if(avg>840){valEl.classList.add('red');card.style.animation='pulseRed 2.5s ease-in-out infinite';}
-    else{valEl.classList.add('orange');card.style.animation='pulseOrange 2.5s ease-in-out infinite';}
+    var dist=Math.abs(avg-600);
+    var inRange=(avg>=540&&avg<=660);
+    // Color + text class
+    var pr,pg,pb; // pulse RGB
+    if(inRange){valEl.classList.add('green');pr=74;pg=222;pb=128;}
+    else if(avg<180){valEl.classList.add('purple');pr=168;pg=85;pb=247;}
+    else if(avg<360){valEl.classList.add('blue');pr=56;pg=189;pb=248;}
+    else if(avg<540){valEl.classList.add('yellow');pr=251;pg=191;pb=36;}
+    else if(avg>840){valEl.classList.add('red');pr=255;pg=50;pb=50;}
+    else{valEl.classList.add('orange');pr=251;pg=146;pb=60;}
+    // Compute intensity: 1.0 = exactly 600s, 0.0 = edge of 540/660
+    var ratio=inRange?Math.max(0,1-(dist/60)):0;
+    var pLo=inRange?(0.03+ratio*0.07):0.03;
+    var pHi=inRange?(0.12+ratio*0.28):0.12;
+    var pSpd=inRange?(3-ratio*1.5):3.5;
+    card.style.setProperty('--ap-r',pr);card.style.setProperty('--ap-g',pg);card.style.setProperty('--ap-b',pb);
+    card.style.setProperty('--ap-lo',pLo.toFixed(2));card.style.setProperty('--ap-hi',pHi.toFixed(2));
+    card.style.animation='avgPulse '+pSpd.toFixed(1)+'s ease-in-out infinite';
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
     // Update cASERT equalizer from block data
@@ -1639,10 +1646,10 @@ function renderAddrCharts(utxos){
     matBar.innerHTML=
       (mature?'<div style="width:'+mPct+'%;background:var(--green);height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
       (almost?'<div style="width:'+aPct+'%;background:#fbbf24;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
-      (immature?'<div style="width:'+iPct+'%;background:#ffd700;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
+      (immature?'<div style="width:'+iPct+'%;background:#999;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
     matLeg.innerHTML='<span style="color:var(--green);">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
       (almost?'<span style="color:#fbbf24;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
-      (immature?'<span style="color:#ffd700;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
+      (immature?'<span style="color:#999;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
   }
 }
 

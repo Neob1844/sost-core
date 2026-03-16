@@ -160,7 +160,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Running a node requires only ~500 MB RAM. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -199,8 +199,8 @@
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>What are the system requirements for mining?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Minimum:</strong> 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad), modern CPU, Linux (Ubuntu 24.04 recommended). Build dependencies: <code>build-essential cmake libssl-dev libsecp256k1-dev</code>. Each thread runs an independent mining attempt, so 4 threads need ~32 GB RAM. Node-only requires ~4 GB (no dataset/scratchpad).</div></div>
+      <div class="faq-q"><h3>What are the system requirements?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Full Node</strong> (verify, send, receive): <strong>~500 MB RAM</strong>. Any modern CPU. Verifies blocks using Transcript V2 in ~0.2ms per block. A 2 GB VPS is sufficient. No PoW computation &mdash; only cryptographic verification of proofs.<br><br><strong>Miner</strong> (find new blocks): <strong>8 GB RAM minimum</strong> per thread (4 GB dataset + 4 GB scratchpad). Modern multi-core CPU recommended. 16 GB total system RAM recommended. Each thread runs an independent attempt, so 4 threads need ~32 GB RAM.<br><br><strong>Why the difference:</strong> The miner builds the full 4 GB dataset + 4 GB scratchpad to solve ConvergenceX. The node only verifies the compact Transcript V2 proof in each block &mdash; SHA256 hashes and merkle checks, no dataset needed. Mining is memory-hard (ASIC resistant), but verification is lightweight (anyone can run a node).<br><br>Build dependencies: <code>build-essential cmake libssl-dev libsecp256k1-dev</code></div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -211,6 +211,11 @@
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
       <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): adjusts the actual difficulty block by block based on chain speed, with a 12-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer tightens ConvergenceX stability requirements across profiles (E3&ndash;H5). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. If mining stalls for 2+ hours, a decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>How does SOST resolve forks?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work &mdash; the same approach used by Bitcoin.<br><br><strong>Fork resolution is atomic:</strong> if a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is fully restored. Maximum reorganization depth: 500 blocks (~3.5 days).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">

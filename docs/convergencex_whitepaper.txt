@@ -2948,6 +2948,30 @@ ADAPTIVE MODE (REMOVED — historical reference only):
 
 ---
 
+3.14 Chain Selection and Fork Resolution
+
+SOST uses best-chain-by-cumulative-work selection, not longest-chain.
+Each block contributes work = floor(2^256 / (target + 1)). The chain
+with the highest total accumulated work wins. This prevents attacks
+using many easy blocks to outpace a shorter chain with more real work.
+This is the same approach used by Bitcoin.
+
+Fork resolution is atomic: if a chain with more cumulative work is
+found, the node disconnects current blocks from the active tip back
+to the fork point, connects the new chain block by block with full
+validation (L1-L4 + ConvergenceX Transcript V2 verification), and
+recovers orphaned non-coinbase transactions to the mempool. If any
+block in the new chain fails validation, the entire reorganization
+is aborted and the original chain is fully restored.
+
+Orphan blocks (parent not yet known) are stored separately from fork
+candidates (parent known but not on active tip) and re-processed
+when their parent arrives via P2P sync.
+
+MAX_REORG_DEPTH = 500 blocks (~3.5 days). Combined with 1000-block
+coinbase maturity and ConvergenceX memory-hard requirements, this
+provides robust protection against deep reorganization attacks.
+
 SOST Protocol Whitepaper v4.0 — Normative Specification
 Last updated: March 2026
 Previous versions: v3.7 (deprecated)
