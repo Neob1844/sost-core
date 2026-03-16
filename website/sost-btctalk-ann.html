@@ -39,7 +39,19 @@
   body.light .disclaimer { color: #777; }
   body.light .theme-toggle { color: #555; border-color: #ccc; }
   body.light .theme-toggle:hover { color: #333; border-color: #999; }
-  .nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
 </style>
 </head>
 <body>
@@ -50,7 +62,7 @@
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
-      <a href="index.html">Home</a>
+            <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
@@ -78,6 +90,8 @@
     </div>
   </div>
 </nav>
+
+
 
 <div class="center">
   <img src="https://sostcore.com/sost-logo.png" alt="SOST Logo">
