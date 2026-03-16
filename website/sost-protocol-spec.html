@@ -169,7 +169,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.25&middot;r + 0.10&middot;lag + 0.05&middot;I + 0.30&middot;burst + 0.10&middot;V</code>. Maps to profile index H &isin; [-3, 5] (H6 disabled).</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-3, 5] (H6 disabled). Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
 
 <table>
 <tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
