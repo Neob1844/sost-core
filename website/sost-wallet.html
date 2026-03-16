@@ -251,13 +251,35 @@
   .modal h3 { font-family: var(--font-display); font-size: 18px; margin-bottom: 16px; }
 
   /* RESPONSIVE */
+  /* Wallet sidebar toggle (mobile) */
+  .wallet-hamburger { display: none; }
+  .sidebar-overlay { display: none; }
+
   @media (max-width: 768px) {
     .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
-    .sidebar { width: 60px; padding: 12px 0; }
-    .sidebar-section-title, .sidebar-btn span:not(.icon) { display: none; }
-    .sidebar-btn { justify-content: center; padding: 12px 0; }
-    .sidebar-btn .icon { margin: 0; }
-
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 240px; z-index: 200;
+      transform: translateX(-100%); transition: transform 0.3s ease;
+      background: var(--bg-panel); border-right: 1px solid var(--border-dim);
+      padding: 60px 0 20px; overflow-y: auto;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 199; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.open { display: block; }
+    .wallet-hamburger {
+      display: block; position: fixed; top: 105px; left: 10px; z-index: 150;
+      background: var(--bg-card); border: 1px solid var(--border-dim);
+      color: #999; font-size: 20px; padding: 6px 10px; cursor: pointer;
+      border-radius: 4px; line-height: 1; font-family: var(--font-mono);
+    }
+    .wallet-hamburger:hover { color: var(--text-primary); border-color: var(--border-med); }
+    .main-content { padding: 16px; width: 100%; }
+    .form-input { font-size: 16px; }
+    .btn { min-height: 44px; }
+  }
 </style>
 </head>
 <body>
@@ -464,8 +486,12 @@
 <!-- APP -->
 <div id="app" class="app-layout">
 
+  <!-- Mobile sidebar toggle -->
+  <button class="wallet-hamburger" id="walletSidebarToggle" onclick="toggleWalletSidebar()">&#9776;</button>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeWalletSidebar()"></div>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="walletSidebar">
     <div class="sidebar-section">
       <div class="sidebar-section-title">Wallet</div>
       <button class="sidebar-btn active" data-view="dashboard" onclick="showView('dashboard')">
@@ -824,12 +850,33 @@
 // SOST Web Wallet — Client-side, keys never leave the browser
 // ============================================================
 
-// --- Noble crypto imports ---
-import * as secp from 'https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/+esm';
-import { sha256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/sha256.js/+esm';
-import { ripemd160 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/ripemd160.js/+esm';
-import { pbkdf2 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/pbkdf2.js/+esm';
-import { hmac } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/hmac.js/+esm';
+// --- Noble crypto imports (with error handling) ---
+let secp, sha256, ripemd160, pbkdf2, hmac;
+try {
+  secp = await import('https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/+esm');
+  const hashes = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/+esm');
+  sha256 = hashes.sha256;
+  ripemd160 = hashes.ripemd160;
+  pbkdf2 = hashes.pbkdf2;
+  hmac = hashes.hmac;
+} catch (e) {
+  // Fallback: try individual imports
+  try {
+    secp = await import('https://esm.sh/@noble/secp256k1@2.1.0');
+    const sha256m = await import('https://esm.sh/@noble/hashes@1.4.0/sha256');
+    const ripemd160m = await import('https://esm.sh/@noble/hashes@1.4.0/ripemd160');
+    const pbkdf2m = await import('https://esm.sh/@noble/hashes@1.4.0/pbkdf2');
+    const hmacm = await import('https://esm.sh/@noble/hashes@1.4.0/hmac');
+    sha256 = sha256m.sha256;
+    ripemd160 = ripemd160m.ripemd160;
+    pbkdf2 = pbkdf2m.pbkdf2;
+    hmac = hmacm.hmac;
+  } catch (e2) {
+    console.error('WALLET: Failed to load crypto libraries:', e2);
+    document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fb010d;color:#fff;padding:12px;text-align:center;z-index:9999;font-family:monospace;">Wallet Error: Could not load crypto libraries. Check your internet connection and try again.</div>';
+  }
+}
+console.log('WALLET: Crypto loaded OK', !!secp, !!sha256);
 
 // --- Constants ---
 const SOST_PREFIX = 'sost1';
@@ -1334,6 +1381,7 @@ window.showView = function(name) {
   }
   if (name === 'totp') updateTotpView();
 
+  closeWalletSidebar(); // auto-close on mobile
   resetLockTimer();
 };
 
@@ -1795,6 +1843,36 @@ async function init() {
   checkNodeStatus();
   setInterval(checkNodeStatus, 30000);
 
+<script>
+// === WALLET SIDEBAR TOGGLE (mobile) ===
+function toggleWalletSidebar() {
+  var sb = document.getElementById('walletSidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  if (sb && ov) { sb.classList.toggle('open'); ov.classList.toggle('open'); }
+}
+function closeWalletSidebar() {
+  var sb = document.getElementById('walletSidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('open');
+}
+
+// === WALLET NAVIGATION (non-module, loads immediately) ===
+if (!window.showView) {
+  window.showView = function(name) {
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.add('hidden'); });
+    var view = document.getElementById('view-' + name);
+    if (view) view.classList.remove('hidden');
+    document.querySelectorAll('.sidebar-btn').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.querySelector('.sidebar-btn[data-view="' + name + '"]');
+    if (btn) btn.classList.add('active');
+    closeWalletSidebar(); // auto-close on mobile after selecting
+  };
+}
+if (!window.unlockWallet) {
+  window.unlockWallet = function() { alert('Wallet is still loading crypto libraries. Please wait a moment and try again.'); };
+}
+</script>
 <script src="sost-search.js"></script>
 </body>
 </html>

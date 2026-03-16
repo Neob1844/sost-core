@@ -200,16 +200,32 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H_raw));
 
     // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
-    // This prevents fast individual blocks from triggering hardening when the chain
-    // is globally behind. Only harden when genuinely ahead of schedule.
-    if (lag >= 0) {
-        H = std::min<int32_t>(H, 0); // cap at B0
+    // lag > 0 means chain is AHEAD; lag <= 0 means behind or on schedule
+    if (lag <= 0) {
+        H = std::min<int32_t>(H, 0);
     }
 
     // Safety rule 2: require minimum chain depth before any hardening
-    // With < 10 blocks, EWMA signals are unreliable (dominated by noise)
     if (chain.size() < 10) {
-        H = std::min<int32_t>(H, 0); // cap at B0 until chain stabilizes
+        H = std::min<int32_t>(H, 0);
+    }
+
+    // Slew rate limit: H can change by at most ±1 per block
+    // Compute previous H from the previous block's data to limit the rate
+    if (chain.size() >= 3) {
+        // Recompute the previous block's lag to estimate prev H
+        int64_t prev_elapsed = chain[chain.size()-2].time - GENESIS_TIME;
+        int64_t prev_exp = (prev_elapsed >= 0) ? (prev_elapsed / TARGET_SPACING) : 0;
+        int32_t prev_lag = (int32_t)((int64_t)(next_height - 2) - prev_exp);
+        int32_t prev_H_est = 0; // B0 baseline
+        if (prev_lag < 0) {
+            int32_t ahead = -prev_lag;
+            if (ahead >= 20) prev_H_est = std::min(5, ahead / 10);
+            else if (ahead >= 5) prev_H_est = 1;
+        }
+        // Clamp change to ±1
+        H = std::max<int32_t>(prev_H_est - 1, std::min<int32_t>(prev_H_est + 1, H));
+        H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));
     }
 
     // ---- Anti-stall (mining only) ----
