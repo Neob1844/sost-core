@@ -81,7 +81,7 @@ static std::string  g_wallet_path = "wallet.json";
 static std::string  g_chain_path  = "";            // v0.3.2: for auto-save after block acceptance
 static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
-static std::mutex   g_chain_mu;
+static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 
 // RPC auth (fail-closed by default)
 static std::string g_rpc_user = "";
@@ -1446,7 +1446,7 @@ static void p2p_send_version(int fd) {
 }
 
 static void p2p_send_block(int fd, int64_t h) {
-    std::lock_guard<std::mutex> lk(g_chain_mu);
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(h<0||h>=(int64_t)g_blocks.size()) return;
     const auto& b=g_blocks[h];
     std::ostringstream s;
@@ -1529,7 +1529,7 @@ static bool compute_fee_for_tx(const Transaction& tx, const IUtxoView& view, int
 }
 
 static bool process_block(const std::string& block_json) {
-    std::lock_guard<std::mutex> lk(g_chain_mu);
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
     // Required fields
     std::string bid = jstr(block_json,"block_id");
@@ -2556,14 +2556,43 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 }
 
 // === P2P BLOCK BROADCAST ===
-// After accepting a block, relay it to all connected peers (except the sender)
+// After accepting a block, relay it to all connected peers (except the sender).
+// Serializes block data from StoredBlock directly (caller holds g_chain_mu).
 static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
+    // Serialize block JSON from StoredBlock (avoid re-acquiring g_chain_mu via p2p_send_block)
+    std::ostringstream s;
+    s<<"{\"block_id\":\""<<to_hex(sb.block_id.data(),32)
+     <<"\",\"prev_hash\":\""<<to_hex(sb.prev_hash.data(),32)
+     <<"\",\"merkle_root\":\""<<to_hex(sb.merkle_root.data(),32)
+     <<"\",\"commit\":\""<<to_hex(sb.commit.data(),32)
+     <<"\",\"checkpoints_root\":\""<<to_hex(sb.checkpoints_root.data(),32)
+     <<"\",\"height\":"<<sb.height
+     <<",\"timestamp\":"<<sb.timestamp
+     <<",\"bits_q\":"<<sb.bits_q
+     <<",\"nonce\":"<<sb.nonce
+     <<",\"extra_nonce\":"<<sb.extra_nonce
+     <<",\"subsidy\":"<<sb.subsidy
+     <<",\"miner\":"<<sb.miner_reward
+     <<",\"gold_vault\":"<<sb.gold_vault_reward
+     <<",\"popc_pool\":"<<sb.popc_pool_reward
+     <<",\"stability_metric\":"<<sb.stability_metric;
+    if (!sb.tx_hexes.empty()) {
+        s << ",\"transactions\":[";
+        for (size_t t = 0; t < sb.tx_hexes.size(); ++t) {
+            if (t) s << ",";
+            s << "\"" << sb.tx_hexes[t] << "\"";
+        }
+        s << "]";
+    }
+    s << "}";
+    std::string js = s.str();
+
     std::lock_guard<std::mutex> lk(g_peers_mu);
     int sent = 0;
     for (auto& p : g_peers) {
         if (p.fd == exclude_fd) continue;
         if (!p.version_acked) continue;
-        p2p_send_block(p.fd, sb.height);
+        p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
         ++sent;
     }
     if (sent > 0) {
@@ -3069,6 +3098,12 @@ static bool load_chain(const std::string& path) {
         printf("[CHAIN-LOAD] Warning: JSON claimed height=%lld but loaded %lld blocks (using %lld)\n",
                (long long)ch, (long long)g_blocks.size(), (long long)g_chain_height);
     }
+    // Log chainwork for tip
+    if (!g_blocks.empty()) {
+        printf("[CHAIN-LOAD] Tip chainwork: %s (height=%lld)\n",
+               to_hex(g_blocks.back().cumulative_work.data(), 32).c_str(),
+               (long long)g_chain_height);
+    }
     return true;
 }
 
@@ -3340,7 +3375,7 @@ static bool save_chain_internal(const std::string& path) {
 
 // Public save — acquires lock, then delegates to internal
 static bool save_chain(const std::string& path) {
-    std::lock_guard<std::mutex> lk(g_chain_mu);
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     return save_chain_internal(path);
 }
 
