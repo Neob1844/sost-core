@@ -52,6 +52,8 @@ struct MinedBlock {
     uint32_t bits_q, nonce, extra_nonce;
     uint64_t stability_metric;
     int64_t  miner_reward, gold_vault_reward, popc_pool_reward;
+    // Mining profile (actual params used, including any anti-stall decay)
+    int32_t stab_scale, stab_k, stab_margin, stab_steps, stab_lr_shift;
     std::vector<uint8_t> x_bytes;
     Bytes32 final_state;
     std::vector<Bytes32> checkpoint_leaves;
@@ -403,6 +405,11 @@ static bool rpc_submit_block_full(
         + ",\"gold_vault\":" + std::to_string(mb.gold_vault_reward)
         + ",\"popc_pool\":" + std::to_string(mb.popc_pool_reward)
         + ",\"stability_metric\":" + std::to_string(mb.stability_metric)
+        + ",\"stab_scale\":" + std::to_string(mb.stab_scale)
+        + ",\"stab_k\":" + std::to_string(mb.stab_k)
+        + ",\"stab_margin\":" + std::to_string(mb.stab_margin)
+        + ",\"stab_steps\":" + std::to_string(mb.stab_steps)
+        + ",\"stab_lr_shift\":" + std::to_string(mb.stab_lr_shift)
         + ",\"x_bytes\":\"" + to_hex_str(mb.x_bytes.data(), mb.x_bytes.size()) + "\""
         + ",\"final_state\":\"" + hex(mb.final_state) + "\""
         + ",\"segments_root\":\"" + hex(mb.segments_root) + "\"";
@@ -626,8 +633,25 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     coinbase_tx.Serialize(cb_raw, &cb_ser_err);
     std::string coinbase_hex = to_hex_str(cb_raw.data(), cb_raw.size());
 
+    // Diagnostic counters
+    uint32_t diag_stable = 0, diag_target = 0, diag_total = 0;
+
+    printf("[DIAG] Mining h=%lld prev=%s bitsQ=%u (%.4f) profile: scale=%d k=%d margin=%d steps=%d\n",
+           (long long)h, hex(g_tip_hash).substr(0,16).c_str(), bits_q, bits_q/65536.0,
+           params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps);
+    fflush(stdout);
+
     while (!found) {
         for (uint32_t nonce = 0; nonce <= max_nonce; ++nonce) {
+            if ((nonce % 1000) == 0 && nonce > 0) {
+                if (diag_total > 0 && (diag_total % 1000) == 0) {
+                    printf("\n[DIAG] nonce=%u stable=%u/1000 target=%u/1000 (total: %u stable, %u target)\n",
+                           nonce + extra_nonce * max_nonce, diag_stable, diag_target,
+                           diag_stable, diag_target);
+                    fflush(stdout);
+                    diag_stable = 0; diag_target = 0; diag_total = 0;
+                }
+            }
             if ((nonce % 5000) == 0 && nonce > 0) {
                 printf("\r  nonce=%u extra=%u", nonce, extra_nonce);
                 fflush(stdout);
@@ -659,6 +683,10 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 scratch.data(), scratch.size(), bk,
                 nonce, extra_nonce,
                 params, hc72, epoch);
+
+            diag_total++;
+            if (res.is_stable) diag_stable++;
+            if (pow_meets_target(res.commit, bits_q)) diag_target++;
 
             if (res.is_stable && pow_meets_target(res.commit, bits_q)) {
                 auto t1 = std::chrono::steady_clock::now();
@@ -699,6 +727,11 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.height = h; mb.timestamp = ts; mb.bits_q = bits_q;
                 mb.nonce = nonce; mb.extra_nonce = extra_nonce;
                 mb.stability_metric = res.stability_metric;
+                mb.stab_scale = params.stab_scale;
+                mb.stab_k = params.stab_k;
+                mb.stab_margin = params.stab_margin;
+                mb.stab_steps = params.stab_steps;
+                mb.stab_lr_shift = params.stab_lr_shift;
                 mb.x_bytes = res.x_bytes;
                 mb.final_state = res.final_state;
                 mb.checkpoint_leaves = res.checkpoint_leaves;
