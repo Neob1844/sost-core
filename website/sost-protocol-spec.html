@@ -35,15 +35,8 @@ footer a{color:var(--t3);text-decoration:none}
 .toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
 .toc a{color:var(--cyan);text-decoration:none;display:block;padding:3px 0;font-size:12px}
 .toc a:hover{color:var(--t1)}
-@media(max-width:768px){h2{font-size:17px}pre{font-size:10px}}
-nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.nav-logo .brand-sost { color: var(--red-primary); }
-.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
-.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
-.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+.nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
+@media(max-width:768px){h2{font-size:17px}pre{font-size:10px} .nav-links{display:none;width:100%} .nav-links.open{display:flex} .nav-hamburger{display:block} }
 </style>
 </head>
 <body>
@@ -52,6 +45,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
@@ -161,7 +155,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.25&middot;r + 0.10&middot;lag + 0.05&middot;I + 0.30&middot;burst + 0.10&middot;V</code>. Maps to profile index H &isin; [-3, 6].</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.25&middot;r + 0.10&middot;lag + 0.05&middot;I + 0.30&middot;burst + 0.10&middot;V</code>. Maps to profile index H &isin; [-3, 5] (H6 disabled).</p>
 
 <table>
 <tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
@@ -169,8 +163,9 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>180</td><td><strong>Baseline</strong></td></tr>
 <tr><td>H3</td><td>2</td><td>5</td><td>5</td><td>155</td><td>Moderate hardening</td></tr>
 <tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>73% stability</td></tr>
-<tr><td>H6</td><td>3</td><td>7</td><td>6</td><td>125</td><td>Maximum hardening</td></tr>
+<tr style="color:var(--t3);text-decoration:line-through;"><td>H6</td><td>3</td><td>7</td><td>6</td><td>125</td><td>Disabled (0% stability)</td></tr>
 </table>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">Maximum profile: H5. H6 disabled at consensus level — 0% stability rate would halt the chain.</p>
 
 <h3>Anti-Stall</h3>
 <p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), drops profile 1 level every 1200s. Allows progressively easier blocks during prolonged stalls. <em>Source: casert.cpp:204-215</em></p>
