@@ -36,13 +36,7 @@
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.nav-logo .brand-sost { color: var(--red-primary); }
-.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
-.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
-.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
 
   /* LAYOUT */
   .reader-layout { display: flex; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 52px); }
@@ -87,7 +81,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
 
   @media (max-width: 900px) {
     .sidebar { display: none; }
-    .nav-links { display: none; }
+    .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
     .wp-content { padding: 20px 16px; }
   }
 </style>
@@ -98,6 +92,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
@@ -851,7 +846,7 @@ PROPERTIES:
 <p class="wp-p">Difficulty algorithm       cASERT bitsQ, 12h half-life</p>
 <p class="wp-p">Per-block delta cap        6.25%</p>
 <p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (unidirectional)</p>
-<p class="wp-p">Equalizer profiles         E3(-3) through H6(+6), B0 is baseline</p>
+<p class="wp-p">Equalizer profiles         E3(-3) through H5(+5); H6 disabled</p>
 <p class="wp-p">Stability baseline         scale=1, k=4, margin=180, steps=4, stab_shift=20</p>
 <p class="wp-p">Block target spacing       600s</p>
 <div class="wp-spacer"></div>
@@ -933,7 +928,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  bitsQ makes blocks easier to find, and the equalizer stays out of the way.</pre>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  The result is an asymmetric safety net:</pre>
-<div class="wp-bullet">Ahead of schedule → equalizer hardens B0→H1→H2→H3→H4→H5→H6+ (protects emission, unbounded)</div>
+<div class="wp-bullet">Ahead of schedule → equalizer hardens B0→H1→H2→H3→H4→H5 (max) (protects emission)</div>
 <div class="wp-bullet">Behind schedule   → equalizer stays at B0 (baseline), bitsQ softens (protects liveness)</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">WHY BLOCK LAG INSTEAD OF LOCAL TIMING:</p>
@@ -2270,7 +2265,7 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <p class="wp-p">The unidirectional block-lag model (Section 3.12) prevents the cASERT equalizer from being weaponized:</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">An attacker with high hashrate mining blocks quickly pushes the chain ahead of schedule.</div>
-<div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → H3 → H4 → H5 → H6+ (unbounded). Stability verification becomes progressively more expensive.</div>
+<div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → H3 → H4 → H5 (max). Stability verification becomes progressively more expensive.</div>
 <div class="wp-bullet">The attacker gains nothing — the faster they mine, the harder each attempt becomes.</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">When the chain is behind schedule, the equalizer stays at B0 (baseline).</p>
@@ -2363,7 +2358,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% per-block delta cap</td></tr>
-<tr><td>cASERT Equalizer</td><td>Consensus-critical block-lag profiles E3(-3) through H6(+6), B0 baseline, k=4, steps=4, scale=level, hardening only, unbounded</td></tr>
+<tr><td>cASERT Equalizer</td><td>Consensus-critical block-lag profiles E3(-3) through H5(+5); H6 disabled, B0 baseline, k=4, steps=4, scale=level, hardening only</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>

@@ -43,13 +43,7 @@
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.nav-logo .brand-sost { color: var(--red-primary); }
-.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
-.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
-.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
 
   /* HERO */
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
@@ -121,7 +115,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   .delay-4 { animation-delay: 0.4s; }
 
   @media (max-width: 768px) {
-    .nav-links { display: none; }
+    .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
   }
 </style>
 </head>
@@ -132,6 +126,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
@@ -398,7 +393,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
           <tr><th>Component</th><th>Status</th></tr>
           <tr><td class="label">Transaction signing (libsecp256k1)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Consensus validation (R1-R14, S1-S12, CB1-CB10)</td><td class="green">Complete</td></tr>
-          <tr><td class="label">cASERT unified difficulty (bitsQ + equalizer, E3-H6 profiles)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">cASERT unified difficulty (bitsQ + equalizer, E3-H5 profiles; H6 disabled)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Mempool validation and relay</td><td class="green">Complete</td></tr>
           <tr><td class="label">Transaction confirmation in blocks</td><td class="green">Complete</td></tr>
           <tr><td class="label">RPC authentication (--rpc-user/--rpc-pass)</td><td class="green">Complete</td></tr>

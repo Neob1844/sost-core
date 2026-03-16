@@ -55,7 +55,7 @@
 ### Consensus
 - Transaction validation: 42 rules (R1-R14, S1-S12, CB1-CB10), all passing
 - Block validation: 4 layers (L1 structure, L2 header, L3 consensus, L4 UTXO)
-- cASERT unified difficulty system: bitsQ Q16.16 primary (12h half-life, 6.25% delta cap) + equalizer profiles (E3-H6) + anti-stall
+- cASERT unified difficulty system: bitsQ Q16.16 primary (12h half-life, 6.25% delta cap) + equalizer profiles (E3-H5) + anti-stall
   - L2 (light): 5-25 blocks ahead, scale=2
   - L3 (moderate): 26-50 blocks ahead, scale=3
   - L4 (strong): 51-75 blocks ahead, scale=4

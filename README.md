@@ -162,7 +162,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX Transcript V2 (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation via 11-phase segment/round verification at ~0.2ms, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H6) |
+| Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H5; H6 disabled) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |

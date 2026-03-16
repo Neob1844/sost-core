@@ -43,13 +43,7 @@
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.nav-logo .brand-sost { color: var(--red-primary); }
-.nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
-.nav-links a:hover { color: var(--red-primary); background: var(--red-subtle); }
-.nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
 
   /* HERO */
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
@@ -92,7 +86,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
   .delay-2 { animation-delay: 0.2s; }
 
   @media (max-width: 768px) {
-    .nav-links { display: none; }
+    .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
   }
 </style>
 </head>
@@ -103,6 +97,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
@@ -202,7 +197,7 @@ nav .container { display: flex; align-items: center; justify-content: space-betw
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): adjusts the actual difficulty block by block based on chain speed, with a 12-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer tightens ConvergenceX stability requirements across profiles (E3&ndash;H6). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. If mining stalls for 2+ hours, a decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): adjusts the actual difficulty block by block based on chain speed, with a 12-hour half-life. It is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: acts as a unidirectional emergency brake on emission speed. If the chain is running too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer tightens ConvergenceX stability requirements across profiles (E3&ndash;H5). It never relaxes when an attacker mines fast — only when the chain is genuinely running slow. If mining stalls for 2+ hours, a decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
