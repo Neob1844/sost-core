@@ -709,17 +709,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 printf("  %zu segment proofs, %zu round witnesses\n",
                        res.segment_proofs.size(), res.round_witnesses.size());
 
-                BlockMeta meta;
-                meta.block_id = block_id;
-                meta.height = h;
-                meta.time = ts;
-                meta.powDiffQ = bits_q;
-                g_chain.push_back(meta);
-                g_tip_hash = block_id;
-
                 MinedBlock mb{};
                 mb.block_id = block_id;
-                mb.prev_hash = g_chain[g_chain.size() - 2].block_id;
+                mb.prev_hash = g_tip_hash;
                 mb.merkle_root = mrkl;
                 mb.commit = res.commit;
                 mb.checkpoints_root = res.checkpoints_root;
@@ -741,19 +733,38 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.miner_reward = split.miner;
                 mb.gold_vault_reward = split.gold_vault;
                 mb.popc_pool_reward = split.popc_pool;
-                g_mined_blocks.push_back(mb);
 
-                // Submit full block to node (coinbase + mempool txs)
+                // Submit to node FIRST — only advance local chain if accepted
+                bool node_accepted = false;
                 if (!g_rpc_url.empty()) {
                     std::vector<std::string> all_hexes;
                     all_hexes.reserve(1 + mempool_tx_hexes.size());
                     all_hexes.push_back(coinbase_hex);
                     for(const auto& hx : mempool_tx_hexes) all_hexes.push_back(hx);
 
-                    if (rpc_submit_block_full(mb, all_hexes))
+                    if (rpc_submit_block_full(mb, all_hexes)) {
                         printf("  -> submitted to node OK (%zu txs)\n", all_hexes.size());
-                    else
-                        printf("  -> WARNING: node rejected block!\n");
+                        node_accepted = true;
+                    } else {
+                        printf("  -> NODE REJECTED BLOCK — will retry same height\n");
+                        // Do NOT advance chain — try next nonce at same height
+                        continue;
+                    }
+                } else {
+                    // No RPC — local-only mode, always accept
+                    node_accepted = true;
+                }
+
+                if (node_accepted) {
+                    // Only now add to local chain
+                    BlockMeta meta;
+                    meta.block_id = block_id;
+                    meta.height = h;
+                    meta.time = ts;
+                    meta.powDiffQ = bits_q;
+                    g_chain.push_back(meta);
+                    g_tip_hash = block_id;
+                    g_mined_blocks.push_back(mb);
                 }
 
                 found = true;
