@@ -2784,16 +2784,30 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 printf("[P2P] %s: version OK, their height=%lld\n",addr.c_str(),(long long)their_h);
 
                 if(their_h > g_chain_height){
+                    printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
+                           addr.c_str(), (long long)their_h, (long long)g_chain_height,
+                           (long long)(g_chain_height+1), (long long)their_h);
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height+1);
                     p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                    printf("[P2P] Requesting blocks from %lld\n",(long long)(g_chain_height+1));
                 }
             }
         }
         else if(!strcmp(msg.cmd,"VACK")) {
-            std::lock_guard<std::mutex> lk(g_peers_mu);
-            for(auto& p:g_peers) if(p.fd==fd){p.version_acked=true;break;}
+            int64_t their_h = -1;
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for(auto& p:g_peers) if(p.fd==fd){p.version_acked=true; their_h=p.their_height; break;}
+            }
+            // If peer has more blocks, initiate sync
+            if(their_h > g_chain_height){
+                printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
+                       addr.c_str(), (long long)their_h, (long long)g_chain_height,
+                       (long long)(g_chain_height+1), (long long)their_h);
+                uint8_t buf[8];
+                write_i64(buf, g_chain_height+1);
+                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+            }
         }
         else if(!strcmp(msg.cmd,"GETB")) {
             if(msg.payload.size()>=8){
@@ -2834,6 +2848,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
             }
 
+            int64_t blk_height = jint(block_json, "height");
             auto t_start = std::chrono::steady_clock::now();
             if(!process_block(block_json)){
                 // process_block returned false — determine severity
@@ -2855,10 +2870,15 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 } else if (blk_bitsq == 0) {
                     if (add_misbehavior(fd, addr, 100, "zero difficulty")) break;
                 } else {
-                    // Genuinely invalid block (failed validation)
+                    // Genuinely invalid block during sync — stop syncing from this peer
+                    printf("[SYNC] Block #%lld from %s failed validation — stopping sync\n",
+                           (long long)blk_height, addr.c_str());
                     if (add_misbehavior(fd, addr, 10, "invalid block")) break;
                 }
             } else {
+                if (is_syncing) {
+                    printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
+                }
                 auto t_end = std::chrono::steady_clock::now();
                 auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
                 if (ms > 100) {
@@ -2892,12 +2912,13 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 for(auto& p:g_peers) if(p.fd==fd){their_h=p.their_height;break;}
             }
             if(g_chain_height<their_h){
+                printf("[SYNC] Batch done from %s. Requesting blocks %lld..%lld\n",
+                       addr.c_str(), (long long)(g_chain_height+1), (long long)their_h);
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height+1);
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                printf("[P2P] Batch done, requesting from %lld\n",(long long)(g_chain_height+1));
             } else {
-                printf("[P2P] Sync complete, height=%lld\n",(long long)g_chain_height);
+                printf("[SYNC] Sync complete: height %lld\n",(long long)g_chain_height);
             }
         }
         else {

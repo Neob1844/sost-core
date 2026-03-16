@@ -248,6 +248,15 @@ popc_pool = q                      // 25%</pre>
 10. verify_stability_basin(x_bytes) passes
 11. stability_metric matches</pre>
 <p>Plus: <code>commit &le; target(bitsQ)</code>. No dataset or scratchpad needed &mdash; both are independently indexable at O(1). <em>Source: convergencex.cpp:374-442</em></p>
+
+<h3>Node vs Miner Memory</h3>
+<p><strong>Miner:</strong> 8 GB RAM (4 GB dataset + 4 GB scratchpad) to solve ConvergenceX. <strong>Node:</strong> ~500 MB to verify via Transcript V2 (~0.2ms per block). Mining is memory-hard (ASIC resistant); verification is lightweight (anyone can run a node). The miner generates the full proof; the node only checks it.</p>
+
+<h3>Chain Selection: Best Chain by Cumulative Work</h3>
+<p>SOST uses <strong>best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work. This is the same approach used by Bitcoin. <em>Source: sostcompact.cpp:compute_block_work()</em></p>
+
+<h3>Atomic Fork Resolution</h3>
+<p>If a better chain is found (higher cumulative work), the node performs an <strong>atomic reorganization</strong>: disconnect current blocks from tip to fork point, connect the new chain, and recover orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. Orphan blocks (parent unknown) are stored separately from fork candidates (parent known) and re-processed when their parent arrives. MAX_REORG_DEPTH = 500 blocks (~3.5 days). <em>Source: sost-node.cpp:try_reorganize()</em></p>
 </div></section>
 
 <!-- 5. EMISSION -->

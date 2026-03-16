@@ -210,12 +210,31 @@
           <tr><td class="label">Inter-attempt parallelism</td><td class="value">Multiple cores = multiple independent attempts</td></tr>
           <tr><td class="label">ASIC advantage estimate</td><td class="value">Low multiples over modern CPUs</td></tr>
           <tr><td class="label">Difficulty adjustment</td><td class="value">cASERT per-block, stable regardless of hashrate</td></tr>
+          <tr><td class="label">Node RAM (verify only)</td><td class="green">~500 MB (no dataset, no scratchpad &mdash; anyone can run a node)</td></tr>
         </table>
       </div>
     </div>
 
     <div class="notice fade-in delay-2">
       <strong>Key insight:</strong> An attacker with 1,000 cores runs 1,000 parallel attempts, not 1,000&times; faster on a single attempt. The sequential dependency chain is the fundamental defense. As mining becomes profitable, network hashrate grows naturally, continuously raising the attack threshold.
+    </div>
+
+    <div class="spec-block fade-in delay-3" style="margin-top:24px;">
+      <div class="spec-header">
+        <div class="spec-icon green"></div>
+        <span class="spec-label">Chain Selection &amp; Fork Resolution</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">SOST uses <strong style="color:var(--green-primary)">best-chain-by-cumulative-work</strong> selection, not longest-chain. Each block contributes work = <code>floor(2^256 / (target + 1))</code>. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work. This is the same approach used by Bitcoin.</p>
+        <table class="code-table">
+          <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative work (NOT longest chain)</td></tr>
+          <tr><td class="label">Block work formula</td><td class="value"><code>floor(2^256 / (target + 1))</code></td></tr>
+          <tr><td class="label">Fork resolution</td><td class="green">Atomic &mdash; full rollback on failure</td></tr>
+          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days)</td></tr>
+          <tr><td class="label">Orphan vs fork</td><td class="value">Separated: orphans (parent unknown) vs fork candidates (parent known)</td></tr>
+          <tr><td class="label">Mempool recovery</td><td class="value">Valid non-coinbase txs returned to mempool after reorg; conflicts discarded</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 </section>

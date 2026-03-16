@@ -11,6 +11,15 @@ The Foundation's manual operations during Phase 1 are transitional by design, no
 - **GitHub:** https://github.com/Neob1844/sost-core
 - **Whitepaper:** https://sostcore.com/whitepaper.pdf
 
+## System Requirements
+
+| Role | RAM | CPU | Notes |
+|------|-----|-----|-------|
+| **Full node** (verify/send/receive) | ~500 MB | Any modern CPU | Verifies blocks via Transcript V2 in ~0.2ms. 2 GB VPS sufficient. |
+| **Miner** (find blocks) | 8 GB min (4 GB dataset + 4 GB scratchpad) | Multi-core recommended | 16 GB total system RAM recommended. Each thread = 1 independent attempt. |
+
+Mining is memory-hard (ASIC resistant), but verification is lightweight — anyone can run a node.
+
 ## Quick Start
 
 ```bash
@@ -177,6 +186,9 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 | RPC port | 18232 |
 | Default seed | seed.sostcore.com:19333 |
 | Mainnet genesis | 2026-03-15 18:00:00 UTC |
+| Chain selection | Best chain by cumulative work (NOT longest chain). work = floor(2^256 / (target+1)) per block |
+| Fork resolution | Atomic reorg with full rollback on failure. MAX_REORG_DEPTH = 500 blocks (~3.5 days) |
+| P2P encryption | X25519 + ChaCha20-Poly1305 (default on) |
 
 ## Constitutional Addresses
 

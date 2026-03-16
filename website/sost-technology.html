@@ -1247,9 +1247,52 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">Chainwork</td>
-            <td class="val">Bitcoin-style: <code>(2^256 - 1) / (target + 1) + 1</code></td>
+            <td class="val">Bitcoin-style: <code>floor(2^256 / (target + 1))</code> per block. Cumulative = sum of all block work.</td>
+          </tr>
+          <tr>
+            <td class="key">Chain selection</td>
+            <td class="val"><strong style="color:var(--green-primary);">Best chain by cumulative work</strong>, not longest chain. The chain with the highest total accumulated work wins. This prevents attacks using many easy blocks to outpace a shorter chain with more real work. Same approach as Bitcoin.</td>
+          </tr>
+          <tr>
+            <td class="key">Fork resolution</td>
+            <td class="val"><strong>Atomic.</strong> If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days).</td>
           </tr>
         </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SYSTEM REQUIREMENTS: NODE vs MINER -->
+<section class="section" id="requirements">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">HARDWARE</div>
+      <h2 class="section-title">System <span class="accent">Requirements</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in delay-1">Mining is memory-hard (ASIC resistant), but verification is lightweight (anyone can run a node). The miner must build and hold the full 4 GB dataset and 4 GB scratchpad in memory to solve the ConvergenceX puzzle. The node only verifies the compact Transcript V2 proof &mdash; SHA256 hashes and merkle checks, no dataset required.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="fade-in delay-2">
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:20px;">
+        <div style="font-size:11px;letter-spacing:2px;color:var(--green-primary);margin-bottom:12px;">FULL NODE</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">~500 MB RAM</div>
+        <table class="code-table" style="font-size:12px;">
+          <tr><td class="label">RAM</td><td class="value">~500 MB (no dataset, no scratchpad)</td></tr>
+          <tr><td class="label">CPU</td><td class="value">Any modern processor</td></tr>
+          <tr><td class="label">Disk</td><td class="value">Minimal (~1 KB per block)</td></tr>
+          <tr><td class="label">System</td><td class="value">2 GB total, any OS</td></tr>
+          <tr><td class="label">Verify speed</td><td class="green">~0.2 ms per block (Transcript V2)</td></tr>
+        </table>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:20px;">
+        <div style="font-size:11px;letter-spacing:2px;color:var(--red-primary);margin-bottom:12px;">MINER</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">8 GB RAM</div>
+        <table class="code-table" style="font-size:12px;">
+          <tr><td class="label">RAM</td><td class="highlight">8 GB min (4 GB dataset + 4 GB scratchpad)</td></tr>
+          <tr><td class="label">CPU</td><td class="value">Modern multi-core (L3 cache helps)</td></tr>
+          <tr><td class="label">Disk</td><td class="value">Minimal</td></tr>
+          <tr><td class="label">System</td><td class="value">16 GB total recommended</td></tr>
+          <tr><td class="label">Per attempt</td><td class="value">100K rounds + dataset/scratchpad I/O</td></tr>
+        </table>
       </div>
     </div>
   </div>

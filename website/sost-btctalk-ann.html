@@ -302,6 +302,9 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <p><b>Fast sync:</b> Layers 1-7 always run. Layer 8 (CX recompute) is skipped for checkpointed blocks. Initial sync takes minutes, not days.</p>
 <p><b>Full verification:</b> With --full-verify, every block is fully recomputed. Takes weeks but provides maximum security.</p>
 
+<p><b>Chain selection:</b> Best chain by cumulative work (NOT longest chain). Each block contributes work = floor(2^256 / (target + 1)). The chain with the highest total accumulated work wins &mdash; same approach as Bitcoin. This prevents attacks using many easy blocks to outpace a shorter chain with more real work.</p>
+<p><b>Fork resolution:</b> Atomic. If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days).</p>
+
 <hr>
 
 <h2>Links</h2>
