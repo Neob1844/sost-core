@@ -236,28 +236,33 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-label">Level Thresholds</span>
+          <span class="spec-label">Equalizer Profiles (E3&ndash;H5)</span>
         </div>
-        <span class="spec-tag">BLOCKS AHEAD OF SCHEDULE</span>
+        <span class="spec-tag">5-SIGNAL EWMA CONTROLLER</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><th>Level</th><th>Blocks Ahead</th><th>Threshold</th><th>Behavior</th></tr>
-          <tr><td class="green">L1</td><td class="value">0 &ndash; 4</td><td class="label">NORMAL</td><td class="value">Standard operation, baseline stability requirements</td></tr>
-          <tr><td class="cyan">L2</td><td class="value">5 &ndash; 25</td><td class="value">CASERT_L2_BLOCKS = 5</td><td class="value">First hardening stage, scale = 2</td></tr>
-          <tr><td class="cyan">L3</td><td class="value">26 &ndash; 50</td><td class="value">CASERT_L3_BLOCKS = 26</td><td class="value">Increased stability requirements, scale = 3</td></tr>
-          <tr><td class="highlight">L4</td><td class="value">51 &ndash; 75</td><td class="value">CASERT_L4_BLOCKS = 51</td><td class="value">Aggressive hardening, scale = 4</td></tr>
-          <tr><td class="highlight">L5</td><td class="value">76 &ndash; 100</td><td class="value">CASERT_L5_BLOCKS = 76</td><td class="value">Near-maximum fixed hardening, scale = 5</td></tr>
-          <tr><td class="highlight">L6+</td><td class="value">101+</td><td class="value">level = 6 + floor((ahead-101)/50)</td><td class="value">Unbounded hardening, scale grows with distance</td></tr>
+          <tr><th>Profile</th><th>Index</th><th>Scale</th><th>K</th><th>Steps</th><th>Margin</th></tr>
+          <tr><td class="cyan">E3</td><td class="value">-3</td><td class="value">1</td><td class="value">3</td><td class="value">3</td><td class="value">240</td></tr>
+          <tr><td class="cyan">E2</td><td class="value">-2</td><td class="value">1</td><td class="value">3</td><td class="value">4</td><td class="value">220</td></tr>
+          <tr><td class="cyan">E1</td><td class="value">-1</td><td class="value">1</td><td class="value">4</td><td class="value">4</td><td class="value">200</td></tr>
+          <tr><td class="green">B0</td><td class="value">0</td><td class="value">1</td><td class="value">4</td><td class="value">4</td><td class="value">180</td></tr>
+          <tr><td class="highlight">H1</td><td class="value">1</td><td class="value">1</td><td class="value">5</td><td class="value">4</td><td class="value">170</td></tr>
+          <tr><td class="highlight">H2</td><td class="value">2</td><td class="value">1</td><td class="value">5</td><td class="value">5</td><td class="value">160</td></tr>
+          <tr><td class="highlight">H3</td><td class="value">3</td><td class="value">2</td><td class="value">5</td><td class="value">5</td><td class="value">155</td></tr>
+          <tr><td class="highlight">H4</td><td class="value">4</td><td class="value">2</td><td class="value">6</td><td class="value">5</td><td class="value">145</td></tr>
+          <tr><td class="highlight">H5</td><td class="value">5</td><td class="value">2</td><td class="value">6</td><td class="value">6</td><td class="value">135</td></tr>
+          <tr style="opacity:0.4;text-decoration:line-through"><td>H6</td><td class="value">6</td><td class="value">3</td><td class="value">7</td><td class="value">6</td><td class="value">125</td></tr>
         </table>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:8px;">H6 is disabled at consensus level (CASERT_H_MAX=5). Its 0% stability rate would halt the chain.</p>
       </div>
     </div>
 
     <div class="mode-grid fade-in delay-2">
       <div class="mode-card">
-        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">UNIDIRECTIONAL</div>
-        <h3 style="color:var(--red-primary)">Hardens Only</h3>
-        <p>cASERT only HARDENS difficulty, never relaxes it. When the chain is behind schedule, cASERT bitsQ handles the adjustment. This prevents attackers from exploiting difficulty drops.</p>
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">BIDIRECTIONAL</div>
+        <h3 style="color:var(--red-primary)">Easing &amp; Hardening</h3>
+        <p>The equalizer operates bidirectionally: E3&ndash;E1 ease stability when blocks are slow, B0 is the baseline, H1&ndash;H5 harden when blocks are fast. Safety rules cap at B0 when behind schedule or with &lt;10 blocks. Slew rate: &plusmn;1 profile level per block.</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">SCALE = LEVEL</div>
@@ -400,16 +405,17 @@
           <tr><td class="label">GENESIS_BITSQ</td><td class="value">765,730</td><td class="value">Initial difficulty in Q16.16 (11.6841, calibrated)</td></tr>
           <tr><td class="label">MIN_BITSQ</td><td class="value">65,536</td><td class="value">Minimum difficulty (1.0 in Q16.16)</td></tr>
           <tr><td class="label">MAX_BITSQ</td><td class="value">16,711,680</td><td class="value">Maximum difficulty (255.0 in Q16.16)</td></tr>
-          <tr><td class="label">CASERT_L2_BLOCKS</td><td class="highlight">5</td><td class="value">Blocks ahead to enter L2</td></tr>
-          <tr><td class="label">CASERT_L3_BLOCKS</td><td class="highlight">26</td><td class="value">Blocks ahead to enter L3</td></tr>
-          <tr><td class="label">CASERT_L4_BLOCKS</td><td class="highlight">51</td><td class="value">Blocks ahead to enter L4</td></tr>
-          <tr><td class="label">CASERT_L5_BLOCKS</td><td class="highlight">76</td><td class="value">Blocks ahead to enter L5</td></tr>
-          <tr><td class="label">CASERT_L6_BLOCKS</td><td class="highlight">101</td><td class="value">L6+ unbounded starts here</td></tr>
-          <tr><td class="label">CASERT_DECAY_ACTIVATION</td><td class="highlight">max(ahead00D7600, 7200)</td><td class="value">Dynamic: proportional to blocks ahead, floor 2h, no ceiling</td></tr>
-          <tr><td class="label">CASERT_DECAY_FAST_SECS</td><td class="value">600s</td><td class="value">L8+: 10 min/level (fast recovery)</td></tr>
-          <tr><td class="label">CASERT_DECAY_MEDIUM_SECS</td><td class="value">1,200s</td><td class="value">L4&ndash;L7: 20 min/level (medium)</td></tr>
-          <tr><td class="label">CASERT_DECAY_SLOW_SECS</td><td class="value">1,800s</td><td class="value">L2&ndash;L3: 30 min/level (cautious)</td></tr>
-          <tr><td class="label">Activation</td><td class="value">height &ge; 2</td><td class="value">Requires at least 2 blocks in chain</td></tr>
+          <tr><td class="label">CASERT_H_MIN / H_MAX</td><td class="highlight">-3 / 5</td><td class="value">Profile range: E3 (deep easing) to H5 (max hardening); H6 disabled</td></tr>
+          <tr><td class="label">CASERT_K_R</td><td class="highlight">0.05</td><td class="value">Instantaneous rate gain (was 0.25)</td></tr>
+          <tr><td class="label">CASERT_K_L</td><td class="highlight">0.40</td><td class="value">Schedule lag gain — dominant (was 0.10)</td></tr>
+          <tr><td class="label">CASERT_K_I</td><td class="highlight">0.15</td><td class="value">Integrator gain (was 0.05)</td></tr>
+          <tr><td class="label">CASERT_K_B</td><td class="highlight">0.05</td><td class="value">Burst score gain (was 0.30)</td></tr>
+          <tr><td class="label">CASERT_K_V</td><td class="highlight">0.02</td><td class="value">Volatility gain (was 0.10)</td></tr>
+          <tr><td class="label">SLEW_RATE</td><td class="highlight">&plusmn;1/block</td><td class="value">Max profile change per block (prevents oscillation)</td></tr>
+          <tr><td class="label">ANTISTALL_FLOOR</td><td class="highlight">7,200s</td><td class="value">2-hour minimum before anti-stall decay activates</td></tr>
+          <tr><td class="label">ANTISTALL_DROP_INTERVAL</td><td class="highlight">1,200s</td><td class="value">Uniform: 1 profile level per 20 minutes</td></tr>
+          <tr><td class="label">Safety: behind schedule</td><td class="value">cap B0</td><td class="value">Never harden when chain is behind schedule (lag &le; 0)</td></tr>
+          <tr><td class="label">Safety: &lt;10 blocks</td><td class="value">cap B0</td><td class="value">Require 10 blocks before any hardening</td></tr>
           <tr><td class="label">CX_C_NUM / CX_C_DEN</td><td class="highlight">7/10</td><td class="value">Convergence ratio for stability test</td></tr>
         </table>
       </div>

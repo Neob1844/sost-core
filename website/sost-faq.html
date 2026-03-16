@@ -160,7 +160,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 4 GB RAM and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -195,12 +195,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can I mine SOST with a GPU or ASIC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">ConvergenceX is designed to be <strong>CPU-friendly</strong>. Each attempt requires 4 GB RAM and 100,000 strictly sequential rounds — intra-attempt parallelism is eliminated by state dependency. GPUs and ASICs cannot speed up a single attempt. The only parallelism available is running multiple independent attempts, which is what CPU cores already do. Preliminary estimates suggest low ASIC advantage multiples compared to &gt;1000&times; for SHA-256.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">ConvergenceX is designed to be <strong>CPU-friendly</strong>. Each attempt requires 8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 strictly sequential rounds — intra-attempt parallelism is eliminated by state dependency. GPUs and ASICs cannot speed up a single attempt. The only parallelism available is running multiple independent attempts, which is what CPU cores already do. Preliminary estimates suggest low ASIC advantage multiples compared to &gt;1000&times; for SHA-256.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What are the system requirements for mining?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Minimum:</strong> 4 GB RAM per mining thread, modern CPU, Linux (Ubuntu 24.04 recommended). Build dependencies: <code>build-essential cmake libssl-dev libsecp256k1-dev</code>. Each thread runs an independent mining attempt, so 4 threads need ~16 GB RAM.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Minimum:</strong> 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad), modern CPU, Linux (Ubuntu 24.04 recommended). Build dependencies: <code>build-essential cmake libssl-dev libsecp256k1-dev</code>. Each thread runs an independent mining attempt, so 4 threads need ~32 GB RAM. Node-only requires ~4 GB (no dataset/scratchpad).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">

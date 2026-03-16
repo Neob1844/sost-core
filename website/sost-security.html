@@ -201,10 +201,10 @@
         <span class="spec-tag">CONVERGENCEX</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Each ConvergenceX attempt requires 4 GB RAM and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Each ConvergenceX attempt requires 8 GB RAM (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds. Even an attacker with unlimited CPUs cannot speed up a single attempt — parallelism only adds more independent attempts. Node validation requires only ~500 MB via Transcript V2 (11-phase verification at ~0.2ms).</p>
         <table class="code-table">
           <tr><th>Property</th><th>Value</th></tr>
-          <tr><td class="label">RAM per attempt</td><td class="highlight">4 GB (scratchpad)</td></tr>
+          <tr><td class="label">RAM per attempt</td><td class="highlight">8 GB (4 GB dataset + 4 GB scratchpad)</td></tr>
           <tr><td class="label">Rounds per attempt</td><td class="value">100,000 (strictly sequential)</td></tr>
           <tr><td class="label">Intra-attempt parallelism</td><td class="highlight">Eliminated by state dependency</td></tr>
           <tr><td class="label">Inter-attempt parallelism</td><td class="value">Multiple cores = multiple independent attempts</td></tr>

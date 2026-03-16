@@ -973,133 +973,138 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
       <div class="spec-body">
         <p class="spec-desc">
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
-          consensus-rate control system. Its equalizer layer adapts ConvergenceX's stability
-          verification parameters based on how far ahead the chain is running vs the ideal
-          schedule (genesis + height &times; 600s). Unidirectional: only hardens when chain is
-          ahead of schedule. When behind, cASERT bitsQ handles difficulty without equalizer overlay.
+          consensus-rate control system. It integrates three components:
+          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E3&ndash;H5 that adjust
+          ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
+          5 EWMA signals to compute a weighted control signal U, which selects a profile from
+          deep easing (E3) through baseline (B0) to maximum hardening (H5). H6 is disabled at
+          consensus level (CASERT_H_MAX=5) because 0% stability would halt the chain.
         </p>
 
-        <div class="code-snippet" data-label="LEVEL COMPUTATION">
-<span class="cmt">// Lag: positive = behind, negative = ahead</span>
-elapsed   = latest_time - GENESIS_TIME
-expected  = elapsed / <span class="num">600</span>
-lag       = expected - (next_height - <span class="num">1</span>)
-ahead     = (lag &lt; <span class="num">0</span>) ? -lag : <span class="num">0</span>
+        <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
+<span class="cmt">// Signals (all Q16.16 fixed-point)</span>
+r   = log2(TARGET_SPACING / dt)      <span class="cmt">// instantaneous log-ratio</span>
+L   = height - floor((time - GENESIS_TIME) / <span class="num">600</span>)  <span class="cmt">// schedule lag</span>
+S   = EWMA(r, alpha=<span class="num">32</span>/<span class="num">256</span>)          <span class="cmt">// 8-block short window</span>
+M   = EWMA(r, alpha=<span class="num">3</span>/<span class="num">256</span>)           <span class="cmt">// 96-block long window</span>
+V   = EWMA(|r - S|, alpha=<span class="num">16</span>/<span class="num">256</span>)    <span class="cmt">// 16-block volatility</span>
+I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256</span>) <span class="cmt">// ±100 cap</span>
 
-<span class="cmt">// Level from blocks ahead (fixed bands L1-L5, unbounded L6+)</span>
-<span class="kw">if</span> ahead &lt;   <span class="num">5</span> → L1 (neutral, scale=<span class="num">1</span>)
-<span class="kw">if</span> ahead &lt;  <span class="num">26</span> → L2 (scale=<span class="num">2</span>)
-<span class="kw">if</span> ahead &lt;  <span class="num">51</span> → L3 (scale=<span class="num">3</span>)
-<span class="kw">if</span> ahead &lt;  <span class="num">76</span> → L4 (scale=<span class="num">4</span>)
-<span class="kw">if</span> ahead &lt; <span class="num">101</span> → L5 (scale=<span class="num">5</span>)
-<span class="kw">else</span>          → L6+ (scale = <span class="num">6</span> + floor((ahead-<span class="num">101</span>)/<span class="num">50</span>))  <span class="cmt">// unbounded</span>
+<span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
+U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
+
+H = clamp(U &gt;&gt; <span class="num">16</span>, E3=<span class="num">-3</span>, H5=<span class="num">5</span>)   <span class="cmt">// H6 disabled (0% stability)</span>
+
+<span class="cmt">// Safety rules</span>
+<span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
+<span class="kw">if</span> chain.size() &lt; <span class="num">10</span>:        H = min(H, B0)  <span class="cmt">// require 10 blocks</span>
+
+<span class="cmt">// Slew rate: &plusmn;1 profile level per block (prevents oscillation)</span>
+H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</span>)
         </div>
 
         <div class="mode-grid">
           <div class="mode-card">
             <div class="mode-name">
-              <span class="indicator" style="background:var(--green-primary)"></span>
-              L1 NEUTRAL
-            </div>
-            <div class="mode-params">
-              0&ndash;4 blocks ahead &middot; scale=1<br>
-              <em>cASERT bitsQ handles difficulty. No equalizer overlay.</em>
-            </div>
-          </div>
-          <div class="mode-card">
-            <div class="mode-name">
               <span class="indicator" style="background:#67e8f9"></span>
-              L2
+              E3 DEEP EASING
             </div>
             <div class="mode-params">
-              5&ndash;25 blocks ahead &middot; scale=2<br>
-              <em>Light hardening. k=4 &middot; margin=180 &middot; steps=4</em>
+              scale=1 &middot; k=3 &middot; margin=240 &middot; steps=3<br>
+              <em>Maximum easing: widest margin, fewest stability probes.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
-              <span class="indicator" style="background:#fbbf24"></span>
-              L3
+              <span class="indicator" style="background:#22d3ee"></span>
+              E2&ndash;E1
             </div>
             <div class="mode-params">
-              26&ndash;50 blocks ahead &middot; scale=3<br>
-              <em>Moderate hardening.</em>
+              scale=1 &middot; k=3&ndash;4 &middot; margin=220&ndash;200 &middot; steps=3&ndash;4<br>
+              <em>Moderate easing. Gradually tightening stability.</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:var(--green-primary)"></span>
+              B0 BASELINE
+            </div>
+            <div class="mode-params">
+              scale=1 &middot; k=4 &middot; margin=180 &middot; steps=4<br>
+              <em>Default operating profile. Balanced stability test.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:#fb923c"></span>
-              L4&ndash;L5
+              H1&ndash;H3
             </div>
             <div class="mode-params">
-              51&ndash;100 blocks ahead &middot; scale=4&ndash;5<br>
-              <em>Strong/severe hardening.</em>
+              scale=1&ndash;2 &middot; k=4&ndash;5 &middot; margin=170&ndash;155 &middot; steps=4&ndash;5<br>
+              <em>Progressive hardening. Tighter margin, more probes.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--red-primary)"></span>
-              L6+ UNBOUNDED
+              H4&ndash;H5 MAX
             </div>
             <div class="mode-params">
-              101+ blocks ahead &middot; scale grows every 50 blocks<br>
-              <em>No ceiling. The faster the attack, the harder the brake.</em>
+              scale=2 &middot; k=5&ndash;6 &middot; margin=145&ndash;135 &middot; steps=5&ndash;6<br>
+              <em>Maximum hardening. H6 (scale=3, margin=125) disabled.</em>
             </div>
           </div>
         </div>
 
-        <div class="code-snippet" data-label="DECAY ANTI-STALL" style="margin-top:16px;">
-<span class="cmt">// Activation: max(ahead 00D7 600s, 7200s) 2014 proportional, no ceiling</span>
-<span class="cmt">// Mining only — validation uses raw level</span>
-stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead00D7600, 7200)</span>
+        <div class="code-snippet" data-label="ANTI-STALL (mining only)" style="margin-top:16px;">
+<span class="cmt">// Activation: max(ahead &times; 600s, 7200s) — floor 2 hours</span>
+<span class="cmt">// Mining only — node validates declared profile from miner</span>
+stall = now - last_block_time
+threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <span class="num">600</span>)
 
-<span class="kw">while</span> effective_level &gt; <span class="num">1</span> and stall_time &gt; <span class="num">0</span>:
-    <span class="kw">if</span> level &gt;= <span class="num">8</span>: cost = <span class="num">600</span>s   <span class="cmt">// L8+: 10 min/level (fast)</span>
-    <span class="kw">elif</span> level &gt;= <span class="num">4</span>: cost = <span class="num">1200</span>s  <span class="cmt">// L4-L7: 20 min/level (medium)</span>
-    <span class="kw">else</span>:           cost = <span class="num">1800</span>s  <span class="cmt">// L2-L3: 30 min/level (cautious)</span>
-    effective_level -= <span class="num">1</span>
-    stall_time -= cost
+<span class="kw">if</span> stall &gt;= threshold:
+    drops = (stall - threshold) / <span class="num">1200</span>  <span class="cmt">// 1 level per 20 min (uniform)</span>
+    H = max(E3, H - drops)
         </div>
 
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
-            <strong style="color:var(--green-primary);">Worked Example &mdash; L10 (450 ahead):</strong><br>
-            Activation: max(450&times;600, 7200) = 270,000s (75h)<br>
-            L10&rarr;L8: FAST (10min/level) = 30min &middot;
-            L7&rarr;L4: MEDIUM (20min/level) = 80min &middot;
-            L3&rarr;L1: SLOW (30min/level) = 60min<br>
-            Total decay: <strong>170min (2h 50m)</strong> &middot; Total from start: <strong>~78 hours</strong>
+            <strong style="color:var(--green-primary);">Key design properties:</strong><br>
+            &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E3 and H5.<br>
+            &bull; Slew rate &plusmn;1/block ensures smooth profile transitions.<br>
+            &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
+            &bull; Anti-stall decays uniformly at 1 level per 1200s after a 2-hour floor.
           </p>
         </div>
 
         <table class="code-table" style="margin-top:16px;">
           <tbody><tr>
-            <td class="key">CASERT_L2_BLOCKS</td>
-            <td class="val"><code>5</code> <span class="comment">// blocks ahead to enter L2</span></td>
+            <td class="key">CASERT_H_MIN</td>
+            <td class="val"><code>-3</code> <span class="comment">// E3 (deep easing)</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_L3_BLOCKS</td>
-            <td class="val"><code>26</code> <span class="comment">// blocks ahead to enter L3</span></td>
+            <td class="key">CASERT_H_MAX</td>
+            <td class="val"><code>5</code> <span class="comment">// H5 (max hardening; H6 disabled)</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_L4_BLOCKS</td>
-            <td class="val"><code>51</code> <span class="comment">// blocks ahead to enter L4</span></td>
+            <td class="key">K_R / K_L / K_I / K_B / K_V</td>
+            <td class="val"><code>0.05 / 0.40 / 0.15 / 0.05 / 0.02</code> <span class="comment">// lag-dominant (60%)</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_L5_BLOCKS</td>
-            <td class="val"><code>76</code> <span class="comment">// blocks ahead to enter L5</span></td>
+            <td class="key">SLEW_RATE</td>
+            <td class="val"><code>&plusmn;1</code> <span class="comment">// profile level per block</span></td>
           </tr>
           <tr>
-            <td class="key">CASERT_L6_BLOCKS</td>
-            <td class="val"><code>101</code> <span class="comment">// L6+ unbounded starts here</span></td>
+            <td class="key">ANTISTALL_FLOOR</td>
+            <td class="val"><code>7200</code> <span class="comment">// 2 hours minimum before decay</span></td>
           </tr>
           <tr>
-            <td class="key">DECAY_ACTIVATION</td>
-            <td class="val"><code>max(ahead00D7600, 7200)</code> <span class="comment">// dynamic, proportional, floor 2h</span></td>
+            <td class="key">ANTISTALL_DROP_INTERVAL</td>
+            <td class="val"><code>1200</code> <span class="comment">// 1 level per 20 min (uniform)</span></td>
           </tr>
           <tr>
-            <td class="key">Directionality</td>
-            <td class="val">Unidirectional <span class="comment">// only hardens when chain is ahead</span></td>
+            <td class="key">Safety rules</td>
+            <td class="val">Behind schedule &rarr; cap B0 &middot; &lt;10 blocks &rarr; cap B0</td>
           </tr>
         </tbody></table>
       </div>
@@ -1340,8 +1345,8 @@ stall_time = now - last_block_time - activation  <span class="cmt">// max(ahead0
           <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>
           <tr><td class="key">Difficulty adjust</td><td class="val">Every 2016 blocks</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--text-primary);">Every block (cASERT exp.)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
-          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Decay (2h&rarr;tiered)</td></tr>
-          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT L1&ndash;L6+ unbounded</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Decay (2h floor, 1 level/20min)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E3&ndash;H5 (&plusmn;1/block)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
           <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>

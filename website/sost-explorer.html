@@ -1564,7 +1564,8 @@ function renderAddrCharts(utxos){
     var ctx2=cv2.getContext('2d'),dpr2=window.devicePixelRatio||1;
     var W2=cv2.offsetWidth,Hc2=cv2.offsetHeight;
     cv2.width=W2*dpr2;cv2.height=Hc2*dpr2;ctx2.scale(dpr2,dpr2);
-    var amts=byHeight.map(function(u){return{h:u.height,a:typeof u.amount==='number'?u.amount:parseFloat(u.amount)};});
+    var typeNames=['transfer','miner','gold','popc'];
+    var amts=byHeight.map(function(u){var tn=typeNames[u.type||0]||'transfer';return{h:u.height,a:typeof u.amount==='number'?u.amount:parseFloat(u.amount),t:tn,cb:u.coinbase};});
     var mxA=Math.max.apply(null,amts.map(function(d){return d.a;}))||1;
     var pad2={l:40,r:8,t:6,b:16},cw2=W2-pad2.l-pad2.r,ch2=Hc2-pad2.t-pad2.b;
     var bw2=Math.max(2,cw2/amts.length-1);
@@ -1601,7 +1602,8 @@ function renderAddrCharts(utxos){
         ctxR.restore();
         // Tooltip
         if(tip){
-          tip.innerHTML='<span style="color:#00e5ff;font-weight:600">Block #'+d.h+'</span><br>Reward: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span>';
+          var typeColor=d.t==='miner'?'var(--orange)':d.t==='gold'?'var(--gold)':d.t==='popc'?'var(--cyan)':'var(--text)';
+          tip.innerHTML='<span style="color:#00e5ff;font-weight:600">Block #'+d.h+'</span><br>Reward: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span><br>Type: <span style="color:'+typeColor+'">'+d.t+(d.cb?' (coinbase)':'')+'</span>';
           tip.style.display='block';
           var tx=mouseX+12;if(tx+160>Wc)tx=mouseX-170;
           tip.style.left=tx+'px';tip.style.top='-10px';
@@ -1915,23 +1917,20 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">cASERT bitsQ</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
   'Half-life: <b>12 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT equalizer</b> — <b>Unidirectional</b> adaptive stability overlay. '+
-  'Monitors chain timing against the ideal schedule (genesis + height × 600s). '+
-  'Only hardens when chain is <b>ahead</b> of schedule (emission protection). '+
-  'Levels: <span style="color:#4ade80">L1</span> (neutral, 0–4 ahead) → '+
-  '<span style="color:#67e8f9">L2</span> (5–25) → '+
-  '<span style="color:#fbbf24">L3</span> (26–50) → '+
-  '<span style="color:#fb923c">L4</span> (51–75) → '+
-  '<span style="color:#fb010d">L5</span> (76–100, scale=5) → '+
-  '<span style="color:#ff0040">L6+</span> (101+ ahead, unbounded — scale grows every 50 blocks).<br><br>'+
-  '<b style="color:var(--green)">DECAY ANTI-STALL:</b> If no block is found for <b>max(ahead 00D7 600s, 2h)</b> (proportional, no ceiling), cASERT level decays downward to prevent chain stall:<br>'+
-  '&bull; <span style="color:#fb010d">L8+</span> → drops 1 level every 10 min (fast recovery)<br>'+
-  '&bull; <span style="color:#fb923c">L4–L7</span> → drops 1 level every 20 min (medium)<br>'+
-  '&bull; <span style="color:#67e8f9">L2–L3</span> → drops 1 level every 30 min (cautious)<br>'+
-  'When mining resumes, decay stops instantly — raw schedule level takes over. Decay affects mining only, never block validation.<br><br>'+
-  '<b style="color:var(--green)">Worked Example — L10 (450 ahead):</b> Activation at max(450×600, 7200) = 270,000s (75h). Then: L10→L8 FAST (30min), L7→L4 MEDIUM (80min), L3→L1 SLOW (60min). Total decay: <b>170min</b>. Cost uses <b>current</b> effective level, not original.<br><br>'+
-  'When chain is behind schedule, cASERT bitsQ handles difficulty reduction.<br><br>'+
-  'cASERT is unified: bitsQ handles <b>long-term</b> hashrate changes. The equalizer handles <b>short-term</b> volatility by adjusting stability test parameters.</div></div>'+
+  '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>10 profiles</b> (E3 through H5). '+
+  'Computes control signal U from instantaneous rate, schedule lag, integrator, burst score, and volatility.<br><br>'+
+  '<b>Formula:</b> U = <span style="color:var(--cyan)">0.05</span>·r + <span style="color:var(--green)">0.40</span>·lag + <span style="color:var(--purple)">0.15</span>·I + <span style="color:var(--orange)">0.05</span>·burst + <span style="color:var(--yellow)">0.02</span>·V<br>'+
+  'Lag dominates (60% of total signal), preventing E3↔H5 oscillation.<br><br>'+
+  '<b>Profiles:</b> '+
+  '<span style="color:#67e8f9">E3</span> (deep easing, margin=240) → '+
+  '<span style="color:#22d3ee">E2→E1</span> (easing) → '+
+  '<span style="color:#4ade80">B0</span> (baseline, k=4, margin=180) → '+
+  '<span style="color:#fb923c">H1→H3</span> (hardening) → '+
+  '<span style="color:#fb010d">H4→H5</span> (max, margin=135). '+
+  '<span style="color:var(--text3)">H6 disabled</span> (CASERT_H_MAX=5, 0% stability).<br><br>'+
+  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block.</b><br><br>'+
+  '<b style="color:var(--green)">ANTI-STALL (mining only):</b> After <b>max(ahead × 600s, 7200s)</b> without a block, profile decays <b>1 level per 1200s</b> (uniform, 20 min/level). Miner declares used profile in block JSON; node validates it within E3–H5 bounds.<br><br>'+
+  '<b>Chain selection:</b> Best chain by <b>cumulative work</b> (NOT longest chain). work = floor(2^256 / (target + 1)). Reorg is atomic with full rollback on failure. MAX_REORG_DEPTH = 500 blocks.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
