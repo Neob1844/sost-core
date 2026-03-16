@@ -974,11 +974,10 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
         <p class="spec-desc">
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
           consensus-rate control system. It integrates three components:
-          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E3&ndash;H5 that adjust
+          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E3&ndash;H6 that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E3) through baseline (B0) to maximum hardening (H5). H6 is disabled at
-          consensus level (CASERT_H_MAX=5) because 0% stability would halt the chain.
+          deep easing (E3) through baseline (B0) to maximum hardening (H6).
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -993,7 +992,7 @@ I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256
 <span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
 U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
 
-H = clamp(U &gt;&gt; <span class="num">16</span>, E3=<span class="num">-3</span>, H5=<span class="num">5</span>)   <span class="cmt">// H6 disabled (0% stability)</span>
+H = clamp(U &gt;&gt; <span class="num">16</span>, E3=<span class="num">-3</span>, H6=<span class="num">6</span>)   <span class="cmt">// max hardening</span>
 
 <span class="cmt">// Safety rules</span>
 <span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
@@ -1047,11 +1046,11 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--red-primary)"></span>
-              H4&ndash;H5 MAX
+              H4&ndash;H6 MAX
             </div>
             <div class="mode-params">
-              scale=2 &middot; k=5&ndash;6 &middot; margin=145&ndash;135 &middot; steps=5&ndash;6<br>
-              <em>Maximum hardening. H6 (scale=3, margin=125) disabled.</em>
+              scale=2&ndash;3 &middot; k=5&ndash;7 &middot; margin=145&ndash;135 &middot; steps=5&ndash;7<br>
+              <em>Maximum hardening. H6 (scale=3, k=7, steps=7, margin=135).</em>
             </div>
           </div>
         </div>
@@ -1070,7 +1069,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E3 and H5.<br>
+            &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E3 and H6.<br>
             &bull; Slew rate &plusmn;1/block ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
             &bull; Anti-stall decays uniformly at 1 level per 1200s after a 2-hour floor.
@@ -1084,7 +1083,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>5</code> <span class="comment">// H5 (max hardening; H6 disabled)</span></td>
+            <td class="val"><code>6</code> <span class="comment">// H6 (max hardening)</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>
@@ -1389,7 +1388,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           <tr><td class="key">Difficulty adjust</td><td class="val">Every 2016 blocks</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--text-primary);">Every block (cASERT exp.)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
           <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Decay (2h floor, 1 level/20min)</td></tr>
-          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E3&ndash;H5 (&plusmn;1/block)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E3&ndash;H6 (&plusmn;1/block)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
           <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>

@@ -106,7 +106,7 @@ inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatili
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -3;     // E3 (deep easing)
-inline constexpr int32_t  CASERT_H_MAX            = 5;      // H5 max (H6 has 0% stability — chain halt)
+inline constexpr int32_t  CASERT_H_MAX            = 6;      // H6 max (full hardening range E3-H6)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -131,7 +131,7 @@ inline constexpr CasertProfile CASERT_PROFILES[] = {
     {1,3,3,240}, {1,3,4,220}, {1,4,4,200}, {1,4,4,180},
     // Hardening: gradual scale increase, smooth margin reduction
     {1,5,4,170}, {1,5,5,160}, {2,5,5,155}, {2,6,5,145},
-    {2,6,6,135}, {3,7,6,125}
+    {2,6,6,135}, {3,7,7,135}
 };
 inline constexpr int32_t CASERT_PROFILE_COUNT = 10;
 // Index offset: profile_index + 3 = array index

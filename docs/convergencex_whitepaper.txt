@@ -734,7 +734,7 @@ Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ, 12h half-life
 Per-block delta cap        6.25% (1/16)
-Equalizer profiles         E3(-3) through H5(+5); H6 disabled at consensus
+Equalizer profiles         E3(-3) through H6(+6)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
 cASERT thresholds          L2=5, L3=26, L4=51, L5=76, L6+=101 blocks ahead
 cASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
@@ -758,7 +758,7 @@ The cASERT equalizer is consensus-critical. It adjusts ConvergenceX stability
 parameters according to the equalizer profile. Block validation verifies the
 equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 
-The equalizer profiles range from E3(-3) through H5(+5); H6 disabled at consensus. B0 is baseline.
+The equalizer profiles range from E3(-3) through H6(+6). B0 is baseline.
 It adjusts stability verification intensity based on how far ahead the chain
 is relative to the ideal schedule.
 
@@ -2253,7 +2253,7 @@ NOTE: The Foundation reserves the right to accelerate or delay any committed tim
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% delta cap |
-| cASERT equalizer | Consensus-critical, profiles E3(-3) through H5(+5); H6 disabled at consensus, B0 baseline, hardening only when ahead of schedule |
+| cASERT equalizer | Consensus-critical, profiles E3(-3) through H6(+6), B0 baseline, hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |

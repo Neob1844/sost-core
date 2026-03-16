@@ -155,7 +155,7 @@ int main() {
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
     TEST("H_MIN == -3", CASERT_H_MIN == -3);
-    TEST("H_MAX == 5", CASERT_H_MAX == 5);
+    TEST("H_MAX == 6", CASERT_H_MAX == 6);
     TEST("PROFILE_COUNT == 10", CASERT_PROFILE_COUNT == 10);
 
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);

@@ -171,7 +171,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX Transcript V2 (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation via 11-phase segment/round verification at ~0.2ms, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H5; H6 disabled) |
+| Difficulty | cASERT unified (bitsQ Q16.16, 12h half-life, 6.25% per-block delta cap, equalizer profiles E3-H6) |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
@@ -218,7 +218,7 @@ Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BU
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E3-H5; H6 disabled), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E3-H6), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 

@@ -600,16 +600,16 @@ const CASERT_PROFILES=[
   {name:'H3',H:3,scale:2,steps:5,k:5,margin:155},
   {name:'H4',H:4,scale:2,steps:6,k:5,margin:145},
   {name:'H5',H:5,scale:2,steps:6,k:6,margin:135},
-  {name:'H6',H:6,scale:3,steps:7,k:6,margin:125},
+  {name:'H6',H:6,scale:3,steps:7,k:7,margin:135},
 ];
 function getProfile(signal) {
   // Estimate H from block timing ratio (simplified equalizer model)
-  // In real consensus, H = clamp(U>>16, [-3,5]) from EWMA signals (H6 disabled)
+  // In real consensus, H = clamp(U>>16, [-3,6]) from EWMA signals
   // Here we approximate from lag
   var H = 0; // default B0
   if (signal < 0) { // ahead of schedule
     var ahead = -signal;
-    if (ahead >= 20) H = Math.min(5, Math.floor(ahead / 10));
+    if (ahead >= 20) H = Math.min(6, Math.floor(ahead / 10));
     else if (ahead >= 5) H = 1;
   } else if (signal > 5) { // behind schedule
     H = Math.max(-3, -Math.floor(signal / 10));
@@ -718,12 +718,12 @@ function renderCasertPanel(signal,mode){
     var p=CASERT_PROFILES[li];var active=p.H===prof.H;
     var compute=p.scale*p.k*p.steps;
     var rowStyle=active?'casert-active':'';
-    var disabled=(p.name==='H6');
-    var disabledStyle=disabled?' style="opacity:0.35;text-decoration:line-through"':'';
-    var disabledTag=disabled?' <span style="font-size:9px;color:var(--text3)">(disabled)</span>':'';
+    var disabled=false;
+    var disabledStyle='';
+    var disabledTag='';
     tableRows+='<tr class="'+rowStyle+'"'+disabledStyle+'><td style="color:var(--text3)">'+p.name+disabledTag+'</td><td style="color:'+getLevelColor(p.H)+';font-weight:600">H='+p.H+'</td><td class="cn">'+p.scale+'</td><td class="cn">'+p.k+'</td><td class="cn">'+p.steps+'</td><td class="cn">'+p.margin+'</td><td class="cg">'+compute+'</td></tr>';
   }
-  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">cASERT unified equalizer profiles</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.k+'</div><div class="casert-param-desc">Stability probes per hash. Current: k='+prof.k+' (profile '+prof.name+'). Varies by equalizer level.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.steps+'</div><div class="casert-param-desc">Gradient steps per perturbation. Current: '+prof.steps+' steps (profile '+prof.name+'). Harder profiles use more steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.scale+'</div><div class="casert-param-desc">Perturbation amplitude. Scale='+prof.scale+', margin='+prof.margin+'. Harder profiles push further with tighter margin.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">PROFILE TABLE <span style="color:var(--purple)">\u00B7 E3 (easing) \u2192 B0 (baseline) \u2192 H5 (max hardening)</span></div><table class="casert-tbl"><thead><tr><th>PROFILE</th><th>H</th><th>SCALE</th><th>K</th><th>STEPS</th><th>MARGIN</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table><div style="font-size:9px;color:var(--text3);margin-top:6px;">Maximum active profile: H5. H6 disabled at consensus level (CASERT_H_MAX=5) \u2014 0% stability rate would halt the chain.</div></div>';
+  return '<div class="casert-panel"><div class="casert-title">// <b>CONVERGENCEX STABILITY TEST</b> <span style="color:var(--text3)">cASERT unified equalizer profiles</span></div><div class="casert-params"><div class="casert-param"><div class="casert-param-label">K \u00B7 PERTURBATIONS</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.k+'</div><div class="casert-param-desc">Stability probes per hash. Current: k='+prof.k+' (profile '+prof.name+'). Varies by equalizer level.</div></div><div class="casert-param"><div class="casert-param-label">STEPS \u00B7 GRADIENT DESCENT</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.steps+'</div><div class="casert-param-desc">Gradient steps per perturbation. Current: '+prof.steps+' steps (profile '+prof.name+'). Harder profiles use more steps.</div></div><div class="casert-param"><div class="casert-param-label">SCALE \u00B7 PERTURBATION SIZE</div><div class="casert-param-val" style="color:'+getLevelColor(prof.H)+'">'+prof.scale+'</div><div class="casert-param-desc">Perturbation amplitude. Scale='+prof.scale+', margin='+prof.margin+'. Harder profiles push further with tighter margin.</div></div></div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">PROFILE TABLE <span style="color:var(--purple)">\u00B7 E3 (easing) \u2192 B0 (baseline) \u2192 H6 (max hardening)</span></div><table class="casert-tbl"><thead><tr><th>PROFILE</th><th>H</th><th>SCALE</th><th>K</th><th>STEPS</th><th>MARGIN</th><th>COMPUTE</th></tr></thead><tbody>'+tableRows+'</tbody></table><div style="font-size:9px;color:var(--text3);margin-top:6px;">Maximum active profile: H6 (CASERT_H_MAX=6). Scale=3, k=7, steps=7, margin=135.</div></div>';
 }
 function renderStats(i){
   document.getElementById('statsCode').innerHTML='<span class="s-comment">// SOST network status</span>\n<span class="s-type">const</span> <span class="s-key">chain</span> <span class="s-sep">=</span> <span class="s-bracket">{</span>\n  <span class="s-key">height</span><span class="s-sep">:</span>    <span class="s-red">'+i.blocks.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">bits_q</span><span class="s-sep">:</span>    <span class="s-num">'+i.difficulty.toLocaleString()+'</span><span class="s-sep">,</span>    <span class="s-comment">// SOSTCompact Q16.16</span>\n  <span class="s-key">bits_real</span><span class="s-sep">:</span>  <span class="s-num">'+(i.difficulty/65536).toFixed(3)+'</span><span class="s-sep">,</span>    <span class="s-comment">// bits_q \u00F7 65536</span>\n  <span class="s-key">peers</span><span class="s-sep">:</span>      <span class="s-num">'+i.connections+'</span><span class="s-sep">,</span>\n  <span class="s-key">mempool</span><span class="s-sep">:</span>    <span class="s-num">'+i.mempool_size+'</span><span class="s-sep">,</span>\n  <span class="s-key">utxo_set</span><span class="s-sep">:</span>  <span class="s-num">'+i.utxo_count.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">version</span><span class="s-sep">:</span>   <span class="s-str">"'+i.version+'"</span><span class="s-sep">,</span>\n  <span class="s-key">balance</span><span class="s-sep">:</span>   <span class="s-str">"'+i.balance+' SOST"</span>\n<span class="s-bracket">}</span><span class="s-sep">;</span>';
@@ -1060,7 +1060,7 @@ function renderDashPanel(key,body,title){
     title.textContent='// NEXT BLOCK';
     var el=document.getElementById('miningHeight');
     var ht=el?el.textContent:'#'+(H+1);
-    var diff=_lastBitsQ?_lastBitsQ.toLocaleString()+' ('+ (_lastBitsQ/65536).toFixed(2)+' bits)':'\u2014';
+    var nb=_nextBitsQ||_lastBitsQ;var diff=nb?nb.toLocaleString()+' ('+(nb/65536).toFixed(2)+' bits)':'\u2014';
     var elapsed=_lastBlockTime?Math.floor(Date.now()/1000-_lastBlockTime):0;
     var em=Math.floor(elapsed/60),es=elapsed%60;
     var eStr=em>0?em+'m '+('0'+es).slice(-2)+'s':es+'s';
@@ -1924,19 +1924,19 @@ function showCXInfo(){
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">cASERT bitsQ</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
   'Half-life: <b>12 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>10 profiles</b> (E3 through H5). '+
+  '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>10 profiles</b> (E3 through H6). '+
   'Computes control signal U from instantaneous rate, schedule lag, integrator, burst score, and volatility.<br><br>'+
   '<b>Formula:</b> U = <span style="color:var(--cyan)">0.05</span>·r + <span style="color:var(--green)">0.40</span>·lag + <span style="color:var(--purple)">0.15</span>·I + <span style="color:var(--orange)">0.05</span>·burst + <span style="color:var(--yellow)">0.02</span>·V<br>'+
-  'Lag dominates (60% of total signal), preventing E3↔H5 oscillation.<br><br>'+
+  'Lag dominates (60% of total signal), preventing E3↔H6 oscillation.<br><br>'+
   '<b>Profiles:</b> '+
   '<span style="color:#67e8f9">E3</span> (deep easing, margin=240) → '+
   '<span style="color:#22d3ee">E2→E1</span> (easing) → '+
   '<span style="color:#4ade80">B0</span> (baseline, k=4, margin=180) → '+
   '<span style="color:#fb923c">H1→H3</span> (hardening) → '+
-  '<span style="color:#fb010d">H4→H5</span> (max, margin=135). '+
-  '<span style="color:var(--text3)">H6 disabled</span> (CASERT_H_MAX=5, 0% stability).<br><br>'+
+  '<span style="color:#fb010d">H4→H5</span> (hardening) → '+
+  '<span style="color:#fb010d">H6</span> (max, scale=3, k=7, steps=7, margin=135).<br><br>'+
   '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block.</b><br><br>'+
-  '<b style="color:var(--green)">ANTI-STALL (mining only):</b> After <b>max(ahead × 600s, 7200s)</b> without a block, profile decays <b>1 level per 1200s</b> (uniform, 20 min/level). Miner declares used profile in block JSON; node validates it within E3–H5 bounds.<br><br>'+
+  '<b style="color:var(--green)">ANTI-STALL (mining only):</b> After <b>max(ahead × 600s, 7200s)</b> without a block, profile decays <b>1 level per 1200s</b> (uniform, 20 min/level). Miner declares used profile in block JSON; node validates it within E3–H6 bounds.<br><br>'+
   '<b>Chain selection:</b> Best chain by <b>cumulative work</b> (NOT longest chain). work = floor(2^256 / (target + 1)). Reorg is atomic with full rollback on failure. MAX_REORG_DEPTH = 500 blocks.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
