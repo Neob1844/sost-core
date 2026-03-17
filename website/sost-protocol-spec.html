@@ -12,10 +12,16 @@
 body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:13px;line-height:1.8}
 .c{max-width:900px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 .container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
-.hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--bdr)}
-.hero h1{font-family:var(--disp);font-size:28px;font-weight:600;letter-spacing:-1px}
+.hero{padding:80px 0 60px;border-bottom:1px solid var(--bdr);position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.06) 0%,transparent 70%);pointer-events:none}
+.hero-label{font-size:11px;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-label::before{content:'//';color:var(--t2)}
+.hero h1{font-family:var(--disp);font-size:clamp(32px,5vw,52px);font-weight:700;line-height:1.1;letter-spacing:-1px;margin-bottom:20px}
 .hero h1 span{color:var(--red)}
-.hero p{color:var(--t2);font-size:12px;margin-top:10px;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.8}
+.hero-sub{font-size:15px;color:var(--t2);max-width:680px;line-height:1.8;font-weight:300}
+.fade-in{opacity:0;transform:translateY(12px);animation:fadeUp .6s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}
 section{padding:48px 0;border-bottom:1px solid var(--bdr)}
 h2{font-family:var(--disp);font-size:20px;font-weight:600;margin-bottom:20px;color:var(--t1)}
 h2 span{color:var(--red)}
@@ -90,10 +96,18 @@ footer a{color:var(--t3);text-decoration:none}
 
 
 
-<div class="hero"><div class="c">
-<h1>SOST <span>Technical Reference</span></h1>
-<p>Complete protocol specification derived from the C++ source code. Every constant, formula, and rule documented with exact file references. Genesis: 2026-03-15 18:00:00 UTC.</p>
-</div></div>
+<section class="hero">
+  <div class="c">
+    <div class="hero-label fade-in">PROTOCOL SPEC</div>
+    <h1 class="fade-in delay-1">
+      <span>Technical</span><br>
+      Reference
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      Complete protocol specification derived from the C++ source code. Every constant, formula, and rule documented with exact file references. Genesis: 2026-03-15 18:00:00 UTC.
+    </p>
+  </div>
+</section>
 
 <section><div class="c">
 <div class="toc">
