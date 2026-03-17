@@ -678,27 +678,23 @@
     </div>
     <script>
     (function(){
-      var RPC_URL='https://sostcore.com';
       var el=document.getElementById('chainLive');
       function update(){
-        fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
+        fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getinfo","params":[],"id":1}'})
         .then(function(r){return r.json();})
         .then(function(j){
           var d=j.result||j;
           var h=d.blocks||0;
-          var sub=785100863,ts=BigInt(sub)*BigInt(h+1),sost=Number(ts)/1e8;
-          // Estimate time since last block (rough: now - genesis - blocks*600)
-          var now=Math.floor(Date.now()/1000);
-          var genesis=1773597600;
-          var estLast=genesis+h*600;
-          var ago=Math.max(0,now-estLast);
-          var aM=Math.floor(ago/60),aS=ago%60;
-          var agoStr=aM>0?aM+'m '+('0'+aS).slice(-2)+'s ago':aS+'s ago';
+          var bits=(d.difficulty||765730)/65536.0;
+          var sost=(h+1)*7.85100863;
+          var utxos=d.utxo_count||0;
           el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
             ' <span style="color:#333">&middot;</span> '+
-            '<span style="color:#999">MINED: '+agoStr+'</span>'+
+            '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
             ' <span style="color:#333">&middot;</span> '+
-            '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+sost.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:4})+' SOST</span>';
+            '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+sost.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:4})+' SOST</span>'+
+            ' <span style="color:#333">&middot;</span> '+
+            '<span style="color:#999">UTXOs: '+utxos.toLocaleString()+'</span>';
         })
         .catch(function(){
           el.innerHTML='<span style="color:#666">Node offline</span>';
