@@ -456,33 +456,33 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           MINING BLOCK <span id="miningHeight" style="color:var(--text);font-weight:700;">#—</span>
         </div>
         <div style="font-size:11px;color:var(--text);">
-          Difficulty: <span id="miningDiff" style="color:var(--purple);font-weight:600;">—</span>
+          <span class="pi" onclick="toggleParamInfo('difficulty')">Difficulty: <span id="miningDiff" style="color:var(--purple);font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
         </div>
         <div style="font-size:11px;color:var(--text);">
-          Elapsed: <span id="miningElapsed" style="font-weight:600;">—</span>
-          &middot; Target: <span style="color:var(--text3);">10m 00s</span>
+          <span class="pi" onclick="toggleParamInfo('elapsed')">Elapsed: <span id="miningElapsed" style="font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
+          &middot; <span class="pi" onclick="toggleParamInfo('target')">Target: <span style="color:var(--text3);">10m 00s</span> <span class="pi-i">\u24D8</span></span>
         </div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;" id="miningStatus">searching nonce...</div>
       </div>
       <!-- Row 2: Block details -->
       <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
         <span>prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a></span>
-        <span>bitsQ: <span id="miningBitsQRaw" style="color:var(--purple);font-weight:600;">—</span></span>
-        <span>profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=180 steps=4)</span></span>
-        <span>stability: <span id="miningStabRate" style="font-weight:600;">—</span></span>
+        <span class="pi" onclick="toggleParamInfo('bitsq')">bitsQ: <span id="miningBitsQRaw" style="color:var(--purple);font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
+        <span class="pi" onclick="toggleParamInfo('profile')">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=185 steps=4)</span> <span class="pi-i">\u24D8</span></span>
+        <span class="pi" onclick="toggleParamInfo('stability')">stability: <span id="miningStabRate" style="font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
         <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
       </div>
       <!-- Row 3: Probability -->
       <div id="miningProbRow" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;color:var(--text3);line-height:1.7;font-family:var(--code);">
-        <span style="letter-spacing:1px;color:var(--text3);">PROBABILITY</span>
+        <span class="pi" onclick="toggleParamInfo('psolve')" style="letter-spacing:1px;color:var(--text3);">PROBABILITY <span class="pi-i">\u24D8</span></span>
         <span id="miningProb" style="margin-left:8px;">—</span><br>
-        <span id="miningProbTable" style="color:var(--text3);">—</span><br>
-        <span id="miningExpTime" style="color:var(--text);">—</span>
+        <span class="pi" onclick="toggleParamInfo('thresholds')"><span id="miningProbTable" style="color:var(--text3);">—</span> <span class="pi-i">\u24D8</span></span><br>
+        <span class="pi" onclick="toggleParamInfo('exptime')"><span id="miningExpTime" style="color:var(--text);">—</span> <span class="pi-i">\u24D8</span></span>
         <span id="miningOverdue" style="color:#fbbf24;display:none;margin-left:8px;">&#9888; block overdue — unlucky variance</span>
       </div>
       <!-- Row 4: Nonce counter + progress bar -->
       <div style="margin-top:6px;font-size:10px;color:#c8c8c8;font-family:var(--code);">
-        <span style="letter-spacing:1px;color:var(--text3);font-size:9px;">NONCE</span>
+        <span class="pi" onclick="toggleParamInfo('nonce')" style="letter-spacing:1px;color:var(--text3);font-size:9px;">NONCE <span class="pi-i">\u24D8</span></span>
         <span id="miningNonce" style="margin-left:8px;color:#c8c8c8;">~0</span>
         <span id="miningNonceMax" style="color:var(--text3);">/ —</span>
         <div id="nonceBarWrap" style="position:relative;height:8px;background:#1a1a1a;border-radius:4px;margin-top:6px;overflow:visible;cursor:crosshair;">
@@ -495,11 +495,38 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <!-- Row 5: Anti-stall -->
       <div id="antiStallPanel" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="letter-spacing:1px;color:var(--text3);font-size:9px;">ANTI-STALL:</span>
+        <span class="pi" onclick="toggleParamInfo('antistall')" style="letter-spacing:1px;color:var(--text3);font-size:9px;">ANTI-STALL: <span class="pi-i">\u24D8</span></span>
         <span id="asIndicator" style="font-weight:600;"></span>
         <span id="asCountdown" style="color:#fbbf24;"></span>
       </div>
     </div>
+    <!-- Parameter explanation panel -->
+    <div id="paramExplain" style="display:none;background:#0d0d0d;border-left:3px solid #00e5ff;padding:0 14px;margin-top:6px;font-family:var(--code);font-size:10px;color:#ccc;line-height:1.7;white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;border-radius:0 4px 4px 0;"></div>
+    <style>.pi{cursor:pointer;transition:opacity .2s}.pi:hover{opacity:.8;text-decoration:underline}.pi-i{font-size:8px;color:var(--text3);opacity:.5}</style>
+    <script>
+    var _paramTexts={
+difficulty:'DIFFICULTY \u2014 How hard it is to find the current block. Measured in bits using SOSTCompact Q16.16 encoding. Higher value = harder to mine. The difficulty adjusts automatically via cASERT (cascading ASERT) to maintain the 10-minute block target. Current value means each nonce attempt has a probability of roughly 1/2^bits of finding the block.',
+elapsed:'ELAPSED \u2014 Time spent searching for this block since mining started. Compared against the 10-minute target to gauge progress. If elapsed exceeds the target, the block is "overdue" \u2014 this is normal variance, not a problem. Mining is probabilistic: some blocks take seconds, others take 30+ minutes.',
+target:'TARGET \u2014 The ideal time between blocks. SOST targets one block every 10 minutes (600 seconds). The cASERT difficulty algorithm continuously adjusts to maintain this rate. If blocks come too fast, difficulty increases. If too slow, it decreases.',
+bitsq:'BITSQ \u2014 Raw difficulty value in SOSTCompact Q16.16 fixed-point format. The first number is the raw integer encoding, the parenthetical is the decoded bit-length. SOSTCompact provides finer granularity than Bitcoin\'s nBits by using 16 fractional bits, allowing sub-1% difficulty adjustments.',
+profile:'cASERT PROFILE \u2014 Current stability test profile selected by the equalizer.\n\n17 profiles from E4 (easiest) to H12 (hardest), with H_MAX=9 active:\nE4-E1: Easing \u2014 relaxed stability, used during stalls\nB0: Baseline \u2014 normal operating profile\nH1-H9: Hardening \u2014 stricter stability during surges\nH10-H12: Reserved for future activation\n\nScale: Perturbation amplitude (1, 2, or 3)\nK: Number of perturbation vectors\nSteps: Iterations per perturbation\nMargin: Minimum stability metric (higher = easier)\n\nSlew rate: \u00B11 profile per block.\nU = 0.05\u00B7r + 0.40\u00B7lag + 0.15\u00B7I + 0.05\u00B7burst + 0.02\u00B7V',
+stability:'STABILITY \u2014 Percentage of recent nonce attempts that passed the ConvergenceX stability basin test. ~100% at B0 is normal. Lower rates occur at harder profiles (H3+) where the perturbation test is more demanding. The metric is committed to the block hash via commit V3 format.',
+psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calculated from difficulty target. Example: 3.63e-4 means each attempt has a 0.0363% chance \u2014 like rolling a die with ~2,758 faces. Determines E[n] = 1/P(solve).',
+thresholds:'PROBABILITY THRESHOLDS \u2014 Cumulative probability milestones.\n"50% \u2192 ~1,912" means by nonce 1,912 there is a 50% chance the block has been found.\nThe checkmark appears when the miner has PASSED that count.\n\n50% \u2014 coin flip point\n75% \u2014 three quarters likely\n90% \u2014 getting unlucky\n95% \u2014 significantly unlucky, but still normal variance',
+exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[72] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
+nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[72] (72-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
+antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for max(ahead\u00D7600, 7200) seconds (min 2h).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
+    };
+    var _openParam=null;
+    function toggleParamInfo(key){
+      var el=document.getElementById('paramExplain');if(!el)return;
+      if(_openParam===key){el.style.maxHeight='0';el.style.padding='0 14px';setTimeout(function(){el.style.display='none';},400);_openParam=null;return;}
+      el.textContent=_paramTexts[key]||key;
+      el.style.display='block';
+      setTimeout(function(){el.style.maxHeight='400px';el.style.padding='10px 14px';},10);
+      _openParam=key;
+    }
+    </script>
   </div>
   <div class="section" id="blocksSection">
     <div class="sec-head"><div class="sec-title">// <b style="cursor:pointer" onclick="off=0;loadBlocks();">LATEST BLOCKS</b></div><div class="sec-meta" id="blockRange"></div></div>
