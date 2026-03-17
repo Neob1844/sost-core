@@ -54,6 +54,7 @@ struct MinedBlock {
     int64_t  miner_reward, gold_vault_reward, popc_pool_reward;
     // Mining profile (actual params used, including any anti-stall decay)
     int32_t stab_scale, stab_k, stab_margin, stab_steps, stab_lr_shift;
+    int32_t profile_index{0}; // committed to block hash
     std::vector<uint8_t> x_bytes;
     Bytes32 final_state;
     std::vector<Bytes32> checkpoint_leaves;
@@ -230,7 +231,8 @@ static bool load_genesis(const std::string& path) {
 // Chain saver
 // =============================================================================
 static bool save_chain(const std::string& path) {
-    std::ofstream f(path); if (!f) return false;
+    std::string tmp = path + ".tmp";
+    std::ofstream f(tmp); if (!f) return false;
     f << "{\n  \"chain_height\": " << (int64_t)(g_chain.size() - 1)
       << ",\n  \"tip\": \"" << hex(g_tip_hash) << "\",\n  \"blocks\": [\n";
     for (size_t i = 0; i < g_mined_blocks.size(); ++i) {
@@ -248,7 +250,10 @@ static bool save_chain(const std::string& path) {
           << (i + 1 < g_mined_blocks.size() ? ",\n" : "\n");
     }
     f << "  ]\n}\n";
-    return f.good();
+    f.flush();
+    if (!f.good()) return false;
+    f.close();
+    return std::rename(tmp.c_str(), path.c_str()) == 0;
 }
 
 // =============================================================================
@@ -410,6 +415,7 @@ static bool rpc_submit_block_full(
         + ",\"stab_margin\":" + std::to_string(mb.stab_margin)
         + ",\"stab_steps\":" + std::to_string(mb.stab_steps)
         + ",\"stab_lr_shift\":" + std::to_string(mb.stab_lr_shift)
+        + ",\"profile_index\":" + std::to_string(mb.profile_index)
         + ",\"x_bytes\":\"" + to_hex_str(mb.x_bytes.data(), mb.x_bytes.size()) + "\""
         + ",\"final_state\":\"" + hex(mb.final_state) + "\""
         + ",\"segments_root\":\"" + hex(mb.segments_root) + "\"";
@@ -724,6 +730,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.stab_margin = params.stab_margin;
                 mb.stab_steps = params.stab_steps;
                 mb.stab_lr_shift = params.stab_lr_shift;
+                mb.profile_index = params.stab_profile_index;
                 mb.x_bytes = res.x_bytes;
                 mb.final_state = res.final_state;
                 mb.checkpoint_leaves = res.checkpoint_leaves;

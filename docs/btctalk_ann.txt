@@ -17,7 +17,7 @@
 [tr][td]Max supply[/td][td]4,669,201 SOST (hard cap by construction)[/td][/tr]
 [tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788[/td][/tr]
 [tr][td]Coinbase split[/td][td]50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
-[tr][td]Difficulty[/td][td]cASERT unified (12h bitsQ half-life + equalizer profiles)[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified (12h bitsQ half-life + 17 equalizer profiles E4-H9, H10-H12 reserved)[/td][/tr]
 [tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point[/td][/tr]
 [tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
 [tr][td]Premine[/td][td]NONE[/td][/tr]
@@ -72,9 +72,9 @@ ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×3
 
 [b]Per-block program:[/b] Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 8GB LPDDR5 on-package (4GB dataset + 4GB scratchpad) and a general-purpose ALU — economically equivalent to building a CPU.
 
-[b]Unified cASERT difficulty:[/b] The bitsQ primary controller handles long-term hashrate calibration with a 12-hour half-life and per-block adjustment. The equalizer is a unidirectional component that hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection). The equalizer uses profiles (E3-H6) that progressively tighten stability requirements. If no block is found for an extended period (max(ahead x 10min, 2 hours) -- proportional to blocks ahead, no ceiling), a decay mechanism gradually reduces the equalizer level to prevent permanent chain stall. Decay affects mining only, never block validation.
+[b]Unified cASERT difficulty:[/b] The bitsQ primary controller handles long-term hashrate calibration with a 12-hour half-life and per-block adjustment. The equalizer uses 17 profiles (E4(-4) through H9(+9), H10-H12 reserved) that adjust ConvergenceX stability parameters based on chain timing. When the chain runs ahead of schedule, profiles harden progressively. Zone-based anti-stall decay targets B0 as the natural destination: H9-H7 at 600s/level, H6-H4 at 900s/level, H3-H1 at 1200s/level. Easing below B0 (E1-E4) only after 6+ additional hours at B0, at 1800s/level. Decay affects mining only, never block validation.
 
-[b]Decay tiers:[/b] L8+ drops 1 level every 10 min (fast), L4-L7 every 20 min (medium), L2-L3 every 30 min (cautious). Cost uses the [b]current[/b] effective level as it drops. [b]Example -- L10 (450 ahead):[/b] Activation at 75h. Then: L10->L8 FAST (30min), L7->L4 MEDIUM (80min), L3->L1 SLOW (60min). Total decay: 170 min. Total from start: ~78 hours.
+[b]Anti-stall zones:[/b] H9-H7 drop 1 level every 10 min (fast), H6-H4 every 15 min (medium), H3-H1 every 20 min (cautious). B0 is the natural floor for hardening decay. Easing into E1-E4 requires extended time at B0.
 
 All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.
 

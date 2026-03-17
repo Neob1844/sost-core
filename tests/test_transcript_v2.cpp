@@ -142,8 +142,11 @@ void test_full_transcript_v2() {
     append(cbuf, res.x_bytes.data(), res.x_bytes.size());
     append(cbuf, res.checkpoints_root); append(cbuf, res.segments_root);
     append_u64_le(cbuf, res.stability_metric);
+    // V3: profile_index committed
+    int8_t pi8 = (int8_t)params.stab_profile_index;
+    cbuf.push_back((uint8_t)pi8);
     Bytes32 expected_commit = sha256(cbuf);
-    TEST("commit binding correct", expected_commit == res.commit);
+    TEST("commit binding correct (V3 with profile_index)", expected_commit == res.commit);
 
     // G. Full verification
     printf("\n=== Full Proof Verification ===\n");

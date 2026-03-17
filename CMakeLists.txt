@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(sost-core LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Always include debug symbols for crash diagnostics (core dumps)
+add_compile_options(-g)
 
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)

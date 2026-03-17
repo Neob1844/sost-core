@@ -105,8 +105,8 @@ inline constexpr int32_t  CASERT_K_B              = 3277;   // 0.05 — burst sc
 inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatility (was 0.10)
 
 // Profile index bounds
-inline constexpr int32_t  CASERT_H_MIN            = -3;     // E3 (deep easing)
-inline constexpr int32_t  CASERT_H_MAX            = 6;      // H6 max (full hardening range E3-H6)
+inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
+inline constexpr int32_t  CASERT_H_MAX            = 9;      // H9 max (H10-H12 defined but capped)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -114,30 +114,34 @@ inline constexpr int64_t  CASERT_DT_MIN           = 1;      // prevent div by ze
 inline constexpr int64_t  CASERT_DT_MAX           = 86400;  // 24h cap
 
 // --- cASERT anti-stall ---
+// Decay is zone-based and targets B0 as natural destination.
+// Easing profiles (E1-E4) only activate after 6+ additional hours at B0.
 inline constexpr int64_t  CASERT_ANTISTALL_FLOOR  = 7200;   // minimum 2 hours
-inline constexpr int64_t  CASERT_ANTISTALL_DROP_INTERVAL = 1200; // 1 profile level per 20 min
+inline constexpr int64_t  CASERT_ANTISTALL_EASING_EXTRA = 21600; // 6h at B0 before easing
 inline constexpr int32_t  CASERT_ANTISTALL_INTEG_DECAY = 240; // I *= 240/256 per 600s
 
-// --- cASERT profile table ---
+// --- cASERT profile table (17 profiles) ---
 // Each profile: { scale, steps, k, margin }
-// Index: -3=E3, -2=E2, -1=E1, 0=B0, 1=H1, ..., 6=H6
+// Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 12=H12
+// Active range: E4(-4) to H9(+9). H10-H12 defined but capped (future reserve).
 struct CasertProfile {
     int32_t scale, steps, k, margin;
 };
 
 inline constexpr CasertProfile CASERT_PROFILES[] = {
-    // E3   E2   E1   B0   H1    H2    H3    H4    H5    H6
-    // Easing: relaxed stability (wider margin, fewer tests)
-    {1,3,3,240}, {1,3,4,220}, {1,4,4,200}, {1,4,4,180},
-    // Hardening: gradual scale increase, smooth margin reduction
-    {1,5,4,170}, {1,5,5,160}, {2,5,5,155}, {2,6,5,145},
-    {2,6,6,135}, {3,7,7,135}
+    // E4       E3       E2       E1       B0
+    {1,2,3,280}, {1,3,3,240}, {1,4,3,225}, {1,4,4,205}, {1,4,4,185},
+    // H1       H2       H3       H4       H5
+    {1,5,4,170}, {1,5,5,160}, {1,6,5,150}, {1,6,6,145}, {2,5,5,140},
+    // H6       H7       H8       H9       H10      H11      H12
+    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120}, {3,7,6,115}, {3,7,7,110}, {3,8,7,105}
 };
-inline constexpr int32_t CASERT_PROFILE_COUNT = 10;
-// Index offset: profile_index + 3 = array index
-// profile_index -3 → array[0] (E3)
-// profile_index  0 → array[3] (B0)
-// profile_index  6 → array[9] (H6)
+inline constexpr int32_t CASERT_PROFILE_COUNT = 17;
+// Index offset: profile_index - CASERT_H_MIN = array index
+// profile_index -4 → array[0] (E4)
+// profile_index  0 → array[4] (B0)
+// profile_index  9 → array[13] (H9)
+// profile_index 12 → array[16] (H12) — reserved, capped at H9
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;
@@ -150,7 +154,7 @@ inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
 // ConvergenceX baseline stability (B0 profile matches these)
 inline constexpr int32_t CX_STB_SCALE  = 1;
 inline constexpr int32_t CX_STB_K      = 4;
-inline constexpr int32_t CX_STB_MARGIN = 180;
+inline constexpr int32_t CX_STB_MARGIN = 185;     // Must match B0 profile in CASERT_PROFILES
 inline constexpr int32_t CX_STB_STEPS  = 4;
 inline constexpr int32_t CX_STB_LR     = 20;   // LR_SHIFT+2
 

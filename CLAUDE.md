@@ -74,7 +74,7 @@ Defined in `include/sost/tx_validation.h`:
 ### PoW system (two layers)
 
 1. **ConvergenceX** (`include/sost/pow/convergencex.h`) — CPU-friendly gradient descent over random 32x32 matrix. Mining requires ~8GB RAM total (4GB dataset + 4GB scratchpad); node validation requires only ~500MB (no dataset/scratchpad). ASIC-resistant. Checkpoint merkle tree for verification.
-2. **cASERT** (`include/sost/pow/casert.h`) — Unified consensus-rate control system combining three integrated components: bitsQ Q16.16 primary hardness regulator (12h half-life, 6.25% per-block delta cap), equalizer profiles (E3 through H6), slew rate limit (±1 level per block), and anti-stall recovery.
+2. **cASERT** (`include/sost/pow/casert.h`) — Unified consensus-rate control system combining three integrated components: bitsQ Q16.16 primary hardness regulator (12h half-life, 6.25% per-block delta cap), 17 equalizer profiles (E4 through H9, H10-H12 reserved for future), CASERT_H_MIN=-4, CASERT_H_MAX=9, slew rate limit (±1 level per block), and zone-based anti-stall recovery.
 
 Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 

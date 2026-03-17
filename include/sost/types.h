@@ -29,6 +29,7 @@ inline int cmp_be(const Bytes32& a, const Bytes32& b) { return std::memcmp(a.dat
 struct ConsensusParams {
     int32_t cx_n, cx_rounds, cx_scratch_mb, cx_lr_shift, cx_lam, cx_checkpoint_interval;
     int32_t stab_scale, stab_k, stab_margin, stab_steps, stab_lr_shift;
+    int32_t stab_profile_index{0}; // committed to block hash — prevents profile downgrade attacks
 };
 struct CoinbaseSplit { int64_t miner, gold_vault, popc_pool, total; };
 // cASERT unified block-rate control decision
@@ -45,9 +46,9 @@ struct CasertDecision {
 };
 
 inline const char* casert_profile_name(int32_t idx) {
-    static const char* names[] = {"E3","E2","E1","B0","H1","H2","H3","H4","H5","H6"};
-    int32_t ai = idx + 3;
-    if (ai < 0 || ai >= 10) return "?";
+    static const char* names[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
+    int32_t ai = idx + 4; // offset by -CASERT_H_MIN (4)
+    if (ai < 0 || ai >= 17) return "?";
     return names[ai];
 }
 struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };

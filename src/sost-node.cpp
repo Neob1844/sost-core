@@ -56,12 +56,16 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <unordered_set>
+#include <deque>
 #include <mutex>
 #include <functional>
 #include <ctime>
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include <csignal>
+#include <stdexcept>
 
 // P2P encryption (X25519 + ChaCha20-Poly1305)
 #include <openssl/evp.h>
@@ -82,6 +86,7 @@ static std::string  g_chain_path  = "";            // v0.3.2: for auto-save afte
 static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
+static bool g_in_reorg = false;        // guard against recursive reorg
 
 // RPC auth (fail-closed by default)
 static std::string g_rpc_user = "";
@@ -89,7 +94,7 @@ static std::string g_rpc_pass = "";
 static bool        g_rpc_auth_required = true;
 static bool        g_rpc_public = false; // default: bind to 127.0.0.1 only
 
-// Block record
+// Block record — stores everything needed for P2P relay and chain.json persistence
 struct StoredBlock {
     Hash256 block_id, prev_hash, merkle_root;
     Hash256 commit, checkpoints_root;
@@ -105,6 +110,15 @@ struct StoredBlock {
     std::string final_state_hex; // Final hash state (hex)
     std::vector<std::string> tx_hexes;  // ALL serialized txs (coinbase + transfers)
     Bytes32 cumulative_work{};   // best chain = highest cumulative valid work
+    // Transcript V2 proof data (for P2P relay — complete verification by remote nodes)
+    std::string segments_root_hex;
+    std::vector<std::string> checkpoint_leaves_hex;
+    // Declared stability profile (miner's profile for CX verification)
+    int32_t stab_scale{0}, stab_k{0}, stab_margin{0}, stab_steps{0}, stab_lr_shift{0};
+    // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
+    // Stored once on acceptance, used for P2P relay and chain.json persistence.
+    // This avoids re-serializing complex nested proof structures.
+    std::string raw_block_json;
 };
 static std::vector<StoredBlock> g_blocks;
 
@@ -324,8 +338,22 @@ static bool g_full_verify_mode = false;
 // Known blocks: blocks we've already accepted or stored as fork/orphan.
 // Used to silently ignore re-broadcast of blocks we already know about.
 // This prevents penalizing peers for normal relay behavior.
-static std::set<std::string> g_known_blocks; // block_id hex
+static std::unordered_set<std::string> g_known_blocks; // block_id hex
+static std::deque<std::string> g_known_blocks_order;   // FIFO for pruning
+static const size_t MAX_KNOWN_BLOCKS = 50000;
 static std::mutex g_known_mu;
+
+// Add block hash to known set with FIFO pruning
+static void mark_block_known(const std::string& hash) {
+    std::lock_guard<std::mutex> lk(g_known_mu);
+    if (g_known_blocks.count(hash)) return;
+    g_known_blocks.insert(hash);
+    g_known_blocks_order.push_back(hash);
+    while (g_known_blocks.size() > MAX_KNOWN_BLOCKS) {
+        g_known_blocks.erase(g_known_blocks_order.front());
+        g_known_blocks_order.pop_front();
+    }
+}
 
 // DoS/ban tracking
 static const int BAN_THRESHOLD = 100;
@@ -712,10 +740,12 @@ static std::string rpc_error(const std::string& id, int code, const std::string&
 }
 
 static std::string handle_getblockcount(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     return rpc_result(id, std::to_string(g_chain_height));
 }
 
 static std::string handle_getblockhash(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing height");
     int64_t h=std::stoll(p[0]);
     if(h<0||h>=(int64_t)g_blocks.size()) return rpc_error(id,-8,"Block height out of range");
@@ -723,6 +753,7 @@ static std::string handle_getblockhash(const std::string& id, const std::vector<
 }
 
 static std::string handle_getblock(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing blockhash");
     for(const auto& b:g_blocks){
         if(to_hex(b.block_id.data(),32)==p[0]){
@@ -789,8 +820,9 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
 }
 
 static std::string handle_getinfo(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     size_t peers_count;
-    { std::lock_guard<std::mutex> lk(g_peers_mu); peers_count=g_peers.size(); }
+    { std::lock_guard<std::mutex> lk2(g_peers_mu); peers_count=g_peers.size(); }
 
     // Show which profile is active so operator can verify at a glance
     const char* profile_str = "unknown";
@@ -862,6 +894,7 @@ static std::string handle_listunspent(const std::string& id, const std::vector<s
 }
 
 static std::string handle_gettxout(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.size()<2) return rpc_error(id,-1,"missing txid and vout");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
     OutPoint op; op.txid=txid; op.index=(uint32_t)std::stoul(p[1]);
@@ -969,6 +1002,7 @@ static std::string handle_submitblock(const std::string& id, const std::vector<s
 static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES);
     std::ostringstream s;
     s << "{\"transactions\":[";
@@ -989,6 +1023,7 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
 
 // TX-INDEX: gettransaction — returns full transaction JSON from confirmed blocks
 static std::string handle_gettransaction(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing txid");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
 
@@ -1218,6 +1253,7 @@ static std::string handle_getaddressbalance(const std::string& id, const std::ve
 }
 
 static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing address");
     std::string addr = p[0];
 
@@ -1436,8 +1472,11 @@ static bool p2p_recv_encrypted(int fd, PeerCrypto& crypto, P2PMsg& msg) {
     if(!read_exact(fd, tag, 16)) return false;
 
     std::vector<uint8_t> plain(clen);
-    if(!chacha20_poly1305_decrypt(crypto.recv_key, crypto.recv_nonce++,
+    // Decrypt with current nonce; only advance nonce on success
+    uint64_t nonce_val = crypto.recv_nonce;
+    if(!chacha20_poly1305_decrypt(crypto.recv_key, nonce_val,
         cipher.data(), clen, tag, plain.data())) return false;
+    crypto.recv_nonce = nonce_val + 1;
 
     memcpy(msg.cmd, plain.data(), 4); msg.cmd[4]=0;
     msg.payload.assign(plain.begin()+4, plain.end());
@@ -1455,6 +1494,12 @@ static void p2p_send_block(int fd, int64_t h) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(h<0||h>=(int64_t)g_blocks.size()) return;
     const auto& b=g_blocks[h];
+    // Use raw_block_json if available (contains complete Transcript V2 proof)
+    if (!b.raw_block_json.empty()) {
+        p2p_send(fd, "BLCK", (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+        return;
+    }
+    // Fallback for genesis/legacy blocks without raw JSON
     std::ostringstream s;
     s<<"{\"block_id\":\""<<to_hex(b.block_id.data(),32)
      <<"\",\"prev_hash\":\""<<to_hex(b.prev_hash.data(),32)
@@ -1471,8 +1516,9 @@ static void p2p_send_block(int fd, int64_t h) {
      <<",\"gold_vault\":"<<b.gold_vault_reward
      <<",\"popc_pool\":"<<b.popc_pool_reward
      <<",\"stability_metric\":"<<b.stability_metric;
-
-    // Include transactions for full block sync (v0.3.2)
+    if (!b.x_bytes_hex.size()) {} else { s<<",\"x_bytes\":\""<<b.x_bytes_hex<<"\""; }
+    if (!b.final_state_hex.empty()) { s<<",\"final_state\":\""<<b.final_state_hex<<"\""; }
+    if (!b.segments_root_hex.empty()) { s<<",\"segments_root\":\""<<b.segments_root_hex<<"\""; }
     if (!b.tx_hexes.empty()) {
         s << ",\"transactions\":[";
         for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
@@ -1481,7 +1527,6 @@ static void p2p_send_block(int fd, int64_t h) {
         }
         s << "]";
     }
-
     s << "}";
     std::string js=s.str();
     p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
@@ -1636,7 +1681,7 @@ static bool process_block(const std::string& block_json) {
                 entry.raw_json = block_json;
                 g_block_index[bid] = entry;
                 g_orphans_by_prev.insert({prev_hex, bid});
-                { std::lock_guard<std::mutex> lk3(g_known_mu); g_known_blocks.insert(bid); }
+                mark_block_known(bid);
                 printf("[ORPHAN] Block h=%lld stored (parent %s unknown). %zu orphans total.\n",
                        (long long)height, prev_hex.substr(0,16).c_str(), g_orphans_by_prev.size());
             }
@@ -1673,7 +1718,7 @@ static bool process_block(const std::string& block_json) {
                 entry.status = BlockStatus::FORK;
                 entry.raw_json = block_json;
                 g_block_index[bid] = entry;
-                { std::lock_guard<std::mutex> lk3(g_known_mu); g_known_blocks.insert(bid); }
+                mark_block_known(bid);
 
                 // Check if this fork has MORE cumulative work than active tip
                 Bytes32 active_tip_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
@@ -1686,7 +1731,8 @@ static bool process_block(const std::string& block_json) {
                     // try_reorganize uses its own locking
                     // NOTE: we already hold g_chain_mu from process_block(), so we call
                     // the internal reorg function directly
-                    try_reorganize(bid);
+                    try { try_reorganize(bid); }
+                    catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
                 } else {
                     printf("[FORK] Fork stored but has LESS cumulative work (no reorg). "
                            "Fork work vs active: %s vs %s\n",
@@ -2035,49 +2081,47 @@ static bool process_block(const std::string& block_json) {
         fflush(stdout);
 
         ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
-        // Use the miner's declared stability profile (includes anti-stall decay)
-        // The miner sends the exact params it used; we verify the proof with those params.
-        // Security: a miner using easier params gets easier stability but still needs commit<=target.
+        // CONSENSUS-CRITICAL: Profile verification
+        // The commit now includes profile_index, so we must verify the miner
+        // used exactly the correct profile. No more trusting free params.
         {
-            int32_t declared_scale = (int32_t)jint(block_json, "stab_scale");
-            int32_t declared_k = (int32_t)jint(block_json, "stab_k");
-            int32_t declared_margin = (int32_t)jint(block_json, "stab_margin");
-            int32_t declared_steps = (int32_t)jint(block_json, "stab_steps");
-            int32_t declared_lr = (int32_t)jint(block_json, "stab_lr_shift");
-
-            if (declared_scale > 0 && declared_k > 0 && declared_margin > 0 && declared_steps > 0) {
-                // Validate: declared params must be within the E3-H6 range (not easier than E3)
-                bool valid_profile = declared_scale >= 1 && declared_scale <= 4
-                    && declared_k >= 3 && declared_k <= 7
-                    && declared_margin >= 120 && declared_margin <= 240
-                    && declared_steps >= 3 && declared_steps <= 7;
-                if (!valid_profile) {
-                    printf("[BLOCK] REJECTED: declared stability params out of valid range (scale=%d k=%d margin=%d steps=%d)\n",
-                           declared_scale, declared_k, declared_margin, declared_steps);
-                    fflush(stdout);
-                    return false;
-                }
-                cx_params.stab_scale = declared_scale;
-                cx_params.stab_k = declared_k;
-                cx_params.stab_margin = declared_margin;
-                cx_params.stab_steps = declared_steps;
-                if (declared_lr > 0) cx_params.stab_lr_shift = declared_lr;
-                printf("[BLOCK-V2] Using miner's declared profile: scale=%d k=%d margin=%d steps=%d lr=%d\n",
-                       cx_params.stab_scale, cx_params.stab_k, cx_params.stab_margin, cx_params.stab_steps, cx_params.stab_lr_shift);
-            } else {
-                // Fallback: recompute from chain (for blocks without declared profile)
-                std::vector<BlockMeta> meta;
-                for (size_t j = 0; j < g_blocks.size(); ++j) {
-                    BlockMeta bm; bm.block_id = g_blocks[j].block_id;
-                    bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
-                    bm.powDiffQ = g_blocks[j].bits_q;
-                    meta.push_back(bm);
-                }
-                auto cdec = sost::casert_compute(meta, height, 0);
-                cx_params = sost::casert_apply_profile(cx_params, cdec);
-                printf("[BLOCK-V2] Fallback cASERT: H=%d scale=%d k=%d margin=%d steps=%d\n",
-                       cdec.profile_index, cx_params.stab_scale, cx_params.stab_k, cx_params.stab_margin, cx_params.stab_steps);
+            // 1. Recompute base profile deterministically from chain history (no anti-stall)
+            std::vector<BlockMeta> meta;
+            meta.reserve(g_blocks.size());
+            for (size_t j = 0; j < g_blocks.size(); ++j) {
+                BlockMeta bm; bm.block_id = g_blocks[j].block_id;
+                bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
+                bm.powDiffQ = g_blocks[j].bits_q;
+                meta.push_back(bm);
             }
+            auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
+            int32_t base_profile = base_dec.profile_index;
+
+            // 2. Read miner's declared profile_index
+            int32_t declared_pi = (int32_t)jint(block_json, "profile_index");
+
+            // 3. Validate: declared profile must be in [CASERT_H_MIN, base_profile]
+            //    Anti-stall can only EASE (lower profile), never harden beyond base.
+            //    If no anti-stall was active, declared must equal base exactly.
+            if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX) {
+                printf("[BLOCK] REJECTED: profile_index %d out of bounds [%d, %d]\n",
+                       declared_pi, CASERT_H_MIN, CASERT_H_MAX);
+                return false;
+            }
+            if (declared_pi > base_profile) {
+                printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
+                       declared_pi, base_profile);
+                return false;
+            }
+
+            // 4. Derive exact params from canonical table — no free params
+            CasertDecision dec_for_profile;
+            dec_for_profile.profile_index = declared_pi;
+            cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+
+            printf("[BLOCK-V3] Profile: declared=%d base=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
+                   declared_pi, base_profile, cx_params.stab_scale, cx_params.stab_k,
+                   cx_params.stab_margin, cx_params.stab_steps);
             fflush(stdout);
         }
 
@@ -2099,8 +2143,11 @@ static bool process_block(const std::string& block_json) {
             append(cbuf_v, x_bytes_raw.data(), x_bytes_raw.size());
             append(cbuf_v, croot32); append(cbuf_v, sroot);
             append_u64_le(cbuf_v, stb);
-            if (sha256(cbuf_v) != commit32) { printf("[BLOCK] REJECTED: commit V2 mismatch\n"); return false; }
-            printf("[BLOCK] Genesis CX proof verified (commit V2 + checkpoint merkle)\n");
+            // V3: profile_index committed (genesis uses B0 = profile_index 0)
+            int8_t genesis_pi = (int8_t)cx_params.stab_profile_index;
+            cbuf_v.push_back((uint8_t)genesis_pi);
+            if (sha256(cbuf_v) != commit32) { printf("[BLOCK] REJECTED: commit V3 mismatch\n"); return false; }
+            printf("[BLOCK] Genesis CX proof verified (commit V3 + checkpoint merkle)\n");
         } else {
             // Full Transcript V2 verification for non-genesis blocks
             if (!sost::verify_cx_proof(hc72, nonce, extra,
@@ -2192,6 +2239,14 @@ static bool process_block(const std::string& block_json) {
     sb.x_bytes_hex = x_bytes_hex;
     sb.final_state_hex = final_state_hex;
     sb.tx_hexes = tx_hexes;  // PERSIST all transaction hex strings
+    // Store Transcript V2 proof data and raw JSON for P2P relay
+    sb.segments_root_hex = jstr(block_json, "segments_root");
+    sb.stab_scale = (int32_t)jint(block_json, "stab_scale");
+    sb.stab_k = (int32_t)jint(block_json, "stab_k");
+    sb.stab_margin = (int32_t)jint(block_json, "stab_margin");
+    sb.stab_steps = (int32_t)jint(block_json, "stab_steps");
+    sb.stab_lr_shift = (int32_t)jint(block_json, "stab_lr_shift");
+    sb.raw_block_json = block_json; // full JSON for relay
 
     // Compute cumulative chainwork: parent_work + this block's work
     // best chain = highest cumulative valid work
@@ -2257,7 +2312,7 @@ static bool process_block(const std::string& block_json) {
     }
 
     // Mark block as known (prevents re-processing on relay back from peers)
-    { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
+    mark_block_known(bid);
 
     // Show chainwork with significant bytes (skip leading zeros for readability)
     std::string cw_hex = to_hex(sb.cumulative_work.data(), 32);
@@ -2278,10 +2333,12 @@ static bool process_block(const std::string& block_json) {
     }
 
     // P2P: broadcast accepted block to all connected peers
-    broadcast_block_to_peers(sb);
+    try { broadcast_block_to_peers(sb); }
+    catch (const std::exception& e) { fprintf(stderr, "[ERROR] broadcast_block_to_peers: %s\n", e.what()); }
 
     // Process orphan blocks that were waiting for this block as parent
-    process_orphans_for_parent(bid);
+    try { process_orphans_for_parent(bid); }
+    catch (const std::exception& e) { fprintf(stderr, "[ERROR] process_orphans_for_parent: %s\n", e.what()); }
 
     return true;
 }
@@ -2312,6 +2369,10 @@ static void cleanup_old_forks() {
     if (!to_remove.empty())
         printf("[REORG] Cleaned %zu stale fork/orphan blocks (below height %lld)\n",
                to_remove.size(), (long long)cutoff);
+
+    // g_known_blocks is now pruned via FIFO in mark_block_known() — no manual cap needed here
+    {
+    }
 }
 
 // === ATOMIC REORG: try_reorganize ===
@@ -2319,6 +2380,14 @@ static void cleanup_old_forks() {
 // the original chain state is fully restored.
 // Selection criterion: best chain = highest cumulative valid work.
 static bool try_reorganize(const std::string& fork_tip_hash) {
+    // Guard against recursive reorg (process_block→try_reorganize→process_block→try_reorganize)
+    if (g_in_reorg) {
+        printf("[REORG] Skipped: already in reorg\n");
+        return false;
+    }
+    g_in_reorg = true;
+    struct ReorgGuard { ~ReorgGuard(){ g_in_reorg = false; } } _rg;
+
     // NOTE: caller already holds g_chain_mu.
     // We acquire g_block_index_mu as needed.
 
@@ -2582,33 +2651,11 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 // After accepting a block, relay it to all connected peers (except the sender).
 // Serializes block data from StoredBlock directly (caller holds g_chain_mu).
 static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
-    // Serialize block JSON from StoredBlock (avoid re-acquiring g_chain_mu via p2p_send_block)
-    std::ostringstream s;
-    s<<"{\"block_id\":\""<<to_hex(sb.block_id.data(),32)
-     <<"\",\"prev_hash\":\""<<to_hex(sb.prev_hash.data(),32)
-     <<"\",\"merkle_root\":\""<<to_hex(sb.merkle_root.data(),32)
-     <<"\",\"commit\":\""<<to_hex(sb.commit.data(),32)
-     <<"\",\"checkpoints_root\":\""<<to_hex(sb.checkpoints_root.data(),32)
-     <<"\",\"height\":"<<sb.height
-     <<",\"timestamp\":"<<sb.timestamp
-     <<",\"bits_q\":"<<sb.bits_q
-     <<",\"nonce\":"<<sb.nonce
-     <<",\"extra_nonce\":"<<sb.extra_nonce
-     <<",\"subsidy\":"<<sb.subsidy
-     <<",\"miner\":"<<sb.miner_reward
-     <<",\"gold_vault\":"<<sb.gold_vault_reward
-     <<",\"popc_pool\":"<<sb.popc_pool_reward
-     <<",\"stability_metric\":"<<sb.stability_metric;
-    if (!sb.tx_hexes.empty()) {
-        s << ",\"transactions\":[";
-        for (size_t t = 0; t < sb.tx_hexes.size(); ++t) {
-            if (t) s << ",";
-            s << "\"" << sb.tx_hexes[t] << "\"";
-        }
-        s << "]";
-    }
-    s << "}";
-    std::string js = s.str();
+    // Use the raw_block_json which contains the COMPLETE Transcript V2 proof
+    // (segment_proofs, round_witnesses, checkpoint_leaves, stab_*, x_bytes, etc.)
+    // This ensures remote nodes can fully validate the block.
+    const std::string& js = sb.raw_block_json;
+    if (js.empty()) return; // genesis or legacy block without raw JSON
 
     std::lock_guard<std::mutex> lk(g_peers_mu);
     int sent = 0;
@@ -2821,6 +2868,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
+          try {
             // Rate limiting: check blocks per minute
             bool is_syncing = false;
             {
@@ -2885,6 +2933,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     printf("[P2P] Warning: block processing took %lldms from %s\n", (long long)ms, addr.c_str());
                 }
             }
+          } catch (const std::exception& e) {
+            fprintf(stderr, "[ERROR] BLCK handler exception from %s: %s\n", addr.c_str(), e.what());
+          }
         }
         else if(!strcmp(msg.cmd,"TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
@@ -2975,7 +3026,7 @@ static bool load_genesis(const std::string& path) {
     g_chain_height=0;
 
     // Mark genesis as known
-    { std::lock_guard<std::mutex> lk(g_known_mu); g_known_blocks.insert(to_hex(g.block_id.data(),32)); }
+    mark_block_known(to_hex(g.block_id.data(),32));
 
     // TX-INDEX: genesis block coinbase (block_id used as pseudo-txid)
     g_tx_index[g.block_id] = {0, 0};
@@ -3062,6 +3113,16 @@ static bool load_chain(const std::string& path) {
         sb.gold_vault_reward=jint(bj,"gold_vault");
         sb.popc_pool_reward=jint(bj,"popc_pool");
         sb.stability_metric=juint(bj,"stability_metric");
+        // Transcript V2 fields
+        sb.x_bytes_hex=jstr(bj,"x_bytes");
+        sb.final_state_hex=jstr(bj,"final_state");
+        sb.segments_root_hex=jstr(bj,"segments_root");
+        sb.stab_scale=(int32_t)jint(bj,"stab_scale");
+        sb.stab_k=(int32_t)jint(bj,"stab_k");
+        sb.stab_margin=(int32_t)jint(bj,"stab_margin");
+        sb.stab_steps=(int32_t)jint(bj,"stab_steps");
+        sb.stab_lr_shift=(int32_t)jint(bj,"stab_lr_shift");
+        sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
         // Parse transactions if present (v0.3.2+)
         sb.tx_hexes = json_get_tx_hexes(bj);
@@ -3130,7 +3191,7 @@ static bool load_chain(const std::string& path) {
                     sb.cumulative_work = add_be256(parent_cw, bw);
                     g_block_undos.push_back(undo); // Store undo for reorg support
                     g_blocks.push_back(sb);
-                    { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
+                    mark_block_known(bid);
                     continue;  // skip the legacy coinbase-only path below
                 } else {
                     printf("[CHAIN-LOAD] Warning: ConnectBlock failed at height %lld: %s (falling back)\n",
@@ -3146,7 +3207,7 @@ static bool load_chain(const std::string& path) {
         Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
         sb.cumulative_work = add_be256(parent_cw, bw);
         g_blocks.push_back(sb);
-        { std::lock_guard<std::mutex> lk2(g_known_mu); g_known_blocks.insert(bid); }
+        mark_block_known(bid);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
             {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
@@ -3408,7 +3469,10 @@ static void connect_peer(const std::string& host, int port) {
 
 // v0.3.2: Internal save — caller MUST already hold g_chain_mu
 static bool save_chain_internal(const std::string& path) {
-    std::ofstream f(path); if (!f) return false;
+    if (g_blocks.empty()) return true; // nothing to save
+    // Atomic write: write to .tmp then rename to avoid corruption on crash
+    std::string tmp_path = path + ".tmp";
+    std::ofstream f(tmp_path); if (!f) return false;
     f << "{\n  \"chain_height\": " << g_chain_height
       << ",\n  \"tip\": \"" << to_hex(g_blocks.back().block_id.data(),32)
       << "\",\n  \"blocks\": [\n";
@@ -3430,6 +3494,19 @@ static bool save_chain_internal(const std::string& path) {
           << ",\"popc_pool\":" << b.popc_pool_reward
           << ",\"stability_metric\":" << b.stability_metric;
 
+        // Transcript V2 proof fields
+        if (!b.x_bytes_hex.empty()) f << ",\"x_bytes\":\"" << b.x_bytes_hex << "\"";
+        if (!b.final_state_hex.empty()) f << ",\"final_state\":\"" << b.final_state_hex << "\"";
+        if (!b.segments_root_hex.empty()) f << ",\"segments_root\":\"" << b.segments_root_hex << "\"";
+        // Declared stability profile
+        if (b.stab_scale > 0) {
+            f << ",\"stab_scale\":" << b.stab_scale
+              << ",\"stab_k\":" << b.stab_k
+              << ",\"stab_margin\":" << b.stab_margin
+              << ",\"stab_steps\":" << b.stab_steps;
+            if (b.stab_lr_shift > 0) f << ",\"stab_lr_shift\":" << b.stab_lr_shift;
+        }
+
         // WRITE TRANSACTIONS (v0.3.2 — critical for TX persistence)
         if (!b.tx_hexes.empty()) {
             f << ",\"transactions\":[";
@@ -3443,7 +3520,15 @@ static bool save_chain_internal(const std::string& path) {
         f << "}" << (i + 1 < g_blocks.size() ? ",\n" : "\n");
     }
     f << "  ]\n}\n";
-    return f.good();
+    f.flush();
+    if (!f.good()) return false;
+    f.close();
+    // Atomic rename: tmp → final (prevents corruption on crash mid-write)
+    if (std::rename(tmp_path.c_str(), path.c_str()) != 0) {
+        perror("[SAVE] rename failed");
+        return false;
+    }
+    return true;
 }
 
 // Public save — acquires lock, then delegates to internal
@@ -3453,9 +3538,33 @@ static bool save_chain(const std::string& path) {
 }
 
 // =============================================================================
+// Crash diagnostics — signal handler
+// =============================================================================
+static void crash_handler(int sig) {
+    const char* name = "UNKNOWN";
+    if (sig == SIGSEGV) name = "SIGSEGV";
+    else if (sig == SIGABRT) name = "SIGABRT";
+    else if (sig == SIGFPE)  name = "SIGFPE";
+    time_t now = time(nullptr);
+    std::string tip_hex = g_blocks.empty() ? "none" : to_hex(g_blocks.back().block_id.data(), 32);
+    fprintf(stderr, "[CRASH] Signal %s (%d) at timestamp %lld. Chain height=%lld, tip=%s, blocks=%zu\n",
+            name, sig, (long long)now, (long long)g_chain_height, tip_hex.c_str(), g_blocks.size());
+    fflush(stderr);
+    // Re-raise to get core dump
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+// =============================================================================
 // main
 // =============================================================================
 int main(int argc, char** argv) {
+    // Crash diagnostics
+    signal(SIGSEGV, crash_handler);
+    signal(SIGABRT, crash_handler);
+    signal(SIGFPE,  crash_handler);
+    setbuf(stdout, NULL); // unbuffered for crash visibility
+
     // =========================================================================
     // FIX #1: Set ACTIVE_PROFILE BEFORE anything that touches magic bytes.
     // Default to MAINNET. Can be overridden with --profile.
@@ -3608,15 +3717,21 @@ int main(int argc, char** argv) {
     }
 
     printf("Node running. Ctrl+C to stop.\n\n");
-    while(g_running){
-        std::this_thread::sleep_for(std::chrono::seconds(30));
-        {
-            std::lock_guard<std::mutex> lk(g_peers_mu);
-            for(auto& p:g_peers){
-                if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
+    try {
+        while(g_running){
+            std::this_thread::sleep_for(std::chrono::seconds(30));
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for(auto& p:g_peers){
+                    if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
+                }
             }
+            if(!chain_path.empty()) save_chain(chain_path);
         }
-        if(!chain_path.empty()) save_chain(chain_path);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "[CRASH] Main loop exception: %s (height=%lld)\n",
+                e.what(), (long long)g_chain_height);
+        throw;
     }
 
     return 0;

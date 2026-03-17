@@ -160,12 +160,13 @@ int main(int argc, char** argv) {
     params.cx_lam = 100;
     params.cx_checkpoint_interval = std::max(1, rounds / 16);
 
-    // B0 profile (genesis baseline)
+    // B0 profile (genesis baseline) — profile_index=0 committed to block hash
     params.stab_scale = CX_STB_SCALE;   // 1
     params.stab_k = CX_STB_K;           // 4
-    params.stab_margin = CX_STB_MARGIN; // 180
+    params.stab_margin = CX_STB_MARGIN; // 185 (B0)
     params.stab_steps = CX_STB_STEPS;   // 4
     params.stab_lr_shift = CX_STB_LR;   // 20
+    params.stab_profile_index = 0;       // B0 — committed to commit hash
 
     // Genesis inputs
     Bytes32 prev = ZERO_HASH();

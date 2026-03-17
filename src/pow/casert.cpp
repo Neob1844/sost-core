@@ -218,9 +218,10 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         int64_t prev_exp = (prev_elapsed >= 0) ? (prev_elapsed / TARGET_SPACING) : 0;
         int32_t prev_lag = (int32_t)((int64_t)(next_height - 2) - prev_exp);
         int32_t prev_H_est = 0; // B0 baseline
-        if (prev_lag < 0) {
-            int32_t ahead = -prev_lag;
-            if (ahead >= 20) prev_H_est = std::min(5, ahead / 10);
+        if (prev_lag > 0) {
+            // Chain is ahead of schedule: estimate previous H from how far ahead
+            int32_t ahead = prev_lag;
+            if (ahead >= 20) prev_H_est = std::min((int32_t)CASERT_H_MAX, ahead / 10);
             else if (ahead >= 5) prev_H_est = 1;
         }
         // Clamp change to ±1
@@ -228,16 +229,37 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));
     }
 
-    // ---- Anti-stall (mining only) ----
+    // ---- Anti-stall (mining only): zone-based decay targeting B0 ----
+    // Decay zones: H9-H7 = 600s/lvl, H6-H4 = 900s/lvl, H3-H1 = 1200s/lvl
+    // B0 is the natural destination. Easing (E1-E4) only after 6h extra at B0.
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
         int64_t t_act = std::max<int64_t>(CASERT_ANTISTALL_FLOOR,
                                            std::max<int64_t>(lag, 0) * TARGET_SPACING);
-        if (stall >= t_act) {
-            // Progressive profile drop
+        if (stall >= t_act && H > 0) {
+            // Hardening decay: drop toward B0
             int64_t decay_time = stall - t_act;
-            int32_t drops = (int32_t)(decay_time / CASERT_ANTISTALL_DROP_INTERVAL);
-            H = std::max<int32_t>(CASERT_H_MIN, H - drops);
+            int32_t decayed_H = H;
+            while (decayed_H > 0 && decay_time > 0) {
+                int64_t cost;
+                if (decayed_H >= 7) cost = 600;       // H9-H7: fast (10 min)
+                else if (decayed_H >= 4) cost = 900;   // H6-H4: medium (15 min)
+                else cost = 1200;                       // H3-H1: standard (20 min)
+                if (decay_time < cost) break;
+                decay_time -= cost;
+                decayed_H--;
+            }
+            H = decayed_H;
+        }
+        // Easing emergency: if at B0 for 6+ additional hours, activate E profiles
+        if (stall >= t_act && H <= 0) {
+            int64_t time_at_b0 = stall - t_act;
+            // Subtract time spent decaying from hardening (estimate)
+            if (time_at_b0 > CASERT_ANTISTALL_EASING_EXTRA) {
+                int64_t easing_time = time_at_b0 - CASERT_ANTISTALL_EASING_EXTRA;
+                int32_t easing_drops = (int32_t)(easing_time / 1800); // 30 min per easing level
+                H = std::max<int32_t>(CASERT_H_MIN, -easing_drops);
+            }
         }
     }
 
@@ -253,7 +275,7 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
                                       const CasertDecision& dec)
 {
     ConsensusParams out = base;
-    int32_t idx = dec.profile_index + 3; // convert to array index
+    int32_t idx = dec.profile_index - CASERT_H_MIN; // convert to array index
     if (idx < 0) idx = 0;
     if (idx >= CASERT_PROFILE_COUNT) idx = CASERT_PROFILE_COUNT - 1;
 
@@ -262,6 +284,7 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
     out.stab_steps  = prof.steps;
     out.stab_k      = prof.k;
     out.stab_margin = prof.margin;
+    out.stab_profile_index = idx + CASERT_H_MIN; // store actual profile index
     return out;
 }
 
