@@ -301,36 +301,31 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div id="dashPanelBody"></div>
   </div>
 </div>
-<div class="diff-bar-wrap"><div class="diff-bar-box">
-  <span class="diff-bar-label">DIFFICULTY</span>
-  <div class="diff-bar-track"><div class="diff-bar-fill" id="diffFill" style="width:0%"></div></div>
-  <span class="diff-bar-info" id="diffInfo">—</span>
-</div></div>
-<!-- cASERT METRICS (collapsible) -->
-<div class="diff-bar-wrap" id="eqWrap">
-<div style="background:var(--bg2);border:1px solid var(--border);overflow:hidden;">
-  <button onclick="var p=document.getElementById('eqPanel');var a=this.querySelector('.eqa');if(p.style.display==='none'){p.style.display='grid';a.textContent='▼'}else{p.style.display='none';a.textContent='▶'}" style="width:100%;background:none;border:none;color:var(--text3);font-family:var(--code);font-size:9px;letter-spacing:2px;padding:8px 12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">
-    <span class="eqa">▶</span> cASERT METRICS
-    <span id="eqSummary" style="margin-left:auto;font-size:9px;color:var(--text3)">B0 · bitsQ —</span>
-  </button>
-  <div id="eqPanel" style="display:none;grid-template-columns:repeat(4,1fr);gap:1px;padding:0 12px 10px;">
-    <div class="eq-m"><span class="eq-k">bitsQ</span><span class="eq-v" id="eqBitsQ">—</span><div class="eq-track"><div class="eq-bar-h" id="eqBitsQBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">profile</span><span class="eq-v" id="eqProfile">B0</span><div class="eq-track"><div class="eq-bar-h" id="eqProfileBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">scale</span><span class="eq-v" id="eqScale">1</span><div class="eq-track"><div class="eq-bar-h" id="eqScaleBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">k</span><span class="eq-v" id="eqK">4</span><div class="eq-track"><div class="eq-bar-h" id="eqKBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">margin</span><span class="eq-v" id="eqMargin">180</span><div class="eq-track"><div class="eq-bar-h" id="eqMarginBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">burst</span><span class="eq-v" id="eqBurst">0</span><div class="eq-track"><div class="eq-bar-h" id="eqBurstBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">volatility</span><span class="eq-v" id="eqVol">0</span><div class="eq-track"><div class="eq-bar-h" id="eqVolBar"></div></div></div>
-    <div class="eq-m"><span class="eq-k">stall</span><span class="eq-v" id="eqStall">OFF</span><div class="eq-track"><div class="eq-bar-h" id="eqStallBar"></div></div></div>
+<!-- CHART 1: Block Production — Real vs Expected -->
+<div class="diff-bar-wrap" id="chartProdWrap">
+<div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-size:9px;color:var(--text3);letter-spacing:2px;">BLOCK PRODUCTION · real vs expected</span>
+    <span id="prodDelta" style="font-size:11px;font-weight:600;color:var(--green)">—</span>
+  </div>
+  <div style="position:relative;">
+    <canvas id="prodChart" style="width:100%;height:120px;cursor:crosshair"></canvas>
+    <div id="prodTip" style="display:none;position:absolute;background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;font-size:9px;color:#e2e8f0;white-space:pre;pointer-events:none;font-family:var(--code);z-index:10;line-height:1.6;"></div>
   </div>
 </div></div>
-<style>
-.eq-m{padding:6px 8px}
-.eq-k{display:block;font-size:8px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
-.eq-v{display:block;font-size:13px;font-weight:600;color:var(--text);margin:2px 0}
-.eq-track{height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
-.eq-bar-h{height:100%;border-radius:2px;transition:width .6s ease,background .6s ease;width:0;background:var(--green)}
-</style>
+<!-- CHART 2: Burst & Volatility -->
+<div class="diff-bar-wrap" id="chartBurstWrap">
+<div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-size:9px;color:var(--text3);letter-spacing:2px;">BURST & VOLATILITY · last 72 blocks (~12h)</span>
+    <span style="font-size:11px;"><span id="burstVal" style="color:var(--orange);font-weight:600;">—</span> <span style="color:var(--text3)">·</span> <span id="volVal" style="color:var(--cyan);font-weight:600;">—</span></span>
+  </div>
+  <div style="position:relative;">
+    <canvas id="bvChart" style="width:100%;height:120px;cursor:crosshair"></canvas>
+    <div id="bvTip" style="display:none;position:absolute;background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;font-size:9px;color:#e2e8f0;white-space:pre;pointer-events:none;font-family:var(--code);z-index:10;line-height:1.6;"></div>
+  </div>
+  <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.7;font-family:var(--code);">Burst = % of blocks &lt;5min in last 72. Volatility = stdev(block_times)/600s. cASERT responds by hardening profiles.</div>
+</div></div>
 <div class="sparkline-wrap"><div class="sparkline-box">
   <span class="sparkline-label">DIFF HISTORY</span>
   <canvas class="sparkline-canvas" id="sparkCanvas" style="cursor:crosshair"></canvas>
@@ -809,9 +804,6 @@ async function updateDashboard(info){
       document.getElementById('dMinerSub').textContent='50% \u00B7 awaiting miner_address';
     }
   }catch(e){console.error('miner balance error:',e);}}
-  var EP=131553,bie=info.blocks%EP,pct=(bie/EP*100).toFixed(2);
-  document.getElementById('diffFill').style.width=pct+'%';
-  document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' bits_q)';
   updateChainSync();
 }
 /* drawReserveBars removed — replaced by price charts */
@@ -1108,46 +1100,124 @@ var _nextBitsQ=0;
 var _tipBlockHash='';
 
 function updateEqualizer(info, times, diffs) {
-  try {
-    var bq = info.difficulty || 765730;
-    var bqReal = (bq / 65536).toFixed(2);
-    var avgBt = 600;
-    if (times && times.length >= 2) {
-      var td = 0; for (var i = 0; i < times.length - 1; i++) td += times[i] - times[i + 1];
-      avgBt = td / (times.length - 1);
-    }
-    var ratio = 600 / Math.max(avgBt, 1);
-    var profileEst = Math.max(-3, Math.min(5, Math.round((ratio - 1) * 10)));
-    var pnames = ['E3','E2','E1','B0','H1','H2','H3','H4','H5','H6'];
-    var profiles = [{s:1,k:3,m:240},{s:1,k:4,m:220},{s:1,k:4,m:200},{s:1,k:4,m:180},{s:1,k:4,m:170},{s:1,k:5,m:160},{s:2,k:5,m:155},{s:2,k:5,m:145},{s:2,k:6,m:135},{s:3,k:6,m:125}];
-    var pi = Math.max(0, Math.min(9, profileEst + 3));
-    var prof = profiles[pi];
-    var lastBt = (times && times.length >= 2) ? (times[0] - times[1]) : 600;
-    var stallPct = Math.min(100, (lastBt / 7200) * 100);
-    var burstVal = ((ratio - 1) * 100).toFixed(1);
-    var volVal = 0;
-    if (diffs && diffs.length > 2) {
-      var ch = 0; for (var j = 1; j < Math.min(diffs.length, 10); j++) ch += Math.abs(diffs[j].d - diffs[j-1].d);
-      volVal = ((ch / Math.max(diffs[0].d, 1)) * 100).toFixed(1);
-    }
-    function mc(pct) { return pct < 30 ? 'var(--green)' : pct < 55 ? 'var(--yellow)' : pct < 80 ? 'var(--orange)' : 'var(--red)'; }
-    // Update text values
-    setEqMeter('eqBitsQ', 'eqBitsQBar', bqReal, Math.min(100, (bq/65536/30)*100), mc((bq/65536/30)*100));
-    setEqMeter('eqProfile', 'eqProfileBar', pnames[pi], ((pi)/9)*100, mc(((pi)/9)*100));
-    setEqMeter('eqScale', 'eqScaleBar', prof.s, (prof.s/3)*100, mc((prof.s/3)*100));
-    setEqMeter('eqK', 'eqKBar', prof.k, (prof.k/6)*100, mc((prof.k/6)*50));
-    setEqMeter('eqMargin', 'eqMarginBar', prof.m, 100-((prof.m-120)/(240-120))*100, mc(100-((prof.m-120)/(240-120))*100));
-    setEqMeter('eqBurst', 'eqBurstBar', burstVal+'%', Math.min(100,Math.abs(ratio-1)*200), mc(Math.min(100,Math.abs(ratio-1)*200)));
-    setEqMeter('eqVol', 'eqVolBar', volVal+'%', Math.min(100,parseFloat(volVal)*5), mc(Math.min(100,parseFloat(volVal)*5)));
-    setEqMeter('eqStall', 'eqStallBar', stallPct < 5 ? 'OFF' : Math.round(stallPct)+'%', stallPct, mc(stallPct));
-    // Summary
-    var sum = document.getElementById('eqSummary');
-    if (sum) sum.textContent = pnames[pi] + ' · bitsQ ' + bqReal + ' · avg ' + Math.round(avgBt) + 's';
-  } catch(e) {}
+  try { renderProdChart(info, diffs); renderBurstChart(diffs); } catch(e) { console.error('chart error',e); }
 }
-function setEqMeter(valId, barId, val, pct, color) {
-  var v = document.getElementById(valId); if (v) v.textContent = val;
-  var b = document.getElementById(barId); if (b) { b.style.width = Math.max(2, pct) + '%'; b.style.background = color; }
+var GENESIS_TS=1773597600;
+function renderProdChart(info, diffs) {
+  var cv=document.getElementById('prodChart'); if(!cv) return;
+  var ctx=cv.getContext('2d'); if(!ctx) return;
+  var dpr=window.devicePixelRatio||1, W=cv.offsetWidth, Hc=cv.offsetHeight;
+  cv.width=W*dpr; cv.height=Hc*dpr; ctx.scale(dpr,dpr);
+  if(!diffs||diffs.length<2) return;
+  var d=diffs.slice().sort(function(a,b){return a.h-b.h;});
+  var pad={l:40,r:8,t:6,b:16}, cw=W-pad.l-pad.r, ch=Hc-pad.t-pad.b;
+  var t0=d[0].t, tN=d[d.length-1].t, hMin=d[0].h, hMax=d[d.length-1].h;
+  var tRange=Math.max(1,tN-t0), hRange=Math.max(1,hMax-hMin);
+  var expMin=(t0-GENESIS_TS)/600, expMax=(tN-GENESIS_TS)/600;
+  var yMax=Math.max(hMax-hMin, expMax-expMin)+2, yMin=Math.min(0,Math.min(hMin-(t0-GENESIS_TS)/600, 0));
+  function tx(t){return pad.l+((t-t0)/tRange)*cw;}
+  function ty(v){return pad.t+ch-(((v-hMin+Math.abs(yMin))/(yMax+Math.abs(yMin)))*ch);}
+  // Expected line (dashed white)
+  ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  for(var i=0;i<d.length;i++){var ex=(d[i].t-GENESIS_TS)/600;var x=tx(d[i].t),y=ty(ex);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.stroke(); ctx.setLineDash([]);
+  // Fill between
+  ctx.beginPath();
+  for(var i=0;i<d.length;i++){var x=tx(d[i].t);ctx.lineTo(x,ty(d[i].h));}
+  for(var i=d.length-1;i>=0;i--){var ex=(d[i].t-GENESIS_TS)/600;ctx.lineTo(tx(d[i].t),ty(ex));}
+  ctx.closePath();
+  var delta=hMax-(tN-GENESIS_TS)/600;
+  ctx.fillStyle=delta>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
+  // Real line (green)
+  ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
+  for(var i=0;i<d.length;i++){var x=tx(d[i].t),y=ty(d[i].h);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.stroke();
+  // Y labels
+  ctx.fillStyle='#444'; ctx.font='8px monospace'; ctx.textAlign='right';
+  for(var yi=0;yi<=3;yi++){var v=hMin+yi/3*hRange;ctx.fillText(Math.round(v),pad.l-4,ty(v)+3);}
+  // Delta indicator
+  var de=document.getElementById('prodDelta');
+  if(de){var rd=Math.round(delta);de.textContent=rd>0?'+'+rd+' ahead':rd<0?rd+' behind':'On target';de.style.color=rd>0?'var(--green)':rd<0?'var(--red)':'#4488ff';}
+  // Tooltip
+  if(!cv._tipBound){cv._tipBound=true;cv._d=d;
+    cv.addEventListener('mousemove',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left,frac=(mx-pad.l)/cw;
+      var idx=Math.round(frac*(cv._d.length-1));if(idx<0)idx=0;if(idx>=cv._d.length)idx=cv._d.length-1;
+      var p=cv._d[idx],ex=((p.t-GENESIS_TS)/600),df=p.h-ex,bt=idx>0?(p.t-cv._d[idx-1].t):0;
+      var tip=document.getElementById('prodTip');if(!tip)return;
+      tip.textContent='Block #'+p.h+'\nReal: '+p.h+' · Expected: '+ex.toFixed(1)+'\n'+(df>=0?'+'+df.toFixed(1)+' ahead':df.toFixed(1)+' behind')+(bt>0?'\nBlock time: '+Math.floor(bt/60)+'m '+Math.round(bt%60)+'s':'');
+      tip.style.display='block';var tx2=mx+12;if(tx2+160>rect.width)tx2=mx-170;tip.style.left=tx2+'px';tip.style.top='0px';
+    });
+    cv.addEventListener('mouseleave',function(){var t=document.getElementById('prodTip');if(t)t.style.display='none';});
+    cv.addEventListener('click',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left,frac=(mx-pad.l)/cw;
+      var idx=Math.round(frac*(cv._d.length-1));if(idx<0)idx=0;if(idx>=cv._d.length)idx=cv._d.length-1;
+      showBlockByHeight(cv._d[idx].h);
+    });
+  } else {cv._d=d;}
+}
+function renderBurstChart(diffs) {
+  var cv=document.getElementById('bvChart'); if(!cv) return;
+  var ctx=cv.getContext('2d'); if(!ctx) return;
+  var dpr=window.devicePixelRatio||1, W=cv.offsetWidth, Hc=cv.offsetHeight;
+  cv.width=W*dpr; cv.height=Hc*dpr; ctx.scale(dpr,dpr);
+  if(!diffs||diffs.length<3) return;
+  var d=diffs.slice().sort(function(a,b){return a.h-b.h;});
+  // Compute intervals
+  var intervals=[];
+  for(var i=1;i<d.length;i++) intervals.push({h:d[i].h,bt:d[i].t-d[i-1].t,t:d[i].t});
+  if(!intervals.length) return;
+  // Rolling burst% and volatility%
+  var pts=[];
+  for(var i=0;i<intervals.length;i++){
+    var win=intervals.slice(Math.max(0,i-71),i+1);
+    var burstCount=0,sum=0,sq=0;
+    for(var j=0;j<win.length;j++){if(win[j].bt<300)burstCount++;sum+=win[j].bt;sq+=win[j].bt*win[j].bt;}
+    var mean=sum/win.length, variance=sq/win.length-mean*mean;
+    var stdev=Math.sqrt(Math.max(0,variance));
+    pts.push({h:intervals[i].h, burst:(burstCount/win.length)*100, vol:(stdev/600)*100, bt:intervals[i].bt, isBurst:intervals[i].bt<300});
+  }
+  var pad={l:40,r:40,t:6,b:16}, cw=W-pad.l-pad.r, ch=Hc-pad.t-pad.b;
+  var bMax=Math.max(50,Math.max.apply(null,pts.map(function(p){return p.burst;})));
+  var vMax=Math.max(50,Math.max.apply(null,pts.map(function(p){return p.vol;})));
+  // Reference zones
+  var zones=[{y:10/bMax,c:'rgba(74,222,128,.04)'},{y:25/bMax,c:'rgba(251,191,36,.04)'},{y:1,c:'rgba(255,50,50,.03)'}];
+  var prev=0;for(var z=0;z<zones.length;z++){ctx.fillStyle=zones[z].c;var y1=pad.t+ch-(prev*ch),y2=pad.t+ch-(Math.min(1,zones[z].y)*ch);ctx.fillRect(pad.l,y2,cw,y1-y2);prev=zones[z].y;}
+  // Burst line (orange)
+  ctx.beginPath(); ctx.strokeStyle='rgba(251,146,60,.8)'; ctx.lineWidth=1.5;
+  for(var i=0;i<pts.length;i++){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(pts[i].burst/bMax)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.stroke();
+  // Volatility line (cyan)
+  ctx.beginPath(); ctx.strokeStyle='rgba(103,232,249,.8)'; ctx.lineWidth=1.5;
+  for(var i=0;i<pts.length;i++){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(pts[i].vol/vMax)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.stroke();
+  // Burst block markers
+  for(var i=0;i<pts.length;i++){if(pts[i].isBurst){var x=pad.l+i/(pts.length-1)*cw;ctx.beginPath();ctx.moveTo(x,pad.t+ch);ctx.lineTo(x-3,pad.t+ch+5);ctx.lineTo(x+3,pad.t+ch+5);ctx.closePath();ctx.fillStyle='rgba(251,146,60,.5)';ctx.fill();}}
+  // Y labels
+  ctx.fillStyle='#444'; ctx.font='8px monospace';
+  ctx.textAlign='right'; for(var yi=0;yi<=2;yi++){var v=bMax*yi/2;ctx.fillText(v.toFixed(0)+'%',pad.l-4,pad.t+ch-yi/2*ch+3);}
+  ctx.textAlign='left'; for(var yi=0;yi<=2;yi++){var v=vMax*yi/2;ctx.fillText(v.toFixed(0)+'%',pad.l+cw+4,pad.t+ch-yi/2*ch+3);}
+  // Values
+  var cur=pts[pts.length-1];
+  var bv=document.getElementById('burstVal');if(bv)bv.textContent='BURST: '+cur.burst.toFixed(1)+'%';
+  var vv=document.getElementById('volVal');if(vv)vv.textContent='VOL: '+cur.vol.toFixed(1)+'%';
+  // Tooltip
+  if(!cv._tipBound){cv._tipBound=true;cv._pts=pts;
+    cv.addEventListener('mousemove',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left,frac=(mx-pad.l)/cw;
+      var idx=Math.round(frac*(cv._pts.length-1));if(idx<0)idx=0;if(idx>=cv._pts.length)idx=cv._pts.length-1;
+      var p=cv._pts[idx],bm=Math.floor(p.bt/60),bs=Math.round(p.bt%60);
+      var tip=document.getElementById('bvTip');if(!tip)return;
+      tip.textContent='Block #'+p.h+'\nBurst: '+p.burst.toFixed(1)+'% · Vol: '+p.vol.toFixed(1)+'%\nBlock time: '+bm+'m '+('0'+bs).slice(-2)+'s'+(p.isBurst?' ⚡ BURST':'');
+      tip.style.display='block';var tx2=mx+12;if(tx2+160>rect.width)tx2=mx-170;tip.style.left=tx2+'px';tip.style.top='0px';
+    });
+    cv.addEventListener('mouseleave',function(){var t=document.getElementById('bvTip');if(t)t.style.display='none';});
+    cv.addEventListener('click',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left,frac=(mx-pad.l)/cw;
+      var idx=Math.round(frac*(cv._pts.length-1));if(idx<0)idx=0;if(idx>=cv._pts.length)idx=cv._pts.length-1;
+      showBlockByHeight(cv._pts[idx].h);
+    });
+  } else {cv._pts=pts;}
 }
 
 function startCountdown(){
