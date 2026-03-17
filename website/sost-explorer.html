@@ -744,13 +744,19 @@ function openDetail(){
   p.style.display='';
   p.classList.add('show');
   var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
-  for(var i=0;i<hide.length;i++){var el=document.querySelector('#'+hide[i])||document.querySelector('.'+hide[i]);if(el)el.style.display='none';}
+  for(var i=0;i<hide.length;i++){
+    var els=document.querySelectorAll('#'+hide[i]+', .'+hide[i]);
+    for(var j=0;j<els.length;j++) els[j].style.display='none';
+  }
 }
 function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
   var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
-  for(var i=0;i<show.length;i++){var el=document.querySelector('#'+show[i])||document.querySelector('.'+show[i]);if(el)el.style.display='';}
+  for(var i=0;i<show.length;i++){
+    var els=document.querySelectorAll('#'+show[i]+', .'+show[i]);
+    for(var j=0;j<els.length;j++) els[j].style.display='';
+  }
   _navStack=[];
   document.getElementById('detailNav').innerHTML='';
 }
