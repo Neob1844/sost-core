@@ -30,6 +30,7 @@ struct ConsensusParams {
     int32_t cx_n, cx_rounds, cx_scratch_mb, cx_lr_shift, cx_lam, cx_checkpoint_interval;
     int32_t stab_scale, stab_k, stab_margin, stab_steps, stab_lr_shift;
     int32_t stab_profile_index{0}; // committed to block hash — prevents profile downgrade attacks
+    bool verbose{false};           // print CX-VERIFY debug output
 };
 struct CoinbaseSplit { int64_t miner, gold_vault, popc_pool, total; };
 // cASERT unified block-rate control decision

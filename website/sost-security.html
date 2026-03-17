@@ -461,9 +461,38 @@
         <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Do not open a public issue for security vulnerabilities. Use the private contact form.</p>
         <table class="code-table">
           <tr><th>Channel</th><th>URL</th></tr>
-          <tr><td class="label">Private vulnerability report</td><td class="value"><a href="sost-contact.html" style="color:var(--cyan-primary);text-decoration:none;">Contact (private report)</a></td></tr>
+          <tr><td class="label">Security vulnerability report</td><td class="value"><a href="https://sostcore.com/sost-contact.html" style="color:var(--cyan-primary);text-decoration:none;">sostcore.com/sost-contact.html &rarr; Select: Security Vulnerability Report</a></td></tr>
           <tr><td class="label">General issues</td><td class="value"><a href="https://github.com/Neob1844/sost-core/issues" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">github.com/Neob1844/sost-core/issues</a></td></tr>
         </table>
+
+        <div style="margin-top:20px;background:#0d0d0d;border:1px solid var(--border-dim);border-left:3px solid var(--red-primary);border-radius:0 6px 6px 0;padding:20px 24px;">
+          <div style="font-size:11px;letter-spacing:2px;color:var(--red-primary);margin-bottom:14px;font-weight:600;">REPORTING A VULNERABILITY</div>
+          <pre style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);line-height:1.9;margin:0;white-space:pre-wrap;">If you discover a security vulnerability in SOST Protocol, please report it
+responsibly through our secure contact channel:
+
+1. Go to the Contact page: <a href="https://sostcore.com/sost-contact.html" style="color:var(--cyan-primary);text-decoration:none;">https://sostcore.com/sost-contact.html</a>
+2. Select subject: &ldquo;Security Vulnerability Report&rdquo;
+3. Include the following ticket code in your message: <span style="color:var(--red-primary);font-weight:600;">SEC-DISC-2026</span>
+4. Describe the vulnerability in detail:
+   &bull; Affected component (node, wallet, explorer, P2P, RPC, consensus)
+   &bull; Steps to reproduce
+   &bull; Potential impact assessment
+   &bull; Suggested fix (if any)
+5. Do NOT disclose the vulnerability publicly until we have acknowledged
+   and addressed it.
+
+<span style="color:var(--text-primary);font-weight:500;">Response time:</span> We aim to acknowledge reports within 48 hours and provide
+an initial assessment within 7 days.
+
+<span style="color:var(--text-primary);font-weight:500;">Severity classification:</span>
+  <span style="color:var(--red-primary);">CRITICAL</span> &mdash; Consensus bypass, double-spend, remote code execution
+  <span style="color:var(--orange-primary,#fb923c);">HIGH</span>     &mdash; Key exposure, fund theft, P2P network disruption
+  <span style="color:#fbbf24;">MEDIUM</span>   &mdash; Denial of service, information disclosure, RPC abuse
+  <span style="color:var(--text-secondary);">LOW</span>      &mdash; UI bugs, non-exploitable edge cases
+
+Reports classified as CRITICAL or HIGH may be eligible for recognition
+in the project&rsquo;s Security Hall of Fame.</pre>
+        </div>
       </div>
     </div>
 

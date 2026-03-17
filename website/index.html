@@ -666,6 +666,49 @@
       <a href="sost-getting-started.html" class="dl-btn secondary">Start Mining</a>
       <a href="sost-whitepaper.html" class="dl-btn secondary">Read Whitepaper</a>
     </div>
+
+    <!-- CHAIN STATUS LIVE -->
+    <div style="margin-top:32px;text-align:center;">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text-muted);margin-bottom:8px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px rgba(0,255,136,.5);vertical-align:middle;margin-right:6px;animation:pulse 2s ease infinite;"></span>CHAIN STATUS &middot; LIVE
+      </div>
+      <div id="chainLive" style="display:inline-block;background:#0d0d0d;border:1px solid #222;border-radius:6px;padding:12px 28px;font-family:var(--font-mono);font-size:13px;letter-spacing:.5px;">
+        <span style="color:var(--text-muted)">connecting...</span>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var RPC_URL='https://sostcore.com';
+      var el=document.getElementById('chainLive');
+      function update(){
+        fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
+        .then(function(r){return r.json();})
+        .then(function(j){
+          var d=j.result||j;
+          var h=d.blocks||0;
+          var sub=785100863,ts=BigInt(sub)*BigInt(h+1),sost=Number(ts)/1e8;
+          // Estimate time since last block (rough: now - genesis - blocks*600)
+          var now=Math.floor(Date.now()/1000);
+          var genesis=1773597600;
+          var estLast=genesis+h*600;
+          var ago=Math.max(0,now-estLast);
+          var aM=Math.floor(ago/60),aS=ago%60;
+          var agoStr=aM>0?aM+'m '+('0'+aS).slice(-2)+'s ago':aS+'s ago';
+          el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
+            ' <span style="color:#333">&middot;</span> '+
+            '<span style="color:#999">MINED: '+agoStr+'</span>'+
+            ' <span style="color:#333">&middot;</span> '+
+            '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+sost.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:4})+' SOST</span>';
+        })
+        .catch(function(){
+          el.innerHTML='<span style="color:#666">Node offline</span>';
+        });
+      }
+      update();
+      setInterval(update,12000);
+    })();
+    </script>
+
   </div>
 </section>
 

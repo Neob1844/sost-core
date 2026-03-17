@@ -1167,7 +1167,9 @@ function renderProdChart(info, diffs) {
   for(var i=0;i<d.length;i++){var x=tx(d[i].t);ctx.lineTo(x,ty(d[i].h));}
   for(var i=d.length-1;i>=0;i--){var ex=(d[i].t-GENESIS_TS)/600;ctx.lineTo(tx(d[i].t),ty(ex));}
   ctx.closePath();
-  var delta=hMax-(tN-GENESIS_TS)/600;
+  // Delta uses current wall time (not last block time) to match CHAIN TIMING panel
+  var nowTs=Date.now()/1000;
+  var delta=hMax-(nowTs-GENESIS_TS)/600;
   ctx.fillStyle=delta>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
@@ -1605,8 +1607,22 @@ async function showAddress(addr){
     } else if(role==='POPC POOL'){
       protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--cyan);font-weight:600">\u{1F551} CONSTITUTIONAL RESERVE</span> <span style="color:var(--text3)">// accumulates rewards for PoPC participants \u2014 distributed after audit cycle</span></div>';
     }
+    // Compute MINED (coinbase) vs IN (regular) vs OUT
+    var minedAmt=0,minedCount=0,inAmt=0,inCount=0;
+    for(var mi2=0;mi2<sorted.length;mi2++){
+      var u2=sorted[mi2];
+      var amt2=typeof u2.amount==='number'?u2.amount:parseFloat(u2.amount);
+      if(u2.coinbase){minedAmt+=amt2;minedCount++;}
+      else{inAmt+=amt2;inCount++;}
+    }
     // Balance section with mature/immature breakdown
     var balHtml='<div class="k">total balance</div><div class="v"><span style="color:var(--green);font-size:16px;font-weight:600">'+totalBalance.toFixed(8)+' SOST</span></div>';
+    // MINED / IN / OUT row
+    balHtml+='<div style="display:flex;gap:24px;margin:8px 0 4px;">';
+    balHtml+='<div title="Total coinbase rewards received from mining '+minedCount+' blocks"><span style="color:var(--text3);font-size:9px;">&#9935; MINED</span><br><span style="color:#ffd700;font-weight:600;">'+minedAmt.toFixed(8)+' SOST</span></div>';
+    balHtml+='<div><span style="color:var(--text3);font-size:9px;">IN</span><br><span style="color:#00ff88;font-weight:600;">'+inAmt.toFixed(8)+' SOST</span></div>';
+    balHtml+='<div><span style="color:var(--text3);font-size:9px;">OUT</span><br><span style="color:#ff4444;font-weight:600;">0.00000000 SOST</span></div>';
+    balHtml+='</div>';
     if(immatureCount>0){
       balHtml+='<div class="k">\u2705 spendable</div><div class="v"><span style="color:var(--green);font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' UTXOs)</span></div>';
       balHtml+='<div class="k">\u23F3 immature</div><div class="v"><span style="color:var(--yellow);font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
