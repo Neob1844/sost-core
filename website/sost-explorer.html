@@ -305,19 +305,20 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div class="diff-bar-wrap" id="chartProdWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span style="font-size:9px;color:var(--text3);letter-spacing:2px;">BLOCK PRODUCTION · real vs expected</span>
+    <span class="pi" onclick="toggleChartInfo('blockprod')" style="font-size:9px;color:var(--text3);letter-spacing:2px;">BLOCK PRODUCTION · real vs expected <span class="pi-i">\u24D8</span></span>
     <span id="prodDelta" style="font-size:11px;font-weight:600;color:var(--green)">—</span>
   </div>
   <div style="position:relative;">
     <canvas id="prodChart" style="width:100%;height:120px;cursor:crosshair"></canvas>
     <div id="prodTip" style="display:none;position:absolute;background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;font-size:9px;color:#e2e8f0;white-space:pre;pointer-events:none;font-family:var(--code);z-index:10;line-height:1.6;"></div>
   </div>
+  <div id="chartExplain_blockprod" class="chart-explain" style="display:none;"></div>
 </div></div>
 <!-- CHART 2: Burst & Volatility -->
 <div class="diff-bar-wrap" id="chartBurstWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span style="font-size:9px;color:var(--text3);letter-spacing:2px;">BURST & VOLATILITY · last 72 blocks (~12h)</span>
+    <span class="pi" onclick="toggleChartInfo('burstvol')" style="font-size:9px;color:var(--text3);letter-spacing:2px;">BURST & VOLATILITY · last 72 blocks (~12h) <span class="pi-i">\u24D8</span></span>
     <span style="font-size:11px;"><span id="burstVal" style="color:var(--orange);font-weight:600;">—</span> <span style="color:var(--text3)">·</span> <span id="volVal" style="color:var(--cyan);font-weight:600;">—</span></span>
   </div>
   <div style="position:relative;">
@@ -325,12 +326,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div id="bvTip" style="display:none;position:absolute;background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;font-size:9px;color:#e2e8f0;white-space:pre;pointer-events:none;font-family:var(--code);z-index:10;line-height:1.6;"></div>
   </div>
   <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.7;font-family:var(--code);">Burst = % of blocks &lt;5min in last 72. Volatility = stdev(block_times)/600s. cASERT responds by hardening profiles.</div>
+  <div id="chartExplain_burstvol" class="chart-explain" style="display:none;"></div>
 </div></div>
 <div class="sparkline-wrap"><div class="sparkline-box">
-  <span class="sparkline-label">DIFF HISTORY · last 72 blocks (~12h)</span>
+  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')">DIFF HISTORY · last 72 blocks (~12h) <span class="pi-i">\u24D8</span></span>
   <canvas class="sparkline-canvas" id="sparkCanvas" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
   <span class="sparkline-info" id="sparkInfo">&mdash;</span>
+  <div id="chartExplain_diffhist" class="chart-explain" style="display:none;"></div>
 </div></div>
 
 <div class="stats"><div class="stats-code" id="statsCode"><span class="s-comment">// connecting to node...</span></div></div>
@@ -519,12 +522,33 @@ antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mine
     };
     var _openParam=null;
     function toggleParamInfo(key){
+      // Close any open chart info first
+      if(_openChart){toggleChartInfo(_openChart);}
       var el=document.getElementById('paramExplain');if(!el)return;
       if(_openParam===key){el.style.maxHeight='0';el.style.padding='0 14px';setTimeout(function(){el.style.display='none';},400);_openParam=null;return;}
       el.textContent=_paramTexts[key]||key;
       el.style.display='block';
       setTimeout(function(){el.style.maxHeight='400px';el.style.padding='10px 14px';},10);
       _openParam=key;
+    }
+    var _chartTexts={
+blockprod:'BLOCK PRODUCTION \u2014 Real vs Expected\n\nThis chart compares actual blockchain progress against the theoretical schedule.\n\n\u2022 Green solid line (Real): Actual blocks mined on the chain.\n\u2022 White dashed line (Expected): Blocks that SHOULD have been mined at 10 min/block.\n  Formula: expected = (current_time - genesis_time) / 600\n\n\u2022 Green shaded area: Chain is AHEAD of schedule (mining faster than 10 min).\n\u2022 Red shaded area: Chain is BEHIND schedule (mining slower than 10 min).\n\nThe "+X ahead" or "-X behind" indicator shows the Block Lag \u2014 the primary health indicator. A healthy chain oscillates slightly around the expected line. Persistent deviation triggers cASERT profile adjustments.',
+burstvol:'BURST & VOLATILITY \u2014 Mining Stability Metrics (last 72 blocks)\n\nBURST (orange line, left axis):\n  % of recent blocks mined in under 5 minutes (half the target).\n  \u2022 <10%: Healthy (green) \u2014 normal variance\n  \u2022 10-25%: Elevated (yellow) \u2014 some fast blocks\n  \u2022 >25%: High burst (red) \u2014 significant instability\n\nVOLATILITY (cyan line, right axis):\n  Standard deviation of block times / 600s target.\n  \u2022 <15%: Stable (green) \u2014 predictable mining\n  \u2022 15-40%: Moderate (yellow) \u2014 some fluctuation\n  \u2022 >40%: Unstable (red) \u2014 erratic hashrate\n\nOrange triangles (\u25B2) on X-axis mark burst blocks (<5 min).\ncASERT escalates profiles during sustained burst/volatility.',
+diffhist:'DIFF HISTORY \u2014 Difficulty Over Time (last 72 blocks)\n\nPurple line: The bitsQ (difficulty) value for each block.\nHigher bitsQ = LOWER difficulty (easier). Lower bitsQ = HIGHER difficulty.\n\nAdjusts every block via ASERT algorithm:\n\u2022 Blocks too fast \u2192 difficulty increases (bitsQ decreases)\n\u2022 Blocks too slow \u2192 difficulty decreases (bitsQ increases)\n\ncASERT overlay amplifies adjustments when unstable:\n\u2022 B0 (baseline): normal ASERT response\n\u2022 H1-H9 (hardening): faster, more aggressive\n\u2022 E1-E4 (easing): slower, gentler\n\nDashed reference line: Genesis difficulty baseline.\nA flat line = stable mining. Sharp changes = hashrate fluctuations being compensated.'
+    };
+    var _openChart=null;
+    function toggleChartInfo(key){
+      // Close any open param info first
+      if(_openParam){toggleParamInfo(_openParam);}
+      var el=document.getElementById('chartExplain_'+key);if(!el)return;
+      if(_openChart===key){el.style.maxHeight='0';el.style.padding='0 14px';setTimeout(function(){el.style.display='none';},400);_openChart=null;return;}
+      // Close previously open chart
+      if(_openChart){var prev=document.getElementById('chartExplain_'+_openChart);if(prev){prev.style.maxHeight='0';prev.style.padding='0 14px';setTimeout(function(){prev.style.display='none';},400);}}
+      var borderColor=key==='blockprod'?'#4ade80':key==='burstvol'?'#fb923c':'#c084fc';
+      el.textContent=_chartTexts[key]||key;
+      el.style.cssText='display:block;background:#0d0d0d;border-left:3px solid '+borderColor+';padding:0 14px;margin-top:6px;font-family:var(--code);font-size:10px;color:#ccc;line-height:1.7;white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;border-radius:0 4px 4px 0;';
+      setTimeout(function(){el.style.maxHeight='500px';el.style.padding='10px 14px';},10);
+      _openChart=key;
     }
     </script>
   </div>
