@@ -135,7 +135,7 @@ Respuesta esperada:
 ```
 === SOST Node v0.3.1 ===
 Profile: MAINNET | P2P: 19333 | RPC: 18232 | RPC auth: ON
-Genesis: a9547840f1daf5c0de8f2a2b2184dac82657be75e9d436f997097888af6b5164
+Genesis: 6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37
 Wallet: 1 keys
 Node running. Ctrl+C to stop.
 [P2P] Listening on port 19333

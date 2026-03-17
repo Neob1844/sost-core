@@ -129,7 +129,7 @@ footer a{color:var(--t3);text-decoration:none}
 <p>Each round: compute <code>A(x) = M<sup>T</sup>(Mx) + &lambda;x</code> (two 32&times;32 matrix-vector multiplies), sample 4 scratchpad indices from state hash, execute per-block program on dataset entry, apply gradient step <code>x[i] -= (A(x)[i] - b[i]) >> 18</code>, mix scratchpad values into x, update state via SHA256. Every 6,250 rounds: save checkpoint (state_hash, x_hash, round, residual).</p>
 
 <h3>Stability Basin Test</h3>
-<p>B0 profile: scale=1, k=4, steps=4, margin=180. Generates 4 deterministic perturbations &delta; &isin; [-1, +1], applies 4 gradient steps to reference and perturbed copies, verifies L1 distance doesn't grow &gt; 180 per step. Large perturbations must compress to 70% ratio. <em>Source: convergencex.cpp:156-197</em></p>
+<p>B0 profile: scale=1, k=4, steps=4, margin=185. Generates 4 deterministic perturbations &delta; &isin; [-1, +1], applies 4 gradient steps to reference and perturbed copies, verifies L1 distance doesn't grow &gt; 180 per step. Large perturbations must compress to 70% ratio. <em>Source: convergencex.cpp:156-197</em></p>
 
 <h3>Commit V2 Hash</h3>
 <pre>commit = SHA256(MAGIC || "COMMIT" || header_core[72] || seed || final_state || x_bytes[128] || segments_root || checkpoints_root || stability_metric)</pre>
@@ -141,12 +141,13 @@ footer a{color:var(--t3);text-decoration:none}
 <h3>Genesis Example (Transcript V2)</h3>
 <pre>timestamp:        1773597600 (2026-03-15 18:00:00 UTC)
 bitsQ:            765730 (11.6841)
-nonce:            9906
-block_id:         fec8b671fe84391f3eb2ce0afb4cda11c5626755969fb49d34b8e3be27b236df
-commit:           0004477dd4f37e52734aaa975027a811433c2014d27a91afd4f56cc114666af1
-segments_root:    0e79f58aa065bd51d323aefe37793461a3a0495006221fedf5a2688ca5f6148f
-checkpoints_root: 621da01a2e4860970779c9c67a5627ef4520cdbca916c20394b2791d2e31db4a
-metric:           82
+nonce:            6643
+block_id:         6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37
+commit:           0012826c6896fe10ef4c726913d21765da650004ad3e00ff822e2d6dad3c35b3
+segments_root:    e0bb171d31dc03501b380c13f128095f90605f6a1b75d0166cf5a28f665d83b5
+checkpoints_root: 93e1107cab5370c61c54a8b23e2b39f496fcb261ebdf0ab0872eb7a5490269cb
+metric:           94
+profile_index:    0 (B0 — committed to hash)
 subsidy:          785,100,863 stocks (7.85100863 SOST)
 split:            miner 392,550,433 | gold 196,275,215 | popc 196,275,215</pre>
 </div></section>
@@ -169,20 +170,21 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-3, 6]. Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 9]. 17 profiles E4(-4) through H12(+12); H10&ndash;H12 reserved. Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
 
 <table>
 <tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
-<tr><td>E3</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Deep easing</td></tr>
-<tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>180</td><td><strong>Baseline</strong></td></tr>
-<tr><td>H3</td><td>2</td><td>5</td><td>5</td><td>155</td><td>Moderate hardening</td></tr>
-<tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>73% stability</td></tr>
-<tr><td>H6</td><td>3</td><td>7</td><td>7</td><td>135</td><td>Maximum hardening</td></tr>
+<tr><td>E4</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Deep easing (only after 6h at B0)</td></tr>
+<tr><td>E3</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Easing (only after 6h at B0)</td></tr>
+<tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>185</td><td><strong>Baseline</strong></td></tr>
+<tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>Moderate hardening</td></tr>
+<tr><td>H9</td><td>3</td><td>8</td><td>8</td><td>110</td><td>Maximum hardening</td></tr>
+<tr><td>H12</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Reserved</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">Maximum profile: H6 (scale=3, k=7, steps=7, margin=135).</p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles E4(-4) through H12(+12). Active range: E4&ndash;H9. H10&ndash;H12 reserved.</p>
 
 <h3>Anti-Stall</h3>
-<p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), drops profile 1 level every 1200s. Allows progressively easier blocks during prolonged stalls. <em>Source: casert.cpp:204-215</em></p>
+<p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), zone-based decay to B0: H9&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
 </div></section>
 
 <!-- 3. TRANSACTIONS -->

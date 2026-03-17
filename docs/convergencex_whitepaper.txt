@@ -296,62 +296,50 @@ The stability context `stctx` is derived from `header_core`, `seed`, and `checkp
 #### cASERT Equalizer Parameters
 
 The intensity of perturbation probes adapts to network conditions through the cASERT
-equalizer (Section 3.12). The equalizer is consensus-critical. It computes how many
-blocks the chain is ahead of the ideal
-schedule (genesis + height × TARGET_SPACING) and assigns levels:
+equalizer (Section 3.12). The equalizer is consensus-critical. It uses 17 profiles
+from E4(-4) through H12(+12), with CASERT_H_MIN=-4 and CASERT_H_MAX=9
+(H10-H12 reserved for future). B0 is baseline.
 
-  ahead = 0–4    → L1   (neutral, base verification)
-  ahead = 5–25   → L2   (light hardening)
-  ahead = 26–50  → L3   (moderate hardening)
-  ahead = 51–75  → L4   (strong hardening)
-  ahead = 76–100 → L5   (strong hardening)
-  ahead = 101+   → L6+  (unbounded hardening, grows every 50 blocks)
+Profile table (struct: {scale, steps, k, margin}):
 
-Stability parameters by level:
+| Profile | Scale | Steps | k | Margin |
+|---|---|---|---|---|
+| E4(-4) | 1 | 2 | 3 | 280 |
+| E3(-3) | 1 | 3 | 3 | 240 |
+| E2(-2) | 1 | 4 | 3 | 225 |
+| E1(-1) | 1 | 4 | 4 | 205 |
+| B0(0) | 1 | 4 | 4 | 185 |
+| H1(+1) | 1 | 5 | 4 | 170 |
+| H2(+2) | 1 | 5 | 5 | 160 |
+| H3(+3) | 1 | 6 | 5 | 150 |
+| H4(+4) | 1 | 6 | 6 | 145 |
+| H5(+5) | 2 | 5 | 5 | 140 |
+| H6(+6) | 2 | 6 | 5 | 135 |
+| H7(+7) | 2 | 6 | 6 | 130 |
+| H8(+8) | 2 | 7 | 6 | 125 |
+| H9(+9) | 2 | 7 | 7 | 120 |
+| H10(+10) | 3 | 7 | 6 | 115 | (reserved) |
+| H11(+11) | 3 | 7 | 7 | 110 | (reserved) |
+| H12(+12) | 3 | 8 | 7 | 105 | (reserved) |
 
-  scale  = level       for ALL levels  (L1→1, L2→2, L3→3, L4→4, L5→5, L6→6, ...)
-  k      = 4          (fixed: always 4 probes)
-  steps  = 4          (fixed: always 4 refinement steps per probe)
-  margin = 180        (fixed)
+Anti-Stall Decay (zone-based, targeting B0):
 
-Level table:
-
-| Condition | Level | Scale | k | Steps | Margin |
-|---|---|---|---|---|---|
-| On-time or behind (ahead 0–4) | L1 | 1 | 4 | 4 | 180 |
-| Slightly ahead (5–25 blocks) | L2 | 2 | 4 | 4 | 180 |
-| Moderately ahead (26–50 blocks) | L3 | 3 | 4 | 4 | 180 |
-| Significantly ahead (51–75 blocks) | L4 | 4 | 4 | 4 | 180 |
-| Far ahead (76–100 blocks) | L5 | 5 | 4 | 4 | 180 |
-| Extreme (101+ blocks) | L6+ | 6+ | 4 | 4 | 180 |
-
-Decay Anti-Stall (v5.1 — miner-side only, NOT consensus-critical):
-
-  If no block found for max(ahead*600s, 7200s) -- proportional, no ceiling,
-  the effective level decays downward to prevent permanent stall:
-    L8+  : drop 1 level every 10 minutes (fast recovery)
-    L4–L7: drop 1 level every 20 minutes (medium recovery)
-    L2–L3: drop 1 level every 30 minutes (cautious near neutral)
-    L1   : floor, no further decay
+  Hardening profiles decay toward B0 (natural destination):
+    H9–H7: drop 1 level every 600s (10 min/level)
+    H6–H4: drop 1 level every 900s (15 min/level)
+    H3–H1: drop 1 level every 1200s (20 min/level)
+    B0   : natural destination, no further decay toward easing
+  Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level).
   When mining resumes, decay stops instantly. Block validation
   always uses the raw schedule level (no decay applied).
 
-  Worked Example — L10 (450 blocks ahead):
-    Activation: max(450 * 600, 7200) = 270,000s (75 hours)
-    After activation, cost is based on CURRENT effective level:
-      L10->L9->L8: FAST (10min/level) = 30 min
-      L7->L6->L5->L4: MEDIUM (20min/level) = 80 min
-      L3->L2->L1: SLOW (30min/level) = 60 min
-    Total decay L10->L1: 170 min (2h 50m)
-    Total from mining start: 75h + 2h 50m = ~78 hours
-
-At L1 (neutral), 4 independent probes each run 4 gradient steps with
-perturbation scale ±1. This is the lightest configuration. When the chain is
-behind schedule, cASERT bitsQ handles difficulty reduction — equalizer stays at B0.
-When the chain runs ahead, scale increases through L2 and beyond with no ceiling
-— an attacker mining blocks quickly faces increasingly strict stability requirements,
-gaining no advantage. This asymmetric policy ensures that relaxation is only available
-when the chain genuinely needs help, never when an attacker is dominating hashrate.
+At B0 (baseline), 4 independent probes each run 4 gradient steps with
+perturbation scale 1 and margin 185. When the chain is behind schedule,
+cASERT bitsQ handles difficulty reduction — equalizer eases toward E4.
+When the chain runs ahead, profiles harden through H1-H9, progressively
+tightening stability requirements. This asymmetric policy ensures that
+relaxation is only available when the chain genuinely needs help, never
+when an attacker is dominating hashrate.
 
 ### 3.4 Anti-Grinding and Proof Binding
 
@@ -734,12 +722,13 @@ Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ, 12h half-life
 Per-block delta cap        6.25% (1/16)
-Equalizer profiles         E3(-3) through H6(+6)
+Equalizer profiles         E4(-4) through H9(+9), H10-H12 reserved (17 total)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
-cASERT thresholds          L2=5, L3=26, L4=51, L5=76, L6+=101 blocks ahead
-cASERT decay               anti-stall after 2h: L8+ 10min/level, L4-L7 20min, L2-L3 30min
+CASERT_H_MIN               -4
+CASERT_H_MAX               9 (H10-H12 reserved for future)
+cASERT decay               zone-based anti-stall targeting B0: H9-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E4 after 6+ additional hours at B0 (1800s/level)
 Block target spacing       600s
-Stability baseline (L1)    scale=1, k=4, margin=180, steps=4, stab_shift=20
+Stability baseline (B0)    scale=1, steps=4, k=4, margin=185
 
 3.11 cASERT bitsQ Difficulty Adjustment (Consensus-Critical)
 
@@ -758,9 +747,29 @@ The cASERT equalizer is consensus-critical. It adjusts ConvergenceX stability
 parameters according to the equalizer profile. Block validation verifies the
 equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 
-The equalizer profiles range from E3(-3) through H6(+6). B0 is baseline.
+The equalizer uses 17 profiles from E4(-4) through H12(+12), with
+CASERT_H_MIN=-4 and CASERT_H_MAX=9 (H10-H12 reserved for future). B0 is baseline.
 It adjusts stability verification intensity based on how far ahead the chain
 is relative to the ideal schedule.
+
+PROFILE TABLE (struct: {scale, steps, k, margin}):
+  E4(-4):  scale=1, steps=2, k=3, margin=280
+  E3(-3):  scale=1, steps=3, k=3, margin=240
+  E2(-2):  scale=1, steps=4, k=3, margin=225
+  E1(-1):  scale=1, steps=4, k=4, margin=205
+  B0(0):   scale=1, steps=4, k=4, margin=185
+  H1(+1):  scale=1, steps=5, k=4, margin=170
+  H2(+2):  scale=1, steps=5, k=5, margin=160
+  H3(+3):  scale=1, steps=6, k=5, margin=150
+  H4(+4):  scale=1, steps=6, k=6, margin=145
+  H5(+5):  scale=2, steps=5, k=5, margin=140
+  H6(+6):  scale=2, steps=6, k=5, margin=135
+  H7(+7):  scale=2, steps=6, k=6, margin=130
+  H8(+8):  scale=2, steps=7, k=6, margin=125
+  H9(+9):  scale=2, steps=7, k=7, margin=120
+  H10(+10): scale=3, steps=7, k=6, margin=115  (reserved)
+  H11(+11): scale=3, steps=7, k=7, margin=110  (reserved)
+  H12(+12): scale=3, steps=8, k=7, margin=105  (reserved)
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
@@ -769,30 +778,13 @@ SIGNAL COMPUTATION (deterministic, block-timestamp based):
   lag           = expected_h - current_height
   ahead         = max(0, -lag)
 
-LEVEL ASSIGNMENT (cASERT — L1–L6+, unbounded):
-  ahead = 0–4    → L1   (neutral, base verification)
-  ahead = 5–25   → L2   (light hardening)
-  ahead = 26–50  → L3   (moderate hardening)
-  ahead = 51–75  → L4   (strong hardening)
-  ahead = 76–100 → L5   (strong hardening)
-  ahead = 101+   → L6+  (unbounded: level = 6 + floor((ahead - 101) / 50))
-
-  Above L5, the level continues to increase without ceiling.
-  Named thresholds exist for L6=101, L7=151, L8=201, L9=251, L10=301
-  but the formula is general and unbounded.
-
-STABILITY PARAMETERS BY LEVEL:
-  scale  = level       for ALL levels  (L1→1, L2→2, ..., L5→5, L6→6, ...)
-  k      = 4          (fixed: always 4 probes)
-  steps  = 4          (fixed: always 4 refinement steps)
-  margin = 180        (fixed)
-
-DECAY ANTI-STALL (miner-side, uses wall-clock time):
-  If no block found for max(ahead*600s, 7200s) -- proportional, no ceiling:
-    L8+  : drop 1 level every 10 minutes (fast recovery from extreme levels)
-    L4–L7: drop 1 level every 20 minutes (medium recovery)
-    L2–L3: drop 1 level every 30 minutes (cautious near neutral)
-    L1   : floor, no further decay
+DECAY ANTI-STALL (zone-based, targeting B0):
+  Hardening profiles decay toward B0 (natural destination):
+    H9–H7: drop 1 level every 600s (10 min/level)
+    H6–H4: drop 1 level every 900s (15 min/level)
+    H3–H1: drop 1 level every 1200s (20 min/level)
+    B0   : natural destination, no further decay toward easing
+  Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level).
 
   Decay uses real time (std::time), not block timestamps.
   This prevents permanent stall if cASERT levels become too high for
@@ -804,14 +796,14 @@ is bounded by MTP and MAX_FUTURE_DRIFT. The decay component uses
 wall-clock time for mining only — it does not affect block validation.
 
 ASYMMETRIC POLICY:
-  When the chain is ahead of schedule, cASERT increases the scale
-  through L2 and beyond, making stability verification progressively
-  harder with no ceiling. An attacker with high hashrate mining blocks
-  quickly pushes the ahead count up, which increases scale unboundedly.
-  The attacker gains nothing: stability requirements grow strictly
-  stricter. cASERT only stays at L1 (neutral) when the chain is
-  on-time or behind — which is when cASERT bitsQ handles difficulty
-  reduction to maintain liveness.
+  When the chain is ahead of schedule, cASERT hardens through profiles
+  H1-H9, progressively tightening stability requirements (scale, steps,
+  k, and margin all adjust per profile). An attacker with high hashrate
+  mining blocks quickly pushes the ahead count up, facing increasingly
+  strict stability requirements. The attacker gains nothing. cASERT
+  only eases below B0 (into E1-E4) when the chain is behind schedule
+  and has been at B0 for 6+ hours — which is when cASERT bitsQ also
+  handles difficulty reduction to maintain liveness.
 
 3.13 Node Synchronization and Verification Policy
 
@@ -873,8 +865,8 @@ merkle_root: 32 bytes
 timestamp ts = 1,771,700,109
 MedianTimePast MTP = 1,771,697,922
 powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits
-cASERT equalizer selected stability parameters (L3, 26–50 blocks ahead):
-scale=3, k=4, margin=180, steps=4, stab_shift=20
+cASERT equalizer selected stability parameters (H3, moderately ahead):
+scale=1, steps=6, k=5, margin=150
 
 3.14.2 Timestamp Rules (MTP + Future Drift)
 
@@ -2253,7 +2245,7 @@ NOTE: The Foundation reserves the right to accelerate or delay any committed tim
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% delta cap |
-| cASERT equalizer | Consensus-critical, profiles E3(-3) through H6(+6), B0 baseline, hardening only when ahead of schedule |
+| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H9(+9) (H10-H12 reserved), B0 baseline, hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2482,11 +2474,10 @@ CONVERGENCEX PARAMETERS:
   CX_LR_SHIFT                  = 18
   CX_LAM                       = 100
   CX_CHECKPOINT_INTERVAL       = 6,250
-  CX_STABILITY_PERTURBATION_SCALE = 1  // L1 neutral baseline
-  CX_STABILITY_K               = 4
-  CX_STABILITY_MARGIN          = 180
-  CX_STABILITY_GRADIENT_STEPS  = 4
-  CX_STABILITY_LR_SHIFT        = 20
+  CX_STABILITY_PERTURBATION_SCALE = 1  // B0 baseline scale
+  CX_STABILITY_K               = 4    // B0 baseline k
+  CX_STABILITY_MARGIN          = 185  // B0 baseline margin
+  CX_STABILITY_GRADIENT_STEPS  = 4    // B0 baseline steps
 
 MONETARY PARAMETERS:
   GENESIS_TIME                 = 1,773,597,600  // 2026-03-15 18:00:00 UTC
@@ -2502,22 +2493,18 @@ DIFFICULTY PARAMETERS:
   HALF_LIFE                    = 43,200
   MAX_FUTURE_DRIFT             = 600
 
-cASERT EQUALIZER PARAMETERS (consensus-critical):
-  cASERT_L2_BLOCKS             = 5     // 5–25 ahead → L2
-  cASERT_L3_BLOCKS             = 26    // 26–50 ahead → L3
-  cASERT_L4_BLOCKS             = 51    // 51–75 ahead → L4
-  cASERT_L5_BLOCKS             = 76    // 76–100 ahead → L5 (fixed)
-  cASERT_L6_BLOCKS             = 101   // 101+ ahead → L6+ (unbounded)
-  // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
-  FIXED_K                      = 4
-  FIXED_STEPS                  = 4
-  FIXED_MARGIN                 = 180
+cASERT EQUALIZER PARAMETERS (consensus-critical, 17 profiles):
+  CASERT_H_MIN                 = -4    // E4 is lowest profile
+  CASERT_H_MAX                 = 9     // H9 is highest active (H10-H12 reserved)
+  // 17 profiles: E4(-4) through H12(+12), each with {scale, steps, k, margin}
+  // B0(0) baseline: scale=1, steps=4, k=4, margin=185
+  // See profile table in Section 3.12
 
-cASERT DECAY ANTI-STALL:
-  cASERT_DECAY_ACTIVATION      = max(ahead*600, 7200) // proportional, no ceiling
-  cASERT_DECAY_FAST_SECS       = 600    // 10 min/level for L8+
-  cASERT_DECAY_MEDIUM_SECS     = 1,200  // 20 min/level for L4-L7
-  cASERT_DECAY_SLOW_SECS       = 1,800  // 30 min/level for L2-L3
+cASERT DECAY ANTI-STALL (zone-based, targeting B0):
+  cASERT_DECAY_H9_H7_SECS     = 600    // 10 min/level for H9-H7
+  cASERT_DECAY_H6_H4_SECS     = 900    // 15 min/level for H6-H4
+  cASERT_DECAY_H3_H1_SECS     = 1,200  // 20 min/level for H3-H1
+  cASERT_DECAY_EASE_SECS       = 1,800  // 30 min/level for E1-E4 (after 6h+ at B0)
 
 EMERGENCY PARAMETERS:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
@@ -2918,12 +2905,12 @@ Changes from v3.4 to v3.5:
       Consensus rules remain immutable at genesis.
   
   cASERT MODIFICATIONS:
-  70) cASERT rewritten: discrete 3-mode system replaced by continuous
-      signal-based levels. k=4 and steps=4 are fixed. Scale equals
-      level for all levels (linear: L1→1, L2→2, ..., L5→5, L6→6, ...).
-      Increases without bound under fast-chain conditions.
-  71) cASERT thresholds: DEGRADED_THRESHOLD=50, OPEN_THRESHOLD=200
-      (naming aligned with code).
+  70) cASERT rewritten: 17 discrete profiles E4(-4) through H12(+12),
+      each with unique {scale, steps, k, margin}. CASERT_H_MIN=-4,
+      CASERT_H_MAX=9 (H10-H12 reserved for future).
+  71) Anti-stall: zone-based decay targeting B0. H9-H7: 600s/level,
+      H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
+      at B0 (1800s/level).
 
 ## Appendix M: Removed — Adaptive Mode (Historical, Non-Normative)
 

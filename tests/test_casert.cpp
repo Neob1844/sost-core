@@ -98,7 +98,7 @@ int main() {
         for (int32_t h = CASERT_H_MIN; h <= CASERT_H_MAX; ++h) {
             dec.profile_index = h;
             auto out = casert_apply_profile(base, dec);
-            int32_t ai = h + 3;
+            int32_t ai = h - CASERT_H_MIN; // convert to array index
             char buf[128];
             snprintf(buf, sizeof(buf), "H=%d: scale=%d steps=%d k=%d margin=%d", h, out.stab_scale, out.stab_steps, out.stab_k, out.stab_margin);
             TEST(buf, out.stab_scale == CASERT_PROFILES[ai].scale && out.stab_k == CASERT_PROFILES[ai].k);
@@ -108,7 +108,7 @@ int main() {
         CasertDecision dec{}; dec.profile_index = 0;
         ConsensusParams base{};
         auto out = casert_apply_profile(base, dec);
-        TEST("B0: scale=1 k=4 steps=4 margin=180", out.stab_scale==1 && out.stab_k==4 && out.stab_steps==4 && out.stab_margin==180);
+        TEST("B0: scale=1 k=4 steps=4 margin=185", out.stab_scale==1 && out.stab_k==4 && out.stab_steps==4 && out.stab_margin==185);
     }
 
     printf("\n=== 4. ANTI-STALL ===\n");
@@ -154,9 +154,65 @@ int main() {
     TEST("BITSQ_HALF_LIFE == 43200", BITSQ_HALF_LIFE == 43200);
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
-    TEST("H_MIN == -3", CASERT_H_MIN == -3);
-    TEST("H_MAX == 6", CASERT_H_MAX == 6);
-    TEST("PROFILE_COUNT == 10", CASERT_PROFILE_COUNT == 10);
+    TEST("H_MIN == -4", CASERT_H_MIN == -4);
+    TEST("H_MAX == 9", CASERT_H_MAX == 9);
+    TEST("PROFILE_COUNT == 17", CASERT_PROFILE_COUNT == 17);
+
+    printf("\n=== 8. SLEW RATE ===\n");
+
+    {
+        // Fast chain: consecutive blocks should not change H by more than ±1
+        auto chain = make_chain(50, 200); // very fast blocks
+        bool slew_ok = true;
+        int32_t prev_H = 0;
+        for (int h = 11; h <= 49; ++h) {
+            std::vector<BlockMeta> sub(chain.begin(), chain.begin() + h);
+            auto dec = casert_compute(sub, h, sub.back().time + 200);
+            if (h > 11) {
+                int32_t delta = dec.profile_index - prev_H;
+                if (delta > 1 || delta < -1) { slew_ok = false; break; }
+            }
+            prev_H = dec.profile_index;
+        }
+        TEST("Slew rate: H changes by at most ±1 per block", slew_ok);
+    }
+
+    printf("\n=== 9. ANTI-STALL LONG (>12h) ===\n");
+
+    {
+        auto chain = make_chain(50, 200); // fast chain, H should be positive
+        // Stall for 12 hours = 43200s
+        int64_t now = chain.back().time + 43200;
+        auto dec = casert_compute(chain, 50, now);
+        TEST("12h stall: decays to B0 or below", dec.profile_index <= 0);
+    }
+
+    printf("\n=== 10. ANTI-STALL EXTREME (>18h) ===\n");
+
+    {
+        auto chain = make_chain(50, 200); // fast chain
+        // Stall for 18 hours = 64800s (7200 activation + ~6000 decay + 21600 easing threshold)
+        int64_t now = chain.back().time + 64800;
+        auto dec = casert_compute(chain, 50, now);
+        TEST("18h stall: activates easing (E1 or below)", dec.profile_index < 0);
+    }
+
+    printf("\n=== 11. H_MAX ENFORCEMENT ===\n");
+
+    {
+        auto chain = make_chain(100, 100); // extremely fast chain
+        int64_t now = chain.back().time + 100;
+        auto dec = casert_compute(chain, 100, now);
+        TEST("H never exceeds H_MAX=9", dec.profile_index <= CASERT_H_MAX);
+    }
+
+    printf("\n=== 12. BEHIND SCHEDULE CAP ===\n");
+
+    {
+        auto chain = make_chain(50, 1200); // very slow chain (behind schedule)
+        auto dec = casert_compute(chain, 50);
+        TEST("Behind schedule: capped at B0", dec.profile_index <= 0);
+    }
 
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;

@@ -859,8 +859,8 @@ PROPERTIES:
 <p class="wp-p">Difficulty algorithm       cASERT bitsQ, 12h half-life</p>
 <p class="wp-p">Per-block delta cap        6.25%</p>
 <p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (unidirectional)</p>
-<p class="wp-p">Equalizer profiles         E3(-3) through H6(+6)</p>
-<p class="wp-p">Stability baseline         scale=1, k=4, margin=180, steps=4, stab_shift=20</p>
+<p class="wp-p">Equalizer profiles         E4(-4) through H9(+9)</p>
+<p class="wp-p">Stability baseline         scale=1, k=4, margin=185, steps=4, stab_shift=20</p>
 <p class="wp-p">Block target spacing       600s</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.11 cASERT bitsQ Difficulty Adjustment (Consensus-Critical)</p>
@@ -1026,7 +1026,7 @@ PROPERTIES:
 <p class="wp-p">MedianTimePast MTP = 1,771,697,922</p>
 <p class="wp-p">powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits</p>
 <p class="wp-p">cASERT equalizer selected stability parameters:</p>
-<p class="wp-p">scale=1, k=4, margin=180, steps=4, stab_shift=20</p>
+<p class="wp-p">scale=1, k=4, margin=185, steps=4, stab_shift=20</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14.2 Timestamp Rules (MTP + Future Drift)</p>
 <div class="wp-spacer"></div>
@@ -2371,7 +2371,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% per-block delta cap</td></tr>
-<tr><td>cASERT Equalizer</td><td>Consensus-critical profiles E3(-3) through H6(+6), B0 baseline, independently tuned per profile, hardening when ahead of schedule</td></tr>
+<tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H9(+9), B0 baseline, independently tuned per profile, hardening when ahead of schedule. H10-H12 reserved.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>

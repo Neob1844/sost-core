@@ -429,7 +429,9 @@ CXAttemptResult convergencex_attempt(
         x, prob, n, lr_shift, stctx,
         params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps,
         params.stab_lr_shift, res.stability_metric);
-    // Commit V2: includes segments_root
+    // Commit V3: includes segments_root + profile_index (consensus-critical)
+    // The profile_index binds the stability parameters to the commit,
+    // preventing miners from using easier params than consensus requires.
     std::vector<uint8_t> cbuf;
     append_magic(cbuf); append(cbuf, "COMMIT", 6);
     append(cbuf, header_core, HEADER_CORE_LEN);
@@ -438,6 +440,9 @@ CXAttemptResult convergencex_attempt(
     append(cbuf, res.checkpoints_root);
     append(cbuf, res.segments_root);
     append_u64_le(cbuf, res.stability_metric);
+    // Profile index: i8 signed, committed to prevent profile downgrade attacks
+    int8_t pi8 = (int8_t)params.stab_profile_index;
+    cbuf.push_back((uint8_t)pi8);
     res.commit = sha256(cbuf);
     return res;
 }
@@ -583,14 +588,16 @@ bool verify_cx_proof(
     append_u32_le(sbuf, nonce); append_u32_le(sbuf, extra_nonce);
     Bytes32 seed = sha256(sbuf);
 
-    // Phase 5: Commit binding (V2 format: includes segments_root)
-    printf("[CX-VERIFY] Phase 5: commit binding\n");
+    // Phase 5: Commit binding (V3 format: includes segments_root + profile_index)
+    printf("[CX-VERIFY] Phase 5: commit binding (profile_index=%d)\n", params.stab_profile_index);
     std::vector<uint8_t> cbuf;
     append_magic(cbuf); append(cbuf, "COMMIT", 6);
     append(cbuf, header_core, 72); append(cbuf, seed); append(cbuf, final_state);
     append(cbuf, x_bytes, x_bytes_len);
     append(cbuf, checkpoints_root); append(cbuf, segments_root);
     append_u64_le(cbuf, stability_metric);
+    int8_t pi8 = (int8_t)params.stab_profile_index;
+    cbuf.push_back((uint8_t)pi8);
     Bytes32 computed_commit = sha256(cbuf);
     if (computed_commit != commit) {
         printf("[CX-VERIFY] Phase 5 FAILED: commit mismatch expected=%s got=%s (cbuf_len=%zu metric=%llu)\n",
