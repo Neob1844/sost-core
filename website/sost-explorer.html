@@ -1707,7 +1707,7 @@ function renderAddrCharts(utxos){
       // Interactive crosshair + tooltip + click
       (function(canvas,data,padC,cwC,chC,mxC){
         var baseImg=ctx.getImageData(0,0,canvas.width,canvas.height);
-        var tip=document.getElementById('dpTip');
+        var tip=document.getElementById('addrBalTip');
         canvas.style.cursor='crosshair';
         canvas.addEventListener('mousemove',function(e){
           if(!data||!data.length){if(tip)tip.style.display='none';return;}
@@ -1775,7 +1775,7 @@ function renderAddrCharts(utxos){
     // Interactive tooltip + highlight + click
     (function(canvas,data,padI,cwI,chI,mxI,barW){
       var baseImg=ctx2.getImageData(0,0,canvas.width,canvas.height);
-      var tip=document.getElementById('dpTip');
+      var tip=document.getElementById('addrIncTip');
       canvas.style.cursor='pointer';
       canvas.addEventListener('mousemove',function(e){
         if(!data||!data.length){if(tip)tip.style.display='none';return;}
