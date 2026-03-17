@@ -466,7 +466,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <!-- Row 2: Block details -->
       <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
-        <span>prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a></span>
+        <span title="Hash and difficulty of the block BEFORE the one being mined now">prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a> <span id="miningPrevDiff" style="color:var(--text3);"></span></span>
         <span class="pi" onclick="toggleParamInfo('bitsq')">bitsQ: <span id="miningBitsQRaw" style="color:var(--purple);font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
         <span class="pi" onclick="toggleParamInfo('profile')">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=185 steps=4)</span> <span class="pi-i">\u24D8</span></span>
         <span class="pi" onclick="toggleParamInfo('stability')">stability: <span id="miningStabRate" style="font-weight:600;">—</span> <span class="pi-i">\u24D8</span></span>
@@ -1354,6 +1354,9 @@ function updateMiningPanel(elapsed){
   var mp=document.getElementById('miningPrev');
   if(mp&&_tipBlockHash){mp.textContent=_tipBlockHash.substr(0,16)+'...';mp.onclick=function(){showBlock(_tipBlockHash);return false;};mp.style.cursor='pointer';}
   else if(mp){mp.textContent='—';}
+  // Show prev block difficulty
+  var pd=document.getElementById('miningPrevDiff');
+  if(pd&&_lastBitsQ){pd.textContent='('+fComma(_lastBitsQ)+' \u00B7 '+(_lastBitsQ/65536).toFixed(3)+' bits)';pd.title='Difficulty of the previous block (before the one being mined now). This is NOT the target for the current block.';}
   // BitsQ raw
   var br=document.getElementById('miningBitsQRaw');
   if(br)br.textContent=fComma(bq)+' ('+bqReal.toFixed(3)+')';
