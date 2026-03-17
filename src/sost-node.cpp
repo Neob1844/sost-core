@@ -334,6 +334,7 @@ static const int64_t MAX_REORG_DEPTH = 500;
 // Trust requires exact hard checkpoint match OR assumevalid anchor on active chain.
 // --full-verify forces full CX recomputation for all blocks.
 static bool g_full_verify_mode = false;
+static bool g_verbose = false;  // --verbose: show CX-VERIFY and PARSE debug output
 
 // Known blocks: blocks we've already accepted or stored as fork/orphan.
 // Used to silently ignore re-broadcast of blocks we already know about.
@@ -1936,7 +1937,7 @@ static bool process_block(const std::string& block_json) {
                         else if (block_json[arr_e] == ']') depth--;
                         if (depth > 0) arr_e++;
                     }
-                    printf("[PARSE] segment_proofs array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                    if(g_verbose) printf("[PARSE] segment_proofs array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
                     fflush(stdout);
                     // Parse array of segment proof objects
                     size_t pos = arr_s + 1;
@@ -1987,7 +1988,7 @@ static bool process_block(const std::string& block_json) {
                     }
                 }
             }
-            printf("[PARSE] Parsed %zu segment_proofs\n", seg_proofs_vec.size()); fflush(stdout);
+            if(g_verbose) printf("[PARSE] Parsed %zu segment_proofs\n", seg_proofs_vec.size()); fflush(stdout);
         }
         // Parse round_witnesses from JSON
         std::vector<RoundWitness> round_witnesses_vec;
@@ -1999,7 +2000,7 @@ static bool process_block(const std::string& block_json) {
                     // Find matching ] for outer array (skip nested [])
                     size_t arr_e = arr_s + 1;
                     { int d2 = 1; while (arr_e < block_json.size() && d2 > 0) { if (block_json[arr_e]=='[') d2++; else if (block_json[arr_e]==']') d2--; if (d2>0) arr_e++; } }
-                    printf("[PARSE] round_witnesses array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
+                    if(g_verbose) printf("[PARSE] round_witnesses array: pos %zu to %zu (%zu chars)\n", arr_s, arr_e, arr_e - arr_s);
                     fflush(stdout);
                     size_t pos = arr_s + 1;
                     while (pos < arr_e) {
@@ -2075,7 +2076,7 @@ static bool process_block(const std::string& block_json) {
                 }
             }
         }
-        printf("[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
+        if(g_verbose) printf("[BLOCK-V2] Parsed: x_bytes=%zu final_state=%s segments_root=%s cp_leaves=%zu seg_proofs=%zu rw=%zu\n",
                 x_bytes_raw.size(), final_state_hex.substr(0,16).c_str(), segments_root_hex.substr(0,16).c_str(),
                 checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
         fflush(stdout);
@@ -2118,8 +2119,9 @@ static bool process_block(const std::string& block_json) {
             CasertDecision dec_for_profile;
             dec_for_profile.profile_index = declared_pi;
             cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+            cx_params.verbose = g_verbose;
 
-            printf("[BLOCK-V3] Profile: declared=%d base=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
+            if(g_verbose) printf("[BLOCK-V3] Profile: declared=%d base=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
                    declared_pi, base_profile, cx_params.stab_scale, cx_params.stab_k,
                    cx_params.stab_margin, cx_params.stab_steps);
             fflush(stdout);
@@ -3608,6 +3610,9 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--no-fast-sync")){
             g_full_verify_mode = true;
         }
+        else if(!strcmp(argv[i],"--verbose")||!strcmp(argv[i],"-v")){
+            g_verbose = true;
+        }
         else if(!strcmp(argv[i],"--help")||!strcmp(argv[i],"-h")){
             printf("SOST Node v0.4.0\n");
             printf("  --wallet <path>            Wallet file (default: wallet.json)\n");
@@ -3624,6 +3629,7 @@ int main(int argc, char** argv) {
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: on)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
             printf("  --no-fast-sync             Same as --full-verify\n");
+            printf("  --verbose / -v             Show CX-VERIFY and PARSE debug output\n");
             return 0;
         }
     }
