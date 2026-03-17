@@ -327,7 +327,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.7;font-family:var(--code);">Burst = % of blocks &lt;5min in last 72. Volatility = stdev(block_times)/600s. cASERT responds by hardening profiles.</div>
 </div></div>
 <div class="sparkline-wrap"><div class="sparkline-box">
-  <span class="sparkline-label">DIFF HISTORY</span>
+  <span class="sparkline-label">DIFF HISTORY · last 72 blocks (~12h)</span>
   <canvas class="sparkline-canvas" id="sparkCanvas" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
   <span class="sparkline-info" id="sparkInfo">&mdash;</span>
@@ -582,6 +582,8 @@ let _navStack=[];
 var _diffHistory=[];
 var _lastBlockTime=0;
 var _avgBlockTime=120;
+var _avgNonceReal=0;     // dynamic E[nonce] from last 72 blocks
+var _prevAvgNonceReal=0; // for trend arrow
 var _countdownInterval=null;
 const ROLES={
   'sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724':'GOLD VAULT',
@@ -740,6 +742,19 @@ async function updateDashboard(info){
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var AVG_WINDOW=72;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
     _diffHistory=diffs.reverse();drawSparkline();
+    // Compute dynamic E[nonce] from real block nonces/times
+    _prevAvgNonceReal=_avgNonceReal;
+    if(_diffHistory.length>=3){
+      var nonces=[];var ATT_S=5.5;
+      for(var di=1;di<_diffHistory.length;di++){
+        var bt=_diffHistory[di].t-_diffHistory[di-1].t;
+        if(bt>0) nonces.push(bt*ATT_S); // estimated nonce = block_time * attempts/s
+      }
+      if(nonces.length>0){
+        var sum=0;for(var ni=0;ni<nonces.length;ni++)sum+=nonces[ni];
+        _avgNonceReal=sum/nonces.length;
+      }
+    }
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
     document.getElementById('dAvgTimeSub').textContent='last '+times.length+' blocks'+(times.length>=AVG_WINDOW?' (~12h)':'');
     // Pulse effect — intensity proportional to proximity to 600s target
@@ -871,27 +886,46 @@ document.getElementById('emissionCanvas').addEventListener('mouseleave',function
 function drawSparkline(){
   if(!_diffHistory.length)return;
   var cv=document.getElementById('sparkCanvas'),ctx=cv.getContext('2d');
+  if(!cv||!ctx)return;
   var dpr=window.devicePixelRatio||1,rect=cv.getBoundingClientRect();
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;ctx.scale(dpr,dpr);
   var W=rect.width,Hc=rect.height,pad=4;
   var data=_diffHistory,len=data.length;
+  if(len<2)return;
   var minD=Infinity,maxD=0;
   for(var i=0;i<len;i++){if(data[i].d<minD)minD=data[i].d;if(data[i].d>maxD)maxD=data[i].d;}
   var range=maxD-minD||1;
+  // Expand range slightly for visual margin
+  var vizMin=minD-range*0.05, vizMax=maxD+range*0.05, vizRange=vizMax-vizMin;
+  function yPos(d){return Hc-pad-((d-vizMin)/vizRange)*(Hc-pad*2);}
   ctx.clearRect(0,0,W,Hc);
+  // Genesis baseline reference line
+  var genesisD=765730;
+  if(genesisD>=vizMin&&genesisD<=vizMax){
+    var gy=yPos(genesisD);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();ctx.setLineDash([]);
+  }
+  // Fill area
   var grd=ctx.createLinearGradient(0,0,0,Hc);
   grd.addColorStop(0,'rgba(192,132,252,.15)');grd.addColorStop(1,'rgba(192,132,252,.02)');
   ctx.beginPath();ctx.moveTo(0,Hc);
-  for(var i=0;i<len;i++){var x=(i/(len-1))*(W);var y=Hc-pad-((data[i].d-minD)/range)*(Hc-pad*2);ctx.lineTo(x,y);}
+  for(var i=0;i<len;i++){var x=(i/(len-1))*W;ctx.lineTo(x,yPos(data[i].d));}
   ctx.lineTo(W,Hc);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+  // Line
   ctx.beginPath();
-  for(var i=0;i<len;i++){var x=(i/(len-1))*(W);var y=Hc-pad-((data[i].d-minD)/range)*(Hc-pad*2);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  for(var i=0;i<len;i++){var x=(i/(len-1))*W,y=yPos(data[i].d);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(192,132,252,.8)';ctx.lineWidth=1.5;ctx.stroke();
+  // Dot markers
+  for(var i=0;i<len;i++){
+    var x=(i/(len-1))*W,y=yPos(data[i].d);
+    ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
+  }
   var last=data[len-1],first=data[0];
-  var change=((last.d-first.d)/first.d*100).toFixed(1);
+  var change=(first.d>0)?((last.d-first.d)/first.d*100).toFixed(1):'0.0';
   var arrow=last.d>=first.d?'\u25B2':'\u25BC';
   var clr=last.d>=first.d?'var(--red)':'var(--green)';
-  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">last '+len+' blks</span>';
+  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks</span>';
 }
 (function(){
   var cv=document.getElementById('sparkCanvas');
@@ -923,15 +957,15 @@ function drawSparkline(){
     // Interval
     var iv='\u2014';
     if(idx>0){var dt=pt.t-data[idx-1].t;iv=dt<60?dt+'s':Math.floor(dt/60)+'m '+dt%60+'s';}
-    // cASERT level for this block
+    // cASERT profile for this block
     var elapsed=pt.t-1773597600;var expected=Math.floor(elapsed/600);
-    var lag=expected-(pt.h);var ahead=(lag<0)?-lag:0;
-    var lv=1;if(ahead>=5)lv=2;if(ahead>=26)lv=3;if(ahead>=51)lv=4;if(ahead>=76)lv=5;if(ahead>=101)lv=6+Math.floor((ahead-101)/50);
+    var lag=pt.h-expected; // positive=ahead, negative=behind
+    var prof=getProfile(lag);
     var ts=new Date(pt.t*1000);
     var tsStr=ts.getUTCFullYear()+'-'+('0'+(ts.getUTCMonth()+1)).slice(-2)+'-'+('0'+ts.getUTCDate()).slice(-2)+' '+('0'+ts.getUTCHours()).slice(-2)+':'+('0'+ts.getUTCMinutes()).slice(-2)+':'+('0'+ts.getUTCSeconds()).slice(-2)+' UTC';
     tip.innerHTML='<span style="color:var(--purple);font-weight:600">Block #'+pt.h+'</span><br>'+
       '<span style="color:var(--text3)">Difficulty:</span> <span style="color:var(--orange);font-weight:600">'+(pt.d/65536).toFixed(3)+'</span> <span style="color:var(--text3)">(bits_q: '+pt.d.toLocaleString()+')</span><br>'+
-      '<span style="color:var(--text3)">cASERT:</span> <span style="color:'+getLevelColor(lv)+';font-weight:600">'+getProfile(-ahead).name+'</span>'+(ahead>0?' <span style="color:var(--text3)">\u00B7 '+ahead+' ahead</span>':'')+
+      '<span style="color:var(--text3)">cASERT:</span> <span style="color:'+getLevelColor(prof.H)+';font-weight:600">'+prof.name+'</span>'+(lag>0?' <span style="color:var(--text3)">\u00B7 '+lag+' ahead</span>':(lag<0?' <span style="color:var(--text3)">\u00B7 '+(-lag)+' behind</span>':''))+
       '<br><span style="color:var(--text3)">Time:</span> '+tsStr+
       '<br><span style="color:var(--text3)">Interval:</span> <span style="color:var(--cyan)">\u23F1 '+iv+'</span>';
     tip.style.display='block';
@@ -942,6 +976,13 @@ function drawSparkline(){
   cv.addEventListener('mouseleave',function(){
     tip.style.display='none';
     drawSparkline();
+  });
+  cv.addEventListener('click',function(e){
+    var data=_diffHistory;if(!data||data.length<2)return;
+    var rect=cv.getBoundingClientRect();
+    var mx=e.clientX-rect.left,W=rect.width;
+    var idx=Math.round((mx/W)*(data.length-1));
+    if(idx>=0&&idx<data.length) showBlockByHeight(data[idx].h);
   });
 })();
 var _activeDashPanel=null;
@@ -1308,14 +1349,25 @@ function updateMiningPanel(elapsed){
   // 3B: Dynamic probability with color transitions
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
-  var expectedNonce=(1/probPerAttempt)*2.25;
+  var theoreticalNonce=(1/probPerAttempt)*2.25;
+  // Weighted: 70% real data + 30% theoretical (if real data available)
+  var expectedNonce=(_avgNonceReal>0)?(0.7*_avgNonceReal+0.3*theoreticalNonce):theoreticalNonce;
   var p50=Math.round(expectedNonce*Math.LN2);
   var p75=Math.round(expectedNonce*Math.log(4));
   var p90=Math.round(expectedNonce*Math.log(10));
   var p95=Math.round(expectedNonce*Math.log(20));
   var estNonce=Math.round(elapsed*attPerSec);
   var ep=document.getElementById('miningProb');
-  if(ep)ep.innerHTML='<span style="color:#c8c8c8">P(solve) = '+probPerAttempt.toExponential(2)+'</span> <span style="color:var(--text3)">\u00B7</span> <span style="color:#c8c8c8">E[nonce] = '+fComma(Math.round(expectedNonce))+'</span>';
+  if(ep){
+    var trend='';
+    if(_prevAvgNonceReal>0&&_avgNonceReal>0){
+      var pctChange=(_avgNonceReal-_prevAvgNonceReal)/_prevAvgNonceReal*100;
+      if(pctChange<-5) trend=' <span style="color:var(--green)">\u2193</span>';
+      else if(pctChange>5) trend=' <span style="color:var(--red)">\u2191</span>';
+    }
+    var srcLabel=_avgNonceReal>0?' <span style="color:var(--text3);font-size:8px">(avg 72 blocks)</span>':'';
+    ep.innerHTML='<span style="color:#c8c8c8">P(solve) = '+probPerAttempt.toExponential(2)+'</span> <span style="color:var(--text3)">\u00B7</span> <span style="color:#c8c8c8">E[nonce] = '+fComma(Math.round(expectedNonce))+trend+'</span>'+srcLabel;
+  }
   // Color each threshold based on nonce proximity
   function threshColor(target,cur){
     if(cur>=target)return'color:#4ade80;font-weight:700;text-shadow:0 0 4px rgba(74,222,128,.5)';
@@ -1715,7 +1767,7 @@ function renderAddrCharts(utxos){
       var h=Math.max(1,(d.a/mxA)*ch2);
       var ratio=d.a/mxA;
       var alpha=0.5+ratio*0.4;
-      ctx2.fillStyle='rgba(0,229,255,'+alpha.toFixed(2)+')';
+      ctx2.fillStyle='rgba(26,58,92,'+Math.min(1,0.5+alpha*0.5).toFixed(2)+')';
       ctx2.fillRect(x,pad2.t+ch2-h,bw2,h);
     });
     ctx2.fillStyle='#444';ctx2.font='8px monospace';ctx2.textAlign='right';
@@ -1736,7 +1788,7 @@ function renderAddrCharts(utxos){
         ctxR.putImageData(baseImg,0,0);ctxR.save();ctxR.scale(dprR,dprR);
         var bx=padI.l+idx/(data.length)*cwI;
         var bh=Math.max(1,(d.a/mxI)*chI);
-        ctxR.fillStyle='rgba(0,229,255,.95)';
+        ctxR.fillStyle='rgba(26,58,92,.95)';
         ctxR.fillRect(bx,padI.t+chI-bh,barW,bh);
         ctxR.strokeStyle='#fff';ctxR.lineWidth=1;
         ctxR.strokeRect(bx,padI.t+chI-bh,barW,bh);
@@ -1744,7 +1796,7 @@ function renderAddrCharts(utxos){
         // Tooltip
         if(tip){
           var typeColor=d.t==='miner'?'var(--orange)':d.t==='gold'?'var(--gold)':d.t==='popc'?'var(--cyan)':'var(--text)';
-          tip.innerHTML='<span style="color:#00e5ff;font-weight:600">Block #'+d.h+'</span><br>Reward: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span><br>Type: <span style="color:'+typeColor+'">'+d.t+(d.cb?' (coinbase)':'')+'</span>';
+          tip.innerHTML='<span style="color:#4488cc;font-weight:600">Block #'+d.h+'</span><br>Reward: <span style="color:var(--text)">'+d.a.toFixed(4)+' SOST</span><br>Type: <span style="color:'+typeColor+'">'+d.t+(d.cb?' (coinbase)':'')+'</span>';
           tip.style.display='block';
           var tx=mouseX+12;if(tx+160>Wc)tx=mouseX-170;
           tip.style.left=tx+'px';tip.style.top='-10px';
@@ -1778,12 +1830,12 @@ function renderAddrCharts(utxos){
     var total=mature+almost+immature;if(total===0)total=1;
     var mPct=(mature/total*100).toFixed(1),aPct=(almost/total*100).toFixed(1),iPct=(immature/total*100).toFixed(1);
     matBar.innerHTML=
-      (mature?'<div style="width:'+mPct+'%;background:var(--green);height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
-      (almost?'<div style="width:'+aPct+'%;background:#fbbf24;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
-      (immature?'<div style="width:'+iPct+'%;background:#999;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
-    matLeg.innerHTML='<span style="color:var(--green);">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
-      (almost?'<span style="color:#fbbf24;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
-      (immature?'<span style="color:#999;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
+      (mature?'<div style="width:'+mPct+'%;background:#3a3a3a;height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
+      (almost?'<div style="width:'+aPct+'%;background:#555;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
+      (immature?'<div style="width:'+iPct+'%;background:#666;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
+    matLeg.innerHTML='<span style="color:#3a3a3a;">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
+      (almost?'<span style="color:#555;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
+      (immature?'<span style="color:#666;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
   }
 }
 
