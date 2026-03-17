@@ -1693,17 +1693,14 @@ async function showAddress(addr){
       if(u2.coinbase){minedAmt+=amt2;minedCount++;}
       else{inAmt+=amt2;inCount++;}
     }
-    // Balance section with mature/immature breakdown
-    var balHtml='<div class="k">total balance</div><div class="v"><span style="color:var(--green);font-size:16px;font-weight:600">'+totalBalance.toFixed(8)+' SOST</span></div>';
-    // MINED / IN / OUT row
-    balHtml+='<div style="display:flex;gap:24px;margin:8px 0 4px;">';
-    balHtml+='<div title="Total coinbase rewards received from mining '+minedCount+' blocks"><span style="color:var(--text3);font-size:9px;">&#9935; MINED</span><br><span style="color:#ffd700;font-weight:600;">'+minedAmt.toFixed(8)+' SOST</span></div>';
-    balHtml+='<div><span style="color:var(--text3);font-size:9px;">IN</span><br><span style="color:#00ff88;font-weight:600;">'+inAmt.toFixed(8)+' SOST</span></div>';
-    balHtml+='<div><span style="color:var(--text3);font-size:9px;">OUT</span><br><span style="color:#ff4444;font-weight:600;">0.00000000 SOST</span></div>';
-    balHtml+='</div>';
+    // Balance section — clean vertical rows
+    var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
+    balHtml+='<div class="k" style="color:#ffd700" title="Total coinbase rewards from mining '+minedCount+' blocks">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
+    balHtml+='<div class="k" style="color:#00ff88">\u2193 IN</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' transfers)</span></div>';
+    balHtml+='<div class="k" style="color:#ff4444">\u2191 OUT</div><div class="v"><span style="color:#ff4444;font-weight:600">0.00000000 SOST</span></div>';
     if(immatureCount>0){
-      balHtml+='<div class="k">\u2705 spendable</div><div class="v"><span style="color:var(--green);font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' UTXOs)</span></div>';
-      balHtml+='<div class="k">\u23F3 immature</div><div class="v"><span style="color:var(--yellow);font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
+      balHtml+='<div class="k" style="color:#00ff88">\u25A0 SPENDABLE</div><div class="v"><span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span></div>';
+      balHtml+='<div class="k" style="color:#fbbf24">\u25A1 IMMATURE</div><div class="v"><span style="color:#fbbf24;font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
     }
     // UTXO rows with maturity indicators
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
