@@ -827,7 +827,9 @@ function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/360
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
   var wallSec=now-GENESIS_TS;
-  var chainSec=H*600;
+  // Chain time: (height × 600) + elapsed since last block (ticks every second)
+  var elapsedSinceLast=_lastBlockTime?(now-_lastBlockTime):0;
+  var chainSec=H*600+Math.max(0,elapsedSinceLast);
   var expected=Math.floor(wallSec/600);
   var actual=H;
   var lag=expected-actual;
@@ -1167,10 +1169,13 @@ function renderProdChart(info, diffs) {
   for(var i=0;i<d.length;i++){var x=tx(d[i].t);ctx.lineTo(x,ty(d[i].h));}
   for(var i=d.length-1;i>=0;i--){var ex=(d[i].t-GENESIS_TS)/600;ctx.lineTo(tx(d[i].t),ty(ex));}
   ctx.closePath();
-  // Delta uses current wall time (not last block time) to match CHAIN TIMING panel
+  // Delta: use info.blocks (actual tip) and same formula as CHAIN TIMING panel
   var nowTs=Date.now()/1000;
-  var delta=hMax-(nowTs-GENESIS_TS)/600;
-  ctx.fillStyle=delta>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
+  var wallSec=nowTs-GENESIS_TS;
+  var expectedNow=Math.floor(wallSec/600);
+  var actualNow=info.blocks;
+  var lag=expectedNow-actualNow; // positive = behind schedule
+  ctx.fillStyle=lag<=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
   for(var i=0;i<d.length;i++){var x=tx(d[i].t),y=ty(d[i].h);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
@@ -1180,7 +1185,11 @@ function renderProdChart(info, diffs) {
   for(var yi=0;yi<=3;yi++){var v=hMin+yi/3*hRange;ctx.fillText(Math.round(v),pad.l-4,ty(v)+3);}
   // Delta indicator
   var de=document.getElementById('prodDelta');
-  if(de){var rd=Math.round(delta);de.textContent=rd>0?'+'+rd+' ahead':rd<0?rd+' behind':'On target';de.style.color=rd>0?'var(--green)':rd<0?'var(--red)':'#4488ff';}
+  if(de){
+    if(lag>0){de.textContent='+'+lag+' behind';de.style.color='var(--red)';}
+    else if(lag<0){de.textContent=(-lag)+' ahead';de.style.color='var(--green)';}
+    else{de.textContent='On target';de.style.color='#4488ff';}
+  }
   // Tooltip
   if(!cv._tipBound){cv._tipBound=true;cv._d=d;
     cv.addEventListener('mousemove',function(e){
@@ -1348,27 +1357,25 @@ function updateMiningPanel(elapsed){
   }
   var di=document.getElementById('miningDecayInfo');
   if(di){if(dc.active&&effProf.name!==rawProf.name){di.style.display='inline';di.textContent='(decayed from '+rawProf.name+' \u2192 '+effProf.name+')';}else{di.style.display='none';}}
-  // 3B: Dynamic probability with color transitions
+  // 3B: Two E[nonce] — theoretical (pure) + adjusted (avg 72 blocks)
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
-  var theoreticalNonce=(1/probPerAttempt)*2.25;
-  // Weighted: 70% real data + 30% theoretical (if real data available)
-  var expectedNonce=(_avgNonceReal>0)?(0.7*_avgNonceReal+0.3*theoreticalNonce):theoreticalNonce;
-  var p50=Math.round(expectedNonce*Math.LN2);
-  var p75=Math.round(expectedNonce*Math.log(4));
-  var p90=Math.round(expectedNonce*Math.log(10));
-  var p95=Math.round(expectedNonce*Math.log(20));
+  var enTheo=1/probPerAttempt;                        // E[n] theoretical (no multiplier)
+  var enAdj=(_avgNonceReal>0)?_avgNonceReal:enTheo;   // E[72] from real block times
+  var expectedNonce=enAdj; // use adjusted for progress bar / time estimates
+  var p50=Math.round(enTheo*Math.LN2);
+  var p75=Math.round(enTheo*Math.log(4));
+  var p90=Math.round(enTheo*Math.log(10));
+  var p95=Math.round(enTheo*Math.log(20));
   var estNonce=Math.round(elapsed*attPerSec);
   var ep=document.getElementById('miningProb');
   if(ep){
-    var trend='';
-    if(_prevAvgNonceReal>0&&_avgNonceReal>0){
-      var pctChange=(_avgNonceReal-_prevAvgNonceReal)/_prevAvgNonceReal*100;
-      if(pctChange<-5) trend=' <span style="color:var(--green)">\u2193</span>';
-      else if(pctChange>5) trend=' <span style="color:var(--red)">\u2191</span>';
-    }
-    var srcLabel=_avgNonceReal>0?' <span style="color:var(--text3);font-size:8px">(avg 72 blocks)</span>':'';
-    ep.innerHTML='<span style="color:#c8c8c8">P(solve) = '+probPerAttempt.toExponential(2)+'</span> <span style="color:var(--text3)">\u00B7</span> <span style="color:#c8c8c8">E[nonce] = '+fComma(Math.round(expectedNonce))+trend+'</span>'+srcLabel;
+    var theoTime=enTheo/attPerSec,adjTime=enAdj/attPerSec;
+    var tM=Math.floor(theoTime/60),tS=Math.round(theoTime%60);
+    var aM=Math.floor(adjTime/60),aS=Math.round(adjTime%60);
+    ep.innerHTML='<span style="color:#c8c8c8">P(solve) = '+probPerAttempt.toExponential(2)+'</span> <span style="color:var(--text3)">\u00B7</span> '+
+      '<span style="color:#fff">E[n]: '+fComma(Math.round(enTheo))+'</span> <span style="color:var(--text3)">\u00B7</span> '+
+      '<span style="color:#ffd700">E[72]: '+fComma(Math.round(enAdj))+'</span>';
   }
   // Color each threshold based on nonce proximity
   function threshColor(target,cur){
@@ -1390,20 +1397,22 @@ function updateMiningPanel(elapsed){
     s+='<span style="'+threshColor(p95,estNonce)+';transition:color .5s,text-shadow .5s">95% \u2192 ~'+fComma(p95)+(estNonce>=p95?' \u2713':'')+'</span>';
     pt.innerHTML=s;
   }
-  // 3C: Expected block time as countdown
-  var expTimeSec=expectedNonce/attPerSec;
+  // 3C: Expected block time as countdown (using E[72] adjusted)
+  var expTimeSec=enAdj/attPerSec;
+  var theoTimeSec=enTheo/attPerSec;
   var remaining=Math.max(0,expTimeSec-elapsed);
   var et=document.getElementById('miningExpTime');
   if(et){
     if(remaining>0){
       var rM=Math.floor(remaining/60),rS=Math.floor(remaining%60);
-      et.innerHTML='Expected in: <span style="color:var(--cyan);font-weight:600">~'+rM+'m '+('0'+rS).slice(-2)+'s</span>';
+      var tRM=Math.floor(Math.max(0,theoTimeSec-elapsed)/60),tRS=Math.floor(Math.max(0,theoTimeSec-elapsed)%60);
+      et.innerHTML='Expected: <span style="color:#fff">~'+tRM+'m '+('0'+tRS).slice(-2)+'s</span> <span style="color:var(--text3)">(theo)</span> \u00B7 <span style="color:#ffd700">~'+rM+'m '+('0'+rS).slice(-2)+'s</span> <span style="color:var(--text3)">(avg72)</span>';
     }else{
       // Recalculate based on remaining probability
       var triedFraction=1-Math.pow(1-probPerAttempt,estNonce);
       var remainingProb=1-triedFraction;
       if(remainingProb>0.01){
-        var newExpNonce=Math.round((1/probPerAttempt)*2.25);
+        var newExpNonce=Math.round(1/probPerAttempt);
         var newExpSec=newExpNonce/attPerSec;
         var nM=Math.floor(newExpSec/60),nS=Math.floor(newExpSec%60);
         et.innerHTML='Expected in: <span style="color:#fbbf24;font-weight:600">~'+nM+'m '+('0'+nS).slice(-2)+'s</span> <span style="font-size:8px;color:var(--text3)">(recalculated)</span>';
@@ -1420,7 +1429,7 @@ function updateMiningPanel(elapsed){
   var mn=document.getElementById('miningNonce');
   if(mn)mn.textContent='~'+fComma(estNonce);
   var mnMax=document.getElementById('miningNonceMax');
-  if(mnMax)mnMax.textContent='/ '+fComma(Math.round(expectedNonce))+' expected';
+  if(mnMax)mnMax.innerHTML='/ E[n]: <span style="color:#fff">'+fComma(Math.round(enTheo))+'</span> \u00B7 E[72]: <span style="color:#ffd700">'+fComma(Math.round(enAdj))+'</span>';
   var mnBar=document.getElementById('miningNonceBar');
   if(mnBar){
     // Fixed range: 0 to 20,000 nonces
@@ -1437,11 +1446,17 @@ function updateMiningPanel(elapsed){
     var marks=document.getElementById('nonceMarks');
     if(marks){
       var mkH='';
-      // E[nonce] mark
-      var ePct=Math.min(100,(expectedNonce/BAR_MAX)*100);
-      if(ePct>0&&ePct<=100){
-        mkH+='<div style="position:absolute;left:'+ePct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
-        mkH+='<div style="position:absolute;left:'+ePct.toFixed(1)+'%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
+      // E[n] theoretical mark (white)
+      var eTPct=Math.min(100,(enTheo/BAR_MAX)*100);
+      if(eTPct>0&&eTPct<=100){
+        mkH+='<div style="position:absolute;left:'+eTPct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
+        mkH+='<div style="position:absolute;left:'+eTPct.toFixed(1)+'%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
+      }
+      // E[72] adjusted mark (gold)
+      var eAPct=Math.min(100,(enAdj/BAR_MAX)*100);
+      if(eAPct>0&&eAPct<=100&&Math.abs(eAPct-eTPct)>2){
+        mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,215,0,.7);"></div>';
+        mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;bottom:-12px;font-size:7px;color:rgba(255,215,0,.6);transform:translateX(-50%);white-space:nowrap;">E[72]</div>';
       }
       // Fixed marks: 10K at 50%, 15K at 75%, 20K at 100%
       var fMarks=[{p:50,l:'10K'},{p:75,l:'15K'},{p:100,l:'20K'}];
