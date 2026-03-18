@@ -380,11 +380,12 @@ static BlockTemplateResult fetch_block_template() {
 // =============================================================================
 // RPC: submit FULL block to node
 // =============================================================================
-static bool rpc_submit_block_full(
+// Return values: 1 = accepted, 0 = rejected by node, -1 = connection failed
+static int rpc_submit_block_full(
     const MinedBlock& mb,
     const std::vector<std::string>& tx_hexes_including_coinbase)
 {
-    if (g_rpc_url.empty()) return false;
+    if (g_rpc_url.empty()) return 0;
 
     std::string host = "127.0.0.1";
     int port = 18232;
@@ -486,17 +487,17 @@ static bool rpc_submit_block_full(
     std::string body = "{\"method\":\"submitblock\",\"params\":[\"" + escaped + "\"],\"id\":1}";
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) return false;
+    if (fd < 0) return -1; // connection failed
 
     struct sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
 
     struct hostent* he = gethostbyname(host.c_str());
-    if (!he) { close(fd); return false; }
+    if (!he) { close(fd); return -1; }
     memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
 
-    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) { close(fd); return false; }
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) { close(fd); return -1; }
 
     std::string req = "POST / HTTP/1.1\r\nHost: " + host
         + "\r\nContent-Type: application/json\r\n"
@@ -506,10 +507,11 @@ static bool rpc_submit_block_full(
     write(fd, req.c_str(), req.size());
 
     char rbuf[4096]{};
-    read(fd, rbuf, sizeof(rbuf) - 1);
+    ssize_t nr = read(fd, rbuf, sizeof(rbuf) - 1);
     close(fd);
 
-    return std::string(rbuf).find("\"result\":true") != std::string::npos;
+    if (nr <= 0) return -1; // connection lost during read
+    return std::string(rbuf).find("\"result\":true") != std::string::npos ? 1 : 0;
 }
 
 // =============================================================================
@@ -749,12 +751,41 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     all_hexes.push_back(coinbase_hex);
                     for(const auto& hx : mempool_tx_hexes) all_hexes.push_back(hx);
 
-                    if (rpc_submit_block_full(mb, all_hexes)) {
+                    int submit_rc = rpc_submit_block_full(mb, all_hexes);
+                    if (submit_rc == 1) {
                         printf("  -> submitted to node OK (%zu txs)\n", all_hexes.size());
                         node_accepted = true;
+                    } else if (submit_rc == -1) {
+                        // Connection lost — pause mining until reconnected
+                        printf("[RPC] Connection lost — pausing mining until reconnected\n");
+                        int attempt = 0;
+                        while (true) {
+                            attempt++;
+                            printf("[RPC] Waiting for node... (attempt %d)\n", attempt);
+                            fflush(stdout);
+                            sleep(30);
+                            // Try to reach the node
+                            std::string info = rpc_call("getinfo");
+                            if (!info.empty()) {
+                                printf("[RPC] Reconnected to node!\n");
+                                // Refresh chain height from node
+                                auto bp = info.find("\"blocks\":");
+                                if (bp != std::string::npos) {
+                                    int64_t nh = atoll(info.c_str() + bp + 9);
+                                    if (nh > (int64_t)g_chain.size() - 1) {
+                                        printf("[RPC] Node height %lld > local %zu — chain advanced while disconnected\n",
+                                               (long long)nh, g_chain.size() - 1);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        // After reconnect: return false so main loop retries with fresh state
+                        printf("[RPC] Resuming mining from height %lld with fresh state\n",
+                               (long long)h);
+                        return false; // will be retried by outer loop
                     } else {
                         printf("  -> NODE REJECTED BLOCK — will retry same height\n");
-                        // Do NOT advance chain — try next nonce at same height
                         continue;
                     }
                 } else {
@@ -882,7 +913,12 @@ int main(int argc, char** argv) {
 
     int mined = 0;
     for (int i = 0; i < num_blocks; ++i) {
-        if (!mine_one_block(prof, max_nonce, sim_time)) break;
+        if (!mine_one_block(prof, max_nonce, sim_time)) {
+            // mine_one_block returns false on: RPC reconnect (retry same height)
+            // or extra_nonce exhaustion (stop)
+            if (!g_rpc_url.empty()) { --i; continue; } // retry same block after reconnect
+            else break; // standalone mode: stop
+        }
         mined++;
         if (g_rpc_url.empty()) save_chain(chain_path);
     }
