@@ -47,11 +47,11 @@ footer a{color:var(--t3);text-decoration:none}
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
   nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
-  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-logo .brand-sost { color: #00ff88; }
   .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
   .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-links a.active { color: #00ff88; border-bottom: 1px solid #00ff88; }
   .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
   @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
   /* === END NAV CSS === */
@@ -187,15 +187,26 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 9]. 17 profiles E4(-4) through H12(+12); H10&ndash;H12 reserved. Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
 
 <table>
-<tr><th>Profile</th><th>Scale</th><th>Steps</th><th>k</th><th>Margin</th><th>Effect</th></tr>
-<tr><td>E4</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Deep easing (only after 6h at B0)</td></tr>
-<tr><td>E3</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Easing (only after 6h at B0)</td></tr>
-<tr><td>B0</td><td>1</td><td>4</td><td>4</td><td>185</td><td><strong>Baseline</strong></td></tr>
-<tr><td>H5</td><td>2</td><td>6</td><td>6</td><td>135</td><td>Moderate hardening</td></tr>
-<tr><td>H9</td><td>3</td><td>8</td><td>8</td><td>110</td><td>Maximum hardening</td></tr>
-<tr><td>H12</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Reserved</td></tr>
+<tr><th>Profile</th><th>H</th><th>Scale</th><th>Steps</th><th>K</th><th>Margin</th><th>Effect</th></tr>
+<tr><td>E4</td><td>-4</td><td>1</td><td>2</td><td>3</td><td>280</td><td>Emergency easing</td></tr>
+<tr><td>E3</td><td>-3</td><td>1</td><td>3</td><td>3</td><td>240</td><td>Deep easing</td></tr>
+<tr><td>E2</td><td>-2</td><td>1</td><td>4</td><td>3</td><td>225</td><td>Easing</td></tr>
+<tr><td>E1</td><td>-1</td><td>1</td><td>4</td><td>4</td><td>205</td><td>Light easing</td></tr>
+<tr><td><strong>B0</strong></td><td>0</td><td>1</td><td>4</td><td>4</td><td>185</td><td><strong>Baseline</strong></td></tr>
+<tr><td>H1</td><td>1</td><td>1</td><td>5</td><td>4</td><td>170</td><td>Light hardening</td></tr>
+<tr><td>H2</td><td>2</td><td>1</td><td>5</td><td>5</td><td>160</td><td>Moderate</td></tr>
+<tr><td>H3</td><td>3</td><td>1</td><td>6</td><td>5</td><td>150</td><td>Moderate+</td></tr>
+<tr><td>H4</td><td>4</td><td>1</td><td>6</td><td>6</td><td>145</td><td>Strong</td></tr>
+<tr><td>H5</td><td>5</td><td>2</td><td>5</td><td>5</td><td>140</td><td>Strong+ (scale=2)</td></tr>
+<tr><td>H6</td><td>6</td><td>2</td><td>6</td><td>5</td><td>135</td><td>Severe</td></tr>
+<tr><td>H7</td><td>7</td><td>2</td><td>6</td><td>6</td><td>130</td><td>Severe+</td></tr>
+<tr><td>H8</td><td>8</td><td>2</td><td>7</td><td>6</td><td>125</td><td>Maximum</td></tr>
+<tr><td>H9</td><td>9</td><td>2</td><td>7</td><td>7</td><td>120</td><td>Maximum (CASERT_H_MAX)</td></tr>
+<tr style="color:var(--t3)"><td>H10</td><td>10</td><td>3</td><td>7</td><td>6</td><td>115</td><td>Reserved</td></tr>
+<tr style="color:var(--t3)"><td>H11</td><td>11</td><td>3</td><td>7</td><td>7</td><td>110</td><td>Reserved</td></tr>
+<tr style="color:var(--t3)"><td>H12</td><td>12</td><td>3</td><td>8</td><td>7</td><td>105</td><td>Reserved</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles E4(-4) through H12(+12). Active range: E4&ndash;H9. H10&ndash;H12 reserved.</p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles. CASERT_H_MIN=-4 (E4), CASERT_H_MAX=9 (H9). H10&ndash;H12 defined in code but capped. Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
 
 <h3>Anti-Stall</h3>
 <p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), zone-based decay to B0: H9&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
@@ -298,14 +309,14 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <!-- 6. CONSTITUTION -->
 <section id="constitution"><div class="c">
 <h2>6. Constitutional <span>Rules</span></h2>
-<h3>Immutable Addresses</h3>
+<h3>Constitutional Addresses</h3>
 <table>
 <tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
 <tr><td>Gold Funding Vault</td><td><code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code></td><td>25% of every block</td></tr>
 <tr><td>PoPC Pool</td><td><code>sost144cc82d3c711b5a9322640c66b94a520497ac40d</code></td><td>25% of every block</td></tr>
-<tr><td>Miner (founder)</td><td><code>sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429</code></td><td>50% of every block</td></tr>
 </table>
-<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the 50/25/25 split or sending to wrong addresses is rejected.</p>
+<p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
+<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the 50/25/25 split or sending gold/popc to wrong addresses is rejected. <em>Source: params.h:187-188</em></p>
 <p><strong>Hard cap:</strong> Total supply &le; 466,920,160,910,299 stocks (~4,669,201 SOST). Enforced in subsidy calculation at consensus level.</p>
 <p><strong>Coinbase maturity:</strong> 1000 blocks (~7 days). Coinbase outputs cannot be spent before this.</p>
 </div></section>
