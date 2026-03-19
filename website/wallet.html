@@ -354,7 +354,7 @@
           <input type="text" id="sendAmount" class="form-input" placeholder="0.00000000">
         </div>
         <div class="form-group">
-          <label class="form-label">Fee (satoshis/byte)</label>
+          <label class="form-label">Fee (stocks/byte)</label>
           <input type="text" id="sendFee" class="form-input" placeholder="Auto" readonly>
           <div class="fee-info" id="feeInfo">
             Estimating fee... <button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>
@@ -656,8 +656,8 @@ function validateAddress(addr) {
   return /^[0-9a-f]{40}$/.test(hexPart);
 }
 
-function formatSost(satoshis) {
-  return (satoshis / SAT).toFixed(8);
+function formatSost(stocks) {
+  return (stocks / SAT).toFixed(8);
 }
 
 function parseSost(str) {
@@ -1291,12 +1291,12 @@ window.estimateFee = async function() {
     const feePerByte = result.fee_per_byte || 1;
     document.getElementById('sendFee').value = feePerByte;
     document.getElementById('feeInfo').innerHTML =
-      `Recommended: <span class="fee-val">${feePerByte} sat/byte</span> ` +
+      `Recommended: <span class="fee-val">${feePerByte} stocks/byte</span> ` +
       `(~${result.fee_for_typical_tx || 250} sat for typical tx) ` +
       `<button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>`;
   } catch (e) {
     document.getElementById('sendFee').value = '1';
-    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1 sat/byte</span>';
+    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1 stocks/byte</span>';
   }
 };
 
