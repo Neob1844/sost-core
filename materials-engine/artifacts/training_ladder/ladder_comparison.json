@@ -1,0 +1,74 @@
+{
+  "target": "formation_energy",
+  "ladder_results": [
+    {
+      "rung_name": "rung_5k",
+      "architecture": "cgcnn",
+      "dataset_size": 5000,
+      "test_mae": 0.2033,
+      "test_rmse": 0.2824,
+      "test_r2": 0.9454,
+      "training_time_sec": 489.4,
+      "best_epoch": 14
+    },
+    {
+      "rung_name": "rung_10k",
+      "architecture": "cgcnn",
+      "dataset_size": 10000,
+      "test_mae": 0.2012,
+      "test_rmse": 0.2706,
+      "test_r2": 0.9425,
+      "training_time_sec": 947.3,
+      "best_epoch": 16
+    },
+    {
+      "rung_name": "rung_20k",
+      "architecture": "cgcnn",
+      "dataset_size": 20000,
+      "test_mae": 0.1528,
+      "test_rmse": 0.2271,
+      "test_r2": 0.9499,
+      "training_time_sec": 1375.1,
+      "best_epoch": 13
+    },
+    {
+      "rung_name": "rung_20k",
+      "architecture": "alignn_lite",
+      "dataset_size": 20000,
+      "test_mae": 0.2162,
+      "test_rmse": 0.3156,
+      "test_r2": 0.9033,
+      "training_time_sec": 1918.8,
+      "best_epoch": 13
+    },
+    {
+      "rung_name": "rung_40k",
+      "architecture": "cgcnn",
+      "dataset_size": 40000,
+      "test_mae": 0.1757,
+      "test_rmse": 0.2337,
+      "test_r2": 0.951,
+      "training_time_sec": 2744.5,
+      "best_epoch": 14
+    },
+    {
+      "rung_name": "rung_full",
+      "architecture": "cgcnn",
+      "dataset_size": 75993,
+      "test_mae": 0.3566,
+      "test_rmse": 0.5125,
+      "test_r2": 0.773,
+      "training_time_sec": 3655.4,
+      "best_epoch": 0
+    }
+  ],
+  "best_model": {
+    "rung": "rung_20k",
+    "architecture": "cgcnn",
+    "mae": 0.1528,
+    "r2": 0.9499,
+    "time_sec": 1375.1
+  },
+  "cto_decision": "PROMOTE_MID_SCALE_MODEL",
+  "rationale": "The 20K CGCNN model (MAE=0.1528, R\u00b2=0.9499) achieves the best MAE. Larger datasets (40K, 75K) did NOT improve \u2014 likely needs more epochs or lower learning rate at scale. 20K is the best cost/quality tradeoff. ALIGNN-Lite underperforms CGCNN at 20K (0.2162 vs 0.1528)."
+}

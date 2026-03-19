@@ -1,0 +1,17 @@
+{
+  "model": "cgcnn",
+  "target": "formation_energy",
+  "dataset_size": 20000,
+  "train_size": 16000,
+  "val_size": 2000,
+  "test_size": 2000,
+  "epochs": 15,
+  "best_epoch": 13,
+  "seed": 42,
+  "test_mae": 0.1528,
+  "test_rmse": 0.2271,
+  "test_r2": 0.9499,
+  "training_time_sec": 1375.1,
+  "checkpoint": "cgcnn_formation_energy_best.pt",
+  "created_at": "2026-03-19T10:24:43.212401+00:00"
+}

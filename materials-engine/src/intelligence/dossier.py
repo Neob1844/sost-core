@@ -88,6 +88,13 @@ def build_dossier(formula: str,
         material_id=material_id, db=db, store=store,
         temperature_K=temperature_K, pressure_GPa=pressure_GPa)
 
+    # Load material object for analytics
+    material = None
+    if material_id and db:
+        material = db.get_material(material_id)
+    if material is None and report.get("exact_matches") and db:
+        material = db.get_material(report["exact_matches"][0]["canonical_id"])
+
     # Determine existence status — override for generated candidates
     existence = report["existence_status"]
     if query_type == "generated_candidate":
@@ -161,6 +168,9 @@ def build_dossier(formula: str,
     limitations = _build_limitations(existence, has_structure, ev,
                                      query_type, lift_confidence)
 
+    # Structure analytics
+    structure_analytics = _get_structure_analytics(material, elements, formula)
+
     # Calibration integration
     calibration_info = _get_calibration_info(
         elements, predicted_fe, predicted_bg)
@@ -191,6 +201,7 @@ def build_dossier(formula: str,
         "validation_rationale": rationale,
         "thermo_pressure_context": tp_context,
         "evidence_summary": ev,
+        "structure_analytics": structure_analytics,
         "calibration": calibration_info,
         "method_notes": report.get("method_notes", []),
         "limitations": limitations,
@@ -410,6 +421,37 @@ def _build_limitations(existence, has_structure, ev, query_type, lift_confidence
             "Accuracy is limited by training data size and model complexity.")
 
     return limits
+
+
+def _get_structure_analytics(material, elements, formula):
+    """Compute structure analytics if structure is available."""
+    try:
+        from ..analytics.descriptors import compute_descriptors
+        from ..normalization.structure import load_structure
+    except ImportError:
+        return {"available": False, "note": "Analytics module not available"}
+
+    structure = None
+    if material and material.structure_data:
+        structure = load_structure(material.structure_data)
+
+    desc = compute_descriptors(structure=structure, formula=formula,
+                               elements=elements or [])
+
+    # Count by evidence level
+    by_evidence = {}
+    for k, v in desc.items():
+        ev = v.get("evidence", "unavailable")
+        by_evidence.setdefault(ev, []).append(k)
+
+    return {
+        "available": structure is not None,
+        "descriptors": desc,
+        "descriptor_count": len(desc),
+        "by_evidence": {k: len(v) for k, v in by_evidence.items()},
+        "note": "Descriptors computed from structure geometry and composition. "
+                "NOT DFT-derived. See evidence field for each descriptor.",
+    }
 
 
 def _get_calibration_info(elements, predicted_fe, predicted_bg):

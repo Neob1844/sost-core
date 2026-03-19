@@ -71,12 +71,13 @@ def load_dataset(db: MaterialsDB, target: str, limit: int = 10000, seed: int = 4
 
 
 def train_cgcnn(db: MaterialsDB, target: str, epochs: int = 50, lr: float = 0.01,
-                seed: int = 42, output_dir: str = "artifacts/training") -> dict:
+                seed: int = 42, output_dir: str = "artifacts/training",
+                limit: int = 10000) -> dict:
     """Train CGCNN baseline on target property. Returns metrics dict."""
     _set_seed(seed)
     os.makedirs(output_dir, exist_ok=True)
 
-    dataset = load_dataset(db, target, seed=seed)
+    dataset = load_dataset(db, target, limit=limit, seed=seed)
     if dataset["total"] < 10:
         return {"error": f"Too few samples ({dataset['total']}) for training"}
 
@@ -193,13 +194,14 @@ def train_cgcnn(db: MaterialsDB, target: str, epochs: int = 50, lr: float = 0.01
 
 
 def train_alignn(db: MaterialsDB, target: str, epochs: int = 50, lr: float = 0.005,
-                 seed: int = 42, output_dir: str = "artifacts/training") -> dict:
+                 seed: int = 42, output_dir: str = "artifacts/training",
+                 limit: int = 10000) -> dict:
     """Train ALIGNN-Lite on target property. Returns metrics dict."""
     from ..models.alignn_lite import ALIGNNLite
     _set_seed(seed)
     os.makedirs(output_dir, exist_ok=True)
 
-    dataset = load_dataset(db, target, seed=seed)
+    dataset = load_dataset(db, target, limit=limit, seed=seed)
     if dataset["total"] < 10:
         return {"error": f"Too few samples ({dataset['total']})"}
 

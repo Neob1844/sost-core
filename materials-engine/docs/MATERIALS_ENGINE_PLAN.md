@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase III.H Final (v1.2.1)**
+> **Document status: Active implementation — Phase IV.A (v1.4.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -396,7 +396,34 @@ Cosine similarity, brute-force scan (sufficient for <50K materials).
 - III.H Delta: Calibration integrated into dossier/intelligence, validation queue calibrated,
   evidence→feedback auto-linking, 4 new endpoints, 18 delta tests (483 total)
 
-### Phase IV — Physics-Based Screening (Planned)
+### Phase III.I — Real Structure Analytics & Physical Descriptor Layer (Current) ✅
+- 28 physical descriptors: density, volume, lattice, bonds, symmetry, composition stats, class fractions
+- Evidence levels: computed_from_structure, computed_from_composition, proxy, unavailable
+- Integrated into dossier as structure_analytics section
+- 2 new API endpoints: /analytics/material/{id}, /analytics/report
+- 21 dedicated tests + all existing 483 tests (504 total)
+- Structure coverage: 2,000/75,993 (2.6%) — composition descriptors always available
+
+### Phase III.J — Corpus Structure Backfill (Current) ✅
+- Backfill: 73,993 JARVIS structures recovered from jarvis-tools atoms dicts in 399s
+- Coverage: 2.6% → 100% (75,993/75,993 with validated CIF structures)
+- Zero failures, zero data loss, database intact
+- Analytics unlocked: density, volume, lattice, bonds, symmetry for entire corpus
+- Note: Training on 5K/10K/20K/40K/76K should only happen after structure
+  coverage expansion and coverage audit are complete — NOW READY.
+
+### Phase IV.A — Scaled Retraining Ladder: Formation Energy (Current) ✅
+- Training ladder: 5 rungs (5K→10K→20K→40K→76K) for CGCNN + ALIGNN-Lite
+- Best model: **rung_20k CGCNN** — MAE=0.1528, R²=0.9499 (promoted to production)
+- CGCNN outperforms ALIGNN-Lite at 20K (0.1528 vs 0.2162)
+- Full corpus (76K) underperformed at 10 epochs — needs hyperparameter tuning at scale
+- CTO Decision: PROMOTE_MID_SCALE_MODEL (20K is optimal cost/quality tradeoff)
+- 16 dedicated tests + all existing 514 tests (530 total)
+- Next: Phase IV.B — Band Gap ladder
+
+### Phase IV.B — Band Gap Scaled Retraining (Planned)
+
+### Phase V — Physics-Based Screening (Planned)
 - Phonon-based thermal stability (phonopy or ML surrogate)
 - Equation of state fitting (Birch-Murnaghan)
 - T/P-conditioned property correction

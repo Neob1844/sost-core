@@ -43,8 +43,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SOST Materials Discovery Engine",
-    version="1.2.1",
-    description="Phase III.H Final: Evidence + Benchmark + Calibration + Integration.",
+    version="1.4.0",
+    description="Phase IV.A: Scaled Retraining Ladder (Formation Energy).",
     lifespan=lifespan,
 )
 
@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "1.2.1", "phase": "evidence_benchmark_calibrated",
+    return {"status": "ok", "version": "1.4.0", "phase": "training_ladder",
             "materials_count": db.count()}
 
 
@@ -1187,6 +1187,67 @@ def intelligence_report_calibrated(req: CalibratedReportRequest):
         spacegroup=req.spacegroup, db=db, store=store,
         temperature_K=req.temperature_K, pressure_GPa=req.pressure_GPa)
     return dossier
+
+
+# --- Training ladder endpoints ---
+
+@app.get("/training/ladder/status")
+def training_ladder_status():
+    """Return status of training ladder rungs."""
+    from ..training.ladder import ladder_status
+    return ladder_status()
+
+
+@app.get("/training/ladder/models")
+def training_ladder_models():
+    """Return all models from the training ladder."""
+    from ..models.registry import list_models
+    models = list_models()
+    return {"models": models}
+
+
+# --- Analytics endpoints ---
+
+class AnalyticsReportRequest(BaseModel):
+    formula: str
+    elements: List[str]
+    cif: Optional[str] = None
+
+
+@app.get("/analytics/material/{material_id}")
+def analytics_material(material_id: str):
+    """Compute physical descriptors for a corpus material."""
+    from ..analytics.descriptors import compute_descriptors
+    from ..normalization.structure import load_structure
+    db = _get_db()
+    m = db.get_material(material_id)
+    if not m:
+        raise HTTPException(404, "Material not found")
+    structure = load_structure(m.structure_data) if m.structure_data else None
+    desc = compute_descriptors(structure=structure, formula=m.formula,
+                               elements=m.elements)
+    return {
+        "material_id": material_id,
+        "formula": m.formula,
+        "structure_available": structure is not None,
+        "descriptors": desc,
+        "note": "Descriptors from structure geometry and composition. NOT DFT.",
+    }
+
+
+@app.post("/analytics/report")
+def analytics_report(req: AnalyticsReportRequest):
+    """Compute descriptors for any formula, optionally with CIF."""
+    from ..analytics.descriptors import compute_descriptors
+    from ..normalization.structure import load_structure
+    structure = load_structure(req.cif) if req.cif else None
+    desc = compute_descriptors(structure=structure, formula=req.formula,
+                               elements=req.elements)
+    return {
+        "formula": req.formula,
+        "structure_available": structure is not None,
+        "descriptors": desc,
+    }
 
 
 # Health alias

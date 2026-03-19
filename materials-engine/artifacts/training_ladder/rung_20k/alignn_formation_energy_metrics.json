@@ -1,0 +1,17 @@
+{
+  "model": "alignn_lite",
+  "target": "formation_energy",
+  "dataset_size": 20000,
+  "train_size": 16000,
+  "val_size": 2000,
+  "test_size": 2000,
+  "epochs": 15,
+  "best_epoch": 13,
+  "seed": 42,
+  "test_mae": 0.2162,
+  "test_rmse": 0.3156,
+  "test_r2": 0.9033,
+  "training_time_sec": 1918.8,
+  "checkpoint": "alignn_formation_energy_best.pt",
+  "created_at": "2026-03-19T11:00:08.891985+00:00"
+}
