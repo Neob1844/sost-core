@@ -607,7 +607,7 @@
           <input type="text" id="sendAmount" class="form-input" placeholder="0.00000000">
         </div>
         <div class="form-group">
-          <label class="form-label">Fee (satoshis/byte)</label>
+          <label class="form-label">Fee (stocks/byte)</label>
           <input type="text" id="sendFee" class="form-input" placeholder="Auto" readonly>
           <div class="fee-info" id="feeInfo">
             Estimating fee... <button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>
@@ -933,8 +933,8 @@ function validateAddress(addr) {
   return /^[0-9a-f]{40}$/.test(hexPart);
 }
 
-function formatSost(satoshis) {
-  return (satoshis / SAT).toFixed(8);
+function formatSost(stocks) {
+  return (stocks / SAT).toFixed(8);
 }
 
 function parseSost(str) {
@@ -1303,20 +1303,20 @@ function buildP2PKHSignScript(sigDER, pubkeyBytes) {
   );
 }
 
-async function buildAndSignTx(utxos, destAddr, amountSat, feeSat, changeAddr) {
-  // Coin selection: smallest-first
+async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAddr) {
+  // Coin selection: smallest-first (amounts in stocks)
   const sorted = [...utxos].sort((a, b) => a.amount - b.amount);
   const selected = [];
   let total = 0;
   for (const u of sorted) {
     selected.push(u);
     total += u.amount;
-    if (total >= amountSat + feeSat) break;
+    if (total >= amountStocks + feeStocks) break;
   }
-  if (total < amountSat + feeSat) throw new Error('Insufficient funds');
+  if (total < amountStocks + feeStocks) throw new Error('Insufficient funds');
 
-  const change = total - amountSat - feeSat;
-  const outputs = [{ address: destAddr, amount: amountSat }];
+  const change = total - amountStocks - feeStocks;
+  const outputs = [{ address: destAddr, amount: amountStocks }];
   if (change > 0) outputs.push({ address: changeAddr, amount: change });
 
   const privKeyBytes = hexToBytes(wallet.privKey);
@@ -1665,15 +1665,17 @@ window.refreshBalance = async function() {
 window.estimateFee = async function() {
   try {
     const result = await rpcCall('estimatefee');
-    const feePerByte = result.fee_per_byte || 1;
+    const feePerByte = result.fee_per_byte || 1000;
     document.getElementById('sendFee').value = feePerByte;
+    const typicalFee = result.fee_for_typical_tx || (feePerByte * 250);
+    const typicalSost = (typicalFee / SAT).toFixed(4);
     document.getElementById('feeInfo').innerHTML =
-      `Recommended: <span class="fee-val">${feePerByte} sat/byte</span> ` +
-      `(~${result.fee_for_typical_tx || 250} sat for typical tx) ` +
+      `Recommended: <span class="fee-val">${feePerByte} stocks/byte</span> ` +
+      `(~${typicalFee.toLocaleString()} stocks for typical tx, ~${typicalSost} SOST) ` +
       `<button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>`;
   } catch (e) {
-    document.getElementById('sendFee').value = '1';
-    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1 sat/byte</span>';
+    document.getElementById('sendFee').value = '1000';
+    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1,000 stocks/byte</span> (~250,000 stocks for typical tx, ~0.0025 SOST)';
   }
 };
 
@@ -1682,11 +1684,11 @@ window.sendTransaction = async function() {
 
   const toAddr = document.getElementById('sendTo').value.trim();
   const amountStr = document.getElementById('sendAmount').value.trim();
-  const feePerByte = parseInt(document.getElementById('sendFee').value) || 1;
+  const feePerByte = parseInt(document.getElementById('sendFee').value) || 1000;
 
   if (!validateAddress(toAddr)) return showError('sendResult', 'Invalid recipient address');
-  const amountSat = parseSost(amountStr);
-  if (amountSat <= 0) return showError('sendResult', 'Invalid amount');
+  const amountStocks = parseSost(amountStr);
+  if (amountStocks <= 0) return showError('sendResult', 'Invalid amount');
 
   // TOTP check
   if (isTotpEnabled()) {
@@ -1697,21 +1699,33 @@ window.sendTransaction = async function() {
   document.getElementById('sendBtn').disabled = true;
 
   try {
-    // Get UTXOs via getaddressinfo (includes UTXO details)
-    const balResult = await rpcCall('getaddressinfo', [wallet.address]);
+    // Get chain height + UTXOs
+    const [nodeInfo, balResult] = await Promise.all([
+      rpcCall('getinfo'),
+      rpcCall('getaddressinfo', [wallet.address])
+    ]);
+    const chainHeight = nodeInfo.blocks || 0;
     const rawUtxos = balResult.utxos || [];
     if (rawUtxos.length === 0) throw new Error('No UTXOs available');
-    // Convert amount from SOST float to stocks (satoshis) for TX building
-    const utxos = rawUtxos.map(u => ({
-      ...u,
-      amount: Math.round((u.amount || 0) * SAT)
-    }));
+
+    // Convert amount from SOST float to stocks and filter to spendable only
+    const utxos = rawUtxos
+      .map(u => ({
+        ...u,
+        amount: Math.round((u.amount || 0) * SAT),
+        confs: chainHeight - (u.height || 0)
+      }))
+      .filter(u => !u.coinbase || u.confs >= 1000);
+
+    if (utxos.length === 0) {
+      throw new Error('No spendable UTXOs. Coinbase rewards require 1000 confirmations before spending.');
+    }
 
     // Estimate tx size: ~148 * inputs + 34 * outputs + 10
     const estSize = 148 * Math.min(utxos.length, 10) + 34 * 2 + 10;
-    const feeSat = feePerByte * estSize;
+    const feeStocks = feePerByte * estSize;
 
-    const rawTx = await buildAndSignTx(utxos, toAddr, amountSat, feeSat, wallet.address);
+    const rawTx = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address);
 
     // Broadcast
     const result = await rpcCall('sendrawtransaction', [rawTx]);
