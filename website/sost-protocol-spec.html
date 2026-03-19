@@ -181,7 +181,7 @@ factor = 2^(frac/65536) via Horner cubic polynomial
 raw = anchor_bitsq &times; factor
 delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/16)
 result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
-<p>Half-life: 12 hours (43,200s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
+<p>Half-life: 48 hours (172,800s). Delta cap: 6.25% per block. <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
 <p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 9]. 17 profiles E4(-4) through H12(+12); H10&ndash;H12 reserved. Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
@@ -312,8 +312,8 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <h3>Constitutional Addresses</h3>
 <table>
 <tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
-<tr><td>Gold Funding Vault</td><td><code>sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724</code></td><td>25% of every block</td></tr>
-<tr><td>PoPC Pool</td><td><code>sost144cc82d3c711b5a9322640c66b94a520497ac40d</code></td><td>25% of every block</td></tr>
+<tr><td>Gold Funding Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block</td></tr>
+<tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block</td></tr>
 </table>
 <p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
 <p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the 50/25/25 split or sending gold/popc to wrong addresses is rejected. <em>Source: params.h:187-188</em></p>
@@ -351,7 +351,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>Node verification memory</td><td>Negligible</td><td><strong>~2GB (must build dataset)</strong></td><td><strong>~500MB (no dataset needed)</strong></td></tr>
 <tr><td>Verification method</td><td>Recompute hash</td><td>Recompute full RandomX</td><td>Transcript V2: segments + round witnesses (~0.2ms)</td></tr>
 <tr><td>Verification cost/block</td><td>~1&mu;s</td><td>~50-200ms</td><td>~0.2ms</td></tr>
-<tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT, 12h half-life)</td></tr>
+<tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT, 48h half-life)</td></tr>
 </table>
 </div></section>
 

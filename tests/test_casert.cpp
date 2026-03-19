@@ -151,7 +151,7 @@ int main() {
 
     printf("\n=== 7. CONSTANTS ===\n");
 
-    TEST("BITSQ_HALF_LIFE == 43200", BITSQ_HALF_LIFE == 43200);
+    TEST("BITSQ_HALF_LIFE == 172800", BITSQ_HALF_LIFE == 172800);
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
     TEST("H_MIN == -4", CASERT_H_MIN == -4);
@@ -177,14 +177,14 @@ int main() {
         TEST("Slew rate: H changes by at most ±1 per block", slew_ok);
     }
 
-    printf("\n=== 9. ANTI-STALL LONG (>12h) ===\n");
+    printf("\n=== 9. ANTI-STALL LONG (>48h) ===\n");
 
     {
         auto chain = make_chain(50, 200); // fast chain, H should be positive
-        // Stall for 12 hours = 43200s
-        int64_t now = chain.back().time + 43200;
+        // Stall for 48 hours = 172800s
+        int64_t now = chain.back().time + 172800;
         auto dec = casert_compute(chain, 50, now);
-        TEST("12h stall: decays to B0 or below", dec.profile_index <= 0);
+        TEST("48h stall: decays to B0 or below", dec.profile_index <= 0);
     }
 
     printf("\n=== 10. ANTI-STALL EXTREME (>18h) ===\n");

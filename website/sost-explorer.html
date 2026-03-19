@@ -283,11 +283,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
-  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 72 blocks</div></div>
+  <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
-  <div class="dash-card" onclick="showAddress('sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" onclick="showAddress('sost144cc82d3c711b5a9322640c66b94a520497ac40d')"><div class="dash-label">◇ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -318,7 +318,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div class="diff-bar-wrap" id="chartBurstWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span class="pi" onclick="toggleChartInfo('burstvol')" style="font-size:9px;color:var(--text3);letter-spacing:2px;">BURST & VOLATILITY · last 72 blocks (~12h) <span class="pi-i">ⓘ</span></span>
+    <span class="pi" onclick="toggleChartInfo('burstvol')" style="font-size:9px;color:var(--text3);letter-spacing:2px;">BURST & VOLATILITY · last 288 blocks (~48h) <span class="pi-i">ⓘ</span></span>
     <span style="font-size:11px;"><span id="burstVal" style="color:var(--orange);font-weight:600;">—</span> <span style="color:var(--text3)">·</span> <span id="volVal" style="color:var(--cyan);font-weight:600;">—</span></span>
   </div>
   <div style="position:relative;">
@@ -329,7 +329,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div id="chartExplain_burstvol" class="chart-explain" style="display:none;"></div>
 </div></div>
 <div class="sparkline-wrap"><div class="sparkline-box">
-  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')">DIFF HISTORY · last 72 blocks (~12h) <span class="pi-i">ⓘ</span></span>
+  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')">DIFF HISTORY · last 288 blocks (~48h) <span class="pi-i">ⓘ</span></span>
   <canvas class="sparkline-canvas" id="sparkCanvas" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
   <span class="sparkline-info" id="sparkInfo">&mdash;</span>
@@ -515,8 +515,8 @@ profile:'cASERT PROFILE \u2014 Current stability test profile selected by the eq
 stability:'STABILITY \u2014 Percentage of recent nonce attempts that passed the ConvergenceX stability basin test. ~100% at B0 is normal. Lower rates occur at harder profiles (H3+) where the perturbation test is more demanding. The metric is committed to the block hash via commit V3 format.',
 psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calculated from difficulty target. Example: 3.63e-4 means each attempt has a 0.0363% chance \u2014 like rolling a die with ~2,758 faces. Determines E[n] = 1/P(solve).',
 thresholds:'PROBABILITY THRESHOLDS \u2014 Cumulative probability milestones.\n"50% \u2192 ~1,912" means by nonce 1,912 there is a 50% chance the block has been found.\nThe checkmark appears when the miner has PASSED that count.\n\n50% \u2014 coin flip point\n75% \u2014 three quarters likely\n90% \u2014 getting unlucky\n95% \u2014 significantly unlucky, but still normal variance',
-exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[72] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
-nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[72] (72-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
+exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[288] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
+nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
 antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for max(ahead\u00D7600, 7200) seconds (min 2h).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
     };
     var _openParam=null;
@@ -538,8 +538,8 @@ antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mine
     }
     var _chartTexts={
 blockprod:'BLOCK PRODUCTION \u2014 Real vs Expected\n\nCompares actual blockchain progress against the theoretical schedule.\n\nGreen solid line (Real): Actual blocks mined. Each step = new block found.\n\nWhite dashed line (Expected): Blocks that SHOULD have been mined if every block took exactly 10 minutes. Formula: expected = (now - genesis_time) / 600\n\nGreen shaded area: Chain is AHEAD of schedule (mining faster than 10 min).\nRed shaded area: Chain is BEHIND schedule (mining slower than 10 min).\n\nThe "+X ahead" or "-X behind" indicator shows the current Block Lag \u2014 the primary input to the cASERT equalizer (weight 0.40 in the formula).\n\nA healthy chain oscillates slightly around the expected line. Persistent deviation triggers cASERT profile adjustments to correct the drift.',
-burstvol:'BURST & VOLATILITY \u2014 Mining Stability Metrics\n\nTracks two secondary stability indicators over the last 72 blocks (~12h):\n\nBURST (orange line, left axis):\n  % of recent blocks mined in under 5 minutes (half the target).\n  High burst indicates sudden hashrate increases or pool concentration.\n  <10%: Healthy (green) \u2014 normal variance\n  10-25%: Elevated (yellow) \u2014 some fast blocks\n  >25%: High burst (red) \u2014 significant instability\n  Weight in cASERT equalizer: 0.05\n\nVOLATILITY (cyan line, right axis):\n  Standard deviation of block times / 600s target.\n  Measures how unpredictable block timing is.\n  <15%: Stable (green) \u2014 predictable mining\n  15-40%: Moderate (yellow) \u2014 some fluctuation\n  >40%: Unstable (red) \u2014 erratic hashrate\n  Weight in cASERT equalizer: 0.02\n\nOrange triangles on X-axis mark burst blocks (<5 min).\n\ncASERT responds primarily to schedule lag (0.40). Burst (0.05) and volatility (0.02) are secondary fine-tuning signals.',
-diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficulty has changed over the last 72 blocks.\n\nPurple line: bitsQ (difficulty) value for each block.\nHigher bitsQ = harder to mine. Lower bitsQ = easier.\n\nDifficulty adjusts every block via the cASERT system (cascading ASERT):\n\u2022 Blocks too fast \u2192 bitsQ increases (harder)\n\u2022 Blocks too slow \u2192 bitsQ decreases (easier)\n\nThe cASERT equalizer controls how aggressively difficulty responds:\n\u2022 B0 (baseline): standard response\n\u2022 H1-H9 (hardening): faster, more aggressive \u2014 when chain is ahead\n\u2022 E1-E4 (easing): slower, gentler \u2014 only during emergency stalls\n\u2022 17 profiles total (E4 to H12), H_MAX=9 active, H10-H12 reserved\n\u2022 Transitions limited to \u00B11 profile per block (slew rate)\n\nEqualizer formula: U = 0.05\u00B7r + 0.40\u00B7lag + 0.15\u00B7I + 0.05\u00B7burst + 0.02\u00B7V\n\nDashed line: genesis difficulty baseline.\nFlat line = stable mining. Sharp changes = hashrate fluctuations being compensated by cASERT.'
+burstvol:'BURST & VOLATILITY \u2014 Mining Stability Metrics\n\nTracks two secondary stability indicators over the last 288 blocks (~48h):\n\nBURST (orange line, left axis):\n  % of recent blocks mined in under 5 minutes (half the target).\n  High burst indicates sudden hashrate increases or pool concentration.\n  <10%: Healthy (green) \u2014 normal variance\n  10-25%: Elevated (yellow) \u2014 some fast blocks\n  >25%: High burst (red) \u2014 significant instability\n  Weight in cASERT equalizer: 0.05\n\nVOLATILITY (cyan line, right axis):\n  Standard deviation of block times / 600s target.\n  Measures how unpredictable block timing is.\n  <15%: Stable (green) \u2014 predictable mining\n  15-40%: Moderate (yellow) \u2014 some fluctuation\n  >40%: Unstable (red) \u2014 erratic hashrate\n  Weight in cASERT equalizer: 0.02\n\nOrange triangles on X-axis mark burst blocks (<5 min).\n\ncASERT responds primarily to schedule lag (0.40). Burst (0.05) and volatility (0.02) are secondary fine-tuning signals.',
+diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficulty has changed over the last 288 blocks.\n\nPurple line: bitsQ (difficulty) value for each block.\nHigher bitsQ = harder to mine. Lower bitsQ = easier.\n\nDifficulty adjusts every block via the cASERT system (cascading ASERT):\n\u2022 Blocks too fast \u2192 bitsQ increases (harder)\n\u2022 Blocks too slow \u2192 bitsQ decreases (easier)\n\nThe cASERT equalizer controls how aggressively difficulty responds:\n\u2022 B0 (baseline): standard response\n\u2022 H1-H9 (hardening): faster, more aggressive \u2014 when chain is ahead\n\u2022 E1-E4 (easing): slower, gentler \u2014 only during emergency stalls\n\u2022 17 profiles total (E4 to H12), H_MAX=9 active, H10-H12 reserved\n\u2022 Transitions limited to \u00B11 profile per block (slew rate)\n\nEqualizer formula: U = 0.05\u00B7r + 0.40\u00B7lag + 0.15\u00B7I + 0.05\u00B7burst + 0.02\u00B7V\n\nDashed line: genesis difficulty baseline.\nFlat line = stable mining. Sharp changes = hashrate fluctuations being compensated by cASERT.'
     };
     var _openChart=null;
     function toggleChartInfo(key){
@@ -636,13 +636,13 @@ let _navStack=[];
 var _diffHistory=[];
 var _lastBlockTime=0;
 var _avgBlockTime=120;
-var _avgNonceReal=0;     // dynamic E[nonce] from last 72 blocks
+var _avgNonceReal=0;     // dynamic E[nonce] from last 288 blocks
 var _prevAvgNonceReal=0; // for trend arrow
 var _countdownInterval=null;
 const ROLES={
-  'sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724':'GOLD VAULT',
-  'sost144cc82d3c711b5a9322640c66b94a520497ac40d':'POPC POOL',
-  'sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429':'GENESIS MINER'
+  'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d':'GOLD VAULT',
+  'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f':'POPC POOL',
+  'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33':'GENESIS MINER'
 };
 // cASERT unified profiles (from params.h) — index = H+3
 const CASERT_PROFILES=[
@@ -800,7 +800,7 @@ async function updateDashboard(info){
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var diffs=[];var AVG_WINDOW=72;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
+  try{var times=[];var diffs=[];var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
     _diffHistory=diffs.reverse();drawSparkline();
     // Compute dynamic E[nonce] from real block nonces/times
     _prevAvgNonceReal=_avgNonceReal;
@@ -816,7 +816,7 @@ async function updateDashboard(info){
       }
     }
     if(times.length>=2){var td=0;for(var i=0;i<times.length-1;i++)td+=times[i]-times[i+1];var avg=td/(times.length-1);_avgBlockTime=avg;var m=Math.floor(avg/60),s=Math.floor(avg%60);document.getElementById('dAvgTime').textContent=m>0?m+'m '+s+'s':s+'s';
-    document.getElementById('dAvgTimeSub').textContent='last '+times.length+' blocks'+(times.length>=AVG_WINDOW?' (~12h)':'');
+    document.getElementById('dAvgTimeSub').textContent='last '+times.length+' blocks'+(times.length>=AVG_WINDOW?' (~48h)':'');
     // Pulse effect — intensity proportional to proximity to 600s target
     var card=document.getElementById('avgTimeCard');var valEl=document.getElementById('dAvgTime');
     card.style.animation='';valEl.className='dash-val';valEl.style.color='';
@@ -853,8 +853,8 @@ async function updateDashboard(info){
   document.getElementById('dSupply').textContent=fComma(tSOST.toFixed(4))+' SOST';
   /* drawReserveBars() removed — replaced by price charts */
   // Constitutional balances (public, no auth needed)
-  var ADDR_GOLD='sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724';
-  var ADDR_POPC='sost144cc82d3c711b5a9322640c66b94a520497ac40d';
+  var ADDR_GOLD='sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d';
+  var ADDR_POPC='sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f';
   try{
     var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
@@ -1424,7 +1424,7 @@ function updateMiningPanel(elapsed){
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
   var enTheo=1/probPerAttempt;                        // E[n] theoretical (no multiplier)
-  var enAdj=(_avgNonceReal>0)?_avgNonceReal:enTheo;   // E[72] from real block times
+  var enAdj=(_avgNonceReal>0)?_avgNonceReal:enTheo;   // E[288] from real block times
   var expectedNonce=enAdj; // use adjusted for progress bar / time estimates
   var p50=Math.round(enTheo*Math.LN2);
   var p75=Math.round(enTheo*Math.log(4));
@@ -1438,7 +1438,7 @@ function updateMiningPanel(elapsed){
     var aM=Math.floor(adjTime/60),aS=Math.round(adjTime%60);
     ep.innerHTML='<span style="color:#c8c8c8">P(solve) = '+probPerAttempt.toExponential(2)+'</span> <span style="color:var(--text3)">\u00B7</span> '+
       '<span style="color:#fff">E[n]: '+fComma(Math.round(enTheo))+'</span> <span style="color:var(--text3)">\u00B7</span> '+
-      '<span style="color:#ffd700">E[72]: '+fComma(Math.round(enAdj))+'</span>';
+      '<span style="color:#ffd700">E[288]: '+fComma(Math.round(enAdj))+'</span>';
   }
   // Color each threshold based on nonce proximity
   function threshColor(target,cur){
@@ -1460,7 +1460,7 @@ function updateMiningPanel(elapsed){
     s+='<span style="'+threshColor(p95,estNonce)+';transition:color .5s,text-shadow .5s">95% \u2192 ~'+fComma(p95)+(estNonce>=p95?' \u2713':'')+'</span>';
     pt.innerHTML=s;
   }
-  // 3C: Expected block time as countdown (using E[72] adjusted)
+  // 3C: Expected block time as countdown (using E[288] adjusted)
   var expTimeSec=enAdj/attPerSec;
   var theoTimeSec=enTheo/attPerSec;
   var remaining=Math.max(0,expTimeSec-elapsed);
@@ -1469,7 +1469,7 @@ function updateMiningPanel(elapsed){
     if(remaining>0){
       var rM=Math.floor(remaining/60),rS=Math.floor(remaining%60);
       var tRM=Math.floor(Math.max(0,theoTimeSec-elapsed)/60),tRS=Math.floor(Math.max(0,theoTimeSec-elapsed)%60);
-      et.innerHTML='Expected: <span style="color:#fff">~'+tRM+'m '+('0'+tRS).slice(-2)+'s</span> <span style="color:var(--text3)">(theo)</span> \u00B7 <span style="color:#ffd700">~'+rM+'m '+('0'+rS).slice(-2)+'s</span> <span style="color:var(--text3)">(avg72)</span>';
+      et.innerHTML='Expected: <span style="color:#fff">~'+tRM+'m '+('0'+tRS).slice(-2)+'s</span> <span style="color:var(--text3)">(theo)</span> \u00B7 <span style="color:#ffd700">~'+rM+'m '+('0'+rS).slice(-2)+'s</span> <span style="color:var(--text3)">(avg288)</span>';
     }else{
       // Recalculate based on remaining probability
       var triedFraction=1-Math.pow(1-probPerAttempt,estNonce);
@@ -1492,7 +1492,7 @@ function updateMiningPanel(elapsed){
   var mn=document.getElementById('miningNonce');
   if(mn)mn.textContent='~'+fComma(estNonce);
   var mnMax=document.getElementById('miningNonceMax');
-  if(mnMax)mnMax.innerHTML='/ E[n]: <span style="color:#fff">'+fComma(Math.round(enTheo))+'</span> \u00B7 E[72]: <span style="color:#ffd700">'+fComma(Math.round(enAdj))+'</span>';
+  if(mnMax)mnMax.innerHTML='/ E[n]: <span style="color:#fff">'+fComma(Math.round(enTheo))+'</span> \u00B7 E[288]: <span style="color:#ffd700">'+fComma(Math.round(enAdj))+'</span>';
   var mnBar=document.getElementById('miningNonceBar');
   if(mnBar){
     // Fixed range: 0 to 20,000 nonces
@@ -1515,11 +1515,11 @@ function updateMiningPanel(elapsed){
         mkH+='<div style="position:absolute;left:'+eTPct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,255,255,.7);"></div>';
         mkH+='<div style="position:absolute;left:'+eTPct.toFixed(1)+'%;top:-12px;font-size:7px;color:rgba(255,255,255,.6);transform:translateX(-50%);white-space:nowrap;">E[n]</div>';
       }
-      // E[72] adjusted mark (gold)
+      // E[288] adjusted mark (gold)
       var eAPct=Math.min(100,(enAdj/BAR_MAX)*100);
       if(eAPct>0&&eAPct<=100&&Math.abs(eAPct-eTPct)>2){
         mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,215,0,.7);"></div>';
-        mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;bottom:-12px;font-size:7px;color:rgba(255,215,0,.6);transform:translateX(-50%);white-space:nowrap;">E[72]</div>';
+        mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;bottom:-12px;font-size:7px;color:rgba(255,215,0,.6);transform:translateX(-50%);white-space:nowrap;">E[288]</div>';
       }
       // Fixed marks: 10K at 50%, 15K at 75%, 20K at 100%
       var fMarks=[{p:50,l:'10K'},{p:75,l:'15K'},{p:100,l:'20K'}];
@@ -2194,13 +2194,13 @@ function showCXInfo(){
   '&nbsp;&nbsp;Exponential: next_bitsq = anchor × 2<sup>(-td/halflife)</sup><br>'+
   '&nbsp;&nbsp;No per-block clamps — smooth continuous adjustment<br>'+
   '&nbsp;&nbsp;Global bounds: MIN_BITSQ=65,536 / MAX_BITSQ=16,711,680<br>'+
-  '&nbsp;&nbsp;After 12h of 2× faster blocks → difficulty doubles'+
+  '&nbsp;&nbsp;After 48h of 2× faster blocks → difficulty doubles'+
   '</div></div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
   '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">UNIFIED cASERT DIFFICULTY</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">cASERT bitsQ</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
-  'Half-life: <b>12 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
+  'Half-life: <b>48 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
   '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>17 profiles</b> (E4 through H12, active range E4–H9). '+
   'Computes control signal U from instantaneous rate, schedule lag, integrator, burst score, and volatility.<br><br>'+
   '<b>Formula:</b> U = <span style="color:var(--cyan)">0.05</span>·r + <span style="color:var(--green)">0.40</span>·lag + <span style="color:var(--purple)">0.15</span>·I + <span style="color:var(--orange)">0.05</span>·burst + <span style="color:var(--yellow)">0.02</span>·V<br>'+
@@ -2218,7 +2218,7 @@ function showCXInfo(){
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
-  '<div class="k">BITSQ HALF-LIFE</div><div class="v">43,200s (12 hours)</div>'+
+  '<div class="k">BITSQ HALF-LIFE</div><div class="v">172,800s (48 hours)</div>'+
   '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--orange)">Unidirectional</span> — only hardens when chain is ahead</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+

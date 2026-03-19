@@ -1144,15 +1144,28 @@ function getSettings() {
 
 async function rpcCall(method, params = {}) {
   const settings = getSettings();
+  const url = settings.rpcUrl;
+  if (!url) throw new Error('RPC endpoint not configured. Go to Settings.');
   const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method, params });
   const headers = { 'Content-Type': 'application/json' };
   if (settings.rpcUser && settings.rpcPass) {
     headers['Authorization'] = 'Basic ' + btoa(settings.rpcUser + ':' + settings.rpcPass);
   }
-  const resp = await fetch(settings.rpcUrl, { method: 'POST', headers, body });
-  const json = await resp.json();
-  if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
-  return json.result;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const resp = await fetch(url, { method: 'POST', headers, body, signal: controller.signal });
+    clearTimeout(timeout);
+    if (resp.status === 401) throw new Error('RPC authentication failed (401). Check Settings → RPC credentials.');
+    if (!resp.ok) throw new Error('RPC error: HTTP ' + resp.status);
+    const json = await resp.json();
+    if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
+    return json.result;
+  } catch (e) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') throw new Error('RPC timeout (10s). Check Settings → RPC Endpoint.');
+    throw e;
+  }
 }
 
 // ==================== TOTP ====================
@@ -1392,8 +1405,12 @@ window.showImportTab = function(tab) {
   });
   const el = document.getElementById('import-' + tab);
   if (el) el.classList.remove('hidden');
-  document.querySelectorAll('#view-import .tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('#view-import .tab-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.textContent.toLowerCase().includes(tab === 'privkey' ? 'private' : tab === 'watchonly' ? 'watch' : tab)) {
+      b.classList.add('active');
+    }
+  });
 };
 
 function showError(elId, msg) {
@@ -1529,27 +1546,42 @@ window.importWatchOnly = function() {
 // ==================== DASHBOARD ====================
 
 window.refreshBalance = async function() {
-  if (!wallet) return;
+  if (!wallet) {
+    document.getElementById('dashAddr').textContent = 'No wallet loaded';
+    document.getElementById('balanceVal').textContent = '---';
+    document.getElementById('balanceUtxoCount').textContent = 'Go to Generate or Import to create a wallet.';
+    return;
+  }
   document.getElementById('dashAddr').textContent = wallet.address;
 
   try {
     const result = await rpcCall('getaddressbalance', { address: wallet.address });
-    document.getElementById('balanceVal').textContent = formatSost(result.balance || 0);
-    document.getElementById('balanceUtxoCount').textContent = (result.utxo_count || 0) + ' UTXOs';
+    const bal = result.balance || result.confirmed || 0;
+    const immature = result.immature || 0;
+    const spendable = bal - immature;
+    document.getElementById('balanceVal').textContent = formatSost(bal);
+    let info = (result.utxo_count || (result.utxos ? result.utxos.length : 0)) + ' UTXOs';
+    if (immature > 0) info += ' · Immature: ' + formatSost(immature) + ' · Spendable: ' + formatSost(spendable);
+    document.getElementById('balanceUtxoCount').textContent = info;
 
     // Update UTXO list
-    if (result.utxos && result.utxos.length > 0) {
+    const utxos = result.utxos || [];
+    if (utxos.length > 0) {
       const list = document.getElementById('utxoList');
-      list.innerHTML = result.utxos.map(u =>
-        `<div class="utxo-item">
-          <span class="utxo-txid" title="${u.txid}">${u.txid.slice(0, 16)}...${u.txid.slice(-8)}:${u.vout}</span>
-          <span class="utxo-amount">${formatSost(u.amount)} SOST</span>
-        </div>`
-      ).join('');
+      list.innerHTML = utxos.map(u => {
+        const txid = u.txid || '';
+        const amt = u.amount || u.value || 0;
+        const conf = u.confirmations || 0;
+        const mature = conf >= 1000 || !u.coinbase;
+        return `<div class="utxo-item" style="opacity:${mature ? 1 : 0.5}">
+          <span class="utxo-txid" title="${txid}">${txid.slice(0, 16)}...${txid.slice(-8)}:${u.vout || 0}</span>
+          <span class="utxo-amount">${formatSost(amt)} SOST${mature ? '' : ' (immature)'}</span>
+        </div>`;
+      }).join('');
     }
   } catch (e) {
     document.getElementById('balanceVal').textContent = '---';
-    document.getElementById('balanceUtxoCount').textContent = 'RPC error: ' + e.message;
+    document.getElementById('balanceUtxoCount').textContent = 'Cannot connect to node: ' + e.message;
   }
 };
 
@@ -1842,6 +1874,9 @@ async function init() {
 
   checkNodeStatus();
   setInterval(checkNodeStatus, 30000);
+}
+
+init();
 </script>
 
 <script>

@@ -114,8 +114,8 @@ No floating-point arithmetic is used in monetary calculations.
 
 ### Fee recipient
 
-- **Address:** `sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429` (Foundation fee wallet)
-- **Source:** `sost144cc82d3c711b5a9322640c66b94a520497ac40d` (PoPC Pool)
+- **Address:** `sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33` (Foundation fee wallet)
+- **Source:** `sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f` (PoPC Pool)
 
 ## Reward Process
 

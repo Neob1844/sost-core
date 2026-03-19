@@ -46,7 +46,7 @@
 
 ### CLI Wallet (sost-cli v1.3)
 - Dynamic fee calculation based on transaction size (1 stock/byte default)
-- Coinbase maturity filter: 100 confirmations required
+- Coinbase maturity filter: 1000 confirmations required
 - Detailed error messages distinguishing immature vs insufficient funds
 - Commands: newwallet, getnewaddress, listaddresses, send, getbalance, listunspent, info
 - Fixed: change address now returns to sender (not destination)

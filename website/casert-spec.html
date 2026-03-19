@@ -209,7 +209,7 @@
           <tr><td class="label">Exponential response</td><td class="value">Difficulty doubles/halves every halflife period</td></tr>
           <tr><td class="label">SOST implementation</td><td class="cyan">Integer-only cubic polynomial approximation of 2^x</td></tr>
           <tr><td class="label">Encoding</td><td class="value">Q16.16 fixed-point arithmetic, no floating point in consensus</td></tr>
-          <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">43,200s (12 hours)</td></tr>
+          <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">172,800s (48 hours)</td></tr>
           <tr><td class="label">Per-block delta cap</td><td class="highlight">6.25%</td></tr>
           <tr><td class="label">TARGET_SPACING</td><td class="highlight">600s (10 minutes)</td></tr>
         </table>
@@ -324,7 +324,7 @@
     </div>
 
     <div class="notice fade-in delay-2">
-      <strong>Heritage note:</strong> cASERT's bitsQ controller is inspired by BCH ASERT's exponential approach but uses a 12h half-life (vs BCH's 24h) and a 6.25% per-block relative delta cap. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
+      <strong>Heritage note:</strong> cASERT's bitsQ controller is inspired by BCH ASERT's exponential approach but uses a 48h half-life (vs BCH's 24h) and a 6.25% per-block relative delta cap. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
     </div>
   </div>
 </section>
@@ -402,7 +402,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
-          <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">43,200s</td><td class="value">12-hour half-life for bitsQ exponential adjustment</td></tr>
+          <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">172,800s</td><td class="value">48-hour half-life for bitsQ exponential adjustment</td></tr>
           <tr><td class="label">BITSQ_DELTA_CAP</td><td class="highlight">6.25%</td><td class="value">Per-block relative delta cap for bitsQ adjustment</td></tr>
           <tr><td class="label">TARGET_SPACING</td><td class="highlight">600s</td><td class="value">10-minute target between blocks</td></tr>
           <tr><td class="label">BLOCKS_PER_EPOCH</td><td class="value">131,553</td><td class="value">Blocks per difficulty epoch (~2.5 years)</td></tr>

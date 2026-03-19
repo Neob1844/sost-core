@@ -230,11 +230,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 </div></div>
 <div class="config">
   <span class="config-label">RPC&gt;</span>
-  <input id="rpcUrl" value="http://212.132.108.244/rpc" spellcheck="false"/>
+  <input id="rpcUrl" value="https://explorer.sostcore.com/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
-  <input id="rpcUser" value="NeoB_1_248" spellcheck="false" style="width:120px"/>
+  <input id="rpcUser" value="sost" spellcheck="false" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
-  <input id="rpcPass" value="sost1b3f7a2c9e5d14b08f6a3c7e9d2b4f1a8c5e3d07b" type="password" spellcheck="false" style="width:120px"/>
+  <input id="rpcPass" value="" type="password" spellcheck="false" style="width:120px"/>
   <button onclick="connectRPC()">CONNECT</button>
 </div>
 <div class="search"><div class="search-box">
@@ -247,8 +247,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
   <div class="dash-card"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="cursor:pointer;display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1be2302d89daef55af4162127b9656f7604948efa')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost18a222922bba5ac84979a74d76c392fdeaa59f505')"><div class="dash-label">◇ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" style="cursor:pointer" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -332,7 +332,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-let RPC='http://212.132.108.244/rpc',RPC_USER='NeoB_1_248',RPC_PASS='sost1b3f7a2c9e5d14b08f6a3c7e9d2b4f1a8c5e3d07b',H=0,prevH=0,off=0;
+let RPC='https://explorer.sostcore.com/rpc',RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
 const COINBASE_MATURITY=100;
 const PS=10;
@@ -343,9 +343,9 @@ var _lastBlockTime=0;
 var _avgBlockTime=120;
 var _countdownInterval=null;
 const ROLES={
-  'sost1be2302d89daef55af4162127b9656f7604948efa':'GOLD VAULT',
-  'sost18a222922bba5ac84979a74d76c392fdeaa59f505':'POPC POOL',
-  'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
+  'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d':'GOLD VAULT',
+  'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f':'POPC POOL',
+  'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
   {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:3},
@@ -471,8 +471,8 @@ async function updateDashboard(info){
   document.getElementById('dSupply').textContent=fComma(Math.floor(tSOST))+' SOST';
   drawReserveBars();
   // Constitutional balances (public, no auth needed)
-  var ADDR_GOLD='sost1be2302d89daef55af4162127b9656f7604948efa';
-  var ADDR_POPC='sost18a222922bba5ac84979a74d76c392fdeaa59f505';
+  var ADDR_GOLD='sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d';
+  var ADDR_POPC='sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f';
   try{
     var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
     var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);

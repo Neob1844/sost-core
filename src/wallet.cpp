@@ -275,9 +275,9 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
     }
 
     const char* addrs[3] = {
-        "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429",
-        "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724",
-        "sost144cc82d3c711b5a9322640c66b94a520497ac40d",
+        "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33",
+        "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d",
+        "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f",
     };
     int64_t amounts[3] = { miner_amt, gold_amt, popc_amt };
 
@@ -351,8 +351,8 @@ bool Wallet::create_transaction(
         if (!find_key_by_pkh(u.pkh)) continue;
         // Never spend constitutional UTXOs (gold vault, popc pool) in transfers
         std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||  // GOLD VAULT
-            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") {  // POPC POOL
+        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||  // GOLD VAULT
+            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") {  // POPC POOL
             continue;
         }
         selected.push_back(i);
@@ -535,8 +535,8 @@ bool Wallet::create_bond_transaction(
         if (!find_key_by_pkh(u.pkh)) continue;
         // Skip constitutional
         std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||
-            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") continue;
+        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
+            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
         // Skip still-locked bonds/escrows
         if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
             chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
@@ -630,8 +630,8 @@ bool Wallet::create_escrow_transaction(
         const auto& u = unspent[i];
         if (!find_key_by_pkh(u.pkh)) continue;
         std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724" ||
-            utxo_addr == "sost144cc82d3c711b5a9322640c66b94a520497ac40d") continue;
+        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
+            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
         if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
             chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
         selected.push_back(i);
