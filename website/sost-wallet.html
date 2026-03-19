@@ -561,7 +561,12 @@
       <div class="card">
         <div class="card-label">Balance</div>
         <div class="balance-display"><span id="balanceVal">0.00000000</span><span class="unit">SOST</span></div>
+        <div id="balanceBreakdown" style="font-size:12px;margin:8px 0;line-height:1.8;display:none">
+          <span id="balSpendable" style="color:var(--green-primary)"></span>
+          <span id="balImmature" style="color:#f59e0b;margin-left:12px"></span>
+        </div>
         <div class="balance-sub" id="balanceUtxoCount">0 UTXOs</div>
+        <div id="balMaturity" style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.7;display:none"></div>
         <div class="btn-group" style="margin-top:16px">
           <button class="btn btn-small" onclick="refreshBalance()">Refresh</button>
           <button class="btn btn-small" onclick="showView('send')">Send</button>
@@ -1560,32 +1565,85 @@ window.refreshBalance = async function() {
   document.getElementById('dashAddr').textContent = wallet.address;
 
   try {
-    // Use getaddressinfo — returns balance + UTXOs with details
-    const result = await rpcCall('getaddressinfo', [wallet.address]);
-    const balStocks = result.balance_stocks || 0;
-    const bal = (typeof result.balance === 'number') ? result.balance * SAT : balStocks;
-    document.getElementById('balanceVal').textContent = formatSost(bal);
+    // Get chain height + address UTXOs
+    const [nodeInfo, addrInfo] = await Promise.all([
+      rpcCall('getinfo'),
+      rpcCall('getaddressinfo', [wallet.address])
+    ]);
+    const chainHeight = nodeInfo.blocks || 0;
+    const utxos = addrInfo.utxos || [];
 
-    const utxos = result.utxos || [];
-    let immatureCount = 0;
-    let immatureStocks = 0;
+    // Classify UTXOs by maturity (coinbase needs 1000 confirmations)
+    let totalStocks = 0, spendableStocks = 0, immatureStocks = 0;
+    let spendableCount = 0, immatureCount = 0;
+    let earliestMature = Infinity;
+
     utxos.forEach(u => {
-      if (u.coinbase) { immatureCount++; immatureStocks += (u.amount || 0) * SAT; }
+      const amtStocks = Math.round((u.amount || 0) * SAT);
+      totalStocks += amtStocks;
+      if (u.coinbase) {
+        const confs = chainHeight - (u.height || 0);
+        if (confs >= 1000) {
+          spendableStocks += amtStocks;
+          spendableCount++;
+        } else {
+          immatureStocks += amtStocks;
+          immatureCount++;
+          const maturesAt = (u.height || 0) + 1000;
+          if (maturesAt < earliestMature) earliestMature = maturesAt;
+        }
+      } else {
+        spendableStocks += amtStocks;
+        spendableCount++;
+      }
     });
 
+    document.getElementById('balanceVal').textContent = formatSost(totalStocks);
+
+    // Breakdown: spendable / immature
+    const brkEl = document.getElementById('balanceBreakdown');
+    if (immatureCount > 0) {
+      brkEl.style.display = '';
+      document.getElementById('balSpendable').textContent = 'SPENDABLE: ' + formatSost(spendableStocks);
+      document.getElementById('balImmature').textContent = 'IMMATURE: ' + formatSost(immatureStocks);
+    } else {
+      brkEl.style.display = 'none';
+    }
+
+    // UTXO summary
     let info = utxos.length + ' UTXOs';
-    if (immatureCount > 0) info += ' · ' + immatureCount + ' coinbase (may need maturity)';
+    if (immatureCount > 0) info += ' · ' + spendableCount + ' spendable · ' + immatureCount + ' immature';
     document.getElementById('balanceUtxoCount').textContent = info;
 
-    // Update UTXO list
+    // Maturity info
+    const matEl = document.getElementById('balMaturity');
+    if (immatureCount > 0 && earliestMature < Infinity) {
+      const blocksLeft = earliestMature - chainHeight;
+      const hoursLeft = Math.ceil(blocksLeft * 10 / 60);
+      matEl.style.display = '';
+      matEl.innerHTML =
+        'Height: <b>#' + chainHeight + '</b> · Earliest maturity: <b>#' + earliestMature + '</b>' +
+        ' · ~' + blocksLeft + ' blocks (~' + hoursLeft + 'h) remaining' +
+        '<br>Coinbase UTXOs require <b>1000 confirmations</b> before spending';
+    } else if (utxos.length > 0 && immatureCount === 0) {
+      matEl.style.display = '';
+      matEl.textContent = 'All UTXOs are mature and spendable. Height: #' + chainHeight;
+    } else {
+      matEl.style.display = 'none';
+    }
+
+    // UTXO list
     if (utxos.length > 0) {
       const list = document.getElementById('utxoList');
       list.innerHTML = utxos.map(u => {
         const txid = u.txid || '';
         const amt = u.amount || 0;
-        return `<div class="utxo-item">
+        const confs = chainHeight - (u.height || 0);
+        const mature = !u.coinbase || confs >= 1000;
+        const tag = u.coinbase ? (mature ? ' (coinbase, mature)' : ' (coinbase, ' + confs + '/1000 confs)') : '';
+        return `<div class="utxo-item" style="opacity:${mature ? 1 : 0.5};border-left:3px solid ${mature ? 'var(--green-primary)' : '#f59e0b'}">
           <span class="utxo-txid" title="${txid}">${txid.slice(0, 16)}...${txid.slice(-8)}:${u.vout || 0}</span>
-          <span class="utxo-amount">${amt} SOST${u.coinbase ? ' (coinbase)' : ''}</span>
+          <span class="utxo-amount" style="color:${mature ? 'var(--green-primary)' : '#f59e0b'}">${amt} SOST${tag}</span>
         </div>`;
       }).join('');
     }
