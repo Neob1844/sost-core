@@ -1145,10 +1145,12 @@ function getSettings() {
 // Methods that require authentication (write operations)
 const AUTH_METHODS = new Set(['sendrawtransaction', 'submitblock']);
 
-async function rpcCall(method, params = {}) {
+async function rpcCall(method, params = []) {
   const settings = getSettings();
   const url = settings.rpcUrl || '/rpc';
-  const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method, params });
+  // Node expects params as array, not object
+  const paramArray = Array.isArray(params) ? params : Object.values(params);
+  const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: paramArray });
   const headers = { 'Content-Type': 'application/json' };
   // Only send auth for write methods — read-only calls must work without credentials
   if (AUTH_METHODS.has(method) && settings.rpcUser && settings.rpcPass) {
@@ -1558,27 +1560,32 @@ window.refreshBalance = async function() {
   document.getElementById('dashAddr').textContent = wallet.address;
 
   try {
-    const result = await rpcCall('getaddressbalance', { address: wallet.address });
-    const bal = result.balance || result.confirmed || 0;
-    const immature = result.immature || 0;
-    const spendable = bal - immature;
+    // Use getaddressinfo — returns balance + UTXOs with details
+    const result = await rpcCall('getaddressinfo', [wallet.address]);
+    const balStocks = result.balance_stocks || 0;
+    const bal = (typeof result.balance === 'number') ? result.balance * SAT : balStocks;
     document.getElementById('balanceVal').textContent = formatSost(bal);
-    let info = (result.utxo_count || (result.utxos ? result.utxos.length : 0)) + ' UTXOs';
-    if (immature > 0) info += ' · Immature: ' + formatSost(immature) + ' · Spendable: ' + formatSost(spendable);
+
+    const utxos = result.utxos || [];
+    let immatureCount = 0;
+    let immatureStocks = 0;
+    utxos.forEach(u => {
+      if (u.coinbase) { immatureCount++; immatureStocks += (u.amount || 0) * SAT; }
+    });
+
+    let info = utxos.length + ' UTXOs';
+    if (immatureCount > 0) info += ' · ' + immatureCount + ' coinbase (may need maturity)';
     document.getElementById('balanceUtxoCount').textContent = info;
 
     // Update UTXO list
-    const utxos = result.utxos || [];
     if (utxos.length > 0) {
       const list = document.getElementById('utxoList');
       list.innerHTML = utxos.map(u => {
         const txid = u.txid || '';
-        const amt = u.amount || u.value || 0;
-        const conf = u.confirmations || 0;
-        const mature = conf >= 1000 || !u.coinbase;
-        return `<div class="utxo-item" style="opacity:${mature ? 1 : 0.5}">
+        const amt = u.amount || 0;
+        return `<div class="utxo-item">
           <span class="utxo-txid" title="${txid}">${txid.slice(0, 16)}...${txid.slice(-8)}:${u.vout || 0}</span>
-          <span class="utxo-amount">${formatSost(amt)} SOST${mature ? '' : ' (immature)'}</span>
+          <span class="utxo-amount">${amt} SOST${u.coinbase ? ' (coinbase)' : ''}</span>
         </div>`;
       }).join('');
     }
@@ -1625,10 +1632,15 @@ window.sendTransaction = async function() {
   document.getElementById('sendBtn').disabled = true;
 
   try {
-    // Get UTXOs
-    const balResult = await rpcCall('getaddressbalance', { address: wallet.address });
-    const utxos = balResult.utxos || [];
-    if (utxos.length === 0) throw new Error('No UTXOs available');
+    // Get UTXOs via getaddressinfo (includes UTXO details)
+    const balResult = await rpcCall('getaddressinfo', [wallet.address]);
+    const rawUtxos = balResult.utxos || [];
+    if (rawUtxos.length === 0) throw new Error('No UTXOs available');
+    // Convert amount from SOST float to stocks (satoshis) for TX building
+    const utxos = rawUtxos.map(u => ({
+      ...u,
+      amount: Math.round((u.amount || 0) * SAT)
+    }));
 
     // Estimate tx size: ~148 * inputs + 34 * outputs + 10
     const estSize = 148 * Math.min(utxos.length, 10) + 34 * 2 + 10;
@@ -1637,7 +1649,7 @@ window.sendTransaction = async function() {
     const rawTx = await buildAndSignTx(utxos, toAddr, amountSat, feeSat, wallet.address);
 
     // Broadcast
-    const result = await rpcCall('sendrawtransaction', { tx_hex: rawTx });
+    const result = await rpcCall('sendrawtransaction', [rawTx]);
     showSuccess('sendResult',
       `Transaction broadcast! TXID: <strong style="word-break:break-all">${result.txid || result}</strong>`
     );
@@ -1833,7 +1845,7 @@ async function checkNodeStatus() {
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
   try {
-    const info = await rpcCall('getblockchaininfo');
+    const info = await rpcCall('getinfo');
     dot.className = 'status-dot online';
     txt.textContent = 'Block ' + (info.blocks || info.height || '?');
   } catch (e) {
