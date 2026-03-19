@@ -1,14 +1,8 @@
 # Learning Summary
 
-**Total feedback entries:** 2
-**Learning queue size:** 2
+**Total feedback entries:** 0
+**Learning queue size:** 0
 
-## Top Learning Candidates
-
-| Formula | Property | Predicted | Observed | Error | Priority |
-|---------|----------|-----------|----------|-------|----------|
-| NaCl | formation_energy | -4.0 | -4.2 | 0.2 | 0.3 |
-| NaCl | formation_energy | -4.0 | -4.2 | 0.2 | 0.3 |
 
 ## Model Failures
 

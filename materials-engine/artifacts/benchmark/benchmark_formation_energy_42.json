@@ -1,0 +1,44 @@
+{
+  "benchmark_id": "benchmark_formation_energy_42",
+  "benchmark_name": "benchmark_formation_energy",
+  "target_property": "formation_energy",
+  "sample_size": 1,
+  "corpus_with_structure": 1,
+  "seed": 42,
+  "elapsed_sec": 0.5,
+  "created_at": "2026-03-19T08:08:47.726531+00:00",
+  "overall": {
+    "mae": 3.2549,
+    "rmse": 3.2549,
+    "median_error": 3.2549,
+    "p90_error": 3.2549,
+    "p95_error": 3.2549,
+    "max_error": 3.2549
+  },
+  "by_element_count": {
+    "other": {
+      "count": 1,
+      "mae": 3.2549,
+      "median": 3.2549,
+      "p90": 3.2549
+    }
+  },
+  "by_value_range": {
+    "-6.0--3.0": {
+      "count": 1,
+      "mae": 3.2549,
+      "median": 3.2549,
+      "p90": 3.2549
+    }
+  },
+  "sample_results": [
+    {
+      "formula": "NaCl",
+      "canonical_id": "d02e18112447d607",
+      "actual": -4.2,
+      "predicted": -0.9451,
+      "error": 3.2549,
+      "n_elements": 2
+    }
+  ]
+}

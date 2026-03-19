@@ -161,6 +161,10 @@ def build_dossier(formula: str,
     limitations = _build_limitations(existence, has_structure, ev,
                                      query_type, lift_confidence)
 
+    # Calibration integration
+    calibration_info = _get_calibration_info(
+        elements, predicted_fe, predicted_bg)
+
     dossier = {
         "dossier_id": dossier_id,
         "query_type": query_type,
@@ -187,6 +191,7 @@ def build_dossier(formula: str,
         "validation_rationale": rationale,
         "thermo_pressure_context": tp_context,
         "evidence_summary": ev,
+        "calibration": calibration_info,
         "method_notes": report.get("method_notes", []),
         "limitations": limitations,
         "generated_at": now,
@@ -405,3 +410,49 @@ def _build_limitations(existence, has_structure, ev, query_type, lift_confidence
             "Accuracy is limited by training data size and model complexity.")
 
     return limits
+
+
+def _get_calibration_info(elements, predicted_fe, predicted_bg):
+    """Get calibration info from persisted benchmark calibrations."""
+    try:
+        from ..calibration.confidence import load_calibration, get_calibrated_confidence
+    except Exception:
+        return {"confidence_source": "no_calibration_available"}
+
+    n_elem = len(elements) if elements else 0
+    result = {"confidence_source": "no_calibration_available"}
+
+    fe_cal = load_calibration("formation_energy")
+    bg_cal = load_calibration("band_gap")
+
+    calibrations = {}
+    if fe_cal:
+        fe_conf = get_calibrated_confidence(
+            fe_cal, n_elements=n_elem, property_value=predicted_fe,
+            target_property="formation_energy")
+        calibrations["formation_energy"] = fe_conf
+        result["confidence_source"] = "benchmark_calibrated"
+
+    if bg_cal:
+        bg_conf = get_calibrated_confidence(
+            bg_cal, n_elements=n_elem, property_value=predicted_bg,
+            target_property="band_gap")
+        calibrations["band_gap"] = bg_conf
+        result["confidence_source"] = "benchmark_calibrated"
+
+    if not calibrations:
+        result["confidence_source"] = "heuristic_fallback"
+        result["calibration_note"] = "No benchmark calibration available for this context."
+    else:
+        result["calibrations"] = calibrations
+        # Use worst confidence as overall
+        bands = [c.get("confidence_band", "unknown") for c in calibrations.values()]
+        order = {"high": 0, "medium": 1, "low": 2, "unknown": 3}
+        worst = max(bands, key=lambda b: order.get(b, 3))
+        result["calibrated_confidence"] = worst
+        result["calibration_note"] = (
+            "Confidence derived from empirical benchmark on known corpus materials. "
+            "NOT statistical probability."
+        )
+
+    return result

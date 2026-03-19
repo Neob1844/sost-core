@@ -1,0 +1,466 @@
+{
+  "benchmark_id": "benchmark_band_gap_42",
+  "benchmark_name": "benchmark_band_gap",
+  "target_property": "band_gap",
+  "sample_size": 100,
+  "corpus_with_structure": 200,
+  "seed": 42,
+  "elapsed_sec": 2.0,
+  "created_at": "2026-03-19T07:39:19.430061+00:00",
+  "overall": {
+    "mae": 0.42,
+    "rmse": 0.7465,
+    "median_error": 0.1381,
+    "p90_error": 1.2893,
+    "p95_error": 1.822,
+    "max_error": 3.5953
+  },
+  "by_element_count": {
+    "other": {
+      "count": 98,
+      "mae": 0.4077,
+      "median": 0.1343,
+      "p90": 1.1652
+    },
+    "5-99": {
+      "count": 2,
+      "mae": 1.0227,
+      "median": 1.0227,
+      "p90": 1.6618
+    }
+  },
+  "by_value_range": {
+    "0.0-0.01": {
+      "count": 60,
+      "mae": 0.209,
+      "median": 0.1103,
+      "p90": 0.3297
+    },
+    "1.0-3.0": {
+      "count": 15,
+      "mae": 0.7061,
+      "median": 0.4819,
+      "p90": 1.5436
+    },
+    "0.01-1.0": {
+      "count": 14,
+      "mae": 0.4439,
+      "median": 0.3598,
+      "p90": 0.888
+    },
+    "3.0-6.0": {
+      "count": 10,
+      "mae": 0.9056,
+      "median": 0.7939,
+      "p90": 1.8495
+    },
+    "6.0-20.0": {
+      "count": 1,
+      "mae": 3.5953,
+      "median": 3.5953,
+      "p90": 3.5953
+    }
+  },
+  "sample_results": [
+    {
+      "formula": "EuCuBi",
+      "canonical_id": "eef4a89359c86d47",
+      "actual": 0.0,
+      "predicted": -0.0702,
+      "error": 0.0702,
+      "n_elements": 3
+    },
+    {
+      "formula": "CdAs2O6",
+      "canonical_id": "6d5e8b38d4015d15",
+      "actual": 2.122,
+      "predicted": 2.1316,
+      "error": 0.0096,
+      "n_elements": 3
+    },
+    {
+      "formula": "LiMn5O3F5",
+      "canonical_id": "5cb0ae65dc1029cb",
+      "actual": 0.482,
+      "predicted": -0.0228,
+      "error": 0.5048,
+      "n_elements": 4
+    },
+    {
+      "formula": "Li5Ti2Co3O10",
+      "canonical_id": "3d445f8d0e8d1614",
+      "actual": 0.0,
+      "predicted": -0.0504,
+      "error": 0.0504,
+      "n_elements": 4
+    },
+    {
+      "formula": "Ba4BiTe",
+      "canonical_id": "3379e2c34a3fbd73",
+      "actual": 0.0,
+      "predicted": -0.043,
+      "error": 0.043,
+      "n_elements": 3
+    },
+    {
+      "formula": "LiYSe2",
+      "canonical_id": "a2808835728fe5fd",
+      "actual": 1.599,
+      "predicted": 0.529,
+      "error": 1.07,
+      "n_elements": 3
+    },
+    {
+      "formula": "UNiSn",
+      "canonical_id": "170169f3e9debdc7",
+      "actual": 0.0,
+      "predicted": -0.1306,
+      "error": 0.1306,
+      "n_elements": 3
+    },
+    {
+      "formula": "Sn3PO4F3",
+      "canonical_id": "8774f1fc9a971a2c",
+      "actual": 2.376,
+      "predicted": 2.6395,
+      "error": 0.2635,
+      "n_elements": 4
+    },
+    {
+      "formula": "Sr5P3ClO12",
+      "canonical_id": "1c35659fc0d7e089",
+      "actual": 5.505,
+      "predicted": 4.799,
+      "error": 0.706,
+      "n_elements": 4
+    },
+    {
+      "formula": "Xe",
+      "canonical_id": "ea9abe0ba8f7cedf",
+      "actual": 6.149,
+      "predicted": 2.5537,
+      "error": 3.5953,
+      "n_elements": 1
+    },
+    {
+      "formula": "Ba4CaSn",
+      "canonical_id": "1da74a2b80d92c87",
+      "actual": 0.0,
+      "predicted": -0.1089,
+      "error": 0.1089,
+      "n_elements": 3
+    },
+    {
+      "formula": "Ca4Al6SO12",
+      "canonical_id": "5c117f88757ecb08",
+      "actual": 3.685,
+      "predicted": 3.6946,
+      "error": 0.0096,
+      "n_elements": 4
+    },
+    {
+      "formula": "Dy3Mn3Ga2Si",
+      "canonical_id": "64f193265a62fdb0",
+      "actual": 0.0,
+      "predicted": -0.0926,
+      "error": 0.0926,
+      "n_elements": 4
+    },
+    {
+      "formula": "Ag2F5",
+      "canonical_id": "eb57f29dee5312e2",
+      "actual": 0.0,
+      "predicted": 0.3492,
+      "error": 0.3492,
+      "n_elements": 2
+    },
+    {
+      "formula": "K4SrBe",
+      "canonical_id": "17ef7f367b827db4",
+      "actual": 0.0,
+      "predicted": 0.0386,
+      "error": 0.0386,
+      "n_elements": 3
+    },
+    {
+      "formula": "RbHSeO4",
+      "canonical_id": "c6deed4bf5592a13",
+      "actual": 3.811,
+      "predicted": 2.693,
+      "error": 1.118,
+      "n_elements": 4
+    },
+    {
+      "formula": "NiN6Cl2",
+      "canonical_id": "e0db0688f754bc2f",
+      "actual": 0.0,
+      "predicted": 1.8295,
+      "error": 1.8295,
+      "n_elements": 3
+    },
+    {
+      "formula": "Ba4ZrPb",
+      "canonical_id": "2a02c8d7ffd371a6",
+      "actual": 0.0,
+      "predicted": -0.0969,
+      "error": 0.0969,
+      "n_elements": 3
+    },
+    {
+      "formula": "Zn2Ga2S5",
+      "canonical_id": "05c0b59da6d5ed99",
+      "actual": 0.813,
+      "predicted": 1.3643,
+      "error": 0.5513,
+      "n_elements": 3
+    },
+    {
+      "formula": "Ba4HgSb",
+      "canonical_id": "b4923a1de57090b7",
+      "actual": 0.0,
+      "predicted": -0.0969,
+      "error": 0.0969,
+      "n_elements": 3
+    },
+    {
+      "formula": "ZrSn",
+      "canonical_id": "acc090274f9791d8",
+      "actual": 0.0,
+      "predicted": 0.1244,
+      "error": 0.1244,
+      "n_elements": 2
+    },
+    {
+      "formula": "FeOF",
+      "canonical_id": "9ae3ba842b21e90a",
+      "actual": 0.0,
+      "predicted": -0.1347,
+      "error": 0.1347,
+      "n_elements": 3
+    },
+    {
+      "formula": "HfSnRh",
+      "canonical_id": "d062c307a65f097e",
+      "actual": 0.0,
+      "predicted": -0.1439,
+      "error": 0.1439,
+      "n_elements": 3
+    },
+    {
+      "formula": "HgHClO4",
+      "canonical_id": "d0e0c0376e015afa",
+      "actual": 2.657,
+      "predicted": 2.4712,
+      "error": 0.1858,
+      "n_elements": 4
+    },
+    {
+      "formula": "Ba4NbBi",
+      "canonical_id": "c7fe128fd3d6c133",
+      "actual": 0.0,
+      "predicted": -0.1242,
+      "error": 0.1242,
+      "n_elements": 3
+    },
+    {
+      "formula": "KBaZn",
+      "canonical_id": "e1954ba241e7dbbb",
+      "actual": 0.0,
+      "predicted": 0.1418,
+      "error": 0.1418,
+      "n_elements": 3
+    },
+    {
+      "formula": "Li2VO2F",
+      "canonical_id": "62a5f0f7842bba87",
+      "actual": 0.0,
+      "predicted": 0.3094,
+      "error": 0.3094,
+      "n_elements": 4
+    },
+    {
+      "formula": "KMoP2O8",
+      "canonical_id": "73e6943e8cf94905",
+      "actual": 0.902,
+      "predicted": 1.9512,
+      "error": 1.0492,
+      "n_elements": 4
+    },
+    {
+      "formula": "AlInO3",
+      "canonical_id": "f3ace8197cb9d86f",
+      "actual": 2.464,
+      "predicted": 2.9459,
+      "error": 0.4819,
+      "n_elements": 3
+    },
+    {
+      "formula": "KBaNb",
+      "canonical_id": "52d88dae94344b1b",
+      "actual": 0.0,
+      "predicted": -0.0998,
+      "error": 0.0998,
+      "n_elements": 3
+    },
+    {
+      "formula": "MoW3Se2S6",
+      "canonical_id": "3d8f9308099c3c52",
+      "actual": 0.689,
+      "predicted": 0.8356,
+      "error": 0.1466,
+      "n_elements": 4
+    },
+    {
+      "formula": "SmSb12Os4",
+      "canonical_id": "ba6add4f5552bfd7",
+      "actual": 0.0,
+      "predicted": -0.0059,
+      "error": 0.0059,
+      "n_elements": 3
+    },
+    {
+      "formula": "YMg",
+      "canonical_id": "d30e81d6dee44be0",
+      "actual": 0.0,
+      "predicted": -0.1293,
+      "error": 0.1293,
+      "n_elements": 2
+    },
+    {
+      "formula": "MnCoO4",
+      "canonical_id": "f15327f329840025",
+      "actual": 0.0,
+      "predicted": -0.0394,
+      "error": 0.0394,
+      "n_elements": 3
+    },
+    {
+      "formula": "Li4VCr3O8",
+      "canonical_id": "3ca8edbfaaaa5628",
+      "actual": 0.0,
+      "predicted": 0.0459,
+      "error": 0.0459,
+      "n_elements": 4
+    },
+    {
+      "formula": "Sr2TaN3",
+      "canonical_id": "32d0c0036d943088",
+      "actual": 2.498,
+      "predicted": 2.2285,
+      "error": 0.2695,
+      "n_elements": 3
+    },
+    {
+      "formula": "Zr5Sb4",
+      "canonical_id": "2bb32b44a41f39f7",
+      "actual": 0.0,
+      "predicted": 0.0062,
+      "error": 0.0062,
+      "n_elements": 2
+    },
+    {
+      "formula": "RbTaO3",
+      "canonical_id": "8fc9b15c23402aae",
+      "actual": 2.391,
+      "predicted": 1.645,
+      "error": 0.746,
+      "n_elements": 3
+    },
+    {
+      "formula": "Sb",
+      "canonical_id": "95d18836624ac7af",
+      "actual": 0.0,
+      "predicted": 0.0098,
+      "error": 0.0098,
+      "n_elements": 1
+    },
+    {
+      "formula": "LaAlH6",
+      "canonical_id": "3b90676a08432ce4",
+      "actual": 2.583,
+      "predicted": 4.0328,
+      "error": 1.4498,
+      "n_elements": 3
+    },
+    {
+      "formula": "CeTiO3",
+      "canonical_id": "92eb073ea209cd07",
+      "actual": 0.0,
+      "predicted": -0.0377,
+      "error": 0.0377,
+      "n_elements": 3
+    },
+    {
+      "formula": "Na2TiO3",
+      "canonical_id": "f6db44bbca0f1aec",
+      "actual": 3.235,
+      "predicted": 1.1344,
+      "error": 2.1006,
+      "n_elements": 3
+    },
+    {
+      "formula": "Ba4TeSe",
+      "canonical_id": "35a7a569c5c18f51",
+      "actual": 0.0,
+      "predicted": 0.0383,
+      "error": 0.0383,
+      "n_elements": 3
+    },
+    {
+      "formula": "AlAs",
+      "canonical_id": "8161a3a128c29842",
+      "actual": 1.681,
+      "predicted": 0.2657,
+      "error": 1.4153,
+      "n_elements": 2
+    },
+    {
+      "formula": "LiCuS",
+      "canonical_id": "a24d9c2f8d5c41d9",
+      "actual": 0.967,
+      "predicted": 0.0389,
+      "error": 0.9281,
+      "n_elements": 3
+    },
+    {
+      "formula": "NaLi5N2",
+      "canonical_id": "d3024910878c6e4c",
+      "actual": 0.683,
+      "predicted": 0.9295,
+      "error": 0.2465,
+      "n_elements": 3
+    },
+    {
+      "formula": "NaI",
+      "canonical_id": "58c8b39b5d9dbfb9",
+      "actual": 3.851,
+      "predicted": 2.5757,
+      "error": 1.2753,
+      "n_elements": 2
+    },
+    {
+      "formula": "Mo3WSe6S2",
+      "canonical_id": "58f855294ab46663",
+      "actual": 0.502,
+      "predicted": 0.1732,
+      "error": 0.3288,
+      "n_elements": 4
+    },
+    {
+      "formula": "Ba9Y2Si6O24",
+      "canonical_id": "a3e3f9ecf086e20f",
+      "actual": 4.611,
+      "predicted": 4.0793,
+      "error": 0.5317,
+      "n_elements": 4
+    },
+    {
+      "formula": "Nb3Si",
+      "canonical_id": "ec798a339d836a47",
+      "actual": 0.0,
+      "predicted": -0.075,
+      "error": 0.075,
+      "n_elements": 2
+    }
+  ]
+}

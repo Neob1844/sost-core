@@ -43,8 +43,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SOST Materials Discovery Engine",
-    version="1.1.0",
-    description="Phase III.G: Validation Queue + Learning Loop Scaffold.",
+    version="1.2.1",
+    description="Phase III.H Final: Evidence + Benchmark + Calibration + Integration.",
     lifespan=lifespan,
 )
 
@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "1.1.0", "phase": "validation_learning",
+    return {"status": "ok", "version": "1.2.1", "phase": "evidence_benchmark_calibrated",
             "materials_count": db.count()}
 
 
@@ -940,6 +940,30 @@ def queue_status():
     return _get_queue().status()
 
 
+@app.get("/validation/queue/calibrated")
+def queue_calibrated():
+    """Return validation queue with calibration data."""
+    q = _get_queue()
+    from ..calibration.confidence import load_calibration, get_calibrated_confidence
+    fe_cal = load_calibration("formation_energy")
+
+    candidates = q.get_top(n=50)
+    for c in candidates:
+        n_elem = len(c.get("elements", []))
+        if fe_cal:
+            conf = get_calibrated_confidence(fe_cal, n_elements=n_elem)
+            c["benchmark_confidence_band"] = conf["confidence_band"]
+            c["expected_error_band"] = conf["expected_error"]
+        else:
+            c["benchmark_confidence_band"] = "unknown"
+            c["expected_error_band"] = None
+    return {
+        "calibrated_queue": candidates,
+        "calibration_available": fe_cal is not None,
+        "note": "Calibration from benchmark on known corpus. NOT statistical probability.",
+    }
+
+
 @app.get("/validation/queue/{validation_id}")
 def queue_get(validation_id: str):
     """Get a specific validation candidate."""
@@ -987,6 +1011,182 @@ def learning_summary():
     """Return full learning summary."""
     from ..learning.memory import generate_learning_summary
     return generate_learning_summary(_get_feedback())
+
+
+# --- Evidence / Benchmark / Calibration endpoints ---
+
+_evidence_registry = None
+
+
+def _get_evidence():
+    global _evidence_registry
+    if _evidence_registry is None:
+        from ..evidence.spec import EvidenceRegistry
+        _evidence_registry = EvidenceRegistry()
+        _evidence_registry.load()
+    return _evidence_registry
+
+
+class EvidenceImportRequest(BaseModel):
+    records: list
+
+
+class BenchmarkRunRequest(BaseModel):
+    target_property: str = "formation_energy"
+    sample_size: int = 200
+    seed: int = 42
+
+
+@app.post("/evidence/import/json")
+def evidence_import_json(req: EvidenceImportRequest):
+    """Import evidence records from JSON."""
+    reg = _get_evidence()
+    result = reg.import_json(req.records)
+    reg.save()
+    return result
+
+
+@app.post("/evidence/import/csv")
+def evidence_import_csv(req: EvidenceImportRequest):
+    """Import evidence from CSV-like rows."""
+    reg = _get_evidence()
+    result = reg.import_csv_rows(req.records)
+    reg.save()
+    return result
+
+
+@app.get("/evidence/status")
+def evidence_status():
+    """Return evidence registry status."""
+    return _get_evidence().status()
+
+
+@app.get("/evidence/feedback-links")
+def evidence_feedback_links():
+    """Show evidence-feedback auto-link results."""
+    from ..evidence.linker import batch_link
+    reg = _get_evidence()
+    fm = _get_feedback()
+    db = _get_db()
+    result = batch_link(reg, db, fm)
+    fm.save()
+    return result
+
+
+@app.get("/evidence/{evidence_id}")
+def get_evidence(evidence_id: str):
+    """Get a specific evidence record."""
+    r = _get_evidence().get(evidence_id)
+    if not r:
+        raise HTTPException(404, "Evidence not found")
+    return r.to_dict()
+
+
+@app.get("/benchmark/presets")
+def benchmark_presets():
+    """Return available benchmark targets."""
+    return {"targets": ["formation_energy", "band_gap"],
+            "default_sample_size": 200, "default_seed": 42}
+
+
+@app.post("/benchmark/run")
+def run_benchmark_endpoint(req: BenchmarkRunRequest):
+    """Run a prediction benchmark on known corpus materials."""
+    from ..benchmark.runner import run_benchmark, save_benchmark
+    db = _get_db()
+    report = run_benchmark(db, target_property=req.target_property,
+                           sample_size=req.sample_size, seed=req.seed)
+    save_benchmark(report)
+    return report
+
+
+@app.get("/benchmark/status")
+def benchmark_status():
+    """List saved benchmarks."""
+    from ..benchmark.runner import list_benchmarks
+    return {"benchmarks": list_benchmarks()}
+
+
+@app.get("/benchmark/{benchmark_id}")
+def get_benchmark(benchmark_id: str):
+    """Retrieve a saved benchmark."""
+    import os, json
+    path = os.path.join("artifacts/benchmark", f"{benchmark_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(404, "Benchmark not found")
+    with open(path) as f:
+        return json.load(f)
+
+
+@app.get("/calibration/status")
+def calibration_status():
+    """List available calibrations."""
+    from ..calibration.confidence import load_calibration
+    results = {}
+    for target in ["formation_energy", "band_gap"]:
+        cal = load_calibration(target)
+        if cal:
+            results[target] = {
+                "overall_mae": cal.get("overall_mae"),
+                "overall_confidence": cal.get("overall_confidence_band"),
+                "sample_size": cal.get("sample_size"),
+            }
+    return {"calibrations": results}
+
+
+@app.get("/calibration/{target_property}")
+def get_calibration(target_property: str):
+    """Get calibration for a specific target property."""
+    from ..calibration.confidence import load_calibration
+    cal = load_calibration(target_property)
+    if not cal:
+        raise HTTPException(404, f"No calibration for {target_property}")
+    return cal
+
+
+# --- Calibrated integration endpoints ---
+
+@app.get("/intelligence/material/{material_id}/calibrated")
+def intelligence_calibrated(material_id: str):
+    """Material intelligence report with calibration integration."""
+    from ..intelligence.dossier import build_dossier
+    from ..features.fingerprint_store import FingerprintStore
+    db = _get_db()
+    m = db.get_material(material_id)
+    if not m:
+        raise HTTPException(404, "Material not found")
+    store = FingerprintStore()
+    if not store.load():
+        store = None
+    dossier = build_dossier(
+        formula=m.formula, elements=m.elements, spacegroup=m.spacegroup,
+        material_id=material_id, query_type="corpus_material",
+        db=db, store=store)
+    return dossier
+
+
+class CalibratedReportRequest(BaseModel):
+    formula: str
+    elements: List[str]
+    spacegroup: Optional[int] = None
+    temperature_K: Optional[float] = None
+    pressure_GPa: Optional[float] = None
+
+
+@app.post("/intelligence/report/calibrated")
+def intelligence_report_calibrated(req: CalibratedReportRequest):
+    """Intelligence report with calibration for any formula."""
+    from ..intelligence.dossier import build_dossier
+    from ..features.fingerprint_store import FingerprintStore
+    db = _get_db()
+    store = FingerprintStore()
+    if not store.load():
+        store = None
+    dossier = build_dossier(
+        formula=req.formula, elements=req.elements,
+        spacegroup=req.spacegroup, db=db, store=store,
+        temperature_K=req.temperature_K, pressure_GPa=req.pressure_GPa)
+    return dossier
 
 
 # Health alias

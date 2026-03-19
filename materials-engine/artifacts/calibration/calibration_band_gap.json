@@ -1,0 +1,58 @@
+{
+  "target_property": "band_gap",
+  "overall_mae": 0.42,
+  "overall_confidence_band": "high",
+  "thresholds_used": {
+    "high": 0.5,
+    "medium": 1.0
+  },
+  "by_element_count": {
+    "other": {
+      "mae": 0.4077,
+      "count": 98,
+      "confidence_band": "high",
+      "expected_error": 0.4077
+    },
+    "5-99": {
+      "mae": 1.0227,
+      "count": 2,
+      "confidence_band": "low",
+      "expected_error": 1.0227
+    }
+  },
+  "by_value_range": {
+    "0.0-0.01": {
+      "mae": 0.209,
+      "count": 60,
+      "confidence_band": "high",
+      "expected_error": 0.209
+    },
+    "1.0-3.0": {
+      "mae": 0.7061,
+      "count": 15,
+      "confidence_band": "medium",
+      "expected_error": 0.7061
+    },
+    "0.01-1.0": {
+      "mae": 0.4439,
+      "count": 14,
+      "confidence_band": "high",
+      "expected_error": 0.4439
+    },
+    "3.0-6.0": {
+      "mae": 0.9056,
+      "count": 10,
+      "confidence_band": "medium",
+      "expected_error": 0.9056
+    },
+    "6.0-20.0": {
+      "mae": 3.5953,
+      "count": 1,
+      "confidence_band": "low",
+      "expected_error": 3.5953
+    }
+  },
+  "sample_size": 100,
+  "benchmark_id": "benchmark_band_gap_42",
+  "note": "Confidence bands derived from benchmark MAE on known materials. high: MAE < 0.5, medium: MAE < 1.0, low: MAE >= 1.0. NOT statistical probability \u2014 empirical error bands only."
+}

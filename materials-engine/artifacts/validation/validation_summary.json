@@ -1,0 +1,18 @@
+{
+  "total": 48,
+  "by_status": {
+    "queued": 48
+  },
+  "by_priority": {
+    "medium": 4,
+    "low": 44
+  },
+  "validation_stages": [
+    "dedup_rejection",
+    "novelty_exotic_screen",
+    "proxy_screening",
+    "ready_for_dft",
+    "validated_external",
+    "learning_candidate"
+  ]
+}

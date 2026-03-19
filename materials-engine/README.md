@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: III.F — Material Intelligence + Validation Dossier (v1.0.0)**
+> **Current phase: III.H Final — Evidence + Benchmark + Calibration + Integration (v1.2.1)**
 
 ## What exists (implemented and tested)
 
@@ -8,7 +8,7 @@
 - **Schema** (`src/schema.py`): Canonical IDs, provenance, structure support, validation
 - **4-source ingestion**: MP, AFLOW, COD, JARVIS normalizers
 - **Storage** (`src/storage/db.py`): SQLite with upsert, compound search, audit queries
-- **API** (`src/api/server.py`): FastAPI with 40 endpoints
+- **API** (`src/api/server.py`): FastAPI with 60 endpoints
 - **Audit + Export**: Corpus audit (JSON + Markdown), reproducible ML-ready CSV export
 
 ### Corpus (Phase III.C — 75,993 materials)
@@ -73,6 +73,23 @@
 - **Limitations**: Honest list of what the system cannot do — always included
 - **API**: `GET /intelligence/status`, `POST /intelligence/dossier/from-evaluation`, `GET /intelligence/dossier/{id}`
 
+### Validation Queue + Learning Loop (Phase III.G)
+- **Validation queue**: Persistent, prioritized, dedup-aware queue of candidates awaiting validation
+- **Cheap-first ladder**: 6 stages from zero-cost dedup → CPU proxy → DFT → external → learning
+- **ROI scoring**: Prioritizes high information value + low cost candidates
+- **Feedback memory**: Records prediction vs observation for future model improvement
+- **Learning scaffold**: Identifies model failures and promising chemical regions
+- **Anti-rework**: Dedup by formula+SG, rejects duplicates before scoring
+- **API**: `/validation/queue/*`, `/validation/feedback/*`, `/learning/*`
+
+### Evidence Bridge + Benchmark + Calibration (Phase III.H)
+- **Evidence bridge**: Import external evidence (JSON/CSV) — experimental values, literature, manual notes
+- **Benchmark suite**: Reproducible prediction accuracy measurement on known corpus materials (FE MAE=0.23, BG MAE=0.42)
+- **Confidence calibration**: Empirical error-based confidence bands (high/medium/low) derived from benchmark
+- **NOT statistical probability** — empirical error bands only
+- **Integrated**: Calibration appears inside dossiers. Evidence auto-links to feedback. Validation queue shows calibrated bands.
+- **API**: `/evidence/*`, `/benchmark/*`, `/calibration/*`, `/validation/queue/calibrated`, `/intelligence/material/{id}/calibrated`, `/intelligence/report/calibrated`, `/evidence/feedback-links`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS database, zero API cost
@@ -91,7 +108,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (402 tests)
+# Run all tests (483 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -167,7 +184,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (402 total)
+## Tests (483 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|
@@ -188,3 +205,4 @@ curl http://localhost:8000/generation/presets
 | test_evaluation.py | 26 | Structure lift, evaluator, ranking, API |
 | test_intelligence.py | 34 | Evidence, applications, comparison, reports, API |
 | test_dossier.py | 32 | Dossier build, evidence, priority, persistence, API |
+| test_validation_learning.py | 35 | Queue, feedback, learning, dedup, API |

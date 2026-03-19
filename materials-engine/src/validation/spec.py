@@ -122,6 +122,14 @@ class ValidationCandidate:
     tags: List[str] = field(default_factory=list)
     notes: str = ""
 
+    # Calibration
+    benchmark_confidence_band: str = "unknown"
+    expected_error_band: Optional[float] = None
+    benchmark_support_score: float = 0.0
+    evidence_count: int = 0
+    external_evidence_present: bool = False
+    calibrated_priority_note: str = ""
+
     # Context
     evidence_summary: Optional[dict] = None
     thermo_pressure_context: Optional[dict] = None
