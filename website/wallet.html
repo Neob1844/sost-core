@@ -565,7 +565,7 @@
         <h3>RPC Endpoint</h3>
         <div class="form-group">
           <label class="form-label">Node URL</label>
-          <input type="text" id="settingsRpc" class="form-input" value="https://explorer.sostcore.com/rpc">
+          <input type="text" id="settingsRpc" class="form-input" value="/rpc">
         </div>
         <div class="form-group">
           <label class="form-label">RPC Username</label>
@@ -870,7 +870,7 @@ async function loadWallet(password) {
 function getSettings() {
   const raw = localStorage.getItem(SETTINGS_KEY);
   if (raw) return JSON.parse(raw);
-  return { rpcUrl: 'https://explorer.sostcore.com/rpc', rpcUser: 'sost', rpcPass: '', lockMinutes: 5 };
+  return { rpcUrl: '/rpc', rpcUser: '', rpcPass: '', lockMinutes: 5 };
 }
 
 async function rpcCall(method, params = {}) {
