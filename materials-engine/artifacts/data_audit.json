@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-03-18T14:48:02.416756+00:00",
+  "total_materials": 250,
+  "by_source": {
+    "cod": 50,
+    "jarvis": 200
+  },
+  "by_crystal_system": {},
+  "coverage": {
+    "with_formula": 250,
+    "with_band_gap": 200,
+    "with_formation_energy": 200,
+    "with_bulk_modulus": 0,
+    "with_shear_modulus": 0,
+    "with_spacegroup": 200,
+    "with_valid_structure": 247
+  },
+  "ml_readiness": {
+    "band_gap_prediction": 200,
+    "formation_energy_prediction": 200
+  }
+}

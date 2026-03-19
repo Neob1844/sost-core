@@ -1,0 +1,211 @@
+{
+  "total": 3,
+  "candidates": [
+    {
+      "validation_id": "5ff3e46540a1",
+      "source_type": "custom_formula",
+      "source_ref": "",
+      "formula": "KCl",
+      "spacegroup": null,
+      "elements": [
+        "Cl",
+        "K"
+      ],
+      "candidate_id": null,
+      "dossier_ref": null,
+      "evaluation_ref": null,
+      "novelty_score": 0.5,
+      "exotic_score": 0.0,
+      "evaluation_score": 0.4,
+      "validation_priority_score": 0.27,
+      "validation_priority_band": "medium",
+      "current_status": "queued",
+      "status_reason_codes": [],
+      "created_at": "2026-03-19T07:03:15.153961+00:00",
+      "updated_at": "2026-03-19T07:03:15.153961+00:00",
+      "tags": [],
+      "notes": "",
+      "evidence_summary": null,
+      "thermo_pressure_context": null,
+      "validation_plan": [
+        {
+          "stage": 0,
+          "name": "dedup_rejection",
+          "method": "corpus_match + fingerprint_dedup",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "not duplicate, not exact_known",
+          "rejection_rule": "exact_known OR duplicate in queue",
+          "outputs": [
+            "status: rejected or queued"
+          ]
+        },
+        {
+          "stage": 1,
+          "name": "novelty_exotic_screen",
+          "method": "novelty_filter + exotic_score + plausibility",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "novelty_band != known, plausibility > 0.3",
+          "rejection_rule": "known duplicate OR plausibility < 0.2",
+          "outputs": [
+            "novelty_score",
+            "exotic_score",
+            "plausibility"
+          ]
+        },
+        {
+          "stage": 2,
+          "name": "proxy_screening",
+          "method": "T/P heuristic + application fit + lift confidence",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "evaluation_score > 0.3, no critical risk flags",
+          "rejection_rule": "predicted_unstable OR insufficient_structure",
+          "outputs": [
+            "evaluation_score",
+            "tp_risk",
+            "application_label"
+          ]
+        }
+      ]
+    },
+    {
+      "validation_id": "e21bb78e0c6a",
+      "source_type": "custom_formula",
+      "source_ref": "",
+      "formula": "A",
+      "spacegroup": null,
+      "elements": [
+        "Fe"
+      ],
+      "candidate_id": null,
+      "dossier_ref": null,
+      "evaluation_ref": null,
+      "novelty_score": 0.0,
+      "exotic_score": 0.0,
+      "evaluation_score": 0.0,
+      "validation_priority_score": 0.045,
+      "validation_priority_band": "low",
+      "current_status": "queued",
+      "status_reason_codes": [],
+      "created_at": "2026-03-19T07:03:15.230286+00:00",
+      "updated_at": "2026-03-19T07:03:15.230286+00:00",
+      "tags": [],
+      "notes": "",
+      "evidence_summary": null,
+      "thermo_pressure_context": null,
+      "validation_plan": [
+        {
+          "stage": 0,
+          "name": "dedup_rejection",
+          "method": "corpus_match + fingerprint_dedup",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "not duplicate, not exact_known",
+          "rejection_rule": "exact_known OR duplicate in queue",
+          "outputs": [
+            "status: rejected or queued"
+          ]
+        },
+        {
+          "stage": 1,
+          "name": "novelty_exotic_screen",
+          "method": "novelty_filter + exotic_score + plausibility",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "novelty_band != known, plausibility > 0.3",
+          "rejection_rule": "known duplicate OR plausibility < 0.2",
+          "outputs": [
+            "novelty_score",
+            "exotic_score",
+            "plausibility"
+          ]
+        },
+        {
+          "stage": 2,
+          "name": "proxy_screening",
+          "method": "T/P heuristic + application fit + lift confidence",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "evaluation_score > 0.3, no critical risk flags",
+          "rejection_rule": "predicted_unstable OR insufficient_structure",
+          "outputs": [
+            "evaluation_score",
+            "tp_risk",
+            "application_label"
+          ]
+        }
+      ]
+    },
+    {
+      "validation_id": "32c5dd3263e6",
+      "source_type": "custom_formula",
+      "source_ref": "",
+      "formula": "X",
+      "spacegroup": null,
+      "elements": [
+        "Fe"
+      ],
+      "candidate_id": null,
+      "dossier_ref": null,
+      "evaluation_ref": null,
+      "novelty_score": 0.0,
+      "exotic_score": 0.0,
+      "evaluation_score": 0.0,
+      "validation_priority_score": 0.045,
+      "validation_priority_band": "low",
+      "current_status": "queued",
+      "status_reason_codes": [],
+      "created_at": "2026-03-19T07:03:15.275336+00:00",
+      "updated_at": "2026-03-19T07:03:15.275336+00:00",
+      "tags": [],
+      "notes": "",
+      "evidence_summary": null,
+      "thermo_pressure_context": null,
+      "validation_plan": [
+        {
+          "stage": 0,
+          "name": "dedup_rejection",
+          "method": "corpus_match + fingerprint_dedup",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "not duplicate, not exact_known",
+          "rejection_rule": "exact_known OR duplicate in queue",
+          "outputs": [
+            "status: rejected or queued"
+          ]
+        },
+        {
+          "stage": 1,
+          "name": "novelty_exotic_screen",
+          "method": "novelty_filter + exotic_score + plausibility",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "novelty_band != known, plausibility > 0.3",
+          "rejection_rule": "known duplicate OR plausibility < 0.2",
+          "outputs": [
+            "novelty_score",
+            "exotic_score",
+            "plausibility"
+          ]
+        },
+        {
+          "stage": 2,
+          "name": "proxy_screening",
+          "method": "T/P heuristic + application fit + lift confidence",
+          "cost_class": "zero",
+          "compute_class": "cpu_light",
+          "acceptance_rule": "evaluation_score > 0.3, no critical risk flags",
+          "rejection_rule": "predicted_unstable OR insufficient_structure",
+          "outputs": [
+            "evaluation_score",
+            "tp_risk",
+            "application_label"
+          ]
+        }
+      ]
+    }
+  ],
+  "saved_at": "2026-03-19T07:04:15.401382+00:00"
+}

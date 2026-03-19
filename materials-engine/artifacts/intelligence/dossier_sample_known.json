@@ -1,0 +1,355 @@
+{
+  "dossier_id": "c1b95ebe5692",
+  "query_type": "corpus_material",
+  "query_material_id": null,
+  "query_candidate_id": null,
+  "query_formula": "TiO2",
+  "query_elements": [
+    "O",
+    "Ti"
+  ],
+  "query_spacegroup": 136,
+  "query_has_structure": false,
+  "existence_status": "near_known_match",
+  "confidence_note": "Material not found exactly but has near matches \u2014 moderate confidence. No crystal structure available \u2014 structural predictions not possible. Evidence: 0 known, 0 predicted, 11 unavailable properties.",
+  "known_matches": [],
+  "near_matches": [
+    {
+      "canonical_id": "c50f565cd05d90a0",
+      "formula": "TiO",
+      "similarity": 0.9653
+    },
+    {
+      "canonical_id": "9702cdb0d0923f4c",
+      "formula": "TiO",
+      "similarity": 0.9608
+    },
+    {
+      "canonical_id": "235d45ed1de33471",
+      "formula": "Ti2O3",
+      "similarity": 0.9604
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "similarity": 0.958
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "similarity": 0.9577
+    }
+  ],
+  "comparison_table": [
+    {
+      "canonical_id": "c50f565cd05d90a0",
+      "formula": "TiO",
+      "spacegroup": 187,
+      "similarity": 0.9653,
+      "band_gap": {
+        "value": 0.0,
+        "evidence": "known",
+        "note": ""
+      },
+      "formation_energy": {
+        "value": -2.71166,
+        "evidence": "known",
+        "note": ""
+      },
+      "bulk_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "shear_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "total_magnetization": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "structure_available": false,
+      "likely_application": "catalytic_candidate",
+      "evidence_level": "known"
+    },
+    {
+      "canonical_id": "9702cdb0d0923f4c",
+      "formula": "TiO",
+      "spacegroup": 194,
+      "similarity": 0.9608,
+      "band_gap": {
+        "value": 0.0,
+        "evidence": "known",
+        "note": ""
+      },
+      "formation_energy": {
+        "value": -2.6779,
+        "evidence": "known",
+        "note": ""
+      },
+      "bulk_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "shear_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "total_magnetization": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "structure_available": false,
+      "likely_application": "catalytic_candidate",
+      "evidence_level": "known"
+    },
+    {
+      "canonical_id": "235d45ed1de33471",
+      "formula": "Ti2O3",
+      "spacegroup": 167,
+      "similarity": 0.9604,
+      "band_gap": {
+        "value": 0.0,
+        "evidence": "known",
+        "note": ""
+      },
+      "formation_energy": {
+        "value": -3.13181,
+        "evidence": "known",
+        "note": ""
+      },
+      "bulk_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "shear_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "total_magnetization": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "structure_available": false,
+      "likely_application": "catalytic_candidate",
+      "evidence_level": "known"
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "spacegroup": 136,
+      "similarity": 0.958,
+      "band_gap": {
+        "value": 1.769,
+        "evidence": "known",
+        "note": ""
+      },
+      "formation_energy": {
+        "value": -3.24104,
+        "evidence": "known",
+        "note": ""
+      },
+      "bulk_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "shear_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "total_magnetization": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "structure_available": false,
+      "likely_application": "semiconductor",
+      "evidence_level": "known"
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "spacegroup": 136,
+      "similarity": 0.9577,
+      "band_gap": {
+        "value": 1.769,
+        "evidence": "known",
+        "note": ""
+      },
+      "formation_energy": {
+        "value": -3.24104,
+        "evidence": "known",
+        "note": ""
+      },
+      "bulk_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "shear_modulus": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "total_magnetization": {
+        "value": null,
+        "evidence": "unavailable",
+        "note": ""
+      },
+      "structure_available": false,
+      "likely_application": "semiconductor",
+      "evidence_level": "known"
+    }
+  ],
+  "known_properties": {},
+  "predicted_properties": {},
+  "proxy_properties": {
+    "element_diversity": {
+      "value": 2,
+      "evidence": "proxy",
+      "note": "Number of unique elements"
+    }
+  },
+  "unavailable_properties": {
+    "density": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "dielectric_constant": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "thermal_conductivity": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "elastic_tensor": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "phonon_stability": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "surface_energy": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Requires DFT/experimental data not yet integrated"
+    },
+    "band_gap": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Not available in corpus or prediction"
+    },
+    "formation_energy": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Not available in corpus or prediction"
+    },
+    "bulk_modulus": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Not available in corpus or prediction"
+    },
+    "shear_modulus": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Not available in corpus or prediction"
+    },
+    "total_magnetization": {
+      "value": null,
+      "evidence": "unavailable",
+      "note": "Not available in corpus or prediction"
+    }
+  },
+  "likely_applications": [
+    {
+      "label": "catalytic_candidate",
+      "score": 0.35,
+      "why": "Contains known catalytic elements: ['Ti']",
+      "evidence_level": "proxy"
+    }
+  ],
+  "novelty_score": 0.0347,
+  "exotic_score": 0.0,
+  "evaluation_score": 0.0,
+  "validation_priority": "low",
+  "validation_rationale": {
+    "priority": "low",
+    "priority_score": 0.1177,
+    "reason_codes": [
+      "already_known_in_corpus"
+    ],
+    "weights_used": {
+      "novelty": 0.15,
+      "exotic": 0.1,
+      "evaluation_score": 0.25,
+      "stability_signal": 0.2,
+      "structure_quality": 0.15,
+      "application_score": 0.15
+    },
+    "components": {
+      "novelty": 0.0347,
+      "exotic": 0.0,
+      "evaluation_score": 0.0,
+      "stability_signal": 0.3,
+      "structure_quality": 0.0,
+      "application_score": 0.35
+    }
+  },
+  "thermo_pressure_context": null,
+  "evidence_summary": {
+    "known_count": 0,
+    "predicted_count": 0,
+    "proxy_count": 1,
+    "unavailable_count": 11,
+    "known_fields": [],
+    "predicted_fields": [],
+    "proxy_fields": [
+      "element_diversity"
+    ],
+    "unavailable_fields": [
+      "density",
+      "dielectric_constant",
+      "thermal_conductivity",
+      "elastic_tensor",
+      "phonon_stability",
+      "surface_energy",
+      "band_gap",
+      "formation_energy",
+      "bulk_modulus",
+      "shear_modulus",
+      "total_magnetization"
+    ]
+  },
+  "method_notes": [
+    "Existence assessed relative to integrated corpus only.",
+    "Properties labeled 'known' come from JARVIS/MP/AFLOW/COD databases.",
+    "Properties labeled 'predicted' come from baseline GNN models (MAE ~0.23-0.45).",
+    "Properties labeled 'proxy' are heuristic estimates, NOT physics-based.",
+    "Application classification is rule-based, NOT experimentally validated.",
+    "Existence is assessed relative to the integrated corpus only, not all published scientific literature."
+  ],
+  "limitations": [
+    "Existence is assessed relative to the integrated corpus only, not all published scientific literature.",
+    "No crystal structure available \u2014 structural property predictions not possible. Density, elastic tensor, phonon stability unavailable.",
+    "11 properties are unavailable. Advanced calculations (DFT, phonon, EOS) not yet integrated."
+  ],
+  "generated_at": "2026-03-19T00:03:08.133976+00:00"
+}

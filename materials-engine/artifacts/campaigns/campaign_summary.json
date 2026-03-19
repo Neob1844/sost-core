@@ -1,0 +1,51 @@
+{
+  "campaigns": [
+    {
+      "name": "Exotic Materials Hunt",
+      "type": "exotic_hunt",
+      "pool_size": 5000,
+      "accepted": 40,
+      "watchlist": 4865,
+      "rejected": 95,
+      "shortlist_size": 20
+    },
+    {
+      "name": "Low Formation Energy Stable Materials",
+      "type": "stability_first",
+      "pool_size": 5000,
+      "accepted": 3525,
+      "watchlist": 0,
+      "rejected": 1475,
+      "shortlist_size": 20
+    },
+    {
+      "name": "Band Gap Window (1.5\u00b10.5 eV)",
+      "type": "band_gap_target",
+      "pool_size": 5000,
+      "accepted": 246,
+      "watchlist": 3146,
+      "rejected": 1608,
+      "shortlist_size": 20
+    },
+    {
+      "name": "T/P Sensitive Watchlist",
+      "type": "thermo_pressure_watchlist",
+      "pool_size": 5000,
+      "accepted": 3095,
+      "watchlist": 1598,
+      "rejected": 307,
+      "shortlist_size": 20
+    },
+    {
+      "name": "High Novelty Watchlist",
+      "type": "novelty_hunt",
+      "pool_size": 5000,
+      "accepted": 0,
+      "watchlist": 3257,
+      "rejected": 1743,
+      "shortlist_size": 20
+    }
+  ],
+  "corpus_size": 75993,
+  "pool_limit_used": 5000
+}

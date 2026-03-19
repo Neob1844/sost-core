@@ -1,0 +1,28 @@
+{
+  "name": "band_gap",
+  "exported_at": "2026-03-18T14:35:51.285595+00:00",
+  "seed": 42,
+  "dataset_hash": "1901c12f08ff720c",
+  "total": 200,
+  "train": 160,
+  "val": 20,
+  "test": 20,
+  "required_properties": [
+    "band_gap"
+  ],
+  "source_filter": null,
+  "fields": [
+    "canonical_id",
+    "formula",
+    "source",
+    "source_id",
+    "band_gap"
+  ],
+  "train_ratio": 0.8,
+  "val_ratio": 0.1,
+  "files": {
+    "train": "band_gap_train.csv",
+    "val": "band_gap_val.csv",
+    "test": "band_gap_test.csv"
+  }
+}
