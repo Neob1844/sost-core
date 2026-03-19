@@ -1,0 +1,42 @@
+[
+  {
+    "feedback_id": "baedaa582341",
+    "validation_id": null,
+    "candidate_id": null,
+    "formula": "NaCl",
+    "elements": [],
+    "spacegroup": null,
+    "target_property": "formation_energy",
+    "predicted_value": -4.0,
+    "prediction_model": null,
+    "confidence_before": "predicted",
+    "observed_result_type": "proxy_check",
+    "observed_value": -4.2,
+    "error": 0.2,
+    "evidence_after": "proxy",
+    "decision": "keep",
+    "reviewer": "api",
+    "source_note": "",
+    "timestamp": "2026-03-19T07:03:15.352216+00:00"
+  },
+  {
+    "feedback_id": "8c6b84bca840",
+    "validation_id": null,
+    "candidate_id": null,
+    "formula": "NaCl",
+    "elements": [],
+    "spacegroup": null,
+    "target_property": "formation_energy",
+    "predicted_value": -4.0,
+    "prediction_model": null,
+    "confidence_before": "predicted",
+    "observed_result_type": "proxy_check",
+    "observed_value": -4.2,
+    "error": 0.2,
+    "evidence_after": "proxy",
+    "decision": "keep",
+    "reviewer": "api",
+    "source_note": "",
+    "timestamp": "2026-03-19T07:04:15.535708+00:00"
+  }
+]

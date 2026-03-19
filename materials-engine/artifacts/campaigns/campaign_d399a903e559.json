@@ -1,0 +1,493 @@
+{
+  "campaign_id": "d399a903e559",
+  "spec": {
+    "name": "Exotic Materials Hunt",
+    "campaign_type": "exotic_hunt",
+    "objective": "Find the rarest and most unexplored materials in corpus",
+    "criteria": {
+      "w_novelty": 0.2,
+      "w_exotic": 0.45,
+      "w_stability": 0.2,
+      "w_property_fit": 0.15,
+      "max_formation_energy": 2.0
+    },
+    "temperature_K": null,
+    "pressure_GPa": null,
+    "top_k": 20,
+    "pool_limit": 5000
+  },
+  "created_at": "2026-03-18T22:02:01.987051+00:00",
+  "status": "completed",
+  "result_summary": {
+    "pool_size": 5000,
+    "evaluated": 5000,
+    "decisions": {
+      "accepted": 40,
+      "watchlist": 4865,
+      "rejected": 95
+    },
+    "shortlist_size": 20
+  },
+  "shortlist": [
+    {
+      "canonical_id": "27e5869dee13e72c",
+      "formula": "K4V5CuClO15",
+      "source": "jarvis",
+      "spacegroup": 75,
+      "band_gap": 0.023,
+      "formation_energy": -2.33311,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.2272,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3772
+      },
+      "screening_reliability": "not_available",
+      "rank": 1,
+      "decision": "accepted",
+      "reason_codes": [
+        "high_exoticity",
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "79b3f9b0da44c5b7",
+      "formula": "NaCaLaF6",
+      "source": "jarvis",
+      "spacegroup": 143,
+      "band_gap": 6.581,
+      "formation_energy": -4.01408,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.2066,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.368
+      },
+      "screening_reliability": "not_available",
+      "rank": 2,
+      "decision": "accepted",
+      "reason_codes": [
+        "high_exoticity",
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "e9c729c15bfd5617",
+      "formula": "LaF3",
+      "source": "jarvis",
+      "spacegroup": 165,
+      "band_gap": 6.245,
+      "formation_energy": -4.42304,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1955,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.363
+      },
+      "screening_reliability": "not_available",
+      "rank": 3,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "6f4fd868a6b2a9f7",
+      "formula": "B5Pb2ClO9",
+      "source": "jarvis",
+      "spacegroup": 34,
+      "band_gap": 3.636,
+      "formation_energy": -2.29716,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1952,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3628
+      },
+      "screening_reliability": "not_available",
+      "rank": 4,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "e6b056caf85477d1",
+      "formula": "UMo5O16",
+      "source": "jarvis",
+      "spacegroup": 3,
+      "band_gap": 0.0,
+      "formation_energy": -2.34384,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1943,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3624
+      },
+      "screening_reliability": "not_available",
+      "rank": 5,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "65170a725757bc28",
+      "formula": "EuCl3",
+      "source": "jarvis",
+      "spacegroup": 176,
+      "band_gap": 4.314,
+      "formation_energy": -2.39603,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1913,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3611
+      },
+      "screening_reliability": "not_available",
+      "rank": 6,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "a2d1a9ad2bc14b17",
+      "formula": "WOF4",
+      "source": "jarvis",
+      "spacegroup": 79,
+      "band_gap": 4.343,
+      "formation_energy": -2.74866,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.19,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3605
+      },
+      "screening_reliability": "not_available",
+      "rank": 7,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "5c904747fa1cdd22",
+      "formula": "Li2B4O7",
+      "source": "jarvis",
+      "spacegroup": 110,
+      "band_gap": 6.158,
+      "formation_energy": -2.60322,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1897,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3604
+      },
+      "screening_reliability": "not_available",
+      "rank": 8,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "5ab59c2812407d00",
+      "formula": "Nd2NCl3",
+      "source": "jarvis",
+      "spacegroup": 60,
+      "band_gap": 3.369,
+      "formation_energy": -2.23925,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1902,
+        "stability": 0.9979,
+        "property_fit": 0.5,
+        "shortlist": 0.3602
+      },
+      "screening_reliability": "not_available",
+      "rank": 9,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "bf5100dd591e1c5e",
+      "formula": "RbCrF5",
+      "source": "jarvis",
+      "spacegroup": 26,
+      "band_gap": 0.0,
+      "formation_energy": -2.80415,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1893,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3602
+      },
+      "screening_reliability": "not_available",
+      "rank": 10,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "b412a13459fed88d",
+      "formula": "Ba2VSi2O8",
+      "source": "jarvis",
+      "spacegroup": 100,
+      "band_gap": 0.96,
+      "formation_energy": -3.04411,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1892,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3601
+      },
+      "screening_reliability": "not_available",
+      "rank": 11,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "b594b71b114e8394",
+      "formula": "Nd2MoO6",
+      "source": "jarvis",
+      "spacegroup": 142,
+      "band_gap": 2.464,
+      "formation_energy": -3.11135,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1859,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3587
+      },
+      "screening_reliability": "not_available",
+      "rank": 12,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "e276ba95a4fb1bc0",
+      "formula": "KTeOF3",
+      "source": "jarvis",
+      "spacegroup": 86,
+      "band_gap": 4.139,
+      "formation_energy": -2.28866,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1813,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3566
+      },
+      "screening_reliability": "not_available",
+      "rank": 13,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "ef9c87c7e6f0c7cc",
+      "formula": "LiSmAlF6",
+      "source": "jarvis",
+      "spacegroup": 182,
+      "band_gap": 0.0,
+      "formation_energy": -3.50227,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.181,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3565
+      },
+      "screening_reliability": "not_available",
+      "rank": 14,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "1da5358888989154",
+      "formula": "La2NiO4",
+      "source": "jarvis",
+      "spacegroup": 138,
+      "band_gap": 0.0,
+      "formation_energy": -2.87919,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1906,
+        "stability": 0.9758,
+        "property_fit": 0.5,
+        "shortlist": 0.3559
+      },
+      "screening_reliability": "not_available",
+      "rank": 15,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "eab1484048e6baff",
+      "formula": "Sr3Hf2O7",
+      "source": "jarvis",
+      "spacegroup": 68,
+      "band_gap": 4.346,
+      "formation_energy": -3.5498,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1792,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3556
+      },
+      "screening_reliability": "not_available",
+      "rank": 16,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "a4e7d5664c298298",
+      "formula": "EuTaO4",
+      "source": "jarvis",
+      "spacegroup": 13,
+      "band_gap": 4.039,
+      "formation_energy": -3.49592,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1789,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3555
+      },
+      "screening_reliability": "not_available",
+      "rank": 17,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "7356ed8f8723c673",
+      "formula": "Ti3Bi4O12",
+      "source": "jarvis",
+      "spacegroup": 41,
+      "band_gap": 2.466,
+      "formation_energy": -2.31637,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1787,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3554
+      },
+      "screening_reliability": "not_available",
+      "rank": 18,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "99e1ee416520cde3",
+      "formula": "BaFeSi4O10",
+      "source": "jarvis",
+      "spacegroup": 130,
+      "band_gap": 1.074,
+      "formation_energy": -2.74123,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1774,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3548
+      },
+      "screening_reliability": "not_available",
+      "rank": 19,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    },
+    {
+      "canonical_id": "61ecdd4108477a4b",
+      "formula": "CaV4Ag2O12",
+      "source": "jarvis",
+      "spacegroup": 125,
+      "band_gap": 1.577,
+      "formation_energy": -2.27493,
+      "scores": {
+        "novelty": 0.0,
+        "exotic": 0.1766,
+        "stability": 1.0,
+        "property_fit": 0.5,
+        "shortlist": 0.3544
+      },
+      "screening_reliability": "not_available",
+      "rank": 20,
+      "decision": "accepted",
+      "reason_codes": [
+        "low_formation_energy",
+        "insufficient_structure_signal"
+      ]
+    }
+  ],
+  "criteria_used": {
+    "require_valid_structure": false,
+    "require_properties": [
+      "formation_energy"
+    ],
+    "max_formation_energy": 2.0,
+    "novelty_min": 0.0,
+    "exotic_min": 0.0,
+    "band_gap_target": null,
+    "band_gap_tolerance": 2.0,
+    "w_novelty": 0.2,
+    "w_exotic": 0.45,
+    "w_stability": 0.2,
+    "w_property_fit": 0.15,
+    "top_k": 20
+  },
+  "conditions_used": null,
+  "disclaimer": "Shortlist scores are relative to the current ingested corpus. T/P screening uses heuristic proxies, not physics simulation. Exotic/novel = rare/unexplored, not necessarily useful."
+}

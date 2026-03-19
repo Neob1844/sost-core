@@ -1,0 +1,3351 @@
+{
+  "run_id": "6bd8716e0edb",
+  "spec": {
+    "strategy": "element_substitution",
+    "max_parents": 50,
+    "max_candidates": 100,
+    "random_seed": 42,
+    "allowed_elements": null,
+    "excluded_elements": null,
+    "max_n_elements": 5,
+    "require_spacegroup": false,
+    "novelty_threshold": 0.0,
+    "formation_energy_max": null,
+    "band_gap_min": null,
+    "band_gap_max": null,
+    "temperature_K": null,
+    "pressure_GPa": null,
+    "pool_limit": 2000
+  },
+  "created_at": "2026-03-18T22:46:37.504626+00:00",
+  "summary": {
+    "parents_used": 50,
+    "raw_generated": 100,
+    "after_sanity": 100,
+    "after_dedup": 100,
+    "final_count": 100,
+    "decisions": {
+      "accepted_novel": 21,
+      "accepted_exotic": 7,
+      "rejected_near_known": 70,
+      "rejected_known": 2
+    }
+  },
+  "candidates": [
+    {
+      "candidate_id": "2223c4176519",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4P6Te19",
+      "elements": [
+        "Ca",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.2902,
+        "exotic": 0.3026,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5895
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "677e3b0956e8",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HeS2Si",
+      "elements": [
+        "He",
+        "S",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "scores": {
+        "novelty": 0.3292,
+        "exotic": 0.3728,
+        "plausibility": 0.8833,
+        "stability_prior": 0.8325,
+        "generation": 0.5771
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2fb004caf7ef",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4O19P6",
+      "elements": [
+        "Be",
+        "O",
+        "P"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.2181,
+        "exotic": 0.3173,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5671
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "8347b82ca4d2",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Br11Ni6O",
+      "elements": [
+        "Br",
+        "Ni",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "scores": {
+        "novelty": 0.308,
+        "exotic": 0.3125,
+        "plausibility": 0.95,
+        "stability_prior": 0.7335,
+        "generation": 0.5545
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "81447c6196e9",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GeHeO2",
+      "elements": [
+        "Ge",
+        "He",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "scores": {
+        "novelty": 0.2929,
+        "exotic": 0.3035,
+        "plausibility": 0.8833,
+        "stability_prior": 0.8325,
+        "generation": 0.5506
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f1fcfbafffae",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Ni6Se",
+      "elements": [
+        "F",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "scores": {
+        "novelty": 0.2816,
+        "exotic": 0.3,
+        "plausibility": 0.95,
+        "stability_prior": 0.7335,
+        "generation": 0.5428
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "01380f389a56",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FFeS",
+      "elements": [
+        "F",
+        "Fe",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "scores": {
+        "novelty": 0.2585,
+        "exotic": 0.2988,
+        "plausibility": 0.95,
+        "stability_prior": 0.7402,
+        "generation": 0.5358
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "98b72d7a9d4b",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Bi6Ca4O19",
+      "elements": [
+        "Bi",
+        "Ca",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.1677,
+        "exotic": 0.193,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5246
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f3e8b2bfbc5f",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Nb2Ni4Se9",
+      "elements": [
+        "Nb",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "scores": {
+        "novelty": 0.2452,
+        "exotic": 0.2463,
+        "plausibility": 0.95,
+        "stability_prior": 0.733,
+        "generation": 0.5192
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2a86d8f37e15",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "ClFeO",
+      "elements": [
+        "Cl",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "scores": {
+        "novelty": 0.2136,
+        "exotic": 0.2842,
+        "plausibility": 0.95,
+        "stability_prior": 0.7402,
+        "generation": 0.5171
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "da8432a4416f",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As4BiC4RbS4",
+      "elements": [
+        "As",
+        "Bi",
+        "C",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.4151,
+        "exotic": 0.4357,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.5165
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "59f25d0a9ed9",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaS3Te13",
+      "elements": [
+        "B",
+        "Ba",
+        "S",
+        "Te"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "scores": {
+        "novelty": 0.2762,
+        "exotic": 0.2782,
+        "plausibility": 0.8,
+        "stability_prior": 0.7834,
+        "generation": 0.509
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "956f5b940c32",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I4MgSr",
+      "elements": [
+        "I",
+        "Mg",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.2132,
+        "exotic": 0.2329,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.5069
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "b38e4a7d05d1",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeCaI4",
+      "elements": [
+        "Be",
+        "Ca",
+        "I"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.2098,
+        "exotic": 0.2177,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.5027
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "321a5a8f950d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4N4RbSe4",
+      "elements": [
+        "Bi",
+        "C",
+        "N",
+        "Rb",
+        "Se"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.3838,
+        "exotic": 0.4201,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.5025
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "702ce41e2c0d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "C4N4RbS4",
+      "elements": [
+        "C",
+        "N",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.3797,
+        "exotic": 0.3862,
+        "plausibility": 0.8,
+        "stability_prior": 0.408,
+        "generation": 0.4917
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5a329e613b37",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4LiN4S4",
+      "elements": [
+        "Bi",
+        "C",
+        "Li",
+        "N",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.364,
+        "exotic": 0.3844,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.4884
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "55bb8a037cd0",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Co4Nb2O9",
+      "elements": [
+        "Co",
+        "Nb",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "scores": {
+        "novelty": 0.1824,
+        "exotic": 0.1988,
+        "plausibility": 0.95,
+        "stability_prior": 0.733,
+        "generation": 0.4877
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "729c0e77a5c6",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaF4Sr",
+      "elements": [
+        "Ca",
+        "F",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.1629,
+        "exotic": 0.207,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.4841
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f4b3ff196634",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CaO13S3",
+      "elements": [
+        "B",
+        "Ca",
+        "O",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "scores": {
+        "novelty": 0.2173,
+        "exotic": 0.2297,
+        "plausibility": 0.8,
+        "stability_prior": 0.7834,
+        "generation": 0.4787
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5eb2917a75c4",
+      "parent_ids": [
+        "13c8919c4bf1c7a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be6CZr",
+      "elements": [
+        "Be",
+        "C",
+        "Zr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 38,
+      "scores": {
+        "novelty": 0.3206,
+        "exotic": 0.332,
+        "plausibility": 0.8833,
+        "stability_prior": 0.3664,
+        "generation": 0.4728
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "b5d5dd99ac81",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Fe6O",
+      "elements": [
+        "F",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "scores": {
+        "novelty": 0.1576,
+        "exotic": 0.1596,
+        "plausibility": 0.95,
+        "stability_prior": 0.7335,
+        "generation": 0.4713
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f6d9f4794b81",
+      "parent_ids": [
+        "4cf712981b175047"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Pb2Ru3Te2",
+      "elements": [
+        "Pb",
+        "Ru",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 59,
+      "scores": {
+        "novelty": 0.2692,
+        "exotic": 0.2778,
+        "plausibility": 0.8833,
+        "stability_prior": 0.4703,
+        "generation": 0.4647
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5502c54d193e",
+      "parent_ids": [
+        "13c8919c4bf1c7a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CMg6Mo",
+      "elements": [
+        "C",
+        "Mg",
+        "Mo"
+      ],
+      "n_elements": 3,
+      "spacegroup": 38,
+      "scores": {
+        "novelty": 0.2618,
+        "exotic": 0.3055,
+        "plausibility": 0.8833,
+        "stability_prior": 0.3664,
+        "generation": 0.4468
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e0bc2afe92bd",
+      "parent_ids": [
+        "4cf712981b175047"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "O2Pb2Pd3",
+      "elements": [
+        "O",
+        "Pb",
+        "Pd"
+      ],
+      "n_elements": 3,
+      "spacegroup": 59,
+      "scores": {
+        "novelty": 0.1687,
+        "exotic": 0.2203,
+        "plausibility": 0.8833,
+        "stability_prior": 0.4703,
+        "generation": 0.418
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "a7f057be8327",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2NbOs",
+      "elements": [
+        "Be",
+        "Nb",
+        "Os"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "scores": {
+        "novelty": 0.1541,
+        "exotic": 0.161,
+        "plausibility": 0.95,
+        "stability_prior": 0.4433,
+        "generation": 0.4123
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "6859e999ab8b",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba2NbPt",
+      "elements": [
+        "Ba",
+        "Nb",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "scores": {
+        "novelty": 0.1527,
+        "exotic": 0.1579,
+        "plausibility": 0.95,
+        "stability_prior": 0.4433,
+        "generation": 0.4112
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "1f87fa24430a",
+      "parent_ids": [
+        "3ebf9a7fbed1e926"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CLaMn2",
+      "elements": [
+        "B",
+        "C",
+        "La",
+        "Mn"
+      ],
+      "n_elements": 4,
+      "spacegroup": 139,
+      "scores": {
+        "novelty": 0.1683,
+        "exotic": 0.1693,
+        "plausibility": 0.75,
+        "stability_prior": 0.4996,
+        "generation": 0.3802
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e740b92bdea3",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2MoPt",
+      "elements": [
+        "Be",
+        "Mo",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "scores": {
+        "novelty": 0.1438,
+        "exotic": 0.155,
+        "plausibility": 0.0,
+        "stability_prior": 0.4433,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "64b5eea3c8ef",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "IrLaSi",
+      "elements": [
+        "Ir",
+        "La",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "scores": {
+        "novelty": 0.0867,
+        "exotic": 0.0982,
+        "plausibility": 0.0,
+        "stability_prior": 0.589,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "cd7f537a9967",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AuCeSi",
+      "elements": [
+        "Au",
+        "Ce",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "scores": {
+        "novelty": 0.1241,
+        "exotic": 0.1301,
+        "plausibility": 0.0,
+        "stability_prior": 0.589,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "49c48f81be26",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CeGeIr",
+      "elements": [
+        "Ce",
+        "Ge",
+        "Ir"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "scores": {
+        "novelty": 0.1149,
+        "exotic": 0.1253,
+        "plausibility": 0.0,
+        "stability_prior": 0.589,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "37b4fd415a60",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Mg4TaY",
+      "elements": [
+        "Mg",
+        "Ta",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1161,
+        "exotic": 0.1278,
+        "plausibility": 0.0,
+        "stability_prior": 0.182,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2ea6fbf6d549",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4WY",
+      "elements": [
+        "Ba",
+        "W",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1201,
+        "exotic": 0.1274,
+        "plausibility": 0.0,
+        "stability_prior": 0.182,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "b96462c7dabd",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4TaZr",
+      "elements": [
+        "Ba",
+        "Ta",
+        "Zr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1057,
+        "exotic": 0.1169,
+        "plausibility": 0.0,
+        "stability_prior": 0.182,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "762c28d27c9f",
+      "parent_ids": [
+        "554fdf364d472bea"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4CdHf",
+      "elements": [
+        "Ca",
+        "Cd",
+        "Hf"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1159,
+        "exotic": 0.1292,
+        "plausibility": 0.0,
+        "stability_prior": 0.2452,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "833a67352881",
+      "parent_ids": [
+        "554fdf364d472bea"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4CdW",
+      "elements": [
+        "Ba",
+        "Cd",
+        "W"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1201,
+        "exotic": 0.1259,
+        "plausibility": 0.0,
+        "stability_prior": 0.2452,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "05aebc7d3d4a",
+      "parent_ids": [
+        "589cb37be12a05de"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Cl2Pb",
+      "elements": [
+        "Cl",
+        "Pb"
+      ],
+      "n_elements": 2,
+      "spacegroup": 166,
+      "scores": {
+        "novelty": 0.0849,
+        "exotic": 0.1316,
+        "plausibility": 0.0,
+        "stability_prior": 0.5317,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "55687961c211",
+      "parent_ids": [
+        "70a55756914df272"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4NbTe",
+      "elements": [
+        "Ca",
+        "Nb",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0983,
+        "exotic": 0.1079,
+        "plausibility": 0.0,
+        "stability_prior": 0.2835,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "17c3938eeb7a",
+      "parent_ids": [
+        "70a55756914df272"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4TeY",
+      "elements": [
+        "Ba",
+        "Te",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0936,
+        "exotic": 0.0956,
+        "plausibility": 0.0,
+        "stability_prior": 0.2835,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "0a3b9c6fa3c0",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FMnO",
+      "elements": [
+        "F",
+        "Mn",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "scores": {
+        "novelty": 0.1226,
+        "exotic": 0.141,
+        "plausibility": 0.0,
+        "stability_prior": 0.7402,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "30a30579b961",
+      "parent_ids": [
+        "95dd4b8fc88a4bc9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "LaSe",
+      "elements": [
+        "La",
+        "Se"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.0288,
+        "exotic": 0.0542,
+        "plausibility": 0.0,
+        "stability_prior": 0.7743,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "bed082db3899",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiMg4Nb",
+      "elements": [
+        "Bi",
+        "Mg",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1191,
+        "exotic": 0.128,
+        "plausibility": 0.0,
+        "stability_prior": 0.2683,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "52b8de973014",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AsBa4Nb",
+      "elements": [
+        "As",
+        "Ba",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.107,
+        "exotic": 0.1137,
+        "plausibility": 0.0,
+        "stability_prior": 0.2683,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f4e7e87dabf9",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BiMo",
+      "elements": [
+        "Ba",
+        "Bi",
+        "Mo"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0985,
+        "exotic": 0.1129,
+        "plausibility": 0.0,
+        "stability_prior": 0.2683,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e0688899fa1f",
+      "parent_ids": [
+        "972a51e45d69bc85"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "LuRh4",
+      "elements": [
+        "Lu",
+        "Rh"
+      ],
+      "n_elements": 2,
+      "spacegroup": 87,
+      "scores": {
+        "novelty": 0.1322,
+        "exotic": 0.1643,
+        "plausibility": 0.0,
+        "stability_prior": 0.451,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "89267875fd02",
+      "parent_ids": [
+        "972a51e45d69bc85"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ag4Dy",
+      "elements": [
+        "Ag",
+        "Dy"
+      ],
+      "n_elements": 2,
+      "spacegroup": 87,
+      "scores": {
+        "novelty": 0.1273,
+        "exotic": 0.1487,
+        "plausibility": 0.0,
+        "stability_prior": 0.451,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "323a57f5a433",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I2N6Ni",
+      "elements": [
+        "I",
+        "N",
+        "Ni"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.1375,
+        "exotic": 0.145,
+        "plausibility": 0.0,
+        "stability_prior": 0.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "c3fd9f0a98d7",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As6Cl2Ni",
+      "elements": [
+        "As",
+        "Cl",
+        "Ni"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.1116,
+        "exotic": 0.1313,
+        "plausibility": 0.0,
+        "stability_prior": 0.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "df382bdb1a0e",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Cl2MnN6",
+      "elements": [
+        "Cl",
+        "Mn",
+        "N"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.118,
+        "exotic": 0.1226,
+        "plausibility": 0.0,
+        "stability_prior": 0.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "1476036db372",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4HfSe",
+      "elements": [
+        "Be",
+        "Hf",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1236,
+        "exotic": 0.135,
+        "plausibility": 0.0,
+        "stability_prior": 0.2922,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "6171c0ff3b85",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4ReSe",
+      "elements": [
+        "Ba",
+        "Re",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0939,
+        "exotic": 0.0977,
+        "plausibility": 0.0,
+        "stability_prior": 0.2922,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "c44155ac3487",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4HfO",
+      "elements": [
+        "Ba",
+        "Hf",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0576,
+        "exotic": 0.06,
+        "plausibility": 0.0,
+        "stability_prior": 0.2922,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "904ebddeef1c",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeGa",
+      "elements": [
+        "Be",
+        "Ga"
+      ],
+      "n_elements": 2,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.118,
+        "exotic": 0.1311,
+        "plausibility": 0.0,
+        "stability_prior": 0.2508,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "044b0bc33b8a",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4GaMg",
+      "elements": [
+        "Ba",
+        "Ga",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0798,
+        "exotic": 0.112,
+        "plausibility": 0.0,
+        "stability_prior": 0.2508,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5d7d3f4bb9df",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BeTl",
+      "elements": [
+        "Ba",
+        "Be",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1144,
+        "exotic": 0.1336,
+        "plausibility": 0.0,
+        "stability_prior": 0.2508,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "4d81c3b0d19a",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaO13",
+      "elements": [
+        "B",
+        "Ba",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 62,
+      "scores": {
+        "novelty": 0.0948,
+        "exotic": 0.1598,
+        "plausibility": 0.0,
+        "stability_prior": 0.7834,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "3e81d156160b",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Se11SrV6",
+      "elements": [
+        "Se",
+        "Sr",
+        "V"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "scores": {
+        "novelty": 0.1003,
+        "exotic": 0.1259,
+        "plausibility": 0.0,
+        "stability_prior": 0.8431,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "a5b84f762e64",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeO11V6",
+      "elements": [
+        "Be",
+        "O",
+        "V"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "scores": {
+        "novelty": 0.0954,
+        "exotic": 0.1017,
+        "plausibility": 0.0,
+        "stability_prior": 0.8431,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "a0fac913c423",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "O11Sc6Sr",
+      "elements": [
+        "O",
+        "Sc",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "scores": {
+        "novelty": 0.0203,
+        "exotic": 0.0678,
+        "plausibility": 0.0,
+        "stability_prior": 0.8431,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "06fc2222a25e",
+      "parent_ids": [
+        "3f34be2acaa04ec8"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeCdSr",
+      "elements": [
+        "Be",
+        "Cd",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0947,
+        "exotic": 0.1126,
+        "plausibility": 0.0,
+        "stability_prior": 0.3495,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "85c0cb499615",
+      "parent_ids": [
+        "3f34be2acaa04ec8"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaCaCd",
+      "elements": [
+        "Ba",
+        "Ca",
+        "Cd"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0995,
+        "exotic": 0.1199,
+        "plausibility": 0.0,
+        "stability_prior": 0.3495,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "d889a8680a3d",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaCo4Ru",
+      "elements": [
+        "Ba",
+        "Co",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1246,
+        "exotic": 0.1311,
+        "plausibility": 0.0,
+        "stability_prior": 0.3531,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5a5445039eb1",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeMn4Ru",
+      "elements": [
+        "Be",
+        "Mn",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0839,
+        "exotic": 0.1222,
+        "plausibility": 0.0,
+        "stability_prior": 0.3531,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "ec109ed3628b",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AgBeCo4",
+      "elements": [
+        "Ag",
+        "Be",
+        "Co"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1258,
+        "exotic": 0.1352,
+        "plausibility": 0.0,
+        "stability_prior": 0.3531,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "dce16e1fa7ff",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4BiTe",
+      "elements": [
+        "Be",
+        "Bi",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1155,
+        "exotic": 0.1319,
+        "plausibility": 0.0,
+        "stability_prior": 0.4602,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "b01655e3887d",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4PTe",
+      "elements": [
+        "Ba",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0955,
+        "exotic": 0.0997,
+        "plausibility": 0.0,
+        "stability_prior": 0.4602,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "6864abcaebd5",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BiSe",
+      "elements": [
+        "Ba",
+        "Bi",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0768,
+        "exotic": 0.0876,
+        "plausibility": 0.0,
+        "stability_prior": 0.4602,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "ae973fb24092",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaIn4Pt",
+      "elements": [
+        "Ca",
+        "In",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1093,
+        "exotic": 0.1176,
+        "plausibility": 0.0,
+        "stability_prior": 0.2567,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "ed60b20a5777",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Al4BePt",
+      "elements": [
+        "Al",
+        "Be",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1089,
+        "exotic": 0.116,
+        "plausibility": 0.0,
+        "stability_prior": 0.2567,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "c2291e689deb",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AuBeIn4",
+      "elements": [
+        "Au",
+        "Be",
+        "In"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.126,
+        "exotic": 0.1343,
+        "plausibility": 0.0,
+        "stability_prior": 0.2567,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "ae6a750257ac",
+      "parent_ids": [
+        "76bbe050cbe26dd3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FeI2",
+      "elements": [
+        "Fe",
+        "I"
+      ],
+      "n_elements": 2,
+      "spacegroup": 136,
+      "scores": {
+        "novelty": 0.1073,
+        "exotic": 0.1886,
+        "plausibility": 0.0,
+        "stability_prior": 0.7229,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "9a1dbd72c6d8",
+      "parent_ids": [
+        "76bbe050cbe26dd3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F2Mn",
+      "elements": [
+        "F",
+        "Mn"
+      ],
+      "n_elements": 2,
+      "spacegroup": 136,
+      "scores": {
+        "novelty": 0.0448,
+        "exotic": 0.0525,
+        "plausibility": 0.0,
+        "stability_prior": 0.7229,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5f04fca55e82",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ni4O9Y2",
+      "elements": [
+        "Ni",
+        "O",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "scores": {
+        "novelty": 0.1483,
+        "exotic": 0.1785,
+        "plausibility": 0.0,
+        "stability_prior": 0.733,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "88d17f6d67e9",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HfKMg",
+      "elements": [
+        "Hf",
+        "K",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1108,
+        "exotic": 0.1169,
+        "plausibility": 0.0,
+        "stability_prior": 0.0992,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "04a3cacf7d40",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaKW",
+      "elements": [
+        "Ba",
+        "K",
+        "W"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1157,
+        "exotic": 0.1225,
+        "plausibility": 0.0,
+        "stability_prior": 0.0992,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "3f378929d850",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaHfLi",
+      "elements": [
+        "Ba",
+        "Hf",
+        "Li"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.105,
+        "exotic": 0.1208,
+        "plausibility": 0.0,
+        "stability_prior": 0.0992,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "d144b6ea5a85",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "MgNdSi2",
+      "elements": [
+        "Mg",
+        "Nd",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "scores": {
+        "novelty": 0.1419,
+        "exotic": 0.1482,
+        "plausibility": 0.0,
+        "stability_prior": 0.5199,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "372f78e75f3f",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaLaSi2",
+      "elements": [
+        "Ba",
+        "La",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "scores": {
+        "novelty": 0.1489,
+        "exotic": 0.154,
+        "plausibility": 0.0,
+        "stability_prior": 0.5199,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "3f000e6b9ea5",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ge2LaMg",
+      "elements": [
+        "Ge",
+        "La",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "scores": {
+        "novelty": 0.1447,
+        "exotic": 0.1493,
+        "plausibility": 0.0,
+        "stability_prior": 0.5199,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2c26f4314c72",
+      "parent_ids": [
+        "3ebf9a7fbed1e926"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CNi2Pr",
+      "elements": [
+        "B",
+        "C",
+        "Ni",
+        "Pr"
+      ],
+      "n_elements": 4,
+      "spacegroup": 139,
+      "scores": {
+        "novelty": 0.141,
+        "exotic": 0.1688,
+        "plausibility": 0.0,
+        "stability_prior": 0.4996,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "6fe9bf4f4c13",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CuMg2Nb",
+      "elements": [
+        "Cu",
+        "Mg",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.1191,
+        "exotic": 0.126,
+        "plausibility": 0.0,
+        "stability_prior": 0.3659,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "442ff9bdaac3",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2NbZn",
+      "elements": [
+        "Be",
+        "Nb",
+        "Zn"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.113,
+        "exotic": 0.1289,
+        "plausibility": 0.0,
+        "stability_prior": 0.3659,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "1a7375cc2307",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2CuY",
+      "elements": [
+        "Be",
+        "Cu",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0911,
+        "exotic": 0.1151,
+        "plausibility": 0.0,
+        "stability_prior": 0.3659,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "68a15d9ed632",
+      "parent_ids": [
+        "58c8b39b5d9dbfb9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FNa",
+      "elements": [
+        "F",
+        "Na"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.0475,
+        "exotic": 0.0668,
+        "plausibility": 0.0,
+        "stability_prior": 0.6716,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "fed11e99b7a6",
+      "parent_ids": [
+        "58c8b39b5d9dbfb9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "IK",
+      "elements": [
+        "I",
+        "K"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.0629,
+        "exotic": 0.0882,
+        "plausibility": 0.0,
+        "stability_prior": 0.6716,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "11db3e494751",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CeO3Tl",
+      "elements": [
+        "Ce",
+        "O",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "scores": {
+        "novelty": 0.0709,
+        "exotic": 0.0846,
+        "plausibility": 0.0,
+        "stability_prior": 1.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "95ada2fa31a7",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AlNdO3",
+      "elements": [
+        "Al",
+        "Nd",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "scores": {
+        "novelty": 0.0447,
+        "exotic": 0.0745,
+        "plausibility": 0.0,
+        "stability_prior": 1.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e46a4ea978c6",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AlCeS3",
+      "elements": [
+        "Al",
+        "Ce",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "scores": {
+        "novelty": 0.0843,
+        "exotic": 0.0861,
+        "plausibility": 0.0,
+        "stability_prior": 1.0,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f700c1d43842",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FeGaTi2",
+      "elements": [
+        "Fe",
+        "Ga",
+        "Ti"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0754,
+        "exotic": 0.0864,
+        "plausibility": 0.0,
+        "stability_prior": 0.4532,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "c8f32a6cdaab",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CoTi2Tl",
+      "elements": [
+        "Co",
+        "Ti",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.123,
+        "exotic": 0.1238,
+        "plausibility": 0.0,
+        "stability_prior": 0.4532,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e431f0778c17",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CoCr2Ga",
+      "elements": [
+        "Co",
+        "Cr",
+        "Ga"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "scores": {
+        "novelty": 0.0841,
+        "exotic": 0.1223,
+        "plausibility": 0.0,
+        "stability_prior": 0.4532,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "23aad3107ac8",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "RuTlU",
+      "elements": [
+        "Ru",
+        "Tl",
+        "U"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "scores": {
+        "novelty": 0.1231,
+        "exotic": 0.1437,
+        "plausibility": 0.0,
+        "stability_prior": 0.4715,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "d0c31a9f94be",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GaPdU",
+      "elements": [
+        "Ga",
+        "Pd",
+        "U"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "scores": {
+        "novelty": 0.0962,
+        "exotic": 0.1113,
+        "plausibility": 0.0,
+        "stability_prior": 0.4715,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "e36805f95054",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GaNpRu",
+      "elements": [
+        "Ga",
+        "Np",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "scores": {
+        "novelty": 0.13,
+        "exotic": 0.1395,
+        "plausibility": 0.0,
+        "stability_prior": 0.4715,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "1b29282d0ab3",
+      "parent_ids": [
+        "4e12b2eb28d90b7f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "MnS2",
+      "elements": [
+        "Mn",
+        "S"
+      ],
+      "n_elements": 2,
+      "spacegroup": 194,
+      "scores": {
+        "novelty": 0.066,
+        "exotic": 0.0705,
+        "plausibility": 0.0,
+        "stability_prior": 0.4247,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "72a88940d36d",
+      "parent_ids": [
+        "4e12b2eb28d90b7f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "NiTe2",
+      "elements": [
+        "Ni",
+        "Te"
+      ],
+      "n_elements": 2,
+      "spacegroup": 194,
+      "scores": {
+        "novelty": 0.0842,
+        "exotic": 0.0928,
+        "plausibility": 0.0,
+        "stability_prior": 0.4247,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "afb115e56fda",
+      "parent_ids": [
+        "00305e122db62583"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B6Fe23",
+      "elements": [
+        "B",
+        "Fe"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "scores": {
+        "novelty": 0.094,
+        "exotic": 0.128,
+        "plausibility": 0.0,
+        "stability_prior": 0.4375,
+        "generation": 0.0
+      },
+      "decision": "rejected_near_known",
+      "reason_codes": [
+        "corpus_near_duplicate"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    }
+  ],
+  "top_candidates": [
+    {
+      "candidate_id": "2223c4176519",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4P6Te19",
+      "elements": [
+        "Ca",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.2902,
+        "exotic": 0.3026,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5895
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "677e3b0956e8",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HeS2Si",
+      "elements": [
+        "He",
+        "S",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "scores": {
+        "novelty": 0.3292,
+        "exotic": 0.3728,
+        "plausibility": 0.8833,
+        "stability_prior": 0.8325,
+        "generation": 0.5771
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2fb004caf7ef",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4O19P6",
+      "elements": [
+        "Be",
+        "O",
+        "P"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.2181,
+        "exotic": 0.3173,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5671
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "8347b82ca4d2",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Br11Ni6O",
+      "elements": [
+        "Br",
+        "Ni",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "scores": {
+        "novelty": 0.308,
+        "exotic": 0.3125,
+        "plausibility": 0.95,
+        "stability_prior": 0.7335,
+        "generation": 0.5545
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "81447c6196e9",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GeHeO2",
+      "elements": [
+        "Ge",
+        "He",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "scores": {
+        "novelty": 0.2929,
+        "exotic": 0.3035,
+        "plausibility": 0.8833,
+        "stability_prior": 0.8325,
+        "generation": 0.5506
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f1fcfbafffae",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Ni6Se",
+      "elements": [
+        "F",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "scores": {
+        "novelty": 0.2816,
+        "exotic": 0.3,
+        "plausibility": 0.95,
+        "stability_prior": 0.7335,
+        "generation": 0.5428
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "01380f389a56",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FFeS",
+      "elements": [
+        "F",
+        "Fe",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "scores": {
+        "novelty": 0.2585,
+        "exotic": 0.2988,
+        "plausibility": 0.95,
+        "stability_prior": 0.7402,
+        "generation": 0.5358
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "98b72d7a9d4b",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Bi6Ca4O19",
+      "elements": [
+        "Bi",
+        "Ca",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "scores": {
+        "novelty": 0.1677,
+        "exotic": 0.193,
+        "plausibility": 0.95,
+        "stability_prior": 0.9492,
+        "generation": 0.5246
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f3e8b2bfbc5f",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Nb2Ni4Se9",
+      "elements": [
+        "Nb",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "scores": {
+        "novelty": 0.2452,
+        "exotic": 0.2463,
+        "plausibility": 0.95,
+        "stability_prior": 0.733,
+        "generation": 0.5192
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "2a86d8f37e15",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "ClFeO",
+      "elements": [
+        "Cl",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "scores": {
+        "novelty": 0.2136,
+        "exotic": 0.2842,
+        "plausibility": 0.95,
+        "stability_prior": 0.7402,
+        "generation": 0.5171
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "da8432a4416f",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As4BiC4RbS4",
+      "elements": [
+        "As",
+        "Bi",
+        "C",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.4151,
+        "exotic": 0.4357,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.5165
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "59f25d0a9ed9",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaS3Te13",
+      "elements": [
+        "B",
+        "Ba",
+        "S",
+        "Te"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "scores": {
+        "novelty": 0.2762,
+        "exotic": 0.2782,
+        "plausibility": 0.8,
+        "stability_prior": 0.7834,
+        "generation": 0.509
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "956f5b940c32",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I4MgSr",
+      "elements": [
+        "I",
+        "Mg",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.2132,
+        "exotic": 0.2329,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.5069
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "b38e4a7d05d1",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeCaI4",
+      "elements": [
+        "Be",
+        "Ca",
+        "I"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.2098,
+        "exotic": 0.2177,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.5027
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "321a5a8f950d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4N4RbSe4",
+      "elements": [
+        "Bi",
+        "C",
+        "N",
+        "Rb",
+        "Se"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.3838,
+        "exotic": 0.4201,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.5025
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "702ce41e2c0d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "C4N4RbS4",
+      "elements": [
+        "C",
+        "N",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.3797,
+        "exotic": 0.3862,
+        "plausibility": 0.8,
+        "stability_prior": 0.408,
+        "generation": 0.4917
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "5a329e613b37",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4LiN4S4",
+      "elements": [
+        "Bi",
+        "C",
+        "Li",
+        "N",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "scores": {
+        "novelty": 0.364,
+        "exotic": 0.3844,
+        "plausibility": 0.81,
+        "stability_prior": 0.408,
+        "generation": 0.4884
+      },
+      "decision": "accepted_exotic",
+      "reason_codes": [
+        "novel_and_exotic"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "55bb8a037cd0",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Co4Nb2O9",
+      "elements": [
+        "Co",
+        "Nb",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "scores": {
+        "novelty": 0.1824,
+        "exotic": 0.1988,
+        "plausibility": 0.95,
+        "stability_prior": 0.733,
+        "generation": 0.4877
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "729c0e77a5c6",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaF4Sr",
+      "elements": [
+        "Ca",
+        "F",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "scores": {
+        "novelty": 0.1629,
+        "exotic": 0.207,
+        "plausibility": 0.95,
+        "stability_prior": 0.7409,
+        "generation": 0.4841
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    },
+    {
+      "candidate_id": "f4b3ff196634",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CaO13S3",
+      "elements": [
+        "B",
+        "Ca",
+        "O",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "scores": {
+        "novelty": 0.2173,
+        "exotic": 0.2297,
+        "plausibility": 0.8,
+        "stability_prior": 0.7834,
+        "generation": 0.4787
+      },
+      "decision": "accepted_novel",
+      "reason_codes": [
+        "moderately_novel"
+      ],
+      "seed": 42,
+      "created_at": "2026-03-18T22:46:37.504626+00:00"
+    }
+  ],
+  "disclaimer": "Generated candidates are heuristic hypotheses based on element substitution and stoichiometry perturbation from corpus materials. NOT validated by DFT, phonon calculation, or experiment. Novelty is relative to the ingested corpus only."
+}

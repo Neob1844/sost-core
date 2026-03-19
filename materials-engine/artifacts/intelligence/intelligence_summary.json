@@ -1,0 +1,17 @@
+{
+  "known_sample": {
+    "formula": "TiO2",
+    "existence": "near_known_match",
+    "priority": "low",
+    "known_props": 0,
+    "predicted_props": 0
+  },
+  "generated_sample": {
+    "formula": "BaCuTe",
+    "existence": "near_known_match",
+    "priority": "low",
+    "eval_score": 0.58,
+    "predicted_props": 2,
+    "proxy_props": 3
+  }
+}

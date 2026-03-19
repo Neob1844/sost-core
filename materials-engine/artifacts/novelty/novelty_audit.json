@@ -1,0 +1,28 @@
+{
+  "corpus_size": 2000,
+  "novelty_bands": {
+    "known": 2000,
+    "near_known": 0,
+    "novel_candidate": 0
+  },
+  "mean_novelty_score": 0.0,
+  "median_novelty_score": 0.0,
+  "scoring_definition": {
+    "novelty_score": "1.0 - max_cosine_similarity_to_corpus (104-dim fingerprint)",
+    "exotic_score": "weighted(novelty=0.40, element_rarity=0.20, structure_rarity=0.15, neighbor_sparsity=0.25)",
+    "fingerprint": "94-dim compositional (element frequency) + 10-dim structural (SG, lattice, sites, props)",
+    "distance_metric": "cosine_similarity"
+  },
+  "thresholds": {
+    "exact_match": 0.98,
+    "near_known": 0.85
+  },
+  "limitations": [
+    "Novelty is relative to current ingested corpus only (not all literature)",
+    "Fingerprint does not capture full structural detail (e.g., atomic positions)",
+    "Exotic != better or useful \u2014 just rarer/less explored",
+    "Band gap and formation energy included in fingerprint (data leakage risk for novelty)",
+    "Cosine similarity may not capture all relevant structural differences"
+  ],
+  "disclaimer": "Novelty is relative to the current ingested corpus only, not to all scientific literature."
+}

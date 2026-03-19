@@ -1,0 +1,4528 @@
+{
+  "evaluation_id": "704242001fd3",
+  "generation_run_id": "6bd8716e0edb",
+  "created_at": "2026-03-18T22:46:38.029517+00:00",
+  "config": {
+    "weights": {
+      "novelty": 0.2,
+      "exotic": 0.15,
+      "plausibility": 0.15,
+      "predicted_fe": 0.25,
+      "target_fit": 0.15,
+      "lift_confidence": 0.1
+    },
+    "band_gap_target": null,
+    "band_gap_tolerance": 2.0,
+    "fe_max_for_stable": 0.5
+  },
+  "summary": {
+    "total_candidates": 98,
+    "lift_stats": {
+      "lifted_ok": 95,
+      "not_liftable": 3
+    },
+    "decisions": {
+      "accepted_for_validation": 23,
+      "rejected_predicted_unstable": 15,
+      "accepted_for_watchlist": 57,
+      "rejected_not_liftable": 3
+    },
+    "top_for_validation_count": 20
+  },
+  "top_for_validation": [
+    {
+      "candidate_id": "2fb004caf7ef",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4O19P6",
+      "elements": [
+        "Be",
+        "O",
+        "P"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e4bba7ae53dc7bbbeff6e249df23aad755e29c4106495e082fc1bf83ecd48618",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -2.5561,
+        "band_gap": 4.8976,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2181,
+        "exotic": 0.3173,
+        "plausibility": 0.95,
+        "evaluation": 0.6065
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "729c0e77a5c6",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaF4Sr",
+      "elements": [
+        "Ca",
+        "F",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "5a78ce63b245f47bbf228ce4d6cf35c0ab34f218c461a4ac17a7a9571528e448",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -3.3516,
+        "band_gap": 4.887,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1629,
+        "exotic": 0.207,
+        "plausibility": 0.95,
+        "evaluation": 0.6011
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "98b72d7a9d4b",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Bi6Ca4O19",
+      "elements": [
+        "Bi",
+        "Ca",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "bec2e9abc0cacafb1b8e1861452197fa125d1489b9c513071001a1bbc155eb3a",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -2.532,
+        "band_gap": 2.5511,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1677,
+        "exotic": 0.193,
+        "plausibility": 0.95,
+        "evaluation": 0.5766
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f1fcfbafffae",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Ni6Se",
+      "elements": [
+        "F",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "d80be10a5729b805068ebb4d0939460925901e80c95175f2371b3c3d86a20fd4",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.7534,
+        "band_gap": -0.1036,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2816,
+        "exotic": 0.3,
+        "plausibility": 0.95,
+        "evaluation": 0.5765
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "81447c6196e9",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GeHeO2",
+      "elements": [
+        "Ge",
+        "He",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f6e6e91387cfb5462b2d618edf9eea8d33cfebf828f1609d8cdeaf69b1d38ea7",
+        "n_atoms": 32
+      },
+      "predictions": {
+        "formation_energy": -1.7001,
+        "band_gap": 4.1711,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2929,
+        "exotic": 0.3035,
+        "plausibility": 0.8833,
+        "evaluation": 0.5666
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "677e3b0956e8",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HeS2Si",
+      "elements": [
+        "He",
+        "S",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "19377aac670b2f51180d72b47b81ac03a7fcf74f1b6b1295c5131ad384e87072",
+        "n_atoms": 32
+      },
+      "predictions": {
+        "formation_energy": -0.9755,
+        "band_gap": 0.8801,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.3292,
+        "exotic": 0.3728,
+        "plausibility": 0.8833,
+        "evaluation": 0.548
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "01380f389a56",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FFeS",
+      "elements": [
+        "F",
+        "Fe",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "49a69bb8e45b9fb5edbe6cc2d96230e7a2b8445ce4b77c8c1869f86a34c696e7",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.2347,
+        "band_gap": -0.0955,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2585,
+        "exotic": 0.2988,
+        "plausibility": 0.95,
+        "evaluation": 0.5458
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2a86d8f37e15",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "ClFeO",
+      "elements": [
+        "Cl",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "763db51e8350917aebce7da84d2999a41a99ca251da9a7c016c6cc89f0334f79",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.352,
+        "band_gap": -0.1267,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2136,
+        "exotic": 0.2842,
+        "plausibility": 0.95,
+        "evaluation": 0.5404
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "b5d5dd99ac81",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Fe6O",
+      "elements": [
+        "F",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f1601b00aa39ba8b22470b168ac6efaefd943c460c19ebf135eae114ed8d5959",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.9029,
+        "band_gap": -0.1379,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1576,
+        "exotic": 0.1596,
+        "plausibility": 0.95,
+        "evaluation": 0.5381
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f4b3ff196634",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CaO13S3",
+      "elements": [
+        "B",
+        "Ca",
+        "O",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6d58a51fa219de47f443598fe3d4ff7ee5c0faebddb9d811a97e3c9dc2a676d3",
+        "n_atoms": 76
+      },
+      "predictions": {
+        "formation_energy": -1.8566,
+        "band_gap": 4.978,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2173,
+        "exotic": 0.2297,
+        "plausibility": 0.8,
+        "evaluation": 0.5357
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "da8432a4416f",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As4BiC4RbS4",
+      "elements": [
+        "As",
+        "Bi",
+        "C",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "342dd8ad28098b1916abf6c9fddcf56104d87048270f59b5d43a58b80caf4e61",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.3557,
+        "band_gap": 1.0353,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.4151,
+        "exotic": 0.4357,
+        "plausibility": 0.81,
+        "evaluation": 0.5327
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "956f5b940c32",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I4MgSr",
+      "elements": [
+        "I",
+        "Mg",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "2ec3e7264b4cb8182dbce77b0d5b7ad743f2d791c05f9447c05e47e27bbd0025",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -1.2834,
+        "band_gap": 2.5765,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2132,
+        "exotic": 0.2329,
+        "plausibility": 0.95,
+        "evaluation": 0.5292
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "55bb8a037cd0",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Co4Nb2O9",
+      "elements": [
+        "Co",
+        "Nb",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "fe543f1649218ad1f50e90e017801f2212846a08cbe598215ca0bfd5a30a84c8",
+        "n_atoms": 60
+      },
+      "predictions": {
+        "formation_energy": -1.3892,
+        "band_gap": -0.1193,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1824,
+        "exotic": 0.1988,
+        "plausibility": 0.95,
+        "evaluation": 0.5233
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "8347b82ca4d2",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Br11Ni6O",
+      "elements": [
+        "Br",
+        "Ni",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "43da8fc94f98eefc490f6d1f5ed6771651cc4abbcf6ee4b2f5c22d76a143e230",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -0.3776,
+        "band_gap": -0.0409,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.308,
+        "exotic": 0.3125,
+        "plausibility": 0.95,
+        "evaluation": 0.5149
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2223c4176519",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4P6Te19",
+      "elements": [
+        "Ca",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "a8306b59616fbba3ff54d9679726028a4fd5a4f5b6cefaa9de4a4a29fdd27a67",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -0.4683,
+        "band_gap": 1.3136,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2902,
+        "exotic": 0.3026,
+        "plausibility": 0.95,
+        "evaluation": 0.5143
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5a329e613b37",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4LiN4S4",
+      "elements": [
+        "Bi",
+        "C",
+        "Li",
+        "N",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "da7bc2e2211c8f8b8f049e75a3bfc05f04d1fc196343e5edc35d793106a18377",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.2742,
+        "band_gap": 2.2299,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.364,
+        "exotic": 0.3844,
+        "plausibility": 0.81,
+        "evaluation": 0.5107
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "321a5a8f950d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4N4RbSe4",
+      "elements": [
+        "Bi",
+        "C",
+        "N",
+        "Rb",
+        "Se"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "bf578498f60124b0bc91d06e8d923830a7f38412ae48f373959c87a476e5746d",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.0247,
+        "band_gap": 1.8638,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.3838,
+        "exotic": 0.4201,
+        "plausibility": 0.81,
+        "evaluation": 0.5075
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f3e8b2bfbc5f",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Nb2Ni4Se9",
+      "elements": [
+        "Nb",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "76e9c5d9777832c6d5cb73013e49900c3f89f593665dd4af447af7eec2d784cd",
+        "n_atoms": 60
+      },
+      "predictions": {
+        "formation_energy": -0.4613,
+        "band_gap": -0.0326,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2452,
+        "exotic": 0.2463,
+        "plausibility": 0.95,
+        "evaluation": 0.4966
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "59f25d0a9ed9",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaS3Te13",
+      "elements": [
+        "B",
+        "Ba",
+        "S",
+        "Te"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6b697d82c36b79f5898d4a760d106e207f7e5ae714a88f4a40997080e19427b5",
+        "n_atoms": 76
+      },
+      "predictions": {
+        "formation_energy": -0.3538,
+        "band_gap": 2.1151,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2762,
+        "exotic": 0.2782,
+        "plausibility": 0.8,
+        "evaluation": 0.4797
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e0bc2afe92bd",
+      "parent_ids": [
+        "4cf712981b175047"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "O2Pb2Pd3",
+      "elements": [
+        "O",
+        "Pb",
+        "Pd"
+      ],
+      "n_elements": 3,
+      "spacegroup": 59,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "4e5f037c200718ef2a452328fb804252e206a88d09408f83de703169123e9f7a",
+        "n_atoms": 14
+      },
+      "predictions": {
+        "formation_energy": -0.6397,
+        "band_gap": -0.1303,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1687,
+        "exotic": 0.2203,
+        "plausibility": 0.8833,
+        "evaluation": 0.4763
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    }
+  ],
+  "all_evaluated": [
+    {
+      "candidate_id": "2fb004caf7ef",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4O19P6",
+      "elements": [
+        "Be",
+        "O",
+        "P"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e4bba7ae53dc7bbbeff6e249df23aad755e29c4106495e082fc1bf83ecd48618",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -2.5561,
+        "band_gap": 4.8976,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2181,
+        "exotic": 0.3173,
+        "plausibility": 0.95,
+        "evaluation": 0.6065
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "729c0e77a5c6",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaF4Sr",
+      "elements": [
+        "Ca",
+        "F",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "5a78ce63b245f47bbf228ce4d6cf35c0ab34f218c461a4ac17a7a9571528e448",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -3.3516,
+        "band_gap": 4.887,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1629,
+        "exotic": 0.207,
+        "plausibility": 0.95,
+        "evaluation": 0.6011
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "98b72d7a9d4b",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Bi6Ca4O19",
+      "elements": [
+        "Bi",
+        "Ca",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "bec2e9abc0cacafb1b8e1861452197fa125d1489b9c513071001a1bbc155eb3a",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -2.532,
+        "band_gap": 2.5511,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1677,
+        "exotic": 0.193,
+        "plausibility": 0.95,
+        "evaluation": 0.5766
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f1fcfbafffae",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Ni6Se",
+      "elements": [
+        "F",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "d80be10a5729b805068ebb4d0939460925901e80c95175f2371b3c3d86a20fd4",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.7534,
+        "band_gap": -0.1036,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2816,
+        "exotic": 0.3,
+        "plausibility": 0.95,
+        "evaluation": 0.5765
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "81447c6196e9",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GeHeO2",
+      "elements": [
+        "Ge",
+        "He",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f6e6e91387cfb5462b2d618edf9eea8d33cfebf828f1609d8cdeaf69b1d38ea7",
+        "n_atoms": 32
+      },
+      "predictions": {
+        "formation_energy": -1.7001,
+        "band_gap": 4.1711,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2929,
+        "exotic": 0.3035,
+        "plausibility": 0.8833,
+        "evaluation": 0.5666
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "677e3b0956e8",
+      "parent_ids": [
+        "70dd0c586254d8dd"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HeS2Si",
+      "elements": [
+        "He",
+        "S",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 14,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "19377aac670b2f51180d72b47b81ac03a7fcf74f1b6b1295c5131ad384e87072",
+        "n_atoms": 32
+      },
+      "predictions": {
+        "formation_energy": -0.9755,
+        "band_gap": 0.8801,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.3292,
+        "exotic": 0.3728,
+        "plausibility": 0.8833,
+        "evaluation": 0.548
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "01380f389a56",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FFeS",
+      "elements": [
+        "F",
+        "Fe",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "49a69bb8e45b9fb5edbe6cc2d96230e7a2b8445ce4b77c8c1869f86a34c696e7",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.2347,
+        "band_gap": -0.0955,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2585,
+        "exotic": 0.2988,
+        "plausibility": 0.95,
+        "evaluation": 0.5458
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2a86d8f37e15",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "ClFeO",
+      "elements": [
+        "Cl",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "763db51e8350917aebce7da84d2999a41a99ca251da9a7c016c6cc89f0334f79",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.352,
+        "band_gap": -0.1267,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2136,
+        "exotic": 0.2842,
+        "plausibility": 0.95,
+        "evaluation": 0.5404
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "b5d5dd99ac81",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F11Fe6O",
+      "elements": [
+        "F",
+        "Fe",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f1601b00aa39ba8b22470b168ac6efaefd943c460c19ebf135eae114ed8d5959",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.9029,
+        "band_gap": -0.1379,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1576,
+        "exotic": 0.1596,
+        "plausibility": 0.95,
+        "evaluation": 0.5381
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f4b3ff196634",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CaO13S3",
+      "elements": [
+        "B",
+        "Ca",
+        "O",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6d58a51fa219de47f443598fe3d4ff7ee5c0faebddb9d811a97e3c9dc2a676d3",
+        "n_atoms": 76
+      },
+      "predictions": {
+        "formation_energy": -1.8566,
+        "band_gap": 4.978,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2173,
+        "exotic": 0.2297,
+        "plausibility": 0.8,
+        "evaluation": 0.5357
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "da8432a4416f",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As4BiC4RbS4",
+      "elements": [
+        "As",
+        "Bi",
+        "C",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "342dd8ad28098b1916abf6c9fddcf56104d87048270f59b5d43a58b80caf4e61",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.3557,
+        "band_gap": 1.0353,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.4151,
+        "exotic": 0.4357,
+        "plausibility": 0.81,
+        "evaluation": 0.5327
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "956f5b940c32",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I4MgSr",
+      "elements": [
+        "I",
+        "Mg",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "2ec3e7264b4cb8182dbce77b0d5b7ad743f2d791c05f9447c05e47e27bbd0025",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -1.2834,
+        "band_gap": 2.5765,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2132,
+        "exotic": 0.2329,
+        "plausibility": 0.95,
+        "evaluation": 0.5292
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "55bb8a037cd0",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Co4Nb2O9",
+      "elements": [
+        "Co",
+        "Nb",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "fe543f1649218ad1f50e90e017801f2212846a08cbe598215ca0bfd5a30a84c8",
+        "n_atoms": 60
+      },
+      "predictions": {
+        "formation_energy": -1.3892,
+        "band_gap": -0.1193,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1824,
+        "exotic": 0.1988,
+        "plausibility": 0.95,
+        "evaluation": 0.5233
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "8347b82ca4d2",
+      "parent_ids": [
+        "7c293c5ae372ad71"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Br11Ni6O",
+      "elements": [
+        "Br",
+        "Ni",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 1,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "43da8fc94f98eefc490f6d1f5ed6771651cc4abbcf6ee4b2f5c22d76a143e230",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -0.3776,
+        "band_gap": -0.0409,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.308,
+        "exotic": 0.3125,
+        "plausibility": 0.95,
+        "evaluation": 0.5149
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2223c4176519",
+      "parent_ids": [
+        "db2875d152e96197"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4P6Te19",
+      "elements": [
+        "Ca",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 2,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "a8306b59616fbba3ff54d9679726028a4fd5a4f5b6cefaa9de4a4a29fdd27a67",
+        "n_atoms": 58
+      },
+      "predictions": {
+        "formation_energy": -0.4683,
+        "band_gap": 1.3136,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2902,
+        "exotic": 0.3026,
+        "plausibility": 0.95,
+        "evaluation": 0.5143
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5a329e613b37",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4LiN4S4",
+      "elements": [
+        "Bi",
+        "C",
+        "Li",
+        "N",
+        "S"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "da7bc2e2211c8f8b8f049e75a3bfc05f04d1fc196343e5edc35d793106a18377",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.2742,
+        "band_gap": 2.2299,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.364,
+        "exotic": 0.3844,
+        "plausibility": 0.81,
+        "evaluation": 0.5107
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "321a5a8f950d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiC4N4RbSe4",
+      "elements": [
+        "Bi",
+        "C",
+        "N",
+        "Rb",
+        "Se"
+      ],
+      "n_elements": 5,
+      "spacegroup": 18,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "bf578498f60124b0bc91d06e8d923830a7f38412ae48f373959c87a476e5746d",
+        "n_atoms": 28
+      },
+      "predictions": {
+        "formation_energy": -0.0247,
+        "band_gap": 1.8638,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.3838,
+        "exotic": 0.4201,
+        "plausibility": 0.81,
+        "evaluation": 0.5075
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f3e8b2bfbc5f",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Nb2Ni4Se9",
+      "elements": [
+        "Nb",
+        "Ni",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "76e9c5d9777832c6d5cb73013e49900c3f89f593665dd4af447af7eec2d784cd",
+        "n_atoms": 60
+      },
+      "predictions": {
+        "formation_energy": -0.4613,
+        "band_gap": -0.0326,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2452,
+        "exotic": 0.2463,
+        "plausibility": 0.95,
+        "evaluation": 0.4966
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "59f25d0a9ed9",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaS3Te13",
+      "elements": [
+        "B",
+        "Ba",
+        "S",
+        "Te"
+      ],
+      "n_elements": 4,
+      "spacegroup": 62,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6b697d82c36b79f5898d4a760d106e207f7e5ae714a88f4a40997080e19427b5",
+        "n_atoms": 76
+      },
+      "predictions": {
+        "formation_energy": -0.3538,
+        "band_gap": 2.1151,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2762,
+        "exotic": 0.2782,
+        "plausibility": 0.8,
+        "evaluation": 0.4797
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e0bc2afe92bd",
+      "parent_ids": [
+        "4cf712981b175047"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "O2Pb2Pd3",
+      "elements": [
+        "O",
+        "Pb",
+        "Pd"
+      ],
+      "n_elements": 3,
+      "spacegroup": 59,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "4e5f037c200718ef2a452328fb804252e206a88d09408f83de703169123e9f7a",
+        "n_atoms": 14
+      },
+      "predictions": {
+        "formation_energy": -0.6397,
+        "band_gap": -0.1303,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1687,
+        "exotic": 0.2203,
+        "plausibility": 0.8833,
+        "evaluation": 0.4763
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5502c54d193e",
+      "parent_ids": [
+        "13c8919c4bf1c7a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CMg6Mo",
+      "elements": [
+        "C",
+        "Mg",
+        "Mo"
+      ],
+      "n_elements": 3,
+      "spacegroup": 38,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "70be6ad2f99552483ada7738ab45b885778bf95a39f8f3bbc2ee8734caab4469",
+        "n_atoms": 8
+      },
+      "predictions": {
+        "formation_energy": 0.0967,
+        "band_gap": -0.1481,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2618,
+        "exotic": 0.3055,
+        "plausibility": 0.8833,
+        "evaluation": 0.4708
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f6d9f4794b81",
+      "parent_ids": [
+        "4cf712981b175047"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Pb2Ru3Te2",
+      "elements": [
+        "Pb",
+        "Ru",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 59,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e3744333b35805223f0c89a482a1ac42fd6b2935f77f08b71b9c4b6a7f1b8a1b",
+        "n_atoms": 14
+      },
+      "predictions": {
+        "formation_energy": 0.1021,
+        "band_gap": -0.0952,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2692,
+        "exotic": 0.2778,
+        "plausibility": 0.8833,
+        "evaluation": 0.4679
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "b38e4a7d05d1",
+      "parent_ids": [
+        "a98ab008626546e7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeCaI4",
+      "elements": [
+        "Be",
+        "Ca",
+        "I"
+      ],
+      "n_elements": 3,
+      "spacegroup": 74,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e8d9cceb87bdba34c2e1a6c5e367eb58a4baef000e7ed858b335f42e6b7b77db",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": 0.0526,
+        "band_gap": 2.6159,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.2098,
+        "exotic": 0.2177,
+        "plausibility": 0.95,
+        "evaluation": 0.4595
+      },
+      "evaluation_status": "accepted_for_validation",
+      "reason_codes": [
+        "high_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5eb2917a75c4",
+      "parent_ids": [
+        "13c8919c4bf1c7a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be6CZr",
+      "elements": [
+        "Be",
+        "C",
+        "Zr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 38,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "ac6bccf496a59007d0b94a37afd40c8908b38925977e612d8f78429454bf6aad",
+        "n_atoms": 8
+      },
+      "predictions": {
+        "formation_energy": 0.7881,
+        "band_gap": 0.2172,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.3206,
+        "exotic": 0.332,
+        "plausibility": 0.8833,
+        "evaluation": 0.452
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "6859e999ab8b",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba2NbPt",
+      "elements": [
+        "Ba",
+        "Nb",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "a9509abacda9603fa3957188103a44db58364b19fd669aa055c4d01b23081906",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": 0.034,
+        "band_gap": -0.1303,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1527,
+        "exotic": 0.1579,
+        "plausibility": 0.95,
+        "evaluation": 0.44
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "a7f057be8327",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2NbOs",
+      "elements": [
+        "Be",
+        "Nb",
+        "Os"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "89e41ca4eddc062d5248250d95047eebf5602d605757bb937485439c92f47126",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": 0.1537,
+        "band_gap": -0.0894,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1541,
+        "exotic": 0.161,
+        "plausibility": 0.95,
+        "evaluation": 0.4348
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "1f87fa24430a",
+      "parent_ids": [
+        "3ebf9a7fbed1e926"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CLaMn2",
+      "elements": [
+        "B",
+        "C",
+        "La",
+        "Mn"
+      ],
+      "n_elements": 4,
+      "spacegroup": 139,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "750b8f24ec46faaf6ceb0b748596bfef095df2907c3aa128bb1f462b3ec3d87d",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.3379,
+        "band_gap": -0.0275,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1683,
+        "exotic": 0.1693,
+        "plausibility": 0.75,
+        "evaluation": 0.4335
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "11db3e494751",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CeO3Tl",
+      "elements": [
+        "Ce",
+        "O",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "582376c94544d21f7f84f4f264033ea60b7f402bdf38ee6647384967b947f2c0",
+        "n_atoms": 5
+      },
+      "predictions": {
+        "formation_energy": -3.2228,
+        "band_gap": -0.0464,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0709,
+        "exotic": 0.0846,
+        "plausibility": 0.0,
+        "evaluation": 0.4219
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "95ada2fa31a7",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AlNdO3",
+      "elements": [
+        "Al",
+        "Nd",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "8979e087a9c1d39e8e5f211d9879d66cb2df1388d31f8fc8fbb36f3bc05116f7",
+        "n_atoms": 5
+      },
+      "predictions": {
+        "formation_energy": -3.5825,
+        "band_gap": 2.874,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0447,
+        "exotic": 0.0745,
+        "plausibility": 0.0,
+        "evaluation": 0.4151
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "a0fac913c423",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "O11Sc6Sr",
+      "elements": [
+        "O",
+        "Sc",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "0c3b2c494bfd59fb1801315f1c34bf35e3c06fcfe970fe7145e6179581150a9a",
+        "n_atoms": 36
+      },
+      "predictions": {
+        "formation_energy": -2.9804,
+        "band_gap": 3.0163,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0203,
+        "exotic": 0.0678,
+        "plausibility": 0.0,
+        "evaluation": 0.4083
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "a5b84f762e64",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeO11V6",
+      "elements": [
+        "Be",
+        "O",
+        "V"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "8f91c738bcedc0a726929ff05bbdf8ef8ff05a9e275f823f7b3f37229770e6e6",
+        "n_atoms": 36
+      },
+      "predictions": {
+        "formation_energy": -2.5087,
+        "band_gap": 0.265,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0954,
+        "exotic": 0.1017,
+        "plausibility": 0.0,
+        "evaluation": 0.4048
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5f04fca55e82",
+      "parent_ids": [
+        "c58e16b72321ff9e"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ni4O9Y2",
+      "elements": [
+        "Ni",
+        "O",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 60,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "b8dcf9ea1df8cccf13c635db30ee690c76d5524ebe30990178cbd06be136aa95",
+        "n_atoms": 60
+      },
+      "predictions": {
+        "formation_energy": -1.9898,
+        "band_gap": -0.0638,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1483,
+        "exotic": 0.1785,
+        "plausibility": 0.0,
+        "evaluation": 0.4009
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "0a3b9c6fa3c0",
+      "parent_ids": [
+        "cc6e8fd17932a502"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FMnO",
+      "elements": [
+        "F",
+        "Mn",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 10,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "4d23ff4a366caf90a46e4f03a4b0b240c666f019d6b2818eb93c51aa04d71413",
+        "n_atoms": 18
+      },
+      "predictions": {
+        "formation_energy": -1.8686,
+        "band_gap": 0.0046,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1226,
+        "exotic": 0.141,
+        "plausibility": 0.0,
+        "evaluation": 0.3841
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "68a15d9ed632",
+      "parent_ids": [
+        "58c8b39b5d9dbfb9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FNa",
+      "elements": [
+        "F",
+        "Na"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "410bc4d6c56107c49080a8199ac93dbb004490b6993699ee56292ed52617f002",
+        "n_atoms": 2
+      },
+      "predictions": {
+        "formation_energy": -2.3538,
+        "band_gap": 1.641,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0475,
+        "exotic": 0.0668,
+        "plausibility": 0.0,
+        "evaluation": 0.3822
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "9a1dbd72c6d8",
+      "parent_ids": [
+        "76bbe050cbe26dd3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "F2Mn",
+      "elements": [
+        "F",
+        "Mn"
+      ],
+      "n_elements": 2,
+      "spacegroup": 136,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "4091f359aa7c08d897b865113d8d15e0a735656e9ee09f26b6fc8cce6027ad70",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -2.2333,
+        "band_gap": -0.0145,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0448,
+        "exotic": 0.0525,
+        "plausibility": 0.0,
+        "evaluation": 0.3735
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e46a4ea978c6",
+      "parent_ids": [
+        "86516b53b76d0c47"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AlCeS3",
+      "elements": [
+        "Al",
+        "Ce",
+        "S"
+      ],
+      "n_elements": 3,
+      "spacegroup": 221,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e9270caa033de42f93adb7d6a46dd4488cdfe987b1ee14a6e9ce32c29ea11ea1",
+        "n_atoms": 5
+      },
+      "predictions": {
+        "formation_energy": -1.7341,
+        "band_gap": 0.0302,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0843,
+        "exotic": 0.0861,
+        "plausibility": 0.0,
+        "evaluation": 0.3615
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "3e81d156160b",
+      "parent_ids": [
+        "22e71a79010d3584"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Se11SrV6",
+      "elements": [
+        "Se",
+        "Sr",
+        "V"
+      ],
+      "n_elements": 3,
+      "spacegroup": 194,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "7bab69099f7151e2728d4b75edb731e04e29767981e6fbf841f9b55d557b24d4",
+        "n_atoms": 36
+      },
+      "predictions": {
+        "formation_energy": -0.9963,
+        "band_gap": 0.1625,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1003,
+        "exotic": 0.1259,
+        "plausibility": 0.0,
+        "evaluation": 0.3338
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "30a30579b961",
+      "parent_ids": [
+        "95dd4b8fc88a4bc9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "LaSe",
+      "elements": [
+        "La",
+        "Se"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "1a6061d1465776f97dc13c7f5d7a71d847b8a2647a2d56ec90939be6013f76e7",
+        "n_atoms": 2
+      },
+      "predictions": {
+        "formation_energy": -1.4844,
+        "band_gap": 0.3051,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0288,
+        "exotic": 0.0542,
+        "plausibility": 0.0,
+        "evaluation": 0.3331
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e0688899fa1f",
+      "parent_ids": [
+        "972a51e45d69bc85"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "LuRh4",
+      "elements": [
+        "Lu",
+        "Rh"
+      ],
+      "n_elements": 2,
+      "spacegroup": 87,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "cd810e143127df726772c746ee6c85ab2dd470eb8411a9f733dd135e1d113ddf",
+        "n_atoms": 5
+      },
+      "predictions": {
+        "formation_energy": -0.6801,
+        "band_gap": -0.1344,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1322,
+        "exotic": 0.1643,
+        "plausibility": 0.0,
+        "evaluation": 0.3301
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "ae6a750257ac",
+      "parent_ids": [
+        "76bbe050cbe26dd3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FeI2",
+      "elements": [
+        "Fe",
+        "I"
+      ],
+      "n_elements": 2,
+      "spacegroup": 136,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "76f1b69cfab1538476685b9b615eeee143ab4f754456b0b82af1f397c25a39b6",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.6353,
+        "band_gap": -0.0764,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1073,
+        "exotic": 0.1886,
+        "plausibility": 0.0,
+        "evaluation": 0.3265
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "cd7f537a9967",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AuCeSi",
+      "elements": [
+        "Au",
+        "Ce",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e5326c4f379007897ade319030ee522bff536d31287a634200e7a1c353180a36",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -0.7153,
+        "band_gap": -0.0941,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1241,
+        "exotic": 0.1301,
+        "plausibility": 0.0,
+        "evaluation": 0.3251
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "d144b6ea5a85",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "MgNdSi2",
+      "elements": [
+        "Mg",
+        "Nd",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "c41aef23b15064d086414d6086b978936b06e1ec07d48feb695add5a282079f6",
+        "n_atoms": 16
+      },
+      "predictions": {
+        "formation_energy": -0.4461,
+        "band_gap": 0.1112,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1419,
+        "exotic": 0.1482,
+        "plausibility": 0.0,
+        "evaluation": 0.3179
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "49c48f81be26",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CeGeIr",
+      "elements": [
+        "Ce",
+        "Ge",
+        "Ir"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "52339ea27d133272f648f8777e3fd7714da2319d21991c78835f00f186321c78",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -0.5911,
+        "band_gap": -0.1213,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1149,
+        "exotic": 0.1253,
+        "plausibility": 0.0,
+        "evaluation": 0.3163
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "3f000e6b9ea5",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ge2LaMg",
+      "elements": [
+        "Ge",
+        "La",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "3fcc610e1eb41c8bbc45e29981064af4afbe6cd6b6f7fad1f6e55d0ea1439283",
+        "n_atoms": 16
+      },
+      "predictions": {
+        "formation_energy": -0.3965,
+        "band_gap": -0.1178,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1447,
+        "exotic": 0.1493,
+        "plausibility": 0.0,
+        "evaluation": 0.3162
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2c26f4314c72",
+      "parent_ids": [
+        "3ebf9a7fbed1e926"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2CNi2Pr",
+      "elements": [
+        "B",
+        "C",
+        "Ni",
+        "Pr"
+      ],
+      "n_elements": 4,
+      "spacegroup": 139,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "ac1f86dea0ac4ae291af63607387ce7b773ecff2f049a7391fffb11375075f52",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.3366,
+        "band_gap": -0.0799,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.141,
+        "exotic": 0.1688,
+        "plausibility": 0.0,
+        "evaluation": 0.3154
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "372f78e75f3f",
+      "parent_ids": [
+        "5c4af81ef16bcf44"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaLaSi2",
+      "elements": [
+        "Ba",
+        "La",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 141,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "b7b018cda4a1f4cbf958cb20dd59457509eb5377470f432da264d1c59affd649",
+        "n_atoms": 16
+      },
+      "predictions": {
+        "formation_energy": -0.3346,
+        "band_gap": 0.1517,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1489,
+        "exotic": 0.154,
+        "plausibility": 0.0,
+        "evaluation": 0.3146
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "fed11e99b7a6",
+      "parent_ids": [
+        "58c8b39b5d9dbfb9"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "IK",
+      "elements": [
+        "I",
+        "K"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "d8a681884f8d98579f57e9dbfefa0c20b18c1330d7eef7c6cb4382cbc7b62ae1",
+        "n_atoms": 2
+      },
+      "predictions": {
+        "formation_energy": -0.8558,
+        "band_gap": 1.4027,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0629,
+        "exotic": 0.0882,
+        "plausibility": 0.0,
+        "evaluation": 0.3136
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "05aebc7d3d4a",
+      "parent_ids": [
+        "589cb37be12a05de"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Cl2Pb",
+      "elements": [
+        "Cl",
+        "Pb"
+      ],
+      "n_elements": 2,
+      "spacegroup": 166,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "da9630d930f585100dca61a279741c3228ef536e6178dc98369c426d22fa7e60",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": -0.59,
+        "band_gap": 1.0752,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0849,
+        "exotic": 0.1316,
+        "plausibility": 0.0,
+        "evaluation": 0.3112
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "d0c31a9f94be",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GaPdU",
+      "elements": [
+        "Ga",
+        "Pd",
+        "U"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "44429a117948f323ebbc9d8283cbd7fa28cdc864d50132987728d16715837c16",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": -0.5597,
+        "band_gap": -0.1462,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0962,
+        "exotic": 0.1113,
+        "plausibility": 0.0,
+        "evaluation": 0.3089
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "23aad3107ac8",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "RuTlU",
+      "elements": [
+        "Ru",
+        "Tl",
+        "U"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "7323d6549fcddae0dc1fb96f7d5cf8b038659176aac579fe32c09f5de112a783",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": -0.3139,
+        "band_gap": -0.1496,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1231,
+        "exotic": 0.1437,
+        "plausibility": 0.0,
+        "evaluation": 0.3069
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "64b5eea3c8ef",
+      "parent_ids": [
+        "072fd66fef5fff5a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "IrLaSi",
+      "elements": [
+        "Ir",
+        "La",
+        "Si"
+      ],
+      "n_elements": 3,
+      "spacegroup": 198,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "88796f1d3836fd2e4ea8d65cb0e7a2b7ff19b9dcb68c4201327dd88841334657",
+        "n_atoms": 12
+      },
+      "predictions": {
+        "formation_energy": -0.5511,
+        "band_gap": -0.0741,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0867,
+        "exotic": 0.0982,
+        "plausibility": 0.0,
+        "evaluation": 0.3046
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "89267875fd02",
+      "parent_ids": [
+        "972a51e45d69bc85"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ag4Dy",
+      "elements": [
+        "Ag",
+        "Dy"
+      ],
+      "n_elements": 2,
+      "spacegroup": 87,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f21a8349501e11a2adc6cac729b6db635f6b0feef754f3b3c59d1b56d184a4ca",
+        "n_atoms": 5
+      },
+      "predictions": {
+        "formation_energy": -0.2258,
+        "band_gap": -0.0689,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1273,
+        "exotic": 0.1487,
+        "plausibility": 0.0,
+        "evaluation": 0.3041
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "ae973fb24092",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CaIn4Pt",
+      "elements": [
+        "Ca",
+        "In",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6c3e5d435e0c655d8078428fb36dde79655cc35ae1c8b7e835046658d2f0eb87",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.3362,
+        "band_gap": -0.1121,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1093,
+        "exotic": 0.1176,
+        "plausibility": 0.0,
+        "evaluation": 0.3013
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "c8f32a6cdaab",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CoTi2Tl",
+      "elements": [
+        "Co",
+        "Ti",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "1d8accc24906c3aac5f9eb51dbe95a679da14110db14bc56b48b7e049c0f2783",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": -0.2548,
+        "band_gap": -0.1056,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.123,
+        "exotic": 0.1238,
+        "plausibility": 0.0,
+        "evaluation": 0.3009
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e36805f95054",
+      "parent_ids": [
+        "d772d01cc980493f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "GaNpRu",
+      "elements": [
+        "Ga",
+        "Np",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 189,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "791c6a4b51d5cacced3fbb2aee206875e6dc7e7a30f892be6dae2bc73aeae4c2",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": -0.1255,
+        "band_gap": -0.132,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.13,
+        "exotic": 0.1395,
+        "plausibility": 0.0,
+        "evaluation": 0.2982
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "6fe9bf4f4c13",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CuMg2Nb",
+      "elements": [
+        "Cu",
+        "Mg",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "18648030aab46d16ec7a281815a66aaf0726908374e1ffd197393240dacebb2b",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": -0.1682,
+        "band_gap": -0.1135,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1191,
+        "exotic": 0.126,
+        "plausibility": 0.0,
+        "evaluation": 0.2961
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "1b29282d0ab3",
+      "parent_ids": [
+        "4e12b2eb28d90b7f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "MnS2",
+      "elements": [
+        "Mn",
+        "S"
+      ],
+      "n_elements": 2,
+      "spacegroup": 194,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f569d5f749d37fde964153bb0be2dd9f159c90fe756ddedd7a5e3ee87fa60620",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.5134,
+        "band_gap": 0.1159,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.066,
+        "exotic": 0.0705,
+        "plausibility": 0.0,
+        "evaluation": 0.2944
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e740b92bdea3",
+      "parent_ids": [
+        "afe03ff8c48fe46b"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2MoPt",
+      "elements": [
+        "Be",
+        "Mo",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 119,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "8f05c0952f3a5d7a6fba3eed395b01175a801e0babe0a2cfb8f8132c2e5426e2",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": 0.1034,
+        "band_gap": -0.0988,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1438,
+        "exotic": 0.155,
+        "plausibility": 0.0,
+        "evaluation": 0.2918
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "d889a8680a3d",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaCo4Ru",
+      "elements": [
+        "Ba",
+        "Co",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "9fb282cd2664853a8b673ff730b47e01d709d321981d3341d93a0a813a17682d",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.0211,
+        "band_gap": -0.1386,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1246,
+        "exotic": 0.1311,
+        "plausibility": 0.0,
+        "evaluation": 0.2906
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "bed082db3899",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BiMg4Nb",
+      "elements": [
+        "Bi",
+        "Mg",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "658e72f11df9424bc536a73cb3818b4e314580df8f22e0bd72ebfcf9120028d4",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.0288,
+        "band_gap": -0.179,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1191,
+        "exotic": 0.128,
+        "plausibility": 0.0,
+        "evaluation": 0.2895
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f700c1d43842",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "FeGaTi2",
+      "elements": [
+        "Fe",
+        "Ga",
+        "Ti"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "50475d9c60e22f10391ec0c2f2b5a60ae60513607977e0e1723776528171c018",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": -0.3025,
+        "band_gap": -0.1091,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0754,
+        "exotic": 0.0864,
+        "plausibility": 0.0,
+        "evaluation": 0.2882
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "afb115e56fda",
+      "parent_ids": [
+        "00305e122db62583"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B6Fe23",
+      "elements": [
+        "B",
+        "Fe"
+      ],
+      "n_elements": 2,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "1c4039181c2d5d47fe7508644b987ef06d24627c4854439954123179281cedc0",
+        "n_atoms": 29
+      },
+      "predictions": {
+        "formation_energy": -0.0873,
+        "band_gap": -0.1465,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.094,
+        "exotic": 0.128,
+        "plausibility": 0.0,
+        "evaluation": 0.2874
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "762c28d27c9f",
+      "parent_ids": [
+        "554fdf364d472bea"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4CdHf",
+      "elements": [
+        "Ca",
+        "Cd",
+        "Hf"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "354dd5d6672a479be753e0b1c0671fee24d84eba0c54653742b77fdf70843450",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.0047,
+        "band_gap": -0.0994,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1159,
+        "exotic": 0.1292,
+        "plausibility": 0.0,
+        "evaluation": 0.2873
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "55687961c211",
+      "parent_ids": [
+        "70a55756914df272"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ca4NbTe",
+      "elements": [
+        "Ca",
+        "Nb",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "85585d395f5dbecac481e466c260adf08670582a2210c13a100ba3696f452b0a",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.124,
+        "band_gap": -0.0678,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0983,
+        "exotic": 0.1079,
+        "plausibility": 0.0,
+        "evaluation": 0.287
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "e431f0778c17",
+      "parent_ids": [
+        "51722f7bab28c1a4"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "CoCr2Ga",
+      "elements": [
+        "Co",
+        "Cr",
+        "Ga"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e62fe6a72cc02a00de1b7737caa7e66984d89c8f707617d5dd63a48a01386e9a",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": -0.1182,
+        "band_gap": -0.1202,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0841,
+        "exotic": 0.1223,
+        "plausibility": 0.0,
+        "evaluation": 0.2861
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "ed60b20a5777",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Al4BePt",
+      "elements": [
+        "Al",
+        "Be",
+        "Pt"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "013f238de80d8ebaa775aefdfe153c030addc150329a1d4e5bd33e0bff9a9564",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.0109,
+        "band_gap": -0.0455,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1089,
+        "exotic": 0.116,
+        "plausibility": 0.0,
+        "evaluation": 0.2847
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "ec109ed3628b",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AgBeCo4",
+      "elements": [
+        "Ag",
+        "Be",
+        "Co"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "84cd40858c618a64907707e76b4a66398c51b1d7187e5cb99cb6e81b7a2a8837",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.1722,
+        "band_gap": -0.1357,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1258,
+        "exotic": 0.1352,
+        "plausibility": 0.0,
+        "evaluation": 0.2818
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "72a88940d36d",
+      "parent_ids": [
+        "4e12b2eb28d90b7f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "NiTe2",
+      "elements": [
+        "Ni",
+        "Te"
+      ],
+      "n_elements": 2,
+      "spacegroup": 194,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "b79bcf8b877a8f7ec80d9309a5ce7041502b87dbf04fe4a8a06a38e0d4a2767b",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.1072,
+        "band_gap": 0.0109,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0842,
+        "exotic": 0.0928,
+        "plausibility": 0.0,
+        "evaluation": 0.2811
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "c2291e689deb",
+      "parent_ids": [
+        "7e365d602ebbc701"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AuBeIn4",
+      "elements": [
+        "Au",
+        "Be",
+        "In"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "83450f6f0ae0cca16be7ddf449e5d3679100c3420edd51f27de8eb67e2ecfc45",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.222,
+        "band_gap": -0.0829,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.126,
+        "exotic": 0.1343,
+        "plausibility": 0.0,
+        "evaluation": 0.2792
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "b01655e3887d",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4PTe",
+      "elements": [
+        "Ba",
+        "P",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "580f655c3c9d653ed949d0e7c7b61ffcbeb7fea9ba0d01caed071cc8750f48cf",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.0033,
+        "band_gap": -0.0215,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0955,
+        "exotic": 0.0997,
+        "plausibility": 0.0,
+        "evaluation": 0.2792
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "442ff9bdaac3",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2NbZn",
+      "elements": [
+        "Be",
+        "Nb",
+        "Zn"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "70addf03607f41a7c52f78743d3c3e7a88ec01efa29f5d074b84903fad203dc3",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": 0.1547,
+        "band_gap": -0.0137,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.113,
+        "exotic": 0.1289,
+        "plausibility": 0.0,
+        "evaluation": 0.2792
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "37b4fd415a60",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Mg4TaY",
+      "elements": [
+        "Mg",
+        "Ta",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "26835461dbbb5a38e809552c095f336d67be41248f40425111318cd9b496e6c3",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.1757,
+        "band_gap": -0.1777,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1161,
+        "exotic": 0.1278,
+        "plausibility": 0.0,
+        "evaluation": 0.2786
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "c3fd9f0a98d7",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "As6Cl2Ni",
+      "elements": [
+        "As",
+        "Cl",
+        "Ni"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "0483a206c0ef5515032b2ba7bc12c23d400e2aac3c26fcf86673c2409f15e800",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": 0.1725,
+        "band_gap": 0.2291,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1116,
+        "exotic": 0.1313,
+        "plausibility": 0.0,
+        "evaluation": 0.2784
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "1a7375cc2307",
+      "parent_ids": [
+        "e5752140bb9d272a"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be2CuY",
+      "elements": [
+        "Be",
+        "Cu",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "380c6fde7a10f76be9d94dec0d647a7c90a1789ebb4c25ce6015d7ad2fb2841f",
+        "n_atoms": 4
+      },
+      "predictions": {
+        "formation_energy": 0.0655,
+        "band_gap": -0.0767,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0911,
+        "exotic": 0.1151,
+        "plausibility": 0.0,
+        "evaluation": 0.2772
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "6864abcaebd5",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BiSe",
+      "elements": [
+        "Ba",
+        "Bi",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "9745fda9b6c41fb47c1bfef24540e1e9f6afc9960a437e8e391308fab04a305a",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": -0.0632,
+        "band_gap": -0.0545,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0768,
+        "exotic": 0.0876,
+        "plausibility": 0.0,
+        "evaluation": 0.2767
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5a5445039eb1",
+      "parent_ids": [
+        "ccfa00c47c4961d7"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeMn4Ru",
+      "elements": [
+        "Be",
+        "Mn",
+        "Ru"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "9d25660970e90999e10d02b379842c1f63a2c47e9e9ce4436a1909dabbbf6c85",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.2377,
+        "band_gap": -0.0904,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0839,
+        "exotic": 0.1222,
+        "plausibility": 0.0,
+        "evaluation": 0.2682
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "88d17f6d67e9",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "HfKMg",
+      "elements": [
+        "Hf",
+        "K",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "8bacfb41fe3bf06d9a934b384ffad9172ea951bf3c72596b63ee2c5bd5db3a32",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": 0.3319,
+        "band_gap": -0.1524,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1108,
+        "exotic": 0.1169,
+        "plausibility": 0.0,
+        "evaluation": 0.2681
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "85c0cb499615",
+      "parent_ids": [
+        "3f34be2acaa04ec8"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaCaCd",
+      "elements": [
+        "Ba",
+        "Ca",
+        "Cd"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f51cd967e48b07a1b34284903dfd9ee66a8f45d16eeb022525f9d92019dd8477",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": 0.3003,
+        "band_gap": -0.0836,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0995,
+        "exotic": 0.1199,
+        "plausibility": 0.0,
+        "evaluation": 0.2679
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "6171c0ff3b85",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4ReSe",
+      "elements": [
+        "Ba",
+        "Re",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "a545c1cf5bfdc07b29bef542d7c6b5afd50a61bb5187ca743f57ce5034fe099d",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.2294,
+        "band_gap": -0.0582,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0939,
+        "exotic": 0.0977,
+        "plausibility": 0.0,
+        "evaluation": 0.267
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "17c3938eeb7a",
+      "parent_ids": [
+        "70a55756914df272"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4TeY",
+      "elements": [
+        "Ba",
+        "Te",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "9f9c32bdb29e1c8f9203de0f7cf0d42d9166284407fadb00f2dc6859493be0b7",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.3836,
+        "band_gap": -0.0682,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0936,
+        "exotic": 0.0956,
+        "plausibility": 0.0,
+        "evaluation": 0.2589
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "5d7d3f4bb9df",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BeTl",
+      "elements": [
+        "Ba",
+        "Be",
+        "Tl"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "e90c6c22320bcd42db8a4f01aaa925c012b9244f1f6268c6aa2e810c878534c6",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.6271,
+        "band_gap": -0.1129,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1144,
+        "exotic": 0.1336,
+        "plausibility": 0.0,
+        "evaluation": 0.2566
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "323a57f5a433",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "I2N6Ni",
+      "elements": [
+        "I",
+        "N",
+        "Ni"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f6b63f8079942f3ae8d749cfeeda2ff802218be9b3e5df5668c9cf07542513cb",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": 0.7735,
+        "band_gap": 2.0203,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1375,
+        "exotic": 0.145,
+        "plausibility": 0.0,
+        "evaluation": 0.2556
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "dce16e1fa7ff",
+      "parent_ids": [
+        "3379e2c34a3fbd73"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4BiTe",
+      "elements": [
+        "Be",
+        "Bi",
+        "Te"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "c0f574f5e0f1e2694a1ec200ea86c0f5f5e1b7904a90bceebc74d5d27541fbff",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.6873,
+        "band_gap": 0.1252,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1155,
+        "exotic": 0.1319,
+        "plausibility": 0.0,
+        "evaluation": 0.2535
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "044b0bc33b8a",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4GaMg",
+      "elements": [
+        "Ba",
+        "Ga",
+        "Mg"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "2bf8b91df93e92e69e3b1df9051e4262c9ec34bf944a0a9a4a54dcf3a3c7a51c",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.4984,
+        "band_gap": -0.146,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0798,
+        "exotic": 0.112,
+        "plausibility": 0.0,
+        "evaluation": 0.2528
+      },
+      "evaluation_status": "accepted_for_watchlist",
+      "reason_codes": [
+        "moderate_evaluation_score"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "3f378929d850",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaHfLi",
+      "elements": [
+        "Ba",
+        "Hf",
+        "Li"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6f0acf4970dfa8c007344dcd9ea646d1671599d0a2337f2d3175f5887ce0a53e",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": 0.6359,
+        "band_gap": -0.1097,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.105,
+        "exotic": 0.1208,
+        "plausibility": 0.0,
+        "evaluation": 0.2523
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "06fc2222a25e",
+      "parent_ids": [
+        "3f34be2acaa04ec8"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeCdSr",
+      "elements": [
+        "Be",
+        "Cd",
+        "Sr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "17e0cf5aad7ff18b66192940bc4044d0a8bd686a8873f0f78aca574534a6f70e",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": 0.6009,
+        "band_gap": -0.0528,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0947,
+        "exotic": 0.1126,
+        "plausibility": 0.0,
+        "evaluation": 0.2508
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "f4e7e87dabf9",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4BiMo",
+      "elements": [
+        "Ba",
+        "Bi",
+        "Mo"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6a629b4de97587aba12a8f4afe90a066c4d9b0a451ab00ed76800ec46fe0beb0",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.6264,
+        "band_gap": -0.1084,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0985,
+        "exotic": 0.1129,
+        "plausibility": 0.0,
+        "evaluation": 0.2503
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "833a67352881",
+      "parent_ids": [
+        "554fdf364d472bea"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4CdW",
+      "elements": [
+        "Ba",
+        "Cd",
+        "W"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f4cae4d09413b56e5177db7c91ceef26d436dcaa0b6cc7007ca9d43e58138a5f",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.7573,
+        "band_gap": -0.1039,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1201,
+        "exotic": 0.1259,
+        "plausibility": 0.0,
+        "evaluation": 0.25
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "1476036db372",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Be4HfSe",
+      "elements": [
+        "Be",
+        "Hf",
+        "Se"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "8cf3788f78e92c4c5a9e594477c717729350bdb8b8e78dfd2fbc36d7dc4eb49b",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.8013,
+        "band_gap": 0.157,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1236,
+        "exotic": 0.135,
+        "plausibility": 0.0,
+        "evaluation": 0.2499
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "df382bdb1a0e",
+      "parent_ids": [
+        "e0db0688f754bc2f"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Cl2MnN6",
+      "elements": [
+        "Cl",
+        "Mn",
+        "N"
+      ],
+      "n_elements": 3,
+      "spacegroup": 225,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "9315e794a8f564478b48ef77527200c3ee21a6d6255ac9927f58faf924d1651e",
+        "n_atoms": 9
+      },
+      "predictions": {
+        "formation_energy": 0.7528,
+        "band_gap": 2.2017,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.118,
+        "exotic": 0.1226,
+        "plausibility": 0.0,
+        "evaluation": 0.2494
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "52b8de973014",
+      "parent_ids": [
+        "c7fe128fd3d6c133"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "AsBa4Nb",
+      "elements": [
+        "As",
+        "Ba",
+        "Nb"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "74a9509a83ac182fe36a3231e5cc8371cabaf909fbcbda2e993196da5c01cd31",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.8958,
+        "band_gap": -0.117,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.107,
+        "exotic": 0.1137,
+        "plausibility": 0.0,
+        "evaluation": 0.2387
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "2ea6fbf6d549",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4WY",
+      "elements": [
+        "Ba",
+        "W",
+        "Y"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "45d22c37ee2dec4dd7831d3c9ae2a53f96cb945f34da436b67b2c756e4184020",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 1.1034,
+        "band_gap": -0.1211,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1201,
+        "exotic": 0.1274,
+        "plausibility": 0.0,
+        "evaluation": 0.233
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "c44155ac3487",
+      "parent_ids": [
+        "240f85e739801e0d"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4HfO",
+      "elements": [
+        "Ba",
+        "Hf",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "6ca1f68f3d134469b52b97f49227d18865987883f6687e8a77be53df040cd51f",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 0.8377,
+        "band_gap": -0.1067,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.0576,
+        "exotic": 0.06,
+        "plausibility": 0.0,
+        "evaluation": 0.2236
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "04a3cacf7d40",
+      "parent_ids": [
+        "7e449489d13acebe"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BaKW",
+      "elements": [
+        "Ba",
+        "K",
+        "W"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "f75ad9bfd33fe60f61d8fce4ef00b78bad67798f9f2315d034900f7c8353f25c",
+        "n_atoms": 3
+      },
+      "predictions": {
+        "formation_energy": 1.2861,
+        "band_gap": -0.0663,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1157,
+        "exotic": 0.1225,
+        "plausibility": 0.0,
+        "evaluation": 0.2222
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "b96462c7dabd",
+      "parent_ids": [
+        "c5093e178523ec91"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "Ba4TaZr",
+      "elements": [
+        "Ba",
+        "Ta",
+        "Zr"
+      ],
+      "n_elements": 3,
+      "spacegroup": 216,
+      "lift": {
+        "status": "lifted_ok",
+        "confidence": 0.7,
+        "structure_sha256": "cfb14472e9bee95f5b1e53f77ab7ac608e85516f7fb05043712c990f18f4eeb8",
+        "n_atoms": 6
+      },
+      "predictions": {
+        "formation_energy": 1.3369,
+        "band_gap": -0.0916,
+        "model": "alignn_lite",
+        "reliability": "lifted_structure_proxy"
+      },
+      "scores": {
+        "novelty": 0.1057,
+        "exotic": 0.1169,
+        "plausibility": 0.0,
+        "evaluation": 0.2168
+      },
+      "evaluation_status": "rejected_predicted_unstable",
+      "reason_codes": [
+        "predicted_unstable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "702ce41e2c0d",
+      "parent_ids": [
+        "5f20bfd8330ac9ee"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "C4N4RbS4",
+      "elements": [
+        "C",
+        "N",
+        "Rb",
+        "S"
+      ],
+      "n_elements": 4,
+      "spacegroup": 18,
+      "lift": {
+        "status": "not_liftable",
+        "confidence": 0.0,
+        "structure_sha256": null,
+        "n_atoms": 0
+      },
+      "predictions": {
+        "formation_energy": null,
+        "band_gap": null,
+        "model": null,
+        "reliability": "not_available"
+      },
+      "scores": {
+        "novelty": 0.3797,
+        "exotic": 0.3862,
+        "plausibility": 0.8,
+        "evaluation": 0.1269
+      },
+      "evaluation_status": "rejected_not_liftable",
+      "reason_codes": [
+        "structure_not_liftable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "904ebddeef1c",
+      "parent_ids": [
+        "f021164d22e0d1a3"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "BeGa",
+      "elements": [
+        "Be",
+        "Ga"
+      ],
+      "n_elements": 2,
+      "spacegroup": 216,
+      "lift": {
+        "status": "not_liftable",
+        "confidence": 0.0,
+        "structure_sha256": null,
+        "n_atoms": 0
+      },
+      "predictions": {
+        "formation_energy": null,
+        "band_gap": null,
+        "model": null,
+        "reliability": "not_available"
+      },
+      "scores": {
+        "novelty": 0.118,
+        "exotic": 0.1311,
+        "plausibility": 0.0,
+        "evaluation": 0.0216
+      },
+      "evaluation_status": "rejected_not_liftable",
+      "reason_codes": [
+        "structure_not_liftable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    },
+    {
+      "candidate_id": "4d81c3b0d19a",
+      "parent_ids": [
+        "3e27deb61f725d86"
+      ],
+      "generation_strategy": "element_substitution",
+      "formula": "B2BaO13",
+      "elements": [
+        "B",
+        "Ba",
+        "O"
+      ],
+      "n_elements": 3,
+      "spacegroup": 62,
+      "lift": {
+        "status": "not_liftable",
+        "confidence": 0.0,
+        "structure_sha256": null,
+        "n_atoms": 0
+      },
+      "predictions": {
+        "formation_energy": null,
+        "band_gap": null,
+        "model": null,
+        "reliability": "not_available"
+      },
+      "scores": {
+        "novelty": 0.0948,
+        "exotic": 0.1598,
+        "plausibility": 0.0,
+        "evaluation": 0.0215
+      },
+      "evaluation_status": "rejected_not_liftable",
+      "reason_codes": [
+        "structure_not_liftable"
+      ],
+      "created_at": "2026-03-18T22:46:38.029517+00:00"
+    }
+  ],
+  "disclaimer": "Predictions use baseline GNN models (MAE ~0.23-0.45). Structures are lifted from parent prototypes, NOT relaxed. This is NOT ab-initio validation \u2014 candidates are ranked hypotheses for further computational or experimental study."
+}
