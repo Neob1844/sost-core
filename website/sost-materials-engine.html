@@ -5,7 +5,7 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Protocol — Materials Discovery Engine</title>
+<title>SOST Protocol — Computational Materials Discovery Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -597,18 +597,18 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">MATERIALS ENGINE</div>
+    <div class="hero-label fade-in">MATERIALS ENGINE &middot; v1.4.0</div>
     <h1 class="fade-in delay-1">
-      <span>Materials Discovery</span><br>
-      Platform
+      <span>Computational Materials</span><br>
+      Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      An independent research platform for computational materials science, powered by the SOST ecosystem. Uses dedicated ML models and optimization algorithms &mdash; not ConvergenceX mining.
+      An operational research platform for computational materials science. 75,993 materials with validated crystal structures, GNN property prediction, novelty-first candidate generation, and material intelligence dossiers &mdash; all running at near-zero cost on CPU.
     </p>
     <div class="protocol-badge fade-in delay-3">
-      <span class="tag">RESEARCH</span>
+      <span class="tag">OPERATIONAL</span>
       <span class="sep">|</span>
-      <span class="val">ML models &middot; Optimization algorithms &middot; SOST escrow access</span>
+      <span class="val">75,993 materials &middot; 60 API endpoints &middot; 530+ tests &middot; $0/month compute</span>
     </div>
   </div>
 </section>
@@ -618,25 +618,31 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">01 &mdash; OVERVIEW</div>
-      <h2 class="section-title">Materials Discovery <span class="accent">Platform</span></h2>
+      <h2 class="section-title">Computational Materials <span class="accent">Platform</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">An Independent Research Platform</span>
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Operational Platform &mdash; Phase IV.A</span>
         </div>
-        <span class="spec-tag overlay">RESEARCH</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">LIVE</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          The SOST Materials Discovery Platform is an independent research initiative within the SOST ecosystem.
-          It uses dedicated machine learning models, public materials databases, and optimization algorithms
-          to predict, generate, and evaluate novel material compositions. The platform is <strong>not</strong>
-          an extension of ConvergenceX mining &mdash; it operates as a separate computational service,
-          accessible via SOST escrow payments.
+          The SOST Computational Materials Discovery Platform is an operational research system within the SOST ecosystem.
+          It ingests data from public materials databases (JARVIS, Materials Project, AFLOW, COD), trains
+          graph neural networks for property prediction, generates and evaluates novel material candidates,
+          and produces comprehensive intelligence dossiers &mdash; all at near-zero compute cost on CPU.
         </p>
+        <table class="code-table">
+          <tr><td class="key">Corpus</td><td class="val"><strong>75,993 materials</strong> &mdash; JARVIS DFT 3D, 100% with validated CIF structures</td></tr>
+          <tr><td class="key">ML Models</td><td class="val">CGCNN (formation energy MAE=0.1528, R&sup2;=0.9499) + ALIGNN-Lite &mdash; trained on 20K samples</td></tr>
+          <tr><td class="key">API</td><td class="val"><strong>60 endpoints</strong> &mdash; FastAPI with predict, search, novelty, generation, intelligence, validation</td></tr>
+          <tr><td class="key">Tests</td><td class="val"><strong>530+ tests</strong> passing across 16 test files</td></tr>
+          <tr><td class="key">Compute Cost</td><td class="val">$0/month &mdash; CPU-only, open data, no cloud required</td></tr>
+        </table>
       </div>
     </div>
   </div>
@@ -647,27 +653,29 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">02 &mdash; COMPUTATION</div>
-      <h2 class="section-title">Computational <span class="accent">Approach</span></h2>
+      <h2 class="section-title">What <span class="accent">Works Today</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">ML + Optimization + DFT Integration</span>
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Implemented &amp; Tested Capabilities</span>
         </div>
-        <span class="spec-tag overlay">METHODOLOGY</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
       </div>
       <div class="spec-body">
-        <p class="spec-desc">
-          The platform combines multiple computational approaches for materials discovery,
-          each using purpose-built algorithms independent of the ConvergenceX mining engine.
-        </p>
         <table class="code-table">
-          <tr><td class="key">ML Models</td><td class="val">Graph neural networks for property prediction <span class="comment">// CGCNN, MEGNet, ALIGNN</span></td></tr>
-          <tr><td class="key">Optimization</td><td class="val">Evolutionary algorithms and numerical optimization <span class="comment">// composition search, structure relaxation</span></td></tr>
-          <tr><td class="key">DFT Integration</td><td class="val">API access to VASP, Quantum ESPRESSO, GPAW <span class="comment">// ab initio validation</span></td></tr>
-          <tr><td class="key">Compute Donation</td><td class="val">Miners donate idle CPU cycles between blocks <span class="comment">// voluntary, opt-in community compute</span></td></tr>
+          <tr><td class="key">Property Prediction</td><td class="val">CGCNN + ALIGNN-Lite GNN models on real crystal structures <span class="comment">// formation_energy, band_gap</span></td></tr>
+          <tr><td class="key">Novelty Detection</td><td class="val">104-dim fingerprint + cosine similarity scoring <span class="comment">// known / near_known / novel_candidate</span></td></tr>
+          <tr><td class="key">Exotic Ranking</td><td class="val">Weighted rarity: element IDF + spacegroup rarity + neighbor sparsity</td></tr>
+          <tr><td class="key">Candidate Generation</td><td class="val">3 strategies: element substitution, stoichiometry perturbation, prototype remix</td></tr>
+          <tr><td class="key">Structure Lift</td><td class="val">Approximate crystal structures from parent prototypes for GNN evaluation</td></tr>
+          <tr><td class="key">Intelligence Dossiers</td><td class="val">Full reports with evidence tagging (known/predicted/proxy/unavailable)</td></tr>
+          <tr><td class="key">Validation Queue</td><td class="val">Cheap-first 6-stage ladder: dedup &rarr; novelty &rarr; proxy &rarr; DFT &rarr; external &rarr; learning</td></tr>
+          <tr><td class="key">Benchmark + Calibration</td><td class="val">Empirical error bands per bucket (element count, value range)</td></tr>
+          <tr><td class="key">Structure Analytics</td><td class="val">28 real descriptors: density, volume, lattice, bonds, symmetry, composition stats</td></tr>
+          <tr><td class="key">Campaign Mode</td><td class="val">5 presets + custom: exotic hunt, stability first, band gap target, T/P watchlist</td></tr>
         </table>
       </div>
     </div>
@@ -675,17 +683,19 @@
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-name">Community Compute Marketplace</span>
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">What Does NOT Exist Yet</span>
         </div>
-        <span class="spec-tag overlay">FUTURE</span>
+        <span class="spec-tag overlay">PLANNED</span>
       </div>
       <div class="spec-body">
-        <p class="spec-desc">
-          Researchers publish materials discovery problems. The SOST mining community contributes
-          idle CPU time to run simulations, earning rewards from the PoPC Pool. All results are
-          published on-chain as immutable open data, creating a permanent public materials database.
-        </p>
+        <table class="code-table" style="opacity:0.7">
+          <tr><td class="key">DFT Validation</td><td class="val">Ab-initio computation for candidate confirmation <span class="comment">// Phase IV+</span></td></tr>
+          <tr><td class="key">Phonon Stability</td><td class="val">Vibrational analysis for thermal stability <span class="comment">// Phase IV+</span></td></tr>
+          <tr><td class="key">Structure Relaxation</td><td class="val">M3GNet / CHGNet geometry optimization <span class="comment">// Phase IV+</span></td></tr>
+          <tr><td class="key">Blockchain PoD</td><td class="val">On-chain proof-of-discovery with SOST integration <span class="comment">// Phase V+</span></td></tr>
+          <tr><td class="key">Community Compute</td><td class="val">Marketplace for distributed materials simulation <span class="comment">// Future</span></td></tr>
+        </table>
       </div>
     </div>
   </div>
@@ -696,54 +706,56 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">03 &mdash; ARCHITECTURE</div>
-      <h2 class="section-title">Five-Layer <span class="accent">Architecture</span></h2>
+      <h2 class="section-title">Platform <span class="accent">Architecture</span></h2>
     </div>
 
     <div class="arch-flow fade-in delay-1">
       <div class="arch-node">
         <div class="node-label">Layer 1</div>
         <div class="node-name">Data</div>
-        <div class="node-detail">~150K known materials<br>from public databases</div>
+        <div class="node-detail">75,993 materials<br>100% with structures</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 2</div>
-        <div class="node-name">Inverse Search</div>
-        <div class="node-detail">Specify properties<br>get ranked candidates</div>
+        <div class="node-name">Prediction</div>
+        <div class="node-detail">CGCNN / ALIGNN-Lite<br>MAE=0.15 eV/atom</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 3</div>
-        <div class="node-name">Prediction</div>
-        <div class="node-detail">ML models predict<br>hypothetical properties</div>
+        <div class="node-name">Discovery</div>
+        <div class="node-detail">Candidate generation<br>novelty-first filtering</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 4</div>
-        <div class="node-name">Discovery</div>
-        <div class="node-detail">Evolutionary algorithm<br>generates candidates</div>
+        <div class="node-name">Intelligence</div>
+        <div class="node-detail">Dossiers, calibration<br>validation queue</div>
       </div>
       <div class="arch-node">
         <div class="node-label">Layer 5</div>
         <div class="node-name">Learning</div>
-        <div class="node-detail">Continuous improvement<br>from feedback loops</div>
+        <div class="node-detail">Feedback memory<br>benchmark + retrain</div>
       </div>
     </div>
 
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
+          <div class="spec-icon green"></div>
           <span class="spec-name">Layer 1 &mdash; Data Foundation</span>
         </div>
-        <span class="spec-tag overlay">DATABASE</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">COMPLETE</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Approximately 150,000 known materials sourced from leading open-access databases.
-          Provides the training data for prediction models and the reference set for inverse search.
+          75,993 materials from JARVIS DFT 3D, all with validated crystal structures (CIF),
+          band gap, formation energy, and spacegroup. 100% ML-ready. Ingested via bulk pipeline
+          with structure backfill from jarvis-tools atoms.
         </p>
         <table class="code-table">
-          <tr><td class="key">Materials Project</td><td class="val">Inorganic crystal structures + computed properties</td></tr>
-          <tr><td class="key">JARVIS</td><td class="val">DFT-computed properties, 2D materials, heterostructures</td></tr>
-          <tr><td class="key">AFLOW</td><td class="val">Autonomous high-throughput materials discovery library</td></tr>
+          <tr><td class="key">JARVIS DFT 3D</td><td class="val">75,993 materials &mdash; band gap, formation energy, spacegroup, full CIF structures</td></tr>
+          <tr><td class="key">Materials Project</td><td class="val">Normalizer ready, API key required <span class="comment">// multi-source expansion planned</span></td></tr>
+          <tr><td class="key">AFLOW + COD</td><td class="val">Normalizers implemented <span class="comment">// additional coverage for future phases</span></td></tr>
+          <tr><td class="key">Fingerprints</td><td class="val">75,993 precomputed 104-dim vectors &mdash; 94 compositional + 10 structural</td></tr>
         </table>
       </div>
     </div>
@@ -752,16 +764,22 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-name">Layer 2 &mdash; Inverse Search</span>
+          <span class="spec-name">Layer 2 &mdash; ML Property Prediction</span>
         </div>
-        <span class="spec-tag consensus">SEARCH</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Specify desired material properties (band gap, hardness, thermal conductivity, etc.)
-          and receive a ranked list of candidate compositions from the database. Enables
-          property-driven discovery rather than composition-driven trial and error.
+          Graph neural networks trained on real crystal structures predict formation energy and band gap
+          from CIF input. Training ladder validated at 5K, 10K, 20K, 40K, and 76K samples &mdash;
+          20K CGCNN promoted as production model.
         </p>
+        <table class="code-table">
+          <tr><td class="key">CGCNN</td><td class="val">Formation energy: <strong>MAE=0.1528 eV/atom, R&sup2;=0.9499</strong> (20K training) <span class="comment">// production</span></td></tr>
+          <tr><td class="key">ALIGNN-Lite</td><td class="val">Edge-gated GNN with line graph concept <span class="comment">// secondary model</span></td></tr>
+          <tr><td class="key">Band Gap</td><td class="val">MAE=0.40 eV (2K training) <span class="comment">// scaled retraining Phase IV.B</span></td></tr>
+          <tr><td class="key">Inference</td><td class="val">Single-sample real-time via /predict endpoint</td></tr>
+        </table>
       </div>
     </div>
 
@@ -769,34 +787,44 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-name">Layer 3 &mdash; Property Prediction</span>
+          <span class="spec-name">Layer 3 &mdash; Candidate Generation + Evaluation</span>
         </div>
-        <span class="spec-tag consensus">ML MODELS</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Machine learning models trained on the Layer 1 database predict physical, electronic,
-          and mechanical properties of hypothetical compositions that have never been synthesized.
-          Enables rapid screening of candidate materials before expensive DFT or experimental validation.
+          Generates plausible candidates from corpus parents via element substitution, stoichiometry perturbation,
+          and prototype remix. Filters novelty-first, lifts approximate structures from parent prototypes,
+          and evaluates with real GNN prediction.
         </p>
+        <table class="code-table">
+          <tr><td class="key">Novelty Filter</td><td class="val">Cosine similarity on 104-dim fingerprints: known / near_known / novel_candidate</td></tr>
+          <tr><td class="key">Exotic Ranking</td><td class="val">Weighted: 40% novelty + 20% element rarity + 15% structure rarity + 25% sparsity</td></tr>
+          <tr><td class="key">Structure Lift</td><td class="val">95% lift rate &mdash; element swap on parent structures, pymatgen validated</td></tr>
+          <tr><td class="key">Campaigns</td><td class="val">5 presets: exotic hunt, stability first, band gap target, T/P watchlist, novelty hunt</td></tr>
+        </table>
       </div>
     </div>
 
     <div class="spec-block fade-in delay-4">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">Layer 4 &mdash; Generative Discovery</span>
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Layer 4 &mdash; Material Intelligence + Validation</span>
         </div>
-        <span class="spec-tag immutable">GENERATIVE</span>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          An evolutionary algorithm generates novel material candidates by mutating and
-          recombining known compositions. Fitness is evaluated using Layer 3 prediction models.
-          Evolutionary algorithms and numerical optimization drive the search toward
-          compositions with target properties.
+          Every material or candidate gets a comprehensive dossier with evidence-tagged properties,
+          application hypotheses, comparison tables, calibrated confidence, and validation priority.
         </p>
+        <table class="code-table">
+          <tr><td class="key">Evidence</td><td class="val">Every property tagged: <code>known</code> | <code>predicted</code> | <code>proxy</code> | <code>unavailable</code></td></tr>
+          <tr><td class="key">Applications</td><td class="val">Rule-based: semiconductor, PV, thermoelectric, catalytic, magnetic, structural, high-pressure</td></tr>
+          <tr><td class="key">Calibration</td><td class="val">Empirical confidence bands from benchmark MAE per element-count and value-range bucket</td></tr>
+          <tr><td class="key">Validation Queue</td><td class="val">6-stage cheap-first ladder with ROI scoring and dedup</td></tr>
+        </table>
       </div>
     </div>
 
@@ -804,17 +832,50 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">Layer 5 &mdash; Continuous Learning</span>
+          <span class="spec-name">Layer 5 &mdash; Feedback + Learning Loop</span>
         </div>
-        <span class="spec-tag overlay">FEEDBACK</span>
+        <span class="spec-tag overlay">SCAFFOLD</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          The system improves from feedback: validated predictions refine ML models,
-          user-submitted experimental data enriches the database, and discovered materials
-          become seeds for further generative exploration. A self-improving loop that
-          increases accuracy and coverage over time.
+          Records predictions vs observations, identifies model failures by property and element family,
+          tracks promising chemical regions, and builds retraining queues. Evidence bridge imports
+          external data (JSON/CSV). Auto-links observations to predictions for feedback. Currently a
+          scaffold &mdash; active retraining loop not yet triggered.
         </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">04 &mdash; ROADMAP</div>
+      <h2 class="section-title">Development <span class="accent">Roadmap</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-body" style="padding:16px 20px">
+        <table class="code-table" style="font-size:12px">
+          <tr><th style="width:140px">Phase</th><th>Scope</th><th style="width:90px">Status</th></tr>
+          <tr><td class="key">Phase I</td><td>Data foundation: 4-source ingestion, canonical schema, SQLite storage, audit/export</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase II</td><td>Baseline ML: CGCNN + ALIGNN-Lite training, /predict, /similar, model registry</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.A</td><td>Novelty filter: 104-dim fingerprints, exotic ranking, cosine similarity bands</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.B</td><td>Shortlist engine: configurable criteria, T/P proxy screening, decision bands</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.C</td><td>Corpus scale: 75,993 materials, persistent fingerprints, fast retrieval, campaigns</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.D</td><td>Candidate generation: element substitution, stoichiometry perturbation, prototype remix</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.E</td><td>Structure lift + evaluation: prototype structures, real GNN prediction on candidates</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.F</td><td>Material Intelligence: dossiers, evidence tagging, application classification, validation priority</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.G</td><td>Validation queue + learning scaffold: cheap-first ladder, feedback memory, ROI scoring</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.H</td><td>Evidence bridge + benchmark + calibration: empirical confidence bands, evidence-feedback linking</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase III.I-J</td><td>Structure analytics (28 descriptors) + corpus backfill (100% CIF coverage)</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key" style="color:var(--cyan-primary)">Phase IV.A</td><td>Scaled retraining ladder: formation energy 5K&rarr;10K&rarr;20K&rarr;40K&rarr;76K, 20K CGCNN promoted</td><td style="color:var(--cyan-primary)">Current</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase IV.B</td><td>Band gap scaled retraining ladder</td><td>Planned</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase V</td><td>Physics-based screening: phonon stability, EOS fitting, CALPHAD, structural relaxation</td><td>Planned</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase VI+</td><td>Blockchain proof-of-discovery, community compute marketplace, SOST escrow access</td><td>Future</td></tr>
+        </table>
       </div>
     </div>
   </div>
@@ -824,7 +885,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">04 &mdash; ACCESS</div>
+      <div class="section-id">05 &mdash; ACCESS</div>
       <h2 class="section-title">Access via SOST <span class="accent">Escrow</span></h2>
     </div>
 
@@ -895,18 +956,20 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">05 &mdash; DISCLAIMER</div>
+      <div class="section-id">06 &mdash; DISCLAIMER</div>
       <h2 class="section-title">Research <span class="accent">Disclaimer</span></h2>
     </div>
 
     <div class="disclaimer-box fade-in delay-1">
       <p>
-        The Materials Discovery Platform is an independent research initiative within the SOST ecosystem.
-        It uses dedicated ML models and optimization algorithms, not the ConvergenceX mining engine.
-        Practical deployment requires significant additional research in computational materials science.
-        SOST commits to exploring this application without making premature claims about timelines or
-        capabilities. Any deployment will be contingent on peer-reviewed validation and demonstration
-        of scientifically meaningful results. This is a research direction, not a product commitment.
+        The Computational Materials Discovery Platform is an operational research system within the SOST ecosystem.
+        It uses dedicated ML models (CGCNN, ALIGNN-Lite) and heuristic algorithms, not the ConvergenceX mining engine.
+        Current predictions are <strong>baseline GNN estimates</strong> (MAE ~0.15 eV/atom for formation energy)
+        and should not be treated as experimental measurements. Novelty assessment is relative to the
+        ingested corpus only, not all published scientific literature. The platform does not yet perform
+        DFT validation, phonon stability calculations, or experimental verification. Generated candidates
+        are <strong>heuristic hypotheses</strong> requiring further computational or experimental validation.
+        The code is open-source (MIT License) and all limitations are documented honestly in every response.
       </p>
     </div>
   </div>
