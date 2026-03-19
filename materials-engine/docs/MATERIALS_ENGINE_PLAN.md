@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase III.F (v1.0.0)**
+> **Document status: Active implementation — Phase III.H Final (v1.2.1)**
 > Last updated: 2026-03-18
 
 ---
@@ -377,6 +377,24 @@ Cosine similarity, brute-force scan (sufficient for <50K materials).
 - 3 new API endpoints: /intelligence/status, /intelligence/dossier/from-evaluation, /intelligence/dossier/{id}
 - 32 dedicated tests + all existing 370 tests (402 total)
 - Version bumped to 1.0.0
+
+### Phase III.G — Validation Queue + Learning Loop Scaffold (Current) ✅
+- Validation queue: persistent, prioritized, dedup-aware
+- Cheap-first ladder: 6 stages (dedup → novelty → proxy → DFT → external → learning)
+- ROI scoring: favors high info value + low cost
+- Feedback memory: records predictions vs observations
+- Learning scaffold: identifies failures and promising regions
+- 10 new API endpoints
+- 35 dedicated tests + all existing 402 tests (437 total)
+
+### Phase III.H — Evidence Bridge + Benchmark + Calibration (Current) ✅
+- Evidence bridge: structured import of external evidence (JSON/CSV/manual)
+- Benchmark suite: reproducible accuracy measurement (FE MAE=0.23, BG MAE=0.42)
+- Confidence calibration: empirical error-based bands by element count and value range
+- 10 new API endpoints
+- 28 dedicated tests + all existing 437 tests (465 total)
+- III.H Delta: Calibration integrated into dossier/intelligence, validation queue calibrated,
+  evidence→feedback auto-linking, 4 new endpoints, 18 delta tests (483 total)
 
 ### Phase IV — Physics-Based Screening (Planned)
 - Phonon-based thermal stability (phonopy or ML surrogate)

@@ -266,8 +266,10 @@ class TestAPI:
     @pytest.fixture(autouse=True)
     def setup(self):
         import src.api.server as srv
-        srv._validation_queue = None
-        srv._feedback_memory = None
+        from src.validation.queue import ValidationQueue
+        from src.learning.feedback import FeedbackMemory
+        srv._validation_queue = ValidationQueue(output_dir=tempfile.mkdtemp())
+        srv._feedback_memory = FeedbackMemory(output_dir=tempfile.mkdtemp())
         f = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         f.close()
         srv._db = MaterialsDB(f.name)
@@ -367,7 +369,7 @@ class TestAPI:
     def test_status_version(self):
         c = self._client()
         d = c.get("/status").json()
-        assert d["version"] == "1.1.0"
+        assert d["version"] == "1.2.1"
 
 
 if __name__ == "__main__":

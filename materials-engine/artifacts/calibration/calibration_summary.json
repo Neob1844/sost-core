@@ -1,0 +1,10 @@
+{
+  "formation_energy": {
+    "mae": 0.2318,
+    "band": "high"
+  },
+  "band_gap": {
+    "mae": 0.42,
+    "band": "high"
+  }
+}

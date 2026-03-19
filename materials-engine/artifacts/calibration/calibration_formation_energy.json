@@ -1,0 +1,58 @@
+{
+  "target_property": "formation_energy",
+  "overall_mae": 0.2318,
+  "overall_confidence_band": "high",
+  "thresholds_used": {
+    "high": 0.3,
+    "medium": 0.6
+  },
+  "by_element_count": {
+    "other": {
+      "mae": 0.2354,
+      "count": 98,
+      "confidence_band": "high",
+      "expected_error": 0.2354
+    },
+    "5-99": {
+      "mae": 0.0547,
+      "count": 2,
+      "confidence_band": "high",
+      "expected_error": 0.0547
+    }
+  },
+  "by_value_range": {
+    "-1.0-0.0": {
+      "mae": 0.1995,
+      "count": 32,
+      "confidence_band": "high",
+      "expected_error": 0.1995
+    },
+    "-3.0--1.0": {
+      "mae": 0.2601,
+      "count": 41,
+      "confidence_band": "high",
+      "expected_error": 0.2601
+    },
+    "0.0-1.0": {
+      "mae": 0.1612,
+      "count": 14,
+      "confidence_band": "high",
+      "expected_error": 0.1612
+    },
+    "-6.0--3.0": {
+      "mae": 0.0863,
+      "count": 5,
+      "confidence_band": "high",
+      "expected_error": 0.0863
+    },
+    "1.0-5.0": {
+      "mae": 0.4306,
+      "count": 8,
+      "confidence_band": "medium",
+      "expected_error": 0.4306
+    }
+  },
+  "sample_size": 100,
+  "benchmark_id": "benchmark_formation_energy_42",
+  "note": "Confidence bands derived from benchmark MAE on known materials. high: MAE < 0.3, medium: MAE < 0.6, low: MAE >= 0.6. NOT statistical probability \u2014 empirical error bands only."
+}
