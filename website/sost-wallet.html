@@ -8,8 +8,8 @@
 <title>SOST Protocol — Wallet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/lib/esm/index.min.js" type="module" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" crossorigin></script>
+<!-- noble/secp256k1 loaded via dynamic import() in module script below -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" crossorigin></script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -456,7 +456,7 @@
           <tr><td class="label">QR Generation</td><td class="value">qrcode.js (client-side canvas rendering)</td></tr>
           <tr><td class="label">Address Format</td><td class="value highlight">sost1 + HASH160(compressed_pubkey)</td></tr>
           <tr><td class="label">Transaction Format</td><td class="value">P2PKH (Pay-to-Public-Key-Hash)</td></tr>
-          <tr><td class="label">RPC Endpoint</td><td class="value green">explorer.sostcore.com/rpc</td></tr>
+          <tr><td class="label">RPC Endpoint</td><td class="value green">sostcore.com/rpc</td></tr>
           <tr><td class="label">Coin Selection</td><td class="value">Smallest-first UTXO strategy</td></tr>
           <tr><td class="label">Signing</td><td class="value">ECDSA secp256k1 with low-S normalization</td></tr>
         </table>
@@ -810,7 +810,7 @@
         <h3>RPC Endpoint</h3>
         <div class="form-group">
           <label class="form-label">Node URL</label>
-          <input type="text" id="settingsRpc" class="form-input" value="https://explorer.sostcore.com/rpc">
+          <input type="text" id="settingsRpc" class="form-input" value="/rpc">
         </div>
         <div class="form-group">
           <label class="form-label">RPC Username</label>
@@ -1139,7 +1139,7 @@ async function loadWallet(password) {
 function getSettings() {
   const raw = localStorage.getItem(SETTINGS_KEY);
   if (raw) return JSON.parse(raw);
-  return { rpcUrl: 'https://explorer.sostcore.com/rpc', rpcUser: 'sost', rpcPass: '', lockMinutes: 5 };
+  return { rpcUrl: '/rpc', rpcUser: '', rpcPass: '', lockMinutes: 5 };
 }
 
 async function rpcCall(method, params = {}) {
