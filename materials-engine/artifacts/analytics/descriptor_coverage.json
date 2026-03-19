@@ -1,0 +1,10 @@
+{
+  "total_materials": 75993,
+  "with_structure": 2000,
+  "structure_coverage_pct": 2.6,
+  "descriptor_categories": {
+    "computed_from_structure": "density, volume, lattice, bonds, symmetry \u2014 requires CIF",
+    "computed_from_composition": "formula_weight, element stats, fractions \u2014 always available",
+    "unavailable_without_structure": "density, volume_per_atom, bond distances, crystal system"
+  }
+}

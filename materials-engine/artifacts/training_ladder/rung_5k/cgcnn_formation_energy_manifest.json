@@ -1,0 +1,18 @@
+{
+  "rung_name": "rung_5k",
+  "target": "formation_energy",
+  "architecture": "cgcnn",
+  "dataset_size": 5000,
+  "train_size": 4000,
+  "val_size": 500,
+  "test_size": 500,
+  "epochs": 20,
+  "best_epoch": 14,
+  "seed": 42,
+  "test_mae": 0.2033,
+  "test_rmse": 0.2824,
+  "test_r2": 0.9454,
+  "training_time_sec": 489.4,
+  "checkpoint": "cgcnn_formation_energy_best.pt",
+  "created_at": "2026-03-19T09:36:16.139767+00:00"
+}

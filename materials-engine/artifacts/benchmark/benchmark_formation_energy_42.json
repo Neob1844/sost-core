@@ -5,30 +5,30 @@
   "sample_size": 1,
   "corpus_with_structure": 1,
   "seed": 42,
-  "elapsed_sec": 0.5,
-  "created_at": "2026-03-19T08:08:47.726531+00:00",
+  "elapsed_sec": 0.8,
+  "created_at": "2026-03-19T13:44:12.300280+00:00",
   "overall": {
-    "mae": 3.2549,
-    "rmse": 3.2549,
-    "median_error": 3.2549,
-    "p90_error": 3.2549,
-    "p95_error": 3.2549,
-    "max_error": 3.2549
+    "mae": 2.4158,
+    "rmse": 2.4158,
+    "median_error": 2.4158,
+    "p90_error": 2.4158,
+    "p95_error": 2.4158,
+    "max_error": 2.4158
   },
   "by_element_count": {
     "other": {
       "count": 1,
-      "mae": 3.2549,
-      "median": 3.2549,
-      "p90": 3.2549
+      "mae": 2.4158,
+      "median": 2.4158,
+      "p90": 2.4158
     }
   },
   "by_value_range": {
     "-6.0--3.0": {
       "count": 1,
-      "mae": 3.2549,
-      "median": 3.2549,
-      "p90": 3.2549
+      "mae": 2.4158,
+      "median": 2.4158,
+      "p90": 2.4158
     }
   },
   "sample_results": [
@@ -36,8 +36,8 @@
       "formula": "NaCl",
       "canonical_id": "d02e18112447d607",
       "actual": -4.2,
-      "predicted": -0.9451,
-      "error": 3.2549,
+      "predicted": -1.7842,
+      "error": 2.4158,
       "n_elements": 2
     }
   ]

@@ -9,6 +9,8 @@ Every property in an intelligence report must declare its evidence level:
 
 # Evidence levels
 KNOWN = "known"
+COMPUTED_STRUCTURE = "computed_from_structure"
+COMPUTED_COMPOSITION = "computed_from_composition"
 PREDICTED = "predicted"
 PROXY = "proxy"
 UNAVAILABLE = "unavailable"

@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: III.H Final — Evidence + Benchmark + Calibration + Integration (v1.2.1)**
+> **Current phase: IV.A — Scaled Retraining Ladder (v1.4.0)**
 
 ## What exists (implemented and tested)
 
@@ -11,13 +11,16 @@
 - **API** (`src/api/server.py`): FastAPI with 60 endpoints
 - **Audit + Export**: Corpus audit (JSON + Markdown), reproducible ML-ready CSV export
 
-### Corpus (Phase III.C — 75,993 materials)
+### Corpus (Phase III.C + III.J — 75,993 materials)
 - **Source**: JARVIS DFT 3D bulk ingestion (via jarvis-tools)
 - **Coverage**: All 75,993 have band_gap, formation_energy, spacegroup
+- **Structure coverage**: **100%** — all 75,993 have validated CIF structures (backfilled from JARVIS atoms)
 - **ML-ready**: 100% — all have the fields needed for prediction and scoring
 
-### ML Prediction (Phase II)
-- **CGCNN + ALIGNN-Lite models**: Trained on 2000 samples
+### ML Prediction (Phase II → IV.A)
+- **Formation energy**: CGCNN on 20K samples — **MAE=0.1528, R²=0.9499** (promoted via training ladder)
+- **Band gap**: CGCNN/ALIGNN-Lite on 2K samples (Phase IV.B target)
+- **Training ladder**: 5 rungs (5K→10K→20K→40K→76K) — 20K is optimal cost/quality tradeoff
 - **`/predict`**: Real GNN inference from CIF input
 - **`/similar`**: 104-dim fingerprint similarity
 
@@ -90,6 +93,15 @@
 - **Integrated**: Calibration appears inside dossiers. Evidence auto-links to feedback. Validation queue shows calibrated bands.
 - **API**: `/evidence/*`, `/benchmark/*`, `/calibration/*`, `/validation/queue/calibrated`, `/intelligence/material/{id}/calibrated`, `/intelligence/report/calibrated`, `/evidence/feedback-links`
 
+### Real Structure Analytics (Phase III.I)
+- **28 physical descriptors** computed from structure geometry + composition
+- **Structure-derived** (requires CIF): density, volume, lattice params, bond distances, symmetry, centrosymmetry
+- **Composition-derived** (always available): formula weight, element statistics, class fractions
+- **Evidence tagging**: `computed_from_structure`, `computed_from_composition`, `proxy`, `unavailable`
+- **Integrated into dossier**: `structure_analytics` section with descriptor counts by evidence
+- **API**: `GET /analytics/material/{id}`, `POST /analytics/report`
+- **Coverage**: **75,993/75,993** materials have CIF structures (100% after Phase III.J backfill)
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS database, zero API cost
@@ -108,7 +120,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (483 tests)
+# Run all tests (530 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -184,7 +196,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (483 total)
+## Tests (530 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|
