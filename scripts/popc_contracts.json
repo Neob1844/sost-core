@@ -1,8 +1,8 @@
 {
   "version": 1,
   "description": "SOST PoPC Contract Registry \u2014 managed by popc_daemon.py",
-  "foundation_fee_address": "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429",
-  "popc_pool_address": "sost144cc82d3c711b5a9322640c66b94a520497ac40d",
+  "foundation_fee_address": "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33",
+  "popc_pool_address": "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f",
   "contracts": [
     {
       "contract_id": "FOUND-001",
@@ -15,7 +15,7 @@
       "expiry_date": "2026-08-28",
       "fee_rate": 0.05,
       "gross_reward_sost": "1.50000000",
-      "participant_sost": "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429",
+      "participant_sost": "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33",
       "token_contract": "0x68749665FF8D2d112Fa859AA293F07A622782F38",
       "eth_wallet": "0xd38955822b88867CD010946F0Ba25680B9DfC7a6",
       "status": "PENDING"
@@ -31,7 +31,7 @@
       "expiry_date": "2026-08-28",
       "fee_rate": 0.05,
       "gross_reward_sost": "1.50000000",
-      "participant_sost": "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429",
+      "participant_sost": "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33",
       "token_contract": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
       "eth_wallet": "0xd38955822b88867CD010946F0Ba25680B9DfC7a6",
       "status": "PENDING"

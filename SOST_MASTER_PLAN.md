@@ -40,9 +40,9 @@
 Private keys for the 3 constitutional addresses (founder, gold vault, PoPC pool) were exposed in a chat session. Although the repo is private and the network has no external participants, these keys must be considered compromised.
 
 ### New Constitutional Wallets (already created, stored offline)
-- **Founder/Miner V2:** `sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429`
-- **Gold Vault V2:** `sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724`
-- **PoPC Pool V2:** `sost144cc82d3c711b5a9322640c66b94a520497ac40d`
+- **Founder/Miner V2:** `sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33`
+- **Gold Vault V2:** `sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d`
+- **PoPC Pool V2:** `sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f`
 - Wallet files: `~/SOST/secrets/` (chmod 600, NOT in git)
 - Backup: `C:\Users\ferna\Desktop\SOST_SECRETS_BACKUP\` → must be moved to USB
 

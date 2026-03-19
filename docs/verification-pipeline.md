@@ -21,7 +21,7 @@ The pipeline is sequential — each layer must pass before the next runs.
 - Genesis block: timestamp=1773597600, bits_q=765730
 
 ### Layer 3 — cASERT bitsQ Difficulty (CHEAP, ~microseconds)
-- Exponential cASERT bitsQ: `next_bitsq = anchor × 2^(-td / 43200)`
+- Exponential cASERT bitsQ: `next_bitsq = anchor × 2^(-td / 172800)`
 - Cubic polynomial approximation of 2^x in Q16.16
 - Epoch 0 anchor always uses GENESIS_BITSQ (765,730)
 - Global bounds: MIN_BITSQ=65,536, MAX_BITSQ=16,711,680

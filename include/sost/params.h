@@ -79,7 +79,7 @@ inline constexpr uint32_t MAX_BITSQ     = 255u * Q16_ONE;
 // bitsQ = log2(600 * 5.48 * 1.0) * 65536 = 11.6841 * 65536 = 765730
 inline constexpr uint32_t GENESIS_BITSQ         = 765730;  // 11.6841, calibrated
 
-inline constexpr int64_t  BITSQ_HALF_LIFE       = 43200;   // 12 hours
+inline constexpr int64_t  BITSQ_HALF_LIFE       = 172800;  // 48 hours (288 blocks)
 inline constexpr int32_t  BITSQ_MAX_DELTA_NUM   = 1;       // relative delta cap numerator
 inline constexpr int32_t  BITSQ_MAX_DELTA_DEN   = 16;      // relative delta cap denominator (6.25%)
 
@@ -183,9 +183,9 @@ inline constexpr int32_t CX_NSEG_T = (CX_ROUNDS_T + CX_SEGMENT_LEN - 1) / CX_SEG
 inline constexpr int32_t CX_NSEG_D = (CX_ROUNDS_D + CX_SEGMENT_LEN - 1) / CX_SEGMENT_LEN;
 
 // Constitutional addresses (hardcoded at genesis, immutable)
-constexpr const char* ADDR_MINER_FOUNDER = "sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429";
-constexpr const char* ADDR_GOLD_VAULT    = "sost1505a886a372a34e0044e3953ea2c8c0f0d7a4724";
-constexpr const char* ADDR_POPC_POOL     = "sost144cc82d3c711b5a9322640c66b94a520497ac40d";
+constexpr const char* ADDR_MINER_FOUNDER = "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33";
+constexpr const char* ADDR_GOLD_VAULT    = "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d";
+constexpr const char* ADDR_POPC_POOL     = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
 
 // Timestamp rules
 inline constexpr int32_t MTP_WINDOW       = 11;

@@ -895,7 +895,7 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
           cASERT consensus-rate control system. Inspired by BCH's ASERT, the bitsQ controller
           performs per-block exponential difficulty adjustment in continuous Q16.16 log-space.
           Unlike legacy epoch-based retarget systems that wait for large windows, bitsQ corrects
-          difficulty every single block with a 12-hour half-life and a per-block relative delta
+          difficulty every single block with a 48-hour half-life and a per-block relative delta
           cap of 6.25% (1/16), producing smooth transitions and faster convergence to the
           target interval.
         </p>
@@ -926,7 +926,7 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
           </tr>
           <tr>
             <td class="key">bitsQ Half-Life</td>
-            <td class="val"><code>43,200</code> seconds <span class="comment">// 12 hours</span></td>
+            <td class="val"><code>43,200</code> seconds <span class="comment">// 48 hours</span></td>
           </tr>
           <tr>
             <td class="key">MIN_BITSQ</td>

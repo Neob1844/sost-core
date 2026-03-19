@@ -91,7 +91,8 @@ void test_bitsq() {
         TEST("50 blocks on-schedule -> GENESIS_BITSQ", d == GENESIS_BITSQ);
     }
 
-    // Exponential response: 100 blocks at 25s each -> difficulty rises >= 50%
+    // Exponential response: 100 blocks at 25s each -> difficulty rises >= 20%
+    // (48h half-life = slower response than 12h)
     {
         std::vector<BlockMeta> fast;
         uint32_t diff = GENESIS_BITSQ;
@@ -99,13 +100,11 @@ void test_bitsq() {
             fast.push_back({ZERO_HASH(), i, GENESIS_TIME + (int64_t)i * 25, diff});
             if (i > 0) diff = casert_next_bitsq(fast, i + 1);
         }
-        // After 100 blocks at 25s, chain is ~57500s ahead of schedule
-        // Exponential cASERT bitsQ should raise difficulty by ~58%
         uint32_t final_d = casert_next_bitsq(fast, 100);
         char buf[128];
-        snprintf(buf, sizeof(buf), "100 blocks @25s: diff %u -> %u (%.1f%% increase >= 50%%)",
+        snprintf(buf, sizeof(buf), "100 blocks @25s: diff %u -> %u (%.1f%% increase >= 20%%)",
                  GENESIS_BITSQ, final_d, 100.0 * (final_d - GENESIS_BITSQ) / GENESIS_BITSQ);
-        TEST(buf, final_d >= GENESIS_BITSQ * 3 / 2);  // at least +50%
+        TEST(buf, final_d >= GENESIS_BITSQ * 6 / 5);  // at least +20% (48h half-life)
     }
 
     // Slow blocks (1200s each) -> difficulty drops

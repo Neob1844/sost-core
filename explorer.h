@@ -308,9 +308,9 @@ var _lastBlockTime=0;
 var _avgBlockTime=120;
 var _countdownInterval=null;
 const ROLES={
-  'sost1be2302d89daef55af4162127b9656f7604948efa':'GOLD VAULT',
-  'sost18a222922bba5ac84979a74d76c392fdeaa59f505':'POPC POOL',
-  'sost1f559e05f39486582231179a4985366961d8f8313':'MINER FOUNDER'
+  'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d':'GOLD VAULT',
+  'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f':'POPC POOL',
+  'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33':'MINER FOUNDER'
 };
 const CASERT_LEVELS=[
   {signal:'0\u20134 ahead',level:1,scale:1,k:4,steps:4},
