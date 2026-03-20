@@ -597,18 +597,18 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">MATERIALS ENGINE &middot; v1.4.0</div>
+    <div class="hero-label fade-in">MATERIALS ENGINE &middot; v2.0.0</div>
     <h1 class="fade-in delay-1">
       <span>Computational Materials</span><br>
       Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      An operational research platform for computational materials science. 75,993 materials with validated crystal structures, GNN property prediction, novelty-first candidate generation, and material intelligence dossiers &mdash; all running at near-zero cost on CPU.
+      An operational research platform for computational materials science. 75,993 materials with validated crystal structures, dual-target GNN prediction, novelty-first candidate generation, multiobjectve frontier ranking, pre-DFT triage, and active learning orchestration &mdash; all at near-zero cost on CPU.
     </p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">OPERATIONAL</span>
       <span class="sep">|</span>
-      <span class="val">75,993 materials &middot; 60 API endpoints &middot; 530+ tests &middot; $0/month compute</span>
+      <span class="val">75,993 materials &middot; 70+ API endpoints &middot; 636 tests &middot; $0/month compute</span>
     </div>
   </div>
 </section>
@@ -625,7 +625,7 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-name">Operational Platform &mdash; Phase IV.A</span>
+          <span class="spec-name">Operational Platform &mdash; v2.0.0</span>
         </div>
         <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">LIVE</span>
       </div>
@@ -638,9 +638,9 @@
         </p>
         <table class="code-table">
           <tr><td class="key">Corpus</td><td class="val"><strong>75,993 materials</strong> &mdash; JARVIS DFT 3D, 100% with validated CIF structures</td></tr>
-          <tr><td class="key">ML Models</td><td class="val">CGCNN (formation energy MAE=0.1528, R&sup2;=0.9499) + ALIGNN-Lite &mdash; trained on 20K samples</td></tr>
-          <tr><td class="key">API</td><td class="val"><strong>60 endpoints</strong> &mdash; FastAPI with predict, search, novelty, generation, intelligence, validation</td></tr>
-          <tr><td class="key">Tests</td><td class="val"><strong>530+ tests</strong> passing across 16 test files</td></tr>
+          <tr><td class="key">ML Models</td><td class="val">CGCNN (FE MAE=0.1528, R&sup2;=0.95) + ALIGNN-Lite (BG MAE=0.3422, R&sup2;=0.71) &mdash; both on 20K</td></tr>
+          <tr><td class="key">API</td><td class="val"><strong>70+ endpoints</strong> &mdash; FastAPI with predict, frontier, triage, niche campaigns, orchestrator</td></tr>
+          <tr><td class="key">Tests</td><td class="val"><strong>636 tests</strong> passing across 19 test files</td></tr>
           <tr><td class="key">Compute Cost</td><td class="val">$0/month &mdash; CPU-only, open data, no cloud required</td></tr>
         </table>
       </div>
@@ -676,6 +676,11 @@
           <tr><td class="key">Benchmark + Calibration</td><td class="val">Empirical error bands per bucket (element count, value range)</td></tr>
           <tr><td class="key">Structure Analytics</td><td class="val">28 real descriptors: density, volume, lattice, bonds, symmetry, composition stats</td></tr>
           <tr><td class="key">Campaign Mode</td><td class="val">5 presets + custom: exotic hunt, stability first, band gap target, T/P watchlist</td></tr>
+          <tr><td class="key">Frontier Engine</td><td class="val">Dual-target multiobjectve ranking: stability + BG fit + novelty + exotic + structure + priority</td></tr>
+          <tr><td class="key">Validation Packs</td><td class="val">Exportable packages with evidence, risk flags, next-step recommendations (JSON/MD/CSV)</td></tr>
+          <tr><td class="key">Pre-DFT Triage</td><td class="val">Hard gates + scoring: approved / manual_review / watchlist / reject — 4 profiles</td></tr>
+          <tr><td class="key">Niche Campaigns</td><td class="val">Themed discovery: stable_semiconductor, wide_gap_exotic, high_novelty, batch + compare</td></tr>
+          <tr><td class="key">Active Learning</td><td class="val">Error hotspot detection, coverage analysis, retraining proposals, corpus expansion planner</td></tr>
         </table>
       </div>
     </div>
@@ -694,6 +699,7 @@
           <tr><td class="key">Phonon Stability</td><td class="val">Vibrational analysis for thermal stability <span class="comment">// Phase IV+</span></td></tr>
           <tr><td class="key">Structure Relaxation</td><td class="val">M3GNet / CHGNet geometry optimization <span class="comment">// Phase IV+</span></td></tr>
           <tr><td class="key">Blockchain PoD</td><td class="val">On-chain proof-of-discovery with SOST integration <span class="comment">// Phase V+</span></td></tr>
+          <tr><td class="key">Remote Sensing</td><td class="val">Satellite-based mineral detection + GNN spectral prediction <span class="comment">// Vision — viability study complete</span></td></tr>
           <tr><td class="key">Community Compute</td><td class="val">Marketplace for distributed materials simulation <span class="comment">// Future</span></td></tr>
         </table>
       </div>
@@ -776,8 +782,7 @@
         </p>
         <table class="code-table">
           <tr><td class="key">CGCNN</td><td class="val">Formation energy: <strong>MAE=0.1528 eV/atom, R&sup2;=0.9499</strong> (20K training) <span class="comment">// production</span></td></tr>
-          <tr><td class="key">ALIGNN-Lite</td><td class="val">Edge-gated GNN with line graph concept <span class="comment">// secondary model</span></td></tr>
-          <tr><td class="key">Band Gap</td><td class="val">MAE=0.40 eV (2K training) <span class="comment">// scaled retraining Phase IV.B</span></td></tr>
+          <tr><td class="key">ALIGNN-Lite</td><td class="val">Band gap: <strong>MAE=0.3422 eV, R&sup2;=0.707</strong> (20K training) <span class="comment">// production</span></td></tr>
           <tr><td class="key">Inference</td><td class="val">Single-sample real-time via /predict endpoint</td></tr>
         </table>
       </div>
@@ -871,10 +876,128 @@
           <tr><td class="key">Phase III.G</td><td>Validation queue + learning scaffold: cheap-first ladder, feedback memory, ROI scoring</td><td style="color:var(--green-primary)">Complete</td></tr>
           <tr><td class="key">Phase III.H</td><td>Evidence bridge + benchmark + calibration: empirical confidence bands, evidence-feedback linking</td><td style="color:var(--green-primary)">Complete</td></tr>
           <tr><td class="key">Phase III.I-J</td><td>Structure analytics (28 descriptors) + corpus backfill (100% CIF coverage)</td><td style="color:var(--green-primary)">Complete</td></tr>
-          <tr><td class="key" style="color:var(--cyan-primary)">Phase IV.A</td><td>Scaled retraining ladder: formation energy 5K&rarr;10K&rarr;20K&rarr;40K&rarr;76K, 20K CGCNN promoted</td><td style="color:var(--cyan-primary)">Current</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase IV.B</td><td>Band gap scaled retraining ladder</td><td>Planned</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase V</td><td>Physics-based screening: phonon stability, EOS fitting, CALPHAD, structural relaxation</td><td>Planned</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase VI+</td><td>Blockchain proof-of-discovery, community compute marketplace, SOST escrow access</td><td>Future</td></tr>
+          <tr><td class="key">Phase IV.A</td><td>Scaled retraining: formation energy ladder 5K&rarr;76K, CGCNN 20K promoted (MAE=0.1528)</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase IV.B</td><td>Scaled retraining: band gap ladder, ALIGNN-Lite 20K promoted (MAE=0.3422)</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase IV.C</td><td>Dual-target frontier engine: multiobjectve ranking with 4 profiles</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase IV.D</td><td>Frontier-to-validation bridge: exportable packs with risk flags + next steps</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase IV.E</td><td>Pre-DFT triage gate: hard gates, cheap-first 4-profile decision engine</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase IV.F</td><td>Niche discovery campaigns: themed batch searches with cross-campaign comparison</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key" style="color:var(--cyan-primary)">Phase IV.G</td><td>Active learning orchestrator: error hotspots, coverage analysis, expansion planner (v2.0.0)</td><td style="color:var(--cyan-primary)">Current</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase V</td><td>Physics-based screening: phonon stability, EOS, CALPHAD, relaxation</td><td>Planned</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase VI</td><td>Remote sensing integration: satellite mineral detection + GNN spectral prediction</td><td>Vision</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase VII+</td><td>Blockchain proof-of-discovery, compute marketplace, SOST escrow access</td><td>Future</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT EXISTS NOW VS FUTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">05 &mdash; STATUS</div>
+      <h2 class="section-title">What Exists <span class="accent">Now</span></h2>
+    </div>
+
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Available Now</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          <strong>75,993 materials</strong> with 100% crystal structures<br>
+          Dual-target GNN prediction (FE + BG)<br>
+          Novelty/exotic detection + candidate generation<br>
+          Material intelligence dossiers with evidence tagging<br>
+          Frontier ranking + triage + niche campaigns<br>
+          Validation queue + active learning orchestrator<br>
+          Benchmark calibration with empirical confidence bands<br>
+          28 real structure descriptors (density, bonds, symmetry)<br>
+          636 tests passing &middot; 70+ API endpoints
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--cyan-primary)"></span> In Progress</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          Corpus expansion planning (MP ~150K, COD ~530K, AFLOW ~3.5M)<br>
+          Error hotspot analysis + retraining proposals<br>
+          Chemical space coverage optimization<br>
+          Exotic niche specialization
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--red-primary)"></span> Planned / Future</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          DFT validation for top candidates<br>
+          Phonon stability + equation of state<br>
+          Structural relaxation (M3GNet/CHGNet)<br>
+          Remote sensing: satellite mineral detection<br>
+          GNN spectral signature prediction<br>
+          Blockchain proof-of-discovery<br>
+          Compute marketplace
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORM VISION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">06 &mdash; VISION</div>
+      <h2 class="section-title">Unified <span class="accent">Platform Vision</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">GeoForge: Predict &middot; Detect &middot; Discover</span>
+        </div>
+        <span class="spec-tag overlay">VISION</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The long-term vision is a unified platform called <strong>GeoForge</strong> that fuses the Materials Discovery Engine
+          with remote sensing mineral detection. The Materials Engine computationally predicts material properties and generates candidates.
+          A future remote sensing module would detect mineral signatures in satellite imagery. Combined, the system could
+          <strong>predict what materials should exist, then search for them from space</strong>.
+        </p>
+        <p class="spec-desc" style="margin-top:12px;color:var(--text-dim);font-size:11px">
+          <strong>Current status:</strong> The Materials Engine is operational (v2.0.0). Remote sensing is in the <strong>viability study</strong> phase &mdash;
+          a detailed technical assessment has been completed, and a zero-cost implementation route using free satellite data (Sentinel-2, EMIT) has been designed.
+          The two modules are <strong>not yet operationally integrated</strong>. Integration requires GNN spectral signature prediction (Phase VI), which is a research challenge.
+        </p>
+        <table class="code-table" style="margin-top:12px">
+          <tr><td class="key">Materials Engine</td><td class="val" style="color:var(--green-primary)">Operational &mdash; v2.0.0, 75,993 materials, production models</td></tr>
+          <tr><td class="key">Remote Sensing</td><td class="val" style="color:var(--cyan-primary)">Viability study complete &mdash; zero-cost route designed, not yet built</td></tr>
+          <tr><td class="key">Integration</td><td class="val" style="color:var(--text-dim)">Future &mdash; requires GNN spectral prediction (research challenge)</td></tr>
+          <tr><td class="key">Blockchain PoD</td><td class="val" style="color:var(--text-dim)">Future &mdash; Capsule Protocol ready, market demand uncertain</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECENT PROGRESS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">07 &mdash; RECENT</div>
+      <h2 class="section-title">Recent <span class="accent">Progress</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-body" style="padding:16px 20px">
+        <table class="code-table" style="font-size:12px">
+          <tr><th style="width:130px">Milestone</th><th>Detail</th></tr>
+          <tr><td class="key" style="color:var(--green-primary)">v2.0.0</td><td>Active learning orchestrator: error hotspots, coverage analysis (89 elements, 213 SGs), retraining proposals, corpus expansion planner</td></tr>
+          <tr><td class="key">Niche Campaigns</td><td>5 themed discovery presets: stable_semiconductor, wide_gap_exotic, high_novelty, balanced, generated_review &mdash; with cross-campaign comparison</td></tr>
+          <tr><td class="key">Pre-DFT Triage</td><td>4-profile gate: strict/balanced/exotic/semiconductor &mdash; hard gates + reason codes + next-action recommendations</td></tr>
+          <tr><td class="key">Frontier Engine</td><td>Dual-target multiobjectve: FE stability + BG fit + novelty + exotic + structure + validation priority</td></tr>
+          <tr><td class="key">Band Gap Model</td><td>ALIGNN-Lite 20K promoted: MAE=0.3422 eV, R&sup2;=0.707 (was 0.40 eV on 2K) &mdash; 14% improvement</td></tr>
+          <tr><td class="key">Training Ladder</td><td>Both targets: 5 rungs (5K&rarr;76K), 20K optimal for cost/quality, CGCNN wins FE, ALIGNN-Lite wins BG</td></tr>
+          <tr><td class="key">636 Tests</td><td>19 test files: schema, normalizer, chemistry, structure, db, api, models, thermo, novelty, shortlist, campaigns, generation, evaluation, intelligence, dossier, validation, evidence, frontier, triage, niche, orchestrator</td></tr>
         </table>
       </div>
     </div>
@@ -885,7 +1008,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">05 &mdash; ACCESS</div>
+      <div class="section-id">08 &mdash; ACCESS</div>
       <h2 class="section-title">Access via SOST <span class="accent">Escrow</span></h2>
     </div>
 
@@ -956,7 +1079,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">06 &mdash; DISCLAIMER</div>
+      <div class="section-id">09 &mdash; DISCLAIMER</div>
       <h2 class="section-title">Research <span class="accent">Disclaimer</span></h2>
     </div>
 
