@@ -22,8 +22,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes scanFlicker{0%,100%{opacity:.5}50%{opacity:.8}}
 #splash-logo{width:200px;height:200px;border-radius:20%;opacity:0;transform:scale(.4);animation:logoIn 2s ease forwards}
 @keyframes logoIn{to{opacity:1;transform:scale(1)}}
-#splash-title{margin-top:20px;font-size:20px;font-weight:700;color:#cc0000;letter-spacing:8px;opacity:0;overflow:hidden;white-space:nowrap;width:0;animation:titleType 1s steps(14) 2s forwards}
-@keyframes titleType{to{opacity:1;width:240px}}
+#splash-title{margin-top:20px;font-size:18px;font-weight:700;color:#cc0000;letter-spacing:3px;text-align:center;opacity:0;animation:fadeIn .8s ease 2s forwards}
 #splash-lines{margin-top:28px;font-size:12px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,.4);min-height:80px;text-align:left;width:300px}
 .tl{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #00ff88;width:0;line-height:2}
 .tl.go{animation:typeW .6s steps(30) forwards,curBlink .5s step-end 4}
@@ -43,30 +42,20 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 /* CRT transition (1s each) */
 .frames.crt-off{animation:cOff 1s ease-in forwards}
 .frames.crt-on{animation:cOn 1s ease-out forwards}
-@keyframes cOff{
-  0%{transform:scaleY(1);filter:brightness(1)}
-  60%{transform:scaleY(1);filter:brightness(1.5)}
-  100%{transform:scaleY(.002);filter:brightness(3)}
-}
-@keyframes cOn{
-  0%{transform:scaleY(.002);filter:brightness(3)}
-  40%{transform:scaleY(.002);filter:brightness(1.5)}
-  100%{transform:scaleY(1);filter:brightness(1)}
-}
-/* CRT zap line */
+@keyframes cOff{0%{transform:scaleY(1);filter:brightness(1)}60%{transform:scaleY(1);filter:brightness(1.5)}100%{transform:scaleY(.002);filter:brightness(3)}}
+@keyframes cOn{0%{transform:scaleY(.002);filter:brightness(3)}40%{transform:scaleY(.002);filter:brightness(1.5)}100%{transform:scaleY(1);filter:brightness(1)}}
 .zap{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.8);box-shadow:0 0 20px 4px rgba(255,255,255,.5);z-index:50;opacity:0;transition:opacity .15s}
 .zap.on{opacity:1}
 
 /* ===== LOADING OVERLAY ===== */
-.load-ov{position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
-.load-ov.done{opacity:0;pointer-events:none}
-.spinner{width:120px;height:120px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
-.spinner-bg{position:absolute;inset:0;border-radius:50%;border:3px solid #333}
-.spinner-fill{position:absolute;inset:0;border-radius:50%}
-.spinner-text{font-size:28px;color:#fff;font-weight:700;z-index:1}
-.load-label{margin-top:16px;font-size:13px;letter-spacing:2px;animation:pulse 1.5s ease infinite}
+.lov{position:absolute;inset:0;background:rgba(0,0,0,.60);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
+.lov.gone{opacity:0;pointer-events:none}
+.pie{width:140px;height:140px;border-radius:50%;border:3px solid #333;position:relative;display:flex;align-items:center;justify-content:center;background:#222}
+.pie-fill{position:absolute;inset:3px;border-radius:50%;transition:background .5s ease}
+.pie-num{font-size:36px;color:#fff;font-weight:700;z-index:1;font-family:inherit}
+.lov-label{margin-top:18px;font-size:14px;letter-spacing:2px;font-weight:600;animation:pulse 1.5s ease infinite}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-.load-label.ok{animation:none;opacity:1}
+.lov-label.ok{animation:none;opacity:1}
 
 /* ===== NAV BAR ===== */
 .bar{display:flex;height:58px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
@@ -83,7 +72,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </head>
 <body>
 
-<!-- SPLASH (7s) -->
+<!-- SPLASH -->
 <div id="splash">
   <img id="splash-logo" src="/sost-logo.png" alt="SOST">
   <div id="splash-title">SOST PROTOCOL</div>
@@ -102,23 +91,14 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
     <iframe id="ef" src="/sost-explorer.html"></iframe>
     <iframe id="wf" src="/sost-wallet.html" class="off"></iframe>
     <div class="zap" id="zap"></div>
-    <!-- Explorer loading overlay -->
-    <div class="load-ov" id="lov-ex">
-      <div class="spinner">
-        <div class="spinner-bg"></div>
-        <div class="spinner-fill" id="sp-ex"></div>
-        <span class="spinner-text" id="cd-ex">60</span>
-      </div>
-      <div class="load-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
+    <!-- Loading overlays -->
+    <div class="lov" id="lov-ex">
+      <div class="pie"><div class="pie-fill" id="pf-ex"></div><span class="pie-num" id="pn-ex">60</span></div>
+      <div class="lov-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
     </div>
-    <!-- Wallet loading overlay -->
-    <div class="load-ov done" id="lov-wl">
-      <div class="spinner">
-        <div class="spinner-bg"></div>
-        <div class="spinner-fill" id="sp-wl"></div>
-        <span class="spinner-text" id="cd-wl">15</span>
-      </div>
-      <div class="load-label" id="ll-wl" style="color:#cc0000">LOADING WALLET...</div>
+    <div class="lov gone" id="lov-wl">
+      <div class="pie"><div class="pie-fill" id="pf-wl"></div><span class="pie-num" id="pn-wl">60</span></div>
+      <div class="lov-label" id="ll-wl" style="color:#cc0000">LOADING WALLET...</div>
     </div>
   </div>
   <nav class="bar">
@@ -130,69 +110,87 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </div>
 
 <script>
-/* ===== SPLASH (7 seconds) ===== */
+/* ===== SPLASH (7s) ===== */
 ['s1','s2','s3','s4'].forEach(function(id,i){
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
 setTimeout(function(){
   document.getElementById('splash').classList.add('out');
   document.getElementById('app').classList.add('show');
-  startLoading('ex',60);
+  initLoading('ex');
   setTimeout(function(){document.getElementById('splash').style.display='none';},600);
 },7000);
 
-/* ===== LOADING OVERLAY ===== */
-var loadState={ex:{loaded:false,ts:0},wl:{loaded:false,ts:0}};
-var loadTimers={};
+/* ===== LOADING — REAL-TIME DETECTION ===== */
+var loaded={ex:false,wl:false};
+var loadTs={ex:0,wl:0};
+var timers={};var polls={};
 
-function startLoading(key,maxSec){
+function initLoading(key){
+  // Skip if already loaded within 5 minutes
+  if(loaded[key]&&(Date.now()-loadTs[key])<300000){
+    document.getElementById('lov-'+key).classList.add('gone');return;
+  }
   var ov=document.getElementById('lov-'+key);
-  var sp=document.getElementById('sp-'+key);
-  var cd=document.getElementById('cd-'+key);
+  var pf=document.getElementById('pf-'+key);
+  var pn=document.getElementById('pn-'+key);
   var ll=document.getElementById('ll-'+key);
-  if(loadState[key].loaded && (Date.now()-loadState[key].ts)<300000){ov.classList.add('done');return;}
-  ov.classList.remove('done');
-  var sec=maxSec;
-  var elapsed=0;
-  if(loadTimers[key])clearInterval(loadTimers[key]);
-  loadTimers[key]=setInterval(function(){
-    elapsed++;sec=Math.max(0,maxSec-elapsed);
+  ov.classList.remove('gone');
+  var startTime=Date.now();
+  var maxSec=60;var elapsed=0;
+
+  // Clear previous
+  if(timers[key])clearInterval(timers[key]);
+  if(polls[key])clearInterval(polls[key]);
+
+  // Countdown timer — 1s tick
+  timers[key]=setInterval(function(){
+    elapsed++;
+    var remaining=Math.max(0,maxSec-elapsed);
     var pct=Math.min(100,Math.round((elapsed/maxSec)*100));
-    sp.style.background='conic-gradient('+(key==='ex'?'#cc0000':'#cc0000')+' 0% '+pct+'%, #222 '+pct+'% 100%)';
-    sp.style.borderRadius='50%';
-    cd.textContent=sec>0?sec:'...';
-    if(sec<=0&&!loadState[key].loaded){ll.textContent='CONNECTION SLOW...';ll.style.color='#f59e0b';}
+    pf.style.background='conic-gradient(#cc0000 0% '+pct+'%, transparent '+pct+'% 100%)';
+    pf.style.borderRadius='50%';
+    if(remaining>0){
+      pn.textContent=remaining;
+    }else{
+      pn.textContent='...';
+      ll.textContent='WAITING FOR NODE...';ll.style.color='#f59e0b';
+    }
   },1000);
-  // Poll RPC every 2s
-  var poll=setInterval(function(){
-    fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
+
+  // RPC poll — every 2s
+  polls[key]=setInterval(function(){
+    var minElapsed=(Date.now()-startTime)>=5000;
+    fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
     .then(function(r){return r.json();})
     .then(function(j){
-      if(j.result&&j.result.blocks>0){
-        finishLoading(key);clearInterval(poll);
+      if(j.result&&j.result.blocks>0&&minElapsed){
+        doneLoading(key);
       }
     }).catch(function(){});
   },2000);
-  // Also finish on iframe load + delay
-  var iframe=document.getElementById(key==='ex'?'ef':'wf');
-  iframe.addEventListener('load',function(){setTimeout(function(){finishLoading(key);clearInterval(poll);},3000);},{once:true});
 }
 
-function finishLoading(key){
-  if(loadState[key].loaded)return;
-  loadState[key].loaded=true;loadState[key].ts=Date.now();
-  if(loadTimers[key])clearInterval(loadTimers[key]);
-  var sp=document.getElementById('sp-'+key);
-  var cd=document.getElementById('cd-'+key);
+function doneLoading(key){
+  if(loaded[key])return;
+  loaded[key]=true;loadTs[key]=Date.now();
+  if(timers[key])clearInterval(timers[key]);
+  if(polls[key])clearInterval(polls[key]);
+  var pf=document.getElementById('pf-'+key);
+  var pn=document.getElementById('pn-'+key);
   var ll=document.getElementById('ll-'+key);
   var ov=document.getElementById('lov-'+key);
-  sp.style.background='conic-gradient(#00ff88 0% 100%, #222 100% 100%)';sp.style.borderRadius='50%';
-  cd.textContent='✓';cd.style.color='#00ff88';
-  ll.textContent='DATA LOADED ✓';ll.style.color='#00ff88';ll.classList.add('ok');
-  setTimeout(function(){ov.classList.add('done');},1000);
+  // Fill 100% green
+  pf.style.background='conic-gradient(#00ff88 0% 100%, transparent 100% 100%)';
+  pf.style.borderRadius='50%';pf.style.transition='background .5s ease';
+  pn.textContent='✓';pn.style.color='#00ff88';pn.style.fontSize='42px';
+  ll.textContent='READY';ll.style.color='#00ff88';ll.classList.add('ok');
+  // Fade out after 1s
+  setTimeout(function(){ov.classList.add('gone');},1000);
 }
 
-/* ===== TAB SWITCH (1s CRT each) ===== */
+/* ===== TAB SWITCH (1s CRT) ===== */
 var cur='explorer';var switching=false;
 function go(t){
   if(t===cur||switching)return;switching=true;
@@ -203,12 +201,7 @@ function go(t){
     zap.classList.remove('on');
     document.getElementById('ef').classList.toggle('off',t!=='explorer');
     document.getElementById('wf').classList.toggle('off',t!=='wallet');
-    // Show loading overlay for new tab if first time
-    if(t==='wallet'&&!loadState.wl.loaded){
-      document.getElementById('lov-wl').classList.remove('done');
-      startLoading('wl',15);
-    }
-    if(t==='explorer'&&!loadState.ex.loaded){startLoading('ex',60);}
+    if(!loaded[t])initLoading(t);
     fr.classList.remove('crt-off');fr.classList.add('crt-on');
     setTimeout(function(){fr.classList.remove('crt-on');switching=false;},1000);
   },1050);
@@ -217,7 +210,7 @@ function go(t){
   document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
 }
 
-/* ===== PWA Install ===== */
+/* ===== PWA ===== */
 var dp=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
 function dl(){
@@ -226,11 +219,7 @@ function dl(){
   else{alert('To install: browser menu → "Add to Home Screen"');}
 }
 if(window.matchMedia('(display-mode:standalone)').matches){document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');}
-
-/* Exit */
 function xt(){window.close();setTimeout(function(){alert('Close this tab to exit.');},100);}
-
-/* SW */
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 </script>
 </body>
