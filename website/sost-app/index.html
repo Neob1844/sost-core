@@ -15,8 +15,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
 
-/* ===== SPLASH (7s) ===== */
-#splash{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
+/* SPLASH — visible by default, covers everything */
+#splash{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
 #splash.out{opacity:0;pointer-events:none}
 #splash::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.02) 2px,rgba(0,255,136,.02) 4px);pointer-events:none;animation:scanFlicker 4s linear infinite}
 @keyframes scanFlicker{0%,100%{opacity:.5}50%{opacity:.8}}
@@ -32,14 +32,14 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes scanSweep{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
 @keyframes fadeIn{to{opacity:1}}
 
-/* ===== APP ===== */
-.app{display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity .5s ease}
-.app.show{opacity:1}
+/* APP — hidden until splash finishes */
+.app{display:flex;flex-direction:column;height:100%;visibility:hidden;opacity:0}
+.app.show{visibility:visible;opacity:1;transition:opacity .5s ease}
 .frames{flex:1;position:relative;overflow:hidden}
 .frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
-.frames iframe.off{display:none}
+.frame-hidden{display:none}
 
-/* CRT transition (1s each) */
+/* CRT (1s each) */
 .frames.crt-off{animation:cOff 1s ease-in forwards}
 .frames.crt-on{animation:cOn 1s ease-out forwards}
 @keyframes cOff{0%{transform:scaleY(1);filter:brightness(1)}60%{transform:scaleY(1);filter:brightness(1.5)}100%{transform:scaleY(.002);filter:brightness(3)}}
@@ -47,8 +47,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 .zap{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.8);box-shadow:0 0 20px 4px rgba(255,255,255,.5);z-index:50;opacity:0;transition:opacity .15s}
 .zap.on{opacity:1}
 
-/* ===== LOADING OVERLAY ===== */
-.lov{position:absolute;inset:0;background:rgba(0,0,0,.60);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
+/* LOADING OVERLAY — blur behind */
+.lov{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
 .lov.gone{opacity:0;pointer-events:none}
 .pie{width:140px;height:140px;border-radius:50%;border:3px solid #333;position:relative;display:flex;align-items:center;justify-content:center;background:#222}
 .pie-fill{position:absolute;inset:3px;border-radius:50%;transition:background .5s ease}
@@ -57,7 +57,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 .lov-label.ok{animation:none;opacity:1}
 
-/* ===== NAV BAR ===== */
+/* NAV */
 .bar{display:flex;height:58px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
 .bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.12) 1px,rgba(0,0,0,.12) 2px);pointer-events:none;opacity:.5}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#444;transition:all .15s;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;min-height:52px;user-select:none;border-left:1px solid #1a1a1a;position:relative}
@@ -72,7 +72,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </head>
 <body>
 
-<!-- SPLASH -->
+<!-- SPLASH — on top of everything from the start -->
 <div id="splash">
   <img id="splash-logo" src="/sost-logo.png" alt="SOST">
   <div id="splash-title">SOST PROTOCOL</div>
@@ -85,13 +85,13 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div id="splash-scan"></div>
 </div>
 
-<!-- APP -->
+<!-- APP — invisible until splash ends -->
 <div class="app" id="app">
   <div class="frames" id="fr">
+    <!-- Both iframes load from start; wallet hidden with display:none -->
     <iframe id="ef" src="/sost-explorer.html"></iframe>
-    <iframe id="wf" src="/sost-wallet.html" class="off"></iframe>
+    <iframe id="wf" src="/sost-wallet.html" class="frame-hidden"></iframe>
     <div class="zap" id="zap"></div>
-    <!-- Loading overlays -->
     <div class="lov" id="lov-ex">
       <div class="pie"><div class="pie-fill" id="pf-ex"></div><span class="pie-num" id="pn-ex">60</span></div>
       <div class="lov-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
@@ -110,24 +110,50 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </div>
 
 <script>
-/* ===== SPLASH (7s) ===== */
+/* ===== SPLASH (7s) — app stays invisible until splash finishes ===== */
 ['s1','s2','s3','s4'].forEach(function(id,i){
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
 setTimeout(function(){
-  document.getElementById('splash').classList.add('out');
+  // First make app visible, THEN fade out splash
   document.getElementById('app').classList.add('show');
-  initLoading('ex');
-  setTimeout(function(){document.getElementById('splash').style.display='none';},600);
+  setTimeout(function(){
+    document.getElementById('splash').classList.add('out');
+    initLoading('ex');
+    setTimeout(function(){document.getElementById('splash').style.display='none';},600);
+  },100);
 },7000);
 
-/* ===== LOADING — REAL-TIME DETECTION ===== */
+/* ===== LOADING — IFRAME CONTENT DETECTION ===== */
 var loaded={ex:false,wl:false};
 var loadTs={ex:0,wl:0};
-var timers={};var polls={};
+var countdownTimers={};
+var detectIntervals={};
+
+function checkExplorerLoaded(){
+  try{
+    var doc=document.getElementById('ef').contentDocument||document.getElementById('ef').contentWindow.document;
+    if(!doc||!doc.body)return false;
+    var text=doc.body.innerText||'';
+    // TOTAL SUPPLY has a real number (not "—")
+    var supplyMatch=text.match(/(\d+\.\d+)\s*SOST/);
+    var heightMatch=text.match(/#(\d+)/);
+    if(supplyMatch&&parseFloat(supplyMatch[1])>0)return true;
+    if(heightMatch&&parseInt(heightMatch[1])>0&&supplyMatch)return true;
+    return false;
+  }catch(e){return null;}
+}
+
+function checkWalletLoaded(){
+  try{
+    var doc=document.getElementById('wf').contentDocument||document.getElementById('wf').contentWindow.document;
+    if(!doc||!doc.body)return false;
+    var text=doc.body.innerText||'';
+    return text.indexOf('Dashboard')>=0||text.indexOf('BALANCE')>=0||text.indexOf('Launch Wallet')>=0||text.indexOf('Generate')>=0;
+  }catch(e){return null;}
+}
 
 function initLoading(key){
-  // Skip if already loaded within 5 minutes
   if(loaded[key]&&(Date.now()-loadTs[key])<300000){
     document.getElementById('lov-'+key).classList.add('gone');return;
   }
@@ -139,72 +165,90 @@ function initLoading(key){
   var startTime=Date.now();
   var maxSec=60;var elapsed=0;
 
-  // Clear previous
-  if(timers[key])clearInterval(timers[key]);
-  if(polls[key])clearInterval(polls[key]);
+  if(countdownTimers[key])clearInterval(countdownTimers[key]);
+  if(detectIntervals[key])clearInterval(detectIntervals[key]);
 
-  // Countdown timer — 1s tick
-  timers[key]=setInterval(function(){
+  // Countdown — visual only
+  countdownTimers[key]=setInterval(function(){
     elapsed++;
-    var remaining=Math.max(0,maxSec-elapsed);
+    var rem=Math.max(0,maxSec-elapsed);
     var pct=Math.min(100,Math.round((elapsed/maxSec)*100));
     pf.style.background='conic-gradient(#cc0000 0% '+pct+'%, transparent '+pct+'% 100%)';
     pf.style.borderRadius='50%';
-    if(remaining>0){
-      pn.textContent=remaining;
-    }else{
-      pn.textContent='...';
-      ll.textContent='WAITING FOR NODE...';ll.style.color='#f59e0b';
-    }
+    if(rem>0){pn.textContent=rem;}
+    else{pn.textContent='...';ll.textContent='WAITING FOR NODE...';ll.style.color='#f59e0b';}
   },1000);
 
-  // RPC poll — every 2s
-  polls[key]=setInterval(function(){
-    var minElapsed=(Date.now()-startTime)>=5000;
-    fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
-    .then(function(r){return r.json();})
-    .then(function(j){
-      if(j.result&&j.result.blocks>0&&minElapsed){
-        doneLoading(key);
-      }
-    }).catch(function(){});
+  // Content detection — every 2s, check iframe content
+  detectIntervals[key]=setInterval(function(){
+    var minElapsed=(Date.now()-startTime)>=3000; // minimum 3s overlay
+    var check=(key==='ex')?checkExplorerLoaded():checkWalletLoaded();
+
+    if(check===true&&minElapsed){
+      doneLoading(key);
+    }else if(check===null&&minElapsed){
+      // Can't read iframe (cross-origin) — fallback to RPC
+      fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
+      .then(function(r){return r.json();})
+      .then(function(j){if(j.result&&j.result.blocks>0)doneLoading(key);})
+      .catch(function(){});
+    }
   },2000);
 }
 
 function doneLoading(key){
   if(loaded[key])return;
   loaded[key]=true;loadTs[key]=Date.now();
-  if(timers[key])clearInterval(timers[key]);
-  if(polls[key])clearInterval(polls[key]);
+  if(countdownTimers[key])clearInterval(countdownTimers[key]);
+  if(detectIntervals[key])clearInterval(detectIntervals[key]);
   var pf=document.getElementById('pf-'+key);
   var pn=document.getElementById('pn-'+key);
   var ll=document.getElementById('ll-'+key);
   var ov=document.getElementById('lov-'+key);
-  // Fill 100% green
   pf.style.background='conic-gradient(#00ff88 0% 100%, transparent 100% 100%)';
-  pf.style.borderRadius='50%';pf.style.transition='background .5s ease';
+  pf.style.borderRadius='50%';
   pn.textContent='✓';pn.style.color='#00ff88';pn.style.fontSize='42px';
   ll.textContent='READY';ll.style.color='#00ff88';ll.classList.add('ok');
-  // Fade out after 1s
   setTimeout(function(){ov.classList.add('gone');},1000);
 }
 
-/* ===== TAB SWITCH (1s CRT) ===== */
+/* ===== TAB SWITCH — CRT + proper frame display ===== */
 var cur='explorer';var switching=false;
 function go(t){
-  if(t===cur||switching)return;switching=true;
-  var fr=document.getElementById('fr');var zap=document.getElementById('zap');
-  fr.classList.remove('crt-on');fr.classList.add('crt-off');
+  if(t===cur||switching)return;
+  switching=true;
+  var fr=document.getElementById('fr');
+  var zap=document.getElementById('zap');
+  var ef=document.getElementById('ef');
+  var wf=document.getElementById('wf');
+
+  // CRT OFF
+  fr.classList.remove('crt-on');
+  fr.classList.add('crt-off');
   setTimeout(function(){zap.classList.add('on');},800);
+
   setTimeout(function(){
     zap.classList.remove('on');
-    document.getElementById('ef').classList.toggle('off',t!=='explorer');
-    document.getElementById('wf').classList.toggle('off',t!=='wallet');
+    // Switch iframe visibility using display
+    if(t==='explorer'){
+      ef.classList.remove('frame-hidden');ef.style.display='block';
+      wf.classList.add('frame-hidden');wf.style.display='none';
+    }else{
+      wf.classList.remove('frame-hidden');wf.style.display='block';
+      ef.classList.add('frame-hidden');ef.style.display='none';
+    }
+    // Show overlay if first time
     if(!loaded[t])initLoading(t);
-    fr.classList.remove('crt-off');fr.classList.add('crt-on');
-    setTimeout(function(){fr.classList.remove('crt-on');switching=false;},1000);
+    // CRT ON
+    fr.classList.remove('crt-off');
+    fr.classList.add('crt-on');
+    setTimeout(function(){
+      fr.classList.remove('crt-on');
+      switching=false;
+    },1000);
   },1050);
+
   cur=t;
   document.getElementById('be').className='nb'+(t==='explorer'?' ex-on':'');
   document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
