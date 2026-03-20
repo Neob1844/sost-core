@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "1.4.0", "phase": "training_ladder",
+    return {"status": "ok", "version": "1.8.0", "phase": "pre_dft_triage",
             "materials_count": db.count()}
 
 
@@ -1204,6 +1204,167 @@ def training_ladder_models():
     from ..models.registry import list_models
     models = list_models()
     return {"models": models}
+
+
+# --- Frontier endpoints ---
+
+class FrontierRunRequest(BaseModel):
+    profile: Optional[str] = "balanced_frontier"
+    source: str = "corpus"
+    band_gap_target: Optional[float] = None
+    band_gap_tolerance: float = 2.0
+    fe_max: float = 1.0
+    top_k: int = 50
+    pool_limit: int = 5000
+
+
+@app.get("/frontier/presets")
+def frontier_presets():
+    """Return available frontier profiles."""
+    from ..frontier.spec import ALL_FRONTIER_PRESETS
+    return {"presets": {n: fn().to_dict() for n, fn in ALL_FRONTIER_PRESETS.items()}}
+
+
+@app.get("/frontier/status")
+def frontier_status():
+    """List saved frontier runs."""
+    from ..frontier.engine import FrontierEngine
+    return {"runs": FrontierEngine(_get_db()).list_runs()}
+
+
+@app.post("/frontier/run")
+def frontier_run(req: FrontierRunRequest):
+    """Run a dual-target frontier selection."""
+    from ..frontier.engine import FrontierEngine
+    from ..frontier.spec import ALL_FRONTIER_PRESETS, FrontierProfile
+    db = _get_db()
+    engine = FrontierEngine(db)
+    if req.profile in ALL_FRONTIER_PRESETS:
+        profile = ALL_FRONTIER_PRESETS[req.profile]()
+    else:
+        profile = FrontierProfile(name=req.profile or "custom")
+    if req.band_gap_target is not None:
+        profile.band_gap_target = req.band_gap_target
+        profile.band_gap_tolerance = req.band_gap_tolerance
+    profile.fe_max = req.fe_max
+    profile.top_k = req.top_k
+    profile.pool_limit = req.pool_limit
+    result, _ = engine.run_and_save(profile, source=req.source)
+    return result
+
+
+@app.get("/frontier/{run_id}")
+def frontier_get(run_id: str):
+    """Retrieve a saved frontier run."""
+    from ..frontier.engine import FrontierEngine
+    result = FrontierEngine(_get_db()).get_run(run_id)
+    if not result:
+        raise HTTPException(404, "Frontier run not found")
+    return result
+
+
+# --- Validation Pack endpoints ---
+
+class PackFromFrontierRequest(BaseModel):
+    frontier_run_id: str
+    top_k: int = 20
+    push_to_queue: bool = False
+
+
+class PackBuildOneRequest(BaseModel):
+    formula: str
+    elements: List[str]
+    spacegroup: Optional[int] = None
+    source_type: str = "known_corpus_candidate"
+
+
+@app.post("/validation-pack/build-from-frontier")
+def build_pack_from_frontier(req: PackFromFrontierRequest):
+    """Build validation packs from a frontier run."""
+    from ..validation_pack.builder import ValidationPackBuilder
+    builder = ValidationPackBuilder(_get_db())
+    packs = builder.build_from_frontier_id(req.frontier_run_id, req.top_k)
+    if not packs:
+        raise HTTPException(404, "Frontier run not found or empty")
+    path = builder.save_batch(packs, label=req.frontier_run_id[:8])
+    result = {
+        "pack_count": len(packs),
+        "packs": [p.to_dict() for p in packs],
+        "saved_to": path,
+    }
+    if req.push_to_queue:
+        queue_result = builder.push_to_queue(packs)
+        result["queue_result"] = queue_result
+    return result
+
+
+@app.post("/validation-pack/build-one")
+def build_pack_one(req: PackBuildOneRequest):
+    """Build a single validation pack for any material."""
+    from ..validation_pack.builder import ValidationPackBuilder
+    builder = ValidationPackBuilder(_get_db())
+    pack = builder.build_one(req.formula, req.elements, req.spacegroup, req.source_type)
+    return pack.to_dict()
+
+
+@app.get("/validation-pack/status")
+def pack_status():
+    """List saved validation pack batches."""
+    import os
+    d = "artifacts/validation_pack"
+    if not os.path.exists(d):
+        return {"batches": []}
+    batches = [f for f in sorted(os.listdir(d)) if f.endswith(".json") and "batch" in f]
+    return {"batches": batches}
+
+
+# --- Triage endpoints ---
+
+class TriageRunRequest(BaseModel):
+    profile: str = "balanced_review_gate"
+    frontier_run_id: Optional[str] = None
+    top_k: int = 20
+
+
+@app.get("/triage/presets")
+def triage_presets():
+    """Return available triage profiles."""
+    from ..triage.spec import ALL_TRIAGE_PRESETS
+    return {"presets": {n: fn().to_dict() for n, fn in ALL_TRIAGE_PRESETS.items()}}
+
+
+@app.get("/triage/status")
+def triage_status():
+    """List saved triage runs."""
+    from ..triage.engine import TriageEngine
+    return {"runs": TriageEngine(_get_db()).list_runs()}
+
+
+@app.post("/triage/from-frontier")
+def triage_from_frontier(req: TriageRunRequest):
+    """Run triage from a frontier run."""
+    from ..triage.engine import TriageEngine
+    from ..triage.spec import ALL_TRIAGE_PRESETS
+    if not req.frontier_run_id:
+        raise HTTPException(400, "frontier_run_id required")
+    engine = TriageEngine(_get_db())
+    profile = ALL_TRIAGE_PRESETS.get(req.profile, ALL_TRIAGE_PRESETS["balanced_review_gate"])()
+    profile.top_k = req.top_k
+    result = engine.run_from_frontier(req.frontier_run_id, profile, req.top_k)
+    if "error" in result:
+        raise HTTPException(404, result["error"])
+    engine._save(result)
+    return result
+
+
+@app.get("/triage/{run_id}")
+def triage_get(run_id: str):
+    """Retrieve a saved triage run."""
+    from ..triage.engine import TriageEngine
+    result = TriageEngine(_get_db()).get_run(run_id)
+    if not result:
+        raise HTTPException(404, "Triage run not found")
+    return result
 
 
 # --- Analytics endpoints ---

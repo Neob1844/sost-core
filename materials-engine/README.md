@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.B — Band Gap Scaled Retraining (v1.5.0)**
+> **Current phase: IV.E — Pre-DFT Triage Gate (v1.8.0)**
 
 ## What exists (implemented and tested)
 
@@ -102,6 +102,14 @@
 - **API**: `GET /analytics/material/{id}`, `POST /analytics/report`
 - **Coverage**: **75,993/75,993** materials have CIF structures (100% after Phase III.J backfill)
 
+### Dual-Target Frontier Engine (Phase IV.C)
+- **What it is**: Multiobjectve candidate selection combining formation_energy (CGCNN) + band_gap (ALIGNN-Lite) + novelty + exotic + structure quality + validation priority
+- **4 profiles**: balanced_frontier, stable_semiconductor, wide_gap_exotic, high_novelty_watchlist
+- **Sources**: corpus-only, generated-only, or mixed
+- **Evidence propagation**: Every property tagged known/predicted/proxy/unavailable
+- **Reason codes**: strong_stability, good_bg_fit, high_novelty, high_exotic, etc.
+- **API**: `GET /frontier/presets`, `POST /frontier/run`, `GET /frontier/{id}`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS database, zero API cost
@@ -120,7 +128,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (539 tests)
+# Run all tests (602 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -196,7 +204,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (539 total)
+## Tests (602 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|

@@ -1,0 +1,11 @@
+formula,source,fe,bg,frontier_score,novelty,exotic,next_step,risk_flags,reasons
+Sr5B3BrO9,known_corpus_candidate,-3.01995,4.223,0.5305,0.0,0.2366,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+BaCaGaF7,known_corpus_candidate,-3.61637,6.055,0.5304,0.0,0.2363,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+Sr5B3ClO9,known_corpus_candidate,-3.07647,4.005,0.5295,0.0,0.2299,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+LiY3WO8,known_corpus_candidate,-3.19641,2.317,0.5291,0.0,0.2275,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+Pr3Si2Cl3O7,known_corpus_candidate,-3.12844,4.919,0.5287,0.0,0.2247,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+NaCaLaF6,known_corpus_candidate,-4.01408,6.581,0.5287,0.0,0.2246,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+Li3AlF6,known_corpus_candidate,-3.41959,8.441,0.5283,0.0,0.2217,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+SmZrF7,known_corpus_candidate,-4.0858,6.404,0.5279,0.0,0.2191,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+EuTaO4,known_corpus_candidate,-3.49592,4.039,0.5277,0.0,0.218,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material
+LaF3,known_corpus_candidate,-4.42304,6.245,0.5275,0.0,0.2169,keep_as_known_reference,known_material,strong_stability_signal|high_exotic_score|known_material

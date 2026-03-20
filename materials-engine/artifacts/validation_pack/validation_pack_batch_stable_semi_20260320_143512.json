@@ -1,0 +1,679 @@
+{
+  "batch_size": 10,
+  "label": "stable_semi",
+  "created_at": "2026-03-20T14:35:12.512220+00:00",
+  "packs": [
+    {
+      "pack_id": "2075b4daf4a5",
+      "formula": "LaSF",
+      "source_type": "known_corpus_candidate",
+      "material_id": "e2311356e08f736a",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.8156,
+      "score_breakdown": {
+        "stability": 1.0,
+        "band_gap_fit": 0.994,
+        "novelty": 0.0,
+        "exotic": 0.1517,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5982,
+        "frontier": 0.8156
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -3.34093,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.509,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1517,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 5.508,
+      "spacegroup": 129,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.51 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.51 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "LaSF | FE=-3.34 | BG=1.51 | frontier=0.816 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.510455+00:00"
+    },
+    {
+      "pack_id": "5350099ebcd8",
+      "formula": "Sm2TeO2",
+      "source_type": "known_corpus_candidate",
+      "material_id": "3c29faa405f2a339",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.8007,
+      "score_breakdown": {
+        "stability": 1.0,
+        "band_gap_fit": 0.9533,
+        "novelty": 0.0,
+        "exotic": 0.1225,
+        "structure_quality": 1.0,
+        "validation_priority": 0.586,
+        "frontier": 0.8007
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -3.10106,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.57,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1225,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 7.4816,
+      "spacegroup": 139,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.57 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.57 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "Sm2TeO2 | FE=-3.10 | BG=1.57 | frontier=0.801 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.510607+00:00"
+    },
+    {
+      "pack_id": "6974ed35a79e",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "material_id": "7114f2bc48efea7c",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7976,
+      "score_breakdown": {
+        "stability": 0.9626,
+        "band_gap_fit": 0.982,
+        "novelty": 0.0,
+        "exotic": 0.1556,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5834,
+        "frontier": 0.7976
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.81316,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.473,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1556,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 3.4755,
+      "spacegroup": 161,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.47 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.47 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.47 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "LiVF3 | FE=-2.81 | BG=1.47 | frontier=0.798 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.510738+00:00"
+    },
+    {
+      "pack_id": "d0cb85b0e9fe",
+      "formula": "Ba4CeMn3O12",
+      "source_type": "known_corpus_candidate",
+      "material_id": "9d725ed2f3e26856",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7946,
+      "score_breakdown": {
+        "stability": 0.9535,
+        "band_gap_fit": 0.9887,
+        "novelty": 0.0,
+        "exotic": 0.1196,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5826,
+        "frontier": 0.7946
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.76746,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.517,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1196,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 6.1379,
+      "spacegroup": 166,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.52 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.52 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "Ba4CeMn3O12 | FE=-2.77 | BG=1.52 | frontier=0.795 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.510868+00:00"
+    },
+    {
+      "pack_id": "ca28124a6157",
+      "formula": "Tb2TeO2",
+      "source_type": "known_corpus_candidate",
+      "material_id": "3fbe3cd3a641a3f6",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7836,
+      "score_breakdown": {
+        "stability": 1.0,
+        "band_gap_fit": 0.9013,
+        "novelty": 0.0,
+        "exotic": 0.1234,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5704,
+        "frontier": 0.7836
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -3.15494,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.352,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1234,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 8.181,
+      "spacegroup": 139,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.35 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.35 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.35 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "Tb2TeO2 | FE=-3.15 | BG=1.35 | frontier=0.784 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.510991+00:00"
+    },
+    {
+      "pack_id": "afc3e9fd5ae4",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "material_id": "995bc64bf7d8fa4c",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7827,
+      "score_breakdown": {
+        "stability": 0.952,
+        "band_gap_fit": 0.95,
+        "novelty": 0.0,
+        "exotic": 0.1481,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5706,
+        "frontier": 0.7827
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.75988,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.425,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1481,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 3.4515,
+      "spacegroup": 198,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.43 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.43 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.43 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "LiVF3 | FE=-2.76 | BG=1.43 | frontier=0.783 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.511109+00:00"
+    },
+    {
+      "pack_id": "24c1299368ff",
+      "formula": "SrLiCoF6",
+      "source_type": "known_corpus_candidate",
+      "material_id": "022176fae1cfdf2a",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7793,
+      "score_breakdown": {
+        "stability": 0.9884,
+        "band_gap_fit": 0.894,
+        "novelty": 0.0,
+        "exotic": 0.173,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5647,
+        "frontier": 0.7793
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.94187,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.341,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.173,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 3.8454,
+      "spacegroup": 14,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.34 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.34 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.34 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "SrLiCoF6 | FE=-2.94 | BG=1.34 | frontier=0.779 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.511230+00:00"
+    },
+    {
+      "pack_id": "14069d7425c5",
+      "formula": "TmTlO2",
+      "source_type": "known_corpus_candidate",
+      "material_id": "e30c5d14e002596a",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7759,
+      "score_breakdown": {
+        "stability": 0.9254,
+        "band_gap_fit": 0.962,
+        "novelty": 0.0,
+        "exotic": 0.1358,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5662,
+        "frontier": 0.7759
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.62696,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.443,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1358,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 10.2395,
+      "spacegroup": 166,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.44 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.44 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.44 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "TmTlO2 | FE=-2.63 | BG=1.44 | frontier=0.776 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.511352+00:00"
+    },
+    {
+      "pack_id": "133a35faac13",
+      "formula": "Li6MnO2F4",
+      "source_type": "known_corpus_candidate",
+      "material_id": "ca3118713cb6164f",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7734,
+      "score_breakdown": {
+        "stability": 0.9003,
+        "band_gap_fit": 0.9827,
+        "novelty": 0.0,
+        "exotic": 0.1408,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5649,
+        "frontier": 0.7734
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -2.50152,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.474,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1408,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 2.2724,
+      "spacegroup": 2,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.47 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.47 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.47 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "Li6MnO2F4 | FE=-2.50 | BG=1.47 | frontier=0.773 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.511766+00:00"
+    },
+    {
+      "pack_id": "ecfbd3cfd653",
+      "formula": "Dy2TeO2",
+      "source_type": "known_corpus_candidate",
+      "material_id": "e26cceb70a7f14a4",
+      "candidate_id": null,
+      "existence_status": "unknown",
+      "frontier_profile": "stable_semiconductor",
+      "frontier_score": 0.7672,
+      "score_breakdown": {
+        "stability": 1.0,
+        "band_gap_fit": 0.8513,
+        "novelty": 0.0,
+        "exotic": 0.1251,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5554,
+        "frontier": 0.7672
+      },
+      "properties": {
+        "formation_energy": {
+          "value": -3.1606,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.277,
+          "evidence": "known"
+        }
+      },
+      "novelty_score": 0.0,
+      "exotic_score": 0.1251,
+      "calibration_band": "high",
+      "expected_error": 0.2318,
+      "has_structure": true,
+      "density": 8.4229,
+      "spacegroup": 139,
+      "n_sites": null,
+      "nearest_neighbors": [],
+      "likely_applications": [
+        {
+          "label": "semiconductor",
+          "score": 0.7,
+          "why": "Band gap 1.28 eV in semiconductor range (0.1-4.0 eV)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "photovoltaic_candidate",
+          "score": 0.6,
+          "why": "Band gap 1.28 eV in optimal PV range (0.8-2.0 eV, Shockley-Queisser)",
+          "evidence_level": "known"
+        },
+        {
+          "label": "thermoelectric_candidate",
+          "score": 0.25,
+          "why": "Band gap 1.28 eV suitable for thermoelectrics",
+          "evidence_level": "known"
+        }
+      ],
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "recommended_next_step": "keep_as_known_reference",
+      "human_summary": "Dy2TeO2 | FE=-3.16 | BG=1.28 | frontier=0.767 | app=semiconductor | next=keep_as_known_reference",
+      "created_at": "2026-03-20T14:35:12.512009+00:00"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.B (v1.5.0)**
+> **Document status: Active implementation — Phase IV.E (v1.8.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -429,6 +429,15 @@ Cosine similarity, brute-force scan (sufficient for <50K materials).
 - CTO Decision: PROMOTE_MID_SCALE_MODEL (ALIGNN-Lite 20K)
 - 9 new tests + all existing tests (539 total)
 
+### Phase IV.C — Dual-Target Frontier Engine (Current) ✅
+- Multiobjectve scoring: stability + band_gap_fit + novelty + exotic + structure_quality + validation_priority
+- 4 profiles: balanced_frontier, stable_semiconductor, wide_gap_exotic, high_novelty_watchlist
+- Uses promoted models: CGCNN FE (MAE=0.1528) + ALIGNN-Lite BG (MAE=0.3422)
+- Supports corpus, generated, and mixed candidate pools
+- Evidence propagation: known/predicted/proxy/unavailable on every property
+- Reason codes for every candidate explaining ranking
+- 4 API endpoints + 29 dedicated tests (568 total)
+
 ### Phase V — Physics-Based Screening (Planned)
 - Phonon-based thermal stability (phonopy or ML surrogate)
 - Equation of state fitting (Birch-Murnaghan)
@@ -527,3 +536,19 @@ Predict property degradation over time under operating conditions — thermal cy
 | GET | /intelligence/status | III.F | ✅ Production |
 | POST | /intelligence/dossier/from-evaluation | III.F | ✅ Production |
 | GET | /intelligence/dossier/{id} | III.F | ✅ Production |
+
+### Phase IV.D — Frontier-to-Validation Bridge (Current) ✅
+- Validation Packs: concrete, exportable packages with evidence, risk flags, and next-step recommendations
+- Bridge: converts frontier shortlists into validation queue entries with dedup
+- Risk flags: known_material, weak_band_gap_confidence, generated_not_validated, etc.
+- Next steps: keep_as_known_reference, watch_only, queue_for_proxy_review, queue_for_dft_when_budget_allows
+- Export: JSON + Markdown + CSV summary
+- 3 new API endpoints + 17 dedicated tests (585 total)
+
+### Phase IV.E — Pre-DFT Triage Gate (Current) ✅
+- Triage decisions: approved_for_budgeted_validation / needs_manual_review / watchlist_only / reject_for_now
+- Hard gates: known_material_low_novelty, too_many_risk_flags, no_structure_required
+- 4 profiles: strict_budget_gate, balanced_review_gate, exotic_patience_gate, stable_semiconductor_gate
+- Next actions: promote_to_budget / review_with_human / keep_in_queue / defer / drop
+- Reason codes: strong_frontier_score, good_calibration_support, generated_candidate_requires_review, etc.
+- 4 API endpoints + 17 dedicated tests (602 total)
