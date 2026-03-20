@@ -1216,18 +1216,24 @@ function base32Decode(str) {
   return bytes;
 }
 
-function generateTotpCode(secretBytes, time = null) {
-  // TOTP: HMAC-SHA1, 6 digits, 30-second period (RFC 6238 / Google Authenticator standard)
-  const counter = Math.floor((time || Date.now() / 1000) / 30);
+async function generateTotpCode(secretBytes, counterOverride = null) {
+  // TOTP RFC 6238: HMAC-SHA1, 6 digits, 30-second period
+  // Uses Web Crypto API (crypto.subtle) — guaranteed correct and available in all browsers
+  const counter = counterOverride !== null ? counterOverride : Math.floor(Date.now() / 1000 / 30);
   const counterBytes = new Uint8Array(8);
-  let c = counter;
-  for (let i = 7; i >= 0; i--) { counterBytes[i] = c & 0xff; c = Math.floor(c / 256); }
-  // Use SHA1 for TOTP (standard), fallback to SHA256 if SHA1 not available
-  const hashFn = sha1 || sha256;
-  const h = hmac(hashFn, secretBytes, counterBytes);
+  let tmp = counter;
+  for (let i = 7; i >= 0; i--) { counterBytes[i] = tmp & 0xff; tmp = Math.floor(tmp / 256); }
+
+  // HMAC-SHA1 via Web Crypto API
+  const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, counterBytes);
+  const h = new Uint8Array(sig);
+
+  // Dynamic truncation (RFC 4226 §5.4)
   const offset = h[h.length - 1] & 0x0f;
-  const code = ((h[offset] & 0x7f) << 24 | h[offset+1] << 16 | h[offset+2] << 8 | h[offset+3]) % 1000000;
-  return code.toString().padStart(6, '0');
+  const binary = ((h[offset] & 0x7f) << 24) | ((h[offset+1] & 0xff) << 16) | ((h[offset+2] & 0xff) << 8) | (h[offset+3] & 0xff);
+  const otp = (binary % 1000000).toString().padStart(6, '0');
+  return otp;
 }
 
 function getTotpSecret() {
@@ -1245,14 +1251,15 @@ function isTotpEnabled() {
   return t && t.enabled;
 }
 
-function verifyTotpCode(code) {
+async function verifyTotpCode(code) {
   const t = getTotpSecret();
   if (!t) return false;
   const secretBytes = base32Decode(t.secret);
-  const now = Date.now() / 1000;
-  // Check current, previous, and next window
+  const currentCounter = Math.floor(Date.now() / 1000 / 30);
+  // Check current period AND ±1 (tolerance for clock drift)
   for (let offset = -1; offset <= 1; offset++) {
-    if (generateTotpCode(secretBytes, now + offset * 30) === code) return true;
+    const expected = await generateTotpCode(secretBytes, currentCounter + offset);
+    if (expected === code) return true;
   }
   return false;
 }
@@ -1702,7 +1709,7 @@ window.sendTransaction = async function() {
   // TOTP check
   if (isTotpEnabled()) {
     const code = document.getElementById('sendTotp').value.trim();
-    if (!verifyTotpCode(code)) return showError('sendResult', '2FA code is invalid');
+    if (!(await verifyTotpCode(code))) return showError('sendResult', '2FA code is invalid');
   }
 
   document.getElementById('sendBtn').disabled = true;
@@ -1832,16 +1839,17 @@ window.setupTotp = function() {
   } catch (e) { /* QR lib not available */ }
 };
 
-window.verifyTotp = function() {
+window.verifyTotp = async function() {
   const code = document.getElementById('totpVerify').value.trim();
   const secret = window._pendingTotpSecret;
   if (!secret) return;
 
   const secretBytes = base32Decode(secret);
-  const now = Date.now() / 1000;
+  const currentCounter = Math.floor(Date.now() / 1000 / 30);
   let valid = false;
   for (let offset = -1; offset <= 1; offset++) {
-    if (generateTotpCode(secretBytes, now + offset * 30) === code) { valid = true; break; }
+    const expected = await generateTotpCode(secretBytes, currentCounter + offset);
+    if (expected === code) { valid = true; break; }
   }
 
   if (valid) {
