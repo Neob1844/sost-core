@@ -2,23 +2,22 @@
 
 ## band_gap
 
-Total: 76,124
+Total: 9
 
 | Tier | Count | % |
 |------|-------|---|
-| easy | 53,187 | 69.87% |
-| hard | 4,810 | 6.32% |
-| high_value_retrain | 494 | 0.65% |
-| medium | 17,633 | 23.16% |
+| high_value_retrain | 2 | 22.22% |
+| medium | 3 | 33.33% |
+| sparse_exotic | 4 | 44.44% |
 
 ## formation_energy
 
-Total: 76,193
+Total: 10
 
 | Tier | Count | % |
 |------|-------|---|
-| easy | 74,351 | 97.58% |
-| medium | 1,842 | 2.42% |
+| easy | 6 | 60.0% |
+| sparse_exotic | 4 | 40.0% |
 
 ## Tier Definitions
 

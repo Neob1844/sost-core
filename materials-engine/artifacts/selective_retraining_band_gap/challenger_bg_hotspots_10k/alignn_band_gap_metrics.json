@@ -1,0 +1,17 @@
+{
+  "model": "alignn_lite",
+  "target": "band_gap",
+  "dataset_size": 9921,
+  "train_size": 7936,
+  "val_size": 992,
+  "test_size": 993,
+  "epochs": 15,
+  "best_epoch": 12,
+  "seed": 42,
+  "test_mae": 0.6374,
+  "test_rmse": 0.8255,
+  "test_r2": 0.5977,
+  "training_time_sec": 978.4,
+  "checkpoint": "alignn_band_gap_best.pt",
+  "created_at": "2026-03-20T22:12:13.556008+00:00"
+}
