@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.E (v1.8.0)**
+> **Document status: Active implementation — Phase IV.G (v2.0.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -552,3 +552,21 @@ Predict property degradation over time under operating conditions — thermal cy
 - Next actions: promote_to_budget / review_with_human / keep_in_queue / defer / drop
 - Reason codes: strong_frontier_score, good_calibration_support, generated_candidate_requires_review, etc.
 - 4 API endpoints + 17 dedicated tests (602 total)
+
+### Phase IV.F — Niche Discovery Campaign Engine (Current) ✅
+- Themed campaigns: frontier → validation pack → triage in a single orchestrated run
+- 5 presets: stable_semiconductor_hunt, wide_gap_exotic_hunt, high_novelty_watchlist, balanced_exotic_opportunities, generated_candidate_review
+- Niche tags: stable_semiconductor, wide_gap_exotic, novel_watchlist, generated_high_interest, known_reference, budget_candidate
+- Cross-campaign comparison with signal/risk ratio
+- Batch execution: run multiple campaigns in one call
+- 5 API endpoints + 17 dedicated tests (619 total)
+
+### Phase IV.G — Active Learning + Corpus Expansion Orchestrator (Current) ✅
+- Chemical space coverage: 89 elements, 213 spacegroups, dense/sparse region maps
+- Error hotspot detection from calibration buckets (3 hotspots found)
+- Retraining proposals: reasoned, prioritized, with recommended rung sizes
+- Corpus expansion planner: 5 free sources (MP ~150K, COD ~530K, AFLOW ~3.5M, OQMD ~1M, NOMAD ~12M)
+- Exotic niche analysis: rare earths, actinides, heavy pnictides, quaternary+ materials
+- Action summary: what to improve, what not to touch, what data to seek
+- 4 API endpoints + 17 dedicated tests (636 total)
+- Version bumped to 2.0.0

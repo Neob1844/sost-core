@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.E — Pre-DFT Triage Gate (v1.8.0)**
+> **Current phase: IV.G — Active Learning + Corpus Expansion Orchestrator (v2.0.0)**
 
 ## What exists (implemented and tested)
 
@@ -128,7 +128,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (602 tests)
+# Run all tests (636 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -204,7 +204,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (602 total)
+## Tests (636 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|
