@@ -32,22 +32,12 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes scanSweep{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
 @keyframes fadeIn{to{opacity:1}}
 
-/* APP — hidden until splash finishes */
-.app{display:flex;flex-direction:column;height:100%;visibility:hidden;opacity:0}
-.app.show{visibility:visible;opacity:1;transition:opacity .5s ease}
+/* APP — hidden with display:none until splash finishes */
+#app{display:none;flex-direction:column;height:100%}
 .frames{flex:1;position:relative;overflow:hidden}
 .frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
-.frame-hidden{display:none}
 
-/* CRT (1s each) */
-.frames.crt-off{animation:cOff 1s ease-in forwards}
-.frames.crt-on{animation:cOn 1s ease-out forwards}
-@keyframes cOff{0%{transform:scaleY(1);filter:brightness(1)}60%{transform:scaleY(1);filter:brightness(1.5)}100%{transform:scaleY(.002);filter:brightness(3)}}
-@keyframes cOn{0%{transform:scaleY(.002);filter:brightness(3)}40%{transform:scaleY(.002);filter:brightness(1.5)}100%{transform:scaleY(1);filter:brightness(1)}}
-.zap{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.8);box-shadow:0 0 20px 4px rgba(255,255,255,.5);z-index:50;opacity:0;transition:opacity .15s}
-.zap.on{opacity:1}
-
-/* LOADING OVERLAY — blur behind */
+/* LOADING OVERLAY */
 .lov{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
 .lov.gone{opacity:0;pointer-events:none}
 .pie{width:140px;height:140px;border-radius:50%;border:3px solid #333;position:relative;display:flex;align-items:center;justify-content:center;background:#222}
@@ -67,7 +57,12 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 .nb.ex-on{color:#00ff88}.nb.ex-on .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
 .nb.wl-on{color:#cc0000}.nb.wl-on .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
 .nb.dl{color:#00e5ff}.nb.dl.done{color:#00ff88}
+.nb.wb{color:#00e5ff}
 .nb.xt{color:#666}.nb.xt:active{color:#cc0000}
+
+/* Tab fade transition */
+.frames.fading{opacity:0;transition:opacity .4s ease}
+.frames.visible{opacity:1;transition:opacity .4s ease}
 </style>
 </head>
 <body>
@@ -85,13 +80,12 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div id="splash-scan"></div>
 </div>
 
-<!-- APP — invisible until splash ends -->
-<div class="app" id="app">
-  <div class="frames" id="fr">
-    <!-- Both iframes load from start; wallet hidden with display:none -->
-    <iframe id="ef" src="/sost-explorer.html"></iframe>
-    <iframe id="wf" src="/sost-wallet.html" class="frame-hidden"></iframe>
-    <div class="zap" id="zap"></div>
+<!-- APP — display:none by default, NO iframes load until splash ends -->
+<div id="app">
+  <div class="frames visible" id="fr">
+    <!-- iframes: src set by JS after splash, wallet starts hidden -->
+    <iframe id="ef" style="display:block"></iframe>
+    <iframe id="wf" style="display:none"></iframe>
     <div class="lov" id="lov-ex">
       <div class="pie"><div class="pie-fill" id="pf-ex"></div><span class="pie-num" id="pn-ex">60</span></div>
       <div class="lov-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
@@ -104,19 +98,24 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <nav class="bar">
     <div class="nb ex-on" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
     <div class="nb dl" id="bd" onclick="dl()"><span class="i">📥</span>DOWNLOAD</div>
+    <div class="nb wb" onclick="web()"><span class="i">🌐</span>WEB</div>
     <div class="nb xt" onclick="xt()"><span class="i">⏻</span>EXIT</div>
     <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
   </nav>
 </div>
 
 <script>
-/* ===== SPLASH (7s) — app stays invisible until splash finishes ===== */
+/* ===== SPLASH (7s) — app stays display:none until splash finishes ===== */
 ['s1','s2','s3','s4'].forEach(function(id,i){
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
 setTimeout(function(){
-  // First make app visible, THEN fade out splash
-  document.getElementById('app').classList.add('show');
+  // Show app, THEN fade out splash
+  var appEl=document.getElementById('app');
+  appEl.style.display='flex';
+  // Set iframe srcs NOW (not before) to prevent flash
+  document.getElementById('ef').src='/sost-explorer.html';
+  document.getElementById('wf').src='/sost-wallet.html';
   setTimeout(function(){
     document.getElementById('splash').classList.add('out');
     initLoading('ex');
@@ -132,25 +131,24 @@ var detectIntervals={};
 
 function checkExplorerLoaded(){
   try{
-    var doc=document.getElementById('ef').contentDocument||document.getElementById('ef').contentWindow.document;
-    if(!doc||!doc.body)return false;
-    var text=doc.body.innerText||'';
-    // TOTAL SUPPLY has a real number (not "—")
-    var supplyMatch=text.match(/(\d+\.\d+)\s*SOST/);
-    var heightMatch=text.match(/#(\d+)/);
-    if(supplyMatch&&parseFloat(supplyMatch[1])>0)return true;
-    if(heightMatch&&parseInt(heightMatch[1])>0&&supplyMatch)return true;
-    return false;
-  }catch(e){return null;}
+    var iframe=document.getElementById('ef');
+    if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
+    var text=iframe.contentDocument.body.innerText||'';
+    // Look for real supply number like "5346.5369 SOST" (at least 2 digits before dot)
+    var hasSupply=/\d{2,}\.\d+\s*SOST/.test(text);
+    // Look for block height like #1234 (at least 2 digits)
+    var hasHeight=/#\d{2,}/.test(text);
+    return hasSupply&&hasHeight;
+  }catch(e){return false;}
 }
 
 function checkWalletLoaded(){
   try{
-    var doc=document.getElementById('wf').contentDocument||document.getElementById('wf').contentWindow.document;
-    if(!doc||!doc.body)return false;
-    var text=doc.body.innerText||'';
+    var iframe=document.getElementById('wf');
+    if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
+    var text=iframe.contentDocument.body.innerText||'';
     return text.indexOf('Dashboard')>=0||text.indexOf('BALANCE')>=0||text.indexOf('Launch Wallet')>=0||text.indexOf('Generate')>=0;
-  }catch(e){return null;}
+  }catch(e){return false;}
 }
 
 function initLoading(key){
@@ -176,24 +174,17 @@ function initLoading(key){
     pf.style.background='conic-gradient(#cc0000 0% '+pct+'%, transparent '+pct+'% 100%)';
     pf.style.borderRadius='50%';
     if(rem>0){pn.textContent=rem;}
-    else{pn.textContent='...';ll.textContent='WAITING FOR NODE...';ll.style.color='#f59e0b';}
+    else{pn.textContent='...';ll.textContent='CONNECTION SLOW...';ll.style.color='#f59e0b';}
   },1000);
 
-  // Content detection — every 2s, check iframe content
+  // Content detection — every 2s, check iframe content directly
   detectIntervals[key]=setInterval(function(){
     var minElapsed=(Date.now()-startTime)>=3000; // minimum 3s overlay
     var check=(key==='ex')?checkExplorerLoaded():checkWalletLoaded();
-
     if(check===true&&minElapsed){
       doneLoading(key);
-    }else if(check===null&&minElapsed){
-      // Can't read iframe (cross-origin) — fallback to RPC
-      fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:'{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}'})
-      .then(function(r){return r.json();})
-      .then(function(j){if(j.result&&j.result.blocks>0)doneLoading(key);})
-      .catch(function(){});
     }
+    // NO RPC fallback — only trust iframe content
   },2000);
 }
 
@@ -213,45 +204,58 @@ function doneLoading(key){
   setTimeout(function(){ov.classList.add('gone');},1000);
 }
 
-/* ===== TAB SWITCH — CRT + proper frame display ===== */
-var cur='explorer';var switching=false;
+/* ===== TAB SWITCH — simple fade, no CRT (reliable > pretty) ===== */
+var cur='explorer';
+var switching=false;
+
 function go(t){
   if(t===cur||switching)return;
   switching=true;
   var fr=document.getElementById('fr');
-  var zap=document.getElementById('zap');
   var ef=document.getElementById('ef');
   var wf=document.getElementById('wf');
 
-  // CRT OFF
-  fr.classList.remove('crt-on');
-  fr.classList.add('crt-off');
-  setTimeout(function(){zap.classList.add('on');},800);
+  // Safety: always reset switching after 3s max
+  var safetyTimer=setTimeout(function(){switching=false;},3000);
+
+  // Phase 1: fade out (0.4s)
+  fr.classList.remove('visible');
+  fr.classList.add('fading');
 
   setTimeout(function(){
-    zap.classList.remove('on');
-    // Switch iframe visibility using display
+    // Phase 2: swap iframes
     if(t==='explorer'){
-      ef.classList.remove('frame-hidden');ef.style.display='block';
-      wf.classList.add('frame-hidden');wf.style.display='none';
+      ef.style.display='block';
+      wf.style.display='none';
     }else{
-      wf.classList.remove('frame-hidden');wf.style.display='block';
-      ef.classList.add('frame-hidden');ef.style.display='none';
+      wf.style.display='block';
+      ef.style.display='none';
     }
     // Show overlay if first time
-    if(!loaded[t])initLoading(t);
-    // CRT ON
-    fr.classList.remove('crt-off');
-    fr.classList.add('crt-on');
-    setTimeout(function(){
-      fr.classList.remove('crt-on');
-      switching=false;
-    },1000);
-  },1050);
+    if(!loaded[t==='explorer'?'ex':'wl']){
+      var key=t==='explorer'?'ex':'wl';
+      initLoading(key);
+    }
 
+    // Phase 3: fade in (0.4s)
+    fr.classList.remove('fading');
+    fr.classList.add('visible');
+
+    setTimeout(function(){
+      switching=false;
+      clearTimeout(safetyTimer);
+    },450);
+  },450);
+
+  // Update button states immediately
   cur=t;
   document.getElementById('be').className='nb'+(t==='explorer'?' ex-on':'');
   document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
+}
+
+/* ===== WEB BUTTON ===== */
+function web(){
+  window.open('https://sostcore.com','_blank');
 }
 
 /* ===== PWA ===== */
