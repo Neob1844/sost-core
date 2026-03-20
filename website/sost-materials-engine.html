@@ -948,56 +948,182 @@
       <h2 class="section-title">Unified <span class="accent">Platform Vision</span></h2>
     </div>
 
+    <!-- GeoForge Overview -->
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">GeoForge: Predict &middot; Detect &middot; Discover</span>
+          <span class="spec-name">GeoForge &mdash; Predict &middot; Detect &middot; Discover</span>
         </div>
         <span class="spec-tag overlay">VISION</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          The long-term vision is a unified platform called <strong>GeoForge</strong> that fuses the Materials Discovery Engine
-          with remote sensing mineral detection. The Materials Engine computationally predicts material properties and generates candidates.
-          A future remote sensing module would detect mineral signatures in satellite imagery. Combined, the system could
-          <strong>predict what materials should exist, then search for them from space</strong>.
+          <strong>GeoForge</strong> is the unified platform combining computational materials science with remote geospatial detection.
+          The Materials Engine predicts properties and generates novel candidates. A future Remote Sensing module will detect mineral
+          signatures from satellite imagery. Together they enable a <strong>closed discovery cycle</strong>:
         </p>
-        <p class="spec-desc" style="margin-top:12px;color:var(--text-dim);font-size:11px">
-          <strong>Current status:</strong> The Materials Engine is operational (v2.0.0). Remote sensing is in the <strong>viability study</strong> phase &mdash;
-          a detailed technical assessment has been completed, and a zero-cost implementation route using free satellite data (Sentinel-2, EMIT) has been designed.
-          The two modules are <strong>not yet operationally integrated</strong>. Integration requires GNN spectral signature prediction (Phase VI), which is a research challenge.
+        <p class="spec-desc" style="margin-top:10px;text-align:center;font-size:13px;color:var(--cyan-primary);letter-spacing:1px">
+          PREDICT &rarr; PRIORITIZE &rarr; SEARCH &rarr; VALIDATE &rarr; REGISTER
         </p>
-        <table class="code-table" style="margin-top:12px">
-          <tr><td class="key">Materials Engine</td><td class="val" style="color:var(--green-primary)">Operational &mdash; v2.0.0, 75,993 materials, production models</td></tr>
-          <tr><td class="key">Remote Sensing</td><td class="val" style="color:var(--cyan-primary)">Viability study complete &mdash; zero-cost route designed, not yet built</td></tr>
-          <tr><td class="key">Integration</td><td class="val" style="color:var(--text-dim)">Future &mdash; requires GNN spectral prediction (research challenge)</td></tr>
-          <tr><td class="key">Blockchain PoD</td><td class="val" style="color:var(--text-dim)">Future &mdash; Capsule Protocol ready, market demand uncertain</td></tr>
+      </div>
+    </div>
+
+    <!-- Module Status Cards -->
+    <div class="mode-grid fade-in delay-2" style="margin-top:16px">
+      <div class="mode-card" style="border-left:3px solid var(--green-primary)">
+        <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Materials Engine</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.7">
+          <strong style="color:var(--green-primary)">OPERATIONAL &mdash; v2.1.0</strong><br>
+          75,993 materials &middot; 100% structures<br>
+          CGCNN FE (MAE=0.15) + ALIGNN-Lite BG (MAE=0.34)<br>
+          Frontier ranking + triage + niche campaigns<br>
+          Active learning orchestrator + corpus expansion<br>
+          655 tests &middot; 70+ API endpoints
+        </div>
+      </div>
+      <div class="mode-card" style="border-left:3px solid var(--cyan-primary)">
+        <div class="mode-name"><span class="indicator" style="background:var(--cyan-primary)"></span> Remote Sensing Initiative</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.7">
+          <strong style="color:var(--cyan-primary)">VIABILITY STUDY COMPLETE</strong><br>
+          Sentinel-2 (13 bands, free) for mineral alteration mapping<br>
+          EMIT hyperspectral (285 bands, free) for mineral ID<br>
+          Iron oxide mapping: 70&ndash;85% accuracy in arid regions<br>
+          Zero-cost route designed &mdash; not yet built<br>
+          <em style="color:var(--text-dim)">Strategic initiative, not operational module</em>
+        </div>
+      </div>
+      <div class="mode-card" style="border-left:3px solid var(--text-dim)">
+        <div class="mode-name"><span class="indicator" style="background:var(--text-dim)"></span> Integration Layer</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.7">
+          <strong style="color:var(--text-dim)">FUTURE RESEARCH</strong><br>
+          GNN predicts spectral signatures from crystal structure<br>
+          Remote sensing searches for those signatures in imagery<br>
+          Requires DFT-to-spectrum training pipeline<br>
+          RRUFF database: ~4,000 minerals with structure + spectra<br>
+          <em style="color:var(--text-dim)">Research challenge &mdash; not yet implemented</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why Integration Matters -->
+    <div class="spec-block fade-in delay-3" style="margin-top:16px">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Why the Unified Platform Matters</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc" style="font-size:12px;line-height:1.8">
+          No existing system combines <strong>computational materials prediction</strong> with <strong>satellite-based mineral detection</strong>.
+          KoBold Metals ($3B) uses AI + geophysics but has no GNN materials engine. SOST&rsquo;s unique angle: predict what materials
+          <em>should</em> exist computationally, then search for them in real satellite imagery. The Materials Engine already discovers
+          exotic candidates &mdash; a future remote sensing module would tell you <em>where</em> to look for them on Earth.
+        </p>
+      </div>
+    </div>
+
+    <!-- Platform Evolution -->
+    <div class="spec-block fade-in delay-3" style="margin-top:16px">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">How the Platform Evolves</span>
+        </div>
+      </div>
+      <div class="spec-body" style="padding:14px 18px">
+        <table class="code-table" style="font-size:11px">
+          <tr><th style="width:80px">Stage</th><th>Capability</th><th style="width:100px">Status</th></tr>
+          <tr><td class="key">Stage 1</td><td>Materials Engine: corpus, GNN prediction, novelty, generation, frontier, triage, campaigns</td><td style="color:var(--green-primary)">Operational</td></tr>
+          <tr><td class="key">Stage 2</td><td>Remote sensing: Sentinel-2 mineral alteration maps for arid regions ($0)</td><td style="color:var(--cyan-primary)">Viability OK</td></tr>
+          <tr><td class="key">Stage 3</td><td>Weak integration: Materials Engine cross-references detected mineral classes</td><td style="color:var(--text-dim)">Planned</td></tr>
+          <tr><td class="key">Stage 4</td><td>GNN spectral prediction: predict signatures &rarr; search in satellite imagery</td><td style="color:var(--text-dim)">Research</td></tr>
+          <tr><td class="key">Stage 5</td><td>Proof of Discovery on SOST blockchain + geological data marketplace</td><td style="color:var(--text-dim)">Future</td></tr>
         </table>
       </div>
     </div>
+
+    <!-- Zero-Cost Strategy -->
+    <div class="spec-block fade-in delay-3" style="margin-top:16px">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Zero-Cost Strategy</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc" style="font-size:12px;line-height:1.8">
+          Every phase uses <strong>free data and open-source tools first</strong>. Materials from JARVIS/MP/AFLOW/COD ($0).
+          Satellite data from Sentinel-2/EMIT/Sentinel-1 ($0). Training on Google Colab ($0). Each phase must produce
+          something <strong>useful and sellable</strong> before the next begins. No cloud spend until revenue justifies it.
+          Current Materials Engine runs on a single VPS at <strong>$0/month compute cost</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Strategic Differentiation -->
+    <div class="spec-block fade-in delay-3" style="margin-top:16px">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Strategic Specialization</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="font-size:12px">
+          <tr><td class="key">Focus</td><td class="val">Novel, unknown, exotic, and under-explored materials &mdash; not a generic prediction service</td></tr>
+          <tr><td class="key">Method</td><td class="val">Novelty-first discovery: generate &rarr; filter by novelty &rarr; frontier rank &rarr; triage &rarr; validate</td></tr>
+          <tr><td class="key">Learning</td><td class="val">Active learning: detect where models fail, expand corpus in sparse regions, retrain selectively</td></tr>
+          <tr><td class="key">Cost</td><td class="val">Near-zero until revenue: open data, open models, CPU-first, cheap-first validation ladder</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Honest Limits -->
+    <div class="spec-block fade-in delay-3" style="margin-top:16px">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Honest Limitations</span>
+        </div>
+        <span class="spec-tag immutable">TRANSPARENCY</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="font-size:11px">
+          <tr><td class="key" style="color:var(--red-primary)">Materials Engine</td><td class="val">Predictions are GNN baseline estimates (MAE ~0.15&ndash;0.34 eV). NOT DFT-validated. NOT experimentally confirmed.</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Remote Sensing</td><td class="val">Cannot see directly underground. Surface mineral mapping only. Subsurface inference requires alteration halo proxies.</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Integration</td><td class="val">GNN spectral prediction from crystal structure is a research challenge. Training data limited (~300&ndash;400 minerals with both).</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Blockchain</td><td class="val">Proof of Discovery is a concept. Does not replace physical validation or peer review.</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Novelty</td><td class="val">Assessed relative to ingested corpus only (75,993 JARVIS materials), not all published science.</td></tr>
+        </table>
+      </div>
+    </div>
+
   </div>
 </section>
 
-<!-- RECENT PROGRESS -->
+<!-- RECENT MILESTONES -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">07 &mdash; RECENT</div>
-      <h2 class="section-title">Recent <span class="accent">Progress</span></h2>
+      <h2 class="section-title">Recent <span class="accent">Milestones</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-body" style="padding:16px 20px">
         <table class="code-table" style="font-size:12px">
           <tr><th style="width:130px">Milestone</th><th>Detail</th></tr>
-          <tr><td class="key" style="color:var(--green-primary)">v2.0.0</td><td>Active learning orchestrator: error hotspots, coverage analysis (89 elements, 213 SGs), retraining proposals, corpus expansion planner</td></tr>
-          <tr><td class="key">Niche Campaigns</td><td>5 themed discovery presets: stable_semiconductor, wide_gap_exotic, high_novelty, balanced, generated_review &mdash; with cross-campaign comparison</td></tr>
-          <tr><td class="key">Pre-DFT Triage</td><td>4-profile gate: strict/balanced/exotic/semiconductor &mdash; hard gates + reason codes + next-action recommendations</td></tr>
-          <tr><td class="key">Frontier Engine</td><td>Dual-target multiobjectve: FE stability + BG fit + novelty + exotic + structure + validation priority</td></tr>
-          <tr><td class="key">Band Gap Model</td><td>ALIGNN-Lite 20K promoted: MAE=0.3422 eV, R&sup2;=0.707 (was 0.40 eV on 2K) &mdash; 14% improvement</td></tr>
-          <tr><td class="key">Training Ladder</td><td>Both targets: 5 rungs (5K&rarr;76K), 20K optimal for cost/quality, CGCNN wins FE, ALIGNN-Lite wins BG</td></tr>
-          <tr><td class="key">636 Tests</td><td>19 test files: schema, normalizer, chemistry, structure, db, api, models, thermo, novelty, shortlist, campaigns, generation, evaluation, intelligence, dossier, validation, evidence, frontier, triage, niche, orchestrator</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">v2.1.0</td><td>Multi-source corpus expansion + dedup foundation: 6 sources registered, staging engine, MP simulation (22% unique), expansion recommendation</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">v2.0.0</td><td>Active learning orchestrator: error hotspots (3 found), coverage analysis (89 elements, 213 SGs), retraining proposals, corpus expansion planner</td></tr>
+          <tr><td class="key">Niche Campaigns</td><td>5 themed discovery presets with cross-campaign comparison: stable_semiconductor, wide_gap_exotic, high_novelty, balanced, generated_review</td></tr>
+          <tr><td class="key">Pre-DFT Triage</td><td>4-profile decision gate: strict/balanced/exotic/semiconductor &mdash; hard gates + reason codes + next-action recommendations</td></tr>
+          <tr><td class="key">Frontier Engine</td><td>Dual-target multiobjectve ranking: FE stability + BG fit + novelty + exotic + structure quality + validation priority</td></tr>
+          <tr><td class="key">Band Gap Model</td><td>ALIGNN-Lite 20K promoted: MAE=0.3422 eV, R&sup2;=0.707 (14% improvement over 2K baseline)</td></tr>
+          <tr><td class="key">Training Ladder</td><td>Both targets: 5 rungs (5K&rarr;76K), 20K optimal. CGCNN wins FE, ALIGNN-Lite wins BG</td></tr>
+          <tr><td class="key">Platform Strategy</td><td>GeoForge unified platform strategy + remote sensing viability report completed (docs/)</td></tr>
+          <tr><td class="key">655 Tests</td><td>20 test files covering full pipeline: schema through corpus_sources</td></tr>
         </table>
       </div>
     </div>
