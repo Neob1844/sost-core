@@ -787,7 +787,11 @@
           <button class="btn btn-primary" onclick="setupTotp()">Enable 2FA</button>
         </div>
         <div id="totpSetupResult" class="hidden">
-          <div class="card-label">Secret Key (enter this in Google Authenticator)</div>
+          <div class="card-label">Scan this QR code with Google Authenticator, Authy, or any TOTP app</div>
+          <div style="text-align:center;margin:12px 0">
+            <canvas id="totpQrCanvas" style="border-radius:8px;background:#fff;padding:8px"></canvas>
+          </div>
+          <div class="card-label" style="margin-top:12px">Or enter this secret key manually</div>
           <div class="address-display" style="margin:8px 0">
             <span class="addr-text" id="totpSecret" style="color:var(--yellow-primary);letter-spacing:4px;font-size:16px"></span>
             <button class="copy-btn" onclick="copyText(document.getElementById('totpSecret').textContent)">COPY</button>
@@ -859,7 +863,7 @@
 // ============================================================
 
 // --- Noble crypto imports (with error handling) ---
-let secp, sha256, ripemd160, pbkdf2, hmac;
+let secp, sha256, sha1, ripemd160, pbkdf2, hmac;
 try {
   secp = await import('https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/+esm');
   const hashes = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/+esm');
@@ -867,6 +871,8 @@ try {
   ripemd160 = hashes.ripemd160;
   pbkdf2 = hashes.pbkdf2;
   hmac = hashes.hmac;
+  // SHA1 needed for TOTP (Google Authenticator uses HMAC-SHA1)
+  try { const sha1m = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/sha1/+esm'); sha1 = sha1m.sha1; } catch(e) { }
 } catch (e) {
   // Fallback: try individual imports
   try {
@@ -1211,11 +1217,14 @@ function base32Decode(str) {
 }
 
 function generateTotpCode(secretBytes, time = null) {
+  // TOTP: HMAC-SHA1, 6 digits, 30-second period (RFC 6238 / Google Authenticator standard)
   const counter = Math.floor((time || Date.now() / 1000) / 30);
   const counterBytes = new Uint8Array(8);
   let c = counter;
   for (let i = 7; i >= 0; i--) { counterBytes[i] = c & 0xff; c = Math.floor(c / 256); }
-  const h = hmac(sha256, secretBytes, counterBytes);
+  // Use SHA1 for TOTP (standard), fallback to SHA256 if SHA1 not available
+  const hashFn = sha1 || sha256;
+  const h = hmac(hashFn, secretBytes, counterBytes);
   const offset = h[h.length - 1] & 0x0f;
   const code = ((h[offset] & 0x7f) << 24 | h[offset+1] << 16 | h[offset+2] << 8 | h[offset+3]) % 1000000;
   return code.toString().padStart(6, '0');
@@ -1809,8 +1818,18 @@ window.setupTotp = function() {
   document.getElementById('totpSecret').textContent = secret;
   document.getElementById('totpNotSetup').classList.add('hidden');
   document.getElementById('totpSetupResult').classList.remove('hidden');
-  // Temporarily store for verification
   window._pendingTotpSecret = secret;
+
+  // Generate QR code with otpauth:// URI
+  const addr = wallet ? wallet.address.slice(0, 20) : 'wallet';
+  const uri = 'otpauth://totp/SOST%20Protocol:' + encodeURIComponent(addr) +
+    '?secret=' + secret + '&issuer=SOST%20Protocol&algorithm=SHA1&digits=6&period=30';
+  try {
+    const canvas = document.getElementById('totpQrCanvas');
+    if (typeof QRCode !== 'undefined' && canvas) {
+      QRCode.toCanvas(canvas, uri, { width: 200, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+    }
+  } catch (e) { /* QR lib not available */ }
 };
 
 window.verifyTotp = function() {
