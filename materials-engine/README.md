@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.H — Multi-Source Corpus Expansion + Dedup (v2.1.0)**
+> **Current phase: IV.I — Targeted AFLOW Ingestion Pilot (v2.2.0)**
 
 ## What exists (implemented and tested)
 
@@ -128,7 +128,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (655 tests)
+# Run all tests (668 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -204,7 +204,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (655 total)
+## Tests (668 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|

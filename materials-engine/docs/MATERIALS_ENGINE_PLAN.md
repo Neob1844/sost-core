@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.H (v2.1.0)**
+> **Document status: Active implementation — Phase IV.I (v2.2.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -579,3 +579,14 @@ Predict property degradation over time under operating conditions — thermal cy
 - Expansion recommendation: scored ranking with action (ingest_next / defer)
 - 4 API endpoints + 19 dedicated tests (655 total)
 - Version 2.1.0
+
+### Phase IV.I — Targeted AFLOW Ingestion Pilot (Current) ✅
+- Pilot ingestion: 200 materials selected from 600 candidates (434 unique, 166 deduped)
+- Corpus expanded: 75,993 → 76,193 (+200 AFLOW-simulated materials)
+- New element added: Gd (was sparse in coverage analysis)
+- AFLOW API was down — simulated data used with real pipeline, clearly labeled
+- Plan/apply separation with dry-run mode
+- Full audit trail: plan, run, audit, recommendation artifacts
+- Recommendation: continue_aflow_expansion
+- 4 API endpoints + 13 dedicated tests (668 total)
+- Version 2.2.0

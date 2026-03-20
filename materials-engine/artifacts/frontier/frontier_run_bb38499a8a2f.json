@@ -1,0 +1,205 @@
+{
+  "run_id": "bb38499a8a2f",
+  "profile": {
+    "name": "stable_semiconductor",
+    "description": "Thermodynamically stable materials with semiconductor band gap (0.5-3.0 eV)",
+    "w_stability": 0.35,
+    "w_band_gap_fit": 0.3,
+    "w_novelty": 0.1,
+    "w_exotic": 0.05,
+    "w_structure_quality": 0.1,
+    "w_validation_priority": 0.1,
+    "band_gap_target": 1.5,
+    "band_gap_tolerance": 1.5,
+    "fe_max": 1.0,
+    "novelty_min": 0.0,
+    "exotic_min": 0.0,
+    "top_k": 5,
+    "pool_limit": 5000
+  },
+  "source": "corpus",
+  "created_at": "2026-03-20T19:25:19.406052+00:00",
+  "summary": {
+    "pool_size": 5,
+    "after_filter": 5,
+    "shortlist_size": 5,
+    "score_range": {
+      "max": 0.5324,
+      "min": 0.3982
+    }
+  },
+  "shortlist": [
+    {
+      "canonical_id": "d5c6b17f446709d2",
+      "formula": "GaAs",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 216,
+      "properties": {
+        "formation_energy": {
+          "value": -0.7,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.4,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 0.54,
+        "band_gap_fit": 0.9333,
+        "novelty": 0.0,
+        "exotic": 0.3848,
+        "structure_quality": 0.0,
+        "validation_priority": 0.442,
+        "frontier": 0.5324
+      },
+      "rank": 1,
+      "reason_codes": [
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "abaaa8f129936004",
+      "formula": "Fe2O3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 167,
+      "properties": {
+        "formation_energy": {
+          "value": -1.5,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 2.1,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 0.7,
+        "band_gap_fit": 0.6,
+        "novelty": 0.0,
+        "exotic": 0.3537,
+        "structure_quality": 0.0,
+        "validation_priority": 0.39,
+        "frontier": 0.4817
+      },
+      "rank": 2,
+      "reason_codes": [
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "0993431016e5bb56",
+      "formula": "Si",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 227,
+      "properties": {
+        "formation_energy": {
+          "value": 0.0,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.1,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 0.4,
+        "band_gap_fit": 0.7333,
+        "novelty": 0.0,
+        "exotic": 0.3967,
+        "structure_quality": 0.0,
+        "validation_priority": 0.34,
+        "frontier": 0.4138
+      },
+      "rank": 3,
+      "reason_codes": [
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "d02e18112447d607",
+      "formula": "NaCl",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 225,
+      "properties": {
+        "formation_energy": {
+          "value": -4.2,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 8.5,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.0,
+        "novelty": 0.0,
+        "exotic": 0.3787,
+        "structure_quality": 0.0,
+        "validation_priority": 0.3,
+        "frontier": 0.3989
+      },
+      "rank": 4,
+      "reason_codes": [
+        "strong_stability_signal",
+        "poor_band_gap_fit",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 136,
+      "properties": {
+        "formation_energy": {
+          "value": -3.4,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 3.2,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.0,
+        "novelty": 0.0,
+        "exotic": 0.3636,
+        "structure_quality": 0.0,
+        "validation_priority": 0.3,
+        "frontier": 0.3982
+      },
+      "rank": 5,
+      "reason_codes": [
+        "strong_stability_signal",
+        "poor_band_gap_fit",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    }
+  ],
+  "disclaimer": "Frontier scores combine predicted formation_energy (CGCNN) + predicted band_gap (ALIGNN-Lite) + novelty/exotic heuristics. NOT DFT-validated. NOT experimentally confirmed. Properties tagged 'known' come from JARVIS DFT corpus. Properties tagged 'predicted' come from baseline GNN models."
+}
