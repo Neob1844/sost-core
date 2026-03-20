@@ -82,6 +82,66 @@ class TestRealRungs:
             assert m["seed"] == 42
 
 
+class TestBandGapRungs:
+    """Verify band_gap training ladder artifacts."""
+
+    def test_bg_rung_5k_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_5k/cgcnn_band_gap_manifest.json"
+        assert os.path.exists(path)
+        with open(path) as f:
+            m = json.load(f)
+        assert m["dataset_size"] == 5000
+        assert m["test_mae"] > 0
+
+    def test_bg_rung_10k_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_10k/cgcnn_band_gap_manifest.json"
+        assert os.path.exists(path)
+
+    def test_bg_rung_20k_cgcnn_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_20k/cgcnn_band_gap_manifest.json"
+        assert os.path.exists(path)
+
+    def test_bg_rung_20k_alignn_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_20k/alignn_lite_band_gap_manifest.json"
+        assert os.path.exists(path)
+
+    def test_bg_rung_40k_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_40k/cgcnn_band_gap_manifest.json"
+        assert os.path.exists(path)
+
+    def test_bg_rung_full_exists(self):
+        path = "artifacts/training_ladder_band_gap/rung_full/cgcnn_band_gap_manifest.json"
+        assert os.path.exists(path)
+
+    def test_bg_best_is_alignn_20k(self):
+        """The promoted band_gap model should be ALIGNN-Lite 20K."""
+        path = "artifacts/training/model_registry.json"
+        with open(path) as f:
+            registry = json.load(f)
+        bg_models = [m for m in registry if m["target"] == "band_gap" and m.get("promoted_for_production")]
+        assert len(bg_models) == 1
+        assert bg_models[0]["model"] == "alignn_lite"
+        assert bg_models[0]["dataset_size"] == 20000
+
+    def test_bg_comparison_exists(self):
+        path = "artifacts/training_ladder_band_gap/ladder_comparison.json"
+        assert os.path.exists(path)
+        with open(path) as f:
+            d = json.load(f)
+        assert d["target"] == "band_gap"
+        assert len(d["ladder_results"]) >= 5
+
+    def test_fe_model_not_touched(self):
+        """Formation energy model must still be CGCNN 20K."""
+        path = "artifacts/training/model_registry.json"
+        with open(path) as f:
+            registry = json.load(f)
+        fe_models = [m for m in registry if m["target"] == "formation_energy" and m.get("promoted_for_production")]
+        assert len(fe_models) == 1
+        assert fe_models[0]["model"] == "cgcnn"
+        assert fe_models[0]["test_mae"] == 0.1528
+
+
 class TestAPI:
     @pytest.fixture(autouse=True)
     def setup(self):
