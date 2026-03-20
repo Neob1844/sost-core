@@ -58,7 +58,7 @@ Recommended rung: After expansion: 40K or selective 20K from expanded corpus
 ## Action Summary
 
 ### Improve Now
-- Address 3 error hotspot(s) — targets: band_gap, formation_energy
+- Address 3 error hotspot(s) — targets: formation_energy, band_gap
 - Ingest materials_project (~~150K materials, $0 (API key))
 
 ### Don't Touch

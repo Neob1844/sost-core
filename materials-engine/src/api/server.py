@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.1.0", "phase": "corpus_expansion_dedup",
+    return {"status": "ok", "version": "2.2.0", "phase": "aflow_pilot",
             "materials_count": db.count()}
 
 
@@ -1524,6 +1524,49 @@ def corpus_sources_recommendation():
     db = _get_db()
     mp_report = simulate_mp_staging(db, sample_size=200)
     return generate_expansion_recommendation([mp_report])
+
+
+# --- Pilot Ingestion endpoints ---
+
+@app.get("/corpus-sources/pilot/status")
+def pilot_status():
+    """Return pilot ingestion status."""
+    import os
+    d = "artifacts/corpus_sources"
+    has_plan = os.path.exists(os.path.join(d, "pilot_plan.json"))
+    has_run = os.path.exists(os.path.join(d, "pilot_run.json"))
+    return {"plan_exists": has_plan, "run_exists": has_run}
+
+
+@app.post("/corpus-sources/pilot/plan")
+def pilot_plan(target_count: int = 200):
+    """Generate a pilot ingestion plan."""
+    from ..corpus_sources.pilot import generate_pilot_plan
+    db = _get_db()
+    plan, candidates = generate_pilot_plan(db, target_count)
+    return {"plan": plan.to_dict(), "sample_candidates": [c.to_dict() for c in candidates[:10]]}
+
+
+@app.post("/corpus-sources/pilot/run")
+def pilot_run(target_count: int = 200, dry_run: bool = True):
+    """Execute a pilot ingestion (dry_run=True by default for safety)."""
+    from ..corpus_sources.pilot import generate_pilot_plan, execute_pilot, save_pilot_artifacts
+    db = _get_db()
+    plan, candidates = generate_pilot_plan(db, target_count)
+    result = execute_pilot(db, plan, candidates, dry_run=dry_run)
+    save_pilot_artifacts(plan, result, candidates)
+    return result.to_dict()
+
+
+@app.get("/corpus-sources/pilot/recommendation")
+def pilot_recommendation():
+    """Get pilot recommendation."""
+    import os, json
+    path = os.path.join("artifacts/corpus_sources", "pilot_recommendation.json")
+    if not os.path.exists(path):
+        return {"recommendation": "no_pilot_run_yet"}
+    with open(path) as f:
+        return json.load(f)
 
 
 # --- Analytics endpoints ---
