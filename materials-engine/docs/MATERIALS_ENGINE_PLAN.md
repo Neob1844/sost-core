@@ -1,7 +1,7 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.I (v2.2.0)**
-> Last updated: 2026-03-18
+> **Document status: Active implementation — Phase IV.K (v2.4.0)**
+> Last updated: 2026-03-20
 
 ---
 
@@ -588,5 +588,37 @@ Predict property degradation over time under operating conditions — thermal cy
 - Plan/apply separation with dry-run mode
 - Full audit trail: plan, run, audit, recommendation artifacts
 - Recommendation: continue_aflow_expansion
-- 4 API endpoints + 13 dedicated tests (668 total)
+- 4 API endpoints + 13 dedicated tests
 - Version 2.2.0
+
+### Phase IV.J — Real-Source COD Pilot + Labeled/Unlabeled Corpus Tiers ✅
+- **Corpus Tiers**: 5-tier classification system (training_ready, structure_only, reference_only, generated_candidate, external_unlabeled)
+- **Tier result**: 100% of 76,193 materials are training_ready (all JARVIS+AFLOW have FE+BG)
+- **COD Pilot**: Attempted real COD API integration — server unreachable (158.129.170.82, 100% packet loss)
+- **Fallback**: Used representative COD entries (real COD IDs) with full pipeline
+- **COD result**: 13 unique structures identified, all classified as structure_only tier
+- **Training impact**: NONE — COD provides experimental structures only, no computed FE/BG
+- **Enhanced dedup**: 7 decision types (exact_duplicate, probable_duplicate, same_formula_different_structure, structure_near_match, unique_material, unique_structure_only, unique_training_candidate)
+- **Value report**: Quantified COD contribution — structural reference expansion only, no training value
+- **Decision**: `pause_cod_keep_as_reference_layer` — wait for AFLOW/MP real API for training data
+- **Critical rule**: Only training_ready tier enters ML training. NO retraining on COD-only materials.
+- **Coverage**: 89 elements, 213 spacegroups, 99.74% structure coverage
+- 6 new API endpoints + 46 dedicated tests (714 total)
+- Version 2.3.0
+
+### Phase IV.K — Hard-Case Mining + Selective Retraining Datasets ✅
+- Hard-case mining: 76,124 BG materials classified by difficulty (69.87% easy, 23.16% medium, 6.32% hard)
+- FE model strong: 97.58% easy → low priority for retraining
+- BG weakest regions: 3-6 eV (MAE=1.12 LOW), 1-3 eV (MAE=0.87 MEDIUM), 5+ elements (MAE=0.73 MEDIUM)
+- 6 selective datasets prepared: bg_sparse_exotic_10k (#1), bg_hotspots_10k (#2), bg_balanced_hardmix_20k (#3), fe_sparse_mix_10k (#4), curriculum_20k (#5), fe_hardcases_10k (#6)
+- Priority scoring: benefit (30%) + difficulty (20%) + diversity (15%) + sparse (15%) + exotic (10%) - overfit (5%) - cost (5%)
+- Decision: `retrain_band_gap_hotspots_next` with bg_sparse_exotic_10k on rung_20k
+- **NO training executed** — datasets prepared only
+- 5 new API endpoints + 37 dedicated tests (751 total)
+- Version 2.4.0
+
+### What has NOT been retrained
+- Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)
+- No retraining on AFLOW pilot or COD pilot materials
+- Retraining blocked until more labeled data from real DFT sources is available
+- Next retraining should use curated training_ready tier only

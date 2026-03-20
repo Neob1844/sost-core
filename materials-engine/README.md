@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.I — Targeted AFLOW Ingestion Pilot (v2.2.0)**
+> **Current phase: IV.K — Hard-Case Mining + Selective Retraining Datasets (v2.4.0)**
 
 ## What exists (implemented and tested)
 
@@ -11,11 +11,21 @@
 - **API** (`src/api/server.py`): FastAPI with 60 endpoints
 - **Audit + Export**: Corpus audit (JSON + Markdown), reproducible ML-ready CSV export
 
-### Corpus (Phase III.C + III.J — 75,993 materials)
-- **Source**: JARVIS DFT 3D bulk ingestion (via jarvis-tools)
-- **Coverage**: All 75,993 have band_gap, formation_energy, spacegroup
-- **Structure coverage**: **100%** — all 75,993 have validated CIF structures (backfilled from JARVIS atoms)
-- **ML-ready**: 100% — all have the fields needed for prediction and scoring
+### Corpus (Phase III.C + III.J + IV.I — 76,193 materials)
+- **Sources**: JARVIS DFT 3D bulk (75,993) + AFLOW pilot (200)
+- **Coverage**: 76,193 with formation_energy, 76,124 with band_gap, all with spacegroup
+- **Structure coverage**: **99.74%** — 75,993 have validated CIF structures
+- **ML-ready**: 100% of current corpus is training_ready tier
+- **Tier distribution**: See Phase IV.J below
+
+### Corpus Tiers (Phase IV.J)
+- **training_ready** (76,193 — 100%): Has formation_energy and/or band_gap. Can enter ML training.
+- **structure_only** (0 currently): Has crystal structure but no computed properties. COD pilot ready.
+- **reference_only**: Formula/composition only. Reference for dedup and coverage mapping.
+- **generated_candidate**: Computationally generated. NOT validated. Do NOT train on.
+- **external_unlabeled**: External source without computed labels. Search space expansion only.
+
+**Critical rule**: Only `training_ready` tier enters ML training pipelines. Other tiers expand search/reference space only.
 
 ### ML Prediction (Phase II → IV.A)
 - **Formation energy**: CGCNN on 20K samples — **MAE=0.1528, R²=0.9499** (Phase IV.A)
@@ -110,9 +120,36 @@
 - **Reason codes**: strong_stability, good_bg_fit, high_novelty, high_exotic, etc.
 - **API**: `GET /frontier/presets`, `POST /frontier/run`, `GET /frontier/{id}`
 
+### Real-Source COD Pilot (Phase IV.J)
+- **What it is**: Attempted real integration with Crystallography Open Database (COD)
+- **COD API status**: Unreachable from current environment (158.129.170.82 — 100% packet loss)
+- **Fallback**: Used representative COD entries (real COD IDs, simulated fetch) with real pipeline
+- **Result**: 13 unique structures identified, all classified as `structure_only` tier
+- **Training impact**: **NONE** — COD has no formation_energy or band_gap data
+- **Value**: Structural reference expansion only — improves novelty detection and polymorph comparison
+- **Decision**: `pause_cod_keep_as_reference_layer` — wait for real AFLOW or MP API for training data
+- **API**: `POST /corpus-sources/cod/pilot/plan`, `POST /corpus-sources/cod/pilot/run`, `GET /corpus-sources/cod/recommendation`
+- **Tier API**: `GET /corpus-sources/tiers/status`, `GET /corpus-sources/tiers/summary`
+
+### Hard-Case Mining + Selective Retraining Datasets (Phase IV.K)
+- **What it is**: Analyzes model weaknesses using calibration data, mines hard cases, builds focused retraining datasets
+- **Hard-case mining**: Classified 76,124 BG materials: 69.87% easy, 23.16% medium, 6.32% hard, 0.65% high-value retrain
+- **FE model is strong**: 97.58% easy, only 2.42% medium — low priority for retraining
+- **BG weakest buckets**: 3-6 eV (MAE=1.12, LOW), 1-3 eV (MAE=0.87, MEDIUM)
+- **6 selective datasets prepared** (NOT trained):
+  - `bg_sparse_exotic_10k` (rank #1, score 0.713) — 4+ element materials with BG
+  - `bg_hotspots_10k` (rank #2, score 0.657) — materials in hard calibration regions
+  - `bg_balanced_hardmix_20k` (rank #3, score 0.603) — combined difficulty signals
+  - `fe_sparse_mix_10k` (rank #4, score 0.591) — complex FE materials
+  - `curriculum_easy_to_hard_20k` (rank #5) — progressive difficulty BG
+  - `fe_hardcases_10k` (rank #6, deferred) — FE model already strong
+- **Recommendation**: `retrain_band_gap_hotspots_next` using sparse exotic dataset on rung_20k
+- **Status**: Datasets PREPARED. Training NOT executed. Models unchanged.
+- **API**: `GET /retraining-prep/status`, `GET /retraining-prep/hardcases`, `POST /retraining-prep/datasets/build`, `GET /retraining-prep/recommendation`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
-- **Corpus**: 76K materials from open JARVIS database, zero API cost
+- **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
 - **Retrieval**: CPU numpy, no cloud services
 
 ## What does NOT exist yet
@@ -120,7 +157,9 @@
 - Physics-based T/P conditioning (phonon, EOS, CALPHAD) — Phase IV+
 - Structural relaxation (M3GNet/CHGNet) — Phase IV+
 - Ab-initio validation of generated candidates — Phase IV+
+- Real AFLOW/MP API integration (APIs unreachable from current env)
 - Blockchain proof-of-discovery — Phase V+
+- Retraining on expanded corpus — blocked until labeled data from DFT sources available
 
 ## Quick Start
 
@@ -128,7 +167,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (668 tests)
+# Run all tests (751 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -204,7 +243,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (668 total)
+## Tests (714 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|
@@ -226,3 +265,5 @@ curl http://localhost:8000/generation/presets
 | test_intelligence.py | 34 | Evidence, applications, comparison, reports, API |
 | test_dossier.py | 32 | Dossier build, evidence, priority, persistence, API |
 | test_validation_learning.py | 35 | Queue, feedback, learning, dedup, API |
+| test_cod_tiers.py | 46 | Tier classification, COD pilot, dedup, value report, API |
+| test_retraining_prep.py | 37 | Hard-case mining, difficulty tiers, datasets, priority, API |

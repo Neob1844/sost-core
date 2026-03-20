@@ -1,16 +1,14 @@
 {
-  "run_id": "6fda310689df",
-  "plan_id": "3ff232d50058",
-  "corpus_before": 75993,
-  "corpus_after": 76193,
-  "ingested": 200,
+  "run_id": "b9826a90c04c",
+  "plan_id": "a9892ecfa832",
+  "corpus_before": 5,
+  "corpus_after": 5,
+  "ingested": 0,
   "deduped_exact": 0,
   "deduped_other": 0,
-  "new_elements_added": [
-    "Gd"
-  ],
+  "new_elements_added": [],
   "new_spacegroups_added": [],
   "simulated": true,
-  "recommendation": "continue_aflow_expansion",
-  "created_at": "2026-03-20T19:41:36.596988+00:00"
+  "recommendation": "pause_and_review",
+  "created_at": "2026-03-20T21:20:09.032782+00:00"
 }

@@ -1,0 +1,234 @@
+[
+  {
+    "dataset_id": "7bfccae2f432",
+    "name": "bg_hotspots_10k",
+    "target": "band_gap",
+    "size": 10000,
+    "selection_logic": "Materials with band_gap 1.0-6.0 eV where model has MEDIUM/LOW confidence (MAE 0.87-1.12 eV in calibration)",
+    "composition_summary": {
+      "actual_size": 10000,
+      "unique_elements": 88,
+      "unique_spacegroups": 187,
+      "n_element_distribution": {
+        "3": 5162,
+        "4": 2979,
+        "5": 399,
+        "2": 1367,
+        "6": 42,
+        "1": 49,
+        "7": 2
+      },
+      "top_elements": {
+        "O": 5391,
+        "H": 1458,
+        "S": 1285,
+        "F": 1214,
+        "Li": 1111,
+        "C": 1040,
+        "Cl": 1035,
+        "N": 971,
+        "K": 942,
+        "Na": 918
+      }
+    },
+    "element_diversity": 88,
+    "sg_diversity": 187,
+    "reason_for_existence": "Calibration shows BG 3-6 eV bucket has MAE=1.12 (LOW confidence) and 1-3 eV has MAE=0.87 (MEDIUM). These are the model's weakest regions.",
+    "expected_benefit": "Reduce BG MAE for wide-gap materials from ~1.0 to <0.6 eV. Improve calibration from LOW/MEDIUM to HIGH.",
+    "risk_note": "Oversampling wide-gap may degrade metal/narrow-gap accuracy. Use curriculum or stratified sampling.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  },
+  {
+    "dataset_id": "b2ab857f4396",
+    "name": "bg_sparse_exotic_10k",
+    "target": "band_gap",
+    "size": 10000,
+    "selection_logic": "Materials with 4+ elements and band_gap. High combinatorial complexity where model has limited signal.",
+    "composition_summary": {
+      "actual_size": 10000,
+      "unique_elements": 84,
+      "unique_spacegroups": 169,
+      "n_element_distribution": {
+        "4": 8686,
+        "5": 1229,
+        "6": 81,
+        "7": 4
+      },
+      "top_elements": {
+        "O": 6933,
+        "Li": 2835,
+        "Mn": 1341,
+        "S": 1324,
+        "F": 1178,
+        "H": 1132,
+        "Cu": 1100,
+        "Co": 1097,
+        "C": 1088,
+        "Fe": 1038
+      }
+    },
+    "element_diversity": 84,
+    "sg_diversity": 169,
+    "reason_for_existence": "5+ element materials show MAE=0.73 in calibration (MEDIUM). Only 1,630 materials in corpus have n_elements>=4 with BG.",
+    "expected_benefit": "Better BG prediction for complex compositions. Expand chemical diversity in training.",
+    "risk_note": "Small sample \u2014 may not generalize. 4-elem materials dominate over 5+ which are truly sparse.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  },
+  {
+    "dataset_id": "7ccacc141465",
+    "name": "bg_balanced_hardmix_20k",
+    "target": "band_gap",
+    "size": 20000,
+    "selection_logic": "Union of hard BG value ranges (1-6 eV) + complex compositions (4+ elem) + rare SGs. Balanced for diversity.",
+    "composition_summary": {
+      "actual_size": 20000,
+      "unique_elements": 89,
+      "unique_spacegroups": 212,
+      "n_element_distribution": {
+        "4": 9674,
+        "3": 6843,
+        "1": 86,
+        "5": 1362,
+        "2": 1935,
+        "6": 95,
+        "7": 5
+      },
+      "top_elements": {
+        "O": 11605,
+        "Li": 3896,
+        "S": 2575,
+        "F": 2362,
+        "H": 2150,
+        "Mn": 1751,
+        "C": 1723,
+        "Na": 1594,
+        "K": 1560,
+        "Cl": 1537
+      }
+    },
+    "element_diversity": 89,
+    "sg_diversity": 212,
+    "reason_for_existence": "Combined difficulty signals. Addresses all weak calibration buckets simultaneously.",
+    "expected_benefit": "Broad improvement across all weak BG regions. Reduce overall BG MAE from 0.49 toward 0.35.",
+    "risk_note": "Larger dataset = longer training. Risk of diluting hard cases with too many medium cases.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  },
+  {
+    "dataset_id": "debdec2c0340",
+    "name": "fe_hardcases_10k",
+    "target": "formation_energy",
+    "size": 10000,
+    "selection_logic": "Materials with formation_energy > 0 eV/atom (unstable/metastable). Calibration shows MAE=0.43 for 1-5 eV range (MEDIUM).",
+    "composition_summary": {
+      "actual_size": 10000,
+      "unique_elements": 89,
+      "unique_spacegroups": 129,
+      "n_element_distribution": {
+        "2": 4315,
+        "3": 5154,
+        "1": 394,
+        "4": 119,
+        "5": 18
+      },
+      "top_elements": {
+        "Be": 2160,
+        "Ba": 1038,
+        "N": 785,
+        "Mg": 757,
+        "C": 702,
+        "H": 458,
+        "Na": 446,
+        "As": 423,
+        "Mn": 423,
+        "Cu": 423
+      }
+    },
+    "element_diversity": 89,
+    "sg_diversity": 129,
+    "reason_for_existence": "FE > 0 (unstable) is the only MEDIUM confidence bucket. MAE=0.43 vs overall 0.23. 15K materials in this region.",
+    "expected_benefit": "Reduce FE MAE for unstable materials from 0.43 to <0.25. Critical for stability screening.",
+    "risk_note": "FE model already strong (overall MAE=0.15). Gains may be marginal vs effort.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  },
+  {
+    "dataset_id": "d72df8adef84",
+    "name": "fe_sparse_mix_10k",
+    "target": "formation_energy",
+    "size": 10000,
+    "selection_logic": "Complex materials (4+ elements) for formation_energy. Rare chemistry where model has limited exposure.",
+    "composition_summary": {
+      "actual_size": 10000,
+      "unique_elements": 84,
+      "unique_spacegroups": 172,
+      "n_element_distribution": {
+        "4": 8689,
+        "5": 1225,
+        "6": 83,
+        "7": 3
+      },
+      "top_elements": {
+        "O": 6942,
+        "Li": 2848,
+        "Mn": 1356,
+        "S": 1303,
+        "F": 1182,
+        "H": 1170,
+        "Co": 1120,
+        "C": 1104,
+        "Cu": 1102,
+        "Fe": 1032
+      }
+    },
+    "element_diversity": 84,
+    "sg_diversity": 172,
+    "reason_for_existence": "FE model trained mostly on 2-3 element materials. 4+ element materials are underrepresented.",
+    "expected_benefit": "Better FE prediction for complex compositions. Useful for multinary phase screening.",
+    "risk_note": "FE model already excellent on common materials. Overemphasis on complex may not help.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  },
+  {
+    "dataset_id": "ce7f8726b613",
+    "name": "curriculum_easy_to_hard_20k",
+    "target": "band_gap",
+    "size": 20000,
+    "selection_logic": "Full BG corpus sample (20K). Training uses curriculum: start with easy (metals, common), gradually add harder (wide-gap, complex). Ordered by predicted difficulty.",
+    "composition_summary": {
+      "actual_size": 20000,
+      "unique_elements": 89,
+      "unique_spacegroups": 190,
+      "n_element_distribution": {
+        "3": 11277,
+        "4": 2841,
+        "2": 5212,
+        "5": 405,
+        "1": 247,
+        "6": 17,
+        "7": 1
+      },
+      "top_elements": {
+        "O": 5445,
+        "Li": 2122,
+        "F": 1429,
+        "S": 1423,
+        "Ba": 1331,
+        "Mn": 1315,
+        "Be": 1284,
+        "Mg": 1201,
+        "Co": 1102,
+        "Fe": 1071
+      }
+    },
+    "element_diversity": 89,
+    "sg_diversity": 190,
+    "reason_for_existence": "Curriculum learning can improve convergence on hard cases without sacrificing easy-case accuracy.",
+    "expected_benefit": "Smoother loss landscape. Better generalization across all BG ranges.",
+    "risk_note": "Curriculum ordering requires difficulty labels at training time. More complex training loop.",
+    "priority_score": 0.0,
+    "created_at": "2026-03-20T21:17:44.871132+00:00"
+  }
+]

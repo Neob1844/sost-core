@@ -5,7 +5,7 @@
   "normalization_errors": 0,
   "exact_duplicates": 0,
   "probable_duplicates": 15,
-  "unique_new": 185,
+  "unique_new": 0,
   "new_elements": [
     "Ag",
     "Al",
@@ -72,5 +72,5 @@
     "band_gap",
     "crystal_structure"
   ],
-  "recommendation": "HIGH VALUE \u2014 92% unique materials. Recommend ingestion."
+  "recommendation": "LOW VALUE \u2014 only 0% unique. High overlap. Defer unless needed."
 }
