@@ -13,45 +13,154 @@
 <title>SOST Protocol</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',monospace}
-.app{display:flex;flex-direction:column;height:100%}
-.app-frames{flex:1;position:relative}
-.app-frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
-.app-frames iframe.hidden{display:none}
-.app-nav{display:flex;height:56px;background:#111;border-top:1px solid #222;
-  padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100}
-.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;color:#666;transition:color .2s;font-size:10px;letter-spacing:1px;
-  -webkit-tap-highlight-color:transparent;min-height:52px;user-select:none}
-.nav-tab.active{color:#cc0000}
-.nav-tab .icon{font-size:22px;margin-bottom:2px}
-.nav-tab.active .icon{filter:drop-shadow(0 0 6px rgba(204,0,0,.6))}
+html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
+
+/* ===== SPLASH ===== */
+#splash{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;transition:opacity .6s ease}
+#splash.out{opacity:0;pointer-events:none}
+#splash-logo{width:180px;height:180px;border-radius:20%;opacity:0;transform:scale(.5);
+  animation:logoIn 1s ease forwards}
+@keyframes logoIn{to{opacity:1;transform:scale(1)}}
+#splash-title{margin-top:18px;font-size:18px;font-weight:700;color:#cc0000;letter-spacing:6px;
+  opacity:0;animation:fadeIn .6s ease .6s forwards}
+#splash-lines{margin-top:24px;font-size:12px;color:#00ff88;
+  text-shadow:0 0 8px rgba(0,255,136,.4);min-height:60px;text-align:left;width:280px}
+.tl{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #00ff88;width:0;
+  animation:none;line-height:1.8}
+.tl.go{animation:typeW .5s steps(25) forwards,cursorBlink .6s step-end 3}
+@keyframes typeW{from{opacity:1;width:0}to{opacity:1;width:100%}}
+@keyframes cursorBlink{50%{border-color:transparent}}
+#splash-scan{position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(180deg,transparent,rgba(0,255,136,.12),transparent);
+  opacity:0;animation:scanDown 2s linear 1.8s}
+@keyframes scanDown{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+@keyframes fadeIn{to{opacity:1}}
+
+/* ===== APP ===== */
+.app{display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity .5s ease}
+.app.show{opacity:1}
+.frames{flex:1;position:relative;overflow:hidden}
+.frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
+.frames iframe.off{display:none}
+
+/* CRT transition */
+.frames.crt-off{animation:cOff .18s ease-in forwards}
+.frames.crt-on{animation:cOn .18s ease-out forwards}
+@keyframes cOff{
+  0%{transform:scaleY(1);filter:brightness(1)}
+  60%{transform:scaleY(.008);filter:brightness(1.8)}
+  100%{transform:scaleY(.008);filter:brightness(0)}
+}
+@keyframes cOn{
+  0%{transform:scaleY(.008);filter:brightness(0)}
+  40%{transform:scaleY(.008);filter:brightness(1.8)}
+  100%{transform:scaleY(1);filter:brightness(1)}
+}
+
+/* ===== NAV BAR ===== */
+.bar{display:flex;height:58px;background:#0a0a0a;border-top:1px solid #222;
+  padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
+.bar::after{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.12) 1px,rgba(0,0,0,.12) 2px);
+  pointer-events:none;opacity:.5}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;color:#444;transition:all .15s;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  -webkit-tap-highlight-color:transparent;min-height:52px;user-select:none;
+  border-left:1px solid #1a1a1a;position:relative}
+.nb:first-child{border-left:none}
+.nb .i{font-size:20px;margin-bottom:3px;transition:all .15s}
+.nb:active{transform:scale(.94)}
+
+/* Button active colors */
+.nb.ex-on{color:#00ff88}
+.nb.ex-on .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
+.nb.wl-on{color:#cc0000}
+.nb.wl-on .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
+.nb.dl{color:#00e5ff}
+.nb.dl:active .i{text-shadow:0 0 10px rgba(0,229,255,.5)}
+.nb.dl.done{color:#00ff88}
+.nb.xt{color:#666}
+.nb.xt:active{color:#cc0000}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="app-frames">
-    <iframe id="explorer-frame" src="/sost-explorer.html"></iframe>
-    <iframe id="wallet-frame" src="/sost-wallet.html" class="hidden"></iframe>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img id="splash-logo" src="/sost-logo.png" alt="SOST">
+  <div id="splash-title">SOST PROTOCOL</div>
+  <div id="splash-lines">
+    <div class="tl" id="s1">&gt; Connecting to network...</div>
+    <div class="tl" id="s2">&gt; Syncing chain data...</div>
+    <div class="tl" id="s3">&gt; Loading explorer...</div>
   </div>
-  <nav class="app-nav">
-    <div class="nav-tab active" onclick="switchTab('explorer')">
-      <span class="icon">⛓</span>EXPLORER
-    </div>
-    <div class="nav-tab" onclick="switchTab('wallet')">
-      <span class="icon">💰</span>WALLET
-    </div>
+  <div id="splash-scan"></div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="frames" id="fr">
+    <iframe id="ef" src="/sost-explorer.html"></iframe>
+    <iframe id="wf" src="/sost-wallet.html" class="off"></iframe>
+  </div>
+  <nav class="bar">
+    <div class="nb ex-on" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
+    <div class="nb dl" id="bd" onclick="dl()"><span class="i">📥</span>DOWNLOAD</div>
+    <div class="nb xt" onclick="xt()"><span class="i">⏻</span>EXIT</div>
+    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
   </nav>
 </div>
+
 <script>
-function switchTab(tab){
-  document.getElementById('explorer-frame').classList.toggle('hidden',tab!=='explorer');
-  document.getElementById('wallet-frame').classList.toggle('hidden',tab!=='wallet');
-  document.querySelectorAll('.nav-tab').forEach(function(el,i){
-    el.classList.toggle('active',i===(tab==='explorer'?0:1));
-  });
+/* Splash sequence */
+['s1','s2','s3'].forEach(function(id,i){
+  setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},900+i*800);
+});
+setTimeout(function(){
+  document.getElementById('splash').classList.add('out');
+  document.getElementById('app').classList.add('show');
+  setTimeout(function(){document.getElementById('splash').style.display='none';},700);
+},3500);
+
+/* Tab switch with CRT */
+var cur='explorer';
+function go(t){
+  if(t===cur)return;
+  var fr=document.getElementById('fr');
+  fr.classList.remove('crt-on');fr.classList.add('crt-off');
+  setTimeout(function(){
+    document.getElementById('ef').classList.toggle('off',t!=='explorer');
+    document.getElementById('wf').classList.toggle('off',t!=='wallet');
+    fr.classList.remove('crt-off');fr.classList.add('crt-on');
+    setTimeout(function(){fr.classList.remove('crt-on');},200);
+  },200);
+  cur=t;
+  document.getElementById('be').className='nb'+(t==='explorer'?' ex-on':'');
+  document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
 }
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+
+/* PWA Install */
+var dp=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
+function dl(){
+  if(dp){dp.prompt();dp.userChoice.then(function(r){
+    if(r.outcome==='accepted'){document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');}
+    dp=null;
+  });}
+  else if(window.matchMedia('(display-mode:standalone)').matches){
+    document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');
+  }else{alert('To install: browser menu → "Add to Home Screen" or "Install App"');}
+}
+if(window.matchMedia('(display-mode:standalone)').matches){
+  document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');
+}
+
+/* Exit */
+function xt(){window.close();setTimeout(function(){alert('Close this tab to exit.');},100);}
+
+/* SW */
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 </script>
 </body>
 </html>
