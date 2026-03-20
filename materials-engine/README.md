@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.K — Hard-Case Mining + Selective Retraining Datasets (v2.4.0)**
+> **Current phase: IV.L — Selective Band Gap Retraining + Promotion Decision (v2.5.0)**
 
 ## What exists (implemented and tested)
 
@@ -147,6 +147,19 @@
 - **Status**: Datasets PREPARED. Training NOT executed. Models unchanged.
 - **API**: `GET /retraining-prep/status`, `GET /retraining-prep/hardcases`, `POST /retraining-prep/datasets/build`, `GET /retraining-prep/recommendation`
 
+### Selective Band Gap Retraining (Phase IV.L)
+- **What it is**: Trained 3 ALIGNN-Lite challengers on selective datasets, compared vs production
+- **Challengers trained** (REAL, not simulated):
+  - `bg_hotspots_10k`: MAE=0.6374, R²=0.5977 (9,921 materials, 978s)
+  - `bg_sparse_exotic_10k`: MAE=0.5926, R²=0.7336 (9,953 materials, 992s)
+  - `bg_balanced_hardmix_20k`: MAE=0.6991, R²=0.6745 (19,885 materials, 1917s)
+- **Production**: ALIGNN-Lite 20K random sample: MAE=0.3422, R²=0.707
+- **Decision: HOLD** — No challenger beat production. All challengers worse by +0.25 to +0.36 MAE
+- **Root cause**: Training only on hard/exotic subsets excludes the metal/narrow-gap majority (~70% of corpus). The model never learns the easy baseline, so overall accuracy drops.
+- **Lesson**: Selective subsets alone do NOT improve overall MAE. Next approach should use stratified sampling or curriculum learning that includes all BG ranges.
+- **Production model UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422) remains in production
+- **API**: `GET /selective-retraining/band-gap/status`, `GET /selective-retraining/band-gap/challengers`, `GET /selective-retraining/band-gap/comparison`, `GET /selective-retraining/band-gap/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -167,7 +180,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (751 tests)
+# Run all tests (772 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -267,3 +280,4 @@ curl http://localhost:8000/generation/presets
 | test_validation_learning.py | 35 | Queue, feedback, learning, dedup, API |
 | test_cod_tiers.py | 46 | Tier classification, COD pilot, dedup, value report, API |
 | test_retraining_prep.py | 37 | Hard-case mining, difficulty tiers, datasets, priority, API |
+| test_selective_retraining.py | 21 | Challenger comparison, promotion rules, bucket analysis, API |

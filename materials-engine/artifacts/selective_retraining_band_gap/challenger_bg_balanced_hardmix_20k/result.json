@@ -1,0 +1,21 @@
+{
+  "challenger_id": "c3_hardmix",
+  "name": "bg_balanced_hardmix_20k",
+  "target": "band_gap",
+  "architecture": "alignn_lite",
+  "dataset_name": "bg_balanced_hardmix_20k",
+  "dataset_sql": "band_gap IS NOT NULL AND (bg >= 1.0 OR n_elements >= 4 OR rare SG)",
+  "dataset_size": 19885,
+  "train_size": 15908,
+  "val_size": 1988,
+  "test_size": 1989,
+  "epochs": 15,
+  "best_epoch": 7,
+  "seed": 42,
+  "test_mae": 0.6991,
+  "test_rmse": 0.9815,
+  "test_r2": 0.6745,
+  "training_time_sec": 1916.6,
+  "checkpoint": "artifacts/selective_retraining_band_gap/challenger_bg_balanced_hardmix_20k/alignn_band_gap_best.pt",
+  "created_at": "2026-03-21T00:19:35+00:00"
+}

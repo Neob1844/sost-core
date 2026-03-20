@@ -1,7 +1,7 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.K (v2.4.0)**
-> Last updated: 2026-03-20
+> **Document status: Active implementation — Phase IV.L (v2.5.0)**
+> Last updated: 2026-03-21
 
 ---
 
@@ -616,6 +616,19 @@ Predict property degradation over time under operating conditions — thermal cy
 - **NO training executed** — datasets prepared only
 - 5 new API endpoints + 37 dedicated tests (751 total)
 - Version 2.4.0
+
+### Phase IV.L — Selective Band Gap Retraining + Promotion Decision ✅
+- 3 ALIGNN-Lite challengers trained on selective datasets (REAL training, ~65 min total)
+- Challenger 1 (bg_hotspots_10k): MAE=0.6374, R²=0.5977 — WORSE than production
+- Challenger 2 (bg_sparse_exotic_10k): MAE=0.5926, R²=0.7336 — WORSE than production
+- Challenger 3 (bg_balanced_hardmix_20k): MAE=0.6991, R²=0.6745 — WORSE than production
+- Production (ALIGNN-Lite 20K random): MAE=0.3422, R²=0.707 — STILL BEST
+- **Decision: HOLD** — no promotion, production model unchanged
+- **Root cause**: Selective subsets exclude the metal/narrow-gap majority. Model never learns easy baseline.
+- **Lesson**: Need stratified sampling or curriculum learning that includes ALL BG ranges
+- Model registry NOT updated — production unchanged
+- 4 API endpoints + 21 dedicated tests (772 total)
+- Version 2.5.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)
