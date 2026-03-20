@@ -514,7 +514,7 @@ bitsq:'BITSQ \u2014 Raw difficulty value in SOSTCompact Q16.16 fixed-point forma
 profile:'cASERT PROFILE \u2014 Current stability test profile selected by the equalizer.\n\n17 profiles from E4 (easiest) to H12 (hardest), with H_MAX=9 active:\nE4-E1: Easing \u2014 relaxed stability, used during stalls\nB0: Baseline \u2014 normal operating profile\nH1-H9: Hardening \u2014 stricter stability during surges\nH10-H12: Reserved for future activation\n\nScale: Perturbation amplitude (1, 2, or 3)\nK: Number of perturbation vectors\nSteps: Iterations per perturbation\nMargin: Minimum stability metric (higher = easier)\n\nSlew rate: \u00B11 profile per block.\nU = 0.05\u00B7r + 0.40\u00B7lag + 0.15\u00B7I + 0.05\u00B7burst + 0.02\u00B7V',
 stability:'STABILITY \u2014 Percentage of recent nonce attempts that passed the ConvergenceX stability basin test. ~100% at B0 is normal. Lower rates occur at harder profiles (H3+) where the perturbation test is more demanding. The metric is committed to the block hash via commit V3 format.',
 psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calculated from difficulty target. Example: 3.63e-4 means each attempt has a 0.0363% chance \u2014 like rolling a die with ~2,758 faces. Determines E[n] = 1/P(solve).',
-thresholds:'PROBABILITY THRESHOLDS \u2014 Cumulative probability milestones.\n"50% \u2192 ~1,912" means by nonce 1,912 there is a 50% chance the block has been found.\nThe checkmark appears when the miner has PASSED that count.\n\n50% \u2014 coin flip point\n75% \u2014 three quarters likely\n90% \u2014 getting unlucky\n95% \u2014 significantly unlucky, but still normal variance',
+thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThresholds calculated from the AVERAGE nonce of the last 288 blocks (~48h).\nThe average = 100%. Each threshold is a percentage of that average.\n\n  25% \u2014 quarter of average effort (lucky early find)\n  50% \u2014 half the average effort\n  75% \u2014 three quarters of typical effort\n  90% \u2014 approaching full average\n  95% \u2014 nearly at the average nonce count\n 100% \u2014 E[288] average \u2014 most blocks found around here\n\nPassing 100% means the block is taking longer than usual.\nThis is normal variance \u2014 some blocks take 2-3x average.\nThe checkmark \u2713 appears when the miner PASSES a threshold.\n\nUnlike theoretical probability, these reflect ACTUAL chain\nconditions: difficulty changes, hashrate, real variance.',
 exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[288] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
 antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for max(ahead\u00D7600, 7200) seconds (min 2h).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
@@ -1426,10 +1426,13 @@ function updateMiningPanel(elapsed){
   var enTheo=1/probPerAttempt;                        // E[n] theoretical (no multiplier)
   var enAdj=(_avgNonceReal>0)?_avgNonceReal:enTheo;   // E[288] from real block times
   var expectedNonce=enAdj; // use adjusted for progress bar / time estimates
-  var p50=Math.round(enTheo*Math.LN2);
-  var p75=Math.round(enTheo*Math.log(4));
-  var p90=Math.round(enTheo*Math.log(10));
-  var p95=Math.round(enTheo*Math.log(20));
+  // Thresholds based on E[288] real average (percentages of avg nonce)
+  var p25=Math.round(enAdj*0.25);
+  var p50=Math.round(enAdj*0.50);
+  var p75=Math.round(enAdj*0.75);
+  var p90=Math.round(enAdj*0.90);
+  var p95=Math.round(enAdj*0.95);
+  var p100=Math.round(enAdj);
   var estNonce=Math.round(elapsed*attPerSec);
   var ep=document.getElementById('miningProb');
   if(ep){
@@ -1450,13 +1453,12 @@ function updateMiningPanel(elapsed){
   }
   var pt=document.getElementById('miningProbTable');
   if(pt){
+    var d=' <span style="color:var(--text3)">\u00B7</span> ';
     var s='';
-    s+='<span style="'+threshColor(p50,estNonce)+';transition:color .5s,text-shadow .5s">50% \u2192 ~'+fComma(p50)+(estNonce>=p50?' \u2713':'')+'</span>';
-    s+=' <span style="color:var(--text3)">\u00B7</span> ';
-    s+='<span style="'+threshColor(p75,estNonce)+';transition:color .5s,text-shadow .5s">75% \u2192 ~'+fComma(p75)+(estNonce>=p75?' \u2713':'')+'</span>';
-    s+=' <span style="color:var(--text3)">\u00B7</span> ';
-    s+='<span style="'+threshColor(p90,estNonce)+';transition:color .5s,text-shadow .5s">90% \u2192 ~'+fComma(p90)+(estNonce>=p90?' \u2713':'')+'</span>';
-    s+=' <span style="color:var(--text3)">\u00B7</span> ';
+    s+='<span style="'+threshColor(p25,estNonce)+';transition:color .5s,text-shadow .5s">25% \u2192 ~'+fComma(p25)+(estNonce>=p25?' \u2713':'')+'</span>'+d;
+    s+='<span style="'+threshColor(p50,estNonce)+';transition:color .5s,text-shadow .5s">50% \u2192 ~'+fComma(p50)+(estNonce>=p50?' \u2713':'')+'</span>'+d;
+    s+='<span style="'+threshColor(p75,estNonce)+';transition:color .5s,text-shadow .5s">75% \u2192 ~'+fComma(p75)+(estNonce>=p75?' \u2713':'')+'</span>'+d;
+    s+='<span style="'+threshColor(p90,estNonce)+';transition:color .5s,text-shadow .5s">90% \u2192 ~'+fComma(p90)+(estNonce>=p90?' \u2713':'')+'</span>'+d;
     s+='<span style="'+threshColor(p95,estNonce)+';transition:color .5s,text-shadow .5s">95% \u2192 ~'+fComma(p95)+(estNonce>=p95?' \u2713':'')+'</span>';
     pt.innerHTML=s;
   }
@@ -1521,11 +1523,14 @@ function updateMiningPanel(elapsed){
         mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;top:0;width:1px;height:100%;background:rgba(255,215,0,.7);"></div>';
         mkH+='<div style="position:absolute;left:'+eAPct.toFixed(1)+'%;bottom:-12px;font-size:7px;color:rgba(255,215,0,.6);transform:translateX(-50%);white-space:nowrap;">E[288]</div>';
       }
-      // Fixed marks: 10K at 50%, 15K at 75%, 20K at 100%
-      var fMarks=[{p:50,l:'10K'},{p:75,l:'15K'},{p:100,l:'20K'}];
-      for(var fi=0;fi<fMarks.length;fi++){
-        mkH+='<div style="position:absolute;left:'+fMarks[fi].p+'%;top:0;width:1px;height:100%;border-left:1px dashed rgba(255,255,255,.15);"></div>';
-        mkH+='<div style="position:absolute;left:'+fMarks[fi].p+'%;bottom:-11px;font-size:7px;color:rgba(255,255,255,.25);transform:translateX(-50%);">'+fMarks[fi].l+'</div>';
+      // Percentage marks based on E[288]: 25%, 50%, 75%, 90%, 95%
+      var pctMarks=[{f:0.25,l:'25%',c:'rgba(74,222,128,.3)'},{f:0.50,l:'50%',c:'rgba(255,221,0,.3)'},{f:0.75,l:'75%',c:'rgba(255,136,0,.3)'},{f:0.90,l:'90%',c:'rgba(255,100,50,.3)'},{f:0.95,l:'95%',c:'rgba(255,50,50,.3)'}];
+      for(var fi=0;fi<pctMarks.length;fi++){
+        var mPct=Math.min(100,(enAdj*pctMarks[fi].f/BAR_MAX)*100);
+        if(mPct>0&&mPct<=100){
+          mkH+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;top:0;width:1px;height:100%;border-left:1px dashed '+pctMarks[fi].c+';"></div>';
+          mkH+='<div style="position:absolute;left:'+mPct.toFixed(1)+'%;bottom:-11px;font-size:7px;color:rgba(255,255,255,.2);transform:translateX(-50%);">'+pctMarks[fi].l+'</div>';
+        }
       }
       marks.innerHTML=mkH;
     }

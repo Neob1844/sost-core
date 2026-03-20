@@ -4,11 +4,11 @@
 
 **Do not open a public issue for security vulnerabilities.**
 
-Use GitHub's private vulnerability reporting:
+Use the private contact form at:
 
-https://github.com/Neob1844/sost-core/security/advisories/new
+**https://sostcore.com/sost-contact.html**
 
-This ensures the report is visible only to maintainers until a fix is available.
+Select "Security Vulnerability Report" as the subject. This ensures the report reaches maintainers privately before any public disclosure.
 
 ## What to include
 
@@ -36,4 +36,5 @@ This ensures the report is visible only to maintainers until a fix is available.
 
 ## Contact
 
-All security communication goes through GitHub private vulnerability reporting. No email contact is provided.
+- **Security vulnerabilities:** Private contact form at sostcore.com/sost-contact.html
+- **General bugs and feature requests:** https://github.com/Neob1844/sost-core/issues (public)

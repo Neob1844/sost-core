@@ -285,7 +285,7 @@ ctest --output-on-failure
 ## Reporting Issues
 
 - **Bugs and feature requests:** https://github.com/Neob1844/sost-core/issues
-- **Security vulnerabilities:** Use [GitHub private vulnerability reporting](https://github.com/Neob1844/sost-core/security/advisories/new) only. Do not open public issues for security bugs.
+- **Security vulnerabilities:** Use the private contact form at [sostcore.com/sost-contact.html](https://sostcore.com/sost-contact.html) and select "Security Vulnerability Report". Do NOT open a public GitHub issue for security disclosures.
 
 ## License
 
