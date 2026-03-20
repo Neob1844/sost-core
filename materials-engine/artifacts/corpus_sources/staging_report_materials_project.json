@@ -1,0 +1,17 @@
+{
+  "source": "materials_project",
+  "total_candidates": 200,
+  "normalized_ok": 200,
+  "normalization_errors": 0,
+  "exact_duplicates": 9,
+  "probable_duplicates": 147,
+  "unique_new": 44,
+  "new_elements": [],
+  "new_spacegroups": [],
+  "properties_added": [
+    "formation_energy",
+    "band_gap",
+    "crystal_structure"
+  ],
+  "recommendation": "LOW VALUE \u2014 only 22% unique. High overlap. Defer unless needed."
+}

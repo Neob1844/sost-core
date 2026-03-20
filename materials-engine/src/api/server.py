@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.0.0", "phase": "active_learning_orchestrator",
+    return {"status": "ok", "version": "2.1.0", "phase": "corpus_expansion_dedup",
             "materials_count": db.count()}
 
 
@@ -1487,6 +1487,43 @@ def orchestrator_proposals():
     proposals = generate_retraining_proposals(hotspots)
     return {"hotspots": [h.to_dict() for h in hotspots],
             "proposals": [p.to_dict() for p in proposals]}
+
+
+# --- Corpus Sources endpoints ---
+
+@app.get("/corpus-sources/registry")
+def corpus_sources_registry():
+    """Return the source registry."""
+    from ..corpus_sources.spec import SOURCE_REGISTRY
+    return {"sources": [s.to_dict() for s in SOURCE_REGISTRY]}
+
+
+@app.get("/corpus-sources/status")
+def corpus_sources_status():
+    """Return corpus expansion status."""
+    from ..corpus_sources.spec import SOURCE_REGISTRY
+    active = sum(1 for s in SOURCE_REGISTRY if s.status == "active")
+    planned = sum(1 for s in SOURCE_REGISTRY if s.status == "planned")
+    return {"active_sources": active, "planned_sources": planned, "total_sources": len(SOURCE_REGISTRY)}
+
+
+@app.post("/corpus-sources/stage")
+def corpus_sources_stage(source: str = "materials_project"):
+    """Run staging analysis for a source (simulated for MP)."""
+    from ..corpus_sources.staging import simulate_mp_staging, save_staging
+    db = _get_db()
+    report = simulate_mp_staging(db, sample_size=200)
+    save_staging(report)
+    return report.to_dict()
+
+
+@app.get("/corpus-sources/recommendation")
+def corpus_sources_recommendation():
+    """Get expansion recommendation based on staging."""
+    from ..corpus_sources.staging import simulate_mp_staging, generate_expansion_recommendation
+    db = _get_db()
+    mp_report = simulate_mp_staging(db, sample_size=200)
+    return generate_expansion_recommendation([mp_report])
 
 
 # --- Analytics endpoints ---
