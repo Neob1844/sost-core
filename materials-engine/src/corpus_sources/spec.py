@@ -10,7 +10,10 @@ from typing import Optional, List, Dict
 DEDUP_EXACT = "exact_duplicate"
 DEDUP_PROBABLE = "probable_duplicate"
 DEDUP_SAME_FORMULA_DIFF_STRUCT = "same_formula_different_structure"
+DEDUP_STRUCTURE_NEAR_MATCH = "structure_near_match"
 DEDUP_UNIQUE = "unique_material"
+DEDUP_UNIQUE_STRUCTURE_ONLY = "unique_structure_only"
+DEDUP_UNIQUE_TRAINING_CANDIDATE = "unique_training_candidate"
 
 
 @dataclass
@@ -102,11 +105,11 @@ SOURCE_REGISTRY = [
         notes="Best-curated open DFT database. Requires free API key. High overlap with JARVIS for common materials.",
         risks="Some overlap with JARVIS. API rate limits."),
     SourceRegistryEntry(
-        name="cod", status="planned", access_mode="api", data_type="experimental",
+        name="cod", status="experimental", access_mode="api", data_type="experimental",
         expected_materials="~530,000", cost="$0", ingestion_priority="medium",
         has_structure=True, has_formation_energy=False, has_band_gap=False,
-        notes="Experimental crystal structures. Huge structural diversity. Few computed properties.",
-        risks="No computed properties — structures only. High dedup effort needed."),
+        notes="Experimental crystal structures. Huge structural diversity. No computed properties. Pilot attempted Phase IV.J.",
+        risks="No computed properties — structures only. NOT training-ready. API unreachable in current env."),
     SourceRegistryEntry(
         name="aflow", status="planned", access_mode="api", data_type="dft",
         expected_materials="~3,500,000", cost="$0", ingestion_priority="medium",

@@ -75,7 +75,8 @@ class TestDedup:
     def test_unique(self, test_db):
         c = NormalizedCandidate(formula="UPu3", spacegroup=12, source_name="mp")
         d = check_dedup(c, test_db)
-        assert d.decision == DEDUP_UNIQUE
+        # Has spacegroup (structure) but no props → unique_structure_only
+        assert d.decision in (DEDUP_UNIQUE, "unique_structure_only")
 
     def test_batch_dedup(self, test_db):
         candidates = [
@@ -85,7 +86,11 @@ class TestDedup:
         ]
         result = batch_dedup(candidates, test_db)
         assert result["summary"]["exact"] == 2  # Si and NaCl
-        assert result["summary"]["unique"] == 1  # UPu3
+        # UPu3 has spacegroup → unique_structure_only
+        unique_total = (result["summary"]["unique"] +
+                        result["summary"].get("unique_structure_only", 0) +
+                        result["summary"].get("unique_training_candidate", 0))
+        assert unique_total == 1  # UPu3
 
 
 class TestStaging:
@@ -172,7 +177,7 @@ class TestAPI:
 
     def test_version(self):
         d = self._client().get("/status").json()
-        assert d["version"] == "2.2.0"
+        assert d["version"] == "2.4.0"
 
 
 if __name__ == "__main__":

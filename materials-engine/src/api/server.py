@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.2.0", "phase": "aflow_pilot",
+    return {"status": "ok", "version": "2.4.0", "phase": "retraining_prep",
             "materials_count": db.count()}
 
 
@@ -1567,6 +1567,145 @@ def pilot_recommendation():
         return {"recommendation": "no_pilot_run_yet"}
     with open(path) as f:
         return json.load(f)
+
+
+# --- Tier endpoints ---
+
+@app.get("/corpus-sources/tiers/status")
+def tiers_status():
+    """Return tier classification status."""
+    from ..corpus_sources.tiers import ALL_TIERS, TIER_DESCRIPTIONS
+    return {"tiers": ALL_TIERS, "descriptions": TIER_DESCRIPTIONS}
+
+
+@app.get("/corpus-sources/tiers/summary")
+def tiers_summary():
+    """Compute and return full tier summary."""
+    from ..corpus_sources.tiers import compute_tier_summary, save_tier_summary
+    db = _get_db()
+    summary = compute_tier_summary(db)
+    save_tier_summary(summary)
+    return summary.to_dict()
+
+
+# --- COD Pilot endpoints ---
+
+@app.post("/corpus-sources/cod/pilot/plan")
+def cod_pilot_plan(target_count: int = 50):
+    """Generate a COD pilot ingestion plan."""
+    from ..corpus_sources.cod_pilot import generate_cod_plan
+    db = _get_db()
+    plan, candidates = generate_cod_plan(db, target_count)
+    return {"plan": plan.to_dict(), "sample_candidates": [c.to_dict() for c in candidates[:10]]}
+
+
+@app.post("/corpus-sources/cod/pilot/run")
+def cod_pilot_run(target_count: int = 50, dry_run: bool = True):
+    """Execute COD pilot ingestion (dry_run=True by default for safety)."""
+    from ..corpus_sources.cod_pilot import (
+        generate_cod_plan, execute_cod_pilot, compute_value_report, save_cod_artifacts)
+    db = _get_db()
+    plan, candidates = generate_cod_plan(db, target_count)
+    result = execute_cod_pilot(db, plan, candidates, dry_run=dry_run)
+    value_report = compute_value_report(db, plan, result, candidates)
+    save_cod_artifacts(plan, result, candidates, value_report)
+    return result.to_dict()
+
+
+@app.get("/corpus-sources/cod/pilot/{run_id}")
+def cod_pilot_get(run_id: str):
+    """Get COD pilot run result by ID."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/corpus_sources", "cod_pilot_run.json")
+    if not _os.path.exists(path):
+        raise HTTPException(404, "No COD pilot run found")
+    with open(path) as f:
+        data = _json.load(f)
+    if data.get("run_id") != run_id:
+        raise HTTPException(404, f"Run {run_id} not found")
+    return data
+
+
+@app.get("/corpus-sources/cod/recommendation")
+def cod_recommendation():
+    """Get COD operational recommendation."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/corpus_sources", "cod_recommendation.json")
+    if not _os.path.exists(path):
+        return {"recommendation": "no_cod_pilot_run_yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+# --- Retraining Prep endpoints ---
+
+@app.get("/retraining-prep/status")
+def retraining_prep_status():
+    """Return retraining preparation status."""
+    import os as _os
+    d = "artifacts/retraining_prep"
+    has_hardcases = _os.path.exists(_os.path.join(d, "hardcase_summary.json"))
+    has_datasets = _os.path.exists(_os.path.join(d, "selective_datasets.json"))
+    has_priority = _os.path.exists(_os.path.join(d, "retraining_priority.json"))
+    return {
+        "phase": "IV.K",
+        "hardcases_analyzed": has_hardcases,
+        "datasets_built": has_datasets,
+        "priority_ranked": has_priority,
+        "models_retrained": False,
+        "note": "Datasets prepared — training NOT executed yet",
+    }
+
+
+@app.get("/retraining-prep/hardcases")
+def retraining_prep_hardcases(target: str = "band_gap"):
+    """Get hard-case mining results for a target."""
+    from ..retraining_prep.mining import mine_hard_cases
+    db = _get_db()
+    summary, cases = mine_hard_cases(db, target=target, limit=100)
+    return {
+        "summary": summary.to_dict(),
+        "sample_hardcases": [c.to_dict() for c in cases[:20]],
+    }
+
+
+@app.get("/retraining-prep/tiers")
+def retraining_prep_tiers():
+    """Get difficulty tier distribution for both targets."""
+    from ..retraining_prep.mining import mine_hard_cases
+    db = _get_db()
+    bg_summary, _ = mine_hard_cases(db, target="band_gap", limit=0)
+    fe_summary, _ = mine_hard_cases(db, target="formation_energy", limit=0)
+    return {
+        "band_gap": bg_summary.to_dict(),
+        "formation_energy": fe_summary.to_dict(),
+    }
+
+
+@app.post("/retraining-prep/datasets/build")
+def retraining_prep_datasets_build():
+    """Build selective retraining datasets and save artifacts."""
+    from ..retraining_prep.report import generate_full_report, save_report
+    db = _get_db()
+    report = generate_full_report(db)
+    save_report(report)
+    return {
+        "datasets": report.datasets,
+        "priority_ranking": report.priority_ranking,
+        "recommendation": report.recommendation,
+        "next_action": report.next_action,
+    }
+
+
+@app.get("/retraining-prep/recommendation")
+def retraining_prep_recommendation():
+    """Get retraining recommendation."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/retraining_prep", "retraining_priority.json")
+    if not _os.path.exists(path):
+        return {"recommendation": "no_analysis_run_yet", "note": "Run POST /retraining-prep/datasets/build first"}
+    with open(path) as f:
+        return _json.load(f)
 
 
 # --- Analytics endpoints ---

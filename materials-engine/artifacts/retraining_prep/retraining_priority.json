@@ -1,0 +1,103 @@
+{
+  "ranking": [
+    {
+      "dataset_id": "b2ab857f4396",
+      "dataset_name": "bg_sparse_exotic_10k",
+      "target": "band_gap",
+      "overall_score": 0.7128,
+      "benefit_score": 0.7084,
+      "difficulty_concentration": 1.0,
+      "diversity_score": 0.8686,
+      "sparse_coverage": 0.8,
+      "exotic_value": 0.9,
+      "overfit_risk": 0.3,
+      "training_cost": 0.5,
+      "rank": 1,
+      "recommendation": "retrain_band_gap_with_bg_sparse_exotic_10k_next"
+    },
+    {
+      "dataset_id": "7bfccae2f432",
+      "dataset_name": "bg_hotspots_10k",
+      "target": "band_gap",
+      "overall_score": 0.6568,
+      "benefit_score": 0.7728,
+      "difficulty_concentration": 1.0,
+      "diversity_score": 0.9333,
+      "sparse_coverage": 0.5,
+      "exotic_value": 0.5,
+      "overfit_risk": 0.3,
+      "training_cost": 0.5,
+      "rank": 2,
+      "recommendation": "retrain_band_gap_with_bg_hotspots_10k_next"
+    },
+    {
+      "dataset_id": "7ccacc141465",
+      "dataset_name": "bg_balanced_hardmix_20k",
+      "target": "band_gap",
+      "overall_score": 0.6028,
+      "benefit_score": 0.644,
+      "difficulty_concentration": 1.0,
+      "diversity_score": 0.9977,
+      "sparse_coverage": 0.6,
+      "exotic_value": 0.3,
+      "overfit_risk": 0.2,
+      "training_cost": 1.0,
+      "rank": 3,
+      "recommendation": "retrain_band_gap_with_bg_balanced_hardmix_20k_next"
+    },
+    {
+      "dataset_id": "d72df8adef84",
+      "dataset_name": "fe_sparse_mix_10k",
+      "target": "formation_energy",
+      "overall_score": 0.5913,
+      "benefit_score": 0.2999,
+      "difficulty_concentration": 1.0,
+      "diversity_score": 0.8757,
+      "sparse_coverage": 0.8,
+      "exotic_value": 0.9,
+      "overfit_risk": 0.3,
+      "training_cost": 0.5,
+      "rank": 4,
+      "recommendation": "retrain_formation_energy_with_fe_sparse_mix_10k_next"
+    },
+    {
+      "dataset_id": "ce7f8726b613",
+      "dataset_name": "curriculum_easy_to_hard_20k",
+      "target": "band_gap",
+      "overall_score": 0.493,
+      "benefit_score": 0.644,
+      "difficulty_concentration": 0.4896,
+      "diversity_score": 0.946,
+      "sparse_coverage": 0.6,
+      "exotic_value": 0.3,
+      "overfit_risk": 0.2,
+      "training_cost": 1.0,
+      "rank": 5,
+      "recommendation": "consider_curriculum_easy_to_hard_20k_after_top_priority"
+    },
+    {
+      "dataset_id": "debdec2c0340",
+      "dataset_name": "fe_hardcases_10k",
+      "target": "formation_energy",
+      "overall_score": 0.3118,
+      "benefit_score": 0.3272,
+      "difficulty_concentration": 0.0411,
+      "diversity_score": 0.8028,
+      "sparse_coverage": 0.5,
+      "exotic_value": 0.5,
+      "overfit_risk": 0.3,
+      "training_cost": 0.5,
+      "rank": 6,
+      "recommendation": "defer_fe_hardcases_10k"
+    }
+  ],
+  "recommendation": "retrain_band_gap_hotspots_next",
+  "next_action": "Use dataset 'bg_sparse_exotic_10k' (0.71 priority) for next band_gap retraining on rung_20k. Current BG MAE=0.49 \u2192 target MAE<0.35.",
+  "do_not": [
+    "Do NOT retrain in this phase \u2014 datasets are prepared, not executed",
+    "Do NOT use structure_only or external_unlabeled tier for training",
+    "Do NOT retrain on full 76K corpus \u2014 20K was already optimal in ladder",
+    "Do NOT change production models until new training is validated",
+    "Do NOT ignore holdout set \u2014 reserve for final validation"
+  ]
+}

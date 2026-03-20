@@ -1,8 +1,7 @@
 # Pilot Recommendation
 
-**continue_aflow_expansion**
+**pause_and_review**
 
-- Proceed with larger AFLOW ingestion (1K-5K targeted)
-- Focus on sparse chemical regions identified by orchestrator
-- Re-run benchmark after expansion to measure impact
+- Review pilot results before further expansion
+- Check if AFLOW API is stable enough for batch ingestion
 - Do NOT retrain until corpus expansion is validated
