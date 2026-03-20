@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.G (v2.0.0)**
+> **Document status: Active implementation — Phase IV.H (v2.1.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -570,3 +570,12 @@ Predict property degradation over time under operating conditions — thermal cy
 - Action summary: what to improve, what not to touch, what data to seek
 - 4 API endpoints + 17 dedicated tests (636 total)
 - Version bumped to 2.0.0
+
+### Phase IV.H — Multi-Source Corpus Expansion + Dedup Foundation (Current) ✅
+- Source registry: 6 sources (JARVIS active, MP/COD/AFLOW/OQMD planned, NOMAD deferred)
+- Normalization layer: common schema for any external source
+- Dedup engine: exact (formula+SG), same_formula_different_structure, unique
+- Staging mode: dry-run analysis before any merge (simulated MP: 22% unique from 200 sample)
+- Expansion recommendation: scored ranking with action (ingest_next / defer)
+- 4 API endpoints + 19 dedicated tests (655 total)
+- Version 2.1.0

@@ -6,7 +6,7 @@
   "corpus_with_structure": 1,
   "seed": 42,
   "elapsed_sec": 1.0,
-  "created_at": "2026-03-20T18:36:07.155573+00:00",
+  "created_at": "2026-03-20T19:08:14.498645+00:00",
   "overall": {
     "mae": 2.4158,
     "rmse": 2.4158,
