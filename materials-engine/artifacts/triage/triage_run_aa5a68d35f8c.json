@@ -1,0 +1,511 @@
+{
+  "run_id": "aa5a68d35f8c",
+  "profile": {
+    "name": "exotic_patience_gate",
+    "description": "Patient gate for exotic/novel candidates \u2014 tolerate higher risk for novelty",
+    "approve_min_frontier": 0.35,
+    "approve_min_novelty": 0.0,
+    "reject_max_risk_flags": 6,
+    "reject_if_known_low_novelty": false,
+    "require_structure": false,
+    "w_frontier": 0.2,
+    "w_calibration": 0.1,
+    "w_evidence": 0.1,
+    "w_novelty": 0.35,
+    "w_structure": 0.05,
+    "w_risk_penalty": 0.2,
+    "top_k": 50
+  },
+  "created_at": "2026-03-20T15:18:51.443347+00:00",
+  "summary": {
+    "total": 20,
+    "decisions": {
+      "approved_for_budgeted_validation": 20
+    }
+  },
+  "results": [
+    {
+      "pack_id": "c35ced67ae33",
+      "formula": "LaSF",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.8156,
+      "triage_score": 0.5797866666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "LaSF: approved_for_budgeted_validation | triage=0.580 | frontier=0.816 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "8db368e7370d",
+      "formula": "Sm2TeO2",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.8007,
+      "triage_score": 0.5768066666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Sm2TeO2: approved_for_budgeted_validation | triage=0.577 | frontier=0.801 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "87361267d66d",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7976,
+      "triage_score": 0.5761866666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "LiVF3: approved_for_budgeted_validation | triage=0.576 | frontier=0.798 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "cc3713a7b07a",
+      "formula": "Ba4CeMn3O12",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7946,
+      "triage_score": 0.5755866666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Ba4CeMn3O12: approved_for_budgeted_validation | triage=0.576 | frontier=0.795 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "bec8ca104f9f",
+      "formula": "Tb2TeO2",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7836,
+      "triage_score": 0.5733866666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Tb2TeO2: approved_for_budgeted_validation | triage=0.573 | frontier=0.784 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "e21d50801cea",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7827,
+      "triage_score": 0.5732066666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "LiVF3: approved_for_budgeted_validation | triage=0.573 | frontier=0.783 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "e65a4322ae7f",
+      "formula": "SrLiCoF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7793,
+      "triage_score": 0.5725266666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "SrLiCoF6: approved_for_budgeted_validation | triage=0.573 | frontier=0.779 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "c2120e2e2653",
+      "formula": "TmTlO2",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7759,
+      "triage_score": 0.5718466666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "TmTlO2: approved_for_budgeted_validation | triage=0.572 | frontier=0.776 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "d92a94edae5c",
+      "formula": "Li6MnO2F4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7734,
+      "triage_score": 0.5713466666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Li6MnO2F4: approved_for_budgeted_validation | triage=0.571 | frontier=0.773 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "c9bf85964da7",
+      "formula": "Dy2TeO2",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7672,
+      "triage_score": 0.5701066666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Dy2TeO2: approved_for_budgeted_validation | triage=0.570 | frontier=0.767 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "b65d17ec73c1",
+      "formula": "Ti4MnP6O24",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7646,
+      "triage_score": 0.5695866666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Ti4MnP6O24: approved_for_budgeted_validation | triage=0.570 | frontier=0.765 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "ad07e9ca060a",
+      "formula": "RbVPO5",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7543,
+      "triage_score": 0.5675266666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "RbVPO5: approved_for_budgeted_validation | triage=0.568 | frontier=0.754 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "b31a3384ff67",
+      "formula": "Ca5MnSi9Pb9O33",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7529,
+      "triage_score": 0.5672466666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Ca5MnSi9Pb9O33: approved_for_budgeted_validation | triage=0.567 | frontier=0.753 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "e89279e8530c",
+      "formula": "Pr2TeO2",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7521,
+      "triage_score": 0.5670866666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Pr2TeO2: approved_for_budgeted_validation | triage=0.567 | frontier=0.752 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "84b8ef18da84",
+      "formula": "KAl2NiP3H4O14",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7516,
+      "triage_score": 0.5669866666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "KAl2NiP3H4O14: approved_for_budgeted_validation | triage=0.567 | frontier=0.752 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "30d433b090f3",
+      "formula": "LiCrP2O7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7512,
+      "triage_score": 0.5669066666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "LiCrP2O7: approved_for_budgeted_validation | triage=0.567 | frontier=0.751 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "8651c6a8c1e5",
+      "formula": "CaV4Ag2O12",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7475,
+      "triage_score": 0.5661666666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "CaV4Ag2O12: approved_for_budgeted_validation | triage=0.566 | frontier=0.748 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "ffc5dd49378a",
+      "formula": "Li3FeF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7461,
+      "triage_score": 0.5658866666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "Li3FeF6: approved_for_budgeted_validation | triage=0.566 | frontier=0.746 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "818fe1a08022",
+      "formula": "K4MnMo4O15",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7459,
+      "triage_score": 0.5658466666666667,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "K4MnMo4O15: approved_for_budgeted_validation | triage=0.566 | frontier=0.746 | action=promote_to_budget_candidate"
+    },
+    {
+      "pack_id": "4d1a337e6392",
+      "formula": "MgIn2O4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.7454,
+      "triage_score": 0.5657466666666666,
+      "decision": "approved_for_budgeted_validation",
+      "next_action": "promote_to_budget_candidate",
+      "reason_codes": [
+        "strong_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "calibration_band": "high",
+      "evidence_strength": 1.0,
+      "novelty_score": 0.0,
+      "has_structure": true,
+      "human_summary": "MgIn2O4: approved_for_budgeted_validation | triage=0.566 | frontier=0.745 | action=promote_to_budget_candidate"
+    }
+  ],
+  "disclaimer": "Triage decisions are based on ML predictions + heuristic evidence scoring. NOT DFT-validated. NOT experimentally confirmed. 'approved_for_budgeted_validation' means the candidate passes the pre-DFT gate and is recommended for more serious (and expensive) validation when budget allows."
+}

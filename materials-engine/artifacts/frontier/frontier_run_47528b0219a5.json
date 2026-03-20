@@ -1,0 +1,1685 @@
+{
+  "run_id": "47528b0219a5",
+  "profile": {
+    "name": "stable_semiconductor",
+    "description": "Thermodynamically stable materials with semiconductor band gap (0.5-3.0 eV)",
+    "w_stability": 0.35,
+    "w_band_gap_fit": 0.3,
+    "w_novelty": 0.1,
+    "w_exotic": 0.05,
+    "w_structure_quality": 0.1,
+    "w_validation_priority": 0.1,
+    "band_gap_target": 1.5,
+    "band_gap_tolerance": 1.5,
+    "fe_max": 0.0,
+    "novelty_min": 0.0,
+    "exotic_min": 0.0,
+    "top_k": 50,
+    "pool_limit": 5000
+  },
+  "source": "corpus",
+  "created_at": "2026-03-20T14:32:09.064045+00:00",
+  "summary": {
+    "pool_size": 5000,
+    "after_filter": 3525,
+    "shortlist_size": 50,
+    "score_range": {
+      "max": 0.8156,
+      "min": 0.7117
+    }
+  },
+  "shortlist": [
+    {
+      "canonical_id": "e2311356e08f736a",
+      "formula": "LaSF",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 129,
+      "properties": {
+        "formation_energy": {
+          "value": -3.34093,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.509,
+          "evidence": "known"
+        },
+        "density": 5.508,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.994,
+        "novelty": 0.0,
+        "exotic": 0.1517,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5982,
+        "frontier": 0.8156
+      },
+      "rank": 1,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "3c29faa405f2a339",
+      "formula": "Sm2TeO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.10106,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.57,
+          "evidence": "known"
+        },
+        "density": 7.4816,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.9533,
+        "novelty": 0.0,
+        "exotic": 0.1225,
+        "structure_quality": 1.0,
+        "validation_priority": 0.586,
+        "frontier": 0.8007
+      },
+      "rank": 2,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "7114f2bc48efea7c",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 161,
+      "properties": {
+        "formation_energy": {
+          "value": -2.81316,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.473,
+          "evidence": "known"
+        },
+        "density": 3.4755,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9626,
+        "band_gap_fit": 0.982,
+        "novelty": 0.0,
+        "exotic": 0.1556,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5834,
+        "frontier": 0.7976
+      },
+      "rank": 3,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "9d725ed2f3e26856",
+      "formula": "Ba4CeMn3O12",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 166,
+      "properties": {
+        "formation_energy": {
+          "value": -2.76746,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.517,
+          "evidence": "known"
+        },
+        "density": 6.1379,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9535,
+        "band_gap_fit": 0.9887,
+        "novelty": 0.0,
+        "exotic": 0.1196,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5826,
+        "frontier": 0.7946
+      },
+      "rank": 4,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "3fbe3cd3a641a3f6",
+      "formula": "Tb2TeO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.15494,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.352,
+          "evidence": "known"
+        },
+        "density": 8.181,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.9013,
+        "novelty": 0.0,
+        "exotic": 0.1234,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5704,
+        "frontier": 0.7836
+      },
+      "rank": 5,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "995bc64bf7d8fa4c",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 198,
+      "properties": {
+        "formation_energy": {
+          "value": -2.75988,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.425,
+          "evidence": "known"
+        },
+        "density": 3.4515,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.952,
+        "band_gap_fit": 0.95,
+        "novelty": 0.0,
+        "exotic": 0.1481,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5706,
+        "frontier": 0.7827
+      },
+      "rank": 6,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "022176fae1cfdf2a",
+      "formula": "SrLiCoF6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 14,
+      "properties": {
+        "formation_energy": {
+          "value": -2.94187,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.341,
+          "evidence": "known"
+        },
+        "density": 3.8454,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9884,
+        "band_gap_fit": 0.894,
+        "novelty": 0.0,
+        "exotic": 0.173,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5647,
+        "frontier": 0.7793
+      },
+      "rank": 7,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "e30c5d14e002596a",
+      "formula": "TmTlO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 166,
+      "properties": {
+        "formation_energy": {
+          "value": -2.62696,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.443,
+          "evidence": "known"
+        },
+        "density": 10.2395,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9254,
+        "band_gap_fit": 0.962,
+        "novelty": 0.0,
+        "exotic": 0.1358,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5662,
+        "frontier": 0.7759
+      },
+      "rank": 8,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "ca3118713cb6164f",
+      "formula": "Li6MnO2F4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 2,
+      "properties": {
+        "formation_energy": {
+          "value": -2.50152,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.474,
+          "evidence": "known"
+        },
+        "density": 2.2724,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9003,
+        "band_gap_fit": 0.9827,
+        "novelty": 0.0,
+        "exotic": 0.1408,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5649,
+        "frontier": 0.7734
+      },
+      "rank": 9,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "e26cceb70a7f14a4",
+      "formula": "Dy2TeO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.1606,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.277,
+          "evidence": "known"
+        },
+        "density": 8.4229,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.8513,
+        "novelty": 0.0,
+        "exotic": 0.1251,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5554,
+        "frontier": 0.7672
+      },
+      "rank": 10,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "4721a84e1af0a9fe",
+      "formula": "Ti4MnP6O24",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 148,
+      "properties": {
+        "formation_energy": {
+          "value": -2.59008,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.596,
+          "evidence": "known"
+        },
+        "density": 3.0077,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.918,
+        "band_gap_fit": 0.936,
+        "novelty": 0.0,
+        "exotic": 0.1372,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5562,
+        "frontier": 0.7646
+      },
+      "rank": 11,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "d9e7960f3d24bdeb",
+      "formula": "RbVPO5",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 19,
+      "properties": {
+        "formation_energy": {
+          "value": -2.45308,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.388,
+          "evidence": "known"
+        },
+        "density": 3.2874,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8906,
+        "band_gap_fit": 0.9253,
+        "novelty": 0.0,
+        "exotic": 0.2103,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5448,
+        "frontier": 0.7543
+      },
+      "rank": 12,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "6e03f1150a01fe04",
+      "formula": "Ca5MnSi9Pb9O33",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 174,
+      "properties": {
+        "formation_energy": {
+          "value": -2.51926,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.368,
+          "evidence": "known"
+        },
+        "density": 5.6645,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9039,
+        "band_gap_fit": 0.912,
+        "novelty": 0.0,
+        "exotic": 0.1696,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5448,
+        "frontier": 0.7529
+      },
+      "rank": 13,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "a0f08087d38e0074",
+      "formula": "Pr2TeO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.04152,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.791,
+          "evidence": "known"
+        },
+        "density": 6.7103,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.806,
+        "novelty": 0.0,
+        "exotic": 0.122,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5418,
+        "frontier": 0.7521
+      },
+      "rank": 14,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "b1e18d76c20c8b8c",
+      "formula": "KAl2NiP3H4O14",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 15,
+      "properties": {
+        "formation_energy": {
+          "value": -2.14081,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.517,
+          "evidence": "known"
+        },
+        "density": 2.8676,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8282,
+        "band_gap_fit": 0.9887,
+        "novelty": 0.0,
+        "exotic": 0.2128,
+        "structure_quality": 1.0,
+        "validation_priority": 0.545,
+        "frontier": 0.7516
+      },
+      "rank": 15,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "74bd0815fb1ca53a",
+      "formula": "LiCrP2O7",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 4,
+      "properties": {
+        "formation_energy": {
+          "value": -2.32249,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.575,
+          "evidence": "known"
+        },
+        "density": 3.0776,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8645,
+        "band_gap_fit": 0.95,
+        "novelty": 0.0,
+        "exotic": 0.1837,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5443,
+        "frontier": 0.7512
+      },
+      "rank": 16,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "61ecdd4108477a4b",
+      "formula": "CaV4Ag2O12",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 125,
+      "properties": {
+        "formation_energy": {
+          "value": -2.27493,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.577,
+          "evidence": "known"
+        },
+        "density": 4.0303,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.855,
+        "band_gap_fit": 0.9487,
+        "novelty": 0.0,
+        "exotic": 0.1903,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5411,
+        "frontier": 0.7475
+      },
+      "rank": 17,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "c6a65a3209183cdb",
+      "formula": "Li3FeF6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 148,
+      "properties": {
+        "formation_energy": {
+          "value": -2.78935,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.254,
+          "evidence": "known"
+        },
+        "density": 3.0053,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9579,
+        "band_gap_fit": 0.836,
+        "novelty": 0.0,
+        "exotic": 0.1255,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5382,
+        "frontier": 0.7461
+      },
+      "rank": 18,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "a464a6f3d317b11c",
+      "formula": "K4MnMo4O15",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 147,
+      "properties": {
+        "formation_energy": {
+          "value": -2.24322,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.569,
+          "evidence": "known"
+        },
+        "density": 3.6894,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8486,
+        "band_gap_fit": 0.954,
+        "novelty": 0.0,
+        "exotic": 0.1727,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5408,
+        "frontier": 0.7459
+      },
+      "rank": 19,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "f320b0b949825130",
+      "formula": "MgIn2O4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 74,
+      "properties": {
+        "formation_energy": {
+          "value": -2.06549,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.509,
+          "evidence": "known"
+        },
+        "density": 5.866,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8131,
+        "band_gap_fit": 0.994,
+        "novelty": 0.0,
+        "exotic": 0.1687,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5421,
+        "frontier": 0.7454
+      },
+      "rank": 20,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "440a2cb60ca34b51",
+      "formula": "LiVF3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 62,
+      "properties": {
+        "formation_energy": {
+          "value": -2.80151,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.224,
+          "evidence": "known"
+        },
+        "density": 3.5297,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9603,
+        "band_gap_fit": 0.816,
+        "novelty": 0.0,
+        "exotic": 0.1246,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5329,
+        "frontier": 0.7404
+      },
+      "rank": 21,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "69bc9759cfaff5bb",
+      "formula": "TiOF2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 131,
+      "properties": {
+        "formation_energy": {
+          "value": -3.28956,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.859,
+          "evidence": "known"
+        },
+        "density": 2.9862,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.7607,
+        "novelty": 0.0,
+        "exotic": 0.1594,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5282,
+        "frontier": 0.739
+      },
+      "rank": 22,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "d25224cbceaacc24",
+      "formula": "Dy3S3N",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 62,
+      "properties": {
+        "formation_energy": {
+          "value": -2.16663,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.424,
+          "evidence": "known"
+        },
+        "density": 6.7959,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8333,
+        "band_gap_fit": 0.9493,
+        "novelty": 0.0,
+        "exotic": 0.1725,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5348,
+        "frontier": 0.7386
+      },
+      "rank": 23,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "894132cedb03cb19",
+      "formula": "LiFeF4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 12,
+      "properties": {
+        "formation_energy": {
+          "value": -2.50531,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.316,
+          "evidence": "known"
+        },
+        "density": 2.9734,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9011,
+        "band_gap_fit": 0.8773,
+        "novelty": 0.0,
+        "exotic": 0.1306,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5335,
+        "frontier": 0.7385
+      },
+      "rank": 24,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "66f161e8058a987a",
+      "formula": "BaNiF6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 166,
+      "properties": {
+        "formation_energy": {
+          "value": -2.59956,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.281,
+          "evidence": "known"
+        },
+        "density": 4.6712,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9199,
+        "band_gap_fit": 0.854,
+        "novelty": 0.0,
+        "exotic": 0.125,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5322,
+        "frontier": 0.7376
+      },
+      "rank": 25,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "ca70b8b6354d7855",
+      "formula": "LaGaSe2O",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 29,
+      "properties": {
+        "formation_energy": {
+          "value": -1.95533,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.524,
+          "evidence": "known"
+        },
+        "density": 5.7632,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.7911,
+        "band_gap_fit": 0.984,
+        "novelty": 0.0,
+        "exotic": 0.244,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5325,
+        "frontier": 0.7375
+      },
+      "rank": 26,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "bccf2eb05d9a7b58",
+      "formula": "LiAgF2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 63,
+      "properties": {
+        "formation_energy": {
+          "value": -2.0561,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.452,
+          "evidence": "known"
+        },
+        "density": 5.1848,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8112,
+        "band_gap_fit": 0.968,
+        "novelty": 0.0,
+        "exotic": 0.1404,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5338,
+        "frontier": 0.7347
+      },
+      "rank": 27,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "98cf8ea4d8416662",
+      "formula": "CaMnSi2O6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 15,
+      "properties": {
+        "formation_energy": {
+          "value": -2.785,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.814,
+          "evidence": "known"
+        },
+        "density": 3.5271,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.957,
+        "band_gap_fit": 0.7907,
+        "novelty": 0.0,
+        "exotic": 0.1683,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5243,
+        "frontier": 0.733
+      },
+      "rank": 28,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "cb2b4c2493c60f38",
+      "formula": "Ba2Sc2O5",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 123,
+      "properties": {
+        "formation_energy": {
+          "value": -3.3651,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.883,
+          "evidence": "known"
+        },
+        "density": 5.1372,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.7447,
+        "novelty": 0.0,
+        "exotic": 0.123,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5234,
+        "frontier": 0.7319
+      },
+      "rank": 29,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "94579f03c085a726",
+      "formula": "SrTaNO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 5,
+      "properties": {
+        "formation_energy": {
+          "value": -2.65483,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.217,
+          "evidence": "known"
+        },
+        "density": 7.8676,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.931,
+        "band_gap_fit": 0.8113,
+        "novelty": 0.0,
+        "exotic": 0.1871,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5227,
+        "frontier": 0.7309
+      },
+      "rank": 30,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "c6ce0ca413355428",
+      "formula": "MnAlO3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 2,
+      "properties": {
+        "formation_energy": {
+          "value": -2.33586,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.669,
+          "evidence": "known"
+        },
+        "density": 3.2428,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8672,
+        "band_gap_fit": 0.8873,
+        "novelty": 0.0,
+        "exotic": 0.1686,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5264,
+        "frontier": 0.7308
+      },
+      "rank": 31,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "3053f02a46907d89",
+      "formula": "Tb3S3N",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 62,
+      "properties": {
+        "formation_energy": {
+          "value": -2.16098,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.387,
+          "evidence": "known"
+        },
+        "density": 6.5837,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8322,
+        "band_gap_fit": 0.9247,
+        "novelty": 0.0,
+        "exotic": 0.1747,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5271,
+        "frontier": 0.7301
+      },
+      "rank": 32,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "e31517d0c5649a7e",
+      "formula": "LiVGeO5",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 67,
+      "properties": {
+        "formation_energy": {
+          "value": -2.1412,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.613,
+          "evidence": "known"
+        },
+        "density": 3.6391,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8282,
+        "band_gap_fit": 0.9247,
+        "novelty": 0.0,
+        "exotic": 0.1981,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5259,
+        "frontier": 0.7298
+      },
+      "rank": 33,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "0fd213d372ba542f",
+      "formula": "LiAgF2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 19,
+      "properties": {
+        "formation_energy": {
+          "value": -2.06912,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.584,
+          "evidence": "known"
+        },
+        "density": 5.1531,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8138,
+        "band_gap_fit": 0.944,
+        "novelty": 0.0,
+        "exotic": 0.175,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5273,
+        "frontier": 0.7295
+      },
+      "rank": 34,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "eebf90f6588b5f13",
+      "formula": "Ce2ZrO6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.66136,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.895,
+          "evidence": "known"
+        },
+        "density": 6.7783,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.7367,
+        "novelty": 0.0,
+        "exotic": 0.1149,
+        "structure_quality": 1.0,
+        "validation_priority": 0.521,
+        "frontier": 0.7288
+      },
+      "rank": 35,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "891e056fc6c13328",
+      "formula": "YCuW2O8",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 2,
+      "properties": {
+        "formation_energy": {
+          "value": -2.51904,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.245,
+          "evidence": "known"
+        },
+        "density": 6.8555,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9038,
+        "band_gap_fit": 0.83,
+        "novelty": 0.0,
+        "exotic": 0.1913,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5201,
+        "frontier": 0.7269
+      },
+      "rank": 36,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "f06d4df673b7a1dc",
+      "formula": "Li5MnO3F",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 4,
+      "properties": {
+        "formation_energy": {
+          "value": -2.07253,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.597,
+          "evidence": "known"
+        },
+        "density": 2.5876,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8145,
+        "band_gap_fit": 0.9353,
+        "novelty": 0.0,
+        "exotic": 0.1624,
+        "structure_quality": 1.0,
+        "validation_priority": 0.525,
+        "frontier": 0.7263
+      },
+      "rank": 37,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "635f8b00132a10da",
+      "formula": "SrAgSF",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 129,
+      "properties": {
+        "formation_energy": {
+          "value": -2.19342,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.361,
+          "evidence": "known"
+        },
+        "density": 5.4121,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8387,
+        "band_gap_fit": 0.9073,
+        "novelty": 0.0,
+        "exotic": 0.1538,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5238,
+        "frontier": 0.7258
+      },
+      "rank": 38,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "98c8d56ac2e1ea0a",
+      "formula": "KCrPO4F",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 33,
+      "properties": {
+        "formation_energy": {
+          "value": -2.47525,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.247,
+          "evidence": "known"
+        },
+        "density": 3.1897,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8951,
+        "band_gap_fit": 0.8313,
+        "novelty": 0.0,
+        "exotic": 0.2132,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5179,
+        "frontier": 0.7251
+      },
+      "rank": 39,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "high_exotic_score",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "10f07eddf6736912",
+      "formula": "Al2O3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 10,
+      "properties": {
+        "formation_energy": {
+          "value": -2.58725,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.213,
+          "evidence": "known"
+        },
+        "density": 2.6784,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9174,
+        "band_gap_fit": 0.8087,
+        "novelty": 0.0,
+        "exotic": 0.1609,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5178,
+        "frontier": 0.7235
+      },
+      "rank": 40,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "9a7e001f9e257790",
+      "formula": "Ca3CdO4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 123,
+      "properties": {
+        "formation_energy": {
+          "value": -2.77374,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.85,
+          "evidence": "known"
+        },
+        "density": 4.4762,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9547,
+        "band_gap_fit": 0.7667,
+        "novelty": 0.0,
+        "exotic": 0.1209,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5164,
+        "frontier": 0.7218
+      },
+      "rank": 41,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "aa145d7e22affcb7",
+      "formula": "ZrBrN",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 166,
+      "properties": {
+        "formation_energy": {
+          "value": -1.80566,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.47,
+          "evidence": "known"
+        },
+        "density": 5.3987,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.7611,
+        "band_gap_fit": 0.98,
+        "novelty": 0.0,
+        "exotic": 0.1387,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5223,
+        "frontier": 0.7196
+      },
+      "rank": 42,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "55245e2da02343c8",
+      "formula": "BaPr2Ti3O10",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 63,
+      "properties": {
+        "formation_energy": {
+          "value": -3.47244,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.958,
+          "evidence": "known"
+        },
+        "density": 5.6078,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.6947,
+        "novelty": 0.0,
+        "exotic": 0.1458,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5084,
+        "frontier": 0.7165
+      },
+      "rank": 43,
+      "reason_codes": [
+        "strong_stability_signal",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "8370065a59b9c3b6",
+      "formula": "Li3MnF7",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 160,
+      "properties": {
+        "formation_energy": {
+          "value": -2.79084,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.882,
+          "evidence": "known"
+        },
+        "density": 2.4956,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.9582,
+        "band_gap_fit": 0.7453,
+        "novelty": 0.0,
+        "exotic": 0.1292,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5111,
+        "frontier": 0.7165
+      },
+      "rank": 44,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "cf86ed935811bb83",
+      "formula": "Ga2O3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 63,
+      "properties": {
+        "formation_energy": {
+          "value": -1.73835,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.476,
+          "evidence": "known"
+        },
+        "density": 6.5254,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.7477,
+        "band_gap_fit": 0.984,
+        "novelty": 0.0,
+        "exotic": 0.1502,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5195,
+        "frontier": 0.7163
+      },
+      "rank": 45,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "a4fa7f4e794ed2a5",
+      "formula": "Sr2TiO4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 139,
+      "properties": {
+        "formation_energy": {
+          "value": -3.33006,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.953,
+          "evidence": "known"
+        },
+        "density": 4.9336,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.698,
+        "novelty": 0.0,
+        "exotic": 0.1082,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5094,
+        "frontier": 0.7158
+      },
+      "rank": 46,
+      "reason_codes": [
+        "strong_stability_signal",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "2e668a369bcaaef1",
+      "formula": "Li2WO4",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 148,
+      "properties": {
+        "formation_energy": {
+          "value": -2.4421,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.771,
+          "evidence": "known"
+        },
+        "density": 4.5379,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8884,
+        "band_gap_fit": 0.8193,
+        "novelty": 0.0,
+        "exotic": 0.1299,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5123,
+        "frontier": 0.7145
+      },
+      "rank": 47,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "3231dd0d916e28f9",
+      "formula": "Ba4PdO6",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 167,
+      "properties": {
+        "formation_energy": {
+          "value": -2.29787,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.274,
+          "evidence": "known"
+        },
+        "density": 6.3573,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8596,
+        "band_gap_fit": 0.8493,
+        "novelty": 0.0,
+        "exotic": 0.1416,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5127,
+        "frontier": 0.714
+      },
+      "rank": 48,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "287350d13368d7cd",
+      "formula": "Li3CrSiO5",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 2,
+      "properties": {
+        "formation_energy": {
+          "value": -2.43891,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.788,
+          "evidence": "known"
+        },
+        "density": 3.7057,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 0.8878,
+        "band_gap_fit": 0.808,
+        "novelty": 0.0,
+        "exotic": 0.1616,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5087,
+        "frontier": 0.7121
+      },
+      "rank": 49,
+      "reason_codes": [
+        "strong_stability_signal",
+        "good_band_gap_window_fit",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "04ad6b5f1de35403",
+      "formula": "DyCrO3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 62,
+      "properties": {
+        "formation_energy": {
+          "value": -3.04522,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 1.019,
+          "evidence": "known"
+        },
+        "density": 7.884,
+        "has_structure": true
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.6793,
+        "novelty": 0.0,
+        "exotic": 0.1498,
+        "structure_quality": 1.0,
+        "validation_priority": 0.5038,
+        "frontier": 0.7117
+      },
+      "rank": 50,
+      "reason_codes": [
+        "strong_stability_signal",
+        "known_material"
+      ]
+    }
+  ],
+  "disclaimer": "Frontier scores combine predicted formation_energy (CGCNN) + predicted band_gap (ALIGNN-Lite) + novelty/exotic heuristics. NOT DFT-validated. NOT experimentally confirmed. Properties tagged 'known' come from JARVIS DFT corpus. Properties tagged 'predicted' come from baseline GNN models."
+}

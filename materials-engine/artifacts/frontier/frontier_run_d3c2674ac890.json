@@ -1,0 +1,135 @@
+{
+  "run_id": "d3c2674ac890",
+  "profile": {
+    "name": "balanced_frontier",
+    "description": "Equal emphasis on stability, electronic utility, and novelty",
+    "w_stability": 0.25,
+    "w_band_gap_fit": 0.2,
+    "w_novelty": 0.2,
+    "w_exotic": 0.15,
+    "w_structure_quality": 0.1,
+    "w_validation_priority": 0.1,
+    "band_gap_target": null,
+    "band_gap_tolerance": 2.0,
+    "fe_max": 1.0,
+    "novelty_min": 0.0,
+    "exotic_min": 0.0,
+    "top_k": 3,
+    "pool_limit": 5000
+  },
+  "source": "corpus",
+  "created_at": "2026-03-20T14:27:58.837334+00:00",
+  "summary": {
+    "pool_size": 5,
+    "after_filter": 5,
+    "shortlist_size": 3,
+    "score_range": {
+      "max": 0.4518,
+      "min": 0.3641
+    }
+  },
+  "shortlist": [
+    {
+      "canonical_id": "d02e18112447d607",
+      "formula": "NaCl",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 225,
+      "properties": {
+        "formation_energy": {
+          "value": -4.2,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 8.5,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.5,
+        "novelty": 0.0,
+        "exotic": 0.3787,
+        "structure_quality": 0.0,
+        "validation_priority": 0.45,
+        "frontier": 0.4518
+      },
+      "rank": 1,
+      "reason_codes": [
+        "strong_stability_signal",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "e9c0f079edfa01f7",
+      "formula": "TiO2",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 136,
+      "properties": {
+        "formation_energy": {
+          "value": -3.4,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 3.2,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 1.0,
+        "band_gap_fit": 0.5,
+        "novelty": 0.0,
+        "exotic": 0.3636,
+        "structure_quality": 0.0,
+        "validation_priority": 0.45,
+        "frontier": 0.4495
+      },
+      "rank": 2,
+      "reason_codes": [
+        "strong_stability_signal",
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    },
+    {
+      "canonical_id": "abaaa8f129936004",
+      "formula": "Fe2O3",
+      "source_type": "known_corpus_candidate",
+      "spacegroup": 167,
+      "properties": {
+        "formation_energy": {
+          "value": -1.5,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 2.1,
+          "evidence": "known"
+        },
+        "density": null,
+        "has_structure": false
+      },
+      "scores": {
+        "stability": 0.7,
+        "band_gap_fit": 0.5,
+        "novelty": 0.0,
+        "exotic": 0.3537,
+        "structure_quality": 0.0,
+        "validation_priority": 0.36,
+        "frontier": 0.3641
+      },
+      "rank": 3,
+      "reason_codes": [
+        "high_exotic_score",
+        "low_structure_quality",
+        "known_material"
+      ]
+    }
+  ],
+  "disclaimer": "Frontier scores combine predicted formation_energy (CGCNN) + predicted band_gap (ALIGNN-Lite) + novelty/exotic heuristics. NOT DFT-validated. NOT experimentally confirmed. Properties tagged 'known' come from JARVIS DFT corpus. Properties tagged 'predicted' come from baseline GNN models."
+}
