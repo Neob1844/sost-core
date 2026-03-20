@@ -67,8 +67,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </head>
 <body>
 
-<!-- SPLASH — on top of everything from the start -->
-<div id="splash">
+<!-- SPLASH — inline styles guarantee visibility before CSS/JS load -->
+<div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
   <img id="splash-logo" src="/sost-logo.png" alt="SOST">
   <div id="splash-title">SOST PROTOCOL</div>
   <div id="splash-lines">
@@ -80,8 +80,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div id="splash-scan"></div>
 </div>
 
-<!-- APP — display:none by default, NO iframes load until splash ends -->
-<div id="app">
+<!-- APP — inline display:none guarantees hidden before CSS/JS load (PWA safe) -->
+<div id="app" style="display:none">
   <div class="frames visible" id="fr">
     <!-- iframes: src set by JS after splash, wallet starts hidden -->
     <iframe id="ef" style="display:block"></iframe>
@@ -231,10 +231,9 @@ function go(t){
       wf.style.display='block';
       ef.style.display='none';
     }
-    // Show overlay if first time
-    if(!loaded[t==='explorer'?'ex':'wl']){
-      var key=t==='explorer'?'ex':'wl';
-      initLoading(key);
+    // Show overlay only for explorer (wallet loads directly, no quesito)
+    if(t==='explorer'&&!loaded['ex']){
+      initLoading('ex');
     }
 
     // Phase 3: fade in (0.4s)
