@@ -10,7 +10,7 @@
     "top_k": 3,
     "pool_limit": 50000
   },
-  "created_at": "2026-03-20T15:22:53.166777+00:00",
+  "created_at": "2026-03-20T18:08:26.763400+00:00",
   "status": "completed",
   "result_summary": {
     "pool_size": 8,

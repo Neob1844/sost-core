@@ -1,0 +1,43 @@
+{
+  "campaigns": [
+    {
+      "name": "stable_semiconductor_hunt",
+      "evaluated": 50,
+      "shortlist": 20,
+      "decisions": {
+        "reject_for_now": 20
+      },
+      "top_candidates": []
+    },
+    {
+      "name": "wide_gap_exotic_hunt",
+      "evaluated": 50,
+      "shortlist": 20,
+      "decisions": {
+        "approved_for_budgeted_validation": 20
+      },
+      "top_candidates": [
+        "CaAl2SiO6",
+        "TaPbF7",
+        "Pr3Si2Cl3O7",
+        "CaMgSi2O6",
+        "Pr4B10O21"
+      ]
+    },
+    {
+      "name": "high_novelty_watchlist",
+      "evaluated": 50,
+      "shortlist": 20,
+      "decisions": {
+        "needs_manual_review": 20
+      },
+      "top_candidates": [
+        "Sr5B3BrO9",
+        "BaCaGaF7",
+        "Sr5B3ClO9",
+        "LiY3WO8",
+        "Pr3Si2Cl3O7"
+      ]
+    }
+  ]
+}

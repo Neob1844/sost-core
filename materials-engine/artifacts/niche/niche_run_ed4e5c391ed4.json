@@ -1,0 +1,1037 @@
+{
+  "campaign_id": "ed4e5c391ed4",
+  "spec": {
+    "name": "high_novelty_watchlist",
+    "objective": "Maximize novelty and exoticism \u2014 find the most unexplored materials",
+    "source_mode": "corpus",
+    "frontier_profile": "high_novelty_watchlist",
+    "triage_profile": "exotic_patience_gate",
+    "band_gap_target": null,
+    "band_gap_tolerance": 2.0,
+    "fe_max": 3.0,
+    "novelty_min": 0.0,
+    "exotic_min": 0.0,
+    "require_structure": false,
+    "frontier_top_k": 50,
+    "triage_top_k": 20,
+    "pool_limit": 5000,
+    "niche_tags": [
+      "novel_watchlist"
+    ],
+    "notes": ""
+  },
+  "created_at": "2026-03-20T17:17:13.640285+00:00",
+  "summary": {
+    "total_evaluated": 50,
+    "total_shortlist": 20,
+    "decisions": {
+      "needs_manual_review": 20
+    },
+    "top_reasons": {
+      "moderate_frontier_score": 20,
+      "good_calibration_support": 20,
+      "good_evidence_coverage": 20,
+      "high_exotic": 20,
+      "good_structure_coverage": 20,
+      "known_material_penalty": 20
+    },
+    "top_risks": {
+      "known_material": 20
+    }
+  },
+  "candidates": [
+    {
+      "formula": "Sr5B3BrO9",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.316,
+      "triage_score": 0.47986666666666666,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.01995,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.223,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "BaCaGaF7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3159,
+      "triage_score": 0.47984666666666664,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.61637,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.055,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Sr5B3ClO9",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.314,
+      "triage_score": 0.4794666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.07647,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.005,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "LiY3WO8",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3132,
+      "triage_score": 0.47930666666666666,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.19641,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 2.317,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Pr3Si2Cl3O7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3124,
+      "triage_score": 0.4791466666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.12844,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.919,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "NaCaLaF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3124,
+      "triage_score": 0.4791466666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.01408,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.581,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Li3AlF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3115,
+      "triage_score": 0.47896666666666665,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.41959,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 8.441,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "SmZrF7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3107,
+      "triage_score": 0.4788066666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.0858,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.404,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "EuTaO4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3104,
+      "triage_score": 0.47874666666666665,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.49592,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.039,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "LaF3",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3101,
+      "triage_score": 0.4786866666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.42304,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.245,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Sr3Hf2O7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.31,
+      "triage_score": 0.4786666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.5498,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.346,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Mg2Al4Si5O18",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3091,
+      "triage_score": 0.4784866666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.08251,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.77,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "TaPbF7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.309,
+      "triage_score": 0.4784666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.13399,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 5.045,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Ho3TaO7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3085,
+      "triage_score": 0.4783666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.69048,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 3.445,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "CaAlF5",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3081,
+      "triage_score": 0.4782866666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.92567,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 7.485,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "CaAl2SiO6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.308,
+      "triage_score": 0.47826666666666673,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.26753,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.974,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "LuTaO4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3078,
+      "triage_score": 0.4782266666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.53591,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.119,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "TbTaO4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3077,
+      "triage_score": 0.47820666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.52032,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.03,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Sr3Pr2B4O12",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3075,
+      "triage_score": 0.4781666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.17643,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.577,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Ba2VSi2O8",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3073,
+      "triage_score": 0.4781266666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.04411,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 0.96,
+          "evidence": "known"
+        }
+      }
+    }
+  ],
+  "top_candidates": [
+    {
+      "formula": "Sr5B3BrO9",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.316,
+      "triage_score": 0.47986666666666666,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.01995,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.223,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "BaCaGaF7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3159,
+      "triage_score": 0.47984666666666664,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.61637,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.055,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Sr5B3ClO9",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.314,
+      "triage_score": 0.4794666666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.07647,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.005,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "LiY3WO8",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3132,
+      "triage_score": 0.47930666666666666,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.19641,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 2.317,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Pr3Si2Cl3O7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3124,
+      "triage_score": 0.4791466666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.12844,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.919,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "NaCaLaF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3124,
+      "triage_score": 0.4791466666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.01408,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.581,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "Li3AlF6",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3115,
+      "triage_score": 0.47896666666666665,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.41959,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 8.441,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "SmZrF7",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3107,
+      "triage_score": 0.4788066666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.0858,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.404,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "EuTaO4",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3104,
+      "triage_score": 0.47874666666666665,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -3.49592,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 4.039,
+          "evidence": "known"
+        }
+      }
+    },
+    {
+      "formula": "LaF3",
+      "source_type": "known_corpus_candidate",
+      "frontier_score": 0.3101,
+      "triage_score": 0.4786866666666667,
+      "triage_decision": "needs_manual_review",
+      "next_action": "review_with_human",
+      "niche_tags": [
+        "novel_watchlist",
+        "known_reference"
+      ],
+      "reason_codes": [
+        "moderate_frontier_score",
+        "good_calibration_support",
+        "good_evidence_coverage",
+        "high_exotic",
+        "good_structure_coverage",
+        "known_material_penalty"
+      ],
+      "risk_flags": [
+        "known_material"
+      ],
+      "properties": {
+        "formation_energy": {
+          "value": -4.42304,
+          "evidence": "known"
+        },
+        "band_gap": {
+          "value": 6.245,
+          "evidence": "known"
+        }
+      }
+    }
+  ],
+  "disclaimer": "Niche campaign results use ML predictions (CGCNN, ALIGNN-Lite) + heuristic scoring. NOT DFT-validated. NOT experimentally confirmed. Candidates are ranked hypotheses, not confirmed discoveries."
+}

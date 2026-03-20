@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "1.8.0", "phase": "pre_dft_triage",
+    return {"status": "ok", "version": "2.0.0", "phase": "active_learning_orchestrator",
             "materials_count": db.count()}
 
 
@@ -1365,6 +1365,128 @@ def triage_get(run_id: str):
     if not result:
         raise HTTPException(404, "Triage run not found")
     return result
+
+
+# --- Niche Campaign endpoints ---
+
+class NicheRunRequest(BaseModel):
+    preset: Optional[str] = None
+    name: str = ""
+    source_mode: str = "corpus"
+    frontier_profile: str = "balanced_frontier"
+    triage_profile: str = "balanced_review_gate"
+    band_gap_target: Optional[float] = None
+    fe_max: float = 1.0
+    frontier_top_k: int = 50
+    triage_top_k: int = 20
+    pool_limit: int = 5000
+
+
+@app.get("/niche/presets")
+def niche_presets():
+    """Return available niche campaign presets."""
+    from ..niche.spec import ALL_NICHE_PRESETS
+    return {"presets": {n: fn().to_dict() for n, fn in ALL_NICHE_PRESETS.items()}}
+
+
+@app.get("/niche/status")
+def niche_status():
+    """List saved niche campaign runs."""
+    from ..niche.engine import NicheCampaignEngine
+    return {"runs": NicheCampaignEngine(_get_db()).list_runs()}
+
+
+@app.post("/niche/run")
+def niche_run(req: NicheRunRequest):
+    """Run a niche discovery campaign."""
+    from ..niche.engine import NicheCampaignEngine
+    from ..niche.spec import ALL_NICHE_PRESETS, NicheCampaignSpec
+    engine = NicheCampaignEngine(_get_db())
+    if req.preset and req.preset in ALL_NICHE_PRESETS:
+        spec = ALL_NICHE_PRESETS[req.preset]()
+    else:
+        spec = NicheCampaignSpec(
+            name=req.name or "custom", source_mode=req.source_mode,
+            frontier_profile=req.frontier_profile, triage_profile=req.triage_profile,
+            band_gap_target=req.band_gap_target, fe_max=req.fe_max,
+            frontier_top_k=req.frontier_top_k, triage_top_k=req.triage_top_k,
+            pool_limit=req.pool_limit)
+    spec.pool_limit = req.pool_limit
+    result, _ = engine.run_and_save(spec)
+    return result
+
+
+@app.get("/niche/{campaign_id}")
+def niche_get(campaign_id: str):
+    """Retrieve a saved niche campaign."""
+    from ..niche.engine import NicheCampaignEngine
+    result = NicheCampaignEngine(_get_db()).get_run(campaign_id)
+    if not result:
+        raise HTTPException(404, "Niche campaign not found")
+    return result
+
+
+@app.post("/niche/compare")
+def niche_compare(campaign_ids: List[str] = []):
+    """Compare multiple niche campaigns."""
+    from ..niche.engine import NicheCampaignEngine
+    engine = NicheCampaignEngine(_get_db())
+    results = []
+    for cid in campaign_ids:
+        r = engine.get_run(cid)
+        if r:
+            results.append(r)
+    if not results:
+        raise HTTPException(404, "No campaigns found")
+    return engine.compare(results)
+
+
+# --- Orchestrator endpoints ---
+
+@app.get("/orchestrator/status")
+def orchestrator_status():
+    """Return orchestrator overview — coverage stats and proposal count."""
+    from ..orchestrator.coverage import analyze_coverage
+    from ..orchestrator.learning import detect_error_hotspots, generate_retraining_proposals
+    db = _get_db()
+    cov = analyze_coverage(db, limit=5000)
+    hotspots = detect_error_hotspots()
+    proposals = generate_retraining_proposals(hotspots)
+    return {
+        "corpus_size": cov.total_materials,
+        "elements_covered": cov.total_elements_seen,
+        "spacegroups_covered": cov.total_spacegroups_seen,
+        "error_hotspots": len(hotspots),
+        "retraining_proposals": len(proposals),
+        "sparse_regions": len(cov.sparse_regions),
+    }
+
+
+@app.post("/orchestrator/run")
+def orchestrator_run():
+    """Run full orchestrator analysis and generate report."""
+    from ..orchestrator.report import generate_orchestrator_report
+    return generate_orchestrator_report(_get_db())
+
+
+@app.get("/orchestrator/coverage")
+def orchestrator_coverage():
+    """Get chemical space coverage analysis."""
+    from ..orchestrator.coverage import analyze_coverage, identify_exotic_niches
+    db = _get_db()
+    cov = analyze_coverage(db, limit=10000)
+    niches = identify_exotic_niches(cov)
+    return {"coverage": cov.to_dict(), "exotic_niches": niches}
+
+
+@app.get("/orchestrator/retraining-proposals")
+def orchestrator_proposals():
+    """Get current retraining proposals based on error analysis."""
+    from ..orchestrator.learning import detect_error_hotspots, generate_retraining_proposals
+    hotspots = detect_error_hotspots()
+    proposals = generate_retraining_proposals(hotspots)
+    return {"hotspots": [h.to_dict() for h in hotspots],
+            "proposals": [p.to_dict() for p in proposals]}
 
 
 # --- Analytics endpoints ---
