@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.A (v1.4.0)**
+> **Document status: Active implementation — Phase IV.B (v1.5.0)**
 > Last updated: 2026-03-18
 
 ---
@@ -421,7 +421,13 @@ Cosine similarity, brute-force scan (sufficient for <50K materials).
 - 16 dedicated tests + all existing 514 tests (530 total)
 - Next: Phase IV.B — Band Gap ladder
 
-### Phase IV.B — Band Gap Scaled Retraining (Planned)
+### Phase IV.B — Band Gap Scaled Retraining (Current) ✅
+- Training ladder: 6 rungs (5K→10K→20K CGCNN+ALIGNN→40K→76K) for band_gap
+- Best model: **rung_20k ALIGNN-Lite** — MAE=0.3422, R²=0.707 (promoted to production)
+- ALIGNN-Lite outperforms CGCNN at 20K for band_gap (0.3422 vs 0.3931)
+- Full corpus (76K) did not improve MAE — same pattern as formation_energy
+- CTO Decision: PROMOTE_MID_SCALE_MODEL (ALIGNN-Lite 20K)
+- 9 new tests + all existing tests (539 total)
 
 ### Phase V — Physics-Based Screening (Planned)
 - Phonon-based thermal stability (phonopy or ML surrogate)

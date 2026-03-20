@@ -1,39 +1,5 @@
 [
   {
-    "model": "alignn_lite",
-    "target": "band_gap",
-    "dataset_size": 2000,
-    "train_size": 1600,
-    "val_size": 200,
-    "test_size": 200,
-    "epochs": 40,
-    "best_epoch": 39,
-    "seed": 42,
-    "test_mae": 0.4022,
-    "test_rmse": 0.7849,
-    "test_r2": 0.7096,
-    "training_time_sec": 463.9,
-    "checkpoint": "alignn_band_gap_best.pt",
-    "created_at": "2026-03-18T17:47:40.572712+00:00"
-  },
-  {
-    "model": "cgcnn",
-    "target": "band_gap",
-    "dataset_size": 2000,
-    "train_size": 1600,
-    "val_size": 200,
-    "test_size": 200,
-    "epochs": 15,
-    "best_epoch": 6,
-    "seed": 42,
-    "test_mae": 0.4531,
-    "test_rmse": 0.8641,
-    "test_r2": 0.648,
-    "training_time_sec": 935.0,
-    "checkpoint": "cgcnn_band_gap_best.pt",
-    "created_at": "2026-03-18T17:01:26.934426+00:00"
-  },
-  {
     "model": "cgcnn",
     "target": "formation_energy",
     "dataset_size": 20000,
@@ -52,5 +18,25 @@
     "rung_name": "rung_20k",
     "promoted_for_production": true,
     "ladder_phase": "IV.A"
+  },
+  {
+    "model": "alignn_lite",
+    "target": "band_gap",
+    "dataset_size": 20000,
+    "train_size": 16000,
+    "val_size": 2000,
+    "test_size": 2000,
+    "epochs": 20,
+    "best_epoch": 17,
+    "seed": 42,
+    "test_mae": 0.3422,
+    "test_rmse": 0.7362,
+    "test_r2": 0.707,
+    "training_time_sec": 2642.2,
+    "checkpoint": "alignn_band_gap_best.pt",
+    "created_at": "2026-03-19T22:10:07.499450+00:00",
+    "rung_name": "rung_20k",
+    "promoted_for_production": true,
+    "ladder_phase": "IV.B"
   }
 ]

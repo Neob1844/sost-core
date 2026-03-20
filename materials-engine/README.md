@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.A — Scaled Retraining Ladder (v1.4.0)**
+> **Current phase: IV.B — Band Gap Scaled Retraining (v1.5.0)**
 
 ## What exists (implemented and tested)
 
@@ -18,9 +18,9 @@
 - **ML-ready**: 100% — all have the fields needed for prediction and scoring
 
 ### ML Prediction (Phase II → IV.A)
-- **Formation energy**: CGCNN on 20K samples — **MAE=0.1528, R²=0.9499** (promoted via training ladder)
-- **Band gap**: CGCNN/ALIGNN-Lite on 2K samples (Phase IV.B target)
-- **Training ladder**: 5 rungs (5K→10K→20K→40K→76K) — 20K is optimal cost/quality tradeoff
+- **Formation energy**: CGCNN on 20K samples — **MAE=0.1528, R²=0.9499** (Phase IV.A)
+- **Band gap**: ALIGNN-Lite on 20K samples — **MAE=0.3422, R²=0.707** (Phase IV.B)
+- **Training ladder**: 5 rungs (5K→10K→20K→40K→76K) per target — 20K optimal for both
 - **`/predict`**: Real GNN inference from CIF input
 - **`/similar`**: 104-dim fingerprint similarity
 
@@ -120,7 +120,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (530 tests)
+# Run all tests (539 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -196,7 +196,7 @@ curl http://localhost:8000/generation/presets
 | POST | /intelligence/dossier/from-evaluation | Production |
 | GET | /intelligence/dossier/{id} | Production |
 
-## Tests (530 total)
+## Tests (539 total)
 
 | File | Tests | Coverage |
 |------|-------|----------|

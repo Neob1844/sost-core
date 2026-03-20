@@ -1,0 +1,17 @@
+{
+  "model": "cgcnn",
+  "target": "band_gap",
+  "dataset_size": 10000,
+  "train_size": 8000,
+  "val_size": 1000,
+  "test_size": 1000,
+  "epochs": 20,
+  "best_epoch": 19,
+  "seed": 42,
+  "test_mae": 0.3735,
+  "test_rmse": 0.7009,
+  "test_r2": 0.7638,
+  "training_time_sec": 911.8,
+  "checkpoint": "cgcnn_band_gap_best.pt",
+  "created_at": "2026-03-19T20:32:47.982373+00:00"
+}
