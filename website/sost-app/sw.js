@@ -1,10 +1,8 @@
 // SOST Protocol — Service Worker
-const CACHE_NAME = 'sost-app-v1';
+const CACHE_NAME = 'sost-app-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './css/app.css',
-  './js/app.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -24,14 +22,17 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Network-first for RPC calls
-  if (url.pathname.endsWith('/rpc') || e.request.method === 'POST') {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
+  // Network-first for RPC and iframe pages
+  if (url.pathname.endsWith('/rpc') || e.request.method === 'POST' ||
+      url.pathname.includes('sost-explorer') || url.pathname.includes('sost-wallet')) {
+    e.respondWith(fetch(e.request).catch(() =>
+      caches.match(e.request).then(r => r || new Response('Offline', {status: 503}))
+    ));
     return;
   }
-  // Cache-first for static assets
+  // Cache-first for app shell
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
     if (resp.ok) { const cl = resp.clone(); caches.open(CACHE_NAME).then(c => c.put(e.request, cl)); }
     return resp;
-  }).catch(() => new Response('Offline', {status:503}))));
+  }).catch(() => new Response('Offline', {status: 503}))));
 });

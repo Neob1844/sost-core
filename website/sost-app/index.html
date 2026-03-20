@@ -11,175 +11,47 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>SOST Protocol</title>
-<link rel="stylesheet" href="css/app.css">
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" crossorigin></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',monospace}
+.app{display:flex;flex-direction:column;height:100%}
+.app-frames{flex:1;position:relative}
+.app-frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
+.app-frames iframe.hidden{display:none}
+.app-nav{display:flex;height:56px;background:#111;border-top:1px solid #222;
+  padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;color:#666;transition:color .2s;font-size:10px;letter-spacing:1px;
+  -webkit-tap-highlight-color:transparent;min-height:52px;user-select:none}
+.nav-tab.active{color:#cc0000}
+.nav-tab .icon{font-size:22px;margin-bottom:2px}
+.nav-tab.active .icon{filter:drop-shadow(0 0 6px rgba(204,0,0,.6))}
+</style>
 </head>
 <body>
-
-<!-- HEADER -->
-<header class="app-header">
-  <span class="app-logo">Σ</span>
-  <span class="app-title">SOST</span>
-  <div class="app-status">
-    <span id="statusDot" class="status-dot offline"></span>
-    <span id="statusText">—</span>
+<div class="app">
+  <div class="app-frames">
+    <iframe id="explorer-frame" src="/sost-explorer.html"></iframe>
+    <iframe id="wallet-frame" src="/sost-wallet.html" class="hidden"></iframe>
   </div>
-  <span class="app-settings" id="settingsBtn">⚙</span>
-</header>
-
-<!-- CONTENT -->
-<main class="app-content">
-
-  <!-- ==================== EXPLORER TAB ==================== -->
-  <div id="tab-explorer" class="tab-content active">
-
-    <!-- Search -->
-    <div class="search-bar">
-      <input class="input" id="searchInput" placeholder="Block height, hash, or address..." autocomplete="off">
-      <button class="btn" id="searchBtn">🔍</button>
+  <nav class="app-nav">
+    <div class="nav-tab active" onclick="switchTab('explorer')">
+      <span class="icon">⛓</span>EXPLORER
     </div>
-    <div id="searchResults"></div>
-
-    <!-- Stats Grid -->
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-label">LAST BLOCK</div>
-        <div class="stat-val" id="exHeight" style="color:var(--green)">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">DIFFICULTY</div>
-        <div class="stat-val" id="exDiff" style="color:var(--cyan)">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">SUPPLY</div>
-        <div class="stat-val" id="exSupply" style="color:var(--gold)">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">PEERS</div>
-        <div class="stat-val" id="exPeers" style="color:var(--text2)">—</div>
-      </div>
+    <div class="nav-tab" onclick="switchTab('wallet')">
+      <span class="icon">💰</span>WALLET
     </div>
-
-    <!-- Refresh -->
-    <button class="btn" id="refreshExplorer" style="width:100%;margin-bottom:12px">↻ Refresh</button>
-
-    <!-- Recent Blocks -->
-    <div class="card">
-      <div class="card-label">RECENT BLOCKS</div>
-      <div id="blockList" style="max-height:400px;overflow-y:auto">
-        <div class="notice">Loading...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== WALLET TAB ==================== -->
-  <div id="tab-wallet" class="tab-content">
-
-    <!-- No wallet state -->
-    <div id="walletEmpty">
-      <div class="card" style="text-align:center;padding:40px 20px">
-        <div style="font-size:40px;margin-bottom:16px">💰</div>
-        <div style="font-size:16px;font-weight:600;margin-bottom:8px">No Wallet Loaded</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:20px">
-          Use the full wallet at <a href="../sost-wallet.html" style="color:var(--cyan)">SOST Wallet</a> to generate, import, or manage your wallet. This app reads the wallet from your browser storage.
-        </div>
-        <a href="../sost-wallet.html" class="btn btn-primary" style="text-decoration:none">Open Full Wallet →</a>
-      </div>
-    </div>
-
-    <!-- Wallet loaded state -->
-    <div id="walletMain" class="hidden">
-
-      <!-- Balance -->
-      <div class="card">
-        <div class="card-label">ADDRESS</div>
-        <div id="wAddr" style="font-size:10px;color:var(--cyan);word-break:break-all;margin-bottom:12px">—</div>
-        <div class="balance-big">
-          <span class="balance-amount" id="wBalance">0.00000000</span>
-          <span class="balance-unit">SOST</span>
-        </div>
-        <div id="wBreakdown" class="balance-breakdown hidden"></div>
-        <div id="wMaturity" class="hidden" style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px"></div>
-        <div class="btn-group">
-          <a href="../sost-wallet.html" class="btn" style="text-decoration:none">Send</a>
-          <button class="btn" onclick="document.getElementById('recvSection').classList.toggle('hidden')">Receive</button>
-          <button class="btn" id="refreshWallet">Refresh</button>
-        </div>
-      </div>
-
-      <!-- Receive (toggle) -->
-      <div id="recvSection" class="card hidden">
-        <div class="card-label">RECEIVE</div>
-        <div class="qr-container">
-          <canvas id="wQr"></canvas>
-        </div>
-        <div style="font-size:10px;color:var(--cyan);word-break:break-all;text-align:center;margin:8px 0" id="wAddrRecv">—</div>
-        <button class="btn" id="copyBtn" style="width:100%">📋 Copy Address</button>
-      </div>
-
-      <!-- UTXOs -->
-      <div class="card">
-        <div class="card-label">UTXOs</div>
-        <div id="wUtxoList" style="max-height:300px;overflow-y:auto">
-          <div class="notice">Loading...</div>
-        </div>
-      </div>
-
-      <!-- Full wallet link -->
-      <a href="../sost-wallet.html" class="btn" style="width:100%;text-decoration:none;text-align:center;margin-top:8px">Open Full Wallet (Send, Import, 2FA, Backup) →</a>
-    </div>
-  </div>
-
-</main>
-
-<!-- BOTTOM NAV -->
-<nav class="app-nav">
-  <div class="nav-tab active" data-tab="explorer">
-    <span class="nav-icon">⛓</span>
-    EXPLORER
-  </div>
-  <div class="nav-tab" data-tab="wallet">
-    <span class="nav-icon">💰</span>
-    WALLET
-  </div>
-</nav>
-
-<!-- SETTINGS OVERLAY -->
-<div id="settingsOverlay" class="settings-overlay">
-  <div class="settings-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <span style="font-size:16px;font-weight:600">Settings</span>
-      <span id="settingsClose" style="font-size:24px;cursor:pointer;padding:8px">✕</span>
-    </div>
-    <div class="card">
-      <div class="card-label">CONNECTION</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">RPC Endpoint: <span style="color:var(--cyan)">/rpc</span> (relative)</div>
-      <div style="font-size:12px;color:var(--text2)">Read-only calls: no auth required<br>Send transactions: auth via full wallet</div>
-    </div>
-    <div class="card">
-      <div class="card-label">ABOUT</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.8">
-        <b>SOST Protocol</b> v1.8.0<br>
-        Sovereign CPU-friendly proof-of-work<br>
-        ConvergenceX + cASERT difficulty<br>
-        48h half-life · 288-block observation<br><br>
-        <a href="../index.html" style="color:var(--cyan)">Website</a> ·
-        <a href="../sost-explorer.html" style="color:var(--cyan)">Full Explorer</a> ·
-        <a href="../sost-wallet.html" style="color:var(--cyan)">Full Wallet</a> ·
-        <a href="../sost-whitepaper.html" style="color:var(--cyan)">Whitepaper</a>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-label">NETWORK</div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.8">
-        Gold Vault: sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d<br>
-        PoPC Pool: sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f<br>
-        Genesis: 2026-03-15 18:00:00 UTC
-      </div>
-    </div>
-  </div>
+  </nav>
 </div>
-
-<script src="js/app.js"></script>
+<script>
+function switchTab(tab){
+  document.getElementById('explorer-frame').classList.toggle('hidden',tab!=='explorer');
+  document.getElementById('wallet-frame').classList.toggle('hidden',tab!=='wallet');
+  document.querySelectorAll('.nav-tab').forEach(function(el,i){
+    el.classList.toggle('active',i===(tab==='explorer'?0:1));
+  });
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+</script>
 </body>
 </html>
