@@ -559,6 +559,7 @@
     <div id="view-dashboard" class="view hidden">
       <button class="btn" onclick="showView('welcome')" style="margin-bottom:16px;font-size:12px;">&larr; Back to Wallet</button>
       <h2><span class="accent">Dashboard</span></h2>
+      <div id="watchOnlyBadge" style="display:none;background:#f59e0b;color:#000;padding:6px 14px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px;margin:8px 0;text-align:center">&#x1F441; WATCH ONLY — Send disabled</div>
       <p class="subtitle" id="dashAddr">Not loaded</p>
 
       <div class="card">
@@ -1405,6 +1406,17 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
 
 // Expose to global scope for onclick handlers
 window.showView = function(name) {
+  // Watch-only restrictions: block Send, Backup, 2FA
+  if (wallet && wallet.watchOnly && (name === 'send' || name === 'backup' || name === 'totp')) {
+    const msg = name === 'send'
+      ? 'Watch-only wallet cannot send transactions. Import the private key to enable sending.'
+      : name === 'backup'
+      ? 'Nothing to backup in watch-only mode. Import the private key first.'
+      : '2FA is not available for watch-only wallets.';
+    alert(msg);
+    return;
+  }
+
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const view = document.getElementById('view-' + name);
   if (view) view.classList.remove('hidden');
@@ -1413,7 +1425,12 @@ window.showView = function(name) {
   const btn = document.querySelector(`.sidebar-btn[data-view="${name}"]`);
   if (btn) btn.classList.add('active');
 
-  if (name === 'dashboard' && wallet) refreshBalance();
+  // Show/hide watch-only badge on dashboard
+  if (name === 'dashboard' && wallet) {
+    refreshBalance();
+    const badge = document.getElementById('watchOnlyBadge');
+    if (badge) badge.style.display = wallet.watchOnly ? 'block' : 'none';
+  }
   if (name === 'receive' && wallet) updateReceiveView();
   if (name === 'send' && wallet) estimateFee();
   if (name === 'send') {
@@ -1422,6 +1439,18 @@ window.showView = function(name) {
     else totpGroup.classList.add('hidden');
   }
   if (name === 'totp') updateTotpView();
+
+  // Grey out restricted sidebar buttons for watch-only
+  if (wallet && wallet.watchOnly) {
+    document.querySelectorAll('.sidebar-btn[data-view="send"],.sidebar-btn[data-view="backup"],.sidebar-btn[data-view="totp"]').forEach(b => {
+      b.style.opacity = '0.3';
+      b.style.pointerEvents = 'auto'; // still clickable to show message
+    });
+  } else {
+    document.querySelectorAll('.sidebar-btn[data-view="send"],.sidebar-btn[data-view="backup"],.sidebar-btn[data-view="totp"]').forEach(b => {
+      b.style.opacity = '';
+    });
+  }
 
   closeWalletSidebar(); // auto-close on mobile
   resetLockTimer();
