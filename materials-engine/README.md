@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.L — Selective Band Gap Retraining + Promotion Decision (v2.5.0)**
+> **Current phase: IV.M — Stratified/Curriculum Band Gap Retraining (v2.6.0)**
 
 ## What exists (implemented and tested)
 
@@ -160,6 +160,18 @@
 - **Production model UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422) remains in production
 - **API**: `GET /selective-retraining/band-gap/status`, `GET /selective-retraining/band-gap/challengers`, `GET /selective-retraining/band-gap/comparison`, `GET /selective-retraining/band-gap/decision`
 
+### Stratified/Curriculum Band Gap Retraining (Phase IV.M)
+- **What it is**: Trained 3 challengers using stratified/curriculum strategies to fix IV.L's pure-subset failure
+- **Challengers trained** (REAL, ~98 min total):
+  - `bg_stratified_20k` (50% random + 30% hard + 20% exotic): MAE=0.6547, R²=0.6437
+  - `bg_curriculum_20k` (phase1 random → phase2 hard finetune): MAE=0.6287, R²=0.4697
+  - `bg_stratified_balanced_30k` (6-stratum mix, 27K materials): MAE=0.6771, R²=0.6273
+- **Production still wins**: ALIGNN-Lite 20K random: MAE=0.3422, R²=0.707
+- **Decision: HOLD** — stratified/curriculum challengers still worse than random baseline
+- **Deep lesson**: The production model's random 20K sample is naturally well-distributed because band_gap=0 (metals) dominates 70% of the corpus. Any reweighting toward hard cases distorts this distribution, and the model struggles to learn the dominant pattern. The ALIGNN-Lite architecture at 15 epochs cannot compensate.
+- **Implication**: Improving BG MAE beyond 0.34 likely requires architectural changes (deeper model, more epochs, or explicit multi-head approach for metals vs insulators), not just data selection.
+- **API**: `GET /stratified-retraining/band-gap/status`, `/challengers`, `/comparison`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -180,7 +192,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (772 tests)
+# Run all tests (794 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -281,3 +293,4 @@ curl http://localhost:8000/generation/presets
 | test_cod_tiers.py | 46 | Tier classification, COD pilot, dedup, value report, API |
 | test_retraining_prep.py | 37 | Hard-case mining, difficulty tiers, datasets, priority, API |
 | test_selective_retraining.py | 21 | Challenger comparison, promotion rules, bucket analysis, API |
+| test_stratified_retraining.py | 22 | Stratified sampler, curriculum, comparison, promotion, API |

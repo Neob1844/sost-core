@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.5.0", "phase": "selective_retraining_bg",
+    return {"status": "ok", "version": "2.6.0", "phase": "stratified_retraining_bg",
             "materials_count": db.count()}
 
 
@@ -1633,6 +1633,63 @@ def cod_recommendation():
     path = _os.path.join("artifacts/corpus_sources", "cod_recommendation.json")
     if not _os.path.exists(path):
         return {"recommendation": "no_cod_pilot_run_yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+# --- Stratified Retraining (Band Gap) endpoints ---
+
+@app.get("/stratified-retraining/band-gap/status")
+def stratified_retraining_bg_status():
+    """Return stratified retraining status."""
+    import os as _os
+    d = "artifacts/stratified_retraining_band_gap"
+    challengers = []
+    if _os.path.isdir(d):
+        for sub in sorted(_os.listdir(d)):
+            rpath = _os.path.join(d, sub, "result.json")
+            if _os.path.exists(rpath):
+                challengers.append(sub)
+    has_decision = _os.path.exists(_os.path.join(d, "promotion_decision.json"))
+    return {"target": "band_gap", "phase": "IV.M",
+            "challengers_trained": len(challengers),
+            "challenger_names": challengers,
+            "decision_made": has_decision}
+
+
+@app.get("/stratified-retraining/band-gap/challengers")
+def stratified_retraining_bg_challengers():
+    """Return all stratified challenger results."""
+    import os as _os, json as _json
+    d = "artifacts/stratified_retraining_band_gap"
+    results = []
+    if _os.path.isdir(d):
+        for sub in sorted(_os.listdir(d)):
+            rpath = _os.path.join(d, sub, "result.json")
+            if _os.path.exists(rpath):
+                with open(rpath) as f:
+                    results.append(_json.load(f))
+    return {"challengers": results}
+
+
+@app.get("/stratified-retraining/band-gap/comparison")
+def stratified_retraining_bg_comparison():
+    """Return comparison table."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/stratified_retraining_band_gap", "comparison_table.json")
+    if not _os.path.exists(path):
+        return {"comparison": [], "note": "Not generated yet"}
+    with open(path) as f:
+        return {"comparison": _json.load(f)}
+
+
+@app.get("/stratified-retraining/band-gap/decision")
+def stratified_retraining_bg_decision():
+    """Return promotion decision."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/stratified_retraining_band_gap", "promotion_decision.json")
+    if not _os.path.exists(path):
+        return {"decision": "no_decision_yet"}
     with open(path) as f:
         return _json.load(f)
 
