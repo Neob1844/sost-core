@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.M — Stratified/Curriculum Band Gap Retraining (v2.6.0)**
+> **Current phase: IV.N — Hierarchical Band Gap Modeling (v2.7.0)**
 
 ## What exists (implemented and tested)
 
@@ -172,6 +172,18 @@
 - **Implication**: Improving BG MAE beyond 0.34 likely requires architectural changes (deeper model, more epochs, or explicit multi-head approach for metals vs insulators), not just data selection.
 - **API**: `GET /stratified-retraining/band-gap/status`, `/challengers`, `/comparison`, `/decision`
 
+### Hierarchical Band Gap Modeling (Phase IV.N)
+- **What it is**: Metal gate classifier + non-metal regressor pipeline to handle the 70/30 metal/non-metal imbalance
+- **Metal gate (CGCNN)**: Accuracy=90.8%, F1_metal=0.94, F1_nonmetal=0.81 (1,421s training)
+- **Non-metal regressor (ALIGNN-Lite)**: MAE=0.7609, R²=0.6378 on 19,879 non-metal materials (1,847s)
+- **Combined pipeline MAE: 0.2793** vs production 0.3422 — **18.4% improvement**
+- **Bucket results**: Metals massively improved (0.3154→0.0048), wide-gap improved (1.12→0.91)
+- **Regression**: Narrow-gap 0.05-1.0 eV regressed (+0.40 MAE) — gate misclassifications hurt this range
+- **Decision: WATCHLIST** — clear overall improvement but narrow-gap regression needs fixing
+- **Next step**: Improve gate recall for narrow-gap semiconductors, or add 3rd tier for narrow-gap
+- **Production model UNCHANGED** pending regression fix
+- **API**: `GET /hierarchical-band-gap/status`, `/gate`, `/regressor`, `/comparison`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -192,7 +204,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (794 tests)
+# Run all tests (814 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -294,3 +306,4 @@ curl http://localhost:8000/generation/presets
 | test_retraining_prep.py | 37 | Hard-case mining, difficulty tiers, datasets, priority, API |
 | test_selective_retraining.py | 21 | Challenger comparison, promotion rules, bucket analysis, API |
 | test_stratified_retraining.py | 22 | Stratified sampler, curriculum, comparison, promotion, API |
+| test_hierarchical_bandgap.py | 20 | Metal gate, regressor, pipeline, promotion rules, API |

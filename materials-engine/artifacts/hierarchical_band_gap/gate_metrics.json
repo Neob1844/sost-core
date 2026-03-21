@@ -1,0 +1,23 @@
+{
+  "architecture": "cgcnn_gate",
+  "threshold": 0.05,
+  "dataset_size": 20000,
+  "train_size": 16000,
+  "test_size": 2000,
+  "accuracy": 0.908,
+  "precision_metal": 0.9372,
+  "recall_metal": 0.9419,
+  "f1_metal": 0.9394,
+  "precision_nonmetal": 0.8162,
+  "recall_nonmetal": 0.8028,
+  "f1_nonmetal": 0.8095,
+  "confusion_matrix": {
+    "TP": 391,
+    "TN": 1425,
+    "FP": 88,
+    "FN": 96
+  },
+  "training_time_sec": 1421.0,
+  "checkpoint": "artifacts/hierarchical_band_gap/metal_gate_best.pt",
+  "created_at": "2026-03-21T08:27:04+00:00"
+}

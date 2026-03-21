@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.6.0", "phase": "stratified_retraining_bg",
+    return {"status": "ok", "version": "2.7.0", "phase": "hierarchical_bandgap",
             "materials_count": db.count()}
 
 
@@ -1633,6 +1633,65 @@ def cod_recommendation():
     path = _os.path.join("artifacts/corpus_sources", "cod_recommendation.json")
     if not _os.path.exists(path):
         return {"recommendation": "no_cod_pilot_run_yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+# --- Hierarchical Band Gap endpoints ---
+
+@app.get("/hierarchical-band-gap/status")
+def hierarchical_bg_status():
+    """Return hierarchical band_gap model status."""
+    import os as _os
+    d = "artifacts/hierarchical_band_gap"
+    has_gate = _os.path.exists(_os.path.join(d, "gate_metrics.json"))
+    has_reg = _os.path.exists(_os.path.join(d, "nonmetal_regressor.json"))
+    has_dec = _os.path.exists(_os.path.join(d, "promotion_decision.json"))
+    return {"target": "band_gap", "phase": "IV.N",
+            "gate_trained": has_gate, "regressor_trained": has_reg,
+            "decision_made": has_dec}
+
+
+@app.get("/hierarchical-band-gap/gate")
+def hierarchical_bg_gate():
+    """Return metal gate classifier metrics."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap", "gate_metrics.json")
+    if not _os.path.exists(path):
+        return {"gate": None, "note": "Not trained yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap/regressor")
+def hierarchical_bg_regressor():
+    """Return non-metal regressor metrics."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap", "nonmetal_regressor.json")
+    if not _os.path.exists(path):
+        return {"regressor": None, "note": "Not trained yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap/comparison")
+def hierarchical_bg_comparison():
+    """Return pipeline comparison."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap", "pipeline_comparison.json")
+    if not _os.path.exists(path):
+        return {"comparison": None}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap/decision")
+def hierarchical_bg_decision():
+    """Return promotion decision."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap", "promotion_decision.json")
+    if not _os.path.exists(path):
+        return {"decision": "no_decision_yet"}
     with open(path) as f:
         return _json.load(f)
 

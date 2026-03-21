@@ -1,0 +1,42 @@
+[
+  {
+    "bucket": "0.0-0.05",
+    "production_mae": 0.3154,
+    "hierarchical_mae": 0.0048,
+    "delta": -0.3106,
+    "improved": true,
+    "count": 129
+  },
+  {
+    "bucket": "0.05-1.0",
+    "production_mae": 0.509,
+    "hierarchical_mae": 0.9067,
+    "delta": 0.3977,
+    "improved": false,
+    "count": 23
+  },
+  {
+    "bucket": "1.0-3.0",
+    "production_mae": 0.8735,
+    "hierarchical_mae": 0.9067,
+    "delta": 0.0332,
+    "improved": false,
+    "count": 29
+  },
+  {
+    "bucket": "3.0-6.0",
+    "production_mae": 1.1223,
+    "hierarchical_mae": 0.9067,
+    "delta": -0.2156,
+    "improved": true,
+    "count": 17
+  },
+  {
+    "bucket": "6.0+",
+    "production_mae": 0.9221,
+    "hierarchical_mae": 0.9067,
+    "delta": -0.0154,
+    "improved": true,
+    "count": 2
+  }
+]

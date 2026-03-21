@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.M (v2.6.0)**
+> **Document status: Active implementation — Phase IV.N (v2.7.0)**
 > Last updated: 2026-03-21
 
 ---
@@ -638,6 +638,18 @@ Predict property degradation over time under operating conditions — thermal cy
 - Combined with IV.L: 6 challengers tried across 2 phases, none beat production
 - Total retraining compute: ~163 minutes of GPU-free CPU training
 - 4 API endpoints + 22 tests (794 total), version 2.6.0
+
+### Phase IV.N — Hierarchical Band Gap Modeling ✅
+- Metal gate (CGCNN binary classifier): 90.8% accuracy, F1_metal=0.94, F1_nonmetal=0.81
+- Non-metal regressor (ALIGNN-Lite): MAE=0.7609 on 19,879 non-metals
+- **Combined pipeline MAE=0.2793** vs production 0.3422 (**-18.4%**)
+- Metal bucket: 0.3154 → 0.0048 (massive improvement — trivial case correctly handled)
+- Wide-gap bucket: 1.1223 → 0.9067 (improved)
+- **Regression: narrow-gap 0.05-1.0 eV: 0.509 → 0.907** (gate misclassifies some semiconductors as metals)
+- Decision: **WATCHLIST** — overall improvement proven, but narrow-gap regression blocks promotion
+- **Key insight**: Hierarchical approach IS the right architecture direction. Just needs better gate for borderline materials.
+- Production model unchanged (ALIGNN-Lite 20K, MAE=0.3422)
+- 5 API endpoints + 20 tests (814 total), version 2.7.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)
