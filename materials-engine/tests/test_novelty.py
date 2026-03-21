@@ -524,7 +524,7 @@ class TestAPI:
     def test_status_version(self):
         client = self._client()
         d = client.get("/status").json()
-        assert d["version"] == "2.6.0"
+        assert d["version"] == "2.7.0"
 
 
 if __name__ == "__main__":
