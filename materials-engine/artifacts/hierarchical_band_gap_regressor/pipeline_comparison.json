@@ -1,0 +1,89 @@
+{
+  "entries": [
+    {
+      "name": "production_alignn_lite_20k",
+      "role": "production",
+      "regressor_mae": null,
+      "pipeline_mae": 0.3422,
+      "pipeline_rmse": 0.7362,
+      "pipeline_r2": 0.707,
+      "bucket_mae": {
+        "0.0-0.05": 0.3154,
+        "0.05-1.0": 0.509,
+        "1.0-3.0": 0.8735,
+        "3.0-6.0": 1.1223,
+        "6.0+": 0.9221
+      }
+    },
+    {
+      "name": "hierarchical_v1_regressor",
+      "role": "baseline_hierarchical",
+      "regressor_mae": 0.7609,
+      "pipeline_mae": 0.2793,
+      "pipeline_rmse": 0.6009,
+      "pipeline_r2": 0.7609,
+      "bucket_mae": {
+        "0.0-0.05": 0.0048,
+        "0.05-1.0": 0.9067,
+        "1.0-3.0": 0.9067,
+        "3.0-6.0": 0.9067,
+        "6.0+": 0.9067
+      }
+    },
+    {
+      "name": "nonmetal_longer_train",
+      "role": "challenger",
+      "regressor_mae": 0.7369,
+      "pipeline_mae": 0.2737,
+      "pipeline_rmse": 0.5888,
+      "pipeline_r2": 0.7657,
+      "bucket_mae": {
+        "0.0-0.05": 0.0048,
+        "0.05-1.0": 0.8874,
+        "1.0-3.0": 0.8874,
+        "3.0-6.0": 0.8874,
+        "6.0+": 0.8874
+      },
+      "epochs": 25,
+      "lr": 0.005,
+      "training_time_sec": 3083.5
+    },
+    {
+      "name": "nonmetal_lower_lr",
+      "role": "challenger",
+      "regressor_mae": 0.6654,
+      "pipeline_mae": 0.2568,
+      "pipeline_rmse": 0.5525,
+      "pipeline_r2": 0.7801,
+      "bucket_mae": {
+        "0.0-0.05": 0.0048,
+        "0.05-1.0": 0.83,
+        "1.0-3.0": 0.83,
+        "3.0-6.0": 0.83,
+        "6.0+": 0.83
+      },
+      "epochs": 20,
+      "lr": 0.002,
+      "training_time_sec": 2634.4
+    },
+    {
+      "name": "nonmetal_longer_lower_lr",
+      "role": "challenger",
+      "regressor_mae": 0.6679,
+      "pipeline_mae": 0.2574,
+      "pipeline_rmse": 0.5538,
+      "pipeline_r2": 0.7796,
+      "bucket_mae": {
+        "0.0-0.05": 0.0048,
+        "0.05-1.0": 0.832,
+        "1.0-3.0": 0.832,
+        "3.0-6.0": 0.832,
+        "6.0+": 0.832
+      },
+      "epochs": 30,
+      "lr": 0.002,
+      "training_time_sec": 4020.7
+    }
+  ],
+  "created_at": "2026-03-21T12:35:33.866974+00:00"
+}

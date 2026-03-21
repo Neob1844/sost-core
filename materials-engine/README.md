@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.O — Gate Calibration + Borderline Routing (v2.8.0)**
+> **Current phase: IV.P — Non-Metal Regressor Improvement (v2.9.0)**
 
 ## What exists (implemented and tested)
 
@@ -196,6 +196,20 @@
 - **Production model UNCHANGED** (ALIGNN-Lite 20K, MAE=0.3422)
 - **API**: `GET /hierarchical-band-gap-calibration/status`, `/thresholds`, `/routing`, `/comparison`, `/decision`
 
+### Non-Metal Regressor Improvement (Phase IV.P)
+- **What it is**: Improve the non-metal regressor (IV.O identified it as the single remaining blocker)
+- **3 challengers trained** (REAL, ~162 min total):
+  - `nonmetal_longer_train` (25ep, lr=0.005): MAE=0.7369 (Δ-0.024 vs v1)
+  - `nonmetal_lower_lr` (20ep, lr=0.002): **MAE=0.6654** (Δ-0.096 vs v1, **best**)
+  - `nonmetal_longer_lower_lr` (30ep, lr=0.002): MAE=0.6679 (overfits after ep10)
+- **Key finding**: Lower learning rate (0.002 vs 0.005) is the main driver. More epochs has diminishing returns.
+- **Best pipeline MAE: 0.2568** (25.0% improvement over production 0.3422)
+- **Regressor progression**: 0.7609 (v1) → 0.6654 (v2) = **12.5% improvement**
+- **Decision: WATCHLIST** — overall improvement strong, narrow-gap bucket projection still elevated
+- **Note**: Bucket MAE projections are conservative estimates, not direct measurements. The actual narrow-gap performance may be better than projected.
+- **Production model UNCHANGED** (ALIGNN-Lite 20K, MAE=0.3422)
+- **API**: `GET /hierarchical-band-gap-regressor/status`, `/challengers`, `/comparison`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -216,7 +230,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (836 tests)
+# Run all tests (854 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -320,3 +334,4 @@ curl http://localhost:8000/generation/presets
 | test_stratified_retraining.py | 22 | Stratified sampler, curriculum, comparison, promotion, API |
 | test_hierarchical_bandgap.py | 20 | Metal gate, regressor, pipeline, promotion rules, API |
 | test_gate_calibration.py | 22 | Threshold sweep, routing policies, calibration, API |
+| test_regressor_improvement.py | 18 | Regressor challengers, pipeline comparison, promotion, API |
