@@ -15,7 +15,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
 
-/* SPLASH animations */
+/* SPLASH */
 #splash.out{opacity:0;pointer-events:none;transition:opacity .5s ease}
 #splash::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.02) 2px,rgba(0,255,136,.02) 4px);pointer-events:none;animation:scanFlicker 4s linear infinite}
 @keyframes scanFlicker{0%,100%{opacity:.5}50%{opacity:.8}}
@@ -31,39 +31,39 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes scanSweep{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
 @keyframes fadeIn{to{opacity:1}}
 
-/* APP layout */
+/* APP */
 #app{flex-direction:column;height:100%}
 .frames{flex:1;position:relative;overflow:hidden}
 .frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
 
-/* LOADING OVERLAY */
-.lov{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
+/* LOADING OVERLAY — logo spinner replaces pie chart */
+.lov{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
 .lov.gone{opacity:0;pointer-events:none}
-.pie{width:140px;height:140px;border-radius:50%;border:3px solid #333;position:relative;display:flex;align-items:center;justify-content:center;background:#222}
-.pie-fill{position:absolute;inset:3px;border-radius:50%;transition:background .5s ease}
-.pie-num{font-size:36px;color:#fff;font-weight:700;z-index:1;font-family:inherit}
-.lov-label{margin-top:18px;font-size:14px;letter-spacing:2px;font-weight:600;animation:pulse 1.5s ease infinite}
+.lov-logo{width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(204,0,0,.5));transition:transform .15s ease-out}
+.lov-num{font-size:28px;color:#fff;font-weight:700;font-family:inherit;margin-top:16px}
+.lov-label{margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;animation:pulse 1.5s ease infinite}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 .lov-label.ok{animation:none;opacity:1}
 
-/* NAV — 3 buttons */
+/* NAV — 4 buttons */
 .bar{display:flex;height:62px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
 .bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.12) 1px,rgba(0,0,0,.12) 2px);pointer-events:none;opacity:.5}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#555;transition:all .15s;font-size:11px;letter-spacing:2px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;user-select:none;position:relative}
-.nb .i{font-size:24px;margin-bottom:4px;transition:all .15s}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#555;transition:all .15s;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;user-select:none;position:relative}
+.nb .i{font-size:22px;margin-bottom:3px;transition:all .15s}
 .nb:active{transform:scale(.92)}
-.nb.ex-on{color:#00ff88}.nb.ex-on .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
-.nb.wl-on{color:#cc0000}.nb.wl-on .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
+.nb.on-ex{color:#00ff88}.nb.on-ex .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
+.nb.on-wb{color:#00e5ff}.nb.on-wb .i{text-shadow:0 0 10px rgba(0,229,255,.5)}
+.nb.on-wl{color:#cc0000}.nb.on-wl .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
 .nb.xt-btn{color:#666}.nb.xt-btn:active{color:#cc0000}
 
 /* Tab fade */
-.frames.fading{opacity:0;transition:opacity .4s ease}
-.frames.visible{opacity:1;transition:opacity .4s ease}
+.frames.fading{opacity:0;transition:opacity .35s ease}
+.frames.visible{opacity:1;transition:opacity .35s ease}
 </style>
 </head>
 <body>
 
-<!-- SPLASH — ALL styles inline. Guaranteed visible before any CSS/JS. -->
+<!-- SPLASH — inline styles, PWA safe -->
 <div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
   <img id="splash-logo" src="/sost-logo.png" alt="SOST">
   <div id="splash-title">SOST PROTOCOL</div>
@@ -76,20 +76,24 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div id="splash-scan"></div>
 </div>
 
-<!-- APP — inline display:none. No flash possible even in standalone PWA. -->
+<!-- APP — inline display:none -->
 <div id="app" style="display:none">
   <div class="frames visible" id="fr">
     <iframe id="ef" style="display:block"></iframe>
     <iframe id="wf" style="display:none"></iframe>
+    <iframe id="webf" style="display:none"></iframe>
+    <!-- Loading overlay with spinning logo -->
     <div class="lov" id="lov-ex">
-      <div class="pie"><div class="pie-fill" id="pf-ex"></div><span class="pie-num" id="pn-ex">60</span></div>
-      <div class="lov-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
+      <img class="lov-logo" id="lov-logo" src="/sost-logo.png" alt="SOST">
+      <div class="lov-num" id="lov-num">60</div>
+      <div class="lov-label" id="lov-label" style="color:#00ff88">LOADING DATA...</div>
     </div>
   </div>
   <nav class="bar">
-    <div class="nb ex-on" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
-    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">💰</span>WALLET</div>
+    <div class="nb on-ex" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
+    <div class="nb" id="bweb" onclick="go('web')"><span class="i">🌐</span>WEB</div>
     <div class="nb xt-btn" onclick="xt()"><span class="i">✕</span>EXIT</div>
+    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
   </nav>
 </div>
 
@@ -103,73 +107,74 @@ setTimeout(function(){
   appEl.style.display='flex';
   document.getElementById('ef').src='/sost-explorer.html';
   document.getElementById('wf').src='/sost-wallet.html';
+  // webf stays about:blank until first WEB click
   setTimeout(function(){
     document.getElementById('splash').classList.add('out');
-    initLoading('ex');
+    initLoading();
     setTimeout(function(){document.getElementById('splash').style.display='none';},600);
   },100);
 },7000);
 
-/* ===== LOADING — EXPLORER ONLY ===== */
-var loaded={ex:false};
-var countdownTimers={};
-var detectIntervals={};
+/* ===== LOADING — spinning logo + countdown ===== */
+var exLoaded=false;
+var cdTimer=null;
+var dtTimer=null;
+var logoAngle=0;
 
 function checkExplorerLoaded(){
   try{
     var iframe=document.getElementById('ef');
     if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
     var text=iframe.contentDocument.body.innerText||'';
-    var hasSupply=/\d{2,}\.\d+\s*SOST/.test(text);
-    var hasHeight=/#\d{2,}/.test(text);
-    return hasSupply&&hasHeight;
+    return /\d{2,}\.\d+\s*SOST/.test(text)&&/#\d{2,}/.test(text);
   }catch(e){return false;}
 }
 
-function initLoading(key){
-  if(loaded[key])return;
-  var ov=document.getElementById('lov-'+key);
-  if(!ov)return;
-  var pf=document.getElementById('pf-'+key);
-  var pn=document.getElementById('pn-'+key);
-  var ll=document.getElementById('ll-'+key);
+function initLoading(){
+  if(exLoaded)return;
+  var ov=document.getElementById('lov-ex');
+  var logo=document.getElementById('lov-logo');
+  var num=document.getElementById('lov-num');
+  var lbl=document.getElementById('lov-label');
   ov.classList.remove('gone');
   var startTime=Date.now();
-  var maxSec=60;var elapsed=0;
-  if(countdownTimers[key])clearInterval(countdownTimers[key]);
-  if(detectIntervals[key])clearInterval(detectIntervals[key]);
-  countdownTimers[key]=setInterval(function(){
+  var elapsed=0;
+  logoAngle=0;
+
+  if(cdTimer)clearInterval(cdTimer);
+  if(dtTimer)clearInterval(dtTimer);
+
+  // Countdown + logo tick every second
+  cdTimer=setInterval(function(){
     elapsed++;
-    var rem=Math.max(0,maxSec-elapsed);
-    var pct=Math.min(100,Math.round((elapsed/maxSec)*100));
-    pf.style.background='conic-gradient(#cc0000 0% '+pct+'%, transparent '+pct+'% 100%)';
-    pf.style.borderRadius='50%';
-    if(rem>0){pn.textContent=rem;}
-    else{pn.textContent='...';ll.textContent='CONNECTION SLOW...';ll.style.color='#f59e0b';}
+    var rem=Math.max(0,60-elapsed);
+    // Tick the logo 6 degrees (clock-like)
+    logoAngle+=6;
+    logo.style.transform='rotate('+logoAngle+'deg)';
+    if(rem>0){num.textContent=rem;}
+    else{num.textContent='...';lbl.textContent='WAITING FOR NODE...';lbl.style.color='#f59e0b';}
   },1000);
-  detectIntervals[key]=setInterval(function(){
-    var minElapsed=(Date.now()-startTime)>=3000;
-    if(checkExplorerLoaded()&&minElapsed) doneLoading(key);
+
+  // Content detection every 2s
+  dtTimer=setInterval(function(){
+    if(checkExplorerLoaded()&&(Date.now()-startTime)>=3000) doneLoading();
   },2000);
 }
 
-function doneLoading(key){
-  if(loaded[key])return;
-  loaded[key]=true;
-  if(countdownTimers[key])clearInterval(countdownTimers[key]);
-  if(detectIntervals[key])clearInterval(detectIntervals[key]);
-  var pf=document.getElementById('pf-'+key);
-  var pn=document.getElementById('pn-'+key);
-  var ll=document.getElementById('ll-'+key);
-  var ov=document.getElementById('lov-'+key);
-  pf.style.background='conic-gradient(#00ff88 0% 100%, transparent 100% 100%)';
-  pf.style.borderRadius='50%';
-  pn.textContent='✓';pn.style.color='#00ff88';pn.style.fontSize='42px';
-  ll.textContent='READY';ll.style.color='#00ff88';ll.classList.add('ok');
+function doneLoading(){
+  if(exLoaded)return;
+  exLoaded=true;
+  if(cdTimer)clearInterval(cdTimer);
+  if(dtTimer)clearInterval(dtTimer);
+  var num=document.getElementById('lov-num');
+  var lbl=document.getElementById('lov-label');
+  var ov=document.getElementById('lov-ex');
+  num.textContent='✓';num.style.color='#00ff88';num.style.fontSize='42px';
+  lbl.textContent='READY';lbl.style.color='#00ff88';lbl.classList.add('ok');
   setTimeout(function(){ov.classList.add('gone');},1000);
 }
 
-/* ===== TAB SWITCH — fade, no overlay for wallet ===== */
+/* ===== TAB SWITCH — 4 tabs: explorer, web, wallet ===== */
 var cur='explorer';
 var switching=false;
 
@@ -179,20 +184,31 @@ function go(t){
   var fr=document.getElementById('fr');
   var ef=document.getElementById('ef');
   var wf=document.getElementById('wf');
+  var webf=document.getElementById('webf');
   var safetyTimer=setTimeout(function(){switching=false;},3000);
 
   fr.classList.remove('visible');
   fr.classList.add('fading');
 
   setTimeout(function(){
+    // Hide all iframes
+    ef.style.display='none';
+    wf.style.display='none';
+    webf.style.display='none';
+
+    // Show selected
     if(t==='explorer'){
       ef.style.display='block';
-      wf.style.display='none';
-    }else{
+      if(!exLoaded) initLoading();
+    }else if(t==='wallet'){
       wf.style.display='block';
-      ef.style.display='none';
+    }else if(t==='web'){
+      // Lazy load web iframe on first use
+      if(!webf.src||webf.src==='about:blank'||webf.src===''){
+        webf.src='https://sostcore.com';
+      }
+      webf.style.display='block';
     }
-    if(t==='explorer'&&!loaded['ex']) initLoading('ex');
 
     fr.classList.remove('fading');
     fr.classList.add('visible');
@@ -200,46 +216,40 @@ function go(t){
     setTimeout(function(){
       switching=false;
       clearTimeout(safetyTimer);
-    },450);
-  },450);
+    },400);
+  },400);
 
   cur=t;
-  document.getElementById('be').className='nb'+(t==='explorer'?' ex-on':'');
-  document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
+  // Update button states
+  document.getElementById('be').className='nb'+(t==='explorer'?' on-ex':'');
+  document.getElementById('bweb').className='nb'+(t==='web'?' on-wb':'');
+  document.getElementById('bw').className='nb'+(t==='wallet'?' on-wl':'');
 }
 
-/* ===== EXIT — works in PWA ===== */
+/* ===== EXIT ===== */
 function xt(){
-  if(window.navigator&&window.navigator.app&&window.navigator.app.exitApp){
-    window.navigator.app.exitApp();
-  }else{
-    window.close();
-    setTimeout(function(){window.location.href='about:blank';},300);
-  }
+  window.close();
+  setTimeout(function(){window.location.href='about:blank';},300);
 }
 
 /* ===== PWA ===== */
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 
-/* ===== BLOCK EXPLORER LOGO NAVIGATION ===== */
-// Intercept clicks inside explorer iframe that would navigate away
+/* ===== EXPLORER LOGO → WEB TAB ===== */
 document.getElementById('ef').addEventListener('load',function(){
   try{
     var doc=this.contentDocument;
     if(!doc)return;
-    // Intercept all <a> clicks that point outside explorer
     doc.addEventListener('click',function(e){
       var a=e.target.closest('a');
       if(!a)return;
       var href=a.getAttribute('href')||'';
-      // Block navigation to index.html or external sites inside the iframe
-      if(href==='index.html'||href==='/index.html'||href==='/'||
-         (href.indexOf('http')===0&&href.indexOf('sost-explorer')===-1)){
+      if(href==='index.html'||href==='/index.html'||href==='/'){
         e.preventDefault();
-        if(href.indexOf('http')===0){
-          window.open(href,'_blank');
-        }
-        // index.html / "/" clicks do nothing (logo stays inert)
+        go('web');
+      }else if(href.indexOf('http')===0&&href.indexOf('sost-explorer')===-1){
+        e.preventDefault();
+        go('web');
       }
     },true);
   }catch(e){}
