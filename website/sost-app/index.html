@@ -83,7 +83,6 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div class="frames visible" id="fr">
     <iframe id="ef" style="display:block"></iframe>
     <iframe id="wf" style="display:none"></iframe>
-    <iframe id="webf" style="display:none;-webkit-overflow-scrolling:touch;touch-action:auto" allow="scripts same-origin"></iframe>
     <div class="lov" id="lov-ex">
       <img class="lov-logo" id="lov-logo" src="/sost-logo.png" alt="SOST">
       <div class="lov-num" id="lov-num">60</div>
@@ -92,7 +91,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   </div>
   <nav class="bar">
     <div class="nb on-ex" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
-    <div class="nb" id="bweb" onclick="go('web')"><span class="i">🌐</span>WEB</div>
+    <div class="nb" id="bweb" onclick="openWeb()"><span class="i">🌐</span>WEB</div>
     <div class="nb dl-off" id="bdl" onclick="dl()"><span class="i">📥</span><span id="bdl-text">INSTALL</span></div>
     <div class="nb xt-btn" onclick="xt()"><span class="i">✕</span>EXIT</div>
     <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
@@ -179,7 +178,6 @@ function go(t){
   var fr=document.getElementById('fr');
   var ef=document.getElementById('ef');
   var wf=document.getElementById('wf');
-  var webf=document.getElementById('webf');
   var safetyTimer=setTimeout(function(){switching=false;},3000);
 
   fr.classList.remove('visible');
@@ -188,18 +186,12 @@ function go(t){
   setTimeout(function(){
     ef.style.display='none';
     wf.style.display='none';
-    webf.style.display='none';
 
     if(t==='explorer'){
       ef.style.display='block';
       if(!exLoaded) initLoading();
     }else if(t==='wallet'){
       wf.style.display='block';
-    }else if(t==='web'){
-      if(!webf.src||webf.src==='about:blank'||webf.src===''){
-        webf.src='https://sostcore.com';
-      }
-      webf.style.display='block';
     }
 
     fr.classList.remove('fading');
@@ -213,8 +205,12 @@ function go(t){
 
   cur=t;
   document.getElementById('be').className='nb'+(t==='explorer'?' on-ex':'');
-  document.getElementById('bweb').className='nb'+(t==='web'?' on-wb':'');
   document.getElementById('bw').className='nb'+(t==='wallet'?' on-wl':'');
+}
+
+/* ===== WEB — opens in external browser ===== */
+function openWeb(){
+  window.open('https://sostcore.com','_blank');
 }
 
 /* ===== EXIT ===== */
@@ -257,7 +253,7 @@ if(window.matchMedia('(display-mode:standalone)').matches){
 /* ===== PWA ===== */
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 
-/* ===== EXPLORER LOGO → WEB TAB ===== */
+/* ===== EXPLORER LOGO → OPENS WEB EXTERNALLY ===== */
 document.getElementById('ef').addEventListener('load',function(){
   try{
     var doc=this.contentDocument;
@@ -268,10 +264,10 @@ document.getElementById('ef').addEventListener('load',function(){
       var href=a.getAttribute('href')||'';
       if(href==='index.html'||href==='/index.html'||href==='/'){
         e.preventDefault();
-        go('web');
+        openWeb();
       }else if(href.indexOf('http')===0&&href.indexOf('sost-explorer')===-1){
         e.preventDefault();
-        go('web');
+        window.open(href,'_blank');
       }
     },true);
   }catch(e){}
