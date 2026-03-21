@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.7.0", "phase": "hierarchical_bandgap",
+    return {"status": "ok", "version": "2.8.0", "phase": "gate_calibration",
             "materials_count": db.count()}
 
 
@@ -1633,6 +1633,65 @@ def cod_recommendation():
     path = _os.path.join("artifacts/corpus_sources", "cod_recommendation.json")
     if not _os.path.exists(path):
         return {"recommendation": "no_cod_pilot_run_yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+# --- Hierarchical Band Gap Calibration endpoints ---
+
+@app.get("/hierarchical-band-gap-calibration/status")
+def hbg_calibration_status():
+    """Return calibration status."""
+    import os as _os
+    d = "artifacts/hierarchical_band_gap_calibration"
+    return {
+        "phase": "IV.O",
+        "sweep_done": _os.path.exists(_os.path.join(d, "threshold_sweep.json")),
+        "routing_done": _os.path.exists(_os.path.join(d, "routing_comparison.json")),
+        "decision_made": _os.path.exists(_os.path.join(d, "promotion_decision.json")),
+    }
+
+
+@app.get("/hierarchical-band-gap-calibration/thresholds")
+def hbg_calibration_thresholds():
+    """Return threshold sweep results."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_calibration", "threshold_sweep.json")
+    if not _os.path.exists(path):
+        return {"thresholds": []}
+    with open(path) as f:
+        return {"thresholds": _json.load(f)}
+
+
+@app.get("/hierarchical-band-gap-calibration/routing")
+def hbg_calibration_routing():
+    """Return routing comparison."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_calibration", "routing_comparison.json")
+    if not _os.path.exists(path):
+        return {"policies": []}
+    with open(path) as f:
+        return {"policies": _json.load(f)}
+
+
+@app.get("/hierarchical-band-gap-calibration/comparison")
+def hbg_calibration_comparison():
+    """Return pipeline comparison."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_calibration", "pipeline_comparison.json")
+    if not _os.path.exists(path):
+        return {"comparison": None}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap-calibration/decision")
+def hbg_calibration_decision():
+    """Return promotion decision."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_calibration", "promotion_decision.json")
+    if not _os.path.exists(path):
+        return {"decision": "no_decision_yet"}
     with open(path) as f:
         return _json.load(f)
 

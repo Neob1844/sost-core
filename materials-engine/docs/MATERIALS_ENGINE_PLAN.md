@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.N (v2.7.0)**
+> **Document status: Active implementation — Phase IV.O (v2.8.0)**
 > Last updated: 2026-03-21
 
 ---
@@ -650,6 +650,16 @@ Predict property degradation over time under operating conditions — thermal cy
 - **Key insight**: Hierarchical approach IS the right architecture direction. Just needs better gate for borderline materials.
 - Production model unchanged (ALIGNN-Lite 20K, MAE=0.3422)
 - 5 API endpoints + 20 tests (814 total), version 2.7.0
+
+### Phase IV.O — Gate Calibration + Borderline Routing ✅
+- Threshold sweep (10 values) + 11 routing policy configurations on 4,000 real test samples
+- Best overall MAE: 0.2187 (36.1% better than production 0.3422)
+- Lowering gate threshold 0.5→0.25 reduces FN from 220→78 but doesn't fix narrow-gap (0.60→0.68)
+- **Key insight**: Narrow-gap regression is NOT caused by gate misclassification — it's the regressor's MAE=0.76 on non-metals
+- Even with perfect gate (0 FN), narrow-gap materials get regressor error of ~0.68 vs production's 0.51
+- Decision: **WATCHLIST** — overall improvement real but regressor needs improvement for promotion
+- Next step: retrain non-metal regressor (more epochs, lower LR) to reduce MAE below 0.50
+- 5 API endpoints + 22 tests (836 total), version 2.8.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)

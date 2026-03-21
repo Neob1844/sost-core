@@ -1,0 +1,233 @@
+[
+  {
+    "policy": "original",
+    "description": "Original gate at sigmoid>=0.5",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.3,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2187,
+    "pipeline_rmse": 0.4888,
+    "pipeline_r2": 0.8127,
+    "bucket_mae": {
+      "0.0-0.05": 0.0285,
+      "0.05-1.0": 0.6001,
+      "1.0-3.0": 0.9341,
+      "3.0-6.0": 0.8337,
+      "6.0+": 1.2404
+    },
+    "fn_count": 220,
+    "fp_count": 172,
+    "regressor_invocations": 921,
+    "total_samples": 4000
+  },
+  {
+    "policy": "conservative",
+    "description": "Conservative: only confident metals (sigmoid<0.25) \u2192 BG=0",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.25,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2238,
+    "pipeline_rmse": 0.4055,
+    "pipeline_r2": 0.8084,
+    "bucket_mae": {
+      "0.0-0.05": 0.0555,
+      "0.05-1.0": 0.6808,
+      "1.0-3.0": 0.7898,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 89,
+    "fp_count": 336,
+    "regressor_invocations": 1216,
+    "total_samples": 4000
+  },
+  {
+    "policy": "conservative",
+    "description": "Conservative: only confident metals (sigmoid<0.3) \u2192 BG=0",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.3,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2216,
+    "pipeline_rmse": 0.4061,
+    "pipeline_r2": 0.8103,
+    "bucket_mae": {
+      "0.0-0.05": 0.0525,
+      "0.05-1.0": 0.6686,
+      "1.0-3.0": 0.8004,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 105,
+    "fp_count": 318,
+    "regressor_invocations": 1182,
+    "total_samples": 4000
+  },
+  {
+    "policy": "conservative",
+    "description": "Conservative: only confident metals (sigmoid<0.35) \u2192 BG=0",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.35,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2207,
+    "pipeline_rmse": 0.4066,
+    "pipeline_r2": 0.811,
+    "bucket_mae": {
+      "0.0-0.05": 0.0509,
+      "0.05-1.0": 0.6649,
+      "1.0-3.0": 0.8065,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 112,
+    "fp_count": 308,
+    "regressor_invocations": 1165,
+    "total_samples": 4000
+  },
+  {
+    "policy": "borderline_to_regressor",
+    "description": "Borderline\u2192regressor: sigmoid<0.2\u21920, else\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.2,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2256,
+    "pipeline_rmse": 0.4061,
+    "pipeline_r2": 0.8068,
+    "bucket_mae": {
+      "0.0-0.05": 0.058,
+      "0.05-1.0": 0.6855,
+      "1.0-3.0": 0.7855,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 78,
+    "fp_count": 351,
+    "regressor_invocations": 1242,
+    "total_samples": 4000
+  },
+  {
+    "policy": "borderline_to_regressor",
+    "description": "Borderline\u2192regressor: sigmoid<0.25\u21920, else\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.25,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2238,
+    "pipeline_rmse": 0.4055,
+    "pipeline_r2": 0.8084,
+    "bucket_mae": {
+      "0.0-0.05": 0.0555,
+      "0.05-1.0": 0.6808,
+      "1.0-3.0": 0.7898,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 89,
+    "fp_count": 336,
+    "regressor_invocations": 1216,
+    "total_samples": 4000
+  },
+  {
+    "policy": "borderline_to_regressor",
+    "description": "Borderline\u2192regressor: sigmoid<0.3\u21920, else\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.3,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2216,
+    "pipeline_rmse": 0.4061,
+    "pipeline_r2": 0.8103,
+    "bucket_mae": {
+      "0.0-0.05": 0.0525,
+      "0.05-1.0": 0.6686,
+      "1.0-3.0": 0.8004,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 105,
+    "fp_count": 318,
+    "regressor_invocations": 1182,
+    "total_samples": 4000
+  },
+  {
+    "policy": "borderline_to_regressor",
+    "description": "Borderline\u2192regressor: sigmoid<0.35\u21920, else\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.35,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2207,
+    "pipeline_rmse": 0.4066,
+    "pipeline_r2": 0.811,
+    "bucket_mae": {
+      "0.0-0.05": 0.0509,
+      "0.05-1.0": 0.6649,
+      "1.0-3.0": 0.8065,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 112,
+    "fp_count": 308,
+    "regressor_invocations": 1165,
+    "total_samples": 4000
+  },
+  {
+    "policy": "three_zone",
+    "description": "Three zone: <0.25\u2192metal, >0.75\u2192nonmetal, middle\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.25,
+    "borderline_high": 0.75,
+    "pipeline_mae": 0.2238,
+    "pipeline_rmse": 0.4055,
+    "pipeline_r2": 0.8084,
+    "bucket_mae": {
+      "0.0-0.05": 0.0555,
+      "0.05-1.0": 0.6808,
+      "1.0-3.0": 0.7898,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 89,
+    "fp_count": 336,
+    "regressor_invocations": 1216,
+    "total_samples": 4000
+  },
+  {
+    "policy": "three_zone",
+    "description": "Three zone: <0.3\u2192metal, >0.7\u2192nonmetal, middle\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.3,
+    "borderline_high": 0.7,
+    "pipeline_mae": 0.2216,
+    "pipeline_rmse": 0.4061,
+    "pipeline_r2": 0.8103,
+    "bucket_mae": {
+      "0.0-0.05": 0.0525,
+      "0.05-1.0": 0.6686,
+      "1.0-3.0": 0.8004,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 105,
+    "fp_count": 318,
+    "regressor_invocations": 1182,
+    "total_samples": 4000
+  },
+  {
+    "policy": "three_zone",
+    "description": "Three zone: <0.35\u2192metal, >0.65\u2192nonmetal, middle\u2192regressor",
+    "sigmoid_threshold": 0.5,
+    "borderline_low": 0.35,
+    "borderline_high": 0.65,
+    "pipeline_mae": 0.2207,
+    "pipeline_rmse": 0.4066,
+    "pipeline_r2": 0.811,
+    "bucket_mae": {
+      "0.0-0.05": 0.0509,
+      "0.05-1.0": 0.6649,
+      "1.0-3.0": 0.8065,
+      "3.0-6.0": 0.7704,
+      "6.0+": 0.7609
+    },
+    "fn_count": 112,
+    "fp_count": 308,
+    "regressor_invocations": 1165,
+    "total_samples": 4000
+  }
+]

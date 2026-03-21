@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.N — Hierarchical Band Gap Modeling (v2.7.0)**
+> **Current phase: IV.O — Gate Calibration + Borderline Routing (v2.8.0)**
 
 ## What exists (implemented and tested)
 
@@ -184,6 +184,18 @@
 - **Production model UNCHANGED** pending regression fix
 - **API**: `GET /hierarchical-band-gap/status`, `/gate`, `/regressor`, `/comparison`, `/decision`
 
+### Gate Calibration + Borderline Routing (Phase IV.O)
+- **What it is**: Calibrate IV.N's metal gate threshold and routing to fix narrow-gap regression
+- **Threshold sweep**: 10 thresholds (0.25-0.70), evaluated on 4,000 test materials with real gate model
+- **Routing policies**: original, conservative, borderline_to_regressor, three_zone — 11 configurations tested
+- **Best calibrated MAE: 0.2187** (36.1% improvement over production 0.3422)
+- **Key finding**: Gate threshold tuning is NOT the bottleneck. Even with zero FN (all non-metals correctly routed), the regressor's MAE=0.76 on non-metals still causes narrow-gap regression (0.60 vs prod 0.51)
+- **Decision: WATCHLIST** — overall improvement proven but narrow-gap regression from regressor quality
+- **Root cause shift**: The problem moved from gate misclassification → regressor accuracy on non-metals
+- **Next step**: Retrain the non-metal regressor specifically (not the gate) to reduce its MAE below 0.50
+- **Production model UNCHANGED** (ALIGNN-Lite 20K, MAE=0.3422)
+- **API**: `GET /hierarchical-band-gap-calibration/status`, `/thresholds`, `/routing`, `/comparison`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -204,7 +216,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (814 tests)
+# Run all tests (836 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -307,3 +319,4 @@ curl http://localhost:8000/generation/presets
 | test_selective_retraining.py | 21 | Challenger comparison, promotion rules, bucket analysis, API |
 | test_stratified_retraining.py | 22 | Stratified sampler, curriculum, comparison, promotion, API |
 | test_hierarchical_bandgap.py | 20 | Metal gate, regressor, pipeline, promotion rules, API |
+| test_gate_calibration.py | 22 | Threshold sweep, routing policies, calibration, API |
