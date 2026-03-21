@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.O (v2.8.0)**
+> **Document status: Active implementation — Phase IV.P (v2.9.0)**
 > Last updated: 2026-03-21
 
 ---
@@ -660,6 +660,15 @@ Predict property degradation over time under operating conditions — thermal cy
 - Decision: **WATCHLIST** — overall improvement real but regressor needs improvement for promotion
 - Next step: retrain non-metal regressor (more epochs, lower LR) to reduce MAE below 0.50
 - 5 API endpoints + 22 tests (836 total), version 2.8.0
+
+### Phase IV.P — Non-Metal Regressor Improvement ✅
+- 3 challengers: longer (MAE=0.7369), lower_lr (MAE=0.6654), both (MAE=0.6679)
+- Best: `nonmetal_lower_lr` (20ep, lr=0.002) — **12.5% regressor improvement** vs V1
+- Pipeline MAE: 0.7609→0.6654 regressor → 0.2793→0.2568 pipeline (**25% better than production**)
+- Lower LR is the key driver. More epochs has diminishing/negative returns (overfitting observed).
+- Decision: **WATCHLIST** — strong overall improvement, projected narrow-gap still elevated
+- Total hierarchical BG effort: IV.N (gate+reg) + IV.O (calibration) + IV.P (regressor) = focused pipeline
+- 4 API endpoints + 18 tests (854 total), version 2.9.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)

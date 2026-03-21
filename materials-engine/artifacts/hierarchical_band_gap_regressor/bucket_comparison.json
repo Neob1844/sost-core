@@ -1,0 +1,37 @@
+[
+  {
+    "bucket": "0.0-0.05",
+    "production": 0.3154,
+    "challenger": 0.0048,
+    "delta": -0.3106,
+    "improved": true
+  },
+  {
+    "bucket": "0.05-1.0",
+    "production": 0.509,
+    "challenger": 0.83,
+    "delta": 0.321,
+    "improved": false
+  },
+  {
+    "bucket": "1.0-3.0",
+    "production": 0.8735,
+    "challenger": 0.83,
+    "delta": -0.0435,
+    "improved": true
+  },
+  {
+    "bucket": "3.0-6.0",
+    "production": 1.1223,
+    "challenger": 0.83,
+    "delta": -0.2923,
+    "improved": true
+  },
+  {
+    "bucket": "6.0+",
+    "production": 0.9221,
+    "challenger": 0.83,
+    "delta": -0.0921,
+    "improved": true
+  }
+]

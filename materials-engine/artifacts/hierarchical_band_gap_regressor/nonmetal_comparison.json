@@ -1,0 +1,35 @@
+{
+  "challengers": [
+    {
+      "name": "nonmetal_longer_train",
+      "test_mae": 0.7369,
+      "test_rmse": 1.0306,
+      "test_r2": 0.6386,
+      "epochs": 25,
+      "lr": 0.005,
+      "bucket_mae": {},
+      "training_time_sec": 3083.5
+    },
+    {
+      "name": "nonmetal_lower_lr",
+      "test_mae": 0.6654,
+      "test_rmse": 0.9487,
+      "test_r2": 0.6938,
+      "epochs": 20,
+      "lr": 0.002,
+      "bucket_mae": {},
+      "training_time_sec": 2634.4
+    },
+    {
+      "name": "nonmetal_longer_lower_lr",
+      "test_mae": 0.6679,
+      "test_rmse": 0.929,
+      "test_r2": 0.7063,
+      "epochs": 30,
+      "lr": 0.002,
+      "bucket_mae": {},
+      "training_time_sec": 4020.7
+    }
+  ],
+  "v1_mae": 0.7609
+}

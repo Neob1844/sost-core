@@ -1,0 +1,55 @@
+{
+  "target": "band_gap",
+  "decision": "watchlist",
+  "promoted_model": null,
+  "production_mae": 0.3422,
+  "best_pipeline_mae": 0.2568,
+  "best_regressor_mae": 0.6654,
+  "best_name": "nonmetal_lower_lr",
+  "mae_improvement": 0.0854,
+  "improvement_pct": 24.96,
+  "narrow_gap_improved": false,
+  "narrow_gap_mae": 0.83,
+  "bucket_improvements": [
+    {
+      "bucket": "0.0-0.05",
+      "production": 0.3154,
+      "challenger": 0.0048,
+      "delta": -0.3106
+    },
+    {
+      "bucket": "1.0-3.0",
+      "production": 0.8735,
+      "challenger": 0.83,
+      "delta": -0.0435
+    },
+    {
+      "bucket": "3.0-6.0",
+      "production": 1.1223,
+      "challenger": 0.83,
+      "delta": -0.2923
+    },
+    {
+      "bucket": "6.0+",
+      "production": 0.9221,
+      "challenger": 0.83,
+      "delta": -0.0921
+    }
+  ],
+  "bucket_regressions": [
+    {
+      "bucket": "0.05-1.0",
+      "production": 0.509,
+      "challenger": 0.83,
+      "delta": 0.321
+    }
+  ],
+  "rationale": "Pipeline MAE improved by 0.0854 (25.0%); Narrow-gap regression: 0.8300 vs prod 0.5090; Severe regression: 0.3210",
+  "lessons": [
+    "IV.N regressor MAE=0.7609 \u2192 best challenger MAE=0.6654",
+    "Pipeline MAE: production=0.3422, best=0.2568",
+    "Narrow-gap: prod=0.5090, best=0.8300",
+    "Best config: nonmetal_lower_lr (epochs=20, lr=0.002)"
+  ],
+  "created_at": "2026-03-21T12:35:33.867018+00:00"
+}
