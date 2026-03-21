@@ -15,9 +15,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
 
-/* SPLASH — visible by default, covers everything */
-#splash{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
-#splash.out{opacity:0;pointer-events:none}
+/* SPLASH animations */
+#splash.out{opacity:0;pointer-events:none;transition:opacity .5s ease}
 #splash::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.02) 2px,rgba(0,255,136,.02) 4px);pointer-events:none;animation:scanFlicker 4s linear infinite}
 @keyframes scanFlicker{0%,100%{opacity:.5}50%{opacity:.8}}
 #splash-logo{width:200px;height:200px;border-radius:20%;opacity:0;transform:scale(.4);animation:logoIn 2s ease forwards}
@@ -32,8 +31,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes scanSweep{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
 @keyframes fadeIn{to{opacity:1}}
 
-/* APP — hidden with display:none until splash finishes */
-#app{display:none;flex-direction:column;height:100%}
+/* APP layout */
+#app{flex-direction:column;height:100%}
 .frames{flex:1;position:relative;overflow:hidden}
 .frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
 
@@ -47,27 +46,24 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 .lov-label.ok{animation:none;opacity:1}
 
-/* NAV */
-.bar{display:flex;height:58px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
+/* NAV — 3 buttons */
+.bar{display:flex;height:62px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
 .bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.12) 1px,rgba(0,0,0,.12) 2px);pointer-events:none;opacity:.5}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#444;transition:all .15s;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;min-height:52px;user-select:none;border-left:1px solid #1a1a1a;position:relative}
-.nb:first-child{border-left:none}
-.nb .i{font-size:20px;margin-bottom:3px;transition:all .15s}
-.nb:active{transform:scale(.94)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#555;transition:all .15s;font-size:11px;letter-spacing:2px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;user-select:none;position:relative}
+.nb .i{font-size:24px;margin-bottom:4px;transition:all .15s}
+.nb:active{transform:scale(.92)}
 .nb.ex-on{color:#00ff88}.nb.ex-on .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
 .nb.wl-on{color:#cc0000}.nb.wl-on .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
-.nb.dl{color:#00e5ff}.nb.dl.done{color:#00ff88}
-.nb.wb{color:#00e5ff}
-.nb.xt{color:#666}.nb.xt:active{color:#cc0000}
+.nb.xt-btn{color:#666}.nb.xt-btn:active{color:#cc0000}
 
-/* Tab fade transition */
+/* Tab fade */
 .frames.fading{opacity:0;transition:opacity .4s ease}
 .frames.visible{opacity:1;transition:opacity .4s ease}
 </style>
 </head>
 <body>
 
-<!-- SPLASH — inline styles guarantee visibility before CSS/JS load -->
+<!-- SPLASH — ALL styles inline. Guaranteed visible before any CSS/JS. -->
 <div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
   <img id="splash-logo" src="/sost-logo.png" alt="SOST">
   <div id="splash-title">SOST PROTOCOL</div>
@@ -80,40 +76,31 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   <div id="splash-scan"></div>
 </div>
 
-<!-- APP — inline display:none guarantees hidden before CSS/JS load (PWA safe) -->
+<!-- APP — inline display:none. No flash possible even in standalone PWA. -->
 <div id="app" style="display:none">
   <div class="frames visible" id="fr">
-    <!-- iframes: src set by JS after splash, wallet starts hidden -->
     <iframe id="ef" style="display:block"></iframe>
     <iframe id="wf" style="display:none"></iframe>
     <div class="lov" id="lov-ex">
       <div class="pie"><div class="pie-fill" id="pf-ex"></div><span class="pie-num" id="pn-ex">60</span></div>
       <div class="lov-label" id="ll-ex" style="color:#00ff88">LOADING DATA...</div>
     </div>
-    <div class="lov gone" id="lov-wl">
-      <div class="pie"><div class="pie-fill" id="pf-wl"></div><span class="pie-num" id="pn-wl">60</span></div>
-      <div class="lov-label" id="ll-wl" style="color:#cc0000">LOADING WALLET...</div>
-    </div>
   </div>
   <nav class="bar">
     <div class="nb ex-on" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
-    <div class="nb dl" id="bd" onclick="dl()"><span class="i">📥</span>DOWNLOAD</div>
-    <div class="nb wb" onclick="web()"><span class="i">🌐</span>WEB</div>
-    <div class="nb xt" onclick="xt()"><span class="i">⏻</span>EXIT</div>
-    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
+    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">💰</span>WALLET</div>
+    <div class="nb xt-btn" onclick="xt()"><span class="i">✕</span>EXIT</div>
   </nav>
 </div>
 
 <script>
-/* ===== SPLASH (7s) — app stays display:none until splash finishes ===== */
+/* ===== SPLASH (7s) ===== */
 ['s1','s2','s3','s4'].forEach(function(id,i){
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
 setTimeout(function(){
-  // Show app, THEN fade out splash
   var appEl=document.getElementById('app');
   appEl.style.display='flex';
-  // Set iframe srcs NOW (not before) to prevent flash
   document.getElementById('ef').src='/sost-explorer.html';
   document.getElementById('wf').src='/sost-wallet.html';
   setTimeout(function(){
@@ -123,9 +110,8 @@ setTimeout(function(){
   },100);
 },7000);
 
-/* ===== LOADING — IFRAME CONTENT DETECTION ===== */
-var loaded={ex:false,wl:false};
-var loadTs={ex:0,wl:0};
+/* ===== LOADING — EXPLORER ONLY ===== */
+var loaded={ex:false};
 var countdownTimers={};
 var detectIntervals={};
 
@@ -134,39 +120,24 @@ function checkExplorerLoaded(){
     var iframe=document.getElementById('ef');
     if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
     var text=iframe.contentDocument.body.innerText||'';
-    // Look for real supply number like "5346.5369 SOST" (at least 2 digits before dot)
     var hasSupply=/\d{2,}\.\d+\s*SOST/.test(text);
-    // Look for block height like #1234 (at least 2 digits)
     var hasHeight=/#\d{2,}/.test(text);
     return hasSupply&&hasHeight;
   }catch(e){return false;}
 }
 
-function checkWalletLoaded(){
-  try{
-    var iframe=document.getElementById('wf');
-    if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
-    var text=iframe.contentDocument.body.innerText||'';
-    return text.indexOf('Dashboard')>=0||text.indexOf('BALANCE')>=0||text.indexOf('Launch Wallet')>=0||text.indexOf('Generate')>=0;
-  }catch(e){return false;}
-}
-
 function initLoading(key){
-  if(loaded[key]&&(Date.now()-loadTs[key])<300000){
-    document.getElementById('lov-'+key).classList.add('gone');return;
-  }
+  if(loaded[key])return;
   var ov=document.getElementById('lov-'+key);
+  if(!ov)return;
   var pf=document.getElementById('pf-'+key);
   var pn=document.getElementById('pn-'+key);
   var ll=document.getElementById('ll-'+key);
   ov.classList.remove('gone');
   var startTime=Date.now();
   var maxSec=60;var elapsed=0;
-
   if(countdownTimers[key])clearInterval(countdownTimers[key]);
   if(detectIntervals[key])clearInterval(detectIntervals[key]);
-
-  // Countdown — visual only
   countdownTimers[key]=setInterval(function(){
     elapsed++;
     var rem=Math.max(0,maxSec-elapsed);
@@ -176,21 +147,15 @@ function initLoading(key){
     if(rem>0){pn.textContent=rem;}
     else{pn.textContent='...';ll.textContent='CONNECTION SLOW...';ll.style.color='#f59e0b';}
   },1000);
-
-  // Content detection — every 2s, check iframe content directly
   detectIntervals[key]=setInterval(function(){
-    var minElapsed=(Date.now()-startTime)>=3000; // minimum 3s overlay
-    var check=(key==='ex')?checkExplorerLoaded():checkWalletLoaded();
-    if(check===true&&minElapsed){
-      doneLoading(key);
-    }
-    // NO RPC fallback — only trust iframe content
+    var minElapsed=(Date.now()-startTime)>=3000;
+    if(checkExplorerLoaded()&&minElapsed) doneLoading(key);
   },2000);
 }
 
 function doneLoading(key){
   if(loaded[key])return;
-  loaded[key]=true;loadTs[key]=Date.now();
+  loaded[key]=true;
   if(countdownTimers[key])clearInterval(countdownTimers[key]);
   if(detectIntervals[key])clearInterval(detectIntervals[key]);
   var pf=document.getElementById('pf-'+key);
@@ -204,7 +169,7 @@ function doneLoading(key){
   setTimeout(function(){ov.classList.add('gone');},1000);
 }
 
-/* ===== TAB SWITCH — simple fade, no CRT (reliable > pretty) ===== */
+/* ===== TAB SWITCH — fade, no overlay for wallet ===== */
 var cur='explorer';
 var switching=false;
 
@@ -214,16 +179,12 @@ function go(t){
   var fr=document.getElementById('fr');
   var ef=document.getElementById('ef');
   var wf=document.getElementById('wf');
-
-  // Safety: always reset switching after 3s max
   var safetyTimer=setTimeout(function(){switching=false;},3000);
 
-  // Phase 1: fade out (0.4s)
   fr.classList.remove('visible');
   fr.classList.add('fading');
 
   setTimeout(function(){
-    // Phase 2: swap iframes
     if(t==='explorer'){
       ef.style.display='block';
       wf.style.display='none';
@@ -231,12 +192,8 @@ function go(t){
       wf.style.display='block';
       ef.style.display='none';
     }
-    // Show overlay only for explorer (wallet loads directly, no quesito)
-    if(t==='explorer'&&!loaded['ex']){
-      initLoading('ex');
-    }
+    if(t==='explorer'&&!loaded['ex']) initLoading('ex');
 
-    // Phase 3: fade in (0.4s)
     fr.classList.remove('fading');
     fr.classList.add('visible');
 
@@ -246,28 +203,47 @@ function go(t){
     },450);
   },450);
 
-  // Update button states immediately
   cur=t;
   document.getElementById('be').className='nb'+(t==='explorer'?' ex-on':'');
   document.getElementById('bw').className='nb'+(t==='wallet'?' wl-on':'');
 }
 
-/* ===== WEB BUTTON ===== */
-function web(){
-  window.open('https://sostcore.com','_blank');
+/* ===== EXIT — works in PWA ===== */
+function xt(){
+  if(window.navigator&&window.navigator.app&&window.navigator.app.exitApp){
+    window.navigator.app.exitApp();
+  }else{
+    window.close();
+    setTimeout(function(){window.location.href='about:blank';},300);
+  }
 }
 
 /* ===== PWA ===== */
-var dp=null;
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
-function dl(){
-  if(dp){dp.prompt();dp.userChoice.then(function(r){if(r.outcome==='accepted'){document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');}dp=null;});}
-  else if(window.matchMedia('(display-mode:standalone)').matches){document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');}
-  else{alert('To install: browser menu → "Add to Home Screen"');}
-}
-if(window.matchMedia('(display-mode:standalone)').matches){document.getElementById('bd').innerHTML='<span class="i">✓</span>INSTALLED';document.getElementById('bd').classList.add('done');}
-function xt(){window.close();setTimeout(function(){alert('Close this tab to exit.');},100);}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+
+/* ===== BLOCK EXPLORER LOGO NAVIGATION ===== */
+// Intercept clicks inside explorer iframe that would navigate away
+document.getElementById('ef').addEventListener('load',function(){
+  try{
+    var doc=this.contentDocument;
+    if(!doc)return;
+    // Intercept all <a> clicks that point outside explorer
+    doc.addEventListener('click',function(e){
+      var a=e.target.closest('a');
+      if(!a)return;
+      var href=a.getAttribute('href')||'';
+      // Block navigation to index.html or external sites inside the iframe
+      if(href==='index.html'||href==='/index.html'||href==='/'||
+         (href.indexOf('http')===0&&href.indexOf('sost-explorer')===-1)){
+        e.preventDefault();
+        if(href.indexOf('http')===0){
+          window.open(href,'_blank');
+        }
+        // index.html / "/" clicks do nothing (logo stays inert)
+      }
+    },true);
+  }catch(e){}
+});
 </script>
 </body>
 </html>
