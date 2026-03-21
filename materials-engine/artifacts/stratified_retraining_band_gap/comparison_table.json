@@ -1,0 +1,46 @@
+[
+  {
+    "name": "production_alignn_lite_20k",
+    "role": "production",
+    "strategy": "random_20k",
+    "dataset_size": 20000,
+    "test_mae": 0.3422,
+    "test_rmse": 0.7362,
+    "test_r2": 0.707,
+    "mae_delta": 0.0,
+    "training_time_sec": 2642.2
+  },
+  {
+    "name": "bg_stratified_20k",
+    "role": "challenger",
+    "strategy": "stratified",
+    "dataset_size": 19925,
+    "test_mae": 0.6547,
+    "test_rmse": 0.9893,
+    "test_r2": 0.6437,
+    "mae_delta": 0.3125,
+    "training_time_sec": 1875.2
+  },
+  {
+    "name": "bg_curriculum_20k",
+    "role": "challenger",
+    "strategy": "curriculum",
+    "dataset_size": 19968,
+    "test_mae": 0.6287,
+    "test_rmse": 0.9153,
+    "test_r2": 0.4697,
+    "mae_delta": 0.2865,
+    "training_time_sec": 1414.1
+  },
+  {
+    "name": "bg_stratified_balanced_30k",
+    "role": "challenger",
+    "strategy": "stratified",
+    "dataset_size": 27437,
+    "test_mae": 0.6771,
+    "test_rmse": 0.9767,
+    "test_r2": 0.6273,
+    "mae_delta": 0.3349,
+    "training_time_sec": 2549.5
+  }
+]

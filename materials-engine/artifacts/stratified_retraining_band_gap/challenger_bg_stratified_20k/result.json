@@ -1,0 +1,25 @@
+{
+  "challenger_id": "s1",
+  "name": "bg_stratified_20k",
+  "target": "band_gap",
+  "architecture": "alignn_lite",
+  "strategy": "stratified",
+  "dataset_size": 19925,
+  "train_size": 15940,
+  "val_size": 1992,
+  "test_size": 1993,
+  "strata_summary": {
+    "random_representative": 10000,
+    "hard_wide_gap": 6000,
+    "sparse_exotic": 4000
+  },
+  "epochs": 15,
+  "best_epoch": 8,
+  "seed": 42,
+  "test_mae": 0.6547,
+  "test_rmse": 0.9893,
+  "test_r2": 0.6437,
+  "training_time_sec": 1875.2,
+  "checkpoint": "",
+  "created_at": "2026-03-21T01:32:31+00:00"
+}

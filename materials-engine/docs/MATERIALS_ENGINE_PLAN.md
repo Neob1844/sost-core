@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.L (v2.5.0)**
+> **Document status: Active implementation — Phase IV.M (v2.6.0)**
 > Last updated: 2026-03-21
 
 ---
@@ -629,6 +629,15 @@ Predict property degradation over time under operating conditions — thermal cy
 - Model registry NOT updated — production unchanged
 - 4 API endpoints + 21 dedicated tests (772 total)
 - Version 2.5.0
+
+### Phase IV.M — Stratified/Curriculum Band Gap Retraining ✅
+- 3 challengers: stratified 20K (MAE=0.6547), curriculum 20K (MAE=0.6287), stratified balanced 30K (MAE=0.6771)
+- ALL worse than production random 20K (MAE=0.3422)
+- **Decision: HOLD** — production model retained again
+- **Key insight**: Random sampling on a metal-dominated corpus is naturally well-distributed. Overweighting hard cases distorts the distribution more than it helps. Improving beyond MAE=0.34 requires architectural changes, not data selection.
+- Combined with IV.L: 6 challengers tried across 2 phases, none beat production
+- Total retraining compute: ~163 minutes of GPU-free CPU training
+- 4 API endpoints + 22 tests (794 total), version 2.6.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)
