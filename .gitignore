@@ -42,3 +42,6 @@ materials-engine/materials.db
 __pycache__/
 *.pyc
 *.pyo
+miner.log
+node.log
+backups/
