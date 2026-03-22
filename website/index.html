@@ -608,8 +608,8 @@
   var els=box.querySelectorAll('.spl-line');
   els.forEach(function(el,i){setTimeout(function(){el.classList.add('go');},2000+i*700);});
   // Try autoplay chiptune; add touch/click fallback if blocked
-  try{if(typeof playChiptuneSplash==='function')playChiptuneSplash(5);}catch(e){}
-  function _splashSound(){try{if(typeof playChiptuneSplash==='function')playChiptuneSplash(4);}catch(e){}}
+  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(5);}catch(e){}
+  function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(4);}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
   setTimeout(function(){
