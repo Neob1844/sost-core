@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Geaspirit Project — Automated Setup Script.
+"""Geaspirit Platform — Automated Setup Script.
 
 Creates directory structure, installs dependencies, downloads free data.
 Run: python3 geaspirit/setup_geaspirit.py
@@ -179,7 +179,7 @@ def print_summary():
 
 if __name__ == "__main__":
     print("╔══════════════════════════════════════════╗")
-    print("║  GEASPIRIT PROJECT — AUTOMATED SETUP     ║")
+    print("║  GEASPIRIT PLATFORM — AUTOMATED SETUP     ║")
     print("║  Mineral Detection via Free Satellite AI  ║")
     print("╚══════════════════════════════════════════╝")
 

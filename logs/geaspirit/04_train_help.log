@@ -1,0 +1,11 @@
+usage: train_baseline.py [-h] [--indices INDICES] [--mrds MRDS] [--zone ZONE]
+                         [--output OUTPUT]
+
+Train baseline mineral prospectivity model
+
+options:
+  -h, --help         show this help message and exit
+  --indices INDICES
+  --mrds MRDS
+  --zone ZONE
+  --output OUTPUT

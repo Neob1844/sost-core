@@ -1,0 +1,8 @@
+usage: compute_mineral_indices.py [-h] --input INPUT [--output OUTPUT]
+
+Compute mineral indices from Sentinel-2
+
+options:
+  -h, --help       show this help message and exit
+  --input INPUT    Sentinel-2 GeoTIFF path
+  --output OUTPUT

@@ -1,0 +1,10 @@
+usage: download_sentinel2.py [-h]
+                             [--zone {chuquicamata,pilbara,zambia_copperbelt}]
+                             [--output OUTPUT]
+
+Download Sentinel-2 for pilot zone
+
+options:
+  -h, --help            show this help message and exit
+  --zone {chuquicamata,pilbara,zambia_copperbelt}
+  --output OUTPUT

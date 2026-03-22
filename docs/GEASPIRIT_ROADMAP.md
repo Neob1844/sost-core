@@ -1,4 +1,4 @@
-# Geaspirit Project — Executable Roadmap
+# Geaspirit Platform — Executable Roadmap
 
 **Version:** 1.0 — March 2026
 **Philosophy:** Make → Measure → Fix → Repeat. Every sprint produces something demonstrable.
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The Geaspirit Project fuses computational materials science (Materials Engine) with satellite remote sensing to detect mineral deposits using free data and AI. This roadmap defines 7 sprints over 26 weeks, each producing a measurable result. The goal is to go from zero to a sellable mineral exploration report.
+The Geaspirit Platform fuses computational materials science (Materials Engine) with satellite remote sensing to detect mineral deposits using free data and AI. This roadmap defines 7 sprints over 26 weeks, each producing a measurable result. The goal is to go from zero to a sellable mineral exploration report.
 
 ---
 
