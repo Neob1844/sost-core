@@ -98,19 +98,15 @@ function playRandomRetroSound(duration){
 /* ===== VOICE COUNTDOWN — all 60 numbers, English forced ===== */
 var _vReady=false;
 if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=function(){_vReady=true;speechSynthesis.getVoices()}}
-var _WORDS={1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight',9:'nine',10:'ten',
-  11:'eleven',12:'twelve',13:'thirteen',14:'fourteen',15:'fifteen',16:'sixteen',17:'seventeen',18:'eighteen',19:'nineteen',20:'twenty',
-  21:'twenty one',22:'twenty two',23:'twenty three',24:'twenty four',25:'twenty five',26:'twenty six',27:'twenty seven',28:'twenty eight',29:'twenty nine',30:'thirty',
-  31:'thirty one',32:'thirty two',33:'thirty three',34:'thirty four',35:'thirty five',36:'thirty six',37:'thirty seven',38:'thirty eight',39:'thirty nine',40:'forty',
-  41:'forty one',42:'forty two',43:'forty three',44:'forty four',45:'forty five',46:'forty six',47:'forty seven',48:'forty eight',49:'forty nine',50:'fifty',
-  51:'fifty one',52:'fifty two',53:'fifty three',54:'fifty four',55:'fifty five',56:'fifty six',57:'fifty seven',58:'fifty eight',59:'fifty nine',60:'sixty'};
+var _WORDS={60:'sixty',50:'fifty',40:'forty',30:'thirty',20:'twenty',
+  10:'ten',9:'nine',8:'eight',7:'seven',6:'six',5:'five',4:'four',3:'three',2:'two',1:'one'};
 
 function speakCountdown(n){
   try{
     if(!window.speechSynthesis||!_WORDS[n])return;
     speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(_WORDS[n]);
-    u.lang='en-US';u.rate=1.1;u.pitch=0.7;u.volume=0.6;
+    u.lang='en-US';u.rate=0.9;u.pitch=0.7;u.volume=0.6;
     var voices=speechSynthesis.getVoices();var best=null;
     ['Google US English','Microsoft David','Microsoft Mark','Alex','Daniel','Google UK English Male'].some(function(p){
       best=voices.find(function(v){return v.name&&v.name.indexOf(p)>=0});return!!best});
@@ -141,7 +137,17 @@ var CHIPTUNES=[
   {n:[294,349,440,349,294,262,294,349,440,523,440,349,294,262,196,262],t:155},
   {n:[440,392,349,330,349,392,440,523,440,392,349,330,294,262,294,330],t:165},
   {n:[523,440,392,330,392,440,523,659,523,440,392,330,262,196,262,330],t:175},
-  {n:[196,330,262,392,294,440,330,494,349,523,392,587,440,659,494,784],t:160}
+  {n:[196,330,262,392,294,440,330,494,349,523,392,587,440,659,494,784],t:160},
+  {n:[349,440,523,440,349,294,262,294,349,440,523,659,523,440,349,294],t:150},
+  {n:[587,523,440,392,349,392,440,523,587,659,784,659,587,523,440,392],t:185},
+  {n:[262,349,440,523,440,349,262,196,262,349,440,587,523,440,349,262],t:140},
+  {n:[392,330,262,196,262,330,392,440,523,440,392,330,262,196,262,330],t:175},
+  {n:[494,440,392,349,330,294,262,294,330,349,392,440,494,523,587,523],t:155},
+  {n:[659,523,440,392,330,262,330,392,440,523,659,784,880,784,659,523],t:190},
+  {n:[220,262,330,392,440,523,440,392,330,262,220,262,330,440,523,659],t:145},
+  {n:[784,698,659,587,523,494,440,392,440,494,523,587,659,698,784,880],t:200},
+  {n:[330,262,196,262,330,392,440,392,330,262,196,330,392,523,440,330],t:160},
+  {n:[440,349,294,262,294,349,440,523,587,523,440,349,294,262,196,262],t:170}
 ];
 function playChiptuneSplash(duration){
   duration=duration||7;var c=_ctx();if(!c)return;
