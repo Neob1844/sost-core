@@ -627,7 +627,7 @@
     <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
       <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// SEARCH MATERIAL</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="searchInput" type="text" placeholder="Formula (e.g. GaAs, TiO2, SiC)" spellcheck="false"
+        <input id="searchInput" type="text" placeholder="Try: GaAs, TiO2, water, air, ozone, quartz, salt, diamond..." spellcheck="false"
           style="flex:1;min-width:200px;background:#111;border:1px solid #333;color:#0f0;padding:10px 14px;font-family:monospace;font-size:14px;border-radius:4px;outline:none">
         <button onclick="doSearch()" style="background:var(--red-primary,#fb010d);color:#fff;border:none;padding:10px 24px;font-family:monospace;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:4px;font-size:13px">SEARCH</button>
       </div>
@@ -695,21 +695,55 @@ function doSearch(){
   if(!q)return;
   var el=document.getElementById('searchResults');
   el.innerHTML='<span style="color:#f59e0b">Searching...</span>';
-  fetch(API+'/search?formula='+encodeURIComponent(q)+'&limit=10')
+  fetch(API+'/smart-search?q='+encodeURIComponent(q)+'&limit=10')
     .then(function(r){return r.json()})
     .then(function(d){
-      var items=d.data||[];
-      if(!items.length){el.innerHTML='<span style="color:#f59e0b">No results for "'+sanitize(q)+'"</span>';return}
-      var html='<table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--red-primary,#fb010d);border-bottom:1px solid #222"><th style="text-align:left;padding:4px">Formula</th><th style="text-align:left;padding:4px">SG</th><th style="text-align:right;padding:4px">Band Gap</th><th style="text-align:right;padding:4px">Form. Energy</th><th style="text-align:left;padding:4px">Source</th></tr></thead><tbody>';
+      var res=d.resolution||{};
+      var header='';
+      if(res.source==='common_name'||res.source==='fuzzy_name'){
+        header='<div style="color:#f59e0b;margin-bottom:8px">Resolved from common name: <b>'+sanitize(q)+'</b> → <span style="color:#67e8f9">'+sanitize(res.formula||'')+'</span></div>';
+      }
+      if(!d.resolved){
+        var note=res.note||'No match found';
+        var html=header+'<div style="color:#f59e0b">'+sanitize(note)+'</div>';
+        if(res.suggestion&&res.suggestion.length){html+='<div style="margin-top:8px;color:#888">Try: '+res.suggestion.map(function(s){return'<span style="color:#67e8f9;cursor:pointer" onclick="document.getElementById(\'searchInput\').value=\''+s+'\';doSearch()">'+s+'</span>'}).join(', ')+'</div>'}
+        if(res.composition){html+='<div style="margin-top:4px;color:#888">Typical composition: '+sanitize(res.composition)+'</div>'}
+        el.innerHTML=html;return;
+      }
+      var items=d.results||[];
+      if(!items.length){el.innerHTML=header+'<span style="color:#f59e0b">Formula '+sanitize(res.formula||q)+' not in corpus</span>';return}
+      var html=header+'<table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--red-primary,#fb010d);border-bottom:1px solid #222"><th style="text-align:left;padding:4px">Formula</th><th style="text-align:left;padding:4px">SG</th><th style="text-align:right;padding:4px">Band Gap</th><th style="text-align:right;padding:4px">Form. Energy</th><th style="text-align:left;padding:4px">Source</th><th style="padding:4px"></th></tr></thead><tbody>';
       items.forEach(function(m){
         var bg=m.band_gap!=null?m.band_gap.toFixed(4)+' eV':'—';
         var fe=m.formation_energy!=null?m.formation_energy.toFixed(4)+' eV/at':'—';
-        html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px;color:#67e8f9">'+sanitize(m.formula)+'</td><td style="padding:4px">'+sanitize(String(m.spacegroup||'—'))+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+bg+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+fe+'</td><td style="padding:4px;color:#666">'+sanitize(m.source||'—')+'</td></tr>';
+        html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px;color:#67e8f9">'+sanitize(m.formula)+'</td><td style="padding:4px">'+sanitize(String(m.spacegroup||'—'))+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+bg+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+fe+'</td><td style="padding:4px;color:#666">'+sanitize(m.source||'—')+'</td><td style="padding:4px"><span style="color:#fb010d;cursor:pointer;font-size:11px" onclick="doExplain(\''+sanitize(m.canonical_id)+'\')">EXPLAIN ▸</span></td></tr>';
       });
       html+='</tbody></table>';
       el.innerHTML=html;
     })
     .catch(function(){el.innerHTML='<span style="color:#fb010d">API unavailable — deploy Materials Engine on VPS first</span>'});
+}
+function doExplain(id){
+  var el=document.getElementById('searchResults');
+  el.innerHTML+='<div style="margin-top:12px;color:#f59e0b">Loading explanation...</div>';
+  fetch(API+'/explain/'+id)
+    .then(function(r){return r.json()})
+    .then(function(e){
+      var html='<div style="margin-top:16px;background:#0a0a0a;border:1px solid #222;padding:16px">';
+      html+='<div style="font-size:16px;color:#67e8f9;font-weight:700;margin-bottom:8px">'+sanitize(e.title||e.formula)+'</div>';
+      html+='<div style="color:#ccc;margin-bottom:8px">'+sanitize(e.what_it_is||'')+'</div>';
+      html+='<div style="color:#4ade80;margin-bottom:12px;font-style:italic">'+sanitize(e.plain_language_summary||'')+'</div>';
+      if(e.electronic_behavior){html+='<div style="margin-bottom:4px"><span style="color:#888">Electronic: </span><b style="color:#67e8f9">'+sanitize(e.electronic_behavior.label)+'</b> — '+sanitize(e.electronic_behavior.reason)+'</div>'}
+      if(e.stability_assessment){html+='<div style="margin-bottom:4px"><span style="color:#888">Stability: </span><b style="color:#4ade80">'+sanitize(e.stability_assessment.label)+'</b> — '+sanitize(e.stability_assessment.reason)+'</div>'}
+      if(e.is_it_exotic){html+='<div style="margin-bottom:4px"><span style="color:#888">Exotic: </span><b style="color:#c084fc">'+sanitize(e.is_it_exotic.label)+'</b> — '+sanitize(e.is_it_exotic.reason)+'</div>'}
+      if(e.practical_value){html+='<div style="margin-bottom:4px"><span style="color:#888">Value: </span><b style="color:#fbbf24">'+sanitize(e.practical_value.label)+'</b> — '+sanitize(e.practical_value.reason)+'</div>'}
+      if(e.what_it_can_do&&e.what_it_can_do.length){html+='<div style="margin-top:8px;color:#888">Applications:</div><ul style="color:#ccc;margin:4px 0 0 16px">';e.what_it_can_do.forEach(function(a){html+='<li>'+sanitize(a)+'</li>'});html+='</ul>'}
+      if(e.industry_relevance){html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';Object.keys(e.industry_relevance).forEach(function(k){var v=e.industry_relevance[k];var col=v==='high'?'#4ade80':v==='medium'?'#fbbf24':'#444';html+='<span style="font-size:10px;padding:2px 8px;border:1px solid '+col+';color:'+col+';border-radius:3px">'+k+': '+v+'</span>'});html+='</div>'}
+      html+='<div style="margin-top:12px;font-size:10px;color:#555;font-style:italic">'+sanitize(e.honesty_note||'')+'</div>';
+      html+='</div>';
+      el.innerHTML+=html;
+    })
+    .catch(function(){});
 }
 document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
 
