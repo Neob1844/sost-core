@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.S (v3.2.0)**
+> **Document status: RELEASE CANDIDATE — v3.2.0-RC1 (Phase IV.T)**
 > Last updated: 2026-03-22
 
 ---
@@ -703,6 +703,15 @@ Predict property degradation over time under operating conditions — thermal cy
 - The gate binary threshold is fundamentally a tradeoff slider between metal/non-metal accuracy
 - Total BG effort: IV.L→IV.S = 9 phases, 22+ real models, 3 direct benchmarks
 - 5 API endpoints + 9 tests (897 total), version 3.2.0
+
+### Phase IV.T — Engine Stabilization + Release Candidate ✅
+- Release manifest: v3.2.0-RC1, corpus 76,193, 2 production models, 145 API endpoints
+- Production freeze: FE CGCNN (MAE=0.1528) + BG ALIGNN-Lite (MAE=0.3422) — locked
+- API audit: 105 production-ready, 40 research/internal endpoints
+- Artifact audit: 33 directories organized by function
+- Research watchlist: hierarchical BG pipeline (24% improvement, not promoted)
+- 4 API endpoints + 12 tests (909 total)
+- **This is the official state of the Materials Discovery Engine**
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)

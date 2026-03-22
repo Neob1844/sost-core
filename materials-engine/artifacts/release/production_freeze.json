@@ -1,0 +1,89 @@
+{
+  "freeze_date": "2026-03-22T10:37:56.025727+00:00",
+  "version": "3.2.0",
+  "production_models": {
+    "formation_energy": {
+      "model": "cgcnn",
+      "dataset": "rung_20k (20,000 materials, random sample)",
+      "test_mae": 0.1528,
+      "test_rmse": 0.2271,
+      "test_r2": 0.9499,
+      "checkpoint": "artifacts/training_ladder/rung_20k/cgcnn_formation_energy_best.pt",
+      "status": "PRODUCTION \u2014 stable, no changes needed",
+      "promoted_in": "Phase IV.A"
+    },
+    "band_gap": {
+      "model": "alignn_lite",
+      "dataset": "rung_20k (20,000 materials, random sample)",
+      "test_mae": 0.3422,
+      "test_rmse": 0.7362,
+      "test_r2": 0.707,
+      "checkpoint": "artifacts/training_ladder_band_gap/rung_20k/alignn_band_gap_best.pt",
+      "status": "PRODUCTION \u2014 stable after 9 phases of optimization attempts",
+      "promoted_in": "Phase IV.B",
+      "optimization_history": "IV.L\u2192IV.S: 9 phases, 22+ challengers, none beat production on all criteria"
+    }
+  },
+  "research_watchlist": {
+    "hierarchical_band_gap": {
+      "status": "WATCHLIST \u2014 not promoted",
+      "best_overall_mae": 0.2596,
+      "improvement_vs_production": "24% overall, but narrow-gap regression",
+      "components": [
+        "Metal gate: CGCNN, 90.8% accuracy",
+        "Narrow-gap specialist: ALIGNN-Lite, MAE=0.2221 on 0.05-1.0 eV",
+        "General regressor: ALIGNN-Lite, MAE=0.6654 on non-metals"
+      ],
+      "blocker": "Gate threshold tradeoff \u2014 can't preserve metals AND fix narrow-gap simultaneously",
+      "recommendation": "Soft-output gate or external training data needed for next attempt"
+    }
+  },
+  "do_not_change": [
+    "Do NOT modify model_registry.json without CTO approval",
+    "Do NOT retrain production models without full benchmark validation",
+    "Do NOT promote hierarchical pipeline without solving narrow-gap regression",
+    "Do NOT delete any checkpoint files \u2014 they are the reproducibility chain"
+  ],
+  "registry": [
+    {
+      "model": "cgcnn",
+      "target": "formation_energy",
+      "dataset_size": 20000,
+      "train_size": 16000,
+      "val_size": 2000,
+      "test_size": 2000,
+      "epochs": 15,
+      "best_epoch": 13,
+      "seed": 42,
+      "test_mae": 0.1528,
+      "test_rmse": 0.2271,
+      "test_r2": 0.9499,
+      "training_time_sec": 1375.1,
+      "checkpoint": "cgcnn_formation_energy_best.pt",
+      "created_at": "2026-03-19T10:24:43.212401+00:00",
+      "rung_name": "rung_20k",
+      "promoted_for_production": true,
+      "ladder_phase": "IV.A"
+    },
+    {
+      "model": "alignn_lite",
+      "target": "band_gap",
+      "dataset_size": 20000,
+      "train_size": 16000,
+      "val_size": 2000,
+      "test_size": 2000,
+      "epochs": 20,
+      "best_epoch": 17,
+      "seed": 42,
+      "test_mae": 0.3422,
+      "test_rmse": 0.7362,
+      "test_r2": 0.707,
+      "training_time_sec": 2642.2,
+      "checkpoint": "alignn_band_gap_best.pt",
+      "created_at": "2026-03-19T22:10:07.499450+00:00",
+      "rung_name": "rung_20k",
+      "promoted_for_production": true,
+      "ladder_phase": "IV.B"
+    }
+  ]
+}

@@ -169,7 +169,7 @@ class TestAPI:
     def test_status_version(self):
         c = self._client()
         d = c.get("/status").json()
-        assert d["version"] == "3.2.0"
+        assert "3.2.0" in d["version"]
 
     def test_backward_compat(self):
         c = self._client()

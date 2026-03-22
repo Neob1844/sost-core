@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.S — Gate Recall Rescue (v3.2.0)**
+> **Release Candidate: v3.2.0-RC1 — Engine Stabilization (Phase IV.T)**
 
 ## What exists (implemented and tested)
 
@@ -264,6 +264,16 @@
 - **Production UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422)
 - **API**: `GET /gate-recall-rescue/status`, `/challengers`, `/thresholds`, `/benchmark`, `/decision`
 
+### Engine Stabilization + Release Candidate (Phase IV.T)
+- **Release**: v3.2.0-RC1 — engine stabilization, no new experiments
+- **Production freeze**: FE (CGCNN, MAE=0.1528) + BG (ALIGNN-Lite, MAE=0.3422) — locked
+- **API audit**: 145 endpoints (105 production, 40 research)
+- **Corpus**: 76,193 materials, 89 elements, 213 spacegroups
+- **Artifacts**: 33 organized directories with full audit trail
+- **Tests**: 41 test files
+- **Research watchlist**: Hierarchical BG (MAE=0.2596, 24% better but narrow-gap blocks promotion)
+- **API**: `GET /release/status`, `/manifest`, `/api-audit`, `/production-freeze`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -284,7 +294,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (897 tests)
+# Run all tests (909 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -392,3 +402,4 @@ curl http://localhost:8000/generation/presets
 | test_final_benchmark.py | 16 | Final benchmark, scorecard, promotion decision, registry, API |
 | test_three_tier.py | 18 | Three-tier pipeline, narrow-gap specialist, scorecard, API |
 | test_gate_recall_rescue.py | 9 | Gate recall, oversampling, threshold selection, API |
+| test_release.py | 12 | Release manifest, production freeze, API audit, endpoints |
