@@ -115,6 +115,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .tf-btn.active{background:rgba(251,1,13,.12);border-color:rgba(251,1,13,.4);color:#fb010d}
 .tf-btn.disabled{opacity:.3;cursor:default;pointer-events:none}
 .chart-wrap{position:relative}
+.chart-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);color:#fff;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;z-index:5;font-family:var(--code);transition:opacity .3s ease}
+.chart-fallback.loaded{opacity:0;pointer-events:none}
 .chart-overlay{position:absolute;top:0;left:0;pointer-events:none}
 .price-tooltip{position:absolute;background:rgba(10,10,10,.95);border:1px solid #333;padding:6px 10px;font-size:10px;pointer-events:none;z-index:10;white-space:nowrap;display:none;line-height:1.5}
 .price-tooltip-date{color:#666}
@@ -240,7 +242,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </head>
 <body>
 <!-- LOADING OVERLAY — spinning logo countdown -->
-<div id="exLoadOv" style="position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace">
+<div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0">
   <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.5));transition:transform .15s ease-out">
   <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px">60</div>
   <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite">LOADING DATA...</div>
@@ -407,6 +409,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <canvas id="xautChart" style="width:100%;height:150px"></canvas>
         <canvas id="xautOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
         <div class="price-tooltip" id="xautTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+        <div class="chart-fallback" id="fb-xaut" onclick="retryChart('xaut')">CLICK HERE</div>
       </div>
       <div class="price-card-range" id="xautRange"></div>
     </div>
@@ -434,6 +437,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <canvas id="paxgChart" style="width:100%;height:150px"></canvas>
         <canvas id="paxgOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
         <div class="price-tooltip" id="paxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+        <div class="chart-fallback" id="fb-paxg" onclick="retryChart('paxg')">CLICK HERE</div>
       </div>
       <div class="price-card-range" id="paxgRange"></div>
     </div>
@@ -461,6 +465,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <canvas id="sostChart" style="width:100%;height:150px"></canvas>
         <canvas id="sostOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
         <div class="price-tooltip" id="sostTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+        <div class="chart-fallback" id="fb-sost" onclick="retryChart('sost')">CLICK HERE</div>
       </div>
       <div class="price-card-range" id="sostRange"></div>
     </div>
@@ -2622,6 +2627,41 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
 })();
 </script>
 <script src="sost-search.js"></script>
+<!-- Chart fallback management -->
+<script>
+// Auto-hide fallback when chart has data, retry on click
+function retryChart(key){
+  var fb=document.getElementById('fb-'+key);
+  if(fb)fb.textContent='LOADING...';
+  try{
+    // Trigger timeframe click to force fetch
+    var btns=document.querySelectorAll('#'+key+'TfBtns .tf-btn.active');
+    if(btns.length)btns[0].click();
+    else if(typeof drawChart==='function')drawChart(key);
+  }catch(e){}
+  // Check after delay
+  setTimeout(function(){_checkChartLoaded(key);},5000);
+}
+function _checkChartLoaded(key){
+  var fb=document.getElementById('fb-'+key);
+  if(!fb)return;
+  var canvas=document.getElementById(key+'Chart');
+  if(!canvas)return;
+  // Check if canvas has been drawn on (not all transparent)
+  try{
+    var ctx=canvas.getContext('2d');
+    var data=ctx.getImageData(0,0,Math.min(canvas.width,10),Math.min(canvas.height,10)).data;
+    var hasContent=false;
+    for(var i=3;i<data.length;i+=4){if(data[i]>0){hasContent=true;break;}}
+    if(hasContent)fb.classList.add('loaded');
+    else fb.textContent='CLICK HERE';
+  }catch(e){fb.textContent='CLICK HERE';}
+}
+// Check all charts after initial load
+setTimeout(function(){
+  ['xaut','paxg','sost'].forEach(function(k){_checkChartLoaded(k);});
+},8000);
+</script>
 <!-- CRT transition + retro sounds -->
 <style>
 .crt-off{animation:crtOff .8s ease-in forwards}

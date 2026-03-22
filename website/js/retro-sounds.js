@@ -144,18 +144,30 @@ function playRandomRetroSound(duration){
   RETRO_SOUNDS[Math.floor(Math.random()*RETRO_SOUNDS.length)].play(c,duration);
 }
 
-/* ===== VOICE COUNTDOWN ===== */
+/* ===== VOICE COUNTDOWN — English forced ===== */
+var _voicesLoaded=false;
+if(window.speechSynthesis){
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged=function(){_voicesLoaded=true;speechSynthesis.getVoices();};
+}
 function speakCountdown(n){
   try{
     if(!window.speechSynthesis)return;
     var words={60:'sixty',50:'fifty',40:'forty',30:'thirty',20:'twenty',
       10:'ten',9:'nine',8:'eight',7:'seven',6:'six',5:'five',4:'four',3:'three',2:'two',1:'one'};
     if(!words[n])return;
+    speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(words[n]);
-    u.rate=0.9;u.pitch=0.8;u.volume=0.4;
+    u.lang='en-US';u.rate=0.85;u.pitch=0.7;u.volume=0.6;
     var voices=speechSynthesis.getVoices();
-    var en=voices.find(function(v){return v.lang.startsWith('en');});
-    if(en)u.voice=en;
+    var best=null;
+    var preferred=['Google US English','Microsoft David','Microsoft Mark','Alex','Daniel','Google UK English Male'];
+    for(var i=0;i<preferred.length;i++){
+      best=voices.find(function(v){return v.name&&v.name.indexOf(preferred[i])>=0;});
+      if(best)break;
+    }
+    if(!best)best=voices.find(function(v){return v.lang==='en-US';})||voices.find(function(v){return v.lang==='en-GB';})||voices.find(function(v){return v.lang&&v.lang.indexOf('en')===0;});
+    if(best)u.voice=best;
     speechSynthesis.speak(u);
   }catch(e){}
 }
