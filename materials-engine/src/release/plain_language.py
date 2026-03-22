@@ -224,6 +224,8 @@ def explain_material(material, corpus_stats=None) -> dict:
             "proxy": [],
         },
         "rarity": _get_rarity(elems),
+        "trust_breakdown": _build_trust(material, is_elemental, f in ELEMENTAL_OVERRIDES, f in COMPOUND_OVERRIDES, confidence),
+        "abundance_analysis": _build_abundance_analysis(elems, is_pure_element),
         "honesty_note": "This assessment is relative to the ingested corpus (76,193 materials) and model outputs. It is a heuristic evaluation, not a market price or commercial valuation. Labels like 'practical_value' reflect scientific/industrial utility estimates only.",
         "_meta": {"heuristic_assessment": True, "corpus_relative": True, "not_market_price": True},
     }
@@ -333,6 +335,73 @@ def _build_summary(formula, electronic, stability, exotic, apps):
     if exotic in ("exotic", "highly exotic"):
         parts.append(f"This is an {exotic} material with unusual chemistry")
     return ". ".join(parts) + "."
+
+
+def _build_trust(material, is_elemental, has_elem_override, has_compound_override, confidence):
+    """Build trust/provenance breakdown."""
+    known = []
+    heuristic = ["practical_value", "industry_relevance", "rarity_human_label", "exotic_assessment"]
+    manual = []
+    for p in ["formula", "spacegroup", "formation_energy", "band_gap", "source", "elements"]:
+        if getattr(material, p, None) is not None:
+            known.append(p)
+    if has_elem_override:
+        manual.extend(["elemental_reference_label", "application_prioritization"])
+    if has_compound_override:
+        manual.append("application_override")
+    reason = "All core properties from DFT corpus" if len(known) >= 4 else "Some properties missing"
+    if manual:
+        reason += "; some labels manually curated for well-known materials"
+    return {
+        "known_corpus_fields": known,
+        "predicted_fields": [],
+        "heuristic_fields": heuristic,
+        "manual_override_fields": manual,
+        "confidence_summary": {"overall": confidence, "reason": reason},
+    }
+
+
+def _build_abundance_analysis(elems, is_pure_element):
+    """Build honest abundance analysis distinguishing elemental vs compound."""
+    try:
+        from .rarity import get_rarity, CRUST_ABUNDANCE
+    except Exception:
+        return None
+    rarity_data = get_rarity(elems)
+    if not rarity_data or not rarity_data.get("crust_abundance"):
+        return None
+    ca = rarity_data["crust_abundance"]
+    tech = ca.get("technical", {})
+    lim_elem = tech.get("limiting_element", elems[0] if elems else "?")
+    lim_ppm = tech.get("value", 0)
+
+    if is_pure_element:
+        mode = "single_element"
+        mode_reason = "Direct elemental crust abundance — high confidence"
+        scope_note = "Directly measured Earth crust abundance for this element"
+        conf = "high"
+    elif len(elems) == 2:
+        mode = "rarest_element_proxy"
+        mode_reason = f"Approximated from the rarest constituent element ({lim_elem}, ~{lim_ppm} ppm)"
+        scope_note = f"This rarity estimate is driven mainly by the scarcity of {lim_elem}, not by a direct abundance measurement of the compound itself."
+        conf = "medium"
+    else:
+        mode = "rarest_element_proxy"
+        mode_reason = f"Rough proxy based on {lim_elem} (~{lim_ppm} ppm) — the rarest of {len(elems)} elements"
+        scope_note = "For compounds with 3+ elements, Earth crust abundance is usually defined for individual elements, not for the exact compound. This is a proxy estimate, useful for intuition but not a geochemical survey result."
+        conf = "low"
+
+    return {
+        "elemental_abundance_basis": {"mode": mode, "reason": mode_reason},
+        "elemental_reference": {
+            "element": lim_elem,
+            "technical": f"~{lim_ppm} ppm in Earth crust",
+            "human": ca.get("human", {}).get("comparison", ""),
+        },
+        "compound_rarity": rarity_data["rarity"],
+        "scope": scope_note,
+        "confidence": conf,
+    }
 
 
 def _get_rarity(elems):

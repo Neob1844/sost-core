@@ -254,5 +254,48 @@ class TestRarity:
         assert "rare" in e["rarity"]["rarity"]["label"]
 
 
+class TestTrustAndAbundance:
+    def test_au_trust_breakdown(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        tb = e.get("trust_breakdown")
+        assert tb is not None
+        assert "formula" in tb["known_corpus_fields"]
+        assert len(tb["heuristic_fields"]) > 0
+        assert "elemental_reference_label" in tb["manual_override_fields"]
+        assert tb["confidence_summary"]["overall"] == "high"
+
+    def test_au_abundance_single_element(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        aa = e.get("abundance_analysis")
+        assert aa is not None
+        assert aa["elemental_abundance_basis"]["mode"] == "single_element"
+        assert aa["confidence"] == "high"
+
+    def test_gaas_abundance_proxy(self):
+        m = _m("GaAs", ["As", "Ga"], 216, -0.7, 1.4)
+        e = explain_material(m)
+        aa = e.get("abundance_analysis")
+        assert aa is not None
+        assert aa["elemental_abundance_basis"]["mode"] == "rarest_element_proxy"
+        assert "proxy" in aa["scope"].lower() or "not" in aa["scope"].lower()
+        assert aa["confidence"] == "medium"
+
+    def test_complex_compound_low_confidence(self):
+        m = _m("LiMgAlSi", ["Al", "Li", "Mg", "Si"], 62, -0.5, 0.3)
+        e = explain_material(m)
+        aa = e.get("abundance_analysis")
+        assert aa is not None
+        assert aa["confidence"] == "low"
+
+    def test_trust_has_heuristic_fields(self):
+        m = _m("GaAs", ["As", "Ga"], 216, -0.7, 1.4)
+        e = explain_material(m)
+        tb = e["trust_breakdown"]
+        assert "practical_value" in tb["heuristic_fields"]
+        assert "industry_relevance" in tb["heuristic_fields"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
