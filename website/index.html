@@ -607,17 +607,17 @@
   var box=document.getElementById('spl-lines');
   lines.forEach(function(t){var d=document.createElement('div');d.className='spl-line';d.textContent=t;box.appendChild(d);});
   var els=box.querySelectorAll('.spl-line');
-  els.forEach(function(el,i){setTimeout(function(){el.classList.add('go');},2000+i*700);});
+  els.forEach(function(el,i){setTimeout(function(){el.classList.add('go');},2500+i*900);});
   // Try autoplay chiptune; add touch/click fallback if blocked
-  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(5);}catch(e){}
-  function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(4);}catch(e){}}
+  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(7);}catch(e){}
+  function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(6);}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
   setTimeout(function(){
     sp.style.opacity='0';
     setTimeout(function(){sp.style.display='none';},600);
     sessionStorage.setItem('splashShown','1');
-  },5000);
+  },7000);
 })();
 </script>
 <nav>
