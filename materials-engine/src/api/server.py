@@ -150,6 +150,48 @@ def search(
             "data": [m.to_dict() for m in results]}
 
 
+# --- Smart Search (common names + formula) ---
+
+@app.get("/smart-search")
+def smart_search(q: str = Query("", description="Formula or common name"),
+                 limit: int = Query(10, ge=1, le=50)):
+    """Search by formula OR common name (EN/ES)."""
+    from ..release.common_names import resolve_query
+    if not q.strip():
+        raise HTTPException(400, "Query 'q' required")
+    resolution = resolve_query(q)
+    if not resolution["resolved"]:
+        return {"query": q, "resolved": False, "resolution": resolution, "results": []}
+    db = _get_db()
+    materials = db.search_materials(formula=resolution["formula"], limit=limit)
+    return {"query": q, "resolved": True, "resolution": resolution,
+            "results": [m.to_dict() for m in materials]}
+
+
+@app.get("/explain/{material_id}")
+def explain_material_ep(material_id: str):
+    """Human-readable explanation for non-scientists."""
+    from ..release.plain_language import explain_material
+    m = _get_db().get_material(material_id)
+    if not m:
+        raise HTTPException(404, "Material not found")
+    return explain_material(m)
+
+
+@app.get("/explain-formula/{formula}")
+def explain_formula(formula: str):
+    """Explain by formula (resolves common names)."""
+    from ..release.plain_language import explain_material
+    from ..release.common_names import resolve_query
+    res = resolve_query(formula)
+    if not res["resolved"]:
+        return {"formula": formula, "resolved": False, "resolution": res}
+    materials = _get_db().search_materials(formula=res["formula"], limit=1)
+    if not materials:
+        return {"formula": res["formula"], "resolved": True, "found": False}
+    return explain_material(materials[0])
+
+
 class PredictRequest(BaseModel):
     cif: str
     target: str = "band_gap"
