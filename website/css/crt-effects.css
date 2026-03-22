@@ -1,37 +1,20 @@
-/* SOST CRT Effects — Fallout Pip-Boy Terminal Style */
+/* SOST CRT Effects v2 — 50 effects handled by JS, CSS provides base styles */
 
-/* === CRT OFF — epic TV shutdown === */
-.crt-off{animation:crtOff 1.5s ease-in forwards}
-@keyframes crtOff{
-  0%{transform:scaleY(1) scaleX(1);filter:brightness(1) saturate(1)}
-  15%{transform:scaleY(1) scaleX(1);filter:brightness(1.4) saturate(1.5)}
-  35%{transform:scaleY(1.02) scaleX(0.98);filter:brightness(1.8) saturate(2) hue-rotate(10deg)}
-  55%{transform:scaleY(0.8) scaleX(1.01);filter:brightness(2.5) saturate(0.5)}
-  70%{transform:scaleY(0.1) scaleX(1);filter:brightness(3) saturate(0)}
-  85%{transform:scaleY(0.005) scaleX(0.8);filter:brightness(4) saturate(0)}
-  100%{transform:scaleY(0.002) scaleX(0.5);filter:brightness(0) saturate(0)}
-}
-
-/* === Phosphor flash on shutdown === */
-.crt-flash{position:fixed;inset:0;background:rgba(0,255,136,.15);z-index:99997;opacity:0;pointer-events:none;transition:opacity .1s}
-.crt-flash.on{opacity:1;transition:opacity .05s}
-
-/* === Zap line — horizontal beam === */
+/* Zap line */
 .crt-zap{position:fixed;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9) 20%,#fff 50%,rgba(255,255,255,.9) 80%,transparent);box-shadow:0 0 30px 6px rgba(255,255,255,.6),0 0 60px 12px rgba(0,255,136,.2);z-index:99998;opacity:0;pointer-events:none;transition:opacity .08s}
 .crt-zap.on{opacity:1}
 
-/* === Subtle scanlines on all pages === */
+/* Subtle scanlines on all pages */
 body::after{
   content:'';position:fixed;top:0;left:0;width:100%;height:100%;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px);
-  pointer-events:none;z-index:99990;
-  animation:scanDrift 8s linear infinite;
+  pointer-events:none;z-index:99990;animation:scanDrift 8s linear infinite;
 }
 @keyframes scanDrift{0%{transform:translateY(0)}100%{transform:translateY(4px)}}
 
-/* === Green phosphor glow for terminal text === */
+/* Green phosphor glow */
 .crt-glow{text-shadow:0 0 5px rgba(0,255,136,.5),0 0 10px rgba(0,255,136,.2)}
 
-/* === Terminal cursor === */
+/* Terminal cursor */
 .terminal-cursor::after{content:'█';animation:curBlink 1s step-end infinite;color:#00ff88}
 @keyframes curBlink{50%{opacity:0}}
