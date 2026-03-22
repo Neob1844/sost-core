@@ -229,7 +229,7 @@ class TestAPI:
 
     def test_version(self):
         d = self._client().get("/status").json()
-        assert d["version"] == "3.2.0"
+        assert "3.2.0" in d["version"]
 
 
 if __name__ == "__main__":

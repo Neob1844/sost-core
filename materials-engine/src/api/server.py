@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "3.2.0", "phase": "gate_recall_rescue",
+    return {"status": "ok", "version": "3.2.0-RC1", "phase": "release_candidate",
             "materials_count": db.count()}
 
 
@@ -1636,6 +1636,34 @@ def cod_recommendation():
     with open(path) as f:
         return _json.load(f)
 
+
+# --- Release endpoints ---
+
+@app.get("/release/status")
+def release_status():
+    return {"version": "3.2.0-RC1", "phase": "IV.T", "status": "release_candidate",
+            "production_models": 2, "total_endpoints": 145, "corpus_size": _get_db().count()}
+
+@app.get("/release/manifest")
+def release_manifest():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "materials_engine_release_manifest.json")
+    if not _os.path.exists(path): return {"manifest": None, "note": "Run stabilization first"}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/release/api-audit")
+def release_api_audit():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "api_audit.json")
+    if not _os.path.exists(path): return {"audit": []}
+    with open(path) as f: return {"audit": _json.load(f)}
+
+@app.get("/release/production-freeze")
+def release_production_freeze():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "production_freeze.json")
+    if not _os.path.exists(path): return {"freeze": None}
+    with open(path) as f: return _json.load(f)
 
 # --- Gate Recall Rescue endpoints ---
 

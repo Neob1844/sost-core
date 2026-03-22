@@ -1,0 +1,79 @@
+{
+  "version": "3.2.0",
+  "release_candidate": "RC1",
+  "phase": "IV.T \u2014 Engine Stabilization",
+  "created_at": "2026-03-22T10:37:55.766856+00:00",
+  "corpus": {
+    "total_materials": 76193,
+    "sources": {
+      "aflow": 200,
+      "jarvis": 75993
+    },
+    "with_formation_energy": 76193,
+    "with_band_gap": 76124,
+    "with_spacegroup": 76193,
+    "with_valid_structure": 75993,
+    "crystal_systems": {
+      "cubic": 18044,
+      "hexagonal": 8639,
+      "monoclinic": 9521,
+      "orthorhombic": 12032,
+      "tetragonal": 14912,
+      "triclinic": 3080,
+      "trigonal": 7765
+    }
+  },
+  "production_models": [
+    {
+      "target": "formation_energy",
+      "architecture": "cgcnn",
+      "dataset_size": 20000,
+      "test_mae": 0.1528,
+      "test_r2": 0.9499,
+      "checkpoint": "cgcnn_formation_energy_best.pt",
+      "phase": "IV.A"
+    },
+    {
+      "target": "band_gap",
+      "architecture": "alignn_lite",
+      "dataset_size": 20000,
+      "test_mae": 0.3422,
+      "test_r2": 0.707,
+      "checkpoint": "alignn_band_gap_best.pt",
+      "phase": "IV.B"
+    }
+  ],
+  "research_branches": {
+    "hierarchical_band_gap": {
+      "status": "watchlist",
+      "best_pipeline_mae": 0.2596,
+      "blocker": "narrow-gap regression (+0.10 vs production)",
+      "phases": "IV.N through IV.S (8 phases, 22+ models)",
+      "conclusion": "Architecture proven but gate tradeoff unsolved"
+    }
+  },
+  "api": {
+    "total_endpoints": 145,
+    "production_ready": 101,
+    "research_internal": 44
+  },
+  "tests": {
+    "test_files": 41
+  },
+  "artifacts": {
+    "total_dirs": 34
+  },
+  "limitations": [
+    "Band gap prediction MAE=0.34 eV \u2014 acceptable baseline, not state-of-art",
+    "No bulk modulus or shear modulus predictions yet",
+    "External data sources (AFLOW, MP, COD) unreachable from current environment",
+    "CPU-only training \u2014 GPU would improve convergence and allow deeper models",
+    "Hierarchical BG pipeline not promoted due to narrow-gap tradeoff"
+  ],
+  "next_steps": [
+    "Deploy API on production VPS",
+    "Acquire Materials Project API key for corpus expansion",
+    "Consider GPU-accelerated training for deeper architectures",
+    "Blockchain proof-of-discovery integration (Phase V)"
+  ]
+}
