@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "2.9.0", "phase": "nonmetal_regressor_improvement",
+    return {"status": "ok", "version": "3.0.0", "phase": "final_hierarchical_benchmark",
             "materials_count": db.count()}
 
 
@@ -1633,6 +1633,51 @@ def cod_recommendation():
     path = _os.path.join("artifacts/corpus_sources", "cod_recommendation.json")
     if not _os.path.exists(path):
         return {"recommendation": "no_cod_pilot_run_yet"}
+    with open(path) as f:
+        return _json.load(f)
+
+
+# --- Hierarchical Band Gap Final Benchmark endpoints ---
+
+@app.get("/hierarchical-band-gap-final/status")
+def hbg_final_status():
+    """Return final benchmark status."""
+    import os as _os
+    d = "artifacts/hierarchical_band_gap_final"
+    return {"phase": "IV.Q",
+            "benchmark_done": _os.path.exists(_os.path.join(d, "final_benchmark.json")),
+            "decision_made": _os.path.exists(_os.path.join(d, "final_decision.json"))}
+
+
+@app.get("/hierarchical-band-gap-final/benchmark")
+def hbg_final_benchmark():
+    """Return final benchmark results."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_final", "final_benchmark.json")
+    if not _os.path.exists(path):
+        return {"benchmark": None}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap-final/scorecard")
+def hbg_final_scorecard():
+    """Return promotion scorecard."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_final", "promotion_scorecard.json")
+    if not _os.path.exists(path):
+        return {"scorecard": None}
+    with open(path) as f:
+        return _json.load(f)
+
+
+@app.get("/hierarchical-band-gap-final/decision")
+def hbg_final_decision():
+    """Return final promotion decision."""
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/hierarchical_band_gap_final", "final_decision.json")
+    if not _os.path.exists(path):
+        return {"decision": "no_decision_yet"}
     with open(path) as f:
         return _json.load(f)
 

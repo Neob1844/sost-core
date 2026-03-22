@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.P — Non-Metal Regressor Improvement (v2.9.0)**
+> **Current phase: IV.Q — Final Hierarchical Promotion Benchmark (v3.0.0)**
 
 ## What exists (implemented and tested)
 
@@ -210,6 +210,25 @@
 - **Production model UNCHANGED** (ALIGNN-Lite 20K, MAE=0.3422)
 - **API**: `GET /hierarchical-band-gap-regressor/status`, `/challengers`, `/comparison`, `/decision`
 
+### Final Hierarchical Promotion Benchmark (Phase IV.Q)
+- **What it is**: Direct, definitive benchmark comparing production vs hierarchical on 2,000 real test materials
+- **Key difference from previous phases**: ALL bucket MAE measured directly, not projected
+- **Results** (DIRECT measurement on 2,000 materials):
+
+| Pipeline | Overall MAE | Metals | Narrow-gap | Wide-gap |
+|----------|------------|--------|-----------|----------|
+| Production | 0.3407 | 0.1907 | **0.5135** | 0.8682 |
+| Hierarchical V2 | **0.2628** | **0.0892** | 0.6495 | **0.8116** |
+| Delta | **-0.0779 (-22.9%)** | **-0.1015** | **+0.1360** | **-0.0566** |
+
+- **Scorecard**: Overall PASS, metals PASS, wide-gap PASS, **narrow-gap FAIL** (+0.136 > +0.10 tolerance)
+- **Decision: HOLD_SINGLE_STAGE_BG** — narrow-gap regression (0.514→0.650) blocks promotion
+- **Root cause**: Gate sends ~20% of narrow-gap semiconductors to BG=0 (false negatives)
+- **Production model UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422) remains
+- **Total BG effort**: IV.L→IV.Q = 7 phases, 17+ real models, 1 definitive benchmark
+- **Conclusion**: Hierarchical IS architecturally superior overall, but needs better gate recall for 0.05-1.0 eV materials before promotion
+- **API**: `GET /hierarchical-band-gap-final/status`, `/benchmark`, `/scorecard`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -230,7 +249,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (854 tests)
+# Run all tests (870 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -335,3 +354,4 @@ curl http://localhost:8000/generation/presets
 | test_hierarchical_bandgap.py | 20 | Metal gate, regressor, pipeline, promotion rules, API |
 | test_gate_calibration.py | 22 | Threshold sweep, routing policies, calibration, API |
 | test_regressor_improvement.py | 18 | Regressor challengers, pipeline comparison, promotion, API |
+| test_final_benchmark.py | 16 | Final benchmark, scorecard, promotion decision, registry, API |

@@ -1,0 +1,139 @@
+{
+  "scorecard": {
+    "overall_improvement": 0.0779,
+    "overall_improvement_pct": 22.86,
+    "narrow_gap_acceptable": false,
+    "narrow_gap_delta": 0.136,
+    "metals_preserved": true,
+    "metals_delta": -0.1015,
+    "wide_gap_improved": true,
+    "wide_gap_delta": -0.0566,
+    "complexity_justified": true,
+    "promote": false,
+    "score_details": {
+      "production": {
+        "name": "production_alignn_20k",
+        "role": "production",
+        "overall_mae": 0.3407,
+        "overall_rmse": 0.6806,
+        "overall_r2": 0.7661,
+        "bucket_mae": {
+          "0.0-0.05": 0.1907,
+          "0.05-1.0": 0.5135,
+          "1.0-3.0": 0.795,
+          "3.0-6.0": 0.8682,
+          "6.0+": 1.6707
+        },
+        "bucket_counts": {
+          "0.0-0.05": 1486,
+          "0.05-1.0": 142,
+          "1.0-3.0": 192,
+          "3.0-6.0": 160,
+          "6.0+": 20
+        },
+        "sample_size": 2000,
+        "elapsed_sec": 2.8
+      },
+      "hierarchical": {
+        "name": "hierarchical_v2_gate_reg",
+        "role": "hierarchical",
+        "overall_mae": 0.2628,
+        "overall_rmse": 0.669,
+        "overall_r2": 0.774,
+        "bucket_mae": {
+          "0.0-0.05": 0.0892,
+          "0.05-1.0": 0.6495,
+          "1.0-3.0": 0.8102,
+          "3.0-6.0": 0.8116,
+          "6.0+": 0.7725
+        },
+        "bucket_counts": {
+          "0.0-0.05": 1486,
+          "0.05-1.0": 142,
+          "1.0-3.0": 192,
+          "3.0-6.0": 160,
+          "6.0+": 20
+        },
+        "sample_size": 2000,
+        "elapsed_sec": 2.4
+      },
+      "threshold_narrow_gap_delta": 0.1,
+      "threshold_metal_delta": 0.05,
+      "threshold_min_improvement": 0.01
+    }
+  },
+  "decision": {
+    "decision": "HOLD_SINGLE_STAGE_BG",
+    "production_mae": 0.3407,
+    "hierarchical_mae": 0.2628,
+    "improvement": 0.0779,
+    "improvement_pct": 22.86,
+    "scorecard": {
+      "overall_improvement": 0.0779,
+      "overall_improvement_pct": 22.86,
+      "narrow_gap_acceptable": false,
+      "narrow_gap_delta": 0.136,
+      "metals_preserved": true,
+      "metals_delta": -0.1015,
+      "wide_gap_improved": true,
+      "wide_gap_delta": -0.0566,
+      "complexity_justified": true,
+      "promote": false,
+      "score_details": {
+        "production": {
+          "name": "production_alignn_20k",
+          "role": "production",
+          "overall_mae": 0.3407,
+          "overall_rmse": 0.6806,
+          "overall_r2": 0.7661,
+          "bucket_mae": {
+            "0.0-0.05": 0.1907,
+            "0.05-1.0": 0.5135,
+            "1.0-3.0": 0.795,
+            "3.0-6.0": 0.8682,
+            "6.0+": 1.6707
+          },
+          "bucket_counts": {
+            "0.0-0.05": 1486,
+            "0.05-1.0": 142,
+            "1.0-3.0": 192,
+            "3.0-6.0": 160,
+            "6.0+": 20
+          },
+          "sample_size": 2000,
+          "elapsed_sec": 2.8
+        },
+        "hierarchical": {
+          "name": "hierarchical_v2_gate_reg",
+          "role": "hierarchical",
+          "overall_mae": 0.2628,
+          "overall_rmse": 0.669,
+          "overall_r2": 0.774,
+          "bucket_mae": {
+            "0.0-0.05": 0.0892,
+            "0.05-1.0": 0.6495,
+            "1.0-3.0": 0.8102,
+            "3.0-6.0": 0.8116,
+            "6.0+": 0.7725
+          },
+          "bucket_counts": {
+            "0.0-0.05": 1486,
+            "0.05-1.0": 142,
+            "1.0-3.0": 192,
+            "3.0-6.0": 160,
+            "6.0+": 20
+          },
+          "sample_size": 2000,
+          "elapsed_sec": 2.4
+        },
+        "threshold_narrow_gap_delta": 0.1,
+        "threshold_metal_delta": 0.05,
+        "threshold_min_improvement": 0.01
+      }
+    },
+    "rationale": "Blocked by: narrow-gap regression (+0.1360)",
+    "registry_updated": false,
+    "new_production_model": null,
+    "created_at": "2026-03-21T13:00:34.736190+00:00"
+  }
+}

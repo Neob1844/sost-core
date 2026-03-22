@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.P (v2.9.0)**
+> **Document status: Active implementation — Phase IV.Q (v3.0.0)**
 > Last updated: 2026-03-21
 
 ---
@@ -669,6 +669,18 @@ Predict property degradation over time under operating conditions — thermal cy
 - Decision: **WATCHLIST** — strong overall improvement, projected narrow-gap still elevated
 - Total hierarchical BG effort: IV.N (gate+reg) + IV.O (calibration) + IV.P (regressor) = focused pipeline
 - 4 API endpoints + 18 tests (854 total), version 2.9.0
+
+### Phase IV.Q — Final Hierarchical Promotion Benchmark ✅
+- Direct benchmark on 2,000 real materials (not projections)
+- Production: MAE=0.3407 | Hierarchical V2: MAE=0.2628 (**-22.9%**)
+- Metals: 0.1907 → 0.0892 (massive improvement)
+- Wide-gap: 0.8682 → 0.8116 (improved)
+- **Narrow-gap: 0.5135 → 0.6495 (+0.136 REGRESSION)** — blocks promotion
+- Scorecard: 4/5 PASS, narrow-gap FAIL
+- **Decision: HOLD_SINGLE_STAGE_BG** — production retained
+- Registry NOT updated
+- The hierarchical architecture IS superior overall but needs better gate for borderline semiconductors
+- 4 API endpoints + 16 tests (870 total), version 3.0.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)
