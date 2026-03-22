@@ -29,8 +29,11 @@ def main():
     from geaspirit.model import train_and_evaluate
 
     # Load index rasters
-    pattern = os.path.join(args.indices, f"{args.zone}*.tif")
+    pattern = os.path.join(args.indices, f"{args.zone}*_s2_*.tif")
     tif_files = sorted(glob.glob(pattern))
+    if not tif_files:
+        pattern = os.path.join(args.indices, f"{args.zone}*.tif")
+        tif_files = sorted(f for f in glob.glob(pattern) if os.path.isfile(f))
     if not tif_files:
         print(f"No index TIFFs found matching {pattern}")
         sys.exit(1)
