@@ -178,33 +178,55 @@ def smart_search(q: str = Query("", description="Formula or common name"),
         return {"query": q, "resolved": True, "resolution": resolution, "results": [],
                 "entity_explanation": explain_known_entity(resolution)}
 
-    # Group variants by formula with representative selection
+    # Group variants with canonical selection + ranking
     grouped = {}
     for m in materials:
         f = m.formula
         if f not in grouped:
             grouped[f] = {"formula": f, "count": 0, "variants": [],
-                          "representative": None, "best_fe": None, "representative_sg": None}
+                          "canonical": None, "best_fe": None, "canonical_sg": None,
+                          "canonical_id": None, "canonical_reason": ""}
         g = grouped[f]
         g["count"] += 1
         d = m.to_dict()
+        d["_ranking"] = {
+            "score": round(1.0 - (abs(m.formation_energy) * 0.01 if m.formation_energy else 0.5), 3),
+            "exact_match": m.formula == resolution["formula"],
+            "resolved_from_alias": resolution.get("source") in ("common_name", "fuzzy_name"),
+        }
         g["variants"].append(d)
-        # Pick representative: lowest formation energy, then first
+        # Canonical: lowest formation energy
         if m.formation_energy is not None:
             if g["best_fe"] is None or m.formation_energy < g["best_fe"]:
                 g["best_fe"] = m.formation_energy
-                g["representative"] = d
-                g["representative_sg"] = m.spacegroup
-                g["representative_id"] = m.canonical_id
-        elif g["representative"] is None:
-            g["representative"] = d
-            g["representative_sg"] = m.spacegroup
-            g["representative_id"] = m.canonical_id
+                g["canonical"] = d
+                g["canonical_sg"] = m.spacegroup
+                g["canonical_id"] = m.canonical_id
+                g["canonical_reason"] = "Most stable known variant (lowest formation energy) in corpus"
+        elif g["canonical"] is None:
+            g["canonical"] = d
+            g["canonical_sg"] = m.spacegroup
+            g["canonical_id"] = m.canonical_id
+            g["canonical_reason"] = "First available variant in corpus"
+
+    # Split visible vs extra variants (show max 3 upfront)
+    for g in grouped.values():
+        if g["count"] > 3:
+            g["visible_variants"] = g["variants"][:3]
+            g["extra_variants_count"] = g["count"] - 3
+        else:
+            g["visible_variants"] = g["variants"]
+            g["extra_variants_count"] = 0
+        # Mark canonical in ranking
+        if g["canonical"]:
+            g["canonical"]["_ranking"]["canonical"] = True
 
     has_multi = any(g["count"] > 1 for g in grouped.values())
     return {"query": q, "resolved": True, "resolution": resolution,
             "results": [m.to_dict() for m in materials],
             "grouped": list(grouped.values()),
+            "canonical_result": next((g["canonical"] for g in grouped.values() if g["canonical"]), None),
+            "canonical_reason": next((g["canonical_reason"] for g in grouped.values() if g["canonical_reason"]), ""),
             "variant_note": "Same formula, different crystal arrangements (polymorphs)" if has_multi else None,
             "has_multiple_variants": has_multi}
 

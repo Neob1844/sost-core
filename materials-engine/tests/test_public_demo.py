@@ -218,6 +218,35 @@ class TestSmartSearchAPI:
         assert d["resolved"]
         assert "grouped" in d
 
+    def test_canonical_result_present(self):
+        r = self._client().get("/smart-search?q=GaAs")
+        d = r.json()
+        assert "canonical_result" in d
+        if d["canonical_result"]:
+            assert "canonical_id" in d["canonical_result"] or "formula" in d["canonical_result"]
+
+    def test_canonical_reason_present(self):
+        r = self._client().get("/smart-search?q=NaCl")
+        d = r.json()
+        assert "canonical_reason" in d
+        assert len(d["canonical_reason"]) > 0
+
+    def test_ranking_in_grouped_variants(self):
+        r = self._client().get("/smart-search?q=GaAs")
+        d = r.json()
+        if d.get("grouped") and d["grouped"][0]["variants"]:
+            v = d["grouped"][0]["variants"][0]
+            assert "_ranking" in v
+            assert "score" in v["_ranking"]
+
+    def test_visible_variants_limit(self):
+        r = self._client().get("/smart-search?q=SiO2")
+        d = r.json()
+        if d.get("grouped"):
+            g = d["grouped"][0]
+            assert "visible_variants" in g
+            assert "extra_variants_count" in g
+
     def test_explain_nitrogen(self):
         r = self._client().get("/explain-formula/nitrogen")
         d = r.json()

@@ -735,6 +735,17 @@ function doSearch(){
         if(res.composition){html+='<div style="margin-top:4px;color:#888">Typical composition: '+sanitize(res.composition)+'</div>'}
         el.innerHTML=html;return;
       }
+      // Canonical result card
+      var cr=d.canonical_result;
+      if(cr){
+        var bg=cr.band_gap!=null?cr.band_gap.toFixed(4)+' eV':'—';
+        var fe=cr.formation_energy!=null?cr.formation_energy.toFixed(4)+' eV/at':'—';
+        header+='<div style="background:#080808;border:1px solid #1a1a1a;border-left:3px solid #fb010d;padding:12px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><span style="color:#67e8f9;font-size:15px;font-weight:700">'+sanitize(cr.formula)+'</span> <span style="color:#444;font-size:11px">SG '+sanitize(String(cr.spacegroup||'—'))+'</span></div><span style="font-size:9px;padding:2px 8px;background:rgba(251,1,13,.1);color:#fb010d;border:1px solid rgba(251,1,13,.2);border-radius:3px">RECOMMENDED RESULT</span></div>';
+        header+='<div style="display:flex;gap:16px;margin-top:6px;font-size:12px"><span style="color:#888">Band gap: <b style="color:#4ade80">'+bg+'</b></span><span style="color:#888">Formation E: <b style="color:#4ade80">'+fe+'</b></span><span style="color:#888">Source: <b style="color:#666">'+sanitize(cr.source||'—')+'</b></span></div>';
+        header+='<div style="margin-top:6px;font-size:10px;color:#555">'+sanitize(d.canonical_reason||'')+'</div>';
+        header+='<span style="color:#fb010d;cursor:pointer;font-size:11px;margin-top:6px;display:inline-block" onclick="doExplain(\''+sanitize(cr.canonical_id)+'\')"">EXPLAIN THIS MATERIAL ▸</span>';
+        header+='</div>';
+      }
       var items=d.results||[];
       if(!items.length){el.innerHTML=header+'<span style="color:#f59e0b">Formula '+sanitize(res.formula||q)+' not in corpus</span>';return}
       var html=header+'<table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--red-primary,#fb010d);border-bottom:1px solid #222"><th style="text-align:left;padding:4px">Formula</th><th style="text-align:left;padding:4px">SG</th><th style="text-align:right;padding:4px">Band Gap</th><th style="text-align:right;padding:4px">Form. Energy</th><th style="text-align:left;padding:4px">Source</th><th style="padding:4px"></th></tr></thead><tbody>';
@@ -749,12 +760,13 @@ function doSearch(){
           html+='<div style="margin-top:10px;background:#080808;border:1px solid #222;padding:10px;font-size:11px">';
           html+='<span style="color:#67e8f9;font-weight:700">'+sanitize(g.formula)+'</span> — ';
           html+='<span style="color:#fbbf24">'+g.count+' crystal variants</span>';
-          if(g.representative_sg){html+=' · Representative: SG '+g.representative_sg}
+          if(g.canonical_sg){html+=' · Canonical: SG '+g.canonical_sg}
           if(g.best_fe!=null){html+=' · Best FE: <span style="color:#4ade80">'+g.best_fe.toFixed(3)+' eV/at</span>'}
-          html+='<div style="color:#666;margin-top:4px;font-style:italic">Same chemistry, different crystal arrangements (polymorphs)</div>';
+          html+='<div style="color:#666;margin-top:4px;font-style:italic">Same chemistry, different crystal arrangements (polymorphs). Differences may affect stability or electronic behavior.</div>';
+          if(g.extra_variants_count>0){html+='<div style="color:#555;margin-top:4px;font-size:10px">Showing 3 of '+g.count+' variants. '+g.extra_variants_count+' additional variant'+(g.extra_variants_count>1?'s':'')+' available in API.</div>'}
           html+='</div>';
         }});
-      } else if(d.variant_note){html+='<div style="margin-top:8px;font-size:11px;color:#888;font-style:italic">'+sanitize(d.variant_note)+'</div>'}
+      }
       el.innerHTML=html;
     })
     .catch(function(){el.innerHTML='<span style="color:#fb010d">API unavailable — deploy Materials Engine on VPS first</span>'});
