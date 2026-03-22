@@ -98,11 +98,14 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   </nav>
 </div>
 
+<script src="/js/retro-sounds.js"></script>
 <script>
-/* ===== SPLASH (7s) ===== */
+/* ===== SPLASH (7s) + chiptune ===== */
 ['s1','s2','s3','s4'].forEach(function(id,i){
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
+// Chiptune starts on splash (PWA counts icon tap as user gesture)
+try{if(typeof playChiptuneSplash==='function')playChiptuneSplash(7);}catch(e){}
 setTimeout(function(){
   var appEl=document.getElementById('app');
   appEl.style.display='flex';
@@ -147,7 +150,7 @@ function initLoading(){
     var rem=Math.max(0,60-elapsed);
     logoAngle+=6;
     logo.style.transform='rotate('+logoAngle+'deg)';
-    if(rem>0){num.textContent=rem;}
+    if(rem>0){num.textContent=rem;if(typeof speakCountdown==='function')speakCountdown(rem);}
     else{num.textContent='...';lbl.textContent='WAITING FOR NODE...';lbl.style.color='#f59e0b';}
   },1000);
   dtTimer=setInterval(function(){
@@ -182,6 +185,7 @@ function go(t){
 
   fr.classList.remove('visible');
   fr.classList.add('fading');
+  if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
 
   setTimeout(function(){
     ef.style.display='none';
