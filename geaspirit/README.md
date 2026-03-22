@@ -1,4 +1,4 @@
-# Geaspirit Platform — Mineral Detection via Free Satellite AI
+# GeaSpirit Platform — Mineral Detection via Free Satellite AI
 
 Fuses computational materials science with satellite remote sensing to detect mineral deposits using free data and AI.
 

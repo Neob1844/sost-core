@@ -1,4 +1,4 @@
-"""Spectral library parsing and matching for Geaspirit Platform."""
+"""Spectral library parsing and matching for GeaSpirit Platform."""
 import os
 import csv
 import numpy as np

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download Sentinel-2 L2A for Geaspirit Platform pilot zones via Google Earth Engine.
+"""Download Sentinel-2 L2A for GeaSpirit Platform pilot zones via Google Earth Engine.
 
 Prerequisites: pip install earthengine-api && earthengine authenticate
 Usage: python3 scripts/download_sentinel2.py --zone chuquicamata
@@ -126,7 +126,7 @@ def validate_tiff(path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download Sentinel-2 for Geaspirit Platform pilot zone")
+    parser = argparse.ArgumentParser(description="Download Sentinel-2 for GeaSpirit Platform pilot zone")
     parser.add_argument("--zone", default="chuquicamata", choices=list(ZONES.keys()))
     parser.add_argument("--output", default=None, help="Output .tif path")
     parser.add_argument("--start-date", default="2024-01-01")
@@ -145,7 +145,7 @@ def main():
     bbox = get_bbox(zone["center"])
 
     print(f"{'='*60}")
-    print(f"  Geaspirit Platform — Sentinel-2 Download")
+    print(f"  GeaSpirit Platform — Sentinel-2 Download")
     print(f"  Zone: {args.zone} ({zone['desc']})")
     print(f"  BBox: {bbox}")
     print(f"  Date: {args.start_date} to {args.end_date}")

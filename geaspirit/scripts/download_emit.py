@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download EMIT hyperspectral data for Geaspirit Platform pilot zones.
+"""Download EMIT hyperspectral data for GeaSpirit Platform pilot zones.
 
 EMIT data is available from NASA Earthdata (requires free account).
 Coverage: ISS orbit (~52°N-52°S), not global.
