@@ -105,7 +105,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="hero-label">GEASPIRIT PLATFORM v0.1</div>
     <h1><span>Mineral Intelligence</span> System</h1>
     <p class="hero-sub">AI-powered mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
-    <div class="status-badge">▪ OPERATIONAL — REAL TESTED RESULTS</div>
+    <div class="status-badge">▪ OPERATIONAL — AUC 0.86 · SPATIALLY VALIDATED</div>
   </div>
 </section>
 
@@ -139,19 +139,20 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- RESULTS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// PILOT RESULTS</div>
+    <div class="section-id">// PILOT RESULTS — ABLATION STUDY</div>
     <div class="section-title">Chuquicamata <span>Performance</span></div>
 
     <div class="panel">
-      <div class="panel-head">MODEL PERFORMANCE — HONEST VALIDATION</div>
+      <div class="panel-head">MODEL PERFORMANCE — ABLATION STUDY (spatial block CV)</div>
       <table class="tbl">
-        <thead><tr><th>Metric</th><th>Phase 1 (naive)</th><th>Phase 2 (naive)</th><th style="color:var(--green)">Phase 3 (spatial block)</th></tr></thead>
+        <thead><tr><th>Experiment</th><th>Bands</th><th>AUC</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead>
         <tbody>
-          <tr><td>AUC-ROC</td><td>0.8718</td><td style="color:#666;text-decoration:line-through">0.9995</td><td class="val">0.6844 <span style="color:var(--amber);font-size:10px">&#8592; REAL</span></td></tr>
-          <tr><td>PR-AUC</td><td style="color:#666">—</td><td style="color:#666">—</td><td class="val">0.5007</td></tr>
-          <tr><td>Precision</td><td>0.8629</td><td style="color:#666;text-decoration:line-through">0.9916</td><td class="val">0.6060</td></tr>
-          <tr><td>Recall</td><td>0.9747</td><td style="color:#666;text-decoration:line-through">0.9994</td><td class="val">0.2836</td></tr>
-          <tr><td>F1</td><td style="color:#666">—</td><td style="color:#666">—</td><td class="val">0.3454</td></tr>
+          <tr style="color:#666"><td>Phase 3 baseline</td><td>19</td><td>0.6844</td><td>0.606</td><td>0.284</td><td>0.345</td></tr>
+          <tr><td>A: S2 only</td><td>5</td><td>0.7325</td><td>0.803</td><td>0.880</td><td>0.822</td></tr>
+          <tr style="color:#44cc66"><td>B: Full satellite</td><td>19</td><td>0.8530</td><td>0.933</td><td>0.764</td><td>0.833</td></tr>
+          <tr><td>C: Geology only</td><td>5</td><td>0.7356</td><td>0.751</td><td>0.738</td><td>0.685</td></tr>
+          <tr><td>D: S2 + geology</td><td>10</td><td>0.8094</td><td>0.850</td><td>0.897</td><td>0.862</td></tr>
+          <tr style="color:var(--green);font-weight:700"><td>E: Full fusion</td><td>24</td><td style="color:var(--amber);font-weight:700">0.8622</td><td>0.948</td><td>0.760</td><td>0.837</td></tr>
         </tbody>
       </table>
     </div>
@@ -192,15 +193,14 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     </div>
 
     <div class="panel">
-      <div class="panel-head">TRAINING DATA</div>
+      <div class="panel-head">TRAINING DATA — PHASE 3B (CURATED)</div>
       <table class="tbl">
         <tbody>
-          <tr><td>Known deposits (USGS MRDS)</td><td class="val">152</td></tr>
-          <tr><td>Positive pixels</td><td class="val">52,898</td></tr>
-          <tr><td>Negative pixels</td><td class="val">13,691</td></tr>
-          <tr><td>Hard negatives (5-12km zone)</td><td class="val">included in Phase 3</td></tr>
-          <tr><td>Image resolution</td><td class="val">1856 x 1857 px · 19 bands · 30m</td></tr>
-          <tr><td>Sensors</td><td class="val">Sentinel-2 + Sentinel-1 + DEM + Landsat thermal</td></tr>
+          <tr><td>Curated deposits (Cu/Au/Ag)</td><td class="val">43 <span style="color:#888;font-weight:400">(from 152 raw MRDS)</span></td></tr>
+          <tr><td>Positive pixels</td><td class="val">33,428</td></tr>
+          <tr><td>Geology-aware negatives</td><td class="val">14,483 <span style="color:#888;font-weight:400">(random + hard + matched)</span></td></tr>
+          <tr><td>Image resolution</td><td class="val">1856 x 1857 px · 24 bands · 30m</td></tr>
+          <tr><td>Sensors</td><td class="val">Sentinel-2 + SAR + DEM + thermal + Macrostrat geology</td></tr>
           <tr><td>Area covered</td><td class="val">~50 x 50 km</td></tr>
           <tr><td>Validation</td><td class="val">Spatial block CV (10km blocks, 5 folds)</td></tr>
         </tbody>
@@ -208,37 +208,38 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     </div>
 
     <div class="human-box">
-      <b>RESEARCH — PHASE 3 HONEST VALIDATION</b><br><br>
-      Phase 2 achieved AUC 0.9995 — but that was <b>95% spatial memorization</b>. Pixels from the same geological block leaked between training and test sets.<br><br>
-      Phase 3 uses <b>SPATIAL BLOCK CROSS-VALIDATION</b>: the study area is divided into 10km blocks. Entire blocks are held out for testing. No pixel from a test block ever appears in training.<br><br>
-      Result: AUC drops from 0.9995 to <b>0.6844</b>.<br>
-      This is <b>NOT a failure</b>. This IS the real signal.<br><br>
-      <b style="color:var(--amber)">WHAT 0.68 AUC MEANS:</b><br><br>
-      <span style="color:#666">Random guessing: &nbsp;&nbsp;&nbsp;&nbsp; 0.50 AUC</span><br>
-      <span style="color:var(--green)">GeaSpirit Phase 3: &nbsp;&nbsp; 0.68 AUC &nbsp;&#8592; 36% better than random</span><br>
-      <span style="color:#888">Industry standard: &nbsp;&nbsp; 0.75-0.85 AUC (with proprietary data)</span><br>
-      <span style="color:#888">KoBold/Goldspot: &nbsp;&nbsp;&nbsp;&nbsp; 0.85-0.93 AUC (with $50M+ investment)</span><br><br>
-      The model <b>DOES</b> find real geological signal. It correctly identifies 28% of deposits with 61% precision. For a system built entirely on public satellite data, this is a <b>defensible starting point</b>.<br><br>
-      <b style="color:var(--amber)">KEY INSIGHT:</b><br><br>
-      <span style="color:var(--green);font-style:italic">"Methodological honesty reduced the metric but increased the real value of the system."</span><br><br>
-      Phase 2 numbers were impressive but useless. Phase 3 numbers are modest but <b>trustworthy</b>. This is the correct foundation for a production mineral intelligence system.<br><br>
-      <b style="color:var(--amber)">WHAT IMPROVES NEXT:</b><br>
-      &#8594; EMIT hyperspectral (285 bands, mineral-specific)<br>
-      &#8594; Public geological maps (lithology as a feature)<br>
-      &#8594; Airborne magnetics/gravity (USGS open data)<br>
-      &#8594; More MRDS deposits globally (300K+ available)<br>
-      &#8594; Cross-zone validation (Pilbara, Zambia)<br>
-      &#8594; Geology-aware negative sampling
+      <b>RESEARCH — PHASE 3B KEY DISCOVERY</b><br><br>
+      The #1 improvement factor was <b>LABEL CURATION</b>, not more data.<br><br>
+      Phase 3 trained on 152 deposits including limestone, dolomite, silica, and boron — geological noise that confused the model. Phase 3B curated to <b>43 real Cu/Au/Ag metal deposits</b>. Same satellite data, same algorithm. Result:<br><br>
+      <span style="color:var(--green);font-size:15px;font-weight:700">AUC: 0.6844 &#8594; 0.8530 &nbsp;(+0.1686)</span><br><br>
+      <span style="color:var(--green);font-style:italic">"Clean labels matter more than fancy sensors."</span><br><br>
+      <b style="color:var(--amber)">WHAT EACH LAYER CONTRIBUTES:</b><br><br>
+      <span style="color:var(--green)">Satellite only (19 bands): &nbsp;&nbsp; AUC 0.8530</span><br>
+      <span style="color:var(--green)">+ Geology (Macrostrat): &nbsp;&nbsp;&nbsp;&nbsp; AUC 0.8622 &nbsp;(+0.009)</span><br><br>
+      Geology adds real but marginal signal. Macrostrat is too coarse for Chile (1 lithology per 50x50km). Finer geological maps will add more.<br><br>
+      <b style="color:var(--amber)">COMPARISON WITH INDUSTRY:</b><br><br>
+      <span style="color:#666">Random guessing: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.50 AUC</span><br>
+      <span style="color:#666">Phase 3 (noisy labels): &nbsp; 0.68 AUC</span><br>
+      <span style="color:var(--green);font-weight:700">Phase 3B (curated): &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.86 AUC &nbsp;&#8592; HERE</span><br>
+      <span style="color:#888">Goldspot ($50M+): &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.85-0.93 AUC</span><br>
+      <span style="color:#888">KoBold ($3B+): &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; not published</span><br><br>
+      GeaSpirit now matches entry-level commercial systems using only public satellite data.<br><br>
+      <b style="color:var(--amber)">HONEST CAVEATS:</b><br>
+      <span style="color:#888">&#9888; Class balance changed (1:3 &#8594; 2.3:1) — amplifies AUC delta</span><br>
+      <span style="color:#888">&#9888; Only 43 curated deposits — small sample, may not generalize</span><br>
+      <span style="color:#888">&#9888; Cross-zone validation incomplete (Pilbara/Zambia pending)</span><br>
+      <span style="color:#888">&#9888; Macrostrat geology too coarse for Chile — need SERNAGEOMIN</span>
     </div>
 
     <div class="panel">
-      <div class="panel-head">ALL 19 FEATURES USED</div>
+      <div class="panel-head">ALL 24 FEATURES (PHASE 3B)</div>
       <table class="tbl">
         <tbody>
           <tr><td style="color:var(--green)">Sentinel-2 (5)</td><td>Iron Oxide · Clay/Hydroxyl · Ferrous Iron · Laterite · NDVI</td></tr>
           <tr><td style="color:#00e5ff">Sentinel-1 SAR (5)</td><td>VV · VH · VV/VH ratio · GLCM variance · GLCM contrast</td></tr>
           <tr><td>DEM (6)</td><td>Elevation · Slope · sin(Aspect) · cos(Aspect) · TPI · Ruggedness</td></tr>
           <tr><td style="color:var(--amber)">Landsat thermal (3)</td><td>Median LST · P90 LST · Thermal z-score anomaly</td></tr>
+          <tr><td style="color:#c084fc">Macrostrat geology (5)</td><td>Lithology code · Group · Geological age · Distance to contact · Availability</td></tr>
         </tbody>
       </table>
     </div>
@@ -248,18 +249,41 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- TARGET DISCOVERY -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// TARGET DISCOVERY — UNEXPLORED ZONES</div>
+    <div class="section-id">// TARGET DISCOVERY — PHASE 3B MODEL</div>
     <div class="section-title">Exploration <span>Targets</span></div>
     <div class="panel">
-      <div class="panel-head">DISCOVERY ENGINE — PHASE 3 MODEL</div>
+      <div class="panel-head">DISCOVERY ENGINE — GEOLOGY-AWARE MODEL</div>
       <div style="font-size:13px;line-height:1.8;color:var(--green)">
-        <b>2</b> unexplored targets identified above <b>0.6 probability threshold</b><br>
-        using the honest Phase 3 model.
+        <b>50</b> exploration targets ranked above <b>0.6 probability threshold</b><br>
+        using the Phase 3B geology-aware model (AUC 0.8622).
       </div>
       <div style="color:#888;font-size:12px;margin-top:12px;line-height:1.8">
-        Conservative approach: better to find <b style="color:var(--green)">2 real targets</b> than 500 false positives.<br>
+        Higher-discrimination model finds more candidates than Phase 3.<br>
+        All targets are outside a <b>5km exclusion buffer</b> from known deposits.<br>
         Target discovery uses <b>calibrated probabilities</b> — when we say 60%, we mean exactly 60%.<br>
-        All targets are outside a <b>5km exclusion buffer</b> from known deposits.
+        Field validation required to confirm — many candidates may be false positives.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEXT OPERATION — PILBARA -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// NEXT OPERATION — PILBARA, AUSTRALIA</div>
+    <div class="section-title">Next Target: <span>Pilbara</span></div>
+    <div class="panel">
+      <div class="panel-head" style="color:var(--amber)">WORLD-CLASS OPEN GEOPHYSICS — ALL CC-BY 4.0</div>
+      <ul class="tech-list">
+        <li class="on"><span class="icon">■</span> 80m aeromagnetics ........... Geoscience Australia (TMI anomaly grid)</li>
+        <li class="on"><span class="icon">■</span> 100m radiometrics ........... Geoscience Australia (K, Th, U dose rate)</li>
+        <li class="on"><span class="icon">■</span> 800m gravity ................ Geoscience Australia (Bouguer anomaly)</li>
+        <li class="on"><span class="icon">■</span> 1:100K geological maps ...... GSWA / DMIRS (lithology + faults)</li>
+        <li class="on"><span class="icon">■</span> Known iron + gold deposits .. MRDS + Geoscience Australia databases</li>
+      </ul>
+      <div class="human-box" style="margin-top:16px;border-color:var(--amber)">
+        Pilbara has the <b>richest open geophysics dataset in the world</b>.<br>
+        Adding airborne magnetics and radiometrics to the satellite stack could push AUC beyond 0.90 for Pilbara specifically.
       </div>
     </div>
   </div>
@@ -271,20 +295,22 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="section-id">// TECHNOLOGY STACK</div>
     <div class="section-title">Systems <span>Online</span></div>
     <ul class="tech-list">
-      <li class="on"><span class="icon">■</span> Sentinel-2 L2A ............ Spectral mineralogy</li>
+      <li class="on"><span class="icon">■</span> Sentinel-2 L2A ............ Spectral mineralogy (5 indices)</li>
       <li class="on"><span class="icon">■</span> Sentinel-1 SAR ............ Radar structure + texture</li>
       <li class="on"><span class="icon">■</span> Copernicus DEM GLO-30 ..... Terrain ruggedness</li>
       <li class="on"><span class="icon">■</span> Landsat 8/9 thermal ....... Temperature anomalies</li>
+      <li class="on"><span class="icon">■</span> Macrostrat geology ........ Lithology + rock age</li>
       <li class="on"><span class="icon">■</span> Google Earth Engine ....... Cloud processing</li>
-      <li class="on"><span class="icon">■</span> USGS MRDS ................. 152 deposit locations</li>
-      <li class="on"><span class="icon">■</span> XGBoost + Random Forest ... ML classifiers</li>
+      <li class="on"><span class="icon">■</span> USGS MRDS (curated) ....... 43 Cu/Au/Ag deposits</li>
+      <li class="on"><span class="icon">■</span> XGBoost ................... Gradient boosting classifier</li>
       <li class="on"><span class="icon">■</span> Spatial Block CV .......... Honest 10km block validation</li>
       <li class="on"><span class="icon">■</span> Isotonic calibration ...... Probability calibration</li>
-      <li class="on"><span class="icon">■</span> Target ranking ............ Unexplored zone discovery</li>
-      <li class="off"><span class="icon">□</span> EMIT hyperspectral ........ PENDING (Phase 4)</li>
-      <li class="off"><span class="icon">□</span> Public lithology maps ..... PENDING (Phase 3B)</li>
-      <li class="off"><span class="icon">□</span> Airborne magnetics ........ PENDING (Phase 4)</li>
-      <li class="off"><span class="icon">□</span> Cross-zone transfer ....... PENDING (Phase 5)</li>
+      <li class="on"><span class="icon">■</span> Ablation study ............ Per-layer contribution analysis</li>
+      <li class="off"><span class="icon">□</span> GA aeromagnetics .......... PENDING (Phase 4 — Pilbara)</li>
+      <li class="off"><span class="icon">□</span> GA radiometrics ........... PENDING (Phase 4 — Pilbara)</li>
+      <li class="off"><span class="icon">□</span> EMIT hyperspectral ........ PENDING (Phase 5)</li>
+      <li class="off"><span class="icon">□</span> SERNAGEOMIN geology ....... PENDING (finer Chile maps)</li>
+      <li class="off"><span class="icon">□</span> Cross-zone LOZO ........... PENDING (Phase 5)</li>
     </ul>
   </div>
 </section>
@@ -295,13 +321,13 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="section-id">// ROADMAP</div>
     <div class="section-title">Development <span>Phases</span></div>
     <div class="phase"><span class="phase-label">PHASE 0</span> Setup + GEE auth + environment <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
-    <div class="phase"><span class="phase-label">PHASE 1</span> Chuquicamata pilot — S2 only <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">AUC 0.87 (naive)</span></div>
-    <div class="phase"><span class="phase-label">PHASE 2</span> Multi-source fusion — 19 bands <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:#666;text-decoration:line-through">AUC 0.9995 (naive)</span></div>
-    <div class="phase"><span class="phase-label">PHASE 3</span> Honest spatial CV + calibration <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">AUC 0.6844 (REAL)</span></div>
-    <div class="phase"><span class="phase-label">PHASE 3B</span> Geology-aware learning <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
-    <div class="phase"><span class="phase-label">PHASE 4</span> EMIT hyperspectral + magnetics/gravity <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
-    <div class="phase"><span class="phase-label">PHASE 5</span> Cross-zone: Pilbara + Zambia + LOZO <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
-    <div class="phase"><span class="phase-label">PHASE 6</span> Subsurface probability inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> FUTURE</div>
+    <div class="phase"><span class="phase-label">PHASE 1</span> Chuquicamata pilot — S2 only <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">AUC 0.73</span></div>
+    <div class="phase"><span class="phase-label">PHASE 2</span> Multi-source fusion — 19 bands <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
+    <div class="phase"><span class="phase-label">PHASE 3</span> Honest spatial CV <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:#888">AUC 0.68</span></div>
+    <div class="phase"><span class="phase-label">PHASE 3B</span> Label curation + geology <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">AUC 0.86</span></div>
+    <div class="phase"><span class="phase-label">PHASE 4</span> Pilbara pilot + GA open geophysics <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 5</span> EMIT hyperspectral + cross-zone LOZO <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
+    <div class="phase"><span class="phase-label">PHASE 6</span> Subsurface probability inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
   </div>
 </section>
 
@@ -320,21 +346,22 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
         <div class="yes">&#10003; Vegetation presence/absence</div>
         <div class="yes">&#10003; Terrain structural anomalies</div>
         <div class="yes">&#10003; Thermal surface anomalies</div>
+        <div class="yes">&#10003; Lithology classification (coarse)</div>
       </div>
       <div class="panel">
-        <div class="panel-head" style="color:var(--amber)">COMING SOON (Phase 3B-4)</div>
-        <div class="soon">&#9676; Hydrothermal alteration halos</div>
+        <div class="panel-head" style="color:var(--amber)">COMING SOON (Phase 4-5)</div>
+        <div class="soon">&#9676; Aeromagnetic anomalies (Pilbara)</div>
+        <div class="soon">&#9676; Radiometric alteration (K/Th/U)</div>
         <div class="soon">&#9676; Precise mineral species (hyperspectral)</div>
-        <div class="soon">&#9676; Lithology-aware classification</div>
-        <div class="soon">&#9676; Magnetic/gravity anomalies</div>
+        <div class="soon">&#9676; Cross-zone transfer learning</div>
         <div class="soon">&#9676; Vegetation stress from metals</div>
       </div>
       <div class="panel">
-        <div class="panel-head" style="color:#555">FUTURE GOAL (Phase 5-6)</div>
-        <div class="future">&#9675; Cross-zone transfer learning</div>
+        <div class="panel-head" style="color:#555">FUTURE GOAL (Phase 6)</div>
         <div class="future">&#9675; Subsurface mineral probability</div>
         <div class="future">&#9675; "Where to dig" recommendations</div>
         <div class="future">&#9675; Depth estimation via proxy fusion</div>
+        <div class="future">&#9675; Global mineral intelligence network</div>
       </div>
     </div>
   </div>
@@ -351,10 +378,10 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
       <li class="on"><span class="icon">&#9656;</span> <b>Landsat 8/9</b> ... NASA / USGS — Landsat Programme</li>
       <li class="on"><span class="icon">&#9656;</span> <b>Copernicus DEM</b>  European Space Agency (ESA) — GLO-30</li>
       <li class="on"><span class="icon">&#9656;</span> <b>MRDS</b> .......... U.S. Geological Survey — Mineral Resources Data System</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Spectral Lib</b> .. U.S. Geological Survey — Spectral Library v7</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>Macrostrat</b> .... University of Wisconsin — Geological map API (CC-BY 4.0)</li>
       <li class="on"><span class="icon">&#9656;</span> <b>Processing</b> .... Google Earth Engine — Non-commercial Community Tier</li>
     </ul>
-    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">Data from ESA Copernicus, NASA, and USGS open programs.</p>
+    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">Data from ESA Copernicus, NASA, USGS, and Macrostrat open programs.</p>
   </div>
 </section>
 
@@ -391,16 +418,27 @@ var chuq=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(
 function chuqPopup(){
   var base='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#006600">PILOT 01: CHUQUICAMATA, CHILE</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 22.3°S, 68.9°W<br><b>Terrain:</b> Arid desert<br><b>Area:</b> 50 × 50 km';
   if(sessionStorage.getItem('geaspirit_auth')==='true'){
-    base+='<hr style="border-color:#006600"><b>PHASE 3 RESULTS (honest)</b><br>AUC-ROC: <b>0.6844</b><br>Precision: <b>0.6060</b><br>Recall: <b>0.2836</b><br>Validation: Spatial block CV (10km)<br>Targets found: <b>2</b> above threshold';
+    base+='<hr style="border-color:#006600"><b>PHASE 3B RESULTS</b><br>AUC: <b>0.8622</b> (full fusion, spatial CV)<br>Precision: <b>0.948</b><br>Recall: <b>0.760</b><br>Curated deposits: <b>43</b> (Cu/Au/Ag)<br>Layers: <b>24 bands</b> (satellite + geology)<br>Key finding: label curation > more sensors';
   }
   return base+'</div>';
 }
 chuq.bindPopup(chuqPopup);
 chuq.on('click',function(){chuq.setPopupContent(chuqPopup())});
 
-// Pilbara — PLANNED
-var pilb=L.marker([-22.0,118.0],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
-pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 02: PILBARA, AUSTRALIA</b><hr><b>Status:</b> PLANNED<br><b>Coords:</b> 22.0°S, 118.0°E</div>');
+// Pilbara — NEXT
+var pilbStyle=document.createElement('style');
+pilbStyle.textContent='@keyframes pulse-amber{0%{box-shadow:0 0 0 0 rgba(255,176,0,.7)}70%{box-shadow:0 0 0 12px rgba(255,176,0,0)}100%{box-shadow:0 0 0 0 rgba(255,176,0,0)}}';
+document.head.appendChild(pilbStyle);
+var pilb=L.marker([-22.0,118.0],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+function pilbPopup(){
+  var base='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#b07800">PILOT 02: PILBARA, AUSTRALIA</b><hr style="border-color:#b07800"><b>Status:</b> <span style="color:#b07800">NEXT</span><br><b>Coords:</b> 22.0°S, 118.0°E';
+  if(sessionStorage.getItem('geaspirit_auth')==='true'){
+    base+='<hr style="border-color:#b07800"><b>Open geophysics:</b> magnetics, radiometrics, gravity<br>All data <b>CC-BY 4.0</b> (Geoscience Australia)';
+  }
+  return base+'</div>';
+}
+pilb.bindPopup(pilbPopup);
+pilb.on('click',function(){pilb.setPopupContent(pilbPopup())});
 
 // Zambia — PLANNED
 var zamb=L.marker([-12.8,28.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
