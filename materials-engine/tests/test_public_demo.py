@@ -283,6 +283,59 @@ class TestRarity:
         assert "rare" in e["rarity"]["rarity"]["label"]
 
 
+class TestFlagshipCuration:
+    def test_ag_sectors(self):
+        m = _m("Ag", ["Ag"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["industry_relevance"]["electronics"] == "high"
+        assert e["industry_relevance"]["optics"] == "high"
+
+    def test_si_strategic(self):
+        m = _m("Si", ["Si"], 227, 0.0, 1.1)
+        e = explain_material(m)
+        vb = e["value_breakdown"]
+        assert vb["strategic_significance"]["label"] == "very_high"
+
+    def test_pt_catalysis(self):
+        m = _m("Pt", ["Pt"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["industry_relevance"]["catalysis"] == "extra_high"
+        assert "PRECIOUS METAL" in e["material_tags"]
+
+    def test_gaas_sectors(self):
+        m = _m("GaAs", ["As", "Ga"], 216, -0.7, 1.4)
+        e = explain_material(m)
+        assert e["industry_relevance"]["electronics"] == "extra_high"
+        assert e["industry_relevance"]["construction"] == "extra_low"
+
+    def test_comparisons_au(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert len(e["human_comparisons"]) >= 2
+        assert any("rare" in c.lower() for c in e["human_comparisons"])
+
+    def test_comparisons_si(self):
+        m = _m("Si", ["Si"], 227, 0.0, 1.1)
+        e = explain_material(m)
+        assert len(e["human_comparisons"]) >= 2
+
+    def test_public_importance_au(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert "strategically important" in e["public_importance_summary"]["label"]
+
+    def test_public_importance_generic(self):
+        m = _m("XYZ", ["X", "Y", "Z"], 62, -1.0, 2.0)
+        e = explain_material(m)
+        assert "public_importance_summary" in e
+
+    def test_li_energy(self):
+        m = _m("Li", ["Li"], 229, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["industry_relevance"]["energy"] == "extra_high"
+        assert "STRATEGIC MATERIAL" in e["material_tags"]
+
+
 class TestTrustAndAbundance:
     def test_au_trust_breakdown(self):
         m = _m("Au", ["Au"], 225, 0.0, 0.0)

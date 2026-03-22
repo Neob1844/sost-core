@@ -13,11 +13,13 @@ ELEMENTAL_OVERRIDES = {
            "apps": ["Electrical contacts and connectors", "Corrosion-resistant coatings",
                     "Specialty electronics (bonding wires)", "Jewelry and decorative applications",
                     "Store-of-value / strategic precious metal", "Dental and medical devices"],
-           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"]},
+           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"],
+           "sectors": {"electronics":"high","energy":"low","construction":"low","optics":"medium","catalysis":"medium","aerospace":"medium"}},
     "Ag": {"strategic": "high", "specialty": "high", "bulk": "low",
            "apps": ["Electrical contacts (highest conductivity)", "Antimicrobial coatings",
                     "Photography and mirrors", "Jewelry", "Solar cell contacts", "Brazing alloys"],
-           "tags": ["PRECIOUS METAL"]},
+           "tags": ["PRECIOUS METAL"],
+           "sectors": {"electronics":"high","energy":"medium","construction":"low","optics":"high","catalysis":"medium","aerospace":"low"}},
     "Cu": {"strategic": "high", "specialty": "medium", "bulk": "high",
            "apps": ["Electrical wiring and power transmission", "Heat exchangers", "Plumbing",
                     "Circuit boards (PCB)", "Electric motors", "Roofing and architecture"],
@@ -46,21 +48,60 @@ ELEMENTAL_OVERRIDES = {
     "Pt": {"strategic": "very_high", "specialty": "very_high", "bulk": "low",
            "apps": ["Catalytic converters", "Fuel cell electrodes", "Laboratory equipment",
                     "Jewelry", "Chemotherapy drugs", "Hydrogen production catalysis"],
-           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"]},
+           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"],
+           "sectors": {"electronics":"medium","energy":"high","construction":"low","optics":"medium","catalysis":"extra_high","aerospace":"medium"}},
+    "Ni": {"strategic": "high", "specialty": "medium", "bulk": "high",
+           "apps": ["Stainless steel alloys (8-12% Ni)", "Rechargeable batteries (NiMH, Li-ion cathodes)",
+                    "Corrosion-resistant plating", "Superalloys for jet engines", "Coins"],
+           "tags": ["STRATEGIC MATERIAL"],
+           "sectors": {"electronics":"medium","energy":"high","construction":"medium","optics":"low","catalysis":"high","aerospace":"very_high"}},
+    "Zn": {"strategic": "medium", "specialty": "low", "bulk": "high",
+           "apps": ["Galvanizing steel (anti-corrosion)", "Zinc-air and zinc-carbon batteries",
+                    "Die casting alloys", "Brass production (Cu+Zn)", "Dietary supplement"],
+           "tags": [],
+           "sectors": {"electronics":"low","energy":"medium","construction":"high","optics":"low","catalysis":"low","aerospace":"low"}},
+    "Li": {"strategic": "very_high", "specialty": "very_high", "bulk": "low",
+           "apps": ["Lithium-ion batteries (EVs, phones, grid storage)", "Lithium grease lubricants",
+                    "Psychiatric medication (lithium carbonate)", "Nuclear fusion fuel (future)", "Glass and ceramics"],
+           "tags": ["STRATEGIC MATERIAL"],
+           "sectors": {"electronics":"very_high","energy":"extra_high","construction":"low","optics":"low","catalysis":"low","aerospace":"high"}},
 }
 
 # Well-known compounds with curated apps
 COMPOUND_OVERRIDES = {
     "NaCl": {"apps": ["Food preservation and seasoning", "De-icing roads", "Chemical feedstock (chlor-alkali)",
-                       "Water softening", "Medical saline solutions"]},
+                       "Water softening", "Medical saline solutions"],
+             "sectors": {"electronics":"low","energy":"low","construction":"low","optics":"low","catalysis":"low","aerospace":"low","chemical":"high"}},
     "SiO2": {"apps": ["Glass production", "Optical fibers", "Electronics (gate oxide in chips)",
-                       "Construction (sand, concrete)", "Abrasives", "Chromatography"]},
+                       "Construction (sand, concrete)", "Abrasives", "Chromatography"],
+             "sectors": {"electronics":"medium","energy":"low","construction":"high","optics":"high","catalysis":"low","aerospace":"low"}},
     "TiO2": {"apps": ["White pigment (paint, sunscreen)", "Photocatalysis", "Self-cleaning surfaces",
-                       "Food additive (E171)", "Optical coatings"]},
+                       "Food additive (E171)", "Optical coatings"],
+             "sectors": {"electronics":"low","energy":"medium","construction":"medium","optics":"high","catalysis":"medium","aerospace":"low"}},
     "GaAs": {"apps": ["High-frequency electronics (5G, radar)", "LED and laser diodes",
-                       "Solar cells (space-grade)", "Fiber optic communications"]},
+                       "Solar cells (space-grade)", "Fiber optic communications"],
+             "sectors": {"electronics":"extra_high","energy":"high","construction":"extra_low","optics":"very_high","catalysis":"low","aerospace":"high"}},
     "ZnO": {"apps": ["Sunscreen (UV blocker)", "Rubber vulcanization", "Varistors",
-                      "Piezoelectric devices", "Cosmetics"]},
+                      "Piezoelectric devices", "Cosmetics"],
+            "sectors": {"electronics":"medium","energy":"medium","construction":"low","optics":"medium","catalysis":"low","aerospace":"low"}},
+    "Al2O3": {"apps": ["Abrasives and grinding", "Ceramic components", "Alumina for aluminum smelting",
+                        "Sapphire substrates (LEDs)", "Thermal insulation"],
+              "sectors": {"electronics":"medium","energy":"low","construction":"medium","optics":"high","catalysis":"medium","aerospace":"medium"}},
+    "Fe2O3": {"apps": ["Iron ore for steel production", "Pigments (red/brown)", "Magnetic storage media",
+                        "Water treatment", "Catalyst support"],
+              "sectors": {"electronics":"low","energy":"low","construction":"high","optics":"low","catalysis":"medium","aerospace":"low"}},
+    "Fe3O4": {"apps": ["Magnetic applications", "Iron ore (magnetite)", "MRI contrast agents",
+                        "Water purification", "High-density media"],
+              "sectors": {"electronics":"medium","energy":"low","construction":"medium","optics":"low","catalysis":"medium","aerospace":"low"}},
+    "CaCO3": {"apps": ["Cement and concrete production", "Paper filler", "Dietary calcium supplement",
+                        "Antacid medication", "Agricultural lime"],
+              "sectors": {"electronics":"low","energy":"low","construction":"extra_high","optics":"low","catalysis":"low","aerospace":"low"}},
+    "SiC":  {"apps": ["Power electronics (EV inverters, fast chargers)", "Abrasives and cutting tools",
+                       "High-temperature ceramics", "LED substrates", "Armor plates"],
+             "sectors": {"electronics":"very_high","energy":"high","construction":"low","optics":"medium","catalysis":"low","aerospace":"high"}},
+    "BaTiO3": {"apps": ["Capacitors (MLCC)", "Piezoelectric sensors and actuators",
+                         "Positive temperature coefficient thermistors", "Optical modulators"],
+               "sectors": {"electronics":"very_high","energy":"medium","construction":"low","optics":"medium","catalysis":"low","aerospace":"medium"}},
 }
 
 
@@ -125,8 +166,13 @@ def explain_material(material, corpus_stats=None) -> dict:
         exotic_label = "common element"
         exotic_reason = "Pure element — well-studied reference material"
 
-    # Industry relevance (heuristic)
-    industry = _assess_industry(f, elems, bg, fe, electronic["label"])
+    # Industry relevance — use override sectors if available
+    if f in ELEMENTAL_OVERRIDES and "sectors" in ELEMENTAL_OVERRIDES[f]:
+        industry = ELEMENTAL_OVERRIDES[f]["sectors"]
+    elif f in COMPOUND_OVERRIDES and "sectors" in COMPOUND_OVERRIDES[f]:
+        industry = COMPOUND_OVERRIDES[f]["sectors"]
+    else:
+        industry = _assess_industry(f, elems, bg, fe, electronic["label"])
 
     # Practical value
     pv = _assess_practical_value(electronic["label"], stability["label"], exotic_label, industry)
@@ -223,6 +269,8 @@ def explain_material(material, corpus_stats=None) -> dict:
             "predicted": [],
             "proxy": [],
         },
+        "human_comparisons": _get_comparisons(f),
+        "public_importance_summary": _importance_summary(f, exotic_label, pv, is_elemental),
         "rarity": _get_rarity(elems),
         "trust_breakdown": _build_trust(material, is_elemental, f in ELEMENTAL_OVERRIDES, f in COMPOUND_OVERRIDES, confidence),
         "abundance_analysis": _build_abundance_analysis(elems, is_pure_element),
@@ -335,6 +383,38 @@ def _build_summary(formula, electronic, stability, exotic, apps):
     if exotic in ("exotic", "highly exotic"):
         parts.append(f"This is an {exotic} material with unusual chemistry")
     return ". ".join(parts) + "."
+
+
+def _get_comparisons(formula):
+    """Get curated human comparisons."""
+    try:
+        from .comparisons import get_comparisons
+        return get_comparisons(formula)
+    except Exception:
+        return []
+
+
+def _importance_summary(formula, exotic_label, pv, is_elemental):
+    """Generate public importance summary."""
+    if formula in ELEMENTAL_OVERRIDES:
+        eo = ELEMENTAL_OVERRIDES[formula]
+        if eo["strategic"] == "very_high":
+            return {"label": "well-known but strategically important",
+                    "reason": "Low scientific novelty, but very high real-world importance in specialized applications."}
+        elif eo["bulk"] in ("high", "very_high"):
+            return {"label": "common and industrially essential",
+                    "reason": "Not exotic, but foundational for modern industry and infrastructure."}
+        else:
+            return {"label": "industrially useful reference material",
+                    "reason": "Well-characterized material with established applications."}
+    if formula in COMPOUND_OVERRIDES:
+        return {"label": "well-known industrial compound",
+                "reason": "Extensively studied compound with clear practical applications."}
+    if exotic_label in ("exotic", "highly exotic"):
+        return {"label": "scientifically interesting, potentially valuable",
+                "reason": "Unusual composition that may have unique properties worth investigating."}
+    return {"label": "standard corpus material",
+            "reason": "Part of the general materials corpus without special strategic classification."}
 
 
 def _build_trust(material, is_elemental, has_elem_override, has_compound_override, confidence):
