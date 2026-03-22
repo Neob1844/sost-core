@@ -1,0 +1,20 @@
+Reading /home/sost/SOST/geaspirit/data/sentinel2/chuquicamata_s2.tif...
+Traceback (most recent call last):
+  File "rasterio/_base.pyx", line 311, in rasterio._base.DatasetBase.__init__
+  File "rasterio/_base.pyx", line 222, in rasterio._base.open_dataset
+  File "rasterio/_err.pyx", line 359, in rasterio._err.exc_wrap_pointer
+rasterio._err.CPLE_OpenFailedError: '/home/sost/SOST/geaspirit/data/sentinel2/chuquicamata_s2.tif' not recognized as being in a supported file format.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sost/SOST/sostcore/sost-core/geaspirit/scripts/compute_mineral_indices.py", line 79, in <module>
+    main()
+  File "/home/sost/SOST/sostcore/sost-core/geaspirit/scripts/compute_mineral_indices.py", line 27, in main
+    with rasterio.open(args.input) as src:
+  File "/home/sost/.local/lib/python3.10/site-packages/rasterio/env.py", line 463, in wrapper
+    return f(*args, **kwds)
+  File "/home/sost/.local/lib/python3.10/site-packages/rasterio/__init__.py", line 356, in open
+    dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+  File "rasterio/_base.pyx", line 313, in rasterio._base.DatasetBase.__init__
+rasterio.errors.RasterioIOError: '/home/sost/SOST/geaspirit/data/sentinel2/chuquicamata_s2.tif' not recognized as being in a supported file format.
