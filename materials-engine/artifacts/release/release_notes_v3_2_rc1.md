@@ -42,7 +42,7 @@ The Materials Discovery Engine is a CPU-friendly ML platform for computational m
 ## What's Next
 - Deploy API on production VPS
 - Acquire Materials Project API key
-- GeoForge unified platform integration
+- Geaspirit unified platform integration
 - Blockchain proof-of-discovery (Phase V)
 
 ---
