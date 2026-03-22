@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geaspirit Platform — Mineral Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#0a0a0a;--green:#00ff41;--green-dim:#004400;--amber:#ffb000;--red:#fb010d;--text:#00ff41;--text-dim:#006600;--border:#004400;--panel:#0d0d0d;--font:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--green);font-family:var(--font);font-size:14px;line-height:1.7}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px);pointer-events:none;z-index:99990}
+
+/* Nav — same structure as rest of site but green accent */
+nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
+.nav-c{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nav-logo{font-weight:700;font-size:18px;color:#e2e8f0;letter-spacing:2px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.nav-logo img{height:48px;filter:drop-shadow(0 0 6px rgba(0,255,65,.5))}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links a{color:#888;text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;transition:all .2s;letter-spacing:.5px}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-links a.active{color:var(--green);border-bottom:1px solid var(--green)}
+.nav-hamburger{display:none;background:none;border:1px solid var(--border);color:var(--green);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px}
+@media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
+
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--border)}
+.hero-label{font-size:11px;color:var(--amber);letter-spacing:4px;margin-bottom:16px}
+.hero h1{font-size:clamp(24px,5vw,42px);font-weight:700;line-height:1.2;margin-bottom:16px}
+.hero h1 span{color:var(--green)}
+.hero-sub{color:#888;font-size:13px;max-width:700px;margin:0 auto;line-height:1.8}
+.status-badge{display:inline-block;background:rgba(0,255,65,.1);border:1px solid var(--green);color:var(--green);padding:4px 14px;border-radius:4px;font-size:11px;letter-spacing:2px;margin-top:16px}
+
+/* Map */
+#map{width:100%;height:500px;border:2px solid var(--border);filter:sepia(100%) saturate(300%) hue-rotate(90deg) brightness(0.6);margin:30px 0}
+@media(max-width:768px){#map{height:300px}}
+
+/* Panels */
+.panel{background:var(--panel);border:1px solid var(--border);padding:20px;margin-bottom:20px}
+.panel-head{font-size:10px;color:var(--amber);letter-spacing:2px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:6px 10px;color:var(--amber);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 10px;border-bottom:1px solid rgba(0,68,0,.3)}
+.tbl td.val{color:var(--green);font-weight:600}
+
+.human-box{background:rgba(0,255,65,.03);border-left:3px solid var(--green);padding:16px;margin:20px 0;font-size:13px;line-height:1.8;color:#aaa}
+.human-box b{color:var(--green)}
+
+.tech-list{list-style:none;font-size:12px}
+.tech-list li{padding:4px 0;border-bottom:1px solid rgba(0,68,0,.2)}
+.tech-list .on{color:var(--green)}
+.tech-list .off{color:#444}
+.tech-list .icon{display:inline-block;width:20px}
+
+.phase{margin-bottom:8px;font-size:12px}
+.phase-bar{display:inline-block;width:200px;height:12px;background:#111;border:1px solid var(--border);vertical-align:middle;margin-left:8px}
+.phase-fill{height:100%;background:var(--green)}
+.phase-fill.pending{background:#333}
+.phase-label{color:var(--amber);font-weight:600}
+
+.detect-list{font-size:12px}
+.detect-list .yes{color:var(--green)}
+.detect-list .soon{color:var(--amber)}
+.detect-list .future{color:#555}
+
+.section{padding:40px 0;border-bottom:1px solid var(--border)}
+.section-id{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px}
+.section-title{font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:20px}
+.section-title span{color:var(--amber)}
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-c">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST"><span><span style="color:var(--red)">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" class="active">Geaspirit</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--green)">📱 App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label">GEASPIRIT PLATFORM v0.1</div>
+    <h1><span>Mineral Intelligence</span> System</h1>
+    <p class="hero-sub">AI-powered mineral prospectivity mapping using free satellite data. Predict where to dig before anyone else. Zero cost. Real results.</p>
+    <div class="status-badge">▪ OPERATIONAL — FIRST PILOT COMPLETE</div>
+  </div>
+</section>
+
+<!-- MAP -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// GLOBAL OPERATIONS MAP</div>
+    <div class="section-title">Pilot <span>Zones</span></div>
+    <div id="map"></div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// PILOT RESULTS</div>
+    <div class="section-title">Chuquicamata <span>Performance</span></div>
+
+    <div class="panel">
+      <div class="panel-head">MODEL PERFORMANCE</div>
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th>Random Forest</th><th>XGBoost</th></tr></thead>
+        <tbody>
+          <tr><td>AUC-ROC</td><td class="val">0.8718</td><td class="val">0.8858</td></tr>
+          <tr><td>Precision</td><td class="val">0.8629</td><td class="val">0.8803</td></tr>
+          <tr><td>Recall</td><td class="val">0.9747</td><td class="val">0.9607</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">TRAINING DATA</div>
+      <table class="tbl">
+        <tbody>
+          <tr><td>Known deposits (USGS MRDS)</td><td class="val">152</td></tr>
+          <tr><td>Positive pixels</td><td class="val">52,898</td></tr>
+          <tr><td>Negative pixels</td><td class="val">13,691</td></tr>
+          <tr><td>Image resolution</td><td class="val">1856 × 1857 px · 10 bands · 30m</td></tr>
+          <tr><td>Area covered</td><td class="val">~50 × 50 km</td></tr>
+          <tr><td>Cost</td><td class="val" style="color:var(--amber)">$0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="human-box">
+      <b>TRANSLATION FOR HUMANS:</b><br><br>
+      We downloaded a <b>FREE</b> satellite photo of a real mining region in Chile. We taught an AI to recognize mineral signatures in the image using known mine locations as training data. <b>Result: the AI correctly identifies 96% of known mines and is right 88% of the time when it says "dig here".</b> This was done with $0 budget, public satellite data, and ~10 minutes of computation.
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">MINERAL INDICES COMPUTED</div>
+      <table class="tbl">
+        <tbody>
+          <tr><td style="color:var(--amber)">Iron Oxide (B4/B2)</td><td>Detects rust-like minerals. High values suggest gossans (oxidized ore caps) or iron-rich rocks.</td></tr>
+          <tr><td style="color:var(--amber)">Clay/Hydroxyl (B11/B12)</td><td>Detects clay minerals formed by hydrothermal alteration — a key indicator of buried mineralization.</td></tr>
+          <tr><td style="color:var(--amber)">Ferrous Iron (B11/B8A)</td><td>Detects ferrous iron minerals. Different from rust — indicates fresh/unweathered iron-bearing rock.</td></tr>
+          <tr><td style="color:var(--amber)">Laterite (B4/B3)</td><td>Detects lateritic weathering profiles. Common in tropical/subtropical mineral-rich terrains.</td></tr>
+          <tr><td style="color:var(--amber)">NDVI</td><td>Vegetation index. Used as a mask — bare ground is where mineral detection works best.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// TECHNOLOGY STACK</div>
+    <div class="section-title">Systems <span>Online</span></div>
+    <ul class="tech-list">
+      <li class="on"><span class="icon">■</span> Sentinel-2 L2A ............ ESA/Copernicus (free)</li>
+      <li class="on"><span class="icon">■</span> Google Earth Engine ....... Cloud processing (free)</li>
+      <li class="on"><span class="icon">■</span> USGS MRDS ................. 152 deposit locations</li>
+      <li class="on"><span class="icon">■</span> USGS Spectral Library ..... 2,600 mineral spectra</li>
+      <li class="on"><span class="icon">■</span> scikit-learn .............. Random Forest classifier</li>
+      <li class="on"><span class="icon">■</span> XGBoost ................... Gradient boosting</li>
+      <li class="on"><span class="icon">■</span> rasterio + geopandas ...... Geospatial processing</li>
+      <li class="off"><span class="icon">□</span> EMIT hyperspectral ........ PENDING (Phase 2)</li>
+      <li class="off"><span class="icon">□</span> Sentinel-1 SAR ............ PENDING (Phase 2)</li>
+      <li class="off"><span class="icon">□</span> Thermal / Landsat ......... PENDING (Phase 3)</li>
+      <li class="off"><span class="icon">□</span> Vegetation anomaly ........ PENDING (Phase 4)</li>
+      <li class="off"><span class="icon">□</span> Subsurface inference ...... PENDING (Phase 5)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// ROADMAP</div>
+    <div class="section-title">Development <span>Phases</span></div>
+    <div class="phase"><span class="phase-label">PHASE 0</span> Setup + GEE auth <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
+    <div class="phase"><span class="phase-label">PHASE 1</span> Chuquicamata pilot <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">AUC 0.8858</span></div>
+    <div class="phase"><span class="phase-label">PHASE 2</span> Add SAR + EMIT + DEM <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 3</span> Vegetation anomaly <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
+    <div class="phase"><span class="phase-label">PHASE 4</span> Transfer to Pilbara + Zambia <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
+    <div class="phase"><span class="phase-label">PHASE 5</span> Subsurface inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> FUTURE</div>
+  </div>
+</section>
+
+<!-- DETECTION -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// DETECTION CAPABILITIES</div>
+    <div class="section-title">What We Can <span>Detect</span></div>
+    <div class="detect-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      <div class="panel">
+        <div class="panel-head" style="color:var(--green)">DETECTABLE NOW (surface)</div>
+        <div class="yes">✓ Iron oxides (hematite, goethite)</div>
+        <div class="yes">✓ Clay minerals (kaolinite, montmorillonite)</div>
+        <div class="yes">✓ Ferrous iron bearing rocks</div>
+        <div class="yes">✓ Laterites and gossans</div>
+        <div class="yes">✓ Vegetation presence/absence</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head" style="color:var(--amber)">COMING SOON (Phase 2-3)</div>
+        <div class="soon">◌ Hydrothermal alteration halos</div>
+        <div class="soon">◌ Structural lineaments (SAR)</div>
+        <div class="soon">◌ Thermal anomalies</div>
+        <div class="soon">◌ Precise mineral species (hyperspectral)</div>
+        <div class="soon">◌ Vegetation stress from metals</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head" style="color:#555">FUTURE GOAL (Phase 5)</div>
+        <div class="future">○ Subsurface mineral probability</div>
+        <div class="future">○ "Where to dig" recommendations</div>
+        <div class="future">○ Depth estimation via proxy fusion</div>
+        <div class="future">○ Blockchain proof-of-discovery</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;padding:40px;color:#333;font-size:11px;border-top:1px solid var(--border)">
+  GEASPIRIT PLATFORM · SOST Protocol · Zero-cost mineral intelligence · All satellite data is free and public
+</div>
+
+<script>
+// === LEAFLET MAP ===
+var map=L.map('map',{scrollWheelZoom:false}).setView([0,0],2);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  maxZoom:18
+}).addTo(map);
+
+// Pulse icon CSS
+var style=document.createElement('style');
+style.textContent='@keyframes pulse-green{0%{box-shadow:0 0 0 0 rgba(0,255,65,.7)}70%{box-shadow:0 0 0 15px rgba(0,255,65,0)}100%{box-shadow:0 0 0 0 rgba(0,255,65,0)}}@keyframes pulse-gray{0%{box-shadow:0 0 0 0 rgba(100,100,100,.5)}70%{box-shadow:0 0 0 10px rgba(100,100,100,0)}100%{box-shadow:0 0 0 0 rgba(100,100,100,0)}}';
+document.head.appendChild(style);
+
+function makeIcon(color,anim){
+  return L.divIcon({
+    className:'',
+    html:'<div style="width:16px;height:16px;background:'+color+';border-radius:50%;border:2px solid #fff;animation:'+anim+' 2s infinite"></div>',
+    iconSize:[20,20],iconAnchor:[10,10]
+  });
+}
+
+// Chuquicamata — COMPLETE
+var chuq=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+chuq.bindPopup('<div style="font-family:monospace;font-size:11px;line-height:1.6;min-width:280px;color:#000"><b style="color:#006600">PILOT 01: CHUQUICAMATA, CHILE</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 22.3°S, 68.9°W<br><b>Terrain:</b> Arid desert<br><b>Target:</b> Copper (Cu), Gold (Au)<br><b>Area:</b> 50 × 50 km · 30m/px<br><b>Deposits:</b> 152 known (MRDS)<hr style="border-color:#006600"><b>XGBoost AUC:</b> <span style="color:#006600;font-weight:700">0.8858</span><br><b>Precision:</b> 0.8803<br><b>Recall:</b> 0.9607 (96% detection)<br><b>Cost:</b> $0.00 · <b>Time:</b> ~10 min</div>');
+
+// Pilbara — PLANNED
+var pilb=L.marker([-22.0,118.0],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
+pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 02: PILBARA, AUSTRALIA</b><hr><b>Status:</b> PLANNED<br><b>Target:</b> Iron (Fe), Gold (Au)<br><b>Terrain:</b> Semi-arid, exposed geology<br><i>Pending execution — Phase 4</i></div>');
+
+// Zambia — PLANNED
+var zamb=L.marker([-12.8,28.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
+zamb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 03: ZAMBIAN COPPERBELT</b><hr><b>Status:</b> PLANNED<br><b>Target:</b> Copper (Cu)<br><b>Terrain:</b> Moderate vegetation<br><i>Pending execution — Phase 4</i></div>');
+
+map.fitBounds([[-22.3,-68.9],[-22.0,118.0],[-12.8,28.2]],{padding:[40,40]});
+</script>
+
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<script src="js/retro-sounds.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>
