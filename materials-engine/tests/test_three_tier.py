@@ -161,7 +161,7 @@ class TestAPI:
         assert c.get("/corpus-sources/registry").status_code == 200
 
     def test_version(self):
-        assert self._client().get("/status").json()["version"] == "3.1.0"
+        assert self._client().get("/status").json()["version"] == "3.2.0"
 
 
 if __name__ == "__main__":

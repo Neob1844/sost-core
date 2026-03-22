@@ -1,0 +1,65 @@
+{
+  "challenger_id": "e65342e7d9b1",
+  "name": "oversampled_narrow",
+  "oversample": true,
+  "dataset_size": 19932,
+  "train_size": 15945,
+  "test_size": 1994,
+  "best_epoch": 10,
+  "epochs": 15,
+  "training_time_sec": 1575.6,
+  "checkpoint": "artifacts/gate_recall_rescue/gate_oversampled_narrow/gate_best.pt",
+  "thresholds": {
+    "0.3": {
+      "accuracy": 0.832,
+      "recall_nonmetal": 0.9756,
+      "recall_metal": 0.6194,
+      "fn": 29,
+      "fn_narrow": 27,
+      "fp": 306,
+      "tp": 1161,
+      "tn": 498
+    },
+    "0.35": {
+      "accuracy": 0.837,
+      "recall_nonmetal": 0.9739,
+      "recall_metal": 0.6343,
+      "fn": 31,
+      "fn_narrow": 29,
+      "fp": 294,
+      "tp": 1159,
+      "tn": 510
+    },
+    "0.4": {
+      "accuracy": 0.841,
+      "recall_nonmetal": 0.9723,
+      "recall_metal": 0.6468,
+      "fn": 33,
+      "fn_narrow": 30,
+      "fp": 284,
+      "tp": 1157,
+      "tn": 520
+    },
+    "0.45": {
+      "accuracy": 0.843,
+      "recall_nonmetal": 0.9689,
+      "recall_metal": 0.6567,
+      "fn": 37,
+      "fn_narrow": 33,
+      "fp": 276,
+      "tp": 1153,
+      "tn": 528
+    },
+    "0.5": {
+      "accuracy": 0.8435,
+      "recall_nonmetal": 0.9622,
+      "recall_metal": 0.6679,
+      "fn": 45,
+      "fn_narrow": 39,
+      "fp": 267,
+      "tp": 1145,
+      "tn": 537
+    }
+  },
+  "created_at": "2026-03-22T08:27:32.599291+00:00"
+}

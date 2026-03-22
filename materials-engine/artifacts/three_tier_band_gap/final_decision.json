@@ -1,0 +1,24 @@
+{
+  "decision": "HOLD_SINGLE_STAGE_BG",
+  "production_mae": 0.3407,
+  "two_tier_mae": 0.2628,
+  "three_tier_mae": 0.2596,
+  "improvement_vs_production": 0.0811,
+  "improvement_pct": 23.8,
+  "narrow_gap_rescued": false,
+  "scorecard": {
+    "overall_improvement": 0.0811,
+    "overall_improvement_pct": 23.8,
+    "narrow_gap_acceptable": false,
+    "narrow_gap_delta": 0.1052,
+    "metals_preserved": true,
+    "metals_delta": -0.1047,
+    "wide_gap_preserved": true,
+    "wide_gap_delta": -0.0566,
+    "complexity_justified": true,
+    "promote": false
+  },
+  "rationale": "Blocked by: narrow-gap still regressed (+0.1052)",
+  "registry_updated": false,
+  "created_at": "2026-03-22T07:13:26.562786+00:00"
+}
