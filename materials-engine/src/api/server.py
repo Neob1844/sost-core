@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "3.1.0", "phase": "three_tier_bandgap",
+    return {"status": "ok", "version": "3.2.0", "phase": "gate_recall_rescue",
             "materials_count": db.count()}
 
 
@@ -1636,6 +1636,49 @@ def cod_recommendation():
     with open(path) as f:
         return _json.load(f)
 
+
+# --- Gate Recall Rescue endpoints ---
+
+@app.get("/gate-recall-rescue/status")
+def gate_rescue_status():
+    import os as _os
+    d = "artifacts/gate_recall_rescue"
+    return {"phase": "IV.S",
+            "challengers_trained": len([x for x in (_os.listdir(d) if _os.path.isdir(d) else []) if x.startswith('gate_')]),
+            "decision_made": _os.path.exists(_os.path.join(d, "final_decision.json"))}
+
+@app.get("/gate-recall-rescue/challengers")
+def gate_rescue_challengers():
+    import os as _os, json as _json
+    d = "artifacts/gate_recall_rescue"
+    results = []
+    if _os.path.isdir(d):
+        for sub in sorted(_os.listdir(d)):
+            rpath = _os.path.join(d, sub, "result.json")
+            if _os.path.exists(rpath):
+                with open(rpath) as f: results.append(_json.load(f))
+    return {"challengers": results}
+
+@app.get("/gate-recall-rescue/thresholds")
+def gate_rescue_thresholds():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/gate_recall_rescue", "threshold_selection.json")
+    if not _os.path.exists(path): return {"thresholds": []}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/gate-recall-rescue/benchmark")
+def gate_rescue_benchmark():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/gate_recall_rescue", "three_tier_rescue_benchmark.json")
+    if not _os.path.exists(path): return {"benchmark": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/gate-recall-rescue/decision")
+def gate_rescue_decision():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/gate_recall_rescue", "final_decision.json")
+    if not _os.path.exists(path): return {"decision": "no_decision_yet"}
+    with open(path) as f: return _json.load(f)
 
 # --- Three-Tier Band Gap endpoints ---
 

@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Current phase: IV.Q — Final Hierarchical Promotion Benchmark (v3.0.0)**
+> **Current phase: IV.S — Gate Recall Rescue (v3.2.0)**
 
 ## What exists (implemented and tested)
 
@@ -229,6 +229,41 @@
 - **Conclusion**: Hierarchical IS architecturally superior overall, but needs better gate recall for 0.05-1.0 eV materials before promotion
 - **API**: `GET /hierarchical-band-gap-final/status`, `/benchmark`, `/scorecard`, `/decision`
 
+### Narrow-Gap Rescue / Three-Tier Pipeline (Phase IV.R)
+- **What it is**: Dedicated narrow-gap specialist (0.05-1.0 eV) as 3rd tier to fix the single remaining blocker
+- **Specialist trained**: ALIGNN-Lite on 7,618 narrow-gap materials, MAE=0.2221 (vs 0.6495 from general regressor)
+- **3-tier pipeline**: gate → narrow specialist OR general regressor
+
+| Pipeline | Overall MAE | Metals | Narrow-gap | Wide-gap |
+|----------|------------|--------|-----------|----------|
+| Production | 0.3407 | 0.1907 | **0.5135** | 0.8682 |
+| 2-Tier | 0.2628 | 0.0892 | 0.6495 | 0.8116 |
+| **3-Tier** | **0.2596** | **0.0860** | 0.6187 | **0.8116** |
+
+- **Scorecard**: Overall PASS (-23.8%), metals PASS, wide-gap PASS, **narrow-gap FAIL** (+0.1052, exceeds +0.10)
+- **Root cause**: Only 48/142 narrow-gap materials reached the specialist — rest were FN'd by gate
+- **Decision: HOLD** — specialist works but gate FN rate limits its impact
+- **Honest conclusion**: The gate FN for borderline semiconductors is the irreducible bottleneck. Fixing it requires retraining the gate with better narrow-gap training data or a softer threshold.
+- **Production model UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422)
+- **API**: `GET /three-tier-band-gap/status`, `/specialist`, `/pipeline`, `/scorecard`, `/decision`
+
+### Gate Recall Rescue (Phase IV.S)
+- **What it is**: Retrained gate with oversampled narrow-gap (8K metal + 6K narrow + 6K wide) at threshold=0.35
+- **Gate improvement**: Narrow-gap reaching specialist: 48/142 → **135/142** (95% routing)
+- **Key result** (direct benchmark, 2000 materials):
+
+| Pipeline | MAE | Metals | Narrow | Medium | Wide | Ultra |
+|----------|-----|--------|--------|--------|------|-------|
+| Production | 0.3407 | **0.1907** | 0.5135 | 0.7950 | 0.8682 | 1.6707 |
+| Rescued 3-Tier | 0.3419 | 0.2506 | 0.5963 | **0.5519** | **0.6581** | **0.7725** |
+
+- **Scorecard**: Narrow-gap PASS (+0.08), Wide-gap PASS (-0.21), **Metals FAIL** (+0.06 > +0.05)
+- **Decision: HOLD** — lower gate threshold trades metals accuracy for better routing
+- **Insight**: Gate threshold is a tradeoff slider. 0.50→metals win, 0.35→routing wins. The optimal balance likely needs a threshold-per-region approach or a continuous-output gate (no binary cutoff).
+- **Medium+wide-gap dramatically improved**: 0.795→0.552 and 0.868→0.658
+- **Production UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422)
+- **API**: `GET /gate-recall-rescue/status`, `/challengers`, `/thresholds`, `/benchmark`, `/decision`
+
 ### Cost-Constrained Execution Mode
 - **Current mode**: Prototype ($0/month on existing VPS)
 - **Corpus**: 76K materials from open JARVIS + AFLOW databases, zero API cost
@@ -249,7 +284,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (870 tests)
+# Run all tests (897 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -355,3 +390,5 @@ curl http://localhost:8000/generation/presets
 | test_gate_calibration.py | 22 | Threshold sweep, routing policies, calibration, API |
 | test_regressor_improvement.py | 18 | Regressor challengers, pipeline comparison, promotion, API |
 | test_final_benchmark.py | 16 | Final benchmark, scorecard, promotion decision, registry, API |
+| test_three_tier.py | 18 | Three-tier pipeline, narrow-gap specialist, scorecard, API |
+| test_gate_recall_rescue.py | 9 | Gate recall, oversampling, threshold selection, API |

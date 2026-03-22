@@ -1,7 +1,7 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: Active implementation — Phase IV.Q (v3.0.0)**
-> Last updated: 2026-03-21
+> **Document status: Active implementation — Phase IV.S (v3.2.0)**
+> Last updated: 2026-03-22
 
 ---
 
@@ -681,6 +681,28 @@ Predict property degradation over time under operating conditions — thermal cy
 - Registry NOT updated
 - The hierarchical architecture IS superior overall but needs better gate for borderline semiconductors
 - 4 API endpoints + 16 tests (870 total), version 3.0.0
+
+### Phase IV.R — Narrow-Gap Rescue / Three-Tier Pipeline ✅
+- Narrow-gap specialist: MAE=0.2221 on 7,618 materials (0.05-1.0 eV)
+- 3-tier: production 0.3407 → 2-tier 0.2628 → 3-tier 0.2596
+- Narrow-gap: 0.5135 (prod) → 0.6495 (2-tier) → 0.6187 (3-tier) — improved but still +0.1052
+- Only 48/142 narrow-gap materials reached specialist (rest FN'd by gate)
+- **Decision: HOLD** — specialist works but gate FN limits impact
+- **Irreducible bottleneck**: Gate misclassifies ~20% of narrow-gap as metal
+- Total BG pipeline effort: IV.L→IV.R = 8 phases, 20+ models, 2 definitive benchmarks
+- 5 API endpoints + 18 tests (888 total), version 3.1.0
+
+### Phase IV.S — Gate Recall Rescue ✅
+- Oversampled gate: 8K metal + 6K narrow + 6K wide (was 14K+6K)
+- Gate recall for non-metals: 0.80 → 0.97 at threshold=0.35
+- Narrow reaching specialist: 48/142 → 135/142 (95% routing)
+- Narrow-gap delta: +0.08 (PASS, within +0.10 tolerance)
+- **BUT metals regressed**: 0.1907 → 0.2506 (+0.06, fails +0.05 tolerance)
+- Medium/wide-gap dramatically improved: 0.795→0.552, 0.868→0.658
+- **Decision: HOLD** — threshold tradeoff: better routing = worse metal accuracy
+- The gate binary threshold is fundamentally a tradeoff slider between metal/non-metal accuracy
+- Total BG effort: IV.L→IV.S = 9 phases, 22+ real models, 3 direct benchmarks
+- 5 API endpoints + 9 tests (897 total), version 3.2.0
 
 ### What has NOT been retrained
 - Models remain at Phase IV.A/B levels (CGCNN FE MAE=0.1528, ALIGNN-Lite BG MAE=0.3422)

@@ -1,0 +1,59 @@
+{
+  "entries": {
+    "production": {
+      "name": "production",
+      "overall_mae": 0.3407,
+      "overall_rmse": 0.6806,
+      "overall_r2": 0.7661,
+      "bucket_mae": {
+        "0.0-0.05": 0.1907,
+        "0.05-1.0": 0.5135,
+        "1.0-3.0": 0.795,
+        "3.0-6.0": 0.8682,
+        "6.0+": 1.6707
+      },
+      "bucket_counts": {
+        "0.0-0.05": 1486,
+        "0.05-1.0": 142,
+        "1.0-3.0": 192,
+        "3.0-6.0": 160,
+        "6.0+": 20
+      },
+      "sample_size": 2000,
+      "elapsed_sec": 0
+    },
+    "three_tier_rescued": {
+      "name": "three_tier_rescued",
+      "overall_mae": 0.3419,
+      "overall_rmse": 0.6663,
+      "overall_r2": 0.7758,
+      "bucket_mae": {
+        "0.0-0.05": 0.2506,
+        "0.05-1.0": 0.5963,
+        "1.0-3.0": 0.5519,
+        "3.0-6.0": 0.6581,
+        "6.0+": 0.7725
+      },
+      "bucket_counts": {
+        "0.0-0.05": 1486,
+        "0.05-1.0": 142,
+        "1.0-3.0": 192,
+        "3.0-6.0": 160,
+        "6.0+": 20
+      },
+      "sample_size": 2000,
+      "elapsed_sec": 0,
+      "gate_metals": 1076,
+      "gate_narrow": 329,
+      "gate_general": 595,
+      "gate_threshold": 0.35,
+      "narrow_reaching_specialist": 135,
+      "narrow_total": 142
+    }
+  },
+  "sample_size": 2000,
+  "seed": 42,
+  "gate_path": "artifacts/gate_recall_rescue/gate_oversampled_narrow/gate_best.pt",
+  "gate_threshold": 0.35,
+  "created_at": "2026-03-22T09:12:30.741769+00:00"
+}

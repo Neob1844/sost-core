@@ -1,0 +1,12 @@
+{
+  "overall_improvement": -0.0012,
+  "overall_improvement_pct": -0.35,
+  "narrow_gap_acceptable": true,
+  "narrow_gap_delta": 0.0828,
+  "metals_preserved": false,
+  "metals_delta": 0.0599,
+  "wide_gap_preserved": true,
+  "wide_gap_delta": -0.2101,
+  "complexity_justified": false,
+  "promote": false
+}
