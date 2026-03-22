@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Technology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #111720;
+    --bg-hover: #151c28;
+    --border-dim: #1a2233;
+    --border-med: #243044;
+    --border-bright: #2d4a6f;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --red-accent: #fb010d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-med) var(--bg-deep);
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    border-bottom: 1px solid var(--border-dim);
+    backdrop-filter: blur(16px);
+    padding: 12px 0;
+  }
+  nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo .brand-sost {
+    color: var(--red-primary);
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+  .nav-links a.active {
+    color: var(--red-primary);
+    background: var(--red-subtle);
+    border-bottom: none;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border-dim);
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 11px;
+    color: var(--red-primary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-label::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .hero h1 span {
+    color: var(--red-primary);
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .protocol-badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    background: var(--bg-card);
+    font-size: 11px;
+  }
+  .protocol-badge .tag {
+    color: var(--green-primary);
+    font-weight: 600;
+  }
+  .protocol-badge .sep {
+    color: var(--text-muted);
+  }
+  .protocol-badge .val {
+    color: var(--text-secondary);
+  }
+
+  /* ---- DOWNLOAD BAR ---- */
+  .download-bar {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--red-dim);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(230,57,70,0.04));
+    color: var(--red-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .dl-btn:hover {
+    background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.10));
+    border-color: var(--red-primary);
+    box-shadow: 0 0 16px rgba(230,57,70,0.15);
+    transform: translateY(-1px);
+  }
+  .dl-btn svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .dl-btn.secondary {
+    border-color: var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .dl-btn.secondary:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .section-title .accent {
+    color: var(--red-primary);
+  }
+
+  /* ---- SPEC BLOCK ---- */
+  .spec-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+  .spec-block:hover {
+    border-color: var(--border-med);
+  }
+  .spec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+
+  .spec-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .spec-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .spec-tag.consensus { color: var(--green-primary); border-color: var(--green-dim); }
+  .spec-tag.overlay { color: var(--cyan-primary); border-color: var(--cyan-dim); }
+  .spec-tag.immutable { color: var(--red-primary); border-color: var(--red-glow); }
+
+  .spec-body {
+    padding: 20px;
+  }
+  .spec-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  /* ---- CODE TABLE ---- */
+  .code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .code-table tr {
+    border-bottom: 1px solid var(--border-dim);
+    transition: background 0.15s;
+  }
+  .code-table tr:last-child { border-bottom: none; }
+  .code-table tr:hover { background: var(--bg-hover); }
+  .code-table td {
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .code-table .key {
+    color: var(--red-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    width: 240px;
+    min-width: 180px;
+  }
+  .code-table .val {
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .code-table .val code {
+    color: var(--green-primary);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .code-table .val .comment {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ---- ARCH DIAGRAM ---- */
+  .arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 32px 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .arch-node {
+    flex: 1;
+    min-width: 160px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+  .arch-node:first-child { border-radius: 8px 0 0 8px; }
+  .arch-node:last-child { border-radius: 0 8px 8px 0; }
+  .arch-node:hover {
+    border-color: var(--red-primary);
+    z-index: 2;
+    transform: translateY(-2px);
+  }
+  .arch-node::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    z-index: 3;
+  }
+  .arch-node:last-child::after { display: none; }
+  .arch-node .node-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+  }
+  .arch-node .node-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .arch-node .node-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ---- CODE SNIPPET ---- */
+  .code-snippet {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.8;
+    position: relative;
+  }
+  .code-snippet::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0; right: 0;
+    background: var(--border-dim);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 0 6px 0 4px;
+    letter-spacing: 1px;
+  }
+  .code-snippet .kw { color: var(--cyan-primary); }
+  .code-snippet .fn { color: var(--red-primary); }
+  .code-snippet .str { color: var(--green-primary); }
+  .code-snippet .num { color: var(--red-primary); }
+  .code-snippet .cmt { color: var(--text-muted); font-style: italic; }
+
+  /* ---- MODE GRID ---- */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .mode-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px;
+    transition: border-color 0.3s;
+  }
+  .mode-card:hover { border-color: var(--border-med); }
+  .mode-card .mode-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-card .mode-name .indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .mode-card .mode-params {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .mode-card .mode-params span {
+    color: var(--text-secondary);
+  }
+
+  /* ---- PRINCIPLE CARDS ---- */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .principle-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--red-primary));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .principle-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .principle-card:hover::before { opacity: 1; }
+  .principle-card .p-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .principle-card .p-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer a {
+    color: var(--red-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--red-primary); }
+  .footer-logo {
+    width: 32px; height: 32px;
+    margin: 0 auto 12px;
+    opacity: 0.4;
+    filter: grayscale(0.3);
+  }
+
+  /* ---- ANIMATIONS ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .arch-flow { flex-direction: column; }
+    .arch-node { border-radius: 0 !important; }
+    .arch-node:first-child { border-radius: 8px 8px 0 0 !important; }
+    .arch-node:last-child { border-radius: 0 0 8px 8px !important; }
+    .arch-node::after {
+      content: '↓';
+      right: 50%; top: auto; bottom: -8px;
+      transform: translateX(50%);
+    }
+    .code-table .key { width: auto; min-width: 140px; }
+    .nav-links { display: none; }
+    .download-bar { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html" class="active">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">TECHNOLOGY</div>
+    <h1 class="fade-in delay-1">
+      <span>ConvergenceX</span><br>
+      Consensus Engine
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      A deterministic, CPU-oriented, security-first consensus engine combining
+      gradient-descent proof-of-work, per-block adaptive difficulty, and a
+      real-time stability overlay. Designed for predictable issuance, controlled
+      growth, and resistance to chaotic retarget behavior.
+    </p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">CONSENSUS</span>
+      <span class="sep">|</span>
+      <span class="val">Integer-only arithmetic · Zero floating point · Deterministic across all nodes</span>
+    </div>
+
+    <div class="download-bar fade-in delay-4">
+      <a class="dl-btn" id="downloadPageBtn" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download this page
+      </a>
+      <a class="dl-btn secondary" href="#convergencex">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        Explore specification
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE OVERVIEW -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">OVERVIEW</div>
+      <h2 class="section-title">Architecture <span class="accent">Pipeline</span></h2>
+    </div>
+
+    <div class="arch-flow fade-in delay-1">
+      <div class="arch-node">
+        <div class="node-label">Layer 01</div>
+        <div class="node-name">ConvergenceX PoW</div>
+        <div class="node-detail">Gradient-descent work<br>+ stability basin proof</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 02</div>
+        <div class="node-name">ASERT</div>
+        <div class="node-detail">Per-block difficulty<br>Q16.16 adjustment</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 03</div>
+        <div class="node-name">cASERT</div>
+        <div class="node-detail">Stability overlay<br>Adaptive mode control</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 04</div>
+        <div class="node-name">SOSTCompact</div>
+        <div class="node-detail">Q16.16 difficulty<br>encoding (nBits)</div>
+      </div>
+      <div class="arch-node">
+        <div class="node-label">Layer 05</div>
+        <div class="node-name">MTP Validation</div>
+        <div class="node-detail">Median Time Past<br>timestamp discipline</div>
+      </div>
+    </div>
+
+    <div class="spec-desc fade-in delay-2" style="max-width:780px;">
+      The consensus stack is vertically integrated: ConvergenceX produces the proof-of-work,
+      ASERT adjusts difficulty every block in continuous Q16.16 log-space, cASERT applies a
+      real-time stability overlay when network conditions degrade, and MTP anchors all
+      timing decisions to validated chain history. Every layer is integer-only and
+      bit-for-bit reproducible across all implementations.
+    </div>
+  </div>
+</section>
+
+<!-- CONVERGENCEX POW -->
+<section class="section" id="convergencex">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PROOF OF WORK</div>
+      <h2 class="section-title">ConvergenceX <span class="accent">PoW</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">convergencex_attempt()</span>
+        </div>
+        <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Instead of brute-force hash collision, ConvergenceX requires miners to produce
+          <strong>verifiable convergence certificates</strong>. Each attempt solves a
+          tip-bound linear system via deterministic gradient descent, mixed with memory-hard
+          scratchpad reads, and proves the solution lies in a stable convergence basin.
+        </p>
+
+        <div class="code-snippet" data-label="ALGORITHM">
+<span class="cmt">// 1. Derive challenge from chain tip (anti-grinding)</span>
+block_key  = <span class="fn">SHA256</span>( prev_hash || <span class="str">"BLOCK_KEY"</span> )
+seed       = <span class="fn">SHA256</span>( MAGIC || <span class="str">"SEED"</span> || header_core || block_key || nonce || extra_nonce )
+
+<span class="cmt">// 2. Derive linear system M, b from block_key (deterministic per tip)</span>
+(M, b, λ)  = <span class="fn">derive_M_and_b</span>( block_key, N=<span class="num">32</span>, λ=<span class="num">100</span> )
+
+<span class="cmt">// 3. Gradient descent with scratchpad mixing (memory-hard)</span>
+<span class="kw">for</span> r <span class="kw">in</span> <span class="num">1</span>..<span class="num">100,000</span>:
+    x[i] -= ( A(x)[i] - b[i] ) &gt;&gt; lr_shift          <span class="cmt">// gradient step</span>
+    x[j] ^= <span class="fn">mix_from_scratch</span>( scratchpad, idx )   <span class="cmt">// ASIC resistance</span>
+    state  = <span class="fn">SHA256</span>( state || mix_data || round )   <span class="cmt">// state chain</span>
+
+<span class="cmt">// 4. Verify stability basin (k perturbation probes)</span>
+(is_stable, metric) = <span class="fn">verify_convergence_stability_basin</span>( x_final, M, b, ... )
+
+<span class="cmt">// 5. Compute commitment</span>
+commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</span> || header_core || seed || state || x || cp_root || metric )
+<span class="kw">require</span>  commit &lt;= target   <span class="kw">AND</span>   is_stable == <span class="num">true</span>
+        </div>
+
+        <table class="code-table">
+          <tbody><tr>
+            <td class="key">CX_SCRATCH_MB</td>
+            <td class="val"><code>4096</code> <span class="comment">// 4 GB memory-hard scratchpad</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_N</td>
+            <td class="val"><code>32</code> <span class="comment">// linear system dimension</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_ROUNDS</td>
+            <td class="val"><code>100,000</code> <span class="comment">// sequential gradient iterations</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_LR_SHIFT</td>
+            <td class="val"><code>18</code> <span class="comment">// learning rate = 1/(2^18)</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_LAM</td>
+            <td class="val"><code>100</code> <span class="comment">// regularization parameter (λ)</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_CHECKPOINT_INTERVAL</td>
+            <td class="val"><code>6,250</code> <span class="comment">// rounds/16, Merkle-committed</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_STABILITY_K</td>
+            <td class="val"><code>4</code> <span class="comment">// perturbation probes per attempt</span></td>
+          </tr>
+          <tr>
+            <td class="key">CX_STABILITY_GRADIENT_STEPS</td>
+            <td class="val"><code>3</code> <span class="comment">// refinement steps per probe</span></td>
+          </tr>
+          <tr>
+            <td class="key">Scratchpad derivation</td>
+            <td class="val">Sequential SHA-256 chain <span class="comment">// epoch-keyed, mmap-friendly</span></td>
+          </tr>
+          <tr>
+            <td class="key">Verification</td>
+            <td class="val">Two-stage pipeline <span class="comment">// cheap header check → full recompute</span></td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Stability Basin Verification</span>
+        </div>
+        <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          A valid ConvergenceX proof must demonstrate that the solution <code>x_final</code>
+          resides in a stable attractor basin. The verifier applies <code>k</code> deterministic
+          perturbation probes and checks two acceptance rules per probe:
+        </p>
+        <table class="code-table">
+          <tbody><tr>
+            <td class="key">Local non-explosion</td>
+            <td class="val"><code>d(t+1) &lt;= d(t) + margin_eff</code> <span class="comment">// per gradient step</span></td>
+          </tr>
+          <tr>
+            <td class="key">Global contraction</td>
+            <td class="val"><code>d_final * c_den &lt;= d0 * c_num + margin_eff</code> <span class="comment">// for large perturbations</span></td>
+          </tr>
+          <tr>
+            <td class="key">Contraction ratio</td>
+            <td class="val"><code>7/10</code> <span class="comment">// epoch-invariant V1</span></td>
+          </tr>
+          <tr>
+            <td class="key">Perturbation scale</td>
+            <td class="val"><code>3</code> <span class="comment">// uniform in [-scale, +scale]</span></td>
+          </tr>
+          <tr>
+            <td class="key">Stability LR shift</td>
+            <td class="val"><code>20</code> <span class="comment">// lr_shift + 2 (more conservative)</span></td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ASERT -->
+<section class="section" id="asert">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">DIFFICULTY ADJUSTMENT</div>
+      <h2 class="section-title">ASERT <span class="accent">Retargeting</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">asert_next_difficulty()</span>
+        </div>
+        <span class="spec-tag consensus">CONSENSUS-CRITICAL</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          SOST implements ASERT (Absolutely Scheduled Exponentially Rising Targets) for
+          per-block difficulty adjustment in continuous Q16.16 log-space. Unlike legacy
+          epoch-based retarget systems that wait for large windows, ASERT corrects
+          difficulty every single block, producing smooth transitions and faster convergence
+          to the target interval.
+        </p>
+
+        <div class="code-snippet" data-label="ASERT CORE (EXPONENTIAL)">
+<span class="cmt">// Compute expected parent time from epoch anchor</span>
+expected_pt = anchor_time + (parent_idx - anchor_idx) * <span class="num">600</span>
+td          = prev_time - expected_pt
+
+<span class="cmt">// Exponential ASERT: next_bitsq = anchor_bitsq * 2^(-td / halflife)</span>
+exponent = (-td * Q16_ONE) / ASERT_HALF_LIFE
+shifts   = exponent >> <span class="num">16</span>        <span class="cmt">// integer part</span>
+frac     = exponent & <span class="num">0xFFFF</span>     <span class="cmt">// fractional part</span>
+
+<span class="cmt">// 2^frac via cubic polynomial (Horner's form, Q0.16)</span>
+factor   = Q16_ONE + polynomial_approx(frac)
+result   = (anchor_bitsq * factor) >> <span class="num">16</span>
+result   = result << shifts       <span class="cmt">// apply integer power-of-two</span>
+
+<span class="cmt">// Global bounds only — no per-block clamps</span>
+new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
+        </div>
+
+        <table class="code-table">
+          <tbody><tr>
+            <td class="key">TARGET_SPACING</td>
+            <td class="val"><code>600</code> seconds <span class="comment">// 10-minute target block time</span></td>
+          </tr>
+          <tr>
+            <td class="key">ASERT Half-Life</td>
+            <td class="val"><code>86,400</code> seconds <span class="comment">// 24 hours</span></td>
+          </tr>
+          <tr>
+            <td class="key">MIN_BITSQ</td>
+            <td class="val"><code>65,536</code> <span class="comment">// Q16_ONE — minimum difficulty</span></td>
+          </tr>
+          <tr>
+            <td class="key">MAX_BITSQ</td>
+            <td class="val"><code>16,711,680</code> <span class="comment">// 255 × Q16_ONE — maximum difficulty</span></td>
+          </tr>
+          <tr>
+            <td class="key">Anchor rotation</td>
+            <td class="val">Per-epoch <span class="comment">// resets at epoch boundary blocks</span></td>
+          </tr>
+          <tr>
+            <td class="key">Encoding</td>
+            <td class="val">SOSTCompact Q16.16 <span class="comment">// finer granularity than Bitcoin nBits</span></td>
+          </tr>
+          <tr>
+            <td class="key">Arithmetic</td>
+            <td class="val">Integer-only <span class="comment">// no floating point, no consensus drift</span></td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- cASERT -->
+<section class="section" id="casert">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STABILITY OVERLAY</div>
+      <h2 class="section-title">cASERT <span class="accent">Controller</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">casert_mode_from_chain()</span>
+        </div>
+        <span class="spec-tag overlay">STABILITY OVERLAY</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          cASERT (Controlled ASERT) is a consensus-critical stability overlay that adapts
+          ConvergenceX's stability verification parameters based on how far ahead the chain
+          is running vs the ideal schedule (genesis + height &times; 600s). Unidirectional: only
+          hardens when chain is ahead of schedule. When behind, ASERT alone handles difficulty.
+        </p>
+
+        <div class="code-snippet" data-label="LEVEL COMPUTATION">
+<span class="cmt">// Lag: positive = behind, negative = ahead</span>
+elapsed   = latest_time - GENESIS_TIME
+expected  = elapsed / <span class="num">600</span>
+lag       = expected - (next_height - <span class="num">1</span>)
+ahead     = (lag &lt; <span class="num">0</span>) ? -lag : <span class="num">0</span>
+
+<span class="cmt">// Level from blocks ahead (fixed bands L1-L5, unbounded L6+)</span>
+<span class="kw">if</span> ahead &lt;   <span class="num">5</span> → L1 (neutral, scale=<span class="num">1</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">26</span> → L2 (scale=<span class="num">2</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">51</span> → L3 (scale=<span class="num">3</span>)
+<span class="kw">if</span> ahead &lt;  <span class="num">76</span> → L4 (scale=<span class="num">4</span>)
+<span class="kw">if</span> ahead &lt; <span class="num">101</span> → L5 (scale=<span class="num">5</span>)
+<span class="kw">else</span>          → L6+ (scale = <span class="num">6</span> + floor((ahead-<span class="num">101</span>)/<span class="num">50</span>))  <span class="cmt">// unbounded</span>
+        </div>
+
+        <div class="mode-grid">
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:var(--green-primary)"></span>
+              L1 NEUTRAL
+            </div>
+            <div class="mode-params">
+              0&ndash;4 blocks ahead &middot; scale=1<br>
+              <em>ASERT handles everything. No CX overlay.</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:#67e8f9"></span>
+              L2
+            </div>
+            <div class="mode-params">
+              5&ndash;25 blocks ahead &middot; scale=2<br>
+              <em>Light hardening. k=4 &middot; margin=180 &middot; steps=4</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:#fbbf24"></span>
+              L3
+            </div>
+            <div class="mode-params">
+              26&ndash;50 blocks ahead &middot; scale=3<br>
+              <em>Moderate hardening.</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:#fb923c"></span>
+              L4&ndash;L5
+            </div>
+            <div class="mode-params">
+              51&ndash;100 blocks ahead &middot; scale=4&ndash;5<br>
+              <em>Strong/severe hardening.</em>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-name">
+              <span class="indicator" style="background:var(--red-primary)"></span>
+              L6+ UNBOUNDED
+            </div>
+            <div class="mode-params">
+              101+ blocks ahead &middot; scale grows every 50 blocks<br>
+              <em>No ceiling. The faster the attack, the harder the brake.</em>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-snippet" data-label="DECAY ANTI-STALL" style="margin-top:16px;">
+<span class="cmt">// Activation: 14400s (4h, L1-L5) or 28800s (8h, L6+)</span>
+<span class="cmt">// Mining only — validation uses raw level</span>
+stall_time = now - last_block_time - activation  <span class="cmt">// 14400s (L1-L5) or 28800s (L6+)</span>
+
+<span class="kw">while</span> effective_level &gt; <span class="num">1</span> and stall_time &gt; <span class="num">0</span>:
+    <span class="kw">if</span> level &gt;= <span class="num">8</span>: cost = <span class="num">600</span>s   <span class="cmt">// L8+: 10 min/level (fast)</span>
+    <span class="kw">elif</span> level &gt;= <span class="num">4</span>: cost = <span class="num">1200</span>s  <span class="cmt">// L4-L7: 20 min/level (medium)</span>
+    <span class="kw">else</span>:           cost = <span class="num">1800</span>s  <span class="cmt">// L2-L3: 30 min/level (cautious)</span>
+    effective_level -= <span class="num">1</span>
+    stall_time -= cost
+        </div>
+
+        <table class="code-table" style="margin-top:16px;">
+          <tbody><tr>
+            <td class="key">CASERT_L2_BLOCKS</td>
+            <td class="val"><code>5</code> <span class="comment">// blocks ahead to enter L2</span></td>
+          </tr>
+          <tr>
+            <td class="key">CASERT_L3_BLOCKS</td>
+            <td class="val"><code>26</code> <span class="comment">// blocks ahead to enter L3</span></td>
+          </tr>
+          <tr>
+            <td class="key">CASERT_L4_BLOCKS</td>
+            <td class="val"><code>51</code> <span class="comment">// blocks ahead to enter L4</span></td>
+          </tr>
+          <tr>
+            <td class="key">CASERT_L5_BLOCKS</td>
+            <td class="val"><code>76</code> <span class="comment">// blocks ahead to enter L5</span></td>
+          </tr>
+          <tr>
+            <td class="key">CASERT_L6_BLOCKS</td>
+            <td class="val"><code>101</code> <span class="comment">// L6+ unbounded starts here</span></td>
+          </tr>
+          <tr>
+            <td class="key">DECAY_ACTIVATION</td>
+            <td class="val"><code>14,400 / 28,800</code> seconds <span class="comment">// 4h (L1-L5) or 8h (L6+)</span></td>
+          </tr>
+          <tr>
+            <td class="key">Directionality</td>
+            <td class="val">Unidirectional <span class="comment">// only hardens when chain is ahead</span></td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOSTCOMPACT + MTP -->
+<section class="section" id="encoding">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">ENCODING &amp; VALIDATION</div>
+      <h2 class="section-title">SOSTCompact <span class="accent">&amp; MTP</span></h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">
+      <div class="spec-block fade-in delay-1">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon red"></div>
+            <span class="spec-name">SOSTCompact Q16.16</span>
+          </div>
+          <span class="spec-tag consensus">CONSENSUS</span>
+        </div>
+        <div class="spec-body">
+          <p class="spec-desc">
+            Difficulty is encoded as a Q16.16 fixed-point value in block headers,
+            providing finer granularity than Bitcoin's nBits compact format. Deterministic
+            bidirectional conversion between compact and full 256-bit target ensures
+            consensus-safe retarget math and bit-for-bit reproducibility.
+          </p>
+          <table class="code-table">
+            <tbody><tr>
+              <td class="key">Format</td>
+              <td class="val">Q16.16 fixed-point <span class="comment">// uint32</span></td>
+            </tr>
+            <tr>
+              <td class="key">GENESIS_BITSQ</td>
+              <td class="val">Consensus-fixed anchor</td>
+            </tr>
+            <tr>
+              <td class="key">MIN_BITSQ</td>
+              <td class="val">Easiest allowed target</td>
+            </tr>
+            <tr>
+              <td class="key">MAX_BITSQ</td>
+              <td class="val">Hardest allowed target</td>
+            </tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <div class="spec-block fade-in delay-2">
+        <div class="spec-header">
+          <div class="spec-header-left">
+            <div class="spec-icon green"></div>
+            <span class="spec-name">Timestamp Discipline</span>
+          </div>
+          <span class="spec-tag consensus">CONSENSUS</span>
+        </div>
+        <div class="spec-body">
+          <p class="spec-desc">
+            Block timestamps are validated against Median Time Past (MTP) to prevent
+            manipulation affecting difficulty. Combined with ASERT anchoring, this
+            creates stable timing even under individually noisy blocks.
+          </p>
+          <table class="code-table">
+            <tbody><tr>
+              <td class="key">MTP_WINDOW</td>
+              <td class="val"><code>11</code> blocks</td>
+            </tr>
+            <tr>
+              <td class="key">MAX_FUTURE_DRIFT</td>
+              <td class="val"><code>600</code> seconds</td>
+            </tr>
+            <tr>
+              <td class="key">Rule: ts &gt; MTP</td>
+              <td class="val">Strict monotonicity</td>
+            </tr>
+            <tr>
+              <td class="key">Rule: ts ≤ now + drift</td>
+              <td class="val">Bounded acceptance</td>
+            </tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONSENSUS CONSTANTS -->
+<section class="section" id="constants">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">CHAIN PARAMETERS</div>
+      <h2 class="section-title">Consensus <span class="accent">Constants</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Network Configuration</span>
+        </div>
+        <span class="spec-tag immutable">IMMUTABLE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tbody><tr>
+            <td class="key">MAINNET_GENESIS_UTC</td>
+            <td class="val"><code>1773360000</code> <span class="comment">// 2026-03-13 00:00:00 UTC</span></td>
+          </tr>
+          <tr>
+            <td class="key">BLOCKS_PER_EPOCH</td>
+            <td class="val"><code>131,553</code> <span class="comment">// ≈2.5 years (Feigenbaum α)</span></td>
+          </tr>
+          <tr>
+            <td class="key">TARGET_SPACING</td>
+            <td class="val"><code>600</code> seconds <span class="comment">// 10-minute blocks</span></td>
+          </tr>
+          <tr>
+            <td class="key">MAGIC</td>
+            <td class="val"><code>CXPOW3</code> + <code>NETWORK_ID</code> <span class="comment">// unique wire identifier</span></td>
+          </tr>
+          <tr>
+            <td class="key">NETWORK_ID</td>
+            <td class="val"><code>SHA256("SOST/CONVERGENCEX/mainnet")[:4]</code></td>
+          </tr>
+          <tr>
+            <td class="key">Block header</td>
+            <td class="val"><code>MAGIC + "HDR2" + core(72B) + cp_root(32B) + nonce(4B) + extra(4B)</code></td>
+          </tr>
+          <tr>
+            <td class="key">Block ID</td>
+            <td class="val"><code>SHA256( header || "ID" || commit )</code></td>
+          </tr>
+          <tr>
+            <td class="key">Block key (anti-grind)</td>
+            <td class="val"><code>SHA256( prev_hash || "BLOCK_KEY" )</code> <span class="comment">// tip-bound only</span></td>
+          </tr>
+          <tr>
+            <td class="key">Chainwork</td>
+            <td class="val">Bitcoin-style: <code>(2^256 - 1) / (target + 1) + 1</code></td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGN PRINCIPLES -->
+<section class="section" id="principles">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">DESIGN</div>
+      <h2 class="section-title">Core <span class="accent">Principles</span></h2>
+    </div>
+
+    <div class="principles-grid">
+      <div class="principle-card fade-in delay-1" style="--card-accent:var(--red-primary);">
+        <div class="p-label" style="color:var(--red-primary);">DETERMINISTIC</div>
+        <div class="p-desc">
+          Zero floating point in consensus. Integer-only arithmetic guarantees identical
+          results on every architecture. Same input → same output, unconditionally.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-1" style="--card-accent:var(--green-primary);">
+        <div class="p-label" style="color:var(--green-primary);">CPU-ORIENTED</div>
+        <div class="p-desc">
+          4 GB memory-hard scratchpad with 100,000 sequential iterations. Throughput is
+          bounded by memory bandwidth and latency, not raw compute — making ASIC
+          development economically impractical.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-2" style="--card-accent:var(--cyan-primary);">
+        <div class="p-label" style="color:var(--cyan-primary);">ADAPTIVE</div>
+        <div class="p-desc">
+          Per-block ASERT retargeting with cASERT stability overlay. The chain converges
+          to its target interval within hours, not days. No retarget whiplash.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-2" style="--card-accent:var(--red-accent);">
+        <div class="p-label" style="color:var(--red-accent);">LAUNCH-SAFE</div>
+        <div class="p-desc">
+          cASERT degrades stability requirements under thin hashrate, ensuring the chain
+          remains mineable and stable from genesis. Security grows with the network.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-3" style="--card-accent:#a78bfa;">
+        <div class="p-label" style="color:#a78bfa;">VERIFIABLE</div>
+        <div class="p-desc">
+          Two-stage verification pipeline: cheap header/target checks for fast sync,
+          full ConvergenceX recomputation for deep validation. Merkle-committed
+          checkpoints enable SPV-friendly proof structures.
+        </div>
+      </div>
+      <div class="principle-card fade-in delay-3" style="--card-accent:#f472b6;">
+        <div class="p-label" style="color:#f472b6;">ANTI-GRINDING</div>
+        <div class="p-desc">
+          Block key derives from chain tip only. All miners solve the same linear system
+          for a given tip — per-attempt uniqueness comes from nonce/extra_nonce, not
+          from the challenge itself.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POW COMPARISON -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PoW COMPARISON</div>
+      <h2 class="section-title">Bitcoin vs Monero vs <span class="accent">SOST</span></h2>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Proof-of-Work Architecture Comparison</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="width:100%;font-size:11px;">
+          <tr style="border-bottom:1px solid var(--border-dim);">
+            <td class="key" style="width:25%;">Property</td>
+            <td class="val" style="width:25%;color:var(--text-dim);">Bitcoin (SHA-256d)</td>
+            <td class="val" style="width:25%;color:var(--text-dim);">Monero (RandomX)</td>
+            <td class="val" style="width:25%;color:var(--red-primary);">SOST (ConvergenceX)</td>
+          </tr>
+          <tr><td class="key">PoW verify cost</td><td class="val">~1&mu;s</td><td class="val">~50ms</td><td class="val" style="color:var(--text-primary);">~5&ndash;30s</td></tr>
+          <tr><td class="key">Memory requirement</td><td class="val">Negligible</td><td class="val">256MB&ndash;2GB</td><td class="val" style="color:var(--text-primary);">4GB scratchpad</td></tr>
+          <tr><td class="key">ASIC resistance</td><td class="val" style="color:var(--red-primary);">None</td><td class="val" style="color:var(--green-primary);">High</td><td class="val" style="color:var(--green-primary);">Very high</td></tr>
+          <tr><td class="key">Full sync time</td><td class="val">~hours</td><td class="val">~days</td><td class="val" style="color:var(--text-primary);">~weeks</td></tr>
+          <tr><td class="key">Fast sync time</td><td class="val">~minutes</td><td class="val">~hours</td><td class="val" style="color:var(--green-primary);">~minutes</td></tr>
+          <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>
+          <tr><td class="key">Difficulty adjust</td><td class="val">Every 2016 blocks</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--text-primary);">Every block (ASERT exp.)</td></tr>
+          <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Decay (2h&rarr;tiered)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT L1&ndash;L6+ unbounded</td></tr>
+          <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
+          <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
+          <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+<script>
+// Self-download functionality
+document.getElementById('downloadPageBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sost-technology.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+
+
+
+</body></html>

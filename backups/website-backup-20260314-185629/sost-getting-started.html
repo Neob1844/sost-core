@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Getting Started</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 11px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  /* SPEC BLOCK */
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .spec-body { padding: 20px; }
+
+  /* CODE TABLE */
+  .code-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .code-table th { text-align: left; padding: 10px 16px; color: var(--text-dim); font-weight: 400; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); font-weight: 400; }
+  .code-table .value { color: var(--text-primary); font-weight: 500; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .cyan { color: var(--cyan-primary); }
+
+  /* CODE SNIPPET */
+  .code-snippet { background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-size: 11px; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; margin: 16px 0; white-space: pre; font-family: var(--font-mono); }
+  .code-snippet .keyword { color: var(--red-primary); }
+  .code-snippet .fn { color: var(--cyan-primary); }
+  .code-snippet .comment { color: var(--text-muted); font-style: italic; }
+  .code-snippet .num { color: var(--green-primary); }
+
+  /* STEP CARDS */
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: var(--red-subtle); color: var(--red-primary); font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+  .mode-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; transition: all 0.3s; }
+  .mode-card:hover { border-color: var(--border-med); transform: translateY(-2px); }
+  .mode-card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .mode-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .mode-card .mode-tag { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; font-weight: 500; }
+
+  /* NOTICE */
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 11px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+  .notice.green { border-left-color: var(--green-primary); }
+
+  /* FOOTER */
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ANIMATIONS */
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html" class="active">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Getting Started</div>
+    <h1 class="fade-in delay-1">Build. <span>Mine.</span><br><span>Transact.</span></h1>
+    <p class="hero-sub fade-in delay-2">Everything you need to compile the source, run a full node, mine blocks with ConvergenceX, and send transactions on the SOST network. Ubuntu 24.04 recommended.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">REQUIREMENTS</span>
+      <span class="sep">|</span>
+      <span class="val">C++17 &middot; 4GB+ RAM &middot; Linux</span>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 1: BUILD -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 01</div>
+      <h2 class="section-title">Build from <span class="accent">Source</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Dependencies</span>
+        </div>
+        <span class="spec-tag">UBUNTU 24.04</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Install build dependencies</span>
+sudo apt install build-essential cmake libssl-dev libsecp256k1-dev</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Clone &amp; Compile</span>
+        </div>
+        <span class="spec-tag">CMAKE</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Clone the repository</span>
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+
+<span class="comment"># Build</span>
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+
+<span class="comment"># Run tests</span>
+ctest --output-on-failure</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Binaries</span>
+        </div>
+        <span class="spec-tag">BUILD OUTPUT</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Binary</th><th>Version</th><th>Description</th></tr>
+          <tr><td class="highlight">sost-node</td><td class="value">v0.4.0</td><td class="value">Full node — P2P networking, JSON-RPC, chain validation, mempool</td></tr>
+          <tr><td class="highlight">sost-miner</td><td class="value">v0.6</td><td class="value">ConvergenceX PoW miner with mempool integration</td></tr>
+          <tr><td class="highlight">sost-cli</td><td class="value">v1.3</td><td class="value">Wallet CLI — create keys, send transactions, auto fees</td></tr>
+          <tr><td class="highlight">sost-rpc</td><td class="value">v0.1</td><td class="value">Standalone RPC client for node queries</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2: WALLET -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 02</div>
+      <h2 class="section-title">Create a <span class="accent">Wallet</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Wallet Commands</span>
+        </div>
+        <span class="spec-tag">SOST-CLI</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Create new wallet</span>
+./sost-cli newwallet
+
+<span class="comment"># Generate a receiving address</span>
+./sost-cli getnewaddress "mining"
+
+<span class="comment"># Import genesis block UTXOs (if applicable)</span>
+./sost-cli importgenesis genesis_block.json
+
+<span class="comment"># Check balance</span>
+./sost-cli getbalance
+
+<span class="comment"># List all addresses</span>
+./sost-cli listaddresses</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Wallet CLI Reference</span>
+        </div>
+        <span class="spec-tag">v1.3</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Command</th><th>Description</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">newwallet</td><td class="value">Create new wallet file</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getnewaddress [label]</td><td class="value">Generate new receiving address</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">listaddresses</td><td class="value">List all wallet addresses with balances</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">importprivkey &lt;hex&gt;</td><td class="value">Import a 32-byte private key (hex)</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getbalance [address]</td><td class="value">Show balance in SOST</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">listunspent [address]</td><td class="value">List unspent transaction outputs</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">createtx &lt;to&gt; &lt;amount&gt;</td><td class="value">Create and sign a transaction (outputs hex)</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">send &lt;to&gt; &lt;amount&gt;</td><td class="value">Create, sign and broadcast via RPC</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">dumpprivkey &lt;address&gt;</td><td class="value">Reveal private key (DANGER)</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">info</td><td class="value">Wallet summary</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-3">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">RECOMMENDED</div>
+        <h3 style="color:var(--green-primary)">CLI Wallet</h3>
+        <p>Full-featured command-line wallet via <code style="color:var(--cyan-primary)">sost-cli</code>. Create keys, sign transactions, broadcast via RPC. Requires a running node for balance queries and broadcasting.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">BROWSER</div>
+        <h3 style="color:var(--cyan-primary)">Web Wallet</h3>
+        <p>Client-side wallet at <a href="sost-wallet.html" style="color:var(--cyan-primary);text-decoration:underline;">sost-wallet.html</a>. Generate keys, create and sign transactions in your browser. Private keys never leave your device.</p>
+      </div>
+    </div>
+
+    <div class="notice green fade-in delay-4">
+      <strong>Wallet encryption:</strong> AES-256-GCM with scrypt key derivation (N=32768, r=8, p=1). Address format: <code style="color:var(--cyan-primary)">sost1</code> + 40 hex characters (20-byte pubkey hash, ECDSA secp256k1).
+    </div>
+  </div>
+</section>
+
+<!-- STEP 3: NODE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 03</div>
+      <h2 class="section-title">Run a <span class="accent">Full Node</span></h2>
+    </div>
+
+    <div class="notice fade-in" style="border-left-color:var(--red-primary);background:var(--red-subtle);">
+      <strong>Node must be running first.</strong> The miner (STEP 04) and wallet CLI (STEP 05) both connect to the node via RPC. Start the node in a separate terminal before proceeding.
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Start Node</span>
+        </div>
+        <span class="spec-tag">TERMINAL 1</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Start full node — connects to seed.sostcore.com automatically</span>
+<span class="comment"># genesis_block.json must be in the current directory (from the repo root)</span>
+./sost-node --genesis genesis_block.json --chain chain.json \
+    --rpc-user myuser --rpc-pass mypass --profile mainnet
+
+<span class="comment"># Verify node is running (in another terminal)</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getinfo</span>","params":[]}' \
+    http://localhost:18232 | python3 -m json.tool</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Node Options</span>
+        </div>
+        <span class="spec-tag">v0.4.0</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--genesis &lt;path&gt;</td><td class="highlight">required</td><td class="value">Genesis block JSON</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--chain &lt;path&gt;</td><td class="label">—</td><td class="value">Chain state file (load/save)</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--wallet &lt;path&gt;</td><td class="label">wallet.json</td><td class="value">Wallet file</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--port &lt;n&gt;</td><td class="label">19333</td><td class="value">P2P port</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--rpc-port &lt;n&gt;</td><td class="label">18232</td><td class="value">RPC port</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--rpc-user &lt;user&gt;</td><td class="highlight">required</td><td class="value">RPC authentication username</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--rpc-pass &lt;pass&gt;</td><td class="highlight">required</td><td class="value">RPC authentication password</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--connect &lt;host:port&gt;</td><td class="label">seed.sostcore.com</td><td class="value">Connect to specific peer</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--profile &lt;p&gt;</td><td class="label">mainnet</td><td class="value">Network profile</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--full-verify</td><td class="label">off</td><td class="value">Force full ConvergenceX verification (no fast sync)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;margin-bottom:16px;" class="fade-in delay-2">
+      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync by Default)</strong>
+      <span style="color:var(--text-secondary);">Your node syncs automatically when started. Fast sync skips expensive ConvergenceX recomputation for trusted historical blocks while all structural, economic, and semantic validation still runs. Add <code style="color:var(--cyan-primary);">--full-verify</code> to force full CX recomputation. Estimated sync times:</span>
+      <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
+        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>
+        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Multiple years: <strong style="color:var(--text-primary);">5–15 minutes</strong></li>
+      </ul>
+      <span style="color:var(--text-dim);font-size:11px;">Your node validates every block independently — no trust required. Once synced, you are running a fully sovereign copy of the SOST blockchain.</span>
+    </div>
+
+    <div class="notice green fade-in delay-2">
+      <strong>RPC credentials:</strong> The <code style="color:var(--cyan-primary)">--rpc-user</code> and <code style="color:var(--cyan-primary)">--rpc-pass</code> values must match between the node, miner, and CLI. Use strong, unique credentials — these are not transmitted over the network but protect local RPC access.
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Node Features</span>
+        </div>
+        <span class="spec-tag">FULL VALIDATION</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Feature</th><th>Detail</th></tr>
+          <tr><td class="label">Consensus validation</td><td class="value">Rules R1-R14, S1-S12, CB1-CB10</td></tr>
+          <tr><td class="label">UTXO set &amp; mempool</td><td class="green">Maintained and persisted</td></tr>
+          <tr><td class="label">Wallet rescan</td><td class="value">Automatic on startup</td></tr>
+          <tr><td class="label">Chain persistence</td><td class="value">Auto-save after every accepted block</td></tr>
+          <tr><td class="label">P2P relay</td><td class="value">Block and transaction relay with DoS protection</td></tr>
+          <tr><td class="label">Ban scoring</td><td class="value">Threshold 100, 24h ban, 64 inbound peer limit</td></tr>
+          <tr><td class="label">Reorg protection</td><td class="value">Max reorg depth: 500 blocks (~3.5 days)</td></tr>
+          <tr><td class="label">Fast sync</td><td class="value">Hard checkpoints + assumevalid (default on)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 4: MINE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 04</div>
+      <h2 class="section-title">Start <span class="accent">Mining</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Launch Miner</span>
+        </div>
+        <span class="spec-tag">TERMINAL 2</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Start mining with RPC mode (recommended)</span>
+<span class="comment"># --address is REQUIRED: your wallet address to receive mining rewards</span>
+<span class="comment"># --blocks 10 mines 10 blocks then stops; omit for continuous mining</span>
+./sost-miner --address sost1YOUR_ADDRESS_HERE \
+    --genesis genesis_block.json --chain chain.json \
+    --rpc 127.0.0.1:18232 \
+    --rpc-user myuser --rpc-pass mypass \
+    --threads 4 --blocks 10
+
+<span class="comment"># Verify blocks are being accepted</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getblockcount</span>","params":[]}' \
+    http://localhost:18232</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Miner Options</span>
+        </div>
+        <span class="spec-tag">v0.6</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--address &lt;sost1..&gt;</td><td class="highlight">required</td><td class="value">Your wallet address to receive mining rewards</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--genesis &lt;path&gt;</td><td class="highlight">required</td><td class="value">Genesis block JSON</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--chain &lt;path&gt;</td><td class="highlight">required</td><td class="value">Chain state file</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--rpc &lt;host:port&gt;</td><td class="label">—</td><td class="value">Submit blocks to node via RPC</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--blocks &lt;n&gt;</td><td class="label">5</td><td class="value">Number of blocks to mine</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--threads &lt;n&gt;</td><td class="label">1</td><td class="value">Mining threads</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--max-nonce &lt;n&gt;</td><td class="label">500000</td><td class="value">Max nonce per round</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-3">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">RECOMMENDED</div>
+        <h3 style="color:var(--green-primary)">RPC Mode</h3>
+        <p>Connect to node via <code style="color:var(--cyan-primary)">--rpc 127.0.0.1:18232</code>. Fetches mempool transactions via getblocktemplate, includes them in blocks, distributes fees across coinbase outputs, submits via submitblock.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">STANDALONE</div>
+        <h3 style="color:var(--text-dim)">No RPC</h3>
+        <p>Writes directly to chain.json. Coinbase-only blocks, no transaction support. Not recommended for production use.</p>
+      </div>
+    </div>
+
+    <div class="notice fade-in delay-4">
+      <strong>ConvergenceX requirements:</strong> Each mining attempt requires 4 GB RAM, 100,000 sequential rounds. CPU-only — no GPU or ASIC advantage. Multi-threading runs independent attempts on separate cores.
+    </div>
+  </div>
+</section>
+
+<!-- STEP 5: TRANSACT -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 05</div>
+      <h2 class="section-title">Send <span class="accent">Transactions</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Send SOST</span>
+        </div>
+        <span class="spec-tag">VIA RPC</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Send SOST to an address (requires 1000+ confirmations on coinbase UTXOs)</span>
+./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass \
+    send sost1abc123...def456 10.0</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Transaction Flow</span>
+        </div>
+        <span class="spec-tag">6 STEPS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Step</th><th>Action</th></tr>
+          <tr><td class="highlight">1</td><td class="value">sost-cli queries node for current chain height (maturity filtering)</td></tr>
+          <tr><td class="highlight">2</td><td class="value">CLI selects mature UTXOs, calculates fee, builds and signs TX</td></tr>
+          <tr><td class="highlight">3</td><td class="value">CLI broadcasts signed TX to node via sendrawtransaction RPC</td></tr>
+          <tr><td class="highlight">4</td><td class="value">Node validates transaction and accepts it to mempool</td></tr>
+          <tr><td class="highlight">5</td><td class="value">Miner fetches mempool via getblocktemplate and includes TX in next block</td></tr>
+          <tr><td class="highlight">6</td><td class="value">Node confirms transaction when block is accepted</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Fee Parameters</span>
+        </div>
+        <span class="spec-tag">AUTO-CALCULATED</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="label">Default fee rate</td><td class="value">1 stock/byte</td></tr>
+          <tr><td class="label">Minimum relay fee</td><td class="value">1,000 stocks (0.00001 SOST)</td></tr>
+          <tr><td class="label">Override</td><td class="value" style="font-family:var(--font-mono)">--fee-rate &lt;n&gt;</td></tr>
+          <tr><td class="label">Coinbase maturity</td><td class="highlight">1000 confirmations required (~7 days)</td></tr>
+          <tr><td class="label">Regular TX outputs</td><td class="green">Spendable immediately</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 6: RPC -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 06</div>
+      <h2 class="section-title">Query via <span class="accent">RPC</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">RPC Example</span>
+        </div>
+        <span class="spec-tag">PORT 18232</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># Query node status</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getinfo</span>","params":[]}' \
+    http://localhost:18232</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">RPC Methods</span>
+        </div>
+        <span class="spec-tag">17 METHODS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Method</th><th>Params</th><th>Description</th></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getinfo</td><td class="label">—</td><td class="value">Node status, height, difficulty, mempool</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblockcount</td><td class="label">—</td><td class="value">Current chain height</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblockhash</td><td class="label">height</td><td class="value">Block hash at given height</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblock</td><td class="label">hash</td><td class="value">Block details including cASERT mode</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getaddressinfo</td><td class="label">address</td><td class="value">Address balance, UTXO count</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getbalance</td><td class="label">—</td><td class="value">Wallet balance</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">listunspent</td><td class="label">—</td><td class="value">Wallet UTXOs</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">gettxout</td><td class="label">txid, vout</td><td class="value">Query specific UTXO</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">validateaddress</td><td class="label">address</td><td class="value">Check address validity</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getnewaddress</td><td class="label">[label]</td><td class="value">Generate new wallet address</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">sendrawtransaction</td><td class="label">hex</td><td class="value">Submit signed transaction</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getmempoolinfo</td><td class="label">—</td><td class="value">Mempool size, bytes, fees</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getrawmempool</td><td class="label">—</td><td class="value">Pending transaction IDs</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getrawtransaction</td><td class="label">txid [verbose]</td><td class="value">Get raw tx from mempool</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getpeerinfo</td><td class="label">—</td><td class="value">Connected P2P peers</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">submitblock</td><td class="label">block_json</td><td class="value">Submit mined block</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">getblocktemplate</td><td class="label">—</td><td class="value">Get mempool txs for mining</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 7: VERIFY -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">STEP 07</div>
+      <h2 class="section-title">Verify &amp; <span class="accent">Troubleshoot</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Health Check</span>
+        </div>
+        <span class="spec-tag">QUICK VERIFY</span>
+      </div>
+      <div class="spec-body">
+        <div class="code-snippet"><span class="comment"># 1. Check node is running and synced</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getinfo</span>","params":[]}' \
+    http://localhost:18232
+
+<span class="comment"># 2. Check connected peers</span>
+curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"<span class="fn">getpeerinfo</span>","params":[]}' \
+    http://localhost:18232
+
+<span class="comment"># 3. Check wallet balance</span>
+./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass getbalance</div>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Common Issues</span>
+        </div>
+        <span class="spec-tag">TROUBLESHOOTING</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Problem</th><th>Solution</th></tr>
+          <tr><td class="label">Connection refused on RPC</td><td class="value">Ensure sost-node is running and --rpc-port matches (default 18232)</td></tr>
+          <tr><td class="label">Authentication failed</td><td class="value">Check --rpc-user and --rpc-pass match between node, miner, and CLI</td></tr>
+          <tr><td class="label">No peers connected</td><td class="value">Check firewall allows port 19333; try --connect seed.sostcore.com:19333</td></tr>
+          <tr><td class="label">Miner finds no template</td><td class="value">Node must be fully synced before mining; check getinfo height</td></tr>
+          <tr><td class="label">"Immature coinbase" error</td><td class="value">Coinbase outputs require 1000 confirmations (~7 days) before spending</td></tr>
+          <tr><td class="label">Out of memory (miner)</td><td class="value">ConvergenceX requires 4GB RAM per thread; reduce --threads</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+<script src="sost-search.js"></script>
+</body>
+</html>

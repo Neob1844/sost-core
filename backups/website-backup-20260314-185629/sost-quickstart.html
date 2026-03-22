@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — Quick Start</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --yellow-primary: #eab308;
+    --yellow-dim: rgba(234,179,8,0.15);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+  .protocol-badge { margin-top: 32px; display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--border-med); border-radius: 6px; background: var(--bg-card); font-size: 11px; }
+  .protocol-badge .tag { color: var(--green-primary); font-weight: 600; }
+  .protocol-badge .sep { color: var(--text-muted); }
+  .protocol-badge .val { color: var(--text-secondary); }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  .code-block { background: #0c0c0c; border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--green-primary); overflow-x: auto; margin-bottom: 16px; line-height: 1.9; white-space: pre-wrap; word-break: break-all; }
+  .code-block .comment { color: var(--text-muted); }
+  .code-block .cmd { color: var(--text-primary); }
+  .code-block .flag { color: var(--cyan-primary); }
+  .code-block .val { color: var(--red-primary); }
+  .code-block .prompt { color: var(--text-dim); user-select: none; }
+
+  .step-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 20px; transition: border-color 0.3s; }
+  .step-card:hover { border-color: var(--border-med); }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--red-primary); border-radius: 4px; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #fff; }
+  .step-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .step-body { padding: 20px; }
+  .step-body p { color: var(--text-secondary); margin-bottom: 12px; font-weight: 300; line-height: 1.8; }
+  .step-body p:last-child { margin-bottom: 0; }
+
+  .notice { padding: 16px 20px; border-left: 3px solid var(--red-primary); background: var(--bg-card); border-radius: 0 6px 6px 0; margin-bottom: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+  .notice.green { border-left-color: var(--green-primary); }
+  .notice.cyan { border-left-color: var(--cyan-primary); }
+  .notice.yellow { border-left-color: var(--yellow-primary); }
+  .notice strong { color: var(--text-primary); font-weight: 600; }
+
+  .explain { color: var(--text-secondary); line-height: 1.8; font-weight: 300; margin-bottom: 20px; font-size: 14px; }
+
+  .req-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 0; }
+  .req-item { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 16px; text-align: center; }
+  .req-item .req-icon { font-size: 24px; margin-bottom: 8px; }
+  .req-item .req-label { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .req-item .req-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .os-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .os-tab { padding: 8px 20px; border: 1px solid var(--border-dim); border-radius: 6px; background: var(--bg-card); color: var(--text-dim); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
+  .os-tab:hover { border-color: var(--border-med); color: var(--text-primary); }
+  .os-tab.active { border-color: var(--red-primary); color: var(--red-primary); background: var(--red-subtle); }
+  .os-panel { display: none; }
+  .os-panel.active { display: block; }
+
+  .numbered-list { counter-reset: steps; list-style: none; padding: 0; }
+  .numbered-list li { counter-increment: steps; padding: 8px 0 8px 36px; position: relative; color: var(--text-secondary); line-height: 1.8; font-size: 13px; }
+  .numbered-list li::before { content: counter(steps); position: absolute; left: 0; top: 8px; width: 24px; height: 24px; background: var(--border-dim); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 11px; font-weight: 700; color: var(--text-primary); }
+
+  .code-table { width: 100%; border-collapse: collapse; }
+  .code-table th { text-align: left; font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 16px; border-bottom: 1px solid var(--border-dim); font-weight: 500; }
+  .code-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-dim); font-size: 13px; vertical-align: top; }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .label { color: var(--text-dim); }
+  .code-table .value { color: var(--text-secondary); }
+  .code-table .highlight { color: var(--red-primary); font-weight: 500; }
+  .code-table .ok { color: var(--green-primary); }
+
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; transition: border-color 0.3s; }
+  .spec-block:hover { border-color: var(--border-med); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); flex-wrap: wrap; gap: 8px; }
+  .spec-header-left { display: flex; align-items: center; gap: 10px; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-label { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.5px; }
+  .spec-meta { font-size: 11px; color: var(--text-dim); }
+  .spec-body { padding: 20px; }
+
+  .faq-item { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; margin-bottom: 12px; transition: border-color 0.3s; }
+  .faq-item:hover { border-color: var(--border-med); }
+  .faq-q { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .faq-a { font-size: 13px; color: var(--text-secondary); line-height: 1.8; font-weight: 300; }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .nav-links { display: none; }
+    .req-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html" class="active">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Beginner's Guide</div>
+    <h1 class="fade-in delay-1">Mine <span>SOST</span> from<br>Zero</h1>
+    <p class="hero-sub fade-in delay-2">Step-by-step guide for complete beginners. No programming experience required. From turning on your computer to earning your first SOST coins in about 30 minutes.</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">BEGINNER</span>
+      <span class="sep">|</span>
+      <span class="val">30 minutes &middot; No experience needed &middot; Any computer</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 00: BEFORE YOU START -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Before You <span class="accent">Start</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">What is mining?</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <p class="explain">Mining is how new SOST coins are created. Your computer solves math problems, and when it finds a solution, you earn SOST. Anyone with a regular computer can mine &mdash; no special hardware needed.</p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">What you need</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <div class="req-grid">
+          <div class="req-item">
+            <div class="req-icon" style="color:#22d3ee;font-family:monospace;font-size:32px;line-height:1;">&#x2588;</div>
+            <div class="req-label">Computer</div>
+            <div class="req-sub">4 GB RAM minimum</div>
+          </div>
+          <div class="req-item">
+            <div class="req-icon" style="color:#4ade80;font-family:monospace;font-size:32px;line-height:1;">&#x25BA;</div>
+            <div class="req-label">Internet</div>
+            <div class="req-sub">Any connection</div>
+          </div>
+          <div class="req-item">
+            <div class="req-icon" style="color:#f59e0b;font-family:monospace;font-size:32px;line-height:1;">&#x25B8;</div>
+            <div class="req-label">30 Minutes</div>
+            <div class="req-sub">One-time setup</div>
+          </div>
+          <div class="req-item">
+            <div class="req-icon" style="color:#a78bfa;font-family:monospace;font-size:32px;line-height:1;">&#x2591;</div>
+            <div class="req-label">No Experience Required</div>
+            <div class="req-sub">Step-by-step guide included</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 0: Get Ubuntu -->
+    <div class="step-card fade-in delay-3">
+      <div class="step-header">
+        <span class="step-num">0</span>
+        <span class="step-title">Get Ubuntu on your computer</span>
+      </div>
+      <div class="step-body">
+        <p>SOST runs on Linux (Ubuntu). Pick your operating system below:</p>
+
+        <div class="os-tabs">
+          <div class="os-tab active" onclick="showOS('windows')">Windows</div>
+          <div class="os-tab" onclick="showOS('mac')">Mac</div>
+          <div class="os-tab" onclick="showOS('linux')">Linux</div>
+        </div>
+
+        <div id="os-windows" class="os-panel active">
+          <ol class="numbered-list">
+            <li>Press <strong style="color:var(--text-primary)">Win+R</strong> on your keyboard (Windows key + R at the same time)</li>
+            <li>Type <strong style="color:var(--green-primary)">cmd</strong> and press Enter</li>
+            <li>A black window appears. Type this and press Enter:<br>
+              <div class="code-block" style="margin:8px 0;"><span class="cmd">wsl --install</span></div>
+            </li>
+            <li>Wait for it to finish (2&ndash;5 minutes, needs internet)</li>
+            <li>Restart your computer when it asks</li>
+            <li>After restart, Ubuntu opens automatically</li>
+            <li>It asks you to create a username and password &mdash; pick something simple you will remember</li>
+            <li>Done! You are now in Ubuntu. This window is your <strong style="color:var(--text-primary)">"terminal"</strong> &mdash; you type commands here.</li>
+          </ol>
+          <div class="notice cyan" style="margin-top:12px;">
+            <strong>If Ubuntu does not open after restart:</strong> Press Win+R again, type <span style="color:var(--green-primary)">ubuntu</span>, press Enter.
+          </div>
+        </div>
+
+        <div id="os-mac" class="os-panel">
+          <ol class="numbered-list">
+            <li>Press <strong style="color:var(--text-primary)">Cmd+Space</strong>, type <strong style="color:var(--green-primary)">Terminal</strong>, press Enter</li>
+            <li>You already have a terminal. Continue to Step 1.</li>
+          </ol>
+          <div class="notice cyan" style="margin-top:12px;">
+            <strong>Note:</strong> You need Homebrew for dependencies. Run: <span style="color:var(--green-primary)">brew install cmake openssl secp256k1 git</span>
+          </div>
+        </div>
+
+        <div id="os-linux" class="os-panel">
+          <ol class="numbered-list">
+            <li>Open your terminal application</li>
+            <li>Continue to Step 1.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 01: INSTALL TOOLS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Install <span class="accent">Tools</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <span class="step-title">Install what your computer needs</span>
+      </div>
+      <div class="step-body">
+        <p>Copy this line, paste it in your terminal (right-click to paste), and press Enter:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">sudo apt update &amp;&amp; sudo apt install -y build-essential cmake libssl-dev libsecp256k1-dev git</span></div>
+        <p>It asks for your password &mdash; type it (you won't see characters appear, that's normal) and press Enter. Wait 1&ndash;2 minutes.</p>
+        <div class="notice green">
+          <strong>No errors?</strong> Great, continue to Step 2. See red text? Run the command again.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: DOWNLOAD AND BUILD -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Download &amp; <span class="accent">Build</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <span class="step-title">Download SOST and build it</span>
+      </div>
+      <div class="step-body">
+        <p>Copy and paste these commands <strong style="color:var(--text-primary)">one at a time</strong>. Press Enter after each one:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git clone https://github.com/Neob1844/sost-core.git</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd sost-core</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">mkdir build &amp;&amp; cd build</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">cmake .. -DCMAKE_BUILD_TYPE=Release</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">make -j$(nproc)</span></div>
+        <p>The last command takes 2&ndash;5 minutes. Lots of text will scroll &mdash; that's normal. Wait until you see <span style="color:var(--green-primary)">[100%] Built target</span>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 03: CREATE WALLET -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Create <span class="accent">Wallet</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <span class="step-title">Create your wallet</span>
+      </div>
+      <div class="step-body">
+        <p>Your wallet is where your coins are stored. Run these two commands:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli newwallet</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli getnewaddress "mining"</span></div>
+        <p>You get an address that looks like: <span style="color:var(--green-primary)">sost1c6dac46bb3a43cefe...</span></p>
+        <p><strong style="color:var(--text-primary)">WRITE IT DOWN.</strong> You need it in the next step.</p>
+        <div class="notice" style="margin-top:12px;">
+          <strong style="color:var(--red-primary)">IMPORTANT:</strong> The file <span style="color:var(--cyan-primary)">wallet.json</span> contains your private keys. Never share it with anyone. If you lose it, your coins are gone forever. Copy it to a USB drive as backup right now.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 04: START NODE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Start the <span class="accent">Node</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">4</span>
+        <span class="step-title">Start the SOST node</span>
+      </div>
+      <div class="step-body">
+        <p>The node connects you to the SOST network. Run this command:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--wallet</span> <span class="val">wallet.json</span> <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
+    <span class="flag">--rpc-user</span> <span class="val">PICK_A_USERNAME</span> <span class="flag">--rpc-pass</span> <span class="val">PICK_A_PASSWORD</span> <span class="flag">--profile</span> <span class="val">mainnet</span></div>
+        <p>Replace <span style="color:var(--red-primary)">PICK_A_USERNAME</span> and <span style="color:var(--red-primary)">PICK_A_PASSWORD</span> with anything you want (example: <span style="color:var(--green-primary)">myuser</span> / <span style="color:var(--green-primary)">mypass123</span>). These are your private credentials for connecting the miner.</p>
+        <p><strong style="color:var(--text-primary)">Leave this window open. Do NOT close it.</strong></p>
+        <div class="notice yellow" style="margin-top:12px;">
+          <strong>Open a NEW terminal window for the next step.</strong> On Windows WSL: press Win+R, type <span style="color:var(--green-primary)">ubuntu</span>, press Enter.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="margin-top:24px;">
+    <div class="notice" style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;">
+      <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync Enabled by Default)</strong>
+      <span style="color:var(--text-secondary);">Your node uses fast sync by default. Trusted historical blocks skip expensive ConvergenceX recomputation while structural, economic, and semantic validation still runs.</span>
+      <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
+        <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
+        <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>
+        <li><span style="color:var(--text-muted);">&#9632;</span> &nbsp;Multiple years: <strong style="color:var(--text-primary);">5–15 minutes</strong></li>
+      </ul>
+      <span style="color:var(--text-dim);font-size:11px;">For paranoid full verification: add <code style="color:var(--cyan-primary);">--full-verify</code> flag. This recomputes every ConvergenceX proof from scratch. Your node validates every block independently — no trust required.</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 05: START MINING -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Start <span class="accent">Mining</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">5</span>
+        <span class="step-title">Start mining</span>
+      </div>
+      <div class="step-body">
+        <p>In the <strong style="color:var(--text-primary)">NEW terminal</strong>, run:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd ~/sost-core/build</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--address</span> <span class="val">YOUR_ADDRESS_FROM_STEP_3</span> \
+    <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
+    <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
+    <span class="flag">--rpc-user</span> <span class="val">SAME_USERNAME_AS_STEP_4</span> \
+    <span class="flag">--rpc-pass</span> <span class="val">SAME_PASSWORD_AS_STEP_4</span> \
+    <span class="flag">--blocks</span> <span class="val">0</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--realtime</span></div>
+        <p>Replace:</p>
+        <ul style="color:var(--text-secondary);margin:8px 0 16px 20px;line-height:2;">
+          <li><span style="color:var(--red-primary)">YOUR_ADDRESS_FROM_STEP_3</span> = the sost1... address you wrote down</li>
+          <li><span style="color:var(--red-primary)">SAME_USERNAME_AS_STEP_4</span> = same username from Step 4</li>
+          <li><span style="color:var(--red-primary)">SAME_PASSWORD_AS_STEP_4</span> = same password from Step 4</li>
+        </ul>
+        <p>Numbers will scroll on screen. When it finds a block you will see: <span style="color:var(--green-primary);font-weight:600;">BLOCK FOUND!</span></p>
+        <p>Leave it running to keep earning coins.</p>
+        <div class="notice green" style="margin-top:12px;">
+          <strong>You are mining SOST!</strong> Your first coins are spendable after ~7 days (1,000 block confirmations). This is the coinbase maturity period.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 06: CHECK BALANCE AND SEND -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Check Balance &amp; <span class="accent">Send SOST Transactions</span></div>
+    </div>
+
+    <div class="step-card fade-in delay-1">
+      <div class="step-header">
+        <span class="step-num">6</span>
+        <span class="step-title">Check your balance and send coins</span>
+      </div>
+      <div class="step-body">
+        <p>Open a <strong style="color:var(--text-primary)">third terminal</strong> and run:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd ~/sost-core/build</span></div>
+
+        <p style="margin-top:16px;font-weight:500;color:var(--text-primary);">Check your balance:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli getbalance</span> <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span></div>
+        <p>Shows: <span style="color:var(--green-primary)">Total</span> / <span style="color:var(--cyan-primary)">Available</span> / <span style="color:var(--red-primary)">Locked (immature)</span></p>
+
+        <p style="margin-top:20px;font-weight:500;color:var(--text-primary);">Send coins to someone:</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-cli send</span> <span class="flag">--to</span> <span class="val">sost1THEIR_ADDRESS</span> <span class="flag">--amount</span> <span class="val">1.5</span> \
+    <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
+    <span class="flag">--rpc-user</span> <span class="val">YOUR_USER</span> <span class="flag">--rpc-pass</span> <span class="val">YOUR_PASS</span></div>
+
+        <p>You can also use the web wallet at <a href="https://wallet.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;border-bottom:1px solid var(--cyan-dim);">wallet.sostcore.com</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 07: COMMON QUESTIONS -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Common <span class="accent">Questions</span></div>
+    </div>
+
+    <div class="fade-in delay-1">
+      <div class="faq-item">
+        <div class="faq-q">How much can I earn?</div>
+        <div class="faq-a">Each block rewards ~7.85 SOST every ~10 minutes. You get 50% as the miner (~3.93 SOST). As more people mine, competition increases and blocks take longer to find solo.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I mine on Windows without Ubuntu?</div>
+        <div class="faq-a">No, SOST requires Linux. WSL (Step 0) is the easiest way to get Linux on Windows. It takes 5 minutes to set up.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How much electricity does it use?</div>
+        <div class="faq-a">Similar to running a video game. Each mining thread uses about 4 GB RAM and moderate CPU. Your electricity bill impact is minimal for 1&ndash;4 cores.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">When can I spend mined coins?</div>
+        <div class="faq-a">After ~7 days (1,000 block confirmations). This is the coinbase maturity period &mdash; a consensus rule. Coins received from regular transfers are spendable immediately.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Is there a visual wallet?</div>
+        <div class="faq-a">Yes &mdash; <a href="https://wallet.sostcore.com" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;">wallet.sostcore.com</a> provides a web-based wallet interface.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I use multiple CPU cores?</div>
+        <div class="faq-a">Yes. The miner is single-threaded by design. Run one miner instance per core in separate terminal windows, all using the same address and RPC credentials.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">My computer crashed &mdash; did I lose my coins?</div>
+        <div class="faq-a">No. Your wallet (<span style="color:var(--cyan-primary)">wallet.json</span>) and chain data (<span style="color:var(--cyan-primary)">chain.json</span>) are saved to disk. Just restart the node and miner with the same commands.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What is ConvergenceX?</div>
+        <div class="faq-a">The mining algorithm that makes SOST work. It requires 4 GB RAM and 100,000 sequential calculations per attempt. This keeps mining fair for regular CPUs &mdash; specialized hardware (ASICs) gets no advantage.</div>
+      </div>
+    </div>
+
+    <!-- TROUBLESHOOTING -->
+    <div class="spec-block fade-in delay-2" style="margin-top:32px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-label">Troubleshooting</span>
+        </div>
+        <span class="spec-meta">common errors</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Error</th><th>Fix</th></tr>
+          <tr>
+            <td class="highlight">cmake: command not found</td>
+            <td class="value">Run Step 1 again: <span style="color:var(--green-primary)">sudo apt install build-essential cmake</span></td>
+          </tr>
+          <tr>
+            <td class="highlight">openssl/sha.h: No such file</td>
+            <td class="value"><span style="color:var(--green-primary)">sudo apt install libssl-dev</span></td>
+          </tr>
+          <tr>
+            <td class="highlight">secp256k1.h: No such file</td>
+            <td class="value"><span style="color:var(--green-primary)">sudo apt install libsecp256k1-dev</span></td>
+          </tr>
+          <tr>
+            <td class="highlight">Connection refused (RPC)</td>
+            <td class="value">Make sure the node (Step 4) is running in its own terminal</td>
+          </tr>
+          <tr>
+            <td class="highlight">wallet.json not found</td>
+            <td class="value">Run Step 3 first: <span style="color:var(--green-primary)">./sost-cli newwallet</span></td>
+          </tr>
+          <tr>
+            <td class="highlight">Miner shows 0 H/s</td>
+            <td class="value">Wait for the node to finish syncing, check your RPC username/password match</td>
+          </tr>
+        </table>
+        <p style="margin-top:12px;color:var(--text-dim);font-size:12px;">Still stuck? Check the <a href="sost-faq.html" style="color:var(--text-secondary);text-decoration:none;border-bottom:1px solid var(--border-med);">FAQ</a> or reach out via <a href="sost-contact.html" style="color:var(--text-secondary);text-decoration:none;border-bottom:1px solid var(--border-med);">Contact</a>.</p>
+      </div>
+    </div>
+
+    <div class="notice cyan fade-in delay-3" style="margin-top:16px;">
+      <strong>Want more detail?</strong> See <a href="sost-getting-started.html" style="color:var(--cyan-primary)">Getting Started</a> for advanced CLI flags, <a href="sost-technology.html" style="color:var(--cyan-primary)">Technology</a> for protocol internals, and the <a href="sost-whitepaper.html" style="color:var(--cyan-primary)">Whitepaper</a> for the full specification.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+<script>
+function showOS(os) {
+  var panels = document.querySelectorAll('.os-panel');
+  var tabs = document.querySelectorAll('.os-tab');
+  for (var i = 0; i < panels.length; i++) panels[i].classList.remove('active');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  document.getElementById('os-' + os).classList.add('active');
+  var names = ['windows', 'mac', 'linux'];
+  for (var i = 0; i < names.length; i++) {
+    if (names[i] === os) tabs[i].classList.add('active');
+  }
+}
+</script>
+<script src="sost-search.js"></script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol — PoPC Contracts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold: #b8860b;
+    --gold-dim: rgba(184,134,11,0.2);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .nav-logo img { height: 72px; filter: drop-shadow(0 0 6px rgba(251,1,13,.5)); }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--bg-card); }
+  .nav-links a.active { color: var(--red-primary); background: var(--red-subtle); }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+
+  .spec-block { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+  .spec-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-dim); background: var(--bg-panel); gap: 10px; flex-wrap: wrap; }
+  .spec-icon { width: 10px; height: 10px; border-radius: 2px; }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-icon.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold-dim); }
+  .spec-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .spec-tag { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-left: auto; }
+  .spec-body { padding: 20px; }
+
+  .code-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .code-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+  .code-table .highlight { color: var(--red-primary); font-weight: 600; }
+  .code-table .green { color: var(--green-primary); }
+  .code-table .gold { color: var(--gold); }
+  .code-table .pending { color: var(--text-muted); font-style: italic; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-card .stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--red-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 11px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .chart-donut-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+  .chart-donut-wrap canvas { max-width: 300px; max-height: 300px; }
+  .chart-bar-wrap { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; }
+  .chart-bar-wrap canvas { max-height: 300px; }
+  .chart-label { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; font-weight: 500; }
+  .chart-placeholder { display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--text-muted); font-size: 11px; text-align: center; line-height: 1.8; }
+  @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html" class="active">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Protocol Transparency</div>
+    <h1 class="fade-in delay-1">PoPC <span>Contracts</span></h1>
+    <p class="hero-sub fade-in delay-2">Public registry of all Proof of Personal Custody contracts. Model A (autocustody bonds) and Model B (escrow timelocks). All data publicly verifiable on-chain.</p>
+  </div>
+</section>
+
+<!-- SECTION 01: Overview Stats -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Overview <span class="accent">Stats</span></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card fade-in delay-1" id="popcCardGold">
+        <div class="stat-label">Total Gold Committed</div>
+        <div class="stat-val" style="color:var(--gold)">...</div>
+        <div class="stat-sub">loading</div>
+      </div>
+      <div class="stat-card fade-in delay-2" id="popcCardActive">
+        <div class="stat-label">Active Contracts</div>
+        <div class="stat-val" style="color:var(--cyan-primary)">0</div>
+        <div class="stat-sub">Model A + Model B</div>
+      </div>
+      <div class="stat-card fade-in delay-1" id="popcCardRewards">
+        <div class="stat-label">Total Rewards Paid</div>
+        <div class="stat-val" style="color:var(--green-primary)">0 SOST</div>
+        <div class="stat-sub">From PoPC Pool</div>
+      </div>
+      <div class="stat-card fade-in delay-2" id="popcCardParticipants">
+        <div class="stat-label">Total Participants</div>
+        <div class="stat-val">0</div>
+        <div class="stat-sub">Unique wallets</div>
+      </div>
+    </div>
+    <div id="popcLiveStatus" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;"></div>
+
+    <div class="chart-grid fade-in delay-3">
+      <div class="chart-donut-wrap">
+        <div class="chart-label">Contracts by Model</div>
+        <div id="popcDonutPlaceholder"></div>
+        <canvas id="popcDonut"></canvas>
+      </div>
+      <div class="chart-bar-wrap">
+        <div class="chart-label">Monthly Rewards Paid</div>
+        <div id="popcBarPlaceholder"></div>
+        <canvas id="popcBarChart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 02: Active Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Active <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon green"></div>
+        <span class="spec-label">Active Contract Registry</span>
+        <span class="spec-tag">ON-CHAIN VERIFIED</span>
+      </div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr>
+            <th>Contract ID</th><th>Model</th><th>Asset</th><th>Amount (oz)</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Address</th>
+          </tr>
+          <tr>
+            <td class="highlight">FOUND-001</td><td>Model A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+          </tr>
+          <tr>
+            <td class="highlight">FOUND-002</td><td>Model B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>Mar 28, 2026</td><td>Jun 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      Foundation contracts shown first. Community contracts will appear here as participants join.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 03: Completed Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Completed <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon cyan"></div>
+        <span class="spec-label">Completed Contract History</span>
+        <span class="spec-tag">VERIFIED</span>
+      </div>
+      <div class="spec-body">
+        <div class="empty-state">No completed contracts yet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 04: Slashed Contracts -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Slashed <span class="accent">Contracts</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon red"></div>
+        <span class="spec-label">Slash Record</span>
+        <span class="spec-tag">AUTOMATIC</span>
+      </div>
+      <div class="spec-body">
+        <div class="empty-state">No slashed contracts.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 05: Contract Verification -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <div class="section-title">Contract <span class="accent">Verification</span></div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-icon cyan"></div>
+        <span class="spec-label">Independent Verification</span>
+        <span class="spec-tag">TRUSTLESS</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Every PoPC contract is independently verifiable:</p>
+        <table class="code-table">
+          <tr><td class="highlight">Model A</td><td>SOST bond locked on SOST chain, gold balance verified via Ethereum RPC</td></tr>
+          <tr><td class="highlight">Model B</td><td>Gold locked in immutable escrow on Ethereum, SOST reward delivered immediately</td></tr>
+          <tr><td class="highlight">Registry</td><td>All contract addresses, transaction hashes, and audit results are published in this registry</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Verification tools:</strong> SOST bond status is verifiable via <a href="sost-explorer.html" style="color:var(--cyan-primary)">SOST Explorer</a>. Ethereum escrow and gold balances are verifiable on <a href="https://etherscan.io" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a>. All source data is public and reproducible.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+<script>
+/* ── Ethereum RPC Config ── */
+var FOUNDATION_WALLET = '0xd38955822b88867CD010946F0Ba25680B9DfC7a6';
+var XAUT_CONTRACT = '0x68749665FF8D2d112Fa859AA293F07A622782F38';
+var PAXG_CONTRACT = '0x45804880De22913dAFE09f4980848ECE6EcbAf78';
+var XAUT_DECIMALS = 6;
+var PAXG_DECIMALS = 18;
+var RPC_ENDPOINTS = ['https://rpc.ankr.com/eth', 'https://1rpc.io/eth'];
+var REFRESH_MS = 60000;
+
+function ethCallPopc(rpcUrl, tokenContract, walletAddress) {
+  var selector = '0x70a08231';
+  var paddedAddr = '000000000000000000000000' + walletAddress.replace('0x', '');
+  return fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: tokenContract, data: selector + paddedAddr }, 'latest'] })
+  }).then(function(r) { return r.json(); })
+    .then(function(j) { if (j.error) throw new Error(j.error.message); return j.result; });
+}
+
+function fetchBalancePopc(tokenContract, walletAddress) {
+  return ethCallPopc(RPC_ENDPOINTS[0], tokenContract, walletAddress)
+    .catch(function() { return ethCallPopc(RPC_ENDPOINTS[1], tokenContract, walletAddress); });
+}
+
+function hexToFloatPopc(hex, decimals) {
+  if (!hex || hex === '0x' || hex === '0x0') return 0;
+  var big = BigInt(hex);
+  var divisor = BigInt(10) ** BigInt(decimals);
+  var whole = big / divisor;
+  var frac = big % divisor;
+  return parseFloat(whole.toString() + '.' + frac.toString().padStart(decimals, '0'));
+}
+
+function updatePopcCard(id, val, sub) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.querySelector('.stat-val').textContent = val;
+  if (sub !== undefined) el.querySelector('.stat-sub').textContent = sub;
+}
+
+function fetchPopcLiveData() {
+  var statusEl = document.getElementById('popcLiveStatus');
+  statusEl.textContent = 'Fetching live balances...';
+  Promise.all([
+    fetchBalancePopc(XAUT_CONTRACT, FOUNDATION_WALLET),
+    fetchBalancePopc(PAXG_CONTRACT, FOUNDATION_WALLET)
+  ]).then(function(results) {
+    var xautOz = hexToFloatPopc(results[0], XAUT_DECIMALS);
+    var paxgOz = hexToFloatPopc(results[1], PAXG_DECIMALS);
+    var totalOz = xautOz + paxgOz;
+    updatePopcCard('popcCardGold',
+      totalOz > 0 ? totalOz.toFixed(4) + ' oz' : '0.0000 oz',
+      'XAUT: ' + xautOz.toFixed(4) + ' + PAXG: ' + paxgOz.toFixed(4));
+    var now = new Date();
+    statusEl.textContent = 'Last updated: ' + now.getUTCHours().toString().padStart(2,'0') + ':' + now.getUTCMinutes().toString().padStart(2,'0') + ' UTC — via Ethereum RPC';
+  }).catch(function(err) {
+    updatePopcCard('popcCardGold', 'ERR', 'RPC unavailable');
+    statusEl.textContent = 'RPC error — retrying in 1 min. (' + err.message + ')';
+  });
+}
+
+fetchPopcLiveData();
+setInterval(fetchPopcLiveData, REFRESH_MS);
+
+/* ── Static Chart Data ── */
+var popcStats = {
+  model_a_count: 0,
+  model_b_count: 0,
+  model_a_oz: 0,
+  model_b_oz: 0,
+  total_rewards_paid: 0,
+  monthly_rewards: [0,0,0,0,0,0,0,0,0,0,0,0]
+};
+
+// PoPC Donut Chart
+(function() {
+  var canvas = document.getElementById('popcDonut');
+  var placeholder = document.getElementById('popcDonutPlaceholder');
+  var hasData = popcStats.model_a_count > 0 || popcStats.model_b_count > 0;
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'No active contracts yet';
+    return;
+  }
+  placeholder.style.display = 'none';
+  new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Model A (' + popcStats.model_a_count + ')', 'Model B (' + popcStats.model_b_count + ')'],
+      datasets: [{
+        data: [popcStats.model_a_count, popcStats.model_b_count],
+        backgroundColor: ['#fb010d', '#22d3ee'],
+        borderColor: ['#0a0a0a', '#0a0a0a'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '60%',
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+      }
+    }
+  });
+})();
+
+// PoPC Monthly Rewards Bar Chart
+(function() {
+  var canvas = document.getElementById('popcBarChart');
+  var placeholder = document.getElementById('popcBarPlaceholder');
+  var hasData = popcStats.monthly_rewards.some(function(v) { return v > 0; });
+
+  if (!hasData) {
+    canvas.style.display = 'none';
+    placeholder.className = 'chart-placeholder';
+    placeholder.innerHTML = 'Rewards tracking begins after<br>first contract completion';
+    return;
+  }
+  placeholder.style.display = 'none';
+  var labels = [];
+  for (var m = 1; m <= 12; m++) labels.push('M' + m);
+  new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'SOST Rewards Paid',
+        data: popcStats.monthly_rewards,
+        backgroundColor: 'rgba(34,211,238,0.7)',
+        borderColor: '#22d3ee',
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' SOST'; } } }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+          grid: { color: '#1a1a1a' }
+        },
+        y: {
+          ticks: {
+            color: '#64748b',
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            callback: function(v) { return v.toLocaleString(); }
+          },
+          grid: { color: '#1a1a1a' }
+        }
+      }
+    }
+  });
+})();
+</script>
+<script src="sost-search.js"></script>
+</body>
+</html>
