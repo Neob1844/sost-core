@@ -221,8 +221,13 @@ function openWeb(){
 /* ===== EXIT ===== */
 function xt(){
   if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
-  window.close();
-  setTimeout(function(){window.location.href='about:blank';},500);
+  // Clear all iframes so they don't block exit or hold history
+  var iframes=document.querySelectorAll('iframe');
+  iframes.forEach(function(f){try{f.src='about:blank';}catch(e){}});
+  // Try close (works in PWA standalone)
+  setTimeout(function(){window.close();},100);
+  // Force blank — replace() prevents back-button return
+  setTimeout(function(){window.location.replace('about:blank');},500);
 }
 
 /* ===== INSTALL (PWA) ===== */
