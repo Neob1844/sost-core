@@ -599,21 +599,134 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">MATERIALS ENGINE &middot; v2.0.0</div>
+    <div class="hero-label fade-in">MATERIALS ENGINE &middot; v3.2.0-RC1</div>
     <h1 class="fade-in delay-1">
       <span>Computational Materials</span><br>
       Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      An operational research platform for computational materials science. 75,993 materials with validated crystal structures, dual-target GNN prediction, novelty-first candidate generation, multiobjectve frontier ranking, pre-DFT triage, and active learning orchestration &mdash; all at near-zero cost on CPU.
+      Operationally accepted research platform for computational materials science. 76,193 materials, dual-target GNN prediction (CGCNN + ALIGNN-Lite), novelty scoring, campaign engine, frontier ranking &mdash; all at zero cost on CPU.
     </p>
-    <div class="protocol-badge fade-in delay-3">
-      <span class="tag">OPERATIONAL</span>
+    <div class="protocol-badge fade-in delay-3" id="statusBanner">
+      <span class="tag" style="background:var(--green-primary,#4ade80);color:#000">ACCEPTED</span>
       <span class="sep">|</span>
-      <span class="val">75,993 materials &middot; 70+ API endpoints &middot; 636 tests &middot; $0/month compute</span>
+      <span class="val" id="statusVal">76,193 materials &middot; 145 API endpoints &middot; 922 tests &middot; $0/month</span>
     </div>
   </div>
 </section>
+
+<!-- LIVE API -->
+<section class="section" id="live-api">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">00 &mdash; LIVE API</div>
+      <h2 class="section-title">Interactive <span class="accent">Explorer</span></h2>
+    </div>
+
+    <!-- SEARCH -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
+      <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// SEARCH MATERIAL</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="searchInput" type="text" placeholder="Formula (e.g. GaAs, TiO2, SiC)" spellcheck="false"
+          style="flex:1;min-width:200px;background:#111;border:1px solid #333;color:#0f0;padding:10px 14px;font-family:monospace;font-size:14px;border-radius:4px;outline:none">
+        <button onclick="doSearch()" style="background:var(--red-primary,#fb010d);color:#fff;border:none;padding:10px 24px;font-family:monospace;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:4px;font-size:13px">SEARCH</button>
+      </div>
+      <div id="searchResults" style="margin-top:14px;font-family:monospace;font-size:12px;line-height:1.8;color:#aaa"></div>
+    </div>
+
+    <!-- STATS -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
+      <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// CORPUS STATISTICS</div>
+      <div id="corpusStats" style="font-family:monospace;font-size:12px;line-height:2;color:#aaa">Loading...</div>
+    </div>
+
+    <!-- PRODUCTION MODELS -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
+      <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// PRODUCTION MODELS</div>
+      <table style="width:100%;font-family:monospace;font-size:12px;border-collapse:collapse;color:#ccc">
+        <thead><tr style="color:var(--red-primary,#fb010d);border-bottom:1px solid #222">
+          <th style="text-align:left;padding:6px">Target</th><th style="text-align:left;padding:6px">Model</th><th style="text-align:right;padding:6px">MAE</th><th style="text-align:right;padding:6px">R&sup2;</th><th style="text-align:right;padding:6px">Dataset</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:6px;color:#67e8f9">Formation Energy</td><td style="padding:6px">CGCNN</td><td style="padding:6px;text-align:right;color:#4ade80">0.1528 eV/atom</td><td style="padding:6px;text-align:right">0.9499</td><td style="padding:6px;text-align:right">20,000</td></tr>
+          <tr><td style="padding:6px;color:#67e8f9">Band Gap</td><td style="padding:6px">ALIGNN-Lite</td><td style="padding:6px;text-align:right;color:#4ade80">0.3422 eV</td><td style="padding:6px;text-align:right">0.707</td><td style="padding:6px;text-align:right">20,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- API EXAMPLES -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
+      <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// HOW TO USE (API)</div>
+      <pre style="font-family:monospace;font-size:11px;color:#4ade80;line-height:1.8;overflow-x:auto;white-space:pre-wrap"><span style="color:#666"># Health check</span>
+curl https://sostcore.com/api/materials/health
+
+<span style="color:#666"># Search by formula</span>
+curl https://sostcore.com/api/materials/search?formula=GaAs
+
+<span style="color:#666"># Corpus stats</span>
+curl https://sostcore.com/api/materials/stats
+
+<span style="color:#666"># Top exotic materials</span>
+curl https://sostcore.com/api/materials/exotic/ranking/5
+
+<span style="color:#666"># Campaign presets</span>
+curl https://sostcore.com/api/materials/campaigns/presets</pre>
+    </div>
+
+    <!-- GOLDEN WORKFLOWS -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);padding:20px;margin-bottom:20px">
+      <div style="font-size:10px;color:var(--text-dim,#666);letter-spacing:2px;margin-bottom:12px">// GOLDEN WORKFLOWS</div>
+      <div style="display:grid;gap:12px;font-family:monospace;font-size:12px">
+        <div style="border-left:2px solid var(--red-primary,#fb010d);padding-left:12px"><b style="color:#67e8f9">1. Search a Known Material</b><br><span style="color:#888">GET /search?formula=GaAs &rarr; properties, spacegroup, source</span></div>
+        <div style="border-left:2px solid var(--red-primary,#fb010d);padding-left:12px"><b style="color:#67e8f9">2. Predict Band Gap</b><br><span style="color:#888">POST /predict {cif, target} &rarr; predicted value + confidence</span></div>
+        <div style="border-left:2px solid var(--red-primary,#fb010d);padding-left:12px"><b style="color:#67e8f9">3. Discover Exotic Materials</b><br><span style="color:#888">GET /exotic/ranking/10 &rarr; rarest materials by novelty + rarity</span></div>
+        <div style="border-left:2px solid var(--red-primary,#fb010d);padding-left:12px"><b style="color:#67e8f9">4. Run Discovery Campaign</b><br><span style="color:#888">POST /campaigns/run {type, top_k} &rarr; ranked candidates</span></div>
+        <div style="border-left:2px solid var(--red-primary,#fb010d);padding-left:12px"><b style="color:#67e8f9">5. Build Frontier Shortlist</b><br><span style="color:#888">POST /frontier/run {profile, top_k} &rarr; multi-objective selection</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+var API='/api/materials';
+
+function doSearch(){
+  var q=document.getElementById('searchInput').value.trim();
+  if(!q)return;
+  var el=document.getElementById('searchResults');
+  el.innerHTML='<span style="color:#f59e0b">Searching...</span>';
+  fetch(API+'/search?formula='+encodeURIComponent(q)+'&limit=10')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      var items=d.data||[];
+      if(!items.length){el.innerHTML='<span style="color:#f59e0b">No results for "'+sanitize(q)+'"</span>';return}
+      var html='<table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--red-primary,#fb010d);border-bottom:1px solid #222"><th style="text-align:left;padding:4px">Formula</th><th style="text-align:left;padding:4px">SG</th><th style="text-align:right;padding:4px">Band Gap</th><th style="text-align:right;padding:4px">Form. Energy</th><th style="text-align:left;padding:4px">Source</th></tr></thead><tbody>';
+      items.forEach(function(m){
+        var bg=m.band_gap!=null?m.band_gap.toFixed(4)+' eV':'—';
+        var fe=m.formation_energy!=null?m.formation_energy.toFixed(4)+' eV/at':'—';
+        html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px;color:#67e8f9">'+sanitize(m.formula)+'</td><td style="padding:4px">'+sanitize(String(m.spacegroup||'—'))+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+bg+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+fe+'</td><td style="padding:4px;color:#666">'+sanitize(m.source||'—')+'</td></tr>';
+      });
+      html+='</tbody></table>';
+      el.innerHTML=html;
+    })
+    .catch(function(){el.innerHTML='<span style="color:#fb010d">API unavailable — deploy Materials Engine on VPS first</span>'});
+}
+document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
+
+// Auto-load stats
+fetch(API+'/stats').then(function(r){return r.json()}).then(function(d){
+  var el=document.getElementById('corpusStats');
+  var html='<span style="color:#4ade80">Total: '+((d.total||0).toLocaleString())+' materials</span><br>';
+  if(d.by_source){html+='Sources: ';Object.keys(d.by_source).forEach(function(k){html+='<span style="color:#67e8f9">'+k+'</span>='+d.by_source[k].toLocaleString()+' '});html+='<br>'}
+  if(d.by_crystal_system){html+='Crystal systems: ';Object.keys(d.by_crystal_system).forEach(function(k){html+=k+'='+d.by_crystal_system[k].toLocaleString()+' '})}
+  el.innerHTML=html;
+}).catch(function(){document.getElementById('corpusStats').innerHTML='<span style="color:#f59e0b">API offline — stats will appear when engine is deployed</span>'});
+
+// Auto-load status banner
+fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
+  document.getElementById('statusVal').textContent=(d.materials_count||76193).toLocaleString()+' materials · v'+(d.version||'3.2.0')+' · '+((d.phase||'release_candidate').replace(/_/g,' '));
+}).catch(function(){});
+</script>
 
 <!-- OVERVIEW -->
 <section class="section" id="overview">
