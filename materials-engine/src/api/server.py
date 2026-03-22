@@ -178,24 +178,35 @@ def smart_search(q: str = Query("", description="Formula or common name"),
         return {"query": q, "resolved": True, "resolution": resolution, "results": [],
                 "entity_explanation": explain_known_entity(resolution)}
 
-    # Group variants by formula
+    # Group variants by formula with representative selection
     grouped = {}
     for m in materials:
         f = m.formula
         if f not in grouped:
-            grouped[f] = {"formula": f, "count": 0, "variants": [], "best_fe": None}
+            grouped[f] = {"formula": f, "count": 0, "variants": [],
+                          "representative": None, "best_fe": None, "representative_sg": None}
         g = grouped[f]
         g["count"] += 1
         d = m.to_dict()
         g["variants"].append(d)
+        # Pick representative: lowest formation energy, then first
         if m.formation_energy is not None:
             if g["best_fe"] is None or m.formation_energy < g["best_fe"]:
                 g["best_fe"] = m.formation_energy
+                g["representative"] = d
+                g["representative_sg"] = m.spacegroup
+                g["representative_id"] = m.canonical_id
+        elif g["representative"] is None:
+            g["representative"] = d
+            g["representative_sg"] = m.spacegroup
+            g["representative_id"] = m.canonical_id
 
+    has_multi = any(g["count"] > 1 for g in grouped.values())
     return {"query": q, "resolved": True, "resolution": resolution,
             "results": [m.to_dict() for m in materials],
             "grouped": list(grouped.values()),
-            "variant_note": "Same formula, different crystal arrangements (polymorphs)" if any(g["count"] > 1 for g in grouped.values()) else None}
+            "variant_note": "Same formula, different crystal arrangements (polymorphs)" if has_multi else None,
+            "has_multiple_variants": has_multi}
 
 
 @app.get("/explain/{material_id}")

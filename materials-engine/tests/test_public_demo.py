@@ -73,7 +73,32 @@ class TestCommonNames:
         r = resolve_query("GaAs")
         assert r["resolved"] and r["formula"] == "GaAs"
     def test_registry_size(self):
-        assert len(COMMON_NAMES) >= 80
+        assert len(COMMON_NAMES) >= 100
+
+    # Multilingual: RU/ZH/JA/AR
+    def test_ru_water(self):
+        assert resolve_query("\u0432\u043e\u0434\u0430")["resolved"]
+    def test_ru_gold(self):
+        r = resolve_query("\u0437\u043e\u043b\u043e\u0442\u043e")
+        assert r["resolved"] and r["formula"] == "Au"
+    def test_ru_helium(self):
+        r = resolve_query("\u0433\u0435\u043b\u0438\u0439")
+        assert r["resolved"] and r["formula"] == "He"
+    def test_zh_water(self):
+        assert resolve_query("\u6c34")["resolved"]
+    def test_zh_gold(self):
+        r = resolve_query("\u91d1")
+        assert r["resolved"] and r["formula"] == "Au"
+    def test_ja_air(self):
+        r = resolve_query("\u7a7a\u6c17")
+        assert not r["resolved"]
+        assert r["entity_type"] == "mixture_or_everyday_material"
+    def test_ar_gold(self):
+        r = resolve_query("\u0630\u0647\u0628")
+        assert r["resolved"] and r["formula"] == "Au"
+    def test_ar_salt(self):
+        r = resolve_query("\u0645\u0644\u062d")
+        assert r["resolved"] and r["formula"] == "NaCl"
     def test_uses_present(self):
         r = resolve_query("nitrogen")
         assert len(r.get("uses", [])) > 0
