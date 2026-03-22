@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download Sentinel-1 SAR data for Geaspirit Platform pilot zones.
+"""Download Sentinel-1 SAR data for GeaSpirit Platform pilot zones.
 
 Uses ASF (Alaska Satellite Facility) search API — free, no auth for search.
 Download requires NASA Earthdata account.

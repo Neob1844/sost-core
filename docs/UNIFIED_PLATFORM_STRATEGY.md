@@ -1,4 +1,4 @@
-# SOST Geaspirit: Unified Materials Discovery + Remote Sensing Platform
+# SOST GeaSpirit: Unified Materials Discovery + Remote Sensing Platform
 
 ## Strategic Plan for Platform Integration
 
@@ -10,11 +10,11 @@
 
 ## Executive Summary
 
-**Platform Name:** Geaspirit
+**Platform Name:** GeaSpirit
 
 **One-liner:** Computationally predict new materials, then search for them in satellite imagery — and register discoveries on a blockchain.
 
-**What nobody else offers:** Geaspirit is the first system that closes the loop between computational materials science (graph neural networks predicting material properties from crystal structure) and orbital remote sensing (detecting mineral spectral signatures from space). Every other player in mineral exploration does one or the other. Nobody combines GNN-predicted spectral signatures with automated satellite search, and nobody anchors discoveries to an immutable blockchain ledger.
+**What nobody else offers:** GeaSpirit is the first system that closes the loop between computational materials science (graph neural networks predicting material properties from crystal structure) and orbital remote sensing (detecting mineral spectral signatures from space). Every other player in mineral exploration does one or the other. Nobody combines GNN-predicted spectral signatures with automated satellite search, and nobody anchors discoveries to an immutable blockchain ledger.
 
 **Why the combination is more powerful than either alone:**
 
@@ -28,7 +28,7 @@ The SOST blockchain provides the third ingredient neither component delivers alo
 
 ### Platform Name and Branding
 
-**Geaspirit** — "Geo" for geoscience and remote sensing, "Forge" for computational materials creation. The name signals the fusion of two domains.
+**GeaSpirit** — "Geo" for geoscience and remote sensing, "Forge" for computational materials creation. The name signals the fusion of two domains.
 
 Tagline: *Predict. Detect. Discover.*
 
@@ -61,7 +61,7 @@ PREDICT ──> SEARCH ──> FIND ──> REGISTER ──> MONETIZE
 - **Goldspot Discoveries**: ML on geological maps + geochemistry. No crystal-structure-level prediction. No remote sensing automation.
 - **Academic groups**: Plenty of GNN materials work (CGCNN, ALIGNN, MEGNet, M3GNet). Plenty of remote sensing mineral mapping. Nobody connects the two.
 
-The gap exists because computational materials science and remote sensing geoscience are entirely separate academic disciplines with different conferences, journals, and toolchains. Geaspirit bridges them.
+The gap exists because computational materials science and remote sensing geoscience are entirely separate academic disciplines with different conferences, journals, and toolchains. GeaSpirit bridges them.
 
 ---
 
@@ -230,7 +230,7 @@ Crystal structure completely determines electronic structure (this is the founda
 - Chen & Ong (Nature Computational Science 2022) demonstrated that GNNs (M3GNet) can predict a wide range of material properties including dielectric constants from structure.
 - Zhuo et al. (J. Phys. Chem. Lett. 2018) predicted refractive indices of crystals from composition using ML.
 - Choudhary et al. (npj Computational Materials 2021) used ALIGNN to predict optical absorption spectra (imaginary part of dielectric function) from crystal structure, achieving useful accuracy for screening.
-- Spectral reflectance specifically (the VNIR/SWIR signature measured by satellites) has not been directly predicted by GNN from crystal structure. This is the gap Geaspirit would fill.
+- Spectral reflectance specifically (the VNIR/SWIR signature measured by satellites) has not been directly predicted by GNN from crystal structure. This is the gap GeaSpirit would fill.
 
 **Training data assessment:**
 
@@ -371,7 +371,7 @@ Train the GNN to directly output reflectance at 200 wavelengths spanning 350-250
 | **Minerva Intelligence** | ~$15M (TSX-V) | Expert system for geological targeting. Knowledge graphs. | Rule-based, not ML. No GNN. No remote sensing automation. No blockchain. |
 | **Goldspot Discoveries** | ~$20M (TSX-V) | ML on geological maps + geochemistry + drilling data. | No crystal-structure-level analysis. No novel material prediction. No spectral prediction. No blockchain. |
 | **Descartes Labs** | ~$50M | Satellite imagery platform + ML. General purpose. | No materials science. No mineral-specific models. No blockchain. Generic imagery analysis. |
-| **Geaspirit (SOST)** | Pre-revenue | GNN materials discovery + remote sensing + blockchain. | No geophysical datasets (yet). Small team. Unproven market traction. |
+| **GeaSpirit (SOST)** | Pre-revenue | GNN materials discovery + remote sensing + blockchain. | No geophysical datasets (yet). Small team. Unproven market traction. |
 
 **Our unique position:**
 
@@ -466,7 +466,7 @@ The closest would be if KoBold Metals built a materials science division and add
 
 **Impact:** The core innovation (predicted spectrum search) is delayed or impossible.
 
-**Mitigation:** The business does not depend on spectral prediction working. Phases 0-2 produce sellable products using only established remote sensing techniques plus compositional matching to the Materials Engine (Level 1 integration). Spectral prediction (Level 2) is the moonshot that would make Geaspirit truly unique, but the business survives without it. Plan B: Focus on compositional inference instead of spectral matching — "this alteration assemblage is consistent with these Materials Engine candidates" is still valuable even without predicting the exact spectrum.
+**Mitigation:** The business does not depend on spectral prediction working. Phases 0-2 produce sellable products using only established remote sensing techniques plus compositional matching to the Materials Engine (Level 1 integration). Spectral prediction (Level 2) is the moonshot that would make GeaSpirit truly unique, but the business survives without it. Plan B: Focus on compositional inference instead of spectral matching — "this alteration assemblage is consistent with these Materials Engine candidates" is still valuable even without predicting the exact spectrum.
 
 ### Risk 3: No Customers
 
@@ -606,4 +606,4 @@ Monitoring the same area over months/years reveals processes: seasonal moisture 
 
 ---
 
-*Document prepared for SOST Geaspirit strategic planning. All cost estimates, timelines, and probability assessments reflect honest evaluation as of 2026-03-20. This is a living document — update after each phase milestone.*
+*Document prepared for SOST GeaSpirit strategic planning. All cost estimates, timelines, and probability assessments reflect honest evaluation as of 2026-03-20. This is a living document — update after each phase milestone.*

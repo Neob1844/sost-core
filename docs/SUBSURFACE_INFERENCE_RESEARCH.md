@@ -3,7 +3,7 @@
 
 **Version:** 1.0 — March 2026
 **Author:** SOST Protocol Research / NeoB
-**Status:** Strategic research document for Geaspirit platform
+**Status:** Strategic research document for GeaSpirit platform
 
 ---
 
@@ -249,7 +249,7 @@ Train on well-studied regions (Andes copper belt, Australian gold provinces, Afr
 
 ---
 
-## 6. Proposed Algorithm: Geaspirit Core
+## 6. Proposed Algorithm: GeaSpirit Core
 
 ### **Deep Evidence-Enhanced Probabilistic Characterization of Ore REsources**
 
@@ -318,7 +318,7 @@ Build 5-year Sentinel-2 time series for vegetated pilot (Zambia). Extract phenol
 
 ### Phase 4: Product (Weeks 13-16)
 
-Web interface: user selects area → system runs Geaspirit Core → returns probability map + ranked targets. First sellable product: "AI-powered mineral exploration screening reports."
+Web interface: user selects area → system runs GeaSpirit Core → returns probability map + ranked targets. First sellable product: "AI-powered mineral exploration screening reports."
 
 ---
 

@@ -1,4 +1,4 @@
-"""Geaspirit centralized configuration."""
+"""GeaSpirit centralized configuration."""
 import os
 
 BASE_DIR = os.path.expanduser("~/SOST/geaspirit")

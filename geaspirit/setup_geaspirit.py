@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Geaspirit Platform — Automated Setup Script.
+"""GeaSpirit Platform — Automated Setup Script.
 
 Creates directory structure, installs dependencies, downloads free data.
 Run: python3 geaspirit/setup_geaspirit.py
