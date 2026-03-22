@@ -104,8 +104,8 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   <div class="container">
     <div class="hero-label">GEASPIRIT PLATFORM v0.1</div>
     <h1><span>Mineral Intelligence</span> System</h1>
-    <p class="hero-sub">AI-powered mineral prospectivity mapping using free satellite data. Predict where to dig before anyone else. Zero cost. Real results.</p>
-    <div class="status-badge">▪ OPERATIONAL — PHASE 2 MULTI-SOURCE FUSION COMPLETE</div>
+    <p class="hero-sub">AI-powered mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
+    <div class="status-badge">▪ OPERATIONAL — REAL TESTED RESULTS</div>
   </div>
 </section>
 
@@ -117,6 +117,24 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div id="map"></div>
   </div>
 </section>
+
+<!-- ACCESS PANEL -->
+<div id="access-panel" style="text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:500px">
+  <div style="color:var(--green);letter-spacing:2px;margin-bottom:20px;font-size:13px">
+    ╔══════════════════════════════════════╗<br>
+    ║&nbsp; RESTRICTED ACCESS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;║<br>
+    ║&nbsp; Research data requires clearance &nbsp;&nbsp;║<br>
+    ╚══════════════════════════════════════╝
+  </div>
+  <input type="password" id="access-pwd" placeholder="Enter clearance code"
+    style="background:#111;color:var(--green);border:1px solid var(--border);padding:10px;font-family:var(--font);width:250px">
+  <button onclick="checkAccess()"
+    style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer;margin-left:10px">ENTER</button>
+  <div id="access-msg" style="color:#ff0000;margin-top:10px;min-height:20px"></div>
+</div>
+
+<!-- PROTECTED CONTENT — hidden until authenticated -->
+<div id="protected-content" style="display:none">
 
 <!-- RESULTS -->
 <section class="section">
@@ -166,7 +184,6 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
           <tr><td>Image resolution</td><td class="val">1856 × 1857 px · 19 bands · 30m</td></tr>
           <tr><td>Sensors</td><td class="val">Sentinel-2 + Sentinel-1 + DEM + Landsat thermal</td></tr>
           <tr><td>Area covered</td><td class="val">~50 × 50 km</td></tr>
-          <tr><td>Cost</td><td class="val" style="color:var(--amber)">$0.00</td></tr>
           <tr><td>Computation time</td><td class="val">~18 minutes</td></tr>
         </tbody>
       </table>
@@ -175,7 +192,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="human-box">
       <b>RESEARCH — KEY INSIGHT:</b><br><br>
       Terrain structure (DEM + radar) is the <b>#1 predictor</b> of mineral deposits — more powerful than spectral signatures. Minerals are where they are for geological reasons: faults, folds, intrusions, and alteration zones create distinctive terrain patterns visible from space.<br><br>
-      <b>Phase 2 fusion of 4 free satellite sources achieves AUC 0.9995</b> — near-perfect discrimination between mineralized and barren ground in arid terrain.<br><br>
+      <b>Phase 2 fusion of 4 satellite data sources achieves AUC 0.9995</b> — near-perfect discrimination between mineralized and barren ground in arid terrain.<br><br>
       <b>What each sensor contributes:</b><br>
       DEM (Copernicus 30m): <b>30.7%</b> of signal — terrain roughness and elevation<br>
       SAR (Sentinel-1): <b>19.8%</b> — surface texture and rock type<br>
@@ -204,11 +221,11 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="section-id">// TECHNOLOGY STACK</div>
     <div class="section-title">Systems <span>Online</span></div>
     <ul class="tech-list">
-      <li class="on"><span class="icon">■</span> Sentinel-2 L2A ............ ESA/Copernicus (free)</li>
-      <li class="on"><span class="icon">■</span> Sentinel-1 SAR ............ Radar texture + structure (free)</li>
-      <li class="on"><span class="icon">■</span> Copernicus DEM GLO-30 ..... Terrain + ruggedness (free)</li>
-      <li class="on"><span class="icon">■</span> Landsat 8/9 thermal ....... Temperature anomalies (free)</li>
-      <li class="on"><span class="icon">■</span> Google Earth Engine ....... Cloud processing (free)</li>
+      <li class="on"><span class="icon">■</span> Sentinel-2 L2A ............ ESA/Copernicus (open data)</li>
+      <li class="on"><span class="icon">■</span> Sentinel-1 SAR ............ Radar texture + structure (open data)</li>
+      <li class="on"><span class="icon">■</span> Copernicus DEM GLO-30 ..... Terrain + ruggedness (open data)</li>
+      <li class="on"><span class="icon">■</span> Landsat 8/9 thermal ....... Temperature anomalies (open data)</li>
+      <li class="on"><span class="icon">■</span> Google Earth Engine ....... Cloud processing (open data)</li>
       <li class="on"><span class="icon">■</span> USGS MRDS ................. 152 deposit locations</li>
       <li class="on"><span class="icon">■</span> USGS Spectral Library ..... 2,600 mineral spectra</li>
       <li class="on"><span class="icon">■</span> scikit-learn + XGBoost .... ML classifiers</li>
@@ -300,7 +317,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- DATA SOURCES -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// DATA SOURCES — ALL FREE AND OPEN</div>
+    <div class="section-id">// DATA SOURCES — OPEN PROGRAMS</div>
     <div class="section-title">Credits &amp; <span>Sources</span></div>
     <ul class="tech-list" style="font-size:11px">
       <li class="on"><span class="icon">▸</span> <b>Sentinel-2</b> .... European Space Agency (ESA) — Copernicus Programme</li>
@@ -311,12 +328,15 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
       <li class="on"><span class="icon">▸</span> <b>Spectral Lib</b> .. U.S. Geological Survey — Spectral Library v7</li>
       <li class="on"><span class="icon">▸</span> <b>Processing</b> .... Google Earth Engine — Non-commercial Community Tier</li>
     </ul>
-    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">No proprietary data. No paid subscriptions. No commercial licenses. 100% reproducible with public data and open-source tools.</p>
+    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">Data from ESA Copernicus, NASA, and USGS open programs.</p>
   </div>
 </section>
 
+<!-- END PROTECTED CONTENT -->
+</div>
+
 <div style="text-align:center;padding:40px;color:#333;font-size:11px;border-top:1px solid var(--border)">
-  GEASPIRIT PLATFORM · SOST Protocol · Zero-cost mineral intelligence · All satellite data is free and public
+  GEASPIRIT PLATFORM · SOST Protocol · Mineral Intelligence System
 </div>
 
 <script>
@@ -340,19 +360,41 @@ function makeIcon(color,anim){
   });
 }
 
-// Chuquicamata — COMPLETE
+// Chuquicamata — COMPLETE (public popup: no metrics)
 var chuq=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-chuq.bindPopup('<div style="font-family:monospace;font-size:11px;line-height:1.6;min-width:300px;color:#000"><b style="color:#006600">PILOT 01: CHUQUICAMATA, CHILE</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">PHASE 2 COMPLETE</span><br><b>Coords:</b> 22.3°S, 68.9°W<br><b>Terrain:</b> Arid desert<br><b>Target:</b> Copper (Cu), Gold (Au)<br><b>Area:</b> 50 × 50 km · 30m/px<br><b>Deposits:</b> 152 known (MRDS)<hr style="border-color:#006600"><b>SENSORS (19 features):</b><br>▪ Sentinel-2 (5 spectral indices)<br>▪ Sentinel-1 SAR (VV, VH, texture)<br>▪ Copernicus DEM (elev, slope, TPI)<br>▪ Landsat 8/9 (thermal anomaly)<hr style="border-color:#006600"><b>XGBoost AUC:</b> <span style="color:#006600;font-weight:700">0.9995</span><br><b>Precision:</b> 0.9916<br><b>Recall:</b> 0.9994 (99.9% detection)<br><b>Top predictor:</b> Terrain ruggedness (18.6%)<br><b>Cost:</b> $0.00 · <b>Time:</b> ~18 min</div>');
+chuq.bindPopup('<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#006600">PILOT 01: CHUQUICAMATA, CHILE</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 22.3°S, 68.9°W<br><b>Terrain:</b> Arid desert<br><b>Area:</b> 50 × 50 km</div>');
 
 // Pilbara — PLANNED
 var pilb=L.marker([-22.0,118.0],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
-pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 02: PILBARA, AUSTRALIA</b><hr><b>Status:</b> PLANNED<br><b>Target:</b> Iron (Fe), Gold (Au)<br><b>Terrain:</b> Semi-arid, exposed geology<br><i>Pending execution — Phase 4</i></div>');
+pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 02: PILBARA, AUSTRALIA</b><hr><b>Status:</b> PLANNED<br><b>Coords:</b> 22.0°S, 118.0°E</div>');
 
 // Zambia — PLANNED
 var zamb=L.marker([-12.8,28.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
-zamb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 03: ZAMBIAN COPPERBELT</b><hr><b>Status:</b> PLANNED<br><b>Target:</b> Copper (Cu)<br><b>Terrain:</b> Moderate vegetation<br><i>Pending execution — Phase 4</i></div>');
+zamb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 03: ZAMBIA COPPERBELT</b><hr><b>Status:</b> PLANNED<br><b>Coords:</b> 12.8°S, 28.2°E</div>');
 
 map.fitBounds([[-22.3,-68.9],[-22.0,118.0],[-12.8,28.2]],{padding:[40,40]});
+
+// === ACCESS CONTROL ===
+async function checkAccess(){
+  var pwd=document.getElementById('access-pwd').value;
+  var enc=new TextEncoder();
+  var buf=await crypto.subtle.digest('SHA-256',enc.encode(pwd));
+  var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  if(hex==='16614047733526b2a16927bcdcec190f434250e761a74ce397df27008798c73d'){
+    document.getElementById('protected-content').style.display='block';
+    document.getElementById('access-panel').style.display='none';
+    sessionStorage.setItem('geaspirit_auth','true');
+  }else{
+    var msg=document.getElementById('access-msg');
+    msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
+    setTimeout(function(){msg.textContent=''},2000);
+  }
+}
+if(sessionStorage.getItem('geaspirit_auth')==='true'){
+  document.getElementById('protected-content').style.display='block';
+  document.getElementById('access-panel').style.display='none';
+}
+document.getElementById('access-pwd').addEventListener('keypress',function(e){if(e.key==='Enter')checkAccess()});
 </script>
 
 <script src="sost-search.js"></script>
