@@ -229,5 +229,30 @@ class TestSmartSearchAPI:
         assert "mixture" in d.get("entity_type", "")
 
 
+class TestRarity:
+    def test_au_rarity(self):
+        from src.release.rarity import get_rarity
+        r = get_rarity(["Au"])
+        assert r is not None
+        assert "rare" in r["rarity"]["label"]
+        assert r["crust_abundance"]["technical"]["value"] == 0.004
+
+    def test_fe_abundant(self):
+        from src.release.rarity import get_rarity
+        r = get_rarity(["Fe"])
+        assert "abundant" in r["rarity"]["label"]
+
+    def test_compound_limiting(self):
+        from src.release.rarity import get_rarity
+        r = get_rarity(["Ga", "As"])
+        assert r["crust_abundance"]["scope"] == "limiting_element_abundance"
+
+    def test_rarity_in_explain(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e.get("rarity") is not None
+        assert "rare" in e["rarity"]["rarity"]["label"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

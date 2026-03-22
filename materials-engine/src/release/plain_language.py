@@ -223,6 +223,7 @@ def explain_material(material, corpus_stats=None) -> dict:
             "predicted": [],
             "proxy": [],
         },
+        "rarity": _get_rarity(elems),
         "honesty_note": "This assessment is relative to the ingested corpus (76,193 materials) and model outputs. It is a heuristic evaluation, not a market price or commercial valuation. Labels like 'practical_value' reflect scientific/industrial utility estimates only.",
         "_meta": {"heuristic_assessment": True, "corpus_relative": True, "not_market_price": True},
     }
@@ -332,6 +333,15 @@ def _build_summary(formula, electronic, stability, exotic, apps):
     if exotic in ("exotic", "highly exotic"):
         parts.append(f"This is an {exotic} material with unusual chemistry")
     return ". ".join(parts) + "."
+
+
+def _get_rarity(elems):
+    """Get rarity from rarity module."""
+    try:
+        from .rarity import get_rarity
+        return get_rarity(elems)
+    except Exception:
+        return None
 
 
 def _novelty_description(exotic, n_elem):
