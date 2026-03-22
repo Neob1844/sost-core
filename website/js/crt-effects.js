@@ -66,11 +66,10 @@ function(b,d){var n=0,iv=setInterval(function(){b.style.filter='brightness('+(5-
 function playRandomCRTEffect(callback){
   var idx=Math.floor(Math.random()*CRT_EFFECTS.length);
   var body=document.body;
-  var orig=body.style.cssText;
   CRT_EFFECTS[idx](body,function(){
-    body.style.cssText=orig;body.style.opacity='1';body.style.transform='';body.style.filter='';
-    body.style.clipPath='';body.style.borderRadius='';body.style.overflow='';body.style.textShadow='';
-    body.style.imageRendering='';
+    // Do NOT restore styles — keep screen black/hidden until navigation
+    body.style.opacity='0';
+    body.style.visibility='hidden';
     if(callback)callback();
   });
 }
