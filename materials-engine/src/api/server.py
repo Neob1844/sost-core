@@ -92,7 +92,7 @@ class StubResponse(BaseModel):
 @app.get("/status")
 def status():
     db = _get_db()
-    return {"status": "ok", "version": "3.0.0", "phase": "final_hierarchical_benchmark",
+    return {"status": "ok", "version": "3.1.0", "phase": "three_tier_bandgap",
             "materials_count": db.count()}
 
 
@@ -1636,6 +1636,45 @@ def cod_recommendation():
     with open(path) as f:
         return _json.load(f)
 
+
+# --- Three-Tier Band Gap endpoints ---
+
+@app.get("/three-tier-band-gap/status")
+def three_tier_bg_status():
+    import os as _os
+    d = "artifacts/three_tier_band_gap"
+    return {"phase": "IV.R",
+            "specialist_trained": _os.path.exists(_os.path.join(d, "narrow_gap_specialist.json")),
+            "benchmark_done": _os.path.exists(_os.path.join(d, "three_tier_pipeline.json")),
+            "decision_made": _os.path.exists(_os.path.join(d, "final_decision.json"))}
+
+@app.get("/three-tier-band-gap/specialist")
+def three_tier_bg_specialist():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/three_tier_band_gap", "narrow_gap_specialist.json")
+    if not _os.path.exists(path): return {"specialist": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/three-tier-band-gap/pipeline")
+def three_tier_bg_pipeline():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/three_tier_band_gap", "three_tier_pipeline.json")
+    if not _os.path.exists(path): return {"pipeline": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/three-tier-band-gap/scorecard")
+def three_tier_bg_scorecard():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/three_tier_band_gap", "final_scorecard.json")
+    if not _os.path.exists(path): return {"scorecard": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/three-tier-band-gap/decision")
+def three_tier_bg_decision():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/three_tier_band_gap", "final_decision.json")
+    if not _os.path.exists(path): return {"decision": "no_decision_yet"}
+    with open(path) as f: return _json.load(f)
 
 # --- Hierarchical Band Gap Final Benchmark endpoints ---
 

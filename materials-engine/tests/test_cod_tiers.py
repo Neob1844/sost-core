@@ -394,7 +394,7 @@ class TestAPI:
 
     def test_version(self):
         d = self._client().get("/status").json()
-        assert d["version"] == "3.0.0"
+        assert d["version"] == "3.1.0"
 
     def test_cod_registry_status(self):
         r = self._client().get("/corpus-sources/registry")
