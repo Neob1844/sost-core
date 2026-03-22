@@ -269,6 +269,34 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   </div>
 </section>
 
+<!-- PHASE 3 — HONEST VALIDATION -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// PHASE 3 — HONEST VALIDATION</div>
+    <div class="section-title">Spatial Block <span>Cross-Validation</span></div>
+    <div class="human-box" style="border-color:var(--amber)">
+      <b style="color:var(--amber)">⚠ SCIENTIFIC HONESTY NOTE:</b><br><br>
+      Phase 2's AUC 0.9995 was <b>inflated by spatial autocorrelation</b>. Adjacent pixels in train and test shared local patterns. Phase 3 uses <b>spatial block CV</b> (10km blocks, 5 folds) — the <b>scientifically honest metric</b>.
+    </div>
+    <div class="panel">
+      <div class="panel-head">NAIVE vs HONEST VALIDATION</div>
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th>Naive (Phase 2)</th><th style="color:var(--green)">Spatial CV (Phase 3)</th></tr></thead>
+        <tbody>
+          <tr><td>AUC-ROC</td><td style="color:#666;text-decoration:line-through">0.9995</td><td class="val">0.6844</td></tr>
+          <tr><td>PR-AUC</td><td style="color:#666">—</td><td class="val">0.5007</td></tr>
+          <tr><td>Precision</td><td style="color:#666;text-decoration:line-through">0.9916</td><td class="val">0.6060</td></tr>
+          <tr><td>Recall</td><td style="color:#666;text-decoration:line-through">0.9994</td><td class="val">0.2836</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="human-box">
+      <b>WHAT THIS MEANS:</b><br><br>
+      AUC 0.68 = the model has <b>real predictive power</b> (random = 0.50) but is far from the Phase 2 illusion. The drop shows Phase 2 was mostly spatial memorization. The remaining signal comes from genuine geological features. <b>This is the honest, publishable number.</b>
+    </div>
+  </div>
+</section>
+
 <!-- DATA SOURCES -->
 <section class="section">
   <div class="container">
