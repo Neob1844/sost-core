@@ -98,19 +98,30 @@ function playRandomRetroSound(duration){
 /* ===== VOICE COUNTDOWN — all 60 numbers, English forced ===== */
 var _vReady=false;
 if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=function(){_vReady=true;speechSynthesis.getVoices()}}
-var _WORDS={60:'sixty',50:'fifty',40:'forty',30:'thirty',20:'twenty',
-  10:'ten',9:'nine',8:'eight',7:'seven',6:'six',5:'five',4:'four',3:'three',2:'two',1:'one'};
+var _CALLOUTS={
+  60:{t:'sixty',l:'en-US'},50:{t:'fifty',l:'en-US'},40:{t:'forty',l:'en-US'},
+  30:{t:'thirty',l:'en-US'},20:{t:'twenty',l:'en-US'},10:{t:'ten',l:'en-US'},
+  9:{t:'\u0434\u0435\u0432\u044f\u0442\u044c',l:'ru-RU'},
+  8:{t:'\u516b',l:'zh-CN'},
+  7:{t:'\u306a\u306a',l:'ja-JP'},
+  6:{t:'\u0633\u062a\u0629',l:'ar-SA'},
+  5:{t:'\u05d7\u05de\u05e9',l:'he-IL'},
+  4:{t:'cuatro',l:'es-ES'},
+  3:{t:'trois',l:'fr-FR'},
+  2:{t:'zwei',l:'de-DE'},
+  1:{t:'uno',l:'it-IT'}
+};
 
 function speakCountdown(n){
   try{
-    if(!window.speechSynthesis||!_WORDS[n])return;
+    if(!window.speechSynthesis||!_CALLOUTS[n])return;
     speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(_WORDS[n]);
-    u.lang='en-US';u.rate=0.9;u.pitch=0.7;u.volume=0.6;
-    var voices=speechSynthesis.getVoices();var best=null;
-    ['Google US English','Microsoft David','Microsoft Mark','Alex','Daniel','Google UK English Male'].some(function(p){
-      best=voices.find(function(v){return v.name&&v.name.indexOf(p)>=0});return!!best});
-    if(!best)best=voices.find(function(v){return v.lang==='en-US'})||voices.find(function(v){return v.lang==='en-GB'})||voices.find(function(v){return v.lang&&v.lang.indexOf('en')===0});
+    var entry=_CALLOUTS[n];
+    var u=new SpeechSynthesisUtterance(entry.t);
+    u.lang=entry.l;u.rate=0.9;u.pitch=0.7;u.volume=0.6;
+    var voices=speechSynthesis.getVoices();
+    var langBase=entry.l.split('-')[0];
+    var best=voices.find(function(v){return v.lang===entry.l})||voices.find(function(v){return v.lang&&v.lang.indexOf(langBase)===0});
     if(best)u.voice=best;
     speechSynthesis.speak(u);
   }catch(e){}
