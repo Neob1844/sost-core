@@ -703,7 +703,19 @@ function doSearch(){
       if(res.source==='common_name'||res.source==='fuzzy_name'){
         header='<div style="color:#f59e0b;margin-bottom:8px">Resolved from common name: <b>'+sanitize(q)+'</b> → <span style="color:#67e8f9">'+sanitize(res.formula||'')+'</span></div>';
       }
-      if(!d.resolved){
+      if(!d.resolved||(!d.results||!d.results.length)){
+        var ee=d.entity_explanation;
+        if(ee){
+          var html=header+'<div style="background:#0a0a0a;border:1px solid #333;padding:16px;margin-top:8px">';
+          html+='<div style="color:#f59e0b;font-size:14px;font-weight:700;margin-bottom:8px">'+sanitize(ee.title||res.note||'Known Substance')+'</div>';
+          html+='<div style="color:#ccc;margin-bottom:8px">'+sanitize(ee.what_it_is||ee.plain_language_summary||res.note||'')+'</div>';
+          if(ee.why_not_in_corpus){html+='<div style="color:#888;font-size:11px;margin-bottom:8px">'+sanitize(ee.why_not_in_corpus)+'</div>'}
+          if(ee.real_world_uses&&ee.real_world_uses.length){html+='<div style="color:#888;margin-bottom:4px">Real-world uses:</div><ul style="color:#4ade80;margin:4px 0 0 16px">';ee.real_world_uses.forEach(function(u){html+='<li>'+sanitize(u)+'</li>'});html+='</ul>'}
+          if(ee.related_materials_in_corpus&&ee.related_materials_in_corpus.length){html+='<div style="margin-top:8px;color:#888">Related in corpus: '+ee.related_materials_in_corpus.map(function(r){return'<span style="color:#67e8f9;cursor:pointer" onclick="document.getElementById(\'searchInput\').value=\''+r+'\';doSearch()">'+r+'</span>'}).join(', ')+'</div>'}
+          html+='<div style="margin-top:8px;font-size:10px;color:#555;font-style:italic">'+sanitize(ee.honesty_note||'')+'</div>';
+          html+='</div>';
+          el.innerHTML=html;return;
+        }
         var note=res.note||'No match found';
         var html=header+'<div style="color:#f59e0b">'+sanitize(note)+'</div>';
         if(res.suggestion&&res.suggestion.length){html+='<div style="margin-top:8px;color:#888">Try: '+res.suggestion.map(function(s){return'<span style="color:#67e8f9;cursor:pointer" onclick="document.getElementById(\'searchInput\').value=\''+s+'\';doSearch()">'+s+'</span>'}).join(', ')+'</div>'}
@@ -719,6 +731,7 @@ function doSearch(){
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px;color:#67e8f9">'+sanitize(m.formula)+'</td><td style="padding:4px">'+sanitize(String(m.spacegroup||'—'))+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+bg+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+fe+'</td><td style="padding:4px;color:#666">'+sanitize(m.source||'—')+'</td><td style="padding:4px"><span style="color:#fb010d;cursor:pointer;font-size:11px" onclick="doExplain(\''+sanitize(m.canonical_id)+'\')">EXPLAIN ▸</span></td></tr>';
       });
       html+='</tbody></table>';
+      if(d.variant_note){html+='<div style="margin-top:8px;font-size:11px;color:#888;font-style:italic">'+sanitize(d.variant_note)+'</div>'}
       el.innerHTML=html;
     })
     .catch(function(){el.innerHTML='<span style="color:#fb010d">API unavailable — deploy Materials Engine on VPS first</span>'});

@@ -1,142 +1,258 @@
-"""Common name → formula registry with ES/EN support and mixture handling.
+"""Common name → formula registry with multilingual support and known-entity handling.
 
-Resolves everyday names (water, sal, quartz) to chemical formulas,
-and honestly identifies mixtures/non-crystalline materials.
+Supports ES/EN/FR/DE/IT. Extensible for RU/ZH/JA/AR.
+Classifies entities as corpus_material, known_molecule_not_in_corpus,
+elemental_gas_or_noble_gas, mixture_or_everyday_material.
 """
 
-# entity_type: "crystal" | "mixture" | "element" | "gas" | "everyday"
-COMMON_NAMES = {
-    # --- Water / Ice ---
-    "water": {"formula": "H2O", "type": "crystal", "note": "Ice (solid H2O) is in many crystal databases; liquid water is not a single crystal"},
-    "agua": {"formula": "H2O", "type": "crystal", "note": "Hielo (H2O sólido) es cristalino; el agua líquida no es un cristal único"},
-    "ice": {"formula": "H2O", "type": "crystal"},
-    "hielo": {"formula": "H2O", "type": "crystal"},
+import re
 
-    # --- Gases ---
-    "oxygen": {"formula": "O2", "type": "gas", "note": "Diatomic gas, not typically in crystal databases as a solid"},
-    "oxígeno": {"formula": "O2", "type": "gas"},
-    "ozone": {"formula": "O3", "type": "gas"},
-    "ozono": {"formula": "O3", "type": "gas"},
-    "nitrogen": {"formula": "N2", "type": "gas"},
-    "nitrógeno": {"formula": "N2", "type": "gas"},
-    "carbon dioxide": {"formula": "CO2", "type": "gas", "note": "Solid CO2 (dry ice) has a crystal structure"},
-    "dióxido de carbono": {"formula": "CO2", "type": "gas"},
-
-    # --- Salts & Minerals ---
-    "salt": {"formula": "NaCl", "type": "crystal"},
-    "sal": {"formula": "NaCl", "type": "crystal"},
-    "quartz": {"formula": "SiO2", "type": "crystal"},
-    "cuarzo": {"formula": "SiO2", "type": "crystal"},
-    "silica": {"formula": "SiO2", "type": "crystal"},
-    "sílice": {"formula": "SiO2", "type": "crystal"},
-    "alumina": {"formula": "Al2O3", "type": "crystal"},
-    "alúmina": {"formula": "Al2O3", "type": "crystal"},
-    "hematite": {"formula": "Fe2O3", "type": "crystal"},
-    "hematita": {"formula": "Fe2O3", "type": "crystal"},
-    "magnetite": {"formula": "Fe3O4", "type": "crystal"},
-    "magnetita": {"formula": "Fe3O4", "type": "crystal"},
-    "calcite": {"formula": "CaCO3", "type": "crystal"},
-    "calcita": {"formula": "CaCO3", "type": "crystal"},
-    "rutile": {"formula": "TiO2", "type": "crystal"},
-    "rutilo": {"formula": "TiO2", "type": "crystal"},
-    "titanium dioxide": {"formula": "TiO2", "type": "crystal"},
-    "dióxido de titanio": {"formula": "TiO2", "type": "crystal"},
-
-    # --- Elements ---
-    "copper": {"formula": "Cu", "type": "element"},
-    "cobre": {"formula": "Cu", "type": "element"},
-    "iron": {"formula": "Fe", "type": "element"},
-    "hierro": {"formula": "Fe", "type": "element"},
-    "gold": {"formula": "Au", "type": "element"},
-    "oro": {"formula": "Au", "type": "element"},
-    "silver": {"formula": "Ag", "type": "element"},
-    "plata": {"formula": "Ag", "type": "element"},
-    "silicon": {"formula": "Si", "type": "element"},
-    "silicio": {"formula": "Si", "type": "element"},
-    "graphite": {"formula": "C", "type": "crystal", "note": "Carbon in graphite crystal structure"},
-    "grafito": {"formula": "C", "type": "crystal"},
-    "diamond": {"formula": "C", "type": "crystal", "note": "Carbon in diamond crystal structure (different spacegroup from graphite)"},
-    "diamante": {"formula": "C", "type": "crystal"},
-
-    # --- Tech materials ---
-    "gallium arsenide": {"formula": "GaAs", "type": "crystal"},
-    "arseniuro de galio": {"formula": "GaAs", "type": "crystal"},
-    "silicon carbide": {"formula": "SiC", "type": "crystal"},
-    "carburo de silicio": {"formula": "SiC", "type": "crystal"},
-    "zinc oxide": {"formula": "ZnO", "type": "crystal"},
-    "óxido de zinc": {"formula": "ZnO", "type": "crystal"},
-    "barium titanate": {"formula": "BaTiO3", "type": "crystal"},
-    "titanato de bario": {"formula": "BaTiO3", "type": "crystal"},
-
-    # --- Everyday mixtures (NOT single crystals) ---
-    "air": {"formula": None, "type": "mixture", "composition": "~78% N2 + 21% O2 + 1% Ar + traces",
-            "note": "Air is a gas mixture, not a single crystalline material. Try searching for N2 or O2 individually."},
-    "aire": {"formula": None, "type": "mixture", "composition": "~78% N2 + 21% O2 + 1% Ar + trazas",
-             "note": "El aire es una mezcla gaseosa, no un material cristalino único. Prueba buscar N2 u O2 por separado."},
-    "steel": {"formula": None, "type": "everyday", "composition": "Fe + C (0.2-2%) + alloy elements",
-              "note": "Steel is an iron alloy, not a single crystal. The engine has pure Fe and Fe-based compounds. Try 'Fe' or 'Fe2O3'."},
-    "acero": {"formula": None, "type": "everyday", "composition": "Fe + C (0.2-2%) + elementos de aleación",
-              "note": "El acero es una aleación de hierro, no un cristal único. Prueba 'Fe' o 'Fe2O3'."},
-    "glass": {"formula": None, "type": "everyday", "composition": "Amorphous SiO2 + additives",
-              "note": "Glass is amorphous (non-crystalline). The engine has crystalline SiO2 (quartz). Try 'SiO2'."},
-    "vidrio": {"formula": None, "type": "everyday", "composition": "SiO2 amorfo + aditivos",
-               "note": "El vidrio es amorfo (no cristalino). Prueba 'SiO2' para cuarzo cristalino."},
-    "concrete": {"formula": None, "type": "everyday", "composition": "Cite calcium silicate hydrates + aggregates",
-                 "note": "Concrete is a composite, not a single crystal. Try 'CaO' or 'SiO2' for component minerals."},
-    "hormigón": {"formula": None, "type": "everyday", "composition": "Silicatos cálcicos hidratados + agregados",
-                 "note": "El hormigón es un compuesto, no un cristal. Prueba 'CaO' o 'SiO2'."},
-    "cement": {"formula": None, "type": "everyday", "composition": "Ca3SiO5, Ca2SiO4, Ca3Al2O6 + more",
-               "note": "Cement is a mixture of calcium silicates. Try 'CaO' or 'Al2O3'."},
-    "cemento": {"formula": None, "type": "everyday", "composition": "Ca3SiO5, Ca2SiO4, Ca3Al2O6 + más"},
-    "plastic": {"formula": None, "type": "everyday", "note": "Plastics are organic polymers, not in the inorganic crystal corpus."},
-    "plástico": {"formula": None, "type": "everyday", "note": "Los plásticos son polímeros orgánicos, no están en el corpus de cristales inorgánicos."},
-    "wood": {"formula": None, "type": "everyday", "note": "Wood is an organic composite (cellulose + lignin), not a crystal."},
-    "madera": {"formula": None, "type": "everyday", "note": "La madera es un compuesto orgánico, no un cristal."},
+# Stop words by language (articles, prepositions, determinants)
+STOP_WORDS = {
+    "es": {"el","la","los","las","un","una","unas","unos","del","de","al","lo"},
+    "en": {"the","a","an","of","some"},
+    "fr": {"le","la","les","un","une","de","du","des","l","d"},
+    "de": {"der","die","das","ein","eine","den","dem","des","von"},
+    "it": {"il","lo","la","i","gli","le","un","una","di","del","della","dei","delle"},
 }
+ALL_STOPS = set()
+for s in STOP_WORDS.values():
+    ALL_STOPS |= s
+
+
+def normalize_query(q: str) -> str:
+    """Normalize a user query: lowercase, strip articles, trim, remove accents for matching."""
+    q = q.strip().lower()
+    # Remove common punctuation
+    q = re.sub(r'[¿¡?!.,;:()"\']', '', q)
+    # Normalize accented chars for matching
+    q_norm = q
+    for src, dst in [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"),("ü","u"),("ñ","n"),
+                     ("à","a"),("è","e"),("ì","i"),("ò","o"),("ù","u"),("ä","a"),("ö","o"),
+                     ("â","a"),("ê","e"),("î","i"),("ô","o"),("û","u"),("ç","c")]:
+        q_norm = q_norm.replace(src, dst)
+    # Remove stop words
+    words = q_norm.split()
+    words = [w for w in words if w not in ALL_STOPS]
+    return " ".join(words).strip()
+
+
+# === REGISTRY ===
+# type: "crystal" | "gas" | "element" | "mixture" | "everyday" | "noble_gas" | "molecule"
+
+COMMON_NAMES = {}
+
+def _add(names, formula, entity_type, note="", composition="", uses=None, related=None):
+    """Register multiple names for the same entity."""
+    entry = {"formula": formula, "type": entity_type, "note": note,
+             "composition": composition, "uses": uses or [], "related": related or []}
+    for n in names:
+        COMMON_NAMES[n] = entry
+
+# --- Water / Ice ---
+_add(["water","agua","wasser","eau","acqua","ice","hielo","eis","glace","ghiaccio"],
+     "H2O", "crystal", "Ice (solid H2O) is crystalline; liquid water is amorphous")
+
+# --- Common salts & minerals ---
+_add(["salt","sal","salz","sel","sale","sodium chloride","cloruro de sodio","natriumchlorid","chlorure de sodium"],
+     "NaCl", "crystal")
+_add(["quartz","cuarzo","quarz","quartzo"],
+     "SiO2", "crystal")
+_add(["silica","silice","sílice","silicium dioxide","dioxido de silicio"],
+     "SiO2", "crystal")
+_add(["alumina","alumina","alúmina","aluminum oxide","oxido de aluminio","óxido de aluminio","aluminiumoxid","alumine","allumina"],
+     "Al2O3", "crystal")
+_add(["hematite","hematita","hamatit","hématite","ematite"],
+     "Fe2O3", "crystal")
+_add(["magnetite","magnetita","magnetit"],
+     "Fe3O4", "crystal")
+_add(["calcite","calcita","calcit","calcaire"],
+     "CaCO3", "crystal")
+_add(["rutile","rutilo","rutil"],
+     "TiO2", "crystal")
+_add(["titanium dioxide","dioxido de titanio","dióxido de titanio","titandioxid","dioxyde de titane","biossido di titanio"],
+     "TiO2", "crystal")
+_add(["zinc oxide","oxido de zinc","óxido de zinc","zinkoxid","oxyde de zinc","ossido di zinco"],
+     "ZnO", "crystal")
+_add(["barium titanate","titanato de bario"],
+     "BaTiO3", "crystal")
+
+# --- Elements ---
+_add(["copper","cobre","kupfer","cuivre","rame"], "Cu", "element")
+_add(["iron","hierro","eisen","fer","ferro"], "Fe", "element")
+_add(["gold","oro","or","ouro"], "Au", "element")
+_add(["silver","plata","silber","argent","argento"], "Ag", "element")
+_add(["silicon","silicio","silizium","silicium"], "Si", "element")
+_add(["aluminum","aluminio","aluminium","alluminio"], "Al", "element")
+_add(["titanium","titanio","titan","titane"], "Ti", "element")
+_add(["carbon","carbono","kohlenstoff","carbone","carbonio"], "C", "element")
+_add(["graphite","grafito","graphit","graphite","grafite"],
+     "C", "crystal", "Carbon in graphite crystal structure")
+_add(["diamond","diamante","diamant","diamante"],
+     "C", "crystal", "Carbon in diamond crystal structure (different spacegroup)")
+
+# --- Tech materials ---
+_add(["gallium arsenide","arseniuro de galio"], "GaAs", "crystal")
+_add(["silicon carbide","carburo de silicio","siliziumkarbid","carbure de silicium","carburo di silicio"],
+     "SiC", "crystal")
+
+# --- Known molecules NOT typically in crystal corpus ---
+_add(["oxygen","oxigeno","oxígeno","sauerstoff","oxygene","ossigeno"],
+     "O2", "molecule",
+     "Oxygen (O2) is a diatomic gas essential for life. As a molecular gas, it is not typically represented as a bulk crystal in this corpus.",
+     uses=["Respiration", "Combustion", "Steel manufacturing", "Medical oxygen", "Water treatment"],
+     related=["Fe2O3", "TiO2", "Al2O3", "SiO2"])
+_add(["nitrogen","nitrogeno","nitrógeno","stickstoff","azote","azoto"],
+     "N2", "molecule",
+     "Nitrogen (N2) is the most abundant gas in Earth's atmosphere (~78%). It is not a bulk crystalline material in this corpus.",
+     uses=["Atmosphere composition", "Fertilizer production (Haber process)", "Cryogenics", "Inert gas shielding", "Food preservation"],
+     related=["GaN", "BN", "AlN", "Si3N4"])
+_add(["ozone","ozono","ozon"],
+     "O3", "molecule",
+     "Ozone (O3) is a reactive gas in Earth's stratosphere. Not a bulk crystal.",
+     uses=["UV protection (ozone layer)", "Water purification", "Air treatment"],
+     related=["O2"])
+_add(["hydrogen","hidrogeno","hidrógeno","wasserstoff","hydrogene","idrogeno"],
+     "H2", "molecule",
+     "Hydrogen (H2) is the lightest and most abundant element. As a diatomic gas, it's not in the crystal corpus.",
+     uses=["Fuel cells", "Rocket propulsion", "Chemical synthesis", "Hydrogenation"],
+     related=["H2O", "LiH", "NaH"])
+_add(["carbon dioxide","dioxido de carbono","dióxido de carbono","kohlendioxid","dioxyde de carbone","anidride carbonica"],
+     "CO2", "molecule",
+     "CO2 is a gas (solid form: dry ice). Not typically in bulk crystal databases.",
+     uses=["Climate science", "Carbonated beverages", "Fire extinguishers", "Supercritical fluid extraction"],
+     related=["CaCO3", "MgCO3"])
+_add(["ammonia","amoniaco","amoniak","ammoniac","ammoniaca"],
+     "NH3", "molecule",
+     "Ammonia (NH3) is an important industrial gas. Not a bulk crystal.",
+     uses=["Fertilizer production", "Refrigeration", "Cleaning products", "Chemical synthesis"],
+     related=["GaN", "AlN", "BN"])
+_add(["methane","metano","methan","méthane"],
+     "CH4", "molecule",
+     "Methane is the simplest hydrocarbon. Organic/molecular, not in inorganic crystal corpus.",
+     uses=["Natural gas fuel", "Chemical feedstock", "Hydrogen production"],
+     related=["C", "SiC"])
+
+# --- Noble gases ---
+_add(["helium","helio","hélium","elio"],
+     "He", "noble_gas",
+     "Helium is a noble gas — it does not form bulk crystals under normal conditions.",
+     uses=["Cryogenics (MRI cooling)", "Leak detection", "Controlled atmospheres", "Balloons", "Deep-sea diving gas"],
+     related=[])
+_add(["neon","neon","neón","néon"],
+     "Ne", "noble_gas",
+     "Neon is a noble gas used in lighting. Does not form crystals.",
+     uses=["Neon signs", "Lasers", "Cryogenics"],
+     related=[])
+_add(["argon","argon","argón"],
+     "Ar", "noble_gas",
+     "Argon is the third most abundant gas in Earth's atmosphere. Noble gas, no bulk crystal.",
+     uses=["Welding shielding gas", "Incandescent light bulbs", "Cryogenics", "Window insulation"],
+     related=[])
+_add(["krypton","cripton","kriptón"],
+     "Kr", "noble_gas", "Noble gas used in specialty lighting.", uses=["Flash photography", "Lasers"], related=[])
+_add(["xenon","xenon","xenón"],
+     "Xe", "noble_gas", "Noble gas used in ion propulsion and lighting.", uses=["Ion thrusters", "Anesthesia", "Headlights"], related=[])
+
+# --- Mixtures / everyday materials ---
+_add(["air","aire","luft","aria"],
+     None, "mixture",
+     "Air is a gas mixture (~78% N2 + 21% O2 + 1% Ar + traces), not a single crystal. Try searching for N2 or O2 individually.",
+     composition="~78% N2 + 21% O2 + 1% Ar + traces",
+     related=["N2", "O2"])
+_add(["steel","acero","stahl","acier","acciaio"],
+     None, "everyday",
+     "Steel is an iron alloy (Fe + 0.2-2% C + alloy elements), not a single crystal. Try 'Fe' or 'Fe2O3'.",
+     composition="Fe + C (0.2-2%) + Mn, Cr, Ni, etc.",
+     related=["Fe", "Fe2O3", "Cr"])
+_add(["glass","vidrio","glas","verre","vetro"],
+     None, "everyday",
+     "Glass is amorphous (non-crystalline) SiO2 + additives. Try 'SiO2' for crystalline quartz.",
+     composition="Amorphous SiO2 + Na2O, CaO, etc.",
+     related=["SiO2"])
+_add(["concrete","hormigon","hormigón","beton","béton","calcestruzzo"],
+     None, "everyday",
+     "Concrete is a composite material, not a single crystal. Try 'CaO' or 'SiO2' for components.",
+     composition="Calcium silicate hydrates + aggregates",
+     related=["CaO", "SiO2", "Al2O3"])
+_add(["cement","cemento","zement","ciment"],
+     None, "everyday",
+     "Cement is a mixture of calcium silicates. Try 'CaO' or 'Al2O3'.",
+     composition="Ca3SiO5 + Ca2SiO4 + Ca3Al2O6",
+     related=["CaO", "Al2O3"])
+_add(["plastic","plastico","plástico","plastik","plastique","plastica"],
+     None, "everyday",
+     "Plastics are organic polymers, not in the inorganic crystal corpus.")
+_add(["wood","madera","holz","bois","legno"],
+     None, "everyday",
+     "Wood is an organic composite (cellulose + lignin), not a crystal.")
+_add(["rubber","goma","caucho","caoutchouc","gomma","gummi"],
+     None, "everyday",
+     "Rubber is an organic polymer, not in the inorganic crystal corpus.")
+_add(["paper","papel","papier","carta"],
+     None, "everyday",
+     "Paper is made from cellulose fibers, an organic material not in this crystal corpus.")
 
 
 def resolve_query(q: str) -> dict:
-    """Resolve a user query to formula or special response."""
-    q_lower = q.strip().lower()
+    """Resolve a user query to formula, known entity, or special response."""
+    q_clean = normalize_query(q)
+    q_orig = q.strip()
 
-    # Direct common name match
-    if q_lower in COMMON_NAMES:
-        entry = COMMON_NAMES[q_lower]
-        if entry["formula"]:
-            return {"resolved": True, "formula": entry["formula"], "source": "common_name",
-                    "original_query": q, "entity_type": entry["type"],
-                    "note": entry.get("note", "")}
-        else:
-            return {"resolved": False, "formula": None, "source": "common_name",
-                    "original_query": q, "entity_type": entry["type"],
-                    "composition": entry.get("composition", ""),
-                    "note": entry.get("note", ""),
-                    "suggestion": _suggest_related(entry)}
+    # Direct registry match (normalized)
+    if q_clean in COMMON_NAMES:
+        return _build_response(q_orig, q_clean, COMMON_NAMES[q_clean])
 
-    # Looks like a formula (has uppercase letter)
-    if any(c.isupper() for c in q):
-        return {"resolved": True, "formula": q.strip(), "source": "formula_direct",
-                "original_query": q, "entity_type": "crystal", "note": ""}
+    # Try original lowercase too
+    q_low = q_orig.lower().strip()
+    if q_low in COMMON_NAMES:
+        return _build_response(q_orig, q_low, COMMON_NAMES[q_low])
 
-    # Fuzzy: try partial match on common names
+    # Looks like a formula (has uppercase letter)?
+    if any(c.isupper() for c in q_orig):
+        return {"resolved": True, "formula": q_orig.strip(), "source": "formula_direct",
+                "original_query": q_orig, "entity_type": "corpus_material", "note": ""}
+
+    # Fuzzy: partial match
     for name, entry in COMMON_NAMES.items():
-        if q_lower in name or name in q_lower:
-            if entry["formula"]:
-                return {"resolved": True, "formula": entry["formula"], "source": "fuzzy_name",
-                        "original_query": q, "matched_name": name,
-                        "entity_type": entry["type"], "note": entry.get("note", "")}
+        if q_clean in name or name in q_clean:
+            return _build_response(q_orig, name, entry, source="fuzzy_name")
 
     return {"resolved": False, "formula": None, "source": "not_found",
-            "original_query": q, "entity_type": "unknown",
-            "note": f"No match for '{q}'. Try a chemical formula (e.g. GaAs) or common name (e.g. quartz, salt)."}
+            "original_query": q_orig, "entity_type": "unknown",
+            "note": f"No match for '{q_orig}'. Try a chemical formula (e.g. GaAs, SiO2) or a common name (e.g. quartz, salt, water)."}
 
 
-def _suggest_related(entry):
-    """Suggest related searchable materials for mixtures."""
-    comp = entry.get("composition", "")
-    suggestions = []
-    for word in comp.replace("+", " ").replace(",", " ").replace("~", "").split():
-        w = word.strip().rstrip("%)")
-        if any(c.isupper() for c in w) and len(w) <= 10 and not w.replace(".", "").isdigit():
-            suggestions.append(w)
-    return suggestions[:3] if suggestions else []
+def _build_response(q_orig, matched, entry, source="common_name"):
+    """Build structured response from registry entry."""
+    etype = entry["type"]
+    formula = entry.get("formula")
+
+    # Map internal types to public classification
+    if etype in ("crystal", "element"):
+        classification = "corpus_material"
+    elif etype == "molecule":
+        classification = "known_molecule_not_in_corpus"
+    elif etype == "noble_gas":
+        classification = "elemental_gas_or_noble_gas"
+    elif etype in ("mixture", "everyday"):
+        classification = "mixture_or_everyday_material"
+    else:
+        classification = etype
+
+    if formula:
+        return {"resolved": True, "formula": formula, "source": source,
+                "original_query": q_orig, "matched_name": matched,
+                "entity_type": classification,
+                "note": entry.get("note", ""),
+                "uses": entry.get("uses", []),
+                "related": entry.get("related", [])}
+    else:
+        return {"resolved": False, "formula": None, "source": source,
+                "original_query": q_orig, "matched_name": matched,
+                "entity_type": classification,
+                "composition": entry.get("composition", ""),
+                "note": entry.get("note", ""),
+                "uses": entry.get("uses", []),
+                "related": entry.get("related", []),
+                "suggestion": entry.get("related", [])}
