@@ -6,6 +6,63 @@ All outputs tagged as heuristic_assessment / corpus_relative.
 
 import math
 
+# === ELEMENTAL REFERENCE RULES ===
+# Pure elements with FE≈0 are reference phases, NOT metastable
+ELEMENTAL_OVERRIDES = {
+    "Au": {"strategic": "very_high", "specialty": "very_high", "bulk": "low",
+           "apps": ["Electrical contacts and connectors", "Corrosion-resistant coatings",
+                    "Specialty electronics (bonding wires)", "Jewelry and decorative applications",
+                    "Store-of-value / strategic precious metal", "Dental and medical devices"],
+           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"]},
+    "Ag": {"strategic": "high", "specialty": "high", "bulk": "low",
+           "apps": ["Electrical contacts (highest conductivity)", "Antimicrobial coatings",
+                    "Photography and mirrors", "Jewelry", "Solar cell contacts", "Brazing alloys"],
+           "tags": ["PRECIOUS METAL"]},
+    "Cu": {"strategic": "high", "specialty": "medium", "bulk": "high",
+           "apps": ["Electrical wiring and power transmission", "Heat exchangers", "Plumbing",
+                    "Circuit boards (PCB)", "Electric motors", "Roofing and architecture"],
+           "tags": ["STRATEGIC MATERIAL"]},
+    "Fe": {"strategic": "high", "specialty": "low", "bulk": "very_high",
+           "apps": ["Steel production (construction, infrastructure)", "Automotive industry",
+                    "Machinery and tools", "Magnetic applications", "Cast iron products"],
+           "tags": []},
+    "Al": {"strategic": "high", "specialty": "medium", "bulk": "high",
+           "apps": ["Aerospace structures", "Automotive lightweight components", "Packaging (foil, cans)",
+                    "Construction (window frames)", "Electrical transmission lines"],
+           "tags": []},
+    "Si": {"strategic": "very_high", "specialty": "very_high", "bulk": "medium",
+           "apps": ["Semiconductor chips (the foundation of electronics)", "Solar cells",
+                    "MEMS devices", "Optical components", "Silicone production feedstock"],
+           "tags": ["STRATEGIC MATERIAL"]},
+    "C":  {"strategic": "high", "specialty": "very_high", "bulk": "medium",
+           "apps": ["Graphite: lubricants, batteries (anodes), pencils, crucibles",
+                    "Diamond: cutting tools, abrasives, jewelry, optics",
+                    "Carbon fiber (from precursors)", "Activated carbon (filtration)"],
+           "tags": []},
+    "Ti": {"strategic": "high", "specialty": "high", "bulk": "medium",
+           "apps": ["Aerospace (lightweight, strong)", "Medical implants (biocompatible)",
+                    "Chemical processing equipment", "Marine applications", "Sporting goods"],
+           "tags": ["STRATEGIC MATERIAL"]},
+    "Pt": {"strategic": "very_high", "specialty": "very_high", "bulk": "low",
+           "apps": ["Catalytic converters", "Fuel cell electrodes", "Laboratory equipment",
+                    "Jewelry", "Chemotherapy drugs", "Hydrogen production catalysis"],
+           "tags": ["PRECIOUS METAL", "STRATEGIC MATERIAL"]},
+}
+
+# Well-known compounds with curated apps
+COMPOUND_OVERRIDES = {
+    "NaCl": {"apps": ["Food preservation and seasoning", "De-icing roads", "Chemical feedstock (chlor-alkali)",
+                       "Water softening", "Medical saline solutions"]},
+    "SiO2": {"apps": ["Glass production", "Optical fibers", "Electronics (gate oxide in chips)",
+                       "Construction (sand, concrete)", "Abrasives", "Chromatography"]},
+    "TiO2": {"apps": ["White pigment (paint, sunscreen)", "Photocatalysis", "Self-cleaning surfaces",
+                       "Food additive (E171)", "Optical coatings"]},
+    "GaAs": {"apps": ["High-frequency electronics (5G, radar)", "LED and laser diodes",
+                       "Solar cells (space-grade)", "Fiber optic communications"]},
+    "ZnO": {"apps": ["Sunscreen (UV blocker)", "Rubber vulcanization", "Varistors",
+                      "Piezoelectric devices", "Cosmetics"]},
+}
+
 
 def explain_material(material, corpus_stats=None) -> dict:
     """Generate plain-language explanation for a material."""
@@ -31,8 +88,14 @@ def explain_material(material, corpus_stats=None) -> dict:
     else:
         electronic = {"label": "uncertain", "reason": "Band gap data not available"}
 
-    # Stability
-    if fe is not None:
+    # Detect elemental reference
+    is_elemental = n_elem == 1 and f in ELEMENTAL_OVERRIDES
+    is_pure_element = n_elem == 1
+
+    # Stability — with elemental override
+    if is_pure_element and fe is not None and abs(fe) < 0.1:
+        stability = {"label": "elemental reference", "reason": f"Formation energy ≈ {fe:.2f} eV/atom — this is the reference phase for {f}. Near-zero is expected, not a sign of instability."}
+    elif fe is not None:
         if fe < -2.0:
             stability = {"label": "very stable", "reason": f"Formation energy = {fe:.2f} eV/atom — strongly favored to exist"}
         elif fe < -0.5:
@@ -71,8 +134,13 @@ def explain_material(material, corpus_stats=None) -> dict:
     # Confidence
     confidence = "high" if bg is not None and fe is not None and sg else ("medium" if bg is not None or fe is not None else "low")
 
-    # Applications
-    apps = _suggest_applications(electronic["label"], bg, fe, elems)
+    # Applications — use overrides for known materials
+    if f in ELEMENTAL_OVERRIDES:
+        apps = ELEMENTAL_OVERRIDES[f]["apps"]
+    elif f in COMPOUND_OVERRIDES:
+        apps = COMPOUND_OVERRIDES[f]["apps"]
+    else:
+        apps = _suggest_applications(electronic["label"], bg, fe, elems)
 
     # Strengths / limitations
     strengths = []
@@ -95,12 +163,47 @@ def explain_material(material, corpus_stats=None) -> dict:
     if not limitations:
         limitations.append("Assessment based on limited computed properties — real-world performance may differ")
 
+    # Split value assessment
+    if is_elemental and f in ELEMENTAL_OVERRIDES:
+        eo = ELEMENTAL_OVERRIDES[f]
+        value_split = {
+            "scientific_interest": {"label": "low_novelty_high_importance",
+                "reason": f"{f} is extremely well-studied — low novelty but foundational reference material"},
+            "industrial_relevance": {"label": "high" if eo["bulk"] in ("high","very_high") else "specialty",
+                "reason": f"Important in {apps[0].lower() if apps else 'various applications'}"},
+            "strategic_significance": {"label": eo["strategic"],
+                "reason": "Precious metal" if "PRECIOUS METAL" in eo.get("tags",[]) else "Strategic industrial material" if eo["strategic"]=="very_high" else "Standard industrial material"},
+            "bulk_vs_specialty": {"label": "specialty" if eo["bulk"]=="low" else "bulk" if eo["bulk"]=="very_high" else "mixed",
+                "reason": f"{'High specialty value, not a mass structural material' if eo['bulk']=='low' else 'Widely used in bulk applications'}"},
+        }
+        tags = eo.get("tags", [])
+        pv = {"label": "strategically important", "reason": f"Low novelty but high real-world importance. {', '.join(tags) if tags else 'Well-known reference material'}.",
+              "heuristic_assessment": True, "not_market_price": True}
+    elif f in COMPOUND_OVERRIDES:
+        value_split = {
+            "scientific_interest": {"label": "well_characterized", "reason": "Well-known compound, extensively studied"},
+            "industrial_relevance": {"label": "high", "reason": f"Used in {apps[0].lower() if apps else 'various fields'}"},
+            "strategic_significance": {"label": "moderate", "reason": "Important industrial compound"},
+            "bulk_vs_specialty": {"label": "mixed", "reason": "Both bulk and specialty uses"},
+        }
+        tags = []
+    else:
+        value_split = {
+            "scientific_interest": {"label": exotic_label, "reason": exotic_reason},
+            "industrial_relevance": {"label": pv["label"], "reason": pv["reason"]},
+            "strategic_significance": {"label": "standard", "reason": "No special strategic classification"},
+            "bulk_vs_specialty": {"label": "unknown", "reason": "Insufficient data for classification"},
+        }
+        tags = []
+
     return {
         "title": f"{f} — {_human_name(f, elems)}",
         "formula": f,
-        "what_it_is": f"A {_crystal_description(sg, n_elem)} with {n_elem} element{'s' if n_elem != 1 else ''}: {', '.join(elems)}",
+        "elemental_reference": is_pure_element,
+        "material_tags": tags,
+        "what_it_is": f"{'An elemental reference material' if is_pure_element else 'A ' + _crystal_description(sg, n_elem)} ({f}) with {n_elem} element{'s' if n_elem != 1 else ''}: {', '.join(elems)}",
         "plain_language_summary": _build_summary(f, electronic, stability, exotic_label, apps),
-        "what_it_can_do": apps[:5],
+        "what_it_can_do": apps[:6],
         "main_strengths": strengths[:4],
         "main_limitations": limitations[:3],
         "is_it_exotic": {"label": exotic_label, "reason": exotic_reason},
@@ -108,6 +211,7 @@ def explain_material(material, corpus_stats=None) -> dict:
         "stability_assessment": stability,
         "electronic_behavior": electronic,
         "practical_value": pv,
+        "value_breakdown": value_split,
         "industry_relevance": industry,
         "quality_flags": {
             "good": [s for s in strengths if "stable" in s.lower() or "ideal" in s.lower()],

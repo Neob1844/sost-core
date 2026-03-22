@@ -113,8 +113,41 @@ class TestPlainLanguage:
         m = _m("Si", ["Si"], 227, 0.0, 1.1)
         e = explain_material(m)
         assert len(e["main_limitations"]) > 0
-        # Should have some limitation, not just empty praise
         assert e["main_limitations"][0] != ""
+
+    def test_au_not_metastable(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["stability_assessment"]["label"] != "metastable"
+        assert "reference" in e["stability_assessment"]["label"]
+
+    def test_au_elemental_reference(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["elemental_reference"] is True
+        assert "PRECIOUS METAL" in e.get("material_tags", [])
+
+    def test_au_not_low_value(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert e["practical_value"]["label"] != "low"
+
+    def test_au_apps_no_structural(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        assert not any("structural component" in a.lower() for a in e["what_it_can_do"])
+
+    def test_au_value_breakdown(self):
+        m = _m("Au", ["Au"], 225, 0.0, 0.0)
+        e = explain_material(m)
+        vb = e.get("value_breakdown", {})
+        assert vb["strategic_significance"]["label"] == "very_high"
+        assert vb["bulk_vs_specialty"]["label"] == "specialty"
+
+    def test_gaas_has_value_breakdown(self):
+        m = _m("GaAs", ["As", "Ga"], 216, -0.7, 1.4)
+        e = explain_material(m)
+        assert "value_breakdown" in e
 
 
 class TestSmartSearchAPI:

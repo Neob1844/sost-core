@@ -743,13 +743,17 @@ function doExplain(id){
     .then(function(r){return r.json()})
     .then(function(e){
       var html='<div style="margin-top:16px;background:#0a0a0a;border:1px solid #222;padding:16px">';
-      html+='<div style="font-size:16px;color:#67e8f9;font-weight:700;margin-bottom:8px">'+sanitize(e.title||e.formula)+'</div>';
+      html+='<div style="font-size:16px;color:#67e8f9;font-weight:700;margin-bottom:8px">'+sanitize(e.title||e.formula);
+      if(e.material_tags&&e.material_tags.length){e.material_tags.forEach(function(t){html+=' <span style="font-size:9px;padding:2px 6px;background:rgba(251,1,13,.15);color:#fb010d;border:1px solid rgba(251,1,13,.3);border-radius:3px;margin-left:6px">'+sanitize(t)+'</span>'})}
+      if(e.elemental_reference){html+=' <span style="font-size:9px;padding:2px 6px;background:rgba(103,232,249,.1);color:#67e8f9;border:1px solid rgba(103,232,249,.3);border-radius:3px;margin-left:6px">ELEMENTAL REFERENCE</span>'}
+      html+='</div>';
       html+='<div style="color:#ccc;margin-bottom:8px">'+sanitize(e.what_it_is||'')+'</div>';
       html+='<div style="color:#4ade80;margin-bottom:12px;font-style:italic">'+sanitize(e.plain_language_summary||'')+'</div>';
       if(e.electronic_behavior){html+='<div style="margin-bottom:4px"><span style="color:#888">Electronic: </span><b style="color:#67e8f9">'+sanitize(e.electronic_behavior.label)+'</b> — '+sanitize(e.electronic_behavior.reason)+'</div>'}
       if(e.stability_assessment){html+='<div style="margin-bottom:4px"><span style="color:#888">Stability: </span><b style="color:#4ade80">'+sanitize(e.stability_assessment.label)+'</b> — '+sanitize(e.stability_assessment.reason)+'</div>'}
       if(e.is_it_exotic){html+='<div style="margin-bottom:4px"><span style="color:#888">Exotic: </span><b style="color:#c084fc">'+sanitize(e.is_it_exotic.label)+'</b> — '+sanitize(e.is_it_exotic.reason)+'</div>'}
       if(e.practical_value){html+='<div style="margin-bottom:4px"><span style="color:#888">Value: </span><b style="color:#fbbf24">'+sanitize(e.practical_value.label)+'</b> — '+sanitize(e.practical_value.reason)+'</div>'}
+      if(e.value_breakdown){var vb=e.value_breakdown;html+='<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">';['scientific_interest','industrial_relevance','strategic_significance','bulk_vs_specialty'].forEach(function(k){if(vb[k]){var v=vb[k];var col=v.label.indexOf('high')>=0||v.label.indexOf('very')>=0?'#4ade80':v.label.indexOf('low')>=0?'#666':'#fbbf24';html+='<span title="'+sanitize(v.reason)+'" style="font-size:10px;padding:2px 8px;border:1px solid '+col+';color:'+col+';border-radius:3px;cursor:help">'+k.replace(/_/g,' ')+': '+sanitize(v.label)+'</span>'}});html+='</div>'}
       if(e.what_it_can_do&&e.what_it_can_do.length){html+='<div style="margin-top:8px;color:#888">Applications:</div><ul style="color:#ccc;margin:4px 0 0 16px">';e.what_it_can_do.forEach(function(a){html+='<li>'+sanitize(a)+'</li>'});html+='</ul>'}
       if(e.industry_relevance){html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';Object.keys(e.industry_relevance).forEach(function(k){var v=e.industry_relevance[k];var col=v==='high'?'#4ade80':v==='medium'?'#fbbf24':'#444';html+='<span style="font-size:10px;padding:2px 8px;border:1px solid '+col+';color:'+col+';border-radius:3px">'+k+': '+v+'</span>'});html+='</div>'}
       html+='<div style="margin-top:12px;font-size:10px;color:#555;font-style:italic">'+sanitize(e.honesty_note||'')+'</div>';
