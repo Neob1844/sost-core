@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine
 
-> **Release Candidate: v3.2.0-RC1 — Engine Stabilization (Phase IV.T)**
+> **ACCEPTED: v3.2.0-RC1 — Operationally Accepted (Phase IV.U)**
 
 ## What exists (implemented and tested)
 
@@ -264,6 +264,14 @@
 - **Production UNCHANGED**: ALIGNN-Lite 20K (MAE=0.3422)
 - **API**: `GET /gate-recall-rescue/status`, `/challengers`, `/thresholds`, `/benchmark`, `/decision`
 
+### Public Demo + Operational Acceptance (Phase IV.U)
+- **Status: OPERATIONALLY ACCEPTED** — 10/10 checks passed
+- Demo surface: 16 safe endpoints for public demo, 9 restricted research paths
+- 5 golden workflows: search, predict, discover, campaign, frontier
+- Release notes: v3.2.0-RC1 with full capabilities documentation
+- **API**: `GET /release/demo-surface`, `/golden-workflows`, `/acceptance-checklist`, `/release-notes`
+- **This marks the official closure of the Materials Engine as a standalone project**
+
 ### Engine Stabilization + Release Candidate (Phase IV.T)
 - **Release**: v3.2.0-RC1 — engine stabilization, no new experiments
 - **Production freeze**: FE (CGCNN, MAE=0.1528) + BG (ALIGNN-Lite, MAE=0.3422) — locked
@@ -294,7 +302,7 @@
 cd materials-engine
 pip install -r requirements.txt
 
-# Run all tests (909 tests)
+# Run all tests (922 tests)
 pytest tests/ -v
 
 # Start API (http://localhost:8000/docs)
@@ -403,3 +411,4 @@ curl http://localhost:8000/generation/presets
 | test_three_tier.py | 18 | Three-tier pipeline, narrow-gap specialist, scorecard, API |
 | test_gate_recall_rescue.py | 9 | Gate recall, oversampling, threshold selection, API |
 | test_release.py | 12 | Release manifest, production freeze, API audit, endpoints |
+| test_demo.py | 13 | Demo surface, golden workflows, acceptance, release notes |
