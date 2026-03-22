@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST — Sovereign Stock Token | Proof-of-Work Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-med) var(--bg-deep);
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    border-bottom: 1px solid var(--border-dim);
+    backdrop-filter: blur(16px);
+    padding: 12px 0;
+  }
+  nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo .brand-sost {
+    color: var(--red-primary);
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+  .nav-links a.active {
+    color: var(--red-primary);
+    background: var(--red-subtle);
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border-dim);
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 11px;
+    color: var(--red-primary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-label::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .cx-red {
+    color: #fb010d;
+  }
+  .cx-white {
+    color: #ffffff;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .protocol-badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    background: var(--bg-card);
+    font-size: 11px;
+  }
+  .protocol-badge .tag {
+    color: var(--green-primary);
+    font-weight: 600;
+  }
+  .protocol-badge .sep {
+    color: var(--text-muted);
+  }
+  .protocol-badge .val {
+    color: var(--text-secondary);
+  }
+
+  /* ---- BUTTONS ---- */
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--red-dim);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(251,1,13,0.12), rgba(251,1,13,0.04));
+    color: var(--red-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .dl-btn:hover {
+    background: linear-gradient(135deg, rgba(251,1,13,0.22), rgba(251,1,13,0.10));
+    border-color: var(--red-primary);
+    box-shadow: 0 0 16px rgba(251,1,13,0.15);
+    transform: translateY(-1px);
+  }
+  .dl-btn.secondary {
+    border-color: var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .dl-btn.secondary:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+  .hero-actions {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .section-title .accent {
+    color: var(--red-primary);
+  }
+
+  /* ---- STAT GRID ---- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .stat-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .stat-card.card-active {
+    border-color: var(--border-bright);
+    transform: translateY(0);
+  }
+  .stat-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+    background: #0d0d0d;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0 16px;
+    margin-top: 0;
+    opacity: 0;
+  }
+  .stat-panel.panel-open {
+    max-height: 420px;
+    border-color: var(--border-dim);
+    padding: 16px;
+    margin-top: 12px;
+    opacity: 1;
+  }
+  .stat-panel .panel-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .stat-panel .panel-link {
+    display: inline-block;
+    color: var(--cyan-primary);
+    text-decoration: none;
+    font-size: 11px;
+    margin-top: 10px;
+    transition: color 0.2s;
+  }
+  .stat-panel .panel-link:hover { color: var(--red-primary); }
+  .stat-panel canvas { max-height: 150px; }
+  .stat-panel table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+  .stat-panel th { text-align: left; padding: 6px 10px; color: var(--text-muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); font-weight: 400; }
+  .stat-panel td { padding: 6px 10px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .stat-panel tr:last-child td { border-bottom: none; }
+  .stat-panel .spec-line { font-size: 11px; color: var(--text-secondary); line-height: 2; }
+  .stat-panel .spec-line b { color: var(--text-primary); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+  }
+  .stat-value .unit {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ---- PILLAR CARDS ---- */
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .pillar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 28px 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pillar-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--red-primary));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pillar-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .pillar-card:hover::before { opacity: 1; }
+  .pillar-number {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .pillar-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .pillar-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .pillar-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 11px;
+    color: var(--red-primary);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .pillar-link:hover {
+    color: var(--red-bright);
+  }
+
+  /* ---- SPEC BLOCK ---- */
+  .spec-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+  .spec-block:hover {
+    border-color: var(--border-med);
+  }
+  .spec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+  .spec-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .spec-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .spec-tag.consensus { color: var(--green-primary); border-color: var(--green-dim); }
+  .spec-tag.immutable { color: var(--red-primary); border-color: var(--red-glow); }
+  .spec-body {
+    padding: 20px;
+  }
+  .spec-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  /* ---- CODE TABLE ---- */
+  .code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .code-table tr {
+    border-bottom: 1px solid var(--border-dim);
+    transition: background 0.15s;
+  }
+  .code-table tr:last-child { border-bottom: none; }
+  .code-table tr:hover { background: var(--bg-hover); }
+  .code-table td {
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .code-table .key {
+    color: var(--red-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    width: 240px;
+    min-width: 180px;
+  }
+  .code-table .val {
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .code-table .val code {
+    color: var(--green-primary);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer a {
+    color: var(--red-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--red-primary); }
+
+  /* ---- ANIMATIONS ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .code-table .key { width: auto; min-width: 140px; }
+    .nav-links { display: none; }
+    .hero-actions { flex-direction: column; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:72px;filter:drop-shadow(0 0 6px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">SOST Protocol</div>
+    <h1 class="fade-in delay-1">
+      <span class="cx-white">Sovereign Stock Token</span><br>
+      <span class="cx-red">Convergence</span><span class="cx-white">X</span> <span class="cx-red">Proof-of-Work</span><br>
+      <span class="cx-white">Protocol</span>
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      CPU-friendly blockchain with constitutional gold reserves.
+      Every block mined allocates 25% to purchase tokenized precious metals
+      and 25% to Proof of Personal Custody rewards &mdash;
+      hardcoded at genesis, immutable forever.
+    </p>
+    <p class="fade-in delay-3" style="font-size:11px;color:#777;letter-spacing:2px;font-family:monospace;margin-top:16px;">SOST &middot; Sovereign Stock Token &middot; ConvergenceX PoW &middot; Constitutional Gold Reserves</p>
+    <div class="protocol-badge fade-in delay-3">
+      <span class="tag">MAINNET</span>
+      <span class="sep">|</span>
+      <span class="val">No ICO &middot; No Premine &middot; No VCs &middot; No Governance</span>
+    </div>
+
+    <!-- COUNTDOWN TIMERS -->
+    <div class="countdown-section fade-in delay-3" style="margin:32px 0 8px;text-align:center;">
+      <div id="countdown-genesis" style="margin-bottom:24px;">
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Genesis Block</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 13, 2026 &mdash; 00:00:00 UTC</div>
+        <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+      </div>
+      <div style="margin:20px auto;max-width:640px;padding:10px 20px;border:1px solid rgba(251,146,60,0.3);border-radius:6px;background:rgba(251,146,60,0.05);text-align:center;">
+        <span style="font-size:11px;letter-spacing:1px;color:#fb923c;font-family:var(--font-mono);line-height:1.6;">&#9888; INFRASTRUCTURE TEST PHASE &mdash; Real-environment protocol stress testing in progress. Solo founder mining. Public launch: May 13, 2026.</span>
+      </div>
+      <div id="countdown-launch">
+        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Official Public Launch</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">May 13, 2026 &mdash; 00:00:00 UTC</div>
+        <div id="launch-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
+      </div>
+    </div>
+
+    <div class="hero-actions fade-in delay-4">
+      <a href="sost-explorer.html" class="dl-btn">Open Explorer</a>
+      <a href="sost-quickstart.html" class="dl-btn secondary">Quick Start</a>
+      <a href="sost-getting-started.html" class="dl-btn secondary">Start Mining</a>
+      <a href="sost-whitepaper.html" class="dl-btn secondary">Read Whitepaper</a>
+    </div>
+  </div>
+</section>
+
+<!-- KEY STATS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 00 &mdash; NETWORK PARAMETERS</div>
+      <h2 class="section-title">Key <span class="accent">Statistics</span></h2>
+    </div>
+
+    <div class="stat-grid fade-in delay-1">
+      <div class="stat-card" onclick="togglePanel('panel-supply',this)">
+        <div class="stat-label">Max Supply</div>
+        <div class="stat-value">~4,669,201<span class="unit">SOST</span></div>
+        <div class="stat-sub">Feigenbaum &delta; &times; 10&sup6;</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-blocktime',this)">
+        <div class="stat-label">Block Time</div>
+        <div class="stat-value">10<span class="unit">min</span></div>
+        <div class="stat-sub">ASERT + cASERT targeting</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-reward',this)">
+        <div class="stat-label">Initial Reward</div>
+        <div class="stat-value">7.8510<span class="unit">SOST</span></div>
+        <div class="stat-sub">Smooth exponential decay</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-split',this)">
+        <div class="stat-label">Coinbase Split</div>
+        <div class="stat-value">50/25/25</div>
+        <div class="stat-sub">Miner / Gold / PoPC</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-algo',this)">
+        <div class="stat-label">Algorithm</div>
+        <div class="stat-value" style="font-size:20px;">ConvergenceX</div>
+        <div class="stat-sub">CPU-mined, 4GB RAM, ASIC-resistant</div>
+      </div>
+      <div class="stat-card" onclick="togglePanel('panel-genesis',this)">
+        <div class="stat-label">Genesis</div>
+        <div class="stat-value" style="font-size:18px;">2026-03-13</div>
+        <div class="stat-sub">00:00:00 UTC</div>
+      </div>
+      <div class="stat-card" id="goldPriceCard" onclick="togglePanel('panel-gold',this)">
+        <div class="stat-label">Gold Spot (XAUT/PAXG avg)</div>
+        <div class="stat-value" style="font-size:20px;color:#b8860b;" id="goldPriceVal">...</div>
+        <div class="stat-sub" id="goldPriceSub">loading</div>
+      </div>
+      <div class="stat-card" id="sostPriceCard" onclick="togglePanel('panel-sost',this)" style="position:relative;">
+        <div class="stat-label">SOST Price</div>
+        <div class="stat-value" style="font-size:20px;color:var(--red-primary);" id="sostPriceVal">...</div>
+        <div class="stat-sub" id="sostPriceSub">loading</div>
+        <div id="sostCurrBtn" title="Click to change currency" style="position:absolute;bottom:10px;right:12px;width:28px;height:28px;border-radius:4px;border:1px solid #2a2a2a;background:#0a0a0a;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;">$</div>
+      </div>
+    </div>
+
+    <!-- Expandable Panels -->
+    <div class="stat-panel" id="panel-supply">
+      <div class="panel-title">Emission Curve &mdash; Smooth Exponential Decay</div>
+      <canvas id="chartSupply"></canvas>
+    </div>
+    <div class="stat-panel" id="panel-blocktime">
+      <div class="panel-title">Live Block Data</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Target block spacing is <b style="color:var(--text-primary)">600 seconds (10 minutes)</b>, maintained by the dual ASERT + cASERT difficulty adjustment system. ASERT handles long-term hashrate changes; cASERT prevents short-term emission acceleration.</p>
+      <a class="panel-link" href="sost-explorer.html">View live block data on Explorer &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-reward">
+      <div class="panel-title">Reward Decay Schedule</div>
+      <table>
+        <tr><th>Epoch</th><th>Years</th><th>Reward / Block</th><th>Decay</th></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">0</td><td>0 &ndash; 2.5</td><td style="color:var(--text-primary);font-weight:500">7.85100863 SOST</td><td style="color:var(--text-muted)">&mdash;</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">1</td><td>2.5 &ndash; 5</td><td style="color:var(--text-primary);font-weight:500">~6.1145 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">2</td><td>5 &ndash; 7.5</td><td style="color:var(--text-primary);font-weight:500">~4.7613 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">3</td><td>7.5 &ndash; 10</td><td style="color:var(--text-primary);font-weight:500">~3.7084 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">4</td><td>10 &ndash; 12.5</td><td style="color:var(--text-primary);font-weight:500">~2.8882 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+        <tr><td style="color:var(--red-primary);font-weight:600">5</td><td>12.5 &ndash; 15</td><td style="color:var(--text-primary);font-weight:500">~2.2492 SOST</td><td style="color:var(--text-dim)">&times; 0.7788</td></tr>
+      </table>
+      <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">q = e<sup>-1/4</sup> &asymp; 0.7788 &middot; Epoch = 131,553 blocks (&asymp;2.5 years)</p>
+    </div>
+    <div class="stat-panel" id="panel-split">
+      <div class="panel-title">Constitutional Split &mdash; Every Block</div>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <canvas id="chartSplit" style="max-width:180px;max-height:180px;"></canvas>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fb010d;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> Miner</div>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#b8860b;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> Gold Funding Vault</div>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22d3ee;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> PoPC Pool</div>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;">Hardcoded at genesis. Immutable.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-panel" id="panel-algo">
+      <div class="panel-title">ConvergenceX v2.0 &mdash; Proof of Irreversible Convergence</div>
+      <div class="spec-line"><b>4GB</b> memory scratchpad &middot; <b>100,000</b> gradient rounds &middot; <b>32&times;32</b> matrix per block</div>
+      <div class="spec-line"><b>256-op</b> per-block program &middot; <b>8</b> ALU operation types &middot; <b>ASIC-resistant</b> by design</div>
+      <div class="spec-line" style="margin-top:6px;"><b>4</b> stability perturbation tests &middot; Contraction factor c = 7/10 &middot; CPU L3 cache optimized</div>
+      <a class="panel-link" href="sost-technology.html">Full technical details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-genesis">
+      <div class="panel-title">Genesis Block</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 13, 2026 at 00:00:00 UTC</b>. First reward: 7.85100863 SOST split constitutionally between miner, Gold Funding Vault, and PoPC Pool.</p>
+      <a class="panel-link" href="sost-genesis.html">View genesis block details &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-gold">
+      <div class="panel-title">Gold Price &mdash; Last 24 Hours</div>
+      <canvas id="chartGold"></canvas>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle;"></span>XAUT</span>
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#4ade80;margin-right:4px;vertical-align:middle;"></span>PAXG</span>
+        <span id="goldChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
+      </div>
+      <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
+    </div>
+    <div class="stat-panel" id="panel-sost">
+      <div class="panel-title">SOST Market Data</div>
+      <div id="sostPanelContent">
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:8px;">SOST is not yet trading. Price chart will activate automatically when market data is available.</p>
+        <p style="font-size:12px;color:var(--text-dim);">Mining cost estimate: <b style="color:var(--text-primary)">~$0.01 USD</b></p>
+      </div>
+      <canvas id="chartSost" style="display:none;"></canvas>
+      <a class="panel-link" href="sost-markets.html">View markets &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS SOST -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01 &mdash; OVERVIEW</div>
+      <h2 class="section-title">What is <span class="accent">SOST</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Protocol Summary</span>
+        </div>
+        <span class="spec-tag immutable">IMMUTABLE BY DESIGN</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          SOST is a Proof-of-Work cryptocurrency where each mined block allocates 25% of issuance
+          to an on-chain Gold Funding Vault by consensus. Conversions to XAUT/PAXG are operational
+          actions executed with public attestations and auditable trails. The reserve is observable
+          on Ethereum mainnet &mdash; not a peg, not a guarantee, but a verifiable commitment.
+        </p>
+        <table class="code-table">
+          <tr><td class="key">Consensus</td><td class="val">ConvergenceX PoW &mdash; memory-hard, CPU-friendly, ASIC-resistant</td></tr>
+          <tr><td class="key">Monetary Policy</td><td class="val">Smooth exponential decay (q=e<sup>-&frac14;</sup>), Feigenbaum-derived constants, ~30 years to 95% supply</td></tr>
+          <tr><td class="key">Reserve</td><td class="val">25% of every block &rarr; tokenized gold (XAUT, PAXG) on Ethereum</td></tr>
+          <tr><td class="key">PoPC</td><td class="val">25% of every block &rarr; Proof of Personal Custody rewards (Phase 2+)</td></tr>
+          <tr><td class="key">Governance</td><td class="val">None. Consensus rules are immutable at genesis.</td></tr>
+          <tr><td class="key">Unit</td><td class="val"><code>1 SOST = 100,000,000 stocks</code></td></tr>
+          <tr><td class="key">Address Format</td><td class="val"><code>sost1</code> + 40 hex chars (20-byte pubkey hash)</td></tr>
+          <tr><td class="key">Signature</td><td class="val">ECDSA secp256k1 with LOW-S enforcement</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THREE PILLARS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02 &mdash; THREE PILLARS</div>
+      <h2 class="section-title">Protocol <span class="accent">Architecture</span></h2>
+    </div>
+
+    <div class="pillars-grid fade-in delay-1">
+      <div class="pillar-card" style="--card-accent: var(--red-primary);">
+        <div class="pillar-number">PILLAR 01</div>
+        <div class="pillar-name">ConvergenceX PoW</div>
+        <p class="pillar-desc">
+          Memory-hard proof-of-work requiring 4GB RAM scratchpad per thread.
+          100,000 sequential iterations prevent GPU/ASIC parallelization.
+          ASERT difficulty targeting with cASERT overlay (L1&ndash;L5 fixed, L6+ unbounded) for
+          progressive hardening under fast-chain conditions.
+        </p>
+        <a href="sost-technology.html" class="pillar-link">Explore Technology &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--green-primary);">
+        <div class="pillar-number">PILLAR 02</div>
+        <div class="pillar-name">Metals Reserve</div>
+        <p class="pillar-desc">
+          25% of every block&rsquo;s coinbase is allocated to the Gold Funding Vault address by consensus.
+          Accumulated SOST is converted to XAUT/PAXG via TWAP pipeline and deposited into
+          a Heritage Reserve on Ethereum mainnet. Observable reserve ratio &mdash;
+          not a peg.
+        </p>
+        <a href="sost-gold-reserve.html" class="pillar-link">Explore Gold Reserve &rarr;</a>
+      </div>
+
+      <div class="pillar-card" style="--card-accent: var(--cyan-primary);">
+        <div class="pillar-number">PILLAR 03</div>
+        <div class="pillar-name">Proof of Personal Custody (PoPC)</div>
+        <p class="pillar-desc">
+          25% of every block&rsquo;s coinbase is allocated to the PoPC Pool address.
+          Rewards distributed to holders who prove continued custody of their SOST
+          through cryptographic attestation. Model A (self-custody bonds) and
+          Model B (escrow timelock) available.
+        </p>
+        <a href="sost-popc.html" class="pillar-link">Explore PoPC &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK LINKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 03 &mdash; GET STARTED</div>
+      <h2 class="section-title">Quick <span class="accent">Links</span></h2>
+    </div>
+
+    <div class="pillars-grid fade-in delay-1">
+      <div class="pillar-card">
+        <div class="pillar-number">MINE</div>
+        <div class="pillar-name">Start Mining SOST</div>
+        <p class="pillar-desc">
+          Build from source, create a wallet, connect to the seed node,
+          and mine your first block. CPU only &mdash; no GPU required.
+        </p>
+        <a href="sost-getting-started.html" class="pillar-link">Mining Guide &rarr;</a>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">EXPLORE</div>
+        <div class="pillar-name">Block Explorer</div>
+        <p class="pillar-desc">
+          Real-time dashboard with block details, difficulty tracking,
+          emission curve, Gold Funding Vault and PoPC Pool charts, address lookup.
+        </p>
+        <a href="sost-explorer.html" class="pillar-link">Open Explorer &rarr;</a>
+      </div>
+
+      <div class="pillar-card">
+        <div class="pillar-number">READ</div>
+        <div class="pillar-name">Technical Whitepaper</div>
+        <p class="pillar-desc">
+          Full protocol specification: ConvergenceX algorithm,
+          monetary policy, reserve mechanics, PoPC design,
+          security analysis, and consensus rules.
+        </p>
+        <a href="sost-whitepaper.html" class="pillar-link">Read Whitepaper &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SITE INDEX -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 04 &mdash; DIRECTORY</div>
+      <h2 class="section-title">Explore the <span class="accent">Protocol</span></h2>
+    </div>
+    <div class="fade-in delay-1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+      <!-- PROTOCOL -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--red-primary);margin-bottom:12px;font-weight:600;">PROTOCOL</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-technology.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Technology</a>
+          <a href="sost-tokenomics.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Tokenomics</a>
+          <a href="sost-whitepaper.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Whitepaper</a>
+          <a href="sost-roadmap.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Roadmap</a>
+          <a href="sost-faq.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">FAQ</a>
+        </div>
+      </div>
+      <!-- GOLD RESERVE -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--green-primary);margin-bottom:12px;font-weight:600;">GOLD RESERVE</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-gold-reserve.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Gold Reserve</a>
+          <a href="sost-metals-reserve.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Metals Reserve</a>
+          <a href="sost-foundation-balances.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--green-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Foundation Balances</a>
+        </div>
+      </div>
+      <!-- PROOF OF CUSTODY -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--cyan-primary);margin-bottom:12px;font-weight:600;">PROOF OF CUSTODY</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-popc.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--cyan-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">PoPC Overview</a>
+          <a href="sost-foundation.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--cyan-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Foundation Commitments</a>
+        </div>
+      </div>
+      <!-- TOOLS -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">TOOLS</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-explorer.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Explorer</a>
+          <a href="sost-wallet.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Wallet</a>
+          <a href="sost-getting-started.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Getting Started</a>
+          <a href="sost-quickstart.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Quick Start</a>
+        </div>
+      </div>
+      <!-- COMMUNITY -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;font-weight:600;">COMMUNITY</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <a href="sost-community.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Community</a>
+          <a href="sost-infrastructure.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Infrastructure</a>
+          <a href="sost-security.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Security</a>
+          <a href="sost-contact.html" style="color:var(--text-secondary);text-decoration:none;font-size:12px;padding:6px 10px;border-left:2px solid var(--border-dim);transition:all .2s;" onmouseover="this.style.borderColor='var(--red-primary)';this.style.color='var(--text-primary)';this.style.background='var(--bg-card)'" onmouseout="this.style.borderColor='var(--border-dim)';this.style.color='var(--text-secondary)';this.style.background='none'">Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN (live)</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-13 00:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Source code: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a> &mdash; See LICENSE</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var valEl=document.getElementById('goldPriceVal');
+  var subEl=document.getElementById('goldPriceSub');
+  function fmt(n){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fetchGold(){
+    fetch(COINGECKO_URL).then(function(r){return r.json();}).then(function(d){
+      var xaut=(d['tether-gold']&&d['tether-gold'].usd)||0;
+      var paxg=(d['pax-gold']&&d['pax-gold'].usd)||0;
+      var avg=(xaut&&paxg)?((xaut+paxg)/2):0;
+      valEl.textContent=avg>0?fmt(avg):'N/A';
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      subEl.innerHTML='XAUT '+fmt(xaut)+' | PAXG '+fmt(paxg)+' <span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span> '+ts;
+    }).catch(function(){
+      valEl.textContent='N/A';
+      subEl.textContent='Price unavailable';
+    });
+  }
+  fetchGold();
+  setInterval(fetchGold,60000);
+})();
+</script>
+<script>
+(function(){
+  var SOST_IDS=['sost-protocol','sost'];
+  var CURRENCIES=['usd','eur','gbp','chf','jpy','cny','rub','aed'];
+  var SYMBOLS={usd:'$',eur:'\u20AC',gbp:'\u00A3',chf:'Fr',jpy:'\u00A5',cny:'\u00A5',rub:'\u20BD',aed:'\u062F.\u0625'};
+  var LABELS={usd:'USD',eur:'EUR',gbp:'GBP',chf:'CHF',jpy:'JPY',cny:'CNY',rub:'RUB',aed:'AED'};
+  var curIdx=0;
+  var sostPrices=null; // null=not fetched, false=not listed, object=prices
+
+  var valEl=document.getElementById('sostPriceVal');
+  var subEl=document.getElementById('sostPriceSub');
+  var btnEl=document.getElementById('sostCurrBtn');
+
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
+
+  function fmtPrice(n,cur){
+    var sym=SYMBOLS[cur]||'$';
+    if(cur==='jpy'||cur==='cny'||cur==='rub') return sym+Math.round(n).toLocaleString();
+    return sym+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});
+  }
+
+  function renderSost(){
+    var cur=CURRENCIES[curIdx];
+    btnEl.textContent=SYMBOLS[cur];
+    if(sostPrices===null){
+      valEl.textContent='...';
+      subEl.textContent='loading';
+      return;
+    }
+    if(sostPrices===false){
+      valEl.textContent='Not Listed';
+      valEl.style.color='#475569';
+      valEl.style.fontSize='18px';
+      subEl.innerHTML='Awaiting market data<br><span style="color:#64748b;font-size:10px;">Mining cost estimate: ~$0.01</span>';
+      return;
+    }
+    var price=sostPrices[cur]||0;
+    if(price>0){
+      valEl.textContent=fmtPrice(price,cur);
+      valEl.style.color='var(--red-primary)';
+      valEl.style.fontSize='20px';
+      var now=new Date();
+      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      subEl.innerHTML=LABELS[cur]+liveBadge()+' '+ts;
+    } else {
+      valEl.textContent='N/A';
+      subEl.textContent=LABELS[cur]+' — rate unavailable';
+    }
+  }
+
+  function fetchSost(){
+    var vsStr=CURRENCIES.join(',');
+    var tries=SOST_IDS.slice();
+    function tryNext(){
+      if(tries.length===0){
+        sostPrices=false;
+        renderSost();
+        return;
+      }
+      var id=tries.shift();
+      var url='https://api.coingecko.com/api/v3/simple/price?ids='+id+'&vs_currencies='+vsStr;
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        var obj=d[id];
+        if(obj&&obj.usd&&obj.usd>0){
+          sostPrices=obj;
+          renderSost();
+        } else {
+          tryNext();
+        }
+      }).catch(function(){tryNext();});
+    }
+    tryNext();
+  }
+
+  btnEl.addEventListener('click',function(e){
+    e.stopPropagation();
+    curIdx=(curIdx+1)%CURRENCIES.length;
+    renderSost();
+  });
+  btnEl.addEventListener('mouseenter',function(){btnEl.style.borderColor='#fb010d';btnEl.style.color='#fb010d';});
+  btnEl.addEventListener('mouseleave',function(){btnEl.style.borderColor='#2a2a2a';btnEl.style.color='#94a3b8';});
+
+  fetchSost();
+  setInterval(fetchSost,60000);
+})();
+</script>
+<script>
+(function(){
+  var GENESIS = new Date('2026-03-13T00:00:00Z').getTime();
+  var LAUNCH  = new Date('2026-05-13T00:00:00Z').getTime();
+  var genesisEl = document.getElementById('genesis-timer');
+  var launchEl  = document.getElementById('launch-timer');
+
+  function fmtDown(diff){
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#fff">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#fff">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#fff">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#fff">'+String(s).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> SEC</span>';
+  }
+
+  function fmtUp(diff){
+    var d=Math.floor(diff/86400000);
+    var h=Math.floor((diff%86400000)/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    return '<span style="color:#4ade80">'+String(d).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> DAYS </span>'
+      +'<span style="color:#4ade80">'+String(h).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> HRS </span>'
+      +'<span style="color:#4ade80">'+String(m).padStart(2,'0')+'</span><span style="color:#555;font-size:0.5em"> MIN </span>'
+      +'<span style="color:#4ade80">'+String(s).padStart(2,'0')+'</span><span style="color:#4ade80;font-size:0.5em"> SEC ago</span>';
+  }
+
+  function tick(){
+    var now=Date.now();
+    var gDiff=GENESIS-now, lDiff=LAUNCH-now;
+
+    if(gDiff>0){
+      genesisEl.innerHTML = fmtDown(gDiff);
+    } else {
+      genesisEl.innerHTML = fmtUp(-gDiff);
+    }
+
+    if(lDiff>0){
+      launchEl.innerHTML = fmtDown(lDiff);
+    } else {
+      launchEl.innerHTML = fmtUp(-lDiff);
+    }
+  }
+  tick();
+  setInterval(tick,1000);
+})();
+</script>
+<script>
+/* ── Card Panel Toggle ── */
+var _activePanel=null,_activeCard=null;
+var _chartInstances={};
+
+function togglePanel(id,cardEl){
+  if(id==='panel-sost'&&cardEl){
+    var btn=document.getElementById('sostCurrBtn');
+    if(btn&&event&&btn.contains(event.target))return;
+  }
+  var panel=document.getElementById(id);
+  if(!panel)return;
+
+  if(_activePanel&&_activePanel!==panel){
+    _activePanel.classList.remove('panel-open');
+    if(_activeCard)_activeCard.classList.remove('card-active');
+  }
+
+  var opening=!panel.classList.contains('panel-open');
+  if(opening){
+    panel.classList.add('panel-open');
+    cardEl.classList.add('card-active');
+    _activePanel=panel;_activeCard=cardEl;
+    initPanelChart(id);
+  } else {
+    panel.classList.remove('panel-open');
+    cardEl.classList.remove('card-active');
+    _activePanel=null;_activeCard=null;
+  }
+}
+
+function initPanelChart(id){
+  if(id==='panel-supply'&&!_chartInstances.supply){
+    var q=Math.exp(-0.25);
+    var R0=7.85100863,B=131553,labels=[],data=[],cum=0;
+    for(var e=0;e<=12;e++){
+      labels.push('E'+e);
+      var reward=R0*Math.pow(q,e);
+      cum+=reward*B;
+      data.push(Math.round(cum));
+    }
+    var ctx=document.getElementById('chartSupply').getContext('2d');
+    var grad=ctx.createLinearGradient(0,0,0,150);
+    grad.addColorStop(0,'rgba(251,1,13,0.3)');
+    grad.addColorStop(1,'rgba(251,1,13,0)');
+    _chartInstances.supply=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[{label:'Cumulative Supply',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#fb010d',borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y.toLocaleString()+' SOST';}}}},scales:{x:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{family:"'JetBrains Mono',monospace",size:10},callback:function(v){return (v/1e6).toFixed(1)+'M';}},grid:{color:'#1a1a1a'}}}}
+    });
+  }
+  if(id==='panel-split'&&!_chartInstances.split){
+    _chartInstances.split=new Chart(document.getElementById('chartSplit').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:['Miner 50%','Gold Vault 25%','PoPC Pool 25%'],datasets:[{data:[50,25,25],backgroundColor:['#fb010d','#b8860b','#22d3ee'],borderColor:['#0d0d0d','#0d0d0d','#0d0d0d'],borderWidth:2}]},
+      options:{responsive:true,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label;}}}}}
+    });
+  }
+  if(id==='panel-gold'&&!_chartInstances.gold){
+    fetchGoldChart();
+  }
+  if(id==='panel-sost'){
+    fetchSostChart();
+  }
+}
+
+/* ── Gold 24h Chart ── */
+var _goldChartTimer=null;
+function fetchGoldChart(){
+  var statusEl=document.getElementById('goldChartStatus');
+  if(statusEl)statusEl.textContent='loading...';
+  Promise.all([
+    fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();}),
+    fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();})
+  ]).then(function(res){
+    var xautPrices=res[0].prices||[];
+    var paxgPrices=res[1].prices||[];
+    var labels=[],xData=[],pData=[];
+    xautPrices.forEach(function(p){
+      var d=new Date(p[0]);
+      labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
+      xData.push(p[1]);
+    });
+    paxgPrices.forEach(function(p){pData.push(p[1]);});
+
+    var ctx=document.getElementById('chartGold').getContext('2d');
+    if(_chartInstances.gold){_chartInstances.gold.destroy();}
+    _chartInstances.gold=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[
+        {label:'XAUT',data:xData,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+        {label:'PAXG',data:pData,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toLocaleString();}},grid:{color:'#1a1a1a'}}}}
+    });
+    var now=new Date();
+    if(statusEl)statusEl.textContent=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+
+    if(_goldChartTimer)clearInterval(_goldChartTimer);
+    _goldChartTimer=setInterval(function(){
+      var panel=document.getElementById('panel-gold');
+      if(panel&&panel.classList.contains('panel-open'))fetchGoldChart();
+    },60000);
+  }).catch(function(){
+    if(statusEl)statusEl.textContent='chart unavailable';
+  });
+}
+
+/* ── SOST 24h Chart (activates when listed) ── */
+function fetchSostChart(){
+  var contentEl=document.getElementById('sostPanelContent');
+  var canvasEl=document.getElementById('chartSost');
+  fetch('https://api.coingecko.com/api/v3/coins/sost-protocol/market_chart?vs_currency=usd&days=1')
+    .then(function(r){if(!r.ok)throw new Error('not listed');return r.json();})
+    .then(function(d){
+      var prices=d.prices||[];
+      if(prices.length<2)throw new Error('no data');
+      contentEl.style.display='none';
+      canvasEl.style.display='';
+      var labels=[],data=[];
+      prices.forEach(function(p){
+        var dt=new Date(p[0]);
+        labels.push(dt.getUTCHours().toString().padStart(2,'0')+':'+dt.getUTCMinutes().toString().padStart(2,'0'));
+        data.push(p[1]);
+      });
+      var ctx=canvasEl.getContext('2d');
+      var grad=ctx.createLinearGradient(0,0,0,150);
+      grad.addColorStop(0,'rgba(251,1,13,0.25)');
+      grad.addColorStop(1,'rgba(251,1,13,0)');
+      if(_chartInstances.sost){_chartInstances.sost.destroy();}
+      _chartInstances.sost=new Chart(ctx,{
+        type:'line',
+        data:{labels:labels,datasets:[{label:'SOST/USD',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:1.5,pointRadius:0,tension:0.3}]},
+        options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v;}},grid:{color:'#1a1a1a'}}}}
+      });
+    }).catch(function(){
+      contentEl.style.display='';
+      canvasEl.style.display='none';
+    });
+}
+</script>
+<script src="sost-search.js"></script>
+</body>
+</html>

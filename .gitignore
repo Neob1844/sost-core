@@ -41,3 +41,4 @@ materials-engine/materials.db
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
