@@ -1658,6 +1658,34 @@ def release_api_audit():
     if not _os.path.exists(path): return {"audit": []}
     with open(path) as f: return {"audit": _json.load(f)}
 
+@app.get("/release/demo-surface")
+def release_demo_surface():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "public_demo_surface.json")
+    if not _os.path.exists(path): return {"demo": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/release/golden-workflows")
+def release_golden_workflows():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "golden_workflows.json")
+    if not _os.path.exists(path): return {"workflows": []}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/release/acceptance-checklist")
+def release_acceptance_checklist():
+    import os as _os, json as _json
+    path = _os.path.join("artifacts/release", "operational_acceptance.json")
+    if not _os.path.exists(path): return {"checklist": None}
+    with open(path) as f: return _json.load(f)
+
+@app.get("/release/release-notes")
+def release_release_notes():
+    import os as _os
+    path = _os.path.join("artifacts/release", "release_notes_v3_2_rc1.md")
+    if not _os.path.exists(path): return {"notes": "Not generated yet"}
+    with open(path) as f: return {"notes": f.read()}
+
 @app.get("/release/production-freeze")
 def release_production_freeze():
     import os as _os, json as _json

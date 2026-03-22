@@ -1,0 +1,123 @@
+{
+  "version": "3.2.0-RC1",
+  "demo_endpoints": [
+    {
+      "method": "GET",
+      "path": "/status",
+      "purpose": "Engine health and version",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/stats",
+      "purpose": "Corpus statistics",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/materials?limit=5",
+      "purpose": "Browse materials",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/materials/{id}",
+      "purpose": "Material detail",
+      "example": "materials/e3b0c44298fc1c14"
+    },
+    {
+      "method": "GET",
+      "path": "/search?formula=GaAs",
+      "purpose": "Search by formula",
+      "example": "search?formula=GaAs"
+    },
+    {
+      "method": "POST",
+      "path": "/predict",
+      "purpose": "Predict properties from CIF",
+      "example": {
+        "cif": "data_...",
+        "target": "band_gap"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/similar/{id}",
+      "purpose": "Find similar materials",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/novelty/material/{id}",
+      "purpose": "Novelty assessment",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/exotic/ranking/10",
+      "purpose": "Top exotic materials",
+      "example": null
+    },
+    {
+      "method": "POST",
+      "path": "/shortlist/build",
+      "purpose": "Build ranked shortlist",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/presets",
+      "purpose": "Campaign presets",
+      "example": null
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/run",
+      "purpose": "Run discovery campaign",
+      "example": {
+        "campaign_type": "exotic_hunt",
+        "top_k": 5
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/frontier/presets",
+      "purpose": "Frontier profiles",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/intelligence/material/{id}",
+      "purpose": "Material intelligence report",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/release/status",
+      "purpose": "Release info",
+      "example": null
+    },
+    {
+      "method": "GET",
+      "path": "/release/manifest",
+      "purpose": "Full manifest",
+      "example": null
+    }
+  ],
+  "do_not_demo": [
+    "/selective-retraining/*",
+    "/stratified-retraining/*",
+    "/hierarchical-band-gap/*",
+    "/hierarchical-band-gap-calibration/*",
+    "/hierarchical-band-gap-regressor/*",
+    "/hierarchical-band-gap-final/*",
+    "/three-tier-band-gap/*",
+    "/gate-recall-rescue/*",
+    "/retraining-prep/*"
+  ],
+  "notes": [
+    "Demo endpoints are read-only or produce ephemeral results",
+    "Research endpoints work but expose unfinished experiments",
+    "POST /predict requires valid CIF structure data"
+  ]
+}

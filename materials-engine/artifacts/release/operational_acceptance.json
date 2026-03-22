@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-22T11:49:48.420101+00:00",
+  "overall": "ACCEPTED",
+  "checks": [
+    {
+      "check": "Corpus accessible",
+      "status": "PASS",
+      "detail": "76,193 materials"
+    },
+    {
+      "check": "FE model checkpoint",
+      "status": "PASS",
+      "detail": "artifacts/training_ladder/rung_20k/cgcnn_formation_energy_best.pt"
+    },
+    {
+      "check": "BG model checkpoint",
+      "status": "PASS",
+      "detail": "artifacts/training_ladder_band_gap/rung_20k/alignn_band_gap_best.pt"
+    },
+    {
+      "check": "Model registry",
+      "status": "PASS",
+      "detail": "artifacts/training/model_registry.json"
+    },
+    {
+      "check": "Release artifact: materials_engine_release_manifest.json",
+      "status": "PASS",
+      "detail": "artifacts/release/materials_engine_release_manifest.json"
+    },
+    {
+      "check": "Release artifact: production_freeze.json",
+      "status": "PASS",
+      "detail": "artifacts/release/production_freeze.json"
+    },
+    {
+      "check": "Release artifact: api_audit.json",
+      "status": "PASS",
+      "detail": "artifacts/release/api_audit.json"
+    },
+    {
+      "check": "Artifact: benchmark/benchmark_band_gap_42.json",
+      "status": "PASS"
+    },
+    {
+      "check": "Artifact: calibration/calibration_band_gap.json",
+      "status": "PASS"
+    },
+    {
+      "check": "Artifact: calibration/calibration_formation_energy.json",
+      "status": "PASS"
+    }
+  ],
+  "pass_count": 10,
+  "total_checks": 10
+}

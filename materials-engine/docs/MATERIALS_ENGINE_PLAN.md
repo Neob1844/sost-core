@@ -1,6 +1,6 @@
 # SOST Materials Discovery Engine — Strategic Plan
 
-> **Document status: RELEASE CANDIDATE — v3.2.0-RC1 (Phase IV.T)**
+> **Document status: OPERATIONALLY ACCEPTED — v3.2.0-RC1 (Phase IV.U)**
 > Last updated: 2026-03-22
 
 ---
@@ -703,6 +703,14 @@ Predict property degradation over time under operating conditions — thermal cy
 - The gate binary threshold is fundamentally a tradeoff slider between metal/non-metal accuracy
 - Total BG effort: IV.L→IV.S = 9 phases, 22+ real models, 3 direct benchmarks
 - 5 API endpoints + 9 tests (897 total), version 3.2.0
+
+### Phase IV.U — Public Demo + Operational Acceptance ✅
+- Operational acceptance: **10/10 checks PASS — ACCEPTED**
+- Demo surface: 16 endpoints safe for public demo
+- 5 golden workflows documented (search, predict, discover, campaign, frontier)
+- Release notes: full capabilities, limitations, next steps
+- 4 API endpoints + 13 tests (922 total)
+- **This is the official closure of the Materials Engine standalone project**
 
 ### Phase IV.T — Engine Stabilization + Release Candidate ✅
 - Release manifest: v3.2.0-RC1, corpus 76,193, 2 production models, 145 API endpoints
