@@ -1360,31 +1360,9 @@ function fetchSostChart(){
 }
 </script>
 <script src="sost-search.js"></script>
-<!-- CRT transition + retro sounds -->
-<style>
-.crt-off{animation:crtOff .8s ease-in forwards}
-@keyframes crtOff{0%{transform:scaleY(1);filter:brightness(1)}60%{transform:scaleY(1);filter:brightness(1.3)}100%{transform:scaleY(.003);filter:brightness(2.5)}}
-.crt-zap{position:fixed;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.8);box-shadow:0 0 20px 4px rgba(255,255,255,.5);z-index:99998;opacity:0;pointer-events:none;transition:opacity .1s}
-.crt-zap.on{opacity:1}
-</style>
-<div class="crt-zap" id="crtZap"></div>
+<!-- CRT + retro sounds -->
+<link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
-<script>
-(function(){
-  var navLinks=document.querySelectorAll('nav a[href], .nav-links a[href]');
-  navLinks.forEach(function(a){
-    var href=a.getAttribute('href')||'';
-    if(href&&!href.startsWith('http')&&!href.startsWith('#')&&href.endsWith('.html')){
-      a.addEventListener('click',function(e){
-        e.preventDefault();
-        document.body.classList.add('crt-off');
-        setTimeout(function(){document.getElementById('crtZap').classList.add('on');},600);
-        if(typeof playRandomRetroSound==='function')playRandomRetroSound(0.8);
-        setTimeout(function(){window.location.href=href;},850);
-      });
-    }
-  });
-})();
-</script>
+<script src="js/crt-effects.js"></script>
 </body>
 </html>
