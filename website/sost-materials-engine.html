@@ -731,7 +731,17 @@ function doSearch(){
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px;color:#67e8f9">'+sanitize(m.formula)+'</td><td style="padding:4px">'+sanitize(String(m.spacegroup||'—'))+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+bg+'</td><td style="padding:4px;text-align:right;color:#4ade80">'+fe+'</td><td style="padding:4px;color:#666">'+sanitize(m.source||'—')+'</td><td style="padding:4px"><span style="color:#fb010d;cursor:pointer;font-size:11px" onclick="doExplain(\''+sanitize(m.canonical_id)+'\')">EXPLAIN ▸</span></td></tr>';
       });
       html+='</tbody></table>';
-      if(d.variant_note){html+='<div style="margin-top:8px;font-size:11px;color:#888;font-style:italic">'+sanitize(d.variant_note)+'</div>'}
+      if(d.has_multiple_variants&&d.grouped){
+        d.grouped.forEach(function(g){if(g.count>1){
+          html+='<div style="margin-top:10px;background:#080808;border:1px solid #222;padding:10px;font-size:11px">';
+          html+='<span style="color:#67e8f9;font-weight:700">'+sanitize(g.formula)+'</span> — ';
+          html+='<span style="color:#fbbf24">'+g.count+' crystal variants</span>';
+          if(g.representative_sg){html+=' · Representative: SG '+g.representative_sg}
+          if(g.best_fe!=null){html+=' · Best FE: <span style="color:#4ade80">'+g.best_fe.toFixed(3)+' eV/at</span>'}
+          html+='<div style="color:#666;margin-top:4px;font-style:italic">Same chemistry, different crystal arrangements (polymorphs)</div>';
+          html+='</div>';
+        }});
+      } else if(d.variant_note){html+='<div style="margin-top:8px;font-size:11px;color:#888;font-style:italic">'+sanitize(d.variant_note)+'</div>'}
       el.innerHTML=html;
     })
     .catch(function(){el.innerHTML='<span style="color:#fb010d">API unavailable — deploy Materials Engine on VPS first</span>'});
