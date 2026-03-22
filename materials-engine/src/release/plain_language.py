@@ -68,6 +68,9 @@ def explain_material(material, corpus_stats=None) -> dict:
     # Practical value
     pv = _assess_practical_value(electronic["label"], stability["label"], exotic_label, industry)
 
+    # Confidence
+    confidence = "high" if bg is not None and fe is not None and sg else ("medium" if bg is not None or fe is not None else "low")
+
     # Applications
     apps = _suggest_applications(electronic["label"], bg, fe, elems)
 
@@ -90,7 +93,7 @@ def explain_material(material, corpus_stats=None) -> dict:
     if not strengths:
         strengths.append("Standard material with known behavior")
     if not limitations:
-        limitations.append("No major limitations identified from available data")
+        limitations.append("Assessment based on limited computed properties — real-world performance may differ")
 
     return {
         "title": f"{f} — {_human_name(f, elems)}",
@@ -236,3 +239,36 @@ def _novelty_description(exotic, n_elem):
         return {"label": "moderately different", "reason": "Ternary compound — more complex than simple binaries but not rare"}
     else:
         return {"label": "very similar to many others", "reason": "Common element or binary compound, well-represented in databases"}
+
+
+def explain_known_entity(resolution: dict) -> dict:
+    """Generate explanation for a known entity NOT in the crystal corpus."""
+    formula = resolution.get("formula", "?")
+    etype = resolution.get("entity_type", "unknown")
+    note = resolution.get("note", "")
+    uses = resolution.get("uses", [])
+    related = resolution.get("related", [])
+    matched = resolution.get("matched_name", resolution.get("original_query", ""))
+
+    type_labels = {
+        "known_molecule_not_in_corpus": "Known Molecule (not in crystal corpus)",
+        "elemental_gas_or_noble_gas": "Noble / Elemental Gas",
+        "mixture_or_everyday_material": "Mixture or Everyday Material",
+    }
+
+    return {
+        "title": f"{formula or matched} — {type_labels.get(etype, 'Known Substance')}",
+        "formula": formula,
+        "entity_type": etype,
+        "corpus_presence_status": "not_in_corpus",
+        "what_it_is": note or f"{formula} is a known chemical entity not represented as a bulk crystal in this engine.",
+        "plain_language_summary": f"This substance ({formula or matched}) is real and well-known, but this materials engine focuses on solid-state crystalline materials. {formula or 'It'} does not appear in the corpus as a bulk crystal entry.",
+        "why_not_in_corpus": "This engine models solid-state inorganic crystals (76,193 entries from DFT databases). Molecular gases, noble gases, organic compounds, and mixtures are generally outside its scope.",
+        "real_world_uses": uses,
+        "related_materials_in_corpus": related,
+        "scientific_profile": "well-characterized" if formula else "composite/variable",
+        "practical_relevance": "high" if uses else "variable",
+        "confidence_in_explanation": "high — this is a well-known substance",
+        "honesty_note": "This entity is real but not modeled in this corpus. The uses listed are general knowledge, not engine predictions.",
+        "_meta": {"heuristic_assessment": True, "corpus_relative": False, "not_market_price": True},
+    }

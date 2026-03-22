@@ -155,17 +155,47 @@ def search(
 @app.get("/smart-search")
 def smart_search(q: str = Query("", description="Formula or common name"),
                  limit: int = Query(10, ge=1, le=50)):
-    """Search by formula OR common name (EN/ES)."""
+    """Search by formula OR common name (EN/ES/FR/DE/IT). Handles mixtures and known non-corpus entities."""
     from ..release.common_names import resolve_query
+    from ..release.plain_language import explain_known_entity
     if not q.strip():
         raise HTTPException(400, "Query 'q' required")
     resolution = resolve_query(q)
+
+    # Not resolved (mixture, everyday, unknown)
     if not resolution["resolved"]:
+        # If it's a known entity type, provide useful info
+        if resolution["entity_type"] in ("mixture_or_everyday_material",):
+            return {"query": q, "resolved": False, "resolution": resolution, "results": [],
+                    "entity_explanation": explain_known_entity(resolution)}
         return {"query": q, "resolved": False, "resolution": resolution, "results": []}
+
+    # Resolved but might be a known molecule not in corpus
     db = _get_db()
     materials = db.search_materials(formula=resolution["formula"], limit=limit)
+
+    if not materials and resolution["entity_type"] in ("known_molecule_not_in_corpus", "elemental_gas_or_noble_gas"):
+        return {"query": q, "resolved": True, "resolution": resolution, "results": [],
+                "entity_explanation": explain_known_entity(resolution)}
+
+    # Group variants by formula
+    grouped = {}
+    for m in materials:
+        f = m.formula
+        if f not in grouped:
+            grouped[f] = {"formula": f, "count": 0, "variants": [], "best_fe": None}
+        g = grouped[f]
+        g["count"] += 1
+        d = m.to_dict()
+        g["variants"].append(d)
+        if m.formation_energy is not None:
+            if g["best_fe"] is None or m.formation_energy < g["best_fe"]:
+                g["best_fe"] = m.formation_energy
+
     return {"query": q, "resolved": True, "resolution": resolution,
-            "results": [m.to_dict() for m in materials]}
+            "results": [m.to_dict() for m in materials],
+            "grouped": list(grouped.values()),
+            "variant_note": "Same formula, different crystal arrangements (polymorphs)" if any(g["count"] > 1 for g in grouped.values()) else None}
 
 
 @app.get("/explain/{material_id}")
@@ -180,15 +210,20 @@ def explain_material_ep(material_id: str):
 
 @app.get("/explain-formula/{formula}")
 def explain_formula(formula: str):
-    """Explain by formula (resolves common names)."""
-    from ..release.plain_language import explain_material
+    """Explain by formula or common name. Handles non-corpus entities."""
+    from ..release.plain_language import explain_material, explain_known_entity
     from ..release.common_names import resolve_query
     res = resolve_query(formula)
     if not res["resolved"]:
+        if res["entity_type"] != "unknown":
+            return explain_known_entity(res)
         return {"formula": formula, "resolved": False, "resolution": res}
     materials = _get_db().search_materials(formula=res["formula"], limit=1)
     if not materials:
-        return {"formula": res["formula"], "resolved": True, "found": False}
+        if res["entity_type"] in ("known_molecule_not_in_corpus", "elemental_gas_or_noble_gas"):
+            return explain_known_entity(res)
+        return {"formula": res["formula"], "resolved": True, "found": False,
+                "note": f"{res['formula']} resolved but not found in the crystal corpus"}
     return explain_material(materials[0])
 
 
