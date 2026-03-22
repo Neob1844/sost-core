@@ -167,8 +167,8 @@ function doneLoading(){
   var lbl=document.getElementById('lov-label');
   var ov=document.getElementById('lov-ex');
   num.textContent='✓';num.style.color='#00ff88';num.style.fontSize='42px';
-  lbl.textContent='READY';lbl.style.color='#00ff88';lbl.classList.add('ok');
-  setTimeout(function(){ov.classList.add('gone');},1000);
+  lbl.textContent='READY';lbl.style.color='#00ff88';lbl.style.animation='none';
+  setTimeout(function(){ov.classList.add('gone');ov.style.display='none';},1200);
 }
 
 /* ===== TAB SWITCH ===== */
@@ -258,6 +258,15 @@ if(window.matchMedia('(display-mode:standalone)').matches){
 
 /* ===== PWA ===== */
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+
+/* ===== BATTERY OPTIMIZATION ===== */
+// Stop CSS animations on splash after it's gone (saves GPU compositing)
+// Stop any lingering speech synthesis when app goes to background
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}
+  }
+});
 
 /* ===== EXPLORER LOGO → OPENS WEB EXTERNALLY ===== */
 document.getElementById('ef').addEventListener('load',function(){
