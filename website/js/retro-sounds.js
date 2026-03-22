@@ -162,3 +162,42 @@ function playChiptuneSplash(duration){
       o.start(s);o.stop(s+nt)});
     total+=m.n.length*nt}
 }
+
+/* ===== SYNTHWAVE SPLASH MUSIC — atmospheric retro terminal ===== */
+var SPLASH_THEMES=[
+  // Each: {melody:[freq,start,dur,type,vol], pad_freq}
+  {pad:65.41,mel:[[131,0,.4,'square',.09],[165,0.5,.4,'square',.09],[196,1,.4,'square',.09],[262,1.5,.8,'square',.11],[196,2.5,.4,'square',.09],[165,3,.4,'square',.09],[131,3.5,.4,'square',.09],[98,4,1,'sawtooth',.07],[131,5,.3,'square',.09],[156,5.4,.3,'square',.09],[196,5.8,.3,'square',.09],[262,6.2,.8,'triangle',.10]]},
+  {pad:55,mel:[[110,0,.5,'square',.08],[147,0.6,.4,'square',.09],[175,1.1,.4,'square',.09],[220,1.6,.7,'triangle',.10],[175,2.4,.3,'square',.08],[147,2.8,.4,'square',.09],[110,3.3,.5,'sawtooth',.07],[88,3.9,1,'sine',.06],[110,5,.3,'square',.08],[131,5.4,.3,'square',.09],[165,5.8,.4,'square',.09],[220,6.3,.7,'triangle',.10]]},
+  {pad:73.42,mel:[[147,0,.4,'square',.09],[175,0.5,.4,'square',.08],[220,1,.5,'triangle',.10],[294,1.6,.7,'square',.11],[220,2.4,.3,'square',.08],[175,2.8,.4,'square',.09],[147,3.3,.5,'square',.08],[110,3.9,1,'sawtooth',.06],[147,5,.3,'square',.09],[196,5.4,.4,'square',.09],[247,5.9,.3,'square',.08],[294,6.3,.7,'triangle',.10]]},
+  {pad:82.41,mel:[[165,0,.4,'square',.09],[196,0.5,.4,'square',.08],[247,1,.5,'square',.09],[330,1.6,.8,'triangle',.11],[247,2.5,.3,'square',.08],[196,2.9,.4,'square',.09],[165,3.4,.5,'sawtooth',.07],[131,4,1,'sine',.06],[165,5,.3,'square',.09],[208,5.4,.3,'square',.08],[262,5.8,.4,'square',.09],[330,6.3,.7,'triangle',.10]]},
+  {pad:49,mel:[[98,0,.5,'sawtooth',.07],[131,0.6,.4,'square',.09],[165,1.1,.5,'square',.09],[196,1.7,.7,'triangle',.10],[165,2.5,.3,'square',.08],[131,2.9,.4,'square',.09],[98,3.4,.6,'sawtooth',.07],[78,4,.9,'sine',.05],[98,5,.3,'square',.08],[123,5.4,.3,'square',.09],[147,5.8,.4,'square',.09],[196,6.3,.7,'triangle',.10]]},
+  {pad:61.74,mel:[[123,0,.4,'square',.08],[156,0.5,.4,'square',.09],[185,1,.5,'square',.09],[247,1.6,.8,'triangle',.11],[185,2.5,.3,'square',.08],[156,2.9,.4,'square',.09],[123,3.4,.4,'square',.08],[93,3.9,1.1,'sawtooth',.06],[123,5.1,.3,'square',.09],[147,5.5,.3,'square',.08],[185,5.9,.3,'square',.09],[247,6.3,.7,'triangle',.10]]},
+  {pad:87.31,mel:[[175,0,.3,'square',.09],[220,0.4,.4,'square',.09],[262,0.9,.5,'triangle',.10],[349,1.5,.8,'square',.11],[262,2.4,.3,'square',.08],[220,2.8,.4,'square',.09],[175,3.3,.5,'square',.08],[131,3.9,1,'sawtooth',.07],[175,5,.3,'square',.09],[220,5.4,.3,'square',.08],[294,5.8,.4,'square',.09],[349,6.3,.7,'triangle',.10]]},
+  {pad:58.27,mel:[[117,0,.5,'sawtooth',.07],[147,0.6,.4,'square',.09],[175,1.1,.4,'square',.08],[233,1.6,.7,'triangle',.10],[175,2.4,.4,'square',.09],[147,2.9,.3,'square',.08],[117,3.3,.5,'sawtooth',.07],[88,3.9,.9,'sine',.06],[117,5,.3,'square',.08],[147,5.4,.4,'square',.09],[185,5.9,.3,'square',.08],[233,6.3,.7,'triangle',.10]]},
+  {pad:69.3,mel:[[139,0,.4,'square',.09],[175,0.5,.4,'square',.08],[208,1,.5,'square',.09],[277,1.6,.8,'triangle',.11],[208,2.5,.3,'square',.08],[175,2.9,.4,'square',.09],[139,3.4,.4,'square',.08],[104,3.9,1,'sawtooth',.06],[139,5,.3,'square',.09],[175,5.4,.3,'square',.08],[220,5.8,.4,'square',.09],[277,6.3,.7,'triangle',.10]]},
+  {pad:51.91,mel:[[104,0,.5,'square',.08],[131,0.6,.4,'square',.09],[156,1.1,.5,'square',.09],[208,1.7,.7,'triangle',.10],[156,2.5,.3,'square',.08],[131,2.9,.4,'square',.09],[104,3.4,.6,'sawtooth',.07],[82,4,.9,'sine',.05],[104,5,.3,'square',.09],[131,5.4,.3,'square',.08],[165,5.8,.4,'square',.09],[208,6.3,.7,'triangle',.10]]}
+];
+
+function playRetroSplashMusic(dur){
+  dur=dur||7;var c=_ctx();if(!c)return;
+  var theme=SPLASH_THEMES[Math.floor(Math.random()*SPLASH_THEMES.length)];
+  var t=c.currentTime;
+  // Low drone pad
+  var pad=c.createOscillator(),pg=c.createGain();
+  pad.type='sine';pad.frequency.value=theme.pad;
+  pg.gain.setValueAtTime(0,t);pg.gain.linearRampToValueAtTime(0.05,t+1);
+  pg.gain.setValueAtTime(0.05,t+dur-2);pg.gain.linearRampToValueAtTime(0,t+dur);
+  pad.connect(pg);pg.connect(c.destination);pad.start(t);pad.stop(t+dur);
+  // Melody notes
+  theme.mel.forEach(function(n){
+    var freq=n[0],start=n[1],d=n[2],type=n[3],vol=n[4];
+    if(start>=dur)return;
+    var o=c.createOscillator(),g=c.createGain();
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t+start);
+    g.gain.linearRampToValueAtTime(vol,t+start+0.04);
+    g.gain.linearRampToValueAtTime(vol*0.6,t+start+d*0.7);
+    g.gain.linearRampToValueAtTime(0,t+start+d);
+    o.connect(g);g.connect(c.destination);o.start(t+start);o.stop(t+start+d+0.05);
+  });
+}
