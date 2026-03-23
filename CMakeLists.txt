@@ -5,6 +5,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Always include debug symbols for crash diagnostics (core dumps)
 add_compile_options(-g)
 
+# === Security hardening flags ===
+if(NOT MSVC)
+  add_compile_options(-fstack-protector-strong)   # Stack buffer overflow detection
+  add_compile_options(-fPIE)                       # Position-independent executables (ASLR)
+  add_compile_options(-Wformat -Wformat-security)  # Format string protection
+  add_link_options(-pie)                           # ASLR for linked executables
+  add_link_options(-Wl,-z,relro,-z,now)            # Read-only relocations (RELRO)
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-D_FORTIFY_SOURCE=2)       # Runtime buffer overflow detection
+  endif()
+endif()
+
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 
