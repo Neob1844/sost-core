@@ -33,9 +33,9 @@ KNOWN_BINARY_FAMILIES = {
 }
 
 # Accepted threshold (Phase II: much harder)
-ACCEPT_THRESHOLD = 0.42  # Phase II: harder than 0.35, softer than 0.50
-WATCHLIST_THRESHOLD = 0.30
-MIN_PLAUSIBILITY = 0.25
+ACCEPT_THRESHOLD = 0.45  # Phase IV.B: harder (was 0.42)
+WATCHLIST_THRESHOLD = 0.32
+MIN_PLAUSIBILITY = 0.30  # raised from 0.25
 
 
 def score_candidate(formula, elements, method, profile, memory=None, neighbors=None):
