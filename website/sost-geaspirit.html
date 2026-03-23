@@ -140,7 +140,61 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- PROTECTED CONTENT — hidden until authenticated -->
 <div id="protected-content" style="display:none">
 
-<!-- RESULTS -->
+<!-- MULTI-DOMAIN BENCHMARK -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// MULTI-DOMAIN BENCHMARK — 3 CONTINENTS VALIDATED</div>
+    <div class="section-title">Global <span>Results</span></div>
+    <div class="panel">
+      <div class="panel-head" style="color:var(--green)">MULTI-DOMAIN BENCHMARK — SPATIAL BLOCK CV</div>
+      <table class="tbl">
+        <thead><tr><th>Domain</th><th>Deposits</th><th>Bands</th><th>AUC</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green);font-weight:700"><td>Chuquicamata, Chile</td><td>43 Cu/Au/Ag</td><td>24</td><td style="color:var(--amber)">0.8622</td><td>STRONG</td></tr>
+          <tr><td>Kalgoorlie, Australia</td><td>205 Au/Cu/Ni</td><td>12</td><td>0.7690</td><td style="color:var(--green)">ACCEPTABLE</td></tr>
+          <tr><td>Zambia Copperbelt</td><td>28 Cu/Co</td><td>16</td><td>0.7626</td><td style="color:var(--green)">ACCEPTABLE</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-head">KALGOORLIE EVOLUTION — LABELS DRIVE EVERYTHING</div>
+      <table class="tbl">
+        <thead><tr><th>Version</th><th>Labels</th><th>Stack</th><th>AUC</th><th>Improvement</th></tr></thead>
+        <tbody>
+          <tr style="color:#666"><td>v1 (MRDS only)</td><td>16</td><td>14 bands, 50% valid</td><td>0.5752</td><td>baseline</td></tr>
+          <tr><td>v2 (+OZMIN)</td><td>205</td><td>12 bands, 50% valid</td><td>0.7219</td><td style="color:var(--green)">+0.1467 (labels)</td></tr>
+          <tr style="color:var(--green);font-weight:600"><td>v3 (full stack)</td><td>205</td><td>12 bands, 100% valid</td><td>0.7690</td><td>+0.0471 (stack)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-head">CROSS-DOMAIN TRANSFER — HONEST RESULTS</div>
+      <table class="tbl">
+        <thead><tr><th>Direction</th><th>AUC</th><th>Lesson</th></tr></thead>
+        <tbody>
+          <tr><td>Chuquicamata &#8594; Zambia</td><td style="color:#ff4444">0.4543</td><td>Porphyry Cu &#8800; sediment-hosted Cu</td></tr>
+          <tr><td>Zambia &#8594; Chuquicamata</td><td style="color:#ff4444">0.5437</td><td>Same commodity &#8800; same geological signal</td></tr>
+        </tbody>
+      </table>
+      <div style="color:#888;font-size:11px;margin-top:8px">Transfer requires same DEPOSIT TYPE, not just same metal.</div>
+    </div>
+    <div class="human-box">
+      <b>RESEARCH — PHASE 4E KEY FINDINGS</b><br><br>
+      <b style="color:var(--amber)">LABELS DOMINATE EVERYTHING</b><br>
+      Kalgoorlie: 16 labels &#8594; AUC 0.58. Same zone, 205 labels &#8594; AUC 0.77. Labels matter 3x more than adding new satellite bands.<br><br>
+      <b style="color:var(--amber)">OZMIN: THE BREAKTHROUGH</b><br>
+      Australian government WFS with 16,225 deposits, programmatic access, CC-BY 4.0. Solved the Australian label crisis overnight.<br><br>
+      <b style="color:var(--amber)">TRANSFER LEARNING DOES NOT WORK ACROSS DEPOSIT TYPES</b><br>
+      Porphyry copper (Chuquicamata) and sediment-hosted copper (Zambia) have fundamentally different surface expressions. AUC drops to random (~0.50) when transferring between them.<br><br>
+      <b style="color:var(--amber)">THREE DOMAINS VALIDATED</b><br>
+      Chile (strong), Australia (acceptable), Zambia (acceptable). The system works where labels are abundant.<br><br>
+      <b style="color:var(--amber)">GLOBAL AOI SCANNER WORKS</b><br>
+      Demonstrated on Tintic, Utah (never trained on): 50 mineral targets identified, 18.9 km&#178; high-probability area, zero training data needed (heuristic mode).
+    </div>
+  </div>
+</section>
+
+<!-- CHUQUICAMATA RESULTS -->
 <section class="section">
   <div class="container">
     <div class="section-id">// PILOT RESULTS — ABLATION STUDY</div>
@@ -454,16 +508,17 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <li class="on"><span class="icon">&#9632;</span> Landsat 8/9 thermal ....... Temperature anomalies</li>
       <li class="on"><span class="icon">&#9632;</span> Macrostrat geology ........ Lithology + rock age</li>
       <li class="on"><span class="icon">&#9632;</span> Google Earth Engine ....... Cloud processing</li>
-      <li class="on"><span class="icon">&#9632;</span> USGS MRDS (curated) ....... 43 Cu/Au/Ag deposits</li>
+      <li class="on"><span class="icon">&#9632;</span> OZMIN WFS (16,225 deposits) Australia labels solved</li>
+      <li class="on"><span class="icon">&#9632;</span> USGS MRDS (curated) ....... Multi-zone labels</li>
       <li class="on"><span class="icon">&#9632;</span> XGBoost ................... Gradient boosting classifier</li>
       <li class="on"><span class="icon">&#9632;</span> Spatial Block CV .......... Honest 10km block validation</li>
-      <li class="on"><span class="icon">&#9632;</span> Isotonic calibration ...... Probability calibration</li>
-      <li class="on"><span class="icon">&#9632;</span> Ablation study ............ Per-layer contribution analysis</li>
-      <li class="off"><span class="icon">&#9633;</span> GA aeromagnetics .......... PENDING (Phase 4 — Pilbara)</li>
-      <li class="off"><span class="icon">&#9633;</span> GA radiometrics ........... PENDING (Phase 4 — Pilbara)</li>
-      <li class="off"><span class="icon">&#9633;</span> EMIT hyperspectral ........ PENDING (Phase 5)</li>
-      <li class="off"><span class="icon">&#9633;</span> SERNAGEOMIN geology ....... PENDING (finer Chile maps)</li>
-      <li class="off"><span class="icon">&#9633;</span> Cross-zone LOZO ........... PENDING (Phase 5)</li>
+      <li class="on"><span class="icon">&#9632;</span> AOI Scanner (heuristic v3) . Scan any zone, no training</li>
+      <li class="on"><span class="icon">&#9632;</span> 3-domain validation ....... Chile + Australia + Zambia</li>
+      <li class="on"><span class="icon">&#9632;</span> Transfer learning tested ... Deposit-type dependent</li>
+      <li class="off"><span class="icon">&#9633;</span> USGS Africa Mineral GIS ... PENDING (Zambia enrichment)</li>
+      <li class="off"><span class="icon">&#9633;</span> GA aeromagnetics .......... PENDING (manual download)</li>
+      <li class="off"><span class="icon">&#9633;</span> EMIT hyperspectral ........ PENDING (after labels strong)</li>
+      <li class="off"><span class="icon">&#9633;</span> Deposit-type transfer ..... PENDING (Phase 6)</li>
     </ul>
   </div>
 </section>
@@ -473,14 +528,11 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   <div class="container">
     <div class="section-id">// ROADMAP</div>
     <div class="section-title">Development <span>Phases</span></div>
-    <div class="phase"><span class="phase-label">PHASE 0</span> Setup + GEE auth + environment <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
-    <div class="phase"><span class="phase-label">PHASE 1</span> Chuquicamata pilot — S2 only <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">AUC 0.73</span></div>
-    <div class="phase"><span class="phase-label">PHASE 2</span> Multi-source fusion — 19 bands <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
-    <div class="phase"><span class="phase-label">PHASE 3</span> Honest spatial CV <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:#888">AUC 0.68</span></div>
-    <div class="phase"><span class="phase-label">PHASE 3B</span> Label curation + geology <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">AUC 0.86</span></div>
-    <div class="phase"><span class="phase-label">PHASE 4</span> Pilbara pilot + GA open geophysics <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
-    <div class="phase"><span class="phase-label">PHASE 5</span> EMIT hyperspectral + cross-zone LOZO <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
-    <div class="phase"><span class="phase-label">PHASE 6</span> Subsurface probability inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
+    <div class="phase"><span class="phase-label">PHASE 0-2</span> Setup + single-source + multi-source <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
+    <div class="phase"><span class="phase-label">PHASE 3-3B</span> Honest spatial CV + label curation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">AUC 0.86</span></div>
+    <div class="phase"><span class="phase-label">PHASE 4A-4E</span> Kalgoorlie + OZMIN + Zambia + AOI scanner <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">3 domains</span></div>
+    <div class="phase"><span class="phase-label">PHASE 5</span> Enrich Zambia + GA geophysics + EMIT <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 6</span> Deposit-type-aware transfer + depth inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
   </div>
 </section>
 
@@ -569,20 +621,36 @@ function chuqPopup(){
 }
 chuq.bindPopup(chuqPopup);chuq.on('click',function(){chuq.setPopupContent(chuqPopup())});
 
-// Pilbara
-var pilb=L.marker([-22.0,118.0],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-function pilbPopup(){
-  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#b07800">PILOT 02: PILBARA, AUSTRALIA</b><hr style="border-color:#b07800"><b>Status:</b> <span style="color:#b07800">NEXT</span><br><b>Coords:</b> 22.0S, 118.0E';
-  if(geaspirit_unlocked){b+='<hr style="border-color:#b07800"><b>Geophysics:</b> magnetics, radiometrics, gravity<br>All <b>CC-BY 4.0</b> (Geoscience Australia)';}
+// Kalgoorlie — COMPLETE
+var kalg=L.marker([-31.4,121.7],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+function kalgPopup(){
+  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#006600">PILOT 02: KALGOORLIE, AUSTRALIA</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 31.4S, 121.7E<br><b>Terrain:</b> Semi-arid goldfields';
+  if(geaspirit_unlocked){b+='<hr style="border-color:#006600"><b>AUC:</b> 0.7690<br><b>Deposits:</b> 205 (OZMIN+MRDS)<br><b>Key:</b> Labels 16&#8594;205 = AUC +0.19';}
   return b+'</div>';
 }
-pilb.bindPopup(pilbPopup);pilb.on('click',function(){pilb.setPopupContent(pilbPopup())});
+kalg.bindPopup(kalgPopup);kalg.on('click',function(){kalg.setPopupContent(kalgPopup())});
 
-// Zambia
-var zamb=L.marker([-12.8,28.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
-zamb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 03: ZAMBIA COPPERBELT</b><hr><b>Status:</b> PLANNED<br><b>Coords:</b> 12.8S, 28.2E</div>');
+// Zambia — COMPLETE
+var zamb=L.marker([-12.5,28.25],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+function zambPopup(){
+  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#b07800">PILOT 03: ZAMBIA COPPERBELT</b><hr style="border-color:#b07800"><b>Status:</b> <span style="color:#b07800">COMPLETE</span><br><b>Coords:</b> 12.5S, 28.25E<br><b>Terrain:</b> Copperbelt shale';
+  if(geaspirit_unlocked){b+='<hr style="border-color:#b07800"><b>AUC:</b> 0.7626<br><b>Deposits:</b> 28 Cu/Co<br><b>Type:</b> Sediment-hosted Cu';}
+  return b+'</div>';
+}
+zamb.bindPopup(zambPopup);zamb.on('click',function(){zamb.setPopupContent(zambPopup())});
 
-map.fitBounds([[-22.3,-68.9],[-22.0,118.0],[-12.8,28.2]],{padding:[40,40]});
+// Pilbara — PENDING
+var pilb=L.marker([-23.1,119.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
+pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 04: PILBARA</b><hr><b>Status:</b> PENDING (label-limited)<br><b>Coords:</b> 23.1S, 119.2E</div>');
+
+// Tintic — AOI DEMO (blue)
+var blueStyle=document.createElement('style');
+blueStyle.textContent='@keyframes pulse-blue{0%{box-shadow:0 0 0 0 rgba(0,100,255,.7)}70%{box-shadow:0 0 0 10px rgba(0,100,255,0)}100%{box-shadow:0 0 0 0 rgba(0,100,255,0)}}';
+document.head.appendChild(blueStyle);
+var tintic=L.marker([39.9,-112.1],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
+tintic.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b style="color:#2266cc">AOI DEMO: TINTIC, UTAH</b><hr style="border-color:#2266cc"><b>Status:</b> <span style="color:#2266cc">SCANNED (heuristic)</span><br><b>Coords:</b> 39.9N, 112.1W<br><b>Mode:</b> No training data<br><b>Targets:</b> 50 identified</div>');
+
+map.fitBounds([[-31.4,-68.9],[39.9,121.7]],{padding:[40,40]});
 
 // === SESSION TIMER + AUTO-LOCK ===
 var countdownInterval=null;
