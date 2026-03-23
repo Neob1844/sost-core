@@ -890,7 +890,12 @@ async function updateDashboard(info){
       card.style.animation='avgPulse 3.5s ease-in-out infinite';
     }
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
-    _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;startCountdown();
+    _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;
+    // Store cASERT profile from RPC (Phase 5A fix)
+    if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
+    if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
+    if(info.casert_lag!==undefined)_rpcCasertLag=info.casert_lag;
+    startCountdown();
     // Update cASERT equalizer from block data
     updateEqualizer(info, times, diffs);
     }}catch(e){}
@@ -1244,6 +1249,7 @@ function setupDpTooltip(canvasId,dataArr,fmtFn){
   cv.addEventListener('mouseleave',function(){tip.style.display='none';});
 }
 var _lastBitsQ=0;
+var _rpcCasertProfile='';var _rpcCasertProfileIdx=null;var _rpcCasertLag=null;
 var _nextBitsQ=0;
 var _tipBlockHash='';
 
@@ -1444,15 +1450,24 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  var lag=computeCurrentLag();
-  var ahead=(lag<0)?-lag:0;
-  var rawProf=getProfile(-ahead);
-  var dc=computeDecayLevel(getCasertLevel(lag),ahead,elapsed);
-  var effProf=rawProf;
-  if(dc.active){var decH=Math.max(-3,rawProf.H-Math.floor((elapsed-dc.threshold)/1200));var dI=Math.max(0,Math.min(9,decH+3));effProf=CASERT_PROFILES[dI];}
+  // Use RPC-provided cASERT profile when available (Phase 5A fix)
+  var effProf;
+  if(_rpcCasertProfileIdx!==null){
+    // Direct from node — authoritative
+    var idx=Math.max(0,Math.min(16,_rpcCasertProfileIdx-(-4)));
+    effProf=CASERT_PROFILES[idx];
+  }else{
+    // Fallback to wall-clock estimate (less accurate)
+    var lag=computeCurrentLag();
+    var ahead=(lag<0)?-lag:0;
+    var rawProf=getProfile(-ahead);
+    var dc=computeDecayLevel(getCasertLevel(lag),ahead,elapsed);
+    effProf=rawProf;
+    if(dc.active){var decH=Math.max(-3,rawProf.H-Math.floor((elapsed-dc.threshold)/1200));var dI=Math.max(0,Math.min(9,decH+3));effProf=CASERT_PROFILES[dI];}
+  }
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
-  if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>';
+  if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+((_rpcCasertProfileIdx!==null)?'':' <span style="color:#555;font-size:8px">(est)</span>');
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
   // Stability rate estimate

@@ -832,17 +832,28 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     else if(ACTIVE_PROFILE == Profile::DEV) profile_str = "dev";
 
     std::ostringstream s;
-    // Compute next block difficulty
+    // Compute next block difficulty + cASERT profile
     uint32_t next_diff = GENESIS_BITSQ;
+    int32_t casert_profile_idx = 0;
+    int32_t casert_lag = 0;
     if (!g_blocks.empty()) {
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
+        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size());
+        casert_profile_idx = dec.profile_index;
+        casert_lag = dec.lag;
     }
+    // Profile name from index
+    static const char* PROF_NAMES[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
+    int prof_arr_idx = std::max(0, std::min(16, casert_profile_idx - CASERT_H_MIN));
     s<<"{\"version\":\"0.3.2\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
      <<",\"next_difficulty\":"<<next_diff
+     <<",\"casert_profile\":\""<<PROF_NAMES[prof_arr_idx]<<"\""
+     <<",\"casert_profile_index\":"<<casert_profile_idx
+     <<",\"casert_lag\":"<<casert_lag
      <<",\"profile\":\""<<profile_str<<"\""
      <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
      <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))
