@@ -57,85 +57,98 @@ def main():
     layers = {}
 
     # --- Sentinel-2 median composite ---
-    print("  [S2] Sentinel-2 composite...")
+    def safe_download(label, image, bbox, path, scale):
+        """Download with error handling — returns True on success."""
+        try:
+            if download_ee_image(image, bbox, path, scale):
+                return True
+        except Exception as e:
+            print(f"    ! {label} failed: {e}")
+        return False
+
+    # --- S2 median composite (use short dry window to avoid GEE overload) ---
+    print("  [S2] Sentinel-2 composite (3-month window)...")
     s2_bands = ["B2","B3","B4","B5","B6","B7","B8","B8A","B11","B12"]
     s2 = (ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-          .filterBounds(roi).filterDate(args.start, args.end)
-          .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", args.max_cloud))
+          .filterBounds(roi).filterDate("2024-06-01","2024-09-30")
+          .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 10))
           .select(s2_bands).median().clip(roi))
-    s2_path = os.path.join(tmp_dir, "s2.tif")
-    if download_ee_image(s2, bbox, s2_path, args.scale):
-        layers["s2"] = s2_path
 
-    # --- Mineral indices from S2 ---
+    # --- Mineral indices (computed server-side, smaller than raw S2) ---
     print("  [IDX] Mineral indices...")
-    b4 = s2.select("B4").toFloat()
-    b2 = s2.select("B2").toFloat()
-    b3 = s2.select("B3").toFloat()
-    b8 = s2.select("B8").toFloat()
-    b8a = s2.select("B8A").toFloat()
-    b11 = s2.select("B11").toFloat()
-    b12 = s2.select("B12").toFloat()
+    b4=s2.select("B4").toFloat();b2=s2.select("B2").toFloat();b3=s2.select("B3").toFloat()
+    b8=s2.select("B8").toFloat();b8a=s2.select("B8A").toFloat()
+    b11=s2.select("B11").toFloat();b12=s2.select("B12").toFloat()
     indices = (b4.divide(b2).rename("iron_oxide")
                .addBands(b11.divide(b12).rename("clay_hydroxyl"))
                .addBands(b11.divide(b8a).rename("ferrous_iron"))
                .addBands(b4.divide(b3).rename("laterite"))
                .addBands(b8.subtract(b4).divide(b8.add(b4)).rename("ndvi")))
     idx_path = os.path.join(tmp_dir, "indices.tif")
-    if download_ee_image(indices, bbox, idx_path, args.scale):
+    safe_download("indices", indices, bbox, idx_path, args.scale)
+    if os.path.exists(idx_path) and os.path.getsize(idx_path) > 1000:
         layers["indices"] = idx_path
 
     # --- Sentinel-1 SAR ---
     print("  [SAR] Sentinel-1...")
-    s1 = (ee.ImageCollection("COPERNICUS/S1_GRD")
-          .filterBounds(roi).filterDate(args.start, args.end)
-          .filter(ee.Filter.listContains("transmitterReceiverPolarisation","VV"))
-          .filter(ee.Filter.listContains("transmitterReceiverPolarisation","VH"))
-          .select(["VV","VH"]))
-    if s1.size().getInfo() > 0:
-        vv = s1.select("VV").median()
-        vh = s1.select("VH").median()
-        ratio = vv.divide(vh).rename("VV_VH_ratio")
-        texture = vv.reduceNeighborhood(reducer=ee.Reducer.variance(),
-                                         kernel=ee.Kernel.circle(3,"pixels")).rename("VV_var")
-        sar = vv.rename("VV").addBands(vh.rename("VH")).addBands(ratio).addBands(texture)
-        sar_path = os.path.join(tmp_dir, "sar.tif")
-        if download_ee_image(sar.clip(roi), bbox, sar_path, args.scale):
-            layers["sar"] = sar_path
+    try:
+        s1 = (ee.ImageCollection("COPERNICUS/S1_GRD")
+              .filterBounds(roi).filterDate("2024-01-01","2024-12-31")
+              .filter(ee.Filter.listContains("transmitterReceiverPolarisation","VV"))
+              .filter(ee.Filter.listContains("transmitterReceiverPolarisation","VH"))
+              .select(["VV","VH"]))
+        n_s1 = s1.size().getInfo()
+        if n_s1 > 0:
+            vv=s1.select("VV").median();vh=s1.select("VH").median()
+            ratio=vv.divide(vh).rename("VV_VH_ratio")
+            texture=vv.reduceNeighborhood(reducer=ee.Reducer.variance(),
+                                          kernel=ee.Kernel.circle(3,"pixels")).rename("VV_var")
+            sar=vv.rename("VV").addBands(vh.rename("VH")).addBands(ratio).addBands(texture)
+            sar_path=os.path.join(tmp_dir,"sar.tif")
+            if safe_download("SAR", sar.clip(roi), bbox, sar_path, args.scale):
+                layers["sar"] = sar_path
+        else:
+            print("    ! No S1 scenes found")
+    except Exception as e:
+        print(f"    ! SAR failed: {e}")
 
     # --- DEM ---
     print("  [DEM] Copernicus DEM...")
-    dem = ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM").mosaic()
-    slope = ee.Terrain.slope(dem).rename("slope")
-    aspect = ee.Terrain.aspect(dem)
-    sin_asp = aspect.multiply(math.pi/180).sin().rename("sin_aspect")
-    cos_asp = aspect.multiply(math.pi/180).cos().rename("cos_aspect")
-    tpi = dem.subtract(dem.focal_mean(radius=10,kernelType="circle",units="pixels")).rename("tpi")
-    rugged = dem.reduceNeighborhood(reducer=ee.Reducer.stdDev(),
-                                    kernel=ee.Kernel.circle(10,"pixels")).rename("ruggedness")
-    dem_stack = (dem.rename("elevation").addBands(slope).addBands(sin_asp)
-                 .addBands(cos_asp).addBands(tpi).addBands(rugged))
-    dem_path = os.path.join(tmp_dir, "dem.tif")
-    if download_ee_image(dem_stack.clip(roi), bbox, dem_path, args.scale):
-        layers["dem"] = dem_path
+    try:
+        dem=ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM").mosaic()
+        slope=ee.Terrain.slope(dem).rename("slope")
+        tpi=dem.subtract(dem.focal_mean(radius=10,kernelType="circle",units="pixels")).rename("tpi")
+        rugged=dem.reduceNeighborhood(reducer=ee.Reducer.stdDev(),
+                                      kernel=ee.Kernel.circle(10,"pixels")).rename("ruggedness")
+        dem_stack=dem.rename("elevation").addBands(slope).addBands(tpi).addBands(rugged)
+        dem_path=os.path.join(tmp_dir,"dem.tif")
+        if safe_download("DEM", dem_stack.clip(roi), bbox, dem_path, args.scale):
+            layers["dem"] = dem_path
+    except Exception as e:
+        print(f"    ! DEM failed: {e}")
 
     # --- Landsat thermal ---
     print("  [LST] Landsat thermal...")
-    lst_coll = (ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
-                .merge(ee.ImageCollection("LANDSAT/LC09/C02/T1_L2"))
-                .filterBounds(roi).filterDate(args.start, args.end)
-                .filter(ee.Filter.lt("CLOUD_COVER", 20))
-                .map(lambda img: img.select("ST_B10").multiply(0.00341802).add(149.0).subtract(273.15).rename("LST")))
-    if lst_coll.size().getInfo() > 0:
-        lst_median = lst_coll.median().rename("LST_median")
-        lst_p90 = lst_coll.reduce(ee.Reducer.percentile([90])).rename("LST_p90")
-        lst_mean = lst_coll.mean()
-        lst_std = lst_coll.reduce(ee.Reducer.stdDev())
-        lst_z = lst_median.subtract(lst_mean).divide(lst_std.add(0.01)).rename("LST_zscore")
-        thermal = lst_median.addBands(lst_p90).addBands(lst_z)
-        lst_path = os.path.join(tmp_dir, "thermal.tif")
-        if download_ee_image(thermal.clip(roi), bbox, lst_path, args.scale):
-            layers["thermal"] = lst_path
+    try:
+        lst_coll=(ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+                  .merge(ee.ImageCollection("LANDSAT/LC09/C02/T1_L2"))
+                  .filterBounds(roi).filterDate(args.start, args.end)
+                  .filter(ee.Filter.lt("CLOUD_COVER",20))
+                  .map(lambda img:img.select("ST_B10").multiply(0.00341802).add(149).subtract(273.15).rename("LST")))
+        n_lst=lst_coll.size().getInfo()
+        if n_lst > 0:
+            med=lst_coll.median().rename("LST_median")
+            p90=lst_coll.reduce(ee.Reducer.percentile([90])).rename("LST_p90")
+            mu=lst_coll.mean();sd=lst_coll.reduce(ee.Reducer.stdDev())
+            z=med.subtract(mu).divide(sd.add(0.01)).rename("LST_zscore")
+            thermal=med.addBands(p90).addBands(z)
+            lst_path=os.path.join(tmp_dir,"thermal.tif")
+            if safe_download("thermal", thermal.clip(roi), bbox, lst_path, args.scale):
+                layers["thermal"] = lst_path
+        else:
+            print("    ! No Landsat scenes found")
+    except Exception as e:
+        print(f"    ! Thermal failed: {e}")
 
     # --- Stack all layers ---
     print(f"\n  Stacking {len(layers)} layer groups...")
@@ -159,7 +172,7 @@ def main():
     band_name_map = {
         "indices": ["iron_oxide","clay_hydroxyl","ferrous_iron","laterite","ndvi"],
         "sar": ["VV","VH","VV_VH_ratio","VV_variance"],
-        "dem": ["elevation","slope","sin_aspect","cos_aspect","tpi","ruggedness"],
+        "dem": ["elevation","slope","tpi","ruggedness"],
         "thermal": ["LST_median","LST_p90","LST_zscore"],
     }
 
