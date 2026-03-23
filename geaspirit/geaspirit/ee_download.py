@@ -6,11 +6,11 @@ import numpy as np
 from pathlib import Path
 
 ZONES = {
-    "chuquicamata": {"center": (-22.3, -68.9), "desc": "Atacama Cu"},
-    "pilbara":      {"center": (-22.0, 118.0), "desc": "Pilbara Fe+Au"},
-    "zambia":        {"center": (-12.8, 28.2),  "desc": "Zambian Cu"},
+    "chuquicamata": {"center": (-22.3, -68.9), "desc": "Atacama Cu", "half_deg": 0.25},
+    "pilbara":      {"center": (-23.1, 119.2), "desc": "Pilbara Fe+Au", "half_deg": 0.5},
+    "zambia":        {"center": (-12.8, 28.2),  "desc": "Zambian Cu", "half_deg": 0.25},
 }
-HALF_DEG = 0.25  # ~50km bbox
+HALF_DEG = 0.25  # default ~50km bbox
 
 
 def init_ee():
@@ -26,7 +26,8 @@ def init_ee():
 def get_bbox(zone_name):
     z = ZONES[zone_name]
     lat, lon = z["center"]
-    return [lon - HALF_DEG, lat - HALF_DEG, lon + HALF_DEG, lat + HALF_DEG]
+    hd = z.get("half_deg", HALF_DEG)
+    return [lon - hd, lat - hd, lon + hd, lat + hd]
 
 
 def download_ee_image(image, bbox, output_path, scale, band_names=None):

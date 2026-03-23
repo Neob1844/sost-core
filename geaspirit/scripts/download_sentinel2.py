@@ -11,21 +11,18 @@ import time
 import requests
 from pathlib import Path
 
-ZONES = {
-    "chuquicamata": {"center": (-22.3, -68.9), "desc": "Atacama Cu"},
-    "pilbara":      {"center": (-22.0, 118.0), "desc": "Pilbara Fe+Au"},
-    "zambia":        {"center": (-12.8, 28.2),  "desc": "Zambian Cu"},
-}
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from geaspirit.ee_download import ZONES, HALF_DEG, get_bbox as _get_bbox
 
 BANDS = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]
-HALF_SIZE_DEG = 0.25  # ~50km diameter bbox (0.25° ≈ 27km, so ±0.25 ≈ 54km)
 
 
-def get_bbox(center):
-    """Return [west, south, east, north] from center point."""
-    lat, lon = center
-    return [lon - HALF_SIZE_DEG, lat - HALF_SIZE_DEG,
-            lon + HALF_SIZE_DEG, lat + HALF_SIZE_DEG]
+def get_bbox(center_or_zone):
+    """Return [west, south, east, north]. Accepts center tuple or zone name."""
+    if isinstance(center_or_zone, str):
+        return _get_bbox(center_or_zone)
+    lat, lon = center_or_zone
+    return [lon - HALF_DEG, lat - HALF_DEG, lon + HALF_DEG, lat + HALF_DEG]
 
 
 def download_tile(image, roi, output_path, scale):
@@ -142,7 +139,7 @@ def main():
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     zone = ZONES[args.zone]
-    bbox = get_bbox(zone["center"])
+    bbox = get_bbox(args.zone)
 
     print(f"{'='*60}")
     print(f"  GeaSpirit Platform — Sentinel-2 Download")

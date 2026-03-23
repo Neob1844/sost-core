@@ -15,10 +15,27 @@ def main():
     import rasterio
     from rasterio.warp import reproject, Resampling
 
+    def _find_indices(base_dir, pilot):
+        """Find S2 index TIFs in indices/ or indices/<pilot>/."""
+        idx_dir = os.path.join(base_dir, "indices")
+        results = []
+        if not os.path.isdir(idx_dir):
+            return results
+        # Check root
+        for f in os.listdir(idx_dir):
+            if f.startswith(pilot) and f.endswith(".tif"):
+                results.append(os.path.join(idx_dir, f))
+        # Check subdirectory
+        sub = os.path.join(idx_dir, pilot)
+        if os.path.isdir(sub):
+            for f in os.listdir(sub):
+                if f.endswith(".tif"):
+                    results.append(os.path.join(sub, f))
+        return results
+
     # Collect all available rasters
     candidates = {
-        "s2_indices": sorted([os.path.join(base, "indices", f) for f in os.listdir(os.path.join(base, "indices"))
-                              if f.startswith(args.pilot) and f.endswith(".tif")]) if os.path.isdir(os.path.join(base, "indices")) else [],
+        "s2_indices": sorted(_find_indices(base, args.pilot)),
         "sentinel1": [os.path.join(base, "sentinel1", f"{args.pilot}_s1.tif")],
         "dem": [os.path.join(base, "dem", f"{args.pilot}_dem.tif")],
         "thermal": [os.path.join(base, "landsat", f"{args.pilot}_lst.tif")],
