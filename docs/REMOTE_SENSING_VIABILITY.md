@@ -956,3 +956,15 @@ Fewer labels of the right type beat more labels of mixed types (+0.037 AUC).
 |-----------|-----------|--------|-----------------|
 | Type-aware models | Not predicted | AUC +0.04 | **CONFIRMED: type > mixed** |
 | Deposit type taxonomy | Not predicted | 5,467 classified | **4 trainable types** |
+| Same-type transfer | Not predicted | FAILED (0.49-0.55) | Even same deposit type fails |
+| Domain normalization | Not predicted | +0.12 AUC (2 zones) | Helps partially |
+| 3-zone LOZO | VIABLE | FAILED (0.510 avg) | Adding zones makes it worse |
+| Vegetation zones | LIMITED | 0 signal (Salave) | Forest kills satellite signal |
+| GNN inference | PARTIALLY VIABLE | CGCNN working | Direct forward pass on CIF |
+| Heuristic scanning | VIABLE | 50 targets (Tintic) | Works globally without training |
+
+## Phase 5G Conclusion (March 2026)
+
+10 AOIs validated across 5 continents. Zone-specific models are the production
+architecture. Transfer learning is definitively not viable for satellite features.
+The heuristic scanner IS the global product. 162 targets with exact coordinates exported.

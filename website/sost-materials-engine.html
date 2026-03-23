@@ -1338,7 +1338,11 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key">Band Gap Model</td><td>ALIGNN-Lite 20K promoted: MAE=0.3422 eV, R&sup2;=0.707 (14% improvement over 2K baseline)</td></tr>
           <tr><td class="key">Training Ladder</td><td>Both targets: 5 rungs (5K&rarr;76K), 20K optimal. CGCNN wins FE, ALIGNN-Lite wins BG</td></tr>
           <tr><td class="key">Platform Strategy</td><td>GeaSpirit unified platform strategy + remote sensing viability report completed (docs/)</td></tr>
-          <tr><td class="key">655 Tests</td><td>20 test files covering full pipeline: schema through corpus_sources</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">Phase V</td><td>Direct GNN inference: CGCNN forward pass on crystal structures. Real property prediction for autonomous candidates.</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">Autonomous Discovery</td><td>Iterative campaign engine with 8 profiles, error learning, validation queue (5 tiers), structure lift pipeline. 28/28 tests passing.</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">Material Mixer</td><td>4 generation strategies: element substitution, single-site doping, mixed-parent, cross-substitution. Dual-output reports (technical + plain language).</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">Phase II Hardening</td><td>Chemical plausibility filters, charge balance heuristic, acceptance rate 61% &rarr; 27%. Known material sanity: 11/11 pass.</td></tr>
+          <tr><td class="key">46 Tests</td><td>46 test files covering full pipeline: schema through autonomous discovery</td></tr>
         </table>
       </div>
     </div>
