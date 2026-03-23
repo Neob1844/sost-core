@@ -695,45 +695,57 @@ function makeIcon(color,anim){
 
 var geaspirit_unlocked=false;
 
-// Chuquicamata
-var chuq=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-function chuqPopup(){
-  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#006600">PILOT 01: CHUQUICAMATA, CHILE</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 22.3S, 68.9W<br><b>Terrain:</b> Arid desert<br><b>Area:</b> 50 x 50 km';
-  if(geaspirit_unlocked){b+='<hr style="border-color:#006600"><b>PHASE 3B</b><br>AUC: <b>0.8622</b><br>Precision: <b>0.948</b><br>Recall: <b>0.760</b><br>Deposits: <b>43</b> Cu/Au/Ag<br>Layers: <b>24 bands</b>';}
-  return b+'</div>';
-}
-chuq.bindPopup(chuqPopup);chuq.on('click',function(){chuq.setPopupContent(chuqPopup())});
-
-// Kalgoorlie — COMPLETE
-var kalg=L.marker([-31.4,121.7],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-function kalgPopup(){
-  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#006600">PILOT 02: KALGOORLIE, AUSTRALIA</b><hr style="border-color:#006600"><b>Status:</b> <span style="color:#006600">COMPLETE</span><br><b>Coords:</b> 31.4S, 121.7E<br><b>Terrain:</b> Semi-arid goldfields';
-  if(geaspirit_unlocked){b+='<hr style="border-color:#006600"><b>Type:</b> Orogenic Au<br><b>AUC:</b> 0.8063 (Au-only)<br><b>Deposits:</b> 103 Au (from 205 OZMIN+MRDS)<br><b>Key:</b> Type-filtering beats mixed labels';}
-  return b+'</div>';
-}
-kalg.bindPopup(kalgPopup);kalg.on('click',function(){kalg.setPopupContent(kalgPopup())});
-
-// Zambia — COMPLETE
-var zamb=L.marker([-12.5,28.25],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-function zambPopup(){
-  var b='<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000"><b style="color:#b07800">PILOT 03: ZAMBIA COPPERBELT</b><hr style="border-color:#b07800"><b>Status:</b> <span style="color:#b07800">COMPLETE</span><br><b>Coords:</b> 12.5S, 28.25E<br><b>Terrain:</b> Copperbelt shale';
-  if(geaspirit_unlocked){b+='<hr style="border-color:#b07800"><b>Type:</b> Sediment-hosted Cu<br><b>AUC:</b> 0.7626<br><b>Deposits:</b> 28 Cu/Co<br><b>Transfer from Chile:</b> FAILED (different type)';}
-  return b+'</div>';
-}
-zamb.bindPopup(zambPopup);zamb.on('click',function(){zamb.setPopupContent(zambPopup())});
-
-// Pilbara — PENDING
-var pilb=L.marker([-23.1,119.2],{icon:makeIcon('#666','pulse-gray')}).addTo(map);
-pilb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>PILOT 04: PILBARA</b><hr><b>Status:</b> PENDING (label-limited)<br><b>Coords:</b> 23.1S, 119.2E</div>');
-
-// Tintic — AOI DEMO (blue)
+// Blue pulse for heuristic markers
 var blueStyle=document.createElement('style');
-blueStyle.textContent='@keyframes pulse-blue{0%{box-shadow:0 0 0 0 rgba(0,100,255,.7)}70%{box-shadow:0 0 0 10px rgba(0,100,255,0)}100%{box-shadow:0 0 0 0 rgba(0,100,255,0)}}';
+blueStyle.textContent='@keyframes pulse-blue{0%{box-shadow:0 0 0 0 rgba(0,100,255,.7)}70%{box-shadow:0 0 0 10px rgba(0,100,255,0)}100%{box-shadow:0 0 0 0 rgba(0,100,255,0)}}@keyframes pulse-red{0%{box-shadow:0 0 0 0 rgba(255,0,50,.5)}70%{box-shadow:0 0 0 8px rgba(255,0,50,0)}100%{box-shadow:0 0 0 0 rgba(255,0,50,0)}}';
 document.head.appendChild(blueStyle);
-var tintic=L.marker([39.9,-112.1],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
-tintic.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b style="color:#2266cc">AOI DEMO: TINTIC, UTAH</b><hr style="border-color:#2266cc"><b>Status:</b> <span style="color:#2266cc">SCANNED (heuristic)</span><br><b>Coords:</b> 39.9N, 112.1W<br><b>Mode:</b> No training data<br><b>Targets:</b> 50 identified</div>');
 
-map.fitBounds([[-31.4,-68.9],[39.9,121.7]],{padding:[40,40]});
+function mp(t){return '<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000">'+t+'</div>'}
+function mh(c,n){return '<b style="color:'+c+'">'+n+'</b><hr style="border-color:'+c+'">'}
+
+// === 10 AOI MARKERS ===
+
+// 1. Chuquicamata (STRONG green)
+var m1=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m1.bindPopup(function(){var b=mh('#006600','CHUQUICAMATA, CHILE')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 22.3S, 68.9W<br><b>Status:</b> <span style="color:#006600">STRONG</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.8622<br><b>Labels:</b> 43 Cu/Au/Ag<br><b>Bands:</b> 24';return mp(b)});
+
+// 2. Kalgoorlie (STRONG green)
+var m2=L.marker([-30.75,121.47],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m2.bindPopup(function(){var b=mh('#006600','KALGOORLIE, AUSTRALIA')+'<b>Type:</b> Orogenic Au<br><b>Coords:</b> 30.75S, 121.47E<br><b>Status:</b> <span style="color:#006600">STRONG</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.8063 (Au-only)<br><b>Labels:</b> 103 OZMIN<br><b>Bands:</b> 12';return mp(b)});
+
+// 3. Zambia (ACCEPTABLE amber)
+var m3=L.marker([-12.8,28.2],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m3.bindPopup(function(){var b=mh('#b07800','ZAMBIA COPPERBELT')+'<b>Type:</b> Sediment-hosted Cu<br><b>Coords:</b> 12.8S, 28.2E<br><b>Status:</b> <span style="color:#b07800">ACCEPTABLE</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7626<br><b>Labels:</b> 28 Cu/Co';return mp(b)});
+
+// 4. Peru (ACCEPTABLE amber)
+var m4=L.marker([-9.9,-77.3],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m4.bindPopup(function(){var b=mh('#b07800','PERU PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 9.9S, 77.3W<br><b>Status:</b> <span style="color:#b07800">ACCEPTABLE</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7577<br><b>Labels:</b> 71';return mp(b)});
+
+// 5. Arizona (ACCEPTABLE amber)
+var m5=L.marker([32.5,-110.6],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m5.bindPopup(function(){var b=mh('#b07800','ARIZONA PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 32.5N, 110.6W<br><b>Status:</b> <span style="color:#b07800">MARGINAL</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7178<br><b>Labels:</b> 5 (sparse)';return mp(b)});
+
+// 6. Banos de Mula (HEURISTIC blue)
+var m6=L.marker([38.04,-1.43],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
+m6.bindPopup(function(){var b=mh('#2266cc','BANOS DE MULA, SPAIN')+'<b>Type:</b> Hydrothermal<br><b>Coords:</b> 38.04N, 1.43W<br><b>Mode:</b> Heuristic';if(geaspirit_unlocked)b+='<br><b>Score:</b> 0.762<br><b>HIGH:</b> 10.0 km&#178;<br><b>Priority:</b> #1 Spain';return mp(b)});
+
+// 7. Barqueros (HEURISTIC blue)
+var m7=L.marker([37.96,-1.36],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
+m7.bindPopup(function(){var b=mh('#2266cc','VOLCAN DE BARQUEROS, SPAIN')+'<b>Type:</b> Volcanic<br><b>Coords:</b> 37.96N, 1.36W<br><b>Mode:</b> Heuristic';if(geaspirit_unlocked)b+='<br><b>Score:</b> 0.713<br><b>HIGH:</b> 5.6 km&#178;<br><b>Priority:</b> #2 Spain';return mp(b)});
+
+// 8. Salave (HEURISTIC blue — no signal)
+var m8=L.marker([43.57,-6.90],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
+m8.bindPopup(mp(mh('#2266cc','SALAVE, SPAIN')+'<b>Type:</b> Orogenic Au (known)<br><b>Coords:</b> 43.57N, 6.90W<br><b>Mode:</b> Heuristic<br><b>Targets:</b> 0 (vegetation suppresses signal)<br><b>Next:</b> Magnetics needed'));
+
+// 9. Tintic (DEMO blue)
+var m9=L.marker([39.9,-112.1],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
+m9.bindPopup(mp(mh('#2266cc','TINTIC, UTAH (DEMO)')+'<b>Mode:</b> Heuristic (untrained)<br><b>Coords:</b> 39.9N, 112.1W<br><b>Targets:</b> 50<br><b>HIGH:</b> 18.9 km&#178;'));
+
+// 10. Pilbara (FAILED red)
+var m10=L.marker([-22.0,118.0],{icon:makeIcon('#ff3344','pulse-red')}).addTo(map);
+m10.bindPopup(mp(mh('#cc0000','PILBARA, AUSTRALIA')+'<b>Type:</b> BIF Fe<br><b>Coords:</b> 22.0S, 118.0E<br><b>AUC:</b> 0.40 (FAILED)<br><b>Status:</b> Not recommended'));
+
+map.fitBounds([[-31.4,-112.1],[43.6,121.7]],{padding:[40,40]});
 
 // === SESSION TIMER + AUTO-LOCK ===
 var countdownInterval=null;
