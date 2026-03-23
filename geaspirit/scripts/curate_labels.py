@@ -9,7 +9,7 @@ from collections import Counter
 from math import radians, cos, sin, asin, sqrt
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from geaspirit.ee_download import ZONES, HALF_DEG
+from geaspirit.ee_download import ZONES, HALF_DEG, get_bbox
 
 # MRDS uses full commodity names — map keywords to groups
 COMMODITY_KEYWORDS = {
@@ -55,8 +55,9 @@ def main():
 
     zone = ZONES[args.pilot]
     lat_c, lon_c = zone["center"]
-    bbox = [lon_c - HALF_DEG, lat_c - HALF_DEG, lon_c + HALF_DEG, lat_c + HALF_DEG]
+    bbox = get_bbox(args.pilot)
     min_lon, min_lat, max_lon, max_lat = bbox
+    hd = zone.get("half_deg", HALF_DEG)
     target_commodities = ZONE_COMMODITIES.get(args.pilot, DEFAULT_COMMODITIES)
 
     print(f"=== MRDS Label Curation — {args.pilot} ===")
@@ -64,7 +65,7 @@ def main():
     print(f"  Target commodities: {sorted(target_commodities)}")
 
     # 1. Load all deposits in expanded AOI (1.5x buffer for near-boundary checks)
-    buf = HALF_DEG * 0.5
+    buf = hd * 0.5
     raw_deposits = []
     with open(args.mrds, newline='', encoding='utf-8', errors='replace') as f:
         reader = csv.DictReader(f)
