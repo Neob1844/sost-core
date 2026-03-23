@@ -120,14 +120,15 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 4F):**
-- 3 domains validated: Chile (AUC 0.86), Australia (0.77), Zambia (0.76)
+**Current state (Phase 5A):**
+- Deposit-type-aware benchmarks: Porphyry Cu (0.86), Orogenic Au (0.80), Sediment-hosted Cu (0.76)
+- 5,467 labels classified by deposit type, 467 trainable
 - OZMIN WFS integrated (16,225 Australian deposits, CC-BY 4.0)
 - Global AOI scanner operational (heuristic mode, works anywhere)
-- Transfer learning: deposit-type dependent (porphyry ≠ sediment-hosted)
-- Bottleneck: labels, not sensors
+- Key finding: deposit type > commodity for ML training
+- Transfer fails cross-type (0.45) but type-filtered beats mixed (+0.04)
+- cASERT profile now exposed via RPC getinfo (casert_profile, casert_profile_index, casert_lag)
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
-- Key scripts: `build_global_aoi_stack.py`, `scan_aoi_proxies.py`, `ingest_australia_labels.py`
 
 ## Materials Engine
 

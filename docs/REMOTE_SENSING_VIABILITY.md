@@ -947,3 +947,12 @@ The strongest zero-cost opportunity is building a Sentinel-2 + EMIT + NISAR fusi
 **Key unexpected finding**: Transfer learning between commodity-compatible zones
 (Chuquicamata Cu vs Zambia Cu) FAILS because deposit TYPES differ (porphyry vs
 sediment-hosted). Transfer requires geological similarity, not just commodity match.
+
+**Phase 5A finding**: Type-filtered training IMPROVES over mixed-type training.
+Kalgoorlie Au-only (103 labels): AUC 0.8063 vs Kalgoorlie mixed (205 labels): AUC 0.7690.
+Fewer labels of the right type beat more labels of mixed types (+0.037 AUC).
+
+| Component | Prediction | Actual | Phase 5A Update |
+|-----------|-----------|--------|-----------------|
+| Type-aware models | Not predicted | AUC +0.04 | **CONFIRMED: type > mixed** |
+| Deposit type taxonomy | Not predicted | 5,467 classified | **4 trainable types** |
