@@ -6,6 +6,7 @@ from .chem_filters import filter_candidate, parse_formula
 from .scorer import score_candidate
 from .ml_evaluator import evaluate_candidate_ml, find_nearest_neighbors
 from .validation_queue import route_candidate
+from .structure_pipeline import lift_structure_for_candidate, run_gnn_inference
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -63,21 +64,56 @@ class DiscoveryEngine:
                 continue
             filtered.append(c)
 
-        # 4. Score + ML evaluation (Phase III)
+        # 4. Score + ML evaluation + Structure lift + GNN (Phase IV.B)
         scored = []
+        lift_attempted = 0
+        lift_success = 0
+        gnn_evaluated = 0
         for c in filtered[:max_candidates]:
             elements = c.get("elements", list(parse_formula(c["formula"]).keys()))
-            # ML evaluation
+            parent_a = c.get("parent_a", "")
+
+            # ML evaluation (corpus context)
             ml = evaluate_candidate_ml(c["formula"], elements, c.get("method", "unknown"),
-                                        c.get("parent_a", ""), c.get("parent_b", ""))
+                                        parent_a, c.get("parent_b", ""))
             c["ml_evaluation"] = ml
-            # Score with ML context
+
+            # Structure lift attempt
+            lift = lift_structure_for_candidate(
+                c["formula"], elements, parent_a, c.get("method", "unknown"))
+            c["structure_lift"] = lift
+            lift_attempted += 1
+            if lift.get("structure_lift_status") == "lifted_ok":
+                lift_success += 1
+                # Try GNN inference on lifted structure
+                gnn_fe = run_gnn_inference(lift.get("lifted_cif"), target="formation_energy")
+                gnn_bg = run_gnn_inference(lift.get("lifted_cif"), target="band_gap")
+                c["gnn_fe"] = gnn_fe
+                c["gnn_bg"] = gnn_bg
+                if gnn_fe.get("gnn_inference_status") in ("corpus_exact_match", "structure_ready_for_gnn"):
+                    gnn_evaluated += 1
+                # Override ML evaluation with GNN results
+                if gnn_fe.get("prediction") is not None:
+                    ml["formation_energy_predicted"] = gnn_fe["prediction"]
+                    ml["ml_inference_status"] = gnn_fe["gnn_inference_status"]
+                    ml["ml_confidence"] = gnn_fe["gnn_confidence"]
+                    ml["prediction_path"] = gnn_fe["inference_input_type"]
+
+            # Score with all context
             scores = score_candidate(c["formula"], elements, c.get("method", "unknown"),
                                      self.profile, self.memory, neighbors=ml.get("nearest_neighbors"))
-            # Boost score if ML found good context
-            if ml.get("ml_confidence") in ("medium", "high"):
+            # Structure + GNN bonus
+            if lift.get("structure_lift_status") == "lifted_ok":
+                scores["composite_score"] = min(1.0, scores["composite_score"] + 0.08)
+                scores["structure_quality_score"] = 0.08
+            elif ml.get("ml_confidence") in ("medium", "high"):
                 scores["composite_score"] = min(1.0, scores["composite_score"] + 0.05)
-                scores["structure_context_bonus"] = 0.05
+                scores["structure_quality_score"] = 0.05
+            else:
+                scores["structure_quality_score"] = 0.0
+                # Penalize composition-only candidates
+                scores["composite_score"] = max(0.0, scores["composite_score"] - 0.03)
+
             c["scores"] = scores
             c["composite_score"] = scores["composite_score"]
             scored.append(c)
@@ -122,6 +158,9 @@ class DiscoveryEngine:
             "rejected_filter": len(rejections),
             "rejected_score": rejected_by_score,
             "watchlist": len(watchlist),
+            "structure_lift_attempted": lift_attempted,
+            "structure_lift_success": lift_success,
+            "gnn_evaluated": gnn_evaluated,
             "elapsed_s": elapsed,
             "top_candidates": [
                 {"rank": i+1, "formula": c["formula"], "method": c.get("method", ""),
