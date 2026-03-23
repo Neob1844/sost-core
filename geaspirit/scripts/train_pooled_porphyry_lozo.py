@@ -96,6 +96,11 @@ def main():
                    os.path.join(data_dir, "labels/arizona_porphyry_labels.csv"))
     if z: zones["arizona"] = z
 
+    z = load_zone("peru",
+                   os.path.join(data_dir, "stack/peru_porphyry_global_stack.tif"),
+                   os.path.join(data_dir, "labels/peru_porphyry_labels_curated.csv"))
+    if z: zones["peru"] = z
+
     print(f"=== Pooled Porphyry Training + LOZO ===\n")
     for name, z in zones.items():
         print(f"  {name}: {z['n_pos']} pos + {z['n_neg']} neg, {z['n_bands']} bands, {z['n_deposits']} deposits")
