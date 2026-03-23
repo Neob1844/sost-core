@@ -4,6 +4,7 @@ from .memory_store import MemoryStore
 from .policy import get_profile, CAMPAIGN_PROFILES
 from .chem_filters import filter_candidate, parse_formula
 from .scorer import score_candidate
+from .ml_evaluator import evaluate_candidate_ml, find_nearest_neighbors
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -61,12 +62,21 @@ class DiscoveryEngine:
                 continue
             filtered.append(c)
 
-        # 4. Score
+        # 4. Score + ML evaluation (Phase III)
         scored = []
         for c in filtered[:max_candidates]:
             elements = c.get("elements", list(parse_formula(c["formula"]).keys()))
+            # ML evaluation
+            ml = evaluate_candidate_ml(c["formula"], elements, c.get("method", "unknown"),
+                                        c.get("parent_a", ""), c.get("parent_b", ""))
+            c["ml_evaluation"] = ml
+            # Score with ML context
             scores = score_candidate(c["formula"], elements, c.get("method", "unknown"),
-                                     self.profile, self.memory)
+                                     self.profile, self.memory, neighbors=ml.get("nearest_neighbors"))
+            # Boost score if ML found good context
+            if ml.get("ml_confidence") in ("medium", "high"):
+                scores["composite_score"] = min(1.0, scores["composite_score"] + 0.05)
+                scores["structure_context_bonus"] = 0.05
             c["scores"] = scores
             c["composite_score"] = scores["composite_score"]
             scored.append(c)
@@ -108,7 +118,11 @@ class DiscoveryEngine:
             "elapsed_s": elapsed,
             "top_candidates": [
                 {"rank": i+1, "formula": c["formula"], "method": c.get("method", ""),
-                 "composite_score": c["composite_score"], "scores": c["scores"]}
+                 "composite_score": c["composite_score"], "scores": c["scores"],
+                 "ml_status": c.get("ml_evaluation", {}).get("ml_inference_status", "unavailable"),
+                 "ml_confidence": c.get("ml_evaluation", {}).get("ml_confidence", "none"),
+                 "prototype_hint": c.get("ml_evaluation", {}).get("prototype_hint"),
+                 "nearest_formula": c.get("ml_evaluation", {}).get("nearest_neighbors", [{}])[0].get("formula", "—") if c.get("ml_evaluation", {}).get("nearest_neighbors") else "—"}
                 for i, c in enumerate(accepted[:10])
             ],
             "top_rejections": rejections[:5],
