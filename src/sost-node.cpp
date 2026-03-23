@@ -840,7 +840,8 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
-        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size());
+        // Pass now_time > 0 to include anti-stall decay (matches what miner sees)
+        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), (int64_t)time(nullptr));
         casert_profile_idx = dec.profile_index;
         casert_lag = dec.lag;
     }
