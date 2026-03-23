@@ -71,18 +71,25 @@ class DiscoveryEngine:
             c["composite_score"] = scores["composite_score"]
             scored.append(c)
 
-        # 5. Rank and decide
+        # 5. Rank and decide (Phase II: use scorer's decision field)
         scored.sort(key=lambda x: -x["composite_score"])
         accepted = []
+        watchlist = []
+        rejected_by_score = 0
         for c in scored:
-            is_accepted = c["composite_score"] >= 0.35
+            decision = c["scores"].get("decision", "rejected")
+            is_accepted = decision == "accepted"
             self.memory.record_candidate(
                 c["formula"], c.get("method", "unknown"),
                 c["composite_score"], is_accepted,
-                None if is_accepted else "low_score"
+                None if is_accepted else f"score_rejected:{decision}"
             )
             if is_accepted:
                 accepted.append(c)
+            elif decision == "watchlist":
+                watchlist.append(c)
+            else:
+                rejected_by_score += 1
 
         elapsed = round(time.time() - t0, 2)
 
@@ -96,7 +103,8 @@ class DiscoveryEngine:
             "scored": len(scored),
             "accepted": len(accepted),
             "rejected_filter": len(rejections),
-            "rejected_score": len(scored) - len(accepted),
+            "rejected_score": rejected_by_score,
+            "watchlist": len(watchlist),
             "elapsed_s": elapsed,
             "top_candidates": [
                 {"rank": i+1, "formula": c["formula"], "method": c.get("method", ""),
