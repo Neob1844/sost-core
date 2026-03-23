@@ -70,6 +70,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 .rpt-trigger:hover{opacity:.8}
 .rpt-body{max-height:0;overflow:hidden;transition:max-height .5s ease}
 .rpt-body.open{max-height:5000px}
+@keyframes blink-red{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
 </style>
 <script src="js/security.js"></script>
 </head>
@@ -128,6 +129,12 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   <button onclick="checkAccess()"
     style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer;margin-left:10px">ENTER</button>
   <div id="access-msg" style="color:#ff0000;margin-top:10px;min-height:20px"></div>
+</div>
+
+<!-- SESSION BAR -->
+<div id="session-bar" style="display:none;position:sticky;top:0;z-index:101;background:#0a0a0a;border-bottom:1px solid #004400;padding:8px 20px;justify-content:space-between;align-items:center;font-family:monospace">
+  <span style="color:#00ff41;font-size:12px">&gt; SESSION ACTIVE — auto-lock in: <span id="countdown" style="color:#ffb000;font-weight:bold">10:00</span></span>
+  <button id="refresh-btn" onclick="refreshSession()" style="background:#004400;color:#00ff41;border:1px solid #00ff41;padding:6px 16px;font-family:monospace;cursor:pointer;font-size:12px;letter-spacing:1px">&#8635; REFRESH SESSION</button>
 </div>
 
 <!-- PROTECTED CONTENT — hidden until authenticated -->
@@ -577,26 +584,63 @@ zamb.bindPopup('<div style="font-family:monospace;font-size:11px;color:#000"><b>
 
 map.fitBounds([[-22.3,-68.9],[-22.0,118.0],[-12.8,28.2]],{padding:[40,40]});
 
-// === AUTO-LOCK SYSTEM ===
-var lockTimer=null;
-function startLockTimer(){
-  clearTimeout(lockTimer);
-  lockTimer=setTimeout(function(){
-    document.getElementById('protected-content').style.display='none';
-    document.getElementById('access-panel').style.display='block';
-    document.getElementById('access-pwd').value='';
-    geaspirit_unlocked=false;
-    var msg=document.getElementById('access-msg');
-    msg.textContent='> SESSION EXPIRED — re-enter clearance code';
-    msg.style.color='#ffb000';
-  },300000);
+// === SESSION TIMER + AUTO-LOCK ===
+var countdownInterval=null;
+var secondsLeft=600;
+
+function startSession(duration){
+  secondsLeft=duration;
+  document.getElementById('session-bar').style.display='flex';
+  clearInterval(countdownInterval);
+  updateCountdownDisplay();
+  countdownInterval=setInterval(function(){
+    secondsLeft--;
+    updateCountdownDisplay();
+    var el=document.getElementById('countdown');
+    if(secondsLeft<=60){
+      el.style.color='#ff0000';
+      el.style.animation='blink-red 1s infinite';
+    }else if(secondsLeft<=180){
+      el.style.color='#ff8800';
+      el.style.animation='none';
+    }else{
+      el.style.color='#ffb000';
+      el.style.animation='none';
+    }
+    if(secondsLeft<=0)lockSession();
+  },1000);
 }
-function resetLockTimer(){
-  if(geaspirit_unlocked)startLockTimer();
+
+function updateCountdownDisplay(){
+  var min=Math.floor(secondsLeft/60);
+  var sec=secondsLeft%60;
+  document.getElementById('countdown').textContent=String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0');
 }
-['click','scroll','keypress','mousemove','touchstart'].forEach(function(evt){
-  document.addEventListener(evt,resetLockTimer);
-});
+
+function refreshSession(){
+  startSession(600);
+  var btn=document.getElementById('refresh-btn');
+  btn.textContent='\u2713 REFRESHED';
+  btn.style.background='#00ff41';
+  btn.style.color='#000';
+  setTimeout(function(){
+    btn.textContent='\u21BB REFRESH SESSION';
+    btn.style.background='#004400';
+    btn.style.color='#00ff41';
+  },1000);
+}
+
+function lockSession(){
+  clearInterval(countdownInterval);
+  document.getElementById('protected-content').style.display='none';
+  document.getElementById('session-bar').style.display='none';
+  document.getElementById('access-panel').style.display='block';
+  document.getElementById('access-pwd').value='';
+  geaspirit_unlocked=false;
+  var msg=document.getElementById('access-msg');
+  msg.textContent='> SESSION EXPIRED \u2014 re-enter clearance code';
+  msg.style.color='#ffb000';
+}
 
 // === ACCESS CONTROL (memory only, no sessionStorage) ===
 async function checkAccess(){
@@ -608,7 +652,7 @@ async function checkAccess(){
     document.getElementById('protected-content').style.display='block';
     document.getElementById('access-panel').style.display='none';
     geaspirit_unlocked=true;
-    startLockTimer();
+    startSession(600);
   }else{
     var msg=document.getElementById('access-msg');
     msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
