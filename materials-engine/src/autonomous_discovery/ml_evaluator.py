@@ -31,27 +31,43 @@ def find_nearest_neighbors(formula, elements, db_path=None, max_neighbors=3):
         elem_set = set(elements)
         neighbors = []
 
-        # Strategy 1: Exact element match (same elements, different stoichiometry)
-        for elem in elements[:3]:  # limit search scope
-            cur.execute(
-                "SELECT canonical_id, formula, spacegroup, band_gap, formation_energy, "
-                "has_valid_structure, structure_data FROM materials "
-                "WHERE formula LIKE ? AND has_valid_structure=1 LIMIT 20",
-                (f"%{elem}%",)
-            )
-            for row in cur.fetchall():
-                row_elems = set(parse_formula(row["formula"]).keys())
-                overlap = len(elem_set & row_elems) / max(len(elem_set | row_elems), 1)
-                if overlap >= 0.5:
-                    neighbors.append({
-                        "canonical_id": row["canonical_id"],
-                        "formula": row["formula"],
-                        "spacegroup": row["spacegroup"],
-                        "band_gap": row["band_gap"],
-                        "formation_energy": row["formation_energy"],
-                        "has_structure": bool(row["has_valid_structure"]),
-                        "element_overlap": round(overlap, 3),
-                    })
+        # Strategy 0: Exact formula match (highest priority)
+        cur.execute(
+            "SELECT canonical_id, formula, spacegroup, band_gap, formation_energy, "
+            "has_valid_structure FROM materials WHERE formula=? AND has_valid_structure=1 "
+            "ORDER BY ABS(formation_energy) ASC LIMIT 5", (formula,)
+        )
+        for row in cur.fetchall():
+            neighbors.append({
+                "canonical_id": row["canonical_id"], "formula": row["formula"],
+                "spacegroup": row["spacegroup"], "band_gap": row["band_gap"],
+                "formation_energy": row["formation_energy"],
+                "has_structure": bool(row["has_valid_structure"]),
+                "element_overlap": 1.0,
+            })
+
+        # Strategy 1: Same-element-set compounds (different stoichiometry)
+        if len(neighbors) < max_neighbors:
+            # Build query that finds compounds containing ALL elements
+            for elem in elements[:2]:
+                cur.execute(
+                    "SELECT canonical_id, formula, spacegroup, band_gap, formation_energy, "
+                    "has_valid_structure FROM materials "
+                    "WHERE formula LIKE ? AND has_valid_structure=1 "
+                    "ORDER BY ABS(formation_energy) ASC LIMIT 50",
+                    (f"%{elem}%",)
+                )
+                for row in cur.fetchall():
+                    row_elems = set(parse_formula(row["formula"]).keys())
+                    overlap = len(elem_set & row_elems) / max(len(elem_set | row_elems), 1)
+                    if overlap >= 0.5 and row["formula"] != formula:
+                        neighbors.append({
+                            "canonical_id": row["canonical_id"], "formula": row["formula"],
+                            "spacegroup": row["spacegroup"], "band_gap": row["band_gap"],
+                            "formation_energy": row["formation_energy"],
+                            "has_structure": bool(row["has_valid_structure"]),
+                            "element_overlap": round(overlap, 3),
+                        })
 
         db.close()
 

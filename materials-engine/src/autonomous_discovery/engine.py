@@ -5,6 +5,7 @@ from .policy import get_profile, CAMPAIGN_PROFILES
 from .chem_filters import filter_candidate, parse_formula
 from .scorer import score_candidate
 from .ml_evaluator import evaluate_candidate_ml, find_nearest_neighbors
+from .validation_queue import route_candidate
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -81,22 +82,28 @@ class DiscoveryEngine:
             c["composite_score"] = scores["composite_score"]
             scored.append(c)
 
-        # 5. Rank and decide (Phase II: use scorer's decision field)
+        # 5. Rank and decide (Phase IV: validation queue routing)
         scored.sort(key=lambda x: -x["composite_score"])
         accepted = []
         watchlist = []
+        validation_candidates = []
         rejected_by_score = 0
         for c in scored:
-            decision = c["scores"].get("decision", "rejected")
-            is_accepted = decision == "accepted"
+            vq = route_candidate(c["scores"], c.get("ml_evaluation"))
+            c["validation"] = vq
+            vd = vq["validation_decision"]
+            is_accepted = vd in ("priority_validation", "validation_candidate", "manual_review")
             self.memory.record_candidate(
                 c["formula"], c.get("method", "unknown"),
                 c["composite_score"], is_accepted,
-                None if is_accepted else f"score_rejected:{decision}"
+                None if is_accepted else f"validation:{vd}"
             )
-            if is_accepted:
+            if vd in ("priority_validation", "validation_candidate"):
                 accepted.append(c)
-            elif decision == "watchlist":
+                validation_candidates.append(c)
+            elif vd == "manual_review":
+                accepted.append(c)
+            elif vd == "watchlist":
                 watchlist.append(c)
             else:
                 rejected_by_score += 1
@@ -122,7 +129,10 @@ class DiscoveryEngine:
                  "ml_status": c.get("ml_evaluation", {}).get("ml_inference_status", "unavailable"),
                  "ml_confidence": c.get("ml_evaluation", {}).get("ml_confidence", "none"),
                  "prototype_hint": c.get("ml_evaluation", {}).get("prototype_hint"),
-                 "nearest_formula": c.get("ml_evaluation", {}).get("nearest_neighbors", [{}])[0].get("formula", "—") if c.get("ml_evaluation", {}).get("nearest_neighbors") else "—"}
+                 "nearest_formula": c.get("ml_evaluation", {}).get("nearest_neighbors", [{}])[0].get("formula", "—") if c.get("ml_evaluation", {}).get("nearest_neighbors") else "—",
+                 "validation": c.get("validation", {}).get("validation_decision", "unknown"),
+                 "validation_priority": c.get("validation", {}).get("validation_priority", 0),
+                 "next_step": c.get("validation", {}).get("recommended_next_step", "unknown")}
                 for i, c in enumerate(accepted[:10])
             ],
             "top_rejections": rejections[:5],
