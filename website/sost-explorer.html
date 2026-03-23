@@ -898,7 +898,19 @@ async function updateDashboard(info){
     startCountdown();
     // Update cASERT equalizer from block data
     updateEqualizer(info, times, diffs);
-    }}catch(e){}
+    }}catch(e){
+    // Fallback: if block fetch failed, use current time minus target spacing as approximation
+    if(!_lastBlockTime&&info.blocks>0){
+      _lastBlockTime=Math.floor(Date.now()/1000)-600; // assume last block ~10min ago
+      _lastBitsQ=info.difficulty;
+      _nextBitsQ=info.next_difficulty||info.difficulty;
+      if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
+      if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
+      if(info.casert_lag!==undefined)_rpcCasertLag=info.casert_lag;
+      startCountdown();
+      console.warn('Block fetch failed, using fallback timing',e);
+    }
+  }
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks+1),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(tSOST.toFixed(4))+' SOST';
   /* drawReserveBars() removed — replaced by price charts */
