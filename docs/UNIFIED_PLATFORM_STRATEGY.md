@@ -607,3 +607,16 @@ Monitoring the same area over months/years reveals processes: seasonal moisture 
 ---
 
 *Document prepared for SOST GeaSpirit strategic planning. All cost estimates, timelines, and probability assessments reflect honest evaluation as of 2026-03-20. This is a living document — update after each phase milestone.*
+
+---
+
+## Confirmed Architecture (Phase 5G, March 2026)
+
+- **Zone-specific models** as production architecture (AUC 0.72-0.86)
+- **AOI heuristic scanner** as global product (works anywhere, no training needed)
+- **Transfer learning abandoned** for satellite features (confirmed across 5 zones)
+- **Labels are #1 bottleneck** in every zone (labels > sensors > model tuning)
+- **Custom AOI capability demonstrated** (Spain: Banos de Mula, Barqueros, Salave)
+- **10 AOIs in registry**, 162 targets with exact coordinates
+- **Direct GNN inference working** (CGCNN forward pass on crystal structures)
+- **Blockers**: EMIT (Earthdata auth), GA geophysics (manual download)

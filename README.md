@@ -282,6 +282,29 @@ make -j$(nproc)
 ctest --output-on-failure
 ```
 
+## GeaSpirit Platform — Mineral Intelligence
+
+Zone-specific mineral prospectivity mapping using public satellite data.
+
+- **10 AOIs globally** · 162 targets with exact coordinates · Direct GNN inference
+- Supervised zones: Porphyry Cu (Chile) AUC 0.86, Orogenic Au (Australia) 0.81, Sediment-hosted Cu (Zambia) 0.76, Porphyry Cu (Peru) 0.76, Porphyry Cu (Arizona) 0.72
+- Heuristic scans: Banos de Mula (Spain, score 0.762), Barqueros, Tintic (Utah)
+- Key finding: deposit type > commodity for ML training. Transfer learning does NOT work for satellite features — zone-specific models required.
+- Details: https://sostcore.com/sost-geaspirit.html
+
+## Materials Engine — Computational Materials Discovery
+
+- 76,193 materials · Direct GNN inference (CGCNN forward pass) · Autonomous discovery engine
+- Validation queue (5 tiers) · Structure lift pipeline · Material Mixer (4 strategies)
+- 28/28 tests passing · Dual-output explainer (technical + plain language)
+
+## Security
+
+- Build hardening: stack protector, ASLR (PIE), RELRO, FORTIFY_SOURCE — 15/15 tests pass
+- Transaction Safety Layer: trusted destinations, cooldown, anti-phishing (no consensus change)
+- Fee system: 1 stock/byte minimum, rational fee-rate ordering, estimatefee advisory
+- cASERT profile exposed via RPC getinfo (real-time from node)
+
 ## Reporting Issues
 
 - **Bugs and feature requests:** https://github.com/Neob1844/sost-core/issues

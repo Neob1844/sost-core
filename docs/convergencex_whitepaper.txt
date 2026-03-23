@@ -2966,3 +2966,35 @@ Previous versions: v3.7 (deprecated)
 LICENSE: SOST source code is published under the MIT License. The code is
 fully open-source and free to use, modify, and distribute.
 See LICENSE file for full terms.
+
+================================================================================
+APPENDIX: NON-CONSENSUS PLATFORM EXTENSIONS (March 2026)
+================================================================================
+
+A. DYNAMIC FEE MARKET (Mempool Policy, No Consensus Change)
+- Fee-rate ordering: rational arithmetic (fee*other.size vs other.fee*size)
+- BuildBlockTemplate: descending fee-rate selection
+- estimatefee RPC: advisory from 10-block lookback + mempool analysis
+- Minimum relay: 1 stock/byte (consensus floor)
+- No RBF/CPFP at protocol level — future mempool policy extension
+
+B. NON-CONSENSUS SECURITY ARCHITECTURE
+- Build hardening: -fstack-protector-strong, -fPIE, -Wl,-z,relro,-z,now, -D_FORTIFY_SOURCE=2
+- Wallet encryption: AES-256-GCM + scrypt (N=32768, r=8, p=1)
+- Key wiping: OPENSSL_cleanse after every use
+- cASERT profile: exposed via RPC getinfo (casert_profile, casert_lag)
+- All security features live above consensus layer — no fork required
+
+C. GEASPIRIT MINERAL INTELLIGENCE PLATFORM
+- 10 AOIs across 5 continents, zone-specific ML models
+- AUC 0.72-0.86 (5 supervised zones), heuristic scanner for arbitrary AOIs
+- Direct GNN inference (CGCNN forward pass) on crystal structures
+- 162 mineral targets with exact coordinates exported
+- Key finding: deposit type > commodity for ML training
+
+D. AUTONOMOUS MATERIALS DISCOVERY ENGINE
+- 76,193 material corpus, CGCNN + ALIGNN-Lite models
+- Autonomous campaign engine with validation queue (5 tiers)
+- Structure lift pipeline for candidate evaluation
+- Dual-output explainer (technical + plain language)
+- 28/28 tests passing

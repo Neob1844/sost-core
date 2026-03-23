@@ -347,3 +347,19 @@ The competitive advantage is not any single data source — it's the **systemati
 - [Mapping Gossans Using Hyperspectral Data in Eastern Kumaon Himalaya](https://www.sciencedirect.com/science/article/pii/S2590197421000021)
 - [A Review of ML in Processing RS Data for Mineral Exploration](https://www.sciencedirect.com/science/article/abs/pii/S0034425721004703)
 - [RS Insights into Subsurface-Surface Relationships: Copper Deposits](https://link.springer.com/article/10.1007/s12145-024-01423-2)
+
+---
+
+## Transfer Learning Results (Confirmed Phase 5B-5D)
+
+| Experiment | AUC | Status |
+|------------|-----|--------|
+| Cross-type (Cu porphyry → Cu sediment) | 0.45 | RANDOM |
+| Same-type (Chile porphyry → Arizona porphyry) | 0.49-0.55 | RANDOM |
+| Normalized 2-zone | 0.636 | MARGINAL (+0.12) |
+| 3-zone LOZO normalized | 0.510 | FAILS (adding zones hurts) |
+
+**Conclusion**: Satellite features are geography-dependent, not geology-transferable.
+Vegetation kills signal completely (Salave: 0 targets in forested terrain).
+Depth inference requires EMIT + geophysics — not achievable with current satellite-only stack.
+Zone-specific models are the only viable production architecture for now.
