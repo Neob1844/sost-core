@@ -224,3 +224,15 @@ For each layer added: **does AUC improve?** By how much?
 - **OZMIN solved Australia**: 16,225 deposits via free WFS API (CC-BY 4.0)
 - **Transfer requires deposit type matching**: Porphyry Cu ≠ Sediment-hosted Cu (AUC drops to random)
 - **AOI scanner works globally**: Tintic, Utah scanned with zero training data (heuristic mode)
+
+### Phase 5A: Deposit Type Discovery
+
+| Sprint | Zone | Type | AUC | Labels | Key Lesson |
+|--------|------|------|-----|--------|------------|
+| Phase 5A | Chuquicamata | Porphyry Cu | **0.86** | 43 | Already type-pure |
+| Phase 5A | Kalgoorlie | Orogenic Au | **0.80** | 103 Au-only | +0.04 vs mixed (0.77) |
+| Phase 5A | Zambia | Sediment-hosted Cu | 0.76 | 28 | Type matters most |
+
+**The Primary Learning Axis**: Deposit type > commodity > geography.
+Training on pure types sharpens the model. Mixing types confuses it.
+5,467 labels classified globally, 467 with trainable type confidence.
