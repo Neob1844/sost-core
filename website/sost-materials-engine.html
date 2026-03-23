@@ -778,7 +778,8 @@ function doExplain(id){
   fetch(API+'/explain/'+id)
     .then(function(r){return r.json()})
     .then(function(e){
-      var html='<div style="margin-top:16px;background:#0a0a0a;border:1px solid #222;padding:16px">';
+      var html='<div id="explainPanel" style="margin-top:16px;background:#0a0a0a;border:1px solid #222;padding:16px;position:relative">';
+      html+='<button onclick="document.getElementById(\'explainPanel\').remove()" style="position:absolute;top:8px;right:8px;background:#111;border:1px solid #333;color:#888;width:28px;height:28px;font-size:14px;cursor:pointer;border-radius:3px;font-family:monospace;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color=\'#fff\';this.style.borderColor=\'#666\'" onmouseout="this.style.color=\'#888\';this.style.borderColor=\'#333\'" title="Close explanation">X</button>';
       html+='<div style="font-size:16px;color:#67e8f9;font-weight:700;margin-bottom:8px">'+sanitize(e.title||e.formula);
       if(e.material_tags&&e.material_tags.length){e.material_tags.forEach(function(t){html+=' <span style="font-size:9px;padding:2px 6px;background:rgba(251,1,13,.15);color:#fb010d;border:1px solid rgba(251,1,13,.3);border-radius:3px;margin-left:6px">'+sanitize(t)+'</span>'})}
       if(e.elemental_reference){html+=' <span style="font-size:9px;padding:2px 6px;background:rgba(103,232,249,.1);color:#67e8f9;border:1px solid rgba(103,232,249,.3);border-radius:3px;margin-left:6px">ELEMENTAL REFERENCE</span>'}
@@ -810,6 +811,7 @@ function doExplain(id){
     .catch(function(){});
 }
 document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var p=document.getElementById('explainPanel');if(p)p.remove()}});
 
 // Auto-load stats
 fetch(API+'/stats').then(function(r){return r.json()}).then(function(d){
