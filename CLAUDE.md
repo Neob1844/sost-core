@@ -115,3 +115,28 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 - Coinbase output order is fixed: [0]=miner, [1]=gold, [2]=popc (validated by CB rules).
 - The `main_node.cpp`, `main_miner.cpp`, `main_wallet.cpp` files are legacy entry points — the active binaries are `sost-node.cpp`, `sost-miner.cpp`, `sost-cli.cpp`.
 - Some CMakeLists.txt targets are commented out (chunk4/6/7 tests, old binaries) — these use the old Block API.
+
+## GeaSpirit Platform (Mineral Intelligence)
+
+Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
+
+**Current state (Phase 4F):**
+- 3 domains validated: Chile (AUC 0.86), Australia (0.77), Zambia (0.76)
+- OZMIN WFS integrated (16,225 Australian deposits, CC-BY 4.0)
+- Global AOI scanner operational (heuristic mode, works anywhere)
+- Transfer learning: deposit-type dependent (porphyry ≠ sediment-hosted)
+- Bottleneck: labels, not sensors
+- Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
+- Key scripts: `build_global_aoi_stack.py`, `scan_aoi_proxies.py`, `ingest_australia_labels.py`
+
+## Materials Engine
+
+Located in `materials-engine/`. Python-based computational materials discovery.
+
+**Current state (v3.2.0):**
+- 76,193 materials, 70+ API endpoints
+- CGCNN formation energy (MAE 0.1528), ALIGNN-Lite band gap (MAE 0.3422)
+- Material Mixer MVP: generates theoretical candidates from parent pairs
+- Autonomous Discovery Engine: iterative candidate generation with error learning
+- 22 elemental + 22 compound curated overrides
+- Multilingual search (9 languages, 270+ common names)

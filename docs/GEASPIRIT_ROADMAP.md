@@ -205,6 +205,22 @@ For each layer added: **does AUC improve?** By how much?
 
 ---
 
-## Next Immediate Action
+## Actual Results (Updated March 2026)
 
-**Run `python geaspirit/setup_geaspirit.py`** to install dependencies, download MRDS data, and prepare the environment. Then create a Google Earth Engine account and authenticate.
+| Sprint | Zone | AUC | Deposits | Bands | Key Lesson |
+|--------|------|-----|----------|-------|------------|
+| Phase 1 | Chuquicamata | 0.87 (naive) | 152 | 5 | First pilot works |
+| Phase 2 | Chuquicamata | 0.99 (naive) | 152 | 19 | Multi-source helps |
+| Phase 3 | Chuquicamata | 0.68 (honest) | 152 | 19 | Spatial CV reveals real AUC |
+| Phase 3B | Chuquicamata | **0.86** | 43 curated | 24 | Clean labels > more sensors |
+| Phase 4B | Kalgoorlie | 0.58 | 16 MRDS | 14 | Label-limited |
+| Phase 4C | Kalgoorlie | 0.72 | 205 OZMIN | 12 | OZMIN breakthrough |
+| Phase 4D | Kalgoorlie | **0.77** | 205 OZMIN | 12 | Full valid stack |
+| Phase 4E | Zambia | 0.61 | 11 MRDS | 16 | Transfer fails cross-type |
+| Phase 4F | Zambia | **0.76** | 28 enriched | 16 | Wider AOI + more labels |
+
+### Key Findings
+- **Labels dominate**: Kalgoorlie went from 0.58 (16 labels) to 0.77 (205 labels) — same satellite data
+- **OZMIN solved Australia**: 16,225 deposits via free WFS API (CC-BY 4.0)
+- **Transfer requires deposit type matching**: Porphyry Cu ≠ Sediment-hosted Cu (AUC drops to random)
+- **AOI scanner works globally**: Tintic, Utah scanned with zero training data (heuristic mode)

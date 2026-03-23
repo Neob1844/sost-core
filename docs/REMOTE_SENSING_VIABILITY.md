@@ -929,3 +929,21 @@ The strongest zero-cost opportunity is building a Sentinel-2 + EMIT + NISAR fusi
 - "A Comprehensive Survey for Hyperspectral Image Classification: From Conventional to Transformers" (2024), arXiv:2404.14955
 - "Advanced Mineral Deposit Mapping via Deep Learning and SVM Integration" (2025), Engineering Reports
 - IAEA-TECDOC-1363: Guidelines for Radioelement Mapping Using Gamma Ray Spectrometry
+
+---
+
+## Actual Results vs Predictions (March 2026 Update)
+
+| Component | Prediction | Actual Result | Status |
+|-----------|-----------|---------------|--------|
+| S2 mineral mapping | VIABLE (AUC 0.70-0.85) | AUC 0.73 (S2 only, Chuquicamata) | CONFIRMED |
+| Multi-source fusion | VIABLE | AUC 0.86 (24 bands, Chuquicamata) | CONFIRMED |
+| Cross-zone transfer | PARTIALLY VIABLE | AUC 0.45-0.54 (cross-type = random) | FAILED cross-type |
+| Label enrichment | HIGH impact | +0.15 AUC (Kalgoorlie 16→205 deposits) | CONFIRMED |
+| Heuristic scanning | VIABLE | Working (Tintic, Utah — zero training) | CONFIRMED |
+| EMIT integration | HIGH potential | 50 L2A scenes/zone, infrastructure ready | PENDING |
+| Airborne geophysics | HIGH potential | GA data exists but WCS endpoints changed | PENDING |
+
+**Key unexpected finding**: Transfer learning between commodity-compatible zones
+(Chuquicamata Cu vs Zambia Cu) FAILS because deposit TYPES differ (porphyry vs
+sediment-hosted). Transfer requires geological similarity, not just commodity match.
