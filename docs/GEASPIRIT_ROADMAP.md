@@ -236,3 +236,26 @@ For each layer added: **does AUC improve?** By how much?
 **The Primary Learning Axis**: Deposit type > commodity > geography.
 Training on pure types sharpens the model. Mixing types confuses it.
 5,467 labels classified globally, 467 with trainable type confidence.
+
+### Phase 5B-5G: Global Porphyry Program + Transfer Conclusion
+
+| Sprint | Zone | Type | AUC | Labels | Key Lesson |
+|--------|------|------|-----|--------|------------|
+| Phase 5B | Arizona | Porphyry Cu | 0.72 | 5 | Label-limited |
+| Phase 5C | 2-zone transfer | Normalized | 0.636 avg | — | Normalization +0.12 |
+| Phase 5D | Peru | Porphyry Cu | 0.76 | 71 | 3-zone LOZO fails (0.51) |
+| Phase 5E | Custom | Spain scans | 0.762 top | 0 | Heuristic works |
+| Phase 5G | All | Registry | — | — | 10 AOIs, 162 targets |
+
+### Transfer Learning: Definitively Zone-Specific
+- Cross-type transfer: 0.45-0.54 (random)
+- Same-type transfer: 0.49-0.55 (still random)
+- Normalized 2-zone: 0.636 (marginal, +0.12)
+- 3-zone LOZO: 0.510 (adding zones makes it worse)
+- **Conclusion: satellite features are geography-dependent, not geology-transferable**
+
+### System Status (Phase 5G)
+- 10 AOIs: 5 supervised (AUC 0.72-0.86) + 3 heuristic + 1 demo + 1 failed
+- 162 targets with exact coordinates
+- Direct GNN inference working (CGCNN forward pass)
+- Blockers: EMIT (Earthdata auth 5min), GA geophysics (manual download 30min)
