@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""Ingest Australian mineral deposit labels from MRDS + supplementary sources.
+"""Ingest Australian mineral deposit labels from MRDS + OZMIN WFS.
 
-MRDS has 1233 Australian deposits. For Kalgoorlie specifically, there are
-~40 Au/Cu/Ni deposits within a 50km window — enough for supervised ML.
+Sources:
+- USGS MRDS (local CSV): ~1,233 Australian deposits
+- OZMIN WFS (Geoscience Australia): ~16,828 national mineral occurrences
+  Endpoint: https://services.ga.gov.au/gis/earthresource/wfs
+  Layer: erl:MineralOccurrenceView
+  License: CC-BY 4.0, no authentication required
 
-This script:
-1. Extracts all Australian metal deposits from MRDS
-2. Curates by commodity, quality, and location
-3. Exports per-AOI label files
-4. Documents everything with full traceability
+The two sources are merged, deduplicated, and curated per AOI.
 """
-import argparse, os, sys, json, csv
+import argparse, os, sys, json, csv, time
 from collections import Counter
 from math import radians, cos, sin, asin, sqrt
+import glob
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+OZMIN_WFS_BASE = "https://services.ga.gov.au/gis/earthresource/wfs"
+OZMIN_LAYER = "erl:MineralOccurrenceView"
 
 METAL_KEYWORDS = {
     "copper": "Cu", "gold": "Au", "silver": "Ag", "iron": "Fe",
@@ -42,10 +46,10 @@ def haversine(lat1, lon1, lat2, lon2):
     return R * 2 * asin(sqrt(a))
 
 
-def classify_commodity(commod_str):
-    if not commod_str:
+def classify_commodity(text):
+    if not text:
         return set()
-    lower = commod_str.lower()
+    lower = text.lower()
     for excl in EXCLUDE_KEYWORDS:
         if excl in lower and not any(m in lower for m in ["copper","gold","silver","nickel","iron"]):
             return set()
@@ -56,22 +60,111 @@ def classify_commodity(commod_str):
     return metals
 
 
-def main():
-    p = argparse.ArgumentParser(description="Ingest Australian mineral labels from MRDS")
-    p.add_argument("--mrds", default=os.path.expanduser("~/SOST/geaspirit/data/mrds/mrds.csv"))
-    p.add_argument("--output-dir", default=os.path.expanduser("~/SOST/geaspirit/data/labels"))
-    p.add_argument("--reports", default=os.path.expanduser("~/SOST/geaspirit/outputs"))
-    p.add_argument("--aoi-dir", default=os.path.expanduser("~/SOST/geaspirit/data/aois"))
-    args = p.parse_args()
+def fetch_ozmin_bbox(bbox, max_features=5000):
+    """Fetch OZMIN WFS features for a bounding box. Returns list of dicts."""
+    import requests
+    min_lon, min_lat, max_lon, max_lat = bbox
 
-    os.makedirs(args.output_dir, exist_ok=True)
-    os.makedirs(args.reports, exist_ok=True)
+    results = []
+    start_index = 0
+    page_size = 1000
 
-    print("=== Ingesting Australian Mineral Labels ===")
+    while True:
+        params = {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": OZMIN_LAYER,
+            "BBOX": f"{min_lat},{min_lon},{max_lat},{max_lon}",
+            "OUTPUTFORMAT": "application/json",
+            "COUNT": str(page_size),
+            "STARTINDEX": str(start_index),
+        }
 
-    # Extract all Australian deposits
-    aus_raw = []
-    with open(args.mrds, newline='', encoding='utf-8', errors='replace') as f:
+        try:
+            resp = requests.get(OZMIN_WFS_BASE, params=params, timeout=60)
+            if resp.status_code != 200:
+                print(f"    WFS error: HTTP {resp.status_code}")
+                break
+
+            data = resp.json()
+            features = data.get("features", [])
+            if not features:
+                break
+
+            for feat in features:
+                props = feat.get("properties", {})
+                geom = feat.get("geometry", {})
+                coords = geom.get("coordinates", [None, None]) if geom else [None, None]
+
+                # OZMIN returns [lon, lat]
+                lon, lat = None, None
+                if coords and len(coords) >= 2:
+                    lon, lat = coords[0], coords[1]
+
+                if lat is None or lon is None:
+                    continue
+
+                commodity_text = props.get("commodity", "") or ""
+                name = props.get("name", "") or ""
+                occ_type = props.get("mineralOccurrenceType", "") or ""
+                identifier = props.get("identifier", "") or ""
+
+                results.append({
+                    "latitude": lat,
+                    "longitude": lon,
+                    "site_name": name,
+                    "deposit_id": identifier,
+                    "commodity_raw": commodity_text,
+                    "occurrence_type": occ_type,
+                    "source": "OZMIN_WFS",
+                })
+
+            start_index += page_size
+            if len(features) < page_size or len(results) >= max_features:
+                break
+            time.sleep(0.3)  # polite rate limiting
+        except Exception as e:
+            print(f"    WFS fetch error: {e}")
+            break
+
+    return results
+
+
+def fetch_ozmin_australia_wide():
+    """Fetch OZMIN data for all of Australia by tiling."""
+    # Australia bbox: lon 112-154, lat -44 to -10
+    # Tile in 5-degree chunks to avoid WFS limits
+    all_results = []
+    tiles = []
+    for lat_start in range(-44, -10, 5):
+        for lon_start in range(112, 154, 5):
+            tiles.append([lon_start, lat_start, lon_start+5, lat_start+5])
+
+    print(f"    Fetching OZMIN via {len(tiles)} tiles...")
+    for i, tile_bbox in enumerate(tiles):
+        results = fetch_ozmin_bbox(tile_bbox, max_features=5000)
+        all_results.extend(results)
+        if (i + 1) % 10 == 0:
+            print(f"    Tile {i+1}/{len(tiles)}: {len(all_results)} total so far")
+        time.sleep(0.2)
+
+    # Deduplicate by identifier
+    seen = set()
+    unique = []
+    for r in all_results:
+        key = r["deposit_id"] or f"{r['latitude']:.5f}_{r['longitude']:.5f}"
+        if key not in seen:
+            seen.add(key)
+            unique.append(r)
+
+    return unique
+
+
+def load_mrds_australia(mrds_path):
+    """Load Australian deposits from MRDS CSV."""
+    deposits = []
+    with open(mrds_path, newline='', encoding='utf-8', errors='replace') as f:
         for row in csv.DictReader(f):
             if "Australia" not in row.get("country", ""):
                 continue
@@ -82,72 +175,115 @@ def main():
                 continue
             if not (-44 <= lat <= -10 and 112 <= lon <= 154):
                 continue
-            aus_raw.append(row)
+            deposits.append({
+                "latitude": lat,
+                "longitude": lon,
+                "site_name": row.get("site_name", ""),
+                "deposit_id": row.get("dep_id", ""),
+                "commodity_raw": row.get("commod1", ""),
+                "occurrence_type": row.get("dep_type", ""),
+                "source": "MRDS",
+            })
+    return deposits
 
-    print(f"  Total Australian deposits in MRDS: {len(aus_raw)}")
 
-    # Classify and curate
+def main():
+    p = argparse.ArgumentParser(description="Ingest Australian labels from MRDS + OZMIN WFS")
+    p.add_argument("--mrds", default=os.path.expanduser("~/SOST/geaspirit/data/mrds/mrds.csv"))
+    p.add_argument("--source", choices=["all", "mrds", "ozmin"], default="all")
+    p.add_argument("--output-dir", default=os.path.expanduser("~/SOST/geaspirit/data/labels"))
+    p.add_argument("--reports", default=os.path.expanduser("~/SOST/geaspirit/outputs"))
+    p.add_argument("--aoi-dir", default=os.path.expanduser("~/SOST/geaspirit/data/aois"))
+    args = p.parse_args()
+
+    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(args.reports, exist_ok=True)
+
+    print("=== Ingesting Australian Mineral Labels ===")
+
+    all_raw = []
+    mrds_count = 0
+    ozmin_count = 0
+
+    # MRDS
+    if args.source in ("all", "mrds"):
+        print("\n  [MRDS] Loading from local CSV...")
+        mrds = load_mrds_australia(args.mrds)
+        mrds_count = len(mrds)
+        all_raw.extend(mrds)
+        print(f"    MRDS: {mrds_count} Australian deposits")
+
+    # OZMIN WFS
+    if args.source in ("all", "ozmin"):
+        print("\n  [OZMIN] Fetching from Geoscience Australia WFS...")
+        ozmin = fetch_ozmin_australia_wide()
+        ozmin_count = len(ozmin)
+        all_raw.extend(ozmin)
+        print(f"    OZMIN: {ozmin_count} mineral occurrences")
+
+        # Save raw OZMIN response
+        raw_path = os.path.join(args.output_dir, "australia_labels_mrds_ozmin_raw.json")
+        with open(raw_path, "w") as f:
+            json.dump(ozmin, f, indent=2)
+
+    print(f"\n  Total raw: {len(all_raw)} (MRDS={mrds_count}, OZMIN={ozmin_count})")
+
+    # Classify commodities and curate
     curated = []
-    for row in aus_raw:
-        lat = float(row["latitude"])
-        lon = float(row["longitude"])
-        commod1 = row.get("commod1", "").strip()
-        commod2 = row.get("commod2", "").strip()
-        commod3 = row.get("commod3", "").strip()
-
-        metals = set()
-        for c in [commod1, commod2, commod3]:
-            metals |= classify_commodity(c)
-
+    for d in all_raw:
+        metals = classify_commodity(d["commodity_raw"])
+        if not metals:
+            # Try occurrence type
+            metals = classify_commodity(d.get("occurrence_type", ""))
         if not metals:
             continue
 
         # Quality score
         quality = 50
-        lat_str = row.get("latitude", "")
-        if "." in lat_str and len(lat_str.split(".")[1]) >= 3:
+        lat_str = str(d["latitude"])
+        if "." in lat_str and len(lat_str.split(".")[1]) >= 4:
             quality += 15
-        if commod1:
-            quality += 10
-        if row.get("dep_type", "").strip():
-            quality += 10
-        if row.get("dev_stat", "").strip():
+        elif "." in lat_str and len(lat_str.split(".")[1]) >= 2:
             quality += 5
-        if row.get("hrock_type", "").strip():
+        if d["commodity_raw"]:
+            quality += 10
+        if d.get("occurrence_type"):
+            quality += 10
+        if d["site_name"]:
             quality += 5
         quality = min(100, quality)
 
         curated.append({
-            "deposit_id": row.get("dep_id", ""),
-            "site_name": row.get("site_name", ""),
-            "latitude": lat,
-            "longitude": lon,
-            "country": "Australia",
-            "state": row.get("state", ""),
+            "deposit_id": d["deposit_id"],
+            "site_name": d["site_name"],
+            "latitude": d["latitude"],
+            "longitude": d["longitude"],
             "commodity_codes": ",".join(sorted(metals)),
-            "commod1_raw": commod1,
-            "dep_type": row.get("dep_type", "").strip(),
-            "dev_stat": row.get("dev_stat", "").strip(),
-            "hrock_type": row.get("hrock_type", "").strip(),
+            "commodity_raw": d["commodity_raw"],
+            "occurrence_type": d.get("occurrence_type", ""),
             "quality_score": quality,
-            "source": "USGS_MRDS",
+            "source_dataset": d["source"],
             "duplicate_flag": False,
             "keep_for_training": quality >= 30,
         })
 
-    print(f"  Metal deposits retained: {len(curated)}")
+    print(f"  Metal deposits after classification: {len(curated)}")
 
-    # Deduplicate
+    # Cross-source deduplication (MRDS vs OZMIN)
     dup_count = 0
-    for i in range(len(curated)):
+    kept_indices = [i for i, d in enumerate(curated) if d["keep_for_training"]]
+    for ii in range(len(kept_indices)):
+        i = kept_indices[ii]
         if not curated[i]["keep_for_training"]:
             continue
-        for j in range(i+1, len(curated)):
+        for jj in range(ii + 1, min(ii + 200, len(kept_indices))):  # limit comparisons
+            j = kept_indices[jj]
             if not curated[j]["keep_for_training"]:
                 continue
             dist = haversine(curated[i]["latitude"], curated[i]["longitude"],
                              curated[j]["latitude"], curated[j]["longitude"])
             if dist < DUPLICATE_THRESHOLD_M:
+                # Keep the one with higher quality or prefer OZMIN (more data)
                 if curated[i]["quality_score"] >= curated[j]["quality_score"]:
                     curated[j]["duplicate_flag"] = True
                     curated[j]["keep_for_training"] = False
@@ -160,7 +296,7 @@ def main():
     print(f"  Duplicates flagged: {dup_count}")
     print(f"  Final kept: {kept}")
 
-    # Save all Australia labels
+    # Save all curated labels
     csv_path = os.path.join(args.output_dir, "australia_labels_curated.csv")
     fieldnames = list(curated[0].keys()) if curated else []
     with open(csv_path, "w", newline="") as f:
@@ -171,8 +307,7 @@ def main():
 
     # Per-AOI extraction
     aoi_stats = {}
-    import glob
-    for aoi_file in glob.glob(os.path.join(args.aoi_dir, "*.json")):
+    for aoi_file in sorted(glob.glob(os.path.join(args.aoi_dir, "*.json"))):
         with open(aoi_file) as f:
             aoi = json.load(f)
         bbox = aoi["bbox"]
@@ -188,34 +323,29 @@ def main():
                 for d in aoi_deps:
                     w.writerow(d)
             comm_counts = Counter()
+            src_counts = Counter()
             for d in aoi_deps:
                 for c in d["commodity_codes"].split(","):
                     if c:
                         comm_counts[c] += 1
-            aoi_stats[aoi_name] = {"count": len(aoi_deps), "commodities": dict(comm_counts)}
-            print(f"  {aoi_name}: {len(aoi_deps)} deposits — {dict(comm_counts)}")
-
-    # Also count for known zones
-    for zone_name, zone_bbox in [("kalgoorlie", [121.2, -31.9, 122.2, -30.9]),
-                                  ("pilbara", [118.7, -23.6, 119.7, -22.6])]:
-        if zone_name not in aoi_stats:
-            zone_deps = [d for d in curated if d["keep_for_training"]
-                         and zone_bbox[1] <= d["latitude"] <= zone_bbox[3]
-                         and zone_bbox[0] <= d["longitude"] <= zone_bbox[2]]
-            comm_counts = Counter()
-            for d in zone_deps:
-                for c in d["commodity_codes"].split(","):
-                    if c:
-                        comm_counts[c] += 1
-            aoi_stats[zone_name] = {"count": len(zone_deps), "commodities": dict(comm_counts)}
-            print(f"  {zone_name} (estimate): {len(zone_deps)} deposits — {dict(comm_counts)}")
+                src_counts[d["source_dataset"]] += 1
+            aoi_stats[aoi_name] = {
+                "count": len(aoi_deps),
+                "commodities": dict(comm_counts.most_common()),
+                "sources": dict(src_counts),
+            }
+            print(f"  {aoi_name}: {len(aoi_deps)} deposits — {dict(comm_counts.most_common(5))}")
+            print(f"    Sources: {dict(src_counts)}")
 
     # Report
     report = {
-        "source": "USGS MRDS (mrds.csv)",
-        "license": "Public domain (US Government)",
-        "total_australian_raw": len(aus_raw),
-        "total_metal_curated": len(curated),
+        "sources": {
+            "MRDS": {"count": mrds_count, "license": "Public domain (US Government)"},
+            "OZMIN_WFS": {"count": ozmin_count, "license": "CC-BY 4.0 (Geoscience Australia)",
+                          "endpoint": OZMIN_WFS_BASE, "layer": OZMIN_LAYER},
+        },
+        "total_raw": len(all_raw),
+        "total_curated_metal": len(curated),
         "duplicates_removed": dup_count,
         "final_kept": kept,
         "per_aoi": aoi_stats,
@@ -223,41 +353,37 @@ def main():
             c for d in curated if d["keep_for_training"]
             for c in d["commodity_codes"].split(",") if c
         ).most_common()),
-        "limitations": [
-            "MRDS is US-centric — Australian coverage is limited (~1233 records)",
-            "No OZMIN/MINEDEX integration yet (requires manual download from GA/DMIRS portals)",
-            "Coordinate precision varies — some deposits have coarse locations",
-            "Commodity classifications are text-based, not standardized codes",
-        ],
     }
-    with open(os.path.join(args.reports, "australia_labels_ingestion_report.json"), "w") as f:
+    with open(os.path.join(args.reports, "ozmin_ingestion_report.json"), "w") as f:
         json.dump(report, f, indent=2)
 
-    md = "# Australian Mineral Labels Ingestion Report\n\n"
-    md += f"## Source: USGS MRDS\n"
-    md += f"- License: Public domain\n"
-    md += f"- Total Australian: {len(aus_raw)}\n"
+    md = "# Australian Mineral Labels — MRDS + OZMIN WFS\n\n"
+    md += f"## Sources\n"
+    md += f"- **MRDS**: {mrds_count} deposits (Public domain)\n"
+    md += f"- **OZMIN WFS**: {ozmin_count} occurrences (CC-BY 4.0, Geoscience Australia)\n"
+    md += f"- Endpoint: `{OZMIN_WFS_BASE}`\n"
+    md += f"- Layer: `{OZMIN_LAYER}`\n\n"
+    md += f"## Totals\n"
+    md += f"- Raw combined: {len(all_raw)}\n"
     md += f"- Metal deposits: {len(curated)}\n"
     md += f"- Duplicates removed: {dup_count}\n"
-    md += f"- Final kept: {kept}\n\n"
+    md += f"- **Final kept: {kept}**\n\n"
     md += f"## Per-AOI Coverage\n\n"
-    md += "| AOI | Deposits | Top Commodities |\n|-----|----------|-----------------|\n"
+    md += "| AOI | Deposits | MRDS | OZMIN | Top Commodities |\n"
+    md += "|-----|----------|------|-------|------------------|\n"
     for name, stats in aoi_stats.items():
-        comms = ", ".join(f"{k}:{v}" for k, v in sorted(stats["commodities"].items(), key=lambda x: -x[1])[:5])
-        md += f"| {name} | {stats['count']} | {comms} |\n"
-    md += f"\n## Limitations\n\n"
-    for lim in report["limitations"]:
-        md += f"- {lim}\n"
-    md += f"\n## OZMIN/MINEDEX Status\n"
-    md += f"OZMIN (Geoscience Australia) and MINEDEX (DMIRS Western Australia) are national/state\n"
-    md += f"mineral databases with thousands more deposits. They require manual download from:\n"
-    md += f"- https://portal.ga.gov.au (OZMIN)\n"
-    md += f"- https://minedex.dmirs.wa.gov.au (MINEDEX/WA)\n"
-    md += f"Integration planned for future phase.\n"
+        comms = ", ".join(f"{k}:{v}" for k, v in list(stats["commodities"].items())[:5])
+        mrds_n = stats["sources"].get("MRDS", 0)
+        ozmin_n = stats["sources"].get("OZMIN_WFS", 0)
+        md += f"| {name} | **{stats['count']}** | {mrds_n} | {ozmin_n} | {comms} |\n"
+    md += f"\n## Impact\n"
+    for name, stats in aoi_stats.items():
+        if "kalgoorlie" in name:
+            md += f"- **Kalgoorlie**: {stats['count']} deposits (was 16 with MRDS only)\n"
 
-    with open(os.path.join(args.reports, "australia_labels_ingestion_report.md"), "w") as f:
+    with open(os.path.join(args.reports, "ozmin_ingestion_report.md"), "w") as f:
         f.write(md)
-    print(f"\n  Saved: australia_labels_curated.csv + report")
+    print(f"\n  Saved: australia_labels_curated.csv + ozmin_ingestion_report.md")
 
 
 if __name__ == "__main__":
