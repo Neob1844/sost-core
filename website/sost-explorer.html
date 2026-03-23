@@ -74,10 +74,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .diff-bar-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:1px;transition:width .6s ease}
 .diff-bar-info{font-size:10px;color:var(--text2);white-space:nowrap}
 .sparkline-wrap{max-width:1400px;margin:8px auto 0;padding:0 24px}
-.sparkline-box{background:var(--bg2);border:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:14px;position:relative}
+.sparkline-box{background:var(--bg2);border:1px solid var(--border);padding:12px 16px;position:relative}
 .sparkline-label{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
-.sparkline-canvas{flex:1;height:40px}
-.sparkline-info{font-size:10px;color:var(--text2);white-space:nowrap}
+.sparkline-canvas{width:100%;height:120px;margin-top:8px}
+.sparkline-info{font-size:10px;color:var(--text2);white-space:nowrap;display:block;margin-top:6px}
 .countdown-val{font-variant-numeric:tabular-nums}
 .rich-section{margin-bottom:24px}
 .dash-val.blue{color:var(--blue)}.dash-val.orange{color:var(--orange)}.dash-val.yellow{color:var(--yellow)}
@@ -515,7 +515,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
         <span title="Hash and difficulty of the block BEFORE the one being mined now">prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a> <span id="miningPrevDiff" style="color:var(--text3);"></span></span>
         <span class="pi" onclick="toggleParamInfo('bitsq')">bitsQ: <span id="miningBitsQRaw" style="color:var(--purple);font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
-        <span class="pi" onclick="toggleParamInfo('profile')">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=185 steps=4)</span> <span class="pi-i">ⓘ</span></span>
+        <span class="pi" onclick="toggleParamInfo('profile')" title="Estimated from current chain lag — actual consensus profile may differ by ±1 level">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--text3);">(scale=1 k=4 margin=185 steps=4)</span> <span class="pi-i">ⓘ</span></span>
         <span class="pi" onclick="toggleParamInfo('stability')">stability: <span id="miningStabRate" style="font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
         <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
       </div>

@@ -607,7 +607,24 @@
   var box=document.getElementById('spl-lines');
   lines.forEach(function(t){var d=document.createElement('div');d.className='spl-line';d.textContent=t;box.appendChild(d);});
   var els=box.querySelectorAll('.spl-line');
-  els.forEach(function(el,i){setTimeout(function(){el.classList.add('go');},2500+i*900);});
+  // Typing tick sound (procedural)
+  function playTypeTick(){
+    try{
+      var ac=new(window.AudioContext||window.webkitAudioContext)();
+      var o=ac.createOscillator();var g=ac.createGain();
+      o.type='square';o.frequency.value=1200+Math.random()*800;
+      g.gain.setValueAtTime(0.04,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.03);
+      o.connect(g);g.connect(ac.destination);
+      o.start();o.stop(ac.currentTime+0.03);
+    }catch(e){}
+  }
+  els.forEach(function(el,i){
+    var t0=2500+i*900;
+    setTimeout(function(){el.classList.add('go');},t0);
+    // Tick sounds during typing (6 ticks per line, 80ms apart)
+    for(var k=0;k<6;k++){setTimeout(playTypeTick,t0+k*80);}
+  });
   // Try autoplay chiptune; add touch/click fallback if blocked
   try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(7);}catch(e){}
   function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(6);}catch(e){}}
