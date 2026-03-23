@@ -407,6 +407,61 @@
   </div>
 </section>
 
+<!-- TRANSACTION SAFETY LAYER -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <h2 class="section-title">Transaction Safety <span class="accent">Layer</span></h2>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-label">Wallet-Layer Security (No Consensus Change)</span>
+        </div>
+        <span class="spec-tag">IMPLEMENTED</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Feature</th><th>Detail</th></tr>
+          <tr><td class="label">Build hardening</td><td class="value">Stack protector, ASLR (PIE), RELRO, FORTIFY_SOURCE</td></tr>
+          <tr><td class="label">Wallet encryption</td><td class="value">AES-256-GCM + scrypt (N=32768), key material wiped with OPENSSL_cleanse</td></tr>
+          <tr><td class="label">ECDSA signing</td><td class="value">libsecp256k1 with LOW-S enforcement, side-channel resistant context</td></tr>
+          <tr><td class="label">Fee-rate ordering</td><td class="value">Rational arithmetic (integer-only), no floating-point consensus bugs</td></tr>
+          <tr><td class="label">P2P protection</td><td class="value">Ban system (100pts = 24h), 64 max inbound, 4 per IP</td></tr>
+          <tr><td class="label">RPC security</td><td class="value">Localhost-only default, Basic Auth, dangerous method documentation</td></tr>
+          <tr><td class="label">cASERT RPC</td><td class="value">Real-time profile from node (casert_profile, casert_lag), no wall-clock estimation</td></tr>
+        </table>
+        <div style="margin-top:12px;font-size:11px;color:#888;line-height:1.7">
+          <b>What did NOT change:</b> Consensus rules, supply, mining, emission, block validation, chain history.<br>
+          <b>No fork required:</b> All security features live above the consensus layer.
+        </div>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon amber"></div>
+          <span class="spec-label">Planned Wallet Safety Features</span>
+        </div>
+        <span class="spec-tag">DESIGNED</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><th>Feature</th><th>Status</th></tr>
+          <tr><td class="label">Trusted address book</td><td class="value">Designed — local address whitelisting with trust levels</td></tr>
+          <tr><td class="label">New-address cooldown</td><td class="value">Designed — warning + optional delay for first send to new address</td></tr>
+          <tr><td class="label">Pre-send summary</td><td class="value">Designed — human-readable confirmation before signing</td></tr>
+          <tr><td class="label">Treasury safety profile</td><td class="value">Designed — daily limits, elevated auth for vault wallets</td></tr>
+          <tr><td class="label">PSBT / offline signing</td><td class="value">Future — enables hardware wallets and air-gapped signing</td></tr>
+          <tr><td class="label">HD wallet (BIP32)</td><td class="value">Future — single seed backup, automatic change addresses</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- IMPLEMENTATION STATUS -->
 <section class="section">
   <div class="container">

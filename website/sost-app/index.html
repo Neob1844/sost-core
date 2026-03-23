@@ -105,7 +105,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
 });
 // Chiptune starts on splash (PWA counts icon tap as user gesture)
-try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(7);}catch(e){}
+try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(8);}catch(e){}
 setTimeout(function(){
   var appEl=document.getElementById('app');
   appEl.style.display='flex';
@@ -116,7 +116,7 @@ setTimeout(function(){
     initLoading();
     setTimeout(function(){document.getElementById('splash').style.display='none';},600);
   },100);
-},7000);
+},8000);
 
 /* ===== LOADING ===== */
 var exLoaded=false;
