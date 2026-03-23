@@ -607,26 +607,36 @@
   var box=document.getElementById('spl-lines');
   lines.forEach(function(t){var d=document.createElement('div');d.className='spl-line';d.textContent=t;box.appendChild(d);});
   var els=box.querySelectorAll('.spl-line');
-  // Typing tick sound (procedural)
+  // 20 typing tick variations (louder, varied)
+  var TICK_PRESETS=[
+    {f:900,t:'square',d:15},{f:1100,t:'square',d:20},{f:1400,t:'square',d:25},
+    {f:1800,t:'square',d:18},{f:2200,t:'square',d:12},{f:800,t:'sawtooth',d:20},
+    {f:1000,t:'sawtooth',d:25},{f:1300,t:'sawtooth',d:15},{f:1600,t:'sawtooth',d:22},
+    {f:2000,t:'sawtooth',d:18},{f:1200,t:'triangle',d:30},{f:1500,t:'triangle',d:25},
+    {f:1900,t:'triangle',d:20},{f:2400,t:'triangle',d:15},{f:2800,t:'triangle',d:12},
+    {f:950,t:'square',d:35},{f:1250,t:'square',d:28},{f:1700,t:'sawtooth',d:22},
+    {f:2100,t:'triangle',d:18},{f:3000,t:'square',d:10}
+  ];
   function playTypeTick(){
     try{
+      var p=TICK_PRESETS[Math.floor(Math.random()*TICK_PRESETS.length)];
       var ac=new(window.AudioContext||window.webkitAudioContext)();
       var o=ac.createOscillator();var g=ac.createGain();
-      o.type='square';o.frequency.value=1200+Math.random()*800;
-      g.gain.setValueAtTime(0.04,ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.03);
+      o.type=p.t;o.frequency.value=p.f;
+      var dur=p.d/1000;
+      g.gain.setValueAtTime(0.12,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
       o.connect(g);g.connect(ac.destination);
-      o.start();o.stop(ac.currentTime+0.03);
+      o.start();o.stop(ac.currentTime+dur);
     }catch(e){}
   }
   els.forEach(function(el,i){
     var t0=2500+i*900;
     setTimeout(function(){el.classList.add('go');},t0);
-    // Tick sounds during typing (6 ticks per line, 80ms apart)
-    for(var k=0;k<6;k++){setTimeout(playTypeTick,t0+k*80);}
+    for(var k=0;k<8;k++){setTimeout(playTypeTick,t0+k*60);}
   });
   // Try autoplay chiptune; add touch/click fallback if blocked
-  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(7);}catch(e){}
+  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(8);}catch(e){}
   function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(6);}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
@@ -634,7 +644,7 @@
     sp.style.opacity='0';
     setTimeout(function(){sp.style.display='none';},600);
     sessionStorage.setItem('splashShown','1');
-  },7000);
+  },8000);
 })();
 </script>
 <nav>
