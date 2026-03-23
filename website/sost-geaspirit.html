@@ -463,6 +463,61 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
+<!-- ZONE-SPECIFIC ARCHITECTURE -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// ZONE-SPECIFIC PRODUCTION ARCHITECTURE</div>
+    <div class="section-title">How It <span>Works</span></div>
+    <div class="human-box">
+      <b style="color:var(--amber)">WHY ZONE-SPECIFIC?</b><br><br>
+      Transfer learning between zones fails even with same deposit type + normalization (AUC ~0.51). Satellite features are geographically local — terrain, climate, vegetation all change with location. The correct architecture is:<br><br>
+      <b>Local models</b> trained per zone where labels exist (AUC 0.76-0.86)<br>
+      <b>Global scanner</b> for any AOI worldwide without training data (heuristic mode)<br><br>
+      <b style="color:var(--amber)">DOMAIN NORMALIZATION</b><br>
+      Z-score normalization per AOI improved 2-zone transfer by +0.12 AUC (0.52 &#8594; 0.64). But with 3+ diverse zones, the improvement vanishes. The model learns <b>local terrain patterns</b>, not universal geology.<br><br>
+      <b style="color:var(--amber)">10 AOIs OPERATIONAL</b><br>
+      Chile, Peru, Australia, Zambia, Arizona, Tintic (Utah), Pilbara, Salave (Spain), Barqueros (Spain), Banos de Mula (Spain)
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOM AOIs -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// CUSTOM AOI SCANS — SPAIN</div>
+    <div class="section-title">User <span>AOIs</span></div>
+    <div class="panel">
+      <div class="panel-head">CUSTOM AOI COMPARISON</div>
+      <table class="tbl">
+        <thead><tr><th>AOI</th><th>Top Score</th><th>HIGH km&#178;</th><th>Style</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>Banos de Mula, Murcia</td><td style="color:var(--amber)">0.762</td><td>10.0</td><td>Hydrothermal</td><td><b>PRIORITY 1</b></td></tr>
+          <tr><td>Volcan de Barqueros, Murcia</td><td>0.713</td><td>5.6</td><td>Volcanic</td><td>PRIORITY 2</td></tr>
+          <tr style="color:#666"><td>Salave, Asturias</td><td>&#8212;</td><td>0.0</td><td>Orogenic Au (known)</td><td>PRIORITY 3</td></tr>
+        </tbody>
+      </table>
+      <div style="color:#888;font-size:11px;margin-top:8px;line-height:1.6">
+        Score reflects surface-proxy coherence only. Score &#8800; confirmed deposit. Score &#8800; ore grade or tonnage.<br>
+        Salave: known gold deposit invisible to satellite (vegetation suppresses signals). Needs ground magnetics.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">SCORE INTERPRETATION</div>
+      <table class="tbl">
+        <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>0.00-0.30</td><td>Weak / background — no strong signal</td></tr>
+          <tr><td>0.30-0.50</td><td>Low anomaly — minor or noise</td></tr>
+          <tr><td>0.50-0.60</td><td>Moderate — worth review</td></tr>
+          <tr style="color:var(--green)"><td>0.60-0.70</td><td>Strong target — multi-proxy signal</td></tr>
+          <tr style="color:var(--green);font-weight:600"><td>0.70-0.80</td><td>Very strong — coherent anomaly</td></tr>
+          <tr style="color:var(--amber);font-weight:700"><td>&gt;0.80</td><td>Exceptional — rare, immediate follow-up</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- TARGET DISCOVERY -->
 <section class="section">
   <div class="container">
@@ -534,12 +589,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   <div class="container">
     <div class="section-id">// ROADMAP</div>
     <div class="section-title">Development <span>Phases</span></div>
-    <div class="phase"><span class="phase-label">PHASE 0-3B</span> Setup &#8594; multi-source &#8594; honest CV &#8594; label curation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
-    <div class="phase"><span class="phase-label">PHASE 4A-4F</span> 3 domains + OZMIN + transfer + AOI scanner <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
-    <div class="phase"><span class="phase-label">PHASE 5A</span> Deposit-type benchmarks &#8212; type &gt; mixed labels <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">3 types</span></div>
-    <div class="phase"><span class="phase-label">PHASE 5B</span> Global porphyry Cu expansion (1,033 MRDS labels) <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
-    <div class="phase"><span class="phase-label">PHASE 6</span> GA geophysics + EMIT hyperspectral <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> PLANNED</div>
-    <div class="phase"><span class="phase-label">PHASE 7</span> Cross-zone same-type transfer + depth inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> FUTURE</div>
+    <div class="phase"><span class="phase-label">PHASE 0-3B</span> Setup &#8594; honest CV &#8594; label curation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
+    <div class="phase"><span class="phase-label">PHASE 4</span> 3 domains + OZMIN + transfer + AOI scanner <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
+    <div class="phase"><span class="phase-label">PHASE 5A-5D</span> Deposit-type + porphyry global + domain normalization <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">10 AOIs</span></div>
+    <div class="phase"><span class="phase-label">PHASE 5E+</span> Zone-specific architecture + geomorphometry + coordinates <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 6</span> EMIT hyperspectral + GA geophysics <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 7</span> Magnetometry + depth inference <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> FUTURE</div>
   </div>
 </section>
 
