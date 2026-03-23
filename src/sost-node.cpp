@@ -1016,8 +1016,27 @@ static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES);
+
+    // Compute next block info
+    int64_t next_height = g_chain_height + 1;
+    std::string prev_hash = g_blocks.empty() ? std::string(64, '0') : to_hex(g_blocks.back().block_id.data(), 32);
+    uint32_t next_bits = GENESIS_BITSQ;
+    if (!g_blocks.empty()) {
+        std::vector<BlockMeta> meta;
+        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
+        next_bits = sost::casert_next_bitsq(meta, next_height);
+    }
+    int64_t curtime = (int64_t)time(nullptr);
+    int64_t subsidy = sost_subsidy_stocks(next_height);
+
     std::ostringstream s;
-    s << "{\"transactions\":[";
+    s << "{\"height\":" << next_height
+      << ",\"previousblockhash\":\"" << prev_hash << "\""
+      << ",\"bits\":" << next_bits
+      << ",\"difficulty\":" << next_bits
+      << ",\"curtime\":" << curtime
+      << ",\"coinbasevalue\":" << subsidy
+      << ",\"transactions\":[";
     for (size_t i = 0; i < tmpl.txs.size(); ++i) {
         if (i) s << ",";
         std::vector<Byte> raw;
