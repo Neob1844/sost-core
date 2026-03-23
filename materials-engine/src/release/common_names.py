@@ -198,6 +198,35 @@ _add(["rubber","goma","caucho","caoutchouc","gomma","gummi"],
 _add(["paper","papel","papier","carta"],
      None, "everyday",
      "Paper is made from cellulose fibers, an organic material not in this crystal corpus.")
+_add(["stainless steel","acero inoxidable","edelstahl","inox"],
+     None, "everyday",
+     "Stainless steel is an iron-chromium alloy (Fe + 10-20% Cr + Ni). Try 'Fe', 'Cr' or 'Ni'.",
+     composition="Fe + Cr (10-20%) + Ni (8-12%)", related=["Fe", "Cr", "Ni"])
+_add(["bronze","bronce"], None, "everyday",
+     "Bronze is a copper-tin alloy. Try 'Cu' or 'Sn'.", composition="Cu + Sn (8-12%)", related=["Cu", "Sn"])
+_add(["brass","laton","latón","messing","laiton"], None, "everyday",
+     "Brass is a copper-zinc alloy. Try 'Cu' or 'Zn'.", composition="Cu + Zn (5-45%)", related=["Cu", "Zn"])
+_add(["graphite","grafito"], "C", "crystal",
+     "Graphite is a crystalline form of carbon. In this corpus as elemental C.", related=["C"])
+_add(["gypsum","yeso"], None, "everyday",
+     "Gypsum is CaSO4 (hydrated calcium sulfate). Try 'CaO' for related oxide.",
+     composition="CaSO4", related=["CaO", "CaCO3"])
+_add(["methane","metano","CH4"], None, "known_molecule_not_in_corpus",
+     "Methane (CH4) is an organic gas, not an inorganic crystal.",
+     uses=["Natural gas fuel", "Chemical feedstock", "Hydrogen production"], related=[])
+_add(["oil","petroleo","petróleo","petroleum"], None, "everyday",
+     "Petroleum/oil is a complex organic mixture, not an inorganic crystal.")
+# Category searches
+_add(["precious metal","precious metals","metal precioso"], None, "category",
+     "Precious metals include Au, Ag, Pt, Pd. Search each individually.", related=["Au", "Ag", "Pt"])
+_add(["semiconductor","semiconductors","semiconductores"], None, "category",
+     "Common semiconductors: Si, GaAs, InP, SiC, GaN, ZnO. Search each individually.", related=["Si", "GaAs", "SiC"])
+_add(["ceramic","ceramics","cerámica"], None, "category",
+     "Technical ceramics include Al2O3, ZrO2, SiC, BN, AlN. Search each individually.", related=["Al2O3", "ZrO2", "SiC"])
+_add(["battery material","battery materials"], None, "category",
+     "Key battery materials: Li, Co, Ni, Mn, graphite (C). Search each individually.", related=["Li", "Co", "Ni", "C"])
+_add(["catalyst","catalysts","catalizador"], None, "category",
+     "Common catalysts: Pt, Pd, Ni, TiO2, ZrO2. Search each individually.", related=["Pt", "Ni", "TiO2"])
 
 
 def resolve_query(q: str) -> dict:
