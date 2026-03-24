@@ -961,9 +961,41 @@ function lockSession(){
   msg.style.color='#ffb000';
 }
 
-// === ACCESS CONTROL (memory only, no sessionStorage) ===
+// === ACCESS CONTROL — server-side auth with client-side fallback ===
 async function checkAccess(){
   var pwd=document.getElementById('access-pwd').value;
+  if(!pwd)return;
+  var msg=document.getElementById('access-msg');
+  msg.textContent='> Authenticating...';msg.style.color='#006600';
+
+  // Try server-side auth first
+  try{
+    var resp=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'admin',password:pwd})});
+    if(resp.ok){
+      var data=await resp.json();
+      if(data.status==='authenticated'||data.status==='otp_sent'){
+        if(data.requires_otp){
+          msg.textContent='> Code sent to phone';msg.style.color='#00ff41';
+          var otp=prompt('Enter 6-digit verification code:');
+          if(!otp)return;
+          var otpResp=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({otp_code:otp})});
+          if(!otpResp.ok){msg.textContent='> INVALID CODE';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
+        }
+        document.getElementById('protected-content').style.display='block';
+        document.getElementById('access-panel').style.display='none';
+        geaspirit_unlocked=true;
+        startSession(600);
+        return;
+      }
+    }
+    if(resp.status===401){msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
+  }catch(e){
+    console.log('Auth API unavailable, using client-side fallback');
+  }
+
+  // Fallback: client-side SHA-256 gate (when auth server not available)
   var enc=new TextEncoder();
   var buf=await crypto.subtle.digest('SHA-256',enc.encode(pwd));
   var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
@@ -973,7 +1005,6 @@ async function checkAccess(){
     geaspirit_unlocked=true;
     startSession(600);
   }else{
-    var msg=document.getElementById('access-msg');
     msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
     setTimeout(function(){msg.textContent=''},2000);
   }
