@@ -586,9 +586,9 @@
 <!-- SPLASH — Red Matrix Rain -->
 <div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
   <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <img id="splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0));z-index:10;pointer-events:none">
-  <div id="splash-title" style="position:absolute;top:52%;left:50%;transform:translateX(-50%);font-size:22px;font-weight:700;letter-spacing:4px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
-  <div id="spl-lines" style="position:absolute;top:62%;left:50%;transform:translateX(-50%);font-size:13px;min-height:80px;text-align:left;width:320px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
+  <img id="splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0));z-index:10;pointer-events:none">
+  <div id="splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
+  <div id="spl-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);font-size:16px;min-height:100px;text-align:left;width:400px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
   <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
 </div>
 <style>
@@ -652,12 +652,12 @@
   // === MATRIX RAIN (RED) on canvas ===
   var canvas=document.getElementById('matrix-canvas');
   var ctx=canvas.getContext('2d');
-  var W,H,columns,drops,fontSize=14;
+  var W,H,columns,drops,fontSize=18;
   var chars='\u30A2\u30A4\u30A6\u30A8\u30AA\u30AB\u30AD\u30AF\u30B1\u30B3\u30B5\u30B7\u30B9\u30BB\u30BD\u30BF\u30C1\u30C4\u30C6\u30C80123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&*+=<>{}[]'.split('');
 
   function initMatrix(){
     W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
-    if(W<600)fontSize=10;
+    if(W<600)fontSize=13;
     columns=Math.floor(W/fontSize);
     drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
   }
@@ -690,9 +690,9 @@
   // === LOGO EMERGE (3s) ===
   var logo=document.getElementById('splash-logo');
   setTimeout(function(){logo.style.opacity='0.15';},2200);
-  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 10px rgba(251,1,13,0.3))';},2800);
-  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 20px rgba(251,1,13,0.5))';},3400);
-  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 30px rgba(251,1,13,0.6)) drop-shadow(0 0 60px rgba(251,1,13,0.3))';},4000);
+  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 13px rgba(251,1,13,0.3))';},2800);
+  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 25px rgba(251,1,13,0.5))';},3400);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 38px rgba(251,1,13,0.6)) drop-shadow(0 0 75px rgba(251,1,13,0.3))';},4000);
 
   // === TITLE TYPING (5s) ===
   var titleEl=document.getElementById('splash-title');
