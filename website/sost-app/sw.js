@@ -1,5 +1,5 @@
 // SOST Protocol — Service Worker
-const CACHE_NAME = 'sost-app-v25';
+const CACHE_NAME = 'sost-app-v26';
 const STATIC_ASSETS = [
   './',
   './index.html',
