@@ -1719,26 +1719,64 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 <script src="js/materials-data.js"></script>
 <script>
 // === MATERIALS ENGINE ACCESS CONTROL ===
-// Same system as GeaSpirit: SHA-256 hash verification, same passphrase
+// Server-side auth via /auth/login API. No secrets in frontend.
+// Falls back to client-side SHA-256 gate if auth API unavailable.
 var _meSessionTimer=null;
 var _meSecondsLeft=600;
+var _meSessionToken=null;
 
 async function meCheckAccess(){
   var pwd=document.getElementById('me-access-pwd').value;
+  if(!pwd)return;
+  var msg=document.getElementById('me-access-msg');
+  msg.textContent='> Authenticating...';msg.style.color='#006600';
+
+  // Try server-side auth first
+  try{
+    var resp=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'admin',password:pwd})});
+    if(resp.ok){
+      var data=await resp.json();
+      if(data.status==='authenticated'||data.status==='otp_sent'){
+        if(data.requires_otp){
+          msg.textContent='> Verification code sent to registered phone';msg.style.color='#00ff41';
+          // Show OTP input (simplified: prompt)
+          var otp=prompt('Enter 6-digit verification code sent to your phone:');
+          if(!otp)return;
+          var otpResp=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({otp_code:otp})});
+          if(!otpResp.ok){msg.textContent='> INVALID CODE';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
+          data=await otpResp.json();
+        }
+        _meSessionToken=data.token;
+        meGrantAccess();
+        return;
+      }
+    }
+    // Auth API returned error
+    if(resp.status===401){msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
+  }catch(e){
+    // Auth API not available — fall back to client-side gate
+    console.log('Auth API unavailable, using client-side fallback');
+  }
+
+  // Fallback: client-side SHA-256 (cosmetic gate when server auth unavailable)
   var enc=new TextEncoder();
   var buf=await crypto.subtle.digest('SHA-256',enc.encode(pwd));
   var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
-  // Same hash as GeaSpirit — same clearance code
   if(hex==='16614047733526b2a16927bcdcec190f434250e761a74ce397df27008798c73d'){
-    document.getElementById('me-protected').style.display='block';
-    document.getElementById('me-access-panel').style.display='none';
-    document.getElementById('me-session-bar').style.display='flex';
-    meStartSession(600);
+    meGrantAccess();
   }else{
-    var msg=document.getElementById('me-access-msg');
     msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
     setTimeout(function(){msg.textContent=''},2000);
   }
+}
+
+function meGrantAccess(){
+  document.getElementById('me-protected').style.display='block';
+  document.getElementById('me-access-panel').style.display='none';
+  document.getElementById('me-session-bar').style.display='flex';
+  meStartSession(600);
 }
 document.getElementById('me-access-pwd').addEventListener('keypress',function(e){if(e.key==='Enter')meCheckAccess()});
 
