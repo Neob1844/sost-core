@@ -43,7 +43,7 @@
 - Matches C++ implementation exactly (src/address.cpp:16-24)
 
 ### 6. CROSS-VERIFICATION — COMPATIBLE
-- Founder key: `4ceeb99f6adbc4a3ccc9e6b4860e6e43424d2219892ca360f41ef040e6d11994`
+- Founder key: `[REDACTED — known compromised, see SOST_MASTER_PLAN.md]`
 - Expected address: `sost13a22c277b5d5cbdc17ecc6c7bc33a9755b88d429`
 - Both web wallet and CLI use identical derivation chain:
   - privkey → secp256k1 compressed pubkey → SHA256 → RIPEMD160 → "sost1" + hex

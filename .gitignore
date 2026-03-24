@@ -6,10 +6,20 @@ build/
 *.so
 *.dylib
 
-# Secrets / wallet
+# Secrets / wallet / credentials
 wallet.json
 wallet.json.*
 *.dat
+.env
+.env.*
+*.env
+*.key
+*.pem
+credentials.json
+secrets.json
+access.json
+trusted_addresses.json
+wallet_policy.json
 
 # Chain data
 chain.json
