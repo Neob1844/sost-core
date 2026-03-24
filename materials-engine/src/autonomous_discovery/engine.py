@@ -9,6 +9,7 @@ from .validation_queue import route_candidate
 from .structure_pipeline import lift_structure_for_candidate, run_gnn_inference, run_direct_gnn_inference, get_parent_cif
 from .chem_filters import normalize_formula
 from .uncertainty import compute_uncertainty, compute_validation_readiness, apply_diversity_constraint, generate_handoff_pack
+from .chemistry_caution import label_candidate
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -129,6 +130,10 @@ class DiscoveryEngine:
             elif prediction_origin not in ("known_exact",):
                 new_candidate_count += 1
 
+            # Phase XI.C: Chemistry caution labeling
+            chem = label_candidate(c["formula"])
+            c["chemistry"] = chem
+
             candidate_context = {
                 "is_known_material": is_known,
                 "has_direct_gnn_fe": gnn_combined.get("direct_fe_inference_success", False),
@@ -136,6 +141,10 @@ class DiscoveryEngine:
                 "has_structure_lift": lift.get("structure_lift_status") == "lifted_ok",
                 "prediction_origin": prediction_origin,
                 "gnn_confidence": gnn_combined.get("direct_fe_confidence", "none"),
+                # Chemistry context for scoring
+                "risk_level": chem.get("risk_level", "unknown"),
+                "family": chem.get("family"),
+                "caution_labels": chem.get("caution_labels", []),
             }
             c["candidate_context"] = candidate_context
 

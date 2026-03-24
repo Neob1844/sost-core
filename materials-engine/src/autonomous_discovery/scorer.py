@@ -209,6 +209,41 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
         composite = round(min(1.0, max(0.0,
             composite + family_trust_bonus + strategy_trust_bonus - noise_suppression)), 4)
 
+    # Phase XI.C: Chemistry-aware scoring adjustments
+    chemistry_risk_adj = 0.0
+    chemistry_family_adj = 0.0
+    chem_risk = "unknown"
+
+    if candidate_context:
+        chem_risk = candidate_context.get("risk_level", "unknown")
+        chem_family = candidate_context.get("family")
+        chem_labels = candidate_context.get("caution_labels", [])
+
+        # Risk-level adjustments
+        if chem_risk == "familiar":
+            chemistry_family_adj = 0.04  # small boost for well-known families
+        elif chem_risk == "plausible":
+            chemistry_family_adj = 0.0   # neutral
+        elif chem_risk == "unusual":
+            chemistry_risk_adj = -0.06   # penalize unusual unless strong evidence
+            if has_gnn and has_lift:
+                chemistry_risk_adj = -0.02  # reduced penalty with direct evidence
+        elif chem_risk == "risky":
+            chemistry_risk_adj = -0.12   # strong penalty for risky chemistry
+            if has_gnn and has_lift and candidate_context.get("gnn_confidence") in ("medium", "high"):
+                chemistry_risk_adj = -0.05  # reduced if strong GNN evidence
+
+        # Label-specific adjustments
+        if "SUBOXIDE-LIKE" in chem_labels:
+            chemistry_risk_adj -= 0.03
+        if "UNUSUAL STOICHIOMETRY" in chem_labels:
+            chemistry_risk_adj -= 0.02
+        if "BATTERY-RELEVANT" in chem_labels and chem_risk in ("familiar", "plausible"):
+            chemistry_family_adj += 0.02
+
+        composite = round(min(1.0, max(0.0,
+            composite + chemistry_family_adj + chemistry_risk_adj)), 4)
+
     return {
         **raw_scores,
         "plausibility": round(plausibility, 4),
@@ -235,6 +270,9 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
         "strategy_trust_bonus": round(strategy_trust_bonus, 4),
         "noise_suppression": round(noise_suppression, 4),
         "evidence_quality": evidence_quality,
+        "chemistry_risk_adj": round(chemistry_risk_adj, 4),
+        "chemistry_family_adj": round(chemistry_family_adj, 4),
+        "chemistry_risk_level": chem_risk,
     }
 
 
