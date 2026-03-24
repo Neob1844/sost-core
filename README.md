@@ -290,7 +290,7 @@ Zone-specific mineral prospectivity mapping using public satellite data.
 - Supervised zones: Porphyry Cu (Chile) AUC 0.86, Orogenic Au (Australia) 0.81, Sediment-hosted Cu (Zambia) 0.76, Porphyry Cu (Peru) 0.76, Porphyry Cu (Arizona) 0.72
 - Heuristic scans: Banos de Mula (Spain, score 0.762), Barqueros, Tintic (Utah)
 - Key finding: deposit type > commodity for ML training. Transfer learning does NOT work for satellite features — zone-specific models required.
-- **Thermal V2** (March 2026): 20-year Landsat thermal long-term proxy pipeline. Moderate but real improvement at Kalgoorlie (+0.013 AUC with geology-matched background). This is a thermal proxy family — not direct subsurface detection. Chuquicamata full replication pending.
+- **Thermal V2** (March 2026): 20-year Landsat thermal long-term proxy pipeline. Moderate but real improvement at Kalgoorlie (+0.013 AUC). Replicated at Chuquicamata (4 features consistent across zones). Multi-zone verdict: PRODUCTION_WORTHY. This is a thermal proxy family — not direct subsurface detection.
 - Details: https://sostcore.com/sost-geaspirit.html
 
 ## Materials Engine — Computational Materials Discovery

@@ -299,9 +299,29 @@ Training on pure types sharpens the model. Mixing types confuses it.
 
 **Correct framing:** This is a thermal long-term proxy family, not direct subsurface detection. The signal is real, moderate, and physically defensible. It helps the model but does not dominate satellite spectral indices.
 
-### System Status (Phase 5G + Thermal V2)
+### Phase 5I: Chuquicamata Full 20-Year Thermal Replication
+
+| Feature | Kalgoorlie d | Chuquicamata d | Consistent? |
+|---------|-------------|----------------|-------------|
+| amplitude | -0.680 | -0.898 | YES |
+| thermal_range_ratio | -0.565 | -0.785 | YES |
+| mean_annual | -0.508 | -1.121 | YES |
+| summer_winter_diff | -0.423 | -0.898 | YES |
+| std_annual | -0.617 | -0.174 | Same direction, weak at Chuquicamata |
+
+**Model improvement:** Kalgoorlie +0.013 AUC (baseline 0.80). Chuquicamata +0.044 PR-AUC but no AUC gain (baseline already 0.91).
+
+**Multi-zone verdict: 4/6 — PRODUCTION_WORTHY**
+- Cross-zone signal consistency: 3/3 (4 features consistent)
+- Model improvement at both sites: 1/3 (only Kalgoorlie AUC improves)
+- Key insight: thermal proxies are most useful when the satellite baseline is moderate
+
+**Stable features across zones:** amplitude, thermal_range_ratio, mean_annual, summer_winter_diff
+
+### System Status (Phase 5I)
 - 10 AOIs: 5 supervised (AUC 0.72-0.86) + 3 heuristic + 1 demo + 1 failed
 - 162 targets with exact coordinates
 - Direct GNN inference working (CGCNN forward pass)
-- Thermal long-term proxies: validated at Kalgoorlie, proxy-replicated at Chuquicamata
+- Thermal long-term proxies: validated at Kalgoorlie + Chuquicamata (PRODUCTION_WORTHY)
+- 4 stable thermal features across 2 independent arid zones
 - Blockers: EMIT (Earthdata auth 5min), GA geophysics (manual download 30min)

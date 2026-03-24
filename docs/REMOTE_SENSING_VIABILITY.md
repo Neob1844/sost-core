@@ -1037,3 +1037,20 @@ It improves but does not dominate the satellite spectral model.
 - Work reliably in vegetated or heavily urbanized areas
 - Dominate satellite spectral indices (thermal is a complement, not a replacement)
 - Guarantee the presence of economic mineralization
+
+### Phase 5I: Chuquicamata Full Replication
+
+Full v2 pipeline replicated at Chuquicamata (55 porphyry Cu deposits, Atacama Desert).
+
+**Cross-zone consistency (4 stable features):**
+- amplitude: Kal d=-0.680, Chu d=-0.898 (both lower at deposits)
+- thermal_range_ratio: Kal d=-0.565, Chu d=-0.785 (both lower)
+- mean_annual: Kal d=-0.508, Chu d=-1.121 (both lower)
+- summer_winter_diff: Kal d=-0.423, Chu d=-0.898 (both lower)
+
+**Model improvement:** Kalgoorlie +0.013 AUC (moderate baseline 0.80). Chuquicamata
+no AUC gain (strong baseline 0.91) but +0.044 PR-AUC. Thermal proxies are most useful
+when the satellite baseline is moderate — they add less where spectral/SAR already saturates.
+
+**Multi-zone verdict: PRODUCTION_WORTHY (4/6)**
+Cautious backfill to similar arid zones recommended. Third-zone validation needed.

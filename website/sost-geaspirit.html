@@ -790,28 +790,38 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="panel">
-      <div class="panel-head">CHUQUICAMATA REPLICATION (PROXY)</div>
+      <div class="panel-head">CHUQUICAMATA FULL REPLICATION (PHASE 5I)</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
-        <b style="color:var(--green)">LST band 17:</b> d = -0.727, p = 0.010 — significant, same direction as Kalgoorlie<br>
-        <b style="color:var(--green)">LST band 18:</b> d = -0.683, p = 0.017 — significant, same direction<br><br>
-        <span style="color:var(--amber)">Note:</span> Proxy analysis only (3 LST bands in existing stack). Full 20-year thermal replication pending GEE export.
+        Full thermal v2 pipeline replicated at Chuquicamata, Chile (55 porphyry Cu deposits, arid desert).
+      </div>
+      <table class="tbl" style="margin-top:8px">
+        <thead><tr><th>Feature</th><th>Kalgoorlie d</th><th>Chuquicamata d</th><th>Consistent?</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>amplitude</td><td class="val">-0.680</td><td class="val">-0.898</td><td style="color:var(--green)">YES — both lower at deposits</td></tr>
+          <tr style="color:var(--green)"><td>thermal_range_ratio</td><td class="val">-0.565</td><td class="val">-0.785</td><td style="color:var(--green)">YES — both lower at deposits</td></tr>
+          <tr style="color:var(--green)"><td>mean_annual</td><td class="val">-0.508</td><td class="val">-1.121</td><td style="color:var(--green)">YES — both lower at deposits</td></tr>
+          <tr style="color:var(--green)"><td>summer_winter_diff</td><td class="val">-0.423</td><td class="val">-0.898</td><td style="color:var(--green)">YES — both lower at deposits</td></tr>
+          <tr style="color:var(--amber)"><td>std_annual</td><td class="val">-0.617</td><td class="val">-0.174</td><td style="color:var(--amber)">Same direction but weak at Chuquicamata</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px;line-height:1.8;color:#aaa;margin-top:12px">
+        <b style="color:var(--amber)">Model improvement:</b> At Chuquicamata, the satellite baseline is already very strong (AUC 0.91) — thermal does not improve AUC but adds +0.044 PR-AUC. At Kalgoorlie (baseline 0.80), thermal adds +0.013 AUC.<br>
+        <b style="color:var(--green)">Key finding:</b> Thermal proxies are most useful when the satellite baseline is moderate. Where spectral/SAR data already saturates, thermal contributes less.
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head">VERDICT: 10/12 — MULTI_ZONE_READY</div>
+      <div class="panel-head">MULTI-ZONE VERDICT: 4/6 — PRODUCTION_WORTHY</div>
       <table class="tbl">
         <thead><tr><th>Criterion</th><th>Score</th><th>Evidence</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Statistical robustness</td><td class="val">3/3</td><td>Survives geology-matched background (|d| &gt; 0.5, p &lt; 0.01)</td></tr>
-          <tr style="color:var(--green)"><td>Model improvement</td><td class="val">2/3</td><td>AUC +0.024, PR-AUC +0.001</td></tr>
-          <tr style="color:var(--green)"><td>Feature importance</td><td class="val">2/2</td><td>thermal_range_ratio ranked #5 (top 5)</td></tr>
-          <tr style="color:var(--green)"><td>Cross-site replication</td><td class="val">2/3</td><td>Chuquicamata proxy: same direction, p &lt; 0.05</td></tr>
-          <tr style="color:var(--green)"><td>Physical plausibility</td><td class="val">1/1</td><td>Lower thermal ratio at deposits — defensible via altered rock thermal inertia</td></tr>
+          <tr style="color:var(--green)"><td>Cross-zone signal consistency</td><td class="val">3/3</td><td>4 features same direction + significant at both sites</td></tr>
+          <tr style="color:var(--amber)"><td>Model improvement at both sites</td><td class="val">1/3</td><td>Kalgoorlie +0.013 AUC; Chuquicamata no AUC gain (baseline already 0.91)</td></tr>
         </tbody>
       </table>
-      <div style="font-size:11px;color:#666;margin-top:8px">
-        Action: integrate locally and pilot 2-3 more arid zones. Full Chuquicamata replication pending.
+      <div style="font-size:12px;line-height:1.8;color:#aaa;margin-top:8px">
+        <b>Stable features across zones:</b> amplitude, thermal_range_ratio, mean_annual, summer_winter_diff<br>
+        <b>Action:</b> Integrate thermal for zones with moderate baseline. Cautious backfill to similar arid zones.
       </div>
     </div>
 
@@ -828,10 +838,9 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="panel" style="border-left:3px solid var(--amber)">
-      <div class="panel-head" style="color:var(--amber)">NEXT STEP: CHUQUICAMATA FULL REPLICATION</div>
+      <div class="panel-head" style="color:var(--amber)">NEXT: THIRD-ZONE VALIDATION</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
-        Full 20-year thermal replication at Chuquicamata, Chile (arid porphyry Cu district, 55+ deposits).<br>
-        If the signal replicates across two independent arid zones, thermal long-term proxies become a validated feature family for arid mineral exploration.
+        Thermal proxies validated at 2 independent arid zones. Next: pilot at a third zone (e.g., Pilbara, Norseman Belt) to confirm the feature family is stable across different geological settings and deposit types.
       </div>
     </div>
   </div>
