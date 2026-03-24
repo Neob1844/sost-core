@@ -63,6 +63,13 @@ CAMPAIGN_PROFILES = {
         "min_novelty": 0.2,
         "prefer_validated": True,
     },
+    "validation_operations": {
+        "description": "Generate best flow for validation efficiency + calibration learning",
+        "weights": {"novelty": 0.15, "exotic": 0.05, "stability": 0.30, "value": 0.25, "diversity": 0.25},
+        "explore_ratio": 0.3, "exploit_ratio": 0.4, "diversify_ratio": 0.3,
+        "min_stability": 0.3,
+        "prefer_diverse_validation": True,
+    },
 }
 
 
