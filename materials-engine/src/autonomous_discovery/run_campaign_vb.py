@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from autonomous_discovery.engine import DiscoveryEngine
 
-OUTPUT_DIR = os.path.expanduser("~/SOST/sostcore/sost-core/materials-engine/artifacts/campaigns_vc")
+OUTPUT_DIR = os.path.expanduser("~/SOST/sostcore/sost-core/materials-engine/artifacts/campaigns_vii")
 
 CAMPAIGNS = [
     {
@@ -83,6 +83,14 @@ CAMPAIGNS = [
         "iterations": 3,
         "max_candidates": 25,
         "description": "Oxide-focused exploratory campaign",
+    },
+    {
+        "name": "high_uncertainty_probe",
+        "profile": "high_uncertainty_probe",
+        "seeds": None,
+        "iterations": 3,
+        "max_candidates": 25,
+        "description": "High-uncertainty region exploration for corpus expansion",
     },
 ]
 
@@ -202,6 +210,13 @@ def compute_vb_metrics(campaign):
         "priority_validation_count": priority_val,
         "validation_candidate_count": val_cand,
         "known_reference_count": known_ref,
+        # Phase VII metrics
+        "mean_uncertainty": round(sum(c.get("uncertainty_score", 0.5) for c in all_candidates) / max(total, 1), 4),
+        "mean_confidence": round(sum(c.get("confidence_score", 0.5) for c in all_candidates) / max(total, 1), 4),
+        "mean_validation_readiness": round(sum(c.get("validation_readiness", 0) for c in all_candidates) / max(total, 1), 4),
+        "dft_handoff_ready_count": sum(1 for c in all_candidates if c.get("dft_handoff_ready", False)),
+        "mean_top10_uncertainty": round(sum(c.get("uncertainty_score", 0.5) for c in top10) / max(len(top10), 1), 4),
+        "mean_top10_confidence": round(sum(c.get("confidence_score", 0.5) for c in top10) / max(len(top10), 1), 4),
     }
 
 

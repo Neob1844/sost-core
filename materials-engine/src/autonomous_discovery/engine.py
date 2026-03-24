@@ -8,6 +8,7 @@ from .ml_evaluator import evaluate_candidate_ml, find_nearest_neighbors
 from .validation_queue import route_candidate
 from .structure_pipeline import lift_structure_for_candidate, run_gnn_inference, run_direct_gnn_inference, get_parent_cif
 from .chem_filters import normalize_formula
+from .uncertainty import compute_uncertainty, compute_validation_readiness, apply_diversity_constraint, generate_handoff_pack
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -143,12 +144,24 @@ class DiscoveryEngine:
                                      self.profile, self.memory, neighbors=ml.get("nearest_neighbors"),
                                      candidate_context=candidate_context)
 
+            # Phase VII: Uncertainty-aware scoring
+            unc = compute_uncertainty(
+                candidate_context, scores, c.get("method", "unknown"),
+                len(elements), ml.get("nearest_neighbors"))
+            readiness = compute_validation_readiness(unc, scores, candidate_context)
+            c["uncertainty"] = unc
+            c["readiness"] = readiness
+            scores["uncertainty_score"] = unc["uncertainty_score"]
+            scores["confidence_score"] = unc["confidence_score"]
+            scores["validation_readiness_score"] = readiness["validation_readiness_score"]
+
             c["scores"] = scores
             c["composite_score"] = scores["composite_score"]
             scored.append(c)
 
-        # 5. Rank and decide (Phase IV: validation queue routing)
+        # 5. Rank and decide — with diversity constraint (Phase VII)
         scored.sort(key=lambda x: -x["composite_score"])
+        scored = apply_diversity_constraint(scored, max_per_family=3, top_k=len(scored))
         accepted = []
         watchlist = []
         validation_candidates = []
@@ -208,7 +221,14 @@ class DiscoveryEngine:
                  "next_step": c.get("validation", {}).get("recommended_next_step", "unknown"),
                  "prediction_origin": c.get("candidate_context", {}).get("prediction_origin", "unavailable"),
                  "direct_fe_value": c.get("gnn_combined", {}).get("direct_fe_value"),
-                 "direct_bg_value": c.get("gnn_combined", {}).get("direct_bg_value")}
+                 "direct_bg_value": c.get("gnn_combined", {}).get("direct_bg_value"),
+                 "uncertainty_score": c.get("uncertainty", {}).get("uncertainty_score"),
+                 "confidence_score": c.get("uncertainty", {}).get("confidence_score"),
+                 "out_of_domain_risk": c.get("uncertainty", {}).get("out_of_domain_risk"),
+                 "support_strength": c.get("uncertainty", {}).get("support_strength"),
+                 "validation_readiness": c.get("readiness", {}).get("validation_readiness_score"),
+                 "dft_handoff_ready": c.get("readiness", {}).get("dft_handoff_ready"),
+                 "readiness_action": c.get("readiness", {}).get("next_action")}
                 for i, c in enumerate(accepted[:10])
             ],
             "top_rejections": rejections[:5],
