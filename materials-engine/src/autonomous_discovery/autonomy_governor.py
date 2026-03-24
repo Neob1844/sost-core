@@ -5,6 +5,7 @@ human review triggers, and policy adaptation. All decisions are traceable.
 """
 import time
 from .policy import CAMPAIGN_PROFILES
+from .campaign_intelligence import score_campaign_chemistry, score_seed_chemistry, generate_campaign_rationale
 
 
 # ============================================================
@@ -76,50 +77,30 @@ class AutonomyGovernor:
                     "requires_human": False, "expected_value": 0.5}
 
         best = max(scores, key=scores.get)
+
+        # Get detailed chemistry rationale
+        best_profile = CAMPAIGN_PROFILES.get(best, {})
+        chem_detail = score_campaign_chemistry(best, best_profile, self.evidence, self._goals)
+        rationale = generate_campaign_rationale(best, best_profile, chem_detail)
         reason = self._explain_campaign_choice(best)
 
         self._log("campaign_recommended", f"{best}: {reason}")
         return {
             "profile": best,
             "reason": reason,
+            "rationale": rationale,
             "expected_value": round(scores[best], 3),
             "requires_human": False,
+            "target_families": chem_detail.get("target_families", []),
+            "avoided_families": chem_detail.get("avoided_families", []),
             "all_scores": {k: round(v, 3) for k, v in sorted(scores.items(), key=lambda x: -x[1])[:5]},
         }
 
     def _score_campaign(self, name, profile):
-        """Score a campaign profile based on evidence and goals."""
-        score = 0.5  # neutral base
-
-        # Goal alignment
-        weights = profile.get("weights", {})
-        if "maximize_defensible_novel_candidates" in self._goals:
-            score += weights.get("stability", 0) * 0.3
-            score += weights.get("value", 0) * 0.2
-        if "reduce_proxy_dependency" in self._goals:
-            score += weights.get("diversity", 0) * 0.2
-        if "improve_weak_families" in self._goals:
-            score += profile.get("explore_ratio", 0.3) * 0.2
-
-        # Evidence-based adjustments
-        if self.evidence:
-            ev_count = self.evidence.by_campaign.get(name, {}).get("count", 0)
-            if ev_count == 0:
-                score += 0.1  # unexplored campaign — worth trying
-            elif ev_count > 10:
-                # Check if this campaign has been productive
-                camp = self.evidence.by_campaign.get(name, {})
-                confirmed = camp.get("confirmed_count", 0)
-                yield_rate = confirmed / max(ev_count, 1)
-                score += (yield_rate - 0.5) * 0.2  # reward productive campaigns
-
-        # Prefer profiles with evidence calibration
-        if profile.get("use_evidence_calibration"):
-            score += 0.05
-        if profile.get("prefer_uncertain") and "improve_weak_families" in self._goals:
-            score += 0.1
-
-        return max(0.0, min(1.0, score))
+        """Score a campaign profile using chemistry-aware intelligence."""
+        # Phase XI.D: delegate to campaign_intelligence module
+        chem_score = score_campaign_chemistry(name, profile, self.evidence, self._goals)
+        return chem_score["score"]
 
     def _explain_campaign_choice(self, name):
         parts = []
@@ -142,31 +123,20 @@ class AutonomyGovernor:
     # ============================================================
 
     def recommend_seeds(self, available_seeds, n=3):
-        """Recommend seed pairs for the next campaign."""
+        """Recommend seed pairs using chemistry-aware scoring."""
         if not self.config["auto_seed"]:
             return available_seeds[:n]
 
-        # Prefer seeds from reliable families
+        # Phase XI.D: use campaign_intelligence for seed scoring
         scored = []
         for seed in available_seeds:
-            score = 0.5
-            if self.evidence:
-                for s in seed:
-                    from .chem_filters import parse_formula
-                    elems = list(parse_formula(s).keys())
-                    family_key = "-".join(sorted(elems))
-                    fam = self.evidence.by_family.get(family_key, {})
-                    if fam.get("count", 0) > 0:
-                        overconf = self.evidence.family_overconfidence_rate(family_key) or 0
-                        score -= overconf * 0.3  # penalize overconfident families
-                        mae = self.evidence.family_mae(family_key, "fe")
-                        if mae is not None and mae < 0.15:
-                            score += 0.2  # reward reliable families
-            scored.append((seed, score))
+            result = score_seed_chemistry(seed, self.evidence)
+            scored.append((seed, result["score"], result["reasons"]))
 
         scored.sort(key=lambda x: -x[1])
         selected = [s[0] for s in scored[:n]]
-        self._log("seeds_recommended", str(selected))
+        reasons = [f"{s[0]}: {s[1]:.2f} ({'; '.join(s[2][:2])})" for s in scored[:n]]
+        self._log("seeds_recommended", " | ".join(reasons))
         return selected
 
     # ============================================================
