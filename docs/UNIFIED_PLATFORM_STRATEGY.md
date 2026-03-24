@@ -524,8 +524,8 @@ The ultimate goal: **look at terrain from orbit and know with high probability w
 - **Phase 0:** Establishes surface mineral mapping capability (the foundation)
 - **Phase 1:** Adds radar/structural data (surface + shallow subsurface indicators)
 - **Phase 2:** Connects surface observations to crystal-structure-level understanding via Materials Engine
-- **Phase 3:** Adds depth inference through alteration halo modeling and hyperspectral precision
-- **Phase 4:** Integrates all data layers for full 3D subsurface estimation
+- **Phase 3:** Adds depth-proxy inference through alteration halo modeling and hyperspectral precision (indirect, not direct measurement)
+- **Phase 4:** Integrates all data layers for subsurface probability estimation (statistical, not imaging)
 
 Each phase adds a "data dimension" to the model. Surface spectral is 2D. Add radar for surface roughness/moisture. Add alteration modeling for shallow 3D. Add geophysics for deep 3D.
 
