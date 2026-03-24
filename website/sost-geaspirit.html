@@ -273,18 +273,41 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 </section>
 
 <!-- ACCESS PANEL -->
-<div id="access-panel" style="text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:500px">
+<div id="access-panel" style="text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:440px">
   <div style="color:var(--green);letter-spacing:2px;margin-bottom:20px;font-size:13px">
     &#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;<br>
     &#9553;&nbsp; RESTRICTED ACCESS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
     &#9553;&nbsp; Research data requires clearance &nbsp;&nbsp;&#9553;<br>
     &#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;
   </div>
-  <input type="password" id="access-pwd" placeholder="Enter clearance code"
-    style="background:#111;color:var(--green);border:1px solid var(--border);padding:10px;font-family:var(--font);width:250px">
-  <button onclick="checkAccess()"
-    style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer;margin-left:10px">ENTER</button>
-  <div id="access-msg" style="color:#ff0000;margin-top:10px;min-height:20px"></div>
+  <!-- Step 1: Login -->
+  <div id="gea-login-step" style="text-align:left;max-width:300px;margin:0 auto">
+    <div style="margin-bottom:10px">
+      <div style="font-size:9px;color:var(--green-dim);letter-spacing:1px;margin-bottom:4px">USERNAME</div>
+      <input type="text" id="access-user" placeholder="admin" autocomplete="username"
+        style="background:#111;color:var(--green);border:1px solid var(--border);padding:10px;font-family:var(--font);width:100%;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;color:var(--green-dim);letter-spacing:1px;margin-bottom:4px">PASSWORD</div>
+      <input type="password" id="access-pwd" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password"
+        style="background:#111;color:var(--green);border:1px solid var(--border);padding:10px;font-family:var(--font);width:100%;box-sizing:border-box">
+    </div>
+    <button onclick="checkAccess()"
+      style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer;width:100%">LOGIN</button>
+  </div>
+  <!-- Step 2: TOTP -->
+  <div id="gea-totp-step" style="display:none;text-align:left;max-width:300px;margin:0 auto">
+    <div style="font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:10px">TWO-FACTOR AUTHENTICATION</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px">Enter the 6-digit code from your authenticator app</div>
+    <div style="margin-bottom:14px">
+      <input type="text" id="gea-totp" placeholder="000000" maxlength="6" autocomplete="one-time-code"
+        style="background:#111;color:var(--green);border:1px solid var(--border);padding:12px;font-family:var(--font);width:160px;text-align:center;letter-spacing:6px;font-size:18px">
+    </div>
+    <button onclick="geaVerifyTotp()"
+      style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer;width:100%">VERIFY</button>
+  </div>
+  <div id="access-msg" style="color:#ff0000;margin-top:12px;min-height:20px;font-size:11px"></div>
+  <p style="color:#333;font-size:10px;margin-top:16px">Server-side authentication required.</p>
 </div>
 
 <!-- SESSION BAR -->
@@ -954,67 +977,63 @@ function lockSession(){
   document.getElementById('protected-content').style.display='none';
   document.getElementById('session-bar').style.display='none';
   document.getElementById('access-panel').style.display='block';
+  document.getElementById('gea-login-step').style.display='block';
+  document.getElementById('gea-totp-step').style.display='none';
   document.getElementById('access-pwd').value='';
+  document.getElementById('gea-totp').value='';
   geaspirit_unlocked=false;
   var msg=document.getElementById('access-msg');
-  msg.textContent='> SESSION EXPIRED \u2014 re-enter clearance code';
+  msg.textContent='> SESSION EXPIRED \u2014 login again';
   msg.style.color='#ffb000';
 }
 
-// === ACCESS CONTROL — server-side auth with client-side fallback ===
+// === ACCESS CONTROL — server-side auth only. No client-side fallback. No hash in frontend. ===
 async function checkAccess(){
+  var user=document.getElementById('access-user').value.trim();
   var pwd=document.getElementById('access-pwd').value;
-  if(!pwd)return;
+  if(!user||!pwd)return;
   var msg=document.getElementById('access-msg');
   msg.textContent='> Authenticating...';msg.style.color='#006600';
 
-  // Try server-side auth first
   try{
     var resp=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:'admin',password:pwd})});
+      body:JSON.stringify({username:user,password:pwd})});
     if(resp.ok){
       var data=await resp.json();
       if(data.requires_otp){
-        msg.textContent='> Enter code from authenticator app';msg.style.color='var(--green)';
-        document.getElementById('access-pwd').style.display='none';
-        document.querySelector('#access-panel button[onclick]').style.display='none';
-        var tw=document.createElement('div');tw.style.marginTop='12px';
-        tw.innerHTML='<input type="text" id="gea-totp" placeholder="6-digit code" maxlength="6" style="background:#111;color:var(--green);border:1px solid var(--border);padding:10px;font-family:var(--font);width:140px;text-align:center;letter-spacing:4px;font-size:16px"> <button onclick="geaVerifyTotp()" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);padding:10px 20px;font-family:var(--font);cursor:pointer">VERIFY</button>';
-        msg.parentNode.insertBefore(tw,msg);
+        document.getElementById('gea-login-step').style.display='none';
+        document.getElementById('gea-totp-step').style.display='block';
+        msg.textContent='';
         document.getElementById('gea-totp').focus();
-        document.getElementById('gea-totp').addEventListener('keypress',function(e){if(e.key==='Enter')geaVerifyTotp()});
-        window.geaVerifyTotp=async function(){
-          var code=document.getElementById('gea-totp').value.trim();if(!code)return;
-          try{
-            var r2=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp_code:code})});
-            if(r2.ok){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);return;}
-            msg.textContent='> INVALID CODE';msg.style.color='#ff0000';
-          }catch(e2){msg.textContent='> Verification failed';msg.style.color='#ff0000';}
-        };
         return;
       }
       if(data.status==='authenticated'){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);return;}
     }
-    if(resp.status===401){msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
+    if(resp.status===401){msg.textContent='> Invalid credentials';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},3000);return;}
+    if(resp.status===429){msg.textContent='> Too many attempts — try later';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},3000);return;}
+    msg.textContent='> Auth service error';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},3000);
   }catch(e){
-    console.log('Auth API unavailable, using client-side fallback');
-  }
-
-  // Fallback: client-side SHA-256 gate (when auth server not available)
-  var enc=new TextEncoder();
-  var buf=await crypto.subtle.digest('SHA-256',enc.encode(pwd));
-  var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
-  if(hex==='16614047733526b2a16927bcdcec190f434250e761a74ce397df27008798c73d'){
-    document.getElementById('protected-content').style.display='block';
-    document.getElementById('access-panel').style.display='none';
-    geaspirit_unlocked=true;
-    startSession(600);
-  }else{
-    msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
-    setTimeout(function(){msg.textContent=''},2000);
+    msg.textContent='> Auth service unavailable';msg.style.color='#ff0000';
+    setTimeout(function(){msg.textContent=''},3000);
   }
 }
+
+async function geaVerifyTotp(){
+  var code=document.getElementById('gea-totp').value.trim();if(!code)return;
+  var msg=document.getElementById('access-msg');
+  msg.textContent='> Verifying...';msg.style.color='#006600';
+  try{
+    var r2=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp_code:code})});
+    if(r2.ok){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);return;}
+    if(r2.status===401){msg.textContent='> Invalid code';msg.style.color='#ff0000';return;}
+    if(r2.status===429){msg.textContent='> Too many attempts — login again';msg.style.color='#ff0000';
+      setTimeout(function(){document.getElementById('gea-login-step').style.display='block';document.getElementById('gea-totp-step').style.display='none';msg.textContent='';},2000);return;}
+    msg.textContent='> Verification error';msg.style.color='#ff0000';
+  }catch(e2){msg.textContent='> Auth service unavailable';msg.style.color='#ff0000';}
+}
+
 document.getElementById('access-pwd').addEventListener('keypress',function(e){if(e.key==='Enter')checkAccess()});
+document.getElementById('gea-totp').addEventListener('keypress',function(e){if(e.key==='Enter')geaVerifyTotp()});
 
 // === DROPDOWN EXPLAINERS ===
 function toggleXp(el){
