@@ -18,13 +18,13 @@
 | 6 | **RPC Security** | Localhost-only, Basic Auth | **IMPLEMENTED_AND_WORKING** | `src/sost-node.cpp:93-96, 633-699, 3403` | INADDR_LOOPBACK default, --rpc-public to override, Base64 Basic Auth decode+verify |
 | 7 | **cASERT RPC** | casert_profile, casert_lag | **IMPLEMENTED_BUT_BROKEN** | `src/sost-node.cpp:838-860` | Fields exist in getinfo. Bug: base formula (now_time=0) returns B0 even when blocks show E3/E4. Explorer JS workaround applied. |
 | 8 | **P2P Encryption** | X25519 + ChaCha20-Poly1305 | **IMPLEMENTED_AND_WORKING** | `src/sost-node.cpp:70-291, 2780-2842` | Full handshake (EKEY exchange), session keys via HKDF-SHA256, per-peer nonce counter. Default: ON (3 modes: off/on/required) |
-| 9 | **Dynamic Fees (RBF, CPFP)** | "Dynamic fee calculation" | **PARTIALLY_IMPLEMENTED** | `src/sost-cli.cpp:203-209, 622-675` | Auto fee calc (size×rate) works. NO RBF, NO CPFP. Web correctly says "Dynamic fee calculation" not RBF/CPFP |
+| 9 | **Dynamic Fees (RBF, CPFP)** | "Dynamic fee calculation" | **IMPLEMENTED_AND_WORKING** | `src/mempool.cpp` (RBF), `src/mempool.cpp:BuildBlockTemplateCPFP` (CPFP), `src/sost-cli.cpp` (auto fee calc) | Full RBF in mempool + CPFP-aware block template. Tests: test-rbf, test-cpfp |
 | 10 | **Checkpoints + Reorg Limit** | 500 blocks max reorg | **IMPLEMENTED_AND_WORKING** | `src/sost-node.cpp:330, 2236-2241, 2481-2491`, `include/sost/checkpoints.h` | MAX_REORG_DEPTH=500, hard checkpoint height+hash validation, test: test-checkpoints, test-reorg |
 | 11 | **Coinbase Maturity** | 1000 blocks | **IMPLEMENTED_AND_WORKING** | `include/sost/consensus_constants.h:14`, `src/wallet.cpp:121-180` | COINBASE_MATURITY=1000, is_mature() filter, balance/list_unspent chain_height-aware |
-| 12 | **Trusted Address Book** | "Designed" | **DOCUMENTED_ONLY** | `sost-security.html:453` | Web correctly says "Designed". No code exists. |
-| 13 | **New-Address Cooldown** | "Designed" | **DOCUMENTED_ONLY** | `sost-security.html:454` | Web correctly says "Designed". No code exists. |
-| 14 | **Pre-Send Summary** | "Designed" | **DOCUMENTED_ONLY** | `sost-security.html:455` | Web correctly says "Designed". CLI sends immediately without confirmation. |
-| 15 | **Treasury Safety Profile** | "Designed" | **DOCUMENTED_ONLY** | `sost-security.html:456` | Web correctly says "Designed". No code exists. |
+| 12 | **Trusted Address Book** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/addressbook.h`, `src/addressbook.cpp`, `src/sost-cli.cpp` | 4 trust levels (trusted/known/new/blocked), JSON persistence, CLI commands. Tests: test-addressbook |
+| 13 | **New-Address Cooldown** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `src/sost-cli.cpp` send command | First-send warning, high-value alert (>10 SOST), --skip-warning flag |
+| 14 | **Pre-Send Summary** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `src/sost-cli.cpp` send command | Full TX summary with confirmation prompt, --yes/-y to skip |
+| 15 | **Treasury Safety Profile** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/wallet_policy.h`, `src/wallet_policy.cpp`, `src/sost-cli.cpp` | Daily/per-TX limits, vault mode, large-TX address book requirement. Tests: test-wallet-policy |
 | 16 | **PSBT / Offline Signing** | "Future" | **NOT_IMPLEMENTED** | `sost-security.html:457` | Web correctly says "Future". No code exists. |
 | 17 | **HD Wallet (BIP32)** | "Future" | **NOT_IMPLEMENTED** | `sost-security.html:458` | Web correctly says "Future". No code exists. Acknowledged in SOST_WALLET_SAFE_USAGE.md. |
 | 18 | **Multisig** | Not listed on security page | **NOT_IMPLEMENTED** | `docs/security/SOST_WALLET_SAFE_USAGE.md:98` | Acknowledged as "Not implemented". |
@@ -37,10 +37,8 @@
 
 | Status | Count | Features |
 |--------|-------|----------|
-| IMPLEMENTED_AND_WORKING | 11 | Build hardening, Wallet encryption, ECDSA/LOW-S, Fee-rate ordering, P2P protection, RPC security, P2P encryption, Checkpoints+reorg, Coinbase maturity, Dynamic fee calc, Vuln reporting |
+| IMPLEMENTED_AND_WORKING | 16 | Build hardening, Wallet encryption, ECDSA/LOW-S, Fee-rate ordering, P2P protection, RPC security, P2P encryption, Checkpoints+reorg, Coinbase maturity, Dynamic fees+RBF+CPFP, Vuln reporting, Trusted address book, New-address cooldown, Pre-send summary, Treasury safety profile |
 | IMPLEMENTED_BUT_BROKEN | 1 | cASERT RPC (profile value incorrect, JS workaround applied) |
-| PARTIALLY_IMPLEMENTED | 1 | Dynamic fees (auto calc yes, RBF/CPFP no) |
-| DOCUMENTED_ONLY | 4 | Trusted address book, New-address cooldown, Pre-send summary, Treasury safety |
 | NOT_IMPLEMENTED | 3 | PSBT, HD wallet, Multisig |
 
 ---

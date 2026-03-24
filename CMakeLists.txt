@@ -45,6 +45,9 @@ add_library(sost-core STATIC
     src/wallet.cpp
     # Phase 5.5: block validation
     src/block_validation.cpp
+    # Phase 7: wallet security layer (no consensus)
+    src/addressbook.cpp
+    src/wallet_policy.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -136,6 +139,23 @@ add_test(NAME reorg COMMAND test-reorg)
 add_executable(test-chainwork tests/test_chainwork.cpp)
 target_link_libraries(test-chainwork PRIVATE sost-core)
 add_test(NAME chainwork COMMAND test-chainwork)
+
+# Phase 7: wallet security + mempool policy tests
+add_executable(test-addressbook tests/test_addressbook.cpp)
+target_link_libraries(test-addressbook PRIVATE sost-core)
+add_test(NAME addressbook COMMAND test-addressbook)
+
+add_executable(test-wallet-policy tests/test_wallet_policy.cpp)
+target_link_libraries(test-wallet-policy PRIVATE sost-core)
+add_test(NAME wallet-policy COMMAND test-wallet-policy)
+
+add_executable(test-rbf tests/test_rbf.cpp)
+target_link_libraries(test-rbf PRIVATE sost-core)
+add_test(NAME rbf COMMAND test-rbf)
+
+add_executable(test-cpfp tests/test_cpfp.cpp)
+target_link_libraries(test-cpfp PRIVATE sost-core)
+add_test(NAME cpfp COMMAND test-cpfp)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)

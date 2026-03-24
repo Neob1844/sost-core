@@ -238,10 +238,11 @@ static bool MP03_reject_duplicate() {
     return true;
 }
 
-// MP04: Reject double-spend within mempool
+// MP04: Reject double-spend within mempool (with RBF disabled)
 static bool MP04_double_spend_mempool() {
     auto env = TestEnv::Create();
     Mempool pool;
+    pool.SetRBFEnabled(false);  // test legacy non-RBF behavior
 
     PubKeyHash dest1; dest1.fill(0x01);
     PubKeyHash dest2; dest2.fill(0x02);
