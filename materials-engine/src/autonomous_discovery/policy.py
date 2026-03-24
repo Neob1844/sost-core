@@ -55,6 +55,14 @@ CAMPAIGN_PROFILES = {
         "min_novelty": 0.4,
         "prefer_uncertain": True,
     },
+    "validation_priority": {
+        "description": "Maximize candidates most likely to validate well — plausibility + direct GNN + readiness",
+        "weights": {"novelty": 0.10, "exotic": 0.05, "stability": 0.35, "value": 0.30, "diversity": 0.20},
+        "explore_ratio": 0.2, "exploit_ratio": 0.6, "diversify_ratio": 0.2,
+        "min_stability": 0.4,
+        "min_novelty": 0.2,
+        "prefer_validated": True,
+    },
 }
 
 
