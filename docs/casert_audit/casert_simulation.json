@@ -1,0 +1,83 @@
+{
+  "scenario_1": {
+    "name": "1_constant",
+    "mean_bt": 606.9,
+    "median_bt": 436.0,
+    "stdev_bt": 586.7,
+    "last100_mean": 676.4,
+    "pct_fast": 20.4,
+    "pct_slow": 5.8,
+    "converged_at_block": 50,
+    "final_bitsq": 755985,
+    "min_bitsq": 749010,
+    "max_bitsq": 793841
+  },
+  "scenario_2": {
+    "name": "2_double",
+    "mean_bt": 398.0,
+    "median_bt": 253.0,
+    "stdev_bt": 466.9,
+    "last100_mean": 355.0,
+    "pct_fast": 28.9,
+    "pct_slow": 1.4,
+    "converged_at_block": 70,
+    "final_bitsq": 1143897,
+    "min_bitsq": 716674,
+    "max_bitsq": 1146269,
+    "adjustment_blocks": null
+  },
+  "scenario_3": {
+    "name": "3_halve",
+    "mean_bt": 863.5,
+    "median_bt": 579.0,
+    "stdev_bt": 882.4,
+    "last100_mean": 783.6,
+    "pct_fast": 14.4,
+    "pct_slow": 12.0,
+    "converged_at_block": 50,
+    "final_bitsq": 452052,
+    "min_bitsq": 445538,
+    "max_bitsq": 765730
+  },
+  "scenario_4": {
+    "name": "4_oscillate",
+    "mean_bt": 694.7,
+    "median_bt": 328.0,
+    "stdev_bt": 901.8,
+    "last100_mean": 597.1,
+    "pct_fast": 22.8,
+    "pct_slow": 10.6,
+    "converged_at_block": 57,
+    "final_bitsq": 633565,
+    "min_bitsq": 631684,
+    "max_bitsq": 817911
+  },
+  "scenario_5": {
+    "name": "5_flash",
+    "mean_bt": 586.1,
+    "median_bt": 401.0,
+    "stdev_bt": 587.2,
+    "last100_mean": 631.2,
+    "pct_fast": 20.2,
+    "pct_slow": 5.2,
+    "converged_at_block": 50,
+    "final_bitsq": 786866,
+    "min_bitsq": 757656,
+    "max_bitsq": 811613,
+    "post_flash_mean": 679.3,
+    "post_flash_max": 2532.0
+  },
+  "scenario_6": {
+    "name": "6_selfish",
+    "mean_bt": 640.6,
+    "median_bt": 330.0,
+    "stdev_bt": 777.8,
+    "last100_mean": 673.1,
+    "pct_fast": 31.3,
+    "pct_slow": 9.0,
+    "converged_at_block": 57,
+    "final_bitsq": 702816,
+    "min_bitsq": 702816,
+    "max_bitsq": 804205
+  }
+}

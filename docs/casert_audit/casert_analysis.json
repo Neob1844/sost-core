@@ -1,0 +1,33 @@
+{
+  "chain_age_hours": 212.6,
+  "expected_blocks": 1276,
+  "actual_blocks": 1252,
+  "block_time": {
+    "mean": 611.9,
+    "median": 87.0,
+    "stdev": 9848.3,
+    "min": 29.0,
+    "max": 346915.0,
+    "pct_under_2min": 55.1,
+    "pct_over_30min": 2.5,
+    "pct_over_60min": 0.3
+  },
+  "cv": 16.094,
+  "difficulty": {
+    "genesis": 765730,
+    "current": 717188,
+    "min": 199249,
+    "max": 776385,
+    "mean": 556287.0
+  },
+  "profiles": {
+    "GENESIS": 1,
+    "B0": 1074,
+    "E4": 1,
+    "E1": 138,
+    "H1": 25,
+    "H2": 13
+  },
+  "transitions": 234,
+  "antistall_activations": 2
+}
