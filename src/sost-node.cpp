@@ -85,6 +85,7 @@ static std::string  g_wallet_path = "wallet.json";
 static std::string  g_chain_path  = "";            // v0.3.2: for auto-save after block acceptance
 static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
+static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT profile index
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
 
@@ -840,9 +841,11 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
-        // Pass now_time > 0 to include anti-stall decay (matches what miner sees)
-        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), (int64_t)time(nullptr));
-        casert_profile_idx = dec.profile_index;
+        // Use the last accepted block's declared profile (matches actual chain state)
+        // The base formula may show B0, but the miner can use anti-stall to ease to E4
+        casert_profile_idx = g_last_accepted_profile;
+        // Compute lag for informational purposes
+        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), 0);
         casert_lag = dec.lag;
     }
     // Profile name from index
@@ -2146,7 +2149,10 @@ static bool process_block(const std::string& block_json) {
                 return false;
             }
 
-            // 4. Derive exact params from canonical table — no free params
+            // 4. Store last accepted profile for getinfo reporting
+            g_last_accepted_profile = declared_pi;
+
+            // 5. Derive exact params from canonical table — no free params
             CasertDecision dec_for_profile;
             dec_for_profile.profile_index = declared_pi;
             cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
