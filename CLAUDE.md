@@ -171,11 +171,15 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - 20-year Landsat thermal long-term proxy pipeline at Kalgoorlie
 - Signal robust against geology-matched background (Cohen's d -0.68, p < 1e-15)
 - Model improvement: +0.013 AUC (std_annual), thermal_range_ratio in top 5 importance
-- Chuquicamata proxy replication: consistent direction (d = -0.727)
-- Verdict: 10/12 MULTI_ZONE_READY
+
+**Phase 5I Chuquicamata Full Replication:** COMPLETE
+- 4 features consistent across zones: amplitude, ratio, mean_annual, summer_winter_diff
+- Kalgoorlie +0.013 AUC; Chuquicamata no AUC gain (baseline already 0.91)
+- Multi-zone verdict: PRODUCTION_WORTHY (4/6)
+- Thermal most useful when satellite baseline is moderate
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
 - NEVER say: "direct subsurface detection", "detect minerals at depth", "nobody has published this"
 - Thermal helps but does not dominate satellite spectral indices
-- Full Chuquicamata 20-year replication pending (Phase 5I)
+- Thermal adds less where spectral/SAR baseline already saturates

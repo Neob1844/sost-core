@@ -3065,5 +3065,7 @@ F. GEASPIRIT MINERAL INTELLIGENCE MODULE
   * Moderate but real improvement at Kalgoorlie (+0.013 AUC)
   * Signal robust against geology-matched background
   * This is a thermal proxy family, NOT direct subsurface detection
-  * Full cross-site replication at Chuquicamata pending
+  * Full cross-site replication at Chuquicamata: 4 features consistent
+  * Multi-zone verdict: PRODUCTION_WORTHY (4/6)
+  * Thermal most useful when satellite baseline is moderate
 - EXPERIMENTAL: no production claims, research initiative only
