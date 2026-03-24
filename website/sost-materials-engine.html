@@ -987,46 +987,49 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
         <div style="font-size:10px;color:#006600;letter-spacing:3px;margin-bottom:4px">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
         <div style="font-family:var(--font-display);font-size:clamp(22px,3vw,32px);font-weight:700;color:#00ff41;text-shadow:0 0 20px rgba(0,255,65,.3);letter-spacing:1px">DISCOVERY CONTROL CONSOLE</div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="meExplain('engine')">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00ff41;box-shadow:0 0 8px rgba(0,255,65,.6);animation:cPulse 2s ease infinite"></span>
         <span style="font-size:11px;color:#00ff41;letter-spacing:2px;font-weight:600">ENGINE ONLINE</span>
+        <span style="color:#006600;font-size:10px" title="Click for details">&#9432;</span>
       </div>
     </div>
     <style>@keyframes cPulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
 
-    <!-- STATUS GAUGES (3 columns) -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px">
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">DIRECT GNN RATE</div>
+    <!-- STATUS GAUGES (clickable, 3 columns) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px">
+      <div onclick="meExplain('gnn')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">DIRECT GNN RATE <span style="color:#004400">&#9432;</span></div>
         <div id="me-gnn-rate" style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">54.1%</div>
         <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-gnn-bar" style="width:54%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PROXY DEPENDENCY</div>
+      <div onclick="meExplain('proxy')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PROXY DEPENDENCY <span style="color:#004400">&#9432;</span></div>
         <div id="me-proxy-rate" style="font-size:28px;font-weight:700;color:#fbbf24;text-shadow:0 0 10px rgba(251,191,36,.3)">45.9%</div>
         <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-proxy-bar" style="width:46%;height:100%;background:linear-gradient(90deg,#004400,#fbbf24);border-radius:2px"></div></div>
       </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">MEAN TOP-10 SCORE</div>
+      <div onclick="meExplain('score')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">MEAN TOP-10 SCORE <span style="color:#004400">&#9432;</span></div>
         <div id="me-score" style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">0.653</div>
         <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-score-bar" style="width:65%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CAMPAIGNS</div>
+      <div onclick="meExplain('campaigns')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CAMPAIGNS <span style="color:#004400">&#9432;</span></div>
         <div style="font-size:28px;font-weight:700;color:#00ff41">9</div>
-        <div style="font-size:10px;color:#006600;margin-top:4px">12 profiles available</div>
+        <div style="font-size:10px;color:#006600;margin-top:4px">14 profiles available</div>
       </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CORPUS</div>
+      <div onclick="meExplain('corpus')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CORPUS <span style="color:#004400">&#9432;</span></div>
         <div style="font-size:28px;font-weight:700;color:#00ff41">76,193</div>
         <div style="font-size:10px;color:#006600;margin-top:4px">materials indexed</div>
       </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
-        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PLAUSIBILITY</div>
+      <div onclick="meExplain('plausibility')" style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;cursor:pointer;transition:border-color .2s" onmouseenter="this.style.borderColor='#003300'" onmouseleave="this.style.borderColor='#0a3a0a'">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PLAUSIBILITY <span style="color:#004400">&#9432;</span></div>
         <div style="font-size:28px;font-weight:700;color:#00ff41">0.767</div>
         <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:77%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
     </div>
+    <!-- Shared explainer panel for gauges -->
+    <div id="me-gauge-explain" style="display:none;background:#0a0a0a;border-left:3px solid #00ff41;border-radius:0 6px 6px 0;padding:14px 18px;margin-bottom:20px;font-size:11px;color:#aaa;line-height:1.8;font-family:monospace;transition:all .2s"></div>
 
     <!-- PIPELINE FLOW -->
     <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
@@ -1890,6 +1893,26 @@ function meLockSession(){
     });
   }
 
+  // Gauge + engine explainer (click-to-expand, one at a time)
+  var _meExplainOpen=null;
+  var GAUGE_INFO={
+    engine:'<b style="color:#00ff41">ENGINE STATUS</b><br><br>The autonomous materials discovery engine is currently running. It generates new material candidates, filters them for chemical plausibility, and scores them using a combination of novelty, stability, and industrial value metrics.<br><br><b>ONLINE</b> = the engine is ready to accept commands and run campaigns.<br><b>OFFLINE</b> = the engine needs to be restarted.',
+    gnn:'<b style="color:#00ff41">DIRECT GNN RATE</b><br><br>When the engine generates a new material candidate, it tries to predict its properties (formation energy, band gap) using a <b>Graph Neural Network</b> trained on 76,193 known materials.<br><br><b>54.1%</b> = more than half of candidates get direct GNN predictions from a real neural network running on their crystal structure.<br><br>The rest (45.9%) use <b>proxy</b> predictions — properties estimated from similar known materials, not from direct neural network inference.<br><br>Higher GNN rate = more accurate predictions = better candidates.',
+    proxy:'<b style="color:#fbbf24">PROXY DEPENDENCY</b><br><br>When the GNN cannot directly evaluate a candidate (because its crystal structure cannot be determined), the engine falls back to <b>proxy estimation</b>: it finds the most similar known material in the 76,193-material corpus and uses its properties as an approximation.<br><br><b>45.9%</b> proxy = almost half of candidates rely on approximation. This is expected for truly novel materials — they have no known crystal structure to feed the neural network.<br><br>Goal: reduce proxy dependency by improving structure prediction.',
+    score:'<b style="color:#00ff41">MEAN TOP-10 SCORE</b><br><br>After each discovery campaign, candidates are ranked by a multi-objective score combining:<br>&bull; <b>Novelty</b> (how different from known materials)<br>&bull; <b>Stability</b> (predicted formation energy)<br>&bull; <b>Industrial value</b> (strategic importance)<br>&bull; <b>Diversity</b> (chemical variety)<br><br><b>0.653</b> = average score of the top 10 candidates.<br>0.00 = worthless &middot; 0.50 = mediocre &middot; 0.65 = promising &middot; 0.80 = excellent<br><br>Scores above 0.60 indicate candidates worth investigating.',
+    campaigns:'<b style="color:#00ff41">CAMPAIGNS</b><br><br>A campaign is an automated discovery session where the engine:<br>1. Selects seed materials<br>2. Generates candidate variations<br>3. Filters for chemical plausibility<br>4. Predicts properties with GNN<br>5. Scores and ranks results<br>6. Saves the best candidates<br><br><b>9 campaigns</b> have been run so far.<br><b>14 profiles</b> available: exotic_hunt, valuable_unknowns, stable_novel_semiconductors, strategic_materials_search, battery_relevant, chemistry_aware_discovery, evidence_guided_discovery, high_uncertainty_probe, validation_priority, validation_operations, balanced, and more.',
+    corpus:'<b style="color:#00ff41">CORPUS</b><br><br>The engine knows <b>76,193 materials</b> from two scientific databases:<br>&bull; JARVIS (NIST): 75,993 materials<br>&bull; AFLOW: 200 materials<br><br>Each material has: chemical formula, crystal structure, formation energy, band gap, source reference.<br><br>This corpus is used for: training the GNN models, finding similar materials (proxy estimation), checking if a candidate already exists, and scoring novelty.',
+    plausibility:'<b style="color:#00ff41">PLAUSIBILITY</b><br><br>Every candidate is checked for chemical plausibility: does this composition make physical sense?<br><br>Checks include: charge balance, known element combinations, reasonable stoichiometry, not a duplicate.<br><br><b>0.767</b> = 76.7% of generated candidates pass the plausibility filter. Higher = the engine generates more realistic candidates.',
+  };
+  window.meExplain=function(key){
+    var panel=el('me-gauge-explain');
+    if(_meExplainOpen===key){panel.style.display='none';_meExplainOpen=null;return;}
+    panel.innerHTML=GAUGE_INFO[key]||'';
+    panel.style.display='block';
+    _meExplainOpen=key;
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
   // Validation tier info
   var TIER_INFO={
     priority:'<b style="color:#00ff41">Priority Validation</b> — Highest-confidence candidates with direct GNN evidence, good structure lift, and high plausibility. Ready for DFT handoff. These are the engine\'s best recommendations for computational validation.',
@@ -1913,14 +1936,14 @@ function meLockSession(){
 
   // Pipeline step explainers
   var PIPE_INFO={
-    seed:'<b style="color:#00ff41">SEED</b> — Select two parent materials (e.g. GaAs + AlN). Explore/exploit policy balances discovery of new chemical space vs deepening known productive regions.',
-    generate:'<b style="color:#00ff41">GENERATE</b> — Create candidate formulas via element substitution, cross-substitution, single-site doping, and mixed-parent combination. Typically produces 10-30 candidates per iteration.',
-    filter:'<b style="color:#00ff41">FILTER</b> — Chemical plausibility check: charge balance, valid elements, stoichiometry limits, no noble gases, deduplication against memory. Rejects ~30-50% of raw candidates.',
-    lift:'<b style="color:#00ff41">LIFT</b> — Find a similar corpus material and substitute elements to create an approximate crystal structure. Required for GNN inference. ~40-60% of candidates get a usable lift.',
-    gnn:'<b style="color:#00ff41">GNN</b> — Run real CGCNN forward pass on the lifted structure to predict formation energy. ALIGNN-Lite for band gap when available. The strongest evidence the engine can produce.',
-    score:'<b style="color:#00ff41">SCORE</b> — Multi-objective scoring: novelty + plausibility + value + stability + evidence quality + uncertainty. Known materials penalized, direct GNN candidates boosted.',
-    validate:'<b style="color:#00ff41">VALIDATE</b> — Route to validation queue tier: reject / watchlist / review / candidate / priority. Based on composite score, evidence, and readiness.',
-    handoff:'<b style="color:#fbbf24">HANDOFF</b> — Generate exportable validation pack with all evidence, risk flags, and rationale. Ready for DFT computation or external review.',
+    seed:'<b style="color:#00ff41">SEED</b> — Select 2 parent materials from the corpus<br><br>The engine picks two known materials as starting points (e.g. GaAs + AlN). An explore/exploit policy balances discovery of new chemical space vs deepening known productive regions. Seeds from historically reliable families are preferred.',
+    generate:'<b style="color:#00ff41">GENERATE</b> — Create candidate formulas<br><br>4 strategies:<br>&bull; <b>Element substitution</b> — swap one element for a similar one (e.g. Ga→Al in GaAs)<br>&bull; <b>Single-site doping</b> — insert a new element from the second parent<br>&bull; <b>Mixed-parent</b> — combine elements from both parents<br>&bull; <b>Cross-substitution</b> — swap elements between parents<br><br>Typically produces 10-30 candidates per iteration.',
+    filter:'<b style="color:#00ff41">FILTER</b> — Remove chemically impossible candidates<br><br>Checks: duplicate detection, charge balance (electronegativity), element compatibility, stoichiometry limits (max 5 elements, max 16 atoms/formula), no noble gases. Rejects ~30-50% of raw candidates.',
+    lift:'<b style="color:#00ff41">LIFT</b> — Predict crystal structure from parent templates<br><br>Copies the parent\'s crystal structure and substitutes the changed elements. Generates a CIF file that the GNN can process. ~40-60% of candidates get a usable lift. Without a structure, the candidate falls back to proxy estimation.',
+    gnn:'<b style="color:#00ff41">GNN</b> — Run Graph Neural Network on lifted structure<br><br>&bull; <b>CGCNN</b> predicts formation energy (is it stable?)<br>&bull; <b>ALIGNN-Lite</b> predicts band gap (electronic properties)<br><br>This is the strongest evidence the engine can produce — a real neural network prediction on the candidate\'s actual crystal structure. If structure unavailable, falls back to proxy from similar known materials.',
+    score:'<b style="color:#00ff41">SCORE</b> — Rank by multi-objective function<br><br>Combines: Novelty &times; Stability &times; Value &times; Diversity<br>Penalizes known materials and overexplored families.<br>Boosts candidates with direct GNN predictions.<br>Chemistry-aware: familiar families get small boost, risky compositions get penalty.<br>Evidence-driven: historically validated families score higher.',
+    validate:'<b style="color:#00ff41">VALIDATE</b> — Route to validation tier<br><br>&bull; <b>Priority</b> (score &ge;0.55 + structure + GNN) → DFT handoff candidate<br>&bull; <b>Candidate</b> (score &ge;0.45) → stronger ML pass needed<br>&bull; <b>Manual review</b> (score &ge;0.38) → compare with neighbors<br>&bull; <b>Watchlist</b> (score &ge;0.30) → keep monitoring<br>&bull; <b>Reject</b> → discard',
+    handoff:'<b style="color:#fbbf24">HANDOFF</b> — Export top candidates for validation<br><br>Generates a validation pack with: formula, structure (CIF), GNN predictions, uncertainty score, family context, risk flags, nearest corpus neighbors, and validation rationale.<br><br>Ready for: DFT calculation (quantum simulation), experimental synthesis, publication, or registration on SOST blockchain (Proof of Discovery).',
   };
   window.showPipeStep=function(step){
     var info=el('me-pipe-info');
