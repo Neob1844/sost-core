@@ -15,21 +15,14 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
 
-/* SPLASH */
+/* SPLASH — Red Matrix Rain */
 #splash.out{opacity:0;pointer-events:none;transition:opacity .5s ease}
-#splash::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.02) 2px,rgba(0,255,136,.02) 4px);pointer-events:none;animation:scanFlicker 4s linear infinite}
-@keyframes scanFlicker{0%,100%{opacity:.5}50%{opacity:.8}}
-#splash-logo{width:180px;height:180px;border-radius:20%;opacity:0;transform:scale(.4);animation:logoIn 1.8s ease forwards}
-@keyframes logoIn{to{opacity:1;transform:scale(1)}}
-#splash-title{margin-top:20px;font-size:22px;font-weight:700;color:#fb010d;letter-spacing:4px;text-align:center;opacity:0;animation:fadeIn .8s ease 1.8s forwards}
-#splash-lines{margin-top:28px;font-size:13px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,.4);min-height:80px;text-align:left;width:320px}
-.tl{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #00ff88;width:0;line-height:2}
-.tl.go{animation:typeW .5s steps(30) forwards,curBlink .5s step-end 4}
+#splash-logo{width:180px;height:180px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0))}
+#splash-title{margin-top:20px;font-size:22px;font-weight:700;letter-spacing:4px;text-align:center;opacity:0;white-space:nowrap}
+#splash-lines{margin-top:28px;font-size:13px;min-height:80px;text-align:left;width:320px}
+.tl{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2}
+.tl.go{animation:typeW .5s steps(30) forwards}
 @keyframes typeW{from{opacity:1;width:0}to{opacity:1;width:100%}}
-@keyframes curBlink{50%{border-color:transparent}}
-#splash-scan{position:absolute;left:0;right:0;height:4px;background:linear-gradient(180deg,transparent,rgba(0,255,136,.15),transparent);opacity:0;animation:scanSweep 3s linear 3s infinite}
-@keyframes scanSweep{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
-@keyframes fadeIn{to{opacity:1}}
 
 /* APP */
 #app{flex-direction:column;height:100%}
@@ -65,17 +58,20 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-  <img id="splash-logo" src="/sost-logo.png" alt="SOST">
-  <div id="splash-title">SOST PROTOCOL</div>
-  <div id="splash-lines">
-    <div class="tl" id="s1">&gt; Initializing node connection...</div>
-    <div class="tl" id="s2">&gt; Verifying genesis block...</div>
-    <div class="tl" id="s3">&gt; Syncing chain data...</div>
-    <div class="tl" id="s4">&gt; Loading explorer modules...</div>
+<!-- SPLASH — Red Matrix Rain -->
+<div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;">
+  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:10;text-align:center;pointer-events:none">
+    <img id="splash-logo" src="/sost-logo.png" alt="SOST">
+    <div id="splash-title"></div>
+    <div id="splash-lines">
+      <div class="tl" id="s1"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Initializing node connection...</span></div>
+      <div class="tl" id="s2"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Verifying genesis block...</span></div>
+      <div class="tl" id="s3"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Syncing chain data...</span></div>
+      <div class="tl" id="s4"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> System ready.</span></div>
+    </div>
   </div>
-  <div id="splash-scan"></div>
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
 </div>
 
 <!-- APP -->
@@ -100,12 +96,67 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 
 <script src="/js/retro-sounds.js"></script>
 <script>
-/* ===== SPLASH (7s) + chiptune ===== */
-['s1','s2','s3','s4'].forEach(function(id,i){
-  setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},2500+i*900);
-});
-// Chiptune starts on splash (PWA counts icon tap as user gesture)
+/* ===== RED MATRIX RAIN SPLASH ===== */
+(function(){
+  var canvas=document.getElementById('matrix-canvas');
+  var ctx=canvas.getContext('2d');
+  var W,H,columns,drops,fontSize=14;
+  var chars='アイウエオカキクケコサシスセソタチツテト0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&'.split('');
+  function initMatrix(){
+    W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
+    if(W<600)fontSize=10;
+    columns=Math.floor(W/fontSize);
+    drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
+  }
+  initMatrix();window.addEventListener('resize',initMatrix);
+  var matrixOn=true;
+  function drawMatrix(){
+    if(!matrixOn)return;
+    ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
+    ctx.font=fontSize+'px monospace';
+    for(var i=0;i<drops.length;i++){
+      var ch=chars[Math.random()*chars.length|0];
+      var y=drops[i]*fontSize;
+      ctx.fillStyle='#ffffff';ctx.fillText(ch,i*fontSize,y);
+      if(drops[i]>1){ctx.fillStyle='#fb010d';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-1)*fontSize);}
+      if(drops[i]>3){ctx.fillStyle=Math.random()>.5?'#cc0000':'#880000';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-2-Math.random()*2|0)*fontSize);}
+      if(y>H&&Math.random()>.975)drops[i]=0;drops[i]++;
+    }
+    requestAnimationFrame(drawMatrix);
+  }
+  requestAnimationFrame(drawMatrix);
+
+  // Logo emerge
+  var logo=document.getElementById('splash-logo');
+  setTimeout(function(){logo.style.opacity='0.15';},1500);
+  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 10px rgba(251,1,13,0.3))';},2000);
+  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 20px rgba(251,1,13,0.5))';},2500);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 30px rgba(251,1,13,0.6)) drop-shadow(0 0 60px rgba(251,1,13,0.3))';},3000);
+
+  // Title typing
+  var titleEl=document.getElementById('splash-title');
+  var titleParts=[{t:'SOST',c:'#fb010d'},{t:' PROTOCOL',c:'#ffffff'}];
+  var ci=0,si=0;
+  function typeT(){
+    if(si>=titleParts.length)return;
+    var seg=titleParts[si];
+    if(ci<seg.t.length){
+      var s=document.createElement('span');s.style.color=seg.c;s.style.textShadow='0 0 10px rgba(251,1,13,0.5)';
+      s.textContent=seg.t[ci];titleEl.appendChild(s);titleEl.style.opacity='1';ci++;setTimeout(typeT,80);
+    }else{ci=0;si++;setTimeout(typeT,40);}
+  }
+  setTimeout(typeT,3500);
+
+  // Terminal lines
+  ['s1','s2','s3','s4'].forEach(function(id,i){
+    setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},5000+i*700);
+  });
+})();
+
+// Chiptune
 try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(8);}catch(e){}
+
+// Transition at 8s
 setTimeout(function(){
   var appEl=document.getElementById('app');
   appEl.style.display='flex';
