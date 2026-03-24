@@ -1,6 +1,6 @@
-// Materials Engine Console Data — auto-generated, canonical formulas
+// Materials Engine Console Data — canonical formulas + caution labels
 var ME_DATA = {
-  "generated_at": "2026-03-24T16:46:16Z",
+  "generated_at": "2026-03-24T16:54:59Z",
   "data_type": "latest_verified_run",
   "corpus_size": 76193,
   "api_endpoints": 145,
@@ -21,7 +21,6 @@ var ME_DATA = {
     "iii_v_semiconductors": {
       "candidates": 11,
       "fe_rate": 9,
-      "bg_rate": 9,
       "proxy_rate": 91,
       "score": 0.507,
       "plausibility": 0.828,
@@ -77,7 +76,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5727,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "III-V semiconductor",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -128,7 +130,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2549,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "III-V semiconductor",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -179,7 +184,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2648,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "III-V nitride",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -230,7 +238,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2711,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "III-V semiconductor",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -281,14 +292,16 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.3018,
           "dft_handoff_ready": false,
-          "readiness_action": "wait_for_better_support"
+          "readiness_action": "wait_for_better_support",
+          "family": "III-V variant",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "oxide_semiconductors": {
       "candidates": 18,
       "fe_rate": 6,
-      "bg_rate": 6,
       "proxy_rate": 94,
       "score": 0.435,
       "plausibility": 0.83,
@@ -344,7 +357,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5837,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": null,
+          "risk_level": "unusual",
+          "short_caution": "No known compound family \u2014 higher uncertainty, exploratory candidate"
         },
         {
           "rank": 1,
@@ -395,7 +411,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2761,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "II-VI oxide (ZnO)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -446,7 +465,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2578,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "Mixed oxide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -497,7 +519,10 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2471,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "Mixed oxide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -548,14 +573,16 @@ var ME_DATA = {
           "support_strength": "none",
           "validation_readiness": 0.2823,
           "dft_handoff_ready": false,
-          "readiness_action": "deprioritize"
+          "readiness_action": "deprioritize",
+          "family": "Mixed oxide",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "group_iv": {
       "candidates": 6,
       "fe_rate": 83,
-      "bg_rate": 83,
       "proxy_rate": 17,
       "score": 0.603,
       "plausibility": 0.593,
@@ -611,7 +638,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5648,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Nitride ceramic (Si3N4 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -667,7 +697,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.4891,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Group IV alloy",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -718,7 +751,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.4769,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Binary alloy",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -769,7 +805,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.485,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Binary alloy",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -820,14 +859,16 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.4737,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Binary alloy",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "stable_novel_semiconductors": {
       "candidates": 25,
       "fe_rate": 48,
-      "bg_rate": 36,
       "proxy_rate": 52,
       "score": 0.719,
       "plausibility": 0.763,
@@ -883,7 +924,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5879,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (NaCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -934,7 +978,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5765,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -985,7 +1032,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5727,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "III-V semiconductor",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -1036,7 +1086,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5859,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (KCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -1087,14 +1140,16 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5859,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (RbCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         }
       ]
     },
     "valuable_unknowns": {
       "candidates": 23,
       "fe_rate": 52,
-      "bg_rate": 43,
       "proxy_rate": 48,
       "score": 0.79,
       "plausibility": 0.773,
@@ -1150,7 +1205,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5727,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "III-V semiconductor",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -1201,7 +1259,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5879,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (NaCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -1252,7 +1313,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5765,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -1303,7 +1367,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6935,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -1354,14 +1421,16 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6622,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "strategic_materials_search": {
       "candidates": 14,
       "fe_rate": 43,
-      "bg_rate": 36,
       "proxy_rate": 57,
       "score": 0.599,
       "plausibility": 0.674,
@@ -1417,7 +1486,10 @@ var ME_DATA = {
           "support_strength": "strong",
           "validation_readiness": 0.7153,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "II-VI oxide (ZnO)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -1468,7 +1540,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5708,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Nitride ceramic (Si3N4 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -1524,7 +1599,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5192,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Group IV alloy",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -1575,7 +1653,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.4895,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Binary alloy",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -1626,14 +1707,16 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.4805,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Binary alloy",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "battery_relevant": {
       "candidates": 20,
       "fe_rate": 50,
-      "bg_rate": 40,
       "proxy_rate": 50,
       "score": 0.821,
       "plausibility": 0.82,
@@ -1689,7 +1772,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5879,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (NaCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -1740,7 +1826,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5765,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -1791,7 +1880,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5879,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (KCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -1842,7 +1934,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5879,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Layered oxide (RbCoO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 5,
@@ -1893,14 +1988,16 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5617,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Battery anode (LiTiO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         }
       ]
     },
     "exploratory_oxides": {
       "candidates": 15,
       "fe_rate": 100,
-      "bg_rate": 67,
       "proxy_rate": 0,
       "score": 0.692,
       "plausibility": 0.796,
@@ -1956,7 +2053,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6865,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -2007,7 +2107,10 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5668,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -2058,7 +2161,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6895,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Oxide (TiO2 family)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 4,
@@ -2109,7 +2215,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6761,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Mixed oxide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -2160,14 +2269,16 @@ var ME_DATA = {
           "support_strength": "weak",
           "validation_readiness": 0.5623,
           "dft_handoff_ready": false,
-          "readiness_action": "prepare_validation_pack"
+          "readiness_action": "prepare_validation_pack",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     },
     "high_uncertainty_probe": {
       "candidates": 24,
       "fe_rate": 96,
-      "bg_rate": 62,
       "proxy_rate": 4,
       "score": 0.71,
       "plausibility": 0.823,
@@ -2223,7 +2334,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6778,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "II-VI semiconductor (CdTe)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -2274,7 +2388,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6778,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "II-VI semiconductor (CdTe)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 3,
@@ -2325,7 +2442,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6778,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "II-VI semiconductor (CdTe)",
+          "risk_level": "familiar",
+          "short_caution": null
         },
         {
           "rank": 1,
@@ -2376,7 +2496,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6935,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         },
         {
           "rank": 2,
@@ -2427,7 +2550,10 @@ var ME_DATA = {
           "support_strength": "moderate",
           "validation_readiness": 0.6585,
           "dft_handoff_ready": true,
-          "readiness_action": "DFT_handoff_candidate"
+          "readiness_action": "DFT_handoff_candidate",
+          "family": "Chalcogenide",
+          "risk_level": "plausible",
+          "short_caution": null
         }
       ]
     }
@@ -2482,7 +2608,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5879,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "Layered oxide (NaCoO2 family)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "Layered oxide (NaCoO2 family) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 1,
@@ -2533,7 +2666,14 @@ var ME_DATA = {
       "support_strength": "strong",
       "validation_readiness": 0.7153,
       "dft_handoff_ready": true,
-      "readiness_action": "DFT_handoff_candidate"
+      "readiness_action": "DFT_handoff_candidate",
+      "family": "II-VI oxide (ZnO)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "II-VI oxide (ZnO) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 1,
@@ -2584,7 +2724,14 @@ var ME_DATA = {
       "support_strength": "moderate",
       "validation_readiness": 0.6778,
       "dft_handoff_ready": true,
-      "readiness_action": "DFT_handoff_candidate"
+      "readiness_action": "DFT_handoff_candidate",
+      "family": "II-VI semiconductor (CdTe)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "II-VI semiconductor (CdTe) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 2,
@@ -2635,7 +2782,14 @@ var ME_DATA = {
       "support_strength": "moderate",
       "validation_readiness": 0.6778,
       "dft_handoff_ready": true,
-      "readiness_action": "DFT_handoff_candidate"
+      "readiness_action": "DFT_handoff_candidate",
+      "family": "II-VI semiconductor (CdTe)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "II-VI semiconductor (CdTe) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 2,
@@ -2686,7 +2840,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5765,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "Chalcogenide",
+      "caution_labels": [
+        "CHALCOGENIDE VARIANT"
+      ],
+      "risk_level": "plausible",
+      "short_why": "Chalcogenide \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 1,
@@ -2737,7 +2898,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5727,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "III-V semiconductor",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "III-V semiconductor \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 1,
@@ -2788,7 +2956,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5708,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "Nitride ceramic (Si3N4 family)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "Nitride ceramic (Si3N4 family) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 3,
@@ -2839,7 +3014,14 @@ var ME_DATA = {
       "support_strength": "moderate",
       "validation_readiness": 0.6778,
       "dft_handoff_ready": true,
-      "readiness_action": "DFT_handoff_candidate"
+      "readiness_action": "DFT_handoff_candidate",
+      "family": "II-VI semiconductor (CdTe)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "II-VI semiconductor (CdTe) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 3,
@@ -2890,7 +3072,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5879,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "Layered oxide (KCoO2 family)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "Layered oxide (KCoO2 family) \u2014 computationally generated variant",
+      "short_caution": null
     },
     {
       "rank": 4,
@@ -2941,7 +3130,14 @@ var ME_DATA = {
       "support_strength": "weak",
       "validation_readiness": 0.5879,
       "dft_handoff_ready": false,
-      "readiness_action": "prepare_validation_pack"
+      "readiness_action": "prepare_validation_pack",
+      "family": "Layered oxide (RbCoO2 family)",
+      "caution_labels": [
+        "FAMILY SUPPORTED"
+      ],
+      "risk_level": "familiar",
+      "short_why": "Layered oxide (RbCoO2 family) \u2014 computationally generated variant",
+      "short_caution": null
     }
   ]
 };

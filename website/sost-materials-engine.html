@@ -2011,11 +2011,23 @@ function meLockSession(){
     var ready=c.validation_readiness;var action=c.readiness_action||c.next_step||'—';
     var support=c.support_strength||'—';
 
+    // Chemistry caution labels
+    var family=c.family||null;
+    var riskLevel=c.risk_level||'plausible';
+    var cautionLabels=c.caution_labels||[];
+    var shortWhy=c.short_why||'';
+    var shortCaution=c.short_caution||null;
+    var riskColor=riskLevel==='familiar'?'#00ff41':riskLevel==='plausible'?'#00cc00':riskLevel==='unusual'?'#fbbf24':'#ff4444';
+    var riskBadge='<span style="background:rgba('+(riskLevel==='familiar'?'0,255,65':riskLevel==='plausible'?'0,204,0':riskLevel==='unusual'?'251,191,36':'255,68,68')+',.1);color:'+riskColor+';padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid '+riskColor+'44;margin-left:6px">'+riskLevel.toUpperCase()+'</span>';
+    var familyRow=family?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Family</td><td style="padding:6px;color:#00cc00">'+family+'</td></tr>':'';
+    var cautionRow=shortCaution?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#665500">Caution</td><td style="padding:6px;color:#fbbf24">'+shortCaution+'</td></tr>':'';
+
     if(mode==='tech'){
       el('cv-content').innerHTML=
         '<div style="font-size:24px;font-weight:700;color:#00ff41;margin-bottom:8px">'+c.formula+'</div>'+
-        '<div style="margin-bottom:12px">'+badge+'</div>'+
+        '<div style="margin-bottom:12px">'+badge+riskBadge+'</div>'+
         '<table style="width:100%;font-size:11px;border-collapse:collapse">'+
+        familyRow+
         '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Score</td><td style="padding:6px;color:#00ff41;font-weight:600">'+(c.composite_score||0).toFixed(4)+'</td></tr>'+
         '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Method</td><td style="padding:6px;color:#008800">'+(c.method||'—')+'</td></tr>'+
         '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Formation Energy</td><td style="padding:6px;color:#00cc00">'+feS+'</td></tr>'+
@@ -2025,7 +2037,8 @@ function meLockSession(){
         (conf!==undefined?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Confidence</td><td style="padding:6px;color:#00cc00">'+conf.toFixed(3)+'</td></tr>':'')+
         (ready!==undefined?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Validation Readiness</td><td style="padding:6px;color:#00cc00">'+ready.toFixed(3)+'</td></tr>':'')+
         '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Support</td><td style="padding:6px;color:#008800">'+support+'</td></tr>'+
-        '<tr><td style="padding:6px;color:#006600">Next Action</td><td style="padding:6px;color:#fbbf24">'+action+'</td></tr>'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Next Action</td><td style="padding:6px;color:#fbbf24">'+action+'</td></tr>'+
+        cautionRow+
         '</table>';
     }else{
       var known=origin==='known_exact';
@@ -2035,15 +2048,19 @@ function meLockSession(){
                  'This candidate relies on proxy estimates from similar materials — higher uncertainty.';
       var feP=fe!==null&&fe!==undefined?'The model predicts a formation energy of '+fe.toFixed(3)+' eV/atom.':'No formation energy prediction available.';
       var confP=conf!==undefined?(conf>=0.6?'Confidence is moderate to strong.':'Confidence is low — treat with caution.'):'';
+      var familyP=family?'<b style="color:#00cc00">Family:</b> '+family+'.':'';
+      var cautionP=shortCaution?'<div style="margin-top:8px;padding:8px;background:#1a1200;border:1px solid #332a00;border-radius:4px;color:#fbbf24;font-size:11px">&#9888; '+shortCaution+'</div>':'';
       var nextP=action==='DFT_handoff_candidate'?'This candidate is ready for computational validation (DFT).':
                 action==='reference_only'?'Known material — useful as baseline, not a discovery.':
                 'More evidence needed before deeper validation.';
       el('cv-content').innerHTML=
         '<div style="font-size:24px;font-weight:700;color:#00ff41;margin-bottom:12px">'+c.formula+'</div>'+
-        '<div style="margin-bottom:12px">'+badge+'</div>'+
+        '<div style="margin-bottom:12px">'+badge+riskBadge+'</div>'+
+        (familyP?'<p style="line-height:1.8;margin-bottom:8px">'+familyP+'</p>':'')+
         '<p style="line-height:1.8;margin-bottom:8px">'+status+'</p>'+
         '<p style="line-height:1.8;margin-bottom:8px">'+feP+' '+confP+'</p>'+
-        '<p style="line-height:1.8;color:#fbbf24">'+nextP+'</p>';
+        '<p style="line-height:1.8;color:#fbbf24">'+nextP+'</p>'+
+        cautionP;
     }
   };
 
