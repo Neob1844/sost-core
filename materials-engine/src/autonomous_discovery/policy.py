@@ -79,6 +79,13 @@ CAMPAIGN_PROFILES = {
         "min_novelty": 0.2,
         "use_evidence_calibration": True,
     },
+    "validation_economics": {
+        "description": "Maximize evidence ROI — best candidates per unit of validation cost",
+        "weights": {"novelty": 0.15, "exotic": 0.05, "stability": 0.30, "value": 0.30, "diversity": 0.20},
+        "explore_ratio": 0.20, "exploit_ratio": 0.55, "diversify_ratio": 0.25,
+        "min_stability": 0.35,
+        "optimize_validation_roi": True,
+    },
     "validation_operations": {
         "description": "Generate best flow for validation efficiency + calibration learning",
         "weights": {"novelty": 0.15, "exotic": 0.05, "stability": 0.30, "value": 0.25, "diversity": 0.25},
