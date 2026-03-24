@@ -1,0 +1,18 @@
+[Unit]
+Description=SOST Auth Gateway (FastAPI + TOTP 2FA)
+After=network.target
+Documentation=https://github.com/SOST-Protocol/sost-core
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/sost
+ExecStart=/usr/bin/python3 -m uvicorn auth.server:app --host 127.0.0.1 --port 8200
+EnvironmentFile=/etc/sost/auth.env
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
