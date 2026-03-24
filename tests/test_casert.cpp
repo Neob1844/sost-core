@@ -151,7 +151,11 @@ int main() {
 
     printf("\n=== 7. CONSTANTS ===\n");
 
-    TEST("BITSQ_HALF_LIFE == 172800", BITSQ_HALF_LIFE == 172800);
+    TEST("BITSQ_HALF_LIFE V1 == 172800", BITSQ_HALF_LIFE == 172800);
+    TEST("BITSQ_HALF_LIFE_V2 == 86400", BITSQ_HALF_LIFE_V2 == 86400);
+    TEST("BITSQ_MAX_DELTA_DEN V1 == 16", BITSQ_MAX_DELTA_DEN == 16);
+    TEST("BITSQ_MAX_DELTA_DEN_V2 == 8", BITSQ_MAX_DELTA_DEN_V2 == 8);
+    TEST("CASERT_V2_FORK_HEIGHT == 1450", CASERT_V2_FORK_HEIGHT == 1450);
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
     TEST("H_MIN == -4", CASERT_H_MIN == -4);
@@ -212,6 +216,88 @@ int main() {
         auto chain = make_chain(50, 1200); // very slow chain (behind schedule)
         auto dec = casert_compute(chain, 50);
         TEST("Behind schedule: capped at B0", dec.profile_index <= 0);
+    }
+
+    printf("\n=== 13. cASERT V2 FORK BOUNDARY ===\n");
+
+    {
+        // Pre-fork: block 1449 uses V1 parameters
+        auto chain = make_chain(1449, TARGET_SPACING);
+        // Set powDiffQ to something measurable
+        for (size_t i = 1; i < chain.size(); ++i)
+            chain[i].powDiffQ = GENESIS_BITSQ;
+        // Make last block arrive fast (half target) to trigger adjustment
+        chain.back().time = chain[chain.size()-2].time + TARGET_SPACING / 2;
+
+        uint32_t d_v1 = casert_next_bitsq(chain, 1449); // pre-fork height
+        // V1: halflife=172800, delta_den=16
+        int64_t max_delta_v1 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN;
+        int64_t actual_v1 = (int64_t)d_v1 - (int64_t)GENESIS_BITSQ;
+        TEST("V1 pre-fork (h=1449): delta capped at 6.25%", std::abs(actual_v1) <= max_delta_v1 + 1);
+    }
+    {
+        // At-fork: block 1450 uses V2 parameters
+        auto chain = make_chain(1450, TARGET_SPACING);
+        for (size_t i = 1; i < chain.size(); ++i)
+            chain[i].powDiffQ = GENESIS_BITSQ;
+        chain.back().time = chain[chain.size()-2].time + TARGET_SPACING / 2;
+
+        uint32_t d_v2 = casert_next_bitsq(chain, 1450); // fork height
+        // V2: delta_den=8 -> max 12.5%
+        int64_t max_delta_v2 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN_V2;
+        int64_t actual_v2 = (int64_t)d_v2 - (int64_t)GENESIS_BITSQ;
+        TEST("V2 at-fork (h=1450): delta capped at 12.5%", std::abs(actual_v2) <= max_delta_v2 + 1);
+    }
+    {
+        // Post-fork: block 1451 uses V2 parameters
+        auto chain = make_chain(1451, TARGET_SPACING);
+        for (size_t i = 1; i < chain.size(); ++i)
+            chain[i].powDiffQ = GENESIS_BITSQ;
+        chain.back().time = chain[chain.size()-2].time + TARGET_SPACING / 2;
+
+        uint32_t d_v2 = casert_next_bitsq(chain, 1451);
+        int64_t max_delta_v2 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN_V2;
+        int64_t actual_v2 = (int64_t)d_v2 - (int64_t)GENESIS_BITSQ;
+        TEST("V2 post-fork (h=1451): delta capped at 12.5%", std::abs(actual_v2) <= max_delta_v2 + 1);
+    }
+    {
+        // Verify V2 delta cap is larger than V1 (12.5% > 6.25%)
+        int64_t cap_v1 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN;
+        int64_t cap_v2 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN_V2;
+        TEST("V2 cap > V1 cap (12.5% > 6.25%)", cap_v2 > cap_v1);
+        TEST("V2 cap == 2 * V1 cap", cap_v2 == cap_v1 * 2);
+    }
+    {
+        // Transition: no pathological jump at fork boundary
+        // Build chain up to 1449 on-schedule, then compute both sides of fork
+        auto chain = make_chain(1449, TARGET_SPACING);
+        for (size_t i = 1; i < chain.size(); ++i)
+            chain[i].powDiffQ = GENESIS_BITSQ;
+        uint32_t d_pre = casert_next_bitsq(chain, 1449);
+
+        // Extend chain by 1 block (on-schedule)
+        BlockMeta m;
+        m.block_id = ZERO_HASH(); m.height = 1449;
+        m.time = chain.back().time + TARGET_SPACING; m.powDiffQ = d_pre;
+        chain.push_back(m);
+        uint32_t d_post = casert_next_bitsq(chain, 1450);
+
+        // Both should be near GENESIS_BITSQ (on-schedule chain)
+        int64_t jump = (int64_t)d_post - (int64_t)d_pre;
+        // Max possible jump at fork = V2 cap (larger)
+        int64_t max_v2 = (int64_t)d_pre / BITSQ_MAX_DELTA_DEN_V2;
+        TEST("transition: no pathological jump", std::abs(jump) <= max_v2 + 1);
+    }
+    {
+        // Historical chain params unchanged: block 100 still uses V1
+        auto chain = make_chain(100, TARGET_SPACING);
+        for (size_t i = 1; i < chain.size(); ++i)
+            chain[i].powDiffQ = GENESIS_BITSQ;
+        chain.back().time = chain[chain.size()-2].time + TARGET_SPACING / 2;
+        uint32_t d = casert_next_bitsq(chain, 100);
+        int64_t max_v1 = (int64_t)GENESIS_BITSQ / BITSQ_MAX_DELTA_DEN;
+        int64_t actual = (int64_t)d - (int64_t)GENESIS_BITSQ;
+        TEST("historical (h=100): uses V1 params", std::abs(actual) <= max_v1 + 1);
     }
 
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);

@@ -79,9 +79,14 @@ inline constexpr uint32_t MAX_BITSQ     = 255u * Q16_ONE;
 // bitsQ = log2(600 * 5.48 * 1.0) * 65536 = 11.6841 * 65536 = 765730
 inline constexpr uint32_t GENESIS_BITSQ         = 765730;  // 11.6841, calibrated
 
-inline constexpr int64_t  BITSQ_HALF_LIFE       = 172800;  // 48 hours (288 blocks)
+inline constexpr int64_t  BITSQ_HALF_LIFE       = 172800;  // 48 hours (288 blocks) — V1 (blocks < 1450)
 inline constexpr int32_t  BITSQ_MAX_DELTA_NUM   = 1;       // relative delta cap numerator
-inline constexpr int32_t  BITSQ_MAX_DELTA_DEN   = 16;      // relative delta cap denominator (6.25%)
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN   = 16;      // relative delta cap denominator (6.25%) — V1
+
+// cASERT V2 fork — activated at block 1450 (no regenesis)
+inline constexpr int64_t  CASERT_V2_FORK_HEIGHT   = 1450;
+inline constexpr int64_t  BITSQ_HALF_LIFE_V2      = 86400;   // 24 hours (144 blocks) — V2
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta cap denominator (12.5%) — V2
 
 // --- cASERT equalizer ---
 // EWMA smoothing constants (denominator = 256 for shift-by-8 division)

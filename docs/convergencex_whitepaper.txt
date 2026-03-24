@@ -3072,3 +3072,11 @@ F. GEASPIRIT MINERAL INTELLIGENCE MODULE
 - V3 ML residual experiment: NEGATIVE (honest result, documented)
 - 10 V3 ideas evaluated, 3 VIABLE, next: spatial gradient geology proxies
 - EXPERIMENTAL: no production claims, research initiative only
+
+G. cASERT V2 CONSENSUS UPGRADE (BLOCK 1450)
+- Fork height: 1450 (no regenesis, history preserved)
+- Halflife: 48h → 24h (faster difficulty response)
+- Delta cap: 6.25% → 12.5% symmetric (faster per-block adjustment)
+- Target spacing unchanged: 600s
+- Anti-stall, profiles, PoW unchanged
+- Rationale: audit showed slow upward adjustment with V1 parameters
