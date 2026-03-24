@@ -524,6 +524,15 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Security</div>
+      <button class="sidebar-btn" data-view="addressbook" onclick="showView('addressbook')">
+        <span class="icon">&#128214;</span> <span>Address Book</span>
+      </button>
+      <button class="sidebar-btn" data-view="psbt" onclick="showView('psbt')">
+        <span class="icon">&#128196;</span> <span>PSBT</span>
+      </button>
+      <button class="sidebar-btn" data-view="multisig" onclick="showView('multisig')">
+        <span class="icon">&#128273;</span> <span>Multisig</span>
+      </button>
       <button class="sidebar-btn" data-view="totp" onclick="showView('totp')">
         <span class="icon">&#128272;</span> <span>2FA</span>
       </button>
@@ -604,7 +613,8 @@
       <div class="card">
         <div class="form-group">
           <label class="form-label">Recipient Address</label>
-          <input type="text" id="sendTo" class="form-input" placeholder="sost1...">
+          <input type="text" id="sendTo" class="form-input" placeholder="sost1..." oninput="checkAddressBook()">
+          <div id="sendAddrInfo" style="margin-top:6px;font-size:12px;display:none"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Amount (SOST)</label>
@@ -777,6 +787,111 @@
       </div>
     </div>
 
+    <!-- ADDRESS BOOK -->
+    <div id="view-addressbook" class="view hidden">
+      <h2>Address <span class="accent">Book</span></h2>
+      <p class="subtitle">Manage trusted addresses for safer sending</p>
+      <div class="card">
+        <h3>Add Address</h3>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input type="text" id="abAddr" class="form-input" placeholder="sost1...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input type="text" id="abLabel" class="form-input" placeholder="Gold Vault">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trust Level</label>
+          <select id="abTrust" class="form-input" style="background:#111;color:#e2e8f0;border:1px solid #333">
+            <option value="trusted">Trusted</option>
+            <option value="known" selected>Known</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="addToAddressBook()">Add to Address Book</button>
+        <div id="abResult" class="notice hidden" style="margin-top:12px"></div>
+      </div>
+      <div class="card" id="abListCard">
+        <h3>Saved Addresses</h3>
+        <div id="abList" style="font-size:12px;line-height:2"></div>
+      </div>
+    </div>
+
+    <!-- PSBT (Offline Signing) -->
+    <div id="view-psbt" class="view hidden">
+      <h2>PSBT <span class="accent">Offline Signing</span></h2>
+      <p class="subtitle">Create, sign, and broadcast partially-signed transactions</p>
+      <div class="card">
+        <h3>Create Unsigned PSBT</h3>
+        <div class="form-group">
+          <label class="form-label">Recipient Address</label>
+          <input type="text" id="psbtTo" class="form-input" placeholder="sost1...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (SOST)</label>
+          <input type="text" id="psbtAmount" class="form-input" placeholder="0.00000000">
+        </div>
+        <button class="btn btn-primary" onclick="createPsbt()">Create Unsigned PSBT</button>
+        <div id="psbtCreateResult" class="notice hidden" style="margin-top:12px"></div>
+        <textarea id="psbtOutput" class="form-input hidden" style="margin-top:12px;height:120px;font-size:11px" readonly></textarea>
+        <button id="psbtCopyBtn" class="btn btn-small hidden" style="margin-top:8px" onclick="copyText(document.getElementById('psbtOutput').value)">Copy PSBT</button>
+      </div>
+      <div class="card">
+        <h3>Sign PSBT</h3>
+        <textarea id="psbtSignInput" class="form-input" style="height:100px;font-size:11px" placeholder="Paste base64 PSBT here..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="signPsbt()">Sign with This Wallet</button>
+        <div id="psbtSignResult" class="notice hidden" style="margin-top:12px"></div>
+        <textarea id="psbtSignOutput" class="form-input hidden" style="margin-top:12px;height:120px;font-size:11px" readonly></textarea>
+      </div>
+      <div class="card">
+        <h3>Broadcast Signed PSBT</h3>
+        <textarea id="psbtBroadcastInput" class="form-input" style="height:100px;font-size:11px" placeholder="Paste signed PSBT here..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="broadcastPsbt()">Finalize &amp; Broadcast</button>
+        <div id="psbtBroadcastResult" class="notice hidden" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- MULTISIG -->
+    <div id="view-multisig" class="view hidden">
+      <h2><span class="accent">Multisig</span></h2>
+      <p class="subtitle">Create and manage M-of-N multisig addresses (sost3)</p>
+      <div class="card">
+        <h3>Create Multisig Address</h3>
+        <div class="form-group">
+          <label class="form-label">Required Signatures (M)</label>
+          <input type="number" id="msigM" class="form-input" value="2" min="1" max="15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Signers (N)</label>
+          <input type="number" id="msigN" class="form-input" value="3" min="1" max="15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Public Keys (one per line, 66 hex chars each)</label>
+          <textarea id="msigPubkeys" class="form-input" style="height:100px;font-size:11px" placeholder="02abc...&#10;03def...&#10;02ghi..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="createMultisig()">Create Multisig</button>
+        <div id="msigResult" class="notice hidden" style="margin-top:12px"></div>
+        <div id="msigInfo" class="hidden" style="margin-top:16px">
+          <div class="card-label">Multisig Address (sost3)</div>
+          <div class="address-display" style="margin:8px 0">
+            <span class="addr-text" id="msigAddr" style="color:var(--green-primary)"></span>
+            <button class="copy-btn" onclick="copyText(document.getElementById('msigAddr').textContent)">COPY</button>
+          </div>
+          <div class="card-label" style="margin-top:8px">RedeemScript</div>
+          <div style="word-break:break-all;font-size:10px;color:var(--text-dim);margin:4px 0" id="msigScript"></div>
+          <button class="btn btn-small" style="margin-top:8px" onclick="downloadMultisigConfig()">Download Config JSON</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Co-Sign Multisig PSBT</h3>
+        <textarea id="msigPsbtInput" class="form-input" style="height:100px;font-size:11px" placeholder="Paste multisig PSBT here..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="cosignMultisig()">Co-Sign with This Wallet</button>
+        <div id="msigCosignResult" class="notice hidden" style="margin-top:12px"></div>
+        <textarea id="msigCosignOutput" class="form-input hidden" style="margin-top:12px;height:120px;font-size:11px" readonly></textarea>
+      </div>
+    </div>
+
     <!-- TOTP 2FA -->
     <div id="view-totp" class="view hidden">
       <h2>Two-Factor <span class="accent">Authentication</span></h2>
@@ -849,6 +964,27 @@
       </div>
 
       <div class="card">
+        <h3>Treasury Safety <span class="accent">Policy</span></h3>
+        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:12px">Set limits to protect against accidental or unauthorized sends.</p>
+        <div class="form-group">
+          <label class="form-label">Daily Send Limit (SOST, 0 = no limit)</label>
+          <input type="number" id="policyDailyLimit" class="form-input" value="0" min="0" step="any">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Per-Transaction Limit (SOST, 0 = no limit)</label>
+          <input type="number" id="policyTxLimit" class="form-input" value="0" min="0" step="any">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:12px">
+          <input type="checkbox" id="policyVaultMode" style="width:18px;height:18px">
+          <label for="policyVaultMode" class="form-label" style="margin:0">Vault Mode — only send to trusted addresses</label>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:12px">
+          <input type="checkbox" id="policyRequireBook" style="width:18px;height:18px">
+          <label for="policyRequireBook" class="form-label" style="margin:0">Require address book for large TXs (&gt;100 SOST)</label>
+        </div>
+        <button class="btn btn-primary" onclick="savePolicy()">Save Policy</button>
+        <div id="policyResult" class="notice hidden" style="margin-top:12px"></div>
+      </div>
 
 </div>
 
@@ -2029,7 +2165,323 @@ async function init() {
   setInterval(checkNodeStatus, 30000);
 }
 
+// ==================== ADDRESS BOOK ====================
+
+const AB_KEY = 'sost_addressbook';
+
+function loadAddressBook() {
+  try { return JSON.parse(localStorage.getItem(AB_KEY)) || {addresses:[]}; }
+  catch(e) { return {addresses:[]}; }
+}
+function saveAddressBook(ab) { localStorage.setItem(AB_KEY, JSON.stringify(ab)); }
+
+function getAddressBookEntry(addr) {
+  const ab = loadAddressBook();
+  return ab.addresses.find(a => a.address === addr);
+}
+
+window.addToAddressBook = function() {
+  const addr = document.getElementById('abAddr').value.trim();
+  const label = document.getElementById('abLabel').value.trim();
+  const trust = document.getElementById('abTrust').value;
+  if (!validateAddress(addr) && !(addr.startsWith('sost3') && addr.length===45)) {
+    return showError('abResult', 'Invalid SOST address');
+  }
+  if (!label) return showError('abResult', 'Label is required');
+  const ab = loadAddressBook();
+  const existing = ab.addresses.findIndex(a => a.address === addr);
+  if (existing >= 0) ab.addresses[existing] = {address:addr,label,trust,added:new Date().toISOString()};
+  else ab.addresses.push({address:addr,label,trust,added:new Date().toISOString()});
+  saveAddressBook(ab);
+  document.getElementById('abAddr').value = '';
+  document.getElementById('abLabel').value = '';
+  showSuccess('abResult', 'Address added: ' + label + ' (' + trust + ')');
+  renderAddressBook();
+};
+
+window.removeFromAddressBook = function(addr) {
+  const ab = loadAddressBook();
+  ab.addresses = ab.addresses.filter(a => a.address !== addr);
+  saveAddressBook(ab);
+  renderAddressBook();
+};
+
+function renderAddressBook() {
+  const ab = loadAddressBook();
+  const el = document.getElementById('abList');
+  if (!ab.addresses.length) { el.innerHTML = '<span style="color:var(--text-dim)">No addresses saved</span>'; return; }
+  el.innerHTML = ab.addresses.map(a => {
+    const trustColor = a.trust==='trusted'?'var(--green-primary)':a.trust==='known'?'#fbbf24':'#fb010d';
+    const short = a.address.slice(0,14)+'...'+a.address.slice(-6);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #222">' +
+      '<div><span style="color:'+trustColor+';font-weight:600">'+a.label+'</span> <span style="color:var(--text-dim)">'+short+'</span> <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+trustColor+'">'+a.trust+'</span></div>' +
+      '<button class="btn btn-small" style="font-size:10px;padding:2px 8px;color:#fb010d" onclick="removeFromAddressBook(\''+a.address+'\')">Remove</button></div>';
+  }).join('');
+}
+
+window.checkAddressBook = function() {
+  const addr = document.getElementById('sendTo').value.trim();
+  const info = document.getElementById('sendAddrInfo');
+  if (!addr || addr.length < 10) { info.style.display = 'none'; return; }
+  const entry = getAddressBookEntry(addr);
+  if (entry) {
+    if (entry.trust === 'blocked') {
+      info.innerHTML = '<span style="color:#fb010d;font-weight:600">&#10007; BLOCKED: '+entry.label+'</span>';
+    } else if (entry.trust === 'trusted') {
+      info.innerHTML = '<span style="color:var(--green-primary)">&#10003; '+entry.label+' (trusted)</span>';
+    } else {
+      info.innerHTML = '<span style="color:#fbbf24">'+entry.label+' ('+entry.trust+')</span>';
+    }
+  } else if (validateAddress(addr)) {
+    info.innerHTML = '<span style="color:#fb923c">&#9888; Unknown address — not in your address book</span>';
+  } else {
+    info.innerHTML = '';
+  }
+  info.style.display = info.innerHTML ? 'block' : 'none';
+};
+
+// ==================== TREASURY POLICY ====================
+
+const POLICY_KEY = 'sost_wallet_policy';
+
+function loadPolicy() {
+  try { return JSON.parse(localStorage.getItem(POLICY_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+
+window.savePolicy = function() {
+  const policy = {
+    dailyLimit: parseFloat(document.getElementById('policyDailyLimit').value) || 0,
+    txLimit: parseFloat(document.getElementById('policyTxLimit').value) || 0,
+    vaultMode: document.getElementById('policyVaultMode').checked,
+    requireBook: document.getElementById('policyRequireBook').checked,
+    dailySent: 0,
+    dailyDate: new Date().toISOString().slice(0,10),
+  };
+  localStorage.setItem(POLICY_KEY, JSON.stringify(policy));
+  showSuccess('policyResult', 'Policy saved');
+};
+
+function checkPolicy(addr, amountSost) {
+  const p = loadPolicy();
+  if (!p.dailyLimit && !p.txLimit && !p.vaultMode && !p.requireBook) return null;
+  const entry = getAddressBookEntry(addr);
+  if (p.vaultMode && (!entry || entry.trust !== 'trusted'))
+    return 'Vault mode is active: only sends to TRUSTED addresses are allowed.';
+  if (p.txLimit > 0 && amountSost > p.txLimit)
+    return 'Amount exceeds per-TX limit of ' + p.txLimit + ' SOST.';
+  if (p.requireBook && amountSost > 100 && !entry)
+    return 'Amounts > 100 SOST require destination in address book.';
+  // Daily limit check
+  const today = new Date().toISOString().slice(0,10);
+  if (p.dailyLimit > 0) {
+    const sent = (p.dailyDate === today) ? (p.dailySent || 0) : 0;
+    if (sent + amountSost > p.dailyLimit)
+      return 'Daily limit reached: ' + sent.toFixed(2) + '/' + p.dailyLimit + ' SOST sent today.';
+  }
+  return null;
+}
+
+function recordDailySend(amountSost) {
+  const p = loadPolicy();
+  const today = new Date().toISOString().slice(0,10);
+  if (p.dailyDate !== today) { p.dailySent = 0; p.dailyDate = today; }
+  p.dailySent = (p.dailySent || 0) + amountSost;
+  localStorage.setItem(POLICY_KEY, JSON.stringify(p));
+}
+
+// ==================== ENHANCED SEND (pre-send confirmation) ====================
+
+// Override sendTransaction to add address book + policy + confirmation
+const _origSendTransaction = window.sendTransaction;
+window.sendTransaction = async function() {
+  if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
+
+  const toAddr = document.getElementById('sendTo').value.trim();
+  const amountStr = document.getElementById('sendAmount').value.trim();
+  const amountSost = parseFloat(amountStr) || 0;
+
+  // Blocked address check
+  const entry = getAddressBookEntry(toAddr);
+  if (entry && entry.trust === 'blocked') {
+    return showError('sendResult', 'This address is BLOCKED in your address book. Send cancelled.');
+  }
+
+  // Policy check
+  const policyMsg = checkPolicy(toAddr, amountSost);
+  if (policyMsg) return showError('sendResult', 'POLICY: ' + policyMsg);
+
+  // Pre-send confirmation
+  const trustLabel = entry ? entry.label + ' (' + entry.trust + ')' : 'UNKNOWN — not in address book';
+  const trustColor = entry ? (entry.trust==='trusted'?'#4ade80':entry.trust==='known'?'#fbbf24':'#fb010d') : '#fb923c';
+  const firstTime = !entry;
+
+  const confirmed = await new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:monospace';
+    let countdown = 3;
+    const feePerByte = parseInt(document.getElementById('sendFee').value) || 1000;
+    const estFee = (feePerByte * 500 / 1e8).toFixed(8);
+    modal.innerHTML = '<div style="background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:24px;max-width:440px;width:90%;color:#e2e8f0;font-size:13px">' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--red-primary)">TRANSACTION SUMMARY</div>' +
+      '<div style="line-height:2">' +
+      '<div><b>To:</b> '+toAddr.slice(0,20)+'...</div>' +
+      '<div><b>Trust:</b> <span style="color:'+trustColor+'">'+trustLabel+'</span></div>' +
+      '<div><b>Amount:</b> '+amountSost+' SOST</div>' +
+      '<div><b>Est. Fee:</b> ~'+estFee+' SOST</div>' +
+      (firstTime ? '<div style="color:#fb923c;margin-top:8px;font-weight:600">&#9888; FIRST-TIME SEND to unknown address</div>' : '') +
+      (firstTime && amountSost > 10 ? '<div style="color:#fb010d;font-weight:600">&#9888; HIGH-VALUE FIRST SEND — consider adding to address book first</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:12px;margin-top:20px">' +
+      '<button id="confirmSendBtn" style="flex:1;padding:10px;background:#222;color:#555;border:1px solid #333;border-radius:4px;font-family:monospace;cursor:not-allowed" disabled>CONFIRM ('+countdown+')</button>' +
+      '<button onclick="this.closest(\'div\').closest(\'div\').closest(\'div\').remove()" style="flex:1;padding:10px;background:#222;color:#e2e8f0;border:1px solid #333;border-radius:4px;font-family:monospace;cursor:pointer">CANCEL</button>' +
+      '</div></div>';
+    document.body.appendChild(modal);
+    modal.querySelector('button:last-child').onclick = () => { modal.remove(); resolve(false); };
+    const btn = document.getElementById('confirmSendBtn');
+    const timer = setInterval(() => {
+      countdown--;
+      if (countdown > 0) { btn.textContent = 'CONFIRM (' + countdown + ')'; }
+      else {
+        clearInterval(timer);
+        btn.textContent = 'CONFIRM & SIGN';
+        btn.disabled = false;
+        btn.style.cssText = 'flex:1;padding:10px;background:var(--red-primary);color:#fff;border:none;border-radius:4px;font-family:monospace;font-weight:700;cursor:pointer';
+        btn.onclick = () => { modal.remove(); resolve(true); };
+      }
+    }, 1000);
+  });
+
+  if (!confirmed) return;
+
+  // Record daily send
+  recordDailySend(amountSost);
+
+  // Call original send logic
+  return _origSendTransaction();
+};
+
+// ==================== PSBT (basic web implementation) ====================
+
+window.createPsbt = async function() {
+  if (!wallet) return showError('psbtCreateResult', 'No wallet loaded');
+  const to = document.getElementById('psbtTo').value.trim();
+  const amt = parseSost(document.getElementById('psbtAmount').value.trim());
+  if (!validateAddress(to)) return showError('psbtCreateResult', 'Invalid address');
+  if (amt <= 0) return showError('psbtCreateResult', 'Invalid amount');
+
+  try {
+    const info = await rpcCall('getaddressinfo', [wallet.address]);
+    const utxos = (info.utxos || []).map(u => ({...u, amount: Math.round((u.amount||0)*SAT)}));
+    if (!utxos.length) throw new Error('No UTXOs');
+
+    // Build PSBT JSON (SOST-PSBT format)
+    const psbt = {
+      sost_psbt_version: 0,
+      complete: false,
+      fee: 10000,
+      change_address: wallet.address,
+      inputs: utxos.slice(0, 5).map(u => ({
+        prev_txid: u.txid, prev_vout: u.vout || 0,
+        amount: u.amount, output_type: 0,
+        input_type: 0, pkh: wallet.address.slice(5),
+        redeem_script: '', required_sigs: 1,
+        pubkeys: [], partial_sigs: [], finalized: false,
+      })),
+      outputs: [{amount: amt, address: to, output_type: 0, pkh: to.slice(5)}],
+    };
+
+    // Add change output if needed
+    const totalIn = utxos.slice(0, 5).reduce((s,u) => s + u.amount, 0);
+    const change = totalIn - amt - psbt.fee;
+    if (change > 0) {
+      psbt.outputs.push({amount: change, address: wallet.address, output_type: 0, pkh: wallet.address.slice(5)});
+    }
+
+    const payload = 'sost-psbt\xff' + JSON.stringify(psbt);
+    const encoded = btoa(unescape(encodeURIComponent(payload)));
+
+    document.getElementById('psbtOutput').value = encoded;
+    document.getElementById('psbtOutput').classList.remove('hidden');
+    document.getElementById('psbtCopyBtn').classList.remove('hidden');
+    showSuccess('psbtCreateResult', 'Unsigned PSBT created (' + psbt.inputs.length + ' inputs)');
+  } catch(e) {
+    showError('psbtCreateResult', e.message);
+  }
+};
+
+window.signPsbt = function() {
+  showError('psbtSignResult', 'PSBT signing requires the SOST-PSBT JS library (coming soon). Use CLI: sost-cli psbt sign');
+};
+
+window.broadcastPsbt = function() {
+  showError('psbtBroadcastResult', 'PSBT broadcast requires finalization. Use CLI: sost-cli psbt finalize');
+};
+
+// ==================== MULTISIG (basic web) ====================
+
+window.createMultisig = function() {
+  const m = parseInt(document.getElementById('msigM').value);
+  const n = parseInt(document.getElementById('msigN').value);
+  const pksRaw = document.getElementById('msigPubkeys').value.trim().split('\n').map(s => s.trim()).filter(s => s.length === 66);
+
+  if (m < 1 || m > 15) return showError('msigResult', 'M must be 1-15');
+  if (n < m || n > 15) return showError('msigResult', 'N must be >= M and <= 15');
+  if (pksRaw.length !== n) return showError('msigResult', 'Need exactly ' + n + ' pubkeys, got ' + pksRaw.length);
+
+  // Build redeemScript: OP_M <pk1> ... <pkN> OP_N OP_CHECKMULTISIG
+  let script = '';
+  script += (0x50 + m).toString(16); // OP_M
+  for (const pk of pksRaw) {
+    script += '21' + pk; // push 33 bytes
+  }
+  script += (0x50 + n).toString(16); // OP_N
+  script += 'ae'; // OP_CHECKMULTISIG
+
+  // HASH160 of redeemScript
+  const scriptBytes = new Uint8Array(script.length/2);
+  for (let i = 0; i < scriptBytes.length; i++) {
+    scriptBytes[i] = parseInt(script.substr(i*2, 2), 16);
+  }
+  const h = hash160(scriptBytes);
+  const addr = 'sost3' + bytesToHex(h);
+
+  document.getElementById('msigAddr').textContent = addr;
+  document.getElementById('msigScript').textContent = script;
+  document.getElementById('msigInfo').classList.remove('hidden');
+  showSuccess('msigResult', m + '-of-' + n + ' multisig created');
+
+  // Store config for download
+  window._msigConfig = {m, n, pubkeys: pksRaw, redeemScript: script, address: addr};
+};
+
+window.downloadMultisigConfig = function() {
+  if (!window._msigConfig) return;
+  const blob = new Blob([JSON.stringify(window._msigConfig, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'multisig_' + window._msigConfig.m + 'of' + window._msigConfig.n + '.json';
+  a.click();
+};
+
+window.cosignMultisig = function() {
+  showError('msigCosignResult', 'Multisig co-signing requires the SOST script engine JS library (coming soon). Use CLI: sost-cli multisig cosign');
+};
+
+// ==================== INIT EXTENSIONS ====================
+
+function initExtensions() {
+  renderAddressBook();
+  // Load policy into settings
+  const p = loadPolicy();
+  if (p.dailyLimit) document.getElementById('policyDailyLimit').value = p.dailyLimit;
+  if (p.txLimit) document.getElementById('policyTxLimit').value = p.txLimit;
+  if (p.vaultMode) document.getElementById('policyVaultMode').checked = true;
+  if (p.requireBook) document.getElementById('policyRequireBook').checked = true;
+}
+
 init();
+initExtensions();
 </script>
 
 <script>
