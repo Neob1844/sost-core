@@ -48,6 +48,7 @@ add_library(sost-core STATIC
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
+    src/hd_wallet.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -156,6 +157,10 @@ add_test(NAME rbf COMMAND test-rbf)
 add_executable(test-cpfp tests/test_cpfp.cpp)
 target_link_libraries(test-cpfp PRIVATE sost-core)
 add_test(NAME cpfp COMMAND test-cpfp)
+
+add_executable(test-hd-wallet tests/test_hd_wallet.cpp)
+target_link_libraries(test-hd-wallet PRIVATE sost-core)
+add_test(NAME hd-wallet COMMAND test-hd-wallet)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
