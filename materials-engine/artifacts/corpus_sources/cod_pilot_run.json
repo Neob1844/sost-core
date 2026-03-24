@@ -1,17 +1,27 @@
 {
-  "run_id": "6b7282861d04",
-  "plan_id": "6e05fa50865b",
+  "run_id": "961fd719fe76",
+  "plan_id": "b228c5f27f24",
   "corpus_before": 5,
-  "corpus_after": 5,
-  "ingested": 0,
+  "corpus_after": 15,
+  "ingested": 10,
   "deduped_exact": 0,
   "deduped_same_formula": 0,
-  "unique_structures": 0,
-  "new_elements_added": [],
+  "unique_structures": 10,
+  "new_elements_added": [
+    "C",
+    "Ca",
+    "Cs",
+    "Cu",
+    "H",
+    "In",
+    "N",
+    "Ru",
+    "S"
+  ],
   "new_spacegroups_added": [],
-  "real_data": false,
+  "real_data": true,
   "tier_assigned": "structure_only",
   "training_impact": "none \u2014 COD has no computed FE/BG properties",
-  "recommendation": "pause_and_review",
-  "created_at": "2026-03-20T21:25:24.173950+00:00"
+  "recommendation": "continue_cod_expansion",
+  "created_at": "2026-03-24T13:25:56.248621+00:00"
 }
