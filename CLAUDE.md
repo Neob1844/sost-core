@@ -178,6 +178,9 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Multi-zone verdict: PRODUCTION_WORTHY (4/6)
 - Thermal most useful when satellite baseline is moderate
 
+**Experiment 2 (EMIT):** BLOCKED BY AUTH — pipeline ready, no data accessed
+**V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
+
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
 - NEVER say: "direct subsurface detection", "detect minerals at depth", "nobody has published this"

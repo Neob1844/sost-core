@@ -846,6 +846,65 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
+<!-- EXPERIMENT 2 + V3 -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// EXPERIMENT 2 — EMIT + SUBSURFACE-PROXY V3</div>
+    <div class="section-title">Research <span>Frontier</span></div>
+
+    <div class="panel">
+      <div class="panel-head" style="color:var(--amber)">EMIT HYPERSPECTRAL — STATUS: BLOCKED BY AUTH</div>
+      <div style="font-size:12px;line-height:1.8;color:#aaa">
+        <b style="color:var(--amber)">NASA EMIT</b> (285 bands, 60m, ISS orbit) can identify surface alteration minerals with spectral precision unavailable from Sentinel-2.<br>
+        This enables <b>alteration-driven multi-proxy inference</b> — detecting alteration haloes that indicate hydrothermal systems.<br><br>
+        <span style="color:#ff4444">Status:</span> Earthdata Login authentication not yet resolved. All pipeline scripts are built and ready.<br>
+        <span style="color:var(--green)">When resolved:</span> Statistical test + fusion benchmark at Chuquicamata, with replication at second zone.<br><br>
+        <b style="color:var(--amber)">EMIT does NOT</b> see underground. It detects surface minerals whose spatial pattern constrains subsurface probability.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">SUBSURFACE-PROXY V3 — ML RESIDUAL EXPERIMENT</div>
+      <div style="font-size:12px;line-height:1.8;color:#aaa">
+        <b style="color:var(--green)">Hypothesis:</b> Train a model to predict thermal_range_ratio from surface covariates (DEM, slope, NDVI, geomorphology). The residual — what surface topography cannot explain — may concentrate geological signal.<br><br>
+        <b style="color:var(--green)">Surface model:</b> R&sup2; = 0.517 — elevation + NDVI explain ~52% of thermal variance. 48% remains unexplained.
+      </div>
+      <table class="tbl" style="margin-top:8px">
+        <thead><tr><th>Test</th><th>Value</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td>Mann-Whitney p</td><td class="val">0.138</td><td style="color:#ff4444">Not significant</td></tr>
+          <tr><td>Cohen's d</td><td class="val">-0.250</td><td style="color:var(--amber)">Small effect (below threshold)</td></tr>
+          <tr><td>Bootstrap 95% CI</td><td class="val">[-0.009, +0.004]</td><td style="color:#ff4444">Includes zero</td></tr>
+          <tr><td>Baseline + residual AUC</td><td class="val">0.724</td><td style="color:#ff4444">-0.016 vs baseline</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px;line-height:1.8;color:#aaa;margin-top:12px">
+        <b style="color:#ff4444">Verdict: NEGATIVE.</b> The ML residual does not concentrate useful geological signal for deposit prediction at Kalgoorlie. The thermal signal at deposits appears substantially explained by surface covariates.<br><br>
+        <b style="color:var(--green)">This is an honest negative result.</b> It does not invalidate thermal proxies (Experiment 1 signal is real), but it means the residual approach does not add independent value at this AOI.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">V3 RESEARCH PIPELINE — 10 IDEAS EVALUATED</div>
+      <table class="tbl">
+        <thead><tr><th>Idea</th><th>Physical Basis</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>ML residual maps</td><td>Strong</td><td style="color:#ff4444">TESTED — NEGATIVE</td></tr>
+          <tr><td>Spatial gradient / edge operators</td><td>Strong</td><td style="color:var(--green)">VIABLE — next experiment</td></tr>
+          <tr><td>Multiscale texture (SAR/DEM/S2)</td><td>Strong</td><td style="color:var(--green)">VIABLE</td></tr>
+          <tr style="color:#666"><td>NDVI ↔ thermal cross-correlation</td><td>Moderate</td><td>SPECULATIVE</td></tr>
+          <tr style="color:#666"><td>Night-time thermal difference</td><td>Strong</td><td>Partially redundant</td></tr>
+          <tr style="color:#666"><td>SAR polarimetric decomposition</td><td>Moderate</td><td>Limited (dual-pol only)</td></tr>
+          <tr style="color:#444"><td>InSAR coherence</td><td>Weak</td><td>SPECULATIVE</td></tr>
+          <tr style="color:#444"><td>Soil moisture anomaly</td><td>Moderate</td><td>INVIABLE (resolution)</td></tr>
+          <tr style="color:#444"><td>Passive microwave downscaling</td><td>Weak</td><td>INVIABLE</td></tr>
+          <tr style="color:#444"><td>Self-potential from satellite</td><td>N/A</td><td>INVIABLE</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- NEXT OPERATION — PILBARA -->
 <section class="section">
   <div class="container">
