@@ -1,0 +1,1035 @@
+{
+  "campaign_name": "valuable_unknowns",
+  "campaign_config": {
+    "name": "valuable_unknowns",
+    "profile": "valuable_unknowns",
+    "seeds": null,
+    "iterations": 3,
+    "max_candidates": 25,
+    "description": "High-value unknown materials campaign"
+  },
+  "elapsed_s": 3.47,
+  "campaign_results": {
+    "profile": "valuable_unknowns",
+    "iterations": 3,
+    "total_generated": 24,
+    "total_accepted": 8,
+    "accept_rate": 0.3333,
+    "top_candidates_overall": [
+      {
+        "rank": 1,
+        "formula": "OZn2",
+        "method": "cross_substitution",
+        "composite_score": 0.86,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.2,
+          "stability": 0.8,
+          "value": 0.5,
+          "diversity": 0.35,
+          "plausibility": 0.83,
+          "family_bonus": 0.15,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.86,
+          "rarity_label": "moderately abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "direct_gnn_lifted"
+        },
+        "ml_status": "direct_gnn_success",
+        "ml_confidence": "medium",
+        "prototype_hint": null,
+        "nearest_formula": "ZnGaO",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "direct_gnn_lifted",
+        "direct_fe_value": -0.2937,
+        "direct_bg_value": null
+      },
+      {
+        "rank": 1,
+        "formula": "O2TiZn",
+        "method": "single_site_doping",
+        "composite_score": 0.7342,
+        "scores": {
+          "novelty": 0.55,
+          "exotic": 0.2,
+          "stability": 0.8,
+          "value": 0.3833,
+          "diversity": 0.4,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.7342,
+          "rarity_label": "moderately abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "direct_gnn_lifted"
+        },
+        "ml_status": "direct_gnn_success",
+        "ml_confidence": "medium",
+        "prototype_hint": null,
+        "nearest_formula": "Ti2AlZn",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "direct_gnn_lifted",
+        "direct_fe_value": -0.8099,
+        "direct_bg_value": null
+      },
+      {
+        "rank": 1,
+        "formula": "MgOZn",
+        "method": "single_site_doping",
+        "composite_score": 0.7342,
+        "scores": {
+          "novelty": 0.55,
+          "exotic": 0.2,
+          "stability": 0.8,
+          "value": 0.3833,
+          "diversity": 0.4,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.7342,
+          "rarity_label": "moderately abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "MgZn3",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": 0.00098,
+        "direct_bg_value": 0.0
+      },
+      {
+        "rank": 2,
+        "formula": "OSr",
+        "method": "element_substitution",
+        "composite_score": 0.69,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.8,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.85,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.69,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "SrPdO",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -2.64361,
+        "direct_bg_value": 2.778
+      },
+      {
+        "rank": 2,
+        "formula": "Te2Ti",
+        "method": "element_substitution",
+        "composite_score": 0.6252,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.85,
+          "stability": 0.7,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0.7,
+          "composite_score": 0.6252,
+          "rarity_label": "extremely rare",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "Ti",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -0.71943,
+        "direct_bg_value": 0.0
+      },
+      {
+        "rank": 3,
+        "formula": "Se2Ti",
+        "method": "element_substitution",
+        "composite_score": 0.618,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.75,
+          "stability": 0.7,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0.7,
+          "composite_score": 0.618,
+          "rarity_label": "very rare",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "Ti",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -1.16276,
+        "direct_bg_value": 0.0
+      },
+      {
+        "rank": 4,
+        "formula": "O2V",
+        "method": "element_substitution",
+        "composite_score": 0.5892,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.8,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.85,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0.7,
+          "composite_score": 0.5892,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "O",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -0.35224,
+        "direct_bg_value": 0.0
+      },
+      {
+        "rank": 5,
+        "formula": "S2Ti",
+        "method": "element_substitution",
+        "composite_score": 0.5712,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.7,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0.7,
+          "composite_score": 0.5712,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "Ti",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -0.09687,
+        "direct_bg_value": 0.0
+      }
+    ],
+    "iteration_reports": [
+      {
+        "iteration": 1,
+        "profile": "valuable_unknowns",
+        "seeds": [
+          "Cu2O",
+          "ZnO"
+        ],
+        "raw_generated": 9,
+        "filtered": 6,
+        "scored": 6,
+        "accepted": 1,
+        "rejected_filter": 3,
+        "rejected_score": 3,
+        "watchlist": 2,
+        "structure_lift_attempted": 6,
+        "structure_lift_success": 4,
+        "gnn_evaluated": 4,
+        "direct_fe_success_count": 4,
+        "direct_bg_success_count": 3,
+        "known_reference_count": 3,
+        "proxy_only_count": 0,
+        "new_candidate_count": 3,
+        "elapsed_s": 1.26,
+        "top_candidates": [
+          {
+            "rank": 1,
+            "formula": "OZn2",
+            "method": "cross_substitution",
+            "composite_score": 0.86,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.2,
+              "stability": 0.8,
+              "value": 0.5,
+              "diversity": 0.35,
+              "plausibility": 0.83,
+              "family_bonus": 0.15,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.86,
+              "rarity_label": "moderately abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "direct_gnn_lifted"
+            },
+            "ml_status": "direct_gnn_success",
+            "ml_confidence": "medium",
+            "prototype_hint": null,
+            "nearest_formula": "ZnGaO",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "direct_gnn_lifted",
+            "direct_fe_value": -0.2937,
+            "direct_bg_value": null
+          }
+        ],
+        "top_rejections": [
+          {
+            "formula": "OTi2",
+            "reason": "charge_imbalance:charge_imbalance_ratio_4.0"
+          },
+          {
+            "formula": "OV2",
+            "reason": "charge_imbalance:charge_imbalance_ratio_5.0"
+          },
+          {
+            "formula": "Cr2O",
+            "reason": "charge_imbalance:charge_imbalance_ratio_6.0"
+          }
+        ],
+        "memory_summary": {
+          "iterations": 1,
+          "total_generated": 9,
+          "total_accepted": 1,
+          "total_rejected": 8,
+          "accept_rate": 0.1111,
+          "unique_candidates": 9,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:known_reference",
+              3
+            ],
+            [
+              "validation:watchlist",
+              2
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_4.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_5.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_6.0",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "cross_substitution",
+              {
+                "generated": 2,
+                "accepted": 1,
+                "rejected": 1,
+                "avg_score": 0.43
+              }
+            ],
+            [
+              "element_substitution",
+              {
+                "generated": 18,
+                "accepted": 5,
+                "rejected": 13,
+                "avg_score": 0.38306666666666667
+              }
+            ],
+            [
+              "mixed_parent",
+              {
+                "generated": 1,
+                "accepted": 0,
+                "rejected": 1,
+                "avg_score": 0.3142
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "iteration": 2,
+        "profile": "valuable_unknowns",
+        "seeds": [
+          "TiO2",
+          "ZnO"
+        ],
+        "raw_generated": 7,
+        "filtered": 7,
+        "scored": 7,
+        "accepted": 5,
+        "rejected_filter": 0,
+        "rejected_score": 2,
+        "watchlist": 0,
+        "structure_lift_attempted": 7,
+        "structure_lift_success": 7,
+        "gnn_evaluated": 7,
+        "direct_fe_success_count": 7,
+        "direct_bg_success_count": 6,
+        "known_reference_count": 2,
+        "proxy_only_count": 0,
+        "new_candidate_count": 1,
+        "elapsed_s": 1.32,
+        "top_candidates": [
+          {
+            "rank": 1,
+            "formula": "O2TiZn",
+            "method": "single_site_doping",
+            "composite_score": 0.7342,
+            "scores": {
+              "novelty": 0.55,
+              "exotic": 0.2,
+              "stability": 0.8,
+              "value": 0.3833,
+              "diversity": 0.4,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.7342,
+              "rarity_label": "moderately abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "direct_gnn_lifted"
+            },
+            "ml_status": "direct_gnn_success",
+            "ml_confidence": "medium",
+            "prototype_hint": null,
+            "nearest_formula": "Ti2AlZn",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "direct_gnn_lifted",
+            "direct_fe_value": -0.8099,
+            "direct_bg_value": null
+          },
+          {
+            "rank": 2,
+            "formula": "Te2Ti",
+            "method": "element_substitution",
+            "composite_score": 0.6252,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.85,
+              "stability": 0.7,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0.7,
+              "composite_score": 0.6252,
+              "rarity_label": "extremely rare",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "Ti",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -0.71943,
+            "direct_bg_value": 0.0
+          },
+          {
+            "rank": 3,
+            "formula": "Se2Ti",
+            "method": "element_substitution",
+            "composite_score": 0.618,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.75,
+              "stability": 0.7,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0.7,
+              "composite_score": 0.618,
+              "rarity_label": "very rare",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "Ti",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -1.16276,
+            "direct_bg_value": 0.0
+          },
+          {
+            "rank": 4,
+            "formula": "O2V",
+            "method": "element_substitution",
+            "composite_score": 0.5892,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.8,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.85,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0.7,
+              "composite_score": 0.5892,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "O",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -0.35224,
+            "direct_bg_value": 0.0
+          },
+          {
+            "rank": 5,
+            "formula": "S2Ti",
+            "method": "element_substitution",
+            "composite_score": 0.5712,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.7,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0.7,
+              "composite_score": 0.5712,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "Ti",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -0.09687,
+            "direct_bg_value": 0.0
+          }
+        ],
+        "top_rejections": [],
+        "memory_summary": {
+          "iterations": 2,
+          "total_generated": 16,
+          "total_accepted": 6,
+          "total_rejected": 10,
+          "accept_rate": 0.375,
+          "unique_candidates": 16,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:known_reference",
+              5
+            ],
+            [
+              "validation:watchlist",
+              2
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_4.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_5.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_6.0",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "element_substitution",
+              {
+                "generated": 18,
+                "accepted": 5,
+                "rejected": 13,
+                "avg_score": 0.38306666666666667
+              }
+            ],
+            [
+              "cross_substitution",
+              {
+                "generated": 2,
+                "accepted": 1,
+                "rejected": 1,
+                "avg_score": 0.43
+              }
+            ],
+            [
+              "single_site_doping",
+              {
+                "generated": 3,
+                "accepted": 2,
+                "rejected": 1,
+                "avg_score": 0.5908666666666667
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "iteration": 3,
+        "profile": "valuable_unknowns",
+        "seeds": [
+          "MgO",
+          "ZnO"
+        ],
+        "raw_generated": 8,
+        "filtered": 7,
+        "scored": 7,
+        "accepted": 2,
+        "rejected_filter": 1,
+        "rejected_score": 5,
+        "watchlist": 0,
+        "structure_lift_attempted": 7,
+        "structure_lift_success": 7,
+        "gnn_evaluated": 7,
+        "direct_fe_success_count": 7,
+        "direct_bg_success_count": 7,
+        "known_reference_count": 5,
+        "proxy_only_count": 0,
+        "new_candidate_count": 0,
+        "elapsed_s": 0.89,
+        "top_candidates": [
+          {
+            "rank": 1,
+            "formula": "MgOZn",
+            "method": "single_site_doping",
+            "composite_score": 0.7342,
+            "scores": {
+              "novelty": 0.55,
+              "exotic": 0.2,
+              "stability": 0.8,
+              "value": 0.3833,
+              "diversity": 0.4,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.7342,
+              "rarity_label": "moderately abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "MgZn3",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": 0.00098,
+            "direct_bg_value": 0.0
+          },
+          {
+            "rank": 2,
+            "formula": "OSr",
+            "method": "element_substitution",
+            "composite_score": 0.69,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.8,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.85,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.69,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "SrPdO",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -2.64361,
+            "direct_bg_value": 2.778
+          }
+        ],
+        "top_rejections": [
+          {
+            "formula": "OZn",
+            "reason": "identical_to_parent_b"
+          }
+        ],
+        "memory_summary": {
+          "iterations": 3,
+          "total_generated": 24,
+          "total_accepted": 8,
+          "total_rejected": 16,
+          "accept_rate": 0.3333,
+          "unique_candidates": 24,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:known_reference",
+              10
+            ],
+            [
+              "validation:watchlist",
+              2
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_4.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_5.0",
+              1
+            ],
+            [
+              "charge_imbalance:charge_imbalance_ratio_6.0",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "element_substitution",
+              {
+                "generated": 18,
+                "accepted": 5,
+                "rejected": 13,
+                "avg_score": 0.38306666666666667
+              }
+            ],
+            [
+              "single_site_doping",
+              {
+                "generated": 3,
+                "accepted": 2,
+                "rejected": 1,
+                "avg_score": 0.5908666666666667
+              }
+            ],
+            [
+              "cross_substitution",
+              {
+                "generated": 2,
+                "accepted": 1,
+                "rejected": 1,
+                "avg_score": 0.43
+              }
+            ]
+          ]
+        }
+      }
+    ],
+    "memory_summary": {
+      "iterations": 3,
+      "total_generated": 24,
+      "total_accepted": 8,
+      "total_rejected": 16,
+      "accept_rate": 0.3333,
+      "unique_candidates": 24,
+      "overexplored_zones": 0,
+      "top_errors": [
+        [
+          "validation:known_reference",
+          10
+        ],
+        [
+          "validation:watchlist",
+          2
+        ],
+        [
+          "charge_imbalance:charge_imbalance_ratio_4.0",
+          1
+        ],
+        [
+          "charge_imbalance:charge_imbalance_ratio_5.0",
+          1
+        ],
+        [
+          "charge_imbalance:charge_imbalance_ratio_6.0",
+          1
+        ]
+      ],
+      "top_rules": [
+        [
+          "element_substitution",
+          {
+            "generated": 18,
+            "accepted": 5,
+            "rejected": 13,
+            "avg_score": 0.38306666666666667
+          }
+        ],
+        [
+          "single_site_doping",
+          {
+            "generated": 3,
+            "accepted": 2,
+            "rejected": 1,
+            "avg_score": 0.5908666666666667
+          }
+        ],
+        [
+          "cross_substitution",
+          {
+            "generated": 2,
+            "accepted": 1,
+            "rejected": 1,
+            "avg_score": 0.43
+          }
+        ]
+      ]
+    },
+    "disclaimer": "All candidates are THEORETICAL \u2014 generated by heuristic rules and scored with proxy metrics. No DFT, experimental synthesis, or high-fidelity validation has been performed. Requires independent verification."
+  },
+  "phase_vb_metrics": {
+    "total_candidates": 8,
+    "direct_fe_inference_rate": 1.0,
+    "direct_bg_inference_rate": 0.75,
+    "direct_gnn_rate": 0.25,
+    "proxy_dependency_rate": 0.0,
+    "known_material_rate": 0.75,
+    "known_material_top10_share": 0.75,
+    "new_candidate_top10_share": 0.25,
+    "direct_gnn_top10_share": 0.25,
+    "mean_top10_score": 0.6777,
+    "mean_top10_plausibility": 0.8162,
+    "priority_validation_count": 8,
+    "validation_candidate_count": 0,
+    "known_reference_count": 0
+  }
+}

@@ -1,0 +1,552 @@
+{
+  "candidates_seen": [
+    "BaS3Ti",
+    "BaCrO3",
+    "LiO2Ti",
+    "CoLiS2",
+    "LiNiO2",
+    "MgO3Ti",
+    "CdSeTe",
+    "CoLiO2S",
+    "BaMnO3",
+    "CaO3Ti",
+    "MoTe",
+    "CdInTe",
+    "CdCu",
+    "CdSe",
+    "CdS",
+    "CuTe",
+    "BaSe3Ti",
+    "NbTe",
+    "CoLiNiO2",
+    "SeTe",
+    "TeZr",
+    "CdIn",
+    "CdO",
+    "CdCuInSeTe",
+    "BeO3Ti",
+    "NiO3Ti",
+    "CoLiNiOS",
+    "CdCuTe",
+    "BaNiO2STi",
+    "InTe",
+    "CoNaO2",
+    "BaO3STi",
+    "CoKO2",
+    "CoLiSe2",
+    "LiO2V",
+    "CoLiTe2",
+    "BaNiO3",
+    "BaO3V",
+    "BaNiO3Ti",
+    "CoO2Rb",
+    "CrLiO2",
+    "BaTe3Ti"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "BaTe3Ti",
+      "method": "element_substitution",
+      "score": 0.8,
+      "iteration": 1
+    },
+    {
+      "formula": "BaSe3Ti",
+      "method": "element_substitution",
+      "score": 0.775,
+      "iteration": 1
+    },
+    {
+      "formula": "BeO3Ti",
+      "method": "element_substitution",
+      "score": 0.6975,
+      "iteration": 1
+    },
+    {
+      "formula": "NiO3Ti",
+      "method": "cross_substitution",
+      "score": 0.6975,
+      "iteration": 1
+    },
+    {
+      "formula": "MgO3Ti",
+      "method": "element_substitution",
+      "score": 0.6225,
+      "iteration": 1
+    },
+    {
+      "formula": "CaO3Ti",
+      "method": "element_substitution",
+      "score": 0.6225,
+      "iteration": 1
+    },
+    {
+      "formula": "BaO3V",
+      "method": "element_substitution",
+      "score": 0.6225,
+      "iteration": 1
+    },
+    {
+      "formula": "BaS3Ti",
+      "method": "element_substitution",
+      "score": 0.6125,
+      "iteration": 1
+    },
+    {
+      "formula": "CoLiTe2",
+      "method": "element_substitution",
+      "score": 0.835,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiSe2",
+      "method": "element_substitution",
+      "score": 0.81,
+      "iteration": 2
+    },
+    {
+      "formula": "CoNaO2",
+      "method": "element_substitution",
+      "score": 0.7175,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiS2",
+      "method": "element_substitution",
+      "score": 0.7075,
+      "iteration": 2
+    },
+    {
+      "formula": "CoKO2",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 2
+    },
+    {
+      "formula": "CoO2Rb",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 2
+    },
+    {
+      "formula": "LiO2Ti",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 2
+    },
+    {
+      "formula": "LiO2V",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 2
+    },
+    {
+      "formula": "CrLiO2",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 2
+    },
+    {
+      "formula": "CdInTe",
+      "method": "single_site_doping",
+      "score": 0.8925,
+      "iteration": 3
+    },
+    {
+      "formula": "CdSeTe",
+      "method": "single_site_doping",
+      "score": 0.8925,
+      "iteration": 3
+    },
+    {
+      "formula": "CdCuTe",
+      "method": "single_site_doping",
+      "score": 0.8575,
+      "iteration": 3
+    },
+    {
+      "formula": "TeZr",
+      "method": "element_substitution",
+      "score": 0.7125,
+      "iteration": 3
+    },
+    {
+      "formula": "MoTe",
+      "method": "element_substitution",
+      "score": 0.7125,
+      "iteration": 3
+    },
+    {
+      "formula": "CdCu",
+      "method": "cross_substitution",
+      "score": 0.595,
+      "iteration": 3
+    },
+    {
+      "formula": "CdCuInSeTe",
+      "method": "mixed_parent",
+      "score": 0.4015,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "BaNiO3",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BaMnO3",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BaCrO3",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BaNiO2STi",
+      "method": "mixed_parent",
+      "reason": "validation:reject",
+      "iteration": 1
+    },
+    {
+      "formula": "BaNiO3Ti",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 1
+    },
+    {
+      "formula": "BaO3STi",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 1
+    },
+    {
+      "formula": "LiNiO2",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiNiOS",
+      "method": "mixed_parent",
+      "reason": "validation:watchlist",
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiNiO2",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiO2S",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "SeTe",
+      "method": "cross_substitution",
+      "reason": "anion_only_compound",
+      "iteration": 3
+    },
+    {
+      "formula": "InTe",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CdSe",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CuTe",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "NbTe",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CdO",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CdS",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CdIn",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "element_substitution": {
+      "generated": 24,
+      "accepted": 18,
+      "rejected": 6,
+      "avg_score": 0.6134375
+    },
+    "cross_substitution": {
+      "generated": 8,
+      "accepted": 2,
+      "rejected": 6,
+      "avg_score": 0.4034375
+    },
+    "mixed_parent": {
+      "generated": 3,
+      "accepted": 1,
+      "rejected": 2,
+      "avg_score": 0.3265
+    },
+    "single_site_doping": {
+      "generated": 7,
+      "accepted": 3,
+      "rejected": 4,
+      "avg_score": 0.5189285714285714
+    }
+  },
+  "family_stats": {
+    "Ba-Te-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Be-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ni-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ca-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-Ni-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-Mn-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-Ni-O-S-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-Ni-O-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-O-S-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Li-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-Se": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Na-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-K-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-O-Rb": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cr-Li-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-Ni-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Li-Ni-O-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Li-Ni-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Li-O-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Se-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-In-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cd-Se-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cd-Cu-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Te-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mo-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cd-Cu": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "In-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-Cu-In-Se-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cu-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Nb-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cd-In": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "validation:known_reference": 11,
+    "validation:reject": 5,
+    "validation:watchlist": 1,
+    "anion_only_compound": 1
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 42,
+  "total_accepted": 24,
+  "total_rejected": 18,
+  "last_saved": "2026-03-24T12:42:15Z"
+}

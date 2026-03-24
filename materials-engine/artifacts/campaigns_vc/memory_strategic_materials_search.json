@@ -1,0 +1,299 @@
+{
+  "candidates_seen": [
+    "CrO2",
+    "Se2V",
+    "O2TiZn",
+    "AlSe2",
+    "MnSe2",
+    "S2V",
+    "S2Ti",
+    "OSe2Ti",
+    "CrS2",
+    "MnO2",
+    "S2TiZn",
+    "AlSe2Ti",
+    "AlO2SeTi",
+    "OSTiZn",
+    "O2V",
+    "OS2Ti",
+    "Te2Ti",
+    "MnS2",
+    "Se2Ti",
+    "CrSe2",
+    "O2Ti"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "O2TiZn",
+      "method": "single_site_doping",
+      "score": 0.7558,
+      "iteration": 1
+    },
+    {
+      "formula": "Te2Ti",
+      "method": "element_substitution",
+      "score": 0.745,
+      "iteration": 1
+    },
+    {
+      "formula": "Se2Ti",
+      "method": "element_substitution",
+      "score": 0.74,
+      "iteration": 1
+    },
+    {
+      "formula": "O2V",
+      "method": "element_substitution",
+      "score": 0.7375,
+      "iteration": 1
+    },
+    {
+      "formula": "S2Ti",
+      "method": "element_substitution",
+      "score": 0.7075,
+      "iteration": 1
+    },
+    {
+      "formula": "O2Ti",
+      "method": "element_substitution",
+      "score": 0.5175,
+      "iteration": 2
+    },
+    {
+      "formula": "OS2Ti",
+      "method": "single_site_doping",
+      "score": 0.4742,
+      "iteration": 2
+    },
+    {
+      "formula": "AlSe2Ti",
+      "method": "single_site_doping",
+      "score": 0.4767,
+      "iteration": 3
+    },
+    {
+      "formula": "OSe2Ti",
+      "method": "single_site_doping",
+      "score": 0.4133,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "MnO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "CrO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "MnS2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "CrS2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "OSTiZn",
+      "method": "mixed_parent",
+      "reason": "validation:watchlist",
+      "iteration": 2
+    },
+    {
+      "formula": "S2TiZn",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "S2V",
+      "method": "element_substitution",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "AlSe2",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CrSe2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "MnSe2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "Se2V",
+      "method": "element_substitution",
+      "reason": "validation:watchlist",
+      "iteration": 3
+    },
+    {
+      "formula": "AlO2SeTi",
+      "method": "mixed_parent",
+      "reason": "validation:reject",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "single_site_doping": {
+      "generated": 5,
+      "accepted": 4,
+      "rejected": 1,
+      "avg_score": 0.4831600000000001
+    },
+    "element_substitution": {
+      "generated": 13,
+      "accepted": 5,
+      "rejected": 8,
+      "avg_score": 0.5157692307692309
+    },
+    "mixed_parent": {
+      "generated": 2,
+      "accepted": 0,
+      "rejected": 2,
+      "avg_score": 0.27625
+    },
+    "cross_substitution": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "avg_score": 0.56
+    }
+  },
+  "family_stats": {
+    "O-Ti-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Te-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mn-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mn-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cr-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-S-Ti-Zn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "S-Ti-Zn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "S-V": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Al-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Al-Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cr-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mn-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Se-V": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Al-O-Se-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "validation:known_reference": 7,
+    "validation:watchlist": 2,
+    "validation:reject": 3
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 21,
+  "total_accepted": 9,
+  "total_rejected": 12,
+  "last_saved": "2026-03-24T10:40:28Z"
+}

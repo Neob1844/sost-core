@@ -1,0 +1,300 @@
+{
+  "candidates_seen": [
+    "BaS3Ti",
+    "BaCrO3",
+    "MgO3Ti",
+    "BaMnO3",
+    "CaO3Ti",
+    "O2Sr",
+    "Sr2Ti",
+    "BaO3Sr",
+    "S2Ti",
+    "O2V",
+    "BaSe3Ti",
+    "CrO2",
+    "O2SrTi",
+    "O3SrTi",
+    "BaO3SrTi",
+    "BeO3Ti",
+    "BaSr3Ti",
+    "Se2Ti",
+    "Te2Ti",
+    "BaO3V",
+    "MnO2",
+    "BaTe3Ti"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "BaTe3Ti",
+      "method": "element_substitution",
+      "score": 0.77,
+      "iteration": 1
+    },
+    {
+      "formula": "BaSe3Ti",
+      "method": "element_substitution",
+      "score": 0.755,
+      "iteration": 1
+    },
+    {
+      "formula": "BeO3Ti",
+      "method": "element_substitution",
+      "score": 0.7225,
+      "iteration": 1
+    },
+    {
+      "formula": "BaO3Sr",
+      "method": "cross_substitution",
+      "score": 0.6975,
+      "iteration": 1
+    },
+    {
+      "formula": "MgO3Ti",
+      "method": "element_substitution",
+      "score": 0.6775,
+      "iteration": 1
+    },
+    {
+      "formula": "CaO3Ti",
+      "method": "element_substitution",
+      "score": 0.6775,
+      "iteration": 1
+    },
+    {
+      "formula": "BaO3V",
+      "method": "element_substitution",
+      "score": 0.6775,
+      "iteration": 1
+    },
+    {
+      "formula": "BaS3Ti",
+      "method": "element_substitution",
+      "score": 0.6575,
+      "iteration": 1
+    },
+    {
+      "formula": "BaSr3Ti",
+      "method": "cross_substitution",
+      "score": 0.5875,
+      "iteration": 1
+    },
+    {
+      "formula": "Te2Ti",
+      "method": "element_substitution",
+      "score": 0.6975,
+      "iteration": 3
+    },
+    {
+      "formula": "Se2Ti",
+      "method": "element_substitution",
+      "score": 0.6825,
+      "iteration": 3
+    },
+    {
+      "formula": "O2Sr",
+      "method": "cross_substitution",
+      "score": 0.625,
+      "iteration": 3
+    },
+    {
+      "formula": "O2V",
+      "method": "element_substitution",
+      "score": 0.605,
+      "iteration": 3
+    },
+    {
+      "formula": "S2Ti",
+      "method": "element_substitution",
+      "score": 0.585,
+      "iteration": 3
+    },
+    {
+      "formula": "Sr2Ti",
+      "method": "cross_substitution",
+      "score": 0.515,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "O3SrTi",
+      "method": "cross_substitution",
+      "reason": "identical_to_parent_b",
+      "iteration": 1
+    },
+    {
+      "formula": "BaMnO3",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BaCrO3",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BaO3SrTi",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 1
+    },
+    {
+      "formula": "MnO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "O2SrTi",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 3
+    },
+    {
+      "formula": "CrO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "cross_substitution": {
+      "generated": 5,
+      "accepted": 4,
+      "rejected": 1,
+      "avg_score": 0.48500000000000004
+    },
+    "element_substitution": {
+      "generated": 15,
+      "accepted": 11,
+      "rejected": 4,
+      "avg_score": 0.5893333333333335
+    },
+    "single_site_doping": {
+      "generated": 2,
+      "accepted": 0,
+      "rejected": 2,
+      "avg_score": 0.25315
+    }
+  },
+  "family_stats": {
+    "O-Sr-Ti": {
+      "generated": 2,
+      "accepted": 0,
+      "rejected": 2
+    },
+    "Ba-Te-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Be-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-O-Sr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ca-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-Sr-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ba-Mn-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ba-O-Sr-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Te-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-Sr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Sr-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mn-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "identical_to_parent_b": 1,
+    "validation:known_reference": 4,
+    "validation:reject": 2
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 22,
+  "total_accepted": 15,
+  "total_rejected": 7,
+  "last_saved": "2026-03-24T12:42:06Z"
+}

@@ -1,0 +1,353 @@
+{
+  "candidates_seen": [
+    "MgRuTe2",
+    "CaO2Zr",
+    "MgO2Zn",
+    "MgO2Zr",
+    "MgNbO2",
+    "MgRuSe2",
+    "MgRuS2",
+    "O2RuZn",
+    "MgS",
+    "O2RuSr",
+    "O2SrZr",
+    "MgO2Ru",
+    "MgSe2Zr",
+    "MgSe",
+    "BeO2Ru",
+    "MgS2Zr",
+    "MgMoO2",
+    "CaO",
+    "MgOZr",
+    "MgTe",
+    "MgO2RuZn",
+    "MgTe2Zr",
+    "BeO",
+    "CaO2Ru",
+    "BeO2Zr",
+    "OSr"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "OSr",
+      "method": "element_substitution",
+      "score": 0.7275,
+      "iteration": 1
+    },
+    {
+      "formula": "MgO2Zr",
+      "method": "mixed_parent",
+      "score": 0.4258,
+      "iteration": 1
+    },
+    {
+      "formula": "MgOZr",
+      "method": "single_site_doping",
+      "score": 0.4108,
+      "iteration": 1
+    },
+    {
+      "formula": "MgO2Ru",
+      "method": "element_substitution",
+      "score": 0.4258,
+      "iteration": 2
+    },
+    {
+      "formula": "BeO2Zr",
+      "method": "element_substitution",
+      "score": 0.4033,
+      "iteration": 2
+    },
+    {
+      "formula": "MgMoO2",
+      "method": "element_substitution",
+      "score": 0.4033,
+      "iteration": 2
+    },
+    {
+      "formula": "MgTe2Zr",
+      "method": "element_substitution",
+      "score": 0.3908,
+      "iteration": 2
+    },
+    {
+      "formula": "CaO2Zr",
+      "method": "element_substitution",
+      "score": 0.3883,
+      "iteration": 2
+    },
+    {
+      "formula": "O2SrZr",
+      "method": "element_substitution",
+      "score": 0.3883,
+      "iteration": 2
+    },
+    {
+      "formula": "MgSe2Zr",
+      "method": "element_substitution",
+      "score": 0.3858,
+      "iteration": 2
+    },
+    {
+      "formula": "O2RuZn",
+      "method": "cross_substitution",
+      "score": 0.4408,
+      "iteration": 3
+    },
+    {
+      "formula": "BeO2Ru",
+      "method": "element_substitution",
+      "score": 0.4258,
+      "iteration": 3
+    },
+    {
+      "formula": "CaO2Ru",
+      "method": "element_substitution",
+      "score": 0.4258,
+      "iteration": 3
+    },
+    {
+      "formula": "O2RuSr",
+      "method": "element_substitution",
+      "score": 0.4258,
+      "iteration": 3
+    },
+    {
+      "formula": "MgO2Zn",
+      "method": "cross_substitution",
+      "score": 0.4083,
+      "iteration": 3
+    },
+    {
+      "formula": "MgRuS2",
+      "method": "element_substitution",
+      "score": 0.3908,
+      "iteration": 3
+    },
+    {
+      "formula": "MgRuSe2",
+      "method": "element_substitution",
+      "score": 0.3908,
+      "iteration": 3
+    },
+    {
+      "formula": "MgRuTe2",
+      "method": "element_substitution",
+      "score": 0.3908,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "CaO",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BeO",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "MgTe",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "MgSe",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "MgS",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "MgNbO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "MgS2Zr",
+      "method": "element_substitution",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "MgO2RuZn",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "element_substitution": {
+      "generated": 21,
+      "accepted": 14,
+      "rejected": 7,
+      "avg_score": 0.4192619047619047
+    },
+    "mixed_parent": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "avg_score": 0.4258
+    },
+    "single_site_doping": {
+      "generated": 2,
+      "accepted": 1,
+      "rejected": 1,
+      "avg_score": 0.3123
+    },
+    "cross_substitution": {
+      "generated": 2,
+      "accepted": 2,
+      "rejected": 0,
+      "avg_score": 0.42455
+    }
+  },
+  "family_stats": {
+    "O-Sr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ca-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-O-Zr": {
+      "generated": 2,
+      "accepted": 2,
+      "rejected": 0
+    },
+    "Be-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-Nb-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Mg-O-Ru": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Be-O-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Mo-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Te-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ca-O-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-Sr-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Se-Zr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-S-Zr": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-Ru-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Be-O-Ru": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ca-O-Ru": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-Ru-Sr": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-O-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Ru-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Ru-Se": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-Ru-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mg-O-Ru-Zn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "validation:known_reference": 6,
+    "validation:reject": 2
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 26,
+  "total_accepted": 18,
+  "total_rejected": 8,
+  "last_saved": "2026-03-24T12:41:37Z"
+}
