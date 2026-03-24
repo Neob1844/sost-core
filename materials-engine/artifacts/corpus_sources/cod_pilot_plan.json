@@ -1,15 +1,25 @@
 {
-  "plan_id": "6e05fa50865b",
+  "plan_id": "b228c5f27f24",
   "source": "cod",
   "target_count": 10,
   "selection_strategy": "exotic_priority",
   "total_candidates": 30,
-  "unique_candidates": 0,
-  "selected_for_ingestion": 0,
-  "new_elements": [],
+  "unique_candidates": 30,
+  "selected_for_ingestion": 10,
+  "new_elements": [
+    "C",
+    "Ca",
+    "Cs",
+    "Cu",
+    "H",
+    "In",
+    "N",
+    "Ru",
+    "S"
+  ],
   "new_spacegroups": [],
-  "real_data": false,
-  "api_status": "unreachable",
-  "api_error": "All COD endpoints timed out or returned errors. Server at 158.129.170.82 is not reachable from this environment.",
-  "created_at": "2026-03-20T21:24:59.972197+00:00"
+  "real_data": true,
+  "api_status": "available",
+  "api_error": null,
+  "created_at": "2026-03-24T13:25:55.669722+00:00"
 }

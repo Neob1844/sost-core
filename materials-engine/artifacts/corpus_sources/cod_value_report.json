@@ -1,26 +1,36 @@
 {
   "source": "cod",
   "pilot_size": 30,
-  "new_materials": 0,
-  "new_structures": 0,
-  "new_compositions": 0,
-  "new_elements": [],
+  "new_materials": 10,
+  "new_structures": 10,
+  "new_compositions": 9,
+  "new_elements": [
+    "C",
+    "Ca",
+    "Cs",
+    "Cu",
+    "H",
+    "In",
+    "N",
+    "Ru",
+    "S"
+  ],
   "new_spacegroups": [],
   "structural_coverage_before": 100.0,
   "structural_coverage_after": 100.0,
   "element_coverage_before": 8,
-  "element_coverage_after": 8,
+  "element_coverage_after": 17,
   "spacegroup_coverage_before": 5,
   "spacegroup_coverage_after": 5,
   "training_value": "none",
   "training_value_reason": "COD provides experimental crystal structures without computed formation_energy or band_gap. These materials CANNOT be used for ML training of FE/BG models. They are classified as structure_only tier.",
   "search_space_benefit": {
-    "novelty_detection": "+0 new compositions expand novelty reference space",
-    "exotic_candidate_ranking": "+0 new elements improve exotic scoring baseline",
-    "structural_reference_pool": "+0 new crystal structures for polymorph comparison",
+    "novelty_detection": "+9 new compositions expand novelty reference space",
+    "exotic_candidate_ranking": "+9 new elements improve exotic scoring baseline",
+    "structural_reference_pool": "+10 new crystal structures for polymorph comparison",
     "comparison_quality": "COD experimental structures provide validation anchors for DFT predictions",
     "frontier_contextualization": "Structure-only materials cannot rank in FE/BG frontiers, but expand the neighbor pool for similarity search"
   },
-  "recommendation": "pause_and_review",
-  "created_at": "2026-03-20T21:25:24.174113+00:00"
+  "recommendation": "continue_cod_expansion",
+  "created_at": "2026-03-24T13:25:56.248786+00:00"
 }

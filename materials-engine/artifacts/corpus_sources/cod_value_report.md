@@ -2,16 +2,16 @@
 
 ## What COD Adds
 
-- New materials: 0
-- New structures: 0
-- New compositions: 0
-- New elements: none
+- New materials: 10
+- New structures: 10
+- New compositions: 9
+- New elements: C, Ca, Cs, Cu, H, In, N, Ru, S
 - New spacegroups: []
 
 ## Coverage Impact
 
 - Structural coverage: 100.0% → 100.0%
-- Element coverage: 8 → 8
+- Element coverage: 8 → 17
 - Spacegroup coverage: 5 → 5
 
 ## Training Value
@@ -22,12 +22,12 @@ COD provides experimental crystal structures without computed formation_energy o
 
 ## Search Space Benefit
 
-- **novelty_detection**: +0 new compositions expand novelty reference space
-- **exotic_candidate_ranking**: +0 new elements improve exotic scoring baseline
-- **structural_reference_pool**: +0 new crystal structures for polymorph comparison
+- **novelty_detection**: +9 new compositions expand novelty reference space
+- **exotic_candidate_ranking**: +9 new elements improve exotic scoring baseline
+- **structural_reference_pool**: +10 new crystal structures for polymorph comparison
 - **comparison_quality**: COD experimental structures provide validation anchors for DFT predictions
 - **frontier_contextualization**: Structure-only materials cannot rank in FE/BG frontiers, but expand the neighbor pool for similarity search
 
 ## Recommendation
 
-**pause_and_review**
+**continue_cod_expansion**

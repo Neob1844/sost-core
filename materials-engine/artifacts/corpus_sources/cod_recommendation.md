@@ -1,15 +1,18 @@
 # COD Operational Recommendation
 
-**Decision:** wait_for_real_aflow
+**Decision:** continue_cod_expansion
 
 ## Rationale
 
-COD pilot added no new materials. Corpus already covers these compositions.
+COD pilot added 10 materials with 9 new elements. Structural diversity improved. Worth expanding for reference/search space, but NOT for training.
 
 ## Next Steps
 
-- Wait for AFLOW API availability for training-ready expansion
-- Consider Materials Project API key acquisition
+- Expand COD ingestion to 500-1000 exotic structures
+- Focus on rare earth and intermetallic families
+- Use COD structures to improve novelty detection baseline
+- Wait for AFLOW real availability for training-ready expansion
+- Do NOT retrain models on COD-only materials
 
 ## What NOT To Do
 

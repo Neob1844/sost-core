@@ -30,7 +30,7 @@
     "expected_benefit": "Reduce BG MAE for wide-gap materials from ~1.0 to <0.6 eV. Improve calibration from LOW/MEDIUM to HIGH.",
     "risk_note": "Oversampling wide-gap may degrade metal/narrow-gap accuracy. Use curriculum or stratified sampling.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   },
   {
     "dataset_id": "b2ab857f4396",
@@ -65,7 +65,7 @@
     "expected_benefit": "Better BG prediction for complex compositions. Expand chemical diversity in training.",
     "risk_note": "Small sample \u2014 may not generalize. 4-elem materials dominate over 5+ which are truly sparse.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   },
   {
     "dataset_id": "7ccacc141465",
@@ -102,7 +102,7 @@
     "expected_benefit": "Broad improvement across all weak BG regions. Reduce overall BG MAE from 0.49 toward 0.35.",
     "risk_note": "Larger dataset = longer training. Risk of diluting hard cases with too many medium cases.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   },
   {
     "dataset_id": "debdec2c0340",
@@ -131,7 +131,7 @@
     "expected_benefit": "Reduce FE MAE for unstable materials from 0.43 to <0.25. Critical for stability screening.",
     "risk_note": "FE model already strong (overall MAE=0.15). Gains may be marginal vs effort.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   },
   {
     "dataset_id": "d72df8adef84",
@@ -166,7 +166,7 @@
     "expected_benefit": "Better FE prediction for complex compositions. Useful for multinary phase screening.",
     "risk_note": "FE model already excellent on common materials. Overemphasis on complex may not help.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   },
   {
     "dataset_id": "ce7f8726b613",
@@ -203,6 +203,6 @@
     "expected_benefit": "Smoother loss landscape. Better generalization across all BG ranges.",
     "risk_note": "Curriculum ordering requires difficulty labels at training time. More complex training loop.",
     "priority_score": 0.0,
-    "created_at": "2026-03-21T02:02:43.921431+00:00"
+    "created_at": "2026-03-24T13:27:41.638745+00:00"
   }
 ]
