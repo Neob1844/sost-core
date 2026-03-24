@@ -606,12 +606,12 @@
       Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Operationally accepted research platform for computational materials science. 76,193 materials, dual-target GNN prediction (CGCNN + ALIGNN-Lite), novelty scoring, campaign engine, frontier ranking &mdash; all at zero cost on CPU.
+      Operationally accepted research platform for computational materials science. 76,193 materials, dual-target GNN prediction (CGCNN + ALIGNN-Lite), autonomous discovery engine with direct GNN inference on novel candidates, 8 campaign profiles, validation queue &mdash; all at zero cost on CPU.
     </p>
     <div class="protocol-badge fade-in delay-3" id="statusBanner">
       <span class="tag" style="background:var(--green-primary,#4ade80);color:#000">ACCEPTED</span>
       <span class="sep">|</span>
-      <span class="val" id="statusVal">76,193 materials &middot; 145 API endpoints &middot; 922 tests &middot; $0/month</span>
+      <span class="val" id="statusVal">76,193 materials &middot; 145 API endpoints &middot; 1,073 tests &middot; Autonomous Discovery &middot; $0/month</span>
     </div>
   </div>
 </section>
@@ -852,10 +852,11 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           and produces comprehensive intelligence dossiers &mdash; all at near-zero compute cost on CPU.
         </p>
         <table class="code-table">
-          <tr><td class="key">Corpus</td><td class="val"><strong>75,993 materials</strong> &mdash; JARVIS DFT 3D, 100% with validated CIF structures</td></tr>
+          <tr><td class="key">Corpus</td><td class="val"><strong>76,193 materials</strong> &mdash; JARVIS DFT 3D (75,993) + AFLOW (200), 100% with validated CIF structures</td></tr>
           <tr><td class="key">ML Models</td><td class="val">CGCNN (FE MAE=0.1528, R&sup2;=0.95) + ALIGNN-Lite (BG MAE=0.3422, R&sup2;=0.71) &mdash; both on 20K</td></tr>
-          <tr><td class="key">API</td><td class="val"><strong>70+ endpoints</strong> &mdash; FastAPI with predict, frontier, triage, niche campaigns, orchestrator</td></tr>
-          <tr><td class="key">Tests</td><td class="val"><strong>636 tests</strong> passing across 19 test files</td></tr>
+          <tr><td class="key">Discovery</td><td class="val"><strong>Autonomous engine</strong> &mdash; 8 campaign profiles, direct GNN on lifted structures, validation queue</td></tr>
+          <tr><td class="key">API</td><td class="val"><strong>145 endpoints</strong> &mdash; FastAPI with predict, frontier, triage, campaigns, autonomous discovery</td></tr>
+          <tr><td class="key">Tests</td><td class="val"><strong>1,073 tests</strong> passing across 47 test files</td></tr>
           <tr><td class="key">Compute Cost</td><td class="val">$0/month &mdash; CPU-only, open data, no cloud required</td></tr>
         </table>
       </div>
@@ -890,7 +891,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key">Validation Queue</td><td class="val">Cheap-first 6-stage ladder: dedup &rarr; novelty &rarr; proxy &rarr; DFT &rarr; external &rarr; learning</td></tr>
           <tr><td class="key">Benchmark + Calibration</td><td class="val">Empirical error bands per bucket (element count, value range)</td></tr>
           <tr><td class="key">Structure Analytics</td><td class="val">28 real descriptors: density, volume, lattice, bonds, symmetry, composition stats</td></tr>
-          <tr><td class="key">Campaign Mode</td><td class="val">5 presets + custom: exotic hunt, stability first, band gap target, T/P watchlist</td></tr>
+          <tr><td class="key">Campaign Mode</td><td class="val">8 presets: III-V, oxide, group IV, stable novel, valuable, strategic, battery, oxide-exploratory</td></tr>
           <tr><td class="key">Frontier Engine</td><td class="val">Dual-target multiobjectve ranking: stability + BG fit + novelty + exotic + structure + priority</td></tr>
           <tr><td class="key">Validation Packs</td><td class="val">Exportable packages with evidence, risk flags, next-step recommendations (JSON/MD/CSV)</td></tr>
           <tr><td class="key">Pre-DFT Triage</td><td class="val">Hard gates + scoring: approved / manual_review / watchlist / reject — 4 profiles</td></tr>
@@ -918,6 +919,160 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key">Community Compute</td><td class="val">Marketplace for distributed materials simulation <span class="comment">// Future</span></td></tr>
         </table>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTONOMOUS DISCOVERY ENGINE -->
+<section class="section" id="autonomous-discovery" style="border-bottom:1px solid var(--border-dim)">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
+      <h2 class="section-title">Autonomous Materials <span class="accent">Discovery Engine</span></h2>
+    </div>
+
+    <p class="fade-in delay-1" style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">
+      The autonomous discovery engine generates, evaluates, and ranks novel material candidates without human intervention. It uses structure lifting, direct GNN inference (CGCNN for formation energy, ALIGNN-Lite for band gap), and a multi-tier validation queue to separate promising discoveries from noise.
+    </p>
+
+    <!-- ENGINE STATUS -->
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Engine Status &mdash; Phase V.C</span>
+        </div>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="key">Direct FE Inference</td><td class="val"><strong style="color:var(--green-primary)">65.5%</strong> of candidates get real CGCNN formation energy prediction</td></tr>
+          <tr><td class="key">Direct BG Inference</td><td class="val"><strong style="color:var(--green-primary)">43.8%</strong> of candidates get real ALIGNN-Lite band gap prediction</td></tr>
+          <tr><td class="key">Novel Direct GNN</td><td class="val"><strong style="color:var(--cyan-primary)">21.7%</strong> of candidates are truly new with real GNN evidence</td></tr>
+          <tr><td class="key">Proxy Dependency</td><td class="val"><strong>34.5%</strong> &mdash; down from 60% in Phase V.B (nearly halved)</td></tr>
+          <tr><td class="key">New in Top 10</td><td class="val"><strong style="color:var(--cyan-primary)">22.6%</strong> of top-10 candidates are genuinely new (7&times; improvement)</td></tr>
+          <tr><td class="key">Mean Top-10 Score</td><td class="val"><strong>0.616</strong> composite &middot; <strong>0.765</strong> plausibility</td></tr>
+          <tr><td class="key">Campaigns</td><td class="val"><strong>8 profiles</strong> &mdash; III-V, oxide, group IV, stable novel, valuable, strategic, battery, oxide-exploratory</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Discovery Pipeline</span>
+        </div>
+        <span class="spec-tag overlay">FLOW</span>
+      </div>
+      <div class="spec-body">
+        <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-secondary)">
+          <span style="color:var(--green-primary)">1.</span> <strong>Seed Selection</strong> &mdash; explore/exploit policy picks parent pair (e.g. GaAs + AlN)<br>
+          <span style="color:var(--green-primary)">2.</span> <strong>Candidate Generation</strong> &mdash; element substitution, cross-sub, doping, mixed-parent<br>
+          <span style="color:var(--green-primary)">3.</span> <strong>Chemical Filter</strong> &mdash; charge balance, element validity, stoichiometry, dedup<br>
+          <span style="color:var(--green-primary)">4.</span> <strong>Structure Lift</strong> &mdash; find prototype in corpus, substitute elements, build CIF<br>
+          <span style="color:var(--green-primary)">5.</span> <strong>Direct GNN</strong> &mdash; CGCNN forward pass on lifted structure &rarr; formation energy<br>
+          <span style="color:var(--green-primary)">6.</span> <strong>Band Gap</strong> &mdash; ALIGNN-Lite forward pass on same structure &rarr; band gap<br>
+          <span style="color:var(--green-primary)">7.</span> <strong>Multi-Objective Scoring</strong> &mdash; novelty + plausibility + value + stability + evidence<br>
+          <span style="color:var(--green-primary)">8.</span> <strong>Validation Queue</strong> &mdash; route to: reject / watchlist / review / candidate / priority
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDATION QUEUE -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Validation Queue</span>
+        </div>
+        <span class="spec-tag overlay">TIERS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#00ff41;margin-right:6px;vertical-align:middle"></span>Priority Validation</td><td class="val">High score + structure lift + direct GNN + novel &mdash; DFT handoff candidate</td></tr>
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4ade80;margin-right:6px;vertical-align:middle"></span>Validation Candidate</td><td class="val">Good score + plausible &mdash; ready for stronger ML pass or prototype refinement</td></tr>
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#67e8f9;margin-right:6px;vertical-align:middle"></span>Manual Review</td><td class="val">Borderline scores, needs human inspection &mdash; compare against corpus neighbors</td></tr>
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fbbf24;margin-right:6px;vertical-align:middle"></span>Watchlist</td><td class="val">Marginal but not worthless &mdash; keep monitoring, re-evaluate with new data</td></tr>
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#888;margin-right:6px;vertical-align:middle"></span>Known Reference</td><td class="val">Corpus material &mdash; useful as baseline comparison, not a discovery</td></tr>
+          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ff4444;margin-right:6px;vertical-align:middle"></span>Rejected</td><td class="val">Low plausibility or low composite score &mdash; no further action</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- EVIDENCE BADGES -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Evidence Badges</span>
+        </div>
+        <span class="spec-tag overlay">LABELS</span>
+      </div>
+      <div class="spec-body">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3)">DIRECT GNN</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3)">LIFTED STRUCTURE</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)">PROXY ESTIMATE</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(136,136,136,0.15);color:#888;border:1px solid rgba(136,136,136,0.3)">KNOWN MATERIAL</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,1,13,0.15);color:#fb010d;border:1px solid rgba(251,1,13,0.3)">NOT VALIDATED</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-dim);line-height:1.7">
+          Every candidate is tagged with its evidence origin: <strong>direct_gnn_lifted</strong> (real CGCNN/ALIGNN prediction on lifted structure), <strong>known_exact</strong> (corpus match), <strong>proxy_only</strong> (neighbor-based estimate), or <strong>unavailable</strong>. This prevents mistaking proxy estimates for real predictions or known materials for discoveries.
+        </p>
+      </div>
+    </div>
+
+    <!-- TOP NOVEL CANDIDATES (V.C results) -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Top Novel Candidates &mdash; Phase V.C</span>
+        </div>
+        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">RESULTS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="font-size:12px">
+          <tr><th>Formula</th><th>Campaign</th><th>Score</th><th>FE (eV/atom)</th><th>Evidence</th></tr>
+          <tr><td class="key">OZn<sub>2</sub></td><td>Oxide</td><td style="color:var(--green-primary)">0.898</td><td>-0.294</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
+          <tr><td class="key">Ni<sub>2</sub>O</td><td>Stable Novel</td><td style="color:var(--green-primary)">0.835</td><td>0.200</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
+          <tr><td class="key">O<sub>2</sub>TiZn</td><td>Oxide</td><td style="color:var(--green-primary)">0.786</td><td>-0.810</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
+          <tr><td class="key">GaIn</td><td>Stable Novel</td><td style="color:var(--green-primary)">0.700</td><td>-0.290</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
+          <tr><td class="key">AlGa</td><td>III-V</td><td style="color:var(--green-primary)">0.680</td><td>-0.379</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
+        </table>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:12px;line-height:1.7">
+          These are genuinely new candidates (not in corpus) with real CGCNN formation energy predictions via structure lifting. All are <strong>theoretical</strong> &mdash; no DFT or experimental validation has been performed. &ldquo;Novel&rdquo; means novel relative to the 76,193-material corpus. Confirmation requires independent computational or experimental verification.
+        </p>
+      </div>
+    </div>
+
+    <!-- V.B vs V.C COMPARISON -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Phase V.B &rarr; V.C Improvement</span>
+        </div>
+        <span class="spec-tag overlay">METRICS</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="font-size:12px">
+          <tr><th>Metric</th><th>V.B</th><th>V.C</th><th>Change</th></tr>
+          <tr><td class="key">Direct FE inference</td><td>39.8%</td><td style="color:var(--green-primary)">65.5%</td><td style="color:var(--green-primary)">+25.7pp</td></tr>
+          <tr><td class="key">Direct BG inference</td><td>36.6%</td><td style="color:var(--green-primary)">43.8%</td><td style="color:var(--green-primary)">+7.2pp</td></tr>
+          <tr><td class="key">Novel with direct GNN</td><td>3.2%</td><td style="color:var(--green-primary)">21.7%</td><td style="color:var(--green-primary)">+18.5pp (7&times;)</td></tr>
+          <tr><td class="key">Proxy dependency</td><td>60.2%</td><td style="color:var(--green-primary)">34.5%</td><td style="color:var(--green-primary)">&minus;25.7pp</td></tr>
+          <tr><td class="key">New in top 10</td><td>3.3%</td><td style="color:var(--green-primary)">22.6%</td><td style="color:var(--green-primary)">+19.3pp (7&times;)</td></tr>
+          <tr><td class="key">Mean top-10 score</td><td>0.536</td><td style="color:var(--green-primary)">0.616</td><td style="color:var(--green-primary)">+0.080</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- HONEST LIMITATIONS -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid var(--red-primary);border-radius:0 6px 6px 0;padding:16px 20px;margin-top:20px;font-size:11px;color:var(--text-secondary);line-height:1.8" class="fade-in delay-2">
+      <strong style="color:var(--text-primary)">Honest limitations:</strong> All candidates are <strong>theoretical</strong>. No DFT, phonon, or experimental validation has been performed. Structure lift does not guarantee correct crystal structure. GNN prediction does not equal experimental confirmation. &ldquo;Novelty&rdquo; is relative to the 76,193-material corpus &mdash; a candidate may exist in databases we have not ingested. Proxy-based estimates (34.5% of candidates) carry higher uncertainty than direct GNN predictions.
     </div>
   </div>
 </section>
@@ -1097,10 +1252,14 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key">Phase IV.D</td><td>Frontier-to-validation bridge: exportable packs with risk flags + next steps</td><td style="color:var(--green-primary)">Complete</td></tr>
           <tr><td class="key">Phase IV.E</td><td>Pre-DFT triage gate: hard gates, cheap-first 4-profile decision engine</td><td style="color:var(--green-primary)">Complete</td></tr>
           <tr><td class="key">Phase IV.F</td><td>Niche discovery campaigns: themed batch searches with cross-campaign comparison</td><td style="color:var(--green-primary)">Complete</td></tr>
-          <tr><td class="key" style="color:var(--cyan-primary)">Phase IV.G</td><td>Active learning orchestrator: error hotspots, coverage analysis, expansion planner (v2.0.0)</td><td style="color:var(--cyan-primary)">Current</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase V</td><td>Physics-based screening: phonon stability, EOS, CALPHAD, relaxation</td><td>Planned</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase VI</td><td>Remote sensing integration: satellite mineral detection + GNN spectral prediction</td><td>Vision</td></tr>
-          <tr style="opacity:0.6"><td class="key">Phase VII+</td><td>Blockchain proof-of-discovery, compute marketplace, SOST escrow access</td><td>Future</td></tr>
+          <tr><td class="key">Phase IV.G&ndash;U</td><td>Active learning, engine stabilization, public demo, operational acceptance (v3.2.0-RC1)</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase V</td><td>Direct GNN inference: CGCNN/ALIGNN-Lite forward pass on lifted candidate structures</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase V.B</td><td>GNN integration into autonomous pipeline, known-material penalty, validation queue hardening</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key">Phase V.C</td><td>Lift expansion (doping/mixed), proxy suppression, novel direct GNN path, quality uplift</td><td style="color:var(--green-primary)">Complete</td></tr>
+          <tr><td class="key" style="color:var(--cyan-primary)">Phase VI</td><td>Public autonomous discovery dashboard, website integration, evidence-first UX</td><td style="color:var(--cyan-primary)">Current</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase VII</td><td>Physics-based screening: phonon stability, EOS, structural relaxation (M3GNet/CHGNet)</td><td>Planned</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase VIII</td><td>Remote sensing integration: satellite mineral detection + GNN spectral prediction</td><td>Vision</td></tr>
+          <tr style="opacity:0.6"><td class="key">Phase IX+</td><td>Blockchain proof-of-discovery, compute marketplace, DFT validation pipeline</td><td>Future</td></tr>
         </table>
       </div>
     </div>
@@ -1119,24 +1278,24 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Available Now</div>
         <div class="mode-params" style="font-size:11px;line-height:1.8">
-          <strong>75,993 materials</strong> with 100% crystal structures<br>
-          Dual-target GNN prediction (FE + BG)<br>
-          Novelty/exotic detection + candidate generation<br>
+          <strong>76,193 materials</strong> with 100% crystal structures<br>
+          Dual-target GNN prediction (CGCNN + ALIGNN-Lite)<br>
+          <strong>Autonomous discovery engine</strong> with direct GNN inference<br>
+          8 campaign profiles &middot; structure lift &middot; validation queue<br>
           Material intelligence dossiers with evidence tagging<br>
           Frontier ranking + triage + niche campaigns<br>
-          Validation queue + active learning orchestrator<br>
           Benchmark calibration with empirical confidence bands<br>
           28 real structure descriptors (density, bonds, symmetry)<br>
-          636 tests passing &middot; 70+ API endpoints
+          1,073 tests passing &middot; 145 API endpoints &middot; 47 test files
         </div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:var(--cyan-primary)"></span> In Progress</div>
         <div class="mode-params" style="font-size:11px;line-height:1.8">
-          Corpus expansion planning (MP ~150K, COD ~530K, AFLOW ~3.5M)<br>
-          Error hotspot analysis + retraining proposals<br>
-          Chemical space coverage optimization<br>
-          Exotic niche specialization
+          Phase VI: public dashboard + evidence-first UX<br>
+          Expanding lift coverage for more generation strategies<br>
+          Reducing proxy dependency below 30%<br>
+          Corpus expansion planning (MP ~150K, AFLOW ~3.5M)
         </div>
       </div>
       <div class="mode-card">
@@ -1310,7 +1469,8 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key" style="color:var(--red-primary)">Remote Sensing</td><td class="val">Cannot see directly underground. Surface mineral mapping only. Subsurface inference requires alteration halo proxies.</td></tr>
           <tr><td class="key" style="color:var(--red-primary)">Integration</td><td class="val">GNN spectral prediction from crystal structure is a research challenge. Training data limited (~300&ndash;400 minerals with both).</td></tr>
           <tr><td class="key" style="color:var(--red-primary)">Blockchain</td><td class="val">Proof of Discovery is a concept. Does not replace physical validation or peer review.</td></tr>
-          <tr><td class="key" style="color:var(--red-primary)">Novelty</td><td class="val">Assessed relative to ingested corpus only (75,993 JARVIS materials), not all published science.</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Novelty</td><td class="val">Assessed relative to ingested corpus only (76,193 materials), not all published science. A &ldquo;novel&rdquo; candidate may exist in databases we have not ingested.</td></tr>
+          <tr><td class="key" style="color:var(--red-primary)">Proxy</td><td class="val">34.5% of autonomous candidates rely on neighbor-proxy estimates rather than direct GNN. Proxy carries higher uncertainty.</td></tr>
         </table>
       </div>
     </div>
@@ -1342,7 +1502,8 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key" style="color:var(--green-primary)">Autonomous Discovery</td><td>Iterative campaign engine with 8 profiles, error learning, validation queue (5 tiers), structure lift pipeline. 28/28 tests passing.</td></tr>
           <tr><td class="key" style="color:var(--green-primary)">Material Mixer</td><td>4 generation strategies: element substitution, single-site doping, mixed-parent, cross-substitution. Dual-output reports (technical + plain language).</td></tr>
           <tr><td class="key" style="color:var(--green-primary)">Phase II Hardening</td><td>Chemical plausibility filters, charge balance heuristic, acceptance rate 61% &rarr; 27%. Known material sanity: 11/11 pass.</td></tr>
-          <tr><td class="key">46 Tests</td><td>46 test files covering full pipeline: schema through autonomous discovery</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">Phase V.C</td><td>Lift expansion (doping/mixed-parent), proxy suppression (60%&rarr;35%), novel direct GNN path (3%&rarr;22%), proxy cap at 0.55. 8 campaigns.</td></tr>
+          <tr><td class="key">47 Test Files</td><td>1,073 test functions across 47 files covering full pipeline: schema through autonomous discovery (Phase V.C)</td></tr>
         </table>
       </div>
     </div>
