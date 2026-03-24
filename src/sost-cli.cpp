@@ -66,6 +66,7 @@ static std::string g_rpc_pass = "";
 static std::string g_node_host = "127.0.0.1";
 static int         g_node_port = 18232;
 static int64_t     g_fee_rate  = FEE_RATE_DEFAULT;
+static bool        g_yes_flag  = false;  // --yes skips confirmation prompts
 
 // Format stocks as SOST with 8 decimal places
 static std::string format_sost(int64_t stocks) {
@@ -242,6 +243,7 @@ static void print_usage() {
     printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
     printf("  --node <host:port>     Node address (default: 127.0.0.1:18232)\n");
     printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
+    printf("  --yes, -y              Skip confirmation prompts\n");
     printf("\nFee calculation (v1.3 — automatic):\n");
     printf("  Fee = tx_size_bytes x fee_rate stocks/byte\n");
     printf("  Minimum: %s SOST (%lld stocks)\n",
@@ -287,6 +289,9 @@ int main(int argc, char** argv) {
                 return 1;
             }
             arg_start += 2;
+        } else if (flag == "--yes" || flag == "-y") {
+            g_yes_flag = true;
+            arg_start += 1;
         } else if (flag == "--help" || flag == "-h") {
             print_usage();
             return 0;
@@ -683,13 +688,27 @@ int main(int argc, char** argv) {
         sost::Hash256 txid;
         tx.ComputeTxId(txid);
 
-        printf("TX created: %s\n", to_hex(txid.data(), 32).c_str());
+        printf("\n========== TRANSACTION SUMMARY ==========\n");
+        printf("  TXID:   %s\n", to_hex(txid.data(), 32).c_str());
         printf("  To:     %s\n", to_addr.c_str());
         printf("  Amount: %s SOST\n", format_sost(amount).c_str());
         printf("  Fee:    %s SOST (%lld stocks = %zu bytes x %lld rate)\n",
                format_sost(real_fee).c_str(), (long long)real_fee,
                raw.size(), (long long)g_fee_rate);
         printf("  Size:   %zu bytes\n", raw.size());
+        printf("=========================================\n");
+
+        // Pre-send confirmation (safety check)
+        if (!g_yes_flag) {
+            printf("Confirm send? [yes/no]: ");
+            fflush(stdout);
+            char confirm[16] = {};
+            if (!fgets(confirm, sizeof(confirm), stdin) ||
+                (strncmp(confirm, "yes", 3) != 0 && strncmp(confirm, "y", 1) != 0)) {
+                printf("Transaction cancelled.\n");
+                return 0;
+            }
+        }
 
         // Broadcast via JSON-RPC: sendrawtransaction
         printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);

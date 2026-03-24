@@ -8,6 +8,7 @@ add_compile_options(-g)
 # === Security hardening flags ===
 if(NOT MSVC)
   add_compile_options(-fstack-protector-strong)   # Stack buffer overflow detection
+  add_compile_options(-fstack-clash-protection)   # Stack clash attack prevention
   add_compile_options(-fPIE)                       # Position-independent executables (ASLR)
   add_compile_options(-Wformat -Wformat-security)  # Format string protection
   add_link_options(-pie)                           # ASLR for linked executables
