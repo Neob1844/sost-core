@@ -84,6 +84,15 @@ def compute_uncertainty(candidate_context, scores, method="unknown",
     else:
         base_uncertainty = 0.85  # no evidence at all
 
+    # Phase XI.C: Chemistry risk adjusts uncertainty and OOD
+    chem_risk = ctx.get("risk_level", "unknown")
+    if chem_risk == "risky":
+        ood_risk = min(1.0, ood_risk + 0.15)
+    elif chem_risk == "unusual":
+        ood_risk = min(1.0, ood_risk + 0.08)
+    elif chem_risk == "familiar":
+        family_support = min(1.0, family_support + 0.10)
+
     # Adjust by other signals
     uncertainty = base_uncertainty
     uncertainty += ood_risk * 0.15  # OOD increases uncertainty
@@ -122,6 +131,10 @@ def compute_uncertainty(candidate_context, scores, method="unknown",
         parts.append("known binary family")
     if ood_risk > 0.5:
         parts.append("high out-of-domain risk")
+    if chem_risk == "risky":
+        parts.append("risky chemistry — unusual composition")
+    elif chem_risk == "unusual":
+        parts.append("unusual chemistry — needs stronger evidence")
 
     summary = "; ".join(parts)
 
@@ -164,6 +177,16 @@ def compute_validation_readiness(uncertainty_result, scores, candidate_context=N
     readiness += plausibility * 0.20  # chemical plausibility
     readiness += min(1.0, composite * 1.2) * 0.15  # composite score (boosted)
     readiness -= ood * 0.10  # OOD risk reduces readiness
+
+    # Phase XI.C: chemistry risk adjusts readiness
+    chem_risk = ctx.get("risk_level", "unknown")
+    if chem_risk == "familiar":
+        readiness += 0.04
+    elif chem_risk == "risky":
+        readiness -= 0.08
+    elif chem_risk == "unusual":
+        readiness -= 0.04
+
     readiness = round(min(1.0, max(0.0, readiness)), 4)
 
     # DFT handoff threshold

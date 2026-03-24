@@ -125,6 +125,8 @@ class AutonomyGovernor:
         parts = []
         if name in ("evidence_guided_discovery",):
             parts.append("evidence-calibrated discovery")
+        if name in ("chemistry_aware_discovery",):
+            parts.append("chemistry-informed, familiar-family focus")
         if name in ("battery_relevant", "strategic_materials_search"):
             parts.append("high strategic value")
         if name in ("high_uncertainty_probe",):
@@ -181,8 +183,13 @@ class AutonomyGovernor:
         ready = readiness.get("validation_readiness_score", 0)
         is_novel_gnn = candidate_scores.get("is_novel_direct_gnn", False)
 
+        # Phase XI.C: risky chemistry blocks auto-promotion
+        chem_risk = candidate_scores.get("chemistry_risk_level", "unknown")
+        if chem_risk == "risky":
+            return False, "risky_chemistry_blocks_auto_promote"
+
         if is_novel_gnn and composite >= 0.55 and conf >= 0.55 and ready >= 0.55:
-            reason = f"auto_promote: novel_gnn + score={composite:.2f} + conf={conf:.2f} + ready={ready:.2f}"
+            reason = f"auto_promote: novel_gnn + score={composite:.2f} + conf={conf:.2f} + ready={ready:.2f} + chem={chem_risk}"
             self._log("auto_promotion", reason)
             return True, reason
 
@@ -196,9 +203,16 @@ class AutonomyGovernor:
         composite = candidate_scores.get("composite_score", 0)
         conf = uncertainty.get("confidence_score", 0)
         evidence_quality = candidate_scores.get("evidence_quality", "no_evidence")
+        chem_risk = candidate_scores.get("chemistry_risk_level", "unknown")
 
         if composite < 0.35 and conf < 0.30:
             reason = f"auto_demote: low_score={composite:.2f} + low_conf={conf:.2f}"
+            self._log("auto_demotion", reason)
+            return True, reason
+
+        # Phase XI.C: risky chemistry + mediocre score → demote
+        if chem_risk == "risky" and composite < 0.50:
+            reason = f"auto_demote: risky_chemistry + score={composite:.2f}"
             self._log("auto_demotion", reason)
             return True, reason
 
