@@ -48,6 +48,13 @@ CAMPAIGN_PROFILES = {
         "weights": {"novelty": 0.25, "exotic": 0.15, "stability": 0.25, "value": 0.25, "diversity": 0.10},
         "explore_ratio": 0.5, "exploit_ratio": 0.3, "diversify_ratio": 0.2,
     },
+    "high_uncertainty_probe": {
+        "description": "Explore high-uncertainty regions for corpus expansion and model improvement",
+        "weights": {"novelty": 0.35, "exotic": 0.25, "stability": 0.10, "value": 0.15, "diversity": 0.15},
+        "explore_ratio": 0.7, "exploit_ratio": 0.1, "diversify_ratio": 0.2,
+        "min_novelty": 0.4,
+        "prefer_uncertain": True,
+    },
 }
 
 
