@@ -527,6 +527,9 @@
       <button class="sidebar-btn" data-view="addressbook" onclick="showView('addressbook')">
         <span class="icon">&#128214;</span> <span>Address Book</span>
       </button>
+      <button class="sidebar-btn" data-view="secguide" onclick="showView('secguide')">
+        <span class="icon">&#128737;</span> <span>Security Guide</span>
+      </button>
       <button class="sidebar-btn" data-view="psbt" onclick="showView('psbt')">
         <span class="icon">&#128196;</span> <span>PSBT</span>
       </button>
@@ -985,6 +988,30 @@
         <button class="btn btn-primary" onclick="savePolicy()">Save Policy</button>
         <div id="policyResult" class="notice hidden" style="margin-top:12px"></div>
       </div>
+    </div>
+
+    <!-- SECURITY GUIDE -->
+    <div id="view-secguide" class="view hidden">
+      <h2><span class="accent">Security Guide</span></h2>
+      <p class="subtitle">Step-by-step guide to securing your wallet and funds</p>
+
+      <!-- Security Score Bar -->
+      <div class="card" id="secScoreCard" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0">SECURITY SCORE</h3>
+          <span id="secScoreLabel" style="font-size:18px;font-weight:700;color:var(--green-primary)">0/10</span>
+        </div>
+        <div style="background:var(--border-dim);border-radius:4px;height:14px;overflow:hidden;margin-bottom:12px">
+          <div id="secScoreBar" style="height:100%;width:0%;background:var(--red-primary);transition:width .5s,background .5s;border-radius:4px"></div>
+        </div>
+        <div id="secScoreChecks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:4px 16px;font-size:11px;color:var(--text-dim)"></div>
+        <div id="secScoreRec" style="margin-top:10px;font-size:12px;color:var(--text-secondary);font-style:italic"></div>
+      </div>
+
+      <!-- Accordion sections -->
+      <div id="secGuideAccordion">
+      </div>
+    </div>
 
 </div>
 
@@ -2513,6 +2540,146 @@ if (!window.showView) {
 if (!window.unlockWallet) {
   window.unlockWallet = function() { alert('Wallet is still loading crypto libraries. Please wait a moment and try again.'); };
 }
+
+// ============================================================
+// SECURITY GUIDE — Interactive accordion + security score
+// ============================================================
+(function(){
+var secSections = [
+  { id:'sg-password', icon:'\uD83D\uDD10', title:'1. STRONG PASSWORD',
+    statusFn:function(){ return (typeof wallet!=='undefined'&&wallet&&wallet.encrypted)?{text:'ACTIVE',color:'var(--green-primary)'}:{text:'NOT SET',color:'var(--red-primary)'}; },
+    scoreFn:function(){ return typeof wallet!=='undefined'&&wallet&&wallet.encrypted?1:0; },
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">YOUR FIRST LINE OF DEFENSE</b><br>Your wallet password encrypts your private keys with AES-256-GCM military-grade encryption. Without it, anyone with access to your device can steal your funds.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.6;overflow-x:auto">Your password\n    \u2193\nPBKDF2 (100,000 iterations)\n    \u2193\nAES-256-GCM encryption key\n    \u2193\nPrivate key encrypted in browser\n    \u2193\nEven if someone steals the file,\nthey can\'t use it without your password</pre><br><b style="color:var(--green-primary)">GOOD PASSWORD:</b><br>\u2713 At least 12 characters<br>\u2713 Mix of letters, numbers, symbols<br>\u2713 Not used anywhere else<br>\u2713 Not a dictionary word<br><br><b style="color:var(--red-primary)">BAD PASSWORD:</b><br>\u2717 "password123" &nbsp; \u2717 "sost2026"<br>\u2717 Your name or birthday<br>\u2717 Same as your email password<br><br><button class="btn btn-small" onclick="showView(\'settings\')" style="font-size:11px">Change Password \u2192</button></div>'
+  },
+  { id:'sg-seed', icon:'\uD83C\uDF31', title:'2. SEED PHRASE BACKUP',
+    statusFn:function(){ return (typeof wallet!=='undefined'&&wallet&&wallet.type==='hd')?{text:'HD WALLET',color:'var(--green-primary)'}:{text:'LEGACY (no seed)',color:'#f59e0b'}; },
+    scoreFn:function(){ return typeof wallet!=='undefined'&&wallet&&wallet.type==='hd'?1:0; },
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">YOUR ULTIMATE BACKUP</b><br>Your 12-word seed phrase can recover ALL your addresses and funds on any device. If you lose your computer \u2014 the 12 words bring everything back.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.6;overflow-x:auto">12 words (e.g., "apple river moon...")\n    \u2193\nPBKDF2-HMAC-SHA512 (2048 iterations)\n    \u2193\nMaster seed (512 bits)\n    \u2193\nAll your private keys derived from it\n    \u2193\nSame 12 words = same keys = same funds</pre><br><b style="color:var(--red-primary)">RULES \u2014 READ CAREFULLY:</b><br>\u2022 Write the 12 words on <b>PAPER</b><br>\u2022 NEVER store digitally (no screenshots, no notes app, no email)<br>\u2022 Store the paper in a safe place (fireproof if possible)<br>\u2022 NEVER share with anyone \u2014 not even SOST support<br>\u2022 Anyone with your 12 words can steal ALL your funds<br><br><b>TEST YOURSELF:</b> Can you recover your wallet right now if your computer dies?<br>If no \u2192 write down your seed phrase NOW.<br><br><button class="btn btn-small" onclick="showView(\'backup\')" style="font-size:11px">View Seed Phrase \u2192</button></div>'
+  },
+  { id:'sg-2fa', icon:'\uD83D\uDCF1', title:'3. TWO-FACTOR AUTHENTICATION (2FA)',
+    statusFn:function(){ try{var s=localStorage.getItem('sost_totp_secret');return s?{text:'ACTIVE',color:'var(--green-primary)'}:{text:'NOT SET',color:'var(--red-primary)'};}catch(e){return{text:'NOT SET',color:'var(--red-primary)'};}},
+    scoreFn:function(){ try{return localStorage.getItem('sost_totp_secret')?1:0;}catch(e){return 0;}},
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">DOUBLE LOCK FOR YOUR WALLET</b><br>Even if someone knows your password, they can\'t access your wallet without the 6-digit code from your phone.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.6;overflow-x:auto">You enter password     \u2192 First lock\nYou enter 6-digit code \u2192 Second lock\nBoth correct           \u2192 Access granted\nMissing one            \u2192 Access denied</pre><br><b style="color:var(--text-primary)">SETUP (2 minutes):</b><br>1. Install Google Authenticator (or Authy) on your phone<br>2. Go to the 2FA tab in this wallet<br>3. Scan the QR code with your authenticator app<br>4. Enter the 6-digit code to confirm<br>5. Done \u2014 your wallet now requires 2FA<br><br><b style="color:var(--red-primary)">IMPORTANT:</b><br>\u2022 The 6-digit code changes every 30 seconds<br>\u2022 If you lose your phone, you need the backup secret<br>\u2022 Write down the TOTP secret when you set it up<br><br><button class="btn btn-small" onclick="showView(\'totp\')" style="font-size:11px">Set Up 2FA \u2192</button></div>'
+  },
+  { id:'sg-addrbook', icon:'\uD83D\uDCD6', title:'4. TRUSTED ADDRESS BOOK',
+    statusFn:function(){ try{var b=JSON.parse(localStorage.getItem('sost_address_book')||'[]');return b.length?{text:b.length+' addresses',color:'var(--green-primary)'}:{text:'Empty',color:'#f59e0b'};}catch(e){return{text:'Empty',color:'#f59e0b'};}},
+    scoreFn:function(){ try{return JSON.parse(localStorage.getItem('sost_address_book')||'[]').length>0?1:0;}catch(e){return 0;}},
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">KNOW WHO YOU\'RE SENDING TO</b><br>Save addresses you trust with labels and trust levels. Prevents sending to wrong or malicious addresses.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">TRUST LEVELS:\nTRUSTED  \u2192 Green: "Sending to: Gold Vault"\n           Send proceeds normally\nKNOWN    \u2192 Yellow: "Known: Exchange"\n           Send proceeds with note\nBLOCKED  \u2192 RED: "BLOCKED ADDRESS"\n           Send CANCELLED automatically\nUNKNOWN  \u2192 Orange: "Unknown address"\n           Warning + first-time alert</pre><br><b>RECOMMENDED FIRST ADDRESSES:</b><br>\u2022 Your own cold storage address<br>\u2022 Any exchange deposit address<br>\u2022 Block any known scam address<br><br><button class="btn btn-small" onclick="showView(\'addressbook\')" style="font-size:11px">Open Address Book \u2192</button></div>'
+  },
+  { id:'sg-firstsend', icon:'\u26A0', title:'5. FIRST-TIME SEND PROTECTION',
+    statusFn:function(){ return {text:'ALWAYS ACTIVE',color:'var(--green-primary)'}; },
+    scoreFn:function(){ return 1; },
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">SAFETY NET FOR NEW ADDRESSES</b><br>When you send SOST to an address for the FIRST TIME, the wallet shows a warning before proceeding.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">\u26A0 FIRST-TIME SEND\n\nYou have never sent to this address.\nAddress: sost1xyz...abc\n\nRecommendation: send a small test\namount first (e.g., 0.1 SOST) to\nverify the address is correct.\n\n[Add to Address Book] [Send] [Cancel]</pre><br><b style="color:var(--red-primary)">WHY THIS MATTERS:</b><br>\u2022 Crypto transactions are IRREVERSIBLE<br>\u2022 One wrong character = funds lost forever<br>\u2022 A test send of 0.1 SOST costs almost nothing<br>\u2022 It could save you from losing everything<br><br>This protection is always active. You cannot disable it.</div>'
+  },
+  { id:'sg-presend', icon:'\u2705', title:'6. TRANSACTION CONFIRMATION',
+    statusFn:function(){ return {text:'ALWAYS ACTIVE',color:'var(--green-primary)'}; },
+    scoreFn:function(){ return 1; },
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">REVIEW BEFORE YOU SIGN</b><br>Every transaction shows a full summary with a 3-second countdown before you can confirm.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">TRANSACTION SUMMARY\n\nTo:     sost1abc... (Gold Vault \u2713)\nAmount: 500.00000000 SOST\nFee:    0.00000250 SOST\nTotal:  500.00000250 SOST\nTrust:  \u2713 TRUSTED\nFirst:  No (sent before)\n\n    [CONFIRM (3...)]    [CANCEL]</pre><br><b>WHAT TO CHECK:</b><br>\u2713 Is the address correct? (check first AND last 6 chars)<br>\u2713 Is the amount correct? (not 500 instead of 50)<br>\u2713 Is the fee reasonable?<br>\u2713 Is the trust level what you expect?</div>'
+  },
+  { id:'sg-treasury', icon:'\uD83C\uDFE6', title:'7. TREASURY LIMITS',
+    statusFn:function(){ try{var p=JSON.parse(localStorage.getItem('sost_security_policy')||'{}');return (p.dailyLimit||p.perTxLimit||p.vaultMode)?{text:'Active',color:'var(--green-primary)'}:{text:'No limits set',color:'#f59e0b'};}catch(e){return{text:'No limits set',color:'#f59e0b'};}},
+    scoreFn:function(){ try{var p=JSON.parse(localStorage.getItem('sost_security_policy')||'{}');return (p.dailyLimit||p.perTxLimit||p.vaultMode)?1:0;}catch(e){return 0;}},
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">SET SPENDING LIMITS</b><br>Like a daily ATM limit for your wallet. Even if someone gets access, they can\'t drain everything at once.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">AVAILABLE LIMITS:\nDaily send limit    \u2502 Max SOST per 24 hours\nPer-TX limit        \u2502 Max SOST per send\nVault mode          \u2502 Only trusted addresses\nAddress book req.   \u2502 For amounts above X</pre><br><b>EXAMPLE \u2014 PERSONAL WALLET:</b><br>Daily: 100 SOST &middot; Per-TX: 50 SOST &middot; Vault: OFF<br><br><b>EXAMPLE \u2014 TREASURY:</b><br>Daily: 1000 SOST &middot; Per-TX: 500 SOST &middot; Vault: ON<br><br>When you hit a limit, the wallet <b>BLOCKS</b> the send. Not a warning \u2014 a hard stop.<br><br><button class="btn btn-small" onclick="showView(\'settings\')" style="font-size:11px">Configure Limits \u2192</button></div>'
+  },
+  { id:'sg-psbt', icon:'\uD83D\uDD0C', title:'8. OFFLINE SIGNING (PSBT)',
+    statusFn:function(){ return {text:'Available',color:'var(--text-dim)'}; },
+    scoreFn:function(){ try{return localStorage.getItem('sost_psbt_used')?1:0;}catch(e){return 0;}},
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">SIGN TRANSACTIONS WITHOUT INTERNET</b><br>Create transactions on an ONLINE computer and sign them on an OFFLINE computer. Your private keys NEVER touch the internet.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">ONLINE PC:\n  Create unsigned transaction (PSBT)\n  Copy base64 text to USB stick\n\nOFFLINE PC (air-gapped, no internet):\n  Import PSBT from USB\n  Sign with your private key\n  Copy signed PSBT back to USB\n\nONLINE PC:\n  Import signed PSBT from USB\n  Broadcast to the network\n\nResult: private key was NEVER online</pre><br><b>WHO NEEDS THIS:</b><br>\u2022 Anyone holding large amounts of SOST<br>\u2022 Treasury/vault managers<br><br><b>WHO DOESN\'T:</b><br>\u2022 Casual users with small balances<br>\u2022 Password + 2FA is fine for &lt;100 SOST<br><br><button class="btn btn-small" onclick="showView(\'psbt\')" style="font-size:11px">Open PSBT Tool \u2192</button></div>'
+  },
+  { id:'sg-multisig', icon:'\uD83D\uDD11', title:'9. MULTI-SIGNATURE (2-OF-3)',
+    statusFn:function(){ return {text:'Available',color:'var(--text-dim)'}; },
+    scoreFn:function(){ try{return localStorage.getItem('sost_multisig_configs')?1:0;}catch(e){return 0;}},
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">REQUIRE MULTIPLE KEYS TO SPEND</b><br>Like a bank vault that needs 2 keys from 3 keyholders. Even if one key is stolen, funds are safe.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">3 people have keys:\n  \uD83D\uDD11 Founder\n  \uD83D\uDD11 CTO\n  \uD83D\uDD11 Backup (in a safe)\n\nTo move funds, ANY 2 must sign:\n  Founder + CTO     \u2192 OK\n  Founder + Backup  \u2192 OK\n  CTO     + Backup  \u2192 OK\n  Founder alone     \u2192 BLOCKED</pre><br><b>WHAT IT PROTECTS AGAINST:</b><br>\u2713 Key theft (1 key stolen \u2192 still safe)<br>\u2713 Key loss (1 key lost \u2192 2 others recover)<br>\u2713 Insider threat (no single person can drain)<br>\u2713 Coercion (attacker needs 2 people)<br><br><b>MULTISIG ADDRESSES:</b><br>Regular: sost1abc... (1 signature)<br>Multisig: sost3abc... (M of N signatures)<br><br><button class="btn btn-small" onclick="showView(\'multisig\')" style="font-size:11px">Open Multisig Tool \u2192</button></div>'
+  },
+  { id:'sg-autolock', icon:'\u23F0', title:'10. AUTO-LOCK TIMER',
+    statusFn:function(){ try{var t=localStorage.getItem('sost_lock_minutes')||'5';return{text:'Locks after '+t+' min',color:'var(--green-primary)'};}catch(e){return{text:'5 min (default)',color:'var(--green-primary)'};}},
+    scoreFn:function(){ return 1; },
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">AUTOMATIC PROTECTION WHEN YOU WALK AWAY</b><br>Your wallet locks automatically after a period of inactivity. When locked, your private keys are cleared from memory.<br><br><b>DEFAULT:</b> 5 minutes of inactivity \u2192 wallet locks<br><b>TO UNLOCK:</b> Enter password again (+ 2FA if enabled)<br><br><b>WHY IT MATTERS:</b><br>\u2717 Without auto-lock: anyone can send your SOST<br>\u2713 With auto-lock: wallet is locked, keys are gone<br><br><b>RECOMMENDED:</b><br>\u2022 Personal laptop: 5 minutes<br>\u2022 Shared computer: 1 minute<br>\u2022 Public computer: NEVER use a wallet on a public computer<br><br><button class="btn btn-small" onclick="showView(\'settings\')" style="font-size:11px">Adjust Timer \u2192</button></div>'
+  }
+];
+
+function buildSecGuide(){
+  var acc=document.getElementById('secGuideAccordion');
+  if(!acc)return;
+  var html='';
+  for(var i=0;i<secSections.length;i++){
+    var s=secSections[i];
+    html+='<div class="sg-item" data-idx="'+i+'" style="border:1px solid var(--border-dim);border-radius:6px;margin-bottom:8px;overflow:hidden;background:var(--bg-card)">';
+    html+='<div class="sg-header" onclick="toggleSecGuideItem('+i+')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;transition:background .2s" onmouseenter="this.style.background=\'var(--bg-hover)\'" onmouseleave="this.style.background=\'\'">';
+    html+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">'+s.icon+'</span><span style="font-size:13px;font-weight:600;color:var(--text-primary)">'+s.title+'</span></div>';
+    html+='<div style="display:flex;align-items:center;gap:10px"><span id="sg-status-'+i+'" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px"></span><span id="sg-arrow-'+i+'" style="color:var(--text-dim);transition:transform .3s">\u25B6</span></div>';
+    html+='</div>';
+    html+='<div id="sg-body-'+i+'" style="max-height:0;overflow:hidden;transition:max-height .4s ease;padding:0 16px">';
+    html+='<div style="padding:0 0 16px">'+s.body+'</div>';
+    html+='</div></div>';
+  }
+  acc.innerHTML=html;
+  updateSecScore();
+}
+
+var activeSecItem=-1;
+window.toggleSecGuideItem=function(idx){
+  // Close current
+  if(activeSecItem>=0){
+    var ob=document.getElementById('sg-body-'+activeSecItem);
+    var oa=document.getElementById('sg-arrow-'+activeSecItem);
+    if(ob)ob.style.maxHeight='0';
+    if(oa)oa.style.transform='';
+  }
+  if(activeSecItem===idx){activeSecItem=-1;return;}
+  // Open new
+  var b=document.getElementById('sg-body-'+idx);
+  var a=document.getElementById('sg-arrow-'+idx);
+  if(b){b.style.maxHeight=b.scrollHeight+100+'px';}
+  if(a)a.style.transform='rotate(90deg)';
+  activeSecItem=idx;
+};
+
+function updateSecScore(){
+  var score=0,checks=[];
+  var labels=['Password','Seed phrase','2FA','Address book','First-time warn','Pre-send confirm','Treasury limits','PSBT','Multisig','Auto-lock'];
+  for(var i=0;i<secSections.length;i++){
+    var s=secSections[i];
+    var st=s.statusFn();
+    var sc=s.scoreFn();
+    score+=sc;
+    checks.push({label:labels[i],ok:sc>0});
+    var el=document.getElementById('sg-status-'+i);
+    if(el){el.textContent=st.text;el.style.color=st.color;el.style.background=st.color+'18';el.style.border='1px solid '+st.color+'33';}
+  }
+  var pct=score*10;
+  var bar=document.getElementById('secScoreBar');
+  var lbl=document.getElementById('secScoreLabel');
+  var chk=document.getElementById('secScoreChecks');
+  var rec=document.getElementById('secScoreRec');
+  if(bar){bar.style.width=pct+'%';bar.style.background=score<=3?'var(--red-primary)':score<=6?'#f59e0b':score<=8?'#88ff00':'var(--green-primary)';}
+  if(lbl){lbl.textContent=score+'/10';lbl.style.color=score<=3?'var(--red-primary)':score<=6?'#f59e0b':score<=8?'#88ff00':'var(--green-primary)';}
+  if(chk){var h='';for(var j=0;j<checks.length;j++){h+='<span style="color:'+(checks[j].ok?'var(--green-primary)':'var(--red-primary)')+';">'+(checks[j].ok?'\u2713':'\u2717')+' '+checks[j].label+'</span>';}chk.innerHTML=h;}
+  if(rec){
+    if(score<=3)rec.textContent='CRITICAL \u2014 Your funds are at risk. Complete the steps above.';
+    else if(score<=6)rec.textContent='MODERATE \u2014 Some protections missing. Review the items marked with \u2717.';
+    else if(score<=8)rec.textContent='GOOD \u2014 Well protected. Consider PSBT or multisig for large amounts.';
+    else rec.textContent='EXCELLENT \u2014 Maximum security. All protections active.';
+    rec.style.color=score<=3?'var(--red-primary)':score<=6?'#f59e0b':score<=8?'#88ff00':'var(--green-primary)';
+  }
+}
+
+// Build on load, refresh when view shown
+var origShowView=window.showView;
+window.showView=function(name){
+  origShowView(name);
+  if(name==='secguide'){
+    if(!document.getElementById('sg-body-0'))buildSecGuide();
+    else updateSecScore();
+  }
+};
+// Also build if DOM ready and accordion empty
+if(document.readyState==='complete'||document.readyState==='interactive'){
+  setTimeout(buildSecGuide,500);
+}else{
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(buildSecGuide,500);});
+}
+})();
 </script>
 <script src="sost-search.js"></script>
 <link rel="stylesheet" href="css/crt-effects.css">
