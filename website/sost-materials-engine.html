@@ -923,157 +923,199 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
   </div>
 </section>
 
-<!-- AUTONOMOUS DISCOVERY ENGINE -->
-<section class="section" id="autonomous-discovery" style="border-bottom:1px solid var(--border-dim)">
-  <div class="container">
-    <div class="section-header fade-in">
-      <div class="section-id">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
-      <h2 class="section-title">Autonomous Materials <span class="accent">Discovery Engine</span></h2>
-    </div>
+<!-- ============================================================ -->
+<!-- AUTONOMOUS DISCOVERY CONTROL CONSOLE — CRT GREEN RETRO UI -->
+<!-- ============================================================ -->
+<section id="autonomous-discovery" style="padding:48px 0;border-bottom:1px solid #0a2a0a;background:linear-gradient(180deg,#000800 0%,#000400 100%);position:relative;overflow:hidden">
+  <!-- CRT scanlines overlay -->
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px);pointer-events:none;z-index:2"></div>
+  <!-- Grid overlay -->
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(0,255,65,.03) 40px,rgba(0,255,65,.03) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(0,255,65,.03) 40px,rgba(0,255,65,.03) 41px);pointer-events:none;z-index:1"></div>
 
-    <p class="fade-in delay-1" style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">
-      The autonomous discovery engine generates, evaluates, and ranks novel material candidates without human intervention. It uses structure lifting, direct GNN inference (CGCNN for formation energy, ALIGNN-Lite for band gap), and a multi-tier validation queue to separate promising discoveries from noise.
-    </p>
+  <div class="container" style="position:relative;z-index:3">
 
-    <!-- ENGINE STATUS -->
-    <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-name">Engine Status &mdash; Phase V.C</span>
-        </div>
-        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">OPERATIONAL</span>
+    <!-- CONSOLE HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:10px;color:#006600;letter-spacing:3px;margin-bottom:4px">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
+        <div style="font-family:var(--font-display);font-size:clamp(22px,3vw,32px);font-weight:700;color:#00ff41;text-shadow:0 0 20px rgba(0,255,65,.3);letter-spacing:1px">DISCOVERY CONTROL CONSOLE</div>
       </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><td class="key">Direct FE Inference</td><td class="val"><strong style="color:var(--green-primary)">65.5%</strong> of candidates get real CGCNN formation energy prediction</td></tr>
-          <tr><td class="key">Direct BG Inference</td><td class="val"><strong style="color:var(--green-primary)">43.8%</strong> of candidates get real ALIGNN-Lite band gap prediction</td></tr>
-          <tr><td class="key">Novel Direct GNN</td><td class="val"><strong style="color:var(--cyan-primary)">21.7%</strong> of candidates are truly new with real GNN evidence</td></tr>
-          <tr><td class="key">Proxy Dependency</td><td class="val"><strong>34.5%</strong> &mdash; down from 60% in Phase V.B (nearly halved)</td></tr>
-          <tr><td class="key">New in Top 10</td><td class="val"><strong style="color:var(--cyan-primary)">22.6%</strong> of top-10 candidates are genuinely new (7&times; improvement)</td></tr>
-          <tr><td class="key">Mean Top-10 Score</td><td class="val"><strong>0.616</strong> composite &middot; <strong>0.765</strong> plausibility</td></tr>
-          <tr><td class="key">Campaigns</td><td class="val"><strong>8 profiles</strong> &mdash; III-V, oxide, group IV, stable novel, valuable, strategic, battery, oxide-exploratory</td></tr>
-        </table>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00ff41;box-shadow:0 0 8px rgba(0,255,65,.6);animation:cPulse 2s ease infinite"></span>
+        <span style="font-size:11px;color:#00ff41;letter-spacing:2px;font-weight:600">ENGINE ONLINE</span>
       </div>
     </div>
+    <style>@keyframes cPulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
 
-    <!-- HOW IT WORKS -->
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">Discovery Pipeline</span>
-        </div>
-        <span class="spec-tag overlay">FLOW</span>
+    <!-- STATUS GAUGES (3 columns) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px">
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">DIRECT GNN RATE</div>
+        <div style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">54.1%</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:54%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
-      <div class="spec-body">
-        <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-secondary)">
-          <span style="color:var(--green-primary)">1.</span> <strong>Seed Selection</strong> &mdash; explore/exploit policy picks parent pair (e.g. GaAs + AlN)<br>
-          <span style="color:var(--green-primary)">2.</span> <strong>Candidate Generation</strong> &mdash; element substitution, cross-sub, doping, mixed-parent<br>
-          <span style="color:var(--green-primary)">3.</span> <strong>Chemical Filter</strong> &mdash; charge balance, element validity, stoichiometry, dedup<br>
-          <span style="color:var(--green-primary)">4.</span> <strong>Structure Lift</strong> &mdash; find prototype in corpus, substitute elements, build CIF<br>
-          <span style="color:var(--green-primary)">5.</span> <strong>Direct GNN</strong> &mdash; CGCNN forward pass on lifted structure &rarr; formation energy<br>
-          <span style="color:var(--green-primary)">6.</span> <strong>Band Gap</strong> &mdash; ALIGNN-Lite forward pass on same structure &rarr; band gap<br>
-          <span style="color:var(--green-primary)">7.</span> <strong>Multi-Objective Scoring</strong> &mdash; novelty + plausibility + value + stability + evidence<br>
-          <span style="color:var(--green-primary)">8.</span> <strong>Validation Queue</strong> &mdash; route to: reject / watchlist / review / candidate / priority
-        </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PROXY DEPENDENCY</div>
+        <div style="font-size:28px;font-weight:700;color:#fbbf24;text-shadow:0 0 10px rgba(251,191,36,.3)">45.9%</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:46%;height:100%;background:linear-gradient(90deg,#004400,#fbbf24);border-radius:2px"></div></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">MEAN TOP-10 SCORE</div>
+        <div style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">0.653</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:65%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CAMPAIGNS</div>
+        <div style="font-size:28px;font-weight:700;color:#00ff41">9</div>
+        <div style="font-size:10px;color:#006600;margin-top:4px">12 profiles available</div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CORPUS</div>
+        <div style="font-size:28px;font-weight:700;color:#00ff41">76,193</div>
+        <div style="font-size:10px;color:#006600;margin-top:4px">materials indexed</div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
+        <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PLAUSIBILITY</div>
+        <div style="font-size:28px;font-weight:700;color:#00ff41">0.767</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:77%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
+      </div>
+    </div>
+
+    <!-- PIPELINE FLOW -->
+    <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:12px">// DISCOVERY PIPELINE</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;font-family:monospace">
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">SEED</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">GENERATE</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">FILTER</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">LIFT</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #00ff41;font-weight:700">GNN</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">SCORE</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">VALIDATE</span>
+        <span style="color:#004400">&rarr;</span>
+        <span style="background:#002200;color:#fbbf24;padding:4px 10px;border-radius:3px;border:1px solid #665500;font-weight:700">HANDOFF</span>
+      </div>
+    </div>
+
+    <!-- CAMPAIGN RESULTS (cards) -->
+    <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:12px">// LATEST CAMPAIGN RESULTS <span style="color:#00ff41;font-size:9px;background:#002200;padding:2px 6px;border-radius:3px;margin-left:8px">VERIFIED SNAPSHOT</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:24px">
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
+        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Battery Relevant</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">20 candidates &middot; FE 50% &middot; Score <b style="color:#00ff41">0.821</b></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
+        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Valuable Unknowns</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">23 candidates &middot; FE 52% &middot; Score <b style="color:#00ff41">0.790</b></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
+        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Stable Novel Semi.</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">25 candidates &middot; FE 48% &middot; Score <b style="color:#00ff41">0.719</b></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
+        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Uncertainty Probe</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">24 candidates &middot; FE 96% &middot; Score <b style="color:#00ff41">0.710</b></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #006600">
+        <div style="font-size:13px;font-weight:700;color:#00cc00;margin-bottom:4px">Exploratory Oxides</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">15 candidates &middot; FE 100% &middot; Score <b style="color:#00cc00">0.692</b></div>
+      </div>
+      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #006600">
+        <div style="font-size:13px;font-weight:700;color:#00cc00;margin-bottom:4px">Group IV</div>
+        <div style="font-size:11px;color:#008800;line-height:1.8">6 candidates &middot; FE 83% &middot; Score <b style="color:#00cc00">0.603</b></div>
       </div>
     </div>
 
     <!-- VALIDATION QUEUE -->
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon red"></div>
-          <span class="spec-name">Validation Queue</span>
+    <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:14px">// VALIDATION QUEUE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:11px">
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#00ff41">&#9679;</div>
+          <div style="color:#00ff41;font-weight:600;margin:4px 0">PRIORITY</div>
+          <div style="color:#006600;font-size:10px">DFT handoff ready</div>
         </div>
-        <span class="spec-tag overlay">TIERS</span>
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#4ade80">&#9679;</div>
+          <div style="color:#4ade80;font-weight:600;margin:4px 0">CANDIDATE</div>
+          <div style="color:#006600;font-size:10px">Stronger ML pass</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#22d3ee">&#9679;</div>
+          <div style="color:#22d3ee;font-weight:600;margin:4px 0">REVIEW</div>
+          <div style="color:#006600;font-size:10px">Human inspection</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#fbbf24">&#9679;</div>
+          <div style="color:#fbbf24;font-weight:600;margin:4px 0">WATCHLIST</div>
+          <div style="color:#006600;font-size:10px">Keep monitoring</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#666">&#9679;</div>
+          <div style="color:#888;font-weight:600;margin:4px 0">REFERENCE</div>
+          <div style="color:#006600;font-size:10px">Known baseline</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+          <div style="font-size:20px;font-weight:700;color:#ff4444">&#9679;</div>
+          <div style="color:#ff4444;font-weight:600;margin:4px 0">REJECTED</div>
+          <div style="color:#006600;font-size:10px">No further action</div>
+        </div>
       </div>
-      <div class="spec-body">
-        <table class="code-table">
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#00ff41;margin-right:6px;vertical-align:middle"></span>Priority Validation</td><td class="val">High score + structure lift + direct GNN + novel &mdash; DFT handoff candidate</td></tr>
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4ade80;margin-right:6px;vertical-align:middle"></span>Validation Candidate</td><td class="val">Good score + plausible &mdash; ready for stronger ML pass or prototype refinement</td></tr>
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#67e8f9;margin-right:6px;vertical-align:middle"></span>Manual Review</td><td class="val">Borderline scores, needs human inspection &mdash; compare against corpus neighbors</td></tr>
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fbbf24;margin-right:6px;vertical-align:middle"></span>Watchlist</td><td class="val">Marginal but not worthless &mdash; keep monitoring, re-evaluate with new data</td></tr>
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#888;margin-right:6px;vertical-align:middle"></span>Known Reference</td><td class="val">Corpus material &mdash; useful as baseline comparison, not a discovery</td></tr>
-          <tr><td class="key"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ff4444;margin-right:6px;vertical-align:middle"></span>Rejected</td><td class="val">Low plausibility or low composite score &mdash; no further action</td></tr>
-        </table>
-      </div>
+    </div>
+
+    <!-- TOP CANDIDATES TABLE -->
+    <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px;overflow-x:auto">
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:14px">// TOP NOVEL CANDIDATES <span style="color:#fbbf24;font-size:9px;background:#1a1200;padding:2px 6px;border-radius:3px;margin-left:8px">THEORETICAL &mdash; NOT VALIDATED</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace">
+        <tr style="border-bottom:1px solid #0a3a0a">
+          <th style="text-align:left;padding:8px;color:#006600;font-weight:400;font-size:10px;letter-spacing:1px">FORMULA</th>
+          <th style="text-align:left;padding:8px;color:#006600;font-weight:400;font-size:10px">CAMPAIGN</th>
+          <th style="text-align:right;padding:8px;color:#006600;font-weight:400;font-size:10px">SCORE</th>
+          <th style="text-align:right;padding:8px;color:#006600;font-weight:400;font-size:10px">FE (eV)</th>
+          <th style="text-align:left;padding:8px;color:#006600;font-weight:400;font-size:10px">EVIDENCE</th>
+        </tr>
+        <tr style="border-bottom:1px solid #061a06"><td style="padding:8px;color:#00ff41;font-weight:700">OZn<sub>2</sub></td><td style="padding:8px;color:#008800">Oxide</td><td style="padding:8px;text-align:right;color:#00ff41;font-weight:600">0.898</td><td style="padding:8px;text-align:right;color:#00cc00">-0.294</td><td style="padding:8px"><span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span></td></tr>
+        <tr style="border-bottom:1px solid #061a06"><td style="padding:8px;color:#00ff41;font-weight:700">Ni<sub>2</sub>O</td><td style="padding:8px;color:#008800">Stable Novel</td><td style="padding:8px;text-align:right;color:#00ff41;font-weight:600">0.835</td><td style="padding:8px;text-align:right;color:#00cc00">0.200</td><td style="padding:8px"><span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span></td></tr>
+        <tr style="border-bottom:1px solid #061a06"><td style="padding:8px;color:#00ff41;font-weight:700">O<sub>2</sub>TiZn</td><td style="padding:8px;color:#008800">Oxide</td><td style="padding:8px;text-align:right;color:#00ff41;font-weight:600">0.786</td><td style="padding:8px;text-align:right;color:#00cc00">-0.810</td><td style="padding:8px"><span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span></td></tr>
+        <tr style="border-bottom:1px solid #061a06"><td style="padding:8px;color:#00ff41;font-weight:700">GaIn</td><td style="padding:8px;color:#008800">Stable Novel</td><td style="padding:8px;text-align:right;color:#00cc00;font-weight:600">0.700</td><td style="padding:8px;text-align:right;color:#00cc00">-0.290</td><td style="padding:8px"><span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span></td></tr>
+        <tr><td style="padding:8px;color:#00ff41;font-weight:700">AlGa</td><td style="padding:8px;color:#008800">III-V</td><td style="padding:8px;text-align:right;color:#00cc00;font-weight:600">0.680</td><td style="padding:8px;text-align:right;color:#00cc00">-0.379</td><td style="padding:8px"><span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span></td></tr>
+      </table>
     </div>
 
     <!-- EVIDENCE BADGES -->
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">Evidence Badges</span>
-        </div>
-        <span class="spec-tag overlay">LABELS</span>
-      </div>
-      <div class="spec-body">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3)">DIRECT GNN</span>
-          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3)">LIFTED STRUCTURE</span>
-          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)">PROXY ESTIMATE</span>
-          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(136,136,136,0.15);color:#888;border:1px solid rgba(136,136,136,0.3)">KNOWN MATERIAL</span>
-          <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,1,13,0.15);color:#fb010d;border:1px solid rgba(251,1,13,0.3)">NOT VALIDATED</span>
-        </div>
-        <p style="font-size:11px;color:var(--text-dim);line-height:1.7">
-          Every candidate is tagged with its evidence origin: <strong>direct_gnn_lifted</strong> (real CGCNN/ALIGNN prediction on lifted structure), <strong>known_exact</strong> (corpus match), <strong>proxy_only</strong> (neighbor-based estimate), or <strong>unavailable</strong>. This prevents mistaking proxy estimates for real predictions or known materials for discoveries.
-        </p>
-      </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+      <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(0,255,65,.1);color:#00ff41;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span>
+      <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(34,211,238,.1);color:#22d3ee;border:1px solid rgba(34,211,238,.3)">LIFTED STRUCTURE</span>
+      <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.3)">PROXY ESTIMATE</span>
+      <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(136,136,136,.1);color:#888;border:1px solid rgba(136,136,136,.3)">KNOWN MATERIAL</span>
+      <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(255,68,68,.1);color:#ff4444;border:1px solid rgba(255,68,68,.3)">NOT VALIDATED</span>
     </div>
 
-    <!-- TOP NOVEL CANDIDATES (V.C results) -->
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <span class="spec-name">Top Novel Candidates &mdash; Phase V.C</span>
-        </div>
-        <span class="spec-tag overlay" style="background:rgba(74,222,128,0.15);color:var(--green-primary);border-color:var(--green-primary)">RESULTS</span>
+    <!-- QUICK HELP -->
+    <details style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;margin-bottom:20px;cursor:pointer">
+      <summary style="font-size:11px;color:#00ff41;letter-spacing:1px;font-weight:600">&#9654; QUICK GUIDE &mdash; What does this engine do?</summary>
+      <div style="margin-top:12px;font-size:12px;color:#008800;line-height:2">
+        <b style="color:#00cc00">What it does:</b> Generates novel material candidates using element substitution, scores them with GNN models, and routes them through a validation queue.<br>
+        <b style="color:#00cc00">Direct GNN:</b> Real CGCNN/ALIGNN-Lite prediction on a lifted crystal structure. The strongest evidence this engine can produce.<br>
+        <b style="color:#00cc00">Proxy:</b> Neighbor-based estimate from similar corpus materials. Weaker — carries higher uncertainty.<br>
+        <b style="color:#00cc00">Watchlist:</b> Marginal candidate worth monitoring but not yet ready for validation.<br>
+        <b style="color:#00cc00">Priority Validation:</b> Strong enough for DFT handoff — the engine's best recommendation.<br>
+        <b style="color:#00cc00">&ldquo;Novel&rdquo;:</b> Not found in our 76,193-material corpus. May exist in databases we haven't ingested.<br>
+        <b style="color:#fbbf24">What it does NOT do:</b> No DFT, no phonon stability, no experimental validation. All candidates are theoretical.
       </div>
-      <div class="spec-body">
-        <table class="code-table" style="font-size:12px">
-          <tr><th>Formula</th><th>Campaign</th><th>Score</th><th>FE (eV/atom)</th><th>Evidence</th></tr>
-          <tr><td class="key">OZn<sub>2</sub></td><td>Oxide</td><td style="color:var(--green-primary)">0.898</td><td>-0.294</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
-          <tr><td class="key">Ni<sub>2</sub>O</td><td>Stable Novel</td><td style="color:var(--green-primary)">0.835</td><td>0.200</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
-          <tr><td class="key">O<sub>2</sub>TiZn</td><td>Oxide</td><td style="color:var(--green-primary)">0.786</td><td>-0.810</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
-          <tr><td class="key">GaIn</td><td>Stable Novel</td><td style="color:var(--green-primary)">0.700</td><td>-0.290</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
-          <tr><td class="key">AlGa</td><td>III-V</td><td style="color:var(--green-primary)">0.680</td><td>-0.379</td><td><span style="color:#4ade80">Direct GNN</span></td></tr>
-        </table>
-        <p style="font-size:11px;color:var(--text-dim);margin-top:12px;line-height:1.7">
-          These are genuinely new candidates (not in corpus) with real CGCNN formation energy predictions via structure lifting. All are <strong>theoretical</strong> &mdash; no DFT or experimental validation has been performed. &ldquo;Novel&rdquo; means novel relative to the 76,193-material corpus. Confirmation requires independent computational or experimental verification.
-        </p>
-      </div>
+    </details>
+
+    <!-- LIMITATIONS -->
+    <div style="background:#0a0200;border:1px solid #2a0a0a;border-left:3px solid #fb010d;border-radius:0 6px 6px 0;padding:14px 18px;font-size:11px;color:#886666;line-height:1.8">
+      <strong style="color:#cc4444">Honest limitations:</strong> All candidates are <strong>theoretical</strong>. No DFT or experimental validation performed. Structure lift &ne; correct structure. GNN prediction &ne; confirmation. Novelty relative to 76,193-material corpus only. Proxy estimates (~46%) carry higher uncertainty.
     </div>
 
-    <!-- V.B vs V.C COMPARISON -->
-    <div class="spec-block fade-in delay-2">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <span class="spec-name">Phase V.B &rarr; V.C Improvement</span>
-        </div>
-        <span class="spec-tag overlay">METRICS</span>
-      </div>
-      <div class="spec-body">
-        <table class="code-table" style="font-size:12px">
-          <tr><th>Metric</th><th>V.B</th><th>V.C</th><th>Change</th></tr>
-          <tr><td class="key">Direct FE inference</td><td>39.8%</td><td style="color:var(--green-primary)">65.5%</td><td style="color:var(--green-primary)">+25.7pp</td></tr>
-          <tr><td class="key">Direct BG inference</td><td>36.6%</td><td style="color:var(--green-primary)">43.8%</td><td style="color:var(--green-primary)">+7.2pp</td></tr>
-          <tr><td class="key">Novel with direct GNN</td><td>3.2%</td><td style="color:var(--green-primary)">21.7%</td><td style="color:var(--green-primary)">+18.5pp (7&times;)</td></tr>
-          <tr><td class="key">Proxy dependency</td><td>60.2%</td><td style="color:var(--green-primary)">34.5%</td><td style="color:var(--green-primary)">&minus;25.7pp</td></tr>
-          <tr><td class="key">New in top 10</td><td>3.3%</td><td style="color:var(--green-primary)">22.6%</td><td style="color:var(--green-primary)">+19.3pp (7&times;)</td></tr>
-          <tr><td class="key">Mean top-10 score</td><td>0.536</td><td style="color:var(--green-primary)">0.616</td><td style="color:var(--green-primary)">+0.080</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- HONEST LIMITATIONS -->
-    <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid var(--red-primary);border-radius:0 6px 6px 0;padding:16px 20px;margin-top:20px;font-size:11px;color:var(--text-secondary);line-height:1.8" class="fade-in delay-2">
-      <strong style="color:var(--text-primary)">Honest limitations:</strong> All candidates are <strong>theoretical</strong>. No DFT, phonon, or experimental validation has been performed. Structure lift does not guarantee correct crystal structure. GNN prediction does not equal experimental confirmation. &ldquo;Novelty&rdquo; is relative to the 76,193-material corpus &mdash; a candidate may exist in databases we have not ingested. Proxy-based estimates (34.5% of candidates) carry higher uncertainty than direct GNN predictions.
-    </div>
   </div>
 </section>
 
