@@ -1054,3 +1054,22 @@ when the satellite baseline is moderate — they add less where spectral/SAR alr
 
 **Multi-zone verdict: PRODUCTION_WORTHY (4/6)**
 Cautious backfill to similar arid zones recommended. Third-zone validation needed.
+
+### Experiment 2: EMIT — BLOCKED BY AUTH
+
+EMIT (285 bands, 60m, ISS) pipeline built but Earthdata Login not resolved.
+When auth is resolved: alteration-driven multi-proxy fusion at Chuquicamata.
+EMIT detects surface alteration minerals, NOT subsurface ore directly.
+
+### Subsurface-Proxy V3: ML Residual — NEGATIVE
+
+Predicted thermal_range_ratio from surface covariates (R² = 0.517), computed residual.
+Residual does NOT differ between deposits and geology-matched background (p = 0.138, d = -0.250).
+Does not improve deposit prediction AUC.
+
+**Interpretation:** The thermal signal detected in Experiment 1 is substantially
+explained by surface processes (elevation + NDVI account for 52% of thermal variance).
+The "unexplained" component does not concentrate geological signal at Kalgoorlie.
+
+This does NOT invalidate thermal proxies — Experiment 1 signal is real and replicable.
+It means the residual decomposition approach does not extract additional independent value.

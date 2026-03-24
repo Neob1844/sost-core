@@ -3068,4 +3068,7 @@ F. GEASPIRIT MINERAL INTELLIGENCE MODULE
   * Full cross-site replication at Chuquicamata: 4 features consistent
   * Multi-zone verdict: PRODUCTION_WORTHY (4/6)
   * Thermal most useful when satellite baseline is moderate
+- EMIT hyperspectral: pipeline ready, blocked by Earthdata auth
+- V3 ML residual experiment: NEGATIVE (honest result, documented)
+- 10 V3 ideas evaluated, 3 VIABLE, next: spatial gradient geology proxies
 - EXPERIMENTAL: no production claims, research initiative only

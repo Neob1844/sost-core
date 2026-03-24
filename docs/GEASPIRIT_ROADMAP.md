@@ -324,4 +324,23 @@ Training on pure types sharpens the model. Mixing types confuses it.
 - Direct GNN inference working (CGCNN forward pass)
 - Thermal long-term proxies: validated at Kalgoorlie + Chuquicamata (PRODUCTION_WORTHY)
 - 4 stable thermal features across 2 independent arid zones
-- Blockers: EMIT (Earthdata auth 5min), GA geophysics (manual download 30min)
+- Blockers: EMIT (Earthdata auth not resolved), GA geophysics (manual download 30min)
+
+### Experiment 2: EMIT Alteration Fusion — BLOCKED BY AUTH
+
+EMIT hyperspectral (285 bands, 60m) could provide surface alteration mineral identification
+for alteration-driven multi-proxy inference. All pipeline scripts built and ready.
+Status: Earthdata Login authentication not resolved. No data accessed.
+
+### Subsurface-Proxy V3: ML Residual Experiment — NEGATIVE
+
+Trained GBR to predict thermal_range_ratio from 11 surface covariates (R² = 0.517).
+Residual does NOT differ significantly between deposits and background (p = 0.138, d = -0.250).
+Adding residual to baseline does not improve AUC (-0.016 delta).
+
+**Conclusion:** Thermal signal at deposits appears substantially explained by surface covariates.
+Residual approach does not add independent value at Kalgoorlie.
+This is an honest negative result that does not invalidate thermal proxies from Experiment 1.
+
+V3 evaluated 10 ideas: 3 VIABLE (spatial gradients, multiscale texture, ML residuals),
+4 SPECULATIVE, 3 INVIABLE. Next experiment: spatial gradient geology proxies.
