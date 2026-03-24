@@ -38,8 +38,11 @@ WATCHLIST_THRESHOLD = 0.32
 MIN_PLAUSIBILITY = 0.30  # raised from 0.25
 
 
-def score_candidate(formula, elements, method, profile, memory=None, neighbors=None, candidate_context=None):
+def score_candidate(formula, elements, method, profile, memory=None, neighbors=None, candidate_context=None, evidence_adjustments=None):
     """Score a candidate on multiple dimensions. Phase II: much stricter.
+
+    evidence_adjustments (Phase XI): optional dict from calibration_intelligence with:
+      family_trust_bonus, strategy_trust_bonus, noise_suppression_penalty, evidence_quality_label
 
     candidate_context (Phase V.B): optional dict with keys:
         is_known_material, has_direct_gnn_fe, has_direct_gnn_bg,
@@ -191,6 +194,21 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
             validation_readiness_bonus = 0.04
             composite = round(min(1.0, composite + validation_readiness_bonus), 4)
 
+    # Phase XI: Evidence-driven adjustments from calibration intelligence
+    family_trust_bonus = 0.0
+    strategy_trust_bonus = 0.0
+    noise_suppression = 0.0
+    evidence_quality = "no_evidence"
+
+    if evidence_adjustments:
+        family_trust_bonus = evidence_adjustments.get("family_trust_bonus", 0.0)
+        strategy_trust_bonus = evidence_adjustments.get("strategy_trust_bonus", 0.0)
+        noise_suppression = evidence_adjustments.get("noise_suppression_penalty", 0.0)
+        evidence_quality = evidence_adjustments.get("evidence_quality_label", "no_evidence")
+
+        composite = round(min(1.0, max(0.0,
+            composite + family_trust_bonus + strategy_trust_bonus - noise_suppression)), 4)
+
     return {
         **raw_scores,
         "plausibility": round(plausibility, 4),
@@ -213,6 +231,10 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
         "liftability_bonus": round(liftability_bonus, 4),
         "is_novel_direct_gnn": is_novel_direct_gnn,
         "prediction_origin": ctx_prediction_origin,
+        "family_trust_bonus": round(family_trust_bonus, 4),
+        "strategy_trust_bonus": round(strategy_trust_bonus, 4),
+        "noise_suppression": round(noise_suppression, 4),
+        "evidence_quality": evidence_quality,
     }
 
 

@@ -63,6 +63,14 @@ CAMPAIGN_PROFILES = {
         "min_novelty": 0.2,
         "prefer_validated": True,
     },
+    "evidence_guided_discovery": {
+        "description": "Prioritize novel candidates in historically reliable families/strategies",
+        "weights": {"novelty": 0.20, "exotic": 0.05, "stability": 0.30, "value": 0.25, "diversity": 0.20},
+        "explore_ratio": 0.3, "exploit_ratio": 0.5, "diversify_ratio": 0.2,
+        "min_stability": 0.3,
+        "min_novelty": 0.2,
+        "use_evidence_calibration": True,
+    },
     "validation_operations": {
         "description": "Generate best flow for validation efficiency + calibration learning",
         "weights": {"novelty": 0.15, "exotic": 0.05, "stability": 0.30, "value": 0.25, "diversity": 0.25},
