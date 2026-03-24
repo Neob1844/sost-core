@@ -1468,30 +1468,13 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  // Use last block's declared profile (most accurate)
-  var effProf;
-  if(_lastBlockCasertMode){
-    // From last accepted block — matches actual chain state
-    var profName=_lastBlockCasertMode;
-    for(var pi=0;pi<CASERT_PROFILES.length;pi++){
-      if(CASERT_PROFILES[pi].name===profName){effProf=CASERT_PROFILES[pi];break;}
-    }
-  }
-  if(!effProf&&_rpcCasertProfileIdx!==null){
-    var idx=Math.max(0,Math.min(16,_rpcCasertProfileIdx-(-4)));
-    effProf=CASERT_PROFILES[idx];
-  }
-  if(!effProf){
-    var lag=computeCurrentLag();
-    var ahead=(lag<0)?-lag:0;
-    var rawProf=getProfile(-ahead);
-    var dc=computeDecayLevel(getCasertLevel(lag),ahead,elapsed);
-    effProf=rawProf;
-    if(dc.active){var decH=Math.max(-3,rawProf.H-Math.floor((elapsed-dc.threshold)/1200));var dI=Math.max(0,Math.min(9,decH+3));effProf=CASERT_PROFILES[dI];}
-  }
+  // Use SAME logic as LATEST BLOCKS: computeBlockLag(height, time) → getProfile
+  var tipLag=computeBlockLag(H,_lastBlockTime);
+  var effProf=getProfile(tipLag);
+  var dc={active:false};
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
-  var profSrc=_lastBlockCasertMode?' <span style="color:#555;font-size:8px">(prev block)</span>':(_rpcCasertProfileIdx!==null?'':' <span style="color:#555;font-size:8px">(est)</span>');
+  var profSrc=' <span style="color:#555;font-size:8px">(lag='+tipLag+')</span>';
   if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+profSrc;
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
@@ -1504,7 +1487,7 @@ function updateMiningPanel(elapsed){
     sr.innerHTML='<span style="color:'+stabColor+'">'+stabEst+'</span>';
   }
   var di=document.getElementById('miningDecayInfo');
-  if(di){if(dc.active&&effProf.name!==rawProf.name){di.style.display='inline';di.textContent='(decayed from '+rawProf.name+' \u2192 '+effProf.name+')';}else{di.style.display='none';}}
+  if(di){di.style.display='none';}
   // 3B: Two E[nonce] — theoretical (pure) + adjusted (avg 72 blocks)
   var attPerSec=5.5;
   var probPerAttempt=Math.pow(2,-bqReal);
@@ -1643,6 +1626,7 @@ function updateMiningPanel(elapsed){
     }
     if(wrap){wrap._ppa=probPerAttempt;wrap._est=estNonce;wrap._elap=elapsed;}
   }
+  var ahead=(tipLag<0)?-tipLag:0;
   var threshold=Math.max(7200,ahead*600);
   var asInd=document.getElementById('asIndicator');
   var asCd=document.getElementById('asCountdown');
