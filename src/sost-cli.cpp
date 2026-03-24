@@ -36,6 +36,8 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
+#include "sost/addressbook.h"
+#include "sost/wallet_policy.h"
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/address.h"
@@ -67,6 +69,18 @@ static std::string g_node_host = "127.0.0.1";
 static int         g_node_port = 18232;
 static int64_t     g_fee_rate  = FEE_RATE_DEFAULT;
 static bool        g_yes_flag  = false;  // --yes skips confirmation prompts
+static bool        g_skip_warning = false;  // --skip-warning for cooldown
+static std::string g_sost_dir;     // ~/.sost directory
+static std::string g_addressbook_path;
+static std::string g_policy_path;
+
+static void init_sost_dir() {
+    const char* home = getenv("HOME");
+    if (!home) home = "/tmp";
+    g_sost_dir = std::string(home) + "/.sost";
+    g_addressbook_path = g_sost_dir + "/trusted_addresses.json";
+    g_policy_path = g_sost_dir + "/wallet_policy.json";
+}
 
 // Format stocks as SOST with 8 decimal places
 static std::string format_sost(int64_t stocks) {
@@ -237,6 +251,14 @@ static void print_usage() {
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
     printf("  info                   Wallet summary\n");
+    printf("\nAddress Book:\n");
+    printf("  addressbook add <addr> --label <name> --trust <level>\n");
+    printf("  addressbook list       List all trusted addresses\n");
+    printf("  addressbook remove <addr>  Remove address from book\n");
+    printf("  addressbook check <addr>   Check trust level\n");
+    printf("\nWallet Policy:\n");
+    printf("  policy show            Show current wallet policy\n");
+    printf("  policy set <key> <val> Set policy value\n");
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
     printf("  --rpc-user <user>      RPC Basic Auth username\n");
@@ -244,6 +266,7 @@ static void print_usage() {
     printf("  --node <host:port>     Node address (default: 127.0.0.1:18232)\n");
     printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
     printf("  --yes, -y              Skip confirmation prompts\n");
+    printf("  --skip-warning         Skip first-send warning for scripts\n");
     printf("\nFee calculation (v1.3 — automatic):\n");
     printf("  Fee = tx_size_bytes x fee_rate stocks/byte\n");
     printf("  Minimum: %s SOST (%lld stocks)\n",
@@ -255,6 +278,7 @@ static void print_usage() {
 }
 
 int main(int argc, char** argv) {
+    init_sost_dir();
     std::string wallet_path = DEFAULT_WALLET;
 
     // Parse global options
@@ -291,6 +315,9 @@ int main(int argc, char** argv) {
             arg_start += 2;
         } else if (flag == "--yes" || flag == "-y") {
             g_yes_flag = true;
+            arg_start += 1;
+        } else if (flag == "--skip-warning") {
+            g_skip_warning = true;
             arg_start += 1;
         } else if (flag == "--help" || flag == "-h") {
             print_usage();
@@ -688,15 +715,61 @@ int main(int argc, char** argv) {
         sost::Hash256 txid;
         tx.ComputeTxId(txid);
 
+        // --- Address book + policy checks ---
+        sost::AddressBook ab;
+        ab.Load(g_addressbook_path);
+        sost::WalletPolicy pol;
+        pol.Load(g_policy_path);
+
+        auto trust = ab.Check(to_addr);
+        bool addr_in_book = (trust != sost::TrustLevel::UNKNOWN);
+
+        // BLOCKED check (hard stop)
+        if (trust == sost::TrustLevel::BLOCKED) {
+            fprintf(stderr, "\nERROR: Address %s is BLOCKED in your address book.\n", to_addr.c_str());
+            fprintf(stderr, "Send cancelled.\n");
+            return 1;
+        }
+
+        // Policy check (hard stop)
+        std::string policy_err = pol.CheckSend(amount, addr_in_book);
+        if (!policy_err.empty()) {
+            fprintf(stderr, "\nPOLICY BLOCK: %s\n", policy_err.c_str());
+            fprintf(stderr, "Send cancelled. Use 'sost-cli policy show' to see current limits.\n");
+            return 1;
+        }
+
         printf("\n========== TRANSACTION SUMMARY ==========\n");
         printf("  TXID:   %s\n", to_hex(txid.data(), 32).c_str());
         printf("  To:     %s\n", to_addr.c_str());
+        if (trust == sost::TrustLevel::TRUSTED) {
+            auto* entry = ab.Get(to_addr);
+            printf("  Dest:   %s (trusted)\n", entry ? entry->label.c_str() : "");
+        } else if (trust == sost::TrustLevel::KNOWN) {
+            auto* entry = ab.Get(to_addr);
+            printf("  Dest:   %s (known)\n", entry ? entry->label.c_str() : "");
+        } else {
+            printf("  Dest:   UNKNOWN (not in address book)\n");
+        }
         printf("  Amount: %s SOST\n", format_sost(amount).c_str());
         printf("  Fee:    %s SOST (%lld stocks = %zu bytes x %lld rate)\n",
                format_sost(real_fee).c_str(), (long long)real_fee,
                raw.size(), (long long)g_fee_rate);
         printf("  Size:   %zu bytes\n", raw.size());
         printf("=========================================\n");
+
+        // First-time send warning (new-address cooldown)
+        if (!addr_in_book && !g_skip_warning && !g_yes_flag) {
+            printf("\n  WARNING: Address %s is NOT in your trusted address book.\n", to_addr.c_str());
+            printf("  This is the first time you send to this address.\n");
+            if (amount > 10 * STOCKS_PER_SOST) {
+                printf("\n  HIGH-VALUE FIRST SEND: %s SOST to unknown address.\n",
+                       format_sost(amount).c_str());
+                printf("  Consider adding this address to your trusted address book first:\n");
+                printf("    ./sost-cli addressbook add %s --label \"name\" --trust known\n\n",
+                       to_addr.c_str());
+            }
+        }
 
         // Pre-send confirmation (safety check)
         if (!g_yes_flag) {
@@ -709,6 +782,9 @@ int main(int argc, char** argv) {
                 return 0;
             }
         }
+
+        // Record send in policy daily tracker
+        pol.RecordSend(amount);
 
         // Broadcast via JSON-RPC: sendrawtransaction
         printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);
@@ -1085,6 +1161,140 @@ int main(int argc, char** argv) {
         printf("  Balance:   %s SOST\n", format_sost(w.balance()).c_str());
         if (w.num_keys() > 0) {
             printf("  Default:   %s\n", w.default_address().c_str());
+        }
+        return 0;
+    }
+
+    // =====================================================================
+    // addressbook add|list|remove|check
+    // =====================================================================
+    if (cmd == "addressbook") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli addressbook <add|list|remove|check> ...\n");
+            return 1;
+        }
+        std::string subcmd = argv[arg_start + 1];
+
+        // Ensure ~/.sost directory exists
+        std::string mkdir_cmd = "mkdir -p " + g_sost_dir;
+        system(mkdir_cmd.c_str());
+
+        sost::AddressBook ab;
+        ab.Load(g_addressbook_path);
+
+        if (subcmd == "add") {
+            if (argc < arg_start + 3) {
+                fprintf(stderr, "Usage: sost-cli addressbook add <address> [--label <name>] [--trust <level>] [--notes <text>]\n");
+                return 1;
+            }
+            std::string addr = argv[arg_start + 2];
+            std::string label, notes;
+            sost::TrustLevel trust = sost::TrustLevel::KNOWN;
+
+            for (int i = arg_start + 3; i < argc; ++i) {
+                if (!strcmp(argv[i], "--label") && i + 1 < argc) label = argv[++i];
+                else if (!strcmp(argv[i], "--trust") && i + 1 < argc) trust = sost::TrustLevelFromStr(argv[++i]);
+                else if (!strcmp(argv[i], "--notes") && i + 1 < argc) notes = argv[++i];
+            }
+
+            ab.Add(addr, label, trust, 0, notes);
+            std::string err;
+            if (!ab.Save(g_addressbook_path, &err)) {
+                fprintf(stderr, "Error saving: %s\n", err.c_str());
+                return 1;
+            }
+            printf("Added: %s [%s] trust=%s\n", addr.c_str(), label.c_str(),
+                   sost::TrustLevelStr(trust));
+        } else if (subcmd == "list") {
+            if (ab.Size() == 0) {
+                printf("Address book is empty.\n");
+                return 0;
+            }
+            printf("%-47s  %-20s  %-8s  %s\n", "ADDRESS", "LABEL", "TRUST", "NOTES");
+            printf("%-47s  %-20s  %-8s  %s\n", "-------", "-----", "-----", "-----");
+            for (const auto& e : ab.Entries()) {
+                printf("%-47s  %-20s  %-8s  %s\n",
+                       e.address.c_str(), e.label.c_str(),
+                       sost::TrustLevelStr(e.trust),
+                       e.notes.c_str());
+            }
+            printf("\nTotal: %zu entries\n", ab.Size());
+        } else if (subcmd == "remove") {
+            if (argc < arg_start + 3) {
+                fprintf(stderr, "Usage: sost-cli addressbook remove <address>\n");
+                return 1;
+            }
+            std::string addr = argv[arg_start + 2];
+            if (!ab.Remove(addr)) {
+                fprintf(stderr, "Address not found: %s\n", addr.c_str());
+                return 1;
+            }
+            std::string err;
+            ab.Save(g_addressbook_path, &err);
+            printf("Removed: %s\n", addr.c_str());
+        } else if (subcmd == "check") {
+            if (argc < arg_start + 3) {
+                fprintf(stderr, "Usage: sost-cli addressbook check <address>\n");
+                return 1;
+            }
+            std::string addr = argv[arg_start + 2];
+            auto trust = ab.Check(addr);
+            if (trust == sost::TrustLevel::UNKNOWN) {
+                printf("%s: UNKNOWN (not in address book)\n", addr.c_str());
+            } else {
+                auto* e = ab.Get(addr);
+                printf("%s: %s", addr.c_str(), sost::TrustLevelStr(trust));
+                if (e && !e->label.empty()) printf(" [%s]", e->label.c_str());
+                printf("\n");
+            }
+        } else {
+            fprintf(stderr, "Unknown addressbook subcommand: %s\n", subcmd.c_str());
+            return 1;
+        }
+        return 0;
+    }
+
+    // =====================================================================
+    // policy show|set
+    // =====================================================================
+    if (cmd == "policy") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli policy <show|set> ...\n");
+            return 1;
+        }
+        std::string subcmd = argv[arg_start + 1];
+
+        std::string mkdir_cmd = "mkdir -p " + g_sost_dir;
+        system(mkdir_cmd.c_str());
+
+        sost::WalletPolicy pol;
+        pol.Load(g_policy_path);
+
+        if (subcmd == "show") {
+            pol.Print();
+        } else if (subcmd == "set") {
+            if (argc < arg_start + 4) {
+                fprintf(stderr, "Usage: sost-cli policy set <key> <value>\n");
+                fprintf(stderr, "Keys: daily_limit, per_tx_limit, vault_mode, ");
+                fprintf(stderr, "require_addressbook_for_large, large_tx_threshold\n");
+                return 1;
+            }
+            std::string key = argv[arg_start + 2];
+            std::string val = argv[arg_start + 3];
+            std::string err;
+            if (!pol.Set(key, val, &err)) {
+                fprintf(stderr, "Error: %s\n", err.c_str());
+                return 1;
+            }
+            if (!pol.Save(g_policy_path, &err)) {
+                fprintf(stderr, "Error saving: %s\n", err.c_str());
+                return 1;
+            }
+            printf("Policy updated: %s = %s\n", key.c_str(), val.c_str());
+            pol.Print();
+        } else {
+            fprintf(stderr, "Unknown policy subcommand: %s\n", subcmd.c_str());
+            return 1;
         }
         return 0;
     }

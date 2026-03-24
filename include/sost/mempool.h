@@ -21,6 +21,11 @@ namespace sost {
 inline constexpr size_t DEFAULT_MEMPOOL_MAX_ENTRIES = 5000;
 inline constexpr size_t MAX_BLOCK_TX_COUNT          = 4096;
 
+// RBF policy: replacement requires this much additional fee per byte
+inline constexpr int64_t RBF_MIN_FEE_BUMP_PER_BYTE  = 1;
+// RBF policy: max number of original transactions that can be replaced
+inline constexpr size_t  RBF_MAX_REPLACEMENTS        = 100;
+
 // ---------------------------------------------------------------------------
 // MempoolEntry
 // ---------------------------------------------------------------------------
@@ -47,6 +52,8 @@ enum class MempoolAcceptCode : int {
     DOUBLE_SPEND    = 4,
     POOL_FULL       = 5,
     COINBASE_REJECT = 6,
+    RBF_REPLACED    = 7,   // accepted via RBF replacement
+    RBF_REJECTED    = 8,   // replacement attempt failed
     INTERNAL_ERROR  = 99,
 };
 
@@ -75,6 +82,10 @@ class Mempool {
 public:
     explicit Mempool(size_t max_entries = DEFAULT_MEMPOOL_MAX_ENTRIES);
 
+    // Enable/disable full RBF (default: enabled)
+    void SetRBFEnabled(bool enabled) { rbf_enabled_ = enabled; }
+    bool RBFEnabled() const { return rbf_enabled_; }
+
     MempoolAcceptResult AcceptToMempool(
         const Transaction& tx,
         const UtxoSet& utxos,
@@ -92,7 +103,13 @@ public:
         size_t  total_size{0};
     };
 
+    // Standard block template (individual fee-rate ordering)
     BlockTemplate BuildBlockTemplate(
+        size_t max_txs = MAX_BLOCK_TX_COUNT,
+        size_t max_block_size = 1000000) const;
+
+    // CPFP-aware block template (package fee-rate ordering)
+    BlockTemplate BuildBlockTemplateCPFP(
         size_t max_txs = MAX_BLOCK_TX_COUNT,
         size_t max_block_size = 1000000) const;
 
@@ -109,6 +126,7 @@ public:
 
 private:
     size_t max_entries_;
+    bool rbf_enabled_{true};  // full RBF enabled by default
 
     // txid → entry
     std::map<Hash256, MempoolEntry> entries_;

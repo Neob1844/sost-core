@@ -445,15 +445,17 @@
           <div class="spec-icon amber"></div>
           <span class="spec-label">Planned Wallet Safety Features</span>
         </div>
-        <span class="spec-tag">DESIGNED</span>
+        <span class="spec-tag">IMPLEMENTED / PLANNED</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Feature</th><th>Status</th></tr>
-          <tr><td class="label">Trusted address book</td><td class="value">Designed — local address whitelisting with trust levels</td></tr>
-          <tr><td class="label">New-address cooldown</td><td class="value">Designed — warning + optional delay for first send to new address</td></tr>
-          <tr><td class="label">Pre-send summary</td><td class="value">Designed — human-readable confirmation before signing</td></tr>
-          <tr><td class="label">Treasury safety profile</td><td class="value">Designed — daily limits, elevated auth for vault wallets</td></tr>
+          <tr><td class="label">Trusted address book</td><td class="green">Complete — local address whitelisting with 4 trust levels (trusted/known/new/blocked)</td></tr>
+          <tr><td class="label">New-address cooldown</td><td class="green">Complete — first-send warning + high-value alert for unknown addresses</td></tr>
+          <tr><td class="label">Pre-send summary</td><td class="green">Complete — full transaction summary with confirmation prompt before broadcast</td></tr>
+          <tr><td class="label">Treasury safety profile</td><td class="green">Complete — daily limits, per-TX limits, vault mode, policy file (~/.sost/wallet_policy.json)</td></tr>
+          <tr><td class="label">RBF (Replace-by-Fee)</td><td class="green">Complete — full RBF mempool policy, higher fee-rate replacement, no consensus change</td></tr>
+          <tr><td class="label">CPFP (Child-Pays-for-Parent)</td><td class="green">Complete — package fee-rate aware block template builder, miner policy only</td></tr>
           <tr><td class="label">PSBT / offline signing</td><td class="value">Future — enables hardware wallets and air-gapped signing</td></tr>
           <tr><td class="label">HD wallet (BIP32)</td><td class="value">Future — single seed backup, automatic change addresses</td></tr>
         </table>
@@ -493,6 +495,12 @@
           <tr><td class="label">P2P DoS protection (ban scoring, peer limits)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Checkpoints + reorg limit (500 blocks / ~3.5 days)</td><td class="green">Complete</td></tr>
           <tr><td class="label">P2P encryption</td><td class="green">Active (X25519 + ChaCha20-Poly1305, default on)</td></tr>
+          <tr><td class="label">Trusted address book (4 trust levels)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">New-address cooldown warning</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Pre-send confirmation summary</td><td class="green">Complete</td></tr>
+          <tr><td class="label">Treasury safety profile (vault mode)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">RBF (Replace-by-Fee) mempool policy</td><td class="green">Complete</td></tr>
+          <tr><td class="label">CPFP (Child-Pays-for-Parent) miner policy</td><td class="green">Complete</td></tr>
         </table>
       </div>
     </div>
