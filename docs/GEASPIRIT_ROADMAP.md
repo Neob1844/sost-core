@@ -254,8 +254,54 @@ Training on pure types sharpens the model. Mixing types confuses it.
 - 3-zone LOZO: 0.510 (adding zones makes it worse)
 - **Conclusion: satellite features are geography-dependent, not geology-transferable**
 
-### System Status (Phase 5G)
+### Experiment 1: 20-Year Thermal Long-Term Proxies (V2 — Hardened)
+
+**Hypothesis:** Mineralized zones have different thermal inertia — 20-year Landsat thermal climatology should show measurable differences between deposit and background pixels.
+
+**V2 hardening applied:**
+- Bare-ground NDVI mask (exclude vegetated pixels)
+- Topographic normalization (elevation regression for thermal_residual_std)
+- Geology-matched background (terrain + spectral proxy matching, >5km exclusion)
+- Cross-site replication (Chuquicamata, Chile)
+- Spatial block CV (not random pixel split)
+
+**Kalgoorlie results (geology-matched background):**
+
+| Feature | Cohen's d | p-value | Signal |
+|---------|-----------|---------|--------|
+| amplitude | -0.680 | 2.2e-15 | VERY STRONG |
+| std_annual | -0.617 | 1.0e-12 | VERY STRONG |
+| thermal_range_ratio | -0.565 | 1.3e-07 | VERY STRONG |
+| mean_annual | -0.508 | 4.9e-08 | STRONG |
+| summer_mean | -0.448 | 1.5e-06 | MODERATE |
+| summer_winter_diff | -0.423 | 1.6e-05 | MODERATE |
+
+**Model improvement (spatial block CV):**
+
+| Model | AUC | Delta |
+|-------|-----|-------|
+| Baseline (satellite only) | 0.797 | — |
+| Baseline + std_annual | 0.825 | +0.013 |
+| Baseline + ratio + std | 0.823 | +0.011 |
+| Baseline + robust v2 | 0.808 | +0.011 |
+
+**Chuquicamata replication (proxy):**
+- LST band 17: d = -0.727, p = 0.010 — same direction as Kalgoorlie
+- LST band 18: d = -0.683, p = 0.017 — same direction
+- Full 20-year replication pending GEE export
+
+**Assessment verdict: 10/12 — MULTI_ZONE_READY**
+- Statistical robustness: 3/3 (survives geology-matched control)
+- Model improvement: 2/3 (meaningful AUC delta)
+- Feature importance: 2/2 (thermal_range_ratio in top 5)
+- Cross-site: 2/3 (proxy replication consistent)
+- Physical plausibility: 1/1 (lower ratio at deposits = defensible)
+
+**Correct framing:** This is a thermal long-term proxy family, not direct subsurface detection. The signal is real, moderate, and physically defensible. It helps the model but does not dominate satellite spectral indices.
+
+### System Status (Phase 5G + Thermal V2)
 - 10 AOIs: 5 supervised (AUC 0.72-0.86) + 3 heuristic + 1 demo + 1 failed
 - 162 targets with exact coordinates
 - Direct GNN inference working (CGCNN forward pass)
+- Thermal long-term proxies: validated at Kalgoorlie, proxy-replicated at Chuquicamata
 - Blockers: EMIT (Earthdata auth 5min), GA geophysics (manual download 30min)

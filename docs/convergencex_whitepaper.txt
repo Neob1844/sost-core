@@ -3057,3 +3057,13 @@ E. AUTONOMOUS MATERIALS DISCOVERY ENGINE
 - Phase V.C: 65.5% direct FE rate, 21.7% novel direct GNN, 34.5% proxy dependency
 - Dual-output explainer (technical + plain language)
 - 1,073 tests passing across 47 files
+
+F. GEASPIRIT MINERAL INTELLIGENCE MODULE
+- Research-grade mineral prospectivity mapping, separate from consensus
+- 10 AOIs globally, 162 targets, zone-specific models (AUC 0.72-0.86)
+- Long-term thermal proxy pipeline: 20-year Landsat climatology
+  * Moderate but real improvement at Kalgoorlie (+0.013 AUC)
+  * Signal robust against geology-matched background
+  * This is a thermal proxy family, NOT direct subsurface detection
+  * Full cross-site replication at Chuquicamata pending
+- EXPERIMENTAL: no production claims, research initiative only

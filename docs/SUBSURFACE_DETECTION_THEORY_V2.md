@@ -272,7 +272,7 @@ Already AUC 0.86 at Chuquicamata with current approach. Incremental improvements
 
 ---
 
-## What Nobody Has Tried (Most Promising Combinations)
+## Underexplored Combinations (Most Promising Research Directions)
 
 ### 1. Multi-Decadal Temporal + Spectral + Structural Fusion
 **Idea:** Combine 20-year Landsat thermal trends + current Sentinel-2 spectral + DEM geomorphology + InSAR seasonal deformation into a single per-pixel feature vector. Each source captures a different physical dimension of the subsurface.
