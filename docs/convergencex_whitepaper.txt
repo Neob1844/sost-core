@@ -2979,11 +2979,55 @@ A. DYNAMIC FEE MARKET (Mempool Policy, No Consensus Change)
 - No RBF/CPFP at protocol level — future mempool policy extension
 
 B. NON-CONSENSUS SECURITY ARCHITECTURE
-- Build hardening: -fstack-protector-strong, -fPIE, -Wl,-z,relro,-z,now, -D_FORTIFY_SOURCE=2
-- Wallet encryption: AES-256-GCM + scrypt (N=32768, r=8, p=1)
-- Key wiping: OPENSSL_cleanse after every use
+- Build hardening: 6 flags (-fstack-protector-strong, -fstack-clash-protection, -fPIE, -pie, -Wl,-z,relro,-z,now, -D_FORTIFY_SOURCE=2)
+- Wallet encryption: AES-256-GCM + scrypt (N=32768, r=8, p=1), OPENSSL_cleanse after every use
 - cASERT profile: exposed via RPC getinfo (casert_profile, casert_lag)
-- All security features live above consensus layer — no fork required
+
+B.1 HD WALLET (BIP39)
+- 12-word seed phrase backup using standard BIP39 English wordlist (2048 words)
+- Entropy: 128 bits via OpenSSL RAND_bytes (CSPRNG)
+- Mnemonic: entropy + SHA256 checksum → 12 words
+- Seed derivation: PBKDF2-HMAC-SHA512, 2048 iterations, salt="mnemonic"
+- Seed used directly as secp256k1 private key (compatible with web wallet)
+- CLI commands: sost-cli hd create, sost-cli hd restore
+- Cross-platform: same seed phrase produces same address in web wallet and CLI
+- 22 tests passing (BIP39 test vectors, roundtrip, address format)
+
+B.2 SOST-PSBT (OFFLINE SIGNING)
+- SOST-specific offline signing format — NOT BIP174
+- Transport: JSON + base64 with "sost-psbt\xff" magic prefix
+- Supports P2PKH inputs and REDEEMSCRIPT_HASH_MULTISIG inputs
+- Multiple partial signatures per input (for M-of-N multisig)
+- Flow: psbt_create → psbt_sign (offline) → psbt_combine → psbt_finalize → broadcast
+- Private keys NEVER appear in serialized PSBT
+- Balance validation: sum(inputs) = sum(outputs) + fee + change
+- Overflow-safe: __int128 arithmetic for amount checking
+- 24 tests passing (create, sign, combine, finalize, encode/decode, security)
+
+B.3 TRANSACTION SAFETY LAYER
+- Trusted address book: 4 trust levels (trusted, known, new, blocked)
+  - blocked addresses hard-stop sends
+  - trusted addresses show label in confirmation
+  - JSON persistence at ~/.sost/trusted_addresses.json
+- New-address cooldown: warning on first send to unknown address
+  - High-value alert for >10 SOST to unknown
+  - --skip-warning flag for automation
+- Treasury safety profile: configurable via ~/.sost/wallet_policy.json
+  - daily_send_limit, per_tx_limit, vault_mode
+  - vault_mode: all sends require destination in address book
+  - require_addressbook_for_large: large TXs need trusted destination
+- Pre-send confirmation: full TX summary with yes/no prompt, --yes/-y to skip
+- All above consensus — no fork required
+
+B.4 DYNAMIC FEE MARKET
+- RBF (Replace-by-Fee): full RBF mempool policy, enabled by default
+  - Replacement requires strictly higher fee-rate (integer arithmetic)
+  - Must pay old_total_fee + tx_size × 1 stock/byte minimum
+  - SetRBFEnabled(false) to disable per-node
+- CPFP (Child-Pays-for-Parent): package fee-rate aware block template builder
+  - BuildBlockTemplateCPFP: parent-child dependency graph
+  - Topological ordering: parents always before children in block
+- Neither changes consensus — relay/mempool/miner policy only
 
 C. GEASPIRIT MINERAL INTELLIGENCE PLATFORM
 - 10 AOIs across 5 continents, zone-specific ML models
@@ -2992,9 +3036,24 @@ C. GEASPIRIT MINERAL INTELLIGENCE PLATFORM
 - 162 mineral targets with exact coordinates exported
 - Key finding: deposit type > commodity for ML training
 
-D. AUTONOMOUS MATERIALS DISCOVERY ENGINE
+D. NATIVE MULTISIG (CONSENSUS CHANGE — PRE-LAUNCH)
+- Minimal script engine: OP_0, OP_1-16, OP_DUP, OP_HASH160, OP_EQUAL,
+  OP_EQUALVERIFY, OP_CHECKSIG, OP_CHECKMULTISIG, OP_PUSHDATA1/2
+- RedeemScript-hash outputs (P2SH-like): OP_HASH160 <hash> OP_EQUAL
+- M-of-N CHECKMULTISIG: ordered signature matching, no backtracking
+- sost3 address type: "sost3" + hex(HASH160(redeemScript)) = 45 chars
+- Activation: MULTISIG_ACTIVATION_HEIGHT = 2000, OUT_SCRIPT_HASH = 0x30
+- Max keys: MAX_MULTISIG_KEYS = 15
+- Treasury protection: 2-of-3 for Gold Vault and PoPC Pool
+- scriptSig format: OP_0 <sig1> <sig2> ... <redeemScript>
+- Backwards compatible: P2PKH (sost1) outputs unchanged, old blocks still valid
+- 24 tests passing (script engine, P2SH, create, verify, backwards compat)
+
+E. AUTONOMOUS MATERIALS DISCOVERY ENGINE
 - 76,193 material corpus, CGCNN + ALIGNN-Lite models
-- Autonomous campaign engine with validation queue (5 tiers)
-- Structure lift pipeline for candidate evaluation
+- Autonomous campaign engine with validation queue (6 tiers)
+- 8 campaign profiles: III-V, oxide, group IV, stable novel, valuable, strategic, battery, exploratory
+- Structure lift pipeline with direct GNN inference on novel candidates
+- Phase V.C: 65.5% direct FE rate, 21.7% novel direct GNN, 34.5% proxy dependency
 - Dual-output explainer (technical + plain language)
-- 28/28 tests passing
+- 1,073 tests passing across 47 files

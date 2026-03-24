@@ -35,12 +35,14 @@ server {
 
 | Property | Value | File |
 |----------|-------|------|
-| Logo size | 240×240px | index.html + sost-app/index.html |
-| Title size | 23px, 4px spacing | Same |
-| Lines size | 15px | Same |
-| Duration | **7 seconds** | Same |
-| Line timing | 2500 + i×900ms | Same |
-| Music | playRetroSplashMusic(7) | Same |
+| Type | Red Matrix Rain (canvas) | index.html + sost-app/index.html |
+| Logo size | 180×180px, border-radius:20% | Same |
+| Duration | **12 seconds** | Same |
+| Logo emerge | 2.2s → 4.0s | Same |
+| Title typing | 5.0s (120ms/char) | Same |
+| Terminal lines | 6.5s (2.5s animation each) | Same |
+| Music | playRandomMelody() + playRetroSplashMusic(12) | Same |
+| Ambient | 55Hz drone + bandpass noise (12s) | Same |
 
 ## What Must NOT Diverge
 

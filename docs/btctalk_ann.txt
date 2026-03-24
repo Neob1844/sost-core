@@ -198,6 +198,21 @@ The miner connects to your node via RPC and submits solved blocks. Use [b]--bloc
 
 [hr]
 
+[size=14pt][b]Security & Wallet Features[/b][/size]
+
+[list]
+[li][b]HD Wallet (BIP39):[/b] 12-word seed phrase backup. PBKDF2-HMAC-SHA512 seed derivation. Compatible between web wallet and CLI. AES-256-GCM encrypted storage.[/li]
+[li][b]SOST-PSBT (Offline Signing):[/b] JSON+base64 offline signing format. Create → Sign (air-gapped) → Combine → Finalize → Broadcast. Private keys never in serialized PSBT. Supports P2PKH and multisig inputs.[/li]
+[li][b]Native 2-of-3 Multisig:[/b] OP_CHECKMULTISIG in script engine. P2SH redeemScript-hash with sost3 addresses. M-of-N policy (max N=15). Treasury protection for Gold Vault and PoPC Pool.[/li]
+[li][b]Dynamic Fee Market:[/b] RBF (Replace-by-Fee) for stuck transactions. CPFP (Child-Pays-for-Parent) for package fee-rate optimization. No consensus change — mempool/miner policy only.[/li]
+[li][b]Transaction Safety:[/b] Trusted address book (4 levels). New-address cooldown warning. Treasury daily limits + vault mode. Pre-send confirmation summary.[/li]
+[li][b]Build Hardening:[/b] 6 compiler/linker flags: stack protector, stack clash protection, PIE/ASLR, full RELRO, FORTIFY_SOURCE.[/li]
+[li][b]P2P Encryption:[/b] X25519 + ChaCha20-Poly1305 (default ON). Ban scoring (100pts = 24h ban), 64 max inbound, 4 per IP.[/li]
+[li][b]22/22 CTest targets passing.[/b] 19/20 security features implemented and working.[/li]
+[/list]
+
+[hr]
+
 [size=14pt][b]Links[/b][/size]
 
 [list]
