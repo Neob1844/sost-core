@@ -985,88 +985,65 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
     <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
       <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:12px">// DISCOVERY PIPELINE</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;font-family:monospace">
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">SEED</span>
+        <span class="me-pipe-step" onclick="showPipeStep('seed')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer;transition:border-color .2s">SEED</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">GENERATE</span>
+        <span class="me-pipe-step" onclick="showPipeStep('generate')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer">GENERATE</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">FILTER</span>
+        <span class="me-pipe-step" onclick="showPipeStep('filter')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer">FILTER</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">LIFT</span>
+        <span class="me-pipe-step" onclick="showPipeStep('lift')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer">LIFT</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #00ff41;font-weight:700">GNN</span>
+        <span class="me-pipe-step" onclick="showPipeStep('gnn')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #00ff41;font-weight:700;cursor:pointer">GNN</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">SCORE</span>
+        <span class="me-pipe-step" onclick="showPipeStep('score')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer">SCORE</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400">VALIDATE</span>
+        <span class="me-pipe-step" onclick="showPipeStep('validate')" style="background:#002200;color:#00ff41;padding:4px 10px;border-radius:3px;border:1px solid #004400;cursor:pointer">VALIDATE</span>
         <span style="color:#004400">&rarr;</span>
-        <span style="background:#002200;color:#fbbf24;padding:4px 10px;border-radius:3px;border:1px solid #665500;font-weight:700">HANDOFF</span>
+        <span class="me-pipe-step" onclick="showPipeStep('handoff')" style="background:#002200;color:#fbbf24;padding:4px 10px;border-radius:3px;border:1px solid #665500;font-weight:700;cursor:pointer">HANDOFF</span>
       </div>
+      <div id="me-pipe-info" style="display:none;margin-top:12px;padding:12px;background:#001a00;border:1px solid #003300;border-radius:4px;font-size:11px;color:#008800;line-height:1.8"></div>
     </div>
 
-    <!-- CAMPAIGN RESULTS (cards) -->
-    <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:12px">// LATEST CAMPAIGN RESULTS <span style="color:#00ff41;font-size:9px;background:#002200;padding:2px 6px;border-radius:3px;margin-left:8px">VERIFIED SNAPSHOT</span></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:24px">
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
-        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Battery Relevant</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">20 candidates &middot; FE 50% &middot; Score <b style="color:#00ff41">0.821</b></div>
-      </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
-        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Valuable Unknowns</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">23 candidates &middot; FE 52% &middot; Score <b style="color:#00ff41">0.790</b></div>
-      </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
-        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Stable Novel Semi.</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">25 candidates &middot; FE 48% &middot; Score <b style="color:#00ff41">0.719</b></div>
-      </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #00ff41">
-        <div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">Uncertainty Probe</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">24 candidates &middot; FE 96% &middot; Score <b style="color:#00ff41">0.710</b></div>
-      </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #006600">
-        <div style="font-size:13px;font-weight:700;color:#00cc00;margin-bottom:4px">Exploratory Oxides</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">15 candidates &middot; FE 100% &middot; Score <b style="color:#00cc00">0.692</b></div>
-      </div>
-      <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid #006600">
-        <div style="font-size:13px;font-weight:700;color:#00cc00;margin-bottom:4px">Group IV</div>
-        <div style="font-size:11px;color:#008800;line-height:1.8">6 candidates &middot; FE 83% &middot; Score <b style="color:#00cc00">0.603</b></div>
-      </div>
-    </div>
+    <!-- CAMPAIGN RESULTS (interactive cards) -->
+    <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:12px">// LATEST CAMPAIGN RESULTS <span style="color:#00ff41;font-size:9px;background:#002200;padding:2px 6px;border-radius:3px;margin-left:8px">VERIFIED SNAPSHOT</span> <span style="color:#004400;font-size:9px;margin-left:4px">click to inspect</span></div>
+    <div id="me-campaign-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:24px"></div>
 
-    <!-- VALIDATION QUEUE -->
+    <!-- VALIDATION QUEUE (interactive tiles) -->
     <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
-      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:14px">// VALIDATION QUEUE</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:11px">
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:14px">// VALIDATION QUEUE <span style="color:#004400;font-size:9px;margin-left:8px">click tier for details</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:11px" id="me-vq-tiles">
+        <div class="me-vq-tile" data-tier="priority" onclick="showTierInfo('priority')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#00ff41">&#9679;</div>
           <div style="color:#00ff41;font-weight:600;margin:4px 0">PRIORITY</div>
           <div style="color:#006600;font-size:10px">DFT handoff ready</div>
         </div>
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+        <div class="me-vq-tile" data-tier="candidate" onclick="showTierInfo('candidate')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#4ade80">&#9679;</div>
           <div style="color:#4ade80;font-weight:600;margin:4px 0">CANDIDATE</div>
           <div style="color:#006600;font-size:10px">Stronger ML pass</div>
         </div>
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+        <div class="me-vq-tile" data-tier="review" onclick="showTierInfo('review')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#22d3ee">&#9679;</div>
           <div style="color:#22d3ee;font-weight:600;margin:4px 0">REVIEW</div>
           <div style="color:#006600;font-size:10px">Human inspection</div>
         </div>
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+        <div class="me-vq-tile" data-tier="watchlist" onclick="showTierInfo('watchlist')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#fbbf24">&#9679;</div>
           <div style="color:#fbbf24;font-weight:600;margin:4px 0">WATCHLIST</div>
           <div style="color:#006600;font-size:10px">Keep monitoring</div>
         </div>
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+        <div class="me-vq-tile" data-tier="reference" onclick="showTierInfo('reference')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#666">&#9679;</div>
           <div style="color:#888;font-weight:600;margin:4px 0">REFERENCE</div>
           <div style="color:#006600;font-size:10px">Known baseline</div>
         </div>
-        <div style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300">
+        <div class="me-vq-tile" data-tier="rejected" onclick="showTierInfo('rejected')" style="text-align:center;padding:10px;background:#001a00;border-radius:4px;border:1px solid #003300;cursor:pointer;transition:border-color .2s">
           <div style="font-size:20px;font-weight:700;color:#ff4444">&#9679;</div>
           <div style="color:#ff4444;font-weight:600;margin:4px 0">REJECTED</div>
           <div style="color:#006600;font-size:10px">No further action</div>
         </div>
       </div>
+      <div id="me-tier-info" style="display:none;margin-top:12px;padding:12px;background:#001a00;border:1px solid #003300;border-radius:4px;font-size:11px;color:#008800;line-height:1.8"></div>
     </div>
 
     <!-- TOP CANDIDATES TABLE -->
@@ -1135,19 +1112,17 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       DATA: <span style="color:#006600">LATEST VERIFIED RUN</span> &middot; <span id="me-timestamp" style="color:#004400"></span>
     </div>
 
-    <!-- QUICK HELP -->
-    <details style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px;margin-bottom:20px;cursor:pointer">
-      <summary style="font-size:11px;color:#00ff41;letter-spacing:1px;font-weight:600">&#9654; QUICK GUIDE &mdash; What does this engine do?</summary>
-      <div style="margin-top:12px;font-size:12px;color:#008800;line-height:2">
-        <b style="color:#00cc00">What it does:</b> Generates novel material candidates using element substitution, scores them with GNN models, and routes them through a validation queue.<br>
-        <b style="color:#00cc00">Direct GNN:</b> Real CGCNN/ALIGNN-Lite prediction on a lifted crystal structure. The strongest evidence this engine can produce.<br>
-        <b style="color:#00cc00">Proxy:</b> Neighbor-based estimate from similar corpus materials. Weaker — carries higher uncertainty.<br>
-        <b style="color:#00cc00">Watchlist:</b> Marginal candidate worth monitoring but not yet ready for validation.<br>
-        <b style="color:#00cc00">Priority Validation:</b> Strong enough for DFT handoff — the engine's best recommendation.<br>
-        <b style="color:#00cc00">&ldquo;Novel&rdquo;:</b> Not found in our 76,193-material corpus. May exist in databases we haven't ingested.<br>
-        <b style="color:#fbbf24">What it does NOT do:</b> No DFT, no phonon stability, no experimental validation. All candidates are theoretical.
-      </div>
-    </details>
+    <!-- QUICK GUIDE (accordion) -->
+    <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;margin-bottom:20px;overflow:hidden">
+      <div style="padding:14px 18px;font-size:11px;color:#00ff41;letter-spacing:1px;font-weight:600;border-bottom:1px solid #0a3a0a">&#9632; GUIDE</div>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What does this engine do?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">Generates novel material candidates using element substitution strategies, evaluates them with GNN models (CGCNN for formation energy, ALIGNN-Lite for band gap), and routes them through a multi-tier validation queue.</p></details>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What is Direct GNN?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">A real CGCNN or ALIGNN-Lite forward pass on a lifted crystal structure. The strongest computational evidence this engine can produce — but still a model prediction, not experimental confirmation.</p></details>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What is Proxy?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">A neighbor-based estimate from similar materials in the corpus. Weaker than direct GNN — carries higher uncertainty because no actual model inference was performed on this specific candidate.</p></details>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What does "novel" mean here?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">Not found in our 76,193-material corpus (JARVIS + AFLOW). The candidate may exist in other databases we haven't ingested. Novelty is relative, not absolute.</p></details>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What is structure lift?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">Finding a similar material in the corpus and substituting elements to create an approximate crystal structure for the candidate. Required before direct GNN inference. Positions are NOT relaxed.</p></details>
+      <details style="padding:0 18px;border-bottom:1px solid #061a06"><summary style="padding:10px 0;font-size:11px;color:#00cc00;cursor:pointer">What happens after handoff?</summary><p style="padding:0 0 10px;font-size:11px;color:#008800;line-height:1.8">A validation pack is generated with all evidence. The candidate enters the validation bridge for DFT or external computational validation. Results are fed back to recalibrate the engine.</p></details>
+      <details style="padding:0 18px"><summary style="padding:10px 0;font-size:11px;color:#fbbf24;cursor:pointer">Why are these not confirmed materials?</summary><p style="padding:0 0 10px;font-size:11px;color:#886666;line-height:1.8">No DFT, no phonon stability analysis, no experimental synthesis or characterization has been performed. All candidates are theoretical hypotheses prioritized by computational heuristics. Confirmation requires independent validation.</p></details>
+    </div>
 
     <!-- LIMITATIONS -->
     <div style="background:#0a0200;border:1px solid #2a0a0a;border-left:3px solid #fb010d;border-radius:0 6px 6px 0;padding:14px 18px;font-size:11px;color:#886666;line-height:1.8">
@@ -1738,6 +1713,72 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
       opt.textContent=name.replace(/_/g,' ');sel.appendChild(opt);
     }
   }
+
+  // Generate campaign cards from data
+  var cardsEl=el('me-campaign-cards');
+  if(cardsEl&&D.campaigns){
+    var sortedC=Object.entries(D.campaigns).sort(function(a,b){return(b[1].score||0)-(a[1].score||0)});
+    sortedC.forEach(function(entry){
+      var name=entry[0],c=entry[1];
+      var card=document.createElement('div');
+      card.style.cssText='background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px;border-left:3px solid '+(c.score>=0.7?'#00ff41':'#006600')+';cursor:pointer;transition:border-color .2s,background .2s';
+      card.innerHTML='<div style="font-size:13px;font-weight:700;color:#00ff41;margin-bottom:4px">'+name.replace(/_/g,' ')+'</div>'+
+        '<div style="font-size:11px;color:#008800;line-height:1.8">'+c.candidates+' candidates &middot; FE '+c.fe_rate+'% &middot; Score <b style="color:#00ff41">'+c.score+'</b></div>';
+      card.onmouseenter=function(){card.style.borderColor='#00ff41';card.style.background='#041004'};
+      card.onmouseleave=function(){card.style.borderColor='#0a3a0a';card.style.background='#020802'};
+      card.onclick=function(){
+        el('me-campaign-select').value=name;
+        showCampaignDetail(name);
+        // Highlight active card
+        cardsEl.querySelectorAll('div').forEach(function(d){d.style.borderLeftColor=''});
+        card.style.borderLeftColor='#00ff41';
+      };
+      cardsEl.appendChild(card);
+    });
+  }
+
+  // Validation tier info
+  var TIER_INFO={
+    priority:'<b style="color:#00ff41">Priority Validation</b> — Highest-confidence candidates with direct GNN evidence, good structure lift, and high plausibility. Ready for DFT handoff. These are the engine\'s best recommendations for computational validation.',
+    candidate:'<b style="color:#4ade80">Validation Candidate</b> — Good composite score and plausibility. May need stronger ML pass or prototype refinement before DFT. Promising but not yet at handoff threshold.',
+    review:'<b style="color:#22d3ee">Manual Review</b> — Borderline scores that need human inspection. Worth comparing against corpus neighbors to decide if they deserve promotion or demotion.',
+    watchlist:'<b style="color:#fbbf24">Watchlist</b> — Marginal but not worthless. Keep monitoring as new evidence arrives. May improve with better structure lift or new corpus data.',
+    reference:'<b style="color:#888">Known Reference</b> — Material already exists in the 76,193-material corpus. Useful as quality baseline, not a new discovery. Helps calibrate the engine.',
+    rejected:'<b style="color:#ff4444">Rejected</b> — Low plausibility or low composite score. No further action recommended. May have failed chemical filters or scored below threshold.',
+  };
+  window.showTierInfo=function(tier){
+    var info=el('me-tier-info');
+    // Highlight tile
+    document.querySelectorAll('.me-vq-tile').forEach(function(t){t.style.borderColor='#003300'});
+    var tile=document.querySelector('.me-vq-tile[data-tier="'+tier+'"]');
+    if(tile)tile.style.borderColor='#00ff41';
+    if(info.style.display!=='none'&&info.getAttribute('data-tier')===tier){info.style.display='none';return;}
+    info.innerHTML=TIER_INFO[tier]||'';
+    info.style.display='block';
+    info.setAttribute('data-tier',tier);
+  };
+
+  // Pipeline step explainers
+  var PIPE_INFO={
+    seed:'<b style="color:#00ff41">SEED</b> — Select two parent materials (e.g. GaAs + AlN). Explore/exploit policy balances discovery of new chemical space vs deepening known productive regions.',
+    generate:'<b style="color:#00ff41">GENERATE</b> — Create candidate formulas via element substitution, cross-substitution, single-site doping, and mixed-parent combination. Typically produces 10-30 candidates per iteration.',
+    filter:'<b style="color:#00ff41">FILTER</b> — Chemical plausibility check: charge balance, valid elements, stoichiometry limits, no noble gases, deduplication against memory. Rejects ~30-50% of raw candidates.',
+    lift:'<b style="color:#00ff41">LIFT</b> — Find a similar corpus material and substitute elements to create an approximate crystal structure. Required for GNN inference. ~40-60% of candidates get a usable lift.',
+    gnn:'<b style="color:#00ff41">GNN</b> — Run real CGCNN forward pass on the lifted structure to predict formation energy. ALIGNN-Lite for band gap when available. The strongest evidence the engine can produce.',
+    score:'<b style="color:#00ff41">SCORE</b> — Multi-objective scoring: novelty + plausibility + value + stability + evidence quality + uncertainty. Known materials penalized, direct GNN candidates boosted.',
+    validate:'<b style="color:#00ff41">VALIDATE</b> — Route to validation queue tier: reject / watchlist / review / candidate / priority. Based on composite score, evidence, and readiness.',
+    handoff:'<b style="color:#fbbf24">HANDOFF</b> — Generate exportable validation pack with all evidence, risk flags, and rationale. Ready for DFT computation or external review.',
+  };
+  window.showPipeStep=function(step){
+    var info=el('me-pipe-info');
+    // Highlight step
+    document.querySelectorAll('.me-pipe-step').forEach(function(s){s.style.borderColor='#004400'});
+    var target=event.target;if(target)target.style.borderColor='#00ff41';
+    if(info.style.display!=='none'&&info.getAttribute('data-step')===step){info.style.display='none';return;}
+    info.innerHTML=PIPE_INFO[step]||'';
+    info.style.display='block';
+    info.setAttribute('data-step',step);
+  };
 
   // Top candidates table — make rows clickable
   var tbl=document.querySelector('#autonomous-discovery table');
