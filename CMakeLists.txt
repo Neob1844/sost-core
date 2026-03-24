@@ -50,6 +50,7 @@ add_library(sost-core STATIC
     src/wallet_policy.cpp
     src/hd_wallet.cpp
     src/psbt.cpp
+    src/script.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -166,6 +167,10 @@ add_test(NAME hd-wallet COMMAND test-hd-wallet)
 add_executable(test-psbt tests/test_psbt.cpp)
 target_link_libraries(test-psbt PRIVATE sost-core)
 add_test(NAME psbt COMMAND test-psbt)
+
+add_executable(test-multisig tests/test_multisig.cpp)
+target_link_libraries(test-multisig PRIVATE sost-core)
+add_test(NAME multisig COMMAND test-multisig)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
