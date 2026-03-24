@@ -83,7 +83,8 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
     int64_t td = chain.back().time - expected_pt;
 
     // Exponential: next_bitsq = anchor_bitsq * 2^(-td / halflife)
-    int64_t exponent = ((-td) * (int64_t)Q16_ONE) / BITSQ_HALF_LIFE;
+    int64_t halflife = (next_height >= CASERT_V2_FORK_HEIGHT) ? BITSQ_HALF_LIFE_V2 : BITSQ_HALF_LIFE;
+    int64_t exponent = ((-td) * (int64_t)Q16_ONE) / halflife;
 
     int32_t shifts = (int32_t)(exponent >> 16);
     uint32_t frac = (uint32_t)(exponent & 0xFFFF);
@@ -100,9 +101,10 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         else              raw_result >>= rshifts;
     }
 
-    // Relative per-block delta cap: prev_bitsq / BITSQ_MAX_DELTA_DEN
+    // Relative per-block delta cap: prev_bitsq / delta_den
     uint32_t prev_bitsq = chain.back().powDiffQ ? chain.back().powDiffQ : GENESIS_BITSQ;
-    int64_t max_delta = (int64_t)prev_bitsq / BITSQ_MAX_DELTA_DEN;
+    int32_t delta_den = (next_height >= CASERT_V2_FORK_HEIGHT) ? BITSQ_MAX_DELTA_DEN_V2 : BITSQ_MAX_DELTA_DEN;
+    int64_t max_delta = (int64_t)prev_bitsq / delta_den;
     if (max_delta < 1) max_delta = 1;
 
     int64_t delta = raw_result - (int64_t)prev_bitsq;

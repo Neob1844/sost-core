@@ -408,6 +408,22 @@ The ConvergenceX + cASERT system is operating correctly within its design parame
 
 ---
 
+## cASERT V2 Fork (Block 1450)
+
+Based on audit findings, a consensus upgrade was implemented:
+
+| Parameter | V1 (blocks < 1450) | V2 (blocks >= 1450) |
+|-----------|-------------------|-------------------|
+| Halflife | 172,800s (48h) | 86,400s (24h) |
+| Delta cap | 6.25% (1/16) | 12.5% (1/8) symmetric |
+| Target spacing | 600s | 600s (unchanged) |
+| Anti-stall | Unchanged | Unchanged |
+| Profiles | Unchanged | Unchanged |
+
+**Rationale:** Audit simulation showed hashrate doubling never converged in 400 blocks with V1 parameters. V2 doubles both response speed (halflife halved) and per-block adjustment rate (delta cap doubled). No regenesis — blocks 0-1449 validate with V1 rules.
+
+---
+
 ## Appendix: Files Analyzed
 
 | File | Purpose |
