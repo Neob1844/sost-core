@@ -36,6 +36,7 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
+#include "sost/hd_wallet.h"
 #include "sost/addressbook.h"
 #include "sost/wallet_policy.h"
 #include "sost/types.h"
@@ -251,6 +252,9 @@ static void print_usage() {
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
     printf("  info                   Wallet summary\n");
+    printf("\nHD Wallet (BIP39):\n");
+    printf("  hd create              Generate 12-word seed phrase + wallet\n");
+    printf("  hd restore             Import 12-word seed phrase\n");
     printf("\nAddress Book:\n");
     printf("  addressbook add <addr> --label <name> --trust <level>\n");
     printf("  addressbook list       List all trusted addresses\n");
@@ -1163,6 +1167,102 @@ int main(int argc, char** argv) {
             printf("  Default:   %s\n", w.default_address().c_str());
         }
         return 0;
+    }
+
+    // =====================================================================
+    // hd create|restore
+    // =====================================================================
+    if (cmd == "hd") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli hd <create|restore>\n");
+            return 1;
+        }
+        std::string subcmd = argv[arg_start + 1];
+
+        if (subcmd == "create") {
+            sost::bip39::HDWalletResult hd;
+            std::string err;
+            if (!sost::bip39::create_hd_wallet(hd, &err)) {
+                fprintf(stderr, "Error: %s\n", err.c_str());
+                return 1;
+            }
+
+            printf("\n========== NEW HD WALLET ==========\n\n");
+            printf("  Seed phrase (12 words):\n\n    ");
+            for (size_t i = 0; i < hd.mnemonic.size(); ++i) {
+                printf("%s", hd.mnemonic[i].c_str());
+                if (i < 11) printf(" ");
+            }
+            printf("\n\n");
+            printf("  Address:     %s\n", hd.address.c_str());
+            printf("  Private key: %s\n", to_hex(hd.privkey.data(), 32).c_str());
+            printf("\n===================================\n");
+            printf("\n*** WRITE DOWN YOUR SEED PHRASE AND STORE IT SAFELY ***\n");
+            printf("*** ANYONE WITH THESE 12 WORDS CAN ACCESS YOUR FUNDS ***\n\n");
+
+            // Import into wallet
+            try {
+                w.import_privkey(hd.privkey, "hd-seed");
+                std::string serr;
+                if (!w.save(wallet_path, &serr)) {
+                    fprintf(stderr, "Warning: failed to save wallet: %s\n", serr.c_str());
+                }
+                printf("Key imported into wallet: %s\n", wallet_path.c_str());
+            } catch (const std::exception& e) {
+                fprintf(stderr, "Warning: %s\n", e.what());
+            }
+            return 0;
+        }
+
+        if (subcmd == "restore") {
+            printf("Enter your 12-word seed phrase (space-separated):\n> ");
+            fflush(stdout);
+            char buf[1024] = {};
+            if (!fgets(buf, sizeof(buf), stdin)) {
+                fprintf(stderr, "Error reading seed phrase\n");
+                return 1;
+            }
+            buf[strcspn(buf, "\r\n")] = 0;
+
+            // Parse words
+            std::vector<std::string> words;
+            {
+                std::string s(buf);
+                size_t pos = 0;
+                while (pos < s.size()) {
+                    while (pos < s.size() && s[pos] == ' ') pos++;
+                    size_t start = pos;
+                    while (pos < s.size() && s[pos] != ' ') pos++;
+                    if (pos > start) words.push_back(s.substr(start, pos - start));
+                }
+            }
+
+            sost::bip39::HDWalletResult hd;
+            std::string err;
+            if (!sost::bip39::restore_from_mnemonic(words, hd, &err)) {
+                fprintf(stderr, "Error: %s\n", err.c_str());
+                return 1;
+            }
+
+            printf("\nRestored wallet:\n");
+            printf("  Address: %s\n", hd.address.c_str());
+
+            // Import into wallet
+            try {
+                w.import_privkey(hd.privkey, "hd-restored");
+                std::string serr;
+                if (!w.save(wallet_path, &serr)) {
+                    fprintf(stderr, "Warning: failed to save wallet: %s\n", serr.c_str());
+                }
+                printf("Key imported into wallet: %s\n", wallet_path.c_str());
+            } catch (const std::exception& e) {
+                fprintf(stderr, "Warning: %s\n", e.what());
+            }
+            return 0;
+        }
+
+        fprintf(stderr, "Unknown hd subcommand: %s\n", subcmd.c_str());
+        return 1;
     }
 
     // =====================================================================
