@@ -597,7 +597,6 @@
 @keyframes splType{from{width:0}to{width:100%}}
 </style>
 <script src="js/retro-sounds.js"></script>
-<script src="js/retro-melodies.js"></script>
 <script>
 (function(){
   if(sessionStorage.getItem('splashShown'))return;
@@ -728,10 +727,8 @@
     for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
   });
 
-  // === AUDIO: random retro melody + chiptune ===
-  try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){}
-  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
-  function _splashSound(){try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){};try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(10);}catch(e){}}
+  // === AUDIO: unlock context on user interaction ===
+  function _splashSound(){try{getAC();}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
 

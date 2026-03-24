@@ -89,8 +89,6 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 .gea-spl-line.go{animation:geaSplType 2.5s steps(35) forwards;opacity:1}
 @keyframes geaSplType{from{width:0}to{width:100%}}
 </style>
-<script src="js/retro-sounds.js"></script>
-<script src="js/retro-melodies.js"></script>
 <script>
 (function(){
   if(sessionStorage.getItem('geaSplashShown'))return;
@@ -219,9 +217,8 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   });
 
   // === AUDIO ===
-  try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){}
-  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
-  function _splashSound(){try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){};try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(10);}catch(e){}}
+  // === AUDIO: unlock context on user interaction ===
+  function _splashSound(){try{getAC();}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
 

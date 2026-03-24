@@ -93,7 +93,6 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </div>
 
 <script src="/js/retro-sounds.js"></script>
-<script src="/js/retro-melodies.js"></script>
 <script>
 /* ===== RED MATRIX RAIN SPLASH ===== */
 (function(){
@@ -200,9 +199,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   });
 })();
 
-// Random retro melody + chiptune
-try{if(typeof playRandomMelody==='function'){var _mac=new(window.AudioContext||window.webkitAudioContext)();playRandomMelody(_mac);}}catch(e){}
-try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
+// Audio context unlocked by splash interaction
 
 // Transition at 12s
 setTimeout(function(){
