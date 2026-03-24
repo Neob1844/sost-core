@@ -925,12 +925,16 @@ async function updateDashboard(info){
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
   }catch(e){console.error('gold/popc balance error:',e);}
   // Miner balance (requires auth)
-  if(RPC_USER&&RPC_PASS){try{
+  // Fetch tip block profile (public RPC, no auth needed)
+  try{
     var tipHash=await rpc('getblockhash',[String(info.blocks)]);
-    _tipBlockHash=tipHash; // store for mining panel
+    _tipBlockHash=tipHash;
     var tipBlock=await rpc('getblock',[tipHash]);
-    if(tipBlock.casert_mode)_lastBlockCasertMode=tipBlock.casert_mode; // store for mining panel profile
-    var minerAddr=tipBlock.miner_address||'';
+    if(tipBlock.casert_mode)_lastBlockCasertMode=tipBlock.casert_mode;
+    if(tipBlock.time)_lastBlockTime=tipBlock.time; // ensure mining panel has timing
+  }catch(e){console.warn('tip block fetch:',e)}
+  if(RPC_USER&&RPC_PASS){try{
+    var minerAddr=(typeof tipBlock!=='undefined'&&tipBlock)?tipBlock.miner_address||'':'';
     _activeMiner=minerAddr;
     if(minerAddr){
       var am=await rpc('getaddressinfo',[minerAddr]);
