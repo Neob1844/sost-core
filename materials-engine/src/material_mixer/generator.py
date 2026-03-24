@@ -15,10 +15,19 @@ def parse_formula(formula):
     return elements
 
 
+_ANIONS = {"O", "S", "Se", "Te", "N", "F", "Cl", "Br", "I", "P", "As", "Sb"}
+
 def formula_from_dict(comp):
-    """Convert {element: count} dict to formula string."""
+    """Convert {element: count} dict to formula string.
+
+    Convention: cations first (alphabetical), then anions (alphabetical).
+    This produces standard chemical formulas like LiCoO2, InAs, SiN, Zn2O.
+    """
+    cations = sorted(e for e in comp if e not in _ANIONS)
+    anions = sorted(e for e in comp if e in _ANIONS)
     parts = []
-    for elem, count in sorted(comp.items()):
+    for elem in cations + anions:
+        count = comp[elem]
         parts.append(elem + (str(count) if count > 1 else ""))
     return "".join(parts)
 

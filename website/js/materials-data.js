@@ -1,8 +1,6 @@
-// Materials Engine Console Data — auto-generated from verified campaign runs
-// Source: artifacts/public_metrics.json + campaign_snapshots.json
-// Data type: LATEST VERIFIED RUN (not live)
+// Materials Engine Console Data — auto-generated, canonical formulas
 var ME_DATA = {
-  "generated_at": "2026-03-24T13:58:00Z",
+  "generated_at": "2026-03-24T16:46:16Z",
   "data_type": "latest_verified_run",
   "corpus_size": 76193,
   "api_endpoints": 145,
@@ -32,7 +30,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "AsIn",
+          "formula": "InAs",
           "method": "element_substitution",
           "composite_score": 0.835,
           "scores": {
@@ -185,7 +183,7 @@ var ME_DATA = {
         },
         {
           "rank": 2,
-          "formula": "AsInN",
+          "formula": "InAsN",
           "method": "element_substitution",
           "composite_score": 0.495,
           "scores": {
@@ -299,7 +297,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "OSr",
+          "formula": "SrO",
           "method": "element_substitution",
           "composite_score": 0.7275,
           "scores": {
@@ -350,7 +348,7 @@ var ME_DATA = {
         },
         {
           "rank": 1,
-          "formula": "O2RuZn",
+          "formula": "RuZnO2",
           "method": "cross_substitution",
           "composite_score": 0.4408,
           "scores": {
@@ -401,7 +399,7 @@ var ME_DATA = {
         },
         {
           "rank": 2,
-          "formula": "MgO2Zr",
+          "formula": "MgZrO2",
           "method": "mixed_parent",
           "composite_score": 0.4258,
           "scores": {
@@ -452,7 +450,7 @@ var ME_DATA = {
         },
         {
           "rank": 1,
-          "formula": "MgO2Ru",
+          "formula": "MgRuO2",
           "method": "element_substitution",
           "composite_score": 0.4258,
           "scores": {
@@ -503,7 +501,7 @@ var ME_DATA = {
         },
         {
           "rank": 2,
-          "formula": "BeO2Ru",
+          "formula": "BeRuO2",
           "method": "element_substitution",
           "composite_score": 0.4258,
           "scores": {
@@ -566,7 +564,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "NSi",
+          "formula": "SiN",
           "method": "cross_substitution",
           "composite_score": 0.8,
           "scores": {
@@ -940,7 +938,7 @@ var ME_DATA = {
         },
         {
           "rank": 1,
-          "formula": "AsIn",
+          "formula": "InAs",
           "method": "element_substitution",
           "composite_score": 0.835,
           "scores": {
@@ -1042,7 +1040,7 @@ var ME_DATA = {
         },
         {
           "rank": 4,
-          "formula": "CoO2Rb",
+          "formula": "CoRbO2",
           "method": "element_substitution",
           "composite_score": 0.8217,
           "scores": {
@@ -1105,7 +1103,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "AsIn",
+          "formula": "InAs",
           "method": "element_substitution",
           "composite_score": 0.8875,
           "scores": {
@@ -1372,7 +1370,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "OZn2",
+          "formula": "Zn2O",
           "method": "cross_substitution",
           "composite_score": 0.9025,
           "scores": {
@@ -1423,7 +1421,7 @@ var ME_DATA = {
         },
         {
           "rank": 1,
-          "formula": "NSi",
+          "formula": "SiN",
           "method": "cross_substitution",
           "composite_score": 0.8625,
           "scores": {
@@ -1797,7 +1795,7 @@ var ME_DATA = {
         },
         {
           "rank": 4,
-          "formula": "CoO2Rb",
+          "formula": "CoRbO2",
           "method": "element_substitution",
           "composite_score": 0.8433,
           "scores": {
@@ -1848,7 +1846,7 @@ var ME_DATA = {
         },
         {
           "rank": 5,
-          "formula": "LiO2Ti",
+          "formula": "LiTiO2",
           "method": "element_substitution",
           "composite_score": 0.8433,
           "scores": {
@@ -1911,7 +1909,7 @@ var ME_DATA = {
       "top5": [
         {
           "rank": 1,
-          "formula": "BaTe3Ti",
+          "formula": "BaTiTe3",
           "method": "element_substitution",
           "composite_score": 0.77,
           "scores": {
@@ -1962,7 +1960,7 @@ var ME_DATA = {
         },
         {
           "rank": 2,
-          "formula": "BaSe3Ti",
+          "formula": "BaTiSe3",
           "method": "element_substitution",
           "composite_score": 0.755,
           "scores": {
@@ -2013,7 +2011,7 @@ var ME_DATA = {
         },
         {
           "rank": 3,
-          "formula": "BeO3Ti",
+          "formula": "BeTiO3",
           "method": "element_substitution",
           "composite_score": 0.7225,
           "scores": {
@@ -2064,7 +2062,7 @@ var ME_DATA = {
         },
         {
           "rank": 4,
-          "formula": "BaO3Sr",
+          "formula": "BaSrO3",
           "method": "cross_substitution",
           "composite_score": 0.6975,
           "scores": {
@@ -2115,7 +2113,7 @@ var ME_DATA = {
         },
         {
           "rank": 1,
-          "formula": "Te2Ti",
+          "formula": "TiTe2",
           "method": "element_substitution",
           "composite_score": 0.6975,
           "scores": {
@@ -2488,7 +2486,7 @@ var ME_DATA = {
     },
     {
       "rank": 1,
-      "formula": "OZn2",
+      "formula": "Zn2O",
       "method": "cross_substitution",
       "composite_score": 0.9025,
       "scores": {
@@ -2692,7 +2690,7 @@ var ME_DATA = {
     },
     {
       "rank": 1,
-      "formula": "AsIn",
+      "formula": "InAs",
       "method": "element_substitution",
       "composite_score": 0.8875,
       "scores": {
@@ -2743,7 +2741,7 @@ var ME_DATA = {
     },
     {
       "rank": 1,
-      "formula": "NSi",
+      "formula": "SiN",
       "method": "cross_substitution",
       "composite_score": 0.8625,
       "scores": {
@@ -2896,7 +2894,7 @@ var ME_DATA = {
     },
     {
       "rank": 4,
-      "formula": "CoO2Rb",
+      "formula": "CoRbO2",
       "method": "element_substitution",
       "composite_score": 0.8433,
       "scores": {

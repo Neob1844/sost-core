@@ -41,13 +41,20 @@ def parse_formula(formula):
     return comp
 
 
+_ANION_SET = {"O", "S", "Se", "Te", "N", "F", "Cl", "Br", "I", "P", "As", "Sb"}
+
 def normalize_formula(formula):
-    """Canonical formula: elements sorted alphabetically, counts explicit."""
+    """Canonical formula: cations first (alphabetical), then anions (alphabetical).
+
+    Produces standard chemical notation: LiCoO2, InAs, SiN, Zn2O, TiZnO2.
+    """
     comp = parse_formula(formula)
     if not comp:
         return formula
+    cations = sorted(e for e in comp if e not in _ANION_SET)
+    anions = sorted(e for e in comp if e in _ANION_SET)
     parts = []
-    for elem in sorted(comp.keys()):
+    for elem in cations + anions:
         parts.append(elem + (str(comp[elem]) if comp[elem] > 1 else ""))
     return "".join(parts)
 
