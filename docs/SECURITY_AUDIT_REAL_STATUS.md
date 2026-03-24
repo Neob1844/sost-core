@@ -25,10 +25,10 @@
 | 13 | **New-Address Cooldown** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `src/sost-cli.cpp` send command | First-send warning, high-value alert (>10 SOST), --skip-warning flag |
 | 14 | **Pre-Send Summary** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `src/sost-cli.cpp` send command | Full TX summary with confirmation prompt, --yes/-y to skip |
 | 15 | **Treasury Safety Profile** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/wallet_policy.h`, `src/wallet_policy.cpp`, `src/sost-cli.cpp` | Daily/per-TX limits, vault mode, large-TX address book requirement. Tests: test-wallet-policy |
-| 16 | **PSBT / Offline Signing** | "Future" | **NOT_IMPLEMENTED** | `sost-security.html:457` | Web correctly says "Future". No code exists. |
-| 17 | **HD Wallet (BIP32)** | "Future" | **NOT_IMPLEMENTED** | `sost-security.html:458` | Web correctly says "Future". No code exists. Acknowledged in SOST_WALLET_SAFE_USAGE.md. |
-| 18 | **Multisig** | Not listed on security page | **NOT_IMPLEMENTED** | `docs/security/SOST_WALLET_SAFE_USAGE.md:98` | Acknowledged as "Not implemented". |
-| 19 | **Anti-Phishing Phrase** | Not listed | **NOT_IMPLEMENTED** | — | No security phrase in wallet or web wallet. Only manual guidelines in docs. |
+| 16 | **PSBT / Offline Signing** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/psbt.h`, `src/psbt.cpp` | SOST-PSBT format (JSON+base64), create/sign/combine/finalize, P2PKH + multisig inputs. Tests: test-psbt (24 tests) |
+| 17 | **HD Wallet (BIP39)** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/hd_wallet.h`, `src/hd_wallet.cpp` | 12-word BIP39 seed phrases, PBKDF2-HMAC-SHA512, web+CLI compatible. Tests: test-hd-wallet (22 tests) |
+| 18 | **Native Multisig** | IMPLEMENTED | **IMPLEMENTED_AND_WORKING** | `include/sost/script.h`, `src/script.cpp` | OP_CHECKMULTISIG, P2SH redeemScript-hash, sost3 addresses, M-of-N (max 15). Tests: test-multisig (24 tests) |
+| 19 | **Anti-Phishing Phrase** | Not listed | **DOCUMENTED_ONLY** | — | Manual guidelines in docs. No automated implementation in wallet. |
 | 20 | **Vulnerability Reporting** | SEC-DISC-2026 contact form | **IMPLEMENTED_AND_WORKING** | `sost-security.html:502-586`, `sost-contact.html:184` | Full reporting process, severity classification, scope definition. |
 
 ---
@@ -37,9 +37,9 @@
 
 | Status | Count | Features |
 |--------|-------|----------|
-| IMPLEMENTED_AND_WORKING | 16 | Build hardening, Wallet encryption, ECDSA/LOW-S, Fee-rate ordering, P2P protection, RPC security, P2P encryption, Checkpoints+reorg, Coinbase maturity, Dynamic fees+RBF+CPFP, Vuln reporting, Trusted address book, New-address cooldown, Pre-send summary, Treasury safety profile |
+| IMPLEMENTED_AND_WORKING | 19 | Build hardening, Wallet encryption, ECDSA/LOW-S, Fee-rate ordering, P2P protection, RPC security, P2P encryption, Checkpoints+reorg, Coinbase maturity, Dynamic fees+RBF+CPFP, Vuln reporting, Trusted address book, New-address cooldown, Pre-send summary, Treasury safety profile, PSBT, HD Wallet BIP39, Native Multisig |
 | IMPLEMENTED_BUT_BROKEN | 1 | cASERT RPC (profile value incorrect, JS workaround applied) |
-| NOT_IMPLEMENTED | 3 | PSBT, HD wallet, Multisig |
+| DOCUMENTED_ONLY | 1 | Anti-phishing phrase (manual guidelines only) |
 
 ---
 

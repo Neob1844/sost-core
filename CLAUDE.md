@@ -42,8 +42,20 @@ ctest -R transaction           # by CTest name pattern
 | merkle-block | test-merkle-block | tests/test_merkle_block.cpp |
 | mempool | test-mempool | tests/test_mempool.cpp |
 | casert | test-casert | tests/test_casert.cpp |
+| bond-lock | test-bond-lock | tests/test_bond_lock.cpp |
+| checkpoints | test-checkpoints | tests/test_checkpoints.cpp |
+| transcript-v2 | test-transcript-v2 | tests/test_transcript_v2.cpp |
+| reorg | test-reorg | tests/test_reorg.cpp |
+| chainwork | test-chainwork | tests/test_chainwork.cpp |
+| addressbook | test-addressbook | tests/test_addressbook.cpp |
+| wallet-policy | test-wallet-policy | tests/test_wallet_policy.cpp |
+| rbf | test-rbf | tests/test_rbf.cpp |
+| cpfp | test-cpfp | tests/test_cpfp.cpp |
+| hd-wallet | test-hd-wallet | tests/test_hd_wallet.cpp |
+| psbt | test-psbt | tests/test_psbt.cpp |
+| multisig | test-multisig | tests/test_multisig.cpp |
 
-Tests use a simple `TEST(name, condition)` macro — no external framework.
+Tests use a simple `TEST(name, condition)` macro — no external framework. 22/22 CTest targets pass.
 
 ## Architecture
 
@@ -82,10 +94,15 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 - **Capsule Protocol v1** (`include/sost/capsule.h`) — Binary metadata in tx outputs (12-byte header + up to 243-byte body). Activates at height 5000 (mainnet).
 - **UTXO Set** (`include/sost/utxo_set.h`) — In-memory, OutPoint-indexed. ConnectBlock/DisconnectBlock with undo entries for reorg.
-- **Mempool** (`include/sost/mempool.h`) — Fee-rate indexed (rational arithmetic, no floats). BuildBlockTemplate selects by fee-rate.
+- **Mempool** (`include/sost/mempool.h`) — Fee-rate indexed (rational arithmetic, no floats). BuildBlockTemplate selects by fee-rate. RBF (full Replace-by-Fee) and CPFP (BuildBlockTemplateCPFP) for dynamic fee market.
 - **Emission** (`include/sost/emission.h`, `subsidy.h`) — Smooth exponential decay, q=e^(-1/4), epoch=131553 blocks (~2.5 years). Max supply ~4.669M SOST.
 - **Crypto** — SHA256 via OpenSSL, ECDSA secp256k1 via libsecp256k1, LOW-S enforced.
-- **Address** (`include/sost/address.h`) — Format: `sost1` + 40 hex chars (20-byte pubkey hash).
+- **Address** (`include/sost/address.h`) — Format: `sost1` + 40 hex chars (20-byte pubkey hash). Script hash: `sost3` + 40 hex chars (20-byte HASH160 of redeemScript).
+- **HD Wallet** (`include/sost/hd_wallet.h`) — BIP39 seed phrases (12 words), PBKDF2-HMAC-SHA512 seed derivation. Compatible with web wallet.
+- **PSBT** (`include/sost/psbt.h`) — SOST-PSBT offline signing format (JSON + base64). Supports P2PKH and multisig inputs.
+- **Script Engine** (`include/sost/script.h`) — Minimal opcodes: OP_CHECKSIG, OP_CHECKMULTISIG, OP_HASH160, OP_EQUAL, etc. P2SH (redeemScript-hash) for multisig. MULTISIG_ACTIVATION_HEIGHT = 2000.
+- **Address Book** (`include/sost/addressbook.h`) — Trusted address management with 4 trust levels.
+- **Wallet Policy** (`include/sost/wallet_policy.h`) — Treasury safety: daily limits, per-TX limits, vault mode.
 
 ### Key constants (in `include/sost/params.h`)
 
