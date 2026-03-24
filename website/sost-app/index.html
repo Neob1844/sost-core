@@ -61,7 +61,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 <!-- SPLASH — Red Matrix Rain -->
 <div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;">
   <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <img id="splash-logo" src="/sost-logo.png" alt="SOST" style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none">
+  <img id="splash-logo" src="/sost-logo.png" alt="SOST" style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:20%;z-index:10;pointer-events:none">
   <div id="splash-title" style="position:absolute;top:52%;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;text-align:center;white-space:nowrap"></div>
   <div id="splash-lines" style="position:absolute;top:62%;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;text-align:left;width:320px;font-size:13px">
     <div class="tl" id="s1"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Initializing node connection...</span></div>
@@ -93,6 +93,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
 </div>
 
 <script src="/js/retro-sounds.js"></script>
+<script src="/js/retro-melodies.js"></script>
 <script>
 /* ===== RED MATRIX RAIN SPLASH ===== */
 (function(){
@@ -199,7 +200,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New',
   });
 })();
 
-// Chiptune
+// Random retro melody + chiptune
+try{if(typeof playRandomMelody==='function'){var _mac=new(window.AudioContext||window.webkitAudioContext)();playRandomMelody(_mac);}}catch(e){}
 try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
 
 // Transition at 12s
@@ -318,13 +320,15 @@ function openWeb(){
 /* ===== EXIT ===== */
 function xt(){
   if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
-  // Clear all iframes so they don't block exit or hold history
+  // Clear all iframes
   var iframes=document.querySelectorAll('iframe');
   iframes.forEach(function(f){try{f.src='about:blank';}catch(e){}});
-  // Try close (works in PWA standalone)
-  setTimeout(function(){window.close();},100);
-  // Force blank — replace() prevents back-button return
-  setTimeout(function(){window.location.replace('/index.html');},500);
+  // Try close (works in PWA standalone and script-opened windows)
+  window.close();
+  // If still here after 600ms, window.close() was blocked by the browser
+  setTimeout(function(){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;color:#cc0000;font-family:monospace;text-align:center;flex-direction:column"><div style="font-size:48px;margin-bottom:20px">\u03A3</div><div style="font-size:18px;letter-spacing:4px;margin-bottom:16px">SESSION ENDED</div><div style="color:#555;font-size:13px">You can close this tab manually.</div></div>';
+  },600);
 }
 
 /* ===== INSTALL (PWA) ===== */
