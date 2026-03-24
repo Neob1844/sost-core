@@ -76,6 +76,162 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 </head>
 <body>
 
+<!-- SPLASH — Green Matrix Rain (GeaSpirit) -->
+<div id="gea-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
+  <canvas id="gea-matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+  <img id="gea-splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(0,255,65,0));z-index:10;pointer-events:none">
+  <div id="gea-splash-title" style="position:absolute;top:52%;left:50%;transform:translateX(-50%);font-size:22px;font-weight:700;letter-spacing:4px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
+  <div id="gea-spl-lines" style="position:absolute;top:62%;left:50%;transform:translateX(-50%);font-size:13px;min-height:80px;text-align:left;width:360px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
+</div>
+<style>
+.gea-spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #008800;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
+.gea-spl-line.go{animation:geaSplType 2.5s steps(35) forwards;opacity:1}
+@keyframes geaSplType{from{width:0}to{width:100%}}
+</style>
+<script src="js/retro-sounds.js"></script>
+<script>
+(function(){
+  if(sessionStorage.getItem('geaSplashShown'))return;
+  var sp=document.getElementById('gea-splash');
+  sp.style.display='block';
+
+  // === SHARED AUDIO CONTEXT ===
+  var _ac=null;
+  function getAC(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+
+  // === GREEN MATRIX AMBIENT (drone + noise, 12s) ===
+  function playMatrixAmbient(dur){
+    var ac=getAC();if(!ac)return;
+    var dr=ac.createOscillator();var dg=ac.createGain();
+    dr.type='sawtooth';dr.frequency.value=55;
+    dg.gain.setValueAtTime(0,ac.currentTime);
+    dg.gain.linearRampToValueAtTime(0.06,ac.currentTime+2);
+    dg.gain.setValueAtTime(0.06,ac.currentTime+dur-2);
+    dg.gain.linearRampToValueAtTime(0,ac.currentTime+dur);
+    dr.connect(dg);dg.connect(ac.destination);
+    dr.start(ac.currentTime);dr.stop(ac.currentTime+dur);
+    var bs=ac.sampleRate*2;var nb=ac.createBuffer(1,bs,ac.sampleRate);
+    var ch=nb.getChannelData(0);for(var i=0;i<bs;i++)ch[i]=Math.random()*2-1;
+    var ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;
+    var ng=ac.createGain();var nf=ac.createBiquadFilter();
+    nf.type='bandpass';nf.frequency.value=2000;nf.Q.value=3;
+    ng.gain.setValueAtTime(0,ac.currentTime);
+    ng.gain.linearRampToValueAtTime(0.03,ac.currentTime+3);
+    ng.gain.setValueAtTime(0.03,ac.currentTime+dur-2);
+    ng.gain.linearRampToValueAtTime(0,ac.currentTime+dur);
+    ns.connect(nf);nf.connect(ng);ng.connect(ac.destination);
+    ns.start(ac.currentTime);ns.stop(ac.currentTime+dur);
+  }
+
+  // === MATRIX TICK (30 var, loud, green theme) ===
+  var MXF=[80,100,120,150,180,200,250,300,350,400,450,500,600,700,800,1000,1200,1500,1800,2000,2500,3000,120,180,250,400,600,800,1500,2500];
+  var MXT=['square','sawtooth','square','sawtooth','triangle'];
+  function playMatrixTick(){
+    var ac=getAC();if(!ac)return;
+    var vi=Math.random()*30|0;
+    var o=ac.createOscillator();var g=ac.createGain();var f=ac.createBiquadFilter();
+    o.type=MXT[vi%5];o.frequency.value=MXF[vi];
+    f.type='bandpass';f.frequency.value=MXF[vi]*1.5;f.Q.value=5+Math.random()*10;
+    g.gain.setValueAtTime(0.25,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);
+    o.connect(f);f.connect(g);g.connect(ac.destination);
+    o.start(ac.currentTime);o.stop(ac.currentTime+0.08);
+  }
+
+  // === GREEN MATRIX RAIN on canvas ===
+  var canvas=document.getElementById('gea-matrix-canvas');
+  var ctx=canvas.getContext('2d');
+  var W,H,columns,drops,fontSize=14;
+  var chars='\u30A2\u30A4\u30A6\u30A8\u30AA\u30AB\u30AD\u30AF\u30B1\u30B3\u30B5\u30B7\u30B9\u30BB\u30BD\u30BF\u30C1\u30C4\u30C6\u30C80123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&*+=<>{}[]'.split('');
+
+  function initMatrix(){
+    W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
+    if(W<600)fontSize=10;
+    columns=Math.floor(W/fontSize);
+    drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
+  }
+  initMatrix();
+  window.addEventListener('resize',initMatrix);
+
+  var matrixRunning=true;
+  function drawMatrix(){
+    if(!matrixRunning)return;
+    ctx.fillStyle='rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.font=fontSize+'px monospace';
+    for(var i=0;i<drops.length;i++){
+      var ch=chars[Math.random()*chars.length|0];
+      var y=drops[i]*fontSize;
+      ctx.fillStyle='#ffffff';
+      ctx.fillText(ch,i*fontSize,y);
+      if(drops[i]>1){ctx.fillStyle='#00ff41';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-1)*fontSize);}
+      if(drops[i]>3){var br=Math.random();ctx.fillStyle=br>.5?'#00cc00':'#006600';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-2-(Math.random()*2|0))*fontSize);}
+      if(y>H&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(drawMatrix);
+  }
+  requestAnimationFrame(drawMatrix);
+  playMatrixAmbient(12);
+
+  // === LOGO EMERGE (3s) with GREEN glow ===
+  var logo=document.getElementById('gea-splash-logo');
+  setTimeout(function(){logo.style.opacity='0.15';},2200);
+  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 10px rgba(0,255,65,0.3))';},2800);
+  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 20px rgba(0,255,65,0.5))';},3400);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 30px rgba(0,255,65,0.6)) drop-shadow(0 0 60px rgba(0,255,65,0.3))';},4000);
+
+  // === TITLE TYPING (5s): "GEASPIRIT" green + " PLATFORM" white ===
+  var titleEl=document.getElementById('gea-splash-title');
+  var titleText=[{t:'GEASPIRIT',c:'#00ff41'},{t:' PLATFORM',c:'#ffffff'}];
+  var charIdx=0,segIdx=0;
+  function typeTitle(){
+    if(segIdx>=titleText.length)return;
+    var seg=titleText[segIdx];
+    if(charIdx<seg.t.length){
+      var span=document.createElement('span');
+      span.style.color=seg.c;
+      span.style.textShadow='0 0 10px rgba(0,255,65,0.5)';
+      span.textContent=seg.t[charIdx];
+      titleEl.appendChild(span);titleEl.style.opacity='1';
+      playMatrixTick();
+      charIdx++;setTimeout(typeTitle,120);
+    }else{charIdx=0;segIdx++;setTimeout(typeTitle,60);}
+  }
+  setTimeout(typeTitle,5000);
+
+  // === TERMINAL LINES (6.5s) in green ===
+  var lines=['> Connecting to satellite feeds...','> Loading mineral signatures...','> System ready.'];
+  var box=document.getElementById('gea-spl-lines');
+  lines.forEach(function(t){
+    var d=document.createElement('div');d.className='gea-spl-line';
+    d.innerHTML='<span style="color:#008800">&gt;</span><span style="color:#00cc00">'+t.slice(1)+'</span>';
+    box.appendChild(d);
+  });
+  var els=box.querySelectorAll('.gea-spl-line');
+  els.forEach(function(el,i){
+    var t0=6500+i*500;
+    setTimeout(function(){el.classList.add('go');},t0);
+    for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
+  });
+
+  // === AUDIO ===
+  try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
+  function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(10);}catch(e){}}
+  sp.addEventListener('click',_splashSound,{once:true});
+  sp.addEventListener('touchstart',_splashSound,{once:true});
+
+  // === TRANSITION (12s) ===
+  setTimeout(function(){
+    matrixRunning=false;
+    sp.style.opacity='0';
+    setTimeout(function(){sp.style.display='none';ctx=null;},600);
+    sessionStorage.setItem('geaSplashShown','1');
+  },12000);
+})();
+</script>
+
 <nav>
   <div class="nav-c">
     <a href="index.html" class="nav-logo">
