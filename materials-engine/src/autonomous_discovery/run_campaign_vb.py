@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from autonomous_discovery.engine import DiscoveryEngine
 
-OUTPUT_DIR = os.path.expanduser("~/SOST/sostcore/sost-core/materials-engine/artifacts/campaigns_vb")
+OUTPUT_DIR = os.path.expanduser("~/SOST/sostcore/sost-core/materials-engine/artifacts/campaigns_vc")
 
 CAMPAIGNS = [
     {
@@ -67,6 +67,22 @@ CAMPAIGNS = [
         "iterations": 3,
         "max_candidates": 25,
         "description": "Strategic materials discovery campaign",
+    },
+    {
+        "name": "battery_relevant",
+        "profile": "battery_relevant",
+        "seeds": [("LiCoO2", "NiO"), ("Fe2O3", "Al2O3"), ("MgO", "ZrO2")],
+        "iterations": 3,
+        "max_candidates": 25,
+        "description": "Battery-relevant materials campaign",
+    },
+    {
+        "name": "exploratory_oxides",
+        "profile": "exploratory_oxides",
+        "seeds": [("TiO2", "ZnO"), ("Fe2O3", "Al2O3"), ("BaTiO3", "SrTiO3")],
+        "iterations": 3,
+        "max_candidates": 25,
+        "description": "Oxide-focused exploratory campaign",
     },
 ]
 

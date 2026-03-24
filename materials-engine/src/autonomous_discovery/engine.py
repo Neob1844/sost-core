@@ -138,21 +138,10 @@ class DiscoveryEngine:
             }
             c["candidate_context"] = candidate_context
 
-            # Score with all context (Phase V.B: pass candidate_context)
+            # Phase V.C: scorer handles all bonuses/penalties via candidate_context
             scores = score_candidate(c["formula"], elements, c.get("method", "unknown"),
                                      self.profile, self.memory, neighbors=ml.get("nearest_neighbors"),
                                      candidate_context=candidate_context)
-            # Structure + GNN bonus
-            if lift.get("structure_lift_status") == "lifted_ok":
-                scores["composite_score"] = min(1.0, scores["composite_score"] + 0.08)
-                scores["structure_quality_score"] = 0.08
-            elif ml.get("ml_confidence") in ("medium", "high"):
-                scores["composite_score"] = min(1.0, scores["composite_score"] + 0.05)
-                scores["structure_quality_score"] = 0.05
-            else:
-                scores["structure_quality_score"] = 0.0
-                # Penalize composition-only candidates
-                scores["composite_score"] = max(0.0, scores["composite_score"] - 0.03)
 
             c["scores"] = scores
             c["composite_score"] = scores["composite_score"]

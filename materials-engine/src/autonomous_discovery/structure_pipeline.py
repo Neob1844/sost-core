@@ -111,14 +111,81 @@ def lift_structure_for_candidate(candidate_formula, candidate_elements,
             result["structure_validation_notes"] = f"Substitution failed: {e}"
             return result
 
-    # For other methods, try direct copy with element replacement
+    # Phase V.C: Expand lift to doping and mixed-parent via neighbor prototype
     if generation_method in ("single_site_doping", "mixed_parent"):
+        # Try to find a corpus neighbor with overlapping elements as prototype
+        try:
+            prototype = _find_best_prototype(candidate_formula, candidate_elements)
+            if prototype:
+                proto_struct = load_structure(prototype["cif"])
+                if proto_struct:
+                    lifted = _lift_by_substitution(proto_struct, prototype["formula"],
+                                                    candidate_formula, candidate_elements)
+                    if lifted:
+                        cif_text = structure_to_cif(lifted)
+                        result["structure_lift_status"] = "lifted_ok"
+                        result["lifted_from_parent"] = prototype["formula"]
+                        result["lifted_spacegroup"] = prototype.get("spacegroup")
+                        result["lifted_structure_confidence"] = "low"  # neighbor-based, not parent
+                        result["lifted_cif"] = cif_text
+                        result["structure_validation_notes"] = (
+                            f"Lifted from corpus neighbor {prototype['formula']} "
+                            f"(overlap={prototype.get('overlap', 0):.0%}). NOT relaxed."
+                        )
+                        return result
+        except Exception as e:
+            result["structure_validation_notes"] = f"Neighbor-based lift failed: {e}"
+
         result["structure_lift_status"] = "method_not_liftable"
-        result["structure_validation_notes"] = f"Strategy '{generation_method}' not supported for direct lift"
+        result["structure_validation_notes"] += f" Strategy '{generation_method}' — no suitable prototype found."
         return result
 
     result["structure_lift_status"] = "unsupported_method"
     return result
+
+
+def _find_best_prototype(candidate_formula, candidate_elements):
+    """Find the best corpus material to use as structure prototype.
+
+    Prioritizes by element overlap, then by lowest |formation_energy|.
+    """
+    if not os.path.exists(DB_PATH):
+        return None
+
+    cand_set = set(candidate_elements)
+    try:
+        db = sqlite3.connect(DB_PATH)
+        cur = db.cursor()
+        # Search for materials with overlapping elements
+        # We can't do set intersection in SQL, so fetch candidates by shared elements
+        best = None
+        best_overlap = 0.0
+
+        for elem in candidate_elements[:3]:  # limit search scope
+            cur.execute(
+                "SELECT formula, structure_data, spacegroup, formation_energy "
+                "FROM materials WHERE formula LIKE ? AND has_valid_structure=1 "
+                "AND structure_data IS NOT NULL "
+                "ORDER BY ABS(formation_energy) ASC LIMIT 5",
+                (f"%{elem}%",))
+            for row in cur.fetchall():
+                proto_formula = row[0]
+                proto_comp = parse_formula(proto_formula)
+                proto_set = set(proto_comp.keys())
+                overlap = len(cand_set & proto_set) / max(len(cand_set | proto_set), 1)
+                # Require at least 50% overlap and same element count (±1)
+                if overlap > best_overlap and overlap >= 0.5 and abs(len(proto_set) - len(cand_set)) <= 1:
+                    best_overlap = overlap
+                    best = {
+                        "formula": proto_formula,
+                        "cif": row[1],
+                        "spacegroup": row[2],
+                        "overlap": overlap,
+                    }
+        db.close()
+        return best
+    except Exception:
+        return None
 
 
 def _lift_by_substitution(parent_struct, parent_formula, candidate_formula, candidate_elements):

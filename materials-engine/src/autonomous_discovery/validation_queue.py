@@ -59,25 +59,29 @@ def route_candidate(scores, ml_eval=None, candidate_context=None):
             "structure_status": "available" if has_structure else "composition_only",
         }
 
-    # Phase V.B: proxy_only origin caps at validation_candidate (never priority_validation)
-    proxy_only_cap = prediction_origin == "proxy_only"
+    # Phase V.C: proxy_only origin capped (never priority_validation, cap at validation_candidate)
+    proxy_only = prediction_origin in ("proxy_only", "unavailable") and not ctx.get("has_structure_lift", False)
 
-    # Phase V.B: direct_gnn_lifted with good score → boost toward priority_validation
-    direct_gnn_boost = prediction_origin == "direct_gnn_lifted" and composite >= 0.50
+    # Phase V.C: novel direct GNN candidates get strong boost
+    is_novel_gnn = scores.get("is_novel_direct_gnn", False)
+    direct_gnn_boost = prediction_origin == "direct_gnn_lifted" and composite >= 0.48
 
-    # Priority validation: high score + structure + ML context (or direct GNN boost)
-    if not proxy_only_cap and (
-        (composite >= 0.55 and has_structure and ml_confidence in ("medium", "high")) or
-        (direct_gnn_boost and composite >= 0.52)
+    # Priority validation: novel direct GNN with good score, OR traditional high score with structure
+    if not proxy_only and (
+        (is_novel_gnn and composite >= 0.50) or
+        (direct_gnn_boost and composite >= 0.50) or
+        (composite >= 0.55 and has_structure and ml_confidence in ("medium", "high"))
     ):
         decision = "priority_validation"
-        reasons.append("high_composite_with_structure")
-        if direct_gnn_boost:
+        reasons.append("high_composite_with_evidence")
+        if is_novel_gnn:
+            reasons.append("novel_direct_gnn_candidate")
+        elif direct_gnn_boost:
             reasons.append("direct_gnn_lifted_boost")
         next_step = "dft_handoff_candidate"
         priority = 4
 
-    # Validation candidate: good score + some ML context
+    # Validation candidate: good score + some ML context (proxy_only allowed here)
     elif composite >= 0.45 and plausibility >= 0.5:
         decision = "validation_candidate"
         reasons.append("good_score_and_plausibility")

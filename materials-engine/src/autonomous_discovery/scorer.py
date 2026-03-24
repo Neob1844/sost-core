@@ -134,41 +134,60 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
     composite *= (1.0 - 0.4 * redundancy_penalty)
     composite = round(max(0.0, min(1.0, composite)), 4)
 
-    # Phase V.B: Direct GNN and known-material adjustments
+    # Phase V.C: Scoring adjustments for quality discovery
     known_material_penalty = 0.0
     direct_gnn_bonus = 0.0
     proxy_only_penalty = 0.0
     new_candidate_bonus = 0.0
     validation_readiness_bonus = 0.0
+    novel_direct_gnn_bonus = 0.0
+    liftability_bonus = 0.0
     ctx_prediction_origin = "unavailable"
+    is_novel_direct_gnn = False
 
     if candidate_context:
         ctx_prediction_origin = candidate_context.get("prediction_origin", "unavailable")
+        is_known = candidate_context.get("is_known_material", False)
+        has_gnn = candidate_context.get("has_direct_gnn_fe", False) or candidate_context.get("has_direct_gnn_bg", False)
+        has_lift = candidate_context.get("has_structure_lift", False)
 
-        # Known material penalty: references, not top candidates
-        if candidate_context.get("is_known_material", False):
-            known_material_penalty = 0.12
+        # V.C: Known material penalty (increased from 0.12 → 0.18)
+        if is_known:
+            known_material_penalty = 0.18
             composite = round(max(0.0, composite - known_material_penalty), 4)
 
-        # Direct GNN bonus: real CGCNN/ALIGNN prediction on new candidate
-        if candidate_context.get("has_direct_gnn_fe", False) or candidate_context.get("has_direct_gnn_bg", False):
-            direct_gnn_bonus = 0.10
+        # V.C: Direct GNN bonus (increased from 0.10 → 0.14)
+        if has_gnn:
+            direct_gnn_bonus = 0.14
             composite = round(min(1.0, composite + direct_gnn_bonus), 4)
 
-        # Proxy-only penalty: no structure, no direct GNN
-        if ctx_prediction_origin == "proxy_only" and not candidate_context.get("has_structure_lift", False):
-            proxy_only_penalty = 0.05
+        # V.C: Novel + direct GNN = extra bonus (truly new with real evidence)
+        if not is_known and has_gnn and has_lift:
+            novel_direct_gnn_bonus = 0.06
+            composite = round(min(1.0, composite + novel_direct_gnn_bonus), 4)
+            is_novel_direct_gnn = True
+
+        # V.C: Liftability bonus (structure lift success, even without GNN)
+        if has_lift and not is_known:
+            liftability_bonus = 0.03
+            composite = round(min(1.0, composite + liftability_bonus), 4)
+
+        # V.C: Proxy-only penalty (increased from 0.05 → 0.10)
+        if ctx_prediction_origin in ("proxy_only", "unavailable") and not has_lift:
+            proxy_only_penalty = 0.10
             composite = round(max(0.0, composite - proxy_only_penalty), 4)
 
-        # New candidate bonus: genuinely new with plausible scores
-        if not candidate_context.get("is_known_material", False) and plausibility >= MIN_PLAUSIBILITY and composite >= WATCHLIST_THRESHOLD:
+        # V.C: Proxy cap — proxy-only candidates capped at 0.55
+        if ctx_prediction_origin in ("proxy_only", "unavailable") and not has_lift:
+            composite = round(min(0.55, composite), 4)
+
+        # V.C: New candidate bonus (kept from V.B)
+        if not is_known and plausibility >= MIN_PLAUSIBILITY and composite >= WATCHLIST_THRESHOLD:
             new_candidate_bonus = 0.06
             composite = round(min(1.0, composite + new_candidate_bonus), 4)
 
-        # Validation readiness bonus: structure + direct GNN + good confidence
-        if (candidate_context.get("has_structure_lift", False) and
-                (candidate_context.get("has_direct_gnn_fe", False) or candidate_context.get("has_direct_gnn_bg", False)) and
-                candidate_context.get("gnn_confidence") in ("medium", "high")):
+        # V.C: Validation readiness bonus
+        if has_lift and has_gnn and candidate_context.get("gnn_confidence") in ("medium", "high"):
             validation_readiness_bonus = 0.04
             composite = round(min(1.0, composite + validation_readiness_bonus), 4)
 
@@ -190,6 +209,9 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
         "proxy_only_penalty": round(proxy_only_penalty, 4),
         "new_candidate_bonus": round(new_candidate_bonus, 4),
         "validation_readiness_bonus": round(validation_readiness_bonus, 4),
+        "novel_direct_gnn_bonus": round(novel_direct_gnn_bonus, 4),
+        "liftability_bonus": round(liftability_bonus, 4),
+        "is_novel_direct_gnn": is_novel_direct_gnn,
         "prediction_origin": ctx_prediction_origin,
     }
 
