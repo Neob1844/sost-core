@@ -597,6 +597,7 @@
 @keyframes splType{from{width:0}to{width:100%}}
 </style>
 <script src="js/retro-sounds.js"></script>
+<script src="js/retro-melodies.js"></script>
 <script>
 (function(){
   if(sessionStorage.getItem('splashShown'))return;
@@ -727,9 +728,10 @@
     for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
   });
 
-  // === AUDIO UNLOCK (chiptune) ===
+  // === AUDIO: random retro melody + chiptune ===
+  try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){}
   try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(12);}catch(e){}
-  function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(10);}catch(e){}}
+  function _splashSound(){try{if(typeof playRandomMelody==='function')playRandomMelody(getAC());}catch(e){};try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(10);}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
 
@@ -745,7 +747,7 @@
 <nav>
   <div class="container">
     <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="height:110px;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
