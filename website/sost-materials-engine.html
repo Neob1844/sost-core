@@ -934,6 +934,35 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
 
   <div class="container" style="position:relative;z-index:3">
 
+    <!-- ACCESS GATE — same system as GeaSpirit, same passphrase -->
+    <div id="me-access-panel" style="text-align:center;padding:40px 20px;max-width:500px;margin:0 auto">
+      <div style="font-size:10px;color:#006600;letter-spacing:3px;margin-bottom:24px">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
+      <div style="color:#00ff41;letter-spacing:2px;margin-bottom:24px;font-size:12px;line-height:2">
+        &#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;<br>
+        &#9553;&nbsp; RESTRICTED ACCESS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
+        &#9553;&nbsp; Discovery console requires clearance &nbsp;&#9553;<br>
+        &#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;
+      </div>
+      <div style="margin-bottom:16px">
+        <input type="password" id="me-access-pwd" placeholder="Enter clearance code"
+          style="background:#001a00;color:#00ff41;border:1px solid #003300;padding:10px 14px;font-family:monospace;font-size:13px;width:220px;border-radius:4px;outline:none">
+        <button onclick="meCheckAccess()"
+          style="background:#002200;color:#00ff41;border:1px solid #004400;padding:10px 20px;font-family:monospace;font-size:12px;cursor:pointer;margin-left:8px;border-radius:4px;letter-spacing:1px;font-weight:600">ENTER</button>
+      </div>
+      <div id="me-access-msg" style="color:#ff0000;margin-top:8px;min-height:18px;font-size:11px"></div>
+      <p style="color:#004400;font-size:10px;margin-top:20px;line-height:1.6">Same clearance code as GeaSpirit Platform.<br>Research data and autonomous discovery console are restricted.</p>
+    </div>
+
+    <!-- SESSION BAR (visible when unlocked) -->
+    <div id="me-session-bar" style="display:none;position:sticky;top:0;z-index:50;background:#001a00;border:1px solid #003300;border-radius:4px;padding:8px 16px;margin-bottom:20px;display:none;justify-content:space-between;align-items:center;font-size:11px">
+      <span style="color:#006600">SESSION ACTIVE</span>
+      <span>&#9201; <span id="me-countdown" style="color:#00ff41;font-weight:700">10:00</span></span>
+      <button id="me-refresh-btn" onclick="meRefreshSession()" style="background:#002200;color:#00ff41;border:1px solid #004400;padding:4px 12px;font-family:monospace;font-size:10px;cursor:pointer;border-radius:3px">&#8635; REFRESH</button>
+    </div>
+
+  <!-- PROTECTED CONSOLE CONTENT (hidden until access granted) -->
+  <div id="me-protected" style="display:none">
+
     <!-- CONSOLE HEADER -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px">
       <div>
@@ -1129,7 +1158,9 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       <strong style="color:#cc4444">Honest limitations:</strong> All candidates are <strong>theoretical</strong>. No DFT or experimental validation performed. Structure lift &ne; correct structure. GNN prediction &ne; confirmation. Novelty relative to 76,193-material corpus only. Proxy estimates (~46%) carry higher uncertainty.
     </div>
 
-  </div>
+  </div><!-- /me-protected -->
+
+  </div><!-- /container -->
 </section>
 
 <!-- ARCHITECTURE -->
@@ -1686,6 +1717,68 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 </script>
 
 <script src="js/materials-data.js"></script>
+<script>
+// === MATERIALS ENGINE ACCESS CONTROL ===
+// Same system as GeaSpirit: SHA-256 hash verification, same passphrase
+var _meSessionTimer=null;
+var _meSecondsLeft=600;
+
+async function meCheckAccess(){
+  var pwd=document.getElementById('me-access-pwd').value;
+  var enc=new TextEncoder();
+  var buf=await crypto.subtle.digest('SHA-256',enc.encode(pwd));
+  var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  // Same hash as GeaSpirit — same clearance code
+  if(hex==='16614047733526b2a16927bcdcec190f434250e761a74ce397df27008798c73d'){
+    document.getElementById('me-protected').style.display='block';
+    document.getElementById('me-access-panel').style.display='none';
+    document.getElementById('me-session-bar').style.display='flex';
+    meStartSession(600);
+  }else{
+    var msg=document.getElementById('me-access-msg');
+    msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';
+    setTimeout(function(){msg.textContent=''},2000);
+  }
+}
+document.getElementById('me-access-pwd').addEventListener('keypress',function(e){if(e.key==='Enter')meCheckAccess()});
+
+function meStartSession(dur){
+  _meSecondsLeft=dur;
+  clearInterval(_meSessionTimer);
+  meUpdateCountdown();
+  _meSessionTimer=setInterval(function(){
+    _meSecondsLeft--;
+    meUpdateCountdown();
+    var el=document.getElementById('me-countdown');
+    if(_meSecondsLeft<=60){el.style.color='#ff0000';}
+    else if(_meSecondsLeft<=180){el.style.color='#ff8800';}
+    else{el.style.color='#00ff41';}
+    if(_meSecondsLeft<=0)meLockSession();
+  },1000);
+}
+
+function meUpdateCountdown(){
+  var m=Math.floor(_meSecondsLeft/60);var s=_meSecondsLeft%60;
+  document.getElementById('me-countdown').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function meRefreshSession(){
+  meStartSession(600);
+  var btn=document.getElementById('me-refresh-btn');
+  btn.textContent='\u2713 REFRESHED';btn.style.background='#00ff41';btn.style.color='#000';
+  setTimeout(function(){btn.textContent='\u21BB REFRESH';btn.style.background='#002200';btn.style.color='#00ff41';},1000);
+}
+
+function meLockSession(){
+  clearInterval(_meSessionTimer);
+  document.getElementById('me-protected').style.display='none';
+  document.getElementById('me-session-bar').style.display='none';
+  document.getElementById('me-access-panel').style.display='block';
+  document.getElementById('me-access-pwd').value='';
+  var msg=document.getElementById('me-access-msg');
+  msg.textContent='> SESSION EXPIRED \u2014 re-enter clearance code';msg.style.color='#ffb000';
+}
+</script>
 <script>
 // === MATERIALS ENGINE CONSOLE — DATA WIRING ===
 (function(){
