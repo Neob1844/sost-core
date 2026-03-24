@@ -951,18 +951,18 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px">
       <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
         <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">DIRECT GNN RATE</div>
-        <div style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">54.1%</div>
-        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:54%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
+        <div id="me-gnn-rate" style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">54.1%</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-gnn-bar" style="width:54%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
       <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
         <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">PROXY DEPENDENCY</div>
-        <div style="font-size:28px;font-weight:700;color:#fbbf24;text-shadow:0 0 10px rgba(251,191,36,.3)">45.9%</div>
-        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:46%;height:100%;background:linear-gradient(90deg,#004400,#fbbf24);border-radius:2px"></div></div>
+        <div id="me-proxy-rate" style="font-size:28px;font-weight:700;color:#fbbf24;text-shadow:0 0 10px rgba(251,191,36,.3)">45.9%</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-proxy-bar" style="width:46%;height:100%;background:linear-gradient(90deg,#004400,#fbbf24);border-radius:2px"></div></div>
       </div>
       <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
         <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">MEAN TOP-10 SCORE</div>
-        <div style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">0.653</div>
-        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div style="width:65%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
+        <div id="me-score" style="font-size:28px;font-weight:700;color:#00ff41;text-shadow:0 0 10px rgba(0,255,65,.4)">0.653</div>
+        <div style="height:4px;background:#0a1a0a;border-radius:2px;margin-top:8px;overflow:hidden"><div id="me-score-bar" style="width:65%;height:100%;background:linear-gradient(90deg,#004400,#00ff41);border-radius:2px"></div></div>
       </div>
       <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:14px 18px">
         <div style="font-size:9px;color:#006600;letter-spacing:2px;margin-bottom:6px">CAMPAIGNS</div>
@@ -1095,6 +1095,44 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.3)">PROXY ESTIMATE</span>
       <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(136,136,136,.1);color:#888;border:1px solid rgba(136,136,136,.3)">KNOWN MATERIAL</span>
       <span style="padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;font-weight:600;background:rgba(255,68,68,.1);color:#ff4444;border:1px solid rgba(255,68,68,.3)">NOT VALIDATED</span>
+    </div>
+
+    <!-- CAMPAIGN INSPECTOR -->
+    <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        <div style="font-size:10px;color:#006600;letter-spacing:2px">// CAMPAIGN INSPECTOR</div>
+        <select id="me-campaign-select" onchange="showCampaignDetail(this.value)" style="background:#001a00;color:#00ff41;border:1px solid #003300;padding:6px 12px;font-family:monospace;font-size:11px;border-radius:4px">
+          <option value="">Select campaign...</option>
+        </select>
+      </div>
+      <div id="me-campaign-detail" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;font-size:11px">
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">CANDIDATES</div><div id="cd-candidates" style="color:#00ff41;font-size:18px;font-weight:700">0</div></div>
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">DIRECT FE</div><div id="cd-fe" style="color:#00ff41;font-size:18px;font-weight:700">0%</div></div>
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">PROXY</div><div id="cd-proxy" style="color:#fbbf24;font-size:18px;font-weight:700">0%</div></div>
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">SCORE</div><div id="cd-score" style="color:#00ff41;font-size:18px;font-weight:700">0</div></div>
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">KNOWN</div><div id="cd-known" style="color:#888;font-size:18px;font-weight:700">0%</div></div>
+          <div style="background:#001a00;padding:8px;border-radius:4px;text-align:center"><div style="color:#006600;font-size:9px">NEW</div><div id="cd-new" style="color:#00ff41;font-size:18px;font-weight:700">0%</div></div>
+        </div>
+        <div id="cd-top5" style="font-size:11px;font-family:monospace;color:#008800;line-height:2"></div>
+      </div>
+    </div>
+
+    <!-- CANDIDATE DETAIL PANEL -->
+    <div id="me-candidate-panel" style="display:none;background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:18px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:10px;color:#006600;letter-spacing:2px">// CANDIDATE DETAIL</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="setCandidateView('tech')" id="cv-tech-btn" style="background:#002200;color:#00ff41;border:1px solid #004400;padding:4px 12px;border-radius:3px;font-family:monospace;font-size:10px;cursor:pointer;font-weight:700">TECHNICAL</button>
+          <button onclick="setCandidateView('plain')" id="cv-plain-btn" style="background:#001a00;color:#006600;border:1px solid #003300;padding:4px 12px;border-radius:3px;font-family:monospace;font-size:10px;cursor:pointer">PLAIN</button>
+        </div>
+      </div>
+      <div id="cv-content" style="font-size:12px;color:#008800;line-height:1.8"></div>
+    </div>
+
+    <!-- DATA SOURCE LABEL -->
+    <div style="text-align:right;font-size:9px;color:#004400;margin-bottom:16px;letter-spacing:1px">
+      DATA: <span style="color:#006600">LATEST VERIFIED RUN</span> &middot; <span id="me-timestamp" style="color:#004400"></span>
     </div>
 
     <!-- QUICK HELP -->
@@ -1672,6 +1710,172 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 });
 </script>
 
+<script src="js/materials-data.js"></script>
+<script>
+// === MATERIALS ENGINE CONSOLE — DATA WIRING ===
+(function(){
+  if(typeof ME_DATA==='undefined')return;
+  var D=ME_DATA;
+  var A=D.agg||{};
+
+  // Gauges
+  var gnn=Math.round((A.avg_direct_fe_inference_rate||0)*100);
+  var proxy=Math.round((A.avg_proxy_dependency_rate||0)*100);
+  var score=(A.avg_mean_top10_score||0).toFixed(3);
+  var plaus=(A.avg_mean_top10_plausibility||0).toFixed(3);
+
+  var el=function(id){return document.getElementById(id)};
+  if(el('me-gnn-rate')){el('me-gnn-rate').textContent=gnn+'%';el('me-gnn-bar').style.width=gnn+'%';}
+  if(el('me-proxy-rate')){el('me-proxy-rate').textContent=proxy+'%';el('me-proxy-bar').style.width=proxy+'%';}
+  if(el('me-score')){el('me-score').textContent=score;el('me-score-bar').style.width=Math.round(score*100)+'%';}
+  if(el('me-timestamp'))el('me-timestamp').textContent=D.generated_at||'';
+
+  // Campaign selector
+  var sel=el('me-campaign-select');
+  if(sel&&D.campaigns){
+    for(var name in D.campaigns){
+      var opt=document.createElement('option');opt.value=name;
+      opt.textContent=name.replace(/_/g,' ');sel.appendChild(opt);
+    }
+  }
+
+  // Top candidates table — make rows clickable
+  var tbl=document.querySelector('#autonomous-discovery table');
+  if(tbl){
+    var rows=tbl.querySelectorAll('tr');
+    rows.forEach(function(r,i){
+      if(i===0)return;// skip header
+      r.style.cursor='pointer';
+      r.addEventListener('click',function(){
+        var formula=r.cells[0]?r.cells[0].textContent.trim():'';
+        showCandidateDetail(formula);
+      });
+      r.addEventListener('mouseenter',function(){r.style.background='#001a00'});
+      r.addEventListener('mouseleave',function(){r.style.background=''});
+    });
+  }
+
+  // Campaign inspector
+  window.showCampaignDetail=function(name){
+    var panel=el('me-campaign-detail');
+    if(!name||!D.campaigns[name]){panel.style.display='none';return;}
+    panel.style.display='block';
+    var c=D.campaigns[name];
+    el('cd-candidates').textContent=c.candidates||0;
+    el('cd-fe').textContent=(c.fe_rate||0)+'%';
+    el('cd-proxy').textContent=(c.proxy_rate||0)+'%';
+    el('cd-score').textContent=(c.score||0);
+    el('cd-known').textContent=(c.known_share||0)+'%';
+    el('cd-new').textContent=(c.new_share||0)+'%';
+    // Top 5
+    var top5=c.top5||[];
+    var html='';
+    for(var i=0;i<top5.length;i++){
+      var t=top5[i];
+      var origin=t.prediction_origin||'?';
+      var badge=origin==='direct_gnn_lifted'?'<span style="color:#00ff41">GNN</span>':
+                origin==='known_exact'?'<span style="color:#888">KNOWN</span>':
+                '<span style="color:#fbbf24">PROXY</span>';
+      var fe=t.direct_fe_value;
+      var feS=fe!==null&&fe!==undefined?fe.toFixed(3):'—';
+      html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #061a06">';
+      html+='<span style="color:#00ff41;cursor:pointer" onclick="showCandidateDetail(\''+t.formula+'\')">'+t.formula+'</span>';
+      html+='<span>'+badge+' &middot; FE='+feS+' &middot; score='+(t.composite_score||0).toFixed(3)+'</span>';
+      html+='</div>';
+    }
+    el('cd-top5').innerHTML=html||'<span style="color:#004400">No top candidates</span>';
+  };
+
+  // Candidate detail
+  window.showCandidateDetail=function(formula){
+    var panel=el('me-candidate-panel');
+    if(!formula){panel.style.display='none';return;}
+    panel.style.display='block';
+    // Find candidate in global top list
+    var cand=null;
+    if(D.top_candidates){
+      for(var i=0;i<D.top_candidates.length;i++){
+        if(D.top_candidates[i].formula===formula){cand=D.top_candidates[i];break;}
+      }
+    }
+    if(!cand){
+      // Search in campaign top5s
+      for(var cn in D.campaigns){
+        var t5=D.campaigns[cn].top5||[];
+        for(var j=0;j<t5.length;j++){
+          if(t5[j].formula===formula){cand=t5[j];break;}
+        }
+        if(cand)break;
+      }
+    }
+    if(!cand){el('cv-content').innerHTML='<span style="color:#004400">Candidate not found: '+formula+'</span>';return;}
+    window._selectedCandidate=cand;
+    setCandidateView('tech');
+  };
+
+  window.setCandidateView=function(mode){
+    var c=window._selectedCandidate;if(!c)return;
+    var techBtn=el('cv-tech-btn'),plainBtn=el('cv-plain-btn');
+    if(mode==='tech'){
+      techBtn.style.background='#002200';techBtn.style.color='#00ff41';techBtn.style.fontWeight='700';
+      plainBtn.style.background='#001a00';plainBtn.style.color='#006600';plainBtn.style.fontWeight='400';
+    }else{
+      plainBtn.style.background='#002200';plainBtn.style.color='#00ff41';plainBtn.style.fontWeight='700';
+      techBtn.style.background='#001a00';techBtn.style.color='#006600';techBtn.style.fontWeight='400';
+    }
+    var origin=c.prediction_origin||'unavailable';
+    var badge=origin==='direct_gnn_lifted'?'<span style="background:rgba(0,255,65,.1);color:#00ff41;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(0,255,65,.3)">DIRECT GNN</span>':
+              origin==='known_exact'?'<span style="background:rgba(136,136,136,.1);color:#888;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(136,136,136,.3)">KNOWN</span>':
+              '<span style="background:rgba(251,191,36,.1);color:#fbbf24;padding:2px 8px;border-radius:3px;font-size:10px;border:1px solid rgba(251,191,36,.3)">PROXY</span>';
+    var fe=c.direct_fe_value;var bg=c.direct_bg_value;
+    var feS=fe!==null&&fe!==undefined?fe.toFixed(4)+' eV/atom':'—';
+    var bgS=bg!==null&&bg!==undefined?bg.toFixed(4)+' eV':'—';
+    var unc=c.uncertainty_score;var conf=c.confidence_score;
+    var ready=c.validation_readiness;var action=c.readiness_action||c.next_step||'—';
+    var support=c.support_strength||'—';
+
+    if(mode==='tech'){
+      el('cv-content').innerHTML=
+        '<div style="font-size:24px;font-weight:700;color:#00ff41;margin-bottom:8px">'+c.formula+'</div>'+
+        '<div style="margin-bottom:12px">'+badge+'</div>'+
+        '<table style="width:100%;font-size:11px;border-collapse:collapse">'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Score</td><td style="padding:6px;color:#00ff41;font-weight:600">'+(c.composite_score||0).toFixed(4)+'</td></tr>'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Method</td><td style="padding:6px;color:#008800">'+(c.method||'—')+'</td></tr>'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Formation Energy</td><td style="padding:6px;color:#00cc00">'+feS+'</td></tr>'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Band Gap</td><td style="padding:6px;color:#00cc00">'+bgS+'</td></tr>'+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Prediction Origin</td><td style="padding:6px;color:#008800">'+origin+'</td></tr>'+
+        (unc!==undefined?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Uncertainty</td><td style="padding:6px;color:'+(unc>0.5?'#fbbf24':'#00cc00')+'">'+unc.toFixed(3)+'</td></tr>':'')+
+        (conf!==undefined?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Confidence</td><td style="padding:6px;color:#00cc00">'+conf.toFixed(3)+'</td></tr>':'')+
+        (ready!==undefined?'<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Validation Readiness</td><td style="padding:6px;color:#00cc00">'+ready.toFixed(3)+'</td></tr>':'')+
+        '<tr style="border-bottom:1px solid #061a06"><td style="padding:6px;color:#006600">Support</td><td style="padding:6px;color:#008800">'+support+'</td></tr>'+
+        '<tr><td style="padding:6px;color:#006600">Next Action</td><td style="padding:6px;color:#fbbf24">'+action+'</td></tr>'+
+        '</table>';
+    }else{
+      var known=origin==='known_exact';
+      var novel=origin==='direct_gnn_lifted';
+      var status=known?'This is a known material already in our corpus (reference baseline).':
+                 novel?'This is a genuinely new candidate with real GNN prediction — promising but unconfirmed.':
+                 'This candidate relies on proxy estimates from similar materials — higher uncertainty.';
+      var feP=fe!==null&&fe!==undefined?'The model predicts a formation energy of '+fe.toFixed(3)+' eV/atom.':'No formation energy prediction available.';
+      var confP=conf!==undefined?(conf>=0.6?'Confidence is moderate to strong.':'Confidence is low — treat with caution.'):'';
+      var nextP=action==='DFT_handoff_candidate'?'This candidate is ready for computational validation (DFT).':
+                action==='reference_only'?'Known material — useful as baseline, not a discovery.':
+                'More evidence needed before deeper validation.';
+      el('cv-content').innerHTML=
+        '<div style="font-size:24px;font-weight:700;color:#00ff41;margin-bottom:12px">'+c.formula+'</div>'+
+        '<div style="margin-bottom:12px">'+badge+'</div>'+
+        '<p style="line-height:1.8;margin-bottom:8px">'+status+'</p>'+
+        '<p style="line-height:1.8;margin-bottom:8px">'+feP+' '+confP+'</p>'+
+        '<p style="line-height:1.8;color:#fbbf24">'+nextP+'</p>';
+    }
+  };
+
+  // Scroll to panel if opened
+  el('me-candidate-panel')&&el('me-candidate-panel').addEventListener('DOMNodeInserted',function(){
+    el('me-candidate-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+})();
+</script>
 <script src="sost-search.js"></script>
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
