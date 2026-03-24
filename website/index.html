@@ -583,17 +583,18 @@
 <script src="js/security.js"></script>
 </head>
 <body>
-<!-- SPLASH — first visit per session only -->
-<div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease">
-  <img src="sost-logo.png" alt="SOST" style="width:180px;height:180px;border-radius:20%;opacity:0;transform:scale(.4);animation:splIn 1.8s ease forwards">
-  <div style="margin-top:20px;font-size:22px;font-weight:700;color:#fb010d;letter-spacing:4px;text-align:center;opacity:0;animation:splFade .8s ease 1.8s forwards;font-family:'JetBrains Mono',monospace">SOST PROTOCOL</div>
-  <div id="spl-lines" style="margin-top:28px;font-size:13px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,.4);min-height:80px;text-align:left;width:320px;font-family:'JetBrains Mono',monospace"></div>
-  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.015) 2px,rgba(0,255,136,.015) 4px);pointer-events:none;opacity:.6"></div>
+<!-- SPLASH — Red Matrix Rain -->
+<div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
+  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:10;text-align:center;pointer-events:none">
+    <img id="splash-logo" src="sost-logo.png" alt="SOST" style="width:180px;height:180px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0))">
+    <div id="splash-title" style="margin-top:20px;font-size:22px;font-weight:700;letter-spacing:4px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap"></div>
+    <div id="spl-lines" style="margin-top:28px;font-size:13px;min-height:80px;text-align:left;width:320px;margin-left:auto;margin-right:auto;font-family:'JetBrains Mono',monospace"></div>
+  </div>
+  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
 </div>
 <style>
-@keyframes splIn{to{opacity:1;transform:scale(1)}}
-@keyframes splFade{to{opacity:1}}
-.spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #00ff88;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
+.spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
 .spl-line.go{animation:splType .5s steps(30) forwards;opacity:1}
 @keyframes splType{from{width:0}to{width:100%}}
 </style>
@@ -602,12 +603,117 @@
 (function(){
   if(sessionStorage.getItem('splashShown'))return;
   var sp=document.getElementById('sost-splash');
-  sp.style.display='flex';
-  var lines=['> Initializing node connection...','> Verifying genesis block...','> Syncing chain data...','> Loading modules...'];
+  sp.style.display='block';
+
+  // === MATRIX RAIN (RED) ===
+  var canvas=document.getElementById('matrix-canvas');
+  var ctx=canvas.getContext('2d');
+  var W,H,columns,drops,fontSize=14;
+  var chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&*+=<>{}[]';
+  chars=chars.split('');
+
+  function initMatrix(){
+    W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
+    if(W<600)fontSize=10;
+    columns=Math.floor(W/fontSize);
+    drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
+  }
+  initMatrix();
+  window.addEventListener('resize',initMatrix);
+
+  var matrixRunning=true;
+  function drawMatrix(){
+    if(!matrixRunning)return;
+    ctx.fillStyle='rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.font=fontSize+'px monospace';
+    for(var i=0;i<drops.length;i++){
+      var ch=chars[Math.random()*chars.length|0];
+      var y=drops[i]*fontSize;
+      // Head: white
+      ctx.fillStyle='#ffffff';
+      ctx.fillText(ch,i*fontSize,y);
+      // Previous char: bright red
+      if(drops[i]>1){
+        var ch2=chars[Math.random()*chars.length|0];
+        ctx.fillStyle='#fb010d';
+        ctx.fillText(ch2,i*fontSize,(drops[i]-1)*fontSize);
+      }
+      // Trail: darker reds
+      if(drops[i]>3){
+        var ch3=chars[Math.random()*chars.length|0];
+        var br=Math.random();
+        ctx.fillStyle=br>.5?'#cc0000':'#880000';
+        ctx.fillText(ch3,i*fontSize,(drops[i]-2-Math.random()*2|0)*fontSize);
+      }
+      if(y>H&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(drawMatrix);
+  }
+  requestAnimationFrame(drawMatrix);
+
+  // === LOGO EMERGE (2s) ===
+  var logo=document.getElementById('splash-logo');
+  setTimeout(function(){
+    logo.style.opacity='0.15';
+  },1500);
+  setTimeout(function(){
+    logo.style.opacity='0.4';
+    logo.style.filter='drop-shadow(0 0 10px rgba(251,1,13,0.3))';
+  },2000);
+  setTimeout(function(){
+    logo.style.opacity='0.7';
+    logo.style.filter='drop-shadow(0 0 20px rgba(251,1,13,0.5))';
+  },2500);
+  setTimeout(function(){
+    logo.style.opacity='1';
+    logo.style.filter='drop-shadow(0 0 30px rgba(251,1,13,0.6)) drop-shadow(0 0 60px rgba(251,1,13,0.3))';
+  },3000);
+
+  // === TITLE TYPING (3.5s) ===
+  var titleEl=document.getElementById('splash-title');
+  var titleText=[{t:'SOST',c:'#fb010d'},{t:' PROTOCOL',c:'#ffffff'}];
+  var titleDelay=3500;
+  var charIdx=0;
+  var segIdx=0;
+  function typeTitle(){
+    if(segIdx>=titleText.length)return;
+    var seg=titleText[segIdx];
+    if(charIdx<seg.t.length){
+      var span=document.createElement('span');
+      span.style.color=seg.c;
+      span.style.textShadow='0 0 10px rgba(251,1,13,0.5)';
+      span.textContent=seg.t[charIdx];
+      titleEl.appendChild(span);
+      titleEl.style.opacity='1';
+      playTypeTick();
+      charIdx++;
+      setTimeout(typeTitle,80);
+    }else{
+      charIdx=0;segIdx++;
+      setTimeout(typeTitle,40);
+    }
+  }
+  setTimeout(typeTitle,titleDelay);
+
+  // === TERMINAL LINES (5s) ===
+  var lines=['> Initializing node connection...','> Verifying genesis block...','> Syncing chain data...','> System ready.'];
   var box=document.getElementById('spl-lines');
-  lines.forEach(function(t){var d=document.createElement('div');d.className='spl-line';d.textContent=t;box.appendChild(d);});
+  lines.forEach(function(t){
+    var d=document.createElement('div');
+    d.className='spl-line';
+    d.innerHTML='<span style="color:#aa0000">&gt;</span><span style="color:#cc0000">'+t.slice(1)+'</span>';
+    box.appendChild(d);
+  });
   var els=box.querySelectorAll('.spl-line');
-  // 20 typing tick variations (louder, varied)
+  els.forEach(function(el,i){
+    var t0=5000+i*700;
+    setTimeout(function(){el.classList.add('go');},t0);
+    for(var k=0;k<8;k++){setTimeout(playTypeTick,t0+k*60);}
+  });
+
+  // === TYPING SOUND (20 variations) ===
   var TICK_PRESETS=[
     {f:900,t:'square',d:15},{f:1100,t:'square',d:20},{f:1400,t:'square',d:25},
     {f:1800,t:'square',d:18},{f:2200,t:'square',d:12},{f:800,t:'sawtooth',d:20},
@@ -619,7 +725,7 @@
   ];
   function playTypeTick(){
     try{
-      var p=TICK_PRESETS[Math.floor(Math.random()*TICK_PRESETS.length)];
+      var p=TICK_PRESETS[Math.random()*TICK_PRESETS.length|0];
       var ac=new(window.AudioContext||window.webkitAudioContext)();
       var o=ac.createOscillator();var g=ac.createGain();
       o.type=p.t;o.frequency.value=p.f;
@@ -630,19 +736,18 @@
       o.start();o.stop(ac.currentTime+dur);
     }catch(e){}
   }
-  els.forEach(function(el,i){
-    var t0=2500+i*900;
-    setTimeout(function(){el.classList.add('go');},t0);
-    for(var k=0;k<8;k++){setTimeout(playTypeTick,t0+k*60);}
-  });
-  // Try autoplay chiptune; add touch/click fallback if blocked
+
+  // === AUDIO UNLOCK ===
   try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(8);}catch(e){}
   function _splashSound(){try{if(typeof playRetroSplashMusic==='function')playRetroSplashMusic(6);}catch(e){}}
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
+
+  // === TRANSITION (7.5s fade, 8s remove) ===
   setTimeout(function(){
+    matrixRunning=false;
     sp.style.opacity='0';
-    setTimeout(function(){sp.style.display='none';},600);
+    setTimeout(function(){sp.style.display='none';ctx=null;},600);
     sessionStorage.setItem('splashShown','1');
   },8000);
 })();
