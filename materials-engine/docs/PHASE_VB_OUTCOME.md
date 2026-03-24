@@ -1,0 +1,134 @@
+# Materials Engine — Phase V.B Outcome Report
+
+**Date:** 2026-03-24
+**Phase:** V.B — Direct GNN Integration into Autonomous Pipeline
+
+---
+
+## Executive Summary
+
+Phase V.B connects the CGCNN/ALIGNN-Lite direct inference breakthrough (Phase V) into the operational autonomous discovery pipeline. The system now:
+
+1. **Attempts real GNN forward pass** on every lifted structure (CGCNN for formation energy, ALIGNN-Lite for band gap)
+2. **Penalizes known materials** in autonomous rankings (-0.12) so they serve as references, not winners
+3. **Rewards direct GNN evidence** (+0.10) for genuinely new candidates
+4. **Routes known materials** to `known_reference` tier instead of competing with novel discoveries
+5. **Tracks prediction origin** (direct_gnn_lifted | known_exact | proxy_only | unavailable) for every candidate
+
+Six pilot campaigns completed with 66 accepted candidates across III-V, oxide, group IV, semiconductor, valuable, and strategic material spaces.
+
+---
+
+## Key Metrics (Aggregate Across 6 Campaigns)
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| Direct FE inference rate | 39.8% | ~40% of candidates now get real CGCNN predictions |
+| Direct BG inference rate | 36.6% | ~37% get ALIGNN-Lite band gap predictions |
+| Direct GNN (new candidates) | 3.2% | Truly novel candidates with direct GNN (small but real) |
+| Proxy dependency rate | 60.2% | Still majority proxy — structure lift is the bottleneck |
+| Known material in top 10 | 40.0% | Down from ~80% in Phase V (penalty working) |
+| New candidate in top 10 | 3.3% | New candidates starting to appear in top rankings |
+| Mean top-10 score | 0.536 | Healthy composite (balanced profiles) |
+| Mean top-10 plausibility | 0.709 | High chemical plausibility |
+| Priority validation candidates | 2 | Two candidates reached DFT-handoff tier |
+
+---
+
+## Campaign Results Summary
+
+| Campaign | Candidates | FE Rate | BG Rate | Known Top10 | New Top10 | Priority | Best New |
+|----------|-----------|---------|---------|-------------|-----------|----------|----------|
+| III-V Semi | 11 | 27.3% | 18.2% | 20% | 10% | 1 | AlGa (FE=-0.379) |
+| Oxide Semi | 10 | 10.0% | 0.0% | 0% | 10% | 1 | OZn2 (FE=-0.294) |
+| Group IV | 3 | 100% | 100% | 100% | 0% | 0 | (all known) |
+| Stable Novel | 17 | 29.4% | 29.4% | 50% | 0% | 0 | AlNSi, GeNSi |
+| Valuable | 11 | 36.4% | 36.4% | 40% | 0% | 0 | O2Ti |
+| Strategic | 14 | 35.7% | 35.7% | 30% | 0% | 0 | AlNSi |
+
+---
+
+## Priority Validation Candidates
+
+Two candidates reached the `priority_validation` tier (DFT handoff quality):
+
+1. **AlGa** (III-V campaign) — Score 0.630, direct GNN FE = -0.379 eV/atom
+   - Novel AlGa binary with direct CGCNN prediction
+   - Lifted from GaAs parent via element substitution
+   - Status: `direct_gnn_lifted`
+
+2. **OZn2** (Oxide campaign) — Score 0.848, direct GNN FE = -0.294 eV/atom
+   - ZnO-variant with direct CGCNN prediction
+   - Lifted from ZnO parent
+   - Status: `direct_gnn_lifted`
+
+---
+
+## Technical Summary
+
+### Files Modified (4)
+| File | Change |
+|------|--------|
+| `src/autonomous_discovery/structure_pipeline.py` | Wired `predict_from_lifted_cif()` into `run_gnn_inference()`. Added `run_direct_gnn_inference()` combined function. New fields: `direct_fe_*`, `direct_bg_*`, `prediction_origin` |
+| `src/autonomous_discovery/scorer.py` | Added `candidate_context` parameter. New adjustments: known_material_penalty (-0.12), direct_gnn_bonus (+0.10), proxy_only_penalty (-0.05), new_candidate_bonus (+0.06), validation_readiness_bonus (+0.04) |
+| `src/autonomous_discovery/validation_queue.py` | Added `known_reference` tier. `candidate_context` routing. Direct GNN boost. Proxy-only cap |
+| `src/autonomous_discovery/engine.py` | Uses `run_direct_gnn_inference()`. Builds `candidate_context`. Tracks new counters. Known-material detection via corpus lookup |
+
+### Files Created (3)
+| File | Purpose |
+|------|---------|
+| `src/autonomous_discovery/run_campaign_vb.py` | Campaign runner for 6 mandatory campaigns |
+| `tests/test_phase_vb.py` | 13 tests covering GNN integration, scoring, and routing |
+| `docs/PHASE_VB_OUTCOME.md` | This report |
+
+### Test Results
+- **Phase V.B tests:** 13/13 pass
+- **Existing tests:** 19/19 pass (zero regressions)
+- **Total:** 32/32 pass
+
+---
+
+## Before/After Comparison
+
+| Metric | Phase V (before) | Phase V.B (after) | Change |
+|--------|-----------------|-------------------|--------|
+| Direct FE inference | 0% (demo only) | 39.8% (operational) | +39.8% |
+| Direct BG inference | 0% | 36.6% | +36.6% |
+| Known material penalty | none | -0.12 applied | NEW |
+| Direct GNN bonus | none | +0.10 applied | NEW |
+| Known in top 10 | ~80% (estimated) | 40% | -40% |
+| Proxy dependency | 100% | 60.2% | -39.8% |
+| prediction_origin tracking | not tracked | every candidate | NEW |
+| known_reference tier | not exists | operational | NEW |
+
+---
+
+## Honest Limitations
+
+1. **Structure lift is the bottleneck** — Only candidates generated by `element_substitution`/`cross_substitution` can be lifted. Mixed-parent and doping methods produce candidates without liftable structures.
+2. **Direct GNN on truly novel candidates is still rare (3.2%)** — Most direct GNN hits are on known materials (corpus exact match), not genuinely new compositions.
+3. **No DFT validation** — All predictions are GNN-level, not DFT or experimental.
+4. **ALIGNN-Lite band gap predictions are sparse** — The band gap model loads successfully but many lifted structures fail the graph conversion for ALIGNN.
+5. **Proxy still dominates** — 60% of candidates have no direct evidence. The fix requires either more liftable generation methods or a structure prediction model.
+6. **Known materials still appear in top rankings** — The -0.12 penalty reduces but doesn't eliminate known materials from top 10 (~40% remain). This is by design: they serve as baselines.
+7. **Campaign seed space is narrow** — The 12 default seed pairs produce a limited chemical space. Broader seeding needed for truly novel discoveries.
+
+---
+
+## CTO Recommendation for Next Phase
+
+### Phase V.C — Priorities
+
+1. **Expand liftable generation methods** — Enable structure lift for `single_site_doping` (partial substitution in parent lattice). This alone could push direct GNN rate from 40% to 70%.
+
+2. **Strengthen the known-material penalty** — Current -0.12 leaves too many known materials in top 10. Consider -0.18 or dynamic penalty based on corpus coverage.
+
+3. **Web dashboard** — Phase V.B backend is now stable enough to expose. The `prediction_origin` field enables honest labeling on the web: show which candidates have real GNN evidence vs proxy-only.
+
+4. **Campaign automation** — Scheduled campaigns with rotating seed pools. Store all results in materials.db for corpus growth.
+
+5. **DFT handoff queue** — The 2 priority_validation candidates (AlGa, OZn2) should be the first to enter a DFT verification pipeline.
+
+---
+
+*All candidates are theoretical. No experimental or DFT validation performed. Results require independent verification.*

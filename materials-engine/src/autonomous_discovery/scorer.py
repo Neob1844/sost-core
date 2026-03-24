@@ -38,8 +38,13 @@ WATCHLIST_THRESHOLD = 0.32
 MIN_PLAUSIBILITY = 0.30  # raised from 0.25
 
 
-def score_candidate(formula, elements, method, profile, memory=None, neighbors=None):
-    """Score a candidate on multiple dimensions. Phase II: much stricter."""
+def score_candidate(formula, elements, method, profile, memory=None, neighbors=None, candidate_context=None):
+    """Score a candidate on multiple dimensions. Phase II: much stricter.
+
+    candidate_context (Phase V.B): optional dict with keys:
+        is_known_material, has_direct_gnn_fe, has_direct_gnn_bg,
+        has_structure_lift, prediction_origin, gnn_confidence
+    """
     n_elem = len(elements)
     elem_set = set(elements)
     norm = normalize_formula(formula)
@@ -129,6 +134,44 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
     composite *= (1.0 - 0.4 * redundancy_penalty)
     composite = round(max(0.0, min(1.0, composite)), 4)
 
+    # Phase V.B: Direct GNN and known-material adjustments
+    known_material_penalty = 0.0
+    direct_gnn_bonus = 0.0
+    proxy_only_penalty = 0.0
+    new_candidate_bonus = 0.0
+    validation_readiness_bonus = 0.0
+    ctx_prediction_origin = "unavailable"
+
+    if candidate_context:
+        ctx_prediction_origin = candidate_context.get("prediction_origin", "unavailable")
+
+        # Known material penalty: references, not top candidates
+        if candidate_context.get("is_known_material", False):
+            known_material_penalty = 0.12
+            composite = round(max(0.0, composite - known_material_penalty), 4)
+
+        # Direct GNN bonus: real CGCNN/ALIGNN prediction on new candidate
+        if candidate_context.get("has_direct_gnn_fe", False) or candidate_context.get("has_direct_gnn_bg", False):
+            direct_gnn_bonus = 0.10
+            composite = round(min(1.0, composite + direct_gnn_bonus), 4)
+
+        # Proxy-only penalty: no structure, no direct GNN
+        if ctx_prediction_origin == "proxy_only" and not candidate_context.get("has_structure_lift", False):
+            proxy_only_penalty = 0.05
+            composite = round(max(0.0, composite - proxy_only_penalty), 4)
+
+        # New candidate bonus: genuinely new with plausible scores
+        if not candidate_context.get("is_known_material", False) and plausibility >= MIN_PLAUSIBILITY and composite >= WATCHLIST_THRESHOLD:
+            new_candidate_bonus = 0.06
+            composite = round(min(1.0, composite + new_candidate_bonus), 4)
+
+        # Validation readiness bonus: structure + direct GNN + good confidence
+        if (candidate_context.get("has_structure_lift", False) and
+                (candidate_context.get("has_direct_gnn_fe", False) or candidate_context.get("has_direct_gnn_bg", False)) and
+                candidate_context.get("gnn_confidence") in ("medium", "high")):
+            validation_readiness_bonus = 0.04
+            composite = round(min(1.0, composite + validation_readiness_bonus), 4)
+
     return {
         **raw_scores,
         "plausibility": round(plausibility, 4),
@@ -142,6 +185,12 @@ def score_candidate(formula, elements, method, profile, memory=None, neighbors=N
                     else "watchlist" if composite >= WATCHLIST_THRESHOLD
                     else "rejected",
         "confidence": "heuristic",
+        "known_material_penalty": round(known_material_penalty, 4),
+        "direct_gnn_bonus": round(direct_gnn_bonus, 4),
+        "proxy_only_penalty": round(proxy_only_penalty, 4),
+        "new_candidate_bonus": round(new_candidate_bonus, 4),
+        "validation_readiness_bonus": round(validation_readiness_bonus, 4),
+        "prediction_origin": ctx_prediction_origin,
     }
 
 

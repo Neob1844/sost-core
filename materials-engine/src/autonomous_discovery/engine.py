@@ -6,7 +6,8 @@ from .chem_filters import filter_candidate, parse_formula
 from .scorer import score_candidate
 from .ml_evaluator import evaluate_candidate_ml, find_nearest_neighbors
 from .validation_queue import route_candidate
-from .structure_pipeline import lift_structure_for_candidate, run_gnn_inference
+from .structure_pipeline import lift_structure_for_candidate, run_gnn_inference, run_direct_gnn_inference, get_parent_cif
+from .chem_filters import normalize_formula
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -64,11 +65,16 @@ class DiscoveryEngine:
                 continue
             filtered.append(c)
 
-        # 4. Score + ML evaluation + Structure lift + GNN (Phase IV.B)
+        # 4. Score + ML evaluation + Structure lift + GNN (Phase V.B)
         scored = []
         lift_attempted = 0
         lift_success = 0
         gnn_evaluated = 0
+        direct_fe_success_count = 0
+        direct_bg_success_count = 0
+        known_reference_count = 0
+        proxy_only_count = 0
+        new_candidate_count = 0
         for c in filtered[:max_candidates]:
             elements = c.get("elements", list(parse_formula(c["formula"]).keys()))
             parent_a = c.get("parent_a", "")
@@ -78,30 +84,64 @@ class DiscoveryEngine:
                                         parent_a, c.get("parent_b", ""))
             c["ml_evaluation"] = ml
 
+            # Phase V.B: Detect known material
+            norm = normalize_formula(c["formula"])
+            is_known = get_parent_cif(norm) is not None
+
             # Structure lift attempt
             lift = lift_structure_for_candidate(
                 c["formula"], elements, parent_a, c.get("method", "unknown"))
             c["structure_lift"] = lift
             lift_attempted += 1
+
+            # Phase V.B: Use run_direct_gnn_inference for combined FE+BG
+            gnn_combined = {"prediction_origin": "unavailable", "bg_prediction_origin": "unavailable",
+                            "direct_fe_inference_success": False, "direct_bg_inference_success": False,
+                            "direct_fe_value": None, "direct_bg_value": None,
+                            "direct_fe_confidence": "none", "direct_bg_confidence": "none"}
             if lift.get("structure_lift_status") == "lifted_ok":
                 lift_success += 1
-                # Try GNN inference on lifted structure
-                gnn_fe = run_gnn_inference(lift.get("lifted_cif"), target="formation_energy")
-                gnn_bg = run_gnn_inference(lift.get("lifted_cif"), target="band_gap")
-                c["gnn_fe"] = gnn_fe
-                c["gnn_bg"] = gnn_bg
-                if gnn_fe.get("gnn_inference_status") in ("corpus_exact_match", "structure_ready_for_gnn"):
-                    gnn_evaluated += 1
-                # Override ML evaluation with GNN results
-                if gnn_fe.get("prediction") is not None:
-                    ml["formation_energy_predicted"] = gnn_fe["prediction"]
-                    ml["ml_inference_status"] = gnn_fe["gnn_inference_status"]
-                    ml["ml_confidence"] = gnn_fe["gnn_confidence"]
-                    ml["prediction_path"] = gnn_fe["inference_input_type"]
+                gnn_combined = run_direct_gnn_inference(lift.get("lifted_cif"))
+                c["gnn_combined"] = gnn_combined
 
-            # Score with all context
+                if gnn_combined.get("direct_fe_inference_success"):
+                    direct_fe_success_count += 1
+                if gnn_combined.get("direct_bg_inference_success"):
+                    direct_bg_success_count += 1
+                if gnn_combined.get("overall_status") in ("corpus_exact_match", "direct_gnn_success"):
+                    gnn_evaluated += 1
+
+                # Override ML evaluation with GNN results
+                if gnn_combined.get("direct_fe_value") is not None:
+                    ml["formation_energy_predicted"] = gnn_combined["direct_fe_value"]
+                    ml["ml_inference_status"] = gnn_combined.get("overall_status", "unavailable")
+                    ml["ml_confidence"] = gnn_combined.get("direct_fe_confidence", "none")
+                    ml["prediction_path"] = "lifted_structure"
+
+            # Build candidate_context for Phase V.B scoring
+            prediction_origin = gnn_combined.get("prediction_origin", "unavailable")
+            if is_known:
+                prediction_origin = "known_exact"
+                known_reference_count += 1
+            elif prediction_origin == "proxy_only":
+                proxy_only_count += 1
+            elif prediction_origin not in ("known_exact",):
+                new_candidate_count += 1
+
+            candidate_context = {
+                "is_known_material": is_known,
+                "has_direct_gnn_fe": gnn_combined.get("direct_fe_inference_success", False),
+                "has_direct_gnn_bg": gnn_combined.get("direct_bg_inference_success", False),
+                "has_structure_lift": lift.get("structure_lift_status") == "lifted_ok",
+                "prediction_origin": prediction_origin,
+                "gnn_confidence": gnn_combined.get("direct_fe_confidence", "none"),
+            }
+            c["candidate_context"] = candidate_context
+
+            # Score with all context (Phase V.B: pass candidate_context)
             scores = score_candidate(c["formula"], elements, c.get("method", "unknown"),
-                                     self.profile, self.memory, neighbors=ml.get("nearest_neighbors"))
+                                     self.profile, self.memory, neighbors=ml.get("nearest_neighbors"),
+                                     candidate_context=candidate_context)
             # Structure + GNN bonus
             if lift.get("structure_lift_status") == "lifted_ok":
                 scores["composite_score"] = min(1.0, scores["composite_score"] + 0.08)
@@ -125,7 +165,7 @@ class DiscoveryEngine:
         validation_candidates = []
         rejected_by_score = 0
         for c in scored:
-            vq = route_candidate(c["scores"], c.get("ml_evaluation"))
+            vq = route_candidate(c["scores"], c.get("ml_evaluation"), c.get("candidate_context"))
             c["validation"] = vq
             vd = vq["validation_decision"]
             is_accepted = vd in ("priority_validation", "validation_candidate", "manual_review")
@@ -161,6 +201,11 @@ class DiscoveryEngine:
             "structure_lift_attempted": lift_attempted,
             "structure_lift_success": lift_success,
             "gnn_evaluated": gnn_evaluated,
+            "direct_fe_success_count": direct_fe_success_count,
+            "direct_bg_success_count": direct_bg_success_count,
+            "known_reference_count": known_reference_count,
+            "proxy_only_count": proxy_only_count,
+            "new_candidate_count": new_candidate_count,
             "elapsed_s": elapsed,
             "top_candidates": [
                 {"rank": i+1, "formula": c["formula"], "method": c.get("method", ""),
@@ -171,7 +216,10 @@ class DiscoveryEngine:
                  "nearest_formula": c.get("ml_evaluation", {}).get("nearest_neighbors", [{}])[0].get("formula", "—") if c.get("ml_evaluation", {}).get("nearest_neighbors") else "—",
                  "validation": c.get("validation", {}).get("validation_decision", "unknown"),
                  "validation_priority": c.get("validation", {}).get("validation_priority", 0),
-                 "next_step": c.get("validation", {}).get("recommended_next_step", "unknown")}
+                 "next_step": c.get("validation", {}).get("recommended_next_step", "unknown"),
+                 "prediction_origin": c.get("candidate_context", {}).get("prediction_origin", "unavailable"),
+                 "direct_fe_value": c.get("gnn_combined", {}).get("direct_fe_value"),
+                 "direct_bg_value": c.get("gnn_combined", {}).get("direct_bg_value")}
                 for i, c in enumerate(accepted[:10])
             ],
             "top_rejections": rejections[:5],
