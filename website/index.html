@@ -595,7 +595,7 @@
 </div>
 <style>
 .spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
-.spl-line.go{animation:splType .5s steps(30) forwards;opacity:1}
+.spl-line.go{animation:splType 2.5s steps(35) forwards;opacity:1}
 @keyframes splType{from{width:0}to{width:100%}}
 </style>
 <script src="js/retro-sounds.js"></script>
@@ -709,8 +709,8 @@
       span.textContent=seg.t[charIdx];
       titleEl.appendChild(span);titleEl.style.opacity='1';
       playMatrixTick();
-      charIdx++;setTimeout(typeTitle,80);
-    }else{charIdx=0;segIdx++;setTimeout(typeTitle,40);}
+      charIdx++;setTimeout(typeTitle,120);
+    }else{charIdx=0;segIdx++;setTimeout(typeTitle,60);}
   }
   setTimeout(typeTitle,5000);
 
@@ -724,9 +724,9 @@
   });
   var els=box.querySelectorAll('.spl-line');
   els.forEach(function(el,i){
-    var t0=7500+i*700;
+    var t0=6500+i*500;
     setTimeout(function(){el.classList.add('go');},t0);
-    for(var k=0;k<8;k++){setTimeout(playMatrixTick,t0+k*60);}
+    for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
   });
 
   // === AUDIO UNLOCK (chiptune) ===
