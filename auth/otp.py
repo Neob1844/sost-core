@@ -1,112 +1,57 @@
-"""OTP generation and verification for 2FA.
+"""TOTP 2FA — Time-based One-Time Password for Google Authenticator / Authy.
 
-Generates random 6-digit codes, stores hashed, enforces expiry and rate limits.
-SMS delivery is abstracted via a provider interface.
+Uses pyotp for TOTP generation and verification. No SMS needed.
+The shared secret is stored in auth.env (never in repo).
 """
-import hashlib
-import hmac
-import secrets
 import time
+import pyotp
 from . import auth_config as cfg
 
 
-class OTPStore:
-    """In-memory OTP store with expiry and rate limiting.
+class TOTPManager:
+    """TOTP-based 2FA manager compatible with Google Authenticator."""
 
-    For production: replace with Redis or database-backed store.
-    """
+    def __init__(self, secret=None):
+        self.secret = secret or cfg.get("SOST_2FA_SECRET")
+        self._attempts = {}  # user → {count, last}
 
-    def __init__(self):
-        self._otps = {}       # user → {hash, created, attempts, verified}
-        self._sends = {}      # user → [timestamps of sends]
-        self._lockouts = {}   # user → lockout_until
+    @staticmethod
+    def generate_secret():
+        """Generate a new TOTP shared secret (base32, 32 chars)."""
+        return pyotp.random_base32(length=32)
 
-    def generate(self, user):
-        """Generate a new OTP for a user. Returns the plaintext code (to send via SMS).
+    def get_provisioning_uri(self, username="admin", issuer="SOST Protocol"):
+        """Generate otpauth:// URI for QR code scanning."""
+        if not self.secret:
+            return None
+        totp = pyotp.TOTP(self.secret)
+        return totp.provisioning_uri(name=username, issuer_name=issuer)
 
-        The code is NOT stored — only its hash. After this function returns,
-        the plaintext only exists in the SMS delivery pipeline.
+    def verify(self, code, user="admin"):
+        """Verify a TOTP code with ±1 period tolerance (30s window).
+
+        Returns (success, reason).
         """
-        # Rate limit: max 3 sends per 5 minutes
+        if not self.secret:
+            return False, "2fa_not_configured"
+
+        # Rate limit: 5 attempts per 5 minutes
         now = time.time()
-        sends = self._sends.get(user, [])
-        sends = [t for t in sends if now - t < 300]
-        if len(sends) >= 3:
-            return None, "rate_limited"
-        sends.append(now)
-        self._sends[user] = sends
-
-        # Generate code
-        code = str(secrets.randbelow(10 ** cfg.OTP_LENGTH)).zfill(cfg.OTP_LENGTH)
-
-        # Store only the hash
-        code_hash = hashlib.sha256(code.encode()).hexdigest()
-        self._otps[user] = {
-            "hash": code_hash,
-            "created": now,
-            "attempts": 0,
-            "verified": False,
-        }
-
-        return code, "ok"
-
-    def verify(self, user, code):
-        """Verify an OTP. Returns (success, reason)."""
-        now = time.time()
-
-        # Lockout check
-        if user in self._lockouts and now < self._lockouts[user]:
-            return False, "locked_out"
-
-        entry = self._otps.get(user)
-        if not entry:
-            return False, "no_pending_otp"
-
-        # Expiry
-        if now - entry["created"] > cfg.OTP_EXPIRY_SECONDS:
-            del self._otps[user]
-            return False, "expired"
-
-        # Attempt limit
-        entry["attempts"] += 1
-        if entry["attempts"] > 5:
-            del self._otps[user]
-            self._lockouts[user] = now + cfg.LOCKOUT_SECONDS
+        att = self._attempts.get(user, {"count": 0, "last": 0})
+        if att["count"] >= 5 and now - att["last"] < 300:
             return False, "too_many_attempts"
 
-        # Verify (constant-time)
-        code_hash = hashlib.sha256(code.encode()).hexdigest()
-        if hmac.compare_digest(code_hash, entry["hash"]):
-            entry["verified"] = True
-            del self._otps[user]  # one-time use
+        att["count"] = att["count"] + 1 if now - att["last"] < 300 else 1
+        att["last"] = now
+        self._attempts[user] = att
+
+        totp = pyotp.TOTP(self.secret)
+        if totp.verify(str(code).zfill(6), valid_window=1):
+            att["count"] = 0  # reset on success
             return True, "verified"
 
         return False, "invalid_code"
 
-
-class SMSProvider:
-    """Abstract SMS provider interface."""
-
-    def send(self, phone, message):
-        """Send an SMS. Override for real provider."""
-        raise NotImplementedError("SMS provider not configured")
-
-
-class MockSMSProvider(SMSProvider):
-    """Mock SMS provider for development/testing."""
-
-    def __init__(self):
-        self.sent = []
-
-    def send(self, phone, message):
-        self.sent.append({"phone": phone, "message": message, "time": time.time()})
-        return True
-
-
-class LogSMSProvider(SMSProvider):
-    """SMS provider that logs to file (for staging)."""
-
-    def send(self, phone, message):
-        import logging
-        logging.getLogger("sost.auth.sms").info(f"OTP to {phone[-4:]}: {message}")
-        return True
+    def is_configured(self):
+        """Check if TOTP is set up."""
+        return bool(self.secret)
