@@ -1,0 +1,885 @@
+{
+  "campaign_name": "exploratory_oxides",
+  "campaign_config": {
+    "name": "exploratory_oxides",
+    "profile": "exploratory_oxides",
+    "seeds": [
+      [
+        "TiO2",
+        "ZnO"
+      ],
+      [
+        "Fe2O3",
+        "Al2O3"
+      ],
+      [
+        "BaTiO3",
+        "SrTiO3"
+      ],
+      [
+        "Fe2S3",
+        "SrTiO3"
+      ],
+      [
+        "O3Ti2",
+        "Al2O3"
+      ],
+      [
+        "Fe2Te3",
+        "SrTiO3"
+      ],
+      [
+        "Fe2S3",
+        "ZnO"
+      ],
+      [
+        "O3Ti2",
+        "ZnO"
+      ],
+      [
+        "Fe2Te3",
+        "ZnO"
+      ]
+    ],
+    "iterations": 3,
+    "max_candidates": 25,
+    "description": "Oxide-focused exploratory campaign"
+  },
+  "elapsed_s": 4.18,
+  "campaign_results": {
+    "profile": "exploratory_oxides",
+    "iterations": 3,
+    "total_generated": 29,
+    "total_accepted": 6,
+    "accept_rate": 0.2069,
+    "top_candidates_overall": [
+      {
+        "rank": 1,
+        "formula": "Fe2S3",
+        "method": "element_substitution",
+        "composite_score": 0.7875,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.7,
+          "value": 0.85,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.15,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.7875,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "direct_gnn_lifted"
+        },
+        "ml_status": "direct_gnn_success",
+        "ml_confidence": "medium",
+        "prototype_hint": null,
+        "nearest_formula": "Fe",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "direct_gnn_lifted",
+        "direct_fe_value": -0.644,
+        "direct_bg_value": null
+      },
+      {
+        "rank": 2,
+        "formula": "O3Ti2",
+        "method": "element_substitution",
+        "composite_score": 0.755,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.8,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.85,
+          "family_bonus": 0.15,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.755,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "O",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -3.01952,
+        "direct_bg_value": 0.026
+      },
+      {
+        "rank": 3,
+        "formula": "Fe2Te3",
+        "method": "element_substitution",
+        "composite_score": 0.6975,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.85,
+          "stability": 0.7,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.6975,
+          "rarity_label": "extremely rare",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "direct_gnn_lifted"
+        },
+        "ml_status": "direct_gnn_success",
+        "ml_confidence": "medium",
+        "prototype_hint": null,
+        "nearest_formula": "FeCuTe2",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "direct_gnn_lifted",
+        "direct_fe_value": -0.5235,
+        "direct_bg_value": null
+      },
+      {
+        "rank": 4,
+        "formula": "Fe2Se3",
+        "method": "element_substitution",
+        "composite_score": 0.6825,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.75,
+          "stability": 0.7,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.6825,
+          "rarity_label": "very rare",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "direct_gnn_lifted"
+        },
+        "ml_status": "direct_gnn_success",
+        "ml_confidence": "medium",
+        "prototype_hint": {
+          "spacegroup": 99,
+          "source_formula": "Fe8Se7",
+          "match_type": "nearest_neighbor",
+          "confidence": "tentative"
+        },
+        "nearest_formula": "Fe8Se7",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "direct_gnn_lifted",
+        "direct_fe_value": -0.5037,
+        "direct_bg_value": null
+      },
+      {
+        "rank": 5,
+        "formula": "O3V2",
+        "method": "element_substitution",
+        "composite_score": 0.605,
+        "scores": {
+          "novelty": 0.25,
+          "exotic": 0.1,
+          "stability": 0.8,
+          "value": 0.5,
+          "diversity": 0.25,
+          "plausibility": 0.85,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.605,
+          "rarity_label": "abundant",
+          "decision": "accepted",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.14,
+          "proxy_only_penalty": 0.0,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.04,
+          "novel_direct_gnn_bonus": 0.06,
+          "liftability_bonus": 0.03,
+          "is_novel_direct_gnn": true,
+          "prediction_origin": "known_exact"
+        },
+        "ml_status": "corpus_exact_match",
+        "ml_confidence": "high",
+        "prototype_hint": null,
+        "nearest_formula": "O",
+        "validation": "priority_validation",
+        "validation_priority": 4,
+        "next_step": "dft_handoff_candidate",
+        "prediction_origin": "known_exact",
+        "direct_fe_value": -2.41793,
+        "direct_bg_value": 0.0
+      },
+      {
+        "rank": 1,
+        "formula": "Fe2OS3",
+        "method": "single_site_doping",
+        "composite_score": 0.4075,
+        "scores": {
+          "novelty": 0.55,
+          "exotic": 0.1,
+          "stability": 0.8,
+          "value": 0.85,
+          "diversity": 0.4,
+          "plausibility": 0.8,
+          "family_bonus": 0.0,
+          "uncertainty_penalty": 0.1,
+          "noise_penalty": 0.0,
+          "redundancy_penalty": 0,
+          "composite_score": 0.4075,
+          "rarity_label": "abundant",
+          "decision": "watchlist",
+          "confidence": "heuristic",
+          "known_material_penalty": 0.0,
+          "direct_gnn_bonus": 0.0,
+          "proxy_only_penalty": 0.1,
+          "new_candidate_bonus": 0.06,
+          "validation_readiness_bonus": 0.0,
+          "novel_direct_gnn_bonus": 0.0,
+          "liftability_bonus": 0.0,
+          "is_novel_direct_gnn": false,
+          "prediction_origin": "unavailable"
+        },
+        "ml_status": "no_neighbors",
+        "ml_confidence": "none",
+        "prototype_hint": null,
+        "nearest_formula": "\u2014",
+        "validation": "manual_review",
+        "validation_priority": 2,
+        "next_step": "compare_corpus_neighbors",
+        "prediction_origin": "unavailable",
+        "direct_fe_value": null,
+        "direct_bg_value": null
+      }
+    ],
+    "iteration_reports": [
+      {
+        "iteration": 1,
+        "profile": "exploratory_oxides",
+        "seeds": [
+          "Fe2O3",
+          "Al2O3"
+        ],
+        "raw_generated": 8,
+        "filtered": 8,
+        "scored": 8,
+        "accepted": 5,
+        "rejected_filter": 0,
+        "rejected_score": 2,
+        "watchlist": 1,
+        "structure_lift_attempted": 8,
+        "structure_lift_success": 6,
+        "gnn_evaluated": 6,
+        "direct_fe_success_count": 6,
+        "direct_bg_success_count": 3,
+        "known_reference_count": 2,
+        "proxy_only_count": 0,
+        "new_candidate_count": 4,
+        "elapsed_s": 1.93,
+        "top_candidates": [
+          {
+            "rank": 1,
+            "formula": "Fe2S3",
+            "method": "element_substitution",
+            "composite_score": 0.7875,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.7,
+              "value": 0.85,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.15,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.7875,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "direct_gnn_lifted"
+            },
+            "ml_status": "direct_gnn_success",
+            "ml_confidence": "medium",
+            "prototype_hint": null,
+            "nearest_formula": "Fe",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "direct_gnn_lifted",
+            "direct_fe_value": -0.644,
+            "direct_bg_value": null
+          },
+          {
+            "rank": 2,
+            "formula": "O3Ti2",
+            "method": "element_substitution",
+            "composite_score": 0.755,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.8,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.85,
+              "family_bonus": 0.15,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.755,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "O",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -3.01952,
+            "direct_bg_value": 0.026
+          },
+          {
+            "rank": 3,
+            "formula": "Fe2Te3",
+            "method": "element_substitution",
+            "composite_score": 0.6975,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.85,
+              "stability": 0.7,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.6975,
+              "rarity_label": "extremely rare",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "direct_gnn_lifted"
+            },
+            "ml_status": "direct_gnn_success",
+            "ml_confidence": "medium",
+            "prototype_hint": null,
+            "nearest_formula": "FeCuTe2",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "direct_gnn_lifted",
+            "direct_fe_value": -0.5235,
+            "direct_bg_value": null
+          },
+          {
+            "rank": 4,
+            "formula": "Fe2Se3",
+            "method": "element_substitution",
+            "composite_score": 0.6825,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.75,
+              "stability": 0.7,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.6825,
+              "rarity_label": "very rare",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "direct_gnn_lifted"
+            },
+            "ml_status": "direct_gnn_success",
+            "ml_confidence": "medium",
+            "prototype_hint": {
+              "spacegroup": 99,
+              "source_formula": "Fe8Se7",
+              "match_type": "nearest_neighbor",
+              "confidence": "tentative"
+            },
+            "nearest_formula": "Fe8Se7",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "direct_gnn_lifted",
+            "direct_fe_value": -0.5037,
+            "direct_bg_value": null
+          },
+          {
+            "rank": 5,
+            "formula": "O3V2",
+            "method": "element_substitution",
+            "composite_score": 0.605,
+            "scores": {
+              "novelty": 0.25,
+              "exotic": 0.1,
+              "stability": 0.8,
+              "value": 0.5,
+              "diversity": 0.25,
+              "plausibility": 0.85,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.605,
+              "rarity_label": "abundant",
+              "decision": "accepted",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.14,
+              "proxy_only_penalty": 0.0,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.04,
+              "novel_direct_gnn_bonus": 0.06,
+              "liftability_bonus": 0.03,
+              "is_novel_direct_gnn": true,
+              "prediction_origin": "known_exact"
+            },
+            "ml_status": "corpus_exact_match",
+            "ml_confidence": "high",
+            "prototype_hint": null,
+            "nearest_formula": "O",
+            "validation": "priority_validation",
+            "validation_priority": 4,
+            "next_step": "dft_handoff_candidate",
+            "prediction_origin": "known_exact",
+            "direct_fe_value": -2.41793,
+            "direct_bg_value": 0.0
+          }
+        ],
+        "top_rejections": [],
+        "memory_summary": {
+          "iterations": 1,
+          "total_generated": 8,
+          "total_accepted": 5,
+          "total_rejected": 3,
+          "accept_rate": 0.625,
+          "unique_candidates": 8,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:known_reference",
+              2
+            ],
+            [
+              "validation:watchlist",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "element_substitution",
+              {
+                "generated": 13,
+                "accepted": 5,
+                "rejected": 8,
+                "avg_score": 0.4373076923076923
+              }
+            ],
+            [
+              "single_site_doping",
+              {
+                "generated": 5,
+                "accepted": 1,
+                "rejected": 4,
+                "avg_score": 0.315
+              }
+            ],
+            [
+              "mixed_parent",
+              {
+                "generated": 2,
+                "accepted": 0,
+                "rejected": 2,
+                "avg_score": 0.26025
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "iteration": 2,
+        "profile": "exploratory_oxides",
+        "seeds": [
+          "Fe2S3",
+          "SrTiO3"
+        ],
+        "raw_generated": 12,
+        "filtered": 10,
+        "scored": 10,
+        "accepted": 1,
+        "rejected_filter": 2,
+        "rejected_score": 9,
+        "watchlist": 0,
+        "structure_lift_attempted": 10,
+        "structure_lift_success": 2,
+        "gnn_evaluated": 2,
+        "direct_fe_success_count": 2,
+        "direct_bg_success_count": 2,
+        "known_reference_count": 2,
+        "proxy_only_count": 0,
+        "new_candidate_count": 8,
+        "elapsed_s": 1.34,
+        "top_candidates": [
+          {
+            "rank": 1,
+            "formula": "Fe2OS3",
+            "method": "single_site_doping",
+            "composite_score": 0.4075,
+            "scores": {
+              "novelty": 0.55,
+              "exotic": 0.1,
+              "stability": 0.8,
+              "value": 0.85,
+              "diversity": 0.4,
+              "plausibility": 0.8,
+              "family_bonus": 0.0,
+              "uncertainty_penalty": 0.1,
+              "noise_penalty": 0.0,
+              "redundancy_penalty": 0,
+              "composite_score": 0.4075,
+              "rarity_label": "abundant",
+              "decision": "watchlist",
+              "confidence": "heuristic",
+              "known_material_penalty": 0.0,
+              "direct_gnn_bonus": 0.0,
+              "proxy_only_penalty": 0.1,
+              "new_candidate_bonus": 0.06,
+              "validation_readiness_bonus": 0.0,
+              "novel_direct_gnn_bonus": 0.0,
+              "liftability_bonus": 0.0,
+              "is_novel_direct_gnn": false,
+              "prediction_origin": "unavailable"
+            },
+            "ml_status": "no_neighbors",
+            "ml_confidence": "none",
+            "prototype_hint": null,
+            "nearest_formula": "\u2014",
+            "validation": "manual_review",
+            "validation_priority": 2,
+            "next_step": "compare_corpus_neighbors",
+            "prediction_origin": "unavailable",
+            "direct_fe_value": null,
+            "direct_bg_value": null
+          }
+        ],
+        "top_rejections": [
+          {
+            "formula": "Fe2Se3",
+            "reason": "duplicate"
+          },
+          {
+            "formula": "Fe2Te3",
+            "reason": "duplicate"
+          }
+        ],
+        "memory_summary": {
+          "iterations": 2,
+          "total_generated": 18,
+          "total_accepted": 6,
+          "total_rejected": 12,
+          "accept_rate": 0.3333,
+          "unique_candidates": 18,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:reject",
+              7
+            ],
+            [
+              "validation:known_reference",
+              4
+            ],
+            [
+              "validation:watchlist",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "element_substitution",
+              {
+                "generated": 13,
+                "accepted": 5,
+                "rejected": 8,
+                "avg_score": 0.4373076923076923
+              }
+            ],
+            [
+              "single_site_doping",
+              {
+                "generated": 5,
+                "accepted": 1,
+                "rejected": 4,
+                "avg_score": 0.315
+              }
+            ],
+            [
+              "mixed_parent",
+              {
+                "generated": 2,
+                "accepted": 0,
+                "rejected": 2,
+                "avg_score": 0.26025
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "iteration": 3,
+        "profile": "exploratory_oxides",
+        "seeds": [
+          "O3Ti2",
+          "SrTiO3"
+        ],
+        "raw_generated": 9,
+        "filtered": 6,
+        "scored": 6,
+        "accepted": 0,
+        "rejected_filter": 3,
+        "rejected_score": 6,
+        "watchlist": 0,
+        "structure_lift_attempted": 6,
+        "structure_lift_success": 1,
+        "gnn_evaluated": 1,
+        "direct_fe_success_count": 1,
+        "direct_bg_success_count": 1,
+        "known_reference_count": 1,
+        "proxy_only_count": 0,
+        "new_candidate_count": 5,
+        "elapsed_s": 0.91,
+        "top_candidates": [],
+        "top_rejections": [
+          {
+            "formula": "S3Ti2",
+            "reason": "duplicate"
+          },
+          {
+            "formula": "O3V2",
+            "reason": "duplicate"
+          },
+          {
+            "formula": "Cr2O3",
+            "reason": "duplicate"
+          }
+        ],
+        "memory_summary": {
+          "iterations": 3,
+          "total_generated": 24,
+          "total_accepted": 6,
+          "total_rejected": 18,
+          "accept_rate": 0.25,
+          "unique_candidates": 24,
+          "overexplored_zones": 0,
+          "top_errors": [
+            [
+              "validation:reject",
+              12
+            ],
+            [
+              "validation:known_reference",
+              5
+            ],
+            [
+              "validation:watchlist",
+              1
+            ]
+          ],
+          "top_rules": [
+            [
+              "element_substitution",
+              {
+                "generated": 13,
+                "accepted": 5,
+                "rejected": 8,
+                "avg_score": 0.4373076923076923
+              }
+            ],
+            [
+              "single_site_doping",
+              {
+                "generated": 5,
+                "accepted": 1,
+                "rejected": 4,
+                "avg_score": 0.315
+              }
+            ],
+            [
+              "mixed_parent",
+              {
+                "generated": 2,
+                "accepted": 0,
+                "rejected": 2,
+                "avg_score": 0.26025
+              }
+            ]
+          ]
+        }
+      }
+    ],
+    "memory_summary": {
+      "iterations": 3,
+      "total_generated": 24,
+      "total_accepted": 6,
+      "total_rejected": 18,
+      "accept_rate": 0.25,
+      "unique_candidates": 24,
+      "overexplored_zones": 0,
+      "top_errors": [
+        [
+          "validation:reject",
+          12
+        ],
+        [
+          "validation:known_reference",
+          5
+        ],
+        [
+          "validation:watchlist",
+          1
+        ]
+      ],
+      "top_rules": [
+        [
+          "element_substitution",
+          {
+            "generated": 13,
+            "accepted": 5,
+            "rejected": 8,
+            "avg_score": 0.4373076923076923
+          }
+        ],
+        [
+          "single_site_doping",
+          {
+            "generated": 5,
+            "accepted": 1,
+            "rejected": 4,
+            "avg_score": 0.315
+          }
+        ],
+        [
+          "mixed_parent",
+          {
+            "generated": 2,
+            "accepted": 0,
+            "rejected": 2,
+            "avg_score": 0.26025
+          }
+        ]
+      ]
+    },
+    "disclaimer": "All candidates are THEORETICAL \u2014 generated by heuristic rules and scored with proxy metrics. No DFT, experimental synthesis, or high-fidelity validation has been performed. Requires independent verification."
+  },
+  "phase_vb_metrics": {
+    "total_candidates": 6,
+    "direct_fe_inference_rate": 0.8333,
+    "direct_bg_inference_rate": 0.3333,
+    "direct_gnn_rate": 0.5,
+    "proxy_dependency_rate": 0.1667,
+    "known_material_rate": 0.3333,
+    "known_material_top10_share": 0.3333,
+    "new_candidate_top10_share": 0.5,
+    "direct_gnn_top10_share": 0.5,
+    "mean_top10_score": 0.6558,
+    "mean_top10_plausibility": 0.8167,
+    "priority_validation_count": 5,
+    "validation_candidate_count": 0,
+    "known_reference_count": 0
+  }
+}

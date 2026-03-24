@@ -1,0 +1,382 @@
+{
+  "candidates_seen": [
+    "NSiZn",
+    "GeN",
+    "AsSi",
+    "Cu2S",
+    "NSn",
+    "CuOZn",
+    "Cu2Te",
+    "CNSi",
+    "NOSi",
+    "GeSi",
+    "Cu2OZn",
+    "OZn2",
+    "NOSiZn",
+    "BSi",
+    "BCNSi",
+    "CGe",
+    "CN",
+    "NSi",
+    "SiSn",
+    "OV2",
+    "CSn",
+    "Cu2Se",
+    "Cr2O",
+    "BCSi",
+    "OTi2",
+    "BC",
+    "PSi",
+    "SbSi"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "NSi",
+      "method": "cross_substitution",
+      "score": 0.8625,
+      "iteration": 1
+    },
+    {
+      "formula": "GeSi",
+      "method": "element_substitution",
+      "score": 0.7525,
+      "iteration": 1
+    },
+    {
+      "formula": "CGe",
+      "method": "element_substitution",
+      "score": 0.6125,
+      "iteration": 1
+    },
+    {
+      "formula": "BSi",
+      "method": "cross_substitution",
+      "score": 0.6125,
+      "iteration": 1
+    },
+    {
+      "formula": "CSn",
+      "method": "element_substitution",
+      "score": 0.4725,
+      "iteration": 1
+    },
+    {
+      "formula": "CNSi",
+      "method": "single_site_doping",
+      "score": 0.4492,
+      "iteration": 1
+    },
+    {
+      "formula": "OZn2",
+      "method": "cross_substitution",
+      "score": 0.9025,
+      "iteration": 2
+    },
+    {
+      "formula": "CuOZn",
+      "method": "mixed_parent",
+      "score": 0.3958,
+      "iteration": 2
+    },
+    {
+      "formula": "Cu2OZn",
+      "method": "single_site_doping",
+      "score": 0.3858,
+      "iteration": 2
+    },
+    {
+      "formula": "NSiZn",
+      "method": "single_site_doping",
+      "score": 0.5425,
+      "iteration": 3
+    },
+    {
+      "formula": "NOSi",
+      "method": "single_site_doping",
+      "score": 0.4792,
+      "iteration": 3
+    },
+    {
+      "formula": "NOSiZn",
+      "method": "mixed_parent",
+      "score": 0.4425,
+      "iteration": 3
+    },
+    {
+      "formula": "SbSi",
+      "method": "element_substitution",
+      "score": 0.3925,
+      "iteration": 3
+    },
+    {
+      "formula": "AsSi",
+      "method": "element_substitution",
+      "score": 0.3825,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "BCNSi",
+      "method": "mixed_parent",
+      "reason": "charge_imbalance:charge_imbalance_ratio_3.7",
+      "iteration": 1
+    },
+    {
+      "formula": "SiSn",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "BCSi",
+      "method": "single_site_doping",
+      "reason": "validation:reject",
+      "iteration": 1
+    },
+    {
+      "formula": "BC",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "OTi2",
+      "method": "element_substitution",
+      "reason": "charge_imbalance:charge_imbalance_ratio_4.0",
+      "iteration": 2
+    },
+    {
+      "formula": "OV2",
+      "method": "element_substitution",
+      "reason": "charge_imbalance:charge_imbalance_ratio_5.0",
+      "iteration": 2
+    },
+    {
+      "formula": "Cr2O",
+      "method": "element_substitution",
+      "reason": "charge_imbalance:charge_imbalance_ratio_6.0",
+      "iteration": 2
+    },
+    {
+      "formula": "Cu2Te",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "Cu2Se",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "Cu2S",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "GeN",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CN",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "PSi",
+      "method": "element_substitution",
+      "reason": "validation:watchlist",
+      "iteration": 3
+    },
+    {
+      "formula": "NSn",
+      "method": "element_substitution",
+      "reason": "validation:reject",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "mixed_parent": {
+      "generated": 3,
+      "accepted": 2,
+      "rejected": 1,
+      "avg_score": 0.27943333333333337
+    },
+    "cross_substitution": {
+      "generated": 4,
+      "accepted": 3,
+      "rejected": 1,
+      "avg_score": 0.6393749999999999
+    },
+    "element_substitution": {
+      "generated": 16,
+      "accepted": 5,
+      "rejected": 11,
+      "avg_score": 0.35109375
+    },
+    "single_site_doping": {
+      "generated": 5,
+      "accepted": 4,
+      "rejected": 1,
+      "avg_score": 0.4085
+    }
+  },
+  "family_stats": {
+    "B-C-N-Si": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "N-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ge-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "C-Ge": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "B-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "C-Sn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "C-N-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Si-Sn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "B-C-Si": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "B-C": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-V": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "O-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cu-Te": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cu-Se": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cu-O-Zn": {
+      "generated": 2,
+      "accepted": 2,
+      "rejected": 0
+    },
+    "Cu-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "N-Si-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ge-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "N-O-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "N-O-Si-Zn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Sb-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "As-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "C-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "P-Si": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "N-Sn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "charge_imbalance:charge_imbalance_ratio_3.7": 1,
+    "validation:known_reference": 7,
+    "validation:reject": 2,
+    "charge_imbalance:charge_imbalance_ratio_4.0": 1,
+    "charge_imbalance:charge_imbalance_ratio_5.0": 1,
+    "charge_imbalance:charge_imbalance_ratio_6.0": 1,
+    "validation:watchlist": 1
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 28,
+  "total_accepted": 14,
+  "total_rejected": 14,
+  "last_saved": "2026-03-24T12:41:57Z"
+}

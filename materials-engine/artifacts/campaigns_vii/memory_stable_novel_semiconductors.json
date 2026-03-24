@@ -1,0 +1,431 @@
+{
+  "candidates_seen": [
+    "LiS2Ti",
+    "GaN",
+    "LiO2Ti",
+    "CoLiS2",
+    "LiNiO2",
+    "CoRbS2",
+    "AlCoLiNS",
+    "AsGaN",
+    "AlAsGaN",
+    "CoLiO2",
+    "AsIn",
+    "LiS2V",
+    "GaSb",
+    "CoLiNS2",
+    "CoLiNiO2",
+    "AlAsGa",
+    "AlCoLiS2",
+    "CoKS2",
+    "AlAs",
+    "GaP",
+    "CoNaO2",
+    "AlGa",
+    "AlLiS2",
+    "CoKO2",
+    "CoLiSe2",
+    "CoNaS2",
+    "LiO2V",
+    "CoLiTe2",
+    "CrLiS2",
+    "CrLiO2",
+    "CoO2Rb",
+    "AsB"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "AsIn",
+      "method": "element_substitution",
+      "score": 0.835,
+      "iteration": 1
+    },
+    {
+      "formula": "AlGa",
+      "method": "cross_substitution",
+      "score": 0.68,
+      "iteration": 1
+    },
+    {
+      "formula": "AsB",
+      "method": "element_substitution",
+      "score": 0.5875,
+      "iteration": 1
+    },
+    {
+      "formula": "AsGaN",
+      "method": "single_site_doping",
+      "score": 0.5075,
+      "iteration": 1
+    },
+    {
+      "formula": "AlAsGa",
+      "method": "single_site_doping",
+      "score": 0.3875,
+      "iteration": 1
+    },
+    {
+      "formula": "CoNaO2",
+      "method": "element_substitution",
+      "score": 0.88,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiS2",
+      "method": "element_substitution",
+      "score": 0.845,
+      "iteration": 2
+    },
+    {
+      "formula": "CoKO2",
+      "method": "element_substitution",
+      "score": 0.8217,
+      "iteration": 2
+    },
+    {
+      "formula": "CoO2Rb",
+      "method": "element_substitution",
+      "score": 0.8217,
+      "iteration": 2
+    },
+    {
+      "formula": "LiO2Ti",
+      "method": "element_substitution",
+      "score": 0.8217,
+      "iteration": 2
+    },
+    {
+      "formula": "LiO2V",
+      "method": "element_substitution",
+      "score": 0.8217,
+      "iteration": 2
+    },
+    {
+      "formula": "CrLiO2",
+      "method": "element_substitution",
+      "score": 0.8217,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiTe2",
+      "method": "element_substitution",
+      "score": 0.8192,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiSe2",
+      "method": "element_substitution",
+      "score": 0.8142,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiNiO2",
+      "method": "single_site_doping",
+      "score": 0.4725,
+      "iteration": 2
+    },
+    {
+      "formula": "CoLiO2",
+      "method": "element_substitution",
+      "score": 0.51,
+      "iteration": 3
+    },
+    {
+      "formula": "CoNaS2",
+      "method": "element_substitution",
+      "score": 0.475,
+      "iteration": 3
+    },
+    {
+      "formula": "AlLiS2",
+      "method": "cross_substitution",
+      "score": 0.4317,
+      "iteration": 3
+    },
+    {
+      "formula": "LiS2Ti",
+      "method": "element_substitution",
+      "score": 0.4167,
+      "iteration": 3
+    },
+    {
+      "formula": "LiS2V",
+      "method": "element_substitution",
+      "score": 0.4167,
+      "iteration": 3
+    },
+    {
+      "formula": "CrLiS2",
+      "method": "element_substitution",
+      "score": 0.4167,
+      "iteration": 3
+    },
+    {
+      "formula": "CoKS2",
+      "method": "element_substitution",
+      "score": 0.4167,
+      "iteration": 3
+    },
+    {
+      "formula": "CoRbS2",
+      "method": "element_substitution",
+      "score": 0.4167,
+      "iteration": 3
+    },
+    {
+      "formula": "AlCoLiS2",
+      "method": "single_site_doping",
+      "score": 0.3938,
+      "iteration": 3
+    },
+    {
+      "formula": "CoLiNS2",
+      "method": "single_site_doping",
+      "score": 0.3938,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "AlAsGaN",
+      "method": "mixed_parent",
+      "reason": "charge_imbalance:charge_imbalance_ratio_3.7",
+      "iteration": 1
+    },
+    {
+      "formula": "GaN",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "AlAs",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "GaSb",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "GaP",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "LiNiO2",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "AlCoLiNS",
+      "method": "mixed_parent",
+      "reason": "validation:reject",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "mixed_parent": {
+      "generated": 2,
+      "accepted": 0,
+      "rejected": 2,
+      "avg_score": 0.13625
+    },
+    "element_substitution": {
+      "generated": 22,
+      "accepted": 18,
+      "rejected": 4,
+      "avg_score": 0.6249045454545454
+    },
+    "cross_substitution": {
+      "generated": 3,
+      "accepted": 2,
+      "rejected": 1,
+      "avg_score": 0.5589000000000001
+    },
+    "single_site_doping": {
+      "generated": 5,
+      "accepted": 5,
+      "rejected": 0,
+      "avg_score": 0.43102
+    }
+  },
+  "family_stats": {
+    "Al-As-Ga-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "As-In": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-Ga": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ga-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "As-B": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "As-Ga-N": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-As": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Al-As-Ga": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Ga-Sb": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ga-P": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Na-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-K-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-O-Rb": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cr-Li-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-Te": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-Se": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-Ni-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Co-Li-Ni-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-O": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Na-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-Li-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Li-S-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Cr-Li-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-K-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Rb-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-Co-Li-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Co-Li-N-S": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-Co-Li-N-S": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "charge_imbalance:charge_imbalance_ratio_3.7": 1,
+    "validation:known_reference": 5,
+    "validation:reject": 1
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 32,
+  "total_accepted": 25,
+  "total_rejected": 7,
+  "last_saved": "2026-03-24T12:41:46Z"
+}
