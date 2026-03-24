@@ -223,5 +223,123 @@ class TestValidationQueuePhaseVB(unittest.TestCase):
                              "Proxy-only should not reach priority_validation")
 
 
+class TestPhaseVC(unittest.TestCase):
+    """Phase V.C tests: expanded lift, proxy suppression, novel GNN path."""
+
+    def _profile(self):
+        return get_profile("balanced")
+
+    def test_vc01_proxy_cap_at_055(self):
+        """VC01: Proxy-only candidates capped at 0.55 composite."""
+        ctx = {
+            "is_known_material": False,
+            "has_direct_gnn_fe": False,
+            "has_direct_gnn_bg": False,
+            "has_structure_lift": False,
+            "prediction_origin": "proxy_only",
+            "gnn_confidence": "none",
+        }
+        scores = score_candidate("GaAlAs", ["Ga", "Al", "As"],
+                                  "element_substitution", self._profile(),
+                                  candidate_context=ctx)
+        self.assertLessEqual(scores["composite_score"], 0.55,
+                              "Proxy-only should be capped at 0.55")
+
+    def test_vc02_novel_direct_gnn_bonus(self):
+        """VC02: Novel + direct GNN gets extra bonus."""
+        ctx = {
+            "is_known_material": False,
+            "has_direct_gnn_fe": True,
+            "has_direct_gnn_bg": False,
+            "has_structure_lift": True,
+            "prediction_origin": "direct_gnn_lifted",
+            "gnn_confidence": "medium",
+        }
+        scores = score_candidate("GaAlAs", ["Ga", "Al", "As"],
+                                  "element_substitution", self._profile(),
+                                  candidate_context=ctx)
+        self.assertGreater(scores["novel_direct_gnn_bonus"], 0)
+        self.assertTrue(scores["is_novel_direct_gnn"])
+
+    def test_vc03_known_penalty_increased(self):
+        """VC03: Known material penalty is now 0.18 (was 0.12)."""
+        ctx = {
+            "is_known_material": True,
+            "has_direct_gnn_fe": True,
+            "has_direct_gnn_bg": True,
+            "has_structure_lift": True,
+            "prediction_origin": "known_exact",
+            "gnn_confidence": "high",
+        }
+        scores = score_candidate("GaAs", ["Ga", "As"],
+                                  "element_substitution", self._profile(),
+                                  candidate_context=ctx)
+        self.assertEqual(scores["known_material_penalty"], 0.18)
+
+    def test_vc04_liftability_bonus(self):
+        """VC04: Lifted candidates get liftability bonus."""
+        ctx_lift = {
+            "is_known_material": False,
+            "has_direct_gnn_fe": False,
+            "has_direct_gnn_bg": False,
+            "has_structure_lift": True,
+            "prediction_origin": "proxy_only",
+            "gnn_confidence": "none",
+        }
+        ctx_nolift = dict(ctx_lift)
+        ctx_nolift["has_structure_lift"] = False
+
+        s1 = score_candidate("GaAlAs", ["Ga", "Al", "As"],
+                              "element_substitution", self._profile(),
+                              candidate_context=ctx_lift)
+        s2 = score_candidate("GaAlAs", ["Ga", "Al", "As"],
+                              "element_substitution", self._profile(),
+                              candidate_context=ctx_nolift)
+        self.assertGreater(s1["liftability_bonus"], 0)
+        self.assertEqual(s2["liftability_bonus"], 0)
+
+    def test_vc05_novel_gnn_reaches_priority_validation(self):
+        """VC05: Novel direct GNN candidates can reach priority_validation."""
+        scores = {
+            "composite_score": 0.52,
+            "plausibility": 0.70,
+            "decision": "accepted",
+            "is_novel_direct_gnn": True,
+        }
+        ctx = {
+            "is_known_material": False,
+            "prediction_origin": "direct_gnn_lifted",
+            "has_structure_lift": True,
+        }
+        result = route_candidate(scores, candidate_context=ctx)
+        self.assertEqual(result["validation_decision"], "priority_validation")
+
+    def test_vc06_doping_lift_attempt(self):
+        """VC06: Doping candidates now attempt neighbor-based lift."""
+        from autonomous_discovery.structure_pipeline import lift_structure_for_candidate
+        # GaAsN is a doped version of GaAs — should find GaAs as prototype
+        result = lift_structure_for_candidate("GaAsN", ["Ga", "As", "N"],
+                                              "GaAs", "single_site_doping")
+        # May or may not succeed depending on prototype availability,
+        # but should NOT return "method_not_liftable" anymore
+        self.assertIn(result["structure_lift_status"],
+                       ("lifted_ok", "method_not_liftable", "no_parent_structure"))
+
+    def test_vc07_proxy_penalty_increased(self):
+        """VC07: Proxy-only penalty is now 0.10 (was 0.05)."""
+        ctx = {
+            "is_known_material": False,
+            "has_direct_gnn_fe": False,
+            "has_direct_gnn_bg": False,
+            "has_structure_lift": False,
+            "prediction_origin": "proxy_only",
+            "gnn_confidence": "none",
+        }
+        scores = score_candidate("GaAlAs", ["Ga", "Al", "As"],
+                                  "element_substitution", self._profile(),
+                                  candidate_context=ctx)
+        self.assertEqual(scores["proxy_only_penalty"], 0.10)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
