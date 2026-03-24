@@ -1,0 +1,348 @@
+{
+  "candidates_seen": [
+    "C",
+    "Se2Ti",
+    "MnO2",
+    "BNSi",
+    "PSi",
+    "CN",
+    "Sn",
+    "SbSi",
+    "Te2Ti",
+    "GeN",
+    "AlNSi",
+    "NSi",
+    "BO2Ti",
+    "B2Ti",
+    "NO2Ti",
+    "Ge",
+    "AsSi",
+    "BO2",
+    "S2Ti",
+    "NSn",
+    "AlSi",
+    "BNOTi",
+    "CrO2",
+    "O2V",
+    "BSi"
+  ],
+  "candidates_accepted": [
+    {
+      "formula": "AlNSi",
+      "method": "mixed_parent",
+      "score": 0.6225,
+      "iteration": 1
+    },
+    {
+      "formula": "NSi",
+      "method": "single_site_doping",
+      "score": 0.5675,
+      "iteration": 1
+    },
+    {
+      "formula": "AsSi",
+      "method": "element_substitution",
+      "score": 0.5325,
+      "iteration": 2
+    },
+    {
+      "formula": "BNSi",
+      "method": "single_site_doping",
+      "score": 0.5192,
+      "iteration": 2
+    },
+    {
+      "formula": "SbSi",
+      "method": "element_substitution",
+      "score": 0.4625,
+      "iteration": 2
+    },
+    {
+      "formula": "PSi",
+      "method": "element_substitution",
+      "score": 0.4375,
+      "iteration": 2
+    },
+    {
+      "formula": "NSn",
+      "method": "element_substitution",
+      "score": 0.4225,
+      "iteration": 2
+    },
+    {
+      "formula": "Te2Ti",
+      "method": "element_substitution",
+      "score": 0.695,
+      "iteration": 3
+    },
+    {
+      "formula": "Se2Ti",
+      "method": "element_substitution",
+      "score": 0.69,
+      "iteration": 3
+    },
+    {
+      "formula": "O2V",
+      "method": "element_substitution",
+      "score": 0.6875,
+      "iteration": 3
+    },
+    {
+      "formula": "S2Ti",
+      "method": "element_substitution",
+      "score": 0.6575,
+      "iteration": 3
+    },
+    {
+      "formula": "B2Ti",
+      "method": "cross_substitution",
+      "score": 0.5625,
+      "iteration": 3
+    },
+    {
+      "formula": "BO2Ti",
+      "method": "single_site_doping",
+      "score": 0.4558,
+      "iteration": 3
+    },
+    {
+      "formula": "NO2Ti",
+      "method": "single_site_doping",
+      "score": 0.4558,
+      "iteration": 3
+    }
+  ],
+  "candidates_rejected": [
+    {
+      "formula": "C",
+      "method": "element_substitution",
+      "reason": "trivial_single_element",
+      "iteration": 1
+    },
+    {
+      "formula": "Ge",
+      "method": "element_substitution",
+      "reason": "trivial_single_element",
+      "iteration": 1
+    },
+    {
+      "formula": "Sn",
+      "method": "element_substitution",
+      "reason": "trivial_single_element",
+      "iteration": 1
+    },
+    {
+      "formula": "AlSi",
+      "method": "single_site_doping",
+      "reason": "validation:known_reference",
+      "iteration": 1
+    },
+    {
+      "formula": "GeN",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "CN",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 2
+    },
+    {
+      "formula": "BSi",
+      "method": "cross_substitution",
+      "reason": "validation:reject",
+      "iteration": 2
+    },
+    {
+      "formula": "MnO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "BO2",
+      "method": "cross_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "CrO2",
+      "method": "element_substitution",
+      "reason": "validation:known_reference",
+      "iteration": 3
+    },
+    {
+      "formula": "BNOTi",
+      "method": "mixed_parent",
+      "reason": "validation:watchlist",
+      "iteration": 3
+    }
+  ],
+  "rule_stats": {
+    "element_substitution": {
+      "generated": 15,
+      "accepted": 8,
+      "rejected": 7,
+      "avg_score": 0.4569999999999999
+    },
+    "mixed_parent": {
+      "generated": 2,
+      "accepted": 1,
+      "rejected": 1,
+      "avg_score": 0.4975
+    },
+    "single_site_doping": {
+      "generated": 5,
+      "accepted": 4,
+      "rejected": 1,
+      "avg_score": 0.46966
+    },
+    "cross_substitution": {
+      "generated": 3,
+      "accepted": 1,
+      "rejected": 2,
+      "avg_score": 0.4458333333333333
+    }
+  },
+  "family_stats": {
+    "C": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ge": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Sn": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Al-N-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "N-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Al-Si": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Ge-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "As-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "B-N-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "C-N": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Sb-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "P-Si": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "N-Sn": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "B-Si": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Te-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Se-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "O-V": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "S-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "Mn-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "B-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "B-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "Cr-O": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    },
+    "B-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "N-O-Ti": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0
+    },
+    "B-N-O-Ti": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1
+    }
+  },
+  "error_patterns": {
+    "trivial_single_element": 3,
+    "validation:known_reference": 6,
+    "validation:reject": 1,
+    "validation:watchlist": 1
+  },
+  "overexplored_zones": [],
+  "iteration_count": 3,
+  "total_generated": 25,
+  "total_accepted": 14,
+  "total_rejected": 11,
+  "last_saved": "2026-03-24T07:30:12Z"
+}
