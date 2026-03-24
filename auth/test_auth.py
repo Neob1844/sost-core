@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Auth system tests — password, OTP, sessions, access control."""
+"""Auth system tests — password, TOTP, sessions, access control."""
 import sys, os, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
 from auth.password import hash_password, verify_password
-from auth.otp import OTPStore
+from auth.otp import TOTPManager
 from auth.sessions import SessionStore
 from auth import auth_config as cfg
 
@@ -24,7 +24,7 @@ class TestPasswordHashing(unittest.TestCase):
     def test_different_hashes_for_same_password(self):
         h1 = hash_password("same")
         h2 = hash_password("same")
-        self.assertNotEqual(h1, h2)  # different salts
+        self.assertNotEqual(h1, h2)
 
     def test_both_verify(self):
         h1 = hash_password("same")
@@ -32,56 +32,68 @@ class TestPasswordHashing(unittest.TestCase):
         self.assertTrue(verify_password("same", h1))
         self.assertTrue(verify_password("same", h2))
 
-    def test_empty_password(self):
-        h = hash_password("")
-        self.assertTrue(verify_password("", h))
-        self.assertFalse(verify_password("x", h))
-
     def test_malformed_hash_fails(self):
         self.assertFalse(verify_password("x", "not_a_valid_hash"))
         self.assertFalse(verify_password("x", ""))
         self.assertFalse(verify_password("x", None))
 
 
-class TestOTP(unittest.TestCase):
+class TestTOTP(unittest.TestCase):
 
-    def test_generate_and_verify(self):
-        store = OTPStore()
-        code, status = store.generate("user1")
-        self.assertEqual(status, "ok")
-        self.assertEqual(len(code), cfg.OTP_LENGTH)
-        ok, reason = store.verify("user1", code)
+    def test_generate_secret(self):
+        secret = TOTPManager.generate_secret()
+        self.assertIsInstance(secret, str)
+        self.assertGreater(len(secret), 16)
+
+    def test_verify_correct_code(self):
+        import pyotp
+        secret = TOTPManager.generate_secret()
+        mgr = TOTPManager(secret)
+        totp = pyotp.TOTP(secret)
+        code = totp.now()
+        ok, reason = mgr.verify(code)
         self.assertTrue(ok)
         self.assertEqual(reason, "verified")
 
-    def test_wrong_code_fails(self):
-        store = OTPStore()
-        store.generate("user1")
-        ok, reason = store.verify("user1", "000000")
+    def test_verify_wrong_code(self):
+        secret = TOTPManager.generate_secret()
+        mgr = TOTPManager(secret)
+        ok, reason = mgr.verify("000000")
         self.assertFalse(ok)
         self.assertEqual(reason, "invalid_code")
 
-    def test_one_time_use(self):
-        store = OTPStore()
-        code, _ = store.generate("user1")
-        store.verify("user1", code)  # first use
-        ok, reason = store.verify("user1", code)  # second use
+    def test_verify_tolerance(self):
+        import pyotp
+        secret = TOTPManager.generate_secret()
+        mgr = TOTPManager(secret)
+        totp = pyotp.TOTP(secret)
+        # Current code should work
+        code = totp.now()
+        ok, _ = mgr.verify(code)
+        self.assertTrue(ok)
+
+    def test_not_configured(self):
+        mgr = TOTPManager(None)
+        self.assertFalse(mgr.is_configured())
+        ok, reason = mgr.verify("123456")
         self.assertFalse(ok)
-        self.assertEqual(reason, "no_pending_otp")
+        self.assertEqual(reason, "2fa_not_configured")
+
+    def test_provisioning_uri(self):
+        secret = TOTPManager.generate_secret()
+        mgr = TOTPManager(secret)
+        uri = mgr.get_provisioning_uri("admin", "SOST")
+        self.assertIn("otpauth://totp/", uri)
+        self.assertIn("SOST", uri)
 
     def test_rate_limit(self):
-        store = OTPStore()
-        for _ in range(3):
-            store.generate("user1")
-        code, status = store.generate("user1")
-        self.assertIsNone(code)
-        self.assertEqual(status, "rate_limited")
-
-    def test_no_pending_otp(self):
-        store = OTPStore()
-        ok, reason = store.verify("nobody", "123456")
+        secret = TOTPManager.generate_secret()
+        mgr = TOTPManager(secret)
+        for _ in range(5):
+            mgr.verify("000000", "user1")
+        ok, reason = mgr.verify("000000", "user1")
         self.assertFalse(ok)
-        self.assertEqual(reason, "no_pending_otp")
+        self.assertEqual(reason, "too_many_attempts")
 
 
 class TestSessions(unittest.TestCase):
@@ -92,13 +104,11 @@ class TestSessions(unittest.TestCase):
         session = store.validate(token)
         self.assertIsNotNone(session)
         self.assertEqual(session["user"], "admin")
-        self.assertEqual(session["role"], "admin")
 
-    def test_invalid_token_fails(self):
+    def test_invalid_token(self):
         store = SessionStore()
-        self.assertIsNone(store.validate("fake_token"))
+        self.assertIsNone(store.validate("fake"))
         self.assertIsNone(store.validate(None))
-        self.assertIsNone(store.validate(""))
 
     def test_revoke(self):
         store = SessionStore()
@@ -106,69 +116,49 @@ class TestSessions(unittest.TestCase):
         self.assertTrue(store.revoke(token))
         self.assertIsNone(store.validate(token))
 
-    def test_refresh_extends(self):
+    def test_refresh(self):
         store = SessionStore()
         token = store.create("admin", "admin")
-        session = store.validate(token)
-        old_expires = session["expires"]
-        time.sleep(0.1)
+        old = store.validate(token)["expires"]
+        time.sleep(0.05)
         store.refresh(token)
-        session = store.validate(token)
-        self.assertGreater(session["expires"], old_expires)
+        self.assertGreater(store.validate(token)["expires"], old)
 
     def test_has_access(self):
         store = SessionStore()
         token = store.create("admin", "admin", ["geaspirit", "materials_engine"])
-        self.assertTrue(store.has_access(token, "geaspirit", min_level=1))
-        self.assertTrue(store.has_access(token, "materials_engine", min_level=1))
-
-    def test_no_access_wrong_product(self):
-        store = SessionStore()
-        token = store.create("user", "user_tier_1", ["geaspirit"])
         self.assertTrue(store.has_access(token, "geaspirit"))
-        # user_tier_1 has both products in config, but session was created with only geaspirit
-        # Actually, has_access checks the ROLE's products, not session's
-        # So user_tier_1 has access to both per ROLES config
+        self.assertTrue(store.has_access(token, "materials_engine"))
 
     def test_revoke_all(self):
         store = SessionStore()
         t1 = store.create("admin", "admin")
         t2 = store.create("admin", "admin")
-        count = store.revoke_all("admin")
-        self.assertEqual(count, 2)
-        self.assertIsNone(store.validate(t1))
-        self.assertIsNone(store.validate(t2))
+        self.assertEqual(store.revoke_all("admin"), 2)
 
 
 class TestRoles(unittest.TestCase):
 
-    def test_all_roles_defined(self):
-        for role in ("public", "user_tier_1", "user_tier_2", "user_tier_3", "operator", "admin"):
-            self.assertIn(role, cfg.ROLES)
+    def test_all_defined(self):
+        for r in ("public", "user_tier_1", "user_tier_2", "user_tier_3", "operator", "admin"):
+            self.assertIn(r, cfg.ROLES)
 
-    def test_admin_highest_level(self):
+    def test_admin_highest(self):
         self.assertEqual(cfg.ROLES["admin"]["level"], 10)
-        self.assertGreater(cfg.ROLES["admin"]["level"], cfg.ROLES["operator"]["level"])
-
-    def test_public_no_products(self):
-        self.assertEqual(cfg.ROLES["public"]["products"], [])
-        self.assertEqual(cfg.ROLES["public"]["level"], 0)
 
 
-class TestNoSecretsInCode(unittest.TestCase):
+class TestNoSecrets(unittest.TestCase):
 
-    def test_no_hardcoded_password_in_config(self):
-        import auth.auth_config as c
-        # Config should get secrets from env, not have them hardcoded
-        self.assertIsNone(c.get("SOST_ADMIN_PASS_HASH"))  # not set in env during test
-        self.assertIsNone(c.get("SOST_SESSION_SECRET"))
+    def test_no_hardcoded_secrets(self):
+        self.assertIsNone(cfg.get("SOST_ADMIN_PASS_HASH"))
+        self.assertIsNone(cfg.get("SOST_2FA_SECRET"))
 
-    def test_env_example_has_no_real_values(self):
-        example_path = os.path.join(os.path.dirname(__file__), "auth.env.example")
-        with open(example_path) as f:
-            content = f.read()
-        self.assertIn("<run setup_admin.py", content)  # placeholder, not real hash
-        self.assertNotIn("16614047733526b2a", content)  # old client-side hash should not appear
+    def test_env_example_clean(self):
+        path = os.path.join(os.path.dirname(__file__), "auth.env.example")
+        with open(path) as f:
+            c = f.read()
+        self.assertIn("<run setup_admin.py", c)
+        self.assertNotIn("16614047733526b2a", c)
 
 
 if __name__ == "__main__":

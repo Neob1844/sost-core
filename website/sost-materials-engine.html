@@ -1737,26 +1737,31 @@ async function meCheckAccess(){
       body:JSON.stringify({username:'admin',password:pwd})});
     if(resp.ok){
       var data=await resp.json();
-      if(data.status==='authenticated'||data.status==='otp_sent'){
-        if(data.requires_otp){
-          msg.textContent='> Verification code sent to registered phone';msg.style.color='#00ff41';
-          // Show OTP input (simplified: prompt)
-          var otp=prompt('Enter 6-digit verification code sent to your phone:');
-          if(!otp)return;
-          var otpResp=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({otp_code:otp})});
-          if(!otpResp.ok){msg.textContent='> INVALID CODE';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
-          data=await otpResp.json();
-        }
-        _meSessionToken=data.token;
-        meGrantAccess();
+      if(data.requires_otp){
+        // Show TOTP input field
+        msg.textContent='> Enter code from authenticator app';msg.style.color='#00ff41';
+        document.getElementById('me-access-pwd').style.display='none';
+        document.querySelector('#me-access-panel button').style.display='none';
+        var totpWrap=document.createElement('div');
+        totpWrap.innerHTML='<input type="text" id="me-totp-code" placeholder="6-digit code" maxlength="6" style="background:#001a00;color:#00ff41;border:1px solid #003300;padding:10px 14px;font-family:monospace;font-size:16px;width:140px;text-align:center;border-radius:4px;letter-spacing:4px"> <button onclick="meVerifyTotp()" style="background:#002200;color:#00ff41;border:1px solid #004400;padding:10px 20px;font-family:monospace;font-size:12px;cursor:pointer;border-radius:4px;letter-spacing:1px;font-weight:600">VERIFY</button>';
+        msg.parentNode.insertBefore(totpWrap,msg);
+        document.getElementById('me-totp-code').focus();
+        document.getElementById('me-totp-code').addEventListener('keypress',function(e){if(e.key==='Enter')meVerifyTotp()});
+        window.meVerifyTotp=async function(){
+          var code=document.getElementById('me-totp-code').value.trim();
+          if(!code)return;
+          try{
+            var otpResp=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp_code:code})});
+            if(otpResp.ok){var d=await otpResp.json();_meSessionToken=d.token;meGrantAccess();return;}
+            msg.textContent='> INVALID CODE';msg.style.color='#ff0000';
+          }catch(e2){msg.textContent='> Verification failed';msg.style.color='#ff0000';}
+        };
         return;
       }
+      if(data.status==='authenticated'){_meSessionToken=data.token;meGrantAccess();return;}
     }
-    // Auth API returned error
     if(resp.status===401){msg.textContent='> ACCESS DENIED';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},2000);return;}
   }catch(e){
-    // Auth API not available — fall back to client-side gate
     console.log('Auth API unavailable, using client-side fallback');
   }
 

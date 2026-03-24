@@ -9,8 +9,8 @@ The .env file must contain:
   SOST_ADMIN_USER=admin
   SOST_ADMIN_PASS_HASH=<scrypt hash>
   SOST_SESSION_SECRET=<random 64 hex chars>
-  SOST_OTP_PHONE=<phone number for SMS 2FA>
-  SOST_SMS_API_KEY=<provider API key>
+  SOST_2FA_SECRET=<TOTP base32 secret for Google Authenticator>
+  SOST_2FA_ENABLED=true
 """
 import os
 
