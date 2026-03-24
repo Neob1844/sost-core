@@ -63,6 +63,14 @@ CAMPAIGN_PROFILES = {
         "min_novelty": 0.2,
         "prefer_validated": True,
     },
+    "chemistry_aware_discovery": {
+        "description": "Novel candidates from familiar/plausible families with strong chemistry support",
+        "weights": {"novelty": 0.15, "exotic": 0.05, "stability": 0.35, "value": 0.25, "diversity": 0.20},
+        "explore_ratio": 0.25, "exploit_ratio": 0.55, "diversify_ratio": 0.20,
+        "min_stability": 0.35,
+        "min_novelty": 0.15,
+        "prefer_familiar_chemistry": True,
+    },
     "evidence_guided_discovery": {
         "description": "Prioritize novel candidates in historically reliable families/strategies",
         "weights": {"novelty": 0.20, "exotic": 0.05, "stability": 0.30, "value": 0.25, "diversity": 0.20},
