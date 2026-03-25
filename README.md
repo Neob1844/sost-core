@@ -304,7 +304,7 @@ Zone-specific mineral prospectivity mapping using public satellite data.
 - Key finding: deposit type > commodity for ML training. Transfer learning does NOT work for satellite features — zone-specific models required.
 - **Thermal V2** (March 2026): 20-year Landsat thermal proxy. +0.013 AUC at Kalgoorlie, replicated at Chuquicamata (4 features consistent). PRODUCTION_WORTHY.
 - **Experiment 2 (EMIT):** 8 granules, 94% coverage. hydroxyl d=+0.645 (p=1.5e-06), EMIT-only AUC 0.826. Fusion no gain (baseline saturated at 0.996). Verdict: PROMISING.
-- **V3 Residual-Proxy:** ML residual experiment NEGATIVE — thermal signal explained by surface covariates. Honest result documented.
+- **V3 Residual-Proxy:** ML residual NEGATIVE. **Phase 6C:** PCA embeddings +0.026 AUC (best gain), gradients negative, AEM pending.
 - Details: https://sostcore.com/sost-geaspirit.html
 
 ## Materials Engine — Computational Materials Discovery
