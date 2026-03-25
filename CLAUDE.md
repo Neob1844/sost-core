@@ -178,7 +178,7 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Multi-zone verdict: PRODUCTION_WORTHY (4/6)
 - Thermal most useful when satellite baseline is moderate
 
-**Experiment 2 (EMIT):** BLOCKED BY AUTH — pipeline ready, no data accessed
+**Experiment 2 (EMIT):** ACTIVE — 3 granules at Chuquicamata, clay/hydroxyl signal d>0.8 (small sample)
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
 
 **Language guardrails:**
