@@ -362,4 +362,18 @@ Residual approach does not add independent value at Kalgoorlie.
 This is an honest negative result that does not invalidate thermal proxies from Experiment 1.
 
 V3 evaluated 10 ideas: 3 VIABLE (spatial gradients, multiscale texture, ML residuals),
-4 SPECULATIVE, 3 INVIABLE. Next experiment: spatial gradient geology proxies.
+4 SPECULATIVE, 3 INVIABLE.
+
+### Phase 6C: Feature Family Comparison (Kalgoorlie)
+
+| Family | AUC Delta | Verdict |
+|--------|-----------|---------|
+| **PCA patch embeddings** | **+0.026** | **BEST — production-worthy** |
+| Thermal (top 3) | +0.006 | Modest, confirmed |
+| Spatial gradients | -0.006 | NEGATIVE — does not help |
+| Full fusion (all) | +0.018 | Good but diluted by gradients |
+| AEM conductivity | — | Not yet available (manual GA download) |
+
+PCA embeddings (8 components from 32px patches, 16px stride) capture spatial texture
+patterns that hand-crafted spectral indices miss. This is the largest single-family
+improvement in GeaSpirit history. Gradients are a dead end at Kalgoorlie.

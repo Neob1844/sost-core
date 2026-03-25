@@ -180,6 +180,7 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 
 **Experiment 2 (EMIT):** ACTIVE — 8 granules at Chuquicamata, 94% coverage, hydroxyl d=+0.645 p=1.5e-06, EMIT-only AUC 0.826
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
+**Phase 6C (Kalgoorlie):** PCA embeddings +0.026 AUC (best single-family gain). Gradients NEGATIVE. AEM pending.
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"

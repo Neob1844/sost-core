@@ -898,6 +898,25 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="panel">
+      <div class="panel-head" style="color:var(--green)">PHASE 6C — FEATURE FAMILY COMPARISON (KALGOORLIE)</div>
+      <table class="tbl">
+        <thead><tr><th>Model</th><th>AUC</th><th>Delta</th><th>Assessment</th></tr></thead>
+        <tbody>
+          <tr><td>A: Baseline satellite</td><td class="val">0.9110</td><td>—</td><td>Reference</td></tr>
+          <tr style="color:var(--green)"><td><b>E: Baseline + PCA embeddings</b></td><td class="val"><b>0.9374</b></td><td style="color:var(--green)"><b>+0.0264</b></td><td style="color:var(--green)"><b>BEST — largest single-family gain</b></td></tr>
+          <tr><td>H: Baseline + thermal + grad + emb</td><td class="val">0.9287</td><td style="color:var(--green)">+0.0177</td><td>Good fusion</td></tr>
+          <tr><td>B: Baseline + thermal</td><td class="val">0.9166</td><td style="color:var(--green)">+0.0056</td><td>Modest</td></tr>
+          <tr style="color:#666"><td>D: Baseline + spatial gradients</td><td class="val">0.9049</td><td style="color:#ff4444">-0.0061</td><td style="color:#ff4444">Negative — gradients hurt</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:#666;margin-top:8px">
+        PCA patch embeddings (8 components from 32px patches) capture spatial patterns that hand-crafted features miss.<br>
+        Spatial gradients add noise at Kalgoorlie — edge detection does not correlate with deposit locations here.<br>
+        AEM conductivity data not yet integrated (manual download from GA required).
+      </div>
+    </div>
+
+    <div class="panel">
       <div class="panel-head">V3 RESEARCH PIPELINE — 10 IDEAS EVALUATED</div>
       <table class="tbl">
         <thead><tr><th>Idea</th><th>Physical Basis</th><th>Status</th></tr></thead>
