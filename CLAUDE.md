@@ -194,6 +194,7 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Peru/Arizona: satellite + thermal → AUC 0.758/0.718
 - Zambia: satellite → AUC 0.763
 **Key learning:** No single feature family is universal. Magnetics/radiometrics individually neutral but contribute to full stack. Foundation embeddings evaluation-method sensitive.
+**Frontier Research V5:** Top 3 next experiments: (1) Temporal DNA Transformer — 20yr multi-band pixel time series + transformer architecture, genuinely novel for mineral exploration; (2) Prithvi-EO-2.0 foundation model fine-tuning for cross-zone transfer; (3) ECOSTRESS diurnal thermal inertia fusion. Also identified: NISAR (L+S SAR, free, launched 2024), USGS Earth MRI for Arizona, MINDAT API (400K+ mineral species), SoilGrids 250m. See docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md.
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
