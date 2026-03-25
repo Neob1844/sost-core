@@ -215,6 +215,18 @@ The miner connects to your node via RPC and submits solved blocks. Use [b]--bloc
 
 [hr]
 
+[size=14pt][b]GeaSpirit Research Module[/b][/size]
+
+A multi-source mineral intelligence system under active development. Designed for target ranking and geological prioritization, not direct underground imaging.
+
+[list]
+[li][b]Validated signals:[/b] Long-term thermal proxies (20yr Landsat, d=-0.627). Type-aware hyperspectral alteration (EMIT, porphyry Cu selective). Zone-specific spatial embeddings (+0.026 AUC at Kalgoorlie). Aeromagnetics (+0.009 AUC). Neighborhood context for mineral discrimination (Au vs Ni AUC 0.627).[/li]
+[li][b]Honest results:[/b] Spatial gradients negative. ML residuals negative. Cross-zone transfer learning does not work. EMIT negative at orogenic Au. Peru EMIT deferred (download issue). No depth estimation from satellite alone.[/li]
+[li][b]Current status:[/b] 6 supervised zones (AUC 0.72-0.88). 162 targets with exact coordinates. Canonical objective score: 23.7/40 (59%). Evolving from sensor experimentation into information fusion platform.[/li]
+[/list]
+
+[hr]
+
 [size=14pt][b]Links[/b][/size]
 
 [list]

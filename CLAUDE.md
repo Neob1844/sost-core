@@ -137,23 +137,22 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 7):**
-- 10 AOIs globally: 5 supervised (AUC 0.72-0.94) + 3 heuristic + 1 demo + 1 failed
-- Zone-specific, type-aware architecture — auto-selects best feature families per zone
-- Best AUC: Kalgoorlie 0.937 (satellite + thermal + PCA embeddings)
-- Universal candidate matrix: 9 zones × 17 families = 153 cells tracked
-- 162 targets with exact coordinates exported
-- OZMIN WFS integrated (16,225 Australian deposits, CC-BY 4.0)
-- EMIT: porphyry-specific (Chuquicamata hydroxyl d=+0.645), Peru 50 granules found
-- Thermal 20yr: universal modest (+0.013 AUC), production-worthy
-- PCA embeddings: Kalgoorlie-specific (+0.026 AUC), negative elsewhere
-- Spatial gradients: negative everywhere
-- Frontier registry: 10 new conjectures (3 HIGH priority)
-- Custom AOIs: Banos de Mula (#1, score 0.762), Barqueros (#2, 0.713), Salave (#3, no signal)
-- Magnetics/radiometrics: tested NEUTRAL (+0.002 AUC), K/Th ratio geologically relevant
-- Foundation embeddings: tested NEUTRAL (+0.004 AUC in strict block CV)
-- Blockers: Peru EMIT download (truncated granule), GSWA detailed AEM (manual check)
+**Current state (Phase 8B):**
+- Multi-source exploration intelligence platform (not satellite-only)
+- 6 supervised zones: Kalgoorlie (0.882 AUC), Chuquicamata (0.862), Peru (0.758), Arizona (0.718), Zambia (0.763), Pilbara (FAILED)
+- Canonical objective: 23.7/40 (59%). Mineral 3.3/10, Depth 4.1/10, Coords 7/10, Certainty 9.3/10
+- Type-aware auto-selection: tests all families, selects best per zone
+- Validated: satellite baseline (universal), thermal 20yr (modest), EMIT (porphyry-specific), PCA embeddings (Kalgoorlie-specific), magnetics (+0.009 real), neighborhood context (mineral AUC 0.627)
+- Rejected: spatial gradients, ML residuals, EMIT at orogenic Au, cross-zone transfer
+- Neighborhood context: strongest new finding (Au vs Ni discrimination begins)
+- tpi_heterogeneity d=+0.878 = strongest single feature ever found
+- Calibration: isotonic reduces Brier from 0.121 to 0.091
+- Critical fix: Phase 7 magnetics were EMPTY (wrong tiles). Fixed with GA national TMI via NCI THREDDS
+- Peru EMIT: blocked (truncated download), 50 granules available
+- Blockers: Peru EMIT, GSWA geology maps, GA gravity, detailed AEM
+- Next CTO: geology + gravity + neighborhood context + calibration = information fusion
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
+- See: docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md, docs/GEASPIRIT_CTO_NEXT_PHASE.md
 
 ## Materials Engine
 
@@ -169,35 +168,20 @@ Located in `materials-engine/`. Python-based computational materials discovery.
 
 ## GeaSpirit Status
 
-Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity mapping.
+Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence platform.
 
-**Thermal V2 (March 2026):** COMPLETE
-- 20-year Landsat thermal long-term proxy pipeline at Kalgoorlie
-- Signal robust against geology-matched background (Cohen's d -0.68, p < 1e-15)
-- Model improvement: +0.013 AUC (std_annual), thermal_range_ratio in top 5 importance
+**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment).
 
-**Phase 5I Chuquicamata Full Replication:** COMPLETE
-- 4 features consistent across zones: amplitude, ratio, mean_annual, summer_winter_diff
-- Kalgoorlie +0.013 AUC; Chuquicamata no AUC gain (baseline already 0.91)
-- Multi-zone verdict: PRODUCTION_WORTHY (4/6)
-- Thermal most useful when satellite baseline is moderate
-
-**Experiment 2 (EMIT):** Chuquicamata strong (hydroxyl d=+0.645), Kalgoorlie weak (deposit-type mismatch). EMIT is porphyry-specific.
-**V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
-**Phase 6C (Kalgoorlie):** PCA embeddings +0.023 AUC at Kalgoorlie ONLY. Cross-zone: NEGATIVE at all 3 porphyry zones.
-**Phase 6D:** Type-aware registry: EMIT=porphyry-specific, PCA=Kalgoorlie-specific, thermal=universal modest, gradients=negative.
-**Phase 6E:** Universal candidate matrix (9 zones × 17 families = 153 cells), type-aware auto-selection pipeline, frontier candidate registry (10 ideas, 3 HIGH priority), zone model registry v3.
-**Phase 7:** Operational experiments — Kalgoorlie magnetics NEUTRAL (+0.002 AUC, 9 features: TMI + K/Th/U radiometrics), foundation embeddings NEUTRAL (+0.004 AUC in strict block CV), Peru EMIT BLOCKED (granule truncated 54%, 50 granules available via CMR). Full stack (sat+thermal+PCA+magnetics) best at 0.870 AUC. Selection unchanged from Phase 6E. Registry v4.
-**Selected families by zone (unchanged):**
-- Kalgoorlie: satellite + thermal + PCA embeddings → AUC 0.937
+**Selected families by zone:**
+- Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood → AUC 0.882
 - Chuquicamata: satellite + thermal + EMIT → AUC 0.862
 - Peru/Arizona: satellite + thermal → AUC 0.758/0.718
 - Zambia: satellite → AUC 0.763
-**Key learning:** No single feature family is universal. Magnetics/radiometrics individually neutral but contribute to full stack. Foundation embeddings evaluation-method sensitive.
-**Frontier Research V5:** Top 3 next experiments: (1) Temporal DNA Transformer; (2) Prithvi-EO-2.0 fine-tuning; (3) ECOSTRESS diurnal thermal inertia. See docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md.
-**CTO Sprint:** Multi-Scale Anomaly experiment: 19 STRONG features (tpi_heterogeneity d=+0.878 strongest ever). AUC neutral (GBM captures implicitly). ECOSTRESS/EarthMRI/Prithvi paths confirmed.
-**Canonical Objective Assessment:** 18/40 (45%). MINERAL 2/10 (Au vs Ni AUC=0.50 random), DEPTH 3/10 (Euler proxy 6m median, no signal), COORDS 7/10, CERTAINTY 6/10 (AUC 0.869, Brier 0.161). Critical fix: Kalgoorlie magnetics were EMPTY (wrong survey tiles P580/P586 don't cover Kalgoorlie). Fixed with GA national TMI grid via NCI THREDDS. Peru EMIT still blocked (truncated granules).
-**Key insight:** The gap to 10/10 is a DATA problem, not ML. Need: geology maps (mineral ID), AEM (depth), drill holes (calibration).
+
+**Canonical objective: 23.7/40 (59%).** Mineral 3.3/10, Depth 4.1/10, Coords 7/10, Certainty 9.3/10.
+**Key insight:** The gap to 10/10 is a DATA problem (geology, geophysics, drill holes), not ML.
+**Next CTO phase:** Geology + gravity + neighborhood context + calibration = information fusion platform.
+**Full docs:** GEASPIRIT_TECHNOLOGY_SUMMARY.md, GEASPIRIT_CTO_NEXT_PHASE.md, GEASPIRIT_CANONICAL_PATH.md
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"

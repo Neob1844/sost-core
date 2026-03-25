@@ -256,7 +256,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label">GEASPIRIT PLATFORM v0.1</div>
+    <div class="hero-label">GEASPIRIT PLATFORM v0.8</div>
     <h1><span>Mineral Intelligence</span> System</h1>
     <p class="hero-sub">Computational mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
     <div class="status-badge">&#9632; OPERATIONAL — AUC 0.94 · TYPE-AWARE · 6 ZONES</div>
@@ -954,6 +954,28 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <b style="color:var(--amber)">Magnetics:</b> 9 features from GA aeromagnetics + radiometrics (TMI, K, Th, U, dose, K/Th ratio, K/U ratio, TMI anomaly, TMI gradient). Individually neutral but contributes to full stack.<br>
         <b style="color:var(--amber)">Foundation Embeddings:</b> 8-band multi-scale PCA embeddings. +0.004 in Phase 7 block CV vs +0.026 in Phase 6C (different CV setup). Useful but sensitive to evaluation method.<br>
         <b style="color:var(--amber)">Peru EMIT:</b> 50 granules found via NASA CMR. 1 granule downloaded but truncated (54%). Replication deferred — not failed. Physical hypothesis (porphyry clay/hydroxyl) remains strong.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head" style="color:var(--green)">CANONICAL OBJECTIVE — WHERE WE STAND</div>
+      <div style="font-size:12px;line-height:1.8;color:#aaa;margin-bottom:12px">
+        <b style="color:var(--green)">Target:</b> "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Dimension</th><th>Score</th><th>Capability</th><th>Gap</th></tr></thead>
+        <tbody>
+          <tr><td>MINERAL</td><td class="val">3.3/10</td><td>Neighborhood context: Au vs Ni AUC 0.627</td><td>Geology maps, EMIT type, labels</td></tr>
+          <tr><td>DEPTH</td><td class="val">4.1/10</td><td>Magnetic Euler proxy exists but noisy</td><td>AEM, gravity shape, drill holes</td></tr>
+          <tr style="color:var(--green)"><td>COORDINATES</td><td class="val">7.0/10</td><td>30m resolution, 1km2 zones</td><td>Peak finding, GPS validation</td></tr>
+          <tr style="color:var(--green)"><td>CERTAINTY</td><td class="val">9.3/10</td><td>AUC 0.882, Brier 0.091 (calibrated)</td><td>More labels, ensemble</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:13px;color:var(--green);font-weight:700;margin-top:12px;text-align:center">TOTAL: 23.7 / 40 (59%)</div>
+      <div style="font-size:11px;color:#666;margin-top:8px">
+        <b style="color:var(--amber)">What GeaSpirit can do today:</b> Rank targets by probability. Detect surface alteration and structural context. Provide exact target coordinates. Support multi-proxy exploration intelligence across 6 supervised zones.<br>
+        <b style="color:#ff4444">What it cannot do yet:</b> Direct underground imaging. Exact mineral ID everywhere. Depth estimation from satellite alone. Ore grade/tonnage estimation. Guaranteed confirmation without field validation.<br>
+        <b style="color:var(--amber)">Next CTO phase:</b> Geology + gravity + neighborhood context + calibration hardening. Evolve from feature experimentation into information fusion platform.
       </div>
     </div>
 
