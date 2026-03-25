@@ -1125,3 +1125,22 @@ EMIT (285 bands, 60m, ISS orbit) is VIABLE for porphyry Cu but NOT for orogenic 
 1. Post-rainfall SAR drying rate
 2. Nighttime thermal offset (ECOSTRESS)
 3. Foundation model embeddings (SatCLIP/Prithvi)
+
+### Phase 7: Operational Experiments (March 2026)
+
+**Aeromagnetics/Radiometrics at Kalgoorlie:**
+- 9 features from GA grids: TMI, K, Th, U concentrations, dose rate, K/Th ratio, K/U ratio, TMI anomaly, gradient
+- AUC delta: +0.002 (NEUTRAL) — below significance threshold
+- K/Th ratio shows geological relevance for orogenic Au alteration zones
+- Individually not worth adding to production model, but contributes to full stack (0.870 AUC)
+
+**Peru EMIT Replication:**
+- BLOCKED: truncated download (54%), network timeout on retry
+- 50 EMIT L2A granules available via NASA CMR — deferred, not failed
+- Physical hypothesis (porphyry clay/hydroxyl detection) untested at Peru
+
+**Foundation Embeddings:**
+- Multi-scale PCA embeddings (8 bands) at Kalgoorlie
+- AUC delta: +0.004 (NEUTRAL in strict block CV)
+- Phase 6C showed +0.026 — evaluation-method dependent
+- Cannot confirm as independently useful with strict spatial validation

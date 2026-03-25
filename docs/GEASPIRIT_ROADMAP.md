@@ -453,3 +453,43 @@ No family is included blindly.
 4. pca_embeddings = Kalgoorlie only (+0.026), negative at all porphyry zones
 5. spatial_gradients = negative everywhere tested
 6. The system must be TYPE-AWARE + FEATURE-AWARE + COVERAGE-AWARE
+
+### Phase 7: Operational Experiments — Magnetics, EMIT Peru, Foundation Embeddings
+
+**Kalgoorlie Aeromagnetics + Radiometrics:**
+- 9 features built: TMI raw, TMI local anomaly, TMI gradient, K, Th, U, dose, K/Th ratio, K/U ratio
+- Source: Geoscience Australia aligned grids (already downloaded)
+- Result: NEUTRAL (+0.0021 AUC, baseline 0.8651 → 0.8672)
+- Full stack (sat+thermal+PCA+magnetics): 0.8696 AUC — best combination
+- Magnetics alone below +0.01 threshold, but K/Th ratio shows geological relevance
+- Not selected as standalone family, but contributes in full stack
+
+**Peru EMIT Replication:**
+- Status: BLOCKED — existing granule truncated (54% downloaded), fresh download timed out
+- 50 EMIT L2A granules confirmed available via NASA CMR
+- Physical hypothesis remains strong (Chuquicamata hydroxyl d=+0.645)
+- Peru replication DEFERRED, not failed
+- Next: re-download manually or with better network
+
+**Foundation Embeddings v1 at Kalgoorlie:**
+- 8-band multi-scale PCA embeddings (already built in Phase 6C)
+- Result: NEUTRAL (+0.0042 AUC in Phase 7 block CV)
+- Phase 6C showed +0.026 with different CV setup — evaluation-method sensitive
+- Not confirmed as independently useful in strict spatial block CV
+
+**Zone Model Registry V4 (unchanged from V3):**
+
+| Zone | Type | Selected Families | AUC | Change from V3 |
+|------|------|-------------------|-----|----------------|
+| Kalgoorlie | orogenic_au | satellite + thermal + PCA embeddings | 0.937 | unchanged |
+| Chuquicamata | porphyry_cu | satellite + thermal + EMIT | 0.862 | unchanged |
+| Peru | porphyry_cu | satellite + thermal | 0.758 | EMIT deferred |
+| Arizona | porphyry_cu | satellite + thermal | 0.718 | unchanged |
+| Zambia | sediment_cu | satellite | 0.763 | unchanged |
+
+**Key learnings:**
+1. Aeromagnetics/radiometrics individually NEUTRAL but contribute to full stack
+2. K/Th ratio geologically relevant for orogenic Au alteration
+3. Foundation embeddings evaluation-method sensitive — prior +0.026 not reproduced in strict block CV
+4. Peru EMIT blocked by download — physical hypothesis untested
+5. No family selection changes — Phase 6E architecture holds

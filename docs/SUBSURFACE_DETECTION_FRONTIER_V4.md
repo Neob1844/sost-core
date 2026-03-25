@@ -26,12 +26,12 @@ This document explores the **next frontier**: physically grounded ideas that hav
 | Spatial gradients | **NEGATIVE** | -0.006 AUC at Kalgoorlie — discarded |
 | PCA embeddings | **CONFIRMED (zone-specific)** | +0.026 AUC at Kalgoorlie, NEGATIVE at porphyry zones |
 | EMIT porphyry replication (Peru) | **PENDING** | 50 granules found via CMR, download pending |
-| AEM conductivity | **BLOCKED** | GA aeromagnetics ready, GSWA needs manual check |
+| Aeromagnetics + radiometrics | **TESTED — NEUTRAL** | +0.002 AUC at Kalgoorlie, K/Th ratio relevant |
 | Multiscale texture | Proposed (V3) | Not yet tested |
 | NDVI↔thermal cross-correlation | Proposed (V3) | Not yet tested |
 | InSAR coherence | Proposed (V3) | Not yet tested |
 | Night-time thermal | Proposed (V3) | Partially redundant |
-| Foundation model embeddings | Proposed (6E) | HIGH priority, ready to test |
+| Foundation model embeddings | **TESTED — NEUTRAL** | +0.004 AUC at Kalgoorlie (strict block CV) |
 | Post-rainfall SAR drying | Proposed (6E) | HIGH priority, needs pipeline |
 | Spectral unmixing endmembers | Proposed (6E) | MEDIUM priority, ready to test |
 

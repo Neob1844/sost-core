@@ -940,6 +940,24 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="panel">
+      <div class="panel-head" style="color:var(--green)">PHASE 7 — OPERATIONAL EXPERIMENTS (MAGNETICS, EMIT PERU, FOUNDATION EMBEDDINGS)</div>
+      <table class="tbl">
+        <thead><tr><th>Experiment</th><th>Zone</th><th>AUC Delta</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Aeromagnetics + Radiometrics</td><td>Kalgoorlie</td><td style="color:var(--amber)">+0.002</td><td style="color:var(--amber)">NEUTRAL — below threshold, K/Th ratio promising</td></tr>
+          <tr><td>Foundation Embeddings v1</td><td>Kalgoorlie</td><td style="color:var(--amber)">+0.004</td><td style="color:var(--amber)">NEUTRAL — below threshold in block CV</td></tr>
+          <tr><td>EMIT Peru Replication</td><td>Peru</td><td>—</td><td style="color:#888">BLOCKED — granule truncated, download timed out</td></tr>
+          <tr style="color:var(--green)"><td><b>Full Stack (sat+therm+PCA+mag)</b></td><td>Kalgoorlie</td><td style="color:var(--green)"><b>+0.005</b></td><td>0.870 — best combination</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:#666;margin-top:8px">
+        <b style="color:var(--amber)">Magnetics:</b> 9 features from GA aeromagnetics + radiometrics (TMI, K, Th, U, dose, K/Th ratio, K/U ratio, TMI anomaly, TMI gradient). Individually neutral but contributes to full stack.<br>
+        <b style="color:var(--amber)">Foundation Embeddings:</b> 8-band multi-scale PCA embeddings. +0.004 in Phase 7 block CV vs +0.026 in Phase 6C (different CV setup). Useful but sensitive to evaluation method.<br>
+        <b style="color:var(--amber)">Peru EMIT:</b> 50 granules found via NASA CMR. 1 granule downloaded but truncated (54%). Replication deferred — not failed. Physical hypothesis (porphyry clay/hydroxyl) remains strong.
+      </div>
+    </div>
+
+    <div class="panel">
       <div class="panel-head">V3 RESEARCH PIPELINE — 10 IDEAS EVALUATED</div>
       <table class="tbl">
         <thead><tr><th>Idea</th><th>Physical Basis</th><th>Status</th></tr></thead>
@@ -1018,8 +1036,9 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 4</span> 3 domains + OZMIN + transfer + AOI scanner <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
     <div class="phase"><span class="phase-label">PHASE 5A-5D</span> Deposit-type + porphyry global + domain normalization <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">10 AOIs</span></div>
     <div class="phase"><span class="phase-label">PHASE 5E+</span> Zone-specific architecture + geomorphometry + coordinates <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 6A-6E</span> EMIT + thermal + PCA + type-aware selection + candidate matrix <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
-    <div class="phase"><span class="phase-label">PHASE 7</span> Peru EMIT download + AEM features + frontier candidates <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 6A-6E</span> EMIT + thermal + PCA + type-aware selection + candidate matrix <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 7</span> Peru EMIT + magnetics + foundation embeddings <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 8</span> Multi-zone replication + frontier candidates <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
   </div>
 </section>
 

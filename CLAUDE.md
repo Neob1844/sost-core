@@ -137,7 +137,7 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 6E):**
+**Current state (Phase 7):**
 - 10 AOIs globally: 5 supervised (AUC 0.72-0.94) + 3 heuristic + 1 demo + 1 failed
 - Zone-specific, type-aware architecture — auto-selects best feature families per zone
 - Best AUC: Kalgoorlie 0.937 (satellite + thermal + PCA embeddings)
@@ -150,7 +150,9 @@ Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 - Spatial gradients: negative everywhere
 - Frontier registry: 10 new conjectures (3 HIGH priority)
 - Custom AOIs: Banos de Mula (#1, score 0.762), Barqueros (#2, 0.713), Salave (#3, no signal)
-- Blockers: Peru EMIT download, GSWA detailed AEM (manual check), GA radiometrics (manual download)
+- Magnetics/radiometrics: tested NEUTRAL (+0.002 AUC), K/Th ratio geologically relevant
+- Foundation embeddings: tested NEUTRAL (+0.004 AUC in strict block CV)
+- Blockers: Peru EMIT download (truncated granule), GSWA detailed AEM (manual check)
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
 
 ## Materials Engine
@@ -184,13 +186,14 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
 **Phase 6C (Kalgoorlie):** PCA embeddings +0.023 AUC at Kalgoorlie ONLY. Cross-zone: NEGATIVE at all 3 porphyry zones.
 **Phase 6D:** Type-aware registry: EMIT=porphyry-specific, PCA=Kalgoorlie-specific, thermal=universal modest, gradients=negative.
-**Phase 6E:** Universal candidate matrix (9 zones × 17 families = 153 cells), type-aware auto-selection pipeline, Peru EMIT replication (50 granules found via CMR), Kalgoorlie AEM inventory (GA aeromagnetics ready, GSWA needs manual check), frontier candidate registry (10 ideas, 3 HIGH priority), zone model registry v3.
-**Selected families by zone:**
+**Phase 6E:** Universal candidate matrix (9 zones × 17 families = 153 cells), type-aware auto-selection pipeline, frontier candidate registry (10 ideas, 3 HIGH priority), zone model registry v3.
+**Phase 7:** Operational experiments — Kalgoorlie magnetics NEUTRAL (+0.002 AUC, 9 features: TMI + K/Th/U radiometrics), foundation embeddings NEUTRAL (+0.004 AUC in strict block CV), Peru EMIT BLOCKED (granule truncated 54%, 50 granules available via CMR). Full stack (sat+thermal+PCA+magnetics) best at 0.870 AUC. Selection unchanged from Phase 6E. Registry v4.
+**Selected families by zone (unchanged):**
 - Kalgoorlie: satellite + thermal + PCA embeddings → AUC 0.937
 - Chuquicamata: satellite + thermal + EMIT → AUC 0.862
 - Peru/Arizona: satellite + thermal → AUC 0.758/0.718
 - Zambia: satellite → AUC 0.763
-**Key learning:** No single feature family is universal. Zone-specific, type-aware, multi-proxy mineral intelligence.
+**Key learning:** No single feature family is universal. Magnetics/radiometrics individually neutral but contribute to full stack. Foundation embeddings evaluation-method sensitive.
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
