@@ -2685,5 +2685,48 @@ if(document.readyState==='complete'||document.readyState==='interactive'){
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
 <script src="js/crt-effects.js"></script>
+<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(251,1,13,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--red-primary,#fb010d);border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:var(--red-primary,#fb010d)}</style>
+<script>
+(function(){
+var D={
+'UTXO':'<b>UTXO</b> \u2014 Unspent Transaction Output. Individual \u201ccoins\u201d in your wallet. A 100 SOST balance might be 3 UTXOs: 50 + 30 + 20.',
+'Coinbase Maturity':'<b>Coinbase Maturity</b> \u2014 Mining rewards cannot be spent until 1,000 blocks (~7 days). Prevents issues if the block is orphaned.',
+'Fee Rate':'<b>Fee Rate</b> \u2014 Fee per byte in stocks/byte (1 SOST = 100,000,000 stocks). Higher fee = faster confirmation. Minimum: 1 stock/byte.',
+'AES-256':'<b>AES-256-GCM</b> \u2014 Military-grade encryption for your private keys. Even if someone copies your wallet file, they can\u2019t use it without your password.',
+'PBKDF2':'<b>PBKDF2</b> \u2014 Turns your password into an encryption key using 100,000 iterations. Makes brute-force attacks extremely slow.',
+'BIP39':'<b>BIP39</b> \u2014 Standard for 12-word seed phrases. Same standard as MetaMask, Ledger. One phrase recovers all your keys.',
+'TOTP':'<b>TOTP</b> \u2014 Time-based One-Time Password. The 6-digit code from Google Authenticator. Changes every 30 seconds.',
+'PSBT':'<b>SOST-PSBT</b> \u2014 Offline signing. Create online, sign offline (air-gapped), broadcast online. Private keys never touch the internet.',
+'Multisig':'<b>Multisig</b> \u2014 sost3 addresses requiring M of N signatures. 2-of-3: any 2 keyholders must approve.',
+'Vault Mode':'<b>Vault Mode</b> \u2014 Only allows sending to trusted address book entries. Prevents unauthorized transfers.',
+'Auto-Lock':'<b>Auto-Lock</b> \u2014 Locks wallet after inactivity (default 5 min). Private keys cleared from memory when locked.',
+'ECDSA':'<b>ECDSA</b> \u2014 Elliptic Curve Digital Signature Algorithm. Proves you own SOST without revealing your private key.',
+'HASH160':'<b>HASH160</b> \u2014 RIPEMD160(SHA256(x)). Double hash creating short addresses from public keys.',
+'P2PKH':'<b>P2PKH</b> \u2014 Pay-to-Public-Key-Hash. Standard SOST transaction: prove ownership with public key + signature.',
+'LOW-S':'<b>LOW-S</b> \u2014 Signature normalization preventing malleability. Only one valid signature format per transaction.',
+'secp256k1':'<b>secp256k1</b> \u2014 The elliptic curve used for all SOST signatures. Same as Bitcoin.',
+'RBF':'<b>Replace-by-Fee</b> \u2014 Replace a stuck transaction with a higher-fee version.',
+'scrypt':'<b>scrypt</b> \u2014 Memory-hard key derivation for CLI wallet. Harder to crack than PBKDF2.'
+};
+var panel=null;
+function init(){
+  panel=document.createElement('div');panel.className='sost-info-panel';document.body.appendChild(panel);
+  document.querySelectorAll('.card h3,.form-label,.subtitle,td,th,strong,b,.spec-label').forEach(function(c){
+    var t=c.textContent||'';for(var k in D){if(t.indexOf(k)!==-1&&!c.classList.contains('sost-info-tip')&&c.children.length<3){c.classList.add('sost-info-tip');c.dataset.info=k;break;}}
+  });
+  document.addEventListener('click',function(e){
+    var tip=e.target.closest('.sost-info-tip');if(!tip){panel.style.display='none';return;}
+    var k=tip.dataset.info;if(!k||!D[k]){panel.style.display='none';return;}
+    panel.innerHTML=D[k];var r=tip.getBoundingClientRect();
+    panel.style.left=Math.max(8,Math.min(r.left,innerWidth-400))+'px';
+    var y=r.bottom+8;if(y+200>innerHeight)y=r.top-200;panel.style.top=y+'px';
+    panel.style.display=panel.style.display==='block'&&panel._last===k?'none':'block';
+    panel._last=k;e.stopPropagation();
+  });
+  document.addEventListener('scroll',function(){panel.style.display='none';});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,500);
+})();
+</script>
 </body>
 </html>
