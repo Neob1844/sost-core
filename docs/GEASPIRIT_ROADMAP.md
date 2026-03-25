@@ -493,3 +493,32 @@ No family is included blindly.
 3. Foundation embeddings evaluation-method sensitive — prior +0.026 not reproduced in strict block CV
 4. Peru EMIT blocked by download — physical hypothesis untested
 5. No family selection changes — Phase 6E architecture holds
+
+### Frontier Research V5: Next-Generation Experiments (March 2026)
+
+**Ultra-deep investigation completed.** Evaluated 30+ sensors, 15+ databases, 10+ novel physical theories,
+and 7+ untried combinations. Full analysis in `docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md`.
+
+**Top 3 experiments identified:**
+
+| # | Experiment | Viability | Novelty | Expected Impact |
+|---|-----------|-----------|---------|-----------------|
+| 1 | **Temporal DNA Transformer** — 20yr multi-band pixel time series + attention architecture | 9/10 | Very High (unpublished for minerals) | Architecture-level breakthrough |
+| 2 | **Prithvi-EO-2.0 Fine-tuning** — foundation model for cross-zone transfer | 8/10 | High | Solves transfer problem |
+| 3 | **ECOSTRESS Diurnal Thermal Inertia** — multi-time-of-day thermal from ISS | 7/10 | Medium | Extends proven thermal pipeline |
+
+**New data sources identified (all free):**
+- NISAR (launched 2024): L+S band SAR, global, 12-day revisit — test L-C difference as subsurface proxy
+- USGS Earth MRI: airborne geophysics for Arizona AOI
+- MINDAT API: 400K+ mineral localities with species assemblages (label enrichment)
+- SoilGrids 250m: soil composition as global lithology proxy
+- GSWA drill hole database: structured drilling data for Kalgoorlie
+
+**Novel physical theories evaluated:**
+- Temporal DNA (solid, highest priority)
+- Biogeochemical spectral signatures (solid in lab, weak from orbit)
+- Passive EM / MobileMT (operational commercial, no satellite proxy)
+- Muography (fascinating but impractical cost/time)
+- Quantum gravity gradiometry (5+ years away)
+
+**Key insight:** The next breakthrough is not a new sensor — it's a new way of using the 40-year Landsat archive. Every pixel on Earth has been photographed thousands of times. The Temporal DNA Transformer is designed to extract that hidden temporal signal.
