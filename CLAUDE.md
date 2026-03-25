@@ -195,7 +195,9 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Zambia: satellite → AUC 0.763
 **Key learning:** No single feature family is universal. Magnetics/radiometrics individually neutral but contribute to full stack. Foundation embeddings evaluation-method sensitive.
 **Frontier Research V5:** Top 3 next experiments: (1) Temporal DNA Transformer; (2) Prithvi-EO-2.0 fine-tuning; (3) ECOSTRESS diurnal thermal inertia. See docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md.
-**CTO Sprint:** Multi-Scale Anomaly Index experiment EXECUTED (novel, unpublished). 19 STRONG features discovered — tpi_heterogeneity d=+0.878 is STRONGEST single feature ever found (deposits in structurally complex terrain). ML AUC neutral (model already captures implicitly). ECOSTRESS path confirmed (GEE + earthaccess). USGS Earth MRI Arizona data found (ScienceBase, free, 200m line spacing). Prithvi-EO-2.0 feasible on CPU (300M model, 8GB RAM). Peru EMIT still blocked (both granules truncated).
+**CTO Sprint:** Multi-Scale Anomaly experiment: 19 STRONG features (tpi_heterogeneity d=+0.878 strongest ever). AUC neutral (GBM captures implicitly). ECOSTRESS/EarthMRI/Prithvi paths confirmed.
+**Canonical Objective Assessment:** 18/40 (45%). MINERAL 2/10 (Au vs Ni AUC=0.50 random), DEPTH 3/10 (Euler proxy 6m median, no signal), COORDS 7/10, CERTAINTY 6/10 (AUC 0.869, Brier 0.161). Critical fix: Kalgoorlie magnetics were EMPTY (wrong survey tiles P580/P586 don't cover Kalgoorlie). Fixed with GA national TMI grid via NCI THREDDS. Peru EMIT still blocked (truncated granules).
+**Key insight:** The gap to 10/10 is a DATA problem, not ML. Need: geology maps (mineral ID), AEM (depth), drill holes (calibration).
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
