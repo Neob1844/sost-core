@@ -853,25 +853,26 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="section-title">Research <span>Frontier</span></div>
 
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">EMIT HYPERSPECTRAL — ACTIVE (EXPERIMENT EXECUTED)</div>
+      <div class="panel-head" style="color:var(--green)">EMIT HYPERSPECTRAL — PHASE 6A COMPLETE (8 GRANULES, 94% COVERAGE)</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
-        <b style="color:var(--green)">NASA EMIT</b> (285 bands, 60m, ISS orbit) identifies surface alteration minerals with spectral precision unavailable from Sentinel-2. This enables <b>alteration-driven multi-proxy inference</b>.<br><br>
-        <b style="color:var(--green)">Earthdata: UNLOCKED.</b> 3 L2A granules downloaded and processed at Chuquicamata (18.5% spatial coverage from 3 swaths).
+        <b style="color:var(--green)">NASA EMIT</b> (285 bands, 60m, ISS orbit) identifies surface alteration minerals. <b>8 L2A granules</b> downloaded at Chuquicamata with <b>93.9% spatial coverage</b> and <b>69/69 deposits</b> with valid data.
       </div>
       <table class="tbl" style="margin-top:8px">
         <thead><tr><th>EMIT Feature</th><th>Cohen's d</th><th>p-value</th><th>Direction</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>clay_proxy</td><td class="val">+0.901</td><td>0.070</td><td>MORE clay absorption at deposits</td></tr>
-          <tr style="color:var(--green)"><td>hydroxyl_proxy</td><td class="val">+0.885</td><td>0.086</td><td>MORE hydroxyl absorption</td></tr>
-          <tr style="color:var(--green)"><td>mineral_id_count</td><td class="val">+0.785</td><td>0.060</td><td>MORE spectral features</td></tr>
-          <tr style="color:var(--amber)"><td>band_depth_summary</td><td class="val">+0.712</td><td>0.188</td><td>Deeper absorption</td></tr>
+          <tr style="color:var(--green)"><td>reflectance_pca_2</td><td class="val">-0.670</td><td>1.9e-06</td><td style="color:var(--green)">VERY PROMISING</td></tr>
+          <tr style="color:var(--green)"><td>hydroxyl_proxy</td><td class="val">+0.645</td><td>1.5e-06</td><td style="color:var(--green)">MORE hydroxyl at deposits</td></tr>
+          <tr style="color:var(--green)"><td>mineral_id_count</td><td class="val">+0.528</td><td>7.7e-05</td><td style="color:var(--green)">MORE spectral features</td></tr>
+          <tr style="color:var(--green)"><td>clay_proxy</td><td class="val">+0.516</td><td>8.9e-05</td><td style="color:var(--green)">MORE clay at deposits</td></tr>
+          <tr style="color:var(--amber)"><td>alteration_mineral_presence</td><td class="val">+0.383</td><td>0.014</td><td style="color:var(--amber)">MORE alteration</td></tr>
         </tbody>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
-        8 deposits / 24 background with valid EMIT data. Effect sizes large (d &gt; 0.7) but p-values marginal due to small sample. Physically correct: porphyry Cu deposits have clay/hydroxyl alteration halos detectable by EMIT.<br><br>
-        <b>EMIT only AUC: 0.750</b> (23 samples) vs satellite baseline: 0.646 (88 samples). Promising but not comparable — different sample sizes and spatial coverage.<br>
-        <b>Fusion (baseline+EMIT):</b> Insufficient overlapping pixels (11 samples). Need more granules for proper fusion test.<br><br>
-        <b style="color:var(--amber)">EMIT does NOT</b> see underground. It detects surface alteration minerals whose spatial pattern constrains subsurface probability.
+        69 deposits / 207 background. 4 features significant at p &lt; 0.001. Terrain-matched: mineral_id_count d=+0.745, p=0.008.<br>
+        <b>EMIT-only AUC: 0.826</b> (276 samples) — strong standalone. Baseline already 0.996 — no AUC gain from fusion (saturated baseline).<br>
+        <b>Verdict: PROMISING (5/10).</b> Real alteration signal, physically correct, but Chuquicamata baseline too strong for fusion improvement.<br>
+        <b>Next:</b> Replicate at Kalgoorlie (baseline 0.80 — room for EMIT to add value).<br><br>
+        <b style="color:var(--amber)">EMIT does NOT</b> see underground. It detects surface alteration minerals — alteration-driven multi-proxy inference.
       </div>
     </div>
 
