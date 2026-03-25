@@ -326,11 +326,21 @@ Training on pure types sharpens the model. Mixing types confuses it.
 - 4 stable thermal features across 2 independent arid zones
 - Blockers: EMIT (Earthdata auth not resolved), GA geophysics (manual download 30min)
 
-### Experiment 2: EMIT Alteration Fusion — BLOCKED BY AUTH
+### Experiment 2: EMIT Alteration Fusion — EXECUTED
 
-EMIT hyperspectral (285 bands, 60m) could provide surface alteration mineral identification
-for alteration-driven multi-proxy inference. All pipeline scripts built and ready.
-Status: Earthdata Login authentication not resolved. No data accessed.
+EMIT hyperspectral (285 bands, 60m) provides surface alteration mineral identification.
+Earthdata Login RESOLVED. 3 L2A granules downloaded at Chuquicamata (18.5% coverage).
+
+**Statistical signal (8 deposits / 24 background with valid data):**
+- clay_proxy: d = +0.901 (MORE clay at deposits)
+- hydroxyl_proxy: d = +0.885 (MORE hydroxyl at deposits)
+- mineral_id_count: d = +0.785 (MORE features at deposits)
+- p-values marginal (0.06-0.09) due to small sample
+
+**Model:** EMIT-only AUC 0.750 (23 samples) vs satellite baseline 0.646 (88 samples).
+Fusion insufficient overlap (need more granules).
+
+**Correct framing:** alteration-driven multi-proxy inference, not subsurface imaging.
 
 ### Subsurface-Proxy V3: ML Residual Experiment — NEGATIVE
 

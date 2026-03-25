@@ -291,7 +291,7 @@ Zone-specific mineral prospectivity mapping using public satellite data.
 - Heuristic scans: Banos de Mula (Spain, score 0.762), Barqueros, Tintic (Utah)
 - Key finding: deposit type > commodity for ML training. Transfer learning does NOT work for satellite features — zone-specific models required.
 - **Thermal V2** (March 2026): 20-year Landsat thermal proxy. +0.013 AUC at Kalgoorlie, replicated at Chuquicamata (4 features consistent). PRODUCTION_WORTHY.
-- **Experiment 2 (EMIT):** Pipeline ready, blocked by Earthdata auth. Alteration-driven multi-proxy inference.
+- **Experiment 2 (EMIT):** Active. Clay/hydroxyl signal d>0.8 at Chuquicamata (small sample, need more granules). Alteration-driven multi-proxy inference.
 - **V3 Residual-Proxy:** ML residual experiment NEGATIVE — thermal signal explained by surface covariates. Honest result documented.
 - Details: https://sostcore.com/sost-geaspirit.html
 

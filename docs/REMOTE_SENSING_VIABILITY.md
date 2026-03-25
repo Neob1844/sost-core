@@ -1055,10 +1055,17 @@ when the satellite baseline is moderate — they add less where spectral/SAR alr
 **Multi-zone verdict: PRODUCTION_WORTHY (4/6)**
 Cautious backfill to similar arid zones recommended. Third-zone validation needed.
 
-### Experiment 2: EMIT — BLOCKED BY AUTH
+### Experiment 2: EMIT — EXECUTED (Chuquicamata)
 
-EMIT (285 bands, 60m, ISS) pipeline built but Earthdata Login not resolved.
-When auth is resolved: alteration-driven multi-proxy fusion at Chuquicamata.
+EMIT (285 bands, 60m, ISS) — Earthdata Login resolved. 3 granules downloaded,
+18.5% coverage at Chuquicamata.
+
+Effect sizes large but marginal p-values (small sample: 8 deposits with valid EMIT data):
+- clay_proxy d=+0.901, hydroxyl_proxy d=+0.885, mineral_id_count d=+0.785
+- Physically correct: porphyry Cu deposits have clay/hydroxyl alteration detectable by EMIT
+- EMIT-only AUC 0.750 (23 samples) vs satellite baseline 0.646 (88 samples)
+- Fusion test inconclusive — need more granules for overlapping coverage
+
 EMIT detects surface alteration minerals, NOT subsurface ore directly.
 
 ### Subsurface-Proxy V3: ML Residual — NEGATIVE
