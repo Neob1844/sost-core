@@ -705,7 +705,7 @@ Bitcoin's SHA-256 remains the canonical PoW baseline—simple, robust, and histo
 | RAM required (mining) | ~0 MB | 2,048 MB (2 GB) | 1-4 GB (growing DAG) | ~8,192 MB (4 GB dataset + 4 GB scratchpad) |
 | RAM required (node) | ~0 MB | ~256 MB | ~256 MB | ~500 MB (no dataset/scratchpad) |
 | ASIC advantage | >1,000× | ~3-5× estimated | ~2-5× (Ethash ASICs exist) | Designed for low multiples (hypothesis; formal benchmark pending) |
-| Difficulty adjustment | Every 2,016 blocks (~2 weeks) | Every block (simple ratio) | Every block (bomb + ratio) | Every block (cASERT bitsQ Q16.16, 48h half-life) |
+| Difficulty adjustment | Every 2,016 blocks (~2 weeks) | Every block (simple ratio) | Every block (bomb + ratio) | Every block (cASERT bitsQ Q16.16; V1: 48h half-life, V2: 24h half-life from block 1450) |
 | Mathematical certificate | None | None | None | Stability basin proof (k probes × g steps) |
 | Useful entropy output | Block hash only | Block hash only | Block hash only | Entropy triple (block_id + commit + cp_root) |
 | Consensus arithmetic | Integer (nBits, subsidy) | Integer + float (VM) | Integer | 100% integer (zero floating-point) |
@@ -720,8 +720,8 @@ Learning rate shift         18
 Regularization λ           100
 Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
-Difficulty algorithm       cASERT bitsQ, 48h half-life
-Per-block delta cap        6.25% (1/16)
+Difficulty algorithm       cASERT bitsQ (V1: 48h half-life, V2: 24h half-life from block 1450)
+Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450
 Equalizer profiles         E4(-4) through H9(+9), H10-H12 reserved (17 total)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
 CASERT_H_MIN               -4
@@ -2244,7 +2244,7 @@ NOTE: The Foundation reserves the right to accelerate or delay any committed tim
 | Initial reward | 7.85100863 SOST/block |
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
-| Difficulty | cASERT bitsQ Q16.16, 48h half-life, per-block, 6.25% delta cap |
+| Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap |
 | cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H9(+9) (H10-H12 reserved), B0 baseline, hardening only when ahead of schedule |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
