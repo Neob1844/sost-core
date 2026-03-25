@@ -2205,5 +2205,48 @@ function meLockSession(){
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
 <script src="js/crt-effects.js"></script>
+<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(0,255,65,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #003300;border-left:3px solid #00ff41;border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:#00ff41}</style>
+<script>
+(function(){
+var D={
+'Formation Energy':'<b>Formation Energy</b> \u2014 Energy when a material forms from elements. Negative = stable (wants to exist). Predicted by CGCNN. Our MAE: 0.1528 eV/atom.',
+'Band Gap':'<b>Band Gap</b> \u2014 Energy gap between valence and conduction bands. 0 = metal, 0.5\u20133 eV = semiconductor, >3 = insulator. Predicted by ALIGNN-Lite.',
+'MAE':'<b>MAE</b> \u2014 Mean Absolute Error. Average prediction error. CGCNN: 0.1528 eV/atom for formation energy.',
+'CGCNN':'<b>CGCNN</b> \u2014 Crystal Graph Convolutional Neural Network. Converts crystal structures to graphs and predicts properties.',
+'ALIGNN':'<b>ALIGNN-Lite</b> \u2014 Atomistic Line Graph Neural Network. Predicts band gap from crystal structure. R\u00b2 = 0.71.',
+'JARVIS':'<b>JARVIS</b> \u2014 NIST database of 75,993 materials with computed properties. Our main training data source.',
+'CIF':'<b>CIF</b> \u2014 Crystallographic Information File. Standard format: atoms, positions, lattice, space group.',
+'Space Group':'<b>Space Group</b> \u2014 Crystal symmetry classification. 230 possible groups determining how atoms repeat in 3D.',
+'Novelty':'<b>Novelty Score</b> \u2014 How different from all 76,193 known materials. Based on compositional distance.',
+'Plausibility':'<b>Plausibility</b> \u2014 Chemical reality check: charge balance, element compatibility, stoichiometry. 76.7% pass rate.',
+'Validation Queue':'<b>Validation Queue</b> \u2014 5 tiers: Priority (DFT-ready), Candidate, Manual Review, Watchlist, Reject.',
+'DFT':'<b>DFT</b> \u2014 Density Functional Theory. Quantum simulation of materials. Gold standard for property prediction but computationally expensive.',
+'Handoff':'<b>Handoff Pack</b> \u2014 Export: formula, predicted properties, CIF, similar materials, confidence scores. Ready for lab synthesis or DFT.',
+'GNN':'<b>Graph Neural Network</b> \u2014 Neural network operating on graph representations of crystal structures.',
+'proxy':'<b>Proxy Estimate</b> \u2014 Score from similar known materials, not a direct GNN prediction. Higher uncertainty.',
+'direct_gnn':'<b>Direct GNN</b> \u2014 Real neural network forward pass on the candidate\u2019s crystal structure. Strongest computational evidence.',
+'lifted':'<b>Structure Lift</b> \u2014 Adapting a known crystal prototype by substituting chemistry. Required before GNN inference.',
+'composite_score':'<b>Composite Score</b> \u2014 Multi-objective ranking: novelty \u00d7 stability \u00d7 value \u00d7 diversity. Penalizes known materials.'
+};
+var panel=null;
+function init(){
+  panel=document.createElement('div');panel.className='sost-info-panel';document.body.appendChild(panel);
+  document.querySelectorAll('td,th,b,strong,span,div').forEach(function(c){
+    var t=c.textContent||'';for(var k in D){if(t.indexOf(k)!==-1&&!c.classList.contains('sost-info-tip')&&c.children.length<4){c.classList.add('sost-info-tip');c.dataset.info=k;break;}}
+  });
+  document.addEventListener('click',function(e){
+    var tip=e.target.closest('.sost-info-tip');if(!tip){panel.style.display='none';return;}
+    var k=tip.dataset.info;if(!k||!D[k]){panel.style.display='none';return;}
+    panel.innerHTML=D[k];var r=tip.getBoundingClientRect();
+    panel.style.left=Math.max(8,Math.min(r.left,innerWidth-400))+'px';
+    var y=r.bottom+8;if(y+200>innerHeight)y=r.top-200;panel.style.top=y+'px';
+    panel.style.display=panel.style.display==='block'&&panel._last===k?'none':'block';
+    panel._last=k;e.stopPropagation();
+  });
+  document.addEventListener('scroll',function(){panel.style.display='none';});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,500);
+})();
+</script>
 </body>
 </html>

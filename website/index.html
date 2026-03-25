@@ -1492,5 +1492,48 @@ function fetchSostChart(){
 <!-- CRT effects -->
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/crt-effects.js"></script>
+<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(251,1,13,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--red-primary,#fb010d);border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:var(--red-primary,#fb010d)}</style>
+<script>
+(function(){
+var D={
+'Proof-of-Work':'<b>Proof-of-Work</b> \u2014 Consensus mechanism where miners solve computational puzzles to validate transactions. SOST uses ConvergenceX: memory-hard (8 GB RAM), 100K sequential rounds, resistant to ASICs.',
+'Constitutional Gold':'<b>Constitutional Gold Reserves</b> \u2014 25% of every block reward automatically goes to the Gold Funding Vault for purchasing tokenized gold (XAUT/PAXG). Encoded at genesis, immutable forever.',
+'ConvergenceX':'<b>ConvergenceX</b> \u2014 Memory-hard PoW: 8 GB RAM, 100K sequential rounds, per-block program generation. GPU/ASIC gains only 2\u20135\u00d7 over CPU. Node verification: ~500 MB, ~0.2ms.',
+'cASERT':'<b>cASERT</b> \u2014 Per-block difficulty adjustment. Keeps block times near 10 minutes. V2 (block 1450+): 24h halflife, 12.5% cap. 17 equalizer profiles.',
+'PoPC':'<b>Proof of Personal Custody</b> \u2014 Users prove they hold gold to earn SOST rewards. Bond (10\u201330% of gold value) is slashed if fraud detected.',
+'Feigenbaum':'<b>Feigenbaum Emission</b> \u2014 Block rewards decay following \u03b4 \u2248 4.6692. Smooth curve, total supply ~4.67M SOST over ~30 years.',
+'coinbase split':'<b>Coinbase Split</b> \u2014 50% miner / 25% Gold Vault / 25% PoPC Pool. Constitutional rule, hardcoded at genesis.',
+'4,669':'<b>~4.67M Max Supply</b> \u2014 Hard cap enforced by emission formula. No minting function exists. After emission ends, miners earn fees only.',
+'AES-256':'<b>AES-256-GCM</b> \u2014 Military-grade encryption protecting wallet files. 256-bit key derived from your password.',
+'secp256k1':'<b>secp256k1</b> \u2014 Elliptic curve for digital signatures, same as Bitcoin. libsecp256k1 with LOW-S enforcement.',
+'Multisig':'<b>Multisig</b> \u2014 sost3 addresses requiring M of N signatures. 2-of-3 for treasury protection.',
+'Explorer':'<b>Block Explorer</b> \u2014 Browse blocks, transactions, addresses, mining stats, and network status.',
+'GeaSpirit':'<b>GeaSpirit</b> \u2014 Mineral intelligence platform. Satellite data + ML for remote mineral prospectivity mapping. 10 AOIs globally.',
+'Materials Engine':'<b>Materials Engine</b> \u2014 Autonomous materials discovery. Graph neural networks predict properties of novel materials from 76,193 known materials.',
+'HD Wallet':'<b>HD Wallet (BIP39)</b> \u2014 12-word seed phrase backup. One phrase recovers all your keys on any device.',
+'PSBT':'<b>SOST-PSBT</b> \u2014 Offline signing. Create transactions online, sign offline (air-gapped), broadcast online. Private keys never touch the internet.',
+'RBF':'<b>Replace-by-Fee</b> \u2014 Replace a stuck transaction with higher fee.',
+'CPFP':'<b>Child-Pays-for-Parent</b> \u2014 A child transaction pays enough to move both itself and its stuck parent.'
+};
+var panel=null;
+function init(){
+  panel=document.createElement('div');panel.className='sost-info-panel';document.body.appendChild(panel);
+  document.querySelectorAll('td,th,h3,h2,strong,b,span,p,li,a').forEach(function(c){
+    var t=c.textContent||'';for(var k in D){if(t.indexOf(k)!==-1&&!c.classList.contains('sost-info-tip')&&c.children.length<3){c.classList.add('sost-info-tip');c.dataset.info=k;break;}}
+  });
+  document.addEventListener('click',function(e){
+    var tip=e.target.closest('.sost-info-tip');if(!tip){panel.style.display='none';return;}
+    var k=tip.dataset.info;if(!k||!D[k]){panel.style.display='none';return;}
+    panel.innerHTML=D[k];var r=tip.getBoundingClientRect();
+    panel.style.left=Math.max(8,Math.min(r.left,innerWidth-400))+'px';
+    var y=r.bottom+8;if(y+200>innerHeight)y=r.top-200;panel.style.top=y+'px';
+    panel.style.display=panel.style.display==='block'&&panel._last===k?'none':'block';
+    panel._last=k;e.stopPropagation();
+  });
+  document.addEventListener('scroll',function(){panel.style.display='none';});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,200);
+})();
+</script>
 </body>
 </html>

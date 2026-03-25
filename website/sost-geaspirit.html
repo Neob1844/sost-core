@@ -1236,5 +1236,55 @@ function toggleRpt(el){
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
 <script src="js/crt-effects.js"></script>
+<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(0,255,65,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #003300;border-left:3px solid #00ff41;border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:#00ff41}</style>
+<script>
+(function(){
+var D={
+'AUC':'<b>AUC (Area Under Curve)</b> \u2014 Measures model accuracy. 0.50 = random, 0.70 = acceptable, 0.80 = good, 0.90+ = excellent. Our best: Chuquicamata 0.86.',
+'Cohen':'<b>Cohen\u2019s d</b> \u2014 Effect size measure. 0.2 = small, 0.5 = medium, 0.8 = large. Our thermal signal: d = \u22120.627 (medium\u2013large).',
+'p-value':'<b>p-value</b> \u2014 Probability the result is random chance. p < 0.05 = significant. p < 0.0001 = extremely significant. Our thermal: p < 0.0001.',
+'PR-AUC':'<b>PR-AUC</b> \u2014 Precision-Recall AUC. Better than ROC-AUC when deposits are rare compared to background.',
+'Sentinel-2':'<b>Sentinel-2</b> \u2014 ESA satellite, 13 bands at 10\u201360m. Free. Captures VNIR + SWIR for mineral and vegetation mapping.',
+'Sentinel-1':'<b>Sentinel-1</b> \u2014 ESA radar satellite. Works through clouds and at night. Surface texture and moisture.',
+'Landsat':'<b>Landsat</b> \u2014 NASA/USGS, 40+ years of data. Thermal infrared band for surface temperature. Free. Our 20-year thermal experiment uses this.',
+'EMIT':'<b>EMIT</b> \u2014 NASA hyperspectral on ISS. 285 bands, 60m resolution. Identifies specific surface minerals. Our Chuquicamata result: hydroxyl d=+0.645.',
+'DEM':'<b>DEM</b> \u2014 Digital Elevation Model. Terrain height map for slope, curvature, aspect, drainage. Critical for geological mapping.',
+'NDVI':'<b>NDVI</b> \u2014 Normalized Difference Vegetation Index. Measures plant health. Stressed vegetation over deposits may show lower NDVI.',
+'Porphyry':'<b>Porphyry Cu</b> \u2014 Large, low-grade copper deposits from magmatic fluids. Concentric alteration zones detectable from satellite. Examples: Chuquicamata.',
+'Orogenic':'<b>Orogenic Au</b> \u2014 Gold in metamorphic rocks along faults/shear zones. Examples: Kalgoorlie, Bendigo.',
+'Sed-hosted':'<b>Sediment-hosted Cu</b> \u2014 Copper in sandstone/shale from migrating fluids. Examples: Zambian Copperbelt.',
+'Spatial Block CV':'<b>Spatial Block CV</b> \u2014 Cross-validation by geographic blocks, not random pixels. Prevents model from memorizing nearby pixels.',
+'Transfer Learning':'<b>Transfer Learning</b> \u2014 Training on one zone, testing on another. FAILED for GeaSpirit \u2014 each zone needs its own model.',
+'thermal_range_ratio':'<b>thermal_range_ratio</b> \u2014 Thermal amplitude / mean annual temp. Strongest thermal feature: d = \u22120.627 at Kalgoorlie. Deposits have lower ratio.',
+'Thermal Amplitude':'<b>Thermal Amplitude</b> \u2014 Summer minus winter surface temperature over 20 years. Deposits show different thermal inertia.',
+'hydroxyl':'<b>hydroxyl_proxy</b> \u2014 EMIT band depth at 2100\u20132250nm. Detects Al-OH, Mg-OH minerals from hydrothermal alteration. d = +0.645 at Chuquicamata.',
+'clay_proxy':'<b>clay_proxy</b> \u2014 EMIT band depth at 2150\u20132220nm. Detects clay minerals (kaolinite, montmorillonite). d = +0.516 at Chuquicamata.',
+'Heuristic':'<b>Heuristic Score</b> \u2014 Multi-criteria score (0\u20131) combining geological, spectral, structural, and terrain analysis.',
+'GNN':'<b>Graph Neural Network</b> \u2014 Neural network on crystal structure graphs. Used by Materials Engine to predict material properties.',
+'Foundation Model':'<b>Foundation Model</b> \u2014 Large AI pre-trained on massive datasets (Prithvi, S2-MAE). Can be fine-tuned for mineral prospectivity.',
+'Kalgoorlie':'<b>Kalgoorlie</b> \u2014 Western Australia. Orogenic gold district. 205 deposits (OZMIN). AUC 0.81. Thermal V2 confirmed here.',
+'Chuquicamata':'<b>Chuquicamata</b> \u2014 Atacama Desert, Chile. World\u2019s largest open-pit copper mine. 55+ porphyry Cu deposits. AUC 0.86.',
+'PRODUCTION_WORTHY':'<b>PRODUCTION_WORTHY</b> \u2014 Signal verified at 2+ zones, useful for local integration. Not yet globally validated.'
+};
+var panel=null;
+function init(){
+  panel=document.createElement('div');panel.className='sost-info-panel';document.body.appendChild(panel);
+  document.querySelectorAll('td,th,b,span,div').forEach(function(c){
+    var t=c.textContent||'';for(var k in D){if(t.indexOf(k)!==-1&&!c.classList.contains('sost-info-tip')&&c.children.length<4){c.classList.add('sost-info-tip');c.dataset.info=k;break;}}
+  });
+  document.addEventListener('click',function(e){
+    var tip=e.target.closest('.sost-info-tip');if(!tip){panel.style.display='none';return;}
+    var k=tip.dataset.info;if(!k||!D[k]){panel.style.display='none';return;}
+    panel.innerHTML=D[k];var r=tip.getBoundingClientRect();
+    panel.style.left=Math.max(8,Math.min(r.left,innerWidth-400))+'px';
+    var y=r.bottom+8;if(y+200>innerHeight)y=r.top-200;panel.style.top=y+'px';
+    panel.style.display=panel.style.display==='block'&&panel._last===k?'none':'block';
+    panel._last=k;e.stopPropagation();
+  });
+  document.addEventListener('scroll',function(){panel.style.display='none';});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,200);
+})();
+</script>
 </body>
 </html>
