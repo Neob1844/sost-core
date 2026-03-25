@@ -340,7 +340,16 @@ Earthdata Login RESOLVED. 3 L2A granules downloaded at Chuquicamata (18.5% cover
 **Model:** EMIT-only AUC 0.750 (23 samples) vs satellite baseline 0.646 (88 samples).
 Fusion insufficient overlap (need more granules).
 
+**Phase 6A expansion (8 granules, 94% coverage, 69/69 deposits):**
+- hydroxyl_proxy d=+0.645 p=1.5e-06 (VERY PROMISING)
+- mineral_id_count d=+0.528 p=7.7e-05 (VERY PROMISING)
+- clay_proxy d=+0.516 p=8.9e-05 (VERY PROMISING)
+- EMIT-only AUC: 0.826 (276 samples) — strong standalone
+- Fusion: baseline already 0.996 — no AUC gain (saturated)
+- Verdict: PROMISING (5/10)
+
 **Correct framing:** alteration-driven multi-proxy inference, not subsurface imaging.
+**Next:** Replicate at Kalgoorlie where baseline is moderate (0.80) — room for EMIT to improve.
 
 ### Subsurface-Proxy V3: ML Residual Experiment — NEGATIVE
 
