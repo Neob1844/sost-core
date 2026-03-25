@@ -400,3 +400,56 @@ Type-aware zone model registry:
 
 **Key learning:** No single feature family is universal. This reinforces the zone-specific
 architecture that GeaSpirit established in Phase 5. Each zone needs its own optimal feature stack.
+
+### Phase 6E: Universal Candidate Matrix + Type-Aware Auto-Selection
+
+**Philosophy shift:** GeaSpirit now evaluates ALL available feature families as candidates,
+measures their real contribution per zone and deposit type, and automatically selects the best subset.
+No family is included blindly.
+
+**Universal Candidate Family Matrix:**
+- 9 zones × 17 families = 153 (zone, family) cells tracked
+- Status distribution: 10 USEFUL, 5 NEGATIVE, 8 AVAILABLE, 17 BLOCKED, 113 UNTESTED
+- 8 production families + 2 subsurface/regional + 7 frontier ideas registered
+
+**Type-Aware Auto-Selection Results:**
+
+| Zone | Type | Selected Families | Rejected | Best AUC | Delta |
+|------|------|-------------------|----------|----------|-------|
+| Kalgoorlie | orogenic_au | satellite + thermal + PCA embeddings | EMIT (-0.135), gradients (-0.006) | 0.937 | +0.131 |
+| Chuquicamata | porphyry_cu | satellite + thermal + EMIT | PCA embeddings (-0.008) | 0.862 | 0.0 |
+| Peru | porphyry_cu | satellite + thermal | PCA embeddings (-0.021) | 0.758 | 0.0 |
+| Arizona | porphyry_cu | satellite + thermal | PCA embeddings (-0.039) | 0.718 | 0.0 |
+| Zambia | sediment_cu | satellite | — | 0.763 | 0.0 |
+| Pilbara | iron_fe | satellite | — | 0.405 | FAILED |
+
+**Peru EMIT Replication:**
+- NASA CMR search found 50 EMIT L2A granules covering Peru porphyry AOI
+- 1 raw granule already downloaded, incremental pipeline ready
+- If hydroxyl/clay signal replicates Chuquicamata, EMIT confirmed as PORPHYRY_USEFUL
+
+**Kalgoorlie AEM/Geophysics Inventory:**
+- GA aeromagnetics: READY (already downloaded, untested as ML feature)
+- GSWA detailed AEM: NEEDS_MANUAL_CHECK (highest value if available, 200m spacing)
+- AusAEM national: ALWAYS AVAILABLE but coarse (20km)
+- GA radiometrics: MODERATE value, easy download
+- Operator checklist generated for manual downloads
+
+**Frontier Candidate Registry (10 ideas):**
+- HIGH priority: post-rainfall SAR drying, nighttime thermal offset, foundation model embeddings
+- MEDIUM priority: multi-decadal NDVI trend, downstream water color, spectral unmixing
+- 2 candidates ready to test immediately (foundation embeddings, spectral unmixing)
+- Total estimated effort: 48 person-days
+
+**Zone Model Registry V3:**
+- 6 zones registered with selected/rejected families
+- Best improvement: Kalgoorlie +0.131 AUC (baseline 0.806 → full stack 0.937)
+- Key insight: no single feature family is universal
+
+**Key learnings:**
+1. satellite_baseline = always included (foundation)
+2. thermal_20yr = universal modest, included wherever available
+3. emit_alteration = porphyry Cu only (Chuquicamata confirmed, Peru pending)
+4. pca_embeddings = Kalgoorlie only (+0.026), negative at all porphyry zones
+5. spatial_gradients = negative everywhere tested
+6. The system must be TYPE-AWARE + FEATURE-AWARE + COVERAGE-AWARE

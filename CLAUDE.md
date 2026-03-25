@@ -137,18 +137,20 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 5G):**
-- 10 AOIs globally: 5 supervised (AUC 0.72-0.86) + 3 heuristic + 1 demo + 1 failed
-- Zone-specific architecture confirmed (transfer does NOT work for satellite features)
-- Deposit-type benchmarks: Porphyry Cu (0.86), Orogenic Au (0.81), Sediment-hosted Cu (0.76)
+**Current state (Phase 6E):**
+- 10 AOIs globally: 5 supervised (AUC 0.72-0.94) + 3 heuristic + 1 demo + 1 failed
+- Zone-specific, type-aware architecture — auto-selects best feature families per zone
+- Best AUC: Kalgoorlie 0.937 (satellite + thermal + PCA embeddings)
+- Universal candidate matrix: 9 zones × 17 families = 153 cells tracked
 - 162 targets with exact coordinates exported
 - OZMIN WFS integrated (16,225 Australian deposits, CC-BY 4.0)
-- Direct GNN inference working (CGCNN forward pass on CIF structures)
-- Advanced geomorphometry (6 bands for 5 zones)
-- Heuristic v9 (geomorphometry-aware global scanner)
+- EMIT: porphyry-specific (Chuquicamata hydroxyl d=+0.645), Peru 50 granules found
+- Thermal 20yr: universal modest (+0.013 AUC), production-worthy
+- PCA embeddings: Kalgoorlie-specific (+0.026 AUC), negative elsewhere
+- Spatial gradients: negative everywhere
+- Frontier registry: 10 new conjectures (3 HIGH priority)
 - Custom AOIs: Banos de Mula (#1, score 0.762), Barqueros (#2, 0.713), Salave (#3, no signal)
-- cASERT profile exposed via RPC getinfo
-- Blockers: EMIT (Earthdata auth), GA geophysics (manual download)
+- Blockers: Peru EMIT download, GSWA detailed AEM (manual check), GA radiometrics (manual download)
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
 
 ## Materials Engine
@@ -178,11 +180,17 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Multi-zone verdict: PRODUCTION_WORTHY (4/6)
 - Thermal most useful when satellite baseline is moderate
 
-**Experiment 2 (EMIT):** ACTIVE — Chuquicamata strong (hydroxyl d=+0.645), Kalgoorlie weak (deposit-type mismatch). EMIT is porphyry-specific.
+**Experiment 2 (EMIT):** Chuquicamata strong (hydroxyl d=+0.645), Kalgoorlie weak (deposit-type mismatch). EMIT is porphyry-specific.
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
 **Phase 6C (Kalgoorlie):** PCA embeddings +0.023 AUC at Kalgoorlie ONLY. Cross-zone: NEGATIVE at all 3 porphyry zones.
 **Phase 6D:** Type-aware registry: EMIT=porphyry-specific, PCA=Kalgoorlie-specific, thermal=universal modest, gradients=negative.
-**Key learning:** No single feature family is universal. Zone-specific model architecture confirmed again.
+**Phase 6E:** Universal candidate matrix (9 zones × 17 families = 153 cells), type-aware auto-selection pipeline, Peru EMIT replication (50 granules found via CMR), Kalgoorlie AEM inventory (GA aeromagnetics ready, GSWA needs manual check), frontier candidate registry (10 ideas, 3 HIGH priority), zone model registry v3.
+**Selected families by zone:**
+- Kalgoorlie: satellite + thermal + PCA embeddings → AUC 0.937
+- Chuquicamata: satellite + thermal + EMIT → AUC 0.862
+- Peru/Arizona: satellite + thermal → AUC 0.758/0.718
+- Zambia: satellite → AUC 0.763
+**Key learning:** No single feature family is universal. Zone-specific, type-aware, multi-proxy mineral intelligence.
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"

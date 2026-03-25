@@ -1080,3 +1080,48 @@ The "unexplained" component does not concentrate geological signal at Kalgoorlie
 
 This does NOT invalidate thermal proxies — Experiment 1 signal is real and replicable.
 It means the residual decomposition approach does not extract additional independent value.
+
+## Phase 6E: Type-Aware Feature Selection — Viability Assessment (March 2026)
+
+### Universal Candidate Matrix
+
+GeaSpirit now maintains a universal candidate family matrix tracking 17 feature families
+across 9 zones (153 cells). Each family is classified as: USEFUL, NEGATIVE, AVAILABLE,
+BLOCKED, or UNTESTED.
+
+**Production-validated families:**
+- **satellite_baseline** — Universal foundation. Always included. AUC 0.72-0.86 across 5 supervised zones.
+- **thermal_20yr** — Universal modest improvement. +0.013 AUC at Kalgoorlie, consistent features across zones. Thermal long-term proxy family, NOT direct subsurface detection.
+- **emit_alteration** — Porphyry-specific. hydroxyl d=+0.645 at Chuquicamata, d=-0.273 at Kalgoorlie (orogenic Au). 50 granules found for Peru replication.
+- **pca_embeddings** — Kalgoorlie-specific. +0.026 AUC at Kalgoorlie, negative at all porphyry zones. Captures greenstone belt spatial textures.
+
+**Negative results (honest):**
+- **spatial_gradients** — Negative everywhere tested (-0.006 AUC at Kalgoorlie). Sobel + Laplacian multi-scale gradients do not help.
+- **ml_residual** — Negative. Thermal signal at deposits appears explained by surface covariates.
+- **pca_embeddings at porphyry zones** — Negative. Does not transfer from orogenic Au context.
+
+### EMIT Viability — Deposit-Type Dependent
+
+EMIT (285 bands, 60m, ISS orbit) is VIABLE for porphyry Cu but NOT for orogenic Au.
+
+| Zone | Deposit Type | hydroxyl d | clay d | Model Impact | Verdict |
+|------|-------------|-----------|--------|-------------|---------|
+| Chuquicamata | Porphyry Cu | +0.645 | +0.293 | No AUC gain (saturated) | USEFUL (physical signal) |
+| Kalgoorlie | Orogenic Au | -0.273 | -0.213 | -0.135 AUC | NEGATIVE (type mismatch) |
+| Peru | Porphyry Cu | pending | pending | pending | 50 GRANULES FOUND |
+
+**Correct framing:** EMIT detects surface alteration minerals (argillic/phyllic). This is relevant for porphyry Cu deposits (clay/hydroxyl alteration) but not for orogenic Au (carbonate/sericite/silica). EMIT does NOT see underground.
+
+### AEM/Geophysics Viability — Partially Blocked
+
+- GA aeromagnetics available for Kalgoorlie, untested as ML feature
+- GSWA detailed AEM (200m spacing, deposit-scale) needs manual portal check
+- AusAEM national grid too coarse (20km) for deposit targeting
+- Operator checklist generated for manual data acquisition
+
+### Frontier Ideas — 10 Registered
+
+3 HIGH priority candidates ready for future testing:
+1. Post-rainfall SAR drying rate
+2. Nighttime thermal offset (ECOSTRESS)
+3. Foundation model embeddings (SatCLIP/Prithvi)
