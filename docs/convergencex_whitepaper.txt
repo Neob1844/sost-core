@@ -3073,7 +3073,22 @@ F. GEASPIRIT MINERAL INTELLIGENCE MODULE
 - 10 V3 ideas evaluated, 3 VIABLE, next: spatial gradient geology proxies
 - EXPERIMENTAL: no production claims, research initiative only
 
-G. cASERT V2 CONSENSUS UPGRADE (BLOCK 1450)
+G. NETWORK SECURITY LAYER
+- P2P encryption: X25519 key exchange + ChaCha20-Poly1305 (default ON)
+- Ban system: 100 penalty points = 24h ban, 64 max inbound peers, 4 per IP
+- RPC authentication: Basic Auth (--rpc-user/--rpc-pass), localhost binding
+- Checkpoints: hardcoded at source, MAX_REORG_DEPTH = 500 blocks (~3.5 days)
+- Build hardening: stack protector, stack clash, PIE/ASLR, full RELRO, FORTIFY_SOURCE
+- Coinbase maturity: 1000 blocks (~7 days) before miner rewards are spendable
+
+H. CAPSULE PROTOCOL V1
+- Binary metadata in transaction outputs (12-byte header + up to 243-byte body)
+- Activates at mainnet block height 5000
+- Enables on-chain attestation, proof-of-discovery, and structured metadata
+- Type byte (1B) + version (1B) + length (2B) + reserved (8B) + body (variable)
+- Validated at consensus level: malformed capsules make the transaction invalid
+
+I. cASERT V2 CONSENSUS UPGRADE (BLOCK 1450)
 - Fork height: 1450 (no regenesis, history preserved)
 - Halflife: 48h → 24h (faster difficulty response)
 - Delta cap: 6.25% → 12.5% symmetric (faster per-block adjustment)
