@@ -180,7 +180,9 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 
 **Experiment 2 (EMIT):** ACTIVE — Chuquicamata strong (hydroxyl d=+0.645), Kalgoorlie weak (deposit-type mismatch). EMIT is porphyry-specific.
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
-**Phase 6C (Kalgoorlie):** PCA embeddings +0.026 AUC (best single-family gain). Gradients NEGATIVE. AEM pending.
+**Phase 6C (Kalgoorlie):** PCA embeddings +0.023 AUC at Kalgoorlie ONLY. Cross-zone: NEGATIVE at all 3 porphyry zones.
+**Phase 6D:** Type-aware registry: EMIT=porphyry-specific, PCA=Kalgoorlie-specific, thermal=universal modest, gradients=negative.
+**Key learning:** No single feature family is universal. Zone-specific model architecture confirmed again.
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"

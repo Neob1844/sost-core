@@ -382,6 +382,21 @@ V3 evaluated 10 ideas: 3 VIABLE (spatial gradients, multiscale texture, ML resid
 | Full fusion (all) | +0.018 | Good but diluted by gradients |
 | AEM conductivity | — | Not yet available (manual GA download) |
 
-PCA embeddings (8 components from 32px patches, 16px stride) capture spatial texture
-patterns that hand-crafted spectral indices miss. This is the largest single-family
-improvement in GeaSpirit history. Gradients are a dead end at Kalgoorlie.
+### Phase 6D: Cross-Zone Confirmation + Type-Aware Registry
+
+PCA embeddings cross-zone results:
+- Kalgoorlie: +0.023 (CONFIRMED, zone-specific)
+- Chuquicamata: -0.008 (negative)
+- Peru: -0.021 (negative)
+- Arizona: -0.039 (negative)
+
+**PCA embeddings are Kalgoorlie-specific, NOT universal.** They capture greenstone belt
+spatial textures that do not transfer to porphyry districts.
+
+Type-aware zone model registry:
+- Kalgoorlie (orogenic Au): baseline + thermal + PCA embeddings
+- Chuquicamata (porphyry Cu): baseline + EMIT alteration + thermal
+- Peru/Arizona (porphyry Cu): baseline + thermal (EMIT untested, embeddings negative)
+
+**Key learning:** No single feature family is universal. This reinforces the zone-specific
+architecture that GeaSpirit established in Phase 5. Each zone needs its own optimal feature stack.
