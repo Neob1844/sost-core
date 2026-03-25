@@ -237,6 +237,18 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | Checkpoints + reorg limit (500 blocks) | Complete |
 | write_exact() reliable socket writes | Complete |
 | P2P encryption (X25519 + ChaCha20-Poly1305) | Active (default on) |
+| HD Wallet BIP39 (12-word seed phrases) | Complete |
+| SOST-PSBT offline signing | Complete |
+| Native multisig (sost3 addresses, OP_CHECKMULTISIG) | Complete |
+| Trusted address book (4 trust levels) | Complete |
+| Treasury safety profile (daily limits, vault mode) | Complete |
+| RBF (Replace-by-Fee) | Complete |
+| CPFP (Child-Pays-for-Parent) | Complete |
+| Build hardening (6 compiler/linker flags) | Complete |
+| Capsule Protocol v1 (binary tx metadata, height 5000) | Complete |
+| cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete |
+
+**22/22 CTest targets pass.**
 
 **cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H9, with H10-H12 reserved) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
 
