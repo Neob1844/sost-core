@@ -522,3 +522,28 @@ and 7+ untried combinations. Full analysis in `docs/GEASPIRIT_FRONTIER_RESEARCH_
 - Quantum gravity gradiometry (5+ years away)
 
 **Key insight:** The next breakthrough is not a new sensor — it's a new way of using the 40-year Landsat archive. Every pixel on Earth has been photographed thousands of times. The Temporal DNA Transformer is designed to extract that hidden temporal signal.
+
+### CTO Sprint: Multi-Scale Anomaly Index (NOVEL — March 2026)
+
+**Concept:** Compute each satellite/geophysics feature at 3 spatial scales (local ~100m, medium ~500m, regional ~1.5km). Three derived features per band: local/regional ratio, local anomaly, heterogeneity.
+
+**Discovery: 19 STRONG features (unpublished approach)**
+
+| Top Feature | Cohen's d | Physical Meaning |
+|-------------|-----------|-----------------|
+| tpi_heterogeneity | **+0.878** | Deposits in structurally complex terrain |
+| elevation_heterogeneity | +0.860 | Deposits near elevation transitions |
+| ruggedness_heterogeneity | +0.835 | Deposits in rough, heterogeneous zones |
+| ferrous_iron_heterogeneity | +0.808 | Ferrous variability at deposit scale |
+| ndvi_heterogeneity | +0.806 | Vegetation patchiness over deposits |
+| ndvi_local_anomaly | -0.596 | LOWER local NDVI at deposits |
+
+**tpi_heterogeneity (d=+0.878)** is the strongest single feature ever found in GeaSpirit.
+
+**ML result:** AUC neutral (-0.0003). GBM already captures multi-scale patterns implicitly. Value is in **interpretability**, not raw AUC improvement.
+
+**Other sprint findings:**
+- ECOSTRESS thermal: path confirmed via GEE/earthaccess, ready to download
+- USGS Earth MRI Arizona: exact survey found on ScienceBase (free, 200m lines)
+- Prithvi-EO-2.0: feasible on CPU (300M model, 8GB RAM)
+- Peru EMIT: still blocked (both granules truncated)
