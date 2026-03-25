@@ -348,8 +348,16 @@ Fusion insufficient overlap (need more granules).
 - Fusion: baseline already 0.996 — no AUC gain (saturated)
 - Verdict: PROMISING (5/10)
 
-**Correct framing:** alteration-driven multi-proxy inference, not subsurface imaging.
-**Next:** Replicate at Kalgoorlie where baseline is moderate (0.80) — room for EMIT to improve.
+**Phase 6B Kalgoorlie replication:** 5 granules, 28% coverage, 62/205 deposits.
+- Statistical signal WEAK (only reflectance_pca_1 marginal, d=-0.398 p=0.013)
+- Fusion: EMIT HURTS baseline (-0.135 AUC)
+- Root cause: Kalgoorlie is orogenic gold (carbonate+sericite+silica alteration),
+  NOT porphyry copper (clay/hydroxyl alteration). EMIT detects argillic/phyllic
+  alteration specific to porphyry systems.
+- **Conclusion: EMIT is deposit-type specific.** Works for porphyry Cu, not for orogenic Au.
+- **Next:** Test at Peru porphyry or Arizona porphyry to confirm porphyry-specificity.
+
+**Correct framing:** alteration-driven multi-proxy inference, deposit-type dependent.
 
 ### Subsurface-Proxy V3: ML Residual Experiment — NEGATIVE
 

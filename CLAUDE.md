@@ -178,7 +178,7 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Multi-zone verdict: PRODUCTION_WORTHY (4/6)
 - Thermal most useful when satellite baseline is moderate
 
-**Experiment 2 (EMIT):** ACTIVE — 8 granules at Chuquicamata, 94% coverage, hydroxyl d=+0.645 p=1.5e-06, EMIT-only AUC 0.826
+**Experiment 2 (EMIT):** ACTIVE — Chuquicamata strong (hydroxyl d=+0.645), Kalgoorlie weak (deposit-type mismatch). EMIT is porphyry-specific.
 **V3 ML Residual:** NEGATIVE — residual does not add independent signal at Kalgoorlie
 **Phase 6C (Kalgoorlie):** PCA embeddings +0.026 AUC (best single-family gain). Gradients NEGATIVE. AEM pending.
 
