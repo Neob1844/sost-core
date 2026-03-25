@@ -194,7 +194,8 @@ Located in `/home/sost/SOST/geaspirit/`. Satellite-based mineral prospectivity m
 - Peru/Arizona: satellite + thermal → AUC 0.758/0.718
 - Zambia: satellite → AUC 0.763
 **Key learning:** No single feature family is universal. Magnetics/radiometrics individually neutral but contribute to full stack. Foundation embeddings evaluation-method sensitive.
-**Frontier Research V5:** Top 3 next experiments: (1) Temporal DNA Transformer — 20yr multi-band pixel time series + transformer architecture, genuinely novel for mineral exploration; (2) Prithvi-EO-2.0 foundation model fine-tuning for cross-zone transfer; (3) ECOSTRESS diurnal thermal inertia fusion. Also identified: NISAR (L+S SAR, free, launched 2024), USGS Earth MRI for Arizona, MINDAT API (400K+ mineral species), SoilGrids 250m. See docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md.
+**Frontier Research V5:** Top 3 next experiments: (1) Temporal DNA Transformer; (2) Prithvi-EO-2.0 fine-tuning; (3) ECOSTRESS diurnal thermal inertia. See docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md.
+**CTO Sprint:** Multi-Scale Anomaly Index experiment EXECUTED (novel, unpublished). 19 STRONG features discovered — tpi_heterogeneity d=+0.878 is STRONGEST single feature ever found (deposits in structurally complex terrain). ML AUC neutral (model already captures implicitly). ECOSTRESS path confirmed (GEE + earthaccess). USGS Earth MRI Arizona data found (ScienceBase, free, 200m line spacing). Prithvi-EO-2.0 feasible on CPU (300M model, 8GB RAM). Peru EMIT still blocked (both granules truncated).
 
 **Language guardrails:**
 - ALWAYS say: "thermal long-term proxy family", "moderate but real improvement"
