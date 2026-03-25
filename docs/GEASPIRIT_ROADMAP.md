@@ -547,3 +547,26 @@ and 7+ untried combinations. Full analysis in `docs/GEASPIRIT_FRONTIER_RESEARCH_
 - USGS Earth MRI Arizona: exact survey found on ScienceBase (free, 200m lines)
 - Prithvi-EO-2.0: feasible on CPU (300M model, 8GB RAM)
 - Peru EMIT: still blocked (both granules truncated)
+
+### Canonical Objective Assessment (March 2026)
+
+**Score: 18/40 (45%)**
+
+| Dimension | Score | Finding |
+|-----------|-------|---------|
+| MINERAL | 2/10 | Au vs Ni AUC = 0.50 (random). Satellite features encode GEOGRAPHY not MINERALOGY. |
+| DEPTH | 3/10 | Magnetic Euler proxy: median 6m, no deposit/background difference. |
+| COORDINATES | 7/10 | 30m resolution, ~1km² zones. Good. |
+| CERTAINTY | 6/10 | AUC 0.869, Brier 0.161, calibration error 0.121. |
+
+**Critical bug fixed:** Phase 7 magnetics experiment used WRONG survey tiles (P580/P586 cover 28-30°S, Kalgoorlie is 31.4°S). ALL magnetics features were zeros. Fixed by downloading GA national TMI grid via NCI THREDDS NCSS subsetting.
+
+**Path to 10/10:**
+- Satellite only: max ~22/40 (55%) — fundamental limit
+- Satellite + free geophysics: max ~30/40 (75%)
+- Satellite + geophysics + drill holes: max ~36/40 (90%)
+- True 10/10: requires field campaign ($250K-500K mining exploration budget)
+
+**Key insight:** The gap to 10/10 is a DATA problem, not an ML problem. The surface screening system (AUC 0.94) is near its ceiling. Each new data layer (geology maps, magnetics, AEM, drill holes) adds information that satellites fundamentally cannot provide.
+
+See: `docs/GEASPIRIT_CANONICAL_PATH.md` for full analysis.
