@@ -570,3 +570,17 @@ and 7+ untried combinations. Full analysis in `docs/GEASPIRIT_FRONTIER_RESEARCH_
 **Key insight:** The gap to 10/10 is a DATA problem, not an ML problem. The surface screening system (AUC 0.94) is near its ceiling. Each new data layer (geology maps, magnetics, AEM, drill holes) adds information that satellites fundamentally cannot provide.
 
 See: `docs/GEASPIRIT_CANONICAL_PATH.md` for full analysis.
+
+### Phase 8B: Full Public Sync + CTO Next Phase (March 2026)
+
+All public documentation synchronized with accumulated results:
+- Website: v0.8, canonical objective scorecard, technology stack, honest limitations
+- README: GeaSpirit section with validated families and zone recipes
+- Whitepaper: Appendix J updated with Phase 8 results and canonical scores
+- BTCTalk: GeaSpirit research module note added
+- Technology Summary dossier created: `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`
+- CTO Next Phase codified: `docs/GEASPIRIT_CTO_NEXT_PHASE.md`
+
+**CTO Decision:** Evolve from feature experimentation into information fusion platform.
+Next priorities: geology integration, gravity, neighborhood context, calibration hardening.
+Target: canonical score 23.7/40 → 28+/40 within 3 sprints using only free data.

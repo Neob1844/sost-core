@@ -313,6 +313,24 @@ Zone-specific mineral prospectivity mapping using public satellite data.
 - Validation queue (5 tiers) · Structure lift pipeline · Material Mixer (4 strategies)
 - 28/28 tests passing · Dual-output explainer (technical + plain language)
 
+## GeaSpirit — Mineral Intelligence Platform
+
+Multi-source exploration intelligence system. Type-aware, zone-aware, proxy-based. Built for target ranking, not direct deposit imaging.
+
+**Validated feature families:**
+- Satellite baseline (universal) — spectral indices, DEM, thermal
+- Thermal 20yr (universal modest) — +0.013 AUC, 20-year Landsat climatology
+- EMIT alteration (porphyry Cu only) — hydroxyl d=+0.645
+- PCA embeddings (Kalgoorlie only) — +0.026 AUC
+- Magnetics (small positive) — +0.009 AUC with correct GA national TMI
+- Neighborhood context (promising) — mineral AUC 0.507→0.627
+
+**Zone recipes:** Kalgoorlie (sat+thermal+PCA, AUC 0.882), Chuquicamata (sat+thermal+EMIT, 0.862), Peru (sat+thermal, 0.758), Arizona (sat+thermal, 0.718), Zambia (sat, 0.763).
+
+**Canonical objective:** 23.7/40 (59%). Coordinates 7/10, certainty 9.3/10, mineral 3.3/10, depth 4.1/10.
+
+**Next phase:** Geology integration, gravity, neighborhood context, calibration hardening. See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
+
 ## Security
 
 - Build hardening: stack protector, ASLR (PIE), RELRO, FORTIFY_SOURCE — 15/15 tests pass
