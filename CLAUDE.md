@@ -137,7 +137,7 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 16):**
+**Current state (Phase 16 — consolidated):**
 - Multi-source exploration intelligence platform (not satellite-only)
 - 6 supervised zones: Kalgoorlie (0.879 AUC), Chuquicamata (0.882), Peru (0.698 baseline), Arizona (0.718), Zambia (0.760), Pilbara (FAILED)
 - Phase 16: Macrostrat API activated (20/20 all zones). Peru geology-first +0.168 AUC (CAVEAT: bias in API-only-at-deposits). Architecture: type+zone+baseline aware + geology-first validated.

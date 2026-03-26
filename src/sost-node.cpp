@@ -1287,6 +1287,41 @@ static std::string handle_getaddressbalance(const std::string& id, const std::ve
     return rpc_result(id,s.str());
 }
 
+static std::string handle_getaddressutxos(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing address");
+    std::string addr = p[0];
+    if(!address_valid(addr)) return rpc_error(id,-8,"invalid address");
+
+    PubKeyHash pkh{};
+    address_decode(addr, pkh);
+
+    std::ostringstream s;
+    s << "[";
+    bool first = true;
+    const auto& umap = g_utxo_set.GetMap();
+    for(const auto& kv : umap){
+        if(kv.second.pubkey_hash == pkh){
+            if(!first) s << ",";
+            first = false;
+            bool mature = !kv.second.is_coinbase ||
+                          (g_chain_height - kv.second.height) >= COINBASE_MATURITY;
+            bool isLocked = (kv.second.type==0x10||kv.second.type==0x11);  // bond/escrow types
+            s << "{\"txid\":\"" << to_hex(kv.first.txid.data(),32)
+              << "\",\"vout\":" << kv.first.index
+              << ",\"amount\":" << format_sost(kv.second.amount)
+              << ",\"amount_stocks\":" << kv.second.amount
+              << ",\"height\":" << kv.second.height
+              << ",\"confirmations\":" << (g_chain_height - kv.second.height + 1)
+              << ",\"coinbase\":" << (kv.second.is_coinbase ? "true" : "false")
+              << ",\"mature\":" << (mature ? "true" : "false")
+              << ",\"spendable\":" << (!isLocked && mature ? "true" : "false")
+              << "}";
+        }
+    }
+    s << "]";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing address");
@@ -1380,6 +1415,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"gettransaction",handle_gettransaction},
     {"estimatefee",handle_estimatefee},
     {"getaddressbalance",handle_getaddressbalance},
+    {"getaddressutxos",handle_getaddressutxos},
     {"listbonds",handle_listbonds},
 };
 

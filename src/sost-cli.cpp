@@ -71,6 +71,8 @@ static int         g_node_port = 18232;
 static int64_t     g_fee_rate  = FEE_RATE_DEFAULT;
 static bool        g_yes_flag  = false;  // --yes skips confirmation prompts
 static bool        g_skip_warning = false;  // --skip-warning for cooldown
+static std::string g_send_to = "";         // --to ADDRESS
+static std::string g_send_amount = "";     // --amount AMOUNT
 static std::string g_sost_dir;     // ~/.sost directory
 static std::string g_addressbook_path;
 static std::string g_policy_path;
@@ -99,20 +101,27 @@ static std::string format_sost(int64_t stocks) {
 // Parse SOST amount string to stocks (supports decimal)
 static int64_t parse_amount(const char* str) {
     std::string s(str);
-    auto dot = s.find('.');
-    if (dot == std::string::npos) {
-        // Integer SOST
-        return std::stoll(s) * STOCKS_PER_SOST;
+    if (s.empty() || (s[0] != '-' && !isdigit(s[0]) && s[0] != '.')) {
+        fprintf(stderr, "Error: invalid amount '%s' — must be a number (e.g. 10 or 1.5)\n", str);
+        exit(1);
     }
-    std::string whole_str = s.substr(0, dot);
-    std::string frac_str = s.substr(dot + 1);
-    // Pad or truncate to 8 digits
-    while (frac_str.size() < 8) frac_str += '0';
-    frac_str = frac_str.substr(0, 8);
+    try {
+        auto dot = s.find('.');
+        if (dot == std::string::npos) {
+            return std::stoll(s) * STOCKS_PER_SOST;
+        }
+        std::string whole_str = s.substr(0, dot);
+        std::string frac_str = s.substr(dot + 1);
+        while (frac_str.size() < 8) frac_str += '0';
+        frac_str = frac_str.substr(0, 8);
 
-    int64_t whole = whole_str.empty() ? 0 : std::stoll(whole_str);
-    int64_t frac = std::stoll(frac_str);
-    return whole * STOCKS_PER_SOST + frac;
+        int64_t whole = whole_str.empty() ? 0 : std::stoll(whole_str);
+        int64_t frac = std::stoll(frac_str);
+        return whole * STOCKS_PER_SOST + frac;
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error: cannot parse amount '%s' — %s\n", str, e.what());
+        exit(1);
+    }
 }
 
 // Hex helper
@@ -216,6 +225,84 @@ static int64_t query_chain_height() {
 }
 
 // =============================================================================
+// v1.4: Fetch UTXOs from node for any address the wallet controls
+//       Uses getaddressutxos RPC to get UTXOs directly from the chain
+// =============================================================================
+static int sync_wallet_utxos_from_node(sost::Wallet& w) {
+    std::string addr = w.default_address();
+    if (addr.empty()) {
+        fprintf(stderr, "Warning: wallet has no addresses\n");
+        return 0;
+    }
+
+    int total_imported = 0;
+    {   // Fetch UTXOs for wallet's default address
+        std::string resp = rpc_call("getaddressutxos", "\"" + addr + "\"");
+        if (resp.empty()) return 0;
+
+        // Find the JSON array in response
+        auto arr_start = resp.find('[');
+        auto arr_end = resp.rfind(']');
+        if (arr_start == std::string::npos || arr_end == std::string::npos) return 0;
+
+        std::string arr = resp.substr(arr_start, arr_end - arr_start + 1);
+
+        // Simple JSON array parsing — find each {...} object
+        size_t pos = 0;
+        while (pos < arr.size()) {
+            auto obj_start = arr.find('{', pos);
+            if (obj_start == std::string::npos) break;
+            auto obj_end = arr.find('}', obj_start);
+            if (obj_end == std::string::npos) break;
+            std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
+
+            // Extract fields
+            auto get_str = [&](const std::string& key) -> std::string {
+                auto p = obj.find("\"" + key + "\":\"");
+                if (p == std::string::npos) return "";
+                p += key.size() + 4;
+                auto e = obj.find('"', p);
+                return e != std::string::npos ? obj.substr(p, e - p) : "";
+            };
+            auto get_int = [&](const std::string& key) -> int64_t {
+                auto p = obj.find("\"" + key + "\":");
+                if (p == std::string::npos) return 0;
+                p += key.size() + 3;
+                try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
+            };
+            auto get_bool = [&](const std::string& key) -> bool {
+                auto p = obj.find("\"" + key + "\":");
+                if (p == std::string::npos) return false;
+                return obj.substr(p + key.size() + 3, 4) == "true";
+            };
+
+            std::string txid_hex = get_str("txid");
+            int64_t vout = get_int("vout");
+            int64_t amount_stocks = get_int("amount_stocks");
+            int64_t height = get_int("height");
+            bool spendable = get_bool("spendable");
+
+            if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
+                sost::WalletUTXO utxo{};
+                utxo.txid = sost::from_hex(txid_hex);
+                utxo.vout = (uint32_t)vout;
+                utxo.amount = amount_stocks;
+                utxo.height = height;
+                utxo.spent = false;
+                utxo.output_type = 0x00;  // TRANSFER
+                // Decode address to pubkey hash
+                sost::address_decode(addr, utxo.pkh);
+                w.add_utxo(utxo);
+                total_imported++;
+            }
+
+            pos = obj_end + 1;
+        }
+    }
+    return total_imported;
+}
+
+// =============================================================================
 // v1.3: Dynamic fee calculation
 //
 // Bitcoin Core approach:
@@ -289,7 +376,7 @@ int main(int argc, char** argv) {
     int arg_start = 1;
     while (arg_start < argc && argv[arg_start][0] == '-') {
         std::string flag = argv[arg_start];
-        if (flag == "--wallet" && arg_start + 1 < argc) {
+        if ((flag == "--wallet" || flag == "--from") && arg_start + 1 < argc) {
             wallet_path = argv[arg_start + 1];
             arg_start += 2;
         } else if (flag == "--rpc-user" && arg_start + 1 < argc) {
@@ -298,8 +385,9 @@ int main(int argc, char** argv) {
         } else if (flag == "--rpc-pass" && arg_start + 1 < argc) {
             g_rpc_pass = argv[arg_start + 1];
             arg_start += 2;
-        } else if (flag == "--node" && arg_start + 1 < argc) {
+        } else if ((flag == "--node" || flag == "--rpc") && arg_start + 1 < argc) {
             // v1.3: --node is now a global option (used by fee calc + send)
+            // --rpc is accepted as alias for --node
             std::string na = argv[arg_start + 1];
             auto colon = na.find(':');
             if (colon != std::string::npos) {
@@ -311,11 +399,22 @@ int main(int argc, char** argv) {
             arg_start += 2;
         } else if (flag == "--fee-rate" && arg_start + 1 < argc) {
             // v1.3: custom fee rate (stocks per byte)
-            g_fee_rate = std::stoll(argv[arg_start + 1]);
+            try {
+                g_fee_rate = std::stoll(argv[arg_start + 1]);
+            } catch (const std::exception&) {
+                fprintf(stderr, "Error: --fee-rate must be a number, got: %s\n", argv[arg_start + 1]);
+                return 1;
+            }
             if (g_fee_rate < 1) {
                 fprintf(stderr, "Error: --fee-rate must be >= 1 (consensus minimum)\n");
                 return 1;
             }
+            arg_start += 2;
+        } else if (flag == "--to" && arg_start + 1 < argc) {
+            g_send_to = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--amount" && arg_start + 1 < argc) {
+            g_send_amount = argv[arg_start + 1];
             arg_start += 2;
         } else if (flag == "--yes" || flag == "-y") {
             g_yes_flag = true;
@@ -536,16 +635,25 @@ int main(int argc, char** argv) {
         std::string to_addr = argv[arg_start + 1];
         int64_t amount = parse_amount(argv[arg_start + 2]);
 
-        // v1.3: Query node for chain height so create_transaction can
-        //       filter out immature coinbase UTXOs (need COINBASE_MATURITY confs)
+        // v1.4: Sync UTXOs from node before building transaction
+        //       This ensures we have ALL spendable UTXOs, not just imported ones
         int64_t chain_height = query_chain_height();
         if (chain_height < 0) {
-            fprintf(stderr, "Warning: cannot reach node at %s:%d\n",
+            fprintf(stderr, "Error: cannot connect to node at %s:%d\n",
                     g_node_host.c_str(), g_node_port);
-            fprintf(stderr, "  Maturity check disabled — tx may be rejected by node.\n");
-            chain_height = -1;
-        } else {
-            printf("Chain height: %lld\n", (long long)chain_height);
+            fprintf(stderr, "  Node must be running to send transactions.\n");
+            return 1;
+        }
+        printf("Chain height: %lld\n", (long long)chain_height);
+
+        // Sync UTXOs from chain for wallet address
+        int synced = sync_wallet_utxos_from_node(w);
+        if (synced > 0) {
+            printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
+        } else if (w.num_utxos() == 0) {
+            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", w.default_address().c_str());
+            fprintf(stderr, "  Check that the address has received funds and they are mature.\n");
+            return 1;
         }
 
         sost::Hash256 genesis_hash = sost::from_hex(
@@ -631,18 +739,32 @@ int main(int argc, char** argv) {
     //       No more manual [fee] parameter — calculated from real tx size
     // =====================================================================
     if (cmd == "send") {
-        if (argc < arg_start + 3) {
+        // Support both positional and flag-based syntax:
+        //   sost-cli send ADDRESS AMOUNT
+        //   sost-cli --to ADDRESS --amount AMOUNT send
+        std::string to_addr = g_send_to;
+        std::string amount_str = g_send_amount;
+
+        // Positional args override flags
+        if (argc >= arg_start + 2 && argv[arg_start + 1][0] != '-') {
+            to_addr = argv[arg_start + 1];
+        }
+        if (argc >= arg_start + 3 && argv[arg_start + 2][0] != '-') {
+            amount_str = argv[arg_start + 2];
+        }
+
+        if (to_addr.empty() || amount_str.empty()) {
             fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost>\n");
+            fprintf(stderr, "   or: sost-cli --to <address> --amount <sost> send\n");
             fprintf(stderr, "  Fee is automatic: tx_size x %lld stock/byte\n",
                     (long long)g_fee_rate);
             fprintf(stderr, "  Use --fee-rate <n> for priority (default: 1)\n");
             fprintf(stderr, "\nExamples:\n");
             fprintf(stderr, "  sost-cli send sost1abc... 10\n");
-            fprintf(stderr, "  sost-cli --fee-rate 2 send sost1abc... 10\n");
+            fprintf(stderr, "  sost-cli --to sost1abc... --amount 10 --rpc 127.0.0.1:18232 send\n");
             return 1;
         }
-        std::string to_addr = argv[arg_start + 1];
-        int64_t amount = parse_amount(argv[arg_start + 2]);
+        int64_t amount = parse_amount(amount_str.c_str());
 
         // v1.3: Query node for current chain height
         //       Required for: maturity filter + broadcasting
