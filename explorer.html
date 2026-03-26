@@ -40,6 +40,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 .header-link{font-size:11px;color:var(--text3);letter-spacing:1px;transition:color .15s}
 .header-link:hover{color:var(--red)}
 .offline{background:linear-gradient(90deg,var(--red),#c41d2f);color:#fff;text-align:center;padding:6px;font-size:11px;font-weight:600;display:none;letter-spacing:2px;text-transform:uppercase}
+.status-badges{display:flex;gap:6px;align-items:center}
+.status-badge{font-size:9px;border:1px solid var(--text3);border-radius:2px;padding:2px 8px;color:var(--text3);letter-spacing:1.5px;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-direction:column;line-height:1.4}
+.status-badge .status-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);display:inline-block}
+.status-badge.active{color:var(--green);border-color:rgba(74,222,128,.4)}
+.status-badge.active .status-dot{background:var(--green);animation:pulse 2s ease infinite}
+.status-badge.offline{color:var(--red);border-color:rgba(230,57,70,.4)}
+.status-badge.offline .status-dot{background:var(--red)}
+.status-badge .badge-sub{font-size:7px;color:var(--text3);letter-spacing:1px;text-align:center}
 .offline.show{display:block;animation:slideDown .3s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:none}}
 .new-block-toast{position:fixed;top:60px;right:24px;background:var(--green-dim);border:1px solid var(--green);color:var(--green);padding:10px 20px;font-size:12px;font-weight:600;letter-spacing:1px;z-index:100;opacity:0;transform:translateX(100%);transition:all .4s ease;pointer-events:none}
@@ -223,6 +231,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   </div>
   <div class="header-right">
     <span class="net-badge" id="netBadge"><span class="net-dot"></span>MAINNET</span>
+    <span class="status-badges" id="statusBadges">
+      <span class="status-badge offline" id="nodeBadge"><span class="status-dot"></span>NODE: OFFLINE</span>
+      <span class="status-badge offline" id="minerBadge"><span class="status-dot"></span>MINER: OFFLINE</span>
+    </span>
     <a class="header-link" style="cursor:pointer;color:var(--purple)" onclick="showCXInfo()">CONVERGENCEX</a>
     <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
     <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
@@ -630,9 +642,42 @@ function startCountdown(){
     var el=document.getElementById('dCountdown');
     if(remaining<=0){el.textContent='any moment';el.style.color='var(--green)';document.getElementById('dCountdownSub').textContent='block overdue';}
     else{var m=Math.floor(remaining/60),s=remaining%60;el.textContent=m>0?m+'m '+('0'+s).slice(-2)+'s':s+'s';el.style.color='';document.getElementById('dCountdownSub').textContent='estimated';}
+    // Update miner badge elapsed time
+    var mb=document.getElementById('minerBadge');
+    if(mb&&mb.classList.contains('active')){
+      var secs=Math.floor(elapsed);
+      var eStr=secs>=60?Math.floor(secs/60)+'m':secs+'s';
+      var nextH=H!==undefined?(H+1):'?';
+      mb.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span class="status-dot"></span>MINER: ACTIVE</span><span class="badge-sub">Mining #'+nextH+' \u00B7 Elapsed: '+eStr+'</span>';
+    }
   },1000);
 }
-async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
+function updateStatusBadges(online,info){
+  var nb=document.getElementById('nodeBadge');
+  var mb=document.getElementById('minerBadge');
+  if(!nb||!mb)return;
+  if(online){
+    nb.className='status-badge active';
+    nb.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span class="status-dot"></span>NODE: ACTIVE</span>';
+    // If node responds, miner is ACTIVE (single-miner network). Show elapsed time context.
+    var elapsed='';
+    if(_lastBlockTime){
+      var secs=Math.floor(Date.now()/1000-_lastBlockTime);
+      if(secs>=60){var m=Math.floor(secs/60);elapsed='Elapsed: '+m+'m';}
+      else{elapsed='Elapsed: '+secs+'s';}
+    }
+    var nextH=info&&info.blocks!==undefined?(info.blocks+1):'?';
+    var sub=elapsed?'<span class="badge-sub">Mining #'+nextH+' \u00B7 '+elapsed+'</span>':'';
+    mb.className='status-badge active';
+    mb.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span class="status-dot"></span>MINER: ACTIVE</span>'+sub;
+  }else{
+    nb.className='status-badge offline';
+    nb.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span class="status-dot"></span>NODE: OFFLINE</span>';
+    mb.className='status-badge offline';
+    mb.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span class="status-dot"></span>MINER: OFFLINE</span>';
+  }
+}
+async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');updateStatusBadges(true,i);}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';updateStatusBadges(false,null);}}
 async function loadBlocks(){
   var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="7" class="ld">loading blocks</td></tr>';
   try{var s=H-off,e=Math.max(s-PS+1,0),rows=[];
