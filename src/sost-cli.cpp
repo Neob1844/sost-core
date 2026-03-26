@@ -307,6 +307,7 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
             int64_t vout = get_int("vout");
             int64_t amount_stocks = get_int("amount_stocks");
             int64_t height = get_int("height");
+            int64_t output_type = get_int("output_type");
             bool spendable = get_bool("spendable");
 
             if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
@@ -316,7 +317,7 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
                 utxo.amount = amount_stocks;
                 utxo.height = height;
                 utxo.spent = false;
-                utxo.output_type = 0x00;  // TRANSFER
+                utxo.output_type = (uint8_t)output_type;  // Real type from node (0x00=transfer, 0x01=coinbase_miner, etc.)
                 // Decode address to pubkey hash
                 sost::address_decode(addr, utxo.pkh);
                 w.add_utxo(utxo);
