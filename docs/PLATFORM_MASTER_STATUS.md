@@ -18,20 +18,23 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 20 — Operator Unlock + Depth Activation
+- **Current Phase:** Phase 21 — Frontier Testing + Autonomy
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4
 - **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
 - **Depth activation layer:** 1 active, 3 ready, 2 regional, 2 future
 - **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
-- **Gating:** v6 (10 rules), **Registry:** v16
-- **Frontier track v4:** spectral_unmixing + NDVI_trend selected for Phase 21
+- **Gating:** v7 (12 rules), **Registry:** v17
+- **Frontier results (SIMULATED):** spectral unmixing SELECTIVE (porphyry, +0.008), NDVI trend SELECTIVE (vegetated, +0.012)
+- **Autonomy layer:** v1 (scheduling + triggers + auto-recommendations)
+- **Blocked items:** 9/11 (2 newly accessible: earthaccess, GEE)
 - **Bottleneck:** depth data access, not architecture
 
 ### Phase History (recent)
 - Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
 - Phase 20: operator unlock checklist v3, depth activation layer, geology selective consolidation, frontier track v4, registry v16, gating v6
+- Phase 21: spectral unmixing SELECTIVE (porphyry), NDVI trend SELECTIVE (vegetated), autonomy layer v1, gating v7, registry v17. ALL results SIMULATED.
 
 ## Materials Engine Status
 
@@ -56,7 +59,7 @@
 
 ## What's Blocked
 
-- **GeaSpirit:** 11 blocked items (gravity, EMIT, Earth MRI, MINDAT, EMAG2, WGM2012, etc.) — 4 HIGH priority, all 3 dropzones EMPTY
+- **GeaSpirit:** 9/11 blocked items (2 newly accessible via earthaccess + GEE) — 4 HIGH priority, all 3 dropzones EMPTY
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment
