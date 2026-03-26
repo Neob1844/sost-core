@@ -1,0 +1,191 @@
+2026-03-26 00:09:45,331 [INFO] Desde iteracion 1, max=14
+2026-03-26 00:09:45,331 [INFO] 
+============================================================
+2026-03-26 00:09:45,331 [INFO] ITERACION 1 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:09:45,331 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:09:48,753 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:09:57,503 [INFO] CV AUC: 0.9999 +/- 0.0001
+2026-03-26 00:10:03,282 [INFO]   MINERAL:     2.4/10
+2026-03-26 00:10:03,282 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:10:03,282 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:10:03,292 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:10:03,292 [INFO]   TOTAL:       22.4/40 (56%)
+2026-03-26 00:10:03,292 [INFO]   AUC=0.9998, Brier=0.0042
+2026-03-26 00:10:03,292 [INFO] NUEVO MEJOR RESULTADO
+2026-03-26 00:10:03,292 [INFO] NUEVO INSIGHT: [iter 0] baseline_temporal_stats -> AUC=0.9998, score=22.4/40
+2026-03-26 00:10:03,294 [INFO] Iteracion 1 en 18.0s
+2026-03-26 00:10:03,294 [INFO] 
+============================================================
+2026-03-26 00:10:03,294 [INFO] ITERACION 2 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:10:03,294 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:10:06,234 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:10:14,483 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:10:20,315 [INFO]   MINERAL:     2.4/10
+2026-03-26 00:10:20,316 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:10:20,326 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:10:20,326 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:10:20,326 [INFO]   TOTAL:       22.4/40 (56%)
+2026-03-26 00:10:20,326 [INFO]   AUC=0.9998, Brier=0.0038
+2026-03-26 00:10:20,326 [INFO] NUEVO MEJOR RESULTADO
+2026-03-26 00:10:20,326 [INFO] NUEVO INSIGHT: [iter 1] baseline_temporal_stats -> AUC=0.9998, score=22.4/40
+2026-03-26 00:10:20,328 [INFO] Iteracion 2 en 17.0s
+2026-03-26 00:10:20,328 [INFO] 
+============================================================
+2026-03-26 00:10:20,328 [INFO] ITERACION 3 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:10:20,328 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:10:23,354 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:10:31,018 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:10:36,933 [INFO]   MINERAL:     2.7/10
+2026-03-26 00:10:36,933 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:10:36,934 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:10:36,934 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:10:36,934 [INFO]   TOTAL:       22.7/40 (57%)
+2026-03-26 00:10:36,934 [INFO]   AUC=0.9996, Brier=0.0072
+2026-03-26 00:10:36,934 [INFO] NUEVO MEJOR RESULTADO
+2026-03-26 00:10:36,934 [INFO] NUEVO INSIGHT: [iter 2] baseline_temporal_stats -> AUC=0.9996, score=22.7/40
+2026-03-26 00:10:36,934 [INFO] Iteracion 3 en 16.6s
+2026-03-26 00:10:36,934 [INFO] 
+============================================================
+2026-03-26 00:10:36,935 [INFO] ITERACION 4 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:10:36,935 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:10:39,918 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:10:47,379 [INFO] CV AUC: 0.9997 +/- 0.0004
+2026-03-26 00:10:53,625 [INFO]   MINERAL:     2.1/10
+2026-03-26 00:10:53,625 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:10:53,625 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:10:53,625 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:10:53,625 [INFO]   TOTAL:       22.1/40 (55%)
+2026-03-26 00:10:53,625 [INFO]   AUC=1.0000, Brier=0.0011
+2026-03-26 00:10:53,625 [INFO] NUEVO MEJOR RESULTADO
+2026-03-26 00:10:53,625 [INFO] NUEVO INSIGHT: [iter 3] baseline_temporal_stats -> AUC=1.0000, score=22.1/40
+2026-03-26 00:10:53,626 [INFO] Iteracion 4 en 16.7s
+2026-03-26 00:10:53,627 [INFO] 
+============================================================
+2026-03-26 00:10:53,627 [INFO] ITERACION 5 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:10:53,627 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:10:56,954 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:11:04,253 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:11:09,908 [INFO]   MINERAL:     2.1/10
+2026-03-26 00:11:09,909 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:11:09,909 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:11:09,909 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:11:09,909 [INFO]   TOTAL:       22.1/40 (55%)
+2026-03-26 00:11:09,909 [INFO]   AUC=1.0000, Brier=0.0014
+2026-03-26 00:11:09,909 [INFO] Iteracion 5 en 16.3s
+2026-03-26 00:11:09,910 [INFO] 
+============================================================
+2026-03-26 00:11:09,910 [INFO] ITERACION 6 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:11:09,910 [INFO] Params: lr=0.0500, depth=5, trees=300
+2026-03-26 00:11:13,203 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:11:20,504 [INFO] CV AUC: 0.9993 +/- 0.0007
+2026-03-26 00:11:26,310 [INFO]   MINERAL:     2.5/10
+2026-03-26 00:11:26,310 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:11:26,311 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:11:26,311 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:11:26,311 [INFO]   TOTAL:       22.5/40 (56%)
+2026-03-26 00:11:26,311 [INFO]   AUC=0.9990, Brier=0.0072
+2026-03-26 00:11:26,312 [INFO] Iteracion 6 en 16.4s
+2026-03-26 00:11:26,312 [INFO] 
+============================================================
+2026-03-26 00:11:26,312 [INFO] ITERACION 7 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:11:26,312 [INFO] Params: lr=0.0500, depth=5, trees=400
+2026-03-26 00:11:29,300 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:11:39,098 [INFO] CV AUC: 0.9997 +/- 0.0004
+2026-03-26 00:11:47,183 [INFO]   MINERAL:     2.3/10
+2026-03-26 00:11:47,183 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:11:47,183 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:11:47,183 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:11:47,183 [INFO]   TOTAL:       22.3/40 (56%)
+2026-03-26 00:11:47,183 [INFO]   AUC=0.9995, Brier=0.0056
+2026-03-26 00:11:47,184 [INFO] Iteracion 7 en 20.9s
+2026-03-26 00:11:47,184 [INFO] 
+============================================================
+2026-03-26 00:11:47,184 [INFO] ITERACION 8 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:11:47,184 [INFO] Params: lr=0.0500, depth=5, trees=400
+2026-03-26 00:11:50,066 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:12:00,292 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:12:07,837 [INFO]   MINERAL:     2.1/10
+2026-03-26 00:12:07,837 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:12:07,837 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:12:07,837 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:12:07,838 [INFO]   TOTAL:       22.1/40 (55%)
+2026-03-26 00:12:07,838 [INFO]   AUC=0.9999, Brier=0.0026
+2026-03-26 00:12:07,838 [INFO] Iteracion 8 en 20.7s
+2026-03-26 00:12:07,838 [INFO] 
+============================================================
+2026-03-26 00:12:07,838 [INFO] ITERACION 9 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:12:07,838 [INFO] Params: lr=0.0500, depth=5, trees=400
+2026-03-26 00:12:10,721 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:12:20,295 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:12:27,764 [INFO]   MINERAL:     2.6/10
+2026-03-26 00:12:27,764 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:12:27,764 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:12:27,765 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:12:27,765 [INFO]   TOTAL:       22.6/40 (57%)
+2026-03-26 00:12:27,765 [INFO]   AUC=0.9996, Brier=0.0062
+2026-03-26 00:12:27,765 [INFO] Iteracion 9 en 19.9s
+2026-03-26 00:12:27,765 [INFO] 
+============================================================
+2026-03-26 00:12:27,765 [INFO] ITERACION 10 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:12:27,765 [INFO] Params: lr=0.0500, depth=5, trees=400
+2026-03-26 00:12:30,658 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:12:40,220 [INFO] CV AUC: 0.9994 +/- 0.0004
+2026-03-26 00:12:48,379 [INFO]   MINERAL:     2.3/10
+2026-03-26 00:12:48,379 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:12:48,379 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:12:48,379 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:12:48,379 [INFO]   TOTAL:       22.3/40 (56%)
+2026-03-26 00:12:48,380 [INFO]   AUC=0.9996, Brier=0.0055
+2026-03-26 00:12:48,380 [INFO] Iteracion 10 en 20.6s
+2026-03-26 00:12:48,380 [INFO] 
+============================================================
+2026-03-26 00:12:48,380 [INFO] ITERACION 11 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:12:48,381 [INFO] Params: lr=0.0500, depth=5, trees=400
+2026-03-26 00:12:51,252 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:13:01,307 [INFO] CV AUC: 0.9999 +/- 0.0001
+2026-03-26 00:13:09,241 [INFO]   MINERAL:     2.1/10
+2026-03-26 00:13:09,242 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:13:09,242 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:13:09,242 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:13:09,242 [INFO]   TOTAL:       22.1/40 (55%)
+2026-03-26 00:13:09,242 [INFO]   AUC=0.9999, Brier=0.0015
+2026-03-26 00:13:09,242 [INFO] Iteracion 11 en 20.9s
+2026-03-26 00:13:09,242 [INFO] 
+============================================================
+2026-03-26 00:13:09,242 [INFO] ITERACION 12 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:13:09,243 [INFO] Params: lr=0.0500, depth=5, trees=500
+2026-03-26 00:13:12,248 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:13:24,598 [INFO] CV AUC: 0.9999 +/- 0.0000
+2026-03-26 00:13:34,623 [INFO]   MINERAL:     2.3/10
+2026-03-26 00:13:34,623 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:13:34,623 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:13:34,623 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:13:34,623 [INFO]   TOTAL:       22.3/40 (56%)
+2026-03-26 00:13:34,623 [INFO]   AUC=0.9999, Brier=0.0042
+2026-03-26 00:13:34,635 [INFO] Iteracion 12 en 25.4s
+2026-03-26 00:13:34,636 [INFO] 
+============================================================
+2026-03-26 00:13:34,636 [INFO] ITERACION 13 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:13:34,636 [INFO] Params: lr=0.0500, depth=5, trees=500
+2026-03-26 00:13:37,573 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:13:49,584 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:13:59,164 [INFO]   MINERAL:     2.1/10
+2026-03-26 00:13:59,164 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:13:59,164 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:13:59,164 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:13:59,164 [INFO]   TOTAL:       22.1/40 (55%)
+2026-03-26 00:13:59,164 [INFO]   AUC=0.9997, Brier=0.0016
+2026-03-26 00:13:59,165 [INFO] Iteracion 13 en 24.5s
+2026-03-26 00:13:59,165 [INFO] 
+============================================================
+2026-03-26 00:13:59,165 [INFO] ITERACION 14 -- Hipotesis: baseline_temporal_stats
+2026-03-26 00:13:59,165 [INFO] Params: lr=0.0500, depth=5, trees=500
+2026-03-26 00:14:02,128 [INFO] Dataset: 3000 muestras, 21 features
+2026-03-26 00:14:14,524 [INFO] CV AUC: 0.9998 +/- 0.0001
+2026-03-26 00:14:24,641 [INFO]   MINERAL:     2.6/10
+2026-03-26 00:14:24,641 [INFO]   PROFUNDIDAD: 3.0/10
+2026-03-26 00:14:24,641 [INFO]   COORDENADAS: 7.0/10
+2026-03-26 00:14:24,641 [INFO]   CERTEZA:     10.0/10
+2026-03-26 00:14:24,641 [INFO]   TOTAL:       22.6/40 (56%)
+2026-03-26 00:14:24,641 [INFO]   AUC=0.9999, Brier=0.0026
+2026-03-26 00:14:24,642 [INFO] Iteracion 14 en 25.5s
