@@ -41,7 +41,8 @@ It is **not** a direct subsurface imaging system. It uses surface and near-surfa
 | **EMIT alteration** | SELECTIVE | hydroxyl d=+0.645 | Porphyry Cu only | Orogenic Au (negative) |
 | **PCA embeddings** | SELECTIVE | +0.026 AUC | Kalgoorlie only | All porphyry zones (negative) |
 | **Magnetics (TMI)** | SMALL POSITIVE | +0.009 AUC | Kalgoorlie (when correctly aligned) | Untested elsewhere |
-| **Neighborhood context** | PROMISING | Mineral AUC 0.507→0.627 | Kalgoorlie | Untested elsewhere |
+| **Geology (Macrostrat)** | VALIDATED SELECTIVE | +0.054/+0.104/+0.011 AUC | Zambia, Peru, Kalgoorlie | Needs coverage parity |
+| **Neighborhood context** | PRODUCTION | Mineral AUC 0.507→0.627, multi-zone | Kalgoorlie, Chuquicamata, Zambia | Weak baselines |
 | **Band ratios** | USEFUL | +0.023 AUC detection | General | Dilutes mineral signal |
 | **Spatial gradients** | REJECTED | -0.006 AUC | None | Kalgoorlie (tested) |
 | **ML residuals** | REJECTED | No independent signal | None | Kalgoorlie (tested) |
@@ -128,3 +129,33 @@ Top 3 next experiments (from Frontier Research V5):
 5. Peru EMIT recovery when download resolves
 6. MINDAT/WAMEX label enrichment
 7. Cross-zone heuristic aggregation v2
+
+---
+
+## 11. Phase 20 — Operator Unlock + Depth Activation + Geology Consolidation (2026-03-26)
+
+**Geology promoted to VALIDATED SELECTIVE:**
+- 3-zone evidence: Zambia lithology +0.054, Peru lithology +0.104, Kalgoorlie lithology +0.011 AUC
+- Macrostrat API confirmed genuine (lithology content > has_data at all tested zones)
+- Coverage parity fix applied: balanced queries for deposits and background
+- Promoted from PROMISING to VALIDATED SELECTIVE
+
+**Depth activation layer:**
+- 1 ACTIVE: magnetics (GA national TMI, +0.009 AUC at Kalgoorlie)
+- 3 READY_WHEN_DROPPED: gravity (GA Bouguer), Earth MRI (ScienceBase), AEM (GSWA)
+- 2 REGIONAL_ONLY: EMAG2v3 (NOAA 404), WGM2012 (BGI 301)
+- 2 FUTURE: detailed AEM surveys, drill hole logs
+- All deposit-scale depth sources remain BLOCKED
+
+**Operator unlock phase:**
+- 11 blocked items documented with exact URLs, file types, dropzones, priorities
+- 4 HIGH priority: GA gravity, Peru EMIT, Arizona Earth MRI, MINDAT API key
+- All 3 manual dropzones still EMPTY (operator action needed)
+- Gating engine v6: 10 rules (added R9 operator unlock, R10 frontier testing gate)
+
+**Frontier track v4:**
+- spectral_unmixing selected for Phase 21 testing (Kalgoorlie + Chuquicamata)
+- NDVI_trend selected for Phase 21 testing (Kalgoorlie + Zambia)
+- Frontier registry v6: 27 families total
+
+**Canonical score:** Unchanged at 22.8/40 (57%, frozen v4). The bottleneck is depth data access, not architecture or feature engineering.

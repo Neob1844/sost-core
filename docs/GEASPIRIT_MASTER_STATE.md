@@ -1,8 +1,28 @@
 # GeaSpirit — Master State Document
 
 **Last updated:** 2026-03-26
-**Architecture:** type-aware + zone-aware + baseline-aware
+**Current phase:** Phase 20
+**Architecture:** type-aware + zone-aware + baseline-aware + geology-aware
 **Canonical Score (frozen v4):** 22.8/40 (57%)
+
+---
+
+## Phase 20 — Operator Unlock + Depth Activation + Geology Consolidation (2026-03-26)
+
+**Focus:** Systematic data unblocking, depth activation, geology validation consolidation.
+
+**Key results:**
+- Geology officially promoted to VALIDATED SELECTIVE (3-zone evidence: Zambia +0.054, Peru +0.104, Kalgoorlie +0.011 AUC)
+- Depth activation layer built: 1 ACTIVE (magnetics), 3 READY_WHEN_DROPPED (gravity, Earth MRI, AEM), 2 REGIONAL_ONLY, 2 FUTURE
+- Operator unlock checklist v3: 11 blocked items documented with exact URLs, file types, dropzones, priorities
+- All 3 manual dropzones still EMPTY (gravity, Peru EMIT, Arizona Earth MRI)
+- Gating engine v6: 10 rules (added R9 operator unlock, R10 frontier testing gate)
+- Frontier track v4: spectral_unmixing + NDVI_trend selected for Phase 21 testing
+- Frontier registry v6: 27 families (5 core, 4 selective, 5 blocked, 10 frontier, 2 rejected, 1 neutral)
+- Zone model registry v16: all 6 zones documented with current families/blockers
+- Canonical score remains FROZEN at v4: 22.8/40 (57%)
+- **Architecture:** type-aware + zone-aware + baseline-aware + geology-aware
+- **Bottleneck:** Depth data access, NOT architecture or feature engineering
 
 ---
 
@@ -34,7 +54,7 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 | emit_alteration | SELECTIVE | PRODUCTION | hydroxyl d=+0.645 | Porphyry Cu only |
 | pca_embeddings | SELECTIVE | PRODUCTION | +0.026 AUC | Kalgoorlie only |
 | magnetics_tmi | SELECTIVE | PRODUCTION | +0.009 AUC | Kalgoorlie (GA national) |
-| geology_macrostrat | SELECTIVE | TESTING | API works, bias in experiment | All (API confirmed) |
+| geology_macrostrat | SELECTIVE | VALIDATED SELECTIVE | 3-zone evidence (+0.054/+0.104/+0.011) | Zambia, Peru, Kalgoorlie |
 | spatial_gradients | REJECTED | — | -0.006 AUC | Kalgoorlie |
 | ml_residuals | REJECTED | — | No independent signal | Kalgoorlie |
 | foundation_embeddings_v1 | NEUTRAL | — | +0.004 (evaluation-sensitive) | Kalgoorlie |
@@ -74,7 +94,7 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 | CERTAINTY | 7.7/10 | Best calibrated Brier 0.096 |
 | **TOTAL** | **22.8/40** | **57%** |
 
-## 5. Gating Rules (v1)
+## 5. Gating Rules (v6)
 
 - R1: baseline < 0.73 → DEFER complex fusion
 - R2: porphyry + EMIT → PRIORITIZE EMIT
@@ -82,6 +102,9 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 - R5: labels < 15 → SKIP ML, heuristic only
 - R6: geology available → INTEGRATE FIRST
 - R7: Brier > 0.15 → CALIBRATE FIRST
+- R8: geology leakage check → coverage parity required
+- R9: operator unlock → auto-detect dropzone data → validate → integrate
+- R10: frontier testing gate → require 2+ zones before promoting to SELECTIVE
 
 ## 6. Blocked Items
 
