@@ -409,3 +409,92 @@ Stack 50+ features from 10+ sources (satellite + thermal + EMIT + magnetics + ra
 **The big picture:** GeaSpirit's next breakthrough is not a new sensor — it's a new way of using the data we already have. The 40-year Landsat archive is an untapped goldmine. Every pixel on Earth has been photographed thousands of times across decades. The question is not "what new data do we need?" but "what have we been leaving on the table?"
 
 The Temporal DNA Transformer is the answer. Build it.
+
+---
+
+## 11. Addendum: CTO Sprint Findings (March 2026)
+
+The following experiments were EXECUTED on real Kalgoorlie data since V5 was written:
+
+### Multi-Scale Anomaly Index (NOVEL — unpublished)
+Computed each feature at local (~100m), medium (~500m), regional (~1.5km) scales.
+- **tpi_heterogeneity d=+0.878** — STRONGEST single feature ever found. Deposits sit in structurally complex terrain.
+- **19 STRONG features** with p < 0.01 discovered.
+- ML AUC: neutral (+0.0001). GBM already captures multi-scale patterns implicitly.
+- Value: interpretability, not raw AUC.
+
+### Neighborhood Context (5x5 pixel window)
+- **Mineral AUC 0.507 → 0.627** — the first feature that begins to distinguish Au from Ni.
+- Physical basis: Au has sharp local anomalies (quartz veins), Ni has uniform regional signatures (komatiite flows).
+- Detection AUC: 0.882 (+0.017 from baseline).
+
+### Hydrological Features from DEM
+- **drainage_density d=+0.576 (STRONG)** — deposits near areas with more fracture-controlled drainage.
+- **TWI d=-0.490 (STRONG)** — deposits in drier hilltop positions.
+- Detection AUC: neutral. Mineral AUC +0.086 with hydro features.
+
+### Error Consensus Discovery
+- Trained 4 models (GBM, RF, LR, SVM). Found **0 consensus errors** — no deposits where ALL fail.
+- Implication: feature stack is complete for detection. The AUC ceiling (~0.88) is a data quality limit.
+
+### Magnetics Bug Fix
+- Phase 7 magnetics used WRONG survey tiles (P580/P586 = 28-30°S, Kalgoorlie = 31.4°S).
+- ALL magnetics features were zeros. Result was invalid.
+- Fixed: downloaded GA national TMI via NCI THREDDS spatial subsetting.
+- Real magnetics: +0.009 AUC (small but genuine).
+
+### Canonical Objective Score
+Current: **23.7/40 (59%)** — Mineral 3.3, Depth 4.1, Coords 7.0, Certainty 9.3.
+
+---
+
+## 12. Additional Tools Not in Original V5
+
+### WAMEX (Western Australia Mineral Exploration)
+- 170,000+ exploration reports with drill hole data, assay results, geological logs
+- Free at wamex.dmirs.wa.gov.au
+- Data mostly in PDFs — extraction requires parsing
+- GSWA also has structured MinedexDrillholes exports (more ML-friendly)
+- **Viability: 6/10 for Kalgoorlie.** Rich training data but extraction effort significant.
+
+### OpenLandMap + SoilGrids 250m
+- Global soil properties: sand/silt/clay, pH, CEC, organic carbon at 0-200cm depths
+- Free via WCS/Zenodo
+- **Viability: 6/10.** Indirect lithology proxy — ultramafic → clay-rich, quartzite → sandy.
+- Easy integration, moderate value.
+
+### Copernicus Climate Data Store (CDS)
+- ERA5 reanalysis: temperature, precipitation, wind at 25km, hourly, from 1940
+- ERA5-Land at 9km
+- **Viability: 4/10.** Regional context only. Precipitation regime controls weathering/laterite.
+
+### Drone-Mounted GPR
+- Ground Penetrating Radar from drone. SPH Engineering sells integrated systems.
+- Depth: 0.3-10m typical, up to 40m in dry sandy media
+- **Viability: 2/10.** Too shallow for most deposits. No satellite integration.
+
+### Planetary Computer (Microsoft)
+- NAIP aerial imagery (1m, US only) — useful for Arizona AOI
+- STAC/COG access — cleaner than GEE for non-Google workflows
+- **Viability: 5/10.** Complement to GEE, not replacement.
+
+---
+
+## 13. Updated CTO Priority After Sprints
+
+The original V5 priority was: (1) Temporal DNA, (2) Prithvi-EO-2.0, (3) ECOSTRESS.
+
+**Updated priority based on sprint results:**
+
+| # | Action | Why | Status |
+|---|--------|-----|--------|
+| 1 | **GSWA geology map integration** | Lithology is the strongest lever for mineral ID. Neighborhood context + lithology should push mineral score from 3.3 to 5+. | READY (data downloadable from GSWA portal) |
+| 2 | **GA gravity grid** | Bouguer anomaly shape → depth proxy. THREDDS path not found; try ecat.ga.gov.au direct download. | BLOCKED (URL discovery needed) |
+| 3 | **Neighborhood context as core family** | Already proven (+0.12 mineral AUC at Kalgoorlie). Need to test at other zones. | IN PROGRESS |
+| 4 | **Isotonic calibration across all zones** | Brier 0.121→0.091 at Kalgoorlie. Deploy everywhere. | READY |
+| 5 | **Temporal DNA Transformer** | Most novel idea. Needs GEE extraction pipeline. | DEFERRED (infrastructure needed) |
+| 6 | **Prithvi-EO-2.0** | Foundation model. Needs GPU (Colab) or long CPU inference. | DEFERRED |
+| 7 | **ECOSTRESS diurnal ATI** | Path confirmed. Needs earthaccess setup. | READY |
+| 8 | **Peru EMIT recovery** | Both granules truncated. Needs re-download. | BLOCKED |
+| 9 | **MINDAT label enrichment** | 400K+ localities. Easy API integration. | READY |
+| 10 | **USGS Earth MRI for Arizona** | Found on ScienceBase. 200m line spacing magnetics+radiometrics. | READY |
