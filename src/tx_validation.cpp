@@ -302,6 +302,18 @@ static TxValidationResult ValidateInputs(
         spent.amount = utxo.amount;
         spent.type = utxo.type;
 
+        // DEBUG: show UTXO entry as seen by node validation
+        {
+            auto hex = [](const uint8_t* d, size_t n) {
+                std::string s; s.reserve(n*2);
+                for (size_t i=0;i<n;i++) { char buf[3]; snprintf(buf,3,"%02x",d[i]); s+=buf; }
+                return s;
+            };
+            printf("[NODE-UTXO] input[%zu] utxo.amount=%lld utxo.type=0x%02x utxo.is_coinbase=%d utxo.height=%lld\n",
+                   i, (long long)utxo.amount, utxo.type, utxo.is_coinbase, (long long)utxo.height);
+            printf("[NODE-UTXO] input[%zu] utxo.pkh=%s\n", i, hex(utxo.pubkey_hash.data(),20).c_str());
+        }
+
         std::string verify_err;
         if (!VerifyTransactionInput(tx, i, spent, ctx.genesis_hash,
                                     utxo.pubkey_hash, &verify_err)) {
