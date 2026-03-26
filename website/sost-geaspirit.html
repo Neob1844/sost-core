@@ -1000,6 +1000,65 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
+<!-- CAPABILITIES + LEARNINGS + CTO DIRECTION -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// PLATFORM ASSESSMENT</div>
+    <div class="section-title">What GeaSpirit <span>Can Do</span></div>
+    <div class="detect-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      <div class="panel">
+        <div class="panel-head" style="color:var(--green)">CAPABILITIES TODAY</div>
+        <div class="yes">&#10003; Rank exploration targets by probability (AUC 0.88)</div>
+        <div class="yes">&#10003; Detect surface alteration and structural context</div>
+        <div class="yes">&#10003; Provide exact target coordinates (30m resolution)</div>
+        <div class="yes">&#10003; Auto-select best feature families per zone and deposit type</div>
+        <div class="yes">&#10003; Distinguish structurally complex terrain (d=+0.878)</div>
+        <div class="yes">&#10003; Export 162 prioritized targets with coordinates</div>
+        <div class="yes">&#10003; Calibrated probability estimates (Brier 0.091)</div>
+        <div class="yes">&#10003; Begin mineral-type discrimination (Au vs Ni AUC 0.63)</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head" style="color:#ff4444">HONEST LIMITATIONS</div>
+        <div class="future">&#10007; Not direct underground imaging — surface proxy inference only</div>
+        <div class="future">&#10007; Not exact mineral ID everywhere — zone-specific, needs geology</div>
+        <div class="future">&#10007; Not depth estimation from satellite alone — needs AEM/gravity</div>
+        <div class="future">&#10007; Not ore grade or tonnage estimation — not designed for this</div>
+        <div class="future">&#10007; Not guaranteed without field/geophysical validation</div>
+        <div class="future">&#10007; Cross-zone transfer does not work — each zone needs own model</div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-head" style="color:var(--amber)">PHASE 6-8 ACCUMULATED LEARNINGS</div>
+      <table class="tbl">
+        <thead><tr><th>Family</th><th>Verdict</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>Thermal 20yr</td><td>USEFUL</td><td>Universal modest. d=-0.627, +0.013 AUC. Replicated at 2 zones.</td></tr>
+          <tr style="color:var(--green)"><td>EMIT alteration</td><td>SELECTIVE</td><td>Porphyry Cu only (hydroxyl d=+0.645). Negative at orogenic Au.</td></tr>
+          <tr style="color:var(--green)"><td>PCA embeddings</td><td>SELECTIVE</td><td>+0.026 AUC at Kalgoorlie. Negative at all porphyry zones.</td></tr>
+          <tr style="color:var(--green)"><td>Neighborhood context</td><td>PROMISING</td><td>Mineral AUC 0.507&rarr;0.627. Key for mineral discrimination.</td></tr>
+          <tr style="color:var(--amber)"><td>Magnetics (TMI)</td><td>SMALL +</td><td>+0.009 AUC with correct GA national data. Prior result was invalid (wrong tiles).</td></tr>
+          <tr style="color:var(--amber)"><td>Peru EMIT</td><td>DEFERRED</td><td>50 granules found. Download truncated. Not scientifically failed.</td></tr>
+          <tr style="color:#ff4444"><td>Spatial gradients</td><td>REJECTED</td><td>-0.006 AUC. No benefit at any tested zone.</td></tr>
+          <tr style="color:#ff4444"><td>ML residuals</td><td>REJECTED</td><td>No independent subsurface signal at Kalgoorlie.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <div class="panel-head" style="color:var(--amber)">NEXT CTO PHASE — INFORMATION FUSION</div>
+      <div style="font-size:12px;line-height:1.8;color:#aaa">
+        GeaSpirit evolves from feature experimentation into an <b style="color:var(--green)">information fusion platform</b>:<br>
+        1. <b>GSWA geological map integration</b> &rarr; mineral identification via lithology context<br>
+        2. <b>GA gravity grid integration</b> &rarr; depth proxy via Bouguer anomaly shape<br>
+        3. <b>Neighborhood context as core family</b> &rarr; mineral discrimination at all zones<br>
+        4. <b>Isotonic calibration hardening</b> &rarr; honest probability across all zones<br>
+        5. <b>Peru EMIT recovery</b> &rarr; confirm porphyry-specificity at 2nd zone<br>
+        6. <b>MINDAT/WAMEX label enrichment</b> &rarr; more data = better models<br>
+        7. <b>Global heuristic v10</b> &rarr; improved target ranking everywhere
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- NEXT OPERATION — PILBARA -->
 <section class="section">
   <div class="container">
