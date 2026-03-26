@@ -3113,3 +3113,17 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 - All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, GA geophysics)
 - Next: geology + gravity + neighborhood context + calibration = information fusion
 - Full methodology and results at: website/sost-geaspirit.html
+
+K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
+- Canonical objective: "There is [mineral] at [depth] at [coordinates] with [certainty%]"
+- Current score: 23.7/40 (59%)
+  - MINERAL:     3.3/10 — Neighborhood context enables Au vs Ni discrimination (AUC 0.627)
+  - DEPTH:       4.1/10 — Magnetic Euler proxy exists but noisy. Needs AEM/gravity/drill holes
+  - COORDINATES: 7.0/10 — 30m pixel resolution, ~1km2 zone identification
+  - CERTAINTY:   9.3/10 — AUC 0.882, Brier 0.091 (isotonic calibration)
+- Ceiling with satellite data only: ~22-24/40 (fundamental limit)
+- Ceiling with satellite + free geophysics: ~28-30/40
+- Ceiling with satellite + geophysics + drill holes: ~36/40
+- Path forward: geology integration + gravity + neighborhood context + calibration
+- GeaSpirit is a probabilistic, proxy-based exploration support tool
+- It does NOT claim direct subsurface imaging or guaranteed mineral identification
