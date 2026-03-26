@@ -1790,13 +1790,11 @@ SectionRenderers.settings = function(el) {
     }
   });
 
-  // Capture install prompt
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    window._deferredInstallPrompt = e;
-    const btn = document.getElementById('set-install-btn');
-    if (btn) btn.textContent = '📲 INSTALL NOW (READY)';
-  });
+  // Update install button text if prompt already captured
+  if (window._deferredInstallPrompt) {
+    const ibtn = document.getElementById('set-install-btn');
+    if (ibtn) ibtn.textContent = '📲 INSTALL NOW (READY)';
+  }
 
   // Test RPC
   document.getElementById('set-test-rpc').addEventListener('click', async function() {
@@ -2017,6 +2015,13 @@ function init() {
   buildMenu();
   bindEvents();
   registerSW();
+
+  // Capture PWA install prompt GLOBALLY (fires before user reaches Settings)
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    window._deferredInstallPrompt = e;
+    console.log('[PWA] Install prompt captured and ready');
+  });
 
   // Unlock AudioContext on first interaction
   let audioUnlocked = false;
