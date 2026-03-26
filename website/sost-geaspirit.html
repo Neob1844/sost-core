@@ -79,12 +79,8 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- SPLASH — Green Matrix Rain (GeaSpirit) -->
 <div id="gea-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
   <canvas id="gea-matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <div id="gea-sigma3d-wrap" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;perspective:800px;opacity:0;transition:opacity 1.5s ease-in">
-    <div id="gea-sigma3d" style="width:180px;height:180px;transform-style:preserve-3d;position:relative">
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;font-weight:900;font-family:serif;background:linear-gradient(135deg,#00ff41,#00aa2a,#00ff41,#00cc33);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(0,255,65,0.5));transform:translateZ(8px)">Σ</div>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;font-weight:900;font-family:serif;background:linear-gradient(315deg,#006600,#00aa2a,#006600);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transform:rotateY(180deg) translateZ(8px)">Σ</div>
-      <div style="position:absolute;top:10px;left:50%;width:16px;height:160px;background:linear-gradient(180deg,#00aa2a,#004400,#00aa2a);transform:translateX(-50%) rotateY(90deg);border-radius:2px"></div>
-    </div>
+  <div id="gea-sigma3d-wrap" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;opacity:0;transition:opacity 1.5s ease-in">
+    <canvas id="gea-sigma-canvas" width="180" height="180" style="width:180px;height:180px"></canvas>
     <div style="position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,65,0.15),transparent 70%);animation:geaSigmaGlow 3s ease-in-out infinite;pointer-events:none"></div>
   </div>
   <style>@keyframes geaSigmaGlow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.1)}}</style>
@@ -182,27 +178,56 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   requestAnimationFrame(drawMatrix);
   playMatrixAmbient(12);
 
-  // === 3D GREEN SIGMA EMERGE + ANIMATE ===
+  // === GREEN SIGMA LOGO — Canvas drawn ===
   var geaSigmaWrap=document.getElementById('gea-sigma3d-wrap');
-  var geaSigma3d=document.getElementById('gea-sigma3d');
+  var geaSigmaCanvas=document.getElementById('gea-sigma-canvas');
+  var geaSigmaCtx=geaSigmaCanvas?geaSigmaCanvas.getContext('2d'):null;
   var geaSigmaRunning=true;
-  var geaT0=performance.now();
+  var geaSigmaT0=performance.now();
+
+  function drawGreenSigma(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    var t=(performance.now()-geaSigmaT0)/1000;
+    var sc=1+Math.sin(t*0.3)*0.08;
+    var tx=Math.sin(t*0.4+2)*15;
+    var ty=Math.sin(t*0.35)*10;
+    ctx.translate(tx,ty);
+    ctx.scale(sc,sc);
+    var coinAngle=Math.sin(t*0.5)*0.4;
+    ctx.scale(Math.cos(coinAngle),1);
+    ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=20;ctx.shadowOffsetX=5;ctx.shadowOffsetY=5;
+    var shift=Math.sin(t*0.7)*30;
+    var grad=ctx.createLinearGradient(-50+shift,-60,50+shift,60);
+    grad.addColorStop(0,'#ccffcc');
+    grad.addColorStop(0.2,'#00ff41');
+    grad.addColorStop(0.45,'#00cc33');
+    grad.addColorStop(0.55,'#00ff41');
+    grad.addColorStop(0.8,'#00aa2a');
+    grad.addColorStop(1,'#006600');
+    ctx.beginPath();
+    ctx.moveTo(-45,-55);ctx.lineTo(45,-55);ctx.lineTo(45,-40);
+    ctx.lineTo(-15,-40);ctx.lineTo(0,0);ctx.lineTo(-15,40);
+    ctx.lineTo(45,40);ctx.lineTo(45,55);ctx.lineTo(-45,55);
+    ctx.lineTo(-10,0);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    ctx.strokeStyle='rgba(200,255,200,0.3)';ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle='rgba(0,50,0,0.4)';ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(45,-40);ctx.lineTo(-15,-40);ctx.lineTo(0,0);ctx.lineTo(-15,40);ctx.lineTo(45,40);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   setTimeout(function(){geaSigmaWrap.style.opacity='0.3';},2000);
   setTimeout(function(){geaSigmaWrap.style.opacity='0.7';},3000);
   setTimeout(function(){geaSigmaWrap.style.opacity='1';},4000);
 
   function animateGeaSigma(){
-    if(!geaSigmaRunning)return;
-    var t=(performance.now()-geaT0)/1000;
-    var rY=Math.sin(t*0.6)*30+Math.sin(t*0.25)*18;
-    var rX=Math.sin(t*0.45+0.8)*12+Math.sin(t*0.18)*8;
-    var rZ=Math.sin(t*0.12)*6;
-    var tX=Math.sin(t*0.35+1.5)*50;
-    var tY=Math.sin(t*0.3+0.3)*35;
-    var tZ=Math.sin(t*0.2)*80;
-    var sc=1+Math.sin(t*0.28)*0.18;
-    geaSigma3d.style.transform='rotateY('+rY+'deg) rotateX('+rX+'deg) rotateZ('+rZ+'deg) translate3d('+tX+'px,'+tY+'px,'+tZ+'px) scale('+sc+')';
+    if(!geaSigmaRunning||!geaSigmaCtx)return;
+    drawGreenSigma(geaSigmaCtx,180,180);
     requestAnimationFrame(animateGeaSigma);
   }
   setTimeout(animateGeaSigma,2500);
@@ -251,7 +276,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   setTimeout(function(){
     matrixRunning=false;
     geaSigmaRunning=false;
-    if(geaSigma3d){geaSigma3d.style.transition='transform 0.8s ease-in';geaSigma3d.style.transform='rotateY(720deg) scale(0) translateZ(-500px)';}
+    if(geaSigmaWrap){geaSigmaWrap.style.transition='opacity 0.5s,transform 0.8s';geaSigmaWrap.style.opacity='0';geaSigmaWrap.style.transform='translate(-50%,-50%) scale(0.3)';}
     sp.style.opacity='0';
     setTimeout(function(){sp.style.display='none';ctx=null;},600);
     sessionStorage.setItem('geaSplashShown','1');
