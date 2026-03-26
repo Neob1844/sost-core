@@ -308,6 +308,7 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
             int64_t amount_stocks = get_int("amount_stocks");
             int64_t height = get_int("height");
             int64_t output_type = get_int("output_type");
+            bool is_coinbase = get_bool("coinbase");
             bool spendable = get_bool("spendable");
 
             if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
@@ -317,12 +318,26 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
                 utxo.amount = amount_stocks;
                 utxo.height = height;
                 utxo.spent = false;
-                utxo.output_type = (uint8_t)output_type;  // Real type from node (0x00=transfer, 0x01=coinbase_miner, etc.)
+                // Determine output type: use explicit field if present, else infer from coinbase flag + vout
+                if (output_type > 0) {
+                    utxo.output_type = (uint8_t)output_type;
+                } else if (is_coinbase) {
+                    // Coinbase outputs: vout=0 → miner (0x01), vout=1 → gold (0x02), vout=2 → popc (0x03)
+                    if (vout == 0) utxo.output_type = 0x01;       // OUT_COINBASE_MINER
+                    else if (vout == 1) utxo.output_type = 0x02;  // OUT_COINBASE_GOLD
+                    else if (vout == 2) utxo.output_type = 0x03;  // OUT_COINBASE_POPC
+                    else utxo.output_type = 0x01;                 // fallback
+                } else {
+                    utxo.output_type = 0x00;  // TRANSFER
+                }
                 // Decode address to pubkey hash
                 sost::address_decode(addr, utxo.pkh);
                 w.add_utxo(utxo);
                 total_imported++;
-                printf("[DEBUG] Imported UTXO: %lld stocks (%.8f SOST) height=%lld\n",
+                printf("[DEBUG] Imported UTXO: %lld stocks, type=0x%02x (coinbase=%d, vout=%d, parsed_type=%lld) height=%lld\n",
+                       (long long)utxo.amount, utxo.output_type, is_coinbase, (int)vout, (long long)output_type, (long long)utxo.height);
+                // TEMP REMOVE NEXT LINE AFTER FIX:
+                printf("[DEBUG-OLD] Imported UTXO: %lld stocks (%.8f SOST) height=%lld\n",
                        (long long)utxo.amount,
                        (double)utxo.amount / 100000000.0,
                        (long long)utxo.height);
@@ -679,7 +694,9 @@ int main(int argc, char** argv) {
         }
         printf("Chain height: %lld\n", (long long)chain_height);
 
-        // Sync UTXOs from chain for wallet address
+        // Clear stale UTXOs (wallet file may have wrong output_type from old sessions)
+        w.clear_utxos();
+        // Sync fresh UTXOs from chain for wallet address
         int synced = sync_wallet_utxos_from_node(w);
         if (synced > 0) {
             printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
@@ -809,7 +826,9 @@ int main(int argc, char** argv) {
         }
         printf("Chain height: %lld\n", (long long)chain_height);
 
-        // Sync UTXOs from chain for wallet address
+        // Clear stale UTXOs (wallet file may have wrong output_type from old sessions)
+        w.clear_utxos();
+        // Sync fresh UTXOs from chain for wallet address
         int synced = sync_wallet_utxos_from_node(w);
         if (synced > 0) {
             printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
