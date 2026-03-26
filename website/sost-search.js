@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  var EXPLORER = 'https://explorer.sostcore.com/sost-explorer.html';
+  var EXPLORER = 'https://sostprotocol.com/sost-explorer.html';
 
   var PAGES = [
     { title: 'Home', desc: 'SOST Protocol overview — Sovereign Stock Token', url: 'index.html', kw: 'home protocol gold pow sovereign stock token' },
