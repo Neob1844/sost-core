@@ -146,6 +146,9 @@ body {
   0% { opacity: 1; transform: translate(0,0); }
   100% { opacity: 0; transform: translate(var(--sx), var(--sy)); }
 }
+@keyframes sparkle { 0%,100%{opacity:0.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
+@keyframes dropFall { 0%{transform:translateY(-5px);opacity:0} 20%{opacity:0.7} 80%{opacity:0.7} 100%{transform:translateY(25px);opacity:0} }
+@keyframes batFly { 0%,100%{transform:translate(0,0)} 25%{transform:translate(10px,-5px)} 50%{transform:translate(20px,0)} 75%{transform:translate(10px,5px)} }
 
 /* Lamp flicker */
 @keyframes lampGlow {
@@ -232,6 +235,7 @@ body {
   border-bottom: 2px solid var(--pip-border);
   flex-shrink: 0;
   z-index: 200;
+  position: relative;
   gap: 8px;
   box-shadow: 0 2px 20px var(--pip-glow);
 }
@@ -520,6 +524,16 @@ body {
       <div class="rock-layer"></div>
       <div class="rock-layer"></div>
     </div>
+    <div id="mine-env" style="width:200px;height:30px;position:relative;margin-bottom:10px">
+      <div style="position:absolute;width:2px;height:2px;background:#ffd700;left:30px;top:5px;animation:sparkle 1.2s ease infinite;border-radius:50%"></div>
+      <div style="position:absolute;width:2px;height:2px;background:#ffd700;left:120px;top:12px;animation:sparkle 1.8s ease infinite 0.4s;border-radius:50%"></div>
+      <div style="position:absolute;width:2px;height:2px;background:#ffaa00;left:170px;top:3px;animation:sparkle 0.9s ease infinite 0.8s;border-radius:50%"></div>
+      <div style="position:absolute;width:1px;height:4px;background:#4488aa;left:60px;top:0;animation:dropFall 2s linear infinite"></div>
+      <div style="position:absolute;width:1px;height:4px;background:#4488aa;left:145px;top:0;animation:dropFall 2.5s linear infinite 1s"></div>
+      <div style="position:absolute;width:4px;height:2px;background:#333;left:90px;top:8px;animation:batFly 3s ease-in-out infinite;border-radius:1px"></div>
+      <div style="position:absolute;bottom:0;left:70px;width:60px;height:1px;background:#444"></div>
+      <div style="position:absolute;bottom:2px;left:70px;width:60px;height:1px;background:#444"></div>
+    </div>
     <div id="splash-title"></div>
     <div id="splash-lines"></div>
     <div id="splash-version">v5.0.0-MINER</div>
@@ -605,7 +619,7 @@ const SPLASH_LINES = [
   '> TERMINAL READY. WELCOME OPERATOR.'
 ];
 
-// ── Web Audio Engine — 50 Retro Sounds ─────────────────────────
+// ── Web Audio Engine — 60 Retro Sounds ─────────────────────────
 const AudioEngine = (function() {
   let ctx = null;
 
@@ -743,7 +757,19 @@ const AudioEngine = (function() {
     sys_alert: function() { multi([{freq:1000,dur:0.08},{freq:1000,dur:0.08,delay:0.15}]); },
     sys_warning: function() { multi([{freq:800,dur:0.1,type:'sawtooth'},{freq:800,dur:0.1,delay:0.2,type:'sawtooth'},{freq:800,dur:0.1,delay:0.4,type:'sawtooth'}]); },
     sys_shutdown: function() { sweep(800, 30, 0.8, 'sine', 0.06); },
-    sys_notify: function() { osc('triangle', 880, 0.1, 0.05); osc('triangle', 1100, 0.08, 0.04); }
+    sys_notify: function() { osc('triangle', 880, 0.1, 0.05); osc('triangle', 1100, 0.08, 0.04); },
+
+    // Extended retro sounds (51-60)
+    retro_arpeggio: function() { multi([{freq:262,dur:0.06},{freq:330,dur:0.06,delay:0.06},{freq:392,dur:0.06,delay:0.12},{freq:523,dur:0.1,delay:0.18}]); },
+    retro_descend: function() { multi([{freq:880,dur:0.06},{freq:660,dur:0.06,delay:0.06},{freq:440,dur:0.06,delay:0.12},{freq:220,dur:0.1,delay:0.18}]); },
+    retro_coin: function() { multi([{freq:988,dur:0.05},{freq:1319,dur:0.12,delay:0.05}]); },
+    retro_powerup: function() { sweep(200, 2000, 0.3, 'square', 0.06); },
+    retro_laser: function() { sweep(2000, 200, 0.15, 'sawtooth', 0.05); },
+    retro_jump: function() { sweep(150, 600, 0.12, 'square', 0.05); },
+    retro_explosion: function() { noise(0.08, 0.25); osc('sawtooth', 80, 0.2, 0.06); },
+    retro_1up: function() { multi([{freq:330,dur:0.08},{freq:392,dur:0.08,delay:0.08},{freq:523,dur:0.08,delay:0.16},{freq:659,dur:0.08,delay:0.24},{freq:784,dur:0.15,delay:0.32}]); },
+    retro_warp: function() { sweep(100, 3000, 0.4, 'sine', 0.04); },
+    retro_gameover: function() { multi([{freq:392,dur:0.15,type:'square'},{freq:330,dur:0.15,delay:0.15,type:'square'},{freq:262,dur:0.3,delay:0.3,type:'square'}]); }
   };
 })();
 
@@ -970,6 +996,11 @@ const Nav = (function() {
       history.pushState({ section: sectionId }, '', '#' + sectionId);
     }
     AudioEngine.nav_select();
+    // 20% chance of bonus retro sound
+    if (Math.random() < 0.2) {
+      const retros = ['retro_arpeggio','retro_coin','retro_powerup','retro_jump','retro_1up'];
+      setTimeout(() => AudioEngine[retros[Math.floor(Math.random()*retros.length)]](), 200);
+    }
   }
 
   function back() {
@@ -1036,6 +1067,108 @@ async function pollBlockHeight() {
 }
 
 
+// ── Pixel Art Library (60 procedural 16x16 icons) ─────────────
+const PixelArt = (function() {
+  // Each icon: 16x16, encoded as hex string (1 char = 1 pixel color index)
+  // Palette per icon: array of hex colors. '0' = transparent
+  const ICONS = {
+    // Mining & metals (1-35)
+    gold_bar:     {p:['','#ffd700','#daa520','#b8860b'],d:'0000000000000000001111111111100001222222222210001233333333210001233333333210001233333333210001222222222210000111111111100000000000000000'},
+    nugget:       {p:['','#ffd700','#daa520'],d:'0000000000000000000000110000000000011221000000001222210000000122222100000012222210000000122221000000001121000000000000000000000000000000'},
+    pickaxe:      {p:['','#888','#654','#aaa'],d:'0000000001110000000000011300000000001130000000001130000000011300000001130000000113000000011300000001130000000011000000000100000000000000'},
+    diamond:      {p:['','#00ffff','#0088aa','#00bbdd'],d:'0000000000000000000001111000000001122221100001123333211000112333321100001233321000000123210000000001210000000000100000000000000000000000'},
+    helmet:       {p:['','#666','#888','#ff0'],d:'0000001111000000000111111100000011111111110000111233111100011111111110001111111111000011111111100000001111100000000000000000000000000000'},
+    cart:         {p:['','#854','#666','#333'],d:'0000000000000000000000000000000011111111110000122222222100012222222210001111111111000033000000330000033000003300000000000000000000000000'},
+    coin:         {p:['','#ffd700','#daa520','#b8860b'],d:'0000011110000000011222211000001122222221100011222112221100112221122211001122211222100011222222211000011222211000000001111000000000000000'},
+    cave:         {p:['','#444','#222','#333'],d:'1111100011111111110000001111111000000000111100000000001110000000000011000000000001110000000000111100000000011111000001111111110011111111'},
+    anvil:        {p:['','#555','#333','#777'],d:'0000111111000000011111111110000001111111100000001111110000000001111000000001111111000000111111110000001111111100000011111111100000000000'},
+    furnace:      {p:['','#c44','#f80','#ffd700'],d:'0011111111100001111111111110011111111111100111112222111101111122221111011111333311100111113331110001111111111100001111111111000000000000'},
+    ore_copper:   {p:['','#666','#d87','#fa0'],d:'1111111111111111112111111211111132111211111111111321111112111113211111321111111113211111112132111113211111111111111111111111111111111111'},
+    ore_gold:     {p:['','#666','#fd0','#fb0'],d:'1111111111111111111211111111111132111111111113211132111111111111132111112111111321111121131111111111321111121111111111111111111111111111'},
+    treasure:     {p:['','#854','#ffd700','#daa520'],d:'0001111111100000012222222100000122232221000001223333221000012233332210000122333221000001222222210000011111111000000000000000000000000000'},
+    mountain:     {p:['','#666','#888','#aaa'],d:'0000000100000000000001210000000001232100000001123321000001112333210000111233332100011112333321001111123333210011111233332100111111111111'},
+    miner2:       {p:['','#d4a','#666','#44a'],d:'0000022200000000002212200000000022222000000000033300000000003333000000003313300000000333300000000033003000000003300300000000330030000000'},
+    crucible:     {p:['','#c44','#fa0','#ffd700'],d:'0000000000000000000011110000000011222211000001123332110000112333211000011233321100000112332110000001122211000000001111100000000000000000'},
+    scale:        {p:['','#888','#666','#aaa'],d:'0000001000000000111111111000011000100001100100001000001001000010000010110001000011011111111111100000001000000000000111000000000000000000'},
+    hammer:       {p:['','#888','#654','#aaa'],d:'0011110000000000011111000000000001110000000000001100000000000011000000000011000000000011000000000011000000000011000000000001000000000000'},
+    rail:         {p:['','#555','#333'],d:'0000000000000000111111111111111100000000000000001111111111111111000000000000000011111111111111110000000000000000111111111111111100000000'},
+    lantern:      {p:['','#fd0','#fa0','#888'],d:'0000033300000000003333300000000033333300000000031113000000000311130000000003111300000000033330000000000333000000000003300000000000030000'},
+    sack:         {p:['','#a86','#864','#654'],d:'0000011000000000011211000000001222221000000012222221000000122222210000001222222100000012222210000000011111000000000000000000000000000000'},
+    gem_red:      {p:['','#f44','#c22','#f88'],d:'0000001100000000001132100000001133321000000113333210000011333321000000113332100000001132100000000001210000000000010000000000000000000000'},
+    gem_green:    {p:['','#4f4','#2c2','#8f8'],d:'0000001100000000001132100000001133321000000113333210000011333321000000113332100000001132100000000001210000000000010000000000000000000000'},
+    gem_blue:     {p:['','#44f','#22c','#88f'],d:'0000001100000000001132100000001133321000000113333210000011333321000000113332100000001132100000000001210000000000010000000000000000000000'},
+    minecart2:    {p:['','#854','#666','#fa0'],d:'0000000000000000000003300000000001233210000000123332100000012333210000001233321000000111111100000033000033000000330000330000000000000000'},
+    dynamite:     {p:['','#c44','#a22','#fd0'],d:'0000000300000000000003000000000000300000000000030000000000001100000000001111000000000111100000000011110000000001111000000000011100000000'},
+    compass:      {p:['','#888','#c44','#44c'],d:'0000111100000001100001100001100000001100110002000011011000300001101100020000110011000000011000011000011000000011110000000000000000000000'},
+    crystal:      {p:['','#c8f','#a6d','#e9f'],d:'0000001000000000001210000000001232100000001233210000001233321000000123332100000012332100000001232100000000121000000000010000000000000000'},
+    pan:          {p:['','#888','#666','#fd0'],d:'0000000000000000000111110000000122222100000012223210000001222321000000122222100000001111110000000000000000000000000000000000000000000000'},
+    torch:        {p:['','#fa0','#fd0','#854'],d:'0000012000000000013320000000001232000000000033000000000003300000000000330000000000003300000000000033000000000000330000000000003300000000'},
+    ingot_silver: {p:['','#ccc','#aaa','#888'],d:'0000000000000000001111111111100001222222222210001233333333210001222222222210000111111111100000000000000000000000000000000000000000000000'},
+    chisel:       {p:['','#888','#aaa','#654'],d:'0000000010000000000001100000000000110000000000011000000000001100000000001100000000001100000000011100000000011000000000010000000000000000'},
+    mine_entry:   {p:['','#654','#432','#222'],d:'0111111111111101111111111111111110000000001111100000000011111000000000111110000000001111100000000011111000000000111111111111111100000000'},
+    wheelbarrow:  {p:['','#854','#666','#333'],d:'0000000000000000001110000000000012221000000000122210000000001222100000000111110000000000033000000000003300000000000000000000000000000000'},
+    // Games (36-50)
+    car_outrun:   {p:['','#f44','#fff','#ffd700'],d:'0000011110000000001122211000000112222110000011222222110001122222221100011222222110000112332110000001133311000000001111100000000000000000'},
+    tetris_l:     {p:['','#fa0','#c80'],d:'0011000000000000001100000000000011110000000000111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000'},
+    pong:         {p:['','#fff','#888'],d:'0000000100000000110001000000001100010000000011000100000000110001000000001100010000000011000100000000000001000000000000000000000000000000'},
+    invader:      {p:['','#0f0','#0a0'],d:'0000100001000000001000100000000111111100000011011011000001111111110000101111101000001011110100000010000010000000100001000000000000000000'},
+    pacman:       {p:['','#ff0','#000'],d:'0000111100000001111111100000111111111000011111111100000111111110000001111100000000011111111000001111111110000001111111100000000111100000'},
+    snake:        {p:['','#0f0','#0a0','#ff0'],d:'0000000000000000000001111100000000011001000000001100100000000011001000000001111000000000000000000000000000000000000000000000000000000000'},
+    asteroid:     {p:['','#888','#aaa'],d:'0000011100000000110001100000100000010000100000001000010000000100001000000010000110000100000011101000000001110000000000000000000000000000'},
+    frog:         {p:['','#0f0','#0a0','#f00'],d:'0010000001000000111000111000001111111110000011333311000001111111100000011111110000000110011000000001001000000000000000000000000000000000'},
+    heart:        {p:['','#f44','#c22'],d:'0000000000000000011001100000000111211110000011122211100001111111110000011111111000000111111100000001111110000000001111000000000001100000'},
+    star:         {p:['','#fd0','#fa0'],d:'0000001000000000001210000000001232100000011123321100001111111111000001112321100000011232110000001120012000000110000110000000000000000000'},
+    mushroom:     {p:['','#f44','#fff','#854'],d:'0000111100000001122211100000112222221100001222222210000011111111000000044440000000004444400000000044440000000000444000000000000000000000'},
+    sword:        {p:['','#aaa','#888','#854'],d:'0000000100000000000011000000000011000000000001100000000001100000000001100000000011000000000011300000000001300000000000100000000000000000'},
+    ghost:        {p:['','#88f','#fff'],d:'0000111100000001111111100000111121110000011112111000001111111110000011111111100000111111111000001010101010000000000000000000000000000000'},
+    cherry:       {p:['','#f44','#0a0','#854'],d:'0000030000000000003000000000000330000000000032000000001112100000001111110000000011111100000000011110000000000000000000000000000000000000'},
+    key:          {p:['','#fd0','#fa0'],d:'0000000000000000001110000000000100010000000010001000000001111000000000010000000000001000000000000100000000000010000000000000000000000000'},
+    // Crypto/tech (51-60)
+    block_chain:  {p:['','#0f0','#080'],d:'0111100111100000100010100010000010001010001000001000101000100001111011110000001000101000100000100010100010000010001010001000011110111100'},
+    hash:         {p:['','#0f0','#080'],d:'0001001000000000001001000000000111111100000000100100000000010010000000111111100000001001000000000010010000000000000000000000000000000000'},
+    node_net:     {p:['','#0f0','#080','#0a0'],d:'0100000000010000011000001100000001100110000000001111000000000011000000001111000000011001100000010000000001000000000000000000000000000000'},
+    cpu:          {p:['','#888','#0f0','#333'],d:'0001010100000000010111010000000111111110000001111111000000111111100000011111110000000101110100000000101010000000000000000000000000000000'},
+    lock:         {p:['','#fd0','#fa0','#888'],d:'0000111100000000110000110000001100001100000033333330000003333333000000333233300000033323330000003332333000000033333300000000333330000000'},
+    sost_coin:    {p:['','#f44','#c22','#fff'],d:'0000111100000001111111100000113333311000011333333110001133313331100011333133311000113333331100000113333110000001111111000000001111000000'},
+    circuit:      {p:['','#0f0','#080'],d:'0100010001000000010001000100000111111101110001000000010001010101010000010000000100011111110111000100010001000001000100010000000000000000'},
+    antenna:      {p:['','#888','#0f0'],d:'0000001000000000000010000000000001210000000000121000000000012100000000001110000000000010000000000001000000000000100000000000001000000000'},
+    terminal:     {p:['','#333','#0f0','#080'],d:'0111111111110000100000000010001021000000100010200000001000102000000010001020000001000010200000100000100000001000001111111111000000000000'},
+    clock_blk:    {p:['','#888','#0f0','#fff'],d:'0000111100000001100001100000100010010010010001001001001000100100100010010010010001001001001000001000010000000011000110000000001111000000'},
+    rocket:       {p:['','#ccc','#f44','#fa0'],d:'0000001000000000001210000000012321000000011232100000012232100000122321000000132210000000332100000000332100000000033000000000003300000000'},
+    shield:       {p:['','#0f0','#080','#fd0'],d:'0001111110000001111111110000111111111100011113111110001111311111000111131111100011113111110000111111111000000111111100000000011110000000'},
+    satellite:    {p:['','#888','#0f0','#44f'],d:'0000000000000000010000000100001110001110000011333110000001131100000000113110000001133311000000111000111000000100000010000000000000000000'},
+  };
+
+  function draw(canvas, name, size) {
+    const icon = ICONS[name];
+    if (!icon) return;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    canvas.width = 16; canvas.height = 16;
+    canvas.style.width = (size || 32) + 'px';
+    canvas.style.height = (size || 32) + 'px';
+    canvas.style.imageRendering = 'pixelated';
+    const d = icon.d;
+    for (let i = 0; i < d.length && i < 256; i++) {
+      const ci = parseInt(d[i]);
+      if (ci > 0 && icon.p[ci]) {
+        ctx.fillStyle = icon.p[ci];
+        ctx.fillRect(i % 16, Math.floor(i / 16), 1, 1);
+      }
+    }
+  }
+
+  function random(canvas, size) {
+    const names = Object.keys(ICONS);
+    draw(canvas, names[Math.floor(Math.random() * names.length)], size);
+  }
+
+  function getNames() { return Object.keys(ICONS); }
+
+  return { draw, random, getNames, count: Object.keys(ICONS).length };
+})();
+
+
 // ── Section Renderers ──────────────────────────────────────────
 function renderSection(id) {
   const content = document.getElementById('content');
@@ -1047,6 +1180,18 @@ function renderSection(id) {
 
   const renderer = SectionRenderers[id];
   if (renderer) renderer(content);
+
+  // Add random pixel art decoration at bottom of section
+  if (id !== 'wallet' && id !== 'explorer' && id !== 'markets') {
+    const decor = document.createElement('div');
+    decor.style.cssText = 'display:flex;justify-content:center;gap:8px;padding:16px 0;opacity:0.3;';
+    for (let i = 0; i < 5; i++) {
+      const c = document.createElement('canvas');
+      PixelArt.random(c, 24);
+      decor.appendChild(c);
+    }
+    content.appendChild(decor);
+  }
 }
 
 const SectionRenderers = {};
@@ -1224,50 +1369,31 @@ SectionRenderers.geaspirit = function(el) {
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// GEASPIRIT PLATFORM</h2>
-      <p>Satellite-based mineral prospectivity mapping.</p>
-      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">23.7 / 40</span></p>
-      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 6D COMPLETE</span></div>
-      <div class="stat-row"><span class="stat-label">AOIs GLOBAL</span><span class="stat-value">10 (5 supervised + 3 heuristic + 1 demo + 1 failed)</span></div>
-      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value">162 coordinates</span></div>
-      <div class="stat-row"><span class="stat-label">OZMIN DEPOSITS</span><span class="stat-value">16,225 (CC-BY 4.0)</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// DEPOSIT-TYPE BENCHMARKS</h2>
-      <div class="stat-row"><span class="stat-label">PORPHYRY Cu</span><span class="stat-value stat-ok">AUC 0.86</span></div>
-      <div class="stat-row"><span class="stat-label">OROGENIC Au</span><span class="stat-value stat-ok">AUC 0.81</span></div>
-      <div class="stat-row"><span class="stat-label">SEDIMENT-HOSTED Cu</span><span class="stat-value stat-warn">AUC 0.76</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// ZONE-SPECIFIC RECIPES</h2>
-      <p>Transfer learning does NOT work for satellite features. Each zone requires its own trained model.</p>
-      <div class="stat-row"><span class="stat-label">THERMAL</span><span class="stat-value">UNIVERSAL MODEST (+0.013 AUC)</span></div>
-      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC ONLY</span></div>
-      <div class="stat-row"><span class="stat-label">PCA EMBEDDINGS</span><span class="stat-value">KALGOORLIE-SPECIFIC ONLY</span></div>
-      <div class="stat-row"><span class="stat-label">ML RESIDUAL</span><span class="stat-value stat-err">NEGATIVE (no signal)</span></div>
-      <div class="stat-row"><span class="stat-label">GRADIENTS</span><span class="stat-value stat-err">NEGATIVE</span></div>
+      <p>GeaSpirit is a proprietary mineral intelligence platform that identifies high-probability mineral exploration targets using multi-source satellite and geophysical data fusion.</p>
     </div>
     <div class="pip-panel">
       <h2>// CAPABILITIES</h2>
-      <h3>CAN DO:</h3>
-      <ul style="padding-left:20px;margin-bottom:12px">
-        <li>Generate prospectivity maps from satellite data</li>
-        <li>Score areas by mineral potential (0-1 probability)</li>
-        <li>20-year Landsat thermal long-term proxy pipeline</li>
-        <li>Advanced geomorphometry (6 bands)</li>
-        <li>CGCNN forward pass on CIF crystal structures</li>
-        <li>Custom AOI targeting</li>
-      </ul>
-      <h3>CANNOT DO:</h3>
       <ul style="padding-left:20px">
-        <li>Direct subsurface mineral detection</li>
-        <li>Cross-zone transfer of satellite models</li>
-        <li>Replace ground-truth geological surveys</li>
-        <li>Guarantee deposit existence at targets</li>
+        <li>Rank exploration targets by probability across multiple zones</li>
+        <li>Identify geological structural contexts favorable for mineral deposits</li>
+        <li>Provide exact target coordinates at 30m resolution</li>
+        <li>Support zone-specific, type-aware analysis for different deposit types</li>
       </ul>
     </div>
     <div class="pip-panel">
-      <h2>// KEY LEARNING</h2>
-      <p>No single feature family is universal. Zone-specific model architecture confirmed repeatedly. Thermal is a moderate but real improvement — it helps most when the spectral/SAR baseline has not yet saturated.</p>
+      <h2>// CURRENT RESULTS</h2>
+      <div class="stat-row"><span class="stat-label">SUPERVISED ZONES</span><span class="stat-value stat-ok">6 ACROSS 4 CONTINENTS</span></div>
+      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value stat-ok">162 WITH EXACT COORDINATES</span></div>
+      <div class="stat-row"><span class="stat-label">MULTI-ZONE VALIDATION</span><span class="stat-value stat-ok">COMPLETED</span></div>
+      <div class="stat-row"><span class="stat-label">IMPROVEMENT</span><span class="stat-value">CONTINUOUS — INFORMATION FUSION ARCHITECTURE</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CANONICAL OBJECTIVE</h2>
+      <p>Determine mineral type, depth, location, and certainty for exploration targets.</p>
+      <p style="margin-top:8px">Progress: <span style="color:var(--pip)">ACTIVELY ADVANCING ACROSS ALL FOUR DIMENSIONS</span></p>
+    </div>
+    <div class="pip-panel" style="text-align:center">
+      <p style="color:var(--pip-dim);font-size:14px">Technical implementation details available in the whitepaper.</p>
     </div>
   `;
   AudioEngine.ambient_scan();
@@ -1279,36 +1405,28 @@ SectionRenderers.materials = function(el) {
   el.style.overflow = 'auto';
   el.innerHTML = `
     <div class="pip-panel">
-      <h2>// MATERIALS ENGINE v3.2.0</h2>
-      <p>Computational materials discovery platform.</p>
-      <div class="stat-row"><span class="stat-label">MATERIALS IN DB</span><span class="stat-value stat-ok">76,193</span></div>
-      <div class="stat-row"><span class="stat-label">API ENDPOINTS</span><span class="stat-value">70+</span></div>
-      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">9 (270+ common names)</span></div>
+      <h2>// MATERIALS DISCOVERY ENGINE</h2>
+      <p>The Materials Discovery Engine is an autonomous computational platform for discovering novel materials with target properties.</p>
     </div>
     <div class="pip-panel">
-      <h2>// GNN MODELS</h2>
-      <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
-      <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// FEATURES</h2>
+      <h2>// CAPABILITIES</h2>
       <ul style="padding-left:20px">
-        <li>Material Mixer MVP: theoretical candidates from parent pairs</li>
-        <li>Autonomous Discovery Engine: iterative candidate generation with error learning</li>
-        <li>22 elemental + 22 compound curated overrides</li>
-        <li>Multilingual search across 9 languages</li>
-        <li>Crystal structure visualization</li>
-        <li>Property prediction via graph neural networks</li>
-        <li>Formation energy and band gap estimation</li>
-        <li>Periodic table-aware element search</li>
+        <li>Predict material properties from crystal structure</li>
+        <li>Generate theoretical candidate materials</li>
+        <li>Autonomous discovery campaigns with iterative learning</li>
+        <li>Multilingual search across 76,000+ known materials</li>
       </ul>
     </div>
     <div class="pip-panel">
-      <h2>// ARCHITECTURE</h2>
-      <div class="stat-row"><span class="stat-label">BACKEND</span><span class="stat-value">PYTHON / FLASK</span></div>
-      <div class="stat-row"><span class="stat-label">ML FRAMEWORK</span><span class="stat-value">PYTORCH</span></div>
-      <div class="stat-row"><span class="stat-label">DATABASE</span><span class="stat-value">76K MATERIALS (MP + CUSTOM)</span></div>
-      <div class="stat-row"><span class="stat-label">INFERENCE</span><span class="stat-value">CGCNN + ALIGNN-LITE</span></div>
+      <h2>// CURRENT RESULTS</h2>
+      <div class="stat-row"><span class="stat-label">MATERIALS INDEXED</span><span class="stat-value stat-ok">76,193</span></div>
+      <div class="stat-row"><span class="stat-label">FORMATION ENERGY PREDICTION</span><span class="stat-value stat-ok">OPERATIONAL</span></div>
+      <div class="stat-row"><span class="stat-label">BAND GAP PREDICTION</span><span class="stat-value stat-ok">OPERATIONAL</span></div>
+      <div class="stat-row"><span class="stat-label">MATERIAL MIXER</span><span class="stat-value stat-ok">GENERATES CANDIDATES FROM PARENT PAIRS</span></div>
+      <div class="stat-row"><span class="stat-label">CURATED OVERRIDES</span><span class="stat-value">22 ELEMENTAL + 22 COMPOUND</span></div>
+    </div>
+    <div class="pip-panel" style="text-align:center">
+      <p style="color:var(--pip-dim);font-size:14px">Technical implementation details available in the whitepaper.</p>
     </div>
   `;
   AudioEngine.ambient_beep();
@@ -1439,7 +1557,7 @@ SectionRenderers.settings = function(el) {
       <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.0.0-PIPBOY</span></div>
       <div class="stat-row"><span class="stat-label">RENDERER</span><span class="stat-value">NATIVE HTML/JS</span></div>
       <div class="stat-row"><span class="stat-label">PWA</span><span class="stat-value stat-ok">ENABLED</span></div>
-      <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (50 SFX)</span></div>
+      <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (60 SFX)</span></div>
       <div class="stat-row"><span class="stat-label">CRT EMULATION</span><span class="stat-value stat-ok">ACTIVE</span></div>
     </div>
 
@@ -1495,7 +1613,7 @@ SectionRenderers.settings = function(el) {
     sounds.forEach((s, i) => {
       setTimeout(() => AudioEngine[s](), i * 300);
     });
-    setTimeout(() => { if (out) out.textContent = '> SOUND TEST COMPLETE (8/50 samples)'; }, sounds.length * 300);
+    setTimeout(() => { if (out) out.textContent = '> SOUND TEST COMPLETE (8/60 samples)'; }, sounds.length * 300);
   });
 
   // Test RPC
@@ -1556,7 +1674,7 @@ SectionRenderers.about = function(el) {
       <h2>// CREDITS</h2>
       <p>Designed and built by the SOST team.</p>
       <p style="margin-top:4px;font-size:14px;color:#006600">Pip-Boy terminal interface v4.0.0</p>
-      <p style="font-size:14px;color:#006600">Web Audio engine: 50 retro sound effects</p>
+      <p style="font-size:14px;color:#006600">Web Audio engine: 60 retro sound effects</p>
       <p style="font-size:14px;color:#006600">Font: VT323 by Peter Hull</p>
     </div>
   `;
@@ -1631,9 +1749,14 @@ function bindEvents() {
   });
   document.getElementById('exit-btn').addEventListener('click', () => {
     AudioEngine.sys_shutdown();
+    // Kill all iframes
+    document.querySelectorAll('iframe').forEach(f => { try { f.src = 'about:blank'; } catch(e) {} });
     document.getElementById('session-ended').classList.add('show');
-    // Try to close window
-    setTimeout(() => { try { window.close(); } catch(e) {} }, 300);
+    // After 4 seconds: try close, then redirect to blank
+    setTimeout(() => {
+      try { window.close(); } catch(e) {}
+      setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+    }, 4000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
 

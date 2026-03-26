@@ -511,6 +511,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         </div>
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;" id="miningStatus">searching nonce...</div>
       </div>
+      <!-- Node/Miner Status Indicators -->
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;letter-spacing:1px;">
+        <span id="nodeStatusBadge" style="padding:2px 8px;border-radius:3px;background:#1a0a0a;border:1px solid #333;color:#666;">NODE: CHECKING...</span>
+        <span id="minerStatusBadge" style="padding:2px 8px;border-radius:3px;background:#1a0a0a;border:1px solid #333;color:#666;">MINER: CHECKING...</span>
+      </div>
       <!-- Row 2: Block details -->
       <div style="margin-top:8px;font-size:10px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;font-family:var(--code);">
         <span title="Hash and difficulty of the block BEFORE the one being mined now">prev: <a id="miningPrev" href="#" style="color:var(--cyan);text-decoration:none;" onclick="return false;">—</a> <span id="miningPrevDiff" style="color:var(--text3);"></span></span>
@@ -2369,6 +2374,41 @@ async function loadLatestTxs(){
 }
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
+
+// Node/Miner status badges
+(function(){
+  var prevH=0,prevTime=0,nodeOk=false;
+  function updateStatus(){
+    var nb=document.getElementById('nodeStatusBadge');
+    var mb=document.getElementById('minerStatusBadge');
+    if(!nb||!mb)return;
+    // Node: check if H (block height) is set and recent RPC worked
+    if(H>0){
+      nb.textContent='NODE: ACTIVE';nb.style.color='#00ff41';nb.style.borderColor='#00ff41';nb.style.background='rgba(0,255,65,0.08)';
+      nodeOk=true;
+    }else{
+      nb.textContent='NODE: OFFLINE';nb.style.color='#ff3333';nb.style.borderColor='#ff3333';nb.style.background='rgba(255,0,0,0.08)';
+      nodeOk=false;
+    }
+    // Miner: check if height changed since last check (blocks being found)
+    var now=Date.now();
+    if(nodeOk&&H>prevH&&prevH>0){
+      mb.textContent='MINER: ACTIVE';mb.style.color='#00ff41';mb.style.borderColor='#00ff41';mb.style.background='rgba(0,255,65,0.08)';
+    }else if(nodeOk&&prevH>0&&(now-prevTime)>1800000){
+      // No new block in 30 min — miner may be idle
+      mb.textContent='MINER: IDLE';mb.style.color='#ffaa00';mb.style.borderColor='#ffaa00';mb.style.background='rgba(255,170,0,0.08)';
+    }else if(!nodeOk){
+      mb.textContent='MINER: OFFLINE';mb.style.color='#ff3333';mb.style.borderColor='#ff3333';mb.style.background='rgba(255,0,0,0.08)';
+    }else{
+      mb.textContent='MINER: CHECKING...';mb.style.color='#666';
+    }
+    if(H>prevH){prevTime=now;}
+    prevH=H;
+  }
+  setInterval(updateStatus,10000);
+  setTimeout(updateStatus,5000);
+})();
+
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
 /* ---- PRICE CHARTS (historical + tooltips) ---- */
 (function(){
