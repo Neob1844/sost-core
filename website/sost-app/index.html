@@ -1942,7 +1942,15 @@ function loadSettings() {
 // ── PWA Service Worker ─────────────────────────────────────────
 function registerSW() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Force check for updated SW on every page load
+      reg.update();
+      console.log('[SW] Registered, checking for updates...');
+    }).catch(() => {});
+    // Also force unregister+re-register if cache is very old
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(r => r.update());
+    });
   }
 }
 
