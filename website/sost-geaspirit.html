@@ -79,7 +79,15 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <!-- SPLASH — Green Matrix Rain (GeaSpirit) -->
 <div id="gea-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
   <canvas id="gea-matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <img id="gea-splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in;filter:hue-rotate(100deg) saturate(3) brightness(1.5) drop-shadow(0 0 0px rgba(0,255,65,0));z-index:10;pointer-events:none">
+  <div id="gea-sigma3d-wrap" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;perspective:800px;opacity:0;transition:opacity 1.5s ease-in">
+    <div id="gea-sigma3d" style="width:180px;height:180px;transform-style:preserve-3d;position:relative">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;font-weight:900;font-family:serif;background:linear-gradient(135deg,#00ff41,#00aa2a,#00ff41,#00cc33);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(0,255,65,0.5));transform:translateZ(8px)">Σ</div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;font-weight:900;font-family:serif;background:linear-gradient(315deg,#006600,#00aa2a,#006600);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transform:rotateY(180deg) translateZ(8px)">Σ</div>
+      <div style="position:absolute;top:10px;left:50%;width:16px;height:160px;background:linear-gradient(180deg,#00aa2a,#004400,#00aa2a);transform:translateX(-50%) rotateY(90deg);border-radius:2px"></div>
+    </div>
+    <div style="position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,65,0.15),transparent 70%);animation:geaSigmaGlow 3s ease-in-out infinite;pointer-events:none"></div>
+  </div>
+  <style>@keyframes geaSigmaGlow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.1)}}</style>
   <div id="gea-splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
   <div id="gea-spl-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);font-size:16px;min-height:100px;text-align:left;width:400px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
   <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
@@ -174,13 +182,30 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   requestAnimationFrame(drawMatrix);
   playMatrixAmbient(12);
 
-  // === LOGO EMERGE (3s) with GREEN glow ===
-  var logo=document.getElementById('gea-splash-logo');
-  var GF='hue-rotate(100deg) saturate(3) brightness(1.5) ';
-  setTimeout(function(){logo.style.opacity='0.15';},2200);
-  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter=GF+'drop-shadow(0 0 13px rgba(0,255,65,0.3))';},2800);
-  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter=GF+'drop-shadow(0 0 25px rgba(0,255,65,0.5))';},3400);
-  setTimeout(function(){logo.style.opacity='1';logo.style.filter=GF+'drop-shadow(0 0 38px rgba(0,255,65,0.6)) drop-shadow(0 0 75px rgba(0,255,65,0.3))';},4000);
+  // === 3D GREEN SIGMA EMERGE + ANIMATE ===
+  var geaSigmaWrap=document.getElementById('gea-sigma3d-wrap');
+  var geaSigma3d=document.getElementById('gea-sigma3d');
+  var geaSigmaRunning=true;
+  var geaT0=performance.now();
+
+  setTimeout(function(){geaSigmaWrap.style.opacity='0.3';},2000);
+  setTimeout(function(){geaSigmaWrap.style.opacity='0.7';},3000);
+  setTimeout(function(){geaSigmaWrap.style.opacity='1';},4000);
+
+  function animateGeaSigma(){
+    if(!geaSigmaRunning)return;
+    var t=(performance.now()-geaT0)/1000;
+    var rY=Math.sin(t*0.6)*30+Math.sin(t*0.25)*18;
+    var rX=Math.sin(t*0.45+0.8)*12+Math.sin(t*0.18)*8;
+    var rZ=Math.sin(t*0.12)*6;
+    var tX=Math.sin(t*0.35+1.5)*50;
+    var tY=Math.sin(t*0.3+0.3)*35;
+    var tZ=Math.sin(t*0.2)*80;
+    var sc=1+Math.sin(t*0.28)*0.18;
+    geaSigma3d.style.transform='rotateY('+rY+'deg) rotateX('+rX+'deg) rotateZ('+rZ+'deg) translate3d('+tX+'px,'+tY+'px,'+tZ+'px) scale('+sc+')';
+    requestAnimationFrame(animateGeaSigma);
+  }
+  setTimeout(animateGeaSigma,2500);
 
   // === TITLE TYPING (5s): "GEASPIRIT" green + " PLATFORM" white ===
   var titleEl=document.getElementById('gea-splash-title');
@@ -225,6 +250,8 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   // === TRANSITION (12s) ===
   setTimeout(function(){
     matrixRunning=false;
+    geaSigmaRunning=false;
+    if(geaSigma3d){geaSigma3d.style.transition='transform 0.8s ease-in';geaSigma3d.style.transform='rotateY(720deg) scale(0) translateZ(-500px)';}
     sp.style.opacity='0';
     setTimeout(function(){sp.style.display='none';ctx=null;},600);
     sessionStorage.setItem('geaSplashShown','1');
