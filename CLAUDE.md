@@ -137,12 +137,13 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 10):**
+**Current state (Phase 11):**
 - Multi-source exploration intelligence platform (not satellite-only)
-- 6 supervised zones: Kalgoorlie (0.877 AUC), Chuquicamata (0.882), Peru (0.758), Arizona (0.718), Zambia (0.758), Pilbara (FAILED)
+- 6 supervised zones: Kalgoorlie (0.879 AUC), Chuquicamata (0.882), Peru (0.758), Arizona (0.718), Zambia (0.758), Pilbara (FAILED)
+- Phase 11 Kalgoorlie full fusion (sat+mag+thermal+nb+hydro+embeddings): 0.8654 → 0.8785 (+0.013 AUC). Best calibrated Brier ever: 0.096. Gravity BLOCKED (manual download needed).
 - Phase 10 Chuquicamata full fusion (sat+geo+EMIT+neighborhood+hydrology): 0.789 → 0.882 (+0.093 AUC) — biggest improvement ever
 - Phase 9 information fusion: neighborhood context + hydrology + magnetics + isotonic calibration
-- Kalgoorlie 0.8654 → 0.8770 (+0.012 AUC), Zambia 0.7366 → 0.7584 (+0.022 AUC)
+- Kalgoorlie 0.8654 → 0.8785 (+0.013 AUC), Zambia 0.7366 → 0.7584 (+0.022 AUC)
 - Neighborhood context multi-zone validated (generalized to Zambia)
 - Isotonic calibration: all Brier scores below 0.17, Kalgoorlie 0.0999
 - Canonical objective: 23.7/40 (59%). Mineral 3.3/10, Depth 4.1/10, Coords 7/10, Certainty 9.3/10
@@ -172,10 +173,10 @@ Located in `materials-engine/`. Python-based computational materials discovery.
 
 Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence platform.
 
-**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment) → Phase 9 (information fusion: neighborhood + hydrology + magnetics + calibration) → Phase 10 (Chuquicamata full fusion +0.093 AUC).
+**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment) → Phase 9 (information fusion: neighborhood + hydrology + magnetics + calibration) → Phase 10 (Chuquicamata full fusion +0.093 AUC) → Phase 11 (Kalgoorlie full fusion +0.013 AUC, gravity blocked).
 
 **Selected families by zone (Phase 9):**
-- Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood + hydrology → AUC 0.877
+- Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood + hydrology + embeddings → AUC 0.879
 - Chuquicamata: satellite + thermal + EMIT + geology + neighborhood + hydrology → AUC 0.882
 - Peru/Arizona: satellite + thermal → AUC 0.698/0.718
 - Zambia: satellite + neighborhood + hydrology → AUC 0.758
@@ -184,6 +185,7 @@ Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence p
 **Key insight:** The gap to 10/10 is a DATA problem (geology, geophysics, drill holes), not ML.
 **Phase 9 result:** Neighborhood context + hydrology + magnetics fusion + isotonic calibration. Kalgoorlie +0.012, Zambia +0.022 AUC. Multi-zone validated.
 **Phase 10 result:** Chuquicamata full fusion (sat+geo+EMIT+neighborhood+hydrology) = 0.882 AUC (+0.093). Biggest single-experiment improvement ever.
+**Phase 11 result:** Kalgoorlie full fusion (sat+mag+nb+hydro+embeddings) = 0.879 AUC (+0.013). Best calibrated Brier ever: 0.096. Gravity BLOCKED (GA endpoints return HTML portal). Multi-source fusion confirmed at 2 independent zones.
 **Full docs:** GEASPIRIT_TECHNOLOGY_SUMMARY.md, GEASPIRIT_CTO_NEXT_PHASE.md, GEASPIRIT_CANONICAL_PATH.md
 
 **Language guardrails:**
