@@ -552,7 +552,10 @@ body {
      MENU OVERLAY
      ============================================================ -->
 <div id="menu-overlay">
-  <h2>MAIN MENU</h2>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">
+    <canvas id="menu-logo-canvas"></canvas>
+    <h2 style="margin:0">MAIN MENU</h2>
+  </div>
   <div id="menu-items"></div>
   <div class="menu-close" id="menu-close-btn">[ESC] CLOSE</div>
 </div>
@@ -562,7 +565,7 @@ body {
      ============================================================ -->
 <div id="app">
   <div id="header">
-    <div class="logo" id="logo-btn">SOST://</div>
+    <div class="logo" id="logo-btn" style="display:flex;align-items:center;gap:6px"><canvas id="hdr-logo-canvas"></canvas>SOST://</div>
     <button class="hdr-btn back-btn" id="back-btn">&lt; BACK</button>
     <button class="hdr-btn" id="menu-btn">MENU</button>
     <button class="hdr-btn" id="web-btn" style="color:#0af" onclick="window.open('https://sostcore.com','_blank')">WEB</button>
@@ -923,10 +926,31 @@ function runSplash(callback) {
     }
   }
 
-  // Start rain + pixel miner
+  // Start rain + pixel miner + random icons
   drawRain();
   drawPixelMiner();
   AudioEngine.boot_start();
+
+  // Show random pixel art icons during splash (appear at 4s, 6s, 8s)
+  const splashContent = document.getElementById('splash-content');
+  if (splashContent) {
+    const iconRow = document.createElement('div');
+    iconRow.style.cssText = 'display:flex;gap:12px;justify-content:center;align-items:center;margin-top:8px;opacity:0;transition:opacity 1s;';
+    // Center: SOST Sigma logo (larger)
+    const splashLogo = document.createElement('canvas');
+    drawSOSTLogo(splashLogo, 64, '#ff0033');
+    iconRow.appendChild(splashLogo);
+    // Flanking random icons
+    for (let i = 0; i < 4; i++) {
+      const c = document.createElement('canvas');
+      PixelArt.random(c, 32);
+      if (i < 2) iconRow.insertBefore(c, splashLogo);
+      else iconRow.appendChild(c);
+    }
+    splashContent.insertBefore(iconRow, document.getElementById('splash-title'));
+    setTimeout(() => { iconRow.style.opacity = '0.7'; }, 4000);
+    console.log('[Splash] Pixel art icons loaded:', PixelArt.count, 'total in library');
+  }
 
   // Type "SOST PROTOCOL" title after 1.5s
   const titleEl = document.getElementById('splash-title');
@@ -1169,6 +1193,68 @@ const PixelArt = (function() {
   return { draw, random, getNames, count: Object.keys(ICONS).length };
 })();
 
+// ── SOST Sigma Logo (pixel art, theme-aware) ──────────────────
+function drawSOSTLogo(canvas, size, color) {
+  const s = size || 32;
+  canvas.width = 16; canvas.height = 16;
+  canvas.style.width = s + 'px';
+  canvas.style.height = s + 'px';
+  canvas.style.imageRendering = 'pixelated';
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, 16, 16);
+  const c = color || THEME_COLOR || '#00ff41';
+  // Sigma (Σ) pixel art 16x16
+  // Row by row: 1=filled
+  const S = [
+    '0011111111111100',
+    '0011111111111100',
+    '0011100000000000',
+    '0001110000000000',
+    '0000111000000000',
+    '0000011100000000',
+    '0000001110000000',
+    '0000000111000000',
+    '0000001110000000',
+    '0000011100000000',
+    '0000111000000000',
+    '0001110000000000',
+    '0011100000000000',
+    '0011111111111100',
+    '0011111111111100',
+    '0000000000000000',
+  ];
+  // Draw with glow effect (dim version behind)
+  const dimC = c + '44'; // semi-transparent glow
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      if (S[y][x] === '1') {
+        // Glow pixel (1px border)
+        ctx.fillStyle = dimC;
+        if (x > 0 && S[y][x-1] === '0') ctx.fillRect(x-1, y, 1, 1);
+        if (x < 15 && S[y][x+1] === '0') ctx.fillRect(x+1, y, 1, 1);
+        // Main pixel
+        ctx.fillStyle = c;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+}
+
+// Track all live logo canvases for theme updates
+const _logoCanvases = [];
+function createLogoCanvas(size) {
+  const c = document.createElement('canvas');
+  drawSOSTLogo(c, size, THEME_COLOR);
+  _logoCanvases.push({ canvas: c, size: size });
+  return c;
+}
+function refreshAllLogos() {
+  _logoCanvases.forEach(item => {
+    drawSOSTLogo(item.canvas, item.size, THEME_COLOR);
+  });
+}
+
 
 // ── Section Renderers ──────────────────────────────────────────
 function renderSection(id) {
@@ -1182,17 +1268,23 @@ function renderSection(id) {
   const renderer = SectionRenderers[id];
   if (renderer) renderer(content);
 
-  // Add random pixel art decoration at bottom of section
+  // Add SOST logo + random pixel art at bottom of section
   if (id !== 'wallet' && id !== 'explorer' && id !== 'markets') {
     const decor = document.createElement('div');
-    decor.style.cssText = 'display:flex;justify-content:center;gap:8px;padding:16px 0;opacity:0.3;';
-    for (let i = 0; i < 5; i++) {
+    decor.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:16px;padding:24px 0;opacity:0.6;flex-wrap:wrap;';
+    // SOST logo in center
+    const sLogo = createLogoCanvas(40);
+    // Random icons around it
+    const count = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < count; i++) {
       const c = document.createElement('canvas');
-      PixelArt.random(c, 24);
+      PixelArt.random(c, 36);
       decor.appendChild(c);
     }
+    decor.insertBefore(sLogo, decor.children[Math.floor(decor.children.length / 2)]);
     content.appendChild(decor);
   }
+  console.log('[PixelArt] Section decorated:', id, '| Library has', PixelArt.count, 'icons');
 }
 
 const SectionRenderers = {};
@@ -1733,6 +1825,13 @@ function applyThemeColor(color) {
   r.setProperty('--pip-dark', dark);
   r.setProperty('--pip-glow', glow);
   r.setProperty('--pip-border', color);
+  // Refresh all SOST pixel logos with new theme color
+  refreshAllLogos();
+  // Also refresh header and menu logos
+  const hdrLogo = document.getElementById('hdr-logo-canvas');
+  if (hdrLogo) drawSOSTLogo(hdrLogo, 28, color);
+  const menuLogo = document.getElementById('menu-logo-canvas');
+  if (menuLogo) drawSOSTLogo(menuLogo, 48, color);
 }
 
 
@@ -1856,18 +1955,36 @@ function init() {
   registerSW();
 
   // Unlock AudioContext on first interaction
+  let audioUnlocked = false;
   const unlockAudio = () => {
     AudioEngine.click_soft();
+    audioUnlocked = true;
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
+    console.log('[Audio] Unlocked. 60 retro sounds available.');
   };
   document.addEventListener('click', unlockAudio);
   document.addEventListener('touchstart', unlockAudio);
+
+  // Ambient retro sounds every 20-30 seconds
+  const ambientSounds = ['ambient_scan','ambient_beep','ambient_pulse','ambient_hum',
+    'retro_arpeggio','retro_coin','retro_warp'];
+  setInterval(() => {
+    if (SOUND_ENABLED && audioUnlocked) {
+      const snd = ambientSounds[Math.floor(Math.random() * ambientSounds.length)];
+      try { AudioEngine[snd](); } catch(e) {}
+    }
+  }, 20000 + Math.random() * 15000);
 
   // Start splash
   runSplash(() => {
     const app = document.getElementById('app');
     app.classList.add('visible');
+
+    // Initialize pixel art logos in header and menu
+    drawSOSTLogo(document.getElementById('hdr-logo-canvas'), 28, THEME_COLOR);
+    drawSOSTLogo(document.getElementById('menu-logo-canvas'), 48, THEME_COLOR);
+
     Nav.go('dashboard');
     Nav.updateBackBtn();
 
