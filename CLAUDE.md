@@ -137,10 +137,10 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 18 — consolidated):**
+**Current state (Phase 19 — consolidated):**
 - Multi-source exploration intelligence platform (not satellite-only)
 - 6 supervised zones: Kalgoorlie (0.879 AUC), Chuquicamata (0.882), Peru (0.698 baseline), Arizona (0.718), Zambia (0.760), Pilbara (FAILED)
-- Phase 18: coverage parity fix. Lithology content > has_data at all 3 zones (Zambia +0.054, Peru +0.104, Kalgoorlie +0.011). Geology genuine but parity improvement needed.
+- Phase 19: geology officially promoted to VALIDATED SELECTIVE. Depth proxy plan: 1 active, 5 blocked. All deposit-scale depth sources BLOCKED. 11 blocked items documented.
 - Phase 12 Zambia full fusion (sat+NB+hydro): 0.737 → 0.760 (+0.024 AUC), Cal Brier 0.139. Multi-source fusion confirmed at 3 zones.
 - Phase 11 Kalgoorlie full fusion (sat+mag+thermal+nb+hydro+embeddings): 0.8654 → 0.8785 (+0.013 AUC). Best calibrated Brier ever: 0.096. Gravity BLOCKED (manual download needed).
 - Phase 10 Chuquicamata full fusion (sat+geo+EMIT+neighborhood+hydrology): 0.789 → 0.882 (+0.093 AUC) — biggest improvement ever
@@ -175,7 +175,7 @@ Located in `materials-engine/`. Python-based computational materials discovery.
 
 Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence platform.
 
-**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment) → Phase 9 (information fusion: neighborhood + hydrology + magnetics + calibration) → Phase 10 (Chuquicamata full fusion +0.093 AUC) → Phase 11 (Kalgoorlie full fusion +0.013 AUC, gravity blocked) → Phase 12 (Zambia fusion +0.024 AUC, manual data layer, canonical V3 22.9/40) → Phase 13 (data closure, canonical score methodology frozen at v4: 22.8/40) → Phase 14 (Peru fusion NEGATIVE -0.063, fusion not universal) → Phase 15 (baseline-aware gating, 8 rules, 27 families, architecture: type+zone+baseline aware) → Phase 16 (Macrostrat API activated, Peru geology-first +0.168 AUC, bias caveat) → Phase 17 (geology bias fix, Zambia lithology genuine +0.054, Peru still leaky) → Phase 18 (coverage parity fix, lithology content > has_data at all 3 zones, geology genuine).
+**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment) → Phase 9 (information fusion: neighborhood + hydrology + magnetics + calibration) → Phase 10 (Chuquicamata full fusion +0.093 AUC) → Phase 11 (Kalgoorlie full fusion +0.013 AUC, gravity blocked) → Phase 12 (Zambia fusion +0.024 AUC, manual data layer, canonical V3 22.9/40) → Phase 13 (data closure, canonical score methodology frozen at v4: 22.8/40) → Phase 14 (Peru fusion NEGATIVE -0.063, fusion not universal) → Phase 15 (baseline-aware gating, 8 rules, 27 families, architecture: type+zone+baseline aware) → Phase 16 (Macrostrat API activated, Peru geology-first +0.168 AUC, bias caveat) → Phase 17 (geology bias fix, Zambia lithology genuine +0.054, Peru still leaky) → Phase 18 (coverage parity fix, lithology content > has_data at all 3 zones, geology genuine) → Phase 19 (geology promoted VALIDATED SELECTIVE, depth proxy plan: 1 active/5 blocked, 11 blocked items documented).
 
 **Selected families by zone (Phase 9):**
 - Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood + hydrology + embeddings → AUC 0.879
@@ -195,6 +195,7 @@ Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence p
 **Phase 16 result:** Macrostrat API activated (20/20 all zones). Peru geology-first +0.168 AUC (CAVEAT: bias in API-only-at-deposits). Architecture: type+zone+baseline aware + geology-first validated.
 **Phase 17 result:** Geology bias fix (balanced Macrostrat query). Zambia lithology content genuine +0.054 AUC (LOW leakage, content > has_data). Peru still leaky (coverage asymmetry: 70% deposits vs 23% background). FIRST honest evidence geology helps by CONTENT, not just data presence.
 **Phase 18 result:** Coverage parity fix + clean geology validation. Peru +0.104 (lithology), Kalgoorlie +0.011 (lithology), both LOW leakage. Lithology content > has_data at ALL 3 tested zones (Zambia +0.054, Peru +0.104, Kalgoorlie +0.011). Geology via Macrostrat GENUINE across zones, parity still needs improvement.
+**Phase 19 result:** Geology officially promoted PROMISING → VALIDATED SELECTIVE (3-zone evidence). Depth proxy plan: 1 active (magnetics), 5 blocked (gravity, AEM, Earth MRI, EMAG2, WGM2012), 2 regional-only. All deposit-scale depth sources BLOCKED. 11 blocked data items documented. Depth remains weakest dimension (4.1/10). The next bottleneck is depth, not architecture.
 **Full docs:** GEASPIRIT_TECHNOLOGY_SUMMARY.md, GEASPIRIT_CTO_NEXT_PHASE.md, GEASPIRIT_CANONICAL_PATH.md
 
 **Language guardrails:**
