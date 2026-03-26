@@ -87,7 +87,7 @@ body {
 }
 
 /* ============================================================
-   SPLASH SCREEN — Red Matrix Rain
+   SPLASH SCREEN — Pixel Art Miner + Red Matrix Rain
    ============================================================ */
 #splash {
   position: fixed; inset: 0; z-index: 10000;
@@ -107,6 +107,62 @@ body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
 }
+
+/* Pixel art miner */
+#pixel-miner {
+  width: 128px; height: 128px;
+  position: relative;
+  image-rendering: pixelated;
+  margin-bottom: 20px;
+}
+#pixel-miner canvas {
+  width: 128px; height: 128px;
+  image-rendering: pixelated;
+}
+
+/* Rock layers under miner */
+#rock-layers {
+  width: 200px; height: 40px;
+  position: relative;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.rock-layer {
+  position: absolute; left: 0; right: 0; height: 10px;
+}
+.rock-layer:nth-child(1) { top: 0; background: linear-gradient(90deg, #3a2a1a, #4a3a2a, #3a2a1a); }
+.rock-layer:nth-child(2) { top: 10px; background: linear-gradient(90deg, #2a2a2a, #ffd700 10%, #2a2a2a 15%, #2a2a2a 80%, #ffd700 85%, #2a2a2a); }
+.rock-layer:nth-child(3) { top: 20px; background: linear-gradient(90deg, #1a1a2a, #ff8c00 20%, #1a1a2a 30%, #1a1a2a 60%, #ff8c00 70%, #1a1a2a); }
+.rock-layer:nth-child(4) { top: 30px; background: linear-gradient(90deg, #0a1a0a, #00ff41 40%, #0a1a0a 55%, #0a1a0a); }
+
+/* Particles */
+.spark {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: #ffaa00;
+  opacity: 0;
+}
+@keyframes sparkFly {
+  0% { opacity: 1; transform: translate(0,0); }
+  100% { opacity: 0; transform: translate(var(--sx), var(--sy)); }
+}
+
+/* Lamp flicker */
+@keyframes lampGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+  70% { opacity: 0.3; }
+}
+#lamp-glow {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,220,0,0.8), transparent);
+  top: -5px; left: 54px;
+  animation: lampGlow 1.5s ease infinite;
+  pointer-events: none;
+}
+
 #splash-title {
   font-family: var(--font);
   font-size: 48px;
@@ -454,9 +510,19 @@ body {
 <div id="splash">
   <canvas id="splash-canvas"></canvas>
   <div id="splash-content">
+    <div id="pixel-miner">
+      <canvas id="miner-canvas" width="32" height="32"></canvas>
+      <div id="lamp-glow"></div>
+    </div>
+    <div id="rock-layers">
+      <div class="rock-layer"></div>
+      <div class="rock-layer"></div>
+      <div class="rock-layer"></div>
+      <div class="rock-layer"></div>
+    </div>
     <div id="splash-title"></div>
     <div id="splash-lines"></div>
-    <div id="splash-version">v4.0.0-PIPBOY</div>
+    <div id="splash-version">v5.0.0-MINER</div>
   </div>
 </div>
 
@@ -682,6 +748,99 @@ const AudioEngine = (function() {
 })();
 
 
+// ── Pixel Art Miner Drawing ────────────────────────────────────
+function drawPixelMiner() {
+  const mc = document.getElementById('miner-canvas');
+  if (!mc) return;
+  const ctx = mc.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  // 32x32 pixel art miner (1=skin, 2=helmet, 3=body, 4=boots, 5=pick, 6=lamp)
+  const PAL = {0:'transparent',1:'#d4a574',2:'#666666',3:'#4444aa',4:'#553311',5:'#888888',6:'#ffdd00'};
+  const MINER = [
+    '00000000022220000000000000000000',
+    '00000000226222000000000000000000',
+    '00000002222222200000000000000000',
+    '00000002222622200000000000000000',
+    '00000001111111000000000000000000',
+    '00000001111111000000000000000000',
+    '00000000111110000000000000000000',
+    '00000003333330000000000000000000',
+    '00000033333333000000000000000000',
+    '00000033333333000000000000000000',
+    '00000033133133000000000000000000',
+    '00000033333333000000000000000000',
+    '00000003333330000000000000000000',
+    '00000000333300000000000000000000',
+    '00000003333330000000000000000000',
+    '00000033300333000000000000000000',
+    '00000033300333000000000000000000',
+    '00000044400444000000000000000000',
+    '00000044400444000000000000000000',
+  ];
+
+  function draw(pickAngle) {
+    ctx.clearRect(0,0,32,32);
+    // Draw miner body
+    for (let y = 0; y < MINER.length; y++) {
+      for (let x = 0; x < MINER[y].length && x < 32; x++) {
+        const c = PAL[MINER[y][x]];
+        if (c && c !== 'transparent') {
+          ctx.fillStyle = c;
+          ctx.fillRect(x, y + 6, 1, 1);
+        }
+      }
+    }
+    // Draw pickaxe (rotating)
+    ctx.save();
+    ctx.translate(18, 14);
+    ctx.rotate(pickAngle * Math.PI / 180);
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(0, 0, 1, 8); // handle
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillRect(-2, -1, 5, 2); // head
+    ctx.fillRect(-3, -1, 2, 1); // point
+    ctx.restore();
+  }
+
+  // Animate pickaxe
+  let angle = 0;
+  let dir = 1;
+  let sparkTimer = 0;
+  const minerEl = document.getElementById('pixel-miner');
+
+  function animate() {
+    angle += dir * 4;
+    if (angle > 45) dir = -1;
+    if (angle < -10) {
+      dir = 1;
+      // Spark on hit
+      if (minerEl) {
+        for (let i = 0; i < 3; i++) {
+          const sp = document.createElement('div');
+          sp.className = 'spark';
+          sp.style.left = '90px';
+          sp.style.top = '80px';
+          sp.style.setProperty('--sx', (Math.random()*30-15)+'px');
+          sp.style.setProperty('--sy', (-Math.random()*20-5)+'px');
+          sp.style.animation = 'sparkFly 0.4s ease-out forwards';
+          sp.style.background = ['#ffaa00','#ff6600','#ffdd00'][i];
+          minerEl.appendChild(sp);
+          setTimeout(() => sp.remove(), 400);
+        }
+      }
+      try { AudioEngine.click_hard(); } catch(e) {}
+    }
+    draw(angle);
+    if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('out')) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  draw(0);
+  setTimeout(animate, 500);
+}
+
 // ── Red Matrix Rain Splash ─────────────────────────────────────
 function runSplash(callback) {
   const canvas = document.getElementById('splash-canvas');
@@ -737,8 +896,9 @@ function runSplash(callback) {
     }
   }
 
-  // Start rain immediately
+  // Start rain + pixel miner
   drawRain();
+  drawPixelMiner();
   AudioEngine.boot_start();
 
   // Type "SOST PROTOCOL" title after 1.5s
