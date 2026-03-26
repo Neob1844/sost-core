@@ -707,7 +707,7 @@ int main(int argc, char** argv) {
         }
 
         sost::Hash256 genesis_hash = sost::from_hex(
-            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         // --- Pass 1: build with estimated fee to measure real size ---
         int64_t est_fee = MIN_FEE_STOCKS;
@@ -840,7 +840,7 @@ int main(int argc, char** argv) {
 
         // Create transaction with dynamic fee
         sost::Hash256 genesis_hash = sost::from_hex(
-            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         // --- Pass 1: build with estimated fee to measure real size ---
         int64_t est_fee = MIN_FEE_STOCKS;
@@ -1060,7 +1060,7 @@ int main(int argc, char** argv) {
         uint64_t lock_until = (uint64_t)chain_height + (uint64_t)lock_blocks;
 
         sost::Hash256 genesis_hash = sost::from_hex(
-            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         // Two-pass fee calculation
         int64_t est_fee = MIN_FEE_STOCKS;
@@ -1136,7 +1136,7 @@ int main(int argc, char** argv) {
         uint64_t lock_until = (uint64_t)chain_height + (uint64_t)lock_blocks;
 
         sost::Hash256 genesis_hash = sost::from_hex(
-            "0a6c8e2b3b440ac69dcf8dbad9587cec99d1cbc4746017d1f6e6e3d73d02d793");
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         int64_t est_fee = MIN_FEE_STOCKS;
         sost::Transaction tx;
