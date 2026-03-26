@@ -498,3 +498,26 @@ The original V5 priority was: (1) Temporal DNA, (2) Prithvi-EO-2.0, (3) ECOSTRES
 | 8 | **Peru EMIT recovery** | Both granules truncated. Needs re-download. | BLOCKED |
 | 9 | **MINDAT label enrichment** | 400K+ localities. Easy API integration. | READY |
 | 10 | **USGS Earth MRI for Arizona** | Found on ScienceBase. 200m line spacing magnetics+radiometrics. | READY |
+
+---
+
+## Phase 20 Update — Frontier Track V4 (2026-03-26)
+
+**Selected for testing (Phase 21):**
+1. **Spectral unmixing** — Sub-pixel mineral endmember decomposition using Sentinel-2 bands + USGS spectral library. Accessible now, medium complexity. Physical basis: separate alteration minerals from background at sub-pixel level.
+2. **NDVI multi-decadal trend** — Landsat archive NDVI change detection over 20+ years. Accessible now, low complexity. Physical basis: mineralized zones may show persistent vegetation stress anomalies.
+
+**Deferred (blocked or complex):**
+- temporal_dna_transformer (complex pipeline, HIGH value)
+- ECOSTRESS_diurnal (earthaccess not configured, HIGH value)
+- prithvi_eo_2 (weights not downloaded, HIGH value)
+- nighttime_thermal (limited data, MEDIUM)
+- post_rainfall_SAR (complex, MEDIUM)
+
+**Track record (v1-v4):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+
+**Validation rate on closed ideas:** 3 validated / 6 closed = 50%

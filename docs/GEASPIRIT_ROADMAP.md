@@ -758,3 +758,21 @@ The bottleneck is DATA ACCESS, not architecture or ML.
 **Blocked data status v2:** 11 items documented (gravity, EMIT, Earth MRI, MINDAT, EMAG2, WGM2012, AEM, ECOSTRESS, Prithvi, GEE, Macrostrat parity).
 
 **CTO statement:** Geology is now validated selective. The next bottleneck remains depth, not architecture.
+
+### Phase 20: Frontier Track V4 — Experiment Selection (2026-03-26)
+
+**Frontier Track V4 completed.** Two experiments selected for Phase 21 testing:
+
+1. **Spectral unmixing** — Sub-pixel mineral endmember decomposition using Sentinel-2 bands + USGS spectral library. Accessible now, medium complexity. Physical basis: separate alteration minerals from background at sub-pixel level.
+2. **NDVI multi-decadal trend** — Landsat archive NDVI change detection over 20+ years. Accessible now, low complexity. Physical basis: mineralized zones may show persistent vegetation stress anomalies.
+
+**Deferred (blocked or complex):** temporal_dna_transformer, ECOSTRESS_diurnal, prithvi_eo_2, nighttime_thermal, post_rainfall_SAR.
+
+**Frontier track record (v1-v4):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+- Validation rate on closed ideas: 3 validated / 6 closed = 50%
+
+**Access restrictions audit:** 11 blocked items documented in `docs/GEASPIRIT_ACCESS_RESTRICTIONS.md`. All manual dropzones remain EMPTY. Depth bottleneck unchanged (4.1/10).

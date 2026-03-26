@@ -18,12 +18,20 @@
 
 ## GeaSpirit Status
 
+- **Current Phase:** Phase 20 — Operator Unlock + Depth Activation
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
-- **Canonical Score:** 22.8/40 (57%)
-- **Architecture:** type + zone + baseline aware
-- **12 blocked data sources** awaiting operator action
-- **10 frontier ideas** registered, 0 tested
+- **Canonical Score:** 22.8/40 (57%) — FROZEN v4
+- **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
+- **Depth activation layer:** 1 active, 3 ready, 2 regional, 2 future
+- **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
+- **Gating:** v6 (10 rules), **Registry:** v16
+- **Frontier track v4:** spectral_unmixing + NDVI_trend selected for Phase 21
+- **Bottleneck:** depth data access, not architecture
+
+### Phase History (recent)
+- Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
+- Phase 20: operator unlock checklist v3, depth activation layer, geology selective consolidation, frontier track v4, registry v16, gating v6
 
 ## Materials Engine Status
 
@@ -48,7 +56,7 @@
 
 ## What's Blocked
 
-- **GeaSpirit:** 12 data sources blocked (gravity, EMIT, Earth MRI, MINDAT, EMAG2, WGM2012, etc.)
+- **GeaSpirit:** 11 blocked items (gravity, EMIT, Earth MRI, MINDAT, EMAG2, WGM2012, etc.) — 4 HIGH priority, all 3 dropzones EMPTY
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment

@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-26
 **Author:** CTO, GeaSpirit Platform
-**Context:** After Phase 6E (universal matrix), Phase 7 (magnetics/embeddings/EMIT), CTO Sprint (multi-scale anomaly, neighborhood context), and Frontier Research V5.
+**Context:** After Phase 6E (universal matrix), Phase 7 (magnetics/embeddings/EMIT), CTO Sprint (multi-scale anomaly, neighborhood context), Frontier Research V5, and Phase 20 (operator unlock + depth activation + geology consolidation).
 
 ---
 
@@ -90,3 +90,30 @@ We have spent 6+ phases testing sensor after sensor. The learning is clear:
 The canonical score moves from 23.7/40 to **28+/40 within the next 3 sprints** using only free data.
 
 If this is achieved, GeaSpirit becomes the most capable free mineral exploration intelligence system publicly available.
+
+---
+
+## Phase 20 Completed (2026-03-26)
+
+Phase 20 was an operator unlock + consolidation phase:
+- Geology: VALIDATED SELECTIVE (3 zones)
+- Depth: activation layer built, all deposit-scale sources BLOCKED
+- Operator unlock checklist v3: 11 items, 4 HIGH priority
+- Frontier: spectral_unmixing + NDVI_trend queued for Phase 21
+- Gating: v6 with 10 rules
+
+## Phase 21 Plan — Frontier Testing + Operator Data Integration
+
+**Priority 1:** Operator drops data (gravity, Peru EMIT, Earth MRI)
+**Priority 2:** Auto-detect via dropzone watcher → validate → integrate
+**Priority 3:** Test spectral_unmixing at Kalgoorlie + Chuquicamata
+**Priority 4:** Test NDVI_trend at Kalgoorlie + Zambia
+**Priority 5:** If gravity dropped → depth activation → re-score canonical
+**Priority 6:** If Peru EMIT dropped → re-attempt Peru fusion
+**Priority 7:** Full public sync + canonical re-evaluation if data unblocked
+
+**Expected canonical trajectory:**
+- Current: 22.8/40 (57%)
+- With gravity: ~24/40 (60%)
+- With gravity + AEM: ~27/40 (68%)
+- With all depth data: ~30/40 (75%)
