@@ -694,3 +694,26 @@ Missing geology. EMIT truncated. Recommendation: geology-first rescue.
 **Architecture evolution:** type-aware + zone-aware → **type-aware + zone-aware + baseline-aware**
 
 **Frontier Registry V2:** 27 families tracked (6 core, 3 selective, 10 frontier, 5 blocked, 2 rejected, 1 neutral).
+
+### Phase 16: Low-Friction Data Activation + Geology-First (March 2026)
+
+**Macrostrat API activated:** 20/20 successful responses for all 4 zones.
+- Kalgoorlie: igneous mafic volcanic, greenstone belt
+- Chuquicamata: sedimentary rocks
+- Zambia: plutonic/metamorphic, volcanic-sedimentary
+- Peru: sedimentary/volcanic rocks
+
+**Geology-first experiments:**
+
+| Zone | Baseline | + Macrostrat | Delta | Note |
+|------|----------|-------------|-------|------|
+| Peru | 0.698 | 0.866 | +0.168 | CAVEAT: bias from API-only-at-deposits |
+| Zambia | 0.737 | 1.000 | +0.263 | LIKELY OVERFITTING: same bias |
+
+**CAVEAT:** Macrostrat was queried only at deposit locations (1 for deposits, 0 for background).
+This creates trivial classification signal. The REAL test requires querying API for background too.
+
+**However:** Macrostrat API works reliably and returns genuine lithological context.
+Next: query both deposits AND background, then re-evaluate.
+
+**EMAG2v3 / WGM2012:** Download URLs moved/redirected. Not yet activated.
