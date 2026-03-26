@@ -666,3 +666,16 @@ Methodology is now fixed and documented. Changes require CTO approval.
 Fusion validated at 3 zones remains the strongest architectural finding.
 
 **Next:** Operator downloads data into dropzones → scripts auto-ingest → scores update.
+
+### Phase 14: Peru Full Fusion — NEGATIVE RESULT (March 2026)
+
+Peru neighborhood + hydrology fusion:
+
+| Model | Features | AUC | Delta |
+|-------|----------|-----|-------|
+| Baseline | 16 | 0.698 | — |
+| + Neighborhood | 52 | 0.639 | -0.058 |
+| + Hydrology | 19 | 0.687 | -0.011 |
+| Full fusion | 55 | 0.635 | -0.063 |
+
+**NEGATIVE.** Neighborhood/hydrology hurt at Peru. Likely cause: 71 labels insufficient for 55-feature model in spatial block CV. Fusion is NOT universal — it helps at strong-baseline zones (Kalgoorlie 0.865, Chuquicamata 0.789, Zambia 0.737) but hurts at weak ones (Peru 0.698). The pattern requires minimum baseline AUC ~0.73 to benefit from fusion.
