@@ -2377,36 +2377,68 @@ refresh();setInterval(refresh,30000);
 
 // Node/Miner status badges
 (function(){
-  var prevH=0,prevTime=0,nodeOk=false;
-  function updateStatus(){
-    var nb=document.getElementById('nodeStatusBadge');
-    var mb=document.getElementById('minerStatusBadge');
-    if(!nb||!mb)return;
-    // Node: check if H (block height) is set and recent RPC worked
-    if(H>0){
-      nb.textContent='NODE: ACTIVE';nb.style.color='#00ff41';nb.style.borderColor='#00ff41';nb.style.background='rgba(0,255,65,0.08)';
-      nodeOk=true;
-    }else{
-      nb.textContent='NODE: OFFLINE';nb.style.color='#ff3333';nb.style.borderColor='#ff3333';nb.style.background='rgba(255,0,0,0.08)';
-      nodeOk=false;
-    }
-    // Miner: check if height changed since last check (blocks being found)
-    var now=Date.now();
-    if(nodeOk&&H>prevH&&prevH>0){
-      mb.textContent='MINER: ACTIVE';mb.style.color='#00ff41';mb.style.borderColor='#00ff41';mb.style.background='rgba(0,255,65,0.08)';
-    }else if(nodeOk&&prevH>0&&(now-prevTime)>1800000){
-      // No new block in 30 min — miner may be idle
-      mb.textContent='MINER: IDLE';mb.style.color='#ffaa00';mb.style.borderColor='#ffaa00';mb.style.background='rgba(255,170,0,0.08)';
-    }else if(!nodeOk){
-      mb.textContent='MINER: OFFLINE';mb.style.color='#ff3333';mb.style.borderColor='#ff3333';mb.style.background='rgba(255,0,0,0.08)';
-    }else{
-      mb.textContent='MINER: CHECKING...';mb.style.color='#666';
-    }
-    if(H>prevH){prevTime=now;}
-    prevH=H;
+  var lastSeenH=0, lastBlockChangeTime=0, firstCheck=true;
+  function setBadge(id,text,color){
+    var el=document.getElementById(id);if(!el)return;
+    el.textContent=text;el.style.color=color;el.style.borderColor=color;
+    el.style.background=color==='#00ff41'?'rgba(0,255,65,0.08)':color==='#ffaa00'?'rgba(255,170,0,0.08)':color==='#ff3333'?'rgba(255,0,0,0.08)':'transparent';
   }
-  setInterval(updateStatus,10000);
-  setTimeout(updateStatus,5000);
+  function updateStatus(){
+    var now=Date.now();
+    // Node: H is the global block height set by the explorer's RPC calls
+    if(H>0){
+      setBadge('nodeStatusBadge','NODE: ACTIVE','#00ff41');
+      // Miner: detect if blocks are advancing
+      if(H>lastSeenH){
+        // Height increased — miner is producing blocks
+        lastBlockChangeTime=now;
+        lastSeenH=H;
+        setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+      }else if(firstCheck){
+        // First check after page load — we see a height but can't compare yet
+        // Use the elapsed time shown in the mining panel as proxy
+        var elapsedEl=document.getElementById('miningElapsed');
+        var elapsedText=elapsedEl?elapsedEl.textContent:'';
+        // Parse elapsed (e.g. "5m 23s" or "12m 01s")
+        var mins=0;
+        var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
+        if(mins<20){
+          setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+        }else if(mins<60){
+          setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
+        }else{
+          setBadge('minerStatusBadge','MINER: STALLED','#ff3333');
+        }
+        lastSeenH=H;lastBlockChangeTime=now;
+        firstCheck=false;
+      }else if((now-lastBlockChangeTime)>120000){
+        // No new block in 2 min — check elapsed time
+        var elapsedEl=document.getElementById('miningElapsed');
+        var elapsedText=elapsedEl?elapsedEl.textContent:'';
+        var mins=0;var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
+        if(mins<20){
+          setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+        }else{
+          setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
+        }
+      }
+    }else{
+      setBadge('nodeStatusBadge','NODE: OFFLINE','#ff3333');
+      setBadge('minerStatusBadge','MINER: OFFLINE','#ff3333');
+    }
+  }
+  // Also try reading node-status.json (written by cron on VPS)
+  function tryStatusJson(){
+    fetch('/node-status.json?t='+Date.now()).then(r=>r.json()).then(d=>{
+      if(d.node) setBadge('nodeStatusBadge','NODE: ACTIVE','#00ff41');
+      if(d.miner) setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+      else if(d.node) setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
+    }).catch(()=>{/* JSON not available, use RPC-based detection */});
+  }
+  setInterval(updateStatus,15000);
+  setInterval(tryStatusJson,30000);
+  setTimeout(updateStatus,8000);
+  setTimeout(tryStatusJson,12000);
 })();
 
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
