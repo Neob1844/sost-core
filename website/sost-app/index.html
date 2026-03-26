@@ -487,13 +487,18 @@ body {
   margin: 8px 0;
 }
 
+@keyframes explorerBlink {
+  0%, 100% { opacity: 1; color: var(--pip); border-color: var(--pip); }
+  50% { opacity: 0.4; color: var(--pip-dim); border-color: var(--pip-dark); }
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   #splash-title { font-size: 32px; letter-spacing: 6px; }
   #splash-lines { font-size: 14px; width: 90vw; }
-  #pixel-miner { width: 96px; height: 96px; margin-bottom: 10px; }
-  #pixel-miner canvas { width: 96px; height: 96px; }
-  #rock-layers { width: 150px; height: 30px; }
+  #pixel-miner { width: 120px; height: 120px; margin-bottom: 8px; }
+  #pixel-miner canvas { width: 120px; height: 120px; }
+  #rock-layers { width: 160px; height: 30px; }
   #header { padding: 0 6px; gap: 4px; height: 46px; flex-wrap: nowrap; overflow-x: auto; }
   #header .logo { font-size: 16px; letter-spacing: 1px; white-space: nowrap; }
   #hdr-logo-canvas { display: none; }
@@ -501,6 +506,7 @@ body {
   #hdr-blockh { font-size: 11px; white-space: nowrap; }
   #hdr-clock { font-size: 11px; white-space: nowrap; }
   #web-btn { display: none; }
+  #exit-btn { display: none; }
   #content { padding: 10px; }
   .pip-panel { padding: 12px; }
   .pip-panel h2 { font-size: 20px; }
@@ -574,13 +580,14 @@ body {
      ============================================================ -->
 <div id="app">
   <div id="header">
-    <div class="logo" id="logo-btn" style="display:flex;align-items:center;gap:6px"><canvas id="hdr-logo-canvas"></canvas>SOST://</div>
+    <div class="logo" id="logo-btn" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Open SOST website"><canvas id="hdr-logo-canvas"></canvas>SOST://</div>
     <button class="hdr-btn back-btn" id="back-btn">&lt; BACK</button>
     <button class="hdr-btn" id="menu-btn">MENU</button>
     <button class="hdr-btn" id="web-btn" style="color:#0af" onclick="window.open('https://sostcore.com','_blank')">WEB</button>
     <div class="hdr-spacer"></div>
     <div id="hdr-blockh">BLK ---</div>
     <div id="hdr-clock">--:--:--</div>
+    <button class="hdr-btn" id="explorer-btn" style="animation:explorerBlink 2s ease-in-out infinite" onclick="window.open('https://sostcore.com/sost-explorer.html','_blank')">EXPL</button>
     <button class="hdr-btn exit-btn" id="exit-btn">EXIT</button>
   </div>
   <div id="content"></div>
@@ -946,13 +953,16 @@ function runSplash(callback) {
     const iconRow = document.createElement('div');
     iconRow.style.cssText = 'display:flex;gap:12px;justify-content:center;align-items:center;margin-top:8px;opacity:0;transition:opacity 1s;';
     // Center: SOST Sigma logo (larger)
+    const isMobile = window.innerWidth < 600;
+    const logoSize = isMobile ? 48 : 80;
+    const iconSize = isMobile ? 28 : 48;
     const splashLogo = document.createElement('canvas');
-    drawSOSTLogo(splashLogo, 64, '#ff0033');
+    drawSOSTLogo(splashLogo, logoSize, '#ff0033');
     iconRow.appendChild(splashLogo);
     // Flanking random icons
     for (let i = 0; i < 4; i++) {
       const c = document.createElement('canvas');
-      PixelArt.random(c, 32);
+      PixelArt.random(c, iconSize);
       if (i < 2) iconRow.insertBefore(c, splashLogo);
       else iconRow.appendChild(c);
     }
@@ -1276,6 +1286,28 @@ function renderSection(id) {
 
   const renderer = SectionRenderers[id];
   if (renderer) renderer(content);
+
+  // Add ↗ link to web for each section title
+  const sectionLinks = {
+    dashboard: '/sost-explorer.html',
+    security: '/sost-security.html',
+    geaspirit: '/sost-geaspirit.html',
+    materials: '/sost-materials-engine.html',
+    documents: '/sost-whitepaper.html',
+    markets: '/sost-markets.html',
+  };
+  if (sectionLinks[id]) {
+    const h2s = content.querySelectorAll('h2');
+    if (h2s.length > 0) {
+      const link = document.createElement('a');
+      link.href = 'https://sostcore.com' + sectionLinks[id];
+      link.target = '_blank';
+      link.textContent = ' ↗';
+      link.style.cssText = 'color:var(--pip-dim);text-decoration:none;font-size:14px;margin-left:8px;opacity:0.6;';
+      link.title = 'Open on web';
+      h2s[0].appendChild(link);
+    }
+  }
 
   // Add SOST logo + random pixel art at bottom of section
   if (id !== 'wallet' && id !== 'explorer' && id !== 'markets') {
@@ -1903,6 +1935,19 @@ function buildMenu() {
     });
     container.appendChild(div);
   });
+  // EXIT item at bottom of menu
+  const exitDiv = document.createElement('div');
+  exitDiv.className = 'menu-item';
+  exitDiv.style.color = 'var(--pip-red)';
+  exitDiv.style.marginTop = '16px';
+  exitDiv.style.borderTop = '1px solid var(--pip-dark)';
+  exitDiv.style.paddingTop = '16px';
+  exitDiv.innerHTML = '<span class="mi-num" style="color:var(--pip-red)">✕</span> EXIT';
+  exitDiv.addEventListener('click', () => {
+    closeMenu();
+    document.getElementById('exit-btn').click();
+  });
+  container.appendChild(exitDiv);
 }
 
 function openMenu() {
@@ -1932,7 +1977,7 @@ function bindEvents() {
   });
   document.getElementById('logo-btn').addEventListener('click', () => {
     AudioEngine.nav_home();
-    Nav.go('dashboard');
+    window.open('https://sostcore.com/', '_blank');
   });
   document.getElementById('exit-btn').addEventListener('click', () => {
     AudioEngine.sys_shutdown();
