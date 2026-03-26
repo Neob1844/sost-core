@@ -54,6 +54,7 @@ public:
 
     // --- UTXO management ---
     void add_utxo(const WalletUTXO& utxo);
+    void clear_utxos() { utxos_.clear(); }
     void mark_spent(const Hash256& txid, uint32_t vout);
 
     // v0.3.2: maturity-aware queries.

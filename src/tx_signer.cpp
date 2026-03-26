@@ -178,7 +178,29 @@ Hash256 ComputeSighash(
     AppendBytes(preimage, ho.data(), 32);
     AppendBytes(preimage, genesis_hash.data(), 32);
 
-    return DoubleSHA256(preimage);
+    Hash256 result = DoubleSHA256(preimage);
+
+    // DEBUG: Print sighash preimage details
+    {
+        auto hex = [](const uint8_t* d, size_t n) {
+            std::string s; s.reserve(n*2);
+            for (size_t i=0;i<n;i++) { char buf[3]; snprintf(buf,3,"%02x",d[i]); s+=buf; }
+            return s;
+        };
+        printf("[SIGHASH-DEBUG] input=%zu version=%u tx_type=0x%02x\n",
+               input_index, tx.version, tx.tx_type);
+        printf("[SIGHASH-DEBUG] prev_txid=%s prev_idx=%u\n",
+               hex(tx.inputs[input_index].prev_txid.data(),32).c_str(),
+               tx.inputs[input_index].prev_index);
+        printf("[SIGHASH-DEBUG] spent.amount=%lld spent.type=0x%02x\n",
+               (long long)spent.amount, spent.type);
+        printf("[SIGHASH-DEBUG] hash_prevouts=%s\n", hex(hp.data(),32).c_str());
+        printf("[SIGHASH-DEBUG] hash_outputs=%s\n", hex(ho.data(),32).c_str());
+        printf("[SIGHASH-DEBUG] genesis=%s\n", hex(genesis_hash.data(),32).c_str());
+        printf("[SIGHASH-DEBUG] SIGHASH=%s\n", hex(result.data(),32).c_str());
+    }
+
+    return result;
 }
 
 // =============================================================================
