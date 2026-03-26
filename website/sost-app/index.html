@@ -10,386 +10,1571 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <title>SOST Protocol</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:#000;font-family:'Courier New','Lucida Console',monospace}
+/* ============================================================
+   SOST PROTOCOL — Fallout Pip-Boy Terminal UI
+   ============================================================ */
 
-/* SPLASH — Red Matrix Rain */
-#splash.out{opacity:0;pointer-events:none;transition:opacity .5s ease}
-#splash-logo{width:225px;height:225px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in,filter 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0))}
-#splash-title{margin-top:20px;font-size:28px;font-weight:700;letter-spacing:5px;text-align:center;opacity:0;white-space:nowrap}
-#splash-lines{margin-top:28px;font-size:16px;min-height:100px;text-align:left;width:400px}
-.tl{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2}
-.tl.go{animation:typeW 2.5s steps(35) forwards}
-@keyframes typeW{from{opacity:1;width:0}to{opacity:1;width:100%}}
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
 
-/* APP */
-#app{flex-direction:column;height:100%}
-.frames{flex:1;position:relative;overflow:hidden}
-.frames iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000}
+:root {
+  --pip: #00ff41;
+  --pip-dim: #00aa2a;
+  --pip-dark: #003300;
+  --pip-glow: rgba(0, 255, 65, 0.4);
+  --pip-bg: #000000;
+  --pip-panel: #0a0f0a;
+  --pip-border: #00ff41;
+  --pip-red: #ff0033;
+  --pip-amber: #ffaa00;
+  --font: 'VT323', 'Courier New', monospace;
+  --scanline-opacity: 0.08;
+}
 
-/* LOADING OVERLAY */
-.lov{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease}
-.lov.gone{opacity:0;pointer-events:none}
-.lov-logo{width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(204,0,0,.5));transition:transform .15s ease-out}
-.lov-num{font-size:28px;color:#fff;font-weight:700;font-family:inherit;margin-top:16px}
-.lov-label{margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;animation:pulse 1.5s ease infinite}
-@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-.lov-label.ok{animation:none;opacity:1}
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--pip-bg);
+  font-family: var(--font);
+  color: var(--pip);
+  font-size: 18px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
 
-/* NAV — 5 buttons */
-.bar{display:flex;height:62px;background:#0a0a0a;border-top:1px solid #222;padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;z-index:100;position:relative}
-.bar::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.12) 1px,rgba(0,0,0,.12) 2px);pointer-events:none;opacity:.5}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#555;transition:all .15s;font-size:9px;letter-spacing:1px;text-transform:uppercase;-webkit-tap-highlight-color:transparent;user-select:none;position:relative}
-.nb .i{font-size:20px;margin-bottom:2px;transition:all .15s}
-.nb:active{transform:scale(.92)}
-.nb.on-ex{color:#00ff88}.nb.on-ex .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
-.nb.on-wb{color:#00e5ff}.nb.on-wb .i{text-shadow:0 0 10px rgba(0,229,255,.5)}
-.nb.on-wl{color:#cc0000}.nb.on-wl .i{text-shadow:0 0 10px rgba(204,0,0,.5)}
-.nb.on-dl{color:#00ff88}.nb.on-dl .i{text-shadow:0 0 10px rgba(0,255,136,.5)}
-.nb.dl-off{color:#333;pointer-events:none}
-.nb.xt-btn{color:#666}.nb.xt-btn:active{color:#cc0000}
+/* CRT Scanlines overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 4px
+  );
+  pointer-events: none;
+}
 
-/* Tab fade */
-.frames.fading{opacity:0;transition:opacity .35s ease}
-.frames.visible{opacity:1;transition:opacity .35s ease}
+/* CRT phosphor glow */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9998;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+}
+
+/* CRT Flicker animation */
+@keyframes crtFlicker {
+  0% { opacity: 1; }
+  3% { opacity: 0.97; }
+  6% { opacity: 1; }
+  42% { opacity: 1; }
+  44% { opacity: 0.98; }
+  46% { opacity: 1; }
+  87% { opacity: 1; }
+  89% { opacity: 0.96; }
+  91% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+body {
+  animation: crtFlicker 4s infinite;
+}
+
+/* ============================================================
+   SPLASH SCREEN — Red Matrix Rain
+   ============================================================ */
+#splash {
+  position: fixed; inset: 0; z-index: 10000;
+  background: #000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.8s ease;
+}
+#splash.out {
+  opacity: 0; pointer-events: none;
+}
+#splash-canvas {
+  position: absolute; inset: 0; z-index: 0;
+}
+#splash-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+#splash-title {
+  font-family: var(--font);
+  font-size: 48px;
+  color: #ff0033;
+  letter-spacing: 12px;
+  text-shadow: 0 0 20px rgba(255,0,51,0.8), 0 0 60px rgba(255,0,51,0.4);
+  opacity: 0;
+  margin-bottom: 30px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 3px solid #ff0033;
+}
+#splash-title.typing {
+  animation: splashBlink 0.7s step-end infinite;
+}
+@keyframes splashBlink {
+  0%, 100% { border-color: #ff0033; }
+  50% { border-color: transparent; }
+}
+#splash-lines {
+  font-family: var(--font);
+  font-size: 16px;
+  color: #aa0000;
+  text-align: left;
+  width: 420px;
+  max-width: 90vw;
+  min-height: 180px;
+}
+#splash-lines .sl {
+  opacity: 0;
+  margin: 4px 0;
+  transition: opacity 0.3s;
+}
+#splash-lines .sl.show { opacity: 1; }
+#splash-version {
+  font-family: var(--font);
+  font-size: 14px;
+  color: #660000;
+  margin-top: 20px;
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+#app {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+#app.visible {
+  display: flex;
+  opacity: 1;
+}
+
+/* Header */
+#header {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 12px;
+  background: var(--pip-panel);
+  border-bottom: 2px solid var(--pip-border);
+  flex-shrink: 0;
+  z-index: 200;
+  gap: 8px;
+  box-shadow: 0 2px 20px var(--pip-glow);
+}
+#header .logo {
+  font-family: var(--font);
+  font-size: 22px;
+  color: var(--pip);
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px var(--pip-glow);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hdr-btn {
+  font-family: var(--font);
+  font-size: 16px;
+  color: var(--pip);
+  background: transparent;
+  border: 1px solid var(--pip-dim);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.hdr-btn:hover, .hdr-btn:active {
+  background: var(--pip-dark);
+  text-shadow: 0 0 8px var(--pip-glow);
+  border-color: var(--pip);
+}
+.hdr-btn.back-btn { color: var(--pip-amber); border-color: #665500; }
+.hdr-btn.back-btn:hover { border-color: var(--pip-amber); }
+.hdr-btn.exit-btn { color: var(--pip-red); border-color: #660011; }
+.hdr-btn.exit-btn:hover { border-color: var(--pip-red); }
+.hdr-spacer { flex: 1; }
+#hdr-blockh {
+  font-size: 14px;
+  color: var(--pip-dim);
+  white-space: nowrap;
+}
+#hdr-clock {
+  font-size: 14px;
+  color: var(--pip-dim);
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Content area */
+#content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pip-dim) var(--pip-bg);
+}
+#content::-webkit-scrollbar { width: 6px; }
+#content::-webkit-scrollbar-track { background: var(--pip-bg); }
+#content::-webkit-scrollbar-thumb { background: var(--pip-dim); border-radius: 3px; }
+
+/* Pip-Boy Panel */
+.pip-panel {
+  border: 1px solid var(--pip-border);
+  background: var(--pip-panel);
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0,255,65,0.1), inset 0 0 30px rgba(0,255,65,0.02);
+}
+.pip-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--pip), transparent);
+}
+.pip-panel h2 {
+  font-family: var(--font);
+  font-size: 24px;
+  color: var(--pip);
+  text-shadow: 0 0 10px var(--pip-glow);
+  margin-bottom: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--pip-dark);
+  padding-bottom: 8px;
+}
+.pip-panel h3 {
+  font-family: var(--font);
+  font-size: 20px;
+  color: var(--pip);
+  margin: 12px 0 8px;
+  letter-spacing: 2px;
+}
+.pip-panel p, .pip-panel li {
+  font-family: var(--font);
+  font-size: 17px;
+  color: var(--pip-dim);
+  line-height: 1.5;
+}
+.pip-panel a {
+  color: var(--pip);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--pip-dim);
+}
+.pip-panel a:hover {
+  text-shadow: 0 0 8px var(--pip-glow);
+}
+
+/* Status indicators */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0,255,65,0.08);
+}
+.stat-label { color: var(--pip-dim); font-size: 16px; }
+.stat-value { color: var(--pip); font-size: 16px; text-align: right; }
+.stat-ok { color: #00ff41; }
+.stat-warn { color: #ffaa00; }
+.stat-err { color: #ff0033; }
+.stat-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 14px;
+  border: 1px solid;
+  letter-spacing: 1px;
+}
+.stat-badge.ok { color: #00ff41; border-color: #00ff41; }
+.stat-badge.warn { color: #ffaa00; border-color: #ffaa00; }
+.stat-badge.err { color: #ff0033; border-color: #ff0033; }
+
+/* Iframe container */
+.iframe-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.iframe-wrap iframe {
+  width: 100%; height: 100%;
+  border: none; background: #000;
+}
+
+/* ============================================================
+   MENU OVERLAY
+   ============================================================ */
+#menu-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.92);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#menu-overlay.open {
+  display: flex;
+}
+#menu-overlay h2 {
+  font-family: var(--font);
+  font-size: 28px;
+  color: var(--pip);
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px var(--pip-glow);
+  margin-bottom: 24px;
+}
+.menu-item {
+  font-family: var(--font);
+  font-size: 22px;
+  color: var(--pip-dim);
+  padding: 10px 40px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 2px;
+  width: 360px;
+  max-width: 90vw;
+  text-align: left;
+  border: 1px solid transparent;
+  margin: 2px 0;
+}
+.menu-item:hover, .menu-item.active {
+  color: var(--pip);
+  background: var(--pip-dark);
+  border-color: var(--pip-dim);
+  text-shadow: 0 0 10px var(--pip-glow);
+}
+.menu-item .mi-num {
+  color: var(--pip);
+  margin-right: 12px;
+  display: inline-block;
+  width: 28px;
+  text-align: right;
+}
+.menu-close {
+  margin-top: 20px;
+  font-family: var(--font);
+  font-size: 18px;
+  color: var(--pip-red);
+  cursor: pointer;
+  padding: 8px 30px;
+  border: 1px solid #660011;
+  transition: all 0.15s;
+  letter-spacing: 2px;
+}
+.menu-close:hover {
+  border-color: var(--pip-red);
+  text-shadow: 0 0 10px rgba(255,0,51,0.5);
+}
+
+/* Session ended overlay */
+#session-ended {
+  position: fixed; inset: 0; z-index: 20000;
+  background: #000;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+}
+#session-ended.show { display: flex; }
+#session-ended h1 {
+  font-family: var(--font);
+  font-size: 42px;
+  color: var(--pip-red);
+  letter-spacing: 8px;
+  text-shadow: 0 0 30px rgba(255,0,51,0.6);
+  animation: sessBlink 1.5s ease infinite;
+}
+@keyframes sessBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+#session-ended p {
+  font-family: var(--font);
+  font-size: 18px;
+  color: #660000;
+  margin-top: 16px;
+  letter-spacing: 3px;
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.loading-bar {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--pip), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  margin: 8px 0;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #splash-title { font-size: 32px; letter-spacing: 6px; }
+  #splash-lines { font-size: 14px; width: 90vw; }
+  #header .logo { font-size: 18px; letter-spacing: 2px; }
+  .hdr-btn { font-size: 14px; padding: 3px 7px; }
+  #hdr-blockh { font-size: 12px; }
+  #hdr-clock { font-size: 12px; }
+  #content { padding: 10px; }
+  .pip-panel { padding: 12px; }
+  .pip-panel h2 { font-size: 20px; }
+  .menu-item { font-size: 18px; padding: 8px 20px; width: 280px; }
+  #menu-overlay h2 { font-size: 22px; }
+}
+@media (max-width: 380px) {
+  #header .logo { font-size: 15px; }
+  .hdr-btn { font-size: 12px; padding: 2px 5px; }
+  .pip-panel h2 { font-size: 18px; letter-spacing: 1px; }
+}
 </style>
 </head>
 <body>
 
-<!-- SPLASH — Red Matrix Rain -->
-<div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;">
-  <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <img id="splash-logo" src="/sost-logo.png" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;border-radius:20%;z-index:10;pointer-events:none">
-  <div id="splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;text-align:center;white-space:nowrap"></div>
-  <div id="splash-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;text-align:left;width:400px;font-size:16px">
-    <div class="tl" id="s1"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Initializing node connection...</span></div>
-    <div class="tl" id="s2"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Verifying genesis block...</span></div>
-    <div class="tl" id="s3"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> Syncing chain data...</span></div>
-    <div class="tl" id="s4"><span style="color:#aa0000">&gt;</span><span style="color:#cc0000"> System ready.</span></div>
+<!-- ============================================================
+     SPLASH SCREEN
+     ============================================================ -->
+<div id="splash">
+  <canvas id="splash-canvas"></canvas>
+  <div id="splash-content">
+    <div id="splash-title"></div>
+    <div id="splash-lines"></div>
+    <div id="splash-version">v4.0.0-PIPBOY</div>
   </div>
-  <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:none">
-  <div class="frames visible" id="fr">
-    <iframe id="ef" style="display:block"></iframe>
-    <iframe id="wf" style="display:none"></iframe>
-    <div class="lov" id="lov-ex">
-      <img class="lov-logo" id="lov-logo" src="/sost-logo.png" alt="SOST">
-      <div class="lov-num" id="lov-num">60</div>
-      <div class="lov-label" id="lov-label" style="color:#00ff88">LOADING DATA...</div>
-    </div>
-  </div>
-  <nav class="bar">
-    <div class="nb on-ex" id="be" onclick="go('explorer')"><span class="i">⛓</span>EXPLORER</div>
-    <div class="nb" id="bweb" onclick="openWeb()"><span class="i">🌐</span>WEB</div>
-    <div class="nb dl-off" id="bdl" onclick="dl()"><span class="i">📥</span><span id="bdl-text">INSTALL</span></div>
-    <div class="nb xt-btn" onclick="xt()"><span class="i">✕</span>EXIT</div>
-    <div class="nb" id="bw" onclick="go('wallet')"><span class="i">🔐</span>WALLET</div>
-  </nav>
+<!-- ============================================================
+     SESSION ENDED
+     ============================================================ -->
+<div id="session-ended">
+  <h1>SESSION ENDED</h1>
+  <p>TERMINAL DISCONNECTED</p>
 </div>
 
-<script src="/js/retro-sounds.js"></script>
+<!-- ============================================================
+     MENU OVERLAY
+     ============================================================ -->
+<div id="menu-overlay">
+  <h2>MAIN MENU</h2>
+  <div id="menu-items"></div>
+  <div class="menu-close" id="menu-close-btn">[ESC] CLOSE</div>
+</div>
+
+<!-- ============================================================
+     APP
+     ============================================================ -->
+<div id="app">
+  <div id="header">
+    <div class="logo" id="logo-btn">SOST://</div>
+    <button class="hdr-btn back-btn" id="back-btn">&lt; BACK</button>
+    <button class="hdr-btn" id="menu-btn">MENU</button>
+    <div class="hdr-spacer"></div>
+    <div id="hdr-blockh">BLK ---</div>
+    <div id="hdr-clock">--:--:--</div>
+    <button class="hdr-btn exit-btn" id="exit-btn">EXIT</button>
+  </div>
+  <div id="content"></div>
+</div>
+
 <script>
-/* ===== RED MATRIX RAIN SPLASH ===== */
-(function(){
-  // === SHARED AUDIO CONTEXT ===
-  var _ac=null;
-  function getAC(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+/* ==============================================================
+   SOST PROTOCOL — Pip-Boy Terminal Application
+   Complete self-contained JS: Audio, Navigation, Sections, RPC
+   ============================================================== */
 
-  // === MATRIX AMBIENT (drone + noise, 12s) ===
-  function playMatrixAmbient(dur){
-    var ac=getAC();if(!ac)return;
-    var dr=ac.createOscillator();var dg=ac.createGain();
-    dr.type='sawtooth';dr.frequency.value=55;
-    dg.gain.setValueAtTime(0,ac.currentTime);
-    dg.gain.linearRampToValueAtTime(0.06,ac.currentTime+2);
-    dg.gain.setValueAtTime(0.06,ac.currentTime+dur-2);
-    dg.gain.linearRampToValueAtTime(0,ac.currentTime+dur);
-    dr.connect(dg);dg.connect(ac.destination);
-    dr.start(ac.currentTime);dr.stop(ac.currentTime+dur);
-    var bs=ac.sampleRate*2;var nb=ac.createBuffer(1,bs,ac.sampleRate);
-    var ch=nb.getChannelData(0);for(var i=0;i<bs;i++)ch[i]=Math.random()*2-1;
-    var ns=ac.createBufferSource();ns.buffer=nb;ns.loop=true;
-    var ng=ac.createGain();var nf=ac.createBiquadFilter();
-    nf.type='bandpass';nf.frequency.value=2000;nf.Q.value=3;
-    ng.gain.setValueAtTime(0,ac.currentTime);
-    ng.gain.linearRampToValueAtTime(0.03,ac.currentTime+3);
-    ng.gain.setValueAtTime(0.03,ac.currentTime+dur-2);
-    ng.gain.linearRampToValueAtTime(0,ac.currentTime+dur);
-    ns.connect(nf);nf.connect(ng);ng.connect(ac.destination);
-    ns.start(ac.currentTime);ns.stop(ac.currentTime+dur);
-  }
+(function() {
+'use strict';
 
-  // === MATRIX TICK (30 var, loud) ===
-  var MXF=[80,100,120,150,180,200,250,300,350,400,450,500,600,700,800,1000,1200,1500,1800,2000,2500,3000,120,180,250,400,600,800,1500,2500];
-  var MXT=['square','sawtooth','square','sawtooth','triangle'];
-  function playMatrixTick(){
-    var ac=getAC();if(!ac)return;
-    var vi=Math.random()*30|0;
-    var o=ac.createOscillator();var g=ac.createGain();var f=ac.createBiquadFilter();
-    o.type=MXT[vi%5];o.frequency.value=MXF[vi];
-    f.type='bandpass';f.frequency.value=MXF[vi]*1.5;f.Q.value=5+Math.random()*10;
-    g.gain.setValueAtTime(0.25,ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.08);
-    o.connect(f);f.connect(g);g.connect(ac.destination);
-    o.start(ac.currentTime);o.stop(ac.currentTime+0.08);
-  }
+// ── Configuration ──────────────────────────────────────────────
+let RPC_URL = '/rpc';
+let SOUND_ENABLED = true;
+let THEME_COLOR = '#00ff41';
 
-  // === MATRIX RAIN ===
-  var canvas=document.getElementById('matrix-canvas');
-  var ctx=canvas.getContext('2d');
-  var W,H,columns,drops,fontSize=18;
-  var chars='\u30A2\u30A4\u30A6\u30A8\u30AA\u30AB\u30AD\u30AF\u30B1\u30B3\u30B5\u30B7\u30B9\u30BB\u30BD\u30BF\u30C1\u30C4\u30C6\u30C80123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@&*+=<>{}[]'.split('');
-  function initMatrix(){
-    W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;
-    if(W<600)fontSize=13;
-    columns=Math.floor(W/fontSize);
-    drops=[];for(var i=0;i<columns;i++)drops[i]=Math.random()*-50|0;
-  }
-  initMatrix();window.addEventListener('resize',initMatrix);
-  var matrixOn=true;
-  function drawMatrix(){
-    if(!matrixOn)return;
-    ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
-    ctx.font=fontSize+'px monospace';
-    for(var i=0;i<drops.length;i++){
-      var ch=chars[Math.random()*chars.length|0];
-      var y=drops[i]*fontSize;
-      ctx.fillStyle='#ffffff';ctx.fillText(ch,i*fontSize,y);
-      if(drops[i]>1){ctx.fillStyle='#fb010d';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-1)*fontSize);}
-      if(drops[i]>3){ctx.fillStyle=Math.random()>.5?'#cc0000':'#880000';ctx.fillText(chars[Math.random()*chars.length|0],i*fontSize,(drops[i]-2-(Math.random()*2|0))*fontSize);}
-      if(y>H&&Math.random()>.975)drops[i]=0;drops[i]++;
+const SECTIONS = [
+  { id: 'dashboard',  label: 'DASHBOARD',        icon: '[1]' },
+  { id: 'wallet',     label: 'WALLET',            icon: '[2]' },
+  { id: 'explorer',   label: 'EXPLORER',          icon: '[3]' },
+  { id: 'security',   label: 'SECURITY',          icon: '[4]' },
+  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[5]' },
+  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[6]' },
+  { id: 'documents',  label: 'DOCUMENTS',         icon: '[7]' },
+  { id: 'markets',    label: 'MARKETS',           icon: '[8]' },
+  { id: 'settings',   label: 'SETTINGS',          icon: '[9]' },
+  { id: 'about',      label: 'ABOUT',             icon: '[0]' }
+];
+
+const SPLASH_LINES = [
+  '> INITIALIZING KERNEL...',
+  '> LOADING CONSENSUS ENGINE v4.0',
+  '> CONVERGENCEX POW MODULE... OK',
+  '> CASERT DIFFICULTY CONTROL... OK',
+  '> UTXO SET INTEGRITY CHECK... PASS',
+  '> SECP256K1 CRYPTO LIBRARY... LOADED',
+  '> P2P NETWORK INTERFACE... STANDBY',
+  '> MEMPOOL MANAGER... READY',
+  '> GOLD VAULT ADDRESS... VERIFIED',
+  '> POPC POOL ADDRESS... VERIFIED',
+  '> CAPSULE PROTOCOL v1... ARMED',
+  '> BLOCK VALIDATION LAYERS L1-L4... OK',
+  '> TX RULES R1-R14, S1-S12, CB1-CB10',
+  '> EMISSION SCHEDULE: 4.669M MAX SUPPLY',
+  '> CONNECTING TO SOST NETWORK...',
+  '> TERMINAL READY. WELCOME OPERATOR.'
+];
+
+// ── Web Audio Engine — 50 Retro Sounds ─────────────────────────
+const AudioEngine = (function() {
+  let ctx = null;
+
+  function getCtx() {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    requestAnimationFrame(drawMatrix);
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
   }
-  requestAnimationFrame(drawMatrix);
-  playMatrixAmbient(12);
 
-  // Logo emerge (3s)
-  var logo=document.getElementById('splash-logo');
-  setTimeout(function(){logo.style.opacity='0.15';},2200);
-  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 13px rgba(251,1,13,0.3))';},2800);
-  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 25px rgba(251,1,13,0.5))';},3400);
-  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 38px rgba(251,1,13,0.6)) drop-shadow(0 0 75px rgba(251,1,13,0.3))';},4000);
-
-  // Title typing (5s)
-  var titleEl=document.getElementById('splash-title');
-  var titleParts=[{t:'SOST',c:'#fb010d'},{t:' PROTOCOL',c:'#ffffff'}];
-  var ci=0,si=0;
-  function typeT(){
-    if(si>=titleParts.length)return;
-    var seg=titleParts[si];
-    if(ci<seg.t.length){
-      var s=document.createElement('span');s.style.color=seg.c;s.style.textShadow='0 0 10px rgba(251,1,13,0.5)';
-      s.textContent=seg.t[ci];titleEl.appendChild(s);titleEl.style.opacity='1';
-      playMatrixTick();ci++;setTimeout(typeT,120);
-    }else{ci=0;si++;setTimeout(typeT,60);}
+  function osc(type, freq, duration, vol, detune) {
+    if (!SOUND_ENABLED) return;
+    try {
+      const c = getCtx();
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      if (detune) o.detune.value = detune;
+      g.gain.setValueAtTime(vol || 0.08, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + duration);
+    } catch(e) {}
   }
-  setTimeout(typeT,5000);
 
-  // Terminal lines (6.5s, 500ms stagger, ticks spread over 2.5s animation)
-  ['s1','s2','s3','s4'].forEach(function(id,i){
-    var t0=6500+i*500;
-    setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('go');},t0);
-    for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
-  });
+  function noise(duration, vol) {
+    if (!SOUND_ENABLED) return;
+    try {
+      const c = getCtx();
+      const bufSize = c.sampleRate * duration;
+      const buf = c.createBuffer(1, bufSize, c.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource();
+      const g = c.createGain();
+      src.buffer = buf;
+      g.gain.setValueAtTime(vol || 0.03, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      src.connect(g); g.connect(c.destination);
+      src.start();
+    } catch(e) {}
+  }
+
+  function sweep(startF, endF, duration, type, vol) {
+    if (!SOUND_ENABLED) return;
+    try {
+      const c = getCtx();
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(startF, c.currentTime);
+      o.frequency.exponentialRampToValueAtTime(endF, c.currentTime + duration);
+      g.gain.setValueAtTime(vol || 0.06, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function multi(notes) {
+    if (!SOUND_ENABLED) return;
+    notes.forEach(n => {
+      setTimeout(() => osc(n.type||'square', n.freq, n.dur||0.1, n.vol||0.06, n.det), (n.delay||0)*1000);
+    });
+  }
+
+  // 50 Named Sound Effects
+  return {
+    // Navigation sounds (1-8)
+    nav_click: function() { osc('square', 800, 0.06, 0.07); },
+    nav_select: function() { multi([{freq:600,dur:0.05},{freq:900,dur:0.08,delay:0.04}]); },
+    nav_back: function() { multi([{freq:900,dur:0.05},{freq:600,dur:0.08,delay:0.04}]); },
+    nav_menu_open: function() { sweep(200, 1200, 0.15, 'sawtooth', 0.05); },
+    nav_menu_close: function() { sweep(1200, 200, 0.15, 'sawtooth', 0.05); },
+    nav_tab: function() { osc('square', 1000, 0.04, 0.05); },
+    nav_scroll: function() { osc('sine', 400, 0.03, 0.03); },
+    nav_home: function() { multi([{freq:523,dur:0.06},{freq:659,dur:0.06,delay:0.06},{freq:784,dur:0.1,delay:0.12}]); },
+
+    // Click/interaction sounds (9-16)
+    click_soft: function() { osc('sine', 600, 0.04, 0.04); },
+    click_hard: function() { osc('square', 1200, 0.03, 0.08); },
+    click_toggle: function() { osc('triangle', 700, 0.06, 0.06); },
+    click_checkbox: function() { multi([{freq:800,dur:0.03},{freq:1200,dur:0.05,delay:0.03}]); },
+    click_button: function() { osc('square', 500, 0.05, 0.06); noise(0.03, 0.02); },
+    click_link: function() { osc('sine', 900, 0.05, 0.05); },
+    click_expand: function() { sweep(400, 800, 0.1, 'triangle', 0.05); },
+    click_collapse: function() { sweep(800, 400, 0.1, 'triangle', 0.05); },
+
+    // Success sounds (17-22)
+    success_small: function() { multi([{freq:523,dur:0.08},{freq:784,dur:0.12,delay:0.08}]); },
+    success_big: function() { multi([{freq:523,dur:0.08},{freq:659,dur:0.08,delay:0.08},{freq:784,dur:0.15,delay:0.16}]); },
+    success_confirm: function() { multi([{freq:400,dur:0.06},{freq:600,dur:0.06,delay:0.06},{freq:800,dur:0.1,delay:0.12}]); },
+    success_save: function() { osc('sine', 880, 0.15, 0.06); },
+    success_connect: function() { sweep(300, 1000, 0.2, 'sine', 0.05); },
+    success_sync: function() { multi([{freq:440,dur:0.05},{freq:880,dur:0.1,delay:0.05}]); },
+
+    // Error sounds (23-28)
+    error_soft: function() { osc('sawtooth', 200, 0.15, 0.06); },
+    error_hard: function() { multi([{freq:150,dur:0.1,type:'sawtooth'},{freq:120,dur:0.15,delay:0.1,type:'sawtooth'}]); },
+    error_buzz: function() { osc('sawtooth', 100, 0.2, 0.08); },
+    error_denied: function() { multi([{freq:300,dur:0.1,type:'square'},{freq:200,dur:0.2,delay:0.1,type:'square'}]); },
+    error_timeout: function() { sweep(800, 100, 0.3, 'sawtooth', 0.05); },
+    error_disconnect: function() { sweep(600, 50, 0.4, 'square', 0.04); },
+
+    // Typing sounds (29-34)
+    type_key: function() { osc('square', 800+Math.random()*400, 0.02, 0.04); noise(0.015, 0.02); },
+    type_space: function() { noise(0.03, 0.03); },
+    type_enter: function() { osc('square', 600, 0.04, 0.05); noise(0.02, 0.02); },
+    type_delete: function() { osc('square', 400, 0.03, 0.04); },
+    type_cursor: function() { osc('sine', 1000, 0.02, 0.03); },
+    type_autocomplete: function() { multi([{freq:1000,dur:0.02},{freq:1200,dur:0.02,delay:0.02},{freq:1400,dur:0.03,delay:0.04}]); },
+
+    // Ambient/atmosphere sounds (35-42)
+    ambient_hum: function() { osc('sine', 60, 0.5, 0.02); },
+    ambient_static: function() { noise(0.3, 0.015); },
+    ambient_beep: function() { osc('sine', 1000, 0.08, 0.03); },
+    ambient_tick: function() { osc('square', 2000, 0.01, 0.04); },
+    ambient_drone: function() { osc('sine', 80, 1.0, 0.015); osc('sine', 120, 1.0, 0.01); },
+    ambient_power: function() { sweep(50, 100, 0.8, 'sine', 0.02); },
+    ambient_scan: function() { sweep(200, 2000, 0.5, 'sine', 0.03); },
+    ambient_pulse: function() { osc('sine', 440, 0.3, 0.04); },
+
+    // Boot/system sounds (43-50)
+    boot_start: function() { sweep(100, 800, 0.4, 'sawtooth', 0.06); noise(0.1, 0.03); },
+    boot_progress: function() { osc('square', 600+Math.random()*200, 0.03, 0.04); },
+    boot_complete: function() {
+      multi([
+        {freq:523,dur:0.1},{freq:659,dur:0.1,delay:0.1},
+        {freq:784,dur:0.1,delay:0.2},{freq:1047,dur:0.2,delay:0.3}
+      ]);
+    },
+    boot_fail: function() { sweep(500, 50, 0.5, 'sawtooth', 0.07); },
+    sys_alert: function() { multi([{freq:1000,dur:0.08},{freq:1000,dur:0.08,delay:0.15}]); },
+    sys_warning: function() { multi([{freq:800,dur:0.1,type:'sawtooth'},{freq:800,dur:0.1,delay:0.2,type:'sawtooth'},{freq:800,dur:0.1,delay:0.4,type:'sawtooth'}]); },
+    sys_shutdown: function() { sweep(800, 30, 0.8, 'sine', 0.06); },
+    sys_notify: function() { osc('triangle', 880, 0.1, 0.05); osc('triangle', 1100, 0.08, 0.04); }
+  };
 })();
 
-// Audio context unlocked by splash interaction
 
-// Transition at 12s
-setTimeout(function(){
-  var appEl=document.getElementById('app');
-  appEl.style.display='flex';
-  document.getElementById('ef').src='/sost-explorer.html';
-  document.getElementById('wf').src='/sost-wallet.html';
-  setTimeout(function(){
-    document.getElementById('splash').classList.add('out');
-    initLoading();
-    setTimeout(function(){document.getElementById('splash').style.display='none';},600);
-  },100);
-},12000);
+// ── Red Matrix Rain Splash ─────────────────────────────────────
+function runSplash(callback) {
+  const canvas = document.getElementById('splash-canvas');
+  const cctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-/* ===== LOADING ===== */
-var exLoaded=false;
-var cdTimer=null;
-var dtTimer=null;
-var logoAngle=0;
+  const fontSize = 14;
+  const cols = Math.floor(canvas.width / fontSize);
+  const drops = new Array(cols).fill(1);
+  const chars = 'SOST01アイウエオカキクケコサシスセソタチツテトナニヌネノ'.split('');
 
-function checkExplorerLoaded(){
-  try{
-    var iframe=document.getElementById('ef');
-    if(!iframe||!iframe.contentDocument||!iframe.contentDocument.body)return false;
-    var text=iframe.contentDocument.body.innerText||'';
-    return /\d{2,}\.\d+\s*SOST/.test(text)&&/#\d{2,}/.test(text);
-  }catch(e){return false;}
-}
+  let frame = 0;
+  const totalFrames = 12 * 30; // 12 seconds at ~30fps
 
-function initLoading(){
-  if(exLoaded)return;
-  var ov=document.getElementById('lov-ex');
-  var logo=document.getElementById('lov-logo');
-  var num=document.getElementById('lov-num');
-  var lbl=document.getElementById('lov-label');
-  ov.classList.remove('gone');
-  var startTime=Date.now();
-  var elapsed=0;
-  logoAngle=0;
-  if(cdTimer)clearInterval(cdTimer);
-  if(dtTimer)clearInterval(dtTimer);
-  cdTimer=setInterval(function(){
-    elapsed++;
-    var rem=Math.max(0,60-elapsed);
-    logoAngle+=6;
-    logo.style.transform='rotate('+logoAngle+'deg)';
-    if(rem>0){num.textContent=rem;if(typeof speakCountdown==='function')speakCountdown(rem);}
-    else{num.textContent='...';lbl.textContent='WAITING FOR NODE...';lbl.style.color='#f59e0b';}
-  },1000);
-  dtTimer=setInterval(function(){
-    if(checkExplorerLoaded()&&(Date.now()-startTime)>=3000) doneLoading();
-  },2000);
-}
+  function drawRain() {
+    cctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+    cctx.fillRect(0, 0, canvas.width, canvas.height);
+    cctx.font = fontSize + 'px monospace';
 
-function doneLoading(){
-  if(exLoaded)return;
-  exLoaded=true;
-  if(cdTimer)clearInterval(cdTimer);
-  if(dtTimer)clearInterval(dtTimer);
-  var num=document.getElementById('lov-num');
-  var lbl=document.getElementById('lov-label');
-  var ov=document.getElementById('lov-ex');
-  num.textContent='✓';num.style.color='#00ff88';num.style.fontSize='42px';
-  lbl.textContent='READY';lbl.style.color='#00ff88';lbl.style.animation='none';
-  setTimeout(function(){ov.classList.add('gone');ov.style.display='none';},1200);
-}
+    for (let i = 0; i < cols; i++) {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
 
-/* ===== TAB SWITCH ===== */
-var cur='explorer';
-var switching=false;
+      // Red matrix palette
+      const brightness = Math.random();
+      if (brightness > 0.95) {
+        cctx.fillStyle = '#ff4444';
+        cctx.shadowBlur = 15;
+        cctx.shadowColor = '#ff0000';
+      } else if (brightness > 0.8) {
+        cctx.fillStyle = '#cc0000';
+        cctx.shadowBlur = 5;
+        cctx.shadowColor = '#aa0000';
+      } else {
+        cctx.fillStyle = '#880000';
+        cctx.shadowBlur = 0;
+        cctx.shadowColor = 'transparent';
+      }
+      cctx.fillText(ch, x, y);
+      cctx.shadowBlur = 0;
 
-function go(t){
-  if(t===cur||switching)return;
-  switching=true;
-  var fr=document.getElementById('fr');
-  var ef=document.getElementById('ef');
-  var wf=document.getElementById('wf');
-  var safetyTimer=setTimeout(function(){switching=false;},3000);
-
-  fr.classList.remove('visible');
-  fr.classList.add('fading');
-  if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
-
-  setTimeout(function(){
-    ef.style.display='none';
-    wf.style.display='none';
-
-    if(t==='explorer'){
-      ef.style.display='block';
-      if(!exLoaded) initLoading();
-    }else if(t==='wallet'){
-      wf.style.display='block';
+      if (y > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
     }
 
-    fr.classList.remove('fading');
-    fr.classList.add('visible');
+    frame++;
+    if (frame < totalFrames) {
+      requestAnimationFrame(drawRain);
+    }
+  }
 
-    setTimeout(function(){
-      switching=false;
-      clearTimeout(safetyTimer);
-    },400);
-  },400);
+  // Start rain immediately
+  drawRain();
+  AudioEngine.boot_start();
 
-  cur=t;
-  document.getElementById('be').className='nb'+(t==='explorer'?' on-ex':'');
-  document.getElementById('bw').className='nb'+(t==='wallet'?' on-wl':'');
-}
-
-/* ===== WEB — opens in external browser ===== */
-function openWeb(){
-  if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
-  window.open('https://sostcore.com','_blank');
-}
-
-/* ===== EXIT ===== */
-function xt(){
-  if(typeof playRandomRetroSound==='function')try{playRandomRetroSound(0.5);}catch(e){}
-  // Clear all iframes
-  var iframes=document.querySelectorAll('iframe');
-  iframes.forEach(function(f){try{f.src='about:blank';}catch(e){}});
-  // Try close (works in PWA standalone and script-opened windows)
-  window.close();
-  // If still here after 600ms, window.close() was blocked by the browser
-  setTimeout(function(){
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;color:#cc0000;font-family:monospace;text-align:center;flex-direction:column"><div style="font-size:48px;margin-bottom:20px">\u03A3</div><div style="font-size:18px;letter-spacing:4px;margin-bottom:16px">SESSION ENDED</div><div style="color:#555;font-size:13px">You can close this tab manually.</div></div>';
-  },600);
-}
-
-/* ===== INSTALL (PWA) ===== */
-var dp=null;
-window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault();
-  dp=e;
-  var btn=document.getElementById('bdl');
-  btn.className='nb';
-  btn.style.color='#00ff88';
-});
-function dl(){
-  if(dp){
-    dp.prompt();
-    dp.userChoice.then(function(r){
-      dp=null;
-      if(r.outcome==='accepted'){
-        document.getElementById('bdl-text').textContent='INSTALLED';
-        document.getElementById('bdl').className='nb on-dl dl-off';
+  // Type "SOST PROTOCOL" title after 1.5s
+  const titleEl = document.getElementById('splash-title');
+  const titleText = 'SOST PROTOCOL';
+  let titleIdx = 0;
+  setTimeout(() => {
+    titleEl.style.opacity = '1';
+    titleEl.classList.add('typing');
+    const typeInterval = setInterval(() => {
+      if (titleIdx < titleText.length) {
+        titleEl.textContent = titleText.substring(0, titleIdx + 1);
+        AudioEngine.type_key();
+        titleIdx++;
+      } else {
+        clearInterval(typeInterval);
+        titleEl.classList.remove('typing');
       }
+    }, 80);
+  }, 1500);
+
+  // Terminal lines starting at 3s
+  const linesEl = document.getElementById('splash-lines');
+  SPLASH_LINES.forEach((text, i) => {
+    const div = document.createElement('div');
+    div.className = 'sl';
+    div.textContent = text;
+    linesEl.appendChild(div);
+
+    setTimeout(() => {
+      div.classList.add('show');
+      AudioEngine.boot_progress();
+    }, 3000 + i * 450);
+  });
+
+  // Show version
+  setTimeout(() => {
+    document.getElementById('splash-version').style.opacity = '1';
+  }, 3000 + SPLASH_LINES.length * 450 + 200);
+
+  // Boot complete sound
+  setTimeout(() => {
+    AudioEngine.boot_complete();
+  }, 3000 + SPLASH_LINES.length * 450 + 500);
+
+  // End splash after 12s
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('out');
+    setTimeout(callback, 800);
+  }, 12000);
+}
+
+
+// ── Navigation System ──────────────────────────────────────────
+const Nav = (function() {
+  const stack = [];
+  let current = null;
+
+  function go(sectionId, pushToStack) {
+    if (current === sectionId) return;
+    if (pushToStack !== false && current) {
+      stack.push(current);
+    }
+    current = sectionId;
+    renderSection(sectionId);
+    updateBackBtn();
+    // Push browser history
+    if (pushToStack !== false) {
+      history.pushState({ section: sectionId }, '', '#' + sectionId);
+    }
+    AudioEngine.nav_select();
+  }
+
+  function back() {
+    if (stack.length > 0) {
+      const prev = stack.pop();
+      current = prev;
+      renderSection(prev);
+      updateBackBtn();
+      AudioEngine.nav_back();
+    }
+  }
+
+  function updateBackBtn() {
+    const btn = document.getElementById('back-btn');
+    btn.style.visibility = stack.length > 0 ? 'visible' : 'hidden';
+  }
+
+  function getCurrent() { return current; }
+  function getStack() { return [...stack]; }
+
+  return { go, back, getCurrent, getStack, updateBackBtn };
+})();
+
+
+// ── RPC Client ─────────────────────────────────────────────────
+async function rpcCall(method, params) {
+  try {
+    const resp = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: params || [] })
     });
-  }else if(window.matchMedia('(display-mode:standalone)').matches){
-    // Already installed — do nothing
-  }else{
-    // Can't install from here
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message || 'RPC error');
+    return data.result;
+  } catch(e) {
+    return null;
   }
 }
-// Detect already installed
-if(window.matchMedia('(display-mode:standalone)').matches){
-  document.getElementById('bdl-text').textContent='INSTALLED';
-  document.getElementById('bdl').className='nb on-dl dl-off';
+
+
+// ── Clock ──────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getUTCHours()).padStart(2,'0');
+  const m = String(now.getUTCMinutes()).padStart(2,'0');
+  const s = String(now.getUTCSeconds()).padStart(2,'0');
+  document.getElementById('hdr-clock').textContent = h + ':' + m + ':' + s + 'Z';
 }
 
-/* ===== PWA ===== */
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
-
-/* ===== BATTERY OPTIMIZATION ===== */
-// Stop CSS animations on splash after it's gone (saves GPU compositing)
-// Stop any lingering speech synthesis when app goes to background
-document.addEventListener('visibilitychange',function(){
-  if(document.hidden){
-    try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}
+// ── Block height poller ────────────────────────────────────────
+let cachedInfo = null;
+async function pollBlockHeight() {
+  const info = await rpcCall('getinfo');
+  if (info) {
+    cachedInfo = info;
+    const h = info.blocks !== undefined ? info.blocks : '---';
+    document.getElementById('hdr-blockh').textContent = 'BLK ' + h;
+    document.getElementById('hdr-blockh').classList.remove('stat-err');
+  } else {
+    document.getElementById('hdr-blockh').textContent = 'OFFLINE';
+    document.getElementById('hdr-blockh').classList.add('stat-err');
   }
-});
+}
 
-/* ===== EXPLORER LOGO → OPENS WEB EXTERNALLY ===== */
-document.getElementById('ef').addEventListener('load',function(){
-  try{
-    var doc=this.contentDocument;
-    if(!doc)return;
-    doc.addEventListener('click',function(e){
-      var a=e.target.closest('a');
-      if(!a)return;
-      var href=a.getAttribute('href')||'';
-      if(href==='index.html'||href==='/index.html'||href==='/'){
-        e.preventDefault();
-        openWeb();
-      }else if(href.indexOf('http')===0&&href.indexOf('sost-explorer')===-1){
-        e.preventDefault();
-        window.open(href,'_blank');
+
+// ── Section Renderers ──────────────────────────────────────────
+function renderSection(id) {
+  const content = document.getElementById('content');
+  // Clear iframes first to stop loading
+  content.querySelectorAll('iframe').forEach(f => f.src = 'about:blank');
+  content.innerHTML = '';
+  content.style.padding = '';
+  content.style.overflow = '';
+
+  const renderer = SectionRenderers[id];
+  if (renderer) renderer(content);
+}
+
+const SectionRenderers = {};
+
+// ── DASHBOARD ──────────────────────────────────────────────────
+SectionRenderers.dashboard = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// CHAIN STATUS</h2>
+      <div id="dash-status"><div class="loading-bar"></div><p style="color:var(--pip-dim)">QUERYING NODE...</p></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// SUPPLY INFO</h2>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,000 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">EMISSION</span><span class="stat-value">EXPONENTIAL DECAY</span></div>
+      <div class="stat-row"><span class="stat-label">DECAY FACTOR q</span><span class="stat-value">e^(-1/4)</span></div>
+      <div class="stat-row"><span class="stat-label">EPOCH LENGTH</span><span class="stat-value">131,553 BLOCKS</span></div>
+      <div class="stat-row"><span class="stat-label">TARGET SPACING</span><span class="stat-value">600 SEC (10 MIN)</span></div>
+      <div class="stat-row"><span class="stat-label">GENESIS REWARD</span><span class="stat-value">7.85100863 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">1e-8 (STOCKS)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// BLOCK REWARD SPLIT</h2>
+      <div class="stat-row"><span class="stat-label">MINER</span><span class="stat-value stat-ok">50%</span></div>
+      <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value stat-warn">25%</span></div>
+      <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value stat-warn">25%</span></div>
+      <div class="stat-row"><span class="stat-label">SPLIT RULE</span><span class="stat-value">HARDCODED / IMMUTABLE</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CONSENSUS</h2>
+      <div class="stat-row"><span class="stat-label">POW ALGORITHM</span><span class="stat-value">CONVERGENCEX</span></div>
+      <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">CASERT (Q16.16)</span></div>
+      <div class="stat-row"><span class="stat-label">COINBASE MATURITY</span><span class="stat-value">1000 BLOCKS</span></div>
+      <div class="stat-row"><span class="stat-label">MAX BLOCK SIZE</span><span class="stat-value">1,000,000 BYTES</span></div>
+      <div class="stat-row"><span class="stat-label">MAX TX SIZE</span><span class="stat-value">100,000 BYTES</span></div>
+      <div class="stat-row"><span class="stat-label">MIN RELAY FEE</span><span class="stat-value">1 STOCK/BYTE</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// LATEST BLOCKS</h2>
+      <div id="dash-blocks"><div class="loading-bar"></div><p style="color:var(--pip-dim)">FETCHING...</p></div>
+    </div>
+  `;
+
+  // Fetch chain info
+  (async () => {
+    const info = await rpcCall('getinfo');
+    const statusEl = document.getElementById('dash-status');
+    if (!statusEl) return;
+    if (info) {
+      AudioEngine.success_connect();
+      const height = info.blocks !== undefined ? info.blocks : 'N/A';
+      const diff = info.difficulty !== undefined ? parseFloat(info.difficulty).toFixed(4) : 'N/A';
+      const conns = info.connections !== undefined ? info.connections : 'N/A';
+      const ver = info.version || info.subversion || 'N/A';
+      const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 'N/A');
+      const bestHash = info.bestblockhash || info.hash || 'N/A';
+      const casertProfile = info.casert_profile || info.equalizer || 'N/A';
+
+      statusEl.innerHTML = `
+        <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
+        <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
+        <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diff}</span></div>
+        <div class="stat-row"><span class="stat-label">CONNECTIONS</span><span class="stat-value">${conns}</span></div>
+        <div class="stat-row"><span class="stat-label">MEMPOOL</span><span class="stat-value">${mempool} TX</span></div>
+        <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}</span></div>
+        <div class="stat-row"><span class="stat-label">VERSION</span><span class="stat-value">${ver}</span></div>
+        <div class="stat-row"><span class="stat-label">BEST HASH</span><span class="stat-value" style="font-size:12px;word-break:break-all">${bestHash}</span></div>
+      `;
+    } else {
+      statusEl.innerHTML = `
+        <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge err">OFFLINE</span></span></div>
+        <div class="stat-row"><span class="stat-label">NODE</span><span class="stat-value stat-err">UNREACHABLE</span></div>
+        <div class="stat-row"><span class="stat-label">RPC ENDPOINT</span><span class="stat-value" style="font-size:14px">${RPC_URL}</span></div>
+      `;
+    }
+  })();
+
+  // Fetch latest blocks
+  (async () => {
+    const blocksEl = document.getElementById('dash-blocks');
+    if (!blocksEl) return;
+    const info = await rpcCall('getinfo');
+    if (!info || info.blocks === undefined) {
+      blocksEl.innerHTML = '<p class="stat-err">NODE OFFLINE - NO BLOCK DATA</p>';
+      return;
+    }
+    const height = info.blocks;
+    let html = '';
+    const count = Math.min(8, height + 1);
+    for (let i = 0; i < count; i++) {
+      const h = height - i;
+      const bHash = await rpcCall('getblockhash', [h]);
+      if (bHash) {
+        const block = await rpcCall('getblock', [bHash]);
+        if (block) {
+          const txCount = block.tx ? block.tx.length : (block.nTx || '?');
+          const time = block.time ? new Date(block.time * 1000).toISOString().replace('T',' ').substring(0,19) + 'Z' : '?';
+          html += `<div class="stat-row">
+            <span class="stat-label">#${h}</span>
+            <span class="stat-value" style="font-size:13px">${txCount} tx | ${time}</span>
+          </div>`;
+        }
       }
-    },true);
-  }catch(e){}
-});
+    }
+    blocksEl.innerHTML = html || '<p style="color:var(--pip-dim)">NO BLOCKS RETRIEVED</p>';
+  })();
+};
+
+// ── WALLET (iframe) ────────────────────────────────────────────
+SectionRenderers.wallet = function(el) {
+  el.style.padding = '0';
+  el.style.overflow = 'hidden';
+  el.innerHTML = '<div class="iframe-wrap"><iframe src="/sost-wallet.html" title="SOST Wallet" allow="clipboard-read; clipboard-write"></iframe></div>';
+  AudioEngine.nav_tab();
+};
+
+// ── EXPLORER (iframe) ──────────────────────────────────────────
+SectionRenderers.explorer = function(el) {
+  el.style.padding = '0';
+  el.style.overflow = 'hidden';
+  el.innerHTML = '<div class="iframe-wrap"><iframe src="/sost-explorer.html" title="SOST Explorer" allow="clipboard-read; clipboard-write"></iframe></div>';
+  AudioEngine.nav_tab();
+};
+
+// ── SECURITY ───────────────────────────────────────────────────
+SectionRenderers.security = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+
+  const features = [
+    ['ECDSA secp256k1 signatures', 'All TX signed with industry-standard elliptic curve cryptography', true],
+    ['LOW-S signature enforcement', 'Prevents signature malleability attacks (BIP-62)', true],
+    ['SHA-256 block hashing', 'OpenSSL-backed, hardware-accelerated where available', true],
+    ['UTXO model (no account state)', 'Eliminates replay attacks and balance manipulation', true],
+    ['Coinbase maturity (1000 blocks)', 'Prevents spend of immature mining rewards (~7 days)', true],
+    ['4-layer block validation', 'L1 structure, L2 header, L3 consensus, L4 atomic UTXO connect', true],
+    ['R-rules (R1-R14) TX structural', 'Version, types, counts, amounts, size, payload validation', true],
+    ['S-rules (S1-S12) spend checks', 'UTXO lookup, pubkey hash, ECDSA verify, fees, maturity', true],
+    ['CB-rules (CB1-CB10) coinbase', 'Enforces exact output order and subsidy split', true],
+    ['Constitutional addresses', 'Gold Vault + PoPC Pool addresses hardcoded and immutable', true],
+    ['ConvergenceX ASIC resistance', 'CPU-friendly PoW with 8GB memory requirement for mining', true],
+    ['cASERT difficulty control', 'Unified rate control with anti-stall recovery zones', true],
+    ['Fee-rate rational arithmetic', 'No floating-point in consensus — eliminates float bugs', true],
+    ['RBF (Replace-by-Fee)', 'Full replace-by-fee for stuck transaction recovery', true],
+    ['CPFP (Child-Pays-for-Parent)', 'Fee bumping via child transactions', true],
+    ['BlockUndo reorg safety', 'Atomic disconnect with full UTXO rollback capability', true],
+    ['Capsule Protocol v1', 'Binary metadata with 12-byte header validation', true],
+    ['P2SH multisig support', 'M-of-N multisig via script hash (activation height 2000)', true],
+    ['PSBT offline signing', 'Partially Signed Bitcoin Transactions for air-gapped wallets', true],
+    ['HD wallet (BIP39)', '12-word seed phrases with PBKDF2-HMAC-SHA512 derivation', true]
+  ];
+
+  let html = '<div class="pip-panel"><h2>// SECURITY AUDIT</h2>';
+  html += '<p style="margin-bottom:12px">20 cryptographic and consensus security features verified.</p>';
+  features.forEach((f, i) => {
+    html += `<div class="stat-row">
+      <span class="stat-label" style="flex:1;padding-right:10px">
+        <span style="color:var(--pip)">${String(i+1).padStart(2,'0')}.</span> ${f[0]}
+        <br><span style="font-size:14px;color:#006600">${f[1]}</span>
+      </span>
+      <span class="stat-value"><span class="stat-badge ${f[2]?'ok':'err'}">${f[2]?'IMPLEMENTED':'PENDING'}</span></span>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  AudioEngine.ambient_scan();
+};
+
+// ── GEASPIRIT ──────────────────────────────────────────────────
+SectionRenderers.geaspirit = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// GEASPIRIT PLATFORM</h2>
+      <p>Satellite-based mineral prospectivity mapping.</p>
+      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">23.7 / 40</span></p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 6D COMPLETE</span></div>
+      <div class="stat-row"><span class="stat-label">AOIs GLOBAL</span><span class="stat-value">10 (5 supervised + 3 heuristic + 1 demo + 1 failed)</span></div>
+      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value">162 coordinates</span></div>
+      <div class="stat-row"><span class="stat-label">OZMIN DEPOSITS</span><span class="stat-value">16,225 (CC-BY 4.0)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// DEPOSIT-TYPE BENCHMARKS</h2>
+      <div class="stat-row"><span class="stat-label">PORPHYRY Cu</span><span class="stat-value stat-ok">AUC 0.86</span></div>
+      <div class="stat-row"><span class="stat-label">OROGENIC Au</span><span class="stat-value stat-ok">AUC 0.81</span></div>
+      <div class="stat-row"><span class="stat-label">SEDIMENT-HOSTED Cu</span><span class="stat-value stat-warn">AUC 0.76</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// ZONE-SPECIFIC RECIPES</h2>
+      <p>Transfer learning does NOT work for satellite features. Each zone requires its own trained model.</p>
+      <div class="stat-row"><span class="stat-label">THERMAL</span><span class="stat-value">UNIVERSAL MODEST (+0.013 AUC)</span></div>
+      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC ONLY</span></div>
+      <div class="stat-row"><span class="stat-label">PCA EMBEDDINGS</span><span class="stat-value">KALGOORLIE-SPECIFIC ONLY</span></div>
+      <div class="stat-row"><span class="stat-label">ML RESIDUAL</span><span class="stat-value stat-err">NEGATIVE (no signal)</span></div>
+      <div class="stat-row"><span class="stat-label">GRADIENTS</span><span class="stat-value stat-err">NEGATIVE</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CAPABILITIES</h2>
+      <h3>CAN DO:</h3>
+      <ul style="padding-left:20px;margin-bottom:12px">
+        <li>Generate prospectivity maps from satellite data</li>
+        <li>Score areas by mineral potential (0-1 probability)</li>
+        <li>20-year Landsat thermal long-term proxy pipeline</li>
+        <li>Advanced geomorphometry (6 bands)</li>
+        <li>CGCNN forward pass on CIF crystal structures</li>
+        <li>Custom AOI targeting</li>
+      </ul>
+      <h3>CANNOT DO:</h3>
+      <ul style="padding-left:20px">
+        <li>Direct subsurface mineral detection</li>
+        <li>Cross-zone transfer of satellite models</li>
+        <li>Replace ground-truth geological surveys</li>
+        <li>Guarantee deposit existence at targets</li>
+      </ul>
+    </div>
+    <div class="pip-panel">
+      <h2>// KEY LEARNING</h2>
+      <p>No single feature family is universal. Zone-specific model architecture confirmed repeatedly. Thermal is a moderate but real improvement — it helps most when the spectral/SAR baseline has not yet saturated.</p>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── MATERIALS ENGINE ───────────────────────────────────────────
+SectionRenderers.materials = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// MATERIALS ENGINE v3.2.0</h2>
+      <p>Computational materials discovery platform.</p>
+      <div class="stat-row"><span class="stat-label">MATERIALS IN DB</span><span class="stat-value stat-ok">76,193</span></div>
+      <div class="stat-row"><span class="stat-label">API ENDPOINTS</span><span class="stat-value">70+</span></div>
+      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">9 (270+ common names)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// GNN MODELS</h2>
+      <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
+      <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// FEATURES</h2>
+      <ul style="padding-left:20px">
+        <li>Material Mixer MVP: theoretical candidates from parent pairs</li>
+        <li>Autonomous Discovery Engine: iterative candidate generation with error learning</li>
+        <li>22 elemental + 22 compound curated overrides</li>
+        <li>Multilingual search across 9 languages</li>
+        <li>Crystal structure visualization</li>
+        <li>Property prediction via graph neural networks</li>
+        <li>Formation energy and band gap estimation</li>
+        <li>Periodic table-aware element search</li>
+      </ul>
+    </div>
+    <div class="pip-panel">
+      <h2>// ARCHITECTURE</h2>
+      <div class="stat-row"><span class="stat-label">BACKEND</span><span class="stat-value">PYTHON / FLASK</span></div>
+      <div class="stat-row"><span class="stat-label">ML FRAMEWORK</span><span class="stat-value">PYTORCH</span></div>
+      <div class="stat-row"><span class="stat-label">DATABASE</span><span class="stat-value">76K MATERIALS (MP + CUSTOM)</span></div>
+      <div class="stat-row"><span class="stat-label">INFERENCE</span><span class="stat-value">CGCNN + ALIGNN-LITE</span></div>
+    </div>
+  `;
+  AudioEngine.ambient_beep();
+};
+
+// ── DOCUMENTS ──────────────────────────────────────────────────
+SectionRenderers.documents = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+
+  const docs = [
+    ['SOST Whitepaper', 'Core protocol design and economic model', '/docs/whitepaper.pdf'],
+    ['ConvergenceX PoW Specification', 'CPU-friendly proof-of-work algorithm details', '/docs/convergencex.pdf'],
+    ['Transaction Design Document', 'UTXO model, TX validation rules R/S/CB', '/docs/tx-design.pdf'],
+    ['Capsule Protocol v1 Spec', 'Binary metadata format for TX outputs', '/docs/capsule-spec.pdf'],
+    ['cASERT Difficulty Control', 'Unified rate control with equalizer profiles', '/docs/casert.pdf'],
+    ['Emission Schedule', 'Smooth exponential decay, max supply analysis', '/docs/emission.pdf'],
+    ['GeaSpirit Technical Report', 'Satellite mineral prospectivity mapping methodology', '/docs/geaspirit-report.pdf'],
+    ['Materials Engine API Docs', 'REST API reference for materials discovery', '/docs/materials-api.pdf'],
+    ['Security Audit Report', 'Cryptographic and consensus security analysis', '/docs/security-audit.pdf'],
+    ['Governance Framework', 'Constitutional vs operational rules, fork process', '/docs/governance.pdf'],
+    ['HD Wallet Specification', 'BIP39 seed derivation and key hierarchy', '/docs/hd-wallet.pdf'],
+    ['Multisig & P2SH Guide', 'M-of-N multisig setup and script hash usage', '/docs/multisig-guide.pdf']
+  ];
+
+  let html = '<div class="pip-panel"><h2>// DOCUMENT ARCHIVE</h2>';
+  html += '<p style="margin-bottom:16px">Technical documentation and specifications.</p>';
+  docs.forEach((d, i) => {
+    html += `<div class="stat-row" style="cursor:pointer" onclick="window.open('${d[2]}','_blank')">
+      <span class="stat-label" style="flex:1">
+        <span style="color:var(--pip)">[${String(i+1).padStart(2,'0')}]</span> ${d[0]}
+        <br><span style="font-size:14px;color:#006600">${d[1]}</span>
+      </span>
+      <span class="stat-value" style="font-size:14px">OPEN &gt;</span>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+};
+
+// ── MARKETS ────────────────────────────────────────────────────
+SectionRenderers.markets = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// MARKETS</h2>
+      <p>SOST trading and market data.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-warn">PRE-MARKET</span></div>
+      <div class="stat-row"><span class="stat-label">TICKER</span><span class="stat-value">SOST</span></div>
+      <div class="stat-row"><span class="stat-label">BACKING</span><span class="stat-value">GOLD-BACKED (25% TO VAULT)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// TOKENOMICS</h2>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,000 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">EMISSION</span><span class="stat-value">SMOOTH EXPONENTIAL DECAY</span></div>
+      <div class="stat-row"><span class="stat-label">EPOCH</span><span class="stat-value">131,553 BLOCKS (~2.5 YR)</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK TIME</span><span class="stat-value">~10 MINUTES</span></div>
+      <div class="stat-row"><span class="stat-label">SUBSIDY SPLIT</span><span class="stat-value">50/25/25 (IMMUTABLE)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// GOLD VAULT</h2>
+      <p>25% of every block reward is allocated to the Gold Vault constitutional address. This creates a permanent, growing gold-backing reserve. The address is hardcoded in the protocol and cannot be changed by any governance process.</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// LINKS</h2>
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://explorer.sostcore.com','_blank')">
+        <span class="stat-label">BLOCK EXPLORER</span><span class="stat-value">OPEN &gt;</span>
+      </div>
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostcore.com','_blank')">
+        <span class="stat-label">OFFICIAL SITE</span><span class="stat-value">OPEN &gt;</span>
+      </div>
+    </div>
+  `;
+  AudioEngine.ambient_pulse();
+};
+
+// ── SETTINGS ───────────────────────────────────────────────────
+SectionRenderers.settings = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// SETTINGS</h2>
+      <p style="margin-bottom:16px">Terminal configuration.</p>
+
+      <div class="stat-row">
+        <span class="stat-label">RPC ENDPOINT</span>
+        <span class="stat-value">
+          <input id="set-rpc" type="text" value="${RPC_URL}" style="
+            background:#001100;border:1px solid var(--pip-dim);color:var(--pip);
+            font-family:var(--font);font-size:16px;padding:4px 8px;width:260px;max-width:50vw;
+          ">
+        </span>
+      </div>
+
+      <div class="stat-row" style="margin-top:12px">
+        <span class="stat-label">SOUND EFFECTS</span>
+        <span class="stat-value">
+          <button id="set-sound-btn" style="
+            background:transparent;border:1px solid var(--pip-dim);color:var(--pip);
+            font-family:var(--font);font-size:16px;padding:4px 16px;cursor:pointer;
+          ">${SOUND_ENABLED ? 'ON' : 'OFF'}</button>
+        </span>
+      </div>
+
+      <div class="stat-row" style="margin-top:12px">
+        <span class="stat-label">THEME COLOR</span>
+        <span class="stat-value" style="display:flex;gap:8px">
+          <button class="theme-btn" data-color="#00ff41" style="background:#00ff41;width:28px;height:28px;border:2px solid #003300;cursor:pointer" title="Green"></button>
+          <button class="theme-btn" data-color="#00e5ff" style="background:#00e5ff;width:28px;height:28px;border:2px solid #003333;cursor:pointer" title="Cyan"></button>
+          <button class="theme-btn" data-color="#ffaa00" style="background:#ffaa00;width:28px;height:28px;border:2px solid #332200;cursor:pointer" title="Amber"></button>
+          <button class="theme-btn" data-color="#ff6600" style="background:#ff6600;width:28px;height:28px;border:2px solid #331100;cursor:pointer" title="Orange"></button>
+        </span>
+      </div>
+
+      <div style="margin-top:20px">
+        <button id="set-save-btn" style="
+          background:var(--pip-dark);border:1px solid var(--pip);color:var(--pip);
+          font-family:var(--font);font-size:18px;padding:8px 24px;cursor:pointer;
+          letter-spacing:2px;
+        ">SAVE SETTINGS</button>
+      </div>
+    </div>
+
+    <div class="pip-panel">
+      <h2>// SYSTEM INFO</h2>
+      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.0.0-PIPBOY</span></div>
+      <div class="stat-row"><span class="stat-label">RENDERER</span><span class="stat-value">NATIVE HTML/JS</span></div>
+      <div class="stat-row"><span class="stat-label">PWA</span><span class="stat-value stat-ok">ENABLED</span></div>
+      <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (50 SFX)</span></div>
+      <div class="stat-row"><span class="stat-label">CRT EMULATION</span><span class="stat-value stat-ok">ACTIVE</span></div>
+    </div>
+
+    <div class="pip-panel">
+      <h2>// DIAGNOSTICS</h2>
+      <button id="set-test-sound" style="
+        background:transparent;border:1px solid var(--pip-dim);color:var(--pip);
+        font-family:var(--font);font-size:16px;padding:6px 16px;cursor:pointer;margin:4px;
+      ">TEST SOUNDS</button>
+      <button id="set-test-rpc" style="
+        background:transparent;border:1px solid var(--pip-dim);color:var(--pip);
+        font-family:var(--font);font-size:16px;padding:6px 16px;cursor:pointer;margin:4px;
+      ">TEST RPC</button>
+      <div id="set-diag-out" style="margin-top:8px;font-size:14px;color:var(--pip-dim)"></div>
+    </div>
+  `;
+
+  // Sound toggle
+  document.getElementById('set-sound-btn').addEventListener('click', function() {
+    SOUND_ENABLED = !SOUND_ENABLED;
+    this.textContent = SOUND_ENABLED ? 'ON' : 'OFF';
+    if (SOUND_ENABLED) AudioEngine.click_toggle();
+  });
+
+  // Theme color buttons
+  el.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const color = this.dataset.color;
+      applyThemeColor(color);
+      AudioEngine.click_checkbox();
+    });
+  });
+
+  // Save
+  document.getElementById('set-save-btn').addEventListener('click', function() {
+    const newRpc = document.getElementById('set-rpc').value.trim();
+    if (newRpc) RPC_URL = newRpc;
+    try {
+      localStorage.setItem('sost_rpc', RPC_URL);
+      localStorage.setItem('sost_sound', SOUND_ENABLED ? '1' : '0');
+      localStorage.setItem('sost_theme', THEME_COLOR);
+    } catch(e) {}
+    AudioEngine.success_save();
+    const out = document.getElementById('set-diag-out');
+    if (out) out.textContent = '> SETTINGS SAVED TO LOCAL STORAGE';
+  });
+
+  // Test sounds
+  document.getElementById('set-test-sound').addEventListener('click', function() {
+    const out = document.getElementById('set-diag-out');
+    if (out) out.textContent = '> PLAYING SOUND SEQUENCE...';
+    const sounds = ['nav_click','nav_select','success_small','error_soft','type_key','ambient_beep','boot_progress','sys_notify'];
+    sounds.forEach((s, i) => {
+      setTimeout(() => AudioEngine[s](), i * 300);
+    });
+    setTimeout(() => { if (out) out.textContent = '> SOUND TEST COMPLETE (8/50 samples)'; }, sounds.length * 300);
+  });
+
+  // Test RPC
+  document.getElementById('set-test-rpc').addEventListener('click', async function() {
+    const out = document.getElementById('set-diag-out');
+    if (out) out.textContent = '> TESTING RPC CONNECTION...';
+    const info = await rpcCall('getinfo');
+    if (info) {
+      AudioEngine.success_connect();
+      if (out) out.textContent = '> RPC OK — HEIGHT: ' + (info.blocks || '?');
+    } else {
+      AudioEngine.error_timeout();
+      if (out) out.innerHTML = '> <span class="stat-err">RPC FAILED — ' + RPC_URL + '</span>';
+    }
+  });
+};
+
+// ── ABOUT ──────────────────────────────────────────────────────
+SectionRenderers.about = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel" style="text-align:center">
+      <div style="font-size:64px;margin:16px 0;text-shadow:0 0 30px var(--pip-glow)">SOST</div>
+      <div style="font-size:28px;letter-spacing:6px;color:var(--pip-dim);margin-bottom:8px">PROTOCOL</div>
+      <div style="font-size:16px;color:#006600;margin-bottom:24px">CPU-FRIENDLY GOLD-BACKED CRYPTOCURRENCY</div>
+      <div style="font-size:16px;border-top:1px solid var(--pip-dark);padding-top:16px">
+        <p style="margin:6px 0">VERSION: <span style="color:var(--pip)">v4.0.0-PIPBOY</span></p>
+        <p style="margin:6px 0">BUILD: <span style="color:var(--pip)">2026-03-26</span></p>
+        <p style="margin:6px 0">CODENAME: <span style="color:var(--pip)">TERMINAL</span></p>
+      </div>
+    </div>
+    <div class="pip-panel">
+      <h2>// ABOUT</h2>
+      <p>SOST is a UTXO-based cryptocurrency with CPU-friendly proof-of-work (ConvergenceX) and a constitutional economic model. Every block permanently allocates 25% of the subsidy to a Gold Vault and 25% to the Proof-of-Productive-Contribution (PoPC) Pool.</p>
+      <p style="margin-top:8px">The protocol is written in C++17, built with CMake, and uses OpenSSL + libsecp256k1 for cryptography. The codebase passes 22/22 test suites.</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// CORE PRINCIPLES</h2>
+      <ul style="padding-left:20px">
+        <li>Gold-backing is constitutional, not optional</li>
+        <li>50/25/25 split is hardcoded and immutable</li>
+        <li>CPU mining accessible to individuals</li>
+        <li>Integer arithmetic only in consensus (no floats)</li>
+        <li>UTXO model for maximum auditability</li>
+        <li>Smooth emission — no sudden halvings</li>
+      </ul>
+    </div>
+    <div class="pip-panel">
+      <h2>// ECOSYSTEM</h2>
+      <div class="stat-row"><span class="stat-label">SOST CORE</span><span class="stat-value">C++ NODE + MINER + CLI</span></div>
+      <div class="stat-row"><span class="stat-label">GEASPIRIT</span><span class="stat-value">MINERAL INTELLIGENCE</span></div>
+      <div class="stat-row"><span class="stat-label">MATERIALS ENGINE</span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK EXPLORER</span><span class="stat-value">WEB-BASED</span></div>
+      <div class="stat-row"><span class="stat-label">WEB WALLET</span><span class="stat-value">HD + MULTISIG</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CREDITS</h2>
+      <p>Designed and built by the SOST team.</p>
+      <p style="margin-top:4px;font-size:14px;color:#006600">Pip-Boy terminal interface v4.0.0</p>
+      <p style="font-size:14px;color:#006600">Web Audio engine: 50 retro sound effects</p>
+      <p style="font-size:14px;color:#006600">Font: VT323 by Peter Hull</p>
+    </div>
+  `;
+  AudioEngine.ambient_drone();
+};
+
+
+// ── Theme color utility ────────────────────────────────────────
+function applyThemeColor(color) {
+  THEME_COLOR = color;
+  const r = document.documentElement.style;
+  r.setProperty('--pip', color);
+  // Compute dim and dark variants
+  const c = parseInt(color.slice(1), 16);
+  const rd = (c >> 16) & 0xff, gd = (c >> 8) & 0xff, bd = c & 0xff;
+  const dim = '#' + [Math.floor(rd*0.65), Math.floor(gd*0.65), Math.floor(bd*0.65)]
+    .map(v => v.toString(16).padStart(2,'0')).join('');
+  const dark = '#' + [Math.floor(rd*0.2), Math.floor(gd*0.2), Math.floor(bd*0.2)]
+    .map(v => v.toString(16).padStart(2,'0')).join('');
+  const glow = `rgba(${rd},${gd},${bd},0.4)`;
+  r.setProperty('--pip-dim', dim);
+  r.setProperty('--pip-dark', dark);
+  r.setProperty('--pip-glow', glow);
+  r.setProperty('--pip-border', color);
+}
+
+
+// ── Menu System ────────────────────────────────────────────────
+function buildMenu() {
+  const container = document.getElementById('menu-items');
+  SECTIONS.forEach((sec, i) => {
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.innerHTML = `<span class="mi-num">${sec.icon}</span> ${sec.label}`;
+    div.addEventListener('click', () => {
+      closeMenu();
+      AudioEngine.nav_select();
+      Nav.go(sec.id);
+    });
+    container.appendChild(div);
+  });
+}
+
+function openMenu() {
+  document.getElementById('menu-overlay').classList.add('open');
+  AudioEngine.nav_menu_open();
+  // Highlight current
+  const items = document.querySelectorAll('.menu-item');
+  items.forEach((item, i) => {
+    item.classList.toggle('active', SECTIONS[i].id === Nav.getCurrent());
+  });
+}
+
+function closeMenu() {
+  document.getElementById('menu-overlay').classList.remove('open');
+  AudioEngine.nav_menu_close();
+}
+
+
+// ── Event Bindings ─────────────────────────────────────────────
+function bindEvents() {
+  // Header buttons
+  document.getElementById('back-btn').addEventListener('click', () => Nav.back());
+  document.getElementById('menu-btn').addEventListener('click', () => {
+    const overlay = document.getElementById('menu-overlay');
+    if (overlay.classList.contains('open')) closeMenu();
+    else openMenu();
+  });
+  document.getElementById('logo-btn').addEventListener('click', () => {
+    AudioEngine.nav_home();
+    Nav.go('dashboard');
+  });
+  document.getElementById('exit-btn').addEventListener('click', () => {
+    AudioEngine.sys_shutdown();
+    document.getElementById('session-ended').classList.add('show');
+    // Try to close window
+    setTimeout(() => { try { window.close(); } catch(e) {} }, 300);
+  });
+  document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const overlay = document.getElementById('menu-overlay');
+    const menuOpen = overlay.classList.contains('open');
+
+    if (e.key === 'Escape') {
+      if (menuOpen) { closeMenu(); e.preventDefault(); }
+      else if (Nav.getStack().length > 0) { Nav.back(); e.preventDefault(); }
+    }
+
+    // Number keys for menu when open
+    if (menuOpen && e.key >= '0' && e.key <= '9') {
+      const idx = e.key === '0' ? 9 : parseInt(e.key) - 1;
+      if (SECTIONS[idx]) {
+        closeMenu();
+        AudioEngine.nav_select();
+        Nav.go(SECTIONS[idx].id);
+        e.preventDefault();
+      }
+    }
+  });
+
+  // Browser back button
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.section) {
+      Nav.go(e.state.section, false);
+    } else {
+      Nav.back();
+    }
+  });
+}
+
+
+// ── Load saved settings ────────────────────────────────────────
+function loadSettings() {
+  try {
+    const savedRpc = localStorage.getItem('sost_rpc');
+    if (savedRpc) RPC_URL = savedRpc;
+    const savedSound = localStorage.getItem('sost_sound');
+    if (savedSound !== null) SOUND_ENABLED = savedSound === '1';
+    const savedTheme = localStorage.getItem('sost_theme');
+    if (savedTheme) applyThemeColor(savedTheme);
+  } catch(e) {}
+}
+
+
+// ── PWA Service Worker ─────────────────────────────────────────
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+
+// ── Initialize ─────────────────────────────────────────────────
+function init() {
+  loadSettings();
+  buildMenu();
+  bindEvents();
+  registerSW();
+
+  // Unlock AudioContext on first interaction
+  const unlockAudio = () => {
+    AudioEngine.click_soft();
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+  };
+  document.addEventListener('click', unlockAudio);
+  document.addEventListener('touchstart', unlockAudio);
+
+  // Start splash
+  runSplash(() => {
+    const app = document.getElementById('app');
+    app.classList.add('visible');
+    Nav.go('dashboard');
+    Nav.updateBackBtn();
+
+    // Start periodic updates
+    updateClock();
+    setInterval(updateClock, 1000);
+    pollBlockHeight();
+    setInterval(pollBlockHeight, 30000);
+
+    // Ambient hum every 45s
+    setInterval(() => {
+      if (SOUND_ENABLED && Math.random() > 0.5) AudioEngine.ambient_hum();
+    }, 45000);
+  });
+}
+
+// Boot
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
 </script>
 </body>
 </html>
