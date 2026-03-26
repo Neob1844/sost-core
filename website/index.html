@@ -586,10 +586,7 @@
 <!-- SPLASH — Red Matrix Rain -->
 <div id="sost-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease">
   <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <div id="sigma3d-wrap" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;opacity:0;transition:opacity 1.5s ease-in">
-    <canvas id="sigma-canvas" width="180" height="180" style="width:180px;height:180px"></canvas>
-    <div id="sigma3d-glow" style="position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(255,215,0,0.15),transparent 70%);animation:sigmaGlow 3s ease-in-out infinite;pointer-events:none"></div>
-  </div>
+  <img id="splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(251,1,13,0));z-index:10;pointer-events:none">
   <div id="splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
   <div id="spl-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);font-size:16px;min-height:100px;text-align:left;width:400px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
   <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
@@ -598,7 +595,6 @@
 .spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #aa0000;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
 .spl-line.go{animation:splType 2.5s steps(35) forwards;opacity:1}
 @keyframes splType{from{width:0}to{width:100%}}
-@keyframes sigmaGlow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.1)}}
 </style>
 <script src="js/retro-sounds.js"></script>
 <script src="js/sost-pwa-install.js"></script>
@@ -691,66 +687,13 @@
   // Start ambient drone immediately
   playMatrixAmbient(12);
 
-  // === GOLDEN SIGMA LOGO — Canvas drawn, smooth animation ===
-  var sigmaWrap=document.getElementById('sigma3d-wrap');
-  var sigmaCanvas=document.getElementById('sigma-canvas');
-  var sigmaCtx=sigmaCanvas?sigmaCanvas.getContext('2d'):null;
+  // === LOGO EMERGE (3s) ===
+  var logo=document.getElementById('splash-logo');
   var sigmaRunning=true;
-  var sigmaT0=performance.now();
-
-  function drawGoldenSigma(ctx,w,h,angle){
-    ctx.clearRect(0,0,w,h);
-    ctx.save();
-    ctx.translate(w/2,h/2);
-    // Subtle scale wobble
-    var t=(performance.now()-sigmaT0)/1000;
-    var sc=1+Math.sin(t*0.3)*0.08;
-    var tx=Math.sin(t*0.4+2)*15;
-    var ty=Math.sin(t*0.35)*10;
-    ctx.translate(tx,ty);
-    ctx.scale(sc,sc);
-    // Simulate 3D coin rotation via horizontal scale
-    var coinAngle=Math.sin(t*0.5)*0.4; // -0.4 to 0.4
-    ctx.scale(Math.cos(coinAngle),1);
-    // Shadow
-    ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=20;ctx.shadowOffsetX=5;ctx.shadowOffsetY=5;
-    // Metallic gradient that shifts with angle
-    var shift=Math.sin(t*0.7)*30;
-    var grad=ctx.createLinearGradient(-50+shift,-60,50+shift,60);
-    grad.addColorStop(0,'#fff8dc');
-    grad.addColorStop(0.2,'#ffd700');
-    grad.addColorStop(0.45,'#ffaa00');
-    grad.addColorStop(0.55,'#ffd700');
-    grad.addColorStop(0.8,'#daa520');
-    grad.addColorStop(1,'#b8860b');
-    // Draw Sigma as thick path
-    ctx.beginPath();
-    ctx.moveTo(-45,-55);ctx.lineTo(45,-55);ctx.lineTo(45,-40);
-    ctx.lineTo(-15,-40);ctx.lineTo(0,0);ctx.lineTo(-15,40);
-    ctx.lineTo(45,40);ctx.lineTo(45,55);ctx.lineTo(-45,55);
-    ctx.lineTo(-10,0);ctx.closePath();
-    ctx.fillStyle=grad;ctx.fill();
-    // Highlight edge (top-left light)
-    ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
-    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;ctx.stroke();
-    // Inner bevel (dark edge bottom-right)
-    ctx.strokeStyle='rgba(100,70,0,0.4)';ctx.lineWidth=1.5;
-    ctx.beginPath();
-    ctx.moveTo(45,-40);ctx.lineTo(-15,-40);ctx.lineTo(0,0);ctx.lineTo(-15,40);ctx.lineTo(45,40);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  setTimeout(function(){sigmaWrap.style.opacity='0.3';},2000);
-  setTimeout(function(){sigmaWrap.style.opacity='0.7';},3000);
-  setTimeout(function(){sigmaWrap.style.opacity='1';},4000);
-
-  function animateSigma(){
-    if(!sigmaRunning||!sigmaCtx)return;
-    drawGoldenSigma(sigmaCtx,180,180);
-    requestAnimationFrame(animateSigma);
-  }
-  setTimeout(animateSigma,2500);
+  setTimeout(function(){logo.style.opacity='0.15';},2200);
+  setTimeout(function(){logo.style.opacity='0.4';logo.style.filter='drop-shadow(0 0 13px rgba(251,1,13,0.3))';},2800);
+  setTimeout(function(){logo.style.opacity='0.7';logo.style.filter='drop-shadow(0 0 25px rgba(251,1,13,0.5))';},3400);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter='drop-shadow(0 0 38px rgba(251,1,13,0.6)) drop-shadow(0 0 75px rgba(251,1,13,0.3))';},4000);
 
   // === TITLE TYPING (5s) ===
   var titleEl=document.getElementById('splash-title');
@@ -795,10 +738,6 @@
   setTimeout(function(){
     matrixRunning=false;
     sigmaRunning=false;
-    // Exit: fade out the sigma wrap
-    if(sigmaWrap)sigmaWrap.style.transition='opacity 0.5s,transform 0.8s';
-    if(sigmaWrap)sigmaWrap.style.opacity='0';
-    if(sigmaWrap)sigmaWrap.style.transform='translate(-50%,-50%) scale(0.3)';
     sp.style.opacity='0';
     setTimeout(function(){sp.style.display='none';ctx=null;},600);
     sessionStorage.setItem('splashShown','1');
