@@ -717,3 +717,16 @@ This creates trivial classification signal. The REAL test requires querying API 
 Next: query both deposits AND background, then re-evaluate.
 
 **EMAG2v3 / WGM2012:** Download URLs moved/redirected. Not yet activated.
+
+### Phase 17: Geology Bias Fix — Balanced Macrostrat (March 2026)
+
+Queried Macrostrat for BOTH deposits AND background (fixing Phase 16 leakage):
+
+| Zone | Baseline | +has_data | +lithology | +full | Leakage |
+|------|----------|----------|-----------|-------|---------|
+| Peru | 0.698 | 0.817 (+0.119) | 0.813 (+0.116) | 0.817 (+0.120) | MODERATE |
+| Zambia | 0.737 | 0.771 (+0.034) | 0.791 (+0.054) | 0.803 (+0.066) | LOW |
+
+**Key finding:** At Zambia, lithology CONTENT contributes MORE than has_data presence (+0.054 vs +0.034).
+This is the FIRST genuine evidence that geology helps by geological content, not just coverage bias.
+Peru remains partly leaky due to coverage asymmetry (70% deposits vs 23% background got data).
