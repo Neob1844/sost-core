@@ -372,6 +372,18 @@ bool VerifySighash(
 
     // Verify
     if (!secp256k1_ecdsa_verify(ctx, &sigobj, sighash.data(), &pk)) {
+        // DEBUG: dump all inputs on E6 failure
+        {
+            auto hex = [](const uint8_t* d, size_t n) {
+                std::string s; s.reserve(n*2);
+                for (size_t i=0;i<n;i++) { char buf[3]; snprintf(buf,3,"%02x",d[i]); s+=buf; }
+                return s;
+            };
+            printf("[NODE-VERIFY-E6] ECDSA verification FAILED\n");
+            printf("[NODE-VERIFY-E6] sighash=%s\n", hex(sighash.data(),32).c_str());
+            printf("[NODE-VERIFY-E6] pubkey=%s\n", hex(pubkey.data(),33).c_str());
+            printf("[NODE-VERIFY-E6] signature=%s\n", hex(sig.data(),64).c_str());
+        }
         if (err) *err = "VerifySighash: ECDSA verification failed (E6)";
         return false;
     }
@@ -560,6 +572,25 @@ bool VerifyTransactionInput(
     if (actual_pkh != expected_pkh) {
         if (err) *err = "VerifyTransactionInput: pubkey hash mismatch (S2)";
         return false;
+    }
+
+    // DEBUG: show what the node passes to ComputeSighash
+    {
+        auto hex = [](const uint8_t* d, size_t n) {
+            std::string s; s.reserve(n*2);
+            for (size_t i=0;i<n;i++) { char buf[3]; snprintf(buf,3,"%02x",d[i]); s+=buf; }
+            return s;
+        };
+        printf("[NODE-VERIFY] VerifyTransactionInput input=%zu\n", input_index);
+        printf("[NODE-VERIFY] spent.amount=%lld spent.type=0x%02x\n",
+               (long long)spent.amount, spent.type);
+        printf("[NODE-VERIFY] expected_pkh=%s\n", hex(expected_pkh.data(),20).c_str());
+        printf("[NODE-VERIFY] genesis=%s\n", hex(genesis_hash.data(),32).c_str());
+        printf("[NODE-VERIFY] tx.version=%u tx.tx_type=0x%02x inputs=%zu outputs=%zu\n",
+               tx.version, tx.tx_type, tx.inputs.size(), tx.outputs.size());
+        printf("[NODE-VERIFY] prev_txid=%s prev_idx=%u\n",
+               hex(txin.prev_txid.data(),32).c_str(), txin.prev_index);
+        printf("[NODE-VERIFY] pubkey=%s\n", hex(txin.pubkey.data(),33).c_str());
     }
 
     Hash256 sighash = ComputeSighash(tx, input_index, spent, genesis_hash);
