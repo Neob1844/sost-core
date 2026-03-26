@@ -602,3 +602,18 @@ Multi-zone experiments with neighborhood context + hydrology + magnetics + isoto
 3. Isotonic calibration brings Kalgoorlie Brier below 0.10
 4. Peru needs EMIT/geology for improvement
 5. Arizona too few labels for meaningful ML
+
+### Phase 10: Information Fusion Expansion — Chuquicamata (March 2026)
+
+Geology + EMIT + neighborhood context + hydrology fusion at Chuquicamata:
+
+| Model | Features | AUC | Delta | Cal Brier |
+|-------|----------|-----|-------|-----------|
+| Baseline | 19 | 0.7890 | — | 0.1207 |
+| + Geology | 24 | 0.7928 | +0.004 | 0.1212 |
+| + Geology + EMIT | 34 | 0.8409 | +0.052 | 0.0997 |
+| Full fusion | 73 | 0.8823 | +0.093 | 0.0915 |
+
+**Biggest AUC improvement ever (+0.093).** Full information fusion transforms Chuquicamata.
+EMIT alone adds +0.052 (confirming porphyry-specificity). Neighborhood + hydrology add another +0.041.
+Calibrated Brier below 0.10 — probability estimates are honest.

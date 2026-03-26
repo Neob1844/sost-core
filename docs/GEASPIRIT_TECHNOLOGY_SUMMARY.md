@@ -54,7 +54,7 @@ It is **not** a direct subsurface imaging system. It uses surface and near-surfa
 | Zone | Deposit Type | Labels | Selected Families | AUC | Status |
 |------|-------------|--------|-------------------|-----|--------|
 | **Kalgoorlie** | Orogenic Au | 205 | satellite + thermal + PCA + magnetics + neighborhood + hydrology | 0.877 | Production |
-| **Chuquicamata** | Porphyry Cu | 43 | satellite + thermal + EMIT | 0.862 | Production |
+| **Chuquicamata** | Porphyry Cu | 38 | satellite + thermal + EMIT + geology + neighborhood + hydrology | 0.882 | Production |
 | **Peru** | Porphyry Cu | 71 | satellite + thermal | 0.758 | Development |
 | **Arizona** | Porphyry Cu | 5 | satellite + thermal | 0.718 | Marginal |
 | **Zambia** | Sediment Cu | 28 | satellite + neighborhood + hydrology | 0.758 | Development |
