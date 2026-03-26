@@ -565,6 +565,7 @@ body {
     <div class="logo" id="logo-btn">SOST://</div>
     <button class="hdr-btn back-btn" id="back-btn">&lt; BACK</button>
     <button class="hdr-btn" id="menu-btn">MENU</button>
+    <button class="hdr-btn" id="web-btn" style="color:#0af" onclick="window.open('https://sostcore.com','_blank')">WEB</button>
     <div class="hdr-spacer"></div>
     <div id="hdr-blockh">BLK ---</div>
     <div id="hdr-clock">--:--:--</div>
@@ -1369,31 +1370,50 @@ SectionRenderers.geaspirit = function(el) {
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// GEASPIRIT PLATFORM</h2>
-      <p>GeaSpirit is a proprietary mineral intelligence platform that identifies high-probability mineral exploration targets using multi-source satellite and geophysical data fusion.</p>
+      <p>Satellite-based mineral prospectivity mapping.</p>
+      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">23.7 / 40</span></p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 12 COMPLETE</span></div>
+      <div class="stat-row"><span class="stat-label">AOIs GLOBAL</span><span class="stat-value">10 (5 supervised + 3 heuristic + 1 demo + 1 failed)</span></div>
+      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value">162 coordinates</span></div>
+      <div class="stat-row"><span class="stat-label">OZMIN DEPOSITS</span><span class="stat-value">16,225 (CC-BY 4.0)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// CAPABILITIES</h2>
+      <ul style="padding-left:20px;margin-bottom:12px">
+        <li>Generate prospectivity maps from satellite data</li>
+        <li>Score areas by mineral potential (0-1 probability)</li>
+        <li>Multi-source information fusion (satellite + thermal + geophysics + context)</li>
+        <li>Zone-specific, type-aware model selection</li>
+        <li>Custom AOI targeting</li>
+      </ul>
+      <h3>CANNOT DO:</h3>
       <ul style="padding-left:20px">
-        <li>Rank exploration targets by probability across multiple zones</li>
-        <li>Identify geological structural contexts favorable for mineral deposits</li>
-        <li>Provide exact target coordinates at 30m resolution</li>
-        <li>Support zone-specific, type-aware analysis for different deposit types</li>
+        <li>Direct subsurface mineral detection</li>
+        <li>Cross-zone transfer of satellite models</li>
+        <li>Replace ground-truth geological surveys</li>
+        <li>Guarantee deposit existence at targets</li>
       </ul>
     </div>
-    <div class="pip-panel">
-      <h2>// CURRENT RESULTS</h2>
-      <div class="stat-row"><span class="stat-label">SUPERVISED ZONES</span><span class="stat-value stat-ok">6 ACROSS 4 CONTINENTS</span></div>
-      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value stat-ok">162 WITH EXACT COORDINATES</span></div>
-      <div class="stat-row"><span class="stat-label">MULTI-ZONE VALIDATION</span><span class="stat-value stat-ok">COMPLETED</span></div>
-      <div class="stat-row"><span class="stat-label">IMPROVEMENT</span><span class="stat-value">CONTINUOUS — INFORMATION FUSION ARCHITECTURE</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// CANONICAL OBJECTIVE</h2>
-      <p>Determine mineral type, depth, location, and certainty for exploration targets.</p>
-      <p style="margin-top:8px">Progress: <span style="color:var(--pip)">ACTIVELY ADVANCING ACROSS ALL FOUR DIMENSIONS</span></p>
-    </div>
-    <div class="pip-panel" style="text-align:center">
-      <p style="color:var(--pip-dim);font-size:14px">Technical implementation details available in the whitepaper.</p>
+    <div id="gea-tech-locked" class="pip-panel" style="position:relative;">
+      <h2>// TECHNICAL DETAILS <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
+      <div id="gea-tech-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;">
+        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:14px">ENTER ACCESS CODE</p>
+        <input type="password" id="gea-tech-pw" style="background:#111;border:1px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;text-align:center;width:180px;border-radius:4px" placeholder="........">
+        <button onclick="if(document.getElementById('gea-tech-pw').value==='SOST2026'){document.getElementById('gea-tech-overlay').style.display='none';AudioEngine.success_big();}else{AudioEngine.error_hard();this.previousElementSibling.value='';}" class="pip-btn" style="margin-top:12px;font-size:14px">UNLOCK</button>
+      </div>
+      <div class="stat-row"><span class="stat-label">PORPHYRY Cu</span><span class="stat-value stat-ok">AUC 0.86</span></div>
+      <div class="stat-row"><span class="stat-label">OROGENIC Au</span><span class="stat-value stat-ok">AUC 0.81</span></div>
+      <div class="stat-row"><span class="stat-label">SEDIMENT-HOSTED Cu</span><span class="stat-value stat-warn">AUC 0.76</span></div>
+      <div class="stat-row"><span class="stat-label">THERMAL</span><span class="stat-value">UNIVERSAL MODEST (+0.013 AUC)</span></div>
+      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC ONLY</span></div>
+      <div class="stat-row"><span class="stat-label">PCA EMBEDDINGS</span><span class="stat-value">KALGOORLIE-SPECIFIC ONLY</span></div>
+      <div class="stat-row"><span class="stat-label">ML RESIDUAL</span><span class="stat-value stat-err">NEGATIVE (no signal)</span></div>
+      <div class="stat-row"><span class="stat-label">GRADIENTS</span><span class="stat-value stat-err">NEGATIVE</span></div>
+      <div class="stat-row"><span class="stat-label">NEIGHBORHOOD</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED (+0.024)</span></div>
+      <div class="stat-row"><span class="stat-label">HYDROLOGY</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED</span></div>
+      <div class="stat-row"><span class="stat-label">MAGNETICS</span><span class="stat-value">+0.009 AUC (TMI national)</span></div>
+      <div class="stat-row"><span class="stat-label">FULL FUSION</span><span class="stat-value stat-ok">+0.093 AUC (Chuquicamata)</span></div>
+      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">No single feature family is universal. Zone-specific model architecture confirmed.</p>
     </div>
   `;
   AudioEngine.ambient_scan();
@@ -1405,28 +1425,36 @@ SectionRenderers.materials = function(el) {
   el.style.overflow = 'auto';
   el.innerHTML = `
     <div class="pip-panel">
-      <h2>// MATERIALS DISCOVERY ENGINE</h2>
-      <p>The Materials Discovery Engine is an autonomous computational platform for discovering novel materials with target properties.</p>
+      <h2>// MATERIALS ENGINE v3.2.0</h2>
+      <p>Computational materials discovery platform.</p>
+      <div class="stat-row"><span class="stat-label">MATERIALS IN DB</span><span class="stat-value stat-ok">76,193</span></div>
+      <div class="stat-row"><span class="stat-label">API ENDPOINTS</span><span class="stat-value">70+</span></div>
+      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">9 (270+ common names)</span></div>
     </div>
     <div class="pip-panel">
-      <h2>// CAPABILITIES</h2>
+      <h2>// FEATURES</h2>
       <ul style="padding-left:20px">
-        <li>Predict material properties from crystal structure</li>
-        <li>Generate theoretical candidate materials</li>
-        <li>Autonomous discovery campaigns with iterative learning</li>
-        <li>Multilingual search across 76,000+ known materials</li>
+        <li>Material Mixer MVP: theoretical candidates from parent pairs</li>
+        <li>Autonomous Discovery Engine: iterative candidate generation</li>
+        <li>22 elemental + 22 compound curated overrides</li>
+        <li>Multilingual search across 9 languages</li>
+        <li>Crystal structure visualization</li>
+        <li>Property prediction (formation energy, band gap)</li>
       </ul>
     </div>
-    <div class="pip-panel">
-      <h2>// CURRENT RESULTS</h2>
-      <div class="stat-row"><span class="stat-label">MATERIALS INDEXED</span><span class="stat-value stat-ok">76,193</span></div>
-      <div class="stat-row"><span class="stat-label">FORMATION ENERGY PREDICTION</span><span class="stat-value stat-ok">OPERATIONAL</span></div>
-      <div class="stat-row"><span class="stat-label">BAND GAP PREDICTION</span><span class="stat-value stat-ok">OPERATIONAL</span></div>
-      <div class="stat-row"><span class="stat-label">MATERIAL MIXER</span><span class="stat-value stat-ok">GENERATES CANDIDATES FROM PARENT PAIRS</span></div>
-      <div class="stat-row"><span class="stat-label">CURATED OVERRIDES</span><span class="stat-value">22 ELEMENTAL + 22 COMPOUND</span></div>
-    </div>
-    <div class="pip-panel" style="text-align:center">
-      <p style="color:var(--pip-dim);font-size:14px">Technical implementation details available in the whitepaper.</p>
+    <div id="mat-tech-locked" class="pip-panel" style="position:relative;">
+      <h2>// TECHNICAL ARCHITECTURE <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
+      <div id="mat-tech-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;">
+        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:14px">ENTER ACCESS CODE</p>
+        <input type="password" id="mat-tech-pw" style="background:#111;border:1px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;text-align:center;width:180px;border-radius:4px" placeholder="........">
+        <button onclick="if(document.getElementById('mat-tech-pw').value==='SOST2026'){document.getElementById('mat-tech-overlay').style.display='none';AudioEngine.success_big();}else{AudioEngine.error_hard();this.previousElementSibling.value='';}" class="pip-btn" style="margin-top:12px;font-size:14px">UNLOCK</button>
+      </div>
+      <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
+      <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
+      <div class="stat-row"><span class="stat-label">BACKEND</span><span class="stat-value">PYTHON / FLASK</span></div>
+      <div class="stat-row"><span class="stat-label">ML FRAMEWORK</span><span class="stat-value">PYTORCH</span></div>
+      <div class="stat-row"><span class="stat-label">DATABASE</span><span class="stat-value">76K MATERIALS (MP + CUSTOM)</span></div>
+      <div class="stat-row"><span class="stat-label">INFERENCE</span><span class="stat-value">CGCNN + ALIGNN-LITE</span></div>
     </div>
   `;
   AudioEngine.ambient_beep();
@@ -1536,10 +1564,16 @@ SectionRenderers.settings = function(el) {
       <div class="stat-row" style="margin-top:12px">
         <span class="stat-label">THEME COLOR</span>
         <span class="stat-value" style="display:flex;gap:8px">
-          <button class="theme-btn" data-color="#00ff41" style="background:#00ff41;width:28px;height:28px;border:2px solid #003300;cursor:pointer" title="Green"></button>
-          <button class="theme-btn" data-color="#00e5ff" style="background:#00e5ff;width:28px;height:28px;border:2px solid #003333;cursor:pointer" title="Cyan"></button>
-          <button class="theme-btn" data-color="#ffaa00" style="background:#ffaa00;width:28px;height:28px;border:2px solid #332200;cursor:pointer" title="Amber"></button>
-          <button class="theme-btn" data-color="#ff6600" style="background:#ff6600;width:28px;height:28px;border:2px solid #331100;cursor:pointer" title="Orange"></button>
+          <button class="theme-btn" data-color="#00ff41" style="background:#00ff41;width:28px;height:28px;border:2px solid #003300;cursor:pointer;border-radius:4px" title="Green / Matrix"></button>
+          <button class="theme-btn" data-color="#ffaa00" style="background:#ffaa00;width:28px;height:28px;border:2px solid #332200;cursor:pointer;border-radius:4px" title="Amber / Retro"></button>
+          <button class="theme-btn" data-color="#ff3333" style="background:#ff3333;width:28px;height:28px;border:2px solid #330000;cursor:pointer;border-radius:4px" title="Red / Alert"></button>
+          <button class="theme-btn" data-color="#ff6600" style="background:#ff6600;width:28px;height:28px;border:2px solid #331100;cursor:pointer;border-radius:4px" title="Orange / Fire"></button>
+          <button class="theme-btn" data-color="#00e5ff" style="background:#00e5ff;width:28px;height:28px;border:2px solid #003333;cursor:pointer;border-radius:4px" title="Cyan / Ice"></button>
+          <button class="theme-btn" data-color="#bb44ff" style="background:#bb44ff;width:28px;height:28px;border:2px solid #220033;cursor:pointer;border-radius:4px" title="Purple / Synthwave"></button>
+          <button class="theme-btn" data-color="#ffd700" style="background:#ffd700;width:28px;height:28px;border:2px solid #332800;cursor:pointer;border-radius:4px" title="Gold / Bullion"></button>
+          <button class="theme-btn" data-color="#ffffff" style="background:#ffffff;width:28px;height:28px;border:2px solid #333333;cursor:pointer;border-radius:4px" title="White / Clean"></button>
+          <button class="theme-btn" data-color="#4488ff" style="background:#4488ff;width:28px;height:28px;border:2px solid #001133;cursor:pointer;border-radius:4px" title="Blue / Deep Ocean"></button>
+          <button class="theme-btn" data-color="#ff44aa" style="background:#ff44aa;width:28px;height:28px;border:2px solid #330022;cursor:pointer;border-radius:4px" title="Pink / Neon"></button>
         </span>
       </div>
 
@@ -1755,7 +1789,7 @@ function bindEvents() {
     // After 4 seconds: try close, then redirect to blank
     setTimeout(() => {
       try { window.close(); } catch(e) {}
-      setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+      setTimeout(() => { window.location.href = 'https://sostprotocol.com/'; }, 500);
     }, 4000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
