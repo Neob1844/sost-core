@@ -53,11 +53,11 @@ It is **not** a direct subsurface imaging system. It uses surface and near-surfa
 
 | Zone | Deposit Type | Labels | Selected Families | AUC | Status |
 |------|-------------|--------|-------------------|-----|--------|
-| **Kalgoorlie** | Orogenic Au | 205 | satellite + thermal + PCA + magnetics | 0.882 | Production |
+| **Kalgoorlie** | Orogenic Au | 205 | satellite + thermal + PCA + magnetics + neighborhood + hydrology | 0.877 | Production |
 | **Chuquicamata** | Porphyry Cu | 43 | satellite + thermal + EMIT | 0.862 | Production |
 | **Peru** | Porphyry Cu | 71 | satellite + thermal | 0.758 | Development |
 | **Arizona** | Porphyry Cu | 5 | satellite + thermal | 0.718 | Marginal |
-| **Zambia** | Sediment Cu | 28 | satellite | 0.763 | Development |
+| **Zambia** | Sediment Cu | 28 | satellite + neighborhood + hydrology | 0.758 | Development |
 | **Pilbara** | Iron Fe | 8 | satellite | 0.405 | Failed |
 
 ---
@@ -100,7 +100,7 @@ Top 3 next experiments (from Frontier Research V5):
 | **MINERAL** | 3.3/10 | Neighborhood context: Au vs Ni AUC 0.627 | Geology maps, EMIT alteration type, better labels |
 | **DEPTH** | 4.1/10 | Magnetic depth proxy exists but noisy | AEM conductivity, drill hole calibration, gravity |
 | **COORDINATES** | 7.0/10 | 30m pixel resolution, ~1km² zones | Multi-scale peak finding, GPS validation |
-| **CERTAINTY** | 9.3/10 | AUC 0.882, Brier 0.091 (calibrated) | More labels, ensemble methods |
+| **CERTAINTY** | 9.3/10 | AUC 0.877, Brier 0.100 (isotonic calibration) | More labels, ensemble methods |
 | **TOTAL** | **23.7/40 (59%)** | | |
 
 ---

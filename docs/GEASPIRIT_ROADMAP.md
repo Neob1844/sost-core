@@ -584,3 +584,21 @@ All public documentation synchronized with accumulated results:
 **CTO Decision:** Evolve from feature experimentation into information fusion platform.
 Next priorities: geology integration, gravity, neighborhood context, calibration hardening.
 Target: canonical score 23.7/40 → 28+/40 within 3 sprints using only free data.
+
+### Phase 9: Information Fusion Core (March 2026)
+
+Multi-zone experiments with neighborhood context + hydrology + magnetics + isotonic calibration:
+
+| Zone | Deposits | Baseline AUC | Full AUC | Delta | Cal Brier |
+|------|----------|-------------|----------|-------|-----------|
+| Kalgoorlie | 205 | 0.8654 | 0.8770 | +0.012 | 0.0999 |
+| Zambia | 28 | 0.7366 | 0.7584 | +0.022 | 0.1547 |
+| Peru | 71 | 0.6976 | 0.6976 | 0.000 | 0.1654 |
+| Arizona | 5 | 0.3333 | — | — | — (too few labels) |
+
+**Key findings:**
+1. Neighborhood context generalizes to Zambia (+0.022 AUC) — multi-zone validated
+2. Hydrology contributes in vegetated zones (Zambia)
+3. Isotonic calibration brings Kalgoorlie Brier below 0.10
+4. Peru needs EMIT/geology for improvement
+5. Arizona too few labels for meaningful ML

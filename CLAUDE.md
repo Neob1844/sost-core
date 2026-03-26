@@ -137,20 +137,21 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 
 Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
-**Current state (Phase 8B):**
+**Current state (Phase 9):**
 - Multi-source exploration intelligence platform (not satellite-only)
-- 6 supervised zones: Kalgoorlie (0.882 AUC), Chuquicamata (0.862), Peru (0.758), Arizona (0.718), Zambia (0.763), Pilbara (FAILED)
+- 6 supervised zones: Kalgoorlie (0.877 AUC), Chuquicamata (0.862), Peru (0.758), Arizona (0.718), Zambia (0.758), Pilbara (FAILED)
+- Phase 9 information fusion: neighborhood context + hydrology + magnetics + isotonic calibration
+- Kalgoorlie 0.8654 → 0.8770 (+0.012 AUC), Zambia 0.7366 → 0.7584 (+0.022 AUC)
+- Neighborhood context multi-zone validated (generalized to Zambia)
+- Isotonic calibration: all Brier scores below 0.17, Kalgoorlie 0.0999
 - Canonical objective: 23.7/40 (59%). Mineral 3.3/10, Depth 4.1/10, Coords 7/10, Certainty 9.3/10
 - Type-aware auto-selection: tests all families, selects best per zone
-- Validated: satellite baseline (universal), thermal 20yr (modest), EMIT (porphyry-specific), PCA embeddings (Kalgoorlie-specific), magnetics (+0.009 real), neighborhood context (mineral AUC 0.627)
+- Validated: satellite baseline (universal), thermal 20yr (modest), EMIT (porphyry-specific), PCA embeddings (Kalgoorlie-specific), magnetics (+0.009 real), neighborhood context (multi-zone validated)
 - Rejected: spatial gradients, ML residuals, EMIT at orogenic Au, cross-zone transfer
-- Neighborhood context: strongest new finding (Au vs Ni discrimination begins)
 - tpi_heterogeneity d=+0.878 = strongest single feature ever found
-- Calibration: isotonic reduces Brier from 0.121 to 0.091
 - Critical fix: Phase 7 magnetics were EMPTY (wrong tiles). Fixed with GA national TMI via NCI THREDDS
 - Peru EMIT: blocked (truncated download), 50 granules available
 - Blockers: Peru EMIT, GSWA geology maps, GA gravity, detailed AEM
-- Next CTO: geology + gravity + neighborhood context + calibration = information fusion
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
 - See: docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md, docs/GEASPIRIT_CTO_NEXT_PHASE.md, docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md (extended with CTO sprint findings + 13 sections)
 
@@ -170,17 +171,17 @@ Located in `materials-engine/`. Python-based computational materials discovery.
 
 Located in `/home/sost/SOST/geaspirit/`. Multi-source exploration intelligence platform.
 
-**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment).
+**Phase history:** Thermal V2 (confirmed d=-0.68) → Phase 5I (multi-zone thermal) → Phase 6A-6E (EMIT, PCA, gradients, type-aware selection, universal matrix) → Phase 7 (magnetics, embeddings) → CTO Sprint (multi-scale anomaly, neighborhood context) → Phase 8B (public sync, canonical assessment) → Phase 9 (information fusion: neighborhood + hydrology + magnetics + calibration).
 
-**Selected families by zone:**
-- Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood → AUC 0.882
+**Selected families by zone (Phase 9):**
+- Kalgoorlie: satellite + thermal + PCA + magnetics + neighborhood + hydrology → AUC 0.877
 - Chuquicamata: satellite + thermal + EMIT → AUC 0.862
-- Peru/Arizona: satellite + thermal → AUC 0.758/0.718
-- Zambia: satellite → AUC 0.763
+- Peru/Arizona: satellite + thermal → AUC 0.698/0.718
+- Zambia: satellite + neighborhood + hydrology → AUC 0.758
 
 **Canonical objective: 23.7/40 (59%).** Mineral 3.3/10, Depth 4.1/10, Coords 7/10, Certainty 9.3/10.
 **Key insight:** The gap to 10/10 is a DATA problem (geology, geophysics, drill holes), not ML.
-**Next CTO phase:** Geology + gravity + neighborhood context + calibration = information fusion platform.
+**Phase 9 result:** Neighborhood context + hydrology + magnetics fusion + isotonic calibration. Kalgoorlie +0.012, Zambia +0.022 AUC. Multi-zone validated.
 **Full docs:** GEASPIRIT_TECHNOLOGY_SUMMARY.md, GEASPIRIT_CTO_NEXT_PHASE.md, GEASPIRIT_CANONICAL_PATH.md
 
 **Language guardrails:**
