@@ -617,3 +617,21 @@ Geology + EMIT + neighborhood context + hydrology fusion at Chuquicamata:
 **Biggest AUC improvement ever (+0.093).** Full information fusion transforms Chuquicamata.
 EMIT alone adds +0.052 (confirming porphyry-specificity). Neighborhood + hydrology add another +0.041.
 Calibrated Brier below 0.10 — probability estimates are honest.
+
+### Phase 11: Depth Push + Kalgoorlie Full Fusion (March 2026)
+
+**Gravity:** BLOCKED. GA WCS/REST endpoints return HTML portal, not raster data.
+Manual download from ecat.ga.gov.au/GADDS required. Gravity remains pending.
+
+**Kalgoorlie Full Fusion (sat + mag + thermal + neighborhood + hydrology + embeddings):**
+
+| Model | Features | AUC | Delta | Cal Brier |
+|-------|----------|-----|-------|-----------|
+| Baseline | 12 | 0.8654 | — | 0.1027 |
+| + Magnetics | 17 | 0.8744 | +0.009 | 0.1032 |
+| Sat+Mag+NB+Hydro | 44 | 0.8761 | +0.011 | 0.0961 |
+| Full fusion | 66 | 0.8785 | +0.013 | 0.0998 |
+
+**Best calibrated Brier ever: 0.096** (sat+mag+nb+hydro at Kalgoorlie).
+Full fusion pattern confirmed at 2 zones (Chuquicamata +0.093, Kalgoorlie +0.013).
+Kalgoorlie improvement smaller because baseline was already higher (0.865 vs 0.789).
