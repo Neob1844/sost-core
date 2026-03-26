@@ -679,3 +679,18 @@ Peru neighborhood + hydrology fusion:
 | Full fusion | 55 | 0.635 | -0.063 |
 
 **NEGATIVE.** Neighborhood/hydrology hurt at Peru. Likely cause: 71 labels insufficient for 55-feature model in spatial block CV. Fusion is NOT universal — it helps at strong-baseline zones (Kalgoorlie 0.865, Chuquicamata 0.789, Zambia 0.737) but hurts at weak ones (Peru 0.698). The pattern requires minimum baseline AUC ~0.73 to benefit from fusion.
+
+### Phase 15: Baseline-Aware Architecture (March 2026)
+
+**Peru diagnostic:** Baseline AUC 0.698 is below the ~0.73 threshold for fusion benefit.
+Missing geology. EMIT truncated. Recommendation: geology-first rescue.
+
+**Adaptive family gating engine (8 rules):**
+- R1: If baseline < 0.73 → DEFER complex fusion, focus on data enrichment
+- R2: If porphyry + EMIT available → PRIORITIZE EMIT
+- R4: If baseline >= 0.73 + labels >= 25 → ALLOW fusion
+- R5: If labels < 15 → SKIP ML, use heuristic only
+
+**Architecture evolution:** type-aware + zone-aware → **type-aware + zone-aware + baseline-aware**
+
+**Frontier Registry V2:** 27 families tracked (6 core, 3 selective, 10 frontier, 5 blocked, 2 rejected, 1 neutral).
