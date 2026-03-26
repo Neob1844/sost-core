@@ -56,7 +56,7 @@ Chain selection: best chain by cumulative work (same as Bitcoin). Atomic fork re
 [size=14pt][b]Links[/b][/size]
 
 [list]
-[li][url=https://sostcore.com]Website[/url] · [url=https://explorer.sostcore.com]Explorer[/url] · [url=https://explorer.sostcore.com/whitepaper.pdf]Whitepaper[/url] · [url=https://github.com/Neob1844/sost-core]GitHub[/url] · [url=https://wallet.sostcore.com]Wallet[/url][/li]
+[li][url=https://sostcore.com]Website[/url] · [url=https://sostprotocol.com/sost-explorer.html]Explorer[/url] · [url=https://sostprotocol.com/whitepaper.pdf]Whitepaper[/url] · [url=https://github.com/Neob1844/sost-core]GitHub[/url] · [url=https://wallet.sostcore.com]Wallet[/url][/li]
 [/list]
 
 [hr]

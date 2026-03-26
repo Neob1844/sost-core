@@ -231,8 +231,8 @@ A multi-source mineral intelligence system under active development. Designed fo
 
 [list]
 [li][b]Website:[/b] [url=https://sostcore.com]https://sostcore.com[/url][/li]
-[li][b]Explorer:[/b] [url=https://explorer.sostcore.com]https://explorer.sostcore.com[/url][/li]
-[li][b]Whitepaper:[/b] [url=https://explorer.sostcore.com/whitepaper.pdf]https://explorer.sostcore.com/whitepaper.pdf[/url][/li]
+[li][b]Explorer:[/b] [url=https://sostprotocol.com/sost-explorer.html]https://sostprotocol.com/sost-explorer.html[/url][/li]
+[li][b]Whitepaper:[/b] [url=https://sostprotocol.com/whitepaper.pdf]https://sostprotocol.com/whitepaper.pdf[/url][/li]
 [li][b]GitHub:[/b] [url=https://github.com/SOST-Protocol/sost-core]https://github.com/SOST-Protocol/sost-core[/url] (public from genesis)[/li]
 [li][b]Wallet:[/b] [url=https://wallet.sostcore.com]https://wallet.sostcore.com[/url][/li]
 [/list]
