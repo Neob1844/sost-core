@@ -742,3 +742,19 @@ Peru remains partly leaky due to coverage asymmetry (70% deposits vs 23% backgro
 **KEY FINDING:** Lithology content consistently > has_data presence at ALL 3 zones.
 Geology via Macrostrat is GENUINE, though coverage parity needs improvement for formal promotion.
 Geology can now be considered a VALIDATED SELECTIVE family (not just promising).
+
+### Phase 19: Geology Selective Promotion + Depth Push (March 2026)
+
+**Geology promoted:** PROMISING → **VALIDATED SELECTIVE** (3-zone evidence: lithology content > has_data at Zambia, Peru, Kalgoorlie).
+
+**Depth proxy plan:**
+- Active: GA national TMI magnetics (Kalgoorlie only, +0.009 AUC)
+- Blocked: gravity (portal), AEM (portal), Earth MRI (not downloaded), EMAG2 (URL 404), WGM2012 (URL 301)
+- Regional only: EMAG2, WGM2012 (~3.7km, too coarse for deposit-scale)
+
+**Depth remains the weakest dimension (4.1/10).** All deposit-scale depth sources are BLOCKED.
+The bottleneck is DATA ACCESS, not architecture or ML.
+
+**Blocked data status v2:** 11 items documented (gravity, EMIT, Earth MRI, MINDAT, EMAG2, WGM2012, AEM, ECOSTRESS, Prithvi, GEE, Macrostrat parity).
+
+**CTO statement:** Geology is now validated selective. The next bottleneck remains depth, not architecture.
