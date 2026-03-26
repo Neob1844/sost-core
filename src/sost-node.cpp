@@ -1312,6 +1312,7 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
               << ",\"amount_stocks\":" << kv.second.amount
               << ",\"height\":" << kv.second.height
               << ",\"confirmations\":" << (g_chain_height - kv.second.height + 1)
+              << ",\"output_type\":" << (int)kv.second.type
               << ",\"coinbase\":" << (kv.second.is_coinbase ? "true" : "false")
               << ",\"mature\":" << (mature ? "true" : "false")
               << ",\"spendable\":" << (!isLocked && mature ? "true" : "false")
