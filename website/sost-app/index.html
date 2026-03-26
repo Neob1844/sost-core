@@ -106,6 +106,8 @@ body {
   position: relative; z-index: 1;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
+  overflow: visible;
+  max-height: 90vh;
 }
 
 /* Pixel art miner */
@@ -489,10 +491,16 @@ body {
 @media (max-width: 600px) {
   #splash-title { font-size: 32px; letter-spacing: 6px; }
   #splash-lines { font-size: 14px; width: 90vw; }
-  #header .logo { font-size: 18px; letter-spacing: 2px; }
-  .hdr-btn { font-size: 14px; padding: 3px 7px; }
-  #hdr-blockh { font-size: 12px; }
-  #hdr-clock { font-size: 12px; }
+  #pixel-miner { width: 96px; height: 96px; margin-bottom: 10px; }
+  #pixel-miner canvas { width: 96px; height: 96px; }
+  #rock-layers { width: 150px; height: 30px; }
+  #header { padding: 0 6px; gap: 4px; height: 46px; flex-wrap: nowrap; overflow-x: auto; }
+  #header .logo { font-size: 16px; letter-spacing: 1px; white-space: nowrap; }
+  #hdr-logo-canvas { display: none; }
+  .hdr-btn { font-size: 12px; padding: 2px 6px; white-space: nowrap; }
+  #hdr-blockh { font-size: 11px; white-space: nowrap; }
+  #hdr-clock { font-size: 11px; white-space: nowrap; }
+  #web-btn { display: none; }
   #content { padding: 10px; }
   .pip-panel { padding: 12px; }
   .pip-panel h2 { font-size: 20px; }
@@ -500,9 +508,10 @@ body {
   #menu-overlay h2 { font-size: 22px; }
 }
 @media (max-width: 380px) {
-  #header .logo { font-size: 15px; }
-  .hdr-btn { font-size: 12px; padding: 2px 5px; }
+  #header .logo { font-size: 14px; }
+  .hdr-btn { font-size: 11px; padding: 2px 4px; }
   .pip-panel h2 { font-size: 18px; letter-spacing: 1px; }
+  #hdr-clock { display: none; }
 }
 </style>
 </head>
@@ -1699,6 +1708,17 @@ SectionRenderers.settings = function(el) {
       ">TEST RPC</button>
       <div id="set-diag-out" style="margin-top:8px;font-size:14px;color:var(--pip-dim)"></div>
     </div>
+
+    <div class="pip-panel">
+      <h2>// INSTALL APP</h2>
+      <p style="margin-bottom:12px">Install SOST as a standalone app on your device.</p>
+      <button id="set-install-btn" style="
+        background:rgba(0,255,65,0.1);border:2px solid var(--pip);color:var(--pip);
+        font-family:var(--font);font-size:18px;padding:12px 24px;cursor:pointer;
+        border-radius:4px;letter-spacing:2px;width:100%;
+      ">INSTALL APP</button>
+      <div id="set-install-info" style="margin-top:8px;font-size:13px;color:var(--pip-dim)"></div>
+    </div>
   `;
 
   // Sound toggle
@@ -1740,6 +1760,42 @@ SectionRenderers.settings = function(el) {
       setTimeout(() => AudioEngine[s](), i * 300);
     });
     setTimeout(() => { if (out) out.textContent = '> SOUND TEST COMPLETE (8/60 samples)'; }, sounds.length * 300);
+  });
+
+  // Install PWA
+  document.getElementById('set-install-btn').addEventListener('click', function() {
+    const info = document.getElementById('set-install-info');
+    if (window._deferredInstallPrompt) {
+      window._deferredInstallPrompt.prompt();
+      window._deferredInstallPrompt.userChoice.then(r => {
+        if (r.outcome === 'accepted') {
+          if (info) info.textContent = '> APP INSTALLED SUCCESSFULLY';
+          AudioEngine.success_big();
+        } else {
+          if (info) info.textContent = '> INSTALLATION CANCELLED';
+        }
+        window._deferredInstallPrompt = null;
+      });
+    } else if (window.matchMedia('(display-mode: standalone)').matches) {
+      if (info) info.textContent = '> APP IS ALREADY INSTALLED';
+      AudioEngine.click_toggle();
+    } else {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        if (info) info.innerHTML = '> TAP SHARE ICON → "ADD TO HOME SCREEN"';
+      } else {
+        if (info) info.innerHTML = '> TAP MENU (⋮) → "ADD TO HOME SCREEN"<br>> OR "INSTALL APP"';
+      }
+      AudioEngine.sys_notify();
+    }
+  });
+
+  // Capture install prompt
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    window._deferredInstallPrompt = e;
+    const btn = document.getElementById('set-install-btn');
+    if (btn) btn.textContent = '📲 INSTALL NOW (READY)';
   });
 
   // Test RPC

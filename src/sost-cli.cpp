@@ -198,15 +198,26 @@ static std::string rpc_call(const std::string& method,
 
     write(fd, req.c_str(), req.size());
 
-    // Read response (16KB buffer — enough for getinfo)
+    // Read full response
     std::string resp;
-    char buf[4096];
+    char buf[8192];
     ssize_t n;
     while ((n = read(fd, buf, sizeof(buf) - 1)) > 0) {
         buf[n] = 0;
         resp += buf;
-        if (resp.find("\r\n\r\n") != std::string::npos &&
-            resp.back() == '}') break;
+        // Check if we have complete HTTP response with JSON body
+        auto hdr_end = resp.find("\r\n\r\n");
+        if (hdr_end != std::string::npos) {
+            // Check Content-Length if present
+            auto cl_pos = resp.find("Content-Length: ");
+            if (cl_pos != std::string::npos && cl_pos < hdr_end) {
+                int64_t cl = std::stoll(resp.substr(cl_pos + 16));
+                int64_t body_received = (int64_t)(resp.size() - hdr_end - 4);
+                if (body_received >= cl) break;
+            } else if (resp.size() > hdr_end + 4 && resp.back() == '}') {
+                break;
+            }
+        }
     }
     close(fd);
     return resp;
@@ -230,6 +241,7 @@ static int64_t query_chain_height() {
 // =============================================================================
 static int sync_wallet_utxos_from_node(sost::Wallet& w) {
     std::string addr = w.default_address();
+    printf("[DEBUG] Wallet default address: %s\n", addr.empty() ? "(empty)" : addr.c_str());
     if (addr.empty()) {
         fprintf(stderr, "Warning: wallet has no addresses\n");
         return 0;
@@ -237,15 +249,30 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
 
     int total_imported = 0;
     {   // Fetch UTXOs for wallet's default address
-        std::string resp = rpc_call("getaddressutxos", "\"" + addr + "\"");
-        if (resp.empty()) return 0;
+        printf("[DEBUG] Querying node for UTXOs of %s...\n", addr.c_str());
+        std::string resp = rpc_call("getaddressutxos", "[\"" + addr + "\"]");
+        printf("[DEBUG] RPC response length: %zu bytes\n", resp.size());
+        if (resp.empty()) { printf("[DEBUG] Empty response — RPC failed\n"); return 0; }
 
-        // Find the JSON array in response
-        auto arr_start = resp.find('[');
-        auto arr_end = resp.rfind(']');
-        if (arr_start == std::string::npos || arr_end == std::string::npos) return 0;
+        // Extract JSON body from HTTP response, then find "result" array
+        auto body_start = resp.find("\r\n\r\n");
+        std::string json_body = (body_start != std::string::npos) ? resp.substr(body_start + 4) : resp;
 
-        std::string arr = resp.substr(arr_start, arr_end - arr_start + 1);
+        // Look for "result":[ in the JSON-RPC response
+        auto result_pos = json_body.find("\"result\":");
+        if (result_pos != std::string::npos) {
+            json_body = json_body.substr(result_pos + 9);  // Skip past "result":
+        }
+
+        auto arr_start = json_body.find('[');
+        auto arr_end = json_body.rfind(']');
+        if (arr_start == std::string::npos || arr_end == std::string::npos) {
+            printf("[DEBUG] No JSON array found. Body: %.300s\n", json_body.c_str());
+            return 0;
+        }
+        // Use json_body instead of resp for parsing
+        std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
+        printf("[DEBUG] Parsed UTXO array: %zu chars\n", arr.size());
 
         // Simple JSON array parsing — find each {...} object
         size_t pos = 0;
@@ -294,11 +321,16 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
                 sost::address_decode(addr, utxo.pkh);
                 w.add_utxo(utxo);
                 total_imported++;
+                printf("[DEBUG] Imported UTXO: %lld stocks (%.8f SOST) height=%lld\n",
+                       (long long)utxo.amount,
+                       (double)utxo.amount / 100000000.0,
+                       (long long)utxo.height);
             }
 
             pos = obj_end + 1;
         }
     }
+    printf("[DEBUG] Total UTXOs imported from node: %d\n", total_imported);
     return total_imported;
 }
 
@@ -766,16 +798,25 @@ int main(int argc, char** argv) {
         }
         int64_t amount = parse_amount(amount_str.c_str());
 
-        // v1.3: Query node for current chain height
-        //       Required for: maturity filter + broadcasting
+        // v1.4: Sync UTXOs from node + query chain height
         int64_t chain_height = query_chain_height();
         if (chain_height < 0) {
             fprintf(stderr, "Error: cannot connect to node at %s:%d\n",
                     g_node_host.c_str(), g_node_port);
-            fprintf(stderr, "  Node must be running to check maturity and broadcast.\n");
+            fprintf(stderr, "  Node must be running to send transactions.\n");
             return 1;
         }
         printf("Chain height: %lld\n", (long long)chain_height);
+
+        // Sync UTXOs from chain for wallet address
+        int synced = sync_wallet_utxos_from_node(w);
+        if (synced > 0) {
+            printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
+        } else if (w.num_utxos() == 0) {
+            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", w.default_address().c_str());
+            fprintf(stderr, "  Check that the address has received funds and they are mature.\n");
+            return 1;
+        }
 
         // Create transaction with dynamic fee
         sost::Hash256 genesis_hash = sost::from_hex(
