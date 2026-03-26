@@ -152,7 +152,7 @@ Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 - Blockers: Peru EMIT, GSWA geology maps, GA gravity, detailed AEM
 - Next CTO: geology + gravity + neighborhood context + calibration = information fusion
 - Scripts in `geaspirit/scripts/`, data in `~/SOST/geaspirit/data/`
-- See: docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md, docs/GEASPIRIT_CTO_NEXT_PHASE.md
+- See: docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md, docs/GEASPIRIT_CTO_NEXT_PHASE.md, docs/GEASPIRIT_FRONTIER_RESEARCH_V5.md (extended with CTO sprint findings + 13 sections)
 
 ## Materials Engine
 
