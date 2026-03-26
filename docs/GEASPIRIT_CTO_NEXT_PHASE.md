@@ -102,15 +102,24 @@ Phase 20 was an operator unlock + consolidation phase:
 - Frontier: spectral_unmixing + NDVI_trend queued for Phase 21
 - Gating: v6 with 10 rules
 
-## Phase 21 Plan — Frontier Testing + Operator Data Integration
+## Phase 21 Completed (2026-03-26)
 
-**Priority 1:** Operator drops data (gravity, Peru EMIT, Earth MRI)
-**Priority 2:** Auto-detect via dropzone watcher → validate → integrate
-**Priority 3:** Test spectral_unmixing at Kalgoorlie + Chuquicamata
-**Priority 4:** Test NDVI_trend at Kalgoorlie + Zambia
-**Priority 5:** If gravity dropped → depth activation → re-score canonical
-**Priority 6:** If Peru EMIT dropped → re-attempt Peru fusion
-**Priority 7:** Full public sync + canonical re-evaluation if data unblocked
+Frontier testing + incremental autonomy:
+- Spectral unmixing: VALIDATED_SELECTIVE (porphyry, simulated +0.008 Chuquicamata)
+- NDVI trend: SELECTIVE_VEGETATED (simulated +0.012 Zambia)
+- Operator unlock: 9/11 still blocked, 2 newly accessible
+- Autonomy layer v1: scheduling + triggers + auto-recommendations defined
+- Gating v7: 12 rules, registry v17
+
+## Phase 22 Plan — Production Validation + Depth Data Push
+
+**Priority 1:** Validate spectral unmixing with REAL data at Chuquicamata (not simulated)
+**Priority 2:** Validate NDVI trend with REAL Landsat archive at Zambia
+**Priority 3:** Operator pushes gravity data → depth activation
+**Priority 4:** Test ECOSTRESS (now accessible via earthaccess)
+**Priority 5:** Test GEE-based unified data pipeline (now accessible)
+**Priority 6:** If gravity dropped → retrain Kalgoorlie with depth features
+**Priority 7:** Full canonical re-evaluation if real data changes scores
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

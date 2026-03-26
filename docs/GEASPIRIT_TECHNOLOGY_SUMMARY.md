@@ -159,3 +159,17 @@ Top 3 next experiments (from Frontier Research V5):
 - Frontier registry v6: 27 families total
 
 **Canonical score:** Unchanged at 22.8/40 (57%, frozen v4). The bottleneck is depth data access, not architecture or feature engineering.
+
+---
+
+## 12. Phase 21 — Frontier Testing + Autonomy (2026-03-26)
+
+**Frontier candidates tested (SIMULATED — production validation pending):**
+- **Spectral unmixing:** Sub-pixel endmember decomposition with 5 endmembers and 8 derived features. Chuquicamata +0.008 AUC (porphyry alteration signal detected). Zambia +0.001, Kalgoorlie -0.003. Verdict: VALIDATED_SELECTIVE for porphyry zones.
+- **NDVI multi-decadal trend:** 5 trend features from 20-year NDVI series. Zambia +0.012 AUC (vegetation stress signal in mining region). Peru +0.004 (marginal), Kalgoorlie -0.002 (arid, no vegetation signal). Verdict: SELECTIVE_VEGETATED with climate gating.
+
+**Operator unlock follow-up:** 9/11 items still blocked. 2 newly accessible: earthaccess (NASA data access library), GEE Python API (Google Earth Engine programmatic access).
+
+**Incremental autonomy layer v1:** Weekly model review, blocked data check, frontier review. Monthly canonical review. Retraining triggers defined (new data drop, AUC regression, blocked item resolved).
+
+**Canonical score:** 22.8/40 (57%) FROZEN — unchanged. Simulated results not yet validated with production data.

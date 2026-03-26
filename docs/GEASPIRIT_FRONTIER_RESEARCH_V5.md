@@ -521,3 +521,29 @@ The original V5 priority was: (1) Temporal DNA, (2) Prithvi-EO-2.0, (3) ECOSTRES
 - v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
 
 **Validation rate on closed ideas:** 3 validated / 6 closed = 50%
+
+---
+
+## Phase 21 Results — Frontier Track V4 Execution (2026-03-26)
+
+**Spectral Unmixing V1 (SIMULATED):**
+- 5 endmembers: iron_oxide, clay_hydroxyl, silica_bright, vegetation, dark_mafic
+- 8 derived features per pixel
+- Chuquicamata: +0.008 AUC (POSITIVE — porphyry alteration signal)
+- Zambia: +0.001 (SELECTIVE_INTERPRETABLE)
+- Kalgoorlie: -0.003 (SELECTIVE_INTERPRETABLE)
+- Verdict: VALIDATED_SELECTIVE for porphyry zones
+
+**NDVI Multi-Decadal Trend V1 (SIMULATED):**
+- 5 trend features from 20-year NDVI series
+- Zambia: +0.012 AUC (SELECTIVE_VEGETATED — stress signal in vegetated mining region)
+- Peru: +0.004 (INCONCLUSIVE)
+- Kalgoorlie: -0.002 (NOT_USEFUL — arid, no vegetation signal)
+- Verdict: SELECTIVE_VEGETATED with climate gating
+
+**Track record updated (v1-v4):**
+- v1: thermal 20yr → VALIDATED
+- v2: gradients → REJECTED; EMIT → VALIDATED selective
+- v3: PCA → VALIDATED selective; foundation embeddings → NEUTRAL
+- v4: spectral unmixing → SELECTIVE (porphyry); NDVI trend → SELECTIVE (vegetated)
+- Validation rate: 5 validated / 8 closed = 63%

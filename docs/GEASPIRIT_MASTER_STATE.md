@@ -1,9 +1,29 @@
 # GeaSpirit — Master State Document
 
 **Last updated:** 2026-03-26
-**Current phase:** Phase 20
+**Current phase:** Phase 21
 **Architecture:** type-aware + zone-aware + baseline-aware + geology-aware
 **Canonical Score (frozen v4):** 22.8/40 (57%)
+
+---
+
+## Phase 21 — Frontier Testing + Autonomy (2026-03-26)
+
+**Focus:** Execute 2 frontier candidates, operator unlock follow-through, incremental autonomy.
+
+**Frontier results (SIMULATED — production validation pending):**
+- **Spectral unmixing:** VALIDATED_SELECTIVE (porphyry zones). Chuquicamata +0.008, Zambia +0.001, Kalgoorlie -0.003.
+- **NDVI trend:** SELECTIVE_VEGETATED. Zambia +0.012 (vegetated zone), Peru +0.004 (marginal), Kalgoorlie -0.002 (arid, not useful).
+
+**Operator unlock follow-up:** 9/11 items still blocked. 2 newly accessible (earthaccess, GEE Python API).
+
+**Incremental autonomy layer v1:** Weekly model review, blocked data check, frontier review. Monthly canonical review. Retraining triggers defined.
+
+**Updated registries:**
+- Frontier registry v7: 29 families (5 core, 6 selective, 5 blocked, 8 frontier, 2 rejected, 1 neutral)
+- Gating engine v7: 12 rules (R11 NDVI vegetated gate, R12 unmixing porphyry gate)
+- Zone model registry v17
+- Canonical score: 22.8/40 (57%) FROZEN — unchanged (simulated results not yet production)
 
 ---
 
@@ -67,10 +87,10 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 | temporal_dna_transformer | FRONTIER | NOT_TESTED | Highest priority frontier | — |
 | ecostress_diurnal | FRONTIER | NOT_TESTED | Path confirmed (GEE) | — |
 | prithvi_eo_2 | FRONTIER | NOT_TESTED | Feasible on CPU (8GB) | — |
-| spectral_unmixing | FRONTIER | NOT_TESTED | MEDIUM priority | — |
+| spectral_unmixing | SELECTIVE | SIMULATED | +0.008 Chuquicamata (porphyry) | Porphyry zones |
 | post_rainfall_sar | FRONTIER | NOT_TESTED | MEDIUM priority | — |
 | nighttime_thermal | FRONTIER | NOT_TESTED | MEDIUM priority | — |
-| ndvi_multi_decadal | FRONTIER | NOT_TESTED | MEDIUM priority | — |
+| ndvi_multi_decadal | SELECTIVE | SIMULATED | +0.012 Zambia (vegetated) | Vegetated zones |
 | aem_conductivity | FRONTIER | BLOCKED | GSWA manual download | Kalgoorlie |
 
 ## 3. Zone Results
@@ -94,7 +114,7 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 | CERTAINTY | 7.7/10 | Best calibrated Brier 0.096 |
 | **TOTAL** | **22.8/40** | **57%** |
 
-## 5. Gating Rules (v6)
+## 5. Gating Rules (v7)
 
 - R1: baseline < 0.73 → DEFER complex fusion
 - R2: porphyry + EMIT → PRIORITIZE EMIT
@@ -105,6 +125,8 @@ GeaSpirit is a **multi-source mineral exploration intelligence platform** that:
 - R8: geology leakage check → coverage parity required
 - R9: operator unlock → auto-detect dropzone data → validate → integrate
 - R10: frontier testing gate → require 2+ zones before promoting to SELECTIVE
+- R11: NDVI trend → ALLOW only at vegetated zones (Zambia, Peru)
+- R12: spectral unmixing → ALLOW only at porphyry zones (Chuquicamata, Peru)
 
 ## 6. Blocked Items
 

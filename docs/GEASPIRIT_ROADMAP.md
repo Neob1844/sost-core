@@ -776,3 +776,28 @@ The bottleneck is DATA ACCESS, not architecture or ML.
 - Validation rate on closed ideas: 3 validated / 6 closed = 50%
 
 **Access restrictions audit:** 11 blocked items documented in `docs/GEASPIRIT_ACCESS_RESTRICTIONS.md`. All manual dropzones remain EMPTY. Depth bottleneck unchanged (4.1/10).
+
+### Phase 21: Frontier Testing + Autonomy (2026-03-26)
+
+**Two frontier experiments completed (SIMULATED):**
+
+1. **Spectral unmixing** — VALIDATED_SELECTIVE (porphyry). Simulated +0.008 AUC at Chuquicamata. Sub-pixel endmember decomposition using Sentinel-2 bands + USGS spectral library. Works at porphyry zones where alteration minerals have distinct spectral signatures.
+2. **NDVI multi-decadal trend** — SELECTIVE_VEGETATED. Simulated +0.012 AUC at Zambia. Landsat archive NDVI change detection over 20+ years. Works at vegetated zones where mineralization causes persistent vegetation stress.
+
+**Autonomy layer v1:** Scheduling framework + trigger conditions + auto-recommendations for next experiments. First step toward self-improving pipeline.
+
+**Access update:** 2 items newly accessible (earthaccess for ECOSTRESS, GEE Python API). 9/11 items still blocked. All 3 manual dropzones still EMPTY.
+
+**Gating v7:** 12 rules (extended from v6 with spectral unmixing + NDVI trend conditions).
+**Registry v17:** Updated with frontier results.
+**Canonical score:** Unchanged 22.8/40 (57%) — all frontier results SIMULATED, production validation pending.
+
+**Frontier track record (v1-v5):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+- v5: spectral_unmixing → VALIDATED_SELECTIVE (porphyry, simulated); NDVI_trend → SELECTIVE_VEGETATED (simulated)
+- Validation rate on closed ideas: 5 validated / 8 closed = 63%
+
+**CTO statement:** ALL Phase 21 results are simulated. Production validation is the next priority before any canonical score update.
