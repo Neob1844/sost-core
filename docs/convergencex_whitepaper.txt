@@ -3136,6 +3136,8 @@ K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
   All manual data dropzones created but awaiting operator download.
 - Phase 14: Peru fusion NEGATIVE (-0.063). Fusion helps at 3/4 zones but not universal.
   Minimum baseline ~0.73 AUC needed to benefit from neighborhood/hydrology fusion.
+- Phase 15: Baseline-aware gating. Peru diagnostic: fusion hurts weak baselines (<0.73 AUC).
+  8 adaptive rules. 27 families tracked. Architecture: type+zone+baseline aware.
 - Ceiling with satellite data only: ~22-24/40 (fundamental limit)
 - Ceiling with satellite + free geophysics: ~28-30/40
 - Ceiling with satellite + geophysics + drill holes: ~36/40
