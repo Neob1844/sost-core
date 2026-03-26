@@ -635,3 +635,17 @@ Manual download from ecat.ga.gov.au/GADDS required. Gravity remains pending.
 **Best calibrated Brier ever: 0.096** (sat+mag+nb+hydro at Kalgoorlie).
 Full fusion pattern confirmed at 2 zones (Chuquicamata +0.093, Kalgoorlie +0.013).
 Kalgoorlie improvement smaller because baseline was already higher (0.865 vs 0.789).
+
+### Phase 12: Zambia Full Fusion + Manual Data Layer (March 2026)
+
+Multi-source fusion confirmed at 3rd independent zone:
+
+| Zone | Baseline | Full Fusion | Delta |
+|------|----------|-------------|-------|
+| Chuquicamata | 0.789 | 0.882 | +0.093 |
+| Kalgoorlie | 0.865 | 0.879 | +0.013 |
+| Zambia | 0.737 | 0.760 | +0.024 |
+
+**Fusion validated across 3 zones, 3 deposit types, 3 continents.**
+Manual data dropzones created for gravity, Peru EMIT, Arizona Earth MRI.
+MINDAT: blocked (needs API key). Canonical V3: 22.9/40 (57%).
