@@ -649,3 +649,20 @@ Multi-source fusion confirmed at 3rd independent zone:
 **Fusion validated across 3 zones, 3 deposit types, 3 continents.**
 Manual data dropzones created for gravity, Peru EMIT, Arizona Earth MRI.
 MINDAT: blocked (needs API key). Canonical V3: 22.9/40 (57%).
+
+### Phase 13: Data Closure + Canonical Score Freeze (March 2026)
+
+**Manual dropzones:** All 3 EMPTY (gravity, Peru EMIT, Arizona Earth MRI). Operator action needed.
+**Peru EMIT raw:** 2 granules, both TRUNCATED (1006 MB, 762 MB). Re-download required.
+**MINDAT:** BLOCKED — no API key registered at ~/.mindat_key.
+**Canonical methodology FROZEN (v4):**
+- MINERAL: 4.0/10 (Au vs Ni AUC 0.627)
+- DEPTH: 4.1/10 (magnetics only, no gravity/AEM)
+- COORDINATES: 7.0/10 (30m pixel)
+- CERTAINTY: 7.7/10 (best Brier 0.096)
+- **TOTAL: 22.8/40 (57%)**
+
+Methodology is now fixed and documented. Changes require CTO approval.
+Fusion validated at 3 zones remains the strongest architectural finding.
+
+**Next:** Operator downloads data into dropzones → scripts auto-ingest → scores update.
