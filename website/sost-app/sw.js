@@ -1,5 +1,5 @@
-// SOST Protocol — Service Worker
-const CACHE_NAME = 'sost-app-v60';
+// SOST Protocol — Service Worker v61
+const CACHE_NAME = 'sost-app-v61';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -22,17 +22,32 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Network-first for RPC and iframe pages
-  if (url.pathname.endsWith('/rpc') || e.request.method === 'POST' ||
-      url.pathname.includes('sost-explorer') || url.pathname.includes('sost-wallet')) {
-    e.respondWith(fetch(e.request).catch(() =>
-      caches.match(e.request).then(r => r || new Response('Offline', {status: 503}))
-    ));
+
+  // ALWAYS network-first for dynamic endpoints (never cache these)
+  if (url.pathname.includes('/rpc') ||
+      url.pathname.includes('/api/') ||
+      url.pathname.includes('node-status') ||
+      url.pathname.includes('materials') ||
+      e.request.method === 'POST' ||
+      url.pathname.includes('sost-explorer') ||
+      url.pathname.includes('sost-wallet') ||
+      url.search.includes('nocache')) {
+    e.respondWith(
+      fetch(e.request).catch(() =>
+        caches.match(e.request).then(r => r || new Response('Offline', {status: 503}))
+      )
+    );
     return;
   }
-  // Cache-first for app shell
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
-    if (resp.ok) { const cl = resp.clone(); caches.open(CACHE_NAME).then(c => c.put(e.request, cl)); }
-    return resp;
-  }).catch(() => new Response('Offline', {status: 503}))));
+
+  // Cache-first for app shell (static assets)
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+      if (resp.ok) {
+        const cl = resp.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, cl));
+      }
+      return resp;
+    }).catch(() => new Response('Offline', {status: 503})))
+  );
 });
