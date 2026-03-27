@@ -1139,8 +1139,27 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 23</div>
-    <div class="section-title">Phase 23: <span>Raw Data Engineering + Real Frontier Validation</span></div>
+    <div class="section-id">// LATEST — PHASE 24</div>
+    <div class="section-title">Phase 24: <span>First Real GEE Validation</span></div>
+
+    <!-- Section: Phase 24 Results -->
+    <div class="panel">
+      <div class="panel-head" style="color:var(--green)">PHASE 24 &mdash; FIRST REAL GEE VALIDATION (NO SIMULATION)</div>
+      <table class="tbl">
+        <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>GEE Exports</td><td>COMPLETED</td><td>4 zones: Chuquicamata (267 S2), Zambia (528), Kalgoorlie (180), Peru (55)</td></tr>
+          <tr style="color:var(--green)"><td>Spectral Unmixing</td><td>REAL_FEATURES</td><td>Computed on 500 real pixels per zone &mdash; first non-simulated results</td></tr>
+          <tr style="color:var(--green)"><td>NDVI Trend</td><td>REAL_FEATURES</td><td>12 years real Landsat per zone. Zambia: mean 0.310, slope +0.0032/yr (promising)</td></tr>
+          <tr style="color:var(--amber)"><td>Chuquicamata NDVI</td><td>NOT_APPLICABLE</td><td>Mean 0.042 (hyperarid) &mdash; NDVI trend not meaningful in desert</td></tr>
+          <tr style="color:var(--red)"><td>AUC Validation</td><td>BLOCKED</td><td>Spatial alignment between GEE pixels and labels needed</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; real features exist but AUC not measurable yet</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
+        <b style="color:var(--green)">Milestone:</b> First time frontier candidates have been tested on real exported satellite data (not simulated). The blocker is now spatial alignment, not data access. Phase 25 will build the alignment layer.
+      </div>
+    </div>
 
     <!-- Section A: Phase 23 GEE Pipelines -->
     <div class="panel">
@@ -1288,7 +1307,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; GEE pipelines built + sample-tested <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 24</span> GEE export + real frontier validation + AUC measurement <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 24</span> First real GEE validation &mdash; 4 zones exported, real features computed <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 25</span> Spatial alignment layer + AUC measurement <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
   </div>
 </section>
 

@@ -246,6 +246,18 @@ A multi-source mineral intelligence system under active development. Designed fo
 [li]Depth remains blocked (4.1/10) — all deposit-scale sources still need operator data[/li]
 [/list]
 
+[b][Phase 24 Update — 2026-03-27][/b]
+[list]
+[li]First real frontier validation on exported GEE rasters — no simulation[/li]
+[li]4 zones exported: Chuquicamata (267 S2 images), Zambia (528), Kalgoorlie (180), Peru (55)[/li]
+[li]Spectral unmixing: real features computed on 500 real pixels per zone[/li]
+[li]NDVI trend: 12 years real Landsat data per zone. Zambia promising (mean 0.310, slope +0.0032/yr)[/li]
+[li]Chuquicamata NDVI not applicable (mean 0.042, hyperarid desert)[/li]
+[li]Validation blocked: spatial alignment between GEE pixels and labels needed before AUC measurement[/li]
+[li]Canonical objective: 22.8/40 (57%) — unchanged. Real features exist but AUC not measurable yet[/li]
+[li]Next: spatial alignment layer (Phase 25)[/li]
+[/list]
+
 [hr]
 
 [size=14pt][b]Links[/b][/size]

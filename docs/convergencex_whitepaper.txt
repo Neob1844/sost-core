@@ -3163,3 +3163,12 @@ Raw data pipelines constructed via Google Earth Engine: Sentinel-2 L2A reflectan
 2013-2024). Both sample-tested with real satellite data. GEE operationalized within
 GeaSpirit. Full raster export and frontier validation pending. Canonical score
 remains 22.8/40 (57%).
+
+--- GeaSpirit Phase 24 Note (2026-03-27) ---
+First real frontier validation on exported GEE rasters (no simulation). 4 zones
+exported: Chuquicamata (267 S2 images), Zambia (528), Kalgoorlie (180), Peru (55).
+Spectral unmixing real features computed on 500 real pixels per zone. NDVI trend:
+12 years real Landsat data per zone. Zambia NDVI promising (mean 0.310, slope
++0.0032/yr). Chuquicamata not applicable (hyperarid). Validation blocked by spatial
+alignment between GEE pixels and labels. Canonical score remains 22.8/40 (57%).
+Next: spatial alignment layer (Phase 25).
