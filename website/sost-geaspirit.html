@@ -1141,8 +1141,99 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   <div class="container">
     <div class="section-id">// LATEST — PHASE 22</div>
     <div class="section-title">Phase 22: <span>Real Validation + Access Closure</span></div>
+
+    <!-- Section A: Real Validation Blocked by Data -->
     <div class="panel">
-      <div class="panel-head">PHASE 22 STATUS</div>
+      <div class="panel-head" style="color:var(--red)">PHASE 22 — REAL VALIDATION BLOCKED BY DATA</div>
+      <table class="tbl">
+        <thead><tr><th>Frontier Candidate</th><th>Status</th><th>Root Cause</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--amber)">Spectral Unmixing</td>
+            <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED_BY_DATA</span></td>
+            <td style="color:#aaa">Existing stacks contain <b style="color:var(--amber)">derived indices</b> (iron oxide ratio, clay ratio, NDVI) &mdash; not raw Sentinel-2 L2A reflectance bands (B2&ndash;B12). Sub-pixel mineral unmixing requires raw reflectance as input. Cannot validate without rebuilding the data pipeline from raw S2 imagery.</td>
+          </tr>
+          <tr>
+            <td style="color:var(--amber)">NDVI Trend (20yr)</td>
+            <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED_BY_DATA</span></td>
+            <td style="color:#aaa">Stacks contain a <b style="color:var(--amber)">single-date NDVI snapshot</b>, not a 20-year Landsat time series. Vegetation stress anomaly detection requires multi-year composite statistics (mean, trend slope, variance). Cannot validate without building a Landsat temporal composite pipeline.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
+        Both candidates remain <b style="color:var(--amber)">SIMULATED_ONLY</b>. Simulated gains (+0.008 porphyry unmixing, +0.012 vegetated NDVI trend) cannot be promoted to VALIDATED until raw data pipelines exist.
+      </div>
+    </div>
+
+    <!-- Section B: Access Status Update -->
+    <div class="panel">
+      <div class="panel-head">ACCESS STATUS UPDATE</div>
+      <table class="tbl">
+        <thead><tr><th>Data Source</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>GEE Python API</td>
+            <td><span style="background:rgba(0,255,65,.12);border:1px solid var(--green);color:var(--green);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">FULLY_ACCESSIBLE</span></td>
+            <td style="color:#aaa">ee.Initialize() succeeds. SRTM data query works. Ready for raw S2 + Landsat pipelines.</td>
+          </tr>
+          <tr>
+            <td>ECOSTRESS / earthaccess</td>
+            <td><span style="background:rgba(255,176,0,.12);border:1px solid var(--amber);color:var(--amber);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">PARTIALLY_ACCESSIBLE</span></td>
+            <td style="color:#aaa">Library installed, NASA Earthdata auth OK. Search returns 0 granules for test AOI &mdash; endpoint or collection issue.</td>
+          </tr>
+          <tr>
+            <td>Gravity (GA Bouguer)</td>
+            <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED</span></td>
+            <td style="color:#555">GA endpoints return HTML portal, not data. Manual download required.</td>
+          </tr>
+          <tr>
+            <td>AEM (detailed)</td>
+            <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED</span></td>
+            <td style="color:#555">No public API. Requires state geological survey access.</td>
+          </tr>
+          <tr>
+            <td>Earth MRI</td>
+            <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED</span></td>
+            <td style="color:#555">USGS Earth MRI portal &mdash; manual download only.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
+        <b style="color:var(--amber)">8 of 11</b> blocked data items remain fully blocked. All depth-related items (gravity, AEM, Earth MRI) remain inaccessible without manual operator intervention.
+      </div>
+    </div>
+
+    <!-- Section C: Why This Does Not Invalidate the Ideas -->
+    <div class="panel">
+      <div class="panel-head" style="color:var(--green)">WHY THIS DOES NOT INVALIDATE THE IDEAS</div>
+      <div style="font-size:12px;line-height:1.8;color:#aaa">
+        <b style="color:var(--green)">Physical basis remains sound.</b> Sub-pixel mineral unmixing from reflectance spectra is established remote sensing science &mdash; USGS and ESA both use it operationally. Vegetation stress anomalies over mineralization are documented in peer-reviewed literature.<br><br>
+        <b style="color:var(--green)">The blocking factor is data pipeline, not science.</b> We attempted real validation and discovered the stacks were built from derived indices, not raw bands. This is an engineering gap, not a scientific failure.<br><br>
+        <b style="color:var(--green)">Simulated results are physically consistent.</b> The simulated gains (+0.008 AUC at porphyry zones for unmixing, +0.012 AUC at vegetated zones for NDVI trend) align with expected effect sizes from literature. They are plausible but unconfirmed.<br><br>
+        <b style="color:var(--amber)">Next step:</b> Build raw data pipelines (GEE is already accessible), then re-validate with proper inputs. Promotion requires real AUC improvement on held-out data.
+      </div>
+    </div>
+
+    <!-- Section D: Next — Raw Data Engineering (Phase 23) -->
+    <div class="panel">
+      <div class="panel-head" style="color:var(--amber)">NEXT &mdash; RAW DATA ENGINEERING (PHASE 23)</div>
+      <table class="tbl">
+        <thead><tr><th>Pipeline</th><th>Source</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>Raw S2 Reflectance</td><td>GEE &rarr; Sentinel-2 L2A</td><td>B2&ndash;B12 raw bands for spectral unmixing (NNLS endmember decomposition)</td></tr>
+          <tr style="color:var(--green)"><td>Multi-year NDVI Composite</td><td>GEE &rarr; Landsat 5/7/8/9 archive</td><td>20-year median, trend slope, variance for vegetation stress anomaly detection</td></tr>
+          <tr style="color:var(--amber)"><td>GEE &rarr; GeaSpirit Integration</td><td>ee Python API</td><td>Automated download, reproject to zone AOI, align to existing stacks</td></tr>
+          <tr style="color:var(--amber)"><td>Real Frontier Validation</td><td>New raw stacks</td><td>Re-run unmixing + NDVI trend experiments with proper data, measure real AUC delta</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
+        GEE access is confirmed. Phase 23 is an engineering phase: build the pipelines, download the data, re-validate the frontier candidates with honest measurements.
+      </div>
+    </div>
+
+    <!-- Phase 22 overview table (retained) -->
+    <div class="panel">
+      <div class="panel-head">PHASE 22 COMPONENT STATUS</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
@@ -1152,14 +1243,15 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr style="color:var(--amber)"><td>ECOSTRESS</td><td>PARTIALLY_ACCESSIBLE</td><td>Auth OK, search returns 0 granules for test AOI</td></tr>
           <tr style="color:var(--green)"><td>Autonomy Layer</td><td>v2</td><td>Promotion guardrails, execution queue, retry policy</td></tr>
           <tr style="color:var(--amber)"><td>Blocked Items</td><td>8/11</td><td>Depth items all blocked</td></tr>
-          <tr style="color:var(--green)"><td>Gating</td><td>v8 — 14 RULES</td><td>R13 simulated guardrail, R14 pilot gate</td></tr>
+          <tr style="color:var(--green)"><td>Gating</td><td>v8 &mdash; 14 RULES</td><td>R13 simulated guardrail, R14 pilot gate</td></tr>
           <tr style="color:var(--green)"><td>Registry</td><td>v18</td><td>Updated with real validation results</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED — frontier candidates remain SIMULATED_ONLY</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; frontier candidates remain SIMULATED_ONLY</td></tr>
         </tbody>
       </table>
     </div>
+
     <div class="human-box">
-      <b>Phase 22 summary:</b> Real validation of spectral unmixing and NDVI trend both BLOCKED_BY_DATA — existing stacks contain derived indices, not raw reflectance; NDVI is single snapshot, not time series. Both remain SIMULATED_ONLY candidates. GEE Python API is FULLY_ACCESSIBLE (ee.Initialize works). ECOSTRESS is PARTIALLY_ACCESSIBLE (auth OK, search returns 0 granules). Autonomy v2 with promotion guardrails. Gating v8 (14 rules). Canonical unchanged 22.8/40 (57%). Honest: frontier candidates remain simulated only until raw data pipelines are built.
+      <b>Phase 22 summary:</b> Real validation of spectral unmixing and NDVI trend both <b>BLOCKED_BY_DATA</b> &mdash; existing stacks contain derived indices, not raw reflectance; NDVI is a single snapshot, not a time series. Both remain SIMULATED_ONLY candidates. GEE Python API is FULLY_ACCESSIBLE (ee.Initialize works). ECOSTRESS is PARTIALLY_ACCESSIBLE (auth OK, search returns 0 granules). 8/11 data items still blocked; all depth sources (gravity, AEM, Earth MRI) remain inaccessible. Canonical unchanged at 22.8/40 (57%). The science is sound but the data pipeline must be built before promotion. Phase 23 will build raw S2 + Landsat pipelines via GEE.
     </div>
   </div>
 </section>
@@ -1179,8 +1271,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 16-19</span> Macrostrat geology + coverage parity + depth proxy plan <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 20</span> Operator unlock + depth activation + frontier track v4 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
-    <div class="phase"><span class="phase-label">PHASE 23</span> Data pipeline construction + GEE integration + depth data push <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; S2 reflectance + Landsat NDVI via GEE + real frontier validation <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
   </div>
 </section>
 

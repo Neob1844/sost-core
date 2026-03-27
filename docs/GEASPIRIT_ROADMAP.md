@@ -832,3 +832,16 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 - Validation rate on closed ideas: 5 validated / 8 closed = 63% — 2 pending real validation
 
 **CTO statement:** Frontier validation requires raw data pipelines. Next phase must build S2 reflectance and NDVI composite pipelines before any further frontier promotion.
+
+### Phase 22B — Documentation + Papers Sync (2026-03-26)
+- Full web update with Phase 22 frontier validation results
+- Research note created (GEASPIRIT_PHASE22_FRONTIER_VALIDATION_NOTE.md)
+- Phase 23 raw data engineering spec created
+- All docs synchronized
+
+### Phase 23 — Raw Data Engineering (PLANNED)
+- Build raw S2 reflectance pipeline via GEE
+- Build multi-year NDVI composite pipeline via GEE + Landsat
+- GEE → GeaSpirit integration
+- Real frontier validation with proper data
+- Operator gravity data integration if dropped

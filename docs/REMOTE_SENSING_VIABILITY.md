@@ -1144,3 +1144,13 @@ EMIT (285 bands, 60m, ISS orbit) is VIABLE for porphyry Cu but NOT for orogenic 
 - AUC delta: +0.004 (NEUTRAL in strict block CV)
 - Phase 6C showed +0.026 — evaluation-method dependent
 - Cannot confirm as independently useful with strict spatial validation
+
+### Phase 22: Raw Data Requirements (2026-03-26)
+
+**Key finding:** Frontier validation of spectral unmixing and NDVI trend analysis was attempted but blocked by data format limitations in existing stacks.
+
+- **Spectral unmixing** requires raw Sentinel-2 reflectance bands (B2-B12), not derived spectral indices. Current stacks contain only pre-computed indices (NDVI, clay ratio, iron oxide, etc.). Endmember decomposition cannot be performed on index-level data.
+- **NDVI trend** requires multi-year Landsat/Sentinel time series composites (5-20 year temporal depth), not single-date NDVI snapshots. Temporal trend detection is impossible from a single observation.
+- **Google Earth Engine** is now FULLY_ACCESSIBLE (ee.Initialize() confirmed, SRTM query successful). GEE provides programmatic access to raw S2 L2A reflectance and full Landsat archive, enabling both pipelines.
+- **ECOSTRESS** is PARTIALLY_ACCESSIBLE (earthaccess library + auth working, but search returns 0 granules for test AOI — needs parameter debugging).
+- **Implication:** The bottleneck for frontier feature validation has shifted from ML architecture to data engineering. Raw data pipelines via GEE are the critical path for Phase 23.
