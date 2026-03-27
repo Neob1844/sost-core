@@ -1224,6 +1224,12 @@ function runSplash(callback) {
       } else {
         clearInterval(typeInterval);
         titleEl.classList.remove('typing');
+        // Add subtitle after typing finishes
+        const sub = document.createElement('div');
+        sub.style.cssText = 'font-size:14px;letter-spacing:5px;color:rgba(255,0,51,0.5);margin-top:6px;opacity:0;transition:opacity 1s';
+        sub.textContent = 'SOVEREIGN STOCK TOKEN';
+        titleEl.parentElement.insertBefore(sub, titleEl.nextSibling);
+        setTimeout(() => { sub.style.opacity = '1'; }, 200);
       }
     }, 80);
   }, 1500);

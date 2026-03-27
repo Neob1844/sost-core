@@ -346,6 +346,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 </div>
 <script>
 let RPC='/rpc',RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
+// Auto-detect working RPC endpoint (supports any domain)
+(async function(){try{var r=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":0,"method":"getinfo","params":[]}'});if(!r.ok)throw 0;console.log('[RPC] /rpc works');}catch(e){RPC='https://sostcore.com/rpc';document.getElementById('rpcUrl').value=RPC;console.log('[RPC] Fallback to '+RPC);}})();
 var _activeMiner='';
 const COINBASE_MATURITY=100;
 const PS=10;
