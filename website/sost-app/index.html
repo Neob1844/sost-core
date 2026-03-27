@@ -612,6 +612,10 @@ body {
     <div class="hdr-spacer"></div>
     <div id="hdr-blockh">BLK ---</div>
     <div id="hdr-clock">--:--:--</div>
+    <span style="display:flex;gap:2px;margin-left:4px">
+      <button class="hdr-btn" style="font-size:14px;padding:0 6px;min-width:24px" onclick="document.getElementById('content').style.transform='scale('+(parseFloat(document.getElementById('content').dataset.zoom||1)+0.1)+')';document.getElementById('content').dataset.zoom=parseFloat(document.getElementById('content').dataset.zoom||1)+0.1;document.getElementById('content').style.transformOrigin='top left'" title="Zoom in">+</button>
+      <button class="hdr-btn" style="font-size:14px;padding:0 6px;min-width:24px" onclick="var z=Math.max(0.5,parseFloat(document.getElementById('content').dataset.zoom||1)-0.1);document.getElementById('content').style.transform='scale('+z+')';document.getElementById('content').dataset.zoom=z;document.getElementById('content').style.transformOrigin='top left'" title="Zoom out">−</button>
+    </span>
     <button class="hdr-btn" id="explorer-btn" style="animation:explorerBlink 2s ease-in-out infinite" onclick="window.open('https://sostcore.com/sost-explorer.html','_blank')">EXPL</button>
     <button class="hdr-btn exit-btn" id="exit-btn">EXIT</button>
   </div>
