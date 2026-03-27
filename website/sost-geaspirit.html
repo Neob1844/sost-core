@@ -274,6 +274,72 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
   </div>
 </section>
 
+<!-- PUBLIC GEASPIRIT OVERVIEW -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// PLATFORM OVERVIEW</div>
+    <div class="section-title">What Is <span>GeaSpirit</span></div>
+
+    <div class="panel">
+      <div class="panel-head">// WHAT IS GEASPIRIT</div>
+      <p>GeaSpirit is an autonomous mineral prospectivity intelligence platform. It identifies zones with high probability of containing mineral deposits by fusing multiple data sources — satellite imagery, geophysics, geochemistry, hydrology, and geological context.</p>
+      <p style="margin-top:10px">Unlike traditional exploration, GeaSpirit does not require physical access to the target zone. It operates entirely from publicly available remote sensing and geoscientific data.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// CANONICAL OBJECTIVE</div>
+      <p style="font-size:16px;color:var(--green);margin-bottom:16px">"There is <b>[MINERAL]</b> at <b>[DEPTH]</b> at <b>[COORDINATES]</b> with <b>[X%]</b> certainty."</p>
+      <p>GeaSpirit scores any point on the planet across 4 dimensions:</p>
+      <table class="tbl">
+        <tr><td style="color:var(--amber);width:140px">MINERAL</td><td>4.0 / 10</td><td>Identify deposit type (porphyry Cu, orogenic Au, sedimentary Cu, etc.)</td></tr>
+        <tr><td style="color:var(--amber)">DEPTH</td><td>4.1 / 10</td><td>Estimate target depth (surface proxy — deposit-scale geophysics blocked)</td></tr>
+        <tr><td style="color:var(--green)">COORDINATES</td><td>7.0 / 10</td><td>Precise location at 30m per pixel resolution</td></tr>
+        <tr><td style="color:var(--green)">CERTAINTY</td><td>7.7 / 10</td><td>Calibrated probability (isotonic calibration, Brier score validated)</td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:18px;color:var(--amber)"><b>Canonical Score: 22.8 / 40 (57%)</b> — Methodology frozen v4</p>
+      <p style="font-size:12px;color:var(--text-dim)">The gap to 10/10 is a DATA problem (gravity, AEM, drill holes), not ML. Architecture is ready; the bottleneck is depth-oriented data access.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// VALIDATED ZONES — 3 Continents, 3 Deposit Types</div>
+      <table class="tbl">
+        <tr><th>Zone</th><th>Country</th><th>Deposit Type</th><th>Baseline AUC</th><th>Fusion AUC</th><th>Improvement</th></tr>
+        <tr><td>Chuquicamata</td><td>Chile</td><td>Porphyry Copper</td><td>0.789</td><td style="color:var(--green)">0.882</td><td style="color:var(--green)">+0.093</td></tr>
+        <tr><td>Kalgoorlie</td><td>Australia</td><td>Orogenic Gold</td><td>0.865</td><td style="color:var(--green)">0.879</td><td style="color:var(--green)">+0.013</td></tr>
+        <tr><td>Zambia Copperbelt</td><td>Zambia</td><td>Sedimentary Copper</td><td>0.737</td><td style="color:var(--green)">0.760</td><td style="color:var(--green)">+0.024</td></tr>
+      </table>
+      <p style="margin-top:12px">Multi-source fusion improves performance at all 3 validated zones, across different deposit types and continents. This confirms the approach generalizes.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// CURRENT CAPABILITIES</div>
+      <table class="tbl">
+        <tr><td style="width:200px">Spectral analysis</td><td>Multi-band satellite imagery interpretation</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>Thermal anomaly detection</td><td>Long-term thermal proxy from 20-year archives</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>Hydrological features</td><td>Drainage density, watershed analysis</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>Neighborhood context</td><td>Spatial autocorrelation of deposit occurrence</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>Aeromagnetics</td><td>National TMI magnetic anomaly data</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>Geological context</td><td>Lithology classification via Macrostrat</td><td style="color:var(--amber)">SELECTIVE</td></tr>
+        <tr><td>Probability calibration</td><td>Isotonic calibration for honest certainty</td><td style="color:var(--green)">PRODUCTION</td></tr>
+        <tr><td>GEE integration</td><td>Google Earth Engine operationalized for data pipelines</td><td style="color:var(--green)">OPERATIONAL</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// RESTRICTED INFORMATION</div>
+      <p>The following details are available only in the restricted technical whitepaper:</p>
+      <ul style="list-style:none;padding:0">
+        <li>— Model architecture and training methodology</li>
+        <li>— Feature engineering algorithms and hyperparameters</li>
+        <li>— Training data composition and preprocessing</li>
+        <li>— Gating engine rules and adaptive family selection</li>
+        <li>— Frontier research experiments and methodology</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
 <!-- ACCESS PANEL -->
 <div id="access-panel" style="text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:440px">
   <div style="color:var(--green);letter-spacing:2px;margin-bottom:20px;font-size:13px">

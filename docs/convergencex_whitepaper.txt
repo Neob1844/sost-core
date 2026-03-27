@@ -3106,7 +3106,7 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
   EMIT alteration (porphyry Cu specific), PCA embeddings (Kalgoorlie specific),
   magnetics (small positive), neighborhood context (promising for mineral ID)
 - Rejected: spatial gradients, ML residuals, EMIT at orogenic Au, cross-zone transfer
-- Canonical objective: 23.7/40 (59%). Mineral 3.3/10, Depth 4.1/10, Coordinates 7/10, Certainty 9.3/10
+- Canonical objective: 22.8/40 (57%, frozen v4). Mineral 4.0/10, Depth 4.1/10, Coordinates 7.0/10, Certainty 7.7/10
 - Type-aware auto-selection: tests all available families, selects best per zone
 - Framing: "zone-aware, type-aware, multi-proxy mineral intelligence"
 - Does NOT claim direct subsurface detection — surface proxy inference only
@@ -3116,11 +3116,11 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 
 K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
 - Canonical objective: "There is [mineral] at [depth] at [coordinates] with [certainty%]"
-- Current score: 23.7/40 (59%)
-  - MINERAL:     3.3/10 — Neighborhood context enables Au vs Ni discrimination (AUC 0.627)
-  - DEPTH:       4.1/10 — Magnetic Euler proxy exists but noisy. Needs AEM/gravity/drill holes
-  - COORDINATES: 7.0/10 — 30m pixel resolution, ~1km2 zone identification
-  - CERTAINTY:   9.3/10 — AUC 0.877, Brier 0.100 (isotonic calibration, Phase 9)
+- Current score: 22.8/40 (57%, frozen methodology v4)
+  - MINERAL:     4.0/10 — Deposit type discrimination (porphyry Cu, orogenic Au, sediment Cu)
+  - DEPTH:       4.1/10 — Depth estimation (surface proxy — deposit-scale geophysics blocked)
+  - COORDINATES: 7.0/10 — Spatial precision at 30m per pixel
+  - CERTAINTY:   7.7/10 — Calibrated probability (isotonic, Brier validated)
 - Phase 9 information fusion results (March 2026):
   - Kalgoorlie: 0.8654 → 0.8770 (+0.012 AUC), calibrated Brier 0.0999
   - Zambia: 0.7366 → 0.7584 (+0.022 AUC), calibrated Brier 0.1547
@@ -3179,3 +3179,28 @@ best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI
 0.724 (NEGATIVE). Kalgoorlie & Chuquicamata blocked by GEE memory limits.
 Spectral unmixing: NEUTRAL. NDVI trend: zone-specific (vegetated only).
 Canonical score remains 22.8/40 (57%) — no improvement exceeding +0.005 threshold.
+
+--- SOST Ecosystem: GeaSpirit & Materials Engine ---
+
+GeaSpirit — Mineral Intelligence Platform
+Canonical Objective: "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
+Canonical Score: 22.8/40 (57%), frozen methodology v4.
+  - MINERAL 4.0/10, DEPTH 4.1/10, COORDINATES 7.0/10, CERTAINTY 7.7/10
+Validated at 3 zones: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).
+Multi-source fusion confirmed at all zones. Architecture: type-aware + zone-aware + baseline-aware.
+GEE operationalized. Depth remains primary bottleneck (blocked geophysical data).
+
+RESTRICTED — Implementation Details:
+  Model architecture, feature engineering algorithms, training data, hyperparameters,
+  gating engine rules, and frontier research experiments are restricted.
+  Available under authorized access only.
+
+Materials Discovery Engine — Autonomous Materials Intelligence
+76,193 materials corpus. Predicts formation energy and band gap from crystal structure.
+19 campaign profiles. Functional intersection discovery for water/lithium/membrane.
+Phase XV: 35,589 screened, 11,339 multi-function candidates identified.
+Full validation bridge with prediction-observation-reconciliation lifecycle.
+
+RESTRICTED — Implementation Details:
+  Neural network architecture, model weights, training methodology,
+  hyperparameter tuning, and backend framework are restricted.
