@@ -801,3 +801,34 @@ The bottleneck is DATA ACCESS, not architecture or ML.
 - Validation rate on closed ideas: 5 validated / 8 closed = 63%
 
 **CTO statement:** ALL Phase 21 results are simulated. Production validation is the next priority before any canonical score update.
+
+### Phase 22: Real Validation + Access Closure (2026-03-26)
+
+**Real validation attempted — both BLOCKED_BY_DATA:**
+
+1. **Spectral unmixing** — VALIDATION_BLOCKED. Existing stacks contain derived spectral indices, not raw Sentinel-2 reflectance bands needed for endmember decomposition. Cannot validate without raw data pipeline.
+2. **NDVI trend** — VALIDATION_BLOCKED. Existing NDVI is single-date snapshots, not multi-year Landsat time series. Cannot validate without temporal composite pipeline.
+
+Both remain SIMULATED_ONLY candidates — NOT promoted to production.
+
+**Access closure:**
+- GEE Python API: FULLY_ACCESSIBLE (ee.Initialize() works, SRTM query successful)
+- ECOSTRESS/earthaccess: PARTIALLY_ACCESSIBLE (library+auth OK, search returns 0 granules for test AOI)
+- 8/11 items still fully blocked. All depth items (gravity, AEM, Earth MRI) blocked.
+
+**Autonomy layer v2:** Promotion guardrails (simulated→candidate only, not production). Execution queue and retry policy.
+
+**Gating v8:** 14 rules (R13 simulated guardrail, R14 newly accessible pilot gate).
+**Registry v18:** Updated with real validation results.
+**Canonical score:** Unchanged 22.8/40 (57%) — no real validation evidence to justify update.
+
+**Frontier track record (v1-v6):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+- v5: spectral_unmixing → VALIDATED_SELECTIVE (porphyry, simulated); NDVI_trend → SELECTIVE_VEGETATED (simulated)
+- v6: real validation attempted → both BLOCKED_BY_DATA (raw pipelines needed)
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% — 2 pending real validation
+
+**CTO statement:** Frontier validation requires raw data pipelines. Next phase must build S2 reflectance and NDVI composite pipelines before any further frontier promotion.
