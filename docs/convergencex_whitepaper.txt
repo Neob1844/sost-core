@@ -3171,4 +3171,11 @@ Spectral unmixing real features computed on 500 real pixels per zone. NDVI trend
 12 years real Landsat data per zone. Zambia NDVI promising (mean 0.310, slope
 +0.0032/yr). Chuquicamata not applicable (hyperarid). Validation blocked by spatial
 alignment between GEE pixels and labels. Canonical score remains 22.8/40 (57%).
-Next: spatial alignment layer (Phase 25).
+
+--- GeaSpirit Phase 25 Note (2026-03-27) ---
+Spatial alignment resolved via GEE sampleRegions() at exact label coordinates.
+Zambia: S2 baseline 0.640, unmixing +0.001 (NEUTRAL), NDVI 0.772 (POSITIVE —
+best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI
+0.724 (NEGATIVE). Kalgoorlie & Chuquicamata blocked by GEE memory limits.
+Spectral unmixing: NEUTRAL. NDVI trend: zone-specific (vegetated only).
+Canonical score remains 22.8/40 (57%) — no improvement exceeding +0.005 threshold.

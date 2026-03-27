@@ -1139,25 +1139,28 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 24</div>
-    <div class="section-title">Phase 24: <span>First Real GEE Validation</span></div>
+    <div class="section-id">// LATEST — PHASE 25</div>
+    <div class="section-title">Phase 25: <span>Spatial Alignment Resolved + Real Frontier Validation</span></div>
 
-    <!-- Section: Phase 24 Results -->
+    <!-- Section: Phase 25 Results -->
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">PHASE 24 &mdash; FIRST REAL GEE VALIDATION (NO SIMULATION)</div>
+      <div class="panel-head" style="color:var(--green)">PHASE 25 &mdash; SPATIAL ALIGNMENT RESOLVED</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>GEE Exports</td><td>COMPLETED</td><td>4 zones: Chuquicamata (267 S2), Zambia (528), Kalgoorlie (180), Peru (55)</td></tr>
-          <tr style="color:var(--green)"><td>Spectral Unmixing</td><td>REAL_FEATURES</td><td>Computed on 500 real pixels per zone &mdash; first non-simulated results</td></tr>
-          <tr style="color:var(--green)"><td>NDVI Trend</td><td>REAL_FEATURES</td><td>12 years real Landsat per zone. Zambia: mean 0.310, slope +0.0032/yr (promising)</td></tr>
-          <tr style="color:var(--amber)"><td>Chuquicamata NDVI</td><td>NOT_APPLICABLE</td><td>Mean 0.042 (hyperarid) &mdash; NDVI trend not meaningful in desert</td></tr>
-          <tr style="color:var(--red)"><td>AUC Validation</td><td>BLOCKED</td><td>Spatial alignment between GEE pixels and labels needed</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; real features exist but AUC not measurable yet</td></tr>
+          <tr style="color:var(--green)"><td>Spatial Alignment</td><td>RESOLVED</td><td>GEE sampleRegions() extracts at exact label coordinates &mdash; blocker eliminated</td></tr>
+          <tr style="color:var(--green)"><td>Zambia S2 Baseline</td><td>AUC 0.640</td><td>Raw S2 reflectance baseline at Zambia</td></tr>
+          <tr style="color:var(--amber)"><td>Zambia Unmixing</td><td>NEUTRAL (+0.001)</td><td>Adds nothing over raw S2 reflectance</td></tr>
+          <tr style="color:var(--green)"><td>Zambia NDVI</td><td>AUC 0.772 (POSITIVE)</td><td>Best single family at this zone &mdash; strong vegetation signal</td></tr>
+          <tr><td>Peru S2 Baseline</td><td>AUC 0.850</td><td>Raw S2 reflectance baseline at Peru</td></tr>
+          <tr style="color:var(--amber)"><td>Peru Unmixing</td><td>NEUTRAL (-0.003)</td><td>Adds nothing over raw S2 reflectance</td></tr>
+          <tr style="color:var(--red)"><td>Peru NDVI</td><td>AUC 0.724 (NEGATIVE)</td><td>Hurts at arid zone &mdash; below S2 baseline</td></tr>
+          <tr style="color:var(--red)"><td>Kalgoorlie &amp; Chuquicamata</td><td>GEE_MEMORY_BLOCKED</td><td>Large AOIs cause GEE compute timeout &mdash; tile strategy needed</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; no improvement exceeding +0.005 threshold</td></tr>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
-        <b style="color:var(--green)">Milestone:</b> First time frontier candidates have been tested on real exported satellite data (not simulated). The blocker is now spatial alignment, not data access. Phase 25 will build the alignment layer.
+        <b style="color:var(--green)">Key findings:</b> Spectral unmixing is NEUTRAL &mdash; adds nothing over raw S2 reflectance at either zone tested. NDVI trend is zone-specific: strong at vegetated zones (Zambia 0.772), negative at arid zones (Peru). GEE memory limits block 2 of 4 zones.
       </div>
     </div>
 

@@ -258,6 +258,18 @@ A multi-source mineral intelligence system under active development. Designed fo
 [li]Next: spatial alignment layer (Phase 25)[/li]
 [/list]
 
+[b][Phase 25 Update — 2026-03-27][/b]
+[list]
+[li]Spatial alignment resolved — GEE sampleRegions() extracts at exact label coordinates[/li]
+[li]Zambia: S2 baseline AUC 0.640, spectral unmixing +0.001 (NEUTRAL), NDVI AUC 0.772 (POSITIVE — best single family)[/li]
+[li]Peru: S2 baseline AUC 0.850, spectral unmixing -0.003 (NEUTRAL), NDVI AUC 0.724 (NEGATIVE)[/li]
+[li]Kalgoorlie and Chuquicamata: blocked by GEE memory limits on large AOIs[/li]
+[li]Spectral unmixing verdict: NEUTRAL — adds nothing over raw S2 reflectance[/li]
+[li]NDVI trend verdict: zone-specific — strong at vegetated zones, weak at arid zones[/li]
+[li]Canonical objective: 22.8/40 (57%) — unchanged. No improvement exceeding +0.005 threshold[/li]
+[li]Next: GEE memory fix (tile strategy) + NDVI fusion at Zambia (Phase 26)[/li]
+[/list]
+
 [hr]
 
 [size=14pt][b]Links[/b][/size]

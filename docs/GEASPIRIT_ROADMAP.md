@@ -881,9 +881,27 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** Real features exist for the first time (not simulated). The blocker is now spatial alignment between GEE pixel grids and label coordinates. Phase 25 will build the alignment layer.
 
-### Phase 25 — Spatial Alignment Layer (PLANNED)
-- Build spatial alignment between GEE raster pixels and deposit/background labels
-- Match exported GeoTIFF coordinates to label lat/lon
-- Run spectral unmixing + NDVI trend with aligned data
-- Measure real AUC delta with spatial block CV
-- Canonical re-evaluation only if real AUC improvement confirmed
+### Phase 25: Spatial Alignment + Real Frontier Validation (2026-03-27)
+
+**Spatial alignment resolved — first real AUC measurements for frontier candidates:**
+
+1. **Spatial alignment:** GEE sampleRegions() extracts at exact label coordinates — alignment blocker eliminated.
+2. **Zambia:** S2 baseline 0.640, spectral unmixing +0.001 (NEUTRAL), NDVI 0.772 (POSITIVE — best single family at this zone).
+3. **Peru:** S2 baseline 0.850, spectral unmixing -0.003 (NEUTRAL), NDVI 0.724 (NEGATIVE — hurts at arid zone).
+4. **Kalgoorlie & Chuquicamata:** Blocked by GEE memory limits (compute timeout on large AOIs).
+5. **Spectral unmixing verdict:** NEUTRAL — adds nothing over raw S2 reflectance at either zone tested.
+6. **NDVI trend verdict:** Zone-specific — strong at vegetated zones (Zambia), weak/negative at arid zones (Peru).
+
+**Frontier track record (v9):**
+- v9: spatial alignment resolved, 2 zones measured, unmixing NEUTRAL, NDVI zone-specific
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% (unchanged)
+
+**Gating v11.** Registry v21. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%) — no improvement exceeding +0.005 threshold.
+
+**CTO statement:** Alignment blocker eliminated. Spectral unmixing adds nothing — NEUTRAL, will not be pursued further. NDVI trend is zone-specific: strong signal at Zambia (vegetated), not useful at Peru (arid). Two zones still blocked by GEE memory limits. Canonical score unchanged.
+
+### Phase 26 — (PLANNED)
+- Resolve GEE memory limits at Kalgoorlie and Chuquicamata (tile/chunk strategy)
+- NDVI trend fusion at Zambia (integrate with existing satellite baseline)
+- Operator gravity data drop — depth activation
+- Canonical re-evaluation if Zambia NDVI fusion yields real AUC gain
