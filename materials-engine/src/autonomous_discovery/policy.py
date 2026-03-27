@@ -102,9 +102,33 @@ CAMPAIGN_PROFILES = {
     },
 }
 
+# Phase XIII: Relaxation-ready discovery profile
+# Selects candidates less flashy but more structurally ready for compute
+PROFILE_RELAXATION_READY = {
+    "name": "relaxation_ready_discovery",
+    "description": "Prioritize candidates with clean structures ready for relaxation/stronger compute",
+    "weights": {
+        "novelty": 0.10,
+        "exotic": 0.05,
+        "stability": 0.25,
+        "value": 0.15,
+        "plausibility": 0.20,
+        "diversity": 0.05,
+        "structure_sanity": 0.20,  # Phase XIII: structure quality matters more
+    },
+    "thresholds": {
+        "min_composite": 0.40,
+        "min_plausibility": 0.45,
+        "min_structure_sanity": 0.55,
+    },
+    "phase_xiii_active": True,
+}
+
 
 def get_profile(name):
     """Get a campaign profile by name, defaulting to 'balanced'."""
+    if name == "relaxation_ready_discovery":
+        return PROFILE_RELAXATION_READY
     return CAMPAIGN_PROFILES.get(name, CAMPAIGN_PROFILES["balanced"])
 
 

@@ -105,3 +105,41 @@ def report_to_markdown(report):
             lines.append(f"- **{key}**: {val}")
 
     return "\n".join(lines)
+
+
+def phase_xiii_dossier_section(candidate):
+    """Generate Phase XIII dossier section for a candidate.
+
+    Covers relaxation readiness, structure repair, and stronger compute suitability.
+    """
+    relax = candidate.get("relaxation_readiness", {})
+    repair = candidate.get("structure_repair", {})
+    phys = candidate.get("physics_screening", {})
+
+    return {
+        "section": "phase_xiii_compute_readiness",
+        "relaxation_ready": relax.get("relaxation_ready", False),
+        "relaxation_tier": relax.get("relaxation_readiness_tier", "not_assessed"),
+        "structure_repair_needed": repair.get("repair_severity", "not_assessed"),
+        "repair_actions": repair.get("repair_actions_recommended", []),
+        "stronger_compute_suitable": relax.get("stronger_compute_candidate", False),
+        "structure_sanity_score": phys.get("structure_sanity_score"),
+        "geometry_warnings_count": len(phys.get("geometry_warnings", [])),
+        "rationale": relax.get("relaxation_rationale", "Not assessed."),
+        "plain_language": _plain_language_compute_readiness(relax, repair),
+    }
+
+
+def _plain_language_compute_readiness(relax, repair):
+    """Human-readable summary of compute readiness."""
+    tier = relax.get("relaxation_readiness_tier", "unknown")
+    if tier == "relaxation_ready":
+        return "This structure looks usable as-is for stronger computational methods."
+    elif tier == "structure_repair_candidate":
+        sev = repair.get("repair_severity", "unknown")
+        return f"This structure needs cleanup ({sev} severity) before it can be used for serious computation."
+    elif tier == "stronger_compute_with_caveats":
+        return "This structure might work for stronger compute, but has some issues to watch."
+    elif tier == "not_ready_discard_or_rebuild":
+        return "This structure is not suitable for stronger computation in its current form."
+    return "Compute readiness has not been assessed for this candidate."
