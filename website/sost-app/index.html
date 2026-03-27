@@ -1671,8 +1671,8 @@ SectionRenderers.dashboard = function(el) {
         if (block) {
           const txCount = block.tx ? block.tx.length : (block.nTx || '?');
           const time = block.time ? new Date(block.time * 1000).toISOString().replace('T',' ').substring(0,19) + 'Z' : '?';
-          html += `<div class="stat-row">
-            <span class="stat-label" onclick="showBlockDetail(${h})" style="cursor:pointer;color:var(--pip)">#${h}</span>
+          html += `<div class="stat-row" onclick="showBlockDetail(${h})" style="cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(var(--pip-rgb,0,255,65),0.05)'" onmouseout="this.style.background='none'">
+            <span class="stat-label" style="color:var(--pip)">#${h}</span>
             <span class="stat-value" style="font-size:13px">${txCount} tx | ${time}</span>
           </div>`;
         }
@@ -1720,6 +1720,20 @@ function addTooltips() {
     'LOW-S signature enforcement': 'Prevents transaction malleability by requiring the low-S form of ECDSA signatures (BIP-62 compliant).',
     'UTXO model (no account state)': 'Unspent Transaction Output model. Each output can only be spent once. No global account balances — eliminates replay attacks.',
     '4-layer block validation': 'L1: structure (size, tx count). L2: header (prev-link, timestamp). L3: consensus (fees, subsidy). L4: atomic UTXO connect.',
+    // Markets additional
+    'TICKER': 'SOST — the native token of the Sovereign Stock Token protocol. Used for transactions, mining rewards, and gold vault accumulation.',
+    'BACKING': 'Every block allocates 25% of the subsidy to a Gold Vault constitutional address. This gold-backing is permanent and immutable.',
+    'EMISSION': 'Block rewards follow smooth Feigenbaum exponential decay. No abrupt halvings. Genesis reward: 7.85 SOST.',
+    'EPOCH': 'One epoch = 131,553 blocks (~2.5 years). At each epoch boundary, the block reward decreases by decay factor q = e^(-1/4).',
+    'BLOCK TIME': 'Target: 10 minutes between blocks. cASERT adjusts difficulty every block to maintain this average.',
+    'SUBSIDY SPLIT': '50% to the miner, 25% to Gold Vault, 25% to PoPC Pool. Hardcoded and immutable — no governance can change it.',
+    'STATUS': 'Current network status. Online = node responding to RPC queries. Pre-market = mining active, no exchange listing yet.',
+    'VERSION': 'Software version of the connected SOST node. Updated with each protocol release.',
+    'BEST HASH': 'Hash of the most recent block accepted by the network. Changes with every new block mined.',
+    // Documents
+    'SOST Whitepaper': 'Core protocol design document. Covers economic model, PoW algorithm, constitutional split, emission schedule.',
+    'ConvergenceX PoW': 'Technical specification of the CPU-friendly proof-of-work algorithm. Gradient descent on random matrices.',
+    'Transaction Design': 'UTXO transaction model with R-rules (structural), S-rules (spend), CB-rules (coinbase) validation.',
   };
 
   document.querySelectorAll('.stat-label').forEach(el => {
@@ -1966,6 +1980,9 @@ SectionRenderers.markets = function(el) {
       <div class="stat-row" style="cursor:pointer" onclick="Nav.go('about')">
         <span class="stat-label">OFFICIAL SITE</span><span class="stat-value">OPEN &gt;</span>
       </div>
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/sost-markets.html','_blank')">
+        <span class="stat-label">VIEW FULL MARKETS</span><span class="stat-value" style="color:var(--pip)">↗ WEB</span>
+      </div>
     </div>
   `;
   AudioEngine.ambient_pulse();
@@ -2182,15 +2199,15 @@ SectionRenderers.about = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// ECOSYSTEM</h2>
-      <div class="stat-row"><span class="stat-label">SOST CORE</span><span class="stat-value">C++ NODE + MINER + CLI</span></div>
-      <div class="stat-row"><span class="stat-label">GEASPIRIT</span><span class="stat-value">MINERAL INTELLIGENCE</span></div>
-      <div class="stat-row"><span class="stat-label">MATERIALS ENGINE</span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div>
-      <div class="stat-row"><span class="stat-label">BLOCK EXPLORER</span><span class="stat-value">WEB-BASED</span></div>
-      <div class="stat-row"><span class="stat-label">WEB WALLET</span><span class="stat-value">HD + MULTISIG</span></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 22/22 test suites passing.</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">GEASPIRIT <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">MINERAL INTELLIGENCE</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Autonomous mineral prospectivity platform. Canonical Score 22.8/40 (57%). Validated at 3 zones across 3 continents: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. Crystal structure → property prediction. 19 campaign profiles including water/lithium/membrane. Zero cost on CPU.</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">BLOCK EXPLORER <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">WEB-BASED</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Real-time blockchain explorer. Block details, transactions, mining status, address balances, difficulty history. Connects directly to the SOST node via RPC.</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">WEB WALLET <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">HD + MULTISIG</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Browser-based SOST wallet. Send, receive, manage UTXOs. HD wallet with BIP39 seed phrases (12 words). P2SH multisig support. Encrypted local storage.</div></div>
     </div>
     <div class="pip-panel">
       <h2>// CREDITS</h2>
-      <p>Designed and built by the SOST team.</p>
+      <p>Designed and built by <span style="color:var(--pip)">NeoB</span>.</p>
       <p style="margin-top:4px;font-size:14px;color:#006600">Pip-Boy terminal interface v4.0.0</p>
       <p style="font-size:14px;color:#006600">Web Audio engine: 60 retro sound effects</p>
       <p style="font-size:14px;color:#006600">Font: VT323 by Peter Hull</p>
