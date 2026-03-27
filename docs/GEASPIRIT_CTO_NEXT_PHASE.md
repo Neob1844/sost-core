@@ -125,14 +125,22 @@ Frontier testing + incremental autonomy:
 - Gating v9. Registry v19.
 - Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
 
-## Phase 24 Plan — GEE Export + Real Frontier Validation
-Priority 1: Execute GEE batch exports for all 4 zones (S2 reflectance + NDVI composites)
-Priority 2: Download exported GeoTIFFs to local storage
-Priority 3: Run spectral unmixing on real reflectance rasters
-Priority 4: Run NDVI trend features on real annual composites
-Priority 5: Train and validate with spatial block CV — measure real AUC delta
-Priority 6: Canonical re-evaluation only if real AUC improvement confirmed
-Priority 7: Operator gravity data drop → depth activation
+## Phase 24 Completed (2026-03-27)
+
+First real frontier validation on exported GEE rasters (no simulation):
+- GEE exports completed: 4 zones (Chuquicamata 267 S2, Zambia 528, Kalgoorlie 180, Peru 55)
+- Spectral unmixing: real features computed on 500 real pixels per zone
+- NDVI trend: 12 years real Landsat data per zone. Zambia promising (mean 0.310, slope +0.0032/yr). Chuquicamata not applicable (mean 0.042, hyperarid).
+- Validation blocked: spatial alignment between GEE pixels and labels needed
+- Canonical: 22.8/40 UNCHANGED — real features exist but AUC not measurable yet
+- Gating v10. Registry v20.
+
+## Phase 25 Plan — Spatial Alignment Layer
+Priority 1: Build spatial alignment between GEE raster pixels and deposit/background labels
+Priority 2: Match exported GeoTIFF coordinates to label lat/lon
+Priority 3: Run spectral unmixing + NDVI trend with aligned data — measure real AUC delta
+Priority 4: Canonical re-evaluation only if real AUC improvement confirmed
+Priority 5: Operator gravity data drop → depth activation
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

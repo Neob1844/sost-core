@@ -1,6 +1,6 @@
 # GeaSpirit Data Access Restrictions
 
-Last updated: 2026-03-27 (Phase 23)
+Last updated: 2026-03-27 (Phase 24)
 
 ## Blocked Items (8 of 11 — 3 accessible)
 
@@ -51,4 +51,10 @@ GEE access enables Phase 23 raw data pipeline construction.
 
 - **GEE Python API (#10):** Upgraded from FULLY_ACCESSIBLE to **OPERATIONALIZED**. Two real data pipelines built and sample-tested: raw S2 reflectance (10 bands, 4 zones, cloud-masked via SCL) and multi-year NDVI (Landsat 8, 2013-2024, 12 annual composites). ee.Initialize() confirmed, 2 datasets operationalized (S2_SR_HARMONIZED, LANDSAT/LC08/C02/T1_L2), 4 AOIs configured, export pathway documented.
 - **Full raster export:** PENDING — requires async ee.batch.Export.image.toDrive(). Pipelines work but data not yet on local storage.
+- **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.
+
+### Phase 24 Access Changes (2026-03-27)
+
+- **GEE Python API (#10):** GEE exports now working — 4 zones exported with real rasters (Chuquicamata 267 S2 images, Zambia 528, Kalgoorlie 180, Peru 55). GEE fully operational for data extraction.
+- **New blocker identified:** Spatial alignment between GEE pixel coordinates and deposit/background labels. Exported GeoTIFFs need coordinate matching to existing label sets before AUC validation is possible.
 - **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.

@@ -864,9 +864,26 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 **CTO statement:** Infrastructure progress, not science progress. Pipelines are built. Next: execute GEE exports, download, validate, measure real AUC.
 - All docs synchronized
 
-### Phase 23 — Raw Data Engineering (PLANNED)
-- Build raw S2 reflectance pipeline via GEE
-- Build multi-year NDVI composite pipeline via GEE + Landsat
-- GEE → GeaSpirit integration
-- Real frontier validation with proper data
-- Operator gravity data integration if dropped
+### Phase 24: First Real GEE Validation (2026-03-27)
+
+**First frontier validation on exported GEE rasters — no simulation:**
+
+1. **GEE exports completed:** 4 zones exported. Chuquicamata (267 S2 images), Zambia (528), Kalgoorlie (180), Peru (55).
+2. **Spectral unmixing:** Real endmember features computed on 500 real pixels per zone. First non-simulated unmixing results.
+3. **NDVI trend:** 12 years real Landsat data per zone. Zambia promising (mean 0.310, slope +0.0032/yr). Chuquicamata not applicable (mean 0.042, hyperarid).
+4. **Validation blocked:** Spatial alignment between GEE pixel coordinates and deposit/background labels not yet resolved. AUC cannot be measured until alignment layer is built.
+
+**Frontier track record (v8):**
+- v8: real GEE exports completed, real features computed → BLOCKED_BY_ALIGNMENT (spatial join needed)
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% (unchanged)
+
+**Gating v10.** Registry v20. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** Real features exist for the first time (not simulated). The blocker is now spatial alignment between GEE pixel grids and label coordinates. Phase 25 will build the alignment layer.
+
+### Phase 25 — Spatial Alignment Layer (PLANNED)
+- Build spatial alignment between GEE raster pixels and deposit/background labels
+- Match exported GeoTIFF coordinates to label lat/lon
+- Run spectral unmixing + NDVI trend with aligned data
+- Measure real AUC delta with spatial block CV
+- Canonical re-evaluation only if real AUC improvement confirmed

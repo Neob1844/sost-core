@@ -18,18 +18,18 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 23 — Raw Data Engineering + Real Frontier Validation
+- **Current Phase:** Phase 24 — First Real GEE Validation
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4
 - **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
 - **Depth activation layer:** 1 active, 3 ready, 2 regional, 2 future
 - **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
-- **Gating:** v9, **Registry:** v19
-- **Frontier validation:** GEE pipelines built (S2 reflectance + NDVI), sample-tested, PIPELINE_READY_VALIDATION_PENDING
-- **GEE:** OPERATIONALIZED (2 datasets, 4 AOIs, export pathway documented)
+- **Gating:** v10, **Registry:** v20
+- **Frontier validation:** First real GEE validation — 4 zones exported, real features computed, blocked by spatial alignment
+- **GEE:** OPERATIONALIZED + EXPORTING (4 zones: Chuquicamata 267 S2, Zambia 528, Kalgoorlie 180, Peru 55)
 - **Autonomy layer:** v2 (promotion guardrails, execution queue, retry policy)
-- **Bottleneck:** GEE batch export + depth data access
+- **Bottleneck:** Spatial alignment between GEE pixels and labels + depth data access
 
 ### Phase History (recent)
 - Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
@@ -37,6 +37,7 @@
 - Phase 21: spectral unmixing SELECTIVE (porphyry), NDVI trend SELECTIVE (vegetated), autonomy layer v1, gating v7, registry v17. ALL results SIMULATED.
 - Phase 22: real validation attempted, both BLOCKED_BY_DATA. GEE FULLY_ACCESSIBLE. ECOSTRESS PARTIALLY_ACCESSIBLE. Autonomy v2. Gating v8 (14 rules). Registry v18.
 - Phase 23: GEE pipelines built (S2 reflectance + NDVI), sample-tested with real data, export pending. Gating v9. Registry v19.
+- Phase 24: First real GEE validation — 4 zones exported, unmixing+NDVI real features computed, validation blocked by spatial alignment. Gating v10. Registry v20.
 
 ## Materials Engine Status
 
@@ -61,7 +62,7 @@
 
 ## What's Blocked
 
-- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, GEE batch export pending for frontier validation
+- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED+EXPORTING, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, spatial alignment needed for frontier validation
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment

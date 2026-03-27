@@ -333,6 +333,8 @@ Multi-source exploration intelligence system. Type-aware, zone-aware, proxy-base
 
 **Phase 23 (2026-03-27):** GEE pipelines built for raw S2 reflectance and multi-year NDVI. Sample-tested with real satellite data. Full validation pending export. Canonical 22.8/40 unchanged.
 
+**Phase 24 (2026-03-27):** First real GEE validation on exported rasters (no simulation). 4 zones exported: Chuquicamata (267 S2), Zambia (528), Kalgoorlie (180), Peru (55). Spectral unmixing and NDVI trend computed on real pixels. Validation blocked by spatial alignment. Canonical 22.8/40 unchanged.
+
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
 ## Security
