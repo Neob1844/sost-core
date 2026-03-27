@@ -345,9 +345,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-let RPC='/rpc',RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
-// Auto-detect working RPC endpoint (supports any domain)
-(async function(){try{var r=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":0,"method":"getinfo","params":[]}'});if(!r.ok)throw 0;console.log('[RPC] /rpc works');}catch(e){RPC='https://sostcore.com/rpc';document.getElementById('rpcUrl').value=RPC;console.log('[RPC] Fallback to '+RPC);}})();
+// RPC: use relative /rpc on sostcore.com, absolute on any other domain
+let RPC=(location.hostname==='sostcore.com'||location.hostname==='explorer.sostcore.com')?'/rpc':'https://sostcore.com/rpc';
+let RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
 const COINBASE_MATURITY=100;
 const PS=10;
@@ -930,7 +930,7 @@ function showCXInfo(){
 }
 
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}
-refresh();setInterval(refresh,10000);
+document.getElementById('rpcUrl').value=RPC;refresh();setInterval(refresh,10000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
 </script>
 </body>

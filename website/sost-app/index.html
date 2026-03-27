@@ -632,7 +632,7 @@ body {
 'use strict';
 
 // ── Configuration ──────────────────────────────────────────────
-let RPC_URL = '/rpc';
+let RPC_URL = (location.hostname==='sostcore.com'||location.hostname==='explorer.sostcore.com')?'/rpc':'https://sostcore.com/rpc';
 let SOUND_ENABLED = true;
 let THEME_COLOR = '#00ff41';
 
