@@ -1205,28 +1205,27 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 25</div>
-    <div class="section-title">Phase 25: <span>Spatial Alignment Resolved + Real Frontier Validation</span></div>
+    <div class="section-id">// LATEST — PHASE 26</div>
+    <div class="section-title">Phase 26: <span>Terrain Depth Pilot + GEE Terrain Infrastructure</span></div>
 
-    <!-- Section: Phase 25 Results -->
+    <!-- Section: Phase 26 Results -->
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">PHASE 25 &mdash; SPATIAL ALIGNMENT RESOLVED</div>
+      <div class="panel-head" style="color:var(--green)">PHASE 26 &mdash; TERRAIN DEPTH PILOT</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Spatial Alignment</td><td>RESOLVED</td><td>GEE sampleRegions() extracts at exact label coordinates &mdash; blocker eliminated</td></tr>
-          <tr style="color:var(--green)"><td>Zambia S2 Baseline</td><td>AUC 0.640</td><td>Raw S2 reflectance baseline at Zambia</td></tr>
-          <tr style="color:var(--amber)"><td>Zambia Unmixing</td><td>NEUTRAL (+0.001)</td><td>Adds nothing over raw S2 reflectance</td></tr>
-          <tr style="color:var(--green)"><td>Zambia NDVI</td><td>AUC 0.772 (POSITIVE)</td><td>Best single family at this zone &mdash; strong vegetation signal</td></tr>
-          <tr><td>Peru S2 Baseline</td><td>AUC 0.850</td><td>Raw S2 reflectance baseline at Peru</td></tr>
-          <tr style="color:var(--amber)"><td>Peru Unmixing</td><td>NEUTRAL (-0.003)</td><td>Adds nothing over raw S2 reflectance</td></tr>
-          <tr style="color:var(--red)"><td>Peru NDVI</td><td>AUC 0.724 (NEGATIVE)</td><td>Hurts at arid zone &mdash; below S2 baseline</td></tr>
-          <tr style="color:var(--red)"><td>Kalgoorlie &amp; Chuquicamata</td><td>GEE_MEMORY_BLOCKED</td><td>Large AOIs cause GEE compute timeout &mdash; tile strategy needed</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; no improvement exceeding +0.005 threshold</td></tr>
+          <tr style="color:var(--green)"><td>Depth Source Audit</td><td>8 AUDITED</td><td>3 GEE-accessible (SRTM, SAR, terrain derivatives), 5 blocked (gravity, AEM, Earth MRI, EMAG2, WGM2012)</td></tr>
+          <tr style="color:var(--green)"><td>Peru Terrain Depth</td><td>AUC 0.907 (+0.057)</td><td>Terrain features add real value vs S2 baseline &mdash; strongest terrain result</td></tr>
+          <tr style="color:var(--amber)"><td>Zambia Terrain Depth</td><td>AUC 0.642 (+0.002)</td><td>Neutral &mdash; flat Copperbelt terrain provides no signal</td></tr>
+          <tr><td>Kalgoorlie Terrain Depth</td><td>AUC 0.774</td><td>No S2 baseline comparison available</td></tr>
+          <tr><td>Chuquicamata Terrain Depth</td><td>AUC 0.769</td><td>No S2 baseline comparison available</td></tr>
+          <tr style="color:var(--green)"><td>GEE Terrain Infrastructure</td><td>OPERATIONAL</td><td>SRTM + SAR + terrain derivatives extractable at all 4 zones</td></tr>
+          <tr style="color:var(--amber)"><td>Depth Score</td><td>4.1/10 UNCHANGED</td><td>Terrain features are surface proxies, not subsurface depth</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; true depth unlock needs gravity, AEM, Earth MRI (all blocked)</td></tr>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
-        <b style="color:var(--green)">Key findings:</b> Spectral unmixing is NEUTRAL &mdash; adds nothing over raw S2 reflectance at either zone tested. NDVI trend is zone-specific: strong at vegetated zones (Zambia 0.772), negative at arid zones (Peru). GEE memory limits block 2 of 4 zones.
+        <b style="color:var(--green)">Key findings:</b> Terrain morphology correlates with deposits in mountainous terrain (Peru +0.057) but not in flat regions (Zambia neutral). These are surface proxies &mdash; true depth estimation requires subsurface geophysics (gravity, AEM, Earth MRI), all of which remain blocked. GEE terrain infrastructure is now operational at all 4 zones.
       </div>
     </div>
 
@@ -1377,7 +1376,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; GEE pipelines built + sample-tested <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 24</span> First real GEE validation &mdash; 4 zones exported, real features computed <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 25</span> Spatial alignment layer + AUC measurement <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 25</span> Spatial alignment layer + AUC measurement <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 26</span> Terrain depth pilot &mdash; 8 sources audited, 4 zones piloted <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
   </div>
 </section>
 

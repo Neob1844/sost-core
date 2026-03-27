@@ -147,11 +147,22 @@ Spatial alignment resolved + first real AUC measurements for frontier candidates
 - Canonical: 22.8/40 UNCHANGED — no improvement exceeding +0.005 threshold
 - Gating v11. Registry v21.
 
-## Phase 26 Plan — NDVI Fusion + GEE Memory Fix
-Priority 1: Resolve GEE memory limits at Kalgoorlie and Chuquicamata (tile/chunk strategy)
-Priority 2: NDVI trend fusion at Zambia (integrate with satellite baseline for AUC gain)
+## Phase 26 Completed (2026-03-27)
+
+Terrain depth pilot — 8 depth sources audited, 3 GEE-accessible piloted at 4 zones:
+- Depth source audit: SRTM, SAR, terrain derivatives (slope, aspect, TPI, TRI, curvature) accessible via GEE. Gravity, AEM, Earth MRI, EMAG2, WGM2012 remain BLOCKED.
+- Peru: depth-only AUC 0.907, +0.057 vs S2 baseline (terrain features add real value)
+- Zambia: depth-only 0.642, +0.002 (neutral — flat terrain)
+- Kalgoorlie: 0.774, Chuquicamata: 0.769 (no baseline comparison)
+- GEE terrain infrastructure operational at all 4 zones
+- Canonical: 22.8/40 UNCHANGED — terrain features are surface proxies, not subsurface
+- Gating v12. Registry v22.
+
+## Phase 27 Plan — Terrain Fusion + Depth Data Unlock
+Priority 1: Peru terrain fusion (integrate terrain with satellite baseline for combined AUC)
+Priority 2: NDVI + terrain multi-feature fusion at Zambia
 Priority 3: Operator gravity data drop — depth activation
-Priority 4: Canonical re-evaluation if Zambia NDVI fusion yields real AUC gain
+Priority 4: Canonical re-evaluation if Peru terrain fusion yields real AUC gain
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

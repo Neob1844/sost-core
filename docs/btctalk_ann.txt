@@ -223,8 +223,8 @@ Autonomous mineral prospectivity engine that identifies zones with high probabil
 [li]Canonical Score: 22.8/40 (57%) — scoring any point on the planet for MINERAL, DEPTH, COORDINATES, CERTAINTY[/li]
 [li]3 validated zones across 3 continents: Chuquicamata (Chile, AUC 0.882), Kalgoorlie (Australia, 0.879), Zambia (0.760)[/li]
 [li]Multi-source fusion: satellite + thermal + magnetic + geological + hydrological data[/li]
-[li]Phase 25: spatial alignment resolved, real frontier validation delivered[/li]
-[li]Google Earth Engine operationalized for raw data pipelines[/li]
+[li]Phase 26: terrain depth pilot — Peru depth-only AUC 0.907 (+0.057), GEE terrain operational[/li]
+[li]Google Earth Engine operationalized for raw data + terrain pipelines[/li]
 [li]The gap to 10/10 is a data problem (gravity, AEM), not an ML problem[/li]
 [/list]
 
