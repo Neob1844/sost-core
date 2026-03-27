@@ -1,9 +1,0 @@
-/home/sost/.local/lib/python3.10/site-packages/google/api_core/_python_version_support.py:275: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
-  warnings.warn(message, FutureWarning)
-Searching Sentinel-2 for chuquicamata...
-Traceback (most recent call last):
-  File "/home/sost/SOST/sostcore/sost-core/geaspirit/scripts/download_sentinel2.py", line 69, in <module>
-    main()
-  File "/home/sost/SOST/sostcore/sost-core/geaspirit/scripts/download_sentinel2.py", line 56, in main
-    os.makedirs(str(Path(args.output).expanduser().resolve()), exist_ok=True)
-NameError: name 'Path' is not defined
