@@ -1,34 +1,33 @@
 # /etc/nginx/sites-available/sost-explorer
-# SOST Protocol Explorer — nginx configuration
+# SOST Explorer + Website — nginx configuration
+#
+# Serves BOTH domains: sostcore.com AND sostprotocol.com
+# Both point to the same content and same RPC proxy.
 #
 # Setup:
-#   sudo cp sost-explorer /etc/nginx/sites-available/
+#   sudo cp sost-explorer.nginx /etc/nginx/sites-available/sost-explorer
 #   sudo ln -s /etc/nginx/sites-available/sost-explorer /etc/nginx/sites-enabled/
 #   sudo nginx -t && sudo systemctl reload nginx
-#   sudo certbot --nginx -d explorer.sostcore.com
+#   sudo certbot --nginx -d sostcore.com -d sostprotocol.com -d explorer.sostcore.com
 
 server {
     listen 80;
-    server_name explorer.sostcore.com sostcore.com;
+    server_name sostcore.com sostprotocol.com explorer.sostcore.com;
 
-    # Redirect HTTP → HTTPS (uncomment after certbot)
-    # return 301 https://$host$request_uri;
-
-    root /var/www/sost;
+    root /opt/sost/website;
     index explorer.html;
 
-    # Explorer
+    # Explorer + Website
     location / {
         try_files $uri $uri/ /explorer.html;
     }
 
-    # Whitepaper
-    location /whitepaper.pdf {
-        alias /var/www/sost/whitepaper.pdf;
+    # Pip-Boy App
+    location /sost-app/ {
+        try_files $uri $uri/ /sost-app/index.html;
     }
 
-    # RPC proxy — read-only methods are public (no auth), write methods require auth.
-    # Auth gating is handled by sost-node, not nginx.
+    # RPC proxy — proxies to sost-node JSON-RPC
     location /rpc {
         proxy_pass http://127.0.0.1:18232;
         proxy_set_header Host $host;
@@ -38,13 +37,12 @@ server {
         # Rate limiting
         limit_req zone=rpc burst=10 nodelay;
 
-        # CORS for explorer — 'always' ensures headers are sent on ALL responses
-        # including 401/403/500, which is critical for browser fetch() to work.
+        # CORS — allow from any origin (both domains + app)
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Methods "POST, GET, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Content-Type, Authorization" always;
 
-        # Handle OPTIONS preflight at nginx level (faster than proxying)
+        # Handle OPTIONS preflight
         if ($request_method = 'OPTIONS') {
             add_header Access-Control-Allow-Origin *;
             add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";
@@ -55,8 +53,19 @@ server {
         }
     }
 
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
+    # Materials Engine API proxy (if running)
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type" always;
+    }
+
+    # Security headers — allow iframes from both domains
+    add_header X-Frame-Options "ALLOW-FROM https://sostcore.com https://sostprotocol.com" always;
+    add_header Content-Security-Policy "frame-ancestors 'self' https://sostcore.com https://sostprotocol.com" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
@@ -65,5 +74,5 @@ server {
     gzip_types text/html text/css application/javascript application/json;
 }
 
-# Rate limiting zone (add to /etc/nginx/nginx.conf http{} block)
+# Rate limiting zone — add to /etc/nginx/nginx.conf http{} block if not present:
 # limit_req_zone $binary_remote_addr zone=rpc:10m rate=5r/s;
