@@ -311,7 +311,7 @@ Autonomous mineral prospectivity platform that identifies zones with high probab
 
 **Validated zones:** Chuquicamata (Chile, porphyry Cu, 0.882 AUC), Kalgoorlie (Australia, orogenic Au, 0.879 AUC), Zambia Copperbelt (sedimentary Cu, 0.760 AUC). Multi-source fusion validated at all 3 zones across 3 continents.
 
-Current phase: Phase 26 — terrain depth pilot (Peru +0.057 AUC). GEE terrain infrastructure operational at 4 zones.
+Current phase: Phase 27 — 9-feature subsurface-aware family via GEE (standalone strong, REDUNDANT with spectral). Canonical 22.8/40 unchanged.
 
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
