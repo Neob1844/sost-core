@@ -238,11 +238,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
     <a class="header-link" style="cursor:pointer;color:var(--purple)" onclick="showCXInfo()">CONVERGENCEX</a>
     <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
     <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
+    <button style="font-size:10px;border:1px solid rgba(230,57,70,.4);border-radius:2px;padding:3px 10px;color:var(--red);letter-spacing:2px;background:none;cursor:pointer;margin-left:10px" onclick="document.body.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100vh;background:#000;color:#e63946;font-family:monospace;font-size:24px;letter-spacing:5px\'>SESSION ENDED</div>';setTimeout(function(){try{window.close()}catch(e){}setTimeout(function(){window.location.href=\'about:blank\'},300)},3000)">EXIT</button>
   </div>
 </div></div>
 <div class="config">
   <span class="config-label">RPC&gt;</span>
-  <input id="rpcUrl" value="https://explorer.sostcore.com/rpc" spellcheck="false"/>
+  <input id="rpcUrl" value="/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
   <input id="rpcUser" value="sost" spellcheck="false" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
@@ -344,7 +345,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-let RPC='https://explorer.sostcore.com/rpc',RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
+let RPC='/rpc',RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
 const COINBASE_MATURITY=100;
 const PS=10;
