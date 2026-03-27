@@ -549,6 +549,7 @@ body {
       <div style="position:absolute;bottom:0;left:70px;width:60px;height:1px;background:#444"></div>
       <div style="position:absolute;bottom:2px;left:70px;width:60px;height:1px;background:#444"></div>
     </div>
+    <div id="splash-sprite-name" style="font-size:10px;letter-spacing:3px;color:#ff003380;margin-top:4px;text-transform:uppercase"></div>
     <div id="splash-title"></div>
     <div id="splash-lines"></div>
     <div id="splash-version">v5.0.0-MINER</div>
@@ -794,96 +795,302 @@ const AudioEngine = (function() {
 })();
 
 
-// ── Pixel Art Miner Drawing ────────────────────────────────────
-function drawPixelMiner() {
+// ── Splash Sprite System — Random animated retro sprites ──────
+const SplashSprites = (function() {
+  // 20 distinct retro game/mining sprites, each with animation
+  const SPRITES = [
+    { name: 'miner', pal: ['','#ffd700','#8B4513','#ddd','#444','#ff6600','#cc8800'], anim: 'pickaxe' },
+    { name: 'pong', pal: ['','#fff','#0f0'], anim: 'pong' },
+    { name: 'space_invader', pal: ['','#0f0','#ff0','#f00'], anim: 'invader' },
+    { name: 'pacman', pal: ['','#ff0','#00f','#fff','#f0f'], anim: 'chomp' },
+    { name: 'tetris_t', pal: ['','#a020f0','#00bcd4','#ff9800','#f44336'], anim: 'fall' },
+    { name: 'gold_bar', pal: ['','#ffd700','#daa520','#fff','#b8860b'], anim: 'shine' },
+    { name: 'gold_nugget', pal: ['','#ffd700','#b8860b','#fff8dc'], anim: 'rotate' },
+    { name: 'diamond', pal: ['','#87ceeb','#4fc3f7','#fff','#0097a7'], anim: 'sparkle' },
+    { name: 'mine_cart', pal: ['','#8B4513','#666','#ffd700','#444'], anim: 'roll' },
+    { name: 'sost_coin', pal: ['','#ffd700','#daa520','#fff','#ff0033'], anim: 'flip' },
+    { name: 'blockchain', pal: ['','#0af','#06a','#fff','#333'], anim: 'build' },
+    { name: 'pickaxe', pal: ['','#8B4513','#aaa','#ddd','#666'], anim: 'swing' },
+    { name: 'treasure', pal: ['','#8B4513','#ffd700','#daa520','#666'], anim: 'open' },
+    { name: 'snake', pal: ['','#0f0','#0a0','#ff0'], anim: 'slither' },
+    { name: 'outrun_car', pal: ['','#f00','#fff','#333','#0af'], anim: 'drive' },
+    { name: 'rocket', pal: ['','#ddd','#f00','#ff6600','#0af'], anim: 'thrust' },
+    { name: 'cpu_chip', pal: ['','#333','#0f0','#666','#0a0'], anim: 'pulse' },
+    { name: 'shield', pal: ['','#ffd700','#0af','#06a','#fff'], anim: 'glow' },
+    { name: 'anvil', pal: ['','#555','#888','#333','#ff6600'], anim: 'strike' },
+    { name: 'crystal', pal: ['','#e040fb','#7c4dff','#fff','#aa00ff'], anim: 'prisma' },
+  ];
+
+  // Simple 16x16 pixel data for each sprite (hex index into palette)
+  const DATA = {
+    miner: [
+      '0000000000000000','0000001111100000','0000011111110000','0000011111110000',
+      '0000002222200000','0000011111110000','0000011131110000','0000011111110000',
+      '0000003333300000','0000033333330000','0000033333330000','0000033133130000',
+      '0000003333300000','0000033300333000','0000044400444000','0000044400444000'
+    ],
+    pong: [
+      '0000000000000000','0110000000000110','0110000000000110','0110000000000110',
+      '0110000000000110','0110000000000110','0000000000000000','0000000110000000',
+      '0000000110000000','0000000000000000','0000000000000000','0110000000000110',
+      '0110000000000110','0110000000000110','0110000000000110','0000000000000000'
+    ],
+    space_invader: [
+      '0000000000000000','0000100000010000','0001010000101000','0001111111101000',
+      '0011101111011100','0011111111111100','0010111111110100','0010100000010100',
+      '0000011001100000','0000000000000000','0000000000000000','0000000000000000',
+      '0000000000000000','0000000110000000','0000001001000000','0000000110000000'
+    ],
+    pacman: [
+      '0000001111000000','0000111111100000','0001111111110000','0011111111111000',
+      '0011111111111000','0111111110000000','0111111100000000','0111111110000000',
+      '0111111111000000','0011111111111000','0011111111111000','0001111111110000',
+      '0000111111100000','0000001111000000','0000000000000000','0000030303030000'
+    ],
+    tetris_t: [
+      '0000000000000000','0000111000000000','0000010000000000','0000000000000000',
+      '0000000022000000','0000000022000000','0000000000000000','0000000000333000',
+      '0000000000030000','0000000000033000','0000000000000000','0004400000000000',
+      '0004400000000000','0000000000000000','0000000000000000','0000000000000000'
+    ],
+    gold_bar: [
+      '0000000000000000','0000000000000000','0000000000000000','0000022222200000',
+      '0000222222220000','0002222332222000','0022223333222200','0222233333322200',
+      '0222233333322200','0222233333322200','0022223333222200','0002222332222000',
+      '0000222222220000','0000022222200000','0000000000000000','0000000000000000'
+    ],
+    gold_nugget: [
+      '0000000000000000','0000000000000000','0000001110000000','0000012221000000',
+      '0000122321100000','0001223321110000','0012233211110000','0012332111100000',
+      '0012321111000000','0001211110000000','0000111100000000','0000011000000000',
+      '0000000000000000','0000000000000000','0000000000000000','0000000000000000'
+    ],
+    diamond: [
+      '0000000000000000','0000000110000000','0000001331000000','0000013343100000',
+      '0000134444310000','0001344444310000','0013444444431000','0013444444431000',
+      '0001344444310000','0000134443100000','0000013431000000','0000001310000000',
+      '0000000100000000','0000000000000000','0000000000000000','0000000000000000'
+    ],
+    mine_cart: [
+      '0000000000000000','0000000000000000','0000000000000000','0000000000000000',
+      '0000003330000000','0000033333000000','0001133333110000','0011133333311000',
+      '0111133333311100','0111133333311100','0111111111111100','0111111111111100',
+      '0011111111111000','0002200000220000','0022220002222000','0002200000220000'
+    ],
+    sost_coin: [
+      '0000001111000000','0000111111100000','0001111111110000','0011114411111000',
+      '0011144441111000','0111144441111100','0111114411111100','0111111111111100',
+      '0111111111111100','0111114411111100','0111144441111100','0011144441111000',
+      '0011114411111000','0001111111110000','0000111111100000','0000001111000000'
+    ],
+    blockchain: [
+      '0000000000000000','0011110000111100','0011110000111100','0011113311111100',
+      '0011113311111100','0000003300000000','0000003300000000','0011113311111100',
+      '0011113311111100','0011110000111100','0011110000111100','0000000000000000',
+      '0000000000000000','0000000000000000','0000000000000000','0000000000000000'
+    ],
+    pickaxe: [
+      '0000000000032000','0000000000322000','0000000003220000','0000000032200000',
+      '0000000322000000','0000003220000000','0000032200000000','0000322000000000',
+      '0001120000000000','0011120000000000','0111100000000000','0011000000000000',
+      '0010000000000000','0000000000000000','0000000000000000','0000000000000000'
+    ],
+    treasure: [
+      '0000000000000000','0000000000000000','0000000000000000','0111111111111100',
+      '0144444444444100','0141122211114100','0141222221114100','0141122211114100',
+      '0144444444444100','0111111111111100','0111111111111100','0111111111111100',
+      '0111111111111100','0111111111111100','0111111111111100','0000000000000000'
+    ],
+    snake: [
+      '0000000000000000','0000000000000000','0000001100000000','0000001100000000',
+      '0000001100000000','0000001111000000','0000000011000000','0000000011000000',
+      '0000001111000000','0000001100000000','0000001100000000','0011111100000000',
+      '0010000000000000','0013000000000000','0010000000000000','0000000000000000'
+    ],
+    outrun_car: [
+      '0000000000000000','0000000000000000','0000000000000000','0000011111100000',
+      '0000111111110000','0001111221111000','0011112222111100','0111112222111110',
+      '0111111111111110','0333111111113330','0033311111133300','0003331111333000',
+      '0000000000000000','0044000000044000','0444400004444000','0044000000044000'
+    ],
+    rocket: [
+      '0000000110000000','0000001111000000','0000011111100000','0000011221100000',
+      '0000011111100000','0000011111100000','0000111111110000','0001111111111000',
+      '0001111111111000','0000111111110000','0000011111100000','0000002332000000',
+      '0000003333000000','0000002332000000','0000000330000000','0000000000000000'
+    ],
+    cpu_chip: [
+      '0020000000000200','0020000000000200','0022222222222200','0021111111111200',
+      '0021133113311200','0021133113311200','0021111111111200','0021133113311200',
+      '0021133113311200','0021111111111200','0021133113311200','0021133113311200',
+      '0021111111111200','0022222222222200','0020000000000200','0020000000000200'
+    ],
+    shield: [
+      '0000000000000000','0001111111110000','0011111111111000','0111111111111100',
+      '0111111111111100','0111133333111100','0111133333111100','0111133333111100',
+      '0111133333111100','0011133333110000','0001133333100000','0000113331000000',
+      '0000011110000000','0000001100000000','0000000000000000','0000000000000000'
+    ],
+    anvil: [
+      '0000000000000000','0000000000000000','0000011111100000','0001111111110000',
+      '0011111111111000','0111111111111100','0011111111111000','0001111111110000',
+      '0000111111100000','0000011111000000','0000011111000000','0000111111100000',
+      '0001111111110000','0011111111111000','0011111111111000','0000000000000000'
+    ],
+    crystal: [
+      '0000000100000000','0000001310000000','0000013331000000','0000133333100000',
+      '0001333233310000','0013332223331000','0013322222331000','0013322222331000',
+      '0013332223331000','0001333233310000','0000133333100000','0000013331000000',
+      '0000001310000000','0000000100000000','0000000000000000','0000000000000000'
+    ],
+  };
+
+  let currentIdx = -1;
+
+  function pick() {
+    // Pick a different sprite each time
+    let idx;
+    do { idx = Math.floor(Math.random() * SPRITES.length); } while (idx === currentIdx && SPRITES.length > 1);
+    currentIdx = idx;
+    return SPRITES[idx];
+  }
+
+  function drawSprite(ctx, sprite, frame) {
+    const data = DATA[sprite.name];
+    if (!data) return;
+    ctx.clearRect(0, 0, 16, 16);
+    for (let y = 0; y < data.length && y < 16; y++) {
+      for (let x = 0; x < data[y].length && x < 16; x++) {
+        const ci = parseInt(data[y][x], 16);
+        if (ci > 0 && sprite.pal[ci]) {
+          ctx.fillStyle = sprite.pal[ci];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+  }
+
+  return { SPRITES, DATA, pick, drawSprite };
+})();
+
+function drawSplashSprite() {
   const mc = document.getElementById('miner-canvas');
   if (!mc) return;
   const ctx = mc.getContext('2d');
-  ctx.imageSmoothingEnabled = false;
+  mc.width = 16; mc.height = 16;
 
-  // 32x32 pixel art miner (1=skin, 2=helmet, 3=body, 4=boots, 5=pick, 6=lamp)
-  const PAL = {0:'transparent',1:'#d4a574',2:'#666666',3:'#4444aa',4:'#553311',5:'#888888',6:'#ffdd00'};
-  const MINER = [
-    '00000000022220000000000000000000',
-    '00000000226222000000000000000000',
-    '00000002222222200000000000000000',
-    '00000002222622200000000000000000',
-    '00000001111111000000000000000000',
-    '00000001111111000000000000000000',
-    '00000000111110000000000000000000',
-    '00000003333330000000000000000000',
-    '00000033333333000000000000000000',
-    '00000033333333000000000000000000',
-    '00000033133133000000000000000000',
-    '00000033333333000000000000000000',
-    '00000003333330000000000000000000',
-    '00000000333300000000000000000000',
-    '00000003333330000000000000000000',
-    '00000033300333000000000000000000',
-    '00000033300333000000000000000000',
-    '00000044400444000000000000000000',
-    '00000044400444000000000000000000',
-  ];
+  const sprite = SplashSprites.pick();
+  const nameEl = document.getElementById('splash-sprite-name');
+  if (nameEl) nameEl.textContent = sprite.name.replace(/_/g, ' ').toUpperCase();
 
-  function draw(pickAngle) {
-    ctx.clearRect(0,0,32,32);
-    // Draw miner body
-    for (let y = 0; y < MINER.length; y++) {
-      for (let x = 0; x < MINER[y].length && x < 32; x++) {
-        const c = PAL[MINER[y][x]];
-        if (c && c !== 'transparent') {
-          ctx.fillStyle = c;
-          ctx.fillRect(x, y + 6, 1, 1);
-        }
-      }
-    }
-    // Draw pickaxe (rotating)
-    ctx.save();
-    ctx.translate(18, 14);
-    ctx.rotate(pickAngle * Math.PI / 180);
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(0, 0, 1, 8); // handle
-    ctx.fillStyle = '#aaaaaa';
-    ctx.fillRect(-2, -1, 5, 2); // head
-    ctx.fillRect(-3, -1, 2, 1); // point
-    ctx.restore();
-  }
-
-  // Animate pickaxe
-  let angle = 0;
-  let dir = 1;
-  let sparkTimer = 0;
-  const minerEl = document.getElementById('pixel-miner');
+  let frame = 0;
+  let animDir = 1;
 
   function animate() {
-    angle += dir * 4;
-    if (angle > 45) dir = -1;
-    if (angle < -10) {
-      dir = 1;
-      // Spark on hit
-      if (minerEl) {
-        for (let i = 0; i < 3; i++) {
-          const sp = document.createElement('div');
-          sp.className = 'spark';
-          sp.style.left = '90px';
-          sp.style.top = '80px';
-          sp.style.setProperty('--sx', (Math.random()*30-15)+'px');
-          sp.style.setProperty('--sy', (-Math.random()*20-5)+'px');
-          sp.style.animation = 'sparkFly 0.4s ease-out forwards';
-          sp.style.background = ['#ffaa00','#ff6600','#ffdd00'][i];
-          minerEl.appendChild(sp);
-          setTimeout(() => sp.remove(), 400);
-        }
+    ctx.clearRect(0, 0, 16, 16);
+    SplashSprites.drawSprite(ctx, sprite, frame);
+
+    // Simple animation overlay per sprite type
+    ctx.save();
+    const anim = sprite.anim;
+    if (anim === 'pickaxe') {
+      ctx.translate(12, 8);
+      ctx.rotate((Math.sin(frame * 0.15) * 40) * Math.PI / 180);
+      ctx.fillStyle = '#8B4513'; ctx.fillRect(0, 0, 1, 5);
+      ctx.fillStyle = '#aaa'; ctx.fillRect(-1, -1, 3, 1);
+    } else if (anim === 'pong') {
+      // Ball bouncing
+      const bx = 7 + Math.sin(frame * 0.1) * 5;
+      const by = 7 + Math.cos(frame * 0.13) * 5;
+      ctx.fillStyle = '#fff'; ctx.fillRect(Math.floor(bx), Math.floor(by), 1, 1);
+    } else if (anim === 'chomp') {
+      // Pac-man mouth opening/closing
+      if (frame % 20 < 10) {
+        ctx.fillStyle = '#000'; ctx.fillRect(8, 6, 4, 1); ctx.fillRect(8, 8, 4, 1);
       }
-      try { AudioEngine.click_hard(); } catch(e) {}
+    } else if (anim === 'shine' || anim === 'sparkle' || anim === 'glow') {
+      // Sparkle effect
+      if (frame % 15 < 3) {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(5 + (frame % 7), 5 + (frame % 5), 1, 1);
+        ctx.fillRect(10 - (frame % 4), 3 + (frame % 6), 1, 1);
+      }
+    } else if (anim === 'flip' || anim === 'rotate') {
+      // Slight scale pulse
+      if (frame % 30 < 5) {
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0, 0, 16, 16);
+      }
+    } else if (anim === 'roll') {
+      // Cart wheels spinning (dots)
+      const a = frame * 0.2;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(4 + Math.cos(a), 14, 1, 1);
+      ctx.fillRect(11 + Math.cos(a + 3.14), 14, 1, 1);
+    } else if (anim === 'slither') {
+      // Snake head movement
+      const sx = Math.sin(frame * 0.15) * 1;
+      ctx.fillStyle = '#0f0'; ctx.fillRect(1 + sx, 12, 2, 1);
+    } else if (anim === 'drive') {
+      // Road lines moving
+      const roadY = 12;
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < 3; i++) {
+        const lx = ((frame * 0.5 + i * 6) % 16);
+        ctx.fillRect(lx, roadY, 2, 1);
+      }
+    } else if (anim === 'thrust') {
+      // Rocket flame
+      if (frame % 4 < 2) {
+        ctx.fillStyle = '#ff6600'; ctx.fillRect(7, 13, 2, 2);
+        ctx.fillStyle = '#ff0'; ctx.fillRect(7, 14, 2, 1);
+      } else {
+        ctx.fillStyle = '#f00'; ctx.fillRect(7, 13, 2, 1);
+      }
+    } else if (anim === 'pulse') {
+      // LED blinking on chip
+      ctx.fillStyle = (frame % 20 < 10) ? '#0f0' : '#030';
+      ctx.fillRect(7, 7, 2, 2);
+    } else if (anim === 'build') {
+      // Block appearing
+      if (frame % 40 < 20) {
+        ctx.fillStyle = '#0af'; ctx.fillRect(1, 12, 6, 3);
+      }
+    } else if (anim === 'invader') {
+      // Legs wiggling
+      const wiggle = (frame % 20 < 10) ? 0 : 1;
+      ctx.fillStyle = '#0f0';
+      ctx.fillRect(3 + wiggle, 9, 1, 1); ctx.fillRect(12 - wiggle, 9, 1, 1);
+    } else if (anim === 'fall') {
+      // Tetris piece falling
+      const fy = (frame * 0.3) % 14;
+      ctx.fillStyle = '#00bcd4'; ctx.fillRect(10, fy, 2, 2);
+    } else if (anim === 'open') {
+      // Chest lid opening
+      if (frame % 40 < 20) {
+        ctx.fillStyle = '#ffd700'; ctx.fillRect(5, 2, 4, 2);
+      }
+    } else if (anim === 'strike') {
+      // Hammer hitting anvil
+      if (frame % 30 < 5) {
+        ctx.fillStyle = '#ff6600';
+        ctx.fillRect(6, 1, 3, 2);
+        ctx.fillRect(7, 0, 1, 1);
+      }
+    } else if (anim === 'prisma') {
+      // Color shifting
+      const hue = (frame * 3) % 360;
+      ctx.fillStyle = `hsl(${hue},100%,70%)`;
+      ctx.fillRect(7, 7, 2, 2);
     }
-    draw(angle);
+    ctx.restore();
+
+    frame++;
     if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('out')) {
       requestAnimationFrame(animate);
     }
   }
 
-  draw(0);
+  SplashSprites.drawSprite(ctx, sprite, 0);
   setTimeout(animate, 500);
 }
 
@@ -944,8 +1151,11 @@ function runSplash(callback) {
 
   // Start rain + pixel miner + random icons
   drawRain();
-  drawPixelMiner();
+  drawSplashSprite();
   AudioEngine.boot_start();
+  // Play a random retro sound for variety
+  const splashSounds = ['retro_arpeggio','retro_coin','retro_powerup','retro_jump','retro_1up','retro_warp','retro_laser'];
+  setTimeout(() => { try { AudioEngine[splashSounds[Math.floor(Math.random()*splashSounds.length)]](); } catch(e){} }, 2000);
 
   // Show random pixel art icons during splash (appear at 4s, 6s, 8s)
   const splashContent = document.getElementById('splash-content');
@@ -1599,29 +1809,31 @@ SectionRenderers.documents = function(el) {
   el.style.overflow = 'auto';
 
   const docs = [
-    ['SOST Whitepaper', 'Core protocol design and economic model', '/docs/whitepaper.pdf'],
-    ['ConvergenceX PoW Specification', 'CPU-friendly proof-of-work algorithm details', '/docs/convergencex.pdf'],
-    ['Transaction Design Document', 'UTXO model, TX validation rules R/S/CB', '/docs/tx-design.pdf'],
-    ['Capsule Protocol v1 Spec', 'Binary metadata format for TX outputs', '/docs/capsule-spec.pdf'],
-    ['cASERT Difficulty Control', 'Unified rate control with equalizer profiles', '/docs/casert.pdf'],
-    ['Emission Schedule', 'Smooth exponential decay, max supply analysis', '/docs/emission.pdf'],
-    ['GeaSpirit Technical Report', 'Satellite mineral prospectivity mapping methodology', '/docs/geaspirit-report.pdf'],
-    ['Materials Engine API Docs', 'REST API reference for materials discovery', '/docs/materials-api.pdf'],
-    ['Security Audit Report', 'Cryptographic and consensus security analysis', '/docs/security-audit.pdf'],
-    ['Governance Framework', 'Constitutional vs operational rules, fork process', '/docs/governance.pdf'],
-    ['HD Wallet Specification', 'BIP39 seed derivation and key hierarchy', '/docs/hd-wallet.pdf'],
-    ['Multisig & P2SH Guide', 'M-of-N multisig setup and script hash usage', '/docs/multisig-guide.pdf']
+    ['SOST Whitepaper', 'Core protocol design, economic model, constitutional split 50/25/25', 'SOST is a CPU-friendly, gold-backed cryptocurrency. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. UTXO-based transaction model with secp256k1 ECDSA signatures. ConvergenceX proof-of-work requires ~8GB RAM, ASIC-resistant. Max supply: ~4.669M SOST. Smooth exponential emission decay.'],
+    ['ConvergenceX PoW', 'CPU-friendly gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. ASIC-resistant by design.'],
+    ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
+    ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
+    ['cASERT Difficulty', 'Unified rate control with equalizer profiles', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks >=1450): 24h halflife, 12.5% delta cap. 17 equalizer profiles (E4-H9). Anti-stall recovery zones.'],
+    ['Emission Schedule', 'Smooth exponential decay, epoch = 131,553 blocks', 'Genesis reward: 7.85100863 SOST. Decay factor q=e^(-1/4). Epoch length: 131,553 blocks (~2.5 years). Max supply converges to ~4,669,000 SOST. All values in stocks (1 SOST = 100,000,000 stocks).'],
+    ['Security Audit', '20 cryptographic and consensus security features', '6 layers of protection: ECDSA secp256k1, LOW-S enforcement, 4-layer block validation, UTXO model, coinbase maturity (1000 blocks), constitutional addresses. RBF + CPFP for fee market. P2SH multisig support.'],
+    ['HD Wallet (BIP39)', '12-word seed phrases, PBKDF2-HMAC-SHA512', 'Deterministic key derivation from 12-word mnemonic. Compatible with web wallet. Encrypted wallet storage (AES-256-GCM + scrypt). Address format: sost1 + 40 hex chars.'],
+    ['Governance Framework', 'Constitutional vs operational rules', 'Constitutional rules (immutable): subsidy split, max supply, address format. Operational rules (upgradeable): block size, relay fees, activation heights. Fork process requires 95% miner signaling.'],
+    ['Reorg Resistance', 'MAX_REORG_DEPTH=500, BlockUndo atomic rollback', 'SOST limits reorg depth to 500 blocks. Each block stores undo data for atomic disconnect. cASERT difficulty adjustment makes chain-switching expensive. Compared to Bitcoin Foundry 2-block reorg: SOST is structurally more resistant.'],
   ];
 
   let html = '<div class="pip-panel"><h2>// DOCUMENT ARCHIVE</h2>';
-  html += '<p style="margin-bottom:16px">Technical documentation and specifications.</p>';
+  html += '<p style="margin-bottom:16px;font-size:14px">Technical documentation — tap to expand.</p>';
   docs.forEach((d, i) => {
-    html += `<div class="stat-row" style="cursor:pointer" onclick="window.open('${d[2]}','_blank')">
-      <span class="stat-label" style="flex:1">
-        <span style="color:var(--pip)">[${String(i+1).padStart(2,'0')}]</span> ${d[0]}
-        <br><span style="font-size:14px;color:#006600">${d[1]}</span>
-      </span>
-      <span class="stat-value" style="font-size:14px">OPEN &gt;</span>
+    const docId = 'doc-' + i;
+    html += `<div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="(function(){var c=document.getElementById('${docId}');c.style.display=c.style.display==='none'?'block':'none'})()">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="stat-label" style="flex:1">
+          <span style="color:var(--pip)">[${String(i+1).padStart(2,'0')}]</span> ${d[0]}
+          <br><span style="font-size:13px;color:var(--pip-dim)">${d[1]}</span>
+        </span>
+        <span style="font-size:12px;color:var(--pip-dim)">▼</span>
+      </div>
+      <div id="${docId}" style="display:none;margin-top:8px;padding:10px;background:rgba(0,0,0,0.3);border:1px solid var(--pip-dark);border-radius:4px;font-size:13px;line-height:1.7;color:var(--pip-dim);white-space:pre-wrap">${d[2]}</div>
     </div>`;
   });
   html += '</div>';
@@ -1654,10 +1866,10 @@ SectionRenderers.markets = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// LINKS</h2>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostcore.com/sost-explorer.html','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="Nav.go('explorer')">
         <span class="stat-label">BLOCK EXPLORER</span><span class="stat-value">OPEN &gt;</span>
       </div>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostcore.com','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="Nav.go('about')">
         <span class="stat-label">OFFICIAL SITE</span><span class="stat-value">OPEN &gt;</span>
       </div>
     </div>
@@ -1988,7 +2200,7 @@ function bindEvents() {
     setTimeout(() => {
       try { window.close(); } catch(e) {}
       setTimeout(() => { window.location.href = 'https://sostprotocol.com/'; }, 500);
-    }, 4000);
+    }, 3000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
 
