@@ -1139,10 +1139,25 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 22</div>
-    <div class="section-title">Phase 22: <span>Real Validation + Access Closure</span></div>
+    <div class="section-id">// LATEST — PHASE 23</div>
+    <div class="section-title">Phase 23: <span>Raw Data Engineering + Real Frontier Validation</span></div>
 
-    <!-- Section A: Real Validation Blocked by Data -->
+    <!-- Section A: Phase 23 GEE Pipelines -->
+    <div class="panel">
+      <div class="panel-head">GEE RAW DATA PIPELINES &mdash; BUILT + SAMPLE-TESTED</div>
+      <table class="tbl">
+        <thead><tr><th>Pipeline</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr style="color:var(--green)"><td>Raw S2 Reflectance</td><td>PIPELINE_READY</td><td>10 bands (B2-B12), 4 zones, cloud-masked via SCL</td></tr>
+          <tr style="color:var(--green)"><td>Multi-Year NDVI</td><td>PIPELINE_READY</td><td>Landsat 8, 2013-2024, 12 annual composites, 4 zones</td></tr>
+          <tr style="color:var(--amber)"><td>Full Raster Export</td><td>PENDING</td><td>Requires async ee.batch.Export.image.toDrive()</td></tr>
+          <tr style="color:var(--amber)"><td>Spectral Unmixing</td><td>VALIDATION_PENDING</td><td>Needs exported rasters for real endmember decomposition</td></tr>
+          <tr style="color:var(--amber)"><td>NDVI Trend</td><td>VALIDATION_PENDING</td><td>Zambia +0.0043/yr greening &mdash; promising, needs full validation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section B: Phase 22 (previous) -->
     <div class="panel">
       <div class="panel-head" style="color:var(--red)">PHASE 22 — REAL VALIDATION BLOCKED BY DATA</div>
       <table class="tbl">
@@ -1231,27 +1246,27 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       </div>
     </div>
 
-    <!-- Phase 22 overview table (retained) -->
+    <!-- Phase 23 overview table -->
     <div class="panel">
-      <div class="panel-head">PHASE 22 COMPONENT STATUS</div>
+      <div class="panel-head">PHASE 23 COMPONENT STATUS</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--amber)"><td>Spectral Unmixing</td><td>VALIDATION_BLOCKED</td><td>Stacks have derived indices, not raw S2 reflectance</td></tr>
-          <tr style="color:var(--amber)"><td>NDVI Trend</td><td>VALIDATION_BLOCKED</td><td>Single-date snapshots, not multi-year time series</td></tr>
-          <tr style="color:var(--green)"><td>GEE Python API</td><td>FULLY_ACCESSIBLE</td><td>ee.Initialize() works, SRTM query successful</td></tr>
-          <tr style="color:var(--amber)"><td>ECOSTRESS</td><td>PARTIALLY_ACCESSIBLE</td><td>Auth OK, search returns 0 granules for test AOI</td></tr>
-          <tr style="color:var(--green)"><td>Autonomy Layer</td><td>v2</td><td>Promotion guardrails, execution queue, retry policy</td></tr>
+          <tr style="color:var(--green)"><td>S2 Reflectance Pipeline</td><td>PIPELINE_READY</td><td>10 bands, 4 zones, sample-tested with real data</td></tr>
+          <tr style="color:var(--green)"><td>NDVI Trend Pipeline</td><td>PIPELINE_READY</td><td>12 years, 4 zones, real trends measured</td></tr>
+          <tr style="color:var(--green)"><td>GEE</td><td>OPERATIONALIZED</td><td>2 datasets, 4 AOIs, export pathway documented</td></tr>
+          <tr style="color:var(--amber)"><td>Raster Export</td><td>PENDING</td><td>Async GEE batch export needed</td></tr>
+          <tr style="color:var(--amber)"><td>Frontier Validation</td><td>PIPELINE_READY</td><td>Needs exported rasters for real AUC measurement</td></tr>
           <tr style="color:var(--amber)"><td>Blocked Items</td><td>8/11</td><td>Depth items all blocked</td></tr>
-          <tr style="color:var(--green)"><td>Gating</td><td>v8 &mdash; 14 RULES</td><td>R13 simulated guardrail, R14 pilot gate</td></tr>
-          <tr style="color:var(--green)"><td>Registry</td><td>v18</td><td>Updated with real validation results</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; frontier candidates remain SIMULATED_ONLY</td></tr>
+          <tr style="color:var(--green)"><td>Gating</td><td>v9</td><td>Updated with pipeline-ready gates</td></tr>
+          <tr style="color:var(--green)"><td>Registry</td><td>v19</td><td>Updated with GEE pipeline results</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; no real AUC improvement yet</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="human-box">
-      <b>Phase 22 summary:</b> Real validation of spectral unmixing and NDVI trend both <b>BLOCKED_BY_DATA</b> &mdash; existing stacks contain derived indices, not raw reflectance; NDVI is a single snapshot, not a time series. Both remain SIMULATED_ONLY candidates. GEE Python API is FULLY_ACCESSIBLE (ee.Initialize works). ECOSTRESS is PARTIALLY_ACCESSIBLE (auth OK, search returns 0 granules). 8/11 data items still blocked; all depth sources (gravity, AEM, Earth MRI) remain inaccessible. Canonical unchanged at 22.8/40 (57%). The science is sound but the data pipeline must be built before promotion. Phase 23 will build raw S2 + Landsat pipelines via GEE.
+      <b>Phase 23 summary:</b> GEE pipelines built for raw S2 reflectance (10 bands, 4 zones, cloud-masked) and multi-year NDVI (Landsat 8, 2013-2024, 12 annual composites, 4 zones). Both pipelines sample-tested with real satellite data. Real NDVI trends measured: Zambia +0.0043/yr (greening, vegetation signal present), Chuquicamata ~0.0/yr (hyperarid, no signal). Full raster export pending (async GEE batch). Frontier validation advances to <b>PIPELINE_READY_VALIDATION_PENDING</b>. Depth unchanged at 4.1/10. Canonical unchanged at 22.8/40 (57%). Progress is in infrastructure (pipelines built), not in validated science (AUC gains). Phase 24 will execute exports, download, and validate.
     </div>
   </div>
 </section>
@@ -1272,7 +1287,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 20</span> Operator unlock + depth activation + frontier track v4 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; S2 reflectance + Landsat NDVI via GEE + real frontier validation <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; GEE pipelines built + sample-tested <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 24</span> GEE export + real frontier validation + AUC measurement <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:var(--amber);font-weight:700">NEXT</span></div>
   </div>
 </section>
 

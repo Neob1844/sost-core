@@ -235,6 +235,17 @@ A multi-source mineral intelligence system under active development. Designed fo
 [li]8/11 data items still blocked — depth remains weakest dimension (4.1/10)[/li]
 [/list]
 
+[b][Phase 23 Update — 2026-03-27][/b]
+[list]
+[li]Raw data pipelines built via Google Earth Engine (GEE)[/li]
+[li]Sentinel-2 L2A reflectance: 10 bands, 4 zones, cloud-masked median composites[/li]
+[li]Multi-year Landsat NDVI: 12 annual composites (2013-2024), real vegetation trends measured[/li]
+[li]Both pipelines sample-tested with real satellite data — GEE confirmed operational[/li]
+[li]Full raster export and frontier validation pending[/li]
+[li]Canonical objective: 22.8/40 (57%) — unchanged[/li]
+[li]Depth remains blocked (4.1/10) — all deposit-scale sources still need operator data[/li]
+[/list]
+
 [hr]
 
 [size=14pt][b]Links[/b][/size]

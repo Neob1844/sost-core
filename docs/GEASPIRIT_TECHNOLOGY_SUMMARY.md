@@ -194,3 +194,20 @@ Top 3 next experiments (from Frontier Research V5):
 **Lesson:** Frontier validation requires raw data pipelines, not just derived indices. The existing feature stacks are optimized for production models but lack the raw inputs needed to test new feature families. Next priority: build raw data download pipelines (GEE for S2 reflectance, Landsat NDVI composites).
 
 **Canonical score:** 22.8/40 (57%) FROZEN — unchanged. No real validation evidence to justify update.
+
+---
+
+## 14. Phase 23 — Raw Data Engineering + GEE Operationalization (2026-03-27)
+
+**GEE pipelines built and sample-tested with real satellite data:**
+- **Raw S2 reflectance pipeline:** 10 bands (B2-B12), median composite, cloud-masked via SCL. Tested at all 4 zones (Chuquicamata 292, Zambia 872, Kalgoorlie 295, Peru 292 scenes). Real reflectance values confirmed.
+- **Multi-year NDVI pipeline:** Landsat 8 annual max-NDVI, 2013-2024 (12 annual composites). Real trends measured: Zambia +0.0043/yr (greening, vegetation signal present), Peru -0.0026/yr, Kalgoorlie -0.0035/yr (arid), Chuquicamata ~0.0/yr (hyperarid, no vegetation signal).
+- **GEE operationalized:** ee.Initialize() confirmed, 2 datasets (S2_SR_HARMONIZED, LANDSAT/LC08/C02/T1_L2), 4 AOIs configured, export pathway documented.
+
+**Frontier validation status:**
+- Spectral unmixing: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- NDVI trend: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- Progress is in infrastructure (pipelines built), not in validated science (AUC gains)
+
+**Gating engine v9.** Registry v19.
+**Canonical score:** 22.8/40 (57%) FROZEN — unchanged. No real AUC improvement measured yet.

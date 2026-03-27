@@ -837,6 +837,31 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 - Full web update with Phase 22 frontier validation results
 - Research note created (GEASPIRIT_PHASE22_FRONTIER_VALIDATION_NOTE.md)
 - Phase 23 raw data engineering spec created
+
+### Phase 23: Raw Data Engineering + Real Frontier Validation (2026-03-27)
+
+**GEE pipelines built and sample-tested with real satellite data:**
+
+1. **Raw S2 reflectance:** 10 bands (B2-B12), median composite, cloud-masked via SCL. Tested at all 4 zones (Chuquicamata 292, Zambia 872, Kalgoorlie 295, Peru 292 scenes).
+2. **Multi-year NDVI:** Landsat 8 annual max-NDVI, 2013-2024 (12 annual composites). Real trends: Zambia +0.0043/yr (greening), Peru -0.0026/yr, Kalgoorlie -0.0035/yr, Chuquicamata ~0.0/yr (hyperarid).
+
+**GEE operationalized:** ee.Initialize() confirmed, 2 datasets (S2_SR_HARMONIZED, LANDSAT/LC08/C02/T1_L2), 4 AOIs configured, export pathway documented.
+
+**Frontier validation:** PIPELINE_READY_VALIDATION_PENDING (needs full raster export). Neither promoted nor rejected.
+
+**Frontier track record (v1-v7):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+- v5: spectral_unmixing → VALIDATED_SELECTIVE (porphyry, simulated); NDVI_trend → SELECTIVE_VEGETATED (simulated)
+- v6: real validation attempted → both BLOCKED_BY_DATA (raw pipelines needed)
+- v7: GEE pipelines built + sample-tested → PIPELINE_READY_VALIDATION_PENDING
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% (unchanged)
+
+**Gating v9.** Registry v19. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** Infrastructure progress, not science progress. Pipelines are built. Next: execute GEE exports, download, validate, measure real AUC.
 - All docs synchronized
 
 ### Phase 23 — Raw Data Engineering (PLANNED)

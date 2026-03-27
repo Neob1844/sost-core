@@ -3156,3 +3156,10 @@ but blocked by raw data availability (stacks contain derived indices, not raw
 reflectance). Google Earth Engine access confirmed, enabling raw data pipeline
 construction in Phase 23. Canonical score remains 22.8/40 (57%). The platform's
 bottleneck has shifted from ML architecture to data engineering.
+
+--- GeaSpirit Phase 23 Note (2026-03-27) ---
+Raw data pipelines constructed via Google Earth Engine: Sentinel-2 L2A reflectance
+(10 spectral bands, 4 zones) and multi-year Landsat NDVI (12 annual composites,
+2013-2024). Both sample-tested with real satellite data. GEE operationalized within
+GeaSpirit. Full raster export and frontier validation pending. Canonical score
+remains 22.8/40 (57%).

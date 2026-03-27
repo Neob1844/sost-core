@@ -329,9 +329,11 @@ Multi-source exploration intelligence system. Type-aware, zone-aware, proxy-base
 
 **Canonical objective:** 23.7/40 (59%). Coordinates 7/10, certainty 9.3/10, mineral 3.3/10, depth 4.1/10.
 
-**Phase 22 (2026-03-26):** Frontier validation attempts for spectral unmixing and NDVI trend blocked by raw data availability. GEE now accessible. Canonical score 22.8/40 (57%) unchanged. Next: raw data pipeline engineering.
+**Phase 22 (2026-03-26):** Frontier validation attempts for spectral unmixing and NDVI trend blocked by raw data availability. GEE now accessible. Canonical score 22.8/40 (57%) unchanged.
 
-**Next phase:** Raw S2 reflectance and NDVI composite pipelines via GEE. See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
+**Phase 23 (2026-03-27):** GEE pipelines built for raw S2 reflectance and multi-year NDVI. Sample-tested with real satellite data. Full validation pending export. Canonical 22.8/40 unchanged.
+
+See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
 ## Security
 
