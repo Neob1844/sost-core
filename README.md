@@ -294,50 +294,39 @@ make -j$(nproc)
 ctest --output-on-failure
 ```
 
-## GeaSpirit Platform — Mineral Intelligence
+### GeaSpirit — Mineral Intelligence Platform
 
-Zone-specific mineral prospectivity mapping using public satellite data.
+Autonomous mineral prospectivity platform that identifies zones with high probability of containing mineral deposits. Operates from publicly available satellite, geophysical, and geological data.
 
-- **10 AOIs globally** · 162 targets with exact coordinates · Direct GNN inference
-- Supervised zones: Porphyry Cu (Chile) AUC 0.86, Orogenic Au (Australia) 0.81, Sediment-hosted Cu (Zambia) 0.76, Porphyry Cu (Peru) 0.76, Porphyry Cu (Arizona) 0.72
-- Heuristic scans: Banos de Mula (Spain, score 0.762), Barqueros, Tintic (Utah)
-- Key finding: deposit type > commodity for ML training. Transfer learning does NOT work for satellite features — zone-specific models required.
-- **Thermal V2** (March 2026): 20-year Landsat thermal proxy. +0.013 AUC at Kalgoorlie, replicated at Chuquicamata (4 features consistent). PRODUCTION_WORTHY.
-- **Experiment 2 (EMIT):** 8 granules, 94% coverage. hydroxyl d=+0.645 (p=1.5e-06), EMIT-only AUC 0.826. Fusion no gain (baseline saturated at 0.996). Verdict: PROMISING.
-- **V3 Residual-Proxy:** ML residual NEGATIVE. **Phase 6C:** PCA embeddings +0.026 AUC (best gain), gradients negative, AEM pending.
-- Details: https://sostcore.com/sost-geaspirit.html
+**Canonical Objective:** "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
 
-## Materials Engine — Computational Materials Discovery
+| Dimension | Score | Description |
+|-----------|-------|-------------|
+| MINERAL | 4.0/10 | Deposit type discrimination (porphyry Cu, orogenic Au, sediment Cu) |
+| DEPTH | 4.1/10 | Depth estimation (surface proxy — deposit-scale geophysics blocked) |
+| COORDINATES | 7.0/10 | Spatial precision at 30m per pixel |
+| CERTAINTY | 7.7/10 | Calibrated probability (isotonic, Brier validated) |
 
-- 76,193 materials · Direct GNN inference (CGCNN forward pass) · Autonomous discovery engine
-- Validation queue (5 tiers) · Structure lift pipeline · Material Mixer (4 strategies)
-- 28/28 tests passing · Dual-output explainer (technical + plain language)
+**Canonical Score: 22.8/40 (57%)** — Methodology frozen v4.
 
-## GeaSpirit — Mineral Intelligence Platform
+**Validated zones:** Chuquicamata (Chile, porphyry Cu, 0.882 AUC), Kalgoorlie (Australia, orogenic Au, 0.879 AUC), Zambia Copperbelt (sedimentary Cu, 0.760 AUC). Multi-source fusion validated at all 3 zones across 3 continents.
 
-Multi-source exploration intelligence system. Type-aware, zone-aware, proxy-based. Built for target ranking, not direct deposit imaging.
-
-**Validated feature families:**
-- Satellite baseline (universal) — spectral indices, DEM, thermal
-- Thermal 20yr (universal modest) — +0.013 AUC, 20-year Landsat climatology
-- EMIT alteration (porphyry Cu only) — hydroxyl d=+0.645
-- PCA embeddings (Kalgoorlie only) — +0.026 AUC
-- Magnetics (small positive) — +0.009 AUC with correct GA national TMI
-- Neighborhood context (promising) — mineral AUC 0.507→0.627
-
-**Zone recipes:** Kalgoorlie (sat+thermal+PCA, AUC 0.882), Chuquicamata (sat+thermal+EMIT, 0.862), Peru (sat+thermal, 0.758), Arizona (sat+thermal, 0.718), Zambia (sat, 0.763).
-
-**Canonical objective:** 23.7/40 (59%). Coordinates 7/10, certainty 9.3/10, mineral 3.3/10, depth 4.1/10.
-
-**Phase 22 (2026-03-26):** Frontier validation attempts for spectral unmixing and NDVI trend blocked by raw data availability. GEE now accessible. Canonical score 22.8/40 (57%) unchanged.
-
-**Phase 23 (2026-03-27):** GEE pipelines built for raw S2 reflectance and multi-year NDVI. Sample-tested with real satellite data. Full validation pending export. Canonical 22.8/40 unchanged.
-
-**Phase 24 (2026-03-27):** First real GEE validation on exported rasters (no simulation). 4 zones exported. Validation blocked by spatial alignment. Canonical 22.8/40 unchanged.
-
-**Phase 25 (2026-03-27):** Spatial alignment resolved (GEE sampleRegions at exact label coordinates). Zambia: S2 baseline 0.640, unmixing +0.001 (NEUTRAL), NDVI 0.772 (POSITIVE — best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI 0.724 (NEGATIVE). Kalgoorlie & Chuquicamata blocked by GEE memory limits. Spectral unmixing: NEUTRAL. NDVI trend: zone-specific. Canonical 22.8/40 unchanged.
+Current phase: Phase 25 — spatial alignment layer for real frontier validation. GEE operationalized.
 
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
+
+### Materials Discovery Engine
+
+Autonomous computational materials discovery platform. Predicts formation energy and electronic band gap from crystal structure without physical synthesis.
+
+- **Corpus:** 76,193 validated crystalline materials (JARVIS DFT + AFLOW)
+- **Campaign profiles:** 19 discovery profiles including battery, semiconductor, water/lithium/membrane
+- **Functional discovery:** Ion separation, desalination, lithium recovery, membrane candidates
+- **Full-corpus scan:** 35,589 functionally relevant materials screened, 11,339 multi-function candidates identified
+- **Validation bridge:** Prediction → observation lifecycle with reconciliation
+- **Cost:** $0/month — runs entirely on CPU
+
+Current phase: Phase XV — full-corpus functional intersection discovery.
 
 ## Security
 

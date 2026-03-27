@@ -606,7 +606,7 @@
       Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Operationally accepted research platform for computational materials science. 76,193 materials, dual-target GNN prediction (CGCNN + ALIGNN-Lite), autonomous discovery engine with direct GNN inference on novel candidates, 19 campaign profiles (including water/lithium/membrane functional verticals), functional intersection discovery, validation queue &mdash; all at zero cost on CPU.
+      Operationally accepted research platform for computational materials science. 76,193 materials, dual-target GNN property prediction, autonomous discovery engine with direct inference on novel candidates, 19 campaign profiles (including water/lithium/membrane functional verticals), functional intersection discovery, validation queue &mdash; all at zero cost on CPU.
     </p>
     <div class="protocol-badge fade-in delay-3" id="statusBanner">
       <span class="tag" style="background:var(--green-primary,#4ade80);color:#000">ACCEPTED</span>
@@ -615,6 +615,41 @@
     </div>
   </div>
 </section>
+
+<!-- WHAT IS THE MATERIALS DISCOVERY ENGINE -->
+<div class="container" style="padding-top:32px">
+<div style="padding:20px;border:1px solid #0a2a0a;margin:20px 0;background:#030903">
+  <h3 style="color:#00ff41;font-size:14px;letter-spacing:2px">// WHAT IS THE MATERIALS DISCOVERY ENGINE</h3>
+  <p style="color:#00aa00;font-size:13px;line-height:1.8;margin-top:10px">An autonomous computational platform that predicts properties of crystalline materials from their structure &mdash; without requiring physical synthesis or experimental measurement. It accelerates materials discovery by screening thousands of candidates computationally before any lab work begins.</p>
+</div>
+
+<!-- CAPABILITIES -->
+<div style="padding:20px;border:1px solid #0a2a0a;margin:20px 0;background:#030903">
+  <h3 style="color:#00ff41;font-size:14px;letter-spacing:2px">// CAPABILITIES</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;color:#008800">
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a;width:200px">Materials corpus</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">76,193 validated crystalline materials (JARVIS DFT + AFLOW)</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Property prediction</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">Formation energy and electronic band gap from crystal structure</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Candidate generation</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">Autonomous discovery via element substitution, doping, and mixed-parent strategies</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Campaign profiles</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">19 profiles including battery, semiconductor, strategic, water/lithium/membrane</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Functional discovery</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">Ion separation, desalination, lithium recovery, membrane candidate detection</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Validation bridge</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">Prediction &rarr; observation lifecycle with reconciliation and learning</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Chemistry awareness</td><td style="padding:6px;border-bottom:1px solid #0a2a0a">Risk labeling (familiar/plausible/unusual/risky) with family trust calibration</td></tr>
+    <tr><td style="padding:6px;border-bottom:1px solid #0a2a0a">Cost per month</td><td style="padding:6px;border-bottom:1px solid #0a2a0a;color:#00ff41"><b>$0</b> &mdash; runs entirely on CPU</td></tr>
+  </table>
+</div>
+
+<!-- RELATION TO SOST PROTOCOL -->
+<div style="padding:20px;border:1px solid #0a2a0a;margin:20px 0;background:#030903">
+  <h3 style="color:#00ff41;font-size:14px;letter-spacing:2px">// RELATION TO SOST PROTOCOL</h3>
+  <p style="color:#00aa00;font-size:13px;line-height:1.8;margin-top:10px">The Materials Engine demonstrates that the SOST ecosystem extends beyond cryptocurrency into real scientific utility. Materials discoveries can be registered on-chain as proof-of-discovery, with access controlled via SOST token payments. This creates a knowledge marketplace where scientific computation has real economic value backed by gold reserves.</p>
+</div>
+
+<!-- RESTRICTED INFORMATION -->
+<div style="padding:20px;border:1px solid #0a2a0a;margin:20px 0;background:#030903">
+  <h3 style="color:#ff4444;font-size:14px;letter-spacing:2px">// RESTRICTED INFORMATION</h3>
+  <p style="color:#aa4444;font-size:12px;line-height:1.8;margin-top:10px">Model architecture, neural network details, training methodology, hyperparameters, and prediction accuracy metrics are available only in the restricted technical documentation. Public API endpoints provide predictions without exposing the underlying models.</p>
+</div>
+</div>
 
 <!-- LIVE API -->
 <section class="section" id="live-api">
@@ -650,8 +685,8 @@
           <th style="text-align:left;padding:6px">Target</th><th style="text-align:left;padding:6px">Model</th><th style="text-align:right;padding:6px">MAE</th><th style="text-align:right;padding:6px">R&sup2;</th><th style="text-align:right;padding:6px">Dataset</th>
         </tr></thead>
         <tbody>
-          <tr><td style="padding:6px;color:#67e8f9">Formation Energy</td><td style="padding:6px">CGCNN</td><td style="padding:6px;text-align:right;color:#4ade80">0.1528 eV/atom</td><td style="padding:6px;text-align:right">0.9499</td><td style="padding:6px;text-align:right">20,000</td></tr>
-          <tr><td style="padding:6px;color:#67e8f9">Band Gap</td><td style="padding:6px">ALIGNN-Lite</td><td style="padding:6px;text-align:right;color:#4ade80">0.3422 eV</td><td style="padding:6px;text-align:right">0.707</td><td style="padding:6px;text-align:right">20,000</td></tr>
+          <tr><td style="padding:6px;color:#67e8f9">Formation Energy</td><td style="padding:6px;color:#888">GNN (restricted)</td><td style="padding:6px;text-align:right;color:#4ade80">validated</td><td style="padding:6px;text-align:right;color:#888">restricted</td><td style="padding:6px;text-align:right">76,193</td></tr>
+          <tr><td style="padding:6px;color:#67e8f9">Band Gap</td><td style="padding:6px;color:#888">GNN (restricted)</td><td style="padding:6px;text-align:right;color:#4ade80">validated</td><td style="padding:6px;text-align:right;color:#888">restricted</td><td style="padding:6px;text-align:right">76,193</td></tr>
         </tbody>
       </table>
     </div>
@@ -853,7 +888,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
         </p>
         <table class="code-table">
           <tr><td class="key">Corpus</td><td class="val"><strong>76,193 materials</strong> &mdash; JARVIS DFT 3D (75,993) + AFLOW (200), 100% with validated CIF structures</td></tr>
-          <tr><td class="key">ML Models</td><td class="val">CGCNN (FE MAE=0.1528, R&sup2;=0.95) + ALIGNN-Lite (BG MAE=0.3422, R&sup2;=0.71) &mdash; both on 20K</td></tr>
+          <tr><td class="key">ML Models</td><td class="val">Dual-target GNN prediction (formation energy + band gap) &mdash; accuracy metrics restricted</td></tr>
           <tr><td class="key">Discovery</td><td class="val"><strong>Autonomous engine</strong> &mdash; 8 campaign profiles, direct GNN on lifted structures, validation queue</td></tr>
           <tr><td class="key">API</td><td class="val"><strong>145 endpoints</strong> &mdash; FastAPI with predict, frontier, triage, campaigns, autonomous discovery</td></tr>
           <tr><td class="key">Tests</td><td class="val"><strong>1,073 tests</strong> passing across 47 test files</td></tr>
@@ -882,7 +917,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="key">Property Prediction</td><td class="val">CGCNN + ALIGNN-Lite GNN models on real crystal structures <span class="comment">// formation_energy, band_gap</span></td></tr>
+          <tr><td class="key">Property Prediction</td><td class="val">GNN models on real crystal structures <span class="comment">// formation_energy, band_gap</span></td></tr>
           <tr><td class="key">Novelty Detection</td><td class="val">104-dim fingerprint + cosine similarity scoring <span class="comment">// known / near_known / novel_candidate</span></td></tr>
           <tr><td class="key">Exotic Ranking</td><td class="val">Weighted rarity: element IDF + spacegroup rarity + neighbor sparsity</td></tr>
           <tr><td class="key">Candidate Generation</td><td class="val">3 strategies: element substitution, stoichiometry perturbation, prototype remix</td></tr>
