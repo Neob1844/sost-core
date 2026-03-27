@@ -117,13 +117,22 @@ Frontier testing + incremental autonomy:
 - Autonomy v2 with promotion guardrails. Gating v8 (14 rules). Registry v18.
 - Canonical unchanged 22.8/40.
 
-## Phase 23 Plan — Data Pipeline Construction + GEE Integration
-Priority 1: Build raw S2 reflectance download pipeline (GEE or direct)
-Priority 2: Build multi-year NDVI composite pipeline (GEE + Landsat archive)
-Priority 3: Operator gravity data drop → depth activation
-Priority 4: ECOSTRESS AOI/search fix
-Priority 5: Real validation with proper data pipelines
-Priority 6: Canonical re-evaluation if real evidence emerges
+## Phase 23 Completed (2026-03-27)
+- GEE pipelines built for raw S2 reflectance (10 bands, 4 zones, cloud-masked) and multi-year NDVI (12 annual composites, 4 zones)
+- Both pipelines sample-tested with real satellite data — confirmed working
+- Full raster export pending (async GEE batch export)
+- Frontier validation: PIPELINE_READY_VALIDATION_PENDING (neither promoted nor rejected)
+- Gating v9. Registry v19.
+- Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+## Phase 24 Plan — GEE Export + Real Frontier Validation
+Priority 1: Execute GEE batch exports for all 4 zones (S2 reflectance + NDVI composites)
+Priority 2: Download exported GeoTIFFs to local storage
+Priority 3: Run spectral unmixing on real reflectance rasters
+Priority 4: Run NDVI trend features on real annual composites
+Priority 5: Train and validate with spatial block CV — measure real AUC delta
+Priority 6: Canonical re-evaluation only if real AUC improvement confirmed
+Priority 7: Operator gravity data drop → depth activation
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

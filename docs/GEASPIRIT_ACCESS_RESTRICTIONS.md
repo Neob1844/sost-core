@@ -1,6 +1,6 @@
 # GeaSpirit Data Access Restrictions
 
-Last updated: 2026-03-27 (Phase 22)
+Last updated: 2026-03-27 (Phase 23)
 
 ## Blocked Items (8 of 11 — 3 accessible)
 
@@ -46,3 +46,9 @@ Only GA TMI magnetics (80m) is active. Depth cannot improve without operator dat
 8 items remain fully blocked. GEE is FULLY_ACCESSIBLE and ready for pipeline construction. ECOSTRESS is PARTIALLY_ACCESSIBLE (needs AOI/search fix). The 4 HIGH-priority blockers (gravity, Peru EMIT, AEM, Macrostrat parity) remain unchanged. All depth items blocked. Next priority: build raw S2 reflectance and multi-year NDVI composite pipelines via GEE to enable real frontier validation.
 
 GEE access enables Phase 23 raw data pipeline construction.
+
+### Phase 23 Access Changes (2026-03-27)
+
+- **GEE Python API (#10):** Upgraded from FULLY_ACCESSIBLE to **OPERATIONALIZED**. Two real data pipelines built and sample-tested: raw S2 reflectance (10 bands, 4 zones, cloud-masked via SCL) and multi-year NDVI (Landsat 8, 2013-2024, 12 annual composites). ee.Initialize() confirmed, 2 datasets operationalized (S2_SR_HARMONIZED, LANDSAT/LC08/C02/T1_L2), 4 AOIs configured, export pathway documented.
+- **Full raster export:** PENDING — requires async ee.batch.Export.image.toDrive(). Pipelines work but data not yet on local storage.
+- **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.

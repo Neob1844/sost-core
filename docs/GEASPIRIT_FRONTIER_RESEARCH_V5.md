@@ -480,6 +480,30 @@ Current: **23.7/40 (59%)** — Mineral 3.3, Depth 4.1, Coords 7.0, Certainty 9.3
 
 ---
 
+## 13. Phase 23: Raw Data Engineering via GEE (2026-03-27)
+
+**GEE pipelines built and sample-tested for both frontier candidates:**
+
+1. **Raw S2 reflectance pipeline:** 10 bands (B2-B12), median composite, cloud-masked via SCL. Tested at all 4 zones (Chuquicamata 292, Zambia 872, Kalgoorlie 295, Peru 292 scenes). Real reflectance values confirmed at zone center points.
+2. **Multi-year NDVI pipeline:** Landsat 8 annual max-NDVI, 2013-2024 (12 annual composites). Real trends: Zambia +0.0043/yr (greening), Peru -0.0026/yr, Kalgoorlie -0.0035/yr, Chuquicamata ~0.0/yr (hyperarid).
+
+**Frontier validation status:**
+- Spectral unmixing: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- NDVI trend: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- Neither promoted nor rejected — honest intermediate state
+
+**Frontier track record (v1-v7):**
+- v1: thermal 20yr → VALIDATED selective
+- v2: spatial gradients → REJECTED; EMIT → VALIDATED selective (porphyry)
+- v3: PCA embeddings → VALIDATED selective (Kalgoorlie); foundation embeddings → NEUTRAL
+- v4: spectral_unmixing + NDVI_trend → READY_TO_TEST
+- v5: spectral_unmixing → VALIDATED_SELECTIVE (porphyry, simulated); NDVI_trend → SELECTIVE_VEGETATED (simulated)
+- v6: real validation attempted → both BLOCKED_BY_DATA (raw pipelines needed)
+- v7: GEE pipelines built + sample-tested → PIPELINE_READY_VALIDATION_PENDING
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% (unchanged — 2 still pending real validation)
+
+---
+
 ## 13. Updated CTO Priority After Sprints
 
 The original V5 priority was: (1) Temporal DNA, (2) Prithvi-EO-2.0, (3) ECOSTRESS.

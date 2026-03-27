@@ -1,9 +1,31 @@
 # GeaSpirit — Master State Document
 
 **Last updated:** 2026-03-27
-**Current phase:** Phase 22
+**Current phase:** Phase 23
 **Architecture:** type-aware + zone-aware + baseline-aware + geology-aware
 **Canonical Score (frozen v4):** 22.8/40 (57%)
+
+---
+
+## Phase 23 — Raw Data Engineering + Real Frontier Validation (2026-03-27)
+
+**Focus:** Build real raw data pipelines via GEE, sample-test with real satellite data, advance frontier validation to PIPELINE_READY.
+
+**GEE pipelines built and sample-tested:**
+- Raw S2 reflectance: 10 bands (B2-B12), median composite, cloud-masked via SCL. Image counts: Chuquicamata 292, Zambia 872, Kalgoorlie 295, Peru 292 scenes. Sample values confirmed.
+- Multi-year NDVI: Landsat 8 annual max-NDVI, 2013-2024, 12 annual composites at all 4 zones. Real trends: Zambia +0.0043/yr (greening), Peru -0.0026/yr, Kalgoorlie -0.0035/yr, Chuquicamata ~0.0/yr (hyperarid).
+- Both pipelines: PIPELINE_READY, full raster export pending (async GEE batch export).
+
+**Frontier validation status:**
+- Spectral unmixing: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- NDVI trend: PIPELINE_READY_VALIDATION_PENDING (needs full raster export)
+- Neither promoted nor rejected — honest intermediate state
+
+**GEE operationalization:** ee.Initialize() confirmed, 2 datasets operationalized (S2_SR_HARMONIZED, LANDSAT/LC08/C02/T1_L2), 4 AOIs configured, export pathway documented.
+
+**Depth:** 4.1/10 unchanged. GA TMI magnetics ACTIVE. All other depth sources BLOCKED.
+**Gating v9.** Registry v19.
+**Canonical: 22.8/40 (57%) FROZEN — unchanged. No real AUC improvement measured yet.**
 
 ---
 
