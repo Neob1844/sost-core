@@ -3189,6 +3189,16 @@ subsurface depth. True depth unlock needs GA gravity, AEM, Earth MRI (all blocke
 GEE terrain infrastructure operational at all 4 zones.
 Canonical score remains 22.8/40 (57%).
 
+--- GeaSpirit Phase 27 Note (2026-03-27) ---
+9-feature subsurface-aware family built at all 4 zones via GEE (CSP/ERGo landform
+dataset). topo_diversity = top feature at 3/4 zones. Standalone AUCs strong:
+Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682. Combined with
+S2: REDUNDANT — Kalgoorlie +0.001 (NEUTRAL), Zambia -0.068 (NEGATIVE),
+Chuquicamata -0.021 (NEGATIVE), Peru -0.004 (NEUTRAL). Features are redundant
+with existing spectral. Terrain reclassified: SURFACE_STRUCTURE, not true depth.
+Real depth needs GA gravity, GSWA AEM, USGS Earth MRI (all manual portals).
+Canonical score remains 22.8/40 (57%).
+
 --- SOST Ecosystem: GeaSpirit & Materials Engine ---
 
 GeaSpirit — Mineral Intelligence Platform

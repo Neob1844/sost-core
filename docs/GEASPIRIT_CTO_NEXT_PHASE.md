@@ -158,11 +158,20 @@ Terrain depth pilot — 8 depth sources audited, 3 GEE-accessible piloted at 4 z
 - Canonical: 22.8/40 UNCHANGED — terrain features are surface proxies, not subsurface
 - Gating v12. Registry v22.
 
-## Phase 27 Plan — Terrain Fusion + Depth Data Unlock
-Priority 1: Peru terrain fusion (integrate terrain with satellite baseline for combined AUC)
-Priority 2: NDVI + terrain multi-feature fusion at Zambia
-Priority 3: Operator gravity data drop — depth activation
-Priority 4: Canonical re-evaluation if Peru terrain fusion yields real AUC gain
+## Phase 27 Completed (2026-03-27)
+
+9-feature subsurface-aware family via GEE — strong standalone, REDUNDANT with S2:
+- Feature family: topo_diversity (CSP/ERGo landform), landform_variety, slope, aspect, TPI, TRI, curvature, SAR_VV, SAR_VH
+- topo_diversity: top feature at 3/4 zones (Peru, Kalgoorlie, Chuquicamata)
+- Standalone AUCs: Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682
+- Combined with S2: Kalgoorlie +0.001 (NEUTRAL), Zambia -0.068 (NEGATIVE), Chuquicamata -0.021 (NEGATIVE), Peru -0.004 (NEUTRAL)
+- Terrain reclassified: SURFACE_STRUCTURE, not true depth
+- Canonical: 22.8/40 UNCHANGED. Gating v13. Registry v23.
+
+## Phase 28 Plan — True Depth Data Unlock
+Priority 1: Operator manual data drops — GA gravity, GSWA AEM, USGS Earth MRI
+Priority 2: True subsurface depth features if data becomes available
+Priority 3: Canonical re-evaluation if genuine depth data yields AUC gain
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

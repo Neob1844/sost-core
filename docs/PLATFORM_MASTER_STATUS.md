@@ -18,18 +18,18 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 26 — Terrain Depth Pilot + GEE Terrain Infrastructure
+- **Current Phase:** Phase 27 — Subsurface-Aware Family (REDUNDANT with spectral)
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4, UNCHANGED
 - **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
 - **Depth activation layer:** 1 active (magnetics), 3 GEE-accessible (SRTM, SAR, terrain), 5 blocked (gravity, AEM, Earth MRI, EMAG2, WGM2012)
 - **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
-- **Gating:** v12, **Registry:** v22
-- **Terrain depth pilot:** Peru 0.907 (+0.057 vs baseline, terrain adds real value), Zambia 0.642 (neutral), Kalgoorlie 0.774, Chuquicamata 0.769
+- **Gating:** v13, **Registry:** v23
+- **Phase 27 subsurface-aware family:** Standalone strong (Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682) but REDUNDANT with S2 spectral. Terrain reclassified SURFACE_STRUCTURE.
 - **GEE:** OPERATIONALIZED — terrain infrastructure operational at all 4 zones
 - **Autonomy layer:** v2 (promotion guardrails, execution queue, retry policy)
-- **Bottleneck:** Depth data access — terrain features are surface proxies, true depth needs gravity/AEM/Earth MRI (all blocked)
+- **Bottleneck:** Depth data access — terrain/structure features REDUNDANT with spectral, true depth needs gravity/AEM/Earth MRI (all manual portals)
 
 ### Phase History (recent)
 - Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
@@ -40,6 +40,7 @@
 - Phase 24: First real GEE validation — 4 zones exported, unmixing+NDVI real features computed, validation blocked by spatial alignment. Gating v10. Registry v20.
 - Phase 25: Spatial alignment resolved (GEE sampleRegions). Zambia: unmixing NEUTRAL, NDVI 0.772 POSITIVE. Peru: unmixing NEUTRAL, NDVI NEGATIVE. Kalgoorlie & Chuquicamata GEE memory blocked. Canonical unchanged. Gating v11. Registry v21.
 - Phase 26: Terrain depth pilot. 8 depth sources audited, 3 GEE-accessible. Peru depth-only 0.907 (+0.057). Zambia neutral. GEE terrain operational at 4 zones. Canonical unchanged. Gating v12. Registry v22.
+- Phase 27: 9-feature subsurface-aware family via GEE. Standalone strong (Peru 0.902, Kalgoorlie 0.859) but REDUNDANT with S2. Terrain reclassified SURFACE_STRUCTURE. Canonical unchanged. Gating v13. Registry v23.
 
 ## Materials Engine Status
 
@@ -64,7 +65,7 @@
 
 ## What's Blocked
 
-- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, true depth unlock needs gravity/AEM/Earth MRI
+- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, terrain REDUNDANT with spectral, true depth unlock needs gravity/AEM/Earth MRI (manual portals)
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment

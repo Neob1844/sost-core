@@ -1205,27 +1205,28 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 26</div>
-    <div class="section-title">Phase 26: <span>Terrain Depth Pilot + GEE Terrain Infrastructure</span></div>
+    <div class="section-id">// LATEST — PHASE 27</div>
+    <div class="section-title">Phase 27: <span>Subsurface-Aware Family &mdash; REDUNDANT with Spectral</span></div>
 
-    <!-- Section: Phase 26 Results -->
+    <!-- Section: Phase 27 Results -->
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">PHASE 26 &mdash; TERRAIN DEPTH PILOT</div>
+      <div class="panel-head" style="color:var(--amber)">PHASE 27 &mdash; 9-FEATURE SUBSURFACE-AWARE FAMILY VIA GEE</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Depth Source Audit</td><td>8 AUDITED</td><td>3 GEE-accessible (SRTM, SAR, terrain derivatives), 5 blocked (gravity, AEM, Earth MRI, EMAG2, WGM2012)</td></tr>
-          <tr style="color:var(--green)"><td>Peru Terrain Depth</td><td>AUC 0.907 (+0.057)</td><td>Terrain features add real value vs S2 baseline &mdash; strongest terrain result</td></tr>
-          <tr style="color:var(--amber)"><td>Zambia Terrain Depth</td><td>AUC 0.642 (+0.002)</td><td>Neutral &mdash; flat Copperbelt terrain provides no signal</td></tr>
-          <tr><td>Kalgoorlie Terrain Depth</td><td>AUC 0.774</td><td>No S2 baseline comparison available</td></tr>
-          <tr><td>Chuquicamata Terrain Depth</td><td>AUC 0.769</td><td>No S2 baseline comparison available</td></tr>
-          <tr style="color:var(--green)"><td>GEE Terrain Infrastructure</td><td>OPERATIONAL</td><td>SRTM + SAR + terrain derivatives extractable at all 4 zones</td></tr>
-          <tr style="color:var(--amber)"><td>Depth Score</td><td>4.1/10 UNCHANGED</td><td>Terrain features are surface proxies, not subsurface depth</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; true depth unlock needs gravity, AEM, Earth MRI (all blocked)</td></tr>
+          <tr style="color:var(--green)"><td>Feature Family</td><td>9 FEATURES BUILT</td><td>topo_diversity, landform_variety, slope, aspect, TPI, TRI, curvature, SAR_VV, SAR_VH via GEE (CSP/ERGo landform dataset)</td></tr>
+          <tr style="color:var(--green)"><td>Top Feature</td><td>topo_diversity</td><td>Top feature at 3/4 zones (Peru, Kalgoorlie, Chuquicamata) from CSP/ERGo landform dataset</td></tr>
+          <tr style="color:var(--green)"><td>Peru Standalone</td><td>AUC 0.902</td><td>Strong standalone terrain discrimination</td></tr>
+          <tr style="color:var(--green)"><td>Kalgoorlie Standalone</td><td>AUC 0.859</td><td>Strong standalone terrain discrimination</td></tr>
+          <tr style="color:var(--green)"><td>Chuquicamata Standalone</td><td>AUC 0.846</td><td>Strong standalone terrain discrimination</td></tr>
+          <tr style="color:var(--amber)"><td>Zambia Standalone</td><td>AUC 0.682</td><td>Weak &mdash; flat Copperbelt terrain provides limited signal</td></tr>
+          <tr style="color:var(--red)"><td>Combined with S2</td><td>REDUNDANT</td><td>Kalgoorlie +0.001 (NEUTRAL), Zambia -0.068 (NEGATIVE), Chuquicamata -0.021 (NEGATIVE), Peru -0.004 (NEUTRAL)</td></tr>
+          <tr style="color:var(--amber)"><td>Terrain Reclassification</td><td>SURFACE_STRUCTURE</td><td>Not true depth &mdash; measures surface morphology, not subsurface geology</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED &mdash; real depth needs GA gravity, GSWA AEM, USGS Earth MRI (manual portals)</td></tr>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
-        <b style="color:var(--green)">Key findings:</b> Terrain morphology correlates with deposits in mountainous terrain (Peru +0.057) but not in flat regions (Zambia neutral). These are surface proxies &mdash; true depth estimation requires subsurface geophysics (gravity, AEM, Earth MRI), all of which remain blocked. GEE terrain infrastructure is now operational at all 4 zones.
+        <b style="color:var(--amber)">Key findings:</b> The 9-feature subsurface-aware family produces strong standalone AUCs (Peru 0.902, Kalgoorlie 0.859) but is entirely REDUNDANT when combined with Sentinel-2 spectral features. The satellite already captures surface structure. Terrain reclassified from depth proxy to SURFACE_STRUCTURE. Real depth estimation requires true subsurface geophysics: GA gravity, GSWA AEM, USGS Earth MRI &mdash; all require manual portal downloads.
       </div>
     </div>
 

@@ -918,8 +918,26 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** Terrain features are surface morphology proxies — they correlate with deposits in mountainous terrain (Peru) but not in flat regions (Zambia). They do not unlock true depth estimation. Canonical score unchanged because depth dimension requires subsurface geophysics (gravity, AEM, Earth MRI), all of which remain blocked. GEE terrain infrastructure is now operational at all 4 zones — ready for fusion experiments when subsurface data becomes available.
 
-### Phase 27 — (PLANNED)
-- Terrain fusion at Peru (integrate terrain with satellite baseline for combined AUC)
-- NDVI + terrain multi-feature fusion at Zambia
-- Operator gravity data drop — depth activation
-- Canonical re-evaluation if Peru terrain fusion yields real AUC gain
+### Phase 27: Subsurface-Aware Feature Family (2026-03-27)
+
+**9-feature subsurface-aware family built at all 4 zones via GEE — REDUNDANT with existing spectral:**
+
+1. **Feature family:** 9 terrain/structure features via GEE (topo_diversity, landform_variety, slope, aspect, TPI, TRI, curvature, SAR_VV, SAR_VH). Uses CSP/ERGo global landform dataset.
+2. **topo_diversity:** Top feature at 3/4 zones (Peru, Kalgoorlie, Chuquicamata). Strong standalone discriminator.
+3. **Standalone AUCs:** Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682 — strong standalone performance.
+4. **Combined with S2:** Kalgoorlie +0.001 (NEUTRAL), Zambia -0.068 (NEGATIVE), Chuquicamata -0.021 (NEGATIVE), Peru -0.004 (NEUTRAL).
+5. **Verdict:** Features are REDUNDANT with existing spectral — satellite S2 already captures the same structural information. Adding terrain does not improve AUC.
+6. **Reclassification:** Terrain features reclassified from "depth proxy" to SURFACE_STRUCTURE — they measure surface morphology, not subsurface geology.
+
+**Frontier track record (v11):**
+- v11: subsurface-aware family strong standalone but REDUNDANT with S2, terrain reclassified SURFACE_STRUCTURE
+- Validation rate on closed ideas: 5 validated / 9 closed = 56%
+
+**Gating v13.** Registry v23. Depth unchanged 4.1/10 — terrain is surface structure, not depth. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** The 9-feature subsurface-aware family produces strong standalone AUCs (Peru 0.902, Kalgoorlie 0.859) but is entirely REDUNDANT when combined with Sentinel-2 spectral features. The satellite already captures surface structure through its spectral bands. Terrain features are reclassified from depth proxy to SURFACE_STRUCTURE. Real depth estimation requires true subsurface geophysics: GA gravity, GSWA AEM, USGS Earth MRI — all require manual portal downloads. The canonical score remains 22.8/40.
+
+### Phase 28 — (PLANNED)
+- Operator manual data drops: GA gravity, GSWA AEM, USGS Earth MRI
+- True subsurface depth features if data becomes available
+- Canonical re-evaluation if genuine depth data yields AUC gain
