@@ -111,15 +111,19 @@ Frontier testing + incremental autonomy:
 - Autonomy layer v1: scheduling + triggers + auto-recommendations defined
 - Gating v7: 12 rules, registry v17
 
-## Phase 22 Plan — Production Validation + Depth Data Push
+## Phase 22 Completed (2026-03-26)
+- Real validation attempted: both BLOCKED_BY_DATA (raw reflectance + NDVI time series not available)
+- GEE: FULLY_ACCESSIBLE. ECOSTRESS: PARTIALLY_ACCESSIBLE.
+- Autonomy v2 with promotion guardrails. Gating v8 (14 rules). Registry v18.
+- Canonical unchanged 22.8/40.
 
-**Priority 1:** Validate spectral unmixing with REAL data at Chuquicamata (not simulated)
-**Priority 2:** Validate NDVI trend with REAL Landsat archive at Zambia
-**Priority 3:** Operator pushes gravity data → depth activation
-**Priority 4:** Test ECOSTRESS (now accessible via earthaccess)
-**Priority 5:** Test GEE-based unified data pipeline (now accessible)
-**Priority 6:** If gravity dropped → retrain Kalgoorlie with depth features
-**Priority 7:** Full canonical re-evaluation if real data changes scores
+## Phase 23 Plan — Data Pipeline Construction + GEE Integration
+Priority 1: Build raw S2 reflectance download pipeline (GEE or direct)
+Priority 2: Build multi-year NDVI composite pipeline (GEE + Landsat archive)
+Priority 3: Operator gravity data drop → depth activation
+Priority 4: ECOSTRESS AOI/search fix
+Priority 5: Real validation with proper data pipelines
+Priority 6: Canonical re-evaluation if real evidence emerges
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

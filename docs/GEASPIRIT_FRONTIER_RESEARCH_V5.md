@@ -547,3 +547,12 @@ The original V5 priority was: (1) Temporal DNA, (2) Prithvi-EO-2.0, (3) ECOSTRES
 - v3: PCA → VALIDATED selective; foundation embeddings → NEUTRAL
 - v4: spectral unmixing → SELECTIVE (porphyry); NDVI trend → SELECTIVE (vegetated)
 - Validation rate: 5 validated / 8 closed = 63%
+
+---
+
+## Phase 22 — Real Validation Attempted (2026-03-26)
+- Spectral unmixing real validation: BLOCKED_BY_DATA (raw S2 reflectance not in stacks)
+- NDVI trend real validation: BLOCKED_BY_DATA (single snapshot, not time series)
+- Both remain SIMULATED_ONLY candidates
+- Lesson: frontier validation requires raw data pipelines, not just derived indices
+- Track record: 5 validated / 8 closed (63%) — 2 pending real validation

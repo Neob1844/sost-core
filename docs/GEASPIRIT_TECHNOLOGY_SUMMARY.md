@@ -173,3 +173,24 @@ Top 3 next experiments (from Frontier Research V5):
 **Incremental autonomy layer v1:** Weekly model review, blocked data check, frontier review. Monthly canonical review. Retraining triggers defined (new data drop, AUC regression, blocked item resolved).
 
 **Canonical score:** 22.8/40 (57%) FROZEN — unchanged. Simulated results not yet validated with production data.
+
+---
+
+## 13. Phase 22 — Real Validation + Access Closure (2026-03-27)
+
+**Real validation attempted — both BLOCKED_BY_DATA:**
+- **Spectral unmixing:** Cannot validate with real data — existing stacks contain derived spectral indices, not raw Sentinel-2 reflectance bands needed for endmember decomposition. Remains SIMULATED_ONLY.
+- **NDVI trend:** Cannot validate with real data — existing NDVI is single-date snapshots, not multi-year Landsat time series. Remains SIMULATED_ONLY.
+
+**Access closure audit:**
+- **GEE Python API:** FULLY_ACCESSIBLE — ee.Initialize() works, SRTM query successful. Ready for data pipeline construction.
+- **ECOSTRESS/earthaccess:** PARTIALLY_ACCESSIBLE — library installed, authentication works, but search returns 0 granules for test AOI. Needs AOI/search parameter fix.
+- 8/11 items remain fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked.
+
+**Autonomy layer v2:** Promotion guardrails added (simulated results can only advance to candidate status, not production). Execution queue and retry policy defined.
+
+**Gating engine v8:** 14 rules — added R13 (simulated guardrail: block promotion without real validation) and R14 (newly accessible pilot gate: require successful test query before pipeline integration).
+
+**Lesson:** Frontier validation requires raw data pipelines, not just derived indices. The existing feature stacks are optimized for production models but lack the raw inputs needed to test new feature families. Next priority: build raw data download pipelines (GEE for S2 reflectance, Landsat NDVI composites).
+
+**Canonical score:** 22.8/40 (57%) FROZEN — unchanged. No real validation evidence to justify update.

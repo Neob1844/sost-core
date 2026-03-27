@@ -1136,28 +1136,30 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
-<!-- PHASE 21 STATUS -->
+<!-- PHASE 22 STATUS -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// LATEST — PHASE 21</div>
-    <div class="section-title">Phase 21: <span>Frontier Testing + Autonomy</span></div>
+    <div class="section-id">// LATEST — PHASE 22</div>
+    <div class="section-title">Phase 22: <span>Real Validation + Access Closure</span></div>
     <div class="panel">
-      <div class="panel-head">PHASE 21 STATUS</div>
+      <div class="panel-head">PHASE 22 STATUS</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Spectral Unmixing</td><td>SELECTIVE (porphyry)</td><td>Simulated +0.008 Chuquicamata</td></tr>
-          <tr style="color:var(--green)"><td>NDVI Trend</td><td>SELECTIVE (vegetated)</td><td>Simulated +0.012 Zambia</td></tr>
-          <tr style="color:var(--green)"><td>Autonomy Layer</td><td>v1</td><td>Scheduling + triggers + auto-recommendations</td></tr>
-          <tr style="color:var(--amber)"><td>Blocked Items</td><td>9/11</td><td>2 newly accessible (earthaccess, GEE)</td></tr>
-          <tr style="color:var(--green)"><td>Gating</td><td>v7 — 12 RULES</td><td>Extended from v6</td></tr>
-          <tr style="color:var(--green)"><td>Registry</td><td>v17</td><td>Updated with frontier results</td></tr>
-          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED — all frontier results SIMULATED</td></tr>
+          <tr style="color:var(--amber)"><td>Spectral Unmixing</td><td>VALIDATION_BLOCKED</td><td>Stacks have derived indices, not raw S2 reflectance</td></tr>
+          <tr style="color:var(--amber)"><td>NDVI Trend</td><td>VALIDATION_BLOCKED</td><td>Single-date snapshots, not multi-year time series</td></tr>
+          <tr style="color:var(--green)"><td>GEE Python API</td><td>FULLY_ACCESSIBLE</td><td>ee.Initialize() works, SRTM query successful</td></tr>
+          <tr style="color:var(--amber)"><td>ECOSTRESS</td><td>PARTIALLY_ACCESSIBLE</td><td>Auth OK, search returns 0 granules for test AOI</td></tr>
+          <tr style="color:var(--green)"><td>Autonomy Layer</td><td>v2</td><td>Promotion guardrails, execution queue, retry policy</td></tr>
+          <tr style="color:var(--amber)"><td>Blocked Items</td><td>8/11</td><td>Depth items all blocked</td></tr>
+          <tr style="color:var(--green)"><td>Gating</td><td>v8 — 14 RULES</td><td>R13 simulated guardrail, R14 pilot gate</td></tr>
+          <tr style="color:var(--green)"><td>Registry</td><td>v18</td><td>Updated with real validation results</td></tr>
+          <tr style="color:var(--green)"><td>Canonical Score</td><td>22.8/40 (57%)</td><td>UNCHANGED — frontier candidates remain SIMULATED_ONLY</td></tr>
         </tbody>
       </table>
     </div>
     <div class="human-box">
-      <b>Phase 21 summary:</b> Spectral unmixing validated as SELECTIVE for porphyry zones (simulated +0.008 at Chuquicamata). NDVI trend validated as SELECTIVE for vegetated zones (simulated +0.012 at Zambia). 2 blocked items now accessible via earthaccess and GEE Python API. Autonomy layer v1 started. ALL frontier results are SIMULATED — production validation pending.
+      <b>Phase 22 summary:</b> Real validation of spectral unmixing and NDVI trend both BLOCKED_BY_DATA — existing stacks contain derived indices, not raw reflectance; NDVI is single snapshot, not time series. Both remain SIMULATED_ONLY candidates. GEE Python API is FULLY_ACCESSIBLE (ee.Initialize works). ECOSTRESS is PARTIALLY_ACCESSIBLE (auth OK, search returns 0 granules). Autonomy v2 with promotion guardrails. Gating v8 (14 rules). Canonical unchanged 22.8/40 (57%). Honest: frontier candidates remain simulated only until raw data pipelines are built.
     </div>
   </div>
 </section>
@@ -1176,8 +1178,9 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 8-15</span> Multi-zone fusion + gating + geology validation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 16-19</span> Macrostrat geology + coverage parity + depth proxy plan <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 20</span> Operator unlock + depth activation + frontier track v4 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
-    <div class="phase"><span class="phase-label">PHASE 22</span> Production validation + depth data unlock + autonomy expansion <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
+    <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green);font-weight:700">CURRENT</span></div>
+    <div class="phase"><span class="phase-label">PHASE 23</span> Data pipeline construction + GEE integration + depth data push <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> NEXT</div>
   </div>
 </section>
 

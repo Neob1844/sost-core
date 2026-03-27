@@ -1,9 +1,29 @@
 # GeaSpirit — Master State Document
 
-**Last updated:** 2026-03-26
-**Current phase:** Phase 21
+**Last updated:** 2026-03-27
+**Current phase:** Phase 22
 **Architecture:** type-aware + zone-aware + baseline-aware + geology-aware
 **Canonical Score (frozen v4):** 22.8/40 (57%)
+
+---
+
+## Phase 22 — Real Validation + Access Closure (2026-03-26)
+
+**Focus:** Validate frontier candidates with real data, activate accessible resources, strengthen autonomy.
+
+**Real validation results:**
+- Spectral unmixing: VALIDATION_BLOCKED — stacks contain derived indices, not raw S2 reflectance
+- NDVI trend: VALIDATION_BLOCKED — single-date NDVI snapshots, not multi-year time series
+- Both remain SIMULATED_ONLY candidates — NOT promoted to production
+
+**Access closure:**
+- GEE Python API: FULLY_ACCESSIBLE — ee.Initialize() works, SRTM query successful
+- ECOSTRESS/earthaccess: PARTIALLY_ACCESSIBLE — library+auth OK, search returns 0 granules for test AOI
+- 8/11 items still fully blocked, depth items all blocked
+
+**Autonomy layer v2:** Promotion guardrails (simulated→candidate only), execution queue, retry policy.
+**Gating v8:** 14 rules (R13 simulated guardrail, R14 newly accessible pilot gate).
+**Canonical: 22.8/40 (57%) FROZEN — unchanged.**
 
 ---
 
