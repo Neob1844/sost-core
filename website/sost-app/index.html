@@ -14,7 +14,7 @@
 <title>SOST — Sovereign Stock Token</title>
 <style>
 /* ============================================================
-   SOST PROTOCOL — Fallout Pip-Boy Terminal UI
+   SOST — Sovereign Stock Token — Pip-Boy Terminal UI
    ============================================================ */
 
 *, *::before, *::after {
@@ -620,7 +620,7 @@ body {
 
 <script>
 /* ==============================================================
-   SOST PROTOCOL — Pip-Boy Terminal Application
+   SOST — Sovereign Stock Token — Pip-Boy Terminal Application
    Complete self-contained JS: Audio, Navigation, Sections, RPC
    ============================================================== */
 
@@ -1205,7 +1205,7 @@ function runSplash(callback) {
     console.log('[Splash] Pixel art icons loaded:', PixelArt.count, 'total in library');
   }
 
-  // Type "SOST PROTOCOL" title after 1.5s
+  // Type "SOST" title after 1.5s
   const titleEl = document.getElementById('splash-title');
   const titleText = 'SOST';
   let titleIdx = 0;
@@ -2286,10 +2286,21 @@ function bindEvents() {
     document.querySelectorAll('iframe').forEach(f => { try { f.src = 'about:blank'; } catch(e) {} });
     document.getElementById('session-ended').classList.add('show');
     setTimeout(() => {
-      // Try native close first (works in PWA standalone and popups)
+      // PWA standalone: window.close() works
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        try { window.close(); } catch(e) {}
+        try { history.go(-(history.length - 1)); } catch(e) {}
+        return;
+      }
+      // Browser: try close, then show toast
       try { window.close(); } catch(e) {}
-      // Fallback: navigate to about:blank (clears everything)
-      setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+      setTimeout(() => {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#111;border:1px solid var(--pip);color:var(--pip);padding:12px 24px;font-family:monospace;font-size:14px;z-index:99999;border-radius:4px;text-align:center';
+        t.innerHTML = 'Close this tab manually<br><span style="font-size:11px;opacity:0.5">Browser blocks programmatic tab close</span>';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 8000);
+      }, 800);
     }, 3000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
