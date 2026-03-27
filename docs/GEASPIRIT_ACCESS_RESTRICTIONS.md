@@ -1,6 +1,6 @@
 # GeaSpirit Data Access Restrictions
 
-Last updated: 2026-03-27 (Phase 25)
+Last updated: 2026-03-27 (Phase 26)
 
 ## Blocked Items (8 of 11 — 3 accessible)
 
@@ -39,7 +39,7 @@ Last updated: 2026-03-27 (Phase 25)
 ## Depth Bottleneck
 
 Current depth score: 4.1/10. All deposit-scale depth sources (gravity, AEM, Earth MRI) are BLOCKED.
-Only GA TMI magnetics (80m) is active. Depth cannot improve without operator data drops.
+GA TMI magnetics (80m) is active. GEE terrain features (SRTM, SAR, terrain derivatives) now operational at 4 zones but are surface proxies only — Peru depth-only AUC 0.907 (+0.057), Zambia 0.642 (neutral). True depth improvement requires subsurface geophysics (gravity, AEM, Earth MRI), all blocked.
 
 ## Phase 22 Follow-up
 
@@ -64,3 +64,9 @@ GEE access enables Phase 23 raw data pipeline construction.
 - **GEE Python API (#10):** Spatial alignment resolved via sampleRegions() — extracts at exact label coordinates. However, GEE compute memory limits block Kalgoorlie and Chuquicamata (large AOIs cause timeout). GEE works for Zambia and Peru but needs tile/chunk strategy for larger zones.
 - **New limitation identified:** GEE memory limits on sampleRegions() for large AOIs. Kalgoorlie and Chuquicamata cannot be processed without splitting into tiles.
 - **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.
+
+### Phase 26 Access Changes (2026-03-27)
+
+- **GEE Python API (#10):** Terrain infrastructure now operational at all 4 zones. SRTM DEM, Sentinel-1 SAR, and terrain derivatives (slope, aspect, TPI, TRI, curvature) all extractable via GEE sampleRegions(). 8 depth sources audited: 3 GEE-accessible (SRTM, SAR, terrain derivatives), 5 remain BLOCKED (GA gravity, AEM, Earth MRI, EMAG2, WGM2012).
+- **Depth source audit results:** Peru terrain depth-only AUC 0.907 (+0.057 vs S2 baseline), Zambia 0.642 (neutral), Kalgoorlie 0.774, Chuquicamata 0.769. Terrain features are surface morphology proxies — they help in mountainous terrain but do not provide subsurface depth estimation.
+- **All other items unchanged.** 8/11 still fully blocked. All deposit-scale depth sources (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.

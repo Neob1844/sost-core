@@ -3180,6 +3180,15 @@ best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI
 Spectral unmixing: NEUTRAL. NDVI trend: zone-specific (vegetated only).
 Canonical score remains 22.8/40 (57%) — no improvement exceeding +0.005 threshold.
 
+--- GeaSpirit Phase 26 Note (2026-03-27) ---
+Terrain depth pilot: 8 depth sources audited, 3 GEE-accessible (SRTM, SAR,
+terrain derivatives). 4 zones piloted. Peru depth-only AUC 0.907 (+0.057 vs S2
+baseline — terrain features add real value). Zambia 0.642 (+0.002, neutral).
+Kalgoorlie 0.774, Chuquicamata 0.769. Terrain features are surface proxies, not
+subsurface depth. True depth unlock needs GA gravity, AEM, Earth MRI (all blocked).
+GEE terrain infrastructure operational at all 4 zones.
+Canonical score remains 22.8/40 (57%).
+
 --- SOST Ecosystem: GeaSpirit & Materials Engine ---
 
 GeaSpirit — Mineral Intelligence Platform
@@ -3188,7 +3197,7 @@ Canonical Score: 22.8/40 (57%), frozen methodology v4.
   - MINERAL 4.0/10, DEPTH 4.1/10, COORDINATES 7.0/10, CERTAINTY 7.7/10
 Validated at 3 zones: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).
 Multi-source fusion confirmed at all zones. Architecture: type-aware + zone-aware + baseline-aware.
-GEE operationalized. Depth remains primary bottleneck (blocked geophysical data).
+GEE operationalized (terrain infrastructure at 4 zones). Depth remains primary bottleneck (blocked geophysical data).
 
 RESTRICTED — Implementation Details:
   Model architecture, feature engineering algorithms, training data, hyperparameters,

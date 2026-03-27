@@ -900,8 +900,26 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** Alignment blocker eliminated. Spectral unmixing adds nothing — NEUTRAL, will not be pursued further. NDVI trend is zone-specific: strong signal at Zambia (vegetated), not useful at Peru (arid). Two zones still blocked by GEE memory limits. Canonical score unchanged.
 
-### Phase 26 — (PLANNED)
-- Resolve GEE memory limits at Kalgoorlie and Chuquicamata (tile/chunk strategy)
-- NDVI trend fusion at Zambia (integrate with existing satellite baseline)
+### Phase 26: Terrain Depth Pilot (2026-03-27)
+
+**8 depth sources audited, 3 GEE-accessible used, 4 zones piloted with terrain+SAR depth features:**
+
+1. **Depth source audit:** 8 sources assessed — SRTM DEM, Sentinel-1 SAR, terrain derivatives (slope, aspect, TPI, TRI, curvature) accessible via GEE. GA gravity, AEM, Earth MRI, EMAG2, WGM2012 remain BLOCKED.
+2. **Peru:** Depth-only AUC 0.907 (+0.057 vs S2 baseline) — terrain features add real value. Strongest terrain depth result.
+3. **Zambia:** Depth-only AUC 0.642 (+0.002 vs baseline) — neutral, terrain features do not help at flat Copperbelt.
+4. **Kalgoorlie:** Depth-only AUC 0.774. **Chuquicamata:** 0.769. No S2 baseline comparison available.
+5. **GEE terrain infrastructure:** Operational at all 4 zones — SRTM, SAR, and terrain derivatives extractable programmatically.
+
+**Frontier track record (v10):**
+- v10: terrain depth features real at 4 zones, Peru +0.057 genuine, Zambia neutral
+- Validation rate on closed ideas: 5 validated / 8 closed = 63% (unchanged)
+
+**Gating v12.** Registry v22. Depth unchanged 4.1/10 — terrain is surface proxy, not subsurface. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** Terrain features are surface morphology proxies — they correlate with deposits in mountainous terrain (Peru) but not in flat regions (Zambia). They do not unlock true depth estimation. Canonical score unchanged because depth dimension requires subsurface geophysics (gravity, AEM, Earth MRI), all of which remain blocked. GEE terrain infrastructure is now operational at all 4 zones — ready for fusion experiments when subsurface data becomes available.
+
+### Phase 27 — (PLANNED)
+- Terrain fusion at Peru (integrate terrain with satellite baseline for combined AUC)
+- NDVI + terrain multi-feature fusion at Zambia
 - Operator gravity data drop — depth activation
-- Canonical re-evaluation if Zambia NDVI fusion yields real AUC gain
+- Canonical re-evaluation if Peru terrain fusion yields real AUC gain
