@@ -44,3 +44,5 @@ Only GA TMI magnetics (80m) is active. Depth cannot improve without operator dat
 ## Phase 22 Follow-up
 
 8 items remain fully blocked. GEE is FULLY_ACCESSIBLE and ready for pipeline construction. ECOSTRESS is PARTIALLY_ACCESSIBLE (needs AOI/search fix). The 4 HIGH-priority blockers (gravity, Peru EMIT, AEM, Macrostrat parity) remain unchanged. All depth items blocked. Next priority: build raw S2 reflectance and multi-year NDVI composite pipelines via GEE to enable real frontier validation.
+
+GEE access enables Phase 23 raw data pipeline construction.

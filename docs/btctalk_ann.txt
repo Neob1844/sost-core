@@ -222,7 +222,17 @@ A multi-source mineral intelligence system under active development. Designed fo
 [list]
 [li][b]Validated signals:[/b] Long-term thermal proxies (20yr Landsat, d=-0.627). Type-aware hyperspectral alteration (EMIT, porphyry Cu selective). Zone-specific spatial embeddings (+0.026 AUC at Kalgoorlie). Aeromagnetics (+0.009 AUC). Neighborhood context for mineral discrimination (Au vs Ni AUC 0.627).[/li]
 [li][b]Honest results:[/b] Spatial gradients negative. ML residuals negative. Cross-zone transfer learning does not work. EMIT negative at orogenic Au. Peru EMIT deferred (download issue). No depth estimation from satellite alone.[/li]
-[li][b]Current status:[/b] 6 supervised zones (AUC 0.72-0.88). 162 targets with exact coordinates. Canonical objective score: 23.7/40 (59%). Evolving from sensor experimentation into information fusion platform.[/li]
+[li][b]Current status:[/b] 6 supervised zones (AUC 0.72-0.88). 162 targets with exact coordinates. Canonical objective score: 22.8/40 (57%, frozen v4). Evolving from sensor experimentation into information fusion platform.[/li]
+[/list]
+
+[b][Phase 22 Update — 2026-03-26][/b]
+[list]
+[li]Frontier validation attempts for spectral unmixing and NDVI trend — blocked by raw-data availability[/li]
+[li]Google Earth Engine now fully accessible for data pipeline construction[/li]
+[li]ECOSTRESS partially accessible (library + auth OK, search refinement needed)[/li]
+[li]Canonical objective: 22.8/40 (57%) — unchanged (frozen methodology v4)[/li]
+[li]Next step: raw data pipeline buildout via GEE for real frontier validation[/li]
+[li]8/11 data items still blocked — depth remains weakest dimension (4.1/10)[/li]
 [/list]
 
 [hr]
