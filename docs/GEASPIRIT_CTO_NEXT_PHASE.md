@@ -135,12 +135,23 @@ First real frontier validation on exported GEE rasters (no simulation):
 - Canonical: 22.8/40 UNCHANGED — real features exist but AUC not measurable yet
 - Gating v10. Registry v20.
 
-## Phase 25 Plan — Spatial Alignment Layer
-Priority 1: Build spatial alignment between GEE raster pixels and deposit/background labels
-Priority 2: Match exported GeoTIFF coordinates to label lat/lon
-Priority 3: Run spectral unmixing + NDVI trend with aligned data — measure real AUC delta
-Priority 4: Canonical re-evaluation only if real AUC improvement confirmed
-Priority 5: Operator gravity data drop → depth activation
+## Phase 25 Completed (2026-03-27)
+
+Spatial alignment resolved + first real AUC measurements for frontier candidates:
+- Spatial alignment: GEE sampleRegions() extracts at exact label coordinates — blocker eliminated
+- Zambia: S2 baseline 0.640, unmixing +0.001 (NEUTRAL), NDVI 0.772 (POSITIVE — best single family)
+- Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI 0.724 (NEGATIVE)
+- Kalgoorlie & Chuquicamata: blocked by GEE memory limits
+- Spectral unmixing: NEUTRAL — adds nothing over raw S2 reflectance. Will not be pursued further.
+- NDVI trend: zone-specific — strong at vegetated zones (Zambia), weak at arid zones (Peru)
+- Canonical: 22.8/40 UNCHANGED — no improvement exceeding +0.005 threshold
+- Gating v11. Registry v21.
+
+## Phase 26 Plan — NDVI Fusion + GEE Memory Fix
+Priority 1: Resolve GEE memory limits at Kalgoorlie and Chuquicamata (tile/chunk strategy)
+Priority 2: NDVI trend fusion at Zambia (integrate with satellite baseline for AUC gain)
+Priority 3: Operator gravity data drop — depth activation
+Priority 4: Canonical re-evaluation if Zambia NDVI fusion yields real AUC gain
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

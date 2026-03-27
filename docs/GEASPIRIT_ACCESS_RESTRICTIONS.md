@@ -1,6 +1,6 @@
 # GeaSpirit Data Access Restrictions
 
-Last updated: 2026-03-27 (Phase 24)
+Last updated: 2026-03-27 (Phase 25)
 
 ## Blocked Items (8 of 11 — 3 accessible)
 
@@ -57,4 +57,10 @@ GEE access enables Phase 23 raw data pipeline construction.
 
 - **GEE Python API (#10):** GEE exports now working — 4 zones exported with real rasters (Chuquicamata 267 S2 images, Zambia 528, Kalgoorlie 180, Peru 55). GEE fully operational for data extraction.
 - **New blocker identified:** Spatial alignment between GEE pixel coordinates and deposit/background labels. Exported GeoTIFFs need coordinate matching to existing label sets before AUC validation is possible.
+- **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.
+
+### Phase 25 Access Changes (2026-03-27)
+
+- **GEE Python API (#10):** Spatial alignment resolved via sampleRegions() — extracts at exact label coordinates. However, GEE compute memory limits block Kalgoorlie and Chuquicamata (large AOIs cause timeout). GEE works for Zambia and Peru but needs tile/chunk strategy for larger zones.
+- **New limitation identified:** GEE memory limits on sampleRegions() for large AOIs. Kalgoorlie and Chuquicamata cannot be processed without splitting into tiles.
 - **All other items unchanged.** 8/11 still fully blocked. All depth items (gravity, AEM, Earth MRI) still blocked. All 3 manual dropzones still EMPTY.
