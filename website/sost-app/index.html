@@ -11,7 +11,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-<title>SOST Protocol</title>
+<title>SOST — Sovereign Stock Token</title>
 <style>
 /* ============================================================
    SOST PROTOCOL — Fallout Pip-Boy Terminal UI
@@ -1207,7 +1207,7 @@ function runSplash(callback) {
 
   // Type "SOST PROTOCOL" title after 1.5s
   const titleEl = document.getElementById('splash-title');
-  const titleText = 'SOST PROTOCOL';
+  const titleText = 'SOST';
   let titleIdx = 0;
   setTimeout(() => {
     titleEl.style.opacity = '1';
@@ -1520,6 +1520,7 @@ function renderSection(id) {
 
   const renderer = SectionRenderers[id];
   if (renderer) renderer(content);
+  setTimeout(addTooltips, 300);
 
   // Add ↗ link to web for each section title
   const sectionLinks = {
@@ -1696,6 +1697,25 @@ function addTooltips() {
     'TARGET SPACING': 'The target time between blocks: 600 seconds (10 minutes). cASERT adjusts difficulty to maintain this average.',
     'MINER': '50% of every block reward goes to the miner who found the block.',
     'GOLD VAULT': '25% of every block reward goes to the Gold Vault — a constitutional treasury address hardcoded in the protocol.',
+    // Consensus section
+    'POW ALGORITHM': 'ConvergenceX: CPU-friendly proof-of-work using gradient descent on a random 32×32 matrix. Requires ~8GB RAM for mining. ASIC-resistant by design.',
+    'CASERT (Q16.16)': 'Per-block difficulty adjustment in Q16.16 fixed-point format. V2 (blocks ≥1450): 24h halflife, 12.5% delta cap. 17 equalizer profiles (E4-H9).',
+    'MAX BLOCK SIZE': '1,000,000 bytes (1MB). Maximum size of a serialized block including all transactions.',
+    'MAX TX SIZE': '100,000 bytes consensus limit, 16,000 bytes policy limit. Prevents oversized transactions.',
+    'MIN RELAY FEE': '1 stock per byte. Minimum fee rate for a transaction to be relayed by nodes. 1 stock = 0.00000001 SOST.',
+    // Block reward split
+    'SPLIT RULE': 'The 50/25/25 split (Miner/Gold/PoPC) is hardcoded in the consensus rules. No governance process, fork, or vote can change it. It is constitutional.',
+    'POPC POOL': '25% of every block reward goes to the Proof of Personal Custody Pool — a future distribution mechanism for individual SOST holders.',
+    // Markets
+    'PRE-MARKET': 'SOST is in pre-market phase. Mining is active, blocks are being produced, but no exchange listing exists yet. The token accrues value through gold-backing.',
+    'GOLD-BACKED (25% TO VAULT)': 'Every block permanently allocates 25% of the subsidy to a constitutional Gold Vault address. This creates a growing gold-backed reserve.',
+    'EXPONENTIAL DECAY': 'Block rewards decrease smoothly using the Feigenbaum exponential: reward(epoch) = genesis_reward × q^epoch where q = e^(-1/4).',
+    'SMOOTH EXPONENTIAL DECAY': 'Unlike Bitcoin\'s abrupt halvings, SOST uses smooth exponential decay. Reward decreases continuously — no sudden supply shocks.',
+    // Security
+    'ECDSA secp256k1 signatures': 'Industry-standard elliptic curve used by Bitcoin. All transactions must be signed with a valid private key.',
+    'LOW-S signature enforcement': 'Prevents transaction malleability by requiring the low-S form of ECDSA signatures (BIP-62 compliant).',
+    'UTXO model (no account state)': 'Unspent Transaction Output model. Each output can only be spent once. No global account balances — eliminates replay attacks.',
+    '4-layer block validation': 'L1: structure (size, tx count). L2: header (prev-link, timestamp). L3: consensus (fees, subsidy). L4: atomic UTXO connect.',
   };
 
   document.querySelectorAll('.stat-label').forEach(el => {
@@ -2132,7 +2152,7 @@ SectionRenderers.about = function(el) {
   el.innerHTML = `
     <div class="pip-panel" style="text-align:center">
       <div style="font-size:64px;margin:16px 0;text-shadow:0 0 30px var(--pip-glow)">SOST</div>
-      <div style="font-size:28px;letter-spacing:6px;color:var(--pip-dim);margin-bottom:8px">PROTOCOL</div>
+      <div style="font-size:18px;letter-spacing:4px;color:var(--pip-dim);margin-bottom:8px">SOVEREIGN STOCK TOKEN</div>
       <div style="font-size:16px;color:#006600;margin-bottom:24px">CPU-FRIENDLY GOLD-BACKED CRYPTOCURRENCY</div>
       <div style="font-size:16px;border-top:1px solid var(--pip-dark);padding-top:16px">
         <p style="margin:6px 0">VERSION: <span style="color:var(--pip)">v4.0.0-PIPBOY</span></p>
@@ -2263,16 +2283,13 @@ function bindEvents() {
   });
   document.getElementById('exit-btn').addEventListener('click', () => {
     AudioEngine.sys_shutdown();
-    // Kill all iframes
     document.querySelectorAll('iframe').forEach(f => { try { f.src = 'about:blank'; } catch(e) {} });
     document.getElementById('session-ended').classList.add('show');
-    // After 4 seconds: try close, then redirect to blank
     setTimeout(() => {
+      // Try native close first (works in PWA standalone and popups)
       try { window.close(); } catch(e) {}
-      setTimeout(() => {
-        try { history.go(-(history.length-1)); } catch(e) {}
-        setTimeout(() => { window.location.href = 'about:blank'; }, 300);
-      }, 500);
+      // Fallback: navigate to about:blank (clears everything)
+      setTimeout(() => { window.location.href = 'about:blank'; }, 500);
     }, 3000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
@@ -2391,6 +2408,60 @@ function showBlockDetail(heightOrHash) {
   })();
 }
 
+function showTxDetail(txid) {
+  const overlay = document.getElementById('block-detail-overlay');
+  const content = document.getElementById('bdo-content');
+  if (!overlay || !content) return;
+  const closeBtn = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button>';
+  content.innerHTML = closeBtn + '<p style="color:var(--pip-dim)">Loading TX...</p>';
+  overlay.classList.add('show');
+
+  (async () => {
+    try {
+      const tx = await rpcCall('getrawtransaction', [txid, true]);
+      if (!tx) { content.innerHTML = closeBtn + '<p>TX not found — node may not have tx-index enabled</p>'; return; }
+
+      let html = closeBtn;
+      html += '<h3 style="color:var(--pip);margin:0 0 12px">// TRANSACTION</h3>';
+      html += '<div class="bdo-row"><span class="bdo-key">TXID</span><span class="bdo-val" style="font-size:10px">' + txid + '</span></div>';
+
+      if (tx.blockhash) html += '<div class="bdo-row"><span class="bdo-key">BLOCK</span><span class="bdo-val" style="cursor:pointer;color:var(--pip)" onclick="showBlockDetail(\'' + tx.blockhash + '\')">' + (tx.height || tx.blockhash.substring(0,16) + '...') + '</span></div>';
+      if (tx.confirmations !== undefined) html += '<div class="bdo-row"><span class="bdo-key">CONFIRMATIONS</span><span class="bdo-val">' + tx.confirmations + '</span></div>';
+      if (tx.size) html += '<div class="bdo-row"><span class="bdo-key">SIZE</span><span class="bdo-val">' + tx.size + ' bytes</span></div>';
+
+      // Inputs
+      if (tx.vin && tx.vin.length > 0) {
+        html += '<h4 style="color:var(--pip-dim);margin:12px 0 6px;font-size:11px">INPUTS (' + tx.vin.length + ')</h4>';
+        tx.vin.forEach((inp, i) => {
+          if (inp.coinbase) {
+            html += '<div class="bdo-row"><span class="bdo-key">IN[' + i + ']</span><span class="bdo-val" style="color:#fbbf24">COINBASE</span></div>';
+          } else {
+            const prevTx = (inp.txid || '').substring(0, 12) + '...:' + (inp.vout !== undefined ? inp.vout : '?');
+            html += '<div class="bdo-row"><span class="bdo-key">IN[' + i + ']</span><span class="bdo-val">' + prevTx + '</span></div>';
+          }
+        });
+      }
+
+      // Outputs
+      if (tx.vout && tx.vout.length > 0) {
+        html += '<h4 style="color:var(--pip-dim);margin:12px 0 6px;font-size:11px">OUTPUTS (' + tx.vout.length + ')</h4>';
+        tx.vout.forEach((out, i) => {
+          const addr = out.address || (out.scriptPubKey && out.scriptPubKey.addresses && out.scriptPubKey.addresses[0]) || 'unknown';
+          const amt = out.value !== undefined ? parseFloat(out.value).toFixed(8) : (out.amount !== undefined ? parseFloat(out.amount).toFixed(8) : '?');
+          html += '<div class="bdo-row"><span class="bdo-key">OUT[' + i + '] ' + addr.substring(0,20) + '...</span><span class="bdo-val" style="color:var(--pip)">' + amt + ' SOST</span></div>';
+        });
+      }
+
+      if (tx.fee !== undefined) html += '<div class="bdo-row"><span class="bdo-key">FEE</span><span class="bdo-val" style="color:#f00">' + tx.fee + ' SOST</span></div>';
+
+      content.innerHTML = html;
+      AudioEngine.click_soft();
+    } catch(e) {
+      content.innerHTML = closeBtn + '<p>TX lookup failed: ' + e.message + '</p><p style="font-size:11px;color:var(--pip-dim)">Node may not support getrawtransaction or tx-index may be disabled.</p>';
+    }
+  })();
+}
+
 // Close overlay on ESC
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
@@ -2449,7 +2520,7 @@ function init() {
 
     // Start periodic updates
     updateClock();
-    setInterval(updateClock, 1000);
+    setInterval(updateClock, 5000);
     pollBlockHeight();
     setInterval(pollBlockHeight, 30000);
 
