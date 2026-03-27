@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -519,6 +519,30 @@ body {
   .pip-panel h2 { font-size: 18px; letter-spacing: 1px; }
   #hdr-clock { display: none; }
 }
+
+/* Block/TX detail overlay */
+#block-detail-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.92); z-index:9999; overflow:auto; padding:20px;
+}
+#block-detail-overlay.show { display:block; }
+#block-detail-overlay .bdo-content {
+  max-width:600px; margin:40px auto; border:2px solid var(--pip);
+  background:var(--pip-panel); padding:16px; font-family:var(--font-mono,'Fira Code',monospace);
+  font-size:13px; color:var(--pip); border-radius:4px;
+}
+#block-detail-overlay .bdo-close {
+  float:right; cursor:pointer; color:var(--pip); font-size:18px; padding:4px 8px;
+  border:1px solid var(--pip-dark); background:none;
+}
+#block-detail-overlay .bdo-close:hover { background:var(--pip-dark); }
+#block-detail-overlay .bdo-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--pip-dark); }
+#block-detail-overlay .bdo-key { color:var(--pip-dim); font-size:12px; }
+#block-detail-overlay .bdo-val { color:var(--pip); font-size:12px; word-break:break-all; text-align:right; max-width:60%; }
+.tip-trigger { position:relative; cursor:pointer; }
+.tip-trigger::after { content:'ⓘ'; font-size:10px; color:var(--pip-dim); margin-left:6px; opacity:0.5; }
+.tip-box { display:none; margin-top:6px; padding:8px 10px; background:rgba(0,0,0,0.85); border:1px solid var(--pip-dark); border-radius:4px; font-size:12px; color:var(--pip-dim); line-height:1.6; }
+.tip-box.show { display:block; }
 </style>
 </head>
 <body>
@@ -573,7 +597,7 @@ body {
     <h2 style="margin:0">MAIN MENU</h2>
   </div>
   <div id="menu-items"></div>
-  <div class="menu-close" id="menu-close-btn">[ESC] CLOSE</div>
+  <div class="menu-close" id="menu-close-btn">‹ BACK</div>
 </div>
 
 <!-- ============================================================
@@ -1579,6 +1603,12 @@ SectionRenderers.dashboard = function(el) {
       <h2>// LATEST BLOCKS</h2>
       <div id="dash-blocks"><div class="loading-bar"></div><p style="color:var(--pip-dim)">FETCHING...</p></div>
     </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="document.getElementById('exit-btn').click()" style="
+        background:none;border:2px solid var(--pip);color:var(--pip);font-size:16px;
+        padding:12px 32px;cursor:pointer;letter-spacing:3px;font-family:inherit;
+        transition:all 0.3s">⏻ EXIT SESSION</button>
+    </div>
   `;
 
   // Fetch chain info
@@ -1606,6 +1636,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">VERSION</span><span class="stat-value">${ver}</span></div>
         <div class="stat-row"><span class="stat-label">BEST HASH</span><span class="stat-value" style="font-size:12px;word-break:break-all">${bestHash}</span></div>
       `;
+      setTimeout(addTooltips, 500);
     } else {
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge err">OFFLINE</span></span></div>
@@ -1636,7 +1667,7 @@ SectionRenderers.dashboard = function(el) {
           const txCount = block.tx ? block.tx.length : (block.nTx || '?');
           const time = block.time ? new Date(block.time * 1000).toISOString().replace('T',' ').substring(0,19) + 'Z' : '?';
           html += `<div class="stat-row">
-            <span class="stat-label">#${h}</span>
+            <span class="stat-label" onclick="showBlockDetail(${h})" style="cursor:pointer;color:var(--pip)">#${h}</span>
             <span class="stat-value" style="font-size:13px">${txCount} tx | ${time}</span>
           </div>`;
         }
@@ -1644,7 +1675,46 @@ SectionRenderers.dashboard = function(el) {
     }
     blocksEl.innerHTML = html || '<p style="color:var(--pip-dim)">NO BLOCKS RETRIEVED</p>';
   })();
+
+  setTimeout(addTooltips, 2000);
 };
+
+function addTooltips() {
+  const tips = {
+    'DIFFICULTY': 'How hard it is to mine a block. Adjusted every block by cASERT algorithm. Higher = more compute needed.',
+    'CONNECTIONS': 'Number of peer nodes connected to this node. More connections = better network health.',
+    'CASERT PROFILE': 'Current equalizer profile for difficulty adjustment. Ranges from E4 (easy) to H9 (hard). Changes based on block times.',
+    'DECAY FACTOR q': 'Feigenbaum exponential decay: q = e^(-1/4). Each epoch, the block reward shrinks by this factor. Ensures smooth emission curve.',
+    'EPOCH LENGTH': '131,553 blocks per epoch (~2.5 years). At each epoch boundary, the reward decreases according to the decay factor.',
+    'GENESIS REWARD': 'The very first block reward: 7.85100863 SOST. All subsequent rewards decay from this starting point.',
+    'COINBASE MATURITY': 'Mining rewards cannot be spent until 1000 blocks later (~7 days). This prevents spending of rewards from orphaned blocks.',
+    'MAX SUPPLY': 'The total SOST that will ever exist: approximately 4,669,000 SOST. Determined by the exponential decay emission curve.',
+    'PRECISION': '1 SOST = 100,000,000 stocks. The smallest unit (1 stock) is like a satoshi in Bitcoin.',
+    'CONVERGENCEX': 'CPU-friendly proof-of-work algorithm. Uses gradient descent on a random 32x32 matrix. Requires ~8GB RAM for mining, ~500MB for validation.',
+    'BLOCK HEIGHT': 'The current number of blocks in the chain since genesis. Each block takes approximately 10 minutes.',
+    'MEMPOOL': 'Transactions waiting to be included in a block. More pending = higher fee competition.',
+    'TARGET SPACING': 'The target time between blocks: 600 seconds (10 minutes). cASERT adjusts difficulty to maintain this average.',
+    'MINER': '50% of every block reward goes to the miner who found the block.',
+    'GOLD VAULT': '25% of every block reward goes to the Gold Vault — a constitutional treasury address hardcoded in the protocol.',
+  };
+
+  document.querySelectorAll('.stat-label').forEach(el => {
+    const text = el.textContent.trim();
+    if (tips[text] && !el.dataset.tipBound) {
+      el.dataset.tipBound = '1';
+      el.style.cursor = 'pointer';
+      el.style.position = 'relative';
+      el.innerHTML = text + ' <span style="font-size:9px;opacity:0.4;color:var(--pip-dim)">ⓘ</span>';
+      const tipDiv = document.createElement('div');
+      tipDiv.style.cssText = 'display:none;margin-top:6px;padding:8px 10px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6;width:100%';
+      tipDiv.textContent = tips[text];
+      el.parentElement.style.flexDirection = 'column';
+      el.parentElement.style.alignItems = 'stretch';
+      el.parentElement.appendChild(tipDiv);
+      el.addEventListener('click', () => { tipDiv.style.display = tipDiv.style.display === 'none' ? 'block' : 'none'; });
+    }
+  });
+}
 
 // ── WALLET (iframe) ────────────────────────────────────────────
 SectionRenderers.wallet = function(el) {
@@ -2199,7 +2269,10 @@ function bindEvents() {
     // After 4 seconds: try close, then redirect to blank
     setTimeout(() => {
       try { window.close(); } catch(e) {}
-      setTimeout(() => { window.location.href = 'https://sostprotocol.com/'; }, 500);
+      setTimeout(() => {
+        try { history.go(-(history.length-1)); } catch(e) {}
+        setTimeout(() => { window.location.href = 'about:blank'; }, 300);
+      }, 500);
     }, 3000);
   });
   document.getElementById('menu-close-btn').addEventListener('click', closeMenu);
@@ -2276,6 +2349,56 @@ function registerSW() {
 }
 
 
+// Block/TX detail overlay
+function showBlockDetail(heightOrHash) {
+  const overlay = document.getElementById('block-detail-overlay');
+  const content = document.getElementById('bdo-content');
+  if (!overlay || !content) return;
+  content.innerHTML = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button><p style="color:var(--pip-dim)">Loading...</p>';
+  overlay.classList.add('show');
+
+  (async () => {
+    try {
+      let hash = heightOrHash;
+      if (/^\d+$/.test(String(heightOrHash))) {
+        hash = await rpcCall('getblockhash', [parseInt(heightOrHash)]);
+      }
+      if (!hash) { content.innerHTML = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button><p>Block not found</p>'; return; }
+      const block = await rpcCall('getblock', [hash]);
+      if (!block) { content.innerHTML = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button><p>Block data unavailable</p>'; return; }
+
+      const fields = [
+        ['HEIGHT', block.height],
+        ['HASH', hash],
+        ['PREV HASH', block.previousblockhash || 'genesis'],
+        ['TIMESTAMP', block.time ? new Date(block.time*1000).toISOString() : 'N/A'],
+        ['DIFFICULTY', block.bits_q ? (block.bits_q/65536).toFixed(3) : block.difficulty],
+        ['TRANSACTIONS', block.tx_count || block.nTx || (block.tx?block.tx.length:'?')],
+        ['MERKLE ROOT', block.merkleroot || 'N/A'],
+        ['MINER', block.miner_address || 'N/A'],
+        ['SUBSIDY', block.subsidy ? (block.subsidy/1e8).toFixed(8)+' SOST' : 'N/A'],
+        ['SIZE', block.size ? block.size+' bytes' : 'N/A'],
+      ];
+
+      let html = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button>';
+      html += '<h3 style="color:var(--pip);margin:0 0 12px">// BLOCK #' + block.height + '</h3>';
+      fields.forEach(([k,v]) => { html += '<div class="bdo-row"><span class="bdo-key">'+k+'</span><span class="bdo-val">'+v+'</span></div>'; });
+      content.innerHTML = html;
+      AudioEngine.click_soft();
+    } catch(e) {
+      content.innerHTML = '<button class="bdo-close" onclick="document.getElementById(\'block-detail-overlay\').classList.remove(\'show\')">&times;</button><p>Error: '+e.message+'</p>';
+    }
+  })();
+}
+
+// Close overlay on ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const o = document.getElementById('block-detail-overlay');
+    if (o && o.classList.contains('show')) { o.classList.remove('show'); e.preventDefault(); }
+  }
+});
+
 // ── Initialize ─────────────────────────────────────────────────
 function init() {
   loadSettings();
@@ -2346,5 +2469,6 @@ if (document.readyState === 'loading') {
 
 })();
 </script>
+<div id="block-detail-overlay"><div class="bdo-content" id="bdo-content"></div></div>
 </body>
 </html>
