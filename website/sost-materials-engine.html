@@ -748,7 +748,7 @@ function doSearch(){
     .then(function(r){return r.json()})
     .then(function(d){
       var res=d.resolution||{};
-      var header='';
+      var header='<div style="text-align:right"><span style="cursor:pointer;color:#666;font-size:18px;padding:4px 8px;border:1px solid #333;border-radius:3px;display:inline-block;margin-bottom:8px" onclick="document.getElementById(\'searchResults\').innerHTML=\'\';document.getElementById(\'searchInput\').value=\'\'" title="Close">&times;</span></div>';
       if(res.source==='common_name'||res.source==='fuzzy_name'){
         header='<div style="color:#f59e0b;margin-bottom:8px">Resolved from common name: <b>'+sanitize(q)+'</b> → <span style="color:#67e8f9">'+sanitize(res.formula||'')+'</span></div>';
       }
