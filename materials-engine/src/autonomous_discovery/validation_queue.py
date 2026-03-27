@@ -15,10 +15,14 @@ DECISIONS = {
     "manual_review": {"label": "Manual Review", "color": "#67e8f9", "action": "human_inspection"},
     "validation_candidate": {"label": "Validation Candidate", "color": "#4ade80", "action": "stronger_ml_pass"},
     "priority_validation": {"label": "Priority Validation", "color": "#00ff41", "action": "dft_handoff_candidate"},
+    "relaxation_candidate": {"label": "Relaxation Candidate", "color": "#22d3ee", "action": "relaxation_backend"},
+    "structure_repair_candidate": {"label": "Structure Repair", "color": "#fb923c", "action": "structure_repair_then_requeue"},
+    "stronger_compute_candidate": {"label": "Stronger Compute", "color": "#a78bfa", "action": "advanced_backend"},
+    "not_ready_for_compute": {"label": "Not Ready", "color": "#ef4444", "action": "defer_or_discard"},
 }
 
 
-def route_candidate(scores, ml_eval=None, candidate_context=None):
+def route_candidate(scores, ml_eval=None, candidate_context=None, relaxation_info=None):
     """Route a scored candidate to the appropriate validation tier.
 
     Args:
@@ -111,6 +115,21 @@ def route_candidate(scores, ml_eval=None, candidate_context=None):
             reasons.append("low_plausibility")
         next_step = "no_action"
         priority = 0
+
+    # Phase XIII: Stronger validation routing refinement
+    if relaxation_info:
+        tier = relaxation_info.get("relaxation_readiness_tier", "")
+        if tier == "relaxation_ready" and decision in ("priority_validation", "validation_candidate"):
+            decision = "relaxation_candidate" if decision == "priority_validation" else decision
+            reasons.append("relaxation_ready_structure")
+            next_step = "relaxation_backend"
+        elif tier == "structure_repair_candidate" and decision != "reject":
+            reasons.append("structure_repair_needed")
+            if decision in ("priority_validation", "validation_candidate"):
+                decision = "structure_repair_candidate"
+                next_step = "structure_repair_then_requeue"
+        elif tier == "not_ready_discard_or_rebuild":
+            reasons.append("structure_not_suitable_for_compute")
 
     return {
         "validation_decision": decision,

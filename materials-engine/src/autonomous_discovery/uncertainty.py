@@ -295,6 +295,13 @@ def generate_handoff_pack(candidate, uncertainty_result, readiness_result):
         # Risk flags
         "risk_flags": _compute_risk_flags(uncertainty_result, readiness_result, scores),
 
+        # Phase XIII: Relaxation readiness and repair info
+        "structure_sanity_score": (candidate.get("physics_screening") or {}).get("structure_sanity_score"),
+        "geometry_warnings": (candidate.get("physics_screening") or {}).get("geometry_warnings", []),
+        "relaxation_readiness": candidate.get("relaxation_readiness", {}),
+        "structure_repair": candidate.get("structure_repair", {}),
+        "stronger_compute_rationale": _build_stronger_compute_rationale(candidate),
+
         # Rationale
         "validation_rationale": _build_rationale(candidate, uncertainty_result, readiness_result),
 
@@ -376,3 +383,25 @@ def apply_diversity_constraint(candidates, max_per_family=3, top_k=10):
         selected.append(c)
 
     return selected
+
+
+def _build_stronger_compute_rationale(candidate):
+    """Build rationale for why this candidate deserves (or doesn't) stronger compute."""
+    relax = candidate.get("relaxation_readiness", {})
+    repair = candidate.get("structure_repair", {})
+    phys = candidate.get("physics_screening", {})
+
+    tier = relax.get("relaxation_readiness_tier", "unknown")
+    sanity = phys.get("structure_sanity_score", 0)
+    repair_sev = repair.get("repair_severity", "unknown")
+
+    if tier == "relaxation_ready":
+        return f"RECOMMENDED for stronger compute. Structure sanity={sanity:.2f}, no repair needed."
+    elif tier == "structure_repair_candidate":
+        return f"Needs repair first (severity={repair_sev}). After repair, may qualify for compute."
+    elif tier == "stronger_compute_with_caveats":
+        return f"Possible stronger compute candidate with caveats (sanity={sanity:.2f})."
+    elif tier == "not_ready_discard_or_rebuild":
+        return f"NOT recommended. Structure too damaged (sanity={sanity:.2f})."
+    else:
+        return "Relaxation readiness not assessed."
