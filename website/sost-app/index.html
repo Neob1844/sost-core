@@ -2254,13 +2254,23 @@ function loadSettings() {
 function registerSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
-      // Force check for updated SW on every page load
       reg.update();
       console.log('[SW] Registered, checking for updates...');
+      // When new SW takes over, reload to get fresh shell
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (newSW) {
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'activated') {
+              console.log('[SW] New version activated');
+            }
+          });
+        }
+      });
     }).catch(() => {});
-    // Also force unregister+re-register if cache is very old
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(r => r.update());
+    // Detect SW controller change (new SW took over)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[SW] Controller changed — new SW active');
     });
   }
 }

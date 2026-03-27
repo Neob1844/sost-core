@@ -24,10 +24,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   // ALWAYS network-first for dynamic endpoints (never cache these)
-  if (url.pathname.includes('/rpc') ||
+  if (url.pathname.endsWith('/rpc') ||
+      url.pathname.includes('/rpc/') ||
       url.pathname.includes('/api/') ||
       url.pathname.includes('node-status') ||
-      url.pathname.includes('materials') ||
       e.request.method === 'POST' ||
       url.pathname.includes('sost-explorer') ||
       url.pathname.includes('sost-wallet') ||
