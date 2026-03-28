@@ -1,6 +1,6 @@
 # SOST Protocol — Platform Master Status
 
-**Date:** 2026-03-27
+**Date:** 2026-03-28
 
 ## Modules Overview
 
@@ -18,18 +18,19 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 27 — Subsurface-Aware Family (REDUNDANT with spectral)
+- **Current Phase:** Phase 28 — QGIS Operational Layer (tool map, workflows, canonical tool mapping)
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4, UNCHANGED
 - **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
 - **Depth activation layer:** 1 active (magnetics), 3 GEE-accessible (SRTM, SAR, terrain), 5 blocked (gravity, AEM, Earth MRI, EMAG2, WGM2012)
 - **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
-- **Gating:** v13, **Registry:** v23
+- **Gating:** v14, **Registry:** v24
+- **Phase 28 QGIS operational layer:** Tool map (12 immediate, 5 optional, 3 skip), 5 reproducible workflows, canonical tool mapping per objective. QGIS strengthens COORDINATES + CERTAINTY, does NOT solve DEPTH or replace ML.
 - **Phase 27 subsurface-aware family:** Standalone strong (Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682) but REDUNDANT with S2 spectral. Terrain reclassified SURFACE_STRUCTURE.
 - **GEE:** OPERATIONALIZED — terrain infrastructure operational at all 4 zones
 - **Autonomy layer:** v2 (promotion guardrails, execution queue, retry policy)
-- **Bottleneck:** Depth data access — terrain/structure features REDUNDANT with spectral, true depth needs gravity/AEM/Earth MRI (all manual portals)
+- **Bottleneck:** Depth data access — terrain/structure features REDUNDANT with spectral, true depth needs gravity/AEM/Earth MRI (all manual portals). QGIS operational layer adds infrastructure for QA and visual analysis but does not change the bottleneck.
 
 ### Phase History (recent)
 - Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
@@ -41,6 +42,7 @@
 - Phase 25: Spatial alignment resolved (GEE sampleRegions). Zambia: unmixing NEUTRAL, NDVI 0.772 POSITIVE. Peru: unmixing NEUTRAL, NDVI NEGATIVE. Kalgoorlie & Chuquicamata GEE memory blocked. Canonical unchanged. Gating v11. Registry v21.
 - Phase 26: Terrain depth pilot. 8 depth sources audited, 3 GEE-accessible. Peru depth-only 0.907 (+0.057). Zambia neutral. GEE terrain operational at 4 zones. Canonical unchanged. Gating v12. Registry v22.
 - Phase 27: 9-feature subsurface-aware family via GEE. Standalone strong (Peru 0.902, Kalgoorlie 0.859) but REDUNDANT with S2. Terrain reclassified SURFACE_STRUCTURE. Canonical unchanged. Gating v13. Registry v23.
+- Phase 28: QGIS operational layer spec. Tool map (12 immediate, 5 optional, 3 skip), 5 reproducible workflows, canonical tool mapping. QGIS strengthens COORDINATES + CERTAINTY, does NOT solve DEPTH or replace ML. Canonical unchanged. Gating v14. Registry v24.
 
 ## Materials Engine Status
 

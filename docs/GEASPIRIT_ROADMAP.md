@@ -937,7 +937,23 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** The 9-feature subsurface-aware family produces strong standalone AUCs (Peru 0.902, Kalgoorlie 0.859) but is entirely REDUNDANT when combined with Sentinel-2 spectral features. The satellite already captures surface structure through its spectral bands. Terrain features are reclassified from depth proxy to SURFACE_STRUCTURE. Real depth estimation requires true subsurface geophysics: GA gravity, GSWA AEM, USGS Earth MRI — all require manual portal downloads. The canonical score remains 22.8/40.
 
-### Phase 28 — (PLANNED)
+### Phase 28: QGIS Operational Layer (2026-03-28)
+
+**QGIS operational layer spec — infrastructure for geospatial QA and visual analysis:**
+
+1. **Tool map:** 12 immediate-value tools (Raster Calculator, Zonal Statistics, Clip, Warp, Point Sampling, Merge, Hillshade/Slope/Aspect, TPI, NDVI, Contour, Buffer/Voronoi, Join by Location). 5 optional (SCP, Profile Tool, Temporal Controller, 3D View, Processing Modeler). 3 not-worth-prioritizing (ML plugins, QGIS Server, network analysis).
+2. **Reproducible workflows:** 5 documented (Label-Raster QA, AOI Clipping, Terrain Context Review, Multi-Layer Target Review, Geophysics Preparation).
+3. **Canonical tool mapping:** QGIS contributes to COORDINATES (reprojection, label-raster alignment QA, buffer analysis) and CERTAINTY (visual prediction inspection, anomaly QA). Does NOT solve DEPTH (needs gravity/AEM/Earth MRI) and does NOT replace ML for MINERAL classification.
+4. **Project structure:** Defined QGIS project layout with groups for Labels, Satellite, Terrain, Geophysics, Validation, Results.
+5. **New framing:** "GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation."
+
+**Honest limitations:** QGIS is infrastructure, not a claims generator. Visualization does not equal validation. Terrain analysis does not equal depth measurement. The canonical score cannot improve from QGIS alone.
+
+**Gating v14.** Registry v24. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** QGIS adds a serious geospatial operational layer to GeaSpirit. It strengthens COORDINATES and CERTAINTY as operational tools. It does NOT solve DEPTH and does NOT replace the Python ML pipeline. Use it as infrastructure for QA and visual target review, not as a source of new claims.
+
+### Phase 29 — (PLANNED)
 - Operator manual data drops: GA gravity, GSWA AEM, USGS Earth MRI
 - True subsurface depth features if data becomes available
 - Canonical re-evaluation if genuine depth data yields AUC gain

@@ -308,7 +308,7 @@ ctest --output-on-failure
 
 ### GeaSpirit — Mineral Intelligence Platform
 
-Autonomous mineral prospectivity platform that identifies zones with high probability of containing mineral deposits. Operates from publicly available satellite, geophysical, and geological data.
+GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits from publicly available satellite, geophysical, and geological data.
 
 **Canonical Objective:** "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
 
@@ -323,7 +323,7 @@ Autonomous mineral prospectivity platform that identifies zones with high probab
 
 **Validated zones:** Chuquicamata (Chile, porphyry Cu, 0.882 AUC), Kalgoorlie (Australia, orogenic Au, 0.879 AUC), Zambia Copperbelt (sedimentary Cu, 0.760 AUC). Multi-source fusion validated at all 3 zones across 3 continents.
 
-Current phase: Phase 27 — 9-feature subsurface-aware family via GEE (standalone strong, REDUNDANT with spectral). Canonical 22.8/40 unchanged.
+Current phase: Phase 28 — QGIS operational layer spec (tool map, reproducible workflows, canonical tool mapping). Canonical 22.8/40 unchanged.
 
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
