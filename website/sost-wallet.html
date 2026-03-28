@@ -1956,6 +1956,7 @@ window.refreshBalance = async function() {
     const chainHeight = nodeInfo.blocks || 0;
     updateCapsuleActivation(chainHeight);
     const utxos = addrInfo.utxos || [];
+    window._lastUtxos = utxos; // cache for TX history
 
     // Classify UTXOs by maturity (coinbase needs 1000 confirmations)
     let totalStocks = 0, spendableStocks = 0, immatureStocks = 0;
@@ -2016,10 +2017,14 @@ window.refreshBalance = async function() {
       matEl.style.display = 'none';
     }
 
-    // UTXO list — 3-column grid: TXID | Amount | Status
+    // UTXO list — sorted by height DESC, paginated 30 per page
     if (utxos.length > 0) {
+      const sorted = [...utxos].sort((a, b) => (b.height || 0) - (a.height || 0));
+      const page = window._utxoPage || 0;
+      const perPage = 30;
+      const paged = sorted.slice(0, (page + 1) * perPage);
       const list = document.getElementById('utxoList');
-      list.innerHTML = utxos.map(u => {
+      list.innerHTML = paged.map(u => {
         const txid = u.txid || '';
         const amt = u.amount || 0;
         const confs = chainHeight - (u.height || 0);
@@ -2029,11 +2034,14 @@ window.refreshBalance = async function() {
           : (confs > 0 ? confs + ' confs' : 'unconfirmed');
         const borderColor = mature ? '#00ff88' : '#f59e0b';
         return `<div class="utxo-item" style="border-left:3px solid ${borderColor};opacity:${mature ? 1 : 0.6}">
-          <span class="utxo-txid"><a href="sost-explorer.html?search=${txid}" target="_blank" title="${txid}">${txid.slice(0,8)}...${txid.slice(-8)}:${u.vout||0}</a></span>
+          <span class="utxo-txid"><a href="https://sostcore.com/sost-explorer.html?search=${txid}" target="_blank" title="${txid}">${txid.slice(0,8)}...${txid.slice(-8)}:${u.vout||0}</a></span>
           <span class="utxo-amount">${amt} SOST</span>
           <span class="utxo-status">${status}</span>
         </div>`;
       }).join('');
+      if (paged.length < sorted.length) {
+        list.innerHTML += `<button class="btn btn-small" style="margin-top:8px;font-size:11px" onclick="window._utxoPage=(window._utxoPage||0)+1;refreshDashboard()">Load more (${sorted.length - paged.length} remaining)</button>`;
+      }
     }
 
     // Render TX history
@@ -2500,30 +2508,86 @@ function saveTxToHistory(tx) {
 function renderTxHistory() {
   const el = document.getElementById('txHistory');
   if (!el) return;
-  const history = loadTxHistory();
-  if (history.length === 0) {
+
+  // Merge sent (localStorage) + received (from UTXOs)
+  const sentHistory = loadTxHistory().map(tx => ({ ...tx, direction: 'sent' }));
+
+  // Build received list from cached UTXOs (from last dashboard refresh)
+  const receivedHistory = [];
+  if (window._lastUtxos && wallet) {
+    for (const u of window._lastUtxos) {
+      // Each UTXO we own is a "received" event
+      receivedHistory.push({
+        txid: u.txid || '',
+        from: '',
+        to: wallet.address,
+        amount: (u.amount || 0).toFixed ? (u.amount || 0).toFixed(8) : String(u.amount || 0),
+        timestamp: u.height ? new Date((1773597600 + (u.height || 0) * 600) * 1000).toISOString() : '',
+        status: 'confirmed',
+        direction: 'received',
+        height: u.height || 0,
+      });
+    }
+  }
+
+  // Combine and sort by height/timestamp DESC
+  const all = [...sentHistory, ...receivedHistory];
+  all.sort((a, b) => {
+    const ha = a.height || 0;
+    const hb = b.height || 0;
+    if (ha !== hb) return hb - ha;
+    return (b.timestamp || '').localeCompare(a.timestamp || '');
+  });
+
+  // Deduplicate by txid (keep first occurrence)
+  const seen = new Set();
+  const unique = all.filter(tx => {
+    const key = tx.txid + tx.direction;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const page = window._txHistPage || 0;
+  const perPage = 30;
+  const paged = unique.slice(0, (page + 1) * perPage);
+
+  if (paged.length === 0) {
     el.innerHTML = '<p style="color:var(--text-dim);font-size:12px">No transaction history</p>';
     return;
   }
+
   const explorerUrl = 'https://sostcore.com/sost-explorer.html';
   let html = '<div style="font-size:12px">';
-  for (const tx of history.slice(0, 10)) {
+  for (const tx of paged) {
     const shortTxid = tx.txid ? tx.txid.substring(0, 12) + '...' : '?';
+    const isSent = tx.direction === 'sent';
+    const arrow = isSent ? '↑' : '↓';
+    const arrowColor = isSent ? 'var(--red-primary,#e63946)' : 'var(--green-primary,#4ade80)';
+    const dirLabel = isSent ? 'SENT' : 'RECEIVED';
+    const counterparty = isSent
+      ? (tx.to ? tx.to.substring(0, 16) + '...' : '?')
+      : (tx.from ? tx.from.substring(0, 16) + '...' : 'coinbase/transfer');
     const statusColor = tx.status === 'confirmed' ? 'var(--green-primary,#4ade80)' : 'var(--yellow-primary,#fbbf24)';
     const statusText = tx.status === 'confirmed' ? 'Confirmed' : 'Pending';
     const date = tx.timestamp ? new Date(tx.timestamp).toLocaleString() : '';
-    const label = tx.toLabel ? ` (${tx.toLabel})` : '';
+
     html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div>
-        <a href="${explorerUrl}" target="_blank" style="color:var(--cyan-primary,#67e8f9);text-decoration:none;cursor:pointer;font-family:monospace">${shortTxid}</a>
-        <span style="color:var(--text-dim);margin-left:8px">→ ${tx.to ? tx.to.substring(0, 16) + '...' : '?'}${label}</span>
+        <span style="color:${arrowColor};font-weight:700;font-size:14px;margin-right:4px">${arrow}</span>
+        <a href="${explorerUrl}?search=${tx.txid}" target="_blank" style="color:var(--cyan-primary,#67e8f9);text-decoration:none;cursor:pointer;font-family:monospace">${shortTxid}</a>
+        <span style="color:var(--text-dim);margin-left:6px;font-size:10px">${dirLabel}</span>
+        <span style="color:var(--text-dim);margin-left:6px">${isSent ? '→' : '←'} ${counterparty}</span>
       </div>
       <div style="text-align:right">
-        <span style="color:var(--green-primary,#4ade80);font-weight:600">${tx.amount || '?'} SOST</span>
+        <span style="color:${arrowColor};font-weight:600">${isSent ? '-' : '+'}${tx.amount || '?'} SOST</span>
         <br><span style="color:${statusColor};font-size:10px">${statusText}</span>
         <span style="color:var(--text-dim);font-size:10px;margin-left:4px">${date}</span>
       </div>
     </div>`;
+  }
+  if (paged.length < unique.length) {
+    html += `<button class="btn btn-small" style="margin-top:8px;font-size:11px" onclick="window._txHistPage=(window._txHistPage||0)+1;renderTxHistory()">Load more (${unique.length - paged.length} remaining)</button>`;
   }
   html += '</div>';
   el.innerHTML = html;
