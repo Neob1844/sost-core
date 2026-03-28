@@ -57,3 +57,14 @@ node.log
 backups/
 config/popc_checker.json
 logs/popc_audit.log
+
+# Secrets — NEVER commit private keys
+secrets/
+**/secrets/
+*.key
+*.pem
+*_privkey*
+*_private*
+gold_vault*.json
+popc_pool*.json
+founder_*.json
