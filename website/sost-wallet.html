@@ -1500,6 +1500,32 @@ function buildP2PKH(address) {
   return concatBytes(new Uint8Array([0x76, 0xa9, 0x14]), pkh, new Uint8Array([0x88, 0xac]));
 }
 
+// Encode ECDSA signature as DER from noble/secp256k1 v2.x Signature object
+// noble v2.x may or may not have toDERRawBytes() depending on build.
+// This function works with any version by extracting r,s and encoding manually.
+function sigToDER(sig) {
+  // If the method exists, use it directly
+  if (typeof sig.toDERRawBytes === 'function') return sig.toDERRawBytes();
+
+  // Manual DER encoding from r,s (BigInt)
+  function bigintToBytes(n) {
+    let hex = n.toString(16);
+    if (hex.length % 2) hex = '0' + hex;
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i*2, 2), 16);
+    return bytes;
+  }
+  function derInt(bytes) {
+    // Pad with 0x00 if high bit set (positive integer in DER)
+    const padded = (bytes[0] & 0x80) ? concatBytes(new Uint8Array([0]), bytes) : bytes;
+    return concatBytes(new Uint8Array([0x02, padded.length]), padded);
+  }
+  const rBytes = derInt(bigintToBytes(sig.r));
+  const sBytes = derInt(bigintToBytes(sig.s));
+  const inner = concatBytes(rBytes, sBytes);
+  return concatBytes(new Uint8Array([0x30, inner.length]), inner);
+}
+
 // Sign a P2PKH input
 function buildP2PKHSignScript(sigDER, pubkeyBytes) {
   const sigWithHashType = concatBytes(sigDER, new Uint8Array([0x01])); // SIGHASH_ALL
@@ -1565,7 +1591,7 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
     const preimage = buildForSigning(i);
     const hash = doubleSha256(preimage);
     const sig = secp.sign(hash, wallet.privKey, { lowS: true });
-    signatures.push(sig.toDERRawBytes());
+    signatures.push(sigToDER(sig));
   }
 
   // Build final signed tx
