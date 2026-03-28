@@ -1058,6 +1058,22 @@ try {
     document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fb010d;color:#fff;padding:12px;text-align:center;z-index:9999;font-family:monospace;">Wallet Error: Could not load crypto libraries. Check your internet connection and try again.</div>';
   }
 }
+// CRITICAL: noble/secp256k1 v2+ requires hmacSha256Sync for synchronous signing
+// Without this, sign() throws "etc.hmacSha256Sync not set"
+if (secp && secp.etc && hmac && sha256) {
+  secp.etc.hmacSha256Sync = (k, ...msgs) => {
+    const h = hmac.create(sha256, k);
+    msgs.forEach(m => h.update(m));
+    return h.digest();
+  };
+  // Also set async version for completeness
+  secp.etc.hmacSha256Async = async (k, ...msgs) => {
+    const h = hmac.create(sha256, k);
+    msgs.forEach(m => h.update(m));
+    return h.digest();
+  };
+  console.log('WALLET: hmacSha256Sync configured for secp256k1 v2+');
+}
 console.log('WALLET: Crypto loaded OK', !!secp, !!sha256);
 
 // --- Constants ---
@@ -2203,9 +2219,23 @@ async function init() {
 
 const AB_KEY = 'sost_addressbook';
 
+// Default constitutional addresses — pre-loaded for user convenience
+const DEFAULT_ADDRESSES = [
+  { address: 'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33', label: 'Genesis Miner (NeoB)', trust: 'trusted', note: 'Founder miner address' },
+  { address: 'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d', label: 'Gold Vault (Constitutional)', trust: 'trusted', note: '25% of every block reward' },
+  { address: 'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f', label: 'PoPC Pool (Constitutional)', trust: 'trusted', note: '25% of every block reward' },
+];
+
 function loadAddressBook() {
-  try { return JSON.parse(localStorage.getItem(AB_KEY)) || {addresses:[]}; }
-  catch(e) { return {addresses:[]}; }
+  try {
+    const ab = JSON.parse(localStorage.getItem(AB_KEY)) || {addresses:[]};
+    // Auto-add default addresses if missing
+    if (ab.addresses.length === 0) {
+      ab.addresses = [...DEFAULT_ADDRESSES];
+      saveAddressBook(ab);
+    }
+    return ab;
+  } catch(e) { return {addresses: [...DEFAULT_ADDRESSES]}; }
 }
 function saveAddressBook(ab) { localStorage.setItem(AB_KEY, JSON.stringify(ab)); }
 
