@@ -358,7 +358,7 @@ Current phase: Phase XV — full-corpus functional intersection discovery.
 
 SOST is **experimental, unaudited software**. It is a completely new proof-of-work protocol written from scratch — **NOT a fork** of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or mining algorithm. The ConvergenceX proof-of-work, cASERT difficulty adjustment, and constitutional economic model are original designs.
 
-**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 222+ automated tests, and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
+**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 22 test suites (548 individual tests), and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
 
 **Every participant is solely responsible for their own investment decisions.** You may lose your entire investment. The developer (NeoB) assumes NO liability for any losses resulting from the use of this software, whether caused by bugs, vulnerabilities, design flaws, or any other reason. This is not financial advice.
 
