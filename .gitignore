@@ -68,3 +68,4 @@ secrets/
 gold_vault*.json
 popc_pool*.json
 founder_*.json
+CLAUDE.md
