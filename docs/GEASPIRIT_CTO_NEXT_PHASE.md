@@ -211,16 +211,39 @@ Gravity DEFINITIVELY BLOCKED + selective geophysics fusion + AEM fallback path:
 - AEM is the most direct subsurface conductivity proxy — best remaining path for DEPTH improvement
 - Canonical: 22.8/40 UNCHANGED — magnetics modest, gravity blocked, AEM not yet acquired
 
-## Phase 32 Plan -- AEM Acquisition + Depth Unlock
+## Phase 32 Completed (2026-03-28)
 
-Priority 1: Operator registers on DMIRS portal (dmirs.wa.gov.au) and downloads Kalgoorlie AEM survey data
-Priority 2: QGIS QA on downloaded AEM data (CRS, coverage, format, alignment)
-Priority 3: If AEM is real: build AEM feature family (conductivity at depth slices) → validate at Kalgoorlie
-Priority 4: If AEM is also blocked: accept DEPTH 4.1/10 as ceiling, focus on expanding zone coverage with validated families
-Priority 5: Do NOT inflate depth claims based on terrain or magnetics alone
+AEM acquisition attempted — BLOCKED (same pattern as gravity):
+- DMIRS DASC portal: 403 Forbidden (programmatic access denied)
+- GA THREDDS AEM catalog: 404 Not Found (endpoint does not exist)
+- GA geodownloads: no AEM endpoint found
+- Local AEM directory exists but is EMPTY
+- Every deposit-scale subsurface geophysics source in Australia is blocked by portal architecture
+- TMI magnetics remains the ONLY real geophysics (GA National via NCI THREDDS)
+- Infrastructure 100% ready (ingest, QA, extraction, validation) — bottleneck is exclusively data access
+- Gravity: FROZEN (BLOCKED_BY_PORTAL), unchanged from Phase 31
+- AEM: BLOCKED_BY_PORTAL (same pattern as gravity)
+- Gating v16. Registry v26. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+## Phase 33 Plan — Zone Coverage Expansion + Operator Unlock
+
+**Path A (autonomous, no blockers):**
+- Expand full fusion to untested zones with validated families
+- Validate NDVI trend at additional vegetated zones
+- Consolidate zone-specific model registry
+- Expected: broader validation, no canonical score change
+
+**Path B (requires human operator action):**
+- AEM: Register on DMIRS portal, download Kalgoorlie AEM surveys, drop into ~/SOST/geaspirit/data/geophysics/aem/
+- Gravity: Download from GA GADDS portal via browser
+- Peru EMIT: Re-download truncated granules
+- Expected: DEPTH could improve to 5-6/10 if AEM adds real conductivity signal
+
+**Recommendation:** Pursue Path A while documenting Path B. Do not wait for blocked data.
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)
-- With AEM: ~25/40 (63%) — if AEM adds real depth discrimination
+- With Path A only: 22.8/40 (unchanged — broader validation, same score)
+- With AEM (manual): ~25/40 (63%) — if AEM adds real depth discrimination
 - With AEM + gravity (manual): ~27/40 (68%)
 - With all depth data: ~30/40 (75%)
