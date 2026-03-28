@@ -345,8 +345,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-// RPC: use relative /rpc on sostcore.com, absolute on any other domain
-let RPC=(location.hostname==='sostcore.com'||location.hostname==='explorer.sostcore.com')?'/rpc':'https://sostcore.com/rpc';
+// Redirect non-primary domains to sostcore.com
+if (location.hostname !== 'sostcore.com' && location.hostname !== 'explorer.sostcore.com' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  location.href = 'https://sostcore.com' + location.pathname + location.search + location.hash;
+}
+let RPC='/rpc'; // Always relative — redirect handles domain normalization
 let RPC_USER='sost',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
 const COINBASE_MATURITY=100;
