@@ -3250,3 +3250,12 @@ enable community participation earlier than originally planned. The developer is
 continuously monitoring the network and actively searching for potential
 vulnerabilities. Maximum diligence and caution are recommended during the early
 operational phase.
+
+---
+
+Phase 28 Note (2026-03-28): GeaSpirit is an advanced remote sensing and
+exploration intelligence platform based on multi-source fusion and zone-based
+validation. Phase 28 adds QGIS operational layer spec: practical tool map,
+reproducible workflows, and canonical tool mapping. QGIS strengthens COORDINATES
+(alignment QA) and CERTAINTY (visual inspection) but does NOT solve DEPTH or
+replace ML. Canonical score 22.8/40 (57%) unchanged.
