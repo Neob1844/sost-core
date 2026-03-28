@@ -18,21 +18,21 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 31 — Selective Geophysics Fusion + AEM Fallback (gravity DEFINITIVELY BLOCKED, magnetics validated, AEM path defined)
+- **Current Phase:** Phase 32 — AEM Depth Pilot BLOCKED (AEM 403/404 like gravity, all deposit-scale subsurface geophysics blocked by portal architecture)
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4, UNCHANGED
 - **Architecture:** type + zone + baseline aware, geology VALIDATED SELECTIVE
-- **Depth activation layer:** 1 active (magnetics), 3 GEE-accessible (SRTM, SAR, terrain), 5 blocked (gravity DEFINITIVELY BLOCKED, AEM next target, Earth MRI, EMAG2, WGM2012)
-- **Gravity:** DEFINITIVELY BLOCKED — all 3 files corrupted (HTML error pages or empty stubs). GA GADDS/WCS returns HTML, not data.
-- **AEM fallback:** GSWA/DMIRS portal — requires manual registration, Kalgoorlie surveys available
+- **Depth activation layer:** 1 active (magnetics), 3 GEE-accessible (SRTM, SAR, terrain), 6 blocked (gravity DEFINITIVELY BLOCKED, AEM BLOCKED_BY_PORTAL, Earth MRI, EMAG2, WGM2012)
+- **Gravity:** FROZEN (BLOCKED_BY_PORTAL) — all 3 files corrupted (HTML error pages or empty stubs). GA GADDS/WCS returns HTML, not data.
+- **AEM:** BLOCKED_BY_PORTAL — DMIRS 403 Forbidden, GA THREDDS 404. Same pattern as gravity. Local AEM directory empty.
 - **11 blocked data items** (4 HIGH priority), all 3 dropzones EMPTY
-- **Gating:** v15, **Registry:** v25
+- **Gating:** v16, **Registry:** v26
 - **Phase 28 QGIS operational layer:** Tool map (12 immediate, 5 optional, 3 skip), 5 reproducible workflows, canonical tool mapping per objective. QGIS strengthens COORDINATES + CERTAINTY, does NOT solve DEPTH or replace ML.
 - **Phase 27 subsurface-aware family:** Standalone strong (Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682) but REDUNDANT with S2 spectral. Terrain reclassified SURFACE_STRUCTURE.
 - **GEE:** OPERATIONALIZED — terrain infrastructure operational at all 4 zones
 - **Autonomy layer:** v2 (promotion guardrails, execution queue, retry policy)
-- **Bottleneck:** Depth data access — gravity DEFINITIVELY BLOCKED (corrupted files), terrain REDUNDANT with spectral, true depth needs AEM (next target via GSWA/DMIRS) or Earth MRI (manual portal). QGIS operational layer adds infrastructure for QA but does not change the bottleneck.
+- **Bottleneck:** Depth data access — gravity DEFINITIVELY BLOCKED (corrupted files), AEM BLOCKED_BY_PORTAL (DMIRS 403, GA THREDDS 404), terrain REDUNDANT with spectral. ALL deposit-scale subsurface geophysics blocked by portal architecture. TMI magnetics is the sole exception. Infrastructure 100% ready — bottleneck is exclusively data access. QGIS operational layer adds infrastructure for QA but does not change the bottleneck.
 
 ### Phase History (recent)
 - Phase 19: geology promoted VALIDATED SELECTIVE, depth proxy plan
@@ -48,6 +48,7 @@
 - Phase 29: Geophysics-ready acquisition + QGIS pilot. Source selection final (10 sources audited). Geophysics ingest layer v1 (naming, directory, pipeline). 11-feature depth-aware family v2 operational at 4 zones. Pilot: standalone strong but REDUNDANT with spectral. Infrastructure ready, waiting for gravity/AEM/Earth MRI data. Canonical unchanged 22.8/40.
 - Phase 30: Real magnetics depth integration. TMI magnetics validated (625x553, 1.05 MB). Mag+terrain 0.772 (+0.008 over terrain alone). Magnetics VALIDATED SELECTIVE. Gravity confirmed stub (39 bytes). Canonical unchanged.
 - Phase 31: Gravity DEFINITIVELY BLOCKED (3 files: HTML error pages + empty stub). TMI magnetics CONFIRMED REAL. AEM fallback path defined (GSWA/DMIRS portal). Selective fusion: mag+terrain best at +0.008. Gating v15. Registry v25. Canonical unchanged 22.8/40.
+- Phase 32: AEM BLOCKED_BY_PORTAL (DMIRS 403 Forbidden, GA THREDDS 404). Same pattern as gravity. All deposit-scale subsurface geophysics confirmed blocked by portal architecture. TMI magnetics sole exception. Infrastructure 100% ready, bottleneck is data access. Gating v16. Registry v26. Canonical unchanged 22.8/40.
 
 ## Materials Engine Status
 
@@ -72,7 +73,7 @@
 
 ## What's Blocked
 
-- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, gravity DEFINITIVELY BLOCKED (corrupted files), AEM next target (GSWA/DMIRS registration needed), terrain REDUNDANT with spectral
+- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, gravity DEFINITIVELY BLOCKED (corrupted files), AEM BLOCKED_BY_PORTAL (DMIRS 403, GA THREDDS 404), all deposit-scale subsurface geophysics blocked, terrain REDUNDANT with spectral
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment

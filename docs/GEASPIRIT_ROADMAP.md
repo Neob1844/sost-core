@@ -988,3 +988,28 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** Gravity is dead — all 3 files are corrupted HTML or empty stubs. GA web services return portal pages, not data. TMI magnetics is real and validated but adds only +0.008 AUC — modest. The DEPTH dimension (4.1/10) cannot improve without new subsurface data. AEM via GSWA/DMIRS is the most promising remaining path: it directly measures conductivity at depth, has dedicated state survey data, and is not blocked by the same web service issues as GA gravity. Phase 32 requires operator manual registration on DMIRS portal.
 - **Next (Phase 32):** Operator registers on DMIRS, downloads Kalgoorlie AEM data → real depth validation
+
+### Phase 32 — AEM Depth Pilot: BLOCKED (2026-03-28)
+
+**AEM acquisition attempted — BLOCKED (same pattern as gravity):**
+
+1. **DMIRS DASC portal:** 403 Forbidden. Programmatic access denied. Portal requires interactive browser session with JavaScript rendering and manual registration.
+2. **GA THREDDS AEM catalog:** 404 Not Found. No AEM data served via NCI THREDDS (unlike TMI magnetics which has a subsetting endpoint).
+3. **GA geodownloads:** No AEM endpoint found. Portal does not serve AEM data via direct download.
+4. **Local AEM directory:** `~/SOST/geaspirit/data/geophysics/aem/` exists but is EMPTY.
+
+**Pattern confirmed:** Every deposit-scale subsurface geophysics source in Australia (gravity, AEM, detailed magnetics) is blocked by portal architecture. TMI magnetics (GA National via NCI THREDDS) is the sole exception.
+
+**Infrastructure status:** 100% ready — ingest layer, QGIS QA, feature extraction, validation framework, AEM feature family design all operational. The bottleneck is exclusively DATA ACCESS.
+
+**Updated block status:**
+- Gravity: FROZEN (BLOCKED_BY_PORTAL, Phase 31)
+- AEM: BLOCKED_BY_PORTAL (Phase 32)
+- Earth MRI: BLOCKED_BY_PORTAL (Phase 19)
+- All 3 manual dropzones: EMPTY
+
+**Frontier track v14:** AEM blocked, same pattern as gravity. Validation rate: 5/11 closed = 45%.
+**Gating v16.** Registry v26. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** AEM follows the same path as gravity — government portals return 403/404 on programmatic access. All deposit-scale subsurface data sources are now confirmed blocked. The DEPTH dimension (4.1/10) is at its ceiling without manual operator action. Phase 33 should focus on expanding zone coverage with validated families (autonomous, no blockers) while documenting the operator manual download path for AEM, gravity, and Peru EMIT.
+- **Next (Phase 33):** Expand zone coverage with validated families OR operator manual data drops
