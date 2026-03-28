@@ -225,21 +225,37 @@ AEM acquisition attempted — BLOCKED (same pattern as gravity):
 - AEM: BLOCKED_BY_PORTAL (same pattern as gravity)
 - Gating v16. Registry v26. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
 
-## Phase 33 Plan — Zone Coverage Expansion + Operator Unlock
+## Phase 33 Completed (2026-03-28)
+
+Fail-fast access guard + operator handoff + autonomous expansion path:
+- Fail-fast validation rules: 10 mandatory checks for ALL new data sources (HTTP status, DNS, Content-Type, file size, magic bytes, rasterio open, band count, value range, CRS, coverage overlap)
+- 11 source status codes defined (ACTIVE through REJECTED) — standardized vocabulary for data access state
+- Mandatory error reporting rule: no silent failures, immediate identification + next action proposal
+- Operator handoff specs: gravity (GA GADDS portal), AEM (DMIRS portal), Earth MRI (ScienceBase) — each with portal URL, format, coverage, min size, drop location, post-drop steps
+- Source status registry: 8 ACTIVE, 4 BLOCKED requiring operator, 2 BLOCKED low-priority
+- Autonomous expansion path: 5 families available NOW (S2 baseline, NDVI trend, Macrostrat geology, GEE terrain, magnetics)
+- Gating v17. Registry v27. Canonical unchanged 22.8/40 (57%).
+
+## Phase 34 Plan — Zone Expansion + Operator Unlock
 
 **Path A (autonomous, no blockers):**
-- Expand full fusion to untested zones with validated families
-- Validate NDVI trend at additional vegetated zones
-- Consolidate zone-specific model registry
+- Expand to 2 new AOIs (e.g., Sudbury nickel, Witwatersrand gold) with validated families
+- Test NDVI trend at a third vegetated zone
+- Validate geology (Macrostrat) at Arizona/Peru
+- Consolidate magnetics at Kalgoorlie with finer feature engineering
 - Expected: broader validation, no canonical score change
 
 **Path B (requires human operator action):**
-- AEM: Register on DMIRS portal, download Kalgoorlie AEM surveys, drop into ~/SOST/geaspirit/data/geophysics/aem/
-- Gravity: Download from GA GADDS portal via browser
+- AEM: Register on DMIRS portal, download Kalgoorlie AEM surveys, drop into ~/SOST/geaspirit/data/manual_drop/aem/
+- Gravity: Download from GA GADDS portal via browser, drop into ~/SOST/geaspirit/data/manual_drop/gravity/
 - Peru EMIT: Re-download truncated granules
+- Earth MRI: Download from ScienceBase for Arizona, drop into ~/SOST/geaspirit/data/manual_drop/arizona_earthmri/
 - Expected: DEPTH could improve to 5-6/10 if AEM adds real conductivity signal
 
-**Recommendation:** Pursue Path A while documenting Path B. Do not wait for blocked data.
+**Path C (hybrid — recommended):**
+- Pursue Path A while operator works on Path B downloads
+- No blocking dependencies between the two paths
+- Infrastructure is 100% ready for both — fail-fast guard will validate any dropped data
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

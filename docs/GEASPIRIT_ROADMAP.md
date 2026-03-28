@@ -1012,4 +1012,20 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 **Gating v16.** Registry v26. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
 
 **CTO statement:** AEM follows the same path as gravity — government portals return 403/404 on programmatic access. All deposit-scale subsurface data sources are now confirmed blocked. The DEPTH dimension (4.1/10) is at its ceiling without manual operator action. Phase 33 should focus on expanding zone coverage with validated families (autonomous, no blockers) while documenting the operator manual download path for AEM, gravity, and Peru EMIT.
-- **Next (Phase 33):** Expand zone coverage with validated families OR operator manual data drops
+
+### Phase 33 — Fail-Fast Access Guard + Operator Handoff (2026-03-28)
+
+**Governance/infrastructure phase — fail-fast validation, operator handoff, autonomous expansion path:**
+
+1. **Fail-fast access guard:** 10 mandatory validation checks for ALL new data sources — HTTP status, DNS resolution, Content-Type, file size, magic bytes, rasterio open, band count, value range, CRS present, coverage overlap. Any failure produces an immediate block with standardized status code.
+2. **Source status codes:** 11 standardized codes (ACTIVE, BLOCKED_BY_PORTAL, BLOCKED_BY_LOGIN, BLOCKED_BY_403, BLOCKED_BY_404, BLOCKED_BY_DNS, INVALID_FILE_HTML, INVALID_FILE_STUB, INVALID_FILE_CORRUPTED, TOOL_INVIABLE, MANUAL_DOWNLOAD_REQUIRED, REJECTED).
+3. **Mandatory error reporting:** No silent failures. Every error must identify: what failed, where it failed, which canonical objective is affected, whether operator is needed, what the next action is.
+4. **Operator handoff specs:** Detailed download instructions for gravity (GA GADDS portal), AEM (DMIRS portal), Earth MRI (ScienceBase) — each with portal URL, expected format, coverage, minimum file size, drop location, post-drop validation steps.
+5. **Source status registry:** 8 ACTIVE sources (S2, S1, Landsat, SRTM, CSP/ERGo, JRC, Macrostrat, GA TMI), 4 BLOCKED requiring operator (gravity, AEM, Earth MRI, EMIT), 2 BLOCKED low-priority (EMAG2, WGM2012).
+6. **Autonomous expansion path:** 5 families available NOW without operator action — S2 spectral baseline, NDVI trend (vegetated zones), Macrostrat geology (selective), GEE terrain stack, magnetics (Kalgoorlie).
+
+**Frontier track v15:** Governance phase — no new frontier experiments.
+**Gating v17.** Registry v27. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** Phase 33 is infrastructure, not science. It establishes the guardrails to prevent future silent failures (gravity HTML stubs, AEM 403s) and defines the exact operator handoff protocol for blocked data sources. The system will not accept bad data. Three paths forward: autonomous zone expansion (Path A), operator manual downloads (Path B), or hybrid (Path C, recommended). Infrastructure is 100% ready for any path.
+- **Next (Phase 34):** Expand to 2 new AOIs with validated families (Path A) OR operator downloads blocked data (Path B) OR both (Path C)
