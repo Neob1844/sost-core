@@ -608,7 +608,7 @@ body {
     <div class="logo" id="logo-btn" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Open SOST website"><canvas id="hdr-logo-canvas"></canvas>SOST://</div>
     <button class="hdr-btn back-btn" id="back-btn">&lt; BACK</button>
     <button class="hdr-btn" id="menu-btn">MENU</button>
-    <button class="hdr-btn" id="web-btn" style="color:#0af" onclick="window.open('https://sostcore.com','_blank')">WEB</button>
+    <button class="hdr-btn" id="web-btn" style="color:#0af" onclick="window.open('https://sostcore.com?from=app','_blank')">WEB</button>
     <div class="hdr-spacer"></div>
     <div id="hdr-blockh">BLK ---</div>
     <div id="hdr-clock">--:--:--</div>
@@ -616,7 +616,7 @@ body {
       <button class="hdr-btn" style="font-size:14px;padding:0 6px;min-width:24px" onclick="document.getElementById('content').style.transform='scale('+(parseFloat(document.getElementById('content').dataset.zoom||1)+0.1)+')';document.getElementById('content').dataset.zoom=parseFloat(document.getElementById('content').dataset.zoom||1)+0.1;document.getElementById('content').style.transformOrigin='top left'" title="Zoom in">+</button>
       <button class="hdr-btn" style="font-size:14px;padding:0 6px;min-width:24px" onclick="var z=Math.max(0.5,parseFloat(document.getElementById('content').dataset.zoom||1)-0.1);document.getElementById('content').style.transform='scale('+z+')';document.getElementById('content').dataset.zoom=z;document.getElementById('content').style.transformOrigin='top left'" title="Zoom out">−</button>
     </span>
-    <button class="hdr-btn" id="explorer-btn" style="animation:explorerBlink 2s ease-in-out infinite" onclick="window.open('https://sostcore.com/sost-explorer.html','_blank')">EXPL</button>
+    <button class="hdr-btn" id="explorer-btn" style="animation:explorerBlink 2s ease-in-out infinite" onclick="window.open('https://sostcore.com/sost-explorer.html?from=app','_blank')">EXPL</button>
     <button class="hdr-btn exit-btn" id="exit-btn">EXIT</button>
   </div>
   <div id="content"></div>
@@ -1983,10 +1983,10 @@ SectionRenderers.markets = function(el) {
       <div class="stat-row" style="cursor:pointer" onclick="window.open('/sost-explorer.html','_blank')">
         <span class="stat-label">BLOCK EXPLORER</span><span class="stat-value" style="color:var(--pip)">↗ OPEN</span>
       </div>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/?from=app','_blank')">
         <span class="stat-label">OFFICIAL SITE</span><span class="stat-value" style="color:var(--pip)">↗ OPEN</span>
       </div>
-      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/sost-markets.html','_blank')">
+      <div class="stat-row" style="cursor:pointer" onclick="window.open('https://sostprotocol.com/sost-markets.html?from=app','_blank')">
         <span class="stat-label">VIEW FULL MARKETS</span><span class="stat-value" style="color:var(--pip)">↗ WEB</span>
       </div>
     </div>
@@ -2306,7 +2306,7 @@ function bindEvents() {
   });
   document.getElementById('logo-btn').addEventListener('click', () => {
     AudioEngine.nav_home();
-    window.open('https://sostcore.com/', '_blank');
+    window.open('https://sostcore.com/?from=app', '_blank');
   });
   document.getElementById('exit-btn').addEventListener('click', () => {
     AudioEngine.sys_shutdown();
