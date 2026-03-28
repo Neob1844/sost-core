@@ -206,7 +206,7 @@
 <a href="#sec-materials" class="toc-l1" style="color:var(--red-primary);">11. EXPERIMENTAL: Materials Discovery Engine</a>
 <a href="#sec-materials-1" class="toc-l2">11.1 Overview</a>
 <a href="#sec-materials-2" class="toc-l2">11.2 Architecture</a>
-<a href="#sec-materials-3" class="toc-l2">11.3 Access via SOST Escrow</a>
+<a href="#sec-materials-3" class="toc-l2">11.3 Access Model</a>
 <a href="#sec-materials-4" class="toc-l2">11.4 Relationship to SOST Protocol</a>
 <a href="#sec-materials-5" class="toc-l2">11.5 Output Specification</a>
 <a href="#sec-materials-6" class="toc-l2">11.6 Disclaimer</a>
@@ -2476,28 +2476,20 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <p class="wp-p"><strong>Layer 5 &mdash; Continuous Learning:</strong> The system improves over time. User queries, community feedback, and published experimental results are incorporated into the training data. The models retrain periodically, expanding coverage and improving accuracy.</p>
 <div class="wp-spacer"></div>
 
-<h4 id="sec-materials-3" class="wp-h">11.3 Access via SOST Escrow</h4>
+<h4 id="sec-materials-3" class="wp-h">11.3 Access Model</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">Access to the Materials Engine requires a SOST escrow deposit &mdash; the same mechanism used by PoPC Model B. Users deposit SOST into an immutable timelock contract for 1 to 6 months. During the escrow period, the user has full access to the engine. At expiry, 100% of the deposit is returned. The Foundation charges a protocol fee (5&ndash;10%) on the escrow amount.</p>
+<p class="wp-p">Access to the Materials Discovery Engine is under study. Any future access model, if implemented, would be denominated in USD-equivalent terms to preserve stability and usability. The algorithm itself is free &mdash; any access mechanism would serve as spam prevention, not as a fee for the science.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">This creates organic demand for SOST: researchers, engineers, and materials scientists need SOST tokens to access the service. The escrow model ensures tokens are locked during use, reducing circulating supply. The fee funds ongoing development and infrastructure.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p">Access tiers (preliminary):</p>
-<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
-<li>Tier 1 (10 SOST, 1 month): Search + prediction</li>
-<li>Tier 2 (50 SOST, 3 months): + generative discovery</li>
-<li>Tier 3 (200 SOST, 6 months): + DFT validation + export</li>
-</ul>
+<p class="wp-p"><strong>The final access structure, technical route, and user model have not been fixed yet.</strong> Details will be published when the model has been validated and approved. Pending study and validation of the best access method.</p>
 <div class="wp-spacer"></div>
 
 <h4 id="sec-materials-4" class="wp-h">11.4 Relationship to SOST Protocol</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The Materials Engine does not modify the SOST blockchain or its consensus rules. It is an application-layer service that reads the blockchain to verify escrow deposits. The SOST protocol provides:</p>
+<p class="wp-p">The Materials Engine does not modify the SOST blockchain or its consensus rules. It is an application-layer service. The SOST protocol provides:</p>
 <ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
-<li>Escrow infrastructure (BOND_LOCK / Model B contracts)</li>
 <li>Payment rail (SOST token)</li>
-<li>Immutable access verification (on-chain escrow state)</li>
-<li>Economic alignment (locked tokens reduce sell pressure)</li>
+<li>On-chain verification infrastructure (if access model requires it)</li>
+<li>Economic alignment (potential token utility for access)</li>
 </ul>
 <div class="wp-spacer"></div>
 <p class="wp-p">The blockchain provides the trust layer. The Materials Engine provides the utility layer. Together, they create a feedback loop: scientific utility drives SOST demand, SOST demand strengthens the gold reserve, the gold reserve underpins the token&rsquo;s value.</p>
