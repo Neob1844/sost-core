@@ -1,0 +1,15 @@
+[
+  {
+    "participant": "NeoB (Founder)",
+    "sost_address": "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de",
+    "eth_address": "0xd38955822b88867CD010946F0Ba25680B9DfC7a6",
+    "declared_xaut": 0.5,
+    "declared_paxg": 0.5,
+    "bond_amount_sost": 0,
+    "registration_height": 0,
+    "commitment_months": 0,
+    "status": "pending_activation",
+    "registered_date": "2026-03-28",
+    "notes": "First PoPC participant. Activation target: 2026-03-30 14:00 UTC"
+  }
+]

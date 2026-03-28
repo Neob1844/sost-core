@@ -44,14 +44,15 @@ struct HardCheckpoint {
 // AND hash match exactly. Lower height alone is NOT enough.
 // Empty at genesis. Updated with each source release.
 static const std::vector<HardCheckpoint> HARD_CHECKPOINTS = {
-    // {height, "block_hash_hex"},
-    // Example (do NOT add until blocks exist):
-    // {1000, "0000abcd..."},
+    {0,    "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37"},
+    {500,  "c3830001702d6bc79ff290d415c091825b2b5a78e4b4104a5ea08b3e045bb770"},
+    {1000, "c7c9553b43bf48062065bac3d727fb0a03ab42eec6c8a791f4794ed26e5cd138"},
+    {1500, "1d6c7d4c5594a264ab36e9436395f27cc4588a05958464d96f5acede03614c2f"},
 };
 
 // Quick range pre-check before iterating checkpoints.
 // Do NOT use this alone to trust blocks.
-static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 0;
+static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 1500;
 
 // Assumevalid anchor: if this block hash exists on the active chain,
 // ancestors of that branch can skip expensive ConvergenceX recomputation

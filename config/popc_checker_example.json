@@ -1,0 +1,12 @@
+{
+  "etherscan_api_key": "",
+  "check_interval_minutes": 60,
+  "log_file": "logs/popc_audit.log",
+  "eth_rpc_endpoints": [
+    "https://eth.meowrpc.com",
+    "https://1rpc.io/eth",
+    "https://ethereum-rpc.publicnode.com",
+    "https://rpc.flashbots.net"
+  ],
+  "_note": "Copy this to config/popc_checker.json and add your Etherscan API key. Get free key at https://etherscan.io/myapikey"
+}

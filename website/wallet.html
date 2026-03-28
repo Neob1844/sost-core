@@ -308,6 +308,13 @@
       <div class="notice">
         <strong>Security Notice:</strong> This wallet runs entirely in your browser. Private keys are encrypted with AES-256-GCM before storage. The wallet auto-locks after 5 minutes of inactivity. Always back up your seed phrase.
       </div>
+      <div class="card" style="margin-top:20px;border-left:3px solid var(--red-primary,#e63946)">
+        <h3 style="color:var(--red-primary,#e63946)">Quick Guide</h3>
+        <p style="color:var(--text-secondary);font-size:13px;margin:8px 0"><strong>What is a SOST wallet?</strong> A cryptographic address derived from a BIP39 seed phrase (12 words). HD Wallet compatible. Send, receive, and custody SOST with full sovereignty.</p>
+        <p style="color:var(--text-secondary);font-size:13px;margin:8px 0"><strong>How to receive SOST:</strong> Share your public address (starts with <code>sost1...</code>). Nobody can move your funds without your private key.</p>
+        <p style="color:var(--text-secondary);font-size:13px;margin:8px 0"><strong>How to send SOST:</strong> Go to Send, enter the destination address and amount, sign with your key, and broadcast. Confirmed in the next mined block.</p>
+        <p style="color:var(--text-secondary);font-size:13px;margin:8px 0"><strong>Security:</strong> NEVER share your seed phrase. Store it offline. The seed is the ONLY way to recover your wallet.</p>
+      </div>
     </div>
 
     <!-- DASHBOARD -->
@@ -1586,5 +1593,18 @@ init();
 <script src="js/retro-sounds.js"></script>
 <script src="js/sost-pwa-install.js"></script>
 <script src="js/crt-effects.js"></script>
+<script>
+// Return to App button (if opened from Pip-Boy app)
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  if(p.get('from')==='app'){
+    var b=document.createElement('button');
+    b.textContent='\u2190 RETURN TO APP';
+    b.style.cssText='position:fixed;bottom:20px;right:20px;z-index:9999;background:#000;color:#00ff41;border:1px solid #00ff41;font-family:monospace;font-size:13px;padding:10px 16px;cursor:pointer;letter-spacing:2px;border-radius:4px';
+    b.onclick=function(){if(document.referrer.includes('sost-app'))history.back();else window.close();};
+    document.body.appendChild(b);
+  }
+})();
+</script>
 </body>
 </html>
