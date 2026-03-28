@@ -187,11 +187,24 @@ Geophysics-ready acquisition + QGIS-assisted depth pilot:
 - Infrastructure complete: extraction, alignment, QA, validation all work
 - Canonical: 22.8/40 UNCHANGED — score cannot improve without deposit-scale geophysics data
 
-## Phase 30 Plan — Gravity Data Unlock + Real Depth Validation
+## Phase 30 Completed (2026-03-28)
 
-Priority 1: Operator downloads GA Bouguer gravity from GADDS portal → `data/manual_drop/gravity/`
-Priority 2: If gravity acquired → integrate, validate at Kalgoorlie, measure real DEPTH improvement
-Priority 3: If gravity not acquired → expand zone coverage with existing features (no new depth sources)
+Real magnetics depth integration -- first deposit-scale geophysics validation:
+- TMI magnetics (GA National, 625x553, 1MB): REAL DATA, loaded and validated at Kalgoorlie
+- Bouguer gravity: CONFIRMED STUB (39 bytes, broken). Still BLOCKED.
+- Labels: 205 deposits + 552 terrain-matched background (GPKG), 738 usable after TMI extraction (97.5% coverage)
+- Magnetics only: AUC 0.6542 (genuine signal, above chance)
+- Terrain only: AUC 0.7637 (GEE SRTM + CSP/ERGo landforms)
+- Magnetics + Terrain: AUC 0.7718 (+0.0081 over terrain alone)
+- All combined: AUC 0.7684 (mild overfitting with all 7 features)
+- Magnetics confirmed VALIDATED SELECTIVE: consistent +0.008-0.009 across Phase 11 and Phase 30
+- Canonical: 22.8/40 UNCHANGED -- magnetics additive but modest, no score-changing improvement
+
+## Phase 31 Plan -- Gravity Data Unlock + Cross-Zone Magnetics
+
+Priority 1: Operator downloads GA Bouguer gravity from GADDS portal (the existing file is a 39-byte stub)
+Priority 2: If gravity acquired: integrate, validate at Kalgoorlie, measure real DEPTH improvement vs magnetics
+Priority 3: If gravity not acquired: test magnetics integration at other zones (Zambia, Chuquicamata) with GEE terrain stack
 Priority 4: QGIS continues as QA layer for all new data integrations
 Priority 5: Do NOT inflate canonical score without real geophysics validation
 
