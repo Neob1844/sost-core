@@ -589,6 +589,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="sidebar-btn" data-view="multisig" onclick="showView('multisig')">
         <span class="icon">&#128273;</span> <span>Multisig</span>
       </button>
+      <button class="sidebar-btn" data-view="popc" onclick="showView('popc')">
+        <span class="icon">&#x1F6E1;</span> <span>PoPC</span>
+      </button>
       <button class="sidebar-btn" data-view="totp" onclick="showView('totp')">
         <span class="icon">&#128272;</span> <span>2FA</span>
       </button>
@@ -969,6 +972,74 @@ document.addEventListener('DOMContentLoaded', () => {
         <button class="btn btn-primary" style="margin-top:12px" onclick="cosignMultisig()">Co-Sign with This Wallet</button>
         <div id="msigCosignResult" class="notice hidden" style="margin-top:12px"></div>
         <textarea id="msigCosignOutput" class="form-input hidden" style="margin-top:12px;height:120px;font-size:11px" readonly></textarea>
+      </div>
+    </div>
+
+    <!-- PoPC — Proof of Personal Custody -->
+    <div id="view-popc" class="view hidden">
+      <h2>Proof of Personal <span class="accent">Custody</span></h2>
+      <p class="subtitle">Bond your SOST to prove custody of real gold (XAUT/PAXG)</p>
+
+      <div id="popcActivationBadge" style="margin-bottom:16px;padding:8px 14px;border-radius:6px;font-size:12px;display:inline-block"></div>
+
+      <div class="card">
+        <h3>How It Works</h3>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+          <p><strong>1.</strong> You hold XAUT or PAXG in your Ethereum wallet</p>
+          <p><strong>2.</strong> You lock a SOST bond (12-30% of gold value) on the SOST chain</p>
+          <p><strong>3.</strong> Random audits verify your gold balance via Ethereum RPC</p>
+          <p><strong>4.</strong> If you maintain custody: <span style="color:var(--green-primary)">bond returned + reward (up to 22% APR)</span></p>
+          <p><strong>5.</strong> If you sell your gold: <span style="color:var(--red-primary)">bond is slashed automatically</span></p>
+          <p style="margin-top:8px;font-style:italic;color:var(--text-dim)">Your gold NEVER leaves your wallet. Only the SOST bond is at risk.</p>
+        </div>
+      </div>
+
+      <div class="card" id="popcRegisterForm">
+        <h3>Register for PoPC</h3>
+        <div class="form-group">
+          <label class="form-label">Your Ethereum Address (holding XAUT/PAXG)</label>
+          <input type="text" id="popcEthAddr" class="form-input" placeholder="0x..." maxlength="42">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Declared XAUT (oz)</label>
+          <input type="number" id="popcXaut" class="form-input" placeholder="0.0" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Declared PAXG (oz)</label>
+          <input type="number" id="popcPaxg" class="form-input" placeholder="0.0" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Commitment Period</label>
+          <select id="popcDuration" class="form-input" onchange="updatePopcCalc()">
+            <option value="1">1 month (1% reward)</option>
+            <option value="3">3 months (4% reward)</option>
+            <option value="6">6 months (9% reward)</option>
+            <option value="9">9 months (15% reward)</option>
+            <option value="12" selected>12 months (22% reward)</option>
+          </select>
+        </div>
+        <div id="popcCalcResult" style="margin:12px 0;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+          Enter gold amounts above to see bond calculation.
+        </div>
+        <button class="btn btn-primary" id="popcRegisterBtn" onclick="registerPopc()" disabled>Register & Lock Bond</button>
+        <div id="popcResult" class="notice hidden" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <h3>Reward Table</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text-secondary)">
+          <tr style="border-bottom:1px solid var(--border-dim)"><th style="text-align:left;padding:6px">Duration</th><th style="text-align:right;padding:6px">Reward % (of bond)</th><th style="text-align:right;padding:6px">Annualized</th></tr>
+          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">1 month</td><td style="text-align:right;padding:6px">1%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">12%</td></tr>
+          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">3 months</td><td style="text-align:right;padding:6px">4%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">16%</td></tr>
+          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">6 months</td><td style="text-align:right;padding:6px">9%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">18%</td></tr>
+          <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">9 months</td><td style="text-align:right;padding:6px">15%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">20%</td></tr>
+          <tr><td style="padding:6px">12 months</td><td style="text-align:right;padding:6px;color:var(--green-primary);font-weight:600">22%</td><td style="text-align:right;padding:6px;color:var(--green-primary)">22%</td></tr>
+        </table>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:8px">Reward rates are operational reference parameters, not guaranteed yields. Protocol fee: 5% on reward. Bond is 100% returned on successful completion.</p>
+      </div>
+
+      <div class="notice" style="border-left:3px solid var(--red-primary)">
+        <strong>Important:</strong> PoPC is a voluntary commitment protocol, NOT a yield product. Bond slashing is automatic if custody fails. Reward rates may be adjusted. This is not financial advice.
       </div>
     </div>
 
@@ -1959,6 +2030,7 @@ window.refreshBalance = async function() {
     ]);
     const chainHeight = nodeInfo.blocks || 0;
     updateCapsuleActivation(chainHeight);
+    updatePopcActivation(chainHeight);
     const utxos = addrInfo.utxos || [];
     window._lastUtxos = utxos; // cache for TX history
 
@@ -2055,6 +2127,107 @@ window.refreshBalance = async function() {
     document.getElementById('balanceUtxoCount').textContent = 'Cannot connect to node: ' + e.message;
   }
 };
+
+// ==================== PoPC ====================
+
+const POPC_REWARD_TABLE = {1: 0.01, 3: 0.04, 6: 0.09, 9: 0.15, 12: 0.22};
+const POPC_BOND_TABLE = [
+  [0.0001, 0.12], [0.001, 0.15], [0.01, 0.20], [0.1, 0.25],
+  [0.2, 0.26], [0.3, 0.27], [0.4, 0.28], [0.5, 0.29], [Infinity, 0.30]
+];
+
+function getBondPct(ratio) {
+  for (const [threshold, pct] of POPC_BOND_TABLE) {
+    if (ratio < threshold) return pct;
+  }
+  return 0.30;
+}
+
+window.updatePopcCalc = function() {
+  const xaut = parseFloat(document.getElementById('popcXaut').value) || 0;
+  const paxg = parseFloat(document.getElementById('popcPaxg').value) || 0;
+  const months = parseInt(document.getElementById('popcDuration').value) || 12;
+  const totalOz = xaut + paxg;
+  const el = document.getElementById('popcCalcResult');
+
+  if (totalOz <= 0) {
+    el.innerHTML = 'Enter gold amounts above to see bond calculation.';
+    return;
+  }
+
+  // Pre-launch reference: SOST=$1, Gold=$3000/oz
+  const sostPrice = 1.0;
+  const goldPrice = 3000.0;
+  const ratio = sostPrice / goldPrice;
+  const bondPct = getBondPct(ratio);
+  const goldValue = totalOz * goldPrice;
+  const bondUsd = goldValue * bondPct;
+  const bondSost = bondUsd / sostPrice;
+  const rewardPct = POPC_REWARD_TABLE[months] || 0;
+  const baseReward = bondSost * rewardPct;
+  const protocolFee = baseReward * 0.05;
+  const userReward = baseReward - protocolFee;
+  const total = bondSost + userReward;
+
+  el.innerHTML = `
+    <div style="line-height:2">
+      <div>Gold declared: <b>${totalOz.toFixed(2)} oz</b> (~$${goldValue.toLocaleString()} USD)</div>
+      <div>SOST/Gold ratio: <b>${ratio.toFixed(6)}</b> → Bond: <b>${(bondPct*100).toFixed(0)}%</b></div>
+      <div>Required bond: <b style="color:var(--green-primary)">${bondSost.toFixed(2)} SOST</b> ($${bondUsd.toFixed(0)} USD)</div>
+      <div>Reward (${months}mo, ${(rewardPct*100).toFixed(0)}%): <b style="color:var(--green-primary)">${userReward.toFixed(4)} SOST</b> (after 5% fee)</div>
+      <div>Total returned: <b>${total.toFixed(4)} SOST</b> (bond + reward)</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Reference prices: SOST=$${sostPrice}, Gold=$${goldPrice}/oz. Actual bond calculated at market rate on registration day.</div>
+    </div>
+  `;
+};
+
+// Update activation badge
+function updatePopcActivation(height) {
+  const badge = document.getElementById('popcActivationBadge');
+  const form = document.getElementById('popcRegisterForm');
+  const btn = document.getElementById('popcRegisterBtn');
+  if (!badge) return;
+
+  if (height >= 5000) {
+    badge.style.background = 'rgba(74,222,128,0.1)';
+    badge.style.border = '1px solid rgba(74,222,128,0.3)';
+    badge.style.color = '#4ade80';
+    badge.textContent = '✅ PoPC ACTIVE — Bond Lock enabled at block #' + height;
+    if (form) form.style.opacity = '1';
+    if (btn) btn.disabled = false;
+  } else {
+    const blocksLeft = 5000 - height;
+    const daysLeft = Math.ceil(blocksLeft * 10 / 60 / 24);
+    badge.style.background = 'rgba(251,191,36,0.1)';
+    badge.style.border = '1px solid rgba(251,191,36,0.3)';
+    badge.style.color = '#fbbf24';
+    badge.textContent = '⏳ PoPC activates at block 5,000 (~' + daysLeft + ' days) — Currently #' + height;
+    if (form) form.style.opacity = '0.5';
+    if (btn) btn.disabled = true;
+  }
+}
+
+window.registerPopc = function() {
+  const ethAddr = document.getElementById('popcEthAddr').value.trim();
+  if (!ethAddr.startsWith('0x') || ethAddr.length !== 42) {
+    return showError('popcResult', 'Invalid Ethereum address. Must be 0x + 40 hex characters.');
+  }
+  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 5,000. Your registration data is saved locally.');
+  // Save to localStorage for when PoPC goes live
+  const reg = { ethAddr, xaut: parseFloat(document.getElementById('popcXaut').value)||0,
+                paxg: parseFloat(document.getElementById('popcPaxg').value)||0,
+                months: parseInt(document.getElementById('popcDuration').value)||12,
+                savedAt: new Date().toISOString() };
+  localStorage.setItem('sost_popc_registration', JSON.stringify(reg));
+};
+
+// Listen for gold amount changes
+document.addEventListener('DOMContentLoaded', () => {
+  ['popcXaut','popcPaxg','popcDuration'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updatePopcCalc);
+  });
+});
 
 // ==================== CAPSULE UI ====================
 
