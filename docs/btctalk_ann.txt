@@ -62,7 +62,7 @@ Existing gold-backed tokens (XAUT, PAXG) attempt to bridge this gap. They are ER
 
 The trust model is the fundamental failure. XAUT holders trust Tether to maintain 1:1 reserves in a Swiss vault. PAXG holders trust Paxos to not freeze their tokens. Both trust their respective custodians to survive regulatory action, remain solvent, and not selectively enforce terms of service. The gold exists in a vault you cannot visit, managed by a company you cannot audit, under a jurisdiction that may change its rules. Every gold-backed ERC-20 is a bearer instrument for counterparty risk dressed up as sound money.
 
-Bitcoin solved digital scarcity through proof-of-work. But Bitcoin has no structural connection to physical reserves. SOST connects PoW scarcity to physical gold accumulation at the protocol level — not through promises or governance votes, but through consensus rules that are immutable at genesis.
+Bitcoin pioneered digital scarcity through proof-of-work — a breakthrough that changed the world. SOST builds on that foundation by exploring a different design: connecting PoW scarcity to physical gold accumulation at the protocol level, through consensus rules that are immutable at genesis. This is not a criticism of Bitcoin — it is an exploration of a complementary approach.
 
 [hr]
 
@@ -168,7 +168,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 [li]P2P encryption: X25519 + ChaCha20-Poly1305[/li]
 [li]Peer ban scoring (misbehavior threshold: 100 points)[/li]
 [li]MAX_REORG_DEPTH = 500 blocks[/li]
-[li]222+ automated tests passing[/li]
+[li]22 test suites, 548 individual tests passing[/li]
 [/list]
 
 [hr]
@@ -183,6 +183,22 @@ Computational materials discovery. 76,193 materials corpus. 19 campaign profiles
 
 [hr]
 
+[size=14pt][b]Roadmap[/b][/size]
+
+[table]
+[tr][td][b]Milestone[/b][/td][td][b]Target[/b][/td][td][b]Status[/b][/td][/tr]
+[tr][td]Genesis + fair launch[/td][td]March 15, 2026[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]cASERT V2 hard fork (24h halflife)[/td][td]Block 1,450[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]Public announcement + community mining[/td][td]March 30, 2026[/td][td][color=green]NOW[/color][/td][/tr]
+[tr][td]Native multisig 2-of-3 (P2SH)[/td][td]Block 2,000[/td][td][color=#fbbf24]IMMINENT[/color][/td][/tr]
+[tr][td]Bond Lock + Escrow Lock + Capsule Protocol[/td][td]Block 5,000[/td][td]Q2 2026[/td][/tr]
+[tr][td]PoPC Model A — first custody contracts[/td][td]After block 5,000[/td][td]Q2-Q3 2026[/td][/tr]
+[tr][td]First gold reserve acquisition[/td][td]When Gold Vault reaches threshold[/td][td]TBD[/td][/tr]
+[tr][td]Exchange listing exploration[/td][td]After sufficient hashrate + liquidity[/td][td]2026-2027[/td][/tr]
+[/table]
+
+[hr]
+
 [size=14pt][b]Links[/b][/size]
 
 [list]
@@ -191,6 +207,17 @@ Computational materials discovery. 76,193 materials corpus. 19 campaign profiles
 [li][b]App (Pip-Boy):[/b] [url=https://sostcore.com/sost-app/]https://sostcore.com/sost-app/[/url][/li]
 [li][b]GitHub:[/b] [url=https://github.com/Neob1844/sost-core]https://github.com/Neob1844/sost-core[/url][/li]
 [li][b]Wallet:[/b] [url=https://sostcore.com/sost-wallet.html]https://sostcore.com/sost-wallet.html[/url][/li]
+[/list]
+
+[hr]
+
+[size=14pt][b]Contact[/b][/size]
+
+[list]
+[li][b]Developer:[/b] NeoB[/li]
+[li][b]GitHub:[/b] [url=https://github.com/Neob1844]https://github.com/Neob1844[/url][/li]
+[li][b]Email:[/b] contact@sostcore.com[/li]
+[li][b]This thread:[/b] Questions, feedback, and bug reports welcome below[/li]
 [/list]
 
 [hr]

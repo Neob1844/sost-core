@@ -326,8 +326,59 @@
   </div>
 </nav>
 
-
-
+<!-- RPC Connection Bar -->
+<div id="rpcBar" style="background:#080808;border-bottom:1px solid #1a1a1a;padding:6px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:11px">
+  <span style="color:#666">RPC&gt;</span>
+  <input id="qRpcUrl" value="/rpc/public" style="background:#0a0a0a;border:1px solid #222;color:#4ade80;padding:3px 8px;font-family:monospace;font-size:11px;width:140px" placeholder="/rpc">
+  <span style="color:#666">USER&gt;</span>
+  <input id="qRpcUser" value="" style="background:#0a0a0a;border:1px solid #222;color:#ccc;padding:3px 8px;font-family:monospace;font-size:11px;width:80px" placeholder="(optional)">
+  <span style="color:#666">PASS&gt;</span>
+  <input id="qRpcPass" value="" type="password" style="background:#0a0a0a;border:1px solid #222;color:#ccc;padding:3px 8px;font-family:monospace;font-size:11px;width:80px" placeholder="(optional)">
+  <button onclick="quickConnect()" style="background:none;border:1px solid #4ade80;color:#4ade80;padding:3px 12px;font-family:monospace;font-size:11px;cursor:pointer">CONNECT</button>
+  <span id="rpcStatus" style="color:#666">⬤ NOT CONNECTED</span>
+</div>
+<script>
+function quickConnect() {
+  const url = document.getElementById('qRpcUrl').value.trim() || '/rpc/public';
+  const user = document.getElementById('qRpcUser').value.trim();
+  const pass = document.getElementById('qRpcPass').value;
+  // Save to settings
+  const settings = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
+  settings.rpcUrl = url;
+  settings.rpcUser = user;
+  settings.rpcPass = pass;
+  localStorage.setItem('sost_wallet_settings', JSON.stringify(settings));
+  // Test connection
+  const status = document.getElementById('rpcStatus');
+  status.style.color = '#fbbf24';
+  status.textContent = '⬤ CONNECTING...';
+  const headers = { 'Content-Type': 'application/json' };
+  if (user && pass) headers['Authorization'] = 'Basic ' + btoa(user + ':' + pass);
+  fetch(url, { method: 'POST', headers, body: '{"jsonrpc":"2.0","id":1,"method":"getinfo","params":[]}', cache: 'no-store' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.result && d.result.blocks !== undefined) {
+        status.style.color = '#4ade80';
+        status.textContent = '⬤ CONNECTED — Block #' + d.result.blocks;
+      } else {
+        status.style.color = '#fb923c';
+        status.textContent = '⬤ RESPONSE BUT NO DATA';
+      }
+    })
+    .catch(e => {
+      status.style.color = '#e63946';
+      status.textContent = '⬤ FAILED — ' + e.message.substring(0, 30);
+    });
+}
+// Auto-connect on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const s = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
+  if (s.rpcUrl) document.getElementById('qRpcUrl').value = s.rpcUrl;
+  if (s.rpcUser) document.getElementById('qRpcUser').value = s.rpcUser;
+  if (s.rpcPass) document.getElementById('qRpcPass').value = s.rpcPass;
+  setTimeout(quickConnect, 500);
+});
+</script>
 
 <div id="walletLanding">
 <!-- HERO -->
@@ -1343,29 +1394,42 @@ function getSettings() {
 // Methods that require authentication (write operations)
 const AUTH_METHODS = new Set(['sendrawtransaction', 'submitblock']);
 
-// RPC endpoints: primary = sostcore.com, secondary = sostprotocol.com
-const RPC_FALLBACK_CHAIN = ['/rpc', 'https://sostcore.com/rpc', 'https://sostprotocol.com/rpc'];
+// RPC endpoints with public fallback for unauthenticated users
+// /rpc/public = nginx proxy that injects auth server-side (safe read + broadcast)
+// /rpc = direct node access (requires user credentials for write ops)
+const RPC_PUBLIC_CHAIN = ['/rpc/public', 'https://sostcore.com/rpc/public', 'https://sostprotocol.com/rpc/public'];
+const RPC_AUTH_CHAIN = ['/rpc', 'https://sostcore.com/rpc', 'https://sostprotocol.com/rpc'];
 
 async function rpcCall(method, params = []) {
   const settings = getSettings();
   const paramArray = Array.isArray(params) ? params : Object.values(params);
   const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: paramArray });
-  const headers = { 'Content-Type': 'application/json' };
-  if (AUTH_METHODS.has(method) && settings.rpcUser && settings.rpcPass) {
-    headers['Authorization'] = 'Basic ' + btoa(settings.rpcUser + ':' + settings.rpcPass);
+  const hasAuth = settings.rpcUser && settings.rpcPass;
+
+  // If user has credentials: use authenticated endpoints (all methods)
+  // If no credentials: use public endpoints (reads + sendrawtransaction)
+  let endpoints;
+  if (hasAuth) {
+    endpoints = settings.rpcUrl && settings.rpcUrl !== '/rpc'
+      ? [settings.rpcUrl, ...RPC_AUTH_CHAIN, ...RPC_PUBLIC_CHAIN]
+      : [...RPC_AUTH_CHAIN, ...RPC_PUBLIC_CHAIN];
+  } else {
+    endpoints = [...RPC_PUBLIC_CHAIN, ...RPC_AUTH_CHAIN];
   }
-  // Build endpoint list: user-configured first, then fallback chain
-  const endpoints = settings.rpcUrl && settings.rpcUrl !== '/rpc'
-    ? [settings.rpcUrl, ...RPC_FALLBACK_CHAIN]
-    : RPC_FALLBACK_CHAIN;
+
   const errors = [];
   for (const url of endpoints) {
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      // Send auth header on non-public endpoints when credentials available
+      if (hasAuth && !url.includes('/public')) {
+        headers['Authorization'] = 'Basic ' + btoa(settings.rpcUser + ':' + settings.rpcPass);
+      }
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
       const resp = await fetch(url, { method: 'POST', headers, body, signal: ctrl.signal, cache: 'no-store' });
       clearTimeout(timer);
-      if (resp.status === 401) throw new Error('RPC auth failed (401)');
+      if (resp.status === 401) { errors.push(url + ': auth required'); continue; } // try next
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const json = await resp.json();
       if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
@@ -1374,7 +1438,7 @@ async function rpcCall(method, params = []) {
       errors.push(url + ': ' + (e.name === 'AbortError' ? 'timeout' : e.message));
     }
   }
-  throw new Error('All RPC endpoints failed: ' + errors.join(' | '));
+  throw new Error('RPC failed. ' + (hasAuth ? 'Check credentials in Settings.' : 'No public RPC available. Set RPC credentials in Settings.'));
 }
 
 // ==================== TOTP ====================
