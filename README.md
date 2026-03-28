@@ -340,6 +340,18 @@ Current phase: Phase XV — full-corpus functional intersection discovery.
 - **Bugs and feature requests:** https://github.com/Neob1844/sost-core/issues
 - **Security vulnerabilities:** Use the private contact form at [sostcore.com/sost-contact.html](https://sostcore.com/sost-contact.html) and select "Security Vulnerability Report". Do NOT open a public GitHub issue for security disclosures.
 
+---
+
+## Disclaimer
+
+SOST is **experimental, unaudited software**. It is a completely new proof-of-work protocol written from scratch — **NOT a fork** of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or mining algorithm. The ConvergenceX proof-of-work, cASERT difficulty adjustment, and constitutional economic model are original designs.
+
+**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 222+ automated tests, and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
+
+**Every participant is solely responsible for their own investment decisions.** You may lose your entire investment. The developer (NeoB) assumes NO liability for any losses resulting from the use of this software, whether caused by bugs, vulnerabilities, design flaws, or any other reason. This is not financial advice.
+
+SOST is provided "AS IS" without warranty of any kind.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for full terms.

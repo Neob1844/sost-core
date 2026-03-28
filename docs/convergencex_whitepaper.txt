@@ -3223,3 +3223,30 @@ Full validation bridge with prediction-observation-reconciliation lifecycle.
 RESTRICTED — Implementation Details:
   Neural network architecture, model weights, training methodology,
   hyperparameter tuning, and backend framework are restricted.
+
+--- LEGAL DISCLAIMER ---
+
+SOST is experimental, unaudited software. It is a completely new proof-of-work
+protocol — NOT a fork of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash,
+CryptoNight, X11, Scrypt, or any other existing cryptocurrency or algorithm.
+The ConvergenceX proof-of-work algorithm, the cASERT difficulty adjustment, and
+the constitutional economic model are original designs that have not been
+independently verified by any third-party security auditing firm.
+
+This software is provided "AS IS" without warranty of any kind. The developer
+(NeoB) makes no representations or warranties regarding the security, reliability,
+or fitness for purpose of this software. The protocol has not been tested under
+adversarial conditions by a large number of independent miners. Undiscovered
+vulnerabilities, bugs, or design flaws may exist.
+
+Every participant is solely and entirely responsible for their own investment
+decisions. You may lose your entire investment. The developer assumes no liability
+for any losses. The gold reserve mechanism is not a redemption right, not a price
+guarantee, and not a stability mechanism. SOST is not a security, not a stablecoin,
+and not financial advice.
+
+The decision to advance the public announcement to March 30, 2026 was made to
+enable community participation earlier than originally planned. The developer is
+continuously monitoring the network and actively searching for potential
+vulnerabilities. Maximum diligence and caution are recommended during the early
+operational phase.
