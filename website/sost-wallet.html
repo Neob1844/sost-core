@@ -1603,8 +1603,26 @@ function buildP2PKHSignScript(sigDER, pubkeyBytes) {
   );
 }
 
+// SOST genesis hash (for sighash computation)
+const GENESIS_HASH = '6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37';
+
+// Decode sost1 address to 20-byte pubkey hash
+function addressToPKH(addr) {
+  if (!addr.startsWith('sost1') || addr.length !== 45) throw new Error('Invalid address: ' + addr);
+  return hexToBytes(addr.slice(5)); // sost1 + 40 hex chars = 20 bytes
+}
+
 async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAddr) {
-  // Coin selection: smallest-first (amounts in stocks)
+  // ============================================================
+  // SOST TX format (NOT Bitcoin!):
+  //   version(4) + tx_type(1) + input_count(varint)
+  //   + inputs[]: prev_txid(32) + prev_index(4) + signature(64) + pubkey(33)
+  //   + output_count(varint)
+  //   + outputs[]: amount(8) + type(1) + pkh(20) + payload_len(2) + payload(N)
+  //   NO locktime, NO sequence, NO scriptSig
+  // ============================================================
+
+  // Coin selection: smallest-first
   const sorted = [...utxos].sort((a, b) => a.amount - b.amount);
   const selected = [];
   let total = 0;
@@ -1616,73 +1634,86 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   if (total < amountStocks + feeStocks) throw new Error('Insufficient funds');
 
   const change = total - amountStocks - feeStocks;
-  const outputs = [{ address: destAddr, amount: amountStocks }];
-  if (change > 0) outputs.push({ address: changeAddr, amount: change });
+  const txOutputs = [{ address: destAddr, amount: amountStocks, type: 0x00 }];
+  if (change > 0) txOutputs.push({ address: changeAddr, amount: change, type: 0x00 });
 
   const privKeyBytes = hexToBytes(wallet.privKey);
   const pubKeyBytes = hexToBytes(wallet.pubKey);
+  const genesisBytes = hexToBytes(GENESIS_HASH);
 
-  // Version
-  const version = writeU32LE(1);
-
-  // Build unsigned tx for signing
-  function buildForSigning(inputIdx) {
-    const parts = [version, encodeVarInt(selected.length)];
-    for (let i = 0; i < selected.length; i++) {
-      const u = selected[i];
-      parts.push(hexToBytes(reverseBytes(u.txid))); // prev txid LE
-      parts.push(writeU32LE(u.vout));
-      if (i === inputIdx) {
-        const scriptPubKey = buildP2PKH(changeAddr);
-        parts.push(encodeVarInt(scriptPubKey.length));
-        parts.push(scriptPubKey);
-      } else {
-        parts.push(new Uint8Array([0x00])); // empty script
-      }
-      parts.push(writeU32LE(0xffffffff)); // sequence
-    }
-    parts.push(encodeVarInt(outputs.length));
-    for (const out of outputs) {
-      parts.push(writeU64LE(out.amount));
-      const script = buildP2PKH(out.address);
-      parts.push(encodeVarInt(script.length));
-      parts.push(script);
-    }
-    parts.push(writeU32LE(0)); // locktime
-    parts.push(writeU32LE(1)); // SIGHASH_ALL
-    return concatBytes(...parts);
+  // --- Compute SOST sighash for each input ---
+  // hashPrevouts = SHA256d(all prev_txid || prev_index)
+  const hpParts = [];
+  for (const u of selected) {
+    hpParts.push(hexToBytes(u.txid)); // txid stored as-is (not reversed in SOST)
+    hpParts.push(writeU32LE(u.vout));
   }
+  const hashPrevouts = doubleSha256(concatBytes(...hpParts));
 
-  // Sign each input
+  // hashOutputs = SHA256d(all outputs in SOST format)
+  const hoParts = [];
+  for (const out of txOutputs) {
+    hoParts.push(writeU64LE(out.amount));       // amount i64 LE
+    hoParts.push(new Uint8Array([out.type]));    // type byte
+    hoParts.push(addressToPKH(out.address));     // pkh 20 bytes
+    hoParts.push(new Uint8Array([0x00]));        // payload_len byte (0)
+  }
+  const hashOutputs = doubleSha256(concatBytes(...hoParts));
+
+  // Sign each input with SOST sighash preimage (146 bytes):
+  // version(4) + tx_type(1) + hashPrevouts(32) + prev_txid(32) + prev_index(4)
+  // + spent.amount(8) + spent.type(1) + hashOutputs(32) + genesis_hash(32)
   const signatures = [];
   for (let i = 0; i < selected.length; i++) {
-    const preimage = buildForSigning(i);
+    const u = selected[i];
+    const spentType = u.output_type || u.type || 0x00;
+    const preimage = concatBytes(
+      writeU32LE(1),                             // version = 1
+      new Uint8Array([0x00]),                    // tx_type = 0x00 (standard)
+      hashPrevouts,                              // 32 bytes
+      hexToBytes(u.txid),                        // prev_txid 32 bytes
+      writeU32LE(u.vout),                        // prev_index 4 bytes
+      writeU64LE(u.amount),                      // spent.amount 8 bytes (stocks)
+      new Uint8Array([spentType]),               // spent.type 1 byte
+      hashOutputs,                               // 32 bytes
+      genesisBytes                               // genesis_hash 32 bytes
+    );
+    console.log('[SIGHASH] input', i, 'preimage', bytesToHex(preimage).substring(0, 60) + '...',
+                'spent.amount', u.amount, 'spent.type', spentType);
     const hash = doubleSha256(preimage);
     const sig = secp.sign(hash, wallet.privKey, { lowS: true });
-    signatures.push(sigToDER(sig));
+    // SOST uses 64-byte compact signature (r[32] + s[32]), NOT DER
+    signatures.push(sig.toCompactRawBytes());
   }
 
-  // Build final signed tx
-  const finalParts = [version, encodeVarInt(selected.length)];
+  // --- Serialize final TX in SOST format ---
+  const parts = [];
+  parts.push(writeU32LE(1));                     // version
+  parts.push(new Uint8Array([0x00]));            // tx_type = standard
+  parts.push(encodeVarInt(selected.length));     // input count
+
   for (let i = 0; i < selected.length; i++) {
     const u = selected[i];
-    finalParts.push(hexToBytes(reverseBytes(u.txid)));
-    finalParts.push(writeU32LE(u.vout));
-    const sigScript = buildP2PKHSignScript(signatures[i], pubKeyBytes);
-    finalParts.push(encodeVarInt(sigScript.length));
-    finalParts.push(sigScript);
-    finalParts.push(writeU32LE(0xffffffff));
+    parts.push(hexToBytes(u.txid));              // prev_txid (32 bytes, NOT reversed)
+    parts.push(writeU32LE(u.vout));              // prev_index (4 bytes)
+    parts.push(signatures[i]);                    // signature (64 bytes compact)
+    parts.push(pubKeyBytes);                      // pubkey (33 bytes compressed)
   }
-  finalParts.push(encodeVarInt(outputs.length));
-  for (const out of outputs) {
-    finalParts.push(writeU64LE(out.amount));
-    const script = buildP2PKH(out.address);
-    finalParts.push(encodeVarInt(script.length));
-    finalParts.push(script);
-  }
-  finalParts.push(writeU32LE(0)); // locktime
 
-  return bytesToHex(concatBytes(...finalParts));
+  parts.push(encodeVarInt(txOutputs.length));    // output count
+
+  for (const out of txOutputs) {
+    parts.push(writeU64LE(out.amount));           // amount (8 bytes i64 LE)
+    parts.push(new Uint8Array([out.type]));       // type (1 byte)
+    parts.push(addressToPKH(out.address));        // pubkey_hash (20 bytes)
+    parts.push(new Uint8Array([0x00, 0x00]));    // payload_len (2 bytes u16 LE = 0)
+  }
+
+  // NO locktime in SOST
+
+  const rawTx = bytesToHex(concatBytes(...parts));
+  console.log('[TX] Raw SOST TX:', rawTx.substring(0, 80) + '... (' + rawTx.length/2 + ' bytes)');
+  return rawTx;
 }
 
 // ==================== UI FUNCTIONS ====================
