@@ -168,10 +168,32 @@ Terrain depth pilot — 8 depth sources audited, 3 GEE-accessible piloted at 4 z
 - Terrain reclassified: SURFACE_STRUCTURE, not true depth
 - Canonical: 22.8/40 UNCHANGED. Gating v13. Registry v23.
 
-## Phase 28 Plan — True Depth Data Unlock
-Priority 1: Operator manual data drops — GA gravity, GSWA AEM, USGS Earth MRI
-Priority 2: True subsurface depth features if data becomes available
-Priority 3: Canonical re-evaluation if genuine depth data yields AUC gain
+## Phase 28 Completed (2026-03-28)
+
+QGIS operational layer spec:
+- Tool map: 12 immediate, 5 optional, 3 skip. 5 reproducible workflows.
+- Canonical tool mapping: QGIS strengthens COORDINATES + CERTAINTY, does NOT solve DEPTH.
+- Gating v14. Registry v24. Canonical unchanged 22.8/40.
+
+## Phase 29 Completed (2026-03-28)
+
+Geophysics-ready acquisition + QGIS-assisted depth pilot:
+- Source selection final: 10 sources audited (5 READY_NOW, 3 MANUAL_BUT_WORTH_IT, 2 LOW_PRIORITY)
+- Geophysics ingest layer v1: naming conventions, directory structure, 5-step processing pipeline
+- 11-feature depth-aware family v2 operational at all 4 zones (terrain + landforms + magnetics)
+- QGIS QA checklist: CRS, coverage, nodata, alignment — all PASS for available data
+- Pilot results (Phase 26-27): standalone strong but REDUNDANT with spectral when combined
+- GA TMI magnetics ACTIVE at Kalgoorlie (+0.009 AUC). Gravity, AEM, Earth MRI: still BLOCKED.
+- Infrastructure complete: extraction, alignment, QA, validation all work
+- Canonical: 22.8/40 UNCHANGED — score cannot improve without deposit-scale geophysics data
+
+## Phase 30 Plan — Gravity Data Unlock + Real Depth Validation
+
+Priority 1: Operator downloads GA Bouguer gravity from GADDS portal → `data/manual_drop/gravity/`
+Priority 2: If gravity acquired → integrate, validate at Kalgoorlie, measure real DEPTH improvement
+Priority 3: If gravity not acquired → expand zone coverage with existing features (no new depth sources)
+Priority 4: QGIS continues as QA layer for all new data integrations
+Priority 5: Do NOT inflate canonical score without real geophysics validation
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)

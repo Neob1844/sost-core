@@ -953,7 +953,12 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 
 **CTO statement:** QGIS adds a serious geospatial operational layer to GeaSpirit. It strengthens COORDINATES and CERTAINTY as operational tools. It does NOT solve DEPTH and does NOT replace the Python ML pipeline. Use it as infrastructure for QA and visual target review, not as a source of new claims.
 
-### Phase 29 — (PLANNED)
-- Operator manual data drops: GA gravity, GSWA AEM, USGS Earth MRI
-- True subsurface depth features if data becomes available
-- Canonical re-evaluation if genuine depth data yields AUC gain
+### Phase 29 — Geophysics-Ready Acquisition + QGIS Pilot (2026-03-28)
+- QGIS-assisted QA of all geophysics datasets (CRS, coverage, nodata, alignment)
+- Geophysics ingest layer v1: naming conventions, directory structure, processing pipeline
+- 11-feature depth-aware family operational at all 4 zones (terrain + landforms + magnetics)
+- Pilot results: features strong standalone but REDUNDANT with spectral when combined
+- GA TMI magnetics ACTIVE at Kalgoorlie (+0.009 AUC, Phase 11)
+- Gravity, AEM, Earth MRI: still BLOCKED (manual portal downloads needed)
+- Canonical score: 22.8/40 UNCHANGED — depth progress requires deposit-scale geophysics
+- **Next (Phase 30):** Operator data drop (gravity) → real depth validation
