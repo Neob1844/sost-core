@@ -961,4 +961,30 @@ Both remain SIMULATED_ONLY candidates — NOT promoted to production.
 - GA TMI magnetics ACTIVE at Kalgoorlie (+0.009 AUC, Phase 11)
 - Gravity, AEM, Earth MRI: still BLOCKED (manual portal downloads needed)
 - Canonical score: 22.8/40 UNCHANGED — depth progress requires deposit-scale geophysics
-- **Next (Phase 30):** Operator data drop (gravity) → real depth validation
+
+### Phase 30 — Real Magnetics Depth Integration (2026-03-28)
+- TMI magnetics validated: REAL DATA (GA National, 625x553, 1.05 MB, [-1312, +1738] nT)
+- Bouguer gravity: confirmed STUB (39 bytes, broken)
+- Labels: 205 deposits + 552 background, 738 usable after TMI extraction (97.5% coverage)
+- Magnetics only: AUC 0.654. Terrain only: 0.764. Mag+Terrain: 0.772 (+0.008). All combined: 0.768.
+- Magnetics VALIDATED SELECTIVE: consistent +0.008-0.009 across Phase 11 and Phase 30
+- Canonical: 22.8/40 UNCHANGED
+
+### Phase 31 — Selective Geophysics Fusion + AEM Fallback (2026-03-28)
+
+**Gravity DEFINITIVELY BLOCKED. TMI magnetics confirmed. AEM fallback path defined:**
+
+1. **Gravity investigation:** 3 files audited — 11KB .tif files are HTML error pages saved as GeoTIFF, 39-byte .nc is empty stub. GA GADDS/WCS returns HTML portal page instead of geospatial data. DEFINITIVELY BLOCKED.
+2. **TMI magnetics:** CONFIRMED REAL. 1.05 MB, 625x553 pixels, range [-1312, +1738] nT. VALIDATED SELECTIVE for Kalgoorlie orogenic gold (+0.008 AUC consistent across Phase 11 and Phase 30).
+3. **Selective fusion (Kalgoorlie):** Terrain 0.764, magnetics 0.654, mag+terrain 0.772 (+0.008 best), all combined 0.768 (mild overfitting).
+4. **AEM fallback path:** GSWA/DMIRS portal (free, manual registration required). Kalgoorlie AEM survey data available. AEM measures subsurface conductivity at depth slices — most direct depth proxy from airborne data.
+5. **AEM integration plan:** Register DMIRS → download → QGIS QA → interpolate to grid → extract at labels → build feature family → validate.
+
+**Frontier track record (v13):**
+- v13: gravity DEFINITIVELY BLOCKED, magnetics validated selective, AEM fallback defined
+- Validation rate on closed ideas: 5 validated / 10 closed = 50%
+
+**Gating v15.** Registry v25. Depth unchanged 4.1/10. Canonical unchanged 22.8/40 (57%).
+
+**CTO statement:** Gravity is dead — all 3 files are corrupted HTML or empty stubs. GA web services return portal pages, not data. TMI magnetics is real and validated but adds only +0.008 AUC — modest. The DEPTH dimension (4.1/10) cannot improve without new subsurface data. AEM via GSWA/DMIRS is the most promising remaining path: it directly measures conductivity at depth, has dedicated state survey data, and is not blocked by the same web service issues as GA gravity. Phase 32 requires operator manual registration on DMIRS portal.
+- **Next (Phase 32):** Operator registers on DMIRS, downloads Kalgoorlie AEM data → real depth validation

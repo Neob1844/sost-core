@@ -200,16 +200,27 @@ Real magnetics depth integration -- first deposit-scale geophysics validation:
 - Magnetics confirmed VALIDATED SELECTIVE: consistent +0.008-0.009 across Phase 11 and Phase 30
 - Canonical: 22.8/40 UNCHANGED -- magnetics additive but modest, no score-changing improvement
 
-## Phase 31 Plan -- Gravity Data Unlock + Cross-Zone Magnetics
+## Phase 31 Completed (2026-03-28)
 
-Priority 1: Operator downloads GA Bouguer gravity from GADDS portal (the existing file is a 39-byte stub)
-Priority 2: If gravity acquired: integrate, validate at Kalgoorlie, measure real DEPTH improvement vs magnetics
-Priority 3: If gravity not acquired: test magnetics integration at other zones (Zambia, Chuquicamata) with GEE terrain stack
-Priority 4: QGIS continues as QA layer for all new data integrations
-Priority 5: Do NOT inflate canonical score without real geophysics validation
+Gravity DEFINITIVELY BLOCKED + selective geophysics fusion + AEM fallback path:
+- Gravity files investigated: 3 files (11KB .tif = HTML error pages, 39-byte .nc = stub). ALL CORRUPTED. GA GADDS/WCS returns HTML portal page, not geospatial data.
+- Gravity: DEFINITIVELY BLOCKED — cannot be acquired programmatically
+- TMI magnetics: CONFIRMED REAL (1.05 MB, 625x553, [-1312, +1738] nT). VALIDATED SELECTIVE at Kalgoorlie (+0.008 AUC, consistent with Phase 11 +0.009)
+- Selective fusion (Kalgoorlie): terrain 0.764, magnetics 0.654, mag+terrain 0.772 (+0.008 BEST), all combined 0.768
+- AEM fallback path defined: GSWA/DMIRS portal (free, manual registration), Kalgoorlie AEM surveys available
+- AEM is the most direct subsurface conductivity proxy — best remaining path for DEPTH improvement
+- Canonical: 22.8/40 UNCHANGED — magnetics modest, gravity blocked, AEM not yet acquired
+
+## Phase 32 Plan -- AEM Acquisition + Depth Unlock
+
+Priority 1: Operator registers on DMIRS portal (dmirs.wa.gov.au) and downloads Kalgoorlie AEM survey data
+Priority 2: QGIS QA on downloaded AEM data (CRS, coverage, format, alignment)
+Priority 3: If AEM is real: build AEM feature family (conductivity at depth slices) → validate at Kalgoorlie
+Priority 4: If AEM is also blocked: accept DEPTH 4.1/10 as ceiling, focus on expanding zone coverage with validated families
+Priority 5: Do NOT inflate depth claims based on terrain or magnetics alone
 
 **Expected canonical trajectory:**
 - Current: 22.8/40 (57%)
-- With gravity: ~24/40 (60%)
-- With gravity + AEM: ~27/40 (68%)
+- With AEM: ~25/40 (63%) — if AEM adds real depth discrimination
+- With AEM + gravity (manual): ~27/40 (68%)
 - With all depth data: ~30/40 (75%)
