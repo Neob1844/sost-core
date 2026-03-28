@@ -119,6 +119,21 @@ ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×3
 
 [hr]
 
+[size=14pt][b]Transaction Fees[/b][/size]
+
+[table]
+[tr][td][b]Parameter[/b][/td][td][b]Value[/b][/td][/tr]
+[tr][td]Min fee rate[/td][td]1 stock/byte (0.00000001 SOST/byte)[/td][/tr]
+[tr][td]Typical TX (~250 bytes)[/td][td]~0.00000250 SOST[/td][/tr]
+[tr][td]Fee split[/td][td]50% miner / 25% Gold Vault / 25% PoPC Pool[/td][/tr]
+[tr][td]Fee market[/td][td]RBF (Replace-by-Fee) + CPFP (Child-Pays-for-Parent)[/td][/tr]
+[tr][td]Arithmetic[/td][td]Rational integer (no floating-point in consensus)[/td][/tr]
+[/table]
+
+Fees follow the same constitutional 50/25/25 split as block subsidies. Even after emission ends (~year 2228), fees continue accumulating gold reserves in perpetuity.
+
+[hr]
+
 [size=14pt][b]How to Mine[/b][/size]
 
 [b]Requirements:[/b] Linux x86_64, 8 GB RAM minimum, CPU-only (GPU provides no advantage).

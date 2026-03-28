@@ -202,6 +202,18 @@ These addresses receive coinbase rewards at every block. Hardcoded at genesis, i
 
 Gold Funding Vault and PoPC Pool addresses are defined in `include/sost/params.h`.
 
+### Transaction Fees
+
+| Parameter | Value |
+|-----------|-------|
+| Min relay fee | 1 stock/byte (0.00000001 SOST/byte) |
+| Typical TX (~250 bytes) | ~0.00000250 SOST |
+| Fee split | 50% miner / 25% Gold Vault / 25% PoPC Pool |
+| Fee market | RBF (Replace-by-Fee) + CPFP (Child-Pays-for-Parent) |
+| Arithmetic | Rational integer (no floating-point in consensus) |
+
+Fees follow the same constitutional 50/25/25 split as block subsidies. After emission ends, fees continue accumulating gold reserves in perpetuity.
+
 ## Native Financial Primitives
 
 SOST does not support smart contracts. Instead, purpose-built transaction types provide financial primitives directly in the consensus layer — deterministic, auditable, and not exploitable through contract bugs.
