@@ -18,7 +18,7 @@
 
 ## GeaSpirit Status
 
-- **Current Phase:** Phase 28 — QGIS Operational Layer (tool map, workflows, canonical tool mapping)
+- **Current Phase:** Phase 29 — Geophysics-Ready Acquisition + QGIS Pilot (source selection, ingest layer v1, depth-aware family v2, QGIS QA)
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
 - **Zones validated:** 3/6 (fusion works), 1 negative, 2 insufficient
 - **Canonical Score:** 22.8/40 (57%) — FROZEN v4, UNCHANGED
@@ -43,6 +43,7 @@
 - Phase 26: Terrain depth pilot. 8 depth sources audited, 3 GEE-accessible. Peru depth-only 0.907 (+0.057). Zambia neutral. GEE terrain operational at 4 zones. Canonical unchanged. Gating v12. Registry v22.
 - Phase 27: 9-feature subsurface-aware family via GEE. Standalone strong (Peru 0.902, Kalgoorlie 0.859) but REDUNDANT with S2. Terrain reclassified SURFACE_STRUCTURE. Canonical unchanged. Gating v13. Registry v23.
 - Phase 28: QGIS operational layer spec. Tool map (12 immediate, 5 optional, 3 skip), 5 reproducible workflows, canonical tool mapping. QGIS strengthens COORDINATES + CERTAINTY, does NOT solve DEPTH or replace ML. Canonical unchanged. Gating v14. Registry v24.
+- Phase 29: Geophysics-ready acquisition + QGIS pilot. Source selection final (10 sources audited). Geophysics ingest layer v1 (naming, directory, pipeline). 11-feature depth-aware family v2 operational at 4 zones. Pilot: standalone strong but REDUNDANT with spectral. Infrastructure ready, waiting for gravity/AEM/Earth MRI data. Canonical unchanged 22.8/40.
 
 ## Materials Engine Status
 
