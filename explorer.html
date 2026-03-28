@@ -935,6 +935,17 @@ function showCXInfo(){
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadMempool();}finally{_loading=false;}}
 document.getElementById('rpcUrl').value=RPC;refresh();setInterval(refresh,10000);
 window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSparkline();}});
+// Auto-search from URL parameter ?search=TXID
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var q=p.get('search')||p.get('tx')||p.get('q');
+  if(q){
+    setTimeout(function(){
+      document.getElementById('searchIn').value=q;
+      doSearch();
+    },2000); // wait for first RPC connection
+  }
+})();
 </script>
 </body>
 </html>
