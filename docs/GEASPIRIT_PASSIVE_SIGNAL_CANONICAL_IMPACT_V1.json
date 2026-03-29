@@ -1,0 +1,139 @@
+{
+  "document": "GEASPIRIT_PASSIVE_SIGNAL_CANONICAL_IMPACT_V1",
+  "date": "2026-03-29",
+  "version": "V1",
+  "current_canonical": {
+    "total": "22.8/40",
+    "percent": "57%",
+    "mineral": 4.0,
+    "depth": 4.1,
+    "coordinates": 7.0,
+    "certainty": 7.7
+  },
+  "hypothesis_impacts": [
+    {
+      "hypothesis": "post_rain_differential_drying",
+      "dimension": "MINERAL",
+      "estimated_impact_low": 0.5,
+      "estimated_impact_high": 1.0,
+      "confidence": "LOW",
+      "data_access": "GEE accessible",
+      "data_source": "Sentinel-2 L2A + GPM",
+      "notes": "Could reveal alteration zones via differential moisture retention, but signal may be subtle relative to spectral noise"
+    },
+    {
+      "hypothesis": "nocturnal_thermal_persistence",
+      "dimension": "MINERAL",
+      "estimated_impact_low": 0.3,
+      "estimated_impact_high": 0.5,
+      "confidence": "MEDIUM",
+      "data_access": "GEE accessible",
+      "data_source": "Landsat Collection 2 thermal band (nighttime passes)",
+      "notes": "Partially validated via thermal_20yr family. Incremental improvement expected, not transformative."
+    },
+    {
+      "hypothesis": "seasonal_forcing_response",
+      "dimension": "MINERAL",
+      "estimated_impact_low": 0.2,
+      "estimated_impact_high": 0.5,
+      "confidence": "LOW",
+      "data_access": "GEE accessible",
+      "data_source": "Landsat + MODIS 8-day LST",
+      "notes": "Highly speculative. Many confounders including vegetation phenology, precipitation patterns, land cover change."
+    },
+    {
+      "hypothesis": "passive_magnetotelluric",
+      "dimension": "DEPTH",
+      "estimated_impact_low": 1.0,
+      "estimated_impact_high": 3.0,
+      "confidence": "HIGH (if accessible)",
+      "data_access": "BLOCKED",
+      "data_source": null,
+      "notes": "Would be transformative for depth dimension. No free programmatic access exists."
+    },
+    {
+      "hypothesis": "aem_conductivity",
+      "dimension": "DEPTH_AND_MINERAL",
+      "estimated_impact_low": 1.0,
+      "estimated_impact_high": 2.0,
+      "confidence": "HIGH (if accessible)",
+      "data_access": "BLOCKED_BY_PORTAL",
+      "data_source": "GSWA/DMIRS AEM surveys",
+      "notes": "Same as existing AEM blocker (Phase 32). Requires manual portal registration."
+    },
+    {
+      "hypothesis": "gravity_gradients",
+      "dimension": "DEPTH",
+      "estimated_impact_low": 0.5,
+      "estimated_impact_high": 1.0,
+      "confidence": "MEDIUM",
+      "data_access": "PARTIAL (WGM2012 coarse)",
+      "data_source": "WGM2012 (~10km resolution)",
+      "notes": "Regional only at available resolution. Not deposit-scale. GA Bouguer BLOCKED_BY_PORTAL."
+    },
+    {
+      "hypothesis": "sar_coherence",
+      "dimension": "COORDINATES",
+      "estimated_impact_low": 0.1,
+      "estimated_impact_high": 0.3,
+      "confidence": "LOW",
+      "data_access": "GEE accessible",
+      "data_source": "Sentinel-1 InSAR coherence",
+      "notes": "Indirect link to mineralization. Probably insufficient to move canonical needle."
+    },
+    {
+      "hypothesis": "non_testable_ideas",
+      "dimension": "NONE",
+      "estimated_impact_low": 0.0,
+      "estimated_impact_high": 0.0,
+      "confidence": "N/A",
+      "data_access": "N/A",
+      "data_source": null,
+      "notes": "By definition, no impact on production. Documented for completeness only."
+    }
+  ],
+  "best_case_canonical": {
+    "mineral": "5.0-5.5",
+    "depth": "4.1",
+    "coordinates": "7.1",
+    "certainty": "8.0",
+    "total_low": "23.2/40",
+    "total_high": "24.7/40",
+    "percent_low": "58%",
+    "percent_high": "62%",
+    "notes": "Assumes all testable GEE hypotheses succeed. Depth unchanged because all depth sources BLOCKED."
+  },
+  "realistic_canonical": {
+    "mineral": "4.0-4.5",
+    "depth": "4.1",
+    "coordinates": "7.0",
+    "certainty": "7.7",
+    "total_low": "22.8/40",
+    "total_high": "23.3/40",
+    "percent_low": "57%",
+    "percent_high": "58%",
+    "basis": "Historical empirical win rate ~40% of hypotheses. Phases 14, 25, 27 all showed neutral-to-negative results for frontier hypotheses."
+  },
+  "bottleneck": {
+    "dimension": "DEPTH",
+    "current_score": 4.1,
+    "status": "UNCHANGED",
+    "reason": "All deposit-scale depth sources are BLOCKED_BY_PORTAL or BLOCKED_BY_ACCESS. GA Bouguer gravity returns HTML portal page. GSWA/DMIRS AEM returns 403 Forbidden. USGS Earth MRI requires manual ScienceBase download. EMAG2v3 and WGM2012 are too coarse (4-10km) for deposit-scale discrimination.",
+    "unlock_path": "Human operator manual download from portals: GA GADDS (gravity), DMIRS portal (AEM), ScienceBase (Earth MRI). Infrastructure is 100% ready — only data access is missing."
+  },
+  "promotion_criteria": {
+    "threshold_auc_delta": 0.005,
+    "min_zones": 2,
+    "requirements": [
+      "Real AUC delta > +0.005 (above noise threshold)",
+      "Validated at 2+ independent zones",
+      "Physical mechanism documented (not coincidence)",
+      "No data leakage confirmed (coverage parity check)"
+    ]
+  },
+  "canonical_status": {
+    "score": "22.8/40",
+    "status": "UNCHANGED",
+    "note": "No production changes in Phase 29. Frontier research only. Canonical methodology frozen at v4."
+  }
+}

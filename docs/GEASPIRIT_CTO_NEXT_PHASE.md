@@ -263,3 +263,34 @@ Fail-fast access guard + operator handoff + autonomous expansion path:
 - With AEM (manual): ~25/40 (63%) — if AEM adds real depth discrimination
 - With AEM + gravity (manual): ~27/40 (68%)
 - With all depth data: ~30/40 (75%)
+
+## Phase 34: Autonomous Selective Scaling (2026-03-29)
+
+**Classification:** Production planning + Frontier consolidation
+
+- 6 new AOIs identified for expansion (Tennant Creek, Mt Isa, Carlin, DRC Katanga, Lihir, Escondida)
+- 11 active families reassessed: satellite, neighborhood, hydrology, geology confirmed as strongest
+- 15 selective stacks defined with rejection criteria
+- 6 new regime-aware gating rules (R18-R21)
+- QGIS QA workflow formalized for new AOI validation
+- All frontier knowledge consolidated in private research repository
+- 10 errors/inviabilities documented
+
+**Canonical: 22.8/40 UNCHANGED.** Depth frozen until real geophysics data.
+**Recommendation:** Execute expansion starting with Tennant Creek (Australian, magnetics, good labels).
+
+## Phase 29: Passive Earth Signal Frontier (2026-03-29)
+
+**Classification:** Frontier research — NOT production
+
+New research line translating intuitive geological concepts into physically testable hypotheses:
+- 18 hypotheses documented (8 physically plausible, 6 speculative but testable, 4 non-testable at this moment)
+- 3 testable hypotheses prioritized: post-rain differential drying, nocturnal thermal persistence, seasonal forcing response
+- All 3 use GEE (no new data access needed)
+- 5 non-testable ideas documented and explicitly separated from production
+- Free data access map: 25 sources inventoried (19 accessible, 3 partially accessible, 3 blocked)
+- Geological area search engine: prototype for coordinate-to-geological-context pipeline
+- Frontier registry updated to v10 (38 families total)
+
+**Canonical impact estimate:** Realistic +0.0 to +0.5. Bottleneck remains DEPTH (4.1/10) — all depth sources BLOCKED.
+**Canonical score: 22.8/40 UNCHANGED.**
