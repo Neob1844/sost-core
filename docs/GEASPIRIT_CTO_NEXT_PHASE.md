@@ -294,3 +294,18 @@ New research line translating intuitive geological concepts into physically test
 
 **Canonical impact estimate:** Realistic +0.0 to +0.5. Bottleneck remains DEPTH (4.1/10) — all depth sources BLOCKED.
 **Canonical score: 22.8/40 UNCHANGED.**
+
+## Phase 35: Tennant Creek Generalization + Public/Private Hygiene (2026-03-29)
+
+**Classification:** Production validation + Repository hygiene
+
+- Tennant Creek activated as AOI: 91 labels (IOCG + orogenic Au), semi-arid
+- 12 selective stacks planned (TC-S1 through TC-S12)
+- Magnetics generalization test: KEY question — does GA TMI help beyond Kalgoorlie?
+- 3 new gating rules (R22-R24): IOCG→magnetics, small samples→spatial CV, EMIT→skip for orogenic
+- Public/private hygiene: 11 frontier research files moved from public to private repo
+- All blocked sources remain frozen (gravity, AEM, Earth MRI)
+- Gating engine updated to v11 (24 rules)
+
+**Canonical: 22.8/40 UNCHANGED.** Tennant Creek is planning + data readiness, not yet tested.
+**Recommendation:** Execute GA TMI download for Tennant Creek, run S2 baseline, then selective stacks.
