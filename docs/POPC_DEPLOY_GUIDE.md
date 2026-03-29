@@ -1,7 +1,7 @@
 # PoPC Deployment Guide
 
 **Date:** 2026-03-29
-**Status:** Phase 2 Complete — Registry + RPC + TX Builders
+**Status:** Phase 3 Complete — Registry + RPC + TX Builders + Auto-Distribution
 
 ## Architecture
 
@@ -25,6 +25,8 @@ PoPC is an **application-layer** system built on top of the existing consensus-l
 | Application | RPC: popc_release | IMPLEMENTED |
 | Application | RPC: popc_slash | IMPLEMENTED |
 | Application | Etherscan checker script | READY (scripts/popc_etherscan_checker.py) |
+| Application | Auto-distribution (Option B) | READY (scripts/popc_auto_distribute.sh) |
+| Application | Cron installer | READY (scripts/install_popc_cron.sh) |
 | Application | RPC commands | NEXT PHASE |
 | Application | Etherscan checker daemon | READY (scripts/popc_etherscan_checker.py) |
 
