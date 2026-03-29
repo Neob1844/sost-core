@@ -1,7 +1,7 @@
 # PoPC Deployment Guide
 
 **Date:** 2026-03-29
-**Status:** Phase 1 Complete — Application-Layer Registry
+**Status:** Phase 2 Complete — Registry + RPC + TX Builders
 
 ## Architecture
 
@@ -18,6 +18,13 @@ PoPC is an **application-layer** system built on top of the existing consensus-l
 | Application | Reputation system (0/1/3/5 stars) | IMPLEMENTED |
 | Application | Audit entropy (ConvergenceX-derived) | IMPLEMENTED |
 | Application | Save/Load (JSON persistence) | IMPLEMENTED |
+| Application | TX Builders (release, reward, slash) | IMPLEMENTED |
+| Application | RPC: popc_register | IMPLEMENTED |
+| Application | RPC: popc_status | IMPLEMENTED |
+| Application | RPC: popc_check | IMPLEMENTED (manual bridge) |
+| Application | RPC: popc_release | IMPLEMENTED |
+| Application | RPC: popc_slash | IMPLEMENTED |
+| Application | Etherscan checker script | READY (scripts/popc_etherscan_checker.py) |
 | Application | RPC commands | NEXT PHASE |
 | Application | Etherscan checker daemon | READY (scripts/popc_etherscan_checker.py) |
 
@@ -34,8 +41,57 @@ make -j$(nproc)
 
 ```bash
 cd build
-ctest --output-on-failure    # All 23 suites (22 existing + 1 new PoPC)
-./test-popc                  # 31 individual PoPC tests
+ctest --output-on-failure    # All 24 suites (22 existing + 2 PoPC)
+./test-popc                  # 31 individual PoPC registry tests
+./test-popc-tx               # 12 individual PoPC TX builder tests
+```
+
+## RPC Commands
+
+### popc_register — Register a PoPC commitment
+```bash
+curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
+  "method": "popc_register",
+  "params": ["sost1...", "0xETH...", "XAUT", "31103", "6"],
+  "id": 1
+}'
+# Returns: commitment_id, required_bond, expected_reward
+```
+
+### popc_status — View all commitments and pool balance
+```bash
+curl -s -X POST http://127.0.0.1:18232 -d '{"method":"popc_status","id":1}'
+# Returns: active_count, total_bonded, pool_balance, commitments list
+```
+
+### popc_check — Verify gold custody (manual bridge to Python checker)
+```bash
+curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
+  "method": "popc_check",
+  "params": ["0xETH..."],
+  "id": 1
+}'
+# Returns: instructions to run scripts/popc_etherscan_checker.py
+```
+
+### popc_release — Complete commitment and release bond + reward
+```bash
+curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
+  "method": "popc_release",
+  "params": ["COMMITMENT_ID_HEX"],
+  "id": 1
+}'
+# Returns: reward amount, completion confirmation
+```
+
+### popc_slash — Slash a commitment for custody failure
+```bash
+curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
+  "method": "popc_slash",
+  "params": ["COMMITMENT_ID_HEX", "XAUT balance dropped to 0"],
+  "id": 1
+}'
+# Returns: slash confirmation, amount confiscated
 ```
 
 ## How to Deploy to VPS
