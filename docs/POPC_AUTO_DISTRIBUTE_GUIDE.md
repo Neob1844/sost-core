@@ -34,14 +34,27 @@ chown root:root /root/.sost_auto_pass
 
 This file contains ONLY the encryption password (not the private key). To get the actual private key, an attacker needs: this file + the .enc file + openssl = three separate things.
 
-### Step 2: Ensure the encrypted key exists
+### Step 2: Ensure the encrypted key exists on the VPS
+
+The script searches for `popc_pool.json.enc` in these locations (first found wins):
+1. `/opt/sost/secrets/popc_pool.json.enc` (VPS production — recommended)
+2. `/root/SOST/secrets/popc_pool.json.enc`
+3. `$HOME/SOST/secrets/popc_pool.json.enc`
+4. `/home/sost/SOST/secrets/popc_pool.json.enc`
 
 ```bash
-# If not already created:
-mkdir -p ~/SOST/secrets
-openssl aes-256-cbc -pbkdf2 -in popc_pool_key.json -out ~/SOST/secrets/popc_pool.json.enc
-# Then DELETE the original: shred -fuz popc_pool_key.json
+# On the VPS — create the directory:
+mkdir -p /opt/sost/secrets && chmod 700 /opt/sost/secrets
+
+# Copy the encrypted key from your local machine:
+scp ~/SOST/secrets/popc_pool.json.enc root@YOUR_VPS_IP:/opt/sost/secrets/
+
+# Or create fresh on the VPS:
+openssl aes-256-cbc -pbkdf2 -in popc_pool_key.json -out /opt/sost/secrets/popc_pool.json.enc
+shred -fuz popc_pool_key.json   # DELETE the unencrypted original immediately
 ```
+
+The `.enc` file is safe to have on the VPS — without the password it's useless.
 
 ### Step 3: Install the cron job
 
