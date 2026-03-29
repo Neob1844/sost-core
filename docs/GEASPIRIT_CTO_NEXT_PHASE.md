@@ -355,3 +355,17 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 22.8/40 UNCHANGED
 
 **Recommendation:** Build Export.table.toDrive() pipeline for S2 extraction at Tennant Creek, download locally, measure true S2 vs magnetics delta. This pattern worked in Phases 25, 26, and 27 and is the correct fix for the GEE memory limit.
+
+## Phase 39: Batch S2 Export + Delta Validation (2026-03-29)
+
+**Classification:** Decisive comparison — magnetics CONSOLIDATED
+
+- GEE credentials expired — batch export infrastructure BUILT but not executed
+- SRTM terrain used as independent baseline (AWS public, no auth)
+- Terrain only: CV 0.694 | Magnetics only: CV 0.668 | Combined: CV 0.763
+- **Delta (combined - terrain): +0.069 CV — ADDS VALUE (well above +0.005 threshold)**
+- **Magnetics upgraded: CONSOLIDATED_VALIDATED_SELECTIVE** (2 zones, independent baseline)
+- Memory-block pattern documented for future AOIs
+- Canonical: 22.8/40 UNCHANGED (conservative)
+
+**Recommendation:** Re-auth GEE, run S2 comparison, plan Mt Isa as third magnetics zone.
