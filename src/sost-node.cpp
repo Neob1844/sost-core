@@ -42,6 +42,7 @@
 #include "sost/checkpoints.h"
 #include "sost/popc.h"
 #include "sost/popc_tx_builder.h"
+#include "sost/popc_model_b.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -89,6 +90,8 @@ static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
 static PoPCRegistry g_popc_registry;
 static std::string  g_popc_registry_path = "popc_registry.json";
+static EscrowRegistry g_escrow_registry;
+static std::string    g_escrow_registry_path = "escrow_registry.json";
 static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT profile index
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
@@ -1407,6 +1410,34 @@ static int64_t popc_duration_to_blocks(uint16_t months) {
     return (int64_t)144 * 30 * (int64_t)months;
 }
 
+// load_popc_pricing
+// Reads config/popc_pricing.json and returns sost_per_usd and gold_price_usd_per_oz.
+// Falls back to defaults (sost_per_usd=1.0, gold_price=3000.0) if file is missing or malformed.
+static void load_popc_pricing(double& sost_per_usd, double& gold_price_usd) {
+    sost_per_usd  = 1.0;
+    gold_price_usd = 3000.0;
+
+    std::ifstream f("config/popc_pricing.json");
+    if (!f.is_open()) return;
+
+    std::string content((std::istreambuf_iterator<char>(f)),
+                         std::istreambuf_iterator<char>());
+
+    // Extract sost_per_usd
+    std::string sv = json_get_string(content, "sost_per_usd");
+    if (!sv.empty()) {
+        double v = std::strtod(sv.c_str(), nullptr);
+        if (v > 0.0) sost_per_usd = v;
+    }
+
+    // Extract gold_price_usd_per_oz
+    std::string gv = json_get_string(content, "gold_price_usd_per_oz");
+    if (!gv.empty()) {
+        double v = std::strtod(gv.c_str(), nullptr);
+        if (v > 0.0) gold_price_usd = v;
+    }
+}
+
 // handle_popc_register
 // Params: [sost_address, eth_address, gold_token, gold_amount_mg, commitment_months]
 static std::string handle_popc_register(const std::string& id, const std::vector<std::string>& p) {
@@ -1452,35 +1483,62 @@ static std::string handle_popc_register(const std::string& id, const std::vector
         current_height = g_chain_height;
     }
 
-    // Bond sizing: use a conservative default ratio_bps when live price is unavailable.
-    // ratio_bps = (sost_price / gold_oz_price) * 10000
-    // Default: treat ratio_bps = 100 (1%) — conservative bond (20%)
-    uint16_t bond_pct_bps = compute_bond_pct(100);
+    // Load pricing from config/popc_pricing.json (with fallback defaults)
+    double sost_per_usd   = 1.0;
+    double gold_price_usd = 3000.0;
+    load_popc_pricing(sost_per_usd, gold_price_usd);
 
-    // Bond amount = gold_amount_mg * bond_pct_bps / 10000 (in stocks — placeholder calc)
-    // For Phase 1, bond is informational — operator verifies before releasing funds.
-    // Real bond amount requires live price oracle (future Phase 2).
-    // Placeholder: 1 SOST per gram of gold (1000 mg), scaled by bond_pct_bps.
-    int64_t gold_amount_grams_x100 = gold_amount_mg / 10; // centigrams
-    int64_t bond_sost_stocks = (gold_amount_grams_x100 * (int64_t)100000000 / 100)
-                               * (int64_t)bond_pct_bps / 10000;
-    if (bond_sost_stocks <= 0) bond_sost_stocks = 1; // minimum
+    // --- Bond calculation (all integer arithmetic, no floats in final values) ---
+    // Prices in micro-USD to preserve precision
+    int64_t gold_price_micro = (int64_t)(gold_price_usd * 1000000.0); // e.g. 3000 * 1M = 3_000_000_000
+    int64_t sost_price_micro = (int64_t)(sost_per_usd  * 1000000.0); // e.g. 1 * 1M = 1_000_000
+    if (gold_price_micro <= 0) gold_price_micro = 3000000000LL;
+    if (sost_price_micro <= 0) sost_price_micro = 1000000LL;
 
+    // Gold value in micro-USD: (gold_mg * gold_price_per_oz_micro) / 31103
+    // 1 troy oz = 31.103 g = 31103 mg
+    int64_t gold_value_micro = (gold_amount_mg * gold_price_micro) / 31103;
+
+    // Bond ratio for compute_bond_pct: (sost_price / gold_price) * 10000
+    uint64_t ratio_bps = (uint64_t)((sost_price_micro * (int64_t)10000) / gold_price_micro);
+
+    uint16_t bond_pct_bps = compute_bond_pct(ratio_bps);
+
+    // Bond in micro-USD
+    int64_t bond_micro = (gold_value_micro * (int64_t)bond_pct_bps) / 10000;
+
+    // Bond in stocks: (bond_micro / sost_price_micro) * STOCKS_PER_SOST
+    int64_t bond_sost_stocks = (bond_micro * (int64_t)STOCKS_PER_SOST) / sost_price_micro;
+    if (bond_sost_stocks <= 0) bond_sost_stocks = 1; // minimum 1 stock
+
+    // --- Reward calculation ---
+    int64_t reward_stocks = calculate_reward_stocks(bond_sost_stocks, reward_pct_bps);
+    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+    int64_t total_return  = bond_sost_stocks + net_reward;
+
+    // Gold value in USD (formatted as string, 2 decimal places)
+    // gold_value_micro / 1_000_000 = USD
+    char gold_usd_buf[64];
+    snprintf(gold_usd_buf, sizeof(gold_usd_buf), "%lld.%02lld",
+             (long long)(gold_value_micro / 1000000LL),
+             (long long)((gold_value_micro % 1000000LL) / 10000LL));
+
+    // Store live prices in commitment
     PoPCCommitment c{};
-    c.commitment_id       = commitment_id;
-    c.user_pkh            = user_pkh;
-    c.eth_wallet          = eth_addr;
-    c.gold_token          = gold_token;
-    c.gold_amount_mg      = gold_amount_mg;
-    c.bond_sost_stocks    = bond_sost_stocks;
-    c.duration_months     = commitment_months;
-    c.start_height        = current_height;
-    c.end_height          = current_height + popc_duration_to_blocks(commitment_months);
-    c.bond_pct_bps        = bond_pct_bps;
-    c.reward_pct_bps      = reward_pct_bps;
-    c.status              = PoPCStatus::ACTIVE;
-    c.sost_price_usd_micro = 0; // live price not available in Phase 1
-    c.gold_price_usd_micro = 0;
+    c.commitment_id        = commitment_id;
+    c.user_pkh             = user_pkh;
+    c.eth_wallet           = eth_addr;
+    c.gold_token           = gold_token;
+    c.gold_amount_mg       = gold_amount_mg;
+    c.bond_sost_stocks     = bond_sost_stocks;
+    c.duration_months      = commitment_months;
+    c.start_height         = current_height;
+    c.end_height           = current_height + popc_duration_to_blocks(commitment_months);
+    c.bond_pct_bps         = bond_pct_bps;
+    c.reward_pct_bps       = reward_pct_bps;
+    c.status               = PoPCStatus::ACTIVE;
+    c.sost_price_usd_micro = sost_price_micro;
+    c.gold_price_usd_micro = gold_price_micro;
 
     std::string reg_err;
     if (!g_popc_registry.register_commitment(c, &reg_err))
@@ -1489,8 +1547,6 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     // Save registry to disk
     std::string save_err;
     g_popc_registry.save(g_popc_registry_path, &save_err); // best-effort
-
-    int64_t expected_reward = calculate_reward_stocks(bond_sost_stocks, reward_pct_bps);
 
     // Format commitment_id as hex
     char cid_hex[65]; cid_hex[64] = 0;
@@ -1503,18 +1559,17 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     std::ostringstream s;
     s << "{"
       << "\"commitment_id\":\"" << cid_hex << "\""
-      << ",\"sost_address\":\"" << json_escape(sost_addr) << "\""
-      << ",\"eth_address\":\"" << json_escape(eth_addr) << "\""
-      << ",\"gold_token\":\"" << json_escape(gold_token) << "\""
-      << ",\"gold_amount_mg\":" << gold_amount_mg
-      << ",\"duration_months\":" << (int)commitment_months
-      << ",\"start_height\":" << current_height
-      << ",\"end_height\":" << c.end_height
-      << ",\"required_bond\":\"" << format_sost(bond_sost_stocks) << "\""
-      << ",\"bond_pct_bps\":" << (int)bond_pct_bps
-      << ",\"reward_pct_bps\":" << (int)reward_pct_bps
-      << ",\"expected_reward\":\"" << format_sost(expected_reward) << "\""
-      << ",\"status\":\"ACTIVE\""
+      << ",\"declared_gold_mg\":" << gold_amount_mg
+      << ",\"gold_value_usd\":\"" << gold_usd_buf << "\""
+      << ",\"bond_percentage\":" << (int)bond_pct_bps
+      << ",\"bond_required_sost\":\"" << format_sost(bond_sost_stocks) << "\""
+      << ",\"reward_percentage\":" << (int)reward_pct_bps
+      << ",\"expected_reward_sost\":\"" << format_sost(net_reward) << "\""
+      << ",\"total_return_sost\":\"" << format_sost(total_return) << "\""
+      << ",\"commitment_blocks\":" << popc_duration_to_blocks(commitment_months)
+      << ",\"commitment_months\":" << (int)commitment_months
+      << ",\"expires_at_height\":" << c.end_height
+      << ",\"message\":\"Bond required before PoPC Pool releases reward. Operator verifies gold custody before release.\""
       << "}";
     return rpc_result(id, s.str());
 }
@@ -1698,6 +1753,237 @@ static std::string handle_popc_slash(const std::string& id, const std::vector<st
     return rpc_result(id, s.str());
 }
 
+// =============================================================================
+// Model B (Escrow) RPC Handlers
+// =============================================================================
+
+// handle_escrow_register
+// Params: [sost_address, eth_escrow_address, gold_token, gold_amount_mg, commitment_months]
+// Calculates immediate reward and registers the escrow commitment.
+static std::string handle_escrow_register(const std::string& id, const std::vector<std::string>& p) {
+    if (p.size() < 5) return rpc_error(id, -1, "usage: escrow_register <sost_address> <eth_escrow_address> <gold_token> <gold_amount_mg> <commitment_months>");
+
+    const std::string& sost_addr        = p[0];
+    const std::string& eth_escrow_addr  = p[1];
+    const std::string& gold_token       = p[2];
+    int64_t gold_amount_mg              = (int64_t)std::stoll(p[3]);
+    uint16_t commitment_months          = (uint16_t)std::stoul(p[4]);
+
+    // Validate SOST address
+    PubKeyHash user_pkh{};
+    if (!address_decode(sost_addr, user_pkh))
+        return rpc_error(id, -1, "invalid sost_address");
+
+    // Validate gold token
+    if (gold_token != "XAUT" && gold_token != "PAXG")
+        return rpc_error(id, -1, "gold_token must be 'XAUT' or 'PAXG'");
+
+    // Validate amount
+    if (gold_amount_mg <= 0)
+        return rpc_error(id, -1, "gold_amount_mg must be > 0");
+
+    // Validate duration
+    uint16_t reward_pct_bps = compute_reward_pct(commitment_months);
+    if (reward_pct_bps == 0)
+        return rpc_error(id, -1, "commitment_months must be 1, 3, 6, 9, or 12");
+
+    // Compute escrow_id = SHA256(eth_escrow_address || sost_address || gold_token || commitment_months)
+    Hash256 escrow_id{};
+    {
+        std::string canon = eth_escrow_addr + sost_addr + gold_token + std::to_string((int)commitment_months);
+        unsigned int digest_len = 32;
+        EVP_Digest(canon.data(), canon.size(),
+                   escrow_id.data(), &digest_len,
+                   EVP_sha256(), nullptr);
+    }
+
+    int64_t current_height;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        current_height = g_chain_height;
+    }
+
+    // Load pricing
+    double sost_per_usd   = 1.0;
+    double gold_price_usd = 3000.0;
+    load_popc_pricing(sost_per_usd, gold_price_usd);
+
+    // Gold value in micro-USD
+    int64_t gold_price_micro = (int64_t)(gold_price_usd * 1000000.0);
+    int64_t sost_price_micro = (int64_t)(sost_per_usd  * 1000000.0);
+    if (gold_price_micro <= 0) gold_price_micro = 3000000000LL;
+    if (sost_price_micro <= 0) sost_price_micro = 1000000LL;
+
+    int64_t gold_value_micro = (gold_amount_mg * gold_price_micro) / 31103;
+
+    // Gold value in stocks (for reward calculation)
+    int64_t gold_value_stocks = (gold_value_micro * (int64_t)STOCKS_PER_SOST) / sost_price_micro;
+
+    // Calculate reward (paid immediately on Model B)
+    int64_t reward_stocks = calculate_escrow_reward(gold_value_stocks, commitment_months);
+    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+
+    // Gold value USD formatted
+    char gold_usd_buf[64];
+    snprintf(gold_usd_buf, sizeof(gold_usd_buf), "%lld.%02lld",
+             (long long)(gold_value_micro / 1000000LL),
+             (long long)((gold_value_micro % 1000000LL) / 10000LL));
+
+    EscrowCommitment e{};
+    e.escrow_id          = escrow_id;
+    e.user_pkh           = user_pkh;
+    e.eth_escrow_address = eth_escrow_addr;
+    e.gold_token         = gold_token;
+    e.gold_amount_mg     = gold_amount_mg;
+    e.reward_stocks      = net_reward;
+    e.duration_months    = commitment_months;
+    e.start_height       = current_height;
+    e.end_height         = current_height + popc_duration_to_blocks(commitment_months);
+    e.status             = EscrowStatus::ACTIVE;
+
+    std::string reg_err;
+    if (!g_escrow_registry.register_escrow(e, &reg_err))
+        return rpc_error(id, -1, "register_escrow failed: " + reg_err);
+
+    g_escrow_registry.save(g_escrow_registry_path, nullptr); // best-effort
+
+    // Format escrow_id as hex
+    char eid_hex[65]; eid_hex[64] = 0;
+    static const char HEX_E[] = "0123456789abcdef";
+    for (int i = 0; i < 32; ++i) {
+        eid_hex[i*2]   = HEX_E[escrow_id[i] >> 4];
+        eid_hex[i*2+1] = HEX_E[escrow_id[i] & 0x0F];
+    }
+
+    std::ostringstream s;
+    s << "{"
+      << "\"escrow_id\":\"" << eid_hex << "\""
+      << ",\"sost_address\":\"" << json_escape(sost_addr) << "\""
+      << ",\"eth_escrow_address\":\"" << json_escape(eth_escrow_addr) << "\""
+      << ",\"gold_token\":\"" << json_escape(gold_token) << "\""
+      << ",\"gold_amount_mg\":" << gold_amount_mg
+      << ",\"gold_value_usd\":\"" << gold_usd_buf << "\""
+      << ",\"reward_pct_bps\":" << (int)reward_pct_bps
+      << ",\"immediate_reward_sost\":\"" << format_sost(net_reward) << "\""
+      << ",\"commitment_months\":" << (int)commitment_months
+      << ",\"commitment_blocks\":" << popc_duration_to_blocks(commitment_months)
+      << ",\"start_height\":" << current_height
+      << ",\"end_height\":" << e.end_height
+      << ",\"status\":\"ACTIVE\""
+      << ",\"message\":\"Reward paid immediately. Gold held in Ethereum escrow contract until end_height.\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_escrow_status
+// Returns list of active escrow commitments and summary.
+static std::string handle_escrow_status(const std::string& id, const std::vector<std::string>&) {
+    size_t active_count = g_escrow_registry.active_count();
+    auto active = g_escrow_registry.list_active();
+
+    std::ostringstream arr;
+    arr << "[";
+    for (size_t i = 0; i < active.size(); ++i) {
+        if (i) arr << ",";
+        const auto& e = active[i];
+        static const char HEX_E[] = "0123456789abcdef";
+        char eid_hex[65]; eid_hex[64] = 0;
+        for (int j = 0; j < 32; ++j) {
+            eid_hex[j*2]   = HEX_E[e.escrow_id[j] >> 4];
+            eid_hex[j*2+1] = HEX_E[e.escrow_id[j] & 0x0F];
+        }
+        arr << "{"
+            << "\"escrow_id\":\"" << eid_hex << "\""
+            << ",\"eth_escrow_address\":\"" << json_escape(e.eth_escrow_address) << "\""
+            << ",\"gold_token\":\"" << json_escape(e.gold_token) << "\""
+            << ",\"gold_amount_mg\":" << e.gold_amount_mg
+            << ",\"reward_stocks\":\"" << format_sost(e.reward_stocks) << "\""
+            << ",\"duration_months\":" << (int)e.duration_months
+            << ",\"start_height\":" << e.start_height
+            << ",\"end_height\":" << e.end_height
+            << "}";
+    }
+    arr << "]";
+
+    std::ostringstream s;
+    s << "{"
+      << "\"active_count\":" << active_count
+      << ",\"escrows\":" << arr.str()
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_escrow_verify
+// Params: [eth_escrow_address]
+// Placeholder — manual bridge to Etherscan (same pattern as popc_check).
+static std::string handle_escrow_verify(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "usage: escrow_verify <eth_escrow_address>");
+    const std::string& eth_addr = p[0];
+
+    std::ostringstream s;
+    s << "{"
+      << "\"eth_escrow_address\":\"" << json_escape(eth_addr) << "\""
+      << ",\"status\":\"MANUAL_CHECK_REQUIRED\""
+      << ",\"message\":\"Run: python3 scripts/popc_etherscan_checker.py check " << json_escape(eth_addr) << "\""
+      << ",\"note\":\"Verify that the Ethereum escrow contract holds the declared gold token balance.\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_escrow_complete
+// Params: [escrow_id_hex]
+// Marks an escrow as COMPLETED when the timelock expires.
+static std::string handle_escrow_complete(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "usage: escrow_complete <escrow_id_hex>");
+
+    const std::string& eid_hex = p[0];
+    if (eid_hex.size() != 64) return rpc_error(id, -1, "escrow_id must be 64 hex chars");
+
+    // Decode escrow_id from hex
+    Hash256 escrow_id{};
+    for (size_t i = 0; i < 32; ++i) {
+        auto h = [](char c) -> int {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+            if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+            return -1;
+        };
+        int hi = h(eid_hex[i*2]);
+        int lo = h(eid_hex[i*2+1]);
+        if (hi < 0 || lo < 0) return rpc_error(id, -1, "invalid hex in escrow_id");
+        escrow_id[i] = (uint8_t)((hi << 4) | lo);
+    }
+
+    int64_t current_height;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        current_height = g_chain_height;
+    }
+
+    const EscrowCommitment* e = g_escrow_registry.find(escrow_id);
+    if (!e) return rpc_error(id, -1, "escrow_id not found");
+    if (e->status != EscrowStatus::ACTIVE) return rpc_error(id, -1, "escrow is not ACTIVE");
+    if (current_height < e->end_height)
+        return rpc_error(id, -1, "escrow timelock has not expired yet (end_height=" +
+                         std::to_string(e->end_height) + ", current_height=" +
+                         std::to_string(current_height) + ")");
+
+    std::string comp_err;
+    if (!g_escrow_registry.complete(escrow_id, &comp_err))
+        return rpc_error(id, -1, "complete failed: " + comp_err);
+
+    g_escrow_registry.save(g_escrow_registry_path, nullptr);
+
+    std::ostringstream s;
+    s << "{"
+      << "\"escrow_id\":\"" << json_escape(eid_hex) << "\""
+      << ",\"status\":\"COMPLETED\""
+      << ",\"reward_paid\":\"" << format_sost(e->reward_stocks) << "\""
+      << ",\"note\":\"Escrow timelock expired. Gold can be released back to depositor.\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -1728,6 +2014,10 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"popc_check",handle_popc_check},
     {"popc_release",handle_popc_release},
     {"popc_slash",handle_popc_slash},
+    {"escrow_register",handle_escrow_register},
+    {"escrow_status",handle_escrow_status},
+    {"escrow_verify",handle_escrow_verify},
+    {"escrow_complete",handle_escrow_complete},
 };
 
 static std::string dispatch_rpc(const std::string& req) {

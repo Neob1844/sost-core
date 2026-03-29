@@ -54,6 +54,7 @@ add_library(sost-core STATIC
     # Phase 8: PoPC application layer (no consensus)
     src/popc.cpp
     src/popc_tx_builder.cpp
+    src/popc_model_b.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -182,6 +183,10 @@ add_test(NAME popc COMMAND test-popc)
 add_executable(test-popc-tx tests/test_popc_tx.cpp)
 target_link_libraries(test-popc-tx PRIVATE sost-core)
 add_test(NAME popc-tx COMMAND test-popc-tx)
+
+add_executable(test-escrow tests/test_escrow.cpp)
+target_link_libraries(test-escrow PRIVATE sost-core)
+add_test(NAME escrow COMMAND test-escrow)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)

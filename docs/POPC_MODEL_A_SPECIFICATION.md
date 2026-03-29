@@ -35,18 +35,22 @@ PoPC Model A is a voluntary time-bound commitment protocol. A participant declar
 | Wallet bond management | ACTIVE | `wallet.h:88-107` — create_bond, create_escrow, list_bonds |
 | CLI bond commands | ACTIVE | `sost-cli.cpp` — bond, escrow, listbonds |
 
-### What does NOT exist yet:
+### Implementation Status (updated 2026-03-29):
 
-| Component | Status | Needed for Model A |
-|-----------|--------|-------------------|
-| PoPC contract registration | NOT IMPLEMENTED | YES — user commitment records |
-| Audit system (entropy-based) | NOT IMPLEMENTED | YES — custody verification |
-| Ethereum wallet verification | NOT IMPLEMENTED | YES — XAUT/PAXG balance check |
-| Reward distribution from Pool | NOT IMPLEMENTED | YES — automatic payout |
-| Slash mechanism | NOT IMPLEMENTED | YES — bond confiscation |
-| Reputation system | NOT IMPLEMENTED | YES — stars, limits |
-| Price Bulletin system | NOT IMPLEMENTED | YES — bond sizing |
-| Foundation signature verification | NOT IMPLEMENTED | YES — EIP-712 |
+| Component | Status | Location |
+|-----------|--------|----------|
+| PoPC contract registration | IMPLEMENTED | `src/popc.cpp` — PoPCRegistry |
+| Audit system (entropy-based) | IMPLEMENTED | `src/popc.cpp` — compute_audit_seed, is_audit_triggered |
+| Ethereum wallet verification | IMPLEMENTED (Python) | `scripts/popc_etherscan_checker.py` |
+| Reward calculation | IMPLEMENTED | `src/popc.cpp` — compute_reward_pct, calculate_reward_stocks |
+| Slash mechanism | IMPLEMENTED | `src/popc.cpp` + `src/popc_tx_builder.cpp` |
+| Reputation system | IMPLEMENTED | `src/popc.cpp` — 0/1/3/5 stars |
+| Bond calculator with pricing | IMPLEMENTED | `src/sost-node.cpp` — reads `config/popc_pricing.json` |
+| RPC commands (Model A) | IMPLEMENTED | `popc_register`, `popc_status`, `popc_check`, `popc_release`, `popc_slash` |
+| TX builders (release, reward) | IMPLEMENTED | `src/popc_tx_builder.cpp` |
+| Price Bulletin system | NOT YET | Future — market oracle when SOST trades |
+| Foundation signature (EIP-712) | NOT YET | Future — Ethereum-side verification |
+| Live reward broadcast | NOT YET | Requires PoPC Pool key management |
 
 ### PoPC Pool Accumulation
 
