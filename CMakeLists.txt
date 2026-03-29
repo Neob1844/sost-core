@@ -51,6 +51,8 @@ add_library(sost-core STATIC
     src/hd_wallet.cpp
     src/psbt.cpp
     src/script.cpp
+    # Phase 8: PoPC application layer (no consensus)
+    src/popc.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -171,6 +173,10 @@ add_test(NAME psbt COMMAND test-psbt)
 add_executable(test-multisig tests/test_multisig.cpp)
 target_link_libraries(test-multisig PRIVATE sost-core)
 add_test(NAME multisig COMMAND test-multisig)
+
+add_executable(test-popc tests/test_popc.cpp)
+target_link_libraries(test-popc PRIVATE sost-core)
+add_test(NAME popc COMMAND test-popc)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
