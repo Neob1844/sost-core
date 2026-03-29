@@ -79,14 +79,17 @@ inline bool check_activation(const std::vector<uint32_t>& versions, uint8_t bit,
     return count >= threshold;
 }
 
-// Foundation commitment: veto power is eliminated when:
-// - 10+ independent miners active for 30 consecutive days, OR
-// - 2 years (105,120 blocks at 10min) from genesis
-inline constexpr int64_t FOUNDATION_VETO_EXPIRY_BLOCKS = 105'120; // ~2 years
+// Foundation quality vote expiration:
+// The Foundation retains the quality vote until it voluntarily relinquishes it.
+// However, the quality vote expires AUTOMATICALLY and IRREVOCABLY at the end of
+// Epoch 2 (block 263,106 = 2 × 131,553). This is hard-coded — no governance vote,
+// no extension, no override. The Foundation may remove it earlier at its sole
+// discretion, but cannot extend it beyond Epoch 2 under any circumstance.
+// Approximately 5 years post-genesis.
+inline constexpr int64_t FOUNDATION_VETO_EXPIRY_BLOCKS = 263'106; // End of Epoch 2 (~5 years)
 
-inline bool foundation_veto_active(int64_t current_height, int32_t independent_miners) {
+inline bool foundation_veto_active(int64_t current_height) {
     if (current_height >= FOUNDATION_VETO_EXPIRY_BLOCKS) return false;
-    if (independent_miners >= 10) return false; // 30-day check is operational
     return true;
 }
 
