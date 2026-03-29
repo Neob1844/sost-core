@@ -141,22 +141,22 @@ TEST(SIG10_foundation_support_not_enough) {
 // Foundation veto lifetime tests
 // =============================================================================
 
-// SIG11: height=1000, miners=1 → veto is active (early network, few miners)
+// SIG11: height=1000 → veto is active (early network, well before Epoch 2)
 TEST(SIG11_veto_active_early) {
-    bool active = foundation_veto_active(1000, 1);
-    EXPECT(active, "veto should be active at height=1000 with only 1 independent miner");
+    bool active = foundation_veto_active(1000);
+    EXPECT(active, "veto should be active at height=1000 (before Epoch 2 end)");
 }
 
-// SIG12: height=105120 → veto expired by height regardless of miners
-TEST(SIG12_veto_expired_by_height) {
-    bool active = foundation_veto_active(105120, 1);
-    EXPECT(!active, "veto should expire at height >= 105120 (FOUNDATION_VETO_EXPIRY_BLOCKS)");
+// SIG12: height=263106 → veto expired automatically at end of Epoch 2
+TEST(SIG12_veto_expired_epoch2) {
+    bool active = foundation_veto_active(263106);
+    EXPECT(!active, "veto should expire at height >= 263106 (end of Epoch 2)");
 }
 
-// SIG13: height=1000, miners=10 → veto expired by miner count
-TEST(SIG13_veto_expired_by_miners) {
-    bool active = foundation_veto_active(1000, 10);
-    EXPECT(!active, "veto should expire when 10+ independent miners are active");
+// SIG13: height=263105 → veto still active (one block before expiry)
+TEST(SIG13_veto_active_just_before_expiry) {
+    bool active = foundation_veto_active(263105);
+    EXPECT(active, "veto should still be active at height 263105 (one block before Epoch 2 end)");
 }
 
 // =============================================================================

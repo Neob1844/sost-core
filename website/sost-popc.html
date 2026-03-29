@@ -835,12 +835,16 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
         </div>
 
         <table class="code-table" style="margin-top:16px;">
-          <tr><td class="key">1 month</td><td class="val"><code>5%</code> of bond in SOST</td></tr>
-          <tr><td class="key">3 months</td><td class="val"><code>12%</code> of bond in SOST</td></tr>
-          <tr><td class="key">6 months</td><td class="val"><code>20%</code> of bond in SOST</td></tr>
-          <tr><td class="key">9 months</td><td class="val"><code>28%</code> of bond in SOST</td></tr>
-          <tr><td class="key">12 months</td><td class="val"><code>35%</code> of bond in SOST</td></tr>
+          <tr><td class="key">1 month</td><td class="val">up to <code>1%</code> of bond in SOST</td></tr>
+          <tr><td class="key">3 months</td><td class="val">up to <code>4%</code> of bond in SOST</td></tr>
+          <tr><td class="key">6 months</td><td class="val">up to <code>9%</code> of bond in SOST</td></tr>
+          <tr><td class="key">9 months</td><td class="val">up to <code>15%</code> of bond in SOST</td></tr>
+          <tr><td class="key">12 months</td><td class="val">up to <code>22%</code> of bond in SOST</td></tr>
         </table>
+        <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
+          Rates are <strong>maximums</strong>. Actual reward is dynamically adjusted by Pool Utilization Ratio (PUR).
+          Anti-whale tiers apply above 10 oz. Protocol fee: 5%.
+        </p>
       </div>
     </div>
 
@@ -855,17 +859,20 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Bond is denominated in USD value, converted to SOST at 7-day TWAP. As SOST
-          appreciates relative to gold, the bond percentage increases to maintain deterrence.
-          Sub-collateralization is intentional &mdash; compensated by layered deterrence.
+          Bond percentage depends on the SOST/gold price ratio. As SOST appreciates
+          relative to gold, the bond percentage decreases (less SOST needed).
+          Pricing initially fixed (SOST=$1, gold=$10,000/oz), updated when SOST trades on exchanges.
         </p>
         <table class="code-table">
-          <tr><td class="key">ratio &lt; 0.0001</td><td class="val"><code>10%</code> bond <span class="comment">// SOST &lt; $0.27</span></td></tr>
-          <tr><td class="key">ratio &lt; 0.001</td><td class="val"><code>15%</code> bond <span class="comment">// SOST &lt; $2.70</span></td></tr>
-          <tr><td class="key">ratio &lt; 0.01</td><td class="val"><code>20%</code> bond <span class="comment">// SOST &lt; $27</span></td></tr>
-          <tr><td class="key">ratio &lt; 0.1</td><td class="val"><code>25%</code> bond <span class="comment">// SOST &lt; $270</span></td></tr>
-          <tr><td class="key">ratio &ge; 0.1</td><td class="val"><code>30%</code> bond (maximum) <span class="comment">// SOST &gt; $270</span></td></tr>
+          <tr><td class="key">ratio &lt; 1%</td><td class="val"><code>25%</code> bond <span class="comment">// SOST very cheap vs gold (current)</span></td></tr>
+          <tr><td class="key">ratio 1-5%</td><td class="val"><code>20%</code> bond</td></tr>
+          <tr><td class="key">ratio 5-10%</td><td class="val"><code>15%</code> bond</td></tr>
+          <tr><td class="key">ratio 10-50%</td><td class="val"><code>12%</code> bond</td></tr>
+          <tr><td class="key">ratio &ge; 50%</td><td class="val"><code>10%</code> bond (minimum)</td></tr>
         </table>
+        <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
+          Source: <code>compute_bond_pct()</code> in <code>src/popc.cpp</code>
+        </p>
       </div>
     </div>
   </div>
@@ -908,11 +915,198 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         </div>
 
         <table class="code-table" style="margin-top:16px;">
-          <tr><td class="key">1 month</td><td class="val"><code>3%</code> APR on gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">3 months</td><td class="val"><code>4%</code> APR on gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">6 months</td><td class="val"><code>5%</code> APR on gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">9 months</td><td class="val"><code>6%</code> APR on gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">12 months</td><td class="val"><code>7%</code> APR on gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">1 month</td><td class="val">up to <code>0.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">3 months</td><td class="val">up to <code>2%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">6 months</td><td class="val">up to <code>4.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">9 months</td><td class="val">up to <code>7.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">12 months</td><td class="val">up to <code>11%</code> of gold value, paid in SOST at deposit</td></tr>
+        </table>
+        <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
+          Rates are <strong>maximums</strong>, dynamically adjusted by PUR. Anti-whale tiers apply. Protocol fee: 5%.
+          Model B pays on gold value (higher base than Model A bond), but at halved rates.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP-BY-STEP GUIDE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">GUIDE</div>
+      <h2 class="section-title">How to Create a <span class="accent">PoPC Contract</span></h2>
+    </div>
+
+    <!-- MODEL A GUIDE -->
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Model A &mdash; Step-by-Step</span>
+        </div>
+        <span class="spec-tag overlay">AUTOCUSTODY</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary)">Prerequisites</p>
+        <p class="spec-desc">
+          &bull; An Ethereum wallet (MetaMask, Ledger, etc.) holding XAUT or PAXG tokens<br>
+          &bull; A SOST wallet with enough SOST to cover the bond<br>
+          &bull; Access to the SOST web wallet at <code>sostcore.com/sost-wallet.html</code>
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 1: Calculate Your Bond</p>
+        <p class="spec-desc">
+          Go to the <strong>PoPC Registration</strong> section in the SOST wallet. Enter:<br>
+          &bull; Your Ethereum wallet address (0x...)<br>
+          &bull; How much XAUT you hold (in oz)<br>
+          &bull; How much PAXG you hold (in oz)<br>
+          &bull; Commitment duration (1, 3, 6, 9, or 12 months)<br><br>
+          The calculator will show you exactly how much SOST you need to lock as bond
+          and your expected reward (adjusted by current pool utilization).
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 2: Register Your Commitment</p>
+        <p class="spec-desc">
+          Click <strong>"Register &amp; Lock Bond"</strong>. This calls the <code>popc_register</code> RPC command, which:<br>
+          &bull; Validates your Ethereum address and gold amounts<br>
+          &bull; Calculates your bond based on the current SOST/gold price ratio<br>
+          &bull; Calculates your dynamic reward (based on pool utilization)<br>
+          &bull; Reserves your reward in the PoPC Pool<br>
+          &bull; Returns your <strong>commitment_id</strong> and the exact bond amount to lock
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 3: Lock Your Bond</p>
+        <p class="spec-desc">
+          Create a <code>BOND_LOCK</code> transaction for the exact SOST amount shown:<br>
+          &bull; In the SOST wallet: go to <strong>Send</strong><br>
+          &bull; Or via CLI: <code>sost-cli create-bond &lt;amount&gt; &lt;lock_blocks&gt;</code><br>
+          &bull; The bond is time-locked on the SOST blockchain (cannot be spent until your commitment period ends)<br>
+          &bull; Your bond is safe &mdash; it returns to you on successful completion
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 4: Maintain Custody</p>
+        <p class="spec-desc">
+          <strong>Keep your XAUT/PAXG in your Ethereum wallet for the entire commitment period.</strong><br>
+          &bull; Random audits are scheduled by ConvergenceX block entropy (you cannot predict when)<br>
+          &bull; An automated script checks your Ethereum balance periodically<br>
+          &bull; If your balance drops below the committed amount &rarr; your bond is <strong>slashed</strong><br>
+          &bull; If you maintain custody &rarr; you receive bond + reward at the end
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 5: Collect Bond + Reward</p>
+        <p class="spec-desc">
+          When your commitment period ends:<br>
+          &bull; The operator runs <code>popc_release</code> for your commitment<br>
+          &bull; Your bond is unlocked and returned to your SOST address<br>
+          &bull; Your reward is sent from the PoPC Pool to your SOST address<br>
+          &bull; Your reputation increases (more reputation = higher gold limits, fewer audits)
+        </p>
+
+        <div class="code-snippet" data-label="EXAMPLE">
+<span class="cmt">// Example: 1 oz gold ($10,000), 6-month commitment, SOST=$1</span>
+
+<span class="num">1.</span> Gold value: <span class="str">$10,000</span> = 10,000 SOST equivalent
+<span class="num">2.</span> Bond: <span class="str">25%</span> of gold value = <span class="fn">2,500 SOST</span> locked
+<span class="num">3.</span> Max reward: <span class="str">9%</span> of bond = 225 SOST (dynamic, adjusted by PUR)
+<span class="num">4.</span> Protocol fee: 5% of reward = 11.25 SOST
+<span class="num">5.</span> Net reward: <span class="fn">~213.75 SOST</span> (at PUR=0%)
+<span class="num">6.</span> Total return: 2,500 + 213.75 = <span class="fn">2,713.75 SOST</span>
+<span class="num">7.</span> Your gold: <span class="str">never moved</span> &mdash; stays in your Ethereum wallet
+        </div>
+      </div>
+    </div>
+
+    <!-- MODEL B GUIDE -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Model B &mdash; Step-by-Step</span>
+        </div>
+        <span class="spec-tag overlay">ESCROW</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary)">Prerequisites</p>
+        <p class="spec-desc">
+          &bull; XAUT or PAXG tokens in an Ethereum wallet<br>
+          &bull; A SOST wallet address to receive rewards<br>
+          &bull; Access to the escrow contract on Ethereum (address provided by SOST Foundation)
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 1: Deposit Gold into Escrow</p>
+        <p class="spec-desc">
+          Send your XAUT or PAXG to the <strong>immutable escrow contract</strong> on Ethereum:<br>
+          &bull; The contract has <strong>no admin key, no upgrade proxy, no pause function</strong><br>
+          &bull; Call <code>deposit(token, amount, unlockTime)</code><br>
+          &bull; Your gold is locked until the unlock time (1-12 months from now)<br>
+          &bull; Only YOU can withdraw after the lock expires &mdash; the Foundation cannot access it
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 2: Register on SOST</p>
+        <p class="spec-desc">
+          In the SOST wallet, register your escrow:<br>
+          &bull; Enter the Ethereum escrow contract address<br>
+          &bull; Enter your gold amount and duration<br>
+          &bull; The system calls <code>escrow_register</code> which verifies your deposit<br>
+          &bull; Your SOST reward is calculated and <strong>paid IMMEDIATELY</strong>
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 3: Receive Reward Immediately</p>
+        <p class="spec-desc">
+          Unlike Model A, Model B pays the SOST reward <strong>upfront</strong>:<br>
+          &bull; Reward is sent from the PoPC Pool to your SOST address<br>
+          &bull; No vesting, no clawback<br>
+          &bull; You can use the SOST immediately
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 4: Wait for Lock to Expire</p>
+        <p class="spec-desc">
+          &bull; No audits &mdash; your gold is provably locked in the escrow contract<br>
+          &bull; No slash risk &mdash; there is no bond to lose<br>
+          &bull; Just wait for your chosen duration to pass
+        </p>
+
+        <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 5: Withdraw Your Gold</p>
+        <p class="spec-desc">
+          After the lock expires:<br>
+          &bull; Call <code>withdraw(depositId)</code> on the Ethereum escrow contract<br>
+          &bull; 100% of your gold is returned to your Ethereum wallet<br>
+          &bull; Register completion on SOST via <code>escrow_complete</code>
+        </p>
+
+        <div class="code-snippet" data-label="EXAMPLE">
+<span class="cmt">// Example: 1 oz XAUT ($10,000), 6-month escrow, SOST=$1</span>
+
+<span class="num">1.</span> Deposit 1 oz XAUT into escrow contract (Ethereum TX)
+<span class="num">2.</span> Register on SOST &rarr; system verifies escrow deposit
+<span class="num">3.</span> Max reward: <span class="str">4.5%</span> of gold value = 450 SOST (dynamic)
+<span class="num">4.</span> Protocol fee: 5% = 22.50 SOST
+<span class="num">5.</span> Net reward: <span class="fn">~427.50 SOST</span> paid immediately
+<span class="num">6.</span> After 6 months: withdraw 1 oz XAUT from escrow
+<span class="num">7.</span> Result: you keep <span class="fn">427.50 SOST + your 1 oz gold</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY DIFFERENCES -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Model A vs Model B &mdash; Which to Choose?</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td class="key" style="width:35%">Feature</td><td class="val" style="width:30%">Model A (Autocustody)</td><td class="val">Model B (Escrow)</td></tr>
+          <tr><td class="key">Gold location</td><td class="val">Your Ethereum wallet</td><td class="val">Escrow contract</td></tr>
+          <tr><td class="key">SOST bond required?</td><td class="val" style="color:var(--red-primary)">Yes (25% of gold value)</td><td class="val" style="color:var(--green-primary)">No</td></tr>
+          <tr><td class="key">When do you get reward?</td><td class="val">At completion (end)</td><td class="val" style="color:var(--green-primary)">Immediately</td></tr>
+          <tr><td class="key">Audits?</td><td class="val" style="color:var(--red-primary)">Yes (random, PoW entropy)</td><td class="val" style="color:var(--green-primary)">No</td></tr>
+          <tr><td class="key">Slash risk?</td><td class="val" style="color:var(--red-primary)">Yes (bond lost if custody fails)</td><td class="val" style="color:var(--green-primary)">No</td></tr>
+          <tr><td class="key">Max reward (12mo)</td><td class="val">22% of bond</td><td class="val">11% of gold value</td></tr>
+          <tr><td class="key">Best for</td><td class="val">Crypto natives, HODLers</td><td class="val">Gold investors, risk-averse</td></tr>
         </table>
       </div>
     </div>

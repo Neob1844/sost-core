@@ -2040,6 +2040,95 @@ degraded or partial state. Participants' physical security is
 a non-negotiable prerequisite — not a trade-off.
 ```
 
+### 6.9 PoPC Contract Lifecycle — Implementation Reference
+
+This section documents the implemented PoPC contract lifecycle as of v0.3.2.
+
+MODEL A — AUTOCUSTODY (BOND + AUDIT):
+
+  Step 1: CALCULATE BOND
+    - User provides: Ethereum address, gold amount (oz), commitment duration
+    - System computes: bond_pct = compute_bond_pct(sost_price/gold_price ratio)
+    - Current ratio yields 25% bond (SOST=$1, gold=$10,000/oz)
+    - Bond amount = gold_value_in_sost × bond_pct
+
+  Step 2: REGISTER COMMITMENT
+    - RPC: popc_register(sost_address, eth_address, gold_token, gold_mg, months)
+    - System calculates dynamic reward based on Pool Utilization Ratio (PUR)
+    - Reward rate = base_rate × (1 - PUR)^2 (quadratic decay)
+    - Anti-whale tiers: 0-10oz=100%, 10-50oz=75%, 50-200oz=50%, >200oz=rejected
+    - Reward is RESERVED in the PoPC Pool (guaranteed if commitment succeeds)
+    - Returns: commitment_id, bond_required, expected_reward
+
+  Step 3: LOCK BOND
+    - User creates BOND_LOCK (0x10) transaction: sost-cli create-bond <amount> <blocks>
+    - Bond is time-locked on-chain (cannot be spent until commitment period ends)
+    - This is a consensus-level lock enforced by rule S11
+
+  Step 4: MAINTAIN CUSTODY
+    - User keeps XAUT/PAXG in their Ethereum wallet for the full period
+    - Random audits derived from: SHA256(block_id || commit || checkpoints_root)
+    - Audit probability: 30% (new), 20% (established), 10% (trusted), 5% (veteran)
+    - Automated Etherscan checker verifies balances
+
+  Step 5: COMPLETION OR SLASH
+    - Success: popc_release → bond returned + reward from pool
+    - Failure: popc_slash → bond confiscated (50% pool, 50% gold vault)
+
+  Maximum reward rates (Model A — % of bond):
+    1 month:  1%   | 3 months: 4%  | 6 months: 9%
+    9 months: 15%  | 12 months: 22%
+
+MODEL B — ESCROW (DEPOSIT + IMMEDIATE REWARD):
+
+  Step 1: DEPOSIT GOLD IN ESCROW
+    - User sends XAUT/PAXG to immutable Ethereum escrow contract
+    - Contract: no admin key, no upgrade proxy, no pause function
+    - Only the original depositor can withdraw after timelock expires
+
+  Step 2: REGISTER ON SOST
+    - RPC: escrow_register(sost_address, escrow_contract, gold_token, gold_mg, months)
+    - System verifies escrow deposit on Ethereum
+    - Calculates dynamic reward (same PUR curve, halved rates)
+    - SOST reward paid IMMEDIATELY (no waiting)
+
+  Step 3: WAIT FOR LOCK EXPIRY
+    - No audits needed (gold is provably locked in escrow)
+    - No bond required (no slash risk)
+
+  Step 4: WITHDRAW GOLD
+    - After timelock: user calls withdraw() on Ethereum contract
+    - 100% of gold returned to user's wallet
+    - Register completion on SOST: escrow_complete
+
+  Maximum reward rates (Model B — % of gold value, halved from A):
+    1 month:  0.5% | 3 months: 2%   | 6 months: 4.5%
+    9 months: 7.5% | 12 months: 11%
+
+DYNAMIC REWARD SYSTEM (PUR):
+
+  All rewards are dynamically adjusted by the Pool Utilization Ratio:
+    PUR = committed_rewards / pool_balance
+    factor = (1 - PUR)^2 (quadratic decay)
+    effective_rate = base_rate × factor
+
+  When PUR is low (few participants): rewards are near maximum.
+  When PUR is high (many participants): rewards decrease automatically.
+  At PUR=100%: no new registrations accepted (pool fully committed).
+
+  This is a self-regulating system — no manual intervention needed.
+
+IMPLEMENTATION:
+  - src/popc.cpp: PoPCRegistry, compute_bond_pct, compute_reward_pct, audit entropy
+  - src/popc_tx_builder.cpp: TX builders for release and reward
+  - src/popc_model_b.cpp: EscrowRegistry, calculate_escrow_reward
+  - include/sost/popc.h: Constants, PUR functions, whale tiers
+  - RPC commands: popc_register, popc_status, popc_check, popc_release, popc_slash
+  - RPC commands: escrow_register, escrow_status, escrow_verify, escrow_complete
+  - Tests: 27 test suites, 616 individual tests (all passing)
+
+---
+
 ## 7. Governance Model
 
 ### 7.1 No Ongoing Parameter Governance

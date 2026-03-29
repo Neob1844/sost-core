@@ -72,9 +72,9 @@ Every SOST block automatically allocates 25% of the coinbase reward to a Gold Fu
 
 The remaining 25% flows to a PoPC Pool powering Proof of Personal Custody — a mechanism that rewards holders who self-custody gold and prove it.
 
-[b]Model A — Bond with Autocustody.[/b] The participant declares an Ethereum wallet holding XAUT or PAXG, locks a SOST bond (12-30% of gold value), and commits to maintain custody for 1 to 12 months. Random audits derived from ConvergenceX block entropy verify custody. On success: bond returned + reward (up to 22% APR). On failure: bond slashed automatically. The gold never leaves the user's wallet.
+[b]Model A — Bond with Autocustody.[/b] The participant declares an Ethereum wallet holding XAUT or PAXG, locks a SOST bond (10-25% of gold value, based on SOST/gold price ratio), and commits to maintain custody for 1 to 12 months. Random audits derived from ConvergenceX block entropy verify custody. On success: bond returned + reward (up to 22% of bond, dynamically adjusted by pool utilization). On failure: bond slashed automatically. The gold never leaves the user's wallet. Anti-whale tiers apply above 10 oz. Step-by-step guide: sostcore.com/sost-popc.html
 
-[b]Model B — Timelocked Escrow.[/b] The participant deposits XAUT/PAXG into an immutable escrow contract on Ethereum. SOST reward paid immediately. At expiry, depositor withdraws 100% of gold. No audits. No bond. No slash.
+[b]Model B — Timelocked Escrow.[/b] The participant deposits XAUT/PAXG into an immutable escrow contract on Ethereum. SOST reward paid immediately (up to 11% of gold value, dynamically adjusted). At expiry, depositor withdraws 100% of gold. No audits. No bond. No slash. Step-by-step guide: sostcore.com/sost-popc.html
 
 SOST is not pegged to gold. Holders have no redemption right against the reserve. There is no stablecoin mechanic, no oracle dependency for consensus, and no algorithmic peg.
 

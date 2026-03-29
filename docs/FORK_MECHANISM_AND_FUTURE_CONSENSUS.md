@@ -177,7 +177,7 @@ With 1 miner and 1 node, flag day works perfectly for immediate changes.
 ### 2. Version-Bit Signaling: IMPLEMENTED
 - `include/sost/proposals.h` — BIP9-style signaling framework
 - 75% threshold over 288-block window (~48 hours)
-- Foundation quality vote: +10% weight (29 blocks), with constitutional expiry (2 years or 10 miners)
+- Foundation quality vote: +10% weight (29 blocks), expires automatically and irrevocably at end of Epoch 2 (block 263,106, ~5 years). Foundation may relinquish earlier but cannot extend.
 - RPC command: `getproposals` shows current signaling status
 - Placeholder proposal: Post-Quantum Migration (bit 8, DEFINED status)
 - **Ready for activation when first external miner joins**
