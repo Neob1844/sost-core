@@ -971,7 +971,7 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
           (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E4&ndash;H9 that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E4) through baseline (B0) to maximum hardening (H9). H10&ndash;H12 are reserved.
+          deep easing (E4) through baseline (B0) to maximum hardening (H9). H10&ndash;H12 are defined in code but capped at H9.
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -986,7 +986,7 @@ I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256
 <span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
 U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
 
-H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H9=<span class="num">9</span>)   <span class="cmt">// max hardening (H10-H12 reserved)</span>
+H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H9=<span class="num">9</span>)   <span class="cmt">// max hardening (H10-H12 defined but capped)</span>
 
 <span class="cmt">// Safety rules</span>
 <span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
@@ -1044,7 +1044,7 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
             </div>
             <div class="mode-params">
               scale=2&ndash;3 &middot; k=6&ndash;8 &middot; margin=130&ndash;110 &middot; steps=6&ndash;8<br>
-              <em>Maximum hardening. H10&ndash;H12 reserved for future use.</em>
+              <em>Maximum hardening. H10&ndash;H12 defined in code but capped at H9.</em>
             </div>
           </div>
         </div>
@@ -1067,7 +1067,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H12 reserved. Active range: E4&ndash;H9.<br>
+            &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H12 defined but capped at H9. Active range: E4&ndash;H9.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
@@ -1082,7 +1082,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>9</code> <span class="comment">// H9 (max hardening; H10-H12 reserved)</span></td>
+            <td class="val"><code>9</code> <span class="comment">// H9 (max hardening; H10-H12 defined but capped)</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>

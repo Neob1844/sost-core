@@ -412,7 +412,7 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">global contraction for sufficiently large perturbations.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">The cASERT equalizer adaptively selects (k, steps, scale) for liveness, with a unidirectional policy: it only hardens when the chain is ahead of schedule — never relaxes under fast conditions.</p>
+<p class="wp-p">The cASERT equalizer adaptively selects (k, steps, scale) for liveness, with a bidirectional policy: it hardens (H1–H9) when the chain is ahead of schedule (emission protection) and eases (E1–E4) when the chain has been behind schedule for 6+ hours at B0 (liveness support).</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Phase 5: Commitment &amp; Target Check</p>
 <p class="wp-p">COMMITMENT (binds all proof components):</p>
@@ -508,9 +508,9 @@
 <h4 id="sec-8" class="wp-h">cASERT Equalizer Stability Parameters</h4>
 <div class="wp-spacer"></div>
 <p class="wp-p">The intensity of perturbation probes adapts to network conditions through the cASERT</p>
-<p class="wp-p">equalizer (Section 3.12). The equalizer uses a <strong>unidirectional block-lag</strong> signal: it compares</p>
+<p class="wp-p">equalizer (Section 3.12). The equalizer uses a <strong>bidirectional block-lag</strong> signal: it compares</p>
 <p class="wp-p">the actual number of blocks mined against the ideal schedule (genesis + height × 600s)</p>
-<p class="wp-p">and only increases computational cost when the chain is running <strong>ahead</strong> of schedule.</p>
+<p class="wp-p">and increases computational cost when the chain is running <strong>ahead</strong> of schedule (H1–H9), or decreases it when the chain has been <strong>behind</strong> schedule for 6+ hours at B0 (E1–E4).</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  lag = expected_blocks - actual_blocks</pre>
 <pre class="wp-code-inline">  expected_blocks = floor((wall_clock_now - GENESIS_TIME) / TARGET_SPACING)</pre>
@@ -549,9 +549,10 @@
 <p class="wp-p">stays at B0 (baseline) and lets cASERT bitsQ handle difficulty adjustment alone. When the chain runs 5 or</p>
 <p class="wp-p">more blocks ahead of schedule (excess hashrate producing blocks faster than 600s),</p>
 <p class="wp-p">the equalizer progressively increases the perturbation scale from L2 through L5, making each</p>
-<p class="wp-p">mining attempt more computationally expensive. This unidirectional policy ensures that</p>
-<p class="wp-p">hardening only activates when the chain genuinely needs emission protection — never when</p>
-<p class="wp-p">the chain is struggling.</p>
+<p class="wp-p">mining attempt more computationally expensive. When the chain has been behind schedule for</p>
+<p class="wp-p">6+ hours at B0, the equalizer eases (E1–E4), reducing perturbation cost to support liveness.</p>
+<p class="wp-p">This bidirectional policy ensures hardening activates for emission protection and easing</p>
+<p class="wp-p">activates when the chain genuinely needs liveness support.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Decay Anti-Stall (cASERT layer 3):</strong></p>
 <p class="wp-p">If no block found for max(ahead &times; 600s, 7200s) &mdash; proportional to blocks ahead, no ceiling &mdash; the effective level decays: L8+ drops 1/10min, L4&ndash;L7 drops 1/20min, L2&ndash;L3 drops 1/30min, L1 is floor. Cost uses the <strong>current</strong> effective level as it drops. When mining resumes, decay stops instantly. Block validation uses raw schedule level.</p>
@@ -862,7 +863,7 @@ PROPERTIES:
 <p class="wp-p">Difficulty encoding        SOSTCompact Q16.16</p>
 <p class="wp-p">Difficulty algorithm       cASERT bitsQ, 12h half-life</p>
 <p class="wp-p">Per-block delta cap        6.25%</p>
-<p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (unidirectional)</p>
+<p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (bidirectional)</p>
 <p class="wp-p">Equalizer profiles         E4(-4) through H9(+9)</p>
 <p class="wp-p">Stability baseline         scale=1, k=4, margin=185, steps=4, stab_shift=20</p>
 <p class="wp-p">Block target spacing       600s</p>
@@ -883,10 +884,10 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">The cASERT equalizer does not change numerical difficulty. It adjusts stability verification</p>
 <p class="wp-p">intensity based on <strong>block lag</strong> — the difference between the expected number of</p>
-<p class="wp-p">blocks since genesis and the actual chain height. The equalizer is <strong>unidirectional</strong>: it</p>
-<p class="wp-p">only increases computational cost when the chain is ahead of schedule (emission</p>
-<p class="wp-p">protection). When the chain is behind schedule, the equalizer remains at B0</p>
-<p class="wp-p">(baseline) and lets cASERT bitsQ handle difficulty reduction.</p>
+<p class="wp-p">blocks since genesis and the actual chain height. The equalizer is <strong>bidirectional</strong>: it</p>
+<p class="wp-p">increases computational cost when the chain is ahead of schedule (H1–H9, emission</p>
+<p class="wp-p">protection) and decreases it when the chain has been behind schedule for 6+ hours at B0</p>
+<p class="wp-p">(E1–E4, liveness support). cASERT bitsQ handles numerical difficulty adjustment in both directions.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">SIGNAL COMPUTATION (block lag):</p>
 <pre class="wp-code-inline">  expected_blocks = floor((wall_clock_now - GENESIS_TIME) / TARGET_SPACING)</pre>
@@ -901,7 +902,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  and the consensus GENESIS_TIME constant. The signal is deterministic for any</pre>
 <pre class="wp-code-inline">  observer at the same wall-clock moment and chain height.</pre>
 <div class="wp-spacer"></div>
-<p class="wp-p">LEVEL ASSIGNMENT (unidirectional, block-count thresholds):</p>
+<p class="wp-p">LEVEL ASSIGNMENT (bidirectional, block-count thresholds):</p>
 <pre class="wp-code-inline">  lag ≥ 0                      → L1  (behind or on-time: neutral)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| &lt; 5           → L1  (slightly ahead: neutral)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 5 ≤ |lag| ≤ 25     → L2  (light hardening)</pre>
@@ -925,7 +926,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  L5: 5 × 4 × 4 = 80  (400% harder than baseline)</pre>
 <pre class="wp-code-inline">  L6: 6 × 4 × 4 = 96  (500% harder, unbounded continues...)</pre>
 <div class="wp-spacer"></div>
-<p class="wp-p">UNIDIRECTIONAL POLICY (emission protection):</p>
+<p class="wp-p">BIDIRECTIONAL POLICY (emission protection + liveness support):</p>
 <pre class="wp-code-inline">  The cASERT equalizer addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
 <pre class="wp-code-inline">  mining blocks much faster than the 600s target, which would accelerate coin</pre>
 <pre class="wp-code-inline">  emission before cASERT bitsQ can fully compensate. bitsQ adjusts numerical difficulty</pre>
@@ -2279,15 +2280,14 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-66" class="wp-h">9.5 cASERT Security Properties</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The unidirectional block-lag model (Section 3.12) prevents the cASERT equalizer from being weaponized:</p>
+<p class="wp-p">The bidirectional block-lag model (Section 3.12) prevents the cASERT equalizer from being weaponized while supporting liveness:</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">An attacker with high hashrate mining blocks quickly pushes the chain ahead of schedule.</div>
 <div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → H3 → H4 → H5 (max). Stability verification becomes progressively more expensive.</div>
 <div class="wp-bullet">The attacker gains nothing — the faster they mine, the harder each attempt becomes.</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">When the chain is behind schedule, the equalizer stays at B0 (baseline).</p>
-<p class="wp-p">There is no relaxation below L1 — the baseline stability check always applies.</p>
-<p class="wp-p">cASERT bitsQ handles difficulty reduction alone, which is the correct liveness response.</p>
+<p class="wp-p">When the chain is behind schedule, the equalizer initially stays at B0 (baseline), letting cASERT bitsQ handle difficulty reduction.</p>
+<p class="wp-p">If the chain remains behind schedule for 6+ hours at B0, the equalizer eases (E1–E4), reducing perturbation cost to actively support liveness. cASERT bitsQ and the E-level easing work together to recover a stalled chain.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">The block-lag metric is objective, global, and tamper-resistant: it uses wall-clock time (not block timestamps) compared against genesis, so miners cannot manipulate the signal by setting favorable timestamps. Any observer can independently verify the lag at any moment.</p>
 <div class="wp-spacer"></div>
@@ -2375,7 +2375,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% per-block delta cap</td></tr>
-<tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H9(+9), B0 baseline, independently tuned per profile, hardening when ahead of schedule. H10-H12 reserved.</td></tr>
+<tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H9(+9), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H9) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. H10-H12 reserved.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2563,7 +2563,7 @@ DIFFICULTY PARAMETERS:
   MAX_FUTURE_DRIFT             = 600
 
 cASERT EQUALIZER PARAMETERS:
-  CASERT_MODE                  = UNIDIRECTIONAL (block-lag, hardening only)
+  CASERT_MODE                  = BIDIRECTIONAL (block-lag, hardening H1-H9 + easing E1-E4)
   CASERT_NEUTRAL_LEVEL         = 1  (L1, scale=1)
   CASERT_UNBOUNDED             = true  (levels extend beyond L5)
   CASERT_L2_THRESHOLD          = 5     // 5-25 blocks ahead → L2 (scale=2)
@@ -2950,9 +2950,10 @@ SERIALIZATION (consensus-critical fix):
 <pre class="wp-code-inline">  </pre>
 <pre class="wp-code-inline">  CASERT MODIFICATIONS:</pre>
 <div class="wp-bullet">  70) CASERT rewritten: continuous signal-based system replaced by</div>
-<pre class="wp-code-inline">    unidirectional block-lag model. Signal is now lag in blocks</pre>
+<pre class="wp-code-inline">    bidirectional block-lag model. Signal is now lag in blocks</pre>
 <pre class="wp-code-inline">    (expected − actual) using wall-clock time vs genesis schedule.</pre>
-<pre class="wp-code-inline">    Only hardens when chain is ahead of schedule (emission protection).</pre>
+<pre class="wp-code-inline">    Hardens (H1-H9) when chain is ahead of schedule (emission protection);</pre>
+<pre class="wp-code-inline">    eases (E1-E4) when chain has been behind schedule for 6+ hours at B0 (liveness support).</pre>
 <pre class="wp-code-inline">    Levels: L1 (neutral, 0–4 ahead), L2 (5–25), L3 (26–50), L4 (51–75), L5 (76–100), L6+ (101+, unbounded).</pre>
 <pre class="wp-code-inline">    k changed from 3 to 4. Scale = level for ALL levels (linear: L1→1, L2→2, ..., L5→5, L6→6, ...).</pre>
 <pre class="wp-code-inline">    MAX_INTERVALS and E_CAP eliminated (no sliding window needed).</pre>
