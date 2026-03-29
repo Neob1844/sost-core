@@ -340,3 +340,18 @@ New research line translating intuitive geological concepts into physically test
 
 **Key finding:** Magnetics distinguishes IOCG from background above random, with gradient features dominating (geologically coherent). But without S2 comparison, cannot confirm magnetics ADDS value over spectral.
 **Recommendation:** Execute S2 baseline via GEE to measure magnetics delta.
+
+## Phase 38: GEE Reactivation + Comparison Attempt (2026-03-29)
+
+**Classification:** Comparison blocked by GEE memory limits
+
+- GEE initialized: YES. 1041 S2 images found for Tennant Creek AOI.
+- sampleRegions(): BLOCKED (User memory limit exceeded)
+- Fallback: within-magnetics comparison only (not independent)
+- Within-magnetics delta: +0.065 CV (sharp features > smoothed) — not S2 vs magnetics
+- Stack B (gradient + analytic signal): CV 0.668, bootstrap 0.755, CI [0.588, 0.883]
+- Phase 37 reproduced exactly: CV 0.668 confirmed
+- Magnetics verdict: BLOCKED_BY_GEE_COMPARISON (unchanged from Phase 37)
+- Canonical: 22.8/40 UNCHANGED
+
+**Recommendation:** Build Export.table.toDrive() pipeline for S2 extraction at Tennant Creek, download locally, measure true S2 vs magnetics delta. This pattern worked in Phases 25, 26, and 27 and is the correct fix for the GEE memory limit.
