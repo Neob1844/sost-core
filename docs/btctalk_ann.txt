@@ -168,7 +168,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 [li]P2P encryption: X25519 + ChaCha20-Poly1305[/li]
 [li]Peer ban scoring (misbehavior threshold: 100 points)[/li]
 [li]MAX_REORG_DEPTH = 500 blocks[/li]
-[li]22 test suites, 548 individual tests passing[/li]
+[li]25 test suites, 583 individual tests passing[/li]
 [/list]
 
 [hr]

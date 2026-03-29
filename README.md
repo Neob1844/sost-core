@@ -220,11 +220,16 @@ SOST does not support smart contracts. Instead, purpose-built transaction types 
 
 | Phase | Timeline | Description |
 |-------|----------|-------------|
-| 1 | Q1-Q2 2027 | Bond Lock + Escrow — native PoPC on SOST chain |
+| 0 | IMPLEMENTED | BOND_LOCK (0x10) + ESCROW_LOCK (0x11) — consensus types, activate at height 5000 |
+| 0 | IMPLEMENTED | PoPC Model A (bond+custody) — 5 RPC commands, registry, rewards, slash |
+| 0 | IMPLEMENTED | PoPC Model B (escrow) — 4 RPC commands, immediate rewards |
+| 1 | Q2-Q3 2026 | Live custody verification via Etherscan + first PoPC participants |
 | 2 | Q4 2027-Q1 2028 | Native metal tokens (XAUT-SOST, PAXG-SOST, SLVR-SOST) |
 | 3 | Q2 2028 | Fully native PoPC — zero Ethereum dependency |
 
-Reserved output types: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
+Active output types at height 5000: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
+
+**PoPC RPC commands (9 total):** `popc_register`, `popc_status`, `popc_check`, `popc_release`, `popc_slash`, `escrow_register`, `escrow_status`, `escrow_verify`, `escrow_complete`.
 
 ## Explorer (v4.2)
 
@@ -260,7 +265,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | Capsule Protocol v1 (binary tx metadata, height 5000) | Complete |
 | cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete |
 
-**22/22 CTest targets pass.**
+**25/25 CTest targets pass (583 individual tests).**
 
 **cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H9, with H10-H12 reserved) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
 
@@ -358,7 +363,7 @@ Current phase: Phase XV — full-corpus functional intersection discovery.
 
 SOST is **experimental, unaudited software**. It is a completely new proof-of-work protocol written from scratch — **NOT a fork** of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or mining algorithm. The ConvergenceX proof-of-work, cASERT difficulty adjustment, and constitutional economic model are original designs.
 
-**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 22 test suites (548 individual tests), and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
+**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 25 test suites (583 individual tests), and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
 
 **Every participant is solely responsible for their own investment decisions.** You may lose your entire investment. The developer (NeoB) assumes NO liability for any losses resulting from the use of this software, whether caused by bugs, vulnerabilities, design flaws, or any other reason. This is not financial advice.
 
