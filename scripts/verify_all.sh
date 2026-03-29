@@ -49,7 +49,7 @@ HEADER
 TOTAL_INDIVIDUAL=0
 
 # Run each test binary and count individual tests
-for TEST_BIN in test-chunk1 test-chunk2 test-transaction test-tx-signer test-tx-validation test-capsule test-utxo-set test-merkle-block test-mempool test-bond-lock test-casert test-checkpoints test-transcript-v2 test-reorg test-chainwork test-addressbook test-wallet-policy test-rbf test-cpfp test-hd-wallet test-psbt test-multisig test-popc test-popc-tx test-escrow; do
+for TEST_BIN in test-chunk1 test-chunk2 test-transaction test-tx-signer test-tx-validation test-capsule test-utxo-set test-merkle-block test-mempool test-bond-lock test-casert test-checkpoints test-transcript-v2 test-reorg test-chainwork test-addressbook test-wallet-policy test-rbf test-cpfp test-hd-wallet test-psbt test-multisig test-popc test-popc-tx test-escrow test-proposals test-dynamic-rewards; do
     if [ -x "$BUILD_DIR/$TEST_BIN" ]; then
         OUTPUT=$("$BUILD_DIR/$TEST_BIN" 2>&1) || true
         # Try to extract count from "X passed, Y failed" line

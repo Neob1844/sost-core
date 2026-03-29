@@ -188,6 +188,14 @@ add_executable(test-escrow tests/test_escrow.cpp)
 target_link_libraries(test-escrow PRIVATE sost-core)
 add_test(NAME escrow COMMAND test-escrow)
 
+add_executable(test-proposals tests/test_proposals.cpp)
+target_link_libraries(test-proposals PRIVATE sost-core)
+add_test(NAME proposals COMMAND test-proposals)
+
+add_executable(test-dynamic-rewards tests/test_dynamic_rewards.cpp)
+target_link_libraries(test-dynamic-rewards PRIVATE sost-core)
+add_test(NAME dynamic-rewards COMMAND test-dynamic-rewards)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
