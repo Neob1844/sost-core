@@ -1,0 +1,57 @@
+[
+  {
+    "id": "NTT-001",
+    "name": "Terrain Memory",
+    "intuitive_concept": "The ground 'remembers' geological events",
+    "why_non_testable": "No sensor measures 'memory' — sensors measure current physical state. Memory is not a measurable physical quantity at any scale relevant to exploration.",
+    "scientific_residue": "Current rock properties (conductivity, density, magnetism) DO reflect geological history. This is standard geology, not memory. The testable version — rocks retain physical signatures of formation processes — is already in use.",
+    "what_would_make_testable": "Nothing as stated. Already testable once rephrased as measurable physical properties (conductivity, density, remanent magnetism), which is standard geophysics.",
+    "status": "NON_TESTABLE_AT_THIS_MOMENT",
+    "enters_production": false,
+    "affects_canonical": false
+  },
+  {
+    "id": "NTT-002",
+    "name": "Conscious Subsurface Response",
+    "intuitive_concept": "The ground 'responds' or 'communicates' with intent",
+    "why_non_testable": "No protocol can measure geological consciousness. There is no operationalizable definition of geological intent that produces testable predictions distinguishable from standard geophysical response.",
+    "scientific_residue": "Subsurface properties DO modulate surface observables — but this is physics, not communication. Every measurable surface anomaly over a deposit is explainable by physical properties (density contrast, conductivity, reflectance) without invoking intent.",
+    "what_would_make_testable": "Define a specific, measurable response to a specific stimulus. At that point it is indistinguishable from geophysics and no longer requires the consciousness framing.",
+    "status": "NON_TESTABLE_AT_THIS_MOMENT",
+    "enters_production": false,
+    "affects_canonical": false
+  },
+  {
+    "id": "NTT-003",
+    "name": "Dowsing / Radiesthesia (Literal Mechanism)",
+    "intuitive_concept": "Rods or pendulums detect subsurface features through a claimed non-physical mechanism",
+    "why_non_testable": "No controlled double-blind study has demonstrated above-chance performance for the claimed mechanism. Existing studies show performance consistent with prior geological knowledge and ideomotor effect, not a novel detection mechanism.",
+    "scientific_residue": "Experienced dowsers are often excellent field geologists who unconsciously read terrain, vegetation, drainage patterns, and outcrop geometry. This pattern recognition is valuable geological knowledge — but it is not the mechanism claimed. The geological knowledge itself is testable and valuable.",
+    "what_would_make_testable": "A rigorous double-blind study with adequate statistical power demonstrating above-chance detection in conditions where geological cues are fully controlled. No such study exists.",
+    "status": "NON_TESTABLE_AT_THIS_MOMENT",
+    "enters_production": false,
+    "affects_canonical": false
+  },
+  {
+    "id": "NTT-004",
+    "name": "Earth Frequency Mineral Detection",
+    "intuitive_concept": "Specific passive Earth frequencies (e.g., Schumann resonances) indicate mineral presence at local scale",
+    "why_non_testable": "Schumann resonances (~7.83 Hz fundamental) are global cavity resonances. Local modulation by mineral deposits at exploration scale has never been demonstrated in peer-reviewed literature. No accessible sensor captures local EM spectral anomalies at the required spatial resolution.",
+    "scientific_residue": "EM methods (magnetotellurics, CSEM, TDEM) DO use frequency-dependent EM response to map subsurface conductivity. These are active or semi-active controlled-source methods, not passive Earth-frequency listening. They work and are used in real exploration — but they are not what the intuitive concept describes.",
+    "what_would_make_testable": "A peer-reviewed study demonstrating statistically significant correlation between local passive EM spectral anomalies and mineral deposits at exploration scale, with replication at multiple sites.",
+    "status": "NON_TESTABLE_AT_THIS_MOMENT",
+    "enters_production": false,
+    "affects_canonical": false
+  },
+  {
+    "id": "NTT-005",
+    "name": "Biological Sensitivity to Ore Bodies",
+    "intuitive_concept": "Plants or animals 'sense' mineral deposits through a non-chemical mechanism at depth",
+    "why_non_testable": "While geobotany is real and well-documented (certain plants preferentially colonise specific soil chemistries), the claim that organisms sense ore at depth through a non-chemical mechanism has no identified physical pathway and no controlled experimental support.",
+    "scientific_residue": "Geobotanical indicators ARE used in exploration. Certain plant species are copper-tolerant and are found preferentially over Cu-rich soils. This is soil chemistry response detectable via NDVI anomalies and hyperspectral reflectance — both of which ARE in the spectral pipeline. The chemical pathway is testable and already partially validated.",
+    "what_would_make_testable": "Already testable as geobotany: NDVI anomalies, chlorophyll fluorescence suppression, or hyperspectral alteration signatures over mineralized ground. These are in the frontier registry as separate hypotheses. The non-chemical depth-sensing claim specifically would require demonstration of above-chance biological response in double-blind conditions with chemical cues excluded.",
+    "status": "NON_TESTABLE_AT_THIS_MOMENT as non-chemical depth-sensing claim. ALREADY_TESTABLE as geobotany via spectral pipeline.",
+    "enters_production": false,
+    "affects_canonical": false
+  }
+]
