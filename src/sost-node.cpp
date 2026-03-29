@@ -40,6 +40,8 @@
 #include "sost/block_validation.h"
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
+#include "sost/popc.h"
+#include "sost/popc_tx_builder.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -85,6 +87,8 @@ static std::string  g_wallet_path = "wallet.json";
 static std::string  g_chain_path  = "";            // v0.3.2: for auto-save after block acceptance
 static Hash256      g_genesis_hash{};
 static int64_t      g_chain_height = 0;
+static PoPCRegistry g_popc_registry;
+static std::string  g_popc_registry_path = "popc_registry.json";
 static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT profile index
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
@@ -1393,6 +1397,307 @@ static std::string handle_listbonds(const std::string& id, const std::vector<std
     s<<"]"; return rpc_result(id,s.str());
 }
 
+// =============================================================================
+// PoPC RPC Handlers (application-layer, no consensus changes)
+// =============================================================================
+
+// Duration in blocks: approximately 30 days per month at 10 min/block
+static int64_t popc_duration_to_blocks(uint16_t months) {
+    // 144 blocks/day * 30 days/month * months
+    return (int64_t)144 * 30 * (int64_t)months;
+}
+
+// handle_popc_register
+// Params: [sost_address, eth_address, gold_token, gold_amount_mg, commitment_months]
+static std::string handle_popc_register(const std::string& id, const std::vector<std::string>& p) {
+    if (p.size() < 5) return rpc_error(id, -1, "usage: popc_register <sost_address> <eth_address> <gold_token> <gold_amount_mg> <commitment_months>");
+
+    const std::string& sost_addr      = p[0];
+    const std::string& eth_addr       = p[1];
+    const std::string& gold_token     = p[2];
+    int64_t gold_amount_mg            = (int64_t)std::stoll(p[3]);
+    uint16_t commitment_months        = (uint16_t)std::stoul(p[4]);
+
+    // Validate SOST address
+    PubKeyHash user_pkh{};
+    if (!address_decode(sost_addr, user_pkh))
+        return rpc_error(id, -1, "invalid sost_address");
+
+    // Validate gold token
+    if (gold_token != "XAUT" && gold_token != "PAXG")
+        return rpc_error(id, -1, "gold_token must be 'XAUT' or 'PAXG'");
+
+    // Validate amount
+    if (gold_amount_mg <= 0)
+        return rpc_error(id, -1, "gold_amount_mg must be > 0");
+
+    // Validate duration
+    uint16_t reward_pct_bps = compute_reward_pct(commitment_months);
+    if (reward_pct_bps == 0)
+        return rpc_error(id, -1, "commitment_months must be 1, 3, 6, 9, or 12");
+
+    // Compute commitment_id = SHA256(eth_address || sost_address || gold_token || commitment_months)
+    Hash256 commitment_id{};
+    {
+        std::string canon = eth_addr + sost_addr + gold_token + std::to_string((int)commitment_months);
+        unsigned int digest_len = 32;
+        EVP_Digest(canon.data(), canon.size(),
+                   commitment_id.data(), &digest_len,
+                   EVP_sha256(), nullptr);
+    }
+
+    int64_t current_height;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        current_height = g_chain_height;
+    }
+
+    // Bond sizing: use a conservative default ratio_bps when live price is unavailable.
+    // ratio_bps = (sost_price / gold_oz_price) * 10000
+    // Default: treat ratio_bps = 100 (1%) — conservative bond (20%)
+    uint16_t bond_pct_bps = compute_bond_pct(100);
+
+    // Bond amount = gold_amount_mg * bond_pct_bps / 10000 (in stocks — placeholder calc)
+    // For Phase 1, bond is informational — operator verifies before releasing funds.
+    // Real bond amount requires live price oracle (future Phase 2).
+    // Placeholder: 1 SOST per gram of gold (1000 mg), scaled by bond_pct_bps.
+    int64_t gold_amount_grams_x100 = gold_amount_mg / 10; // centigrams
+    int64_t bond_sost_stocks = (gold_amount_grams_x100 * (int64_t)100000000 / 100)
+                               * (int64_t)bond_pct_bps / 10000;
+    if (bond_sost_stocks <= 0) bond_sost_stocks = 1; // minimum
+
+    PoPCCommitment c{};
+    c.commitment_id       = commitment_id;
+    c.user_pkh            = user_pkh;
+    c.eth_wallet          = eth_addr;
+    c.gold_token          = gold_token;
+    c.gold_amount_mg      = gold_amount_mg;
+    c.bond_sost_stocks    = bond_sost_stocks;
+    c.duration_months     = commitment_months;
+    c.start_height        = current_height;
+    c.end_height          = current_height + popc_duration_to_blocks(commitment_months);
+    c.bond_pct_bps        = bond_pct_bps;
+    c.reward_pct_bps      = reward_pct_bps;
+    c.status              = PoPCStatus::ACTIVE;
+    c.sost_price_usd_micro = 0; // live price not available in Phase 1
+    c.gold_price_usd_micro = 0;
+
+    std::string reg_err;
+    if (!g_popc_registry.register_commitment(c, &reg_err))
+        return rpc_error(id, -1, "register_commitment failed: " + reg_err);
+
+    // Save registry to disk
+    std::string save_err;
+    g_popc_registry.save(g_popc_registry_path, &save_err); // best-effort
+
+    int64_t expected_reward = calculate_reward_stocks(bond_sost_stocks, reward_pct_bps);
+
+    // Format commitment_id as hex
+    char cid_hex[65]; cid_hex[64] = 0;
+    static const char HEX[] = "0123456789abcdef";
+    for (int i = 0; i < 32; ++i) {
+        cid_hex[i*2]   = HEX[commitment_id[i] >> 4];
+        cid_hex[i*2+1] = HEX[commitment_id[i] & 0x0F];
+    }
+
+    std::ostringstream s;
+    s << "{"
+      << "\"commitment_id\":\"" << cid_hex << "\""
+      << ",\"sost_address\":\"" << json_escape(sost_addr) << "\""
+      << ",\"eth_address\":\"" << json_escape(eth_addr) << "\""
+      << ",\"gold_token\":\"" << json_escape(gold_token) << "\""
+      << ",\"gold_amount_mg\":" << gold_amount_mg
+      << ",\"duration_months\":" << (int)commitment_months
+      << ",\"start_height\":" << current_height
+      << ",\"end_height\":" << c.end_height
+      << ",\"required_bond\":\"" << format_sost(bond_sost_stocks) << "\""
+      << ",\"bond_pct_bps\":" << (int)bond_pct_bps
+      << ",\"reward_pct_bps\":" << (int)reward_pct_bps
+      << ",\"expected_reward\":\"" << format_sost(expected_reward) << "\""
+      << ",\"status\":\"ACTIVE\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_popc_status
+// Returns PoPC registry summary: active count, total bonded, PoPC Pool balance.
+static std::string handle_popc_status(const std::string& id, const std::vector<std::string>&) {
+    size_t active_count  = g_popc_registry.active_count();
+    int64_t total_bonded = g_popc_registry.total_bonded_stocks();
+
+    // Scan UTXO set for PoPC Pool balance
+    PubKeyHash popc_pkh{};
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+
+    int64_t pool_balance = 0;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        const auto& umap = g_utxo_set.GetMap();
+        for (const auto& kv : umap) {
+            if (kv.second.pubkey_hash == popc_pkh) {
+                pool_balance += kv.second.amount;
+            }
+        }
+    }
+
+    auto active = g_popc_registry.list_active();
+    std::ostringstream arr;
+    arr << "[";
+    for (size_t i = 0; i < active.size(); ++i) {
+        if (i) arr << ",";
+        const auto& c = active[i];
+        static const char HEX[] = "0123456789abcdef";
+        char cid_hex[65]; cid_hex[64] = 0;
+        for (int j = 0; j < 32; ++j) {
+            cid_hex[j*2]   = HEX[c.commitment_id[j] >> 4];
+            cid_hex[j*2+1] = HEX[c.commitment_id[j] & 0x0F];
+        }
+        arr << "{"
+            << "\"commitment_id\":\"" << cid_hex << "\""
+            << ",\"eth_address\":\"" << json_escape(c.eth_wallet) << "\""
+            << ",\"gold_token\":\"" << json_escape(c.gold_token) << "\""
+            << ",\"gold_amount_mg\":" << c.gold_amount_mg
+            << ",\"bond\":\"" << format_sost(c.bond_sost_stocks) << "\""
+            << ",\"duration_months\":" << (int)c.duration_months
+            << ",\"start_height\":" << c.start_height
+            << ",\"end_height\":" << c.end_height
+            << "}";
+    }
+    arr << "]";
+
+    std::ostringstream s;
+    s << "{"
+      << "\"active_count\":" << active_count
+      << ",\"total_bonded\":\"" << format_sost(total_bonded) << "\""
+      << ",\"pool_balance\":\"" << format_sost(pool_balance) << "\""
+      << ",\"commitments\":" << arr.str()
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_popc_check
+// Params: [eth_address]
+// Returns instructions to run the Python-side Etherscan checker.
+// Full Etherscan integration is Python-side, not C++.
+static std::string handle_popc_check(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "usage: popc_check <eth_address>");
+    const std::string& eth_addr = p[0];
+
+    std::ostringstream s;
+    s << "{"
+      << "\"eth_address\":\"" << json_escape(eth_addr) << "\""
+      << ",\"status\":\"MANUAL_CHECK_REQUIRED\""
+      << ",\"message\":\"Run: python3 scripts/popc_etherscan_checker.py check " << json_escape(eth_addr) << "\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_popc_release
+// Params: [commitment_id_hex]
+// Marks a completed commitment as COMPLETED and returns reward info.
+static std::string handle_popc_release(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "usage: popc_release <commitment_id_hex>");
+
+    const std::string& cid_hex = p[0];
+    if (cid_hex.size() != 64) return rpc_error(id, -1, "commitment_id must be 64 hex chars");
+
+    // Decode commitment_id from hex
+    Hash256 commitment_id{};
+    for (size_t i = 0; i < 32; ++i) {
+        auto h = [](char c) -> int {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+            if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+            return -1;
+        };
+        int hi = h(cid_hex[i*2]);
+        int lo = h(cid_hex[i*2+1]);
+        if (hi < 0 || lo < 0) return rpc_error(id, -1, "invalid hex in commitment_id");
+        commitment_id[i] = (uint8_t)((hi << 4) | lo);
+    }
+
+    int64_t current_height;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        current_height = g_chain_height;
+    }
+
+    const PoPCCommitment* c = g_popc_registry.find(commitment_id);
+    if (!c) return rpc_error(id, -1, "commitment_id not found");
+    if (c->status != PoPCStatus::ACTIVE) return rpc_error(id, -1, "commitment is not ACTIVE");
+    if (current_height < c->end_height)
+        return rpc_error(id, -1, "commitment has not expired yet (end_height=" +
+                         std::to_string(c->end_height) + ", current_height=" +
+                         std::to_string(current_height) + ")");
+
+    int64_t reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
+
+    // Mark as COMPLETED
+    std::string comp_err;
+    if (!g_popc_registry.complete(commitment_id, &comp_err))
+        return rpc_error(id, -1, "complete failed: " + comp_err);
+
+    // Save registry
+    g_popc_registry.save(g_popc_registry_path, nullptr);
+
+    std::ostringstream s;
+    s << "{"
+      << "\"commitment_id\":\"" << json_escape(cid_hex) << "\""
+      << ",\"status\":\"COMPLETED\""
+      << ",\"bond\":\"" << format_sost(c->bond_sost_stocks) << "\""
+      << ",\"reward_pct_bps\":" << (int)c->reward_pct_bps
+      << ",\"reward_amount\":\"" << format_sost(reward) << "\""
+      << ",\"instructions\":\"Broadcast a reward TX from the PoPC Pool to the user's SOST address using build_reward_tx()\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_popc_slash
+// Params: [commitment_id_hex, reason]
+// Marks a commitment as SLASHED in the registry.
+static std::string handle_popc_slash(const std::string& id, const std::vector<std::string>& p) {
+    if (p.size() < 2) return rpc_error(id, -1, "usage: popc_slash <commitment_id_hex> <reason>");
+
+    const std::string& cid_hex = p[0];
+    const std::string& reason  = p[1];
+    if (cid_hex.size() != 64) return rpc_error(id, -1, "commitment_id must be 64 hex chars");
+
+    // Decode commitment_id from hex
+    Hash256 commitment_id{};
+    for (size_t i = 0; i < 32; ++i) {
+        auto h = [](char c) -> int {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+            if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+            return -1;
+        };
+        int hi = h(cid_hex[i*2]);
+        int lo = h(cid_hex[i*2+1]);
+        if (hi < 0 || lo < 0) return rpc_error(id, -1, "invalid hex in commitment_id");
+        commitment_id[i] = (uint8_t)((hi << 4) | lo);
+    }
+
+    const PoPCCommitment* c = g_popc_registry.find(commitment_id);
+    if (!c) return rpc_error(id, -1, "commitment_id not found");
+    if (c->status != PoPCStatus::ACTIVE) return rpc_error(id, -1, "commitment is not ACTIVE");
+
+    std::string slash_err;
+    if (!build_slash_marker(g_popc_registry, commitment_id, reason, &slash_err))
+        return rpc_error(id, -1, "slash failed: " + slash_err);
+
+    // Save registry
+    g_popc_registry.save(g_popc_registry_path, nullptr);
+
+    std::ostringstream s;
+    s << "{"
+      << "\"commitment_id\":\"" << json_escape(cid_hex) << "\""
+      << ",\"status\":\"SLASHED\""
+      << ",\"reason\":\"" << json_escape(reason) << "\""
+      << ",\"note\":\"Bond UTXO can be recovered via build_bond_release_tx() after lock_until expires\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -1418,6 +1723,11 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getaddressbalance",handle_getaddressbalance},
     {"getaddressutxos",handle_getaddressutxos},
     {"listbonds",handle_listbonds},
+    {"popc_register",handle_popc_register},
+    {"popc_status",handle_popc_status},
+    {"popc_check",handle_popc_check},
+    {"popc_release",handle_popc_release},
+    {"popc_slash",handle_popc_slash},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
@@ -3744,6 +4054,16 @@ int main(int argc, char** argv) {
         printf("Wallet: %zu keys\n",g_wallet.num_keys());
     }
 
+    // Load PoPC registry (optional — missing file is not an error)
+    {
+        std::string popc_err;
+        if (!g_popc_registry.load(g_popc_registry_path, &popc_err)) {
+            printf("Warning: PoPC registry load failed: %s\n", popc_err.c_str());
+        } else {
+            printf("PoPC registry: %zu active commitments\n", g_popc_registry.active_count());
+        }
+    }
+
     // Wallet rescan from UTXO set
     {
         int rescan_count = 0;
@@ -3807,6 +4127,7 @@ int main(int argc, char** argv) {
                 }
             }
             if(!chain_path.empty()) save_chain(chain_path);
+            g_popc_registry.save(g_popc_registry_path, nullptr); // best-effort periodic save
         }
     } catch (const std::exception& e) {
         fprintf(stderr, "[CRASH] Main loop exception: %s (height=%lld)\n",

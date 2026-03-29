@@ -309,3 +309,19 @@ New research line translating intuitive geological concepts into physically test
 
 **Canonical: 22.8/40 UNCHANGED.** Tennant Creek is planning + data readiness, not yet tested.
 **Recommendation:** Execute GA TMI download for Tennant Creek, run S2 baseline, then selective stacks.
+
+## Phase 36: Tennant Creek Execution (2026-03-29)
+
+**Classification:** Production validation — data acquisition + planning
+
+- GA TMI magnetics DOWNLOADED for Tennant Creek (5.2MB, validated NetCDF, NCI THREDDS)
+- First magnetics data outside Kalgoorlie — enables multi-zone generalization test
+- Higher magnetic contrast at Tennant Creek (-2664 to 2692 nT) vs Kalgoorlie (-1312 to 1738 nT)
+- All 8 active data sources confirmed ready for Tennant Creek
+- 91 labels validated (IOCG + orogenic Au)
+- Pre-ML magnetics verdict: EXPECTED_CONSOLIDATED_VALIDATED_SELECTIVE (IOCG = inherently magnetic)
+- Gating engine updated to v12 (26 rules)
+- ML pipeline execution deferred to Phase 37 (requires GEE+RF environment)
+
+**Canonical: 22.8/40 UNCHANGED.** Data acquired, ML testing pending.
+**Recommendation:** Execute S2 baseline + magnetics standalone + S2+magnetics stack at Tennant Creek.

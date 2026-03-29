@@ -23,19 +23,24 @@
 | **Reputation system** | **IMPLEMENTED** | `src/popc.cpp` — 0/1/3/5 stars |
 | **Audit entropy** | **IMPLEMENTED** | `src/popc.cpp` — ConvergenceX-derived |
 | **Save/Load (JSON)** | **IMPLEMENTED** | `src/popc.cpp` |
+| **TX Builders (release, reward)** | **IMPLEMENTED** | `src/popc_tx_builder.cpp` |
+| **RPC: popc_register** | **IMPLEMENTED** | `src/sost-node.cpp` |
+| **RPC: popc_status** | **IMPLEMENTED** | `src/sost-node.cpp` |
+| **RPC: popc_check** | **IMPLEMENTED** | `src/sost-node.cpp` (manual bridge) |
+| **RPC: popc_release** | **IMPLEMENTED** | `src/sost-node.cpp` |
+| **RPC: popc_slash** | **IMPLEMENTED** | `src/sost-node.cpp` |
 | Wallet PoPC UI | READY | `sost-wallet.html` (registration form, calculator) |
 
 ## What NEEDS to be built (next phases)
 
 | Component | Effort | Priority | Risk |
 |-----------|--------|----------|------|
-| RPC: popc_register, popc_status, popc_list, popc_release, popc_slash | 2-3 days | HIGH | LOW |
 | Etherscan checker daemon mode + API key | 1 day | HIGH | MEDIUM (rate limits) |
-| Reward distribution (manual or semi-auto) | 2-3 days | HIGH | HIGH (moves real funds) |
-| Slash execution via RPC | 1-2 days | MEDIUM | HIGH (moves real funds) |
+| Live reward TX broadcast (pool key management) | 1-2 days | HIGH | HIGH (moves real funds) |
 | Price Bulletin system | 2-3 days | MEDIUM | LOW |
+| Full Etherscan integration in C++ | 2-3 days | LOW | MEDIUM |
 
-**Remaining estimated: ~10-12 days of focused development**
+**Remaining estimated: ~6-9 days of focused development**
 
 ## What must NOT be rushed
 
