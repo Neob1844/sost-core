@@ -72,7 +72,7 @@
 
 ### Explorer (v4.2)
 - Dashboard: height, block time, supply, hashrate, mempool, countdown
-- cASERT panel with L1-L5/L6+ color-coded display (unidirectional)
+- cASERT panel with L1-L5/L6+ color-coded display (bidirectional: hardens when fast, eases after 6h+ at B0)
 - Gold Reserves and PoPC Pool charts with real block-interval data
 - Emission curve chart (12 epochs, interactive tooltip)
 - Chain timing panel with expected vs actual blocks, lag display

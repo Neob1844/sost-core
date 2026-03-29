@@ -739,7 +739,7 @@ equalizer profiles and anti-stall.
 slow chain → decrease powDiffQ → larger target → easier
 fast chain → increase powDiffQ → smaller target → harder
 
-Half-life: 12h (172,800s). Per-block delta cap: 6.25% (1/16).
+Half-life: V1 (blocks <1450): 48h (172,800s); V2 (blocks >=1450): 24h (86,400s). Per-block delta cap: V1: 6.25% (1/16), V2: 12.5% (1/8).
 
 3.12 cASERT Equalizer (Consensus-Critical)
 
@@ -2245,7 +2245,7 @@ NOTE: The Foundation reserves the right to accelerate or delay any committed tim
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap |
-| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H9(+9) (H10-H12 reserved), B0 baseline, hardening only when ahead of schedule |
+| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H9(+9) (H10-H12 reserved), B0 baseline, bidirectional: hardens (H1-H9) when ahead of schedule, eases (E1-E4) after 6h+ at B0 |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2490,7 +2490,8 @@ MONETARY PARAMETERS:
 
 DIFFICULTY PARAMETERS:
   Q16_ONE                      = 65,536
-  HALF_LIFE                    = 43,200
+  BITSQ_HALF_LIFE (V1)         = 172,800   // 48h — blocks < 1450
+  BITSQ_HALF_LIFE_V2 (V2)      = 86,400    // 24h — blocks >= 1450
   MAX_FUTURE_DRIFT             = 600
 
 cASERT EQUALIZER PARAMETERS (consensus-critical, 17 profiles):
