@@ -1,6 +1,6 @@
 # PoPC Implementation Status
 
-**Date:** 2026-03-28
+**Date:** 2026-03-29
 **Author:** NeoB
 
 ## What EXISTS (ready to use)
@@ -16,23 +16,26 @@
 | PoPC Pool balance | ~3,600 SOST | Accumulating ~1.96/block |
 | Etherscan checker script | READY | `scripts/popc_etherscan_checker.py` |
 | PoPC registry (first entry) | READY | `data/popc_registry.json` |
-| popc.h skeleton | READY | `include/sost/popc.h` |
+| popc.h declarations | READY | `include/sost/popc.h` |
+| **PoPCRegistry implementation** | **IMPLEMENTED** | `src/popc.cpp` (31 tests, all pass) |
+| **Bond sizing (compute_bond_pct)** | **IMPLEMENTED** | `src/popc.cpp` — 5-tier table |
+| **Reward calculation** | **IMPLEMENTED** | `src/popc.cpp` — 1/4/9/15/22% by duration |
+| **Reputation system** | **IMPLEMENTED** | `src/popc.cpp` — 0/1/3/5 stars |
+| **Audit entropy** | **IMPLEMENTED** | `src/popc.cpp` — ConvergenceX-derived |
+| **Save/Load (JSON)** | **IMPLEMENTED** | `src/popc.cpp` |
 | Wallet PoPC UI | READY | `sost-wallet.html` (registration form, calculator) |
 
-## What NEEDS to be built (Phase 34+)
+## What NEEDS to be built (next phases)
 
 | Component | Effort | Priority | Risk |
 |-----------|--------|----------|------|
-| src/popc.cpp — PoPCRegistry full implementation | 3-5 days | HIGH | LOW (application layer, not consensus) |
-| RPC: popc_register, popc_status, popc_list | 2-3 days | HIGH | LOW |
+| RPC: popc_register, popc_status, popc_list, popc_release, popc_slash | 2-3 days | HIGH | LOW |
 | Etherscan checker daemon mode + API key | 1 day | HIGH | MEDIUM (rate limits) |
 | Reward distribution (manual or semi-auto) | 2-3 days | HIGH | HIGH (moves real funds) |
-| Slash execution script | 1-2 days | MEDIUM | HIGH (moves real funds) |
-| Audit entropy from ConvergenceX blocks | 2-3 days | MEDIUM | LOW |
-| Reputation system (stars 0→1→3→5) | 1 day | LOW | LOW |
+| Slash execution via RPC | 1-2 days | MEDIUM | HIGH (moves real funds) |
 | Price Bulletin system | 2-3 days | MEDIUM | LOW |
 
-**Total estimated: ~15-20 days of focused development**
+**Remaining estimated: ~10-12 days of focused development**
 
 ## What must NOT be rushed
 
