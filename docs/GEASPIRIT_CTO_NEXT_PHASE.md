@@ -325,3 +325,18 @@ New research line translating intuitive geological concepts into physically test
 
 **Canonical: 22.8/40 UNCHANGED.** Data acquired, ML testing pending.
 **Recommendation:** Execute S2 baseline + magnetics standalone + S2+magnetics stack at Tennant Creek.
+
+## Phase 37: Tennant Creek Measured Validation (2026-03-29)
+
+**Classification:** First measured ML validation at new zone
+
+- Magnetics-only AUC: 0.762 (bootstrap), CI [0.611, 0.897]
+- Spatial CV AUC: 0.668 ± 0.269 (high variance from 33 labels)
+- Feature importance: TMI gradient (0.381) > analytic signal (0.364) > TMI value (0.255)
+- S2 baseline: NOT MEASURED (GEE not available in execution environment)
+- Magnetics verdict: STILL_SELECTIVE_BUT_ZONE_DEPENDENT
+- Gating engine v13 (28 rules): added WEAK_POSITIVE threshold and PROVISIONAL flag for small samples
+- Canonical: 22.8/40 UNCHANGED
+
+**Key finding:** Magnetics distinguishes IOCG from background above random, with gradient features dominating (geologically coherent). But without S2 comparison, cannot confirm magnetics ADDS value over spectral.
+**Recommendation:** Execute S2 baseline via GEE to measure magnetics delta.
