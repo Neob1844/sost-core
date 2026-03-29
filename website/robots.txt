@@ -1,0 +1,11 @@
+# SOST Protocol — https://sostcore.com
+# Crawl everything, respect rate limits
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sostcore.com/sitemap.xml
+
+# Disallow internal/dev paths
+Disallow: /sost-app/sw.js

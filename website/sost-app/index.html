@@ -632,10 +632,7 @@ body {
 (function() {
 'use strict';
 
-// Redirect non-primary domains to sostcore.com (belt-and-suspenders with nginx)
-if (location.hostname !== 'sostcore.com' && location.hostname !== 'explorer.sostcore.com' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-  location.href = 'https://sostcore.com' + location.pathname + location.search + location.hash;
-}
+// No domain redirect — both sostcore.com and sostprotocol.com serve identical content
 
 // ── Configuration ──────────────────────────────────────────────
 let RPC_URL = '/rpc'; // Always relative — we redirect non-sostcore domains above
