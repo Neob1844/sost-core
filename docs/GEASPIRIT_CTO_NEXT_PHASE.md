@@ -369,3 +369,19 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 22.8/40 UNCHANGED (conservative)
 
 **Recommendation:** Re-auth GEE, run S2 comparison, plan Mt Isa as third magnetics zone.
+
+## Phase 40: S2 Batch Export + Mt Isa Readiness (2026-03-29)
+
+**Classification:** S2 comparison blocked, Mt Isa assessed
+
+- GEE credentials: STILL EXPIRED (needs interactive `earthengine authenticate`)
+- Copernicus/AWS alternatives: FAILED (timeout/400)
+- TMI multi-scale proxy: not independent (within-magnetics self-comparison)
+- Phase 39 terrain comparison: REPRODUCED EXACTLY (0.694/0.668/0.763)
+- TRUE S2 comparison: NOT ACHIEVED (3 consecutive phases blocked)
+- Mt Isa assessed: 104 labels (Cu, U, Au+Cu), TMI download pending
+- Magnetics: CONSOLIDATED_VALIDATED_SELECTIVE (unchanged — terrain evidence stands)
+- Canonical: 22.8/40 UNCHANGED
+
+**Blocker:** Operator must run `earthengine authenticate` in an interactive terminal.
+**Recommendation:** Auth GEE → run Track A → download Mt Isa TMI → validate at 3rd zone.
