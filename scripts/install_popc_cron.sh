@@ -10,8 +10,20 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DISTRIBUTE_SCRIPT="$SCRIPT_DIR/popc_auto_distribute.sh"
 AUTO_PASS_FILE="/root/.sost_auto_pass"
-ENCRYPTED_KEY="$HOME/SOST/secrets/popc_pool.json.enc"
 CRON_LINE="0 4 * * * $DISTRIBUTE_SCRIPT"
+
+# Search for encrypted key in multiple locations
+ENCRYPTED_KEY=""
+for candidate in \
+    "/opt/sost/secrets/popc_pool.json.enc" \
+    "/root/SOST/secrets/popc_pool.json.enc" \
+    "$HOME/SOST/secrets/popc_pool.json.enc" \
+    "/home/sost/SOST/secrets/popc_pool.json.enc"; do
+    if [ -f "$candidate" ]; then
+        ENCRYPTED_KEY="$candidate"
+        break
+    fi
+done
 
 echo "=== PoPC Auto-Distribution Installer ==="
 echo ""
@@ -31,14 +43,21 @@ else
     echo "[OK] Distribution script is executable."
 fi
 
-# Check 3: Encrypted key exists
-if [ ! -f "$ENCRYPTED_KEY" ]; then
+# Check 3: Encrypted key exists (searched multiple locations)
+if [ -z "$ENCRYPTED_KEY" ]; then
     echo ""
-    echo "WARNING: Encrypted key not found at $ENCRYPTED_KEY"
-    echo "  You need to create it first:"
-    echo "    mkdir -p ~/SOST/secrets"
-    echo "    openssl aes-256-cbc -pbkdf2 -in popc_pool.json -out ~/SOST/secrets/popc_pool.json.enc"
+    echo "WARNING: Encrypted key not found in any standard location."
+    echo "  Searched: /opt/sost/secrets/, ~/SOST/secrets/, /home/sost/SOST/secrets/"
     echo ""
+    echo "  To set up on the VPS:"
+    echo "    mkdir -p /opt/sost/secrets && chmod 700 /opt/sost/secrets"
+    echo "    scp ~/SOST/secrets/popc_pool.json.enc root@VPS_IP:/opt/sost/secrets/"
+    echo ""
+    echo "  Or create fresh:"
+    echo "    openssl aes-256-cbc -pbkdf2 -in popc_pool.json -out /opt/sost/secrets/popc_pool.json.enc"
+    echo ""
+else
+    echo "[OK] Encrypted key found: $ENCRYPTED_KEY"
 fi
 
 # Check 4: Auto-pass file

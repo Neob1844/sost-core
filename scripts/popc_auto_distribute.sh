@@ -22,10 +22,33 @@ set -o pipefail
 LOG="/var/log/popc_auto_distribute.log"
 ALERT_LOG="/var/log/popc_alerts.log"
 SECRETS_DIR="/tmp/sost_secrets_auto_$$"
-ENCRYPTED_KEY="$HOME/SOST/secrets/popc_pool.json.enc"
 AUTO_PASS_FILE="/root/.sost_auto_pass"
 RPC_URL="http://127.0.0.1:18232"
-SLASH_QUEUE="$HOME/SOST/sostcore/sost-core/logs/popc_slash_queue.json"
+
+# Search for encrypted key in multiple locations (first found wins)
+ENCRYPTED_KEY=""
+for candidate in \
+    "/opt/sost/secrets/popc_pool.json.enc" \
+    "/root/SOST/secrets/popc_pool.json.enc" \
+    "$HOME/SOST/secrets/popc_pool.json.enc" \
+    "/home/sost/SOST/secrets/popc_pool.json.enc"; do
+    if [ -f "$candidate" ]; then
+        ENCRYPTED_KEY="$candidate"
+        break
+    fi
+done
+
+# Search for slash queue in multiple locations
+SLASH_QUEUE=""
+for candidate in \
+    "/opt/sost/logs/popc_slash_queue.json" \
+    "$HOME/SOST/sostcore/sost-core/logs/popc_slash_queue.json" \
+    "/home/sost/SOST/sostcore/sost-core/logs/popc_slash_queue.json"; do
+    if [ -f "$candidate" ]; then
+        SLASH_QUEUE="$candidate"
+        break
+    fi
+done
 MAX_RELEASES_PER_RUN=10
 MAX_SLASHES_PER_RUN=5
 REWARD_POOL_PCT_LIMIT=30  # alert if single reward > 30% of pool
@@ -75,11 +98,12 @@ if [ ! -f "$AUTO_PASS_FILE" ]; then
     exit 0
 fi
 
-# Check encrypted key exists
-if [ ! -f "$ENCRYPTED_KEY" ]; then
-    log "No encrypted key found ($ENCRYPTED_KEY), skipping."
+# Check encrypted key exists (searched in multiple locations above)
+if [ -z "$ENCRYPTED_KEY" ] || [ ! -f "$ENCRYPTED_KEY" ]; then
+    log "No encrypted key found in any location (tried /opt/sost/secrets/, ~/SOST/secrets/, /home/sost/SOST/secrets/). Skipping."
     exit 0
 fi
+log "Using encrypted key: $ENCRYPTED_KEY"
 
 # Check node is running
 NODE_CHECK=$(rpc_call "getblockcount")

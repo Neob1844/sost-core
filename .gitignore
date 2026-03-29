@@ -58,11 +58,13 @@ backups/
 config/popc_checker.json
 logs/popc_audit.log
 
-# Secrets — NEVER commit private keys
+# Secrets — NEVER commit private keys or encrypted keys
 secrets/
 **/secrets/
 *.key
 *.pem
+*.enc
+.sost_auto_pass
 *_privkey*
 *_private*
 gold_vault*.json
