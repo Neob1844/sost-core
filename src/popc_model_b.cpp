@@ -122,11 +122,20 @@ static EscrowStatus escrow_status_from_str(const std::string& s) {
 
 // =========================================================================
 // calculate_escrow_reward
-// Same reward rates as Model A (POPC_REWARD_RATES), applied to gold_value_stocks.
+// Uses ESCROW_REWARD_RATES (Model B — halved from Model A), applied to gold_value_stocks.
 // No bond required — reward is on the full gold value.
 // =========================================================================
 int64_t calculate_escrow_reward(int64_t gold_value_stocks, uint16_t duration_months) {
-    uint16_t reward_pct_bps = compute_reward_pct(duration_months);
+    // Look up ESCROW_REWARD_RATES by matching duration against POPC_DURATIONS
+    static constexpr size_t N = sizeof(POPC_DURATIONS) / sizeof(POPC_DURATIONS[0]);
+    static constexpr size_t NR = sizeof(ESCROW_REWARD_RATES) / sizeof(ESCROW_REWARD_RATES[0]);
+    uint16_t reward_pct_bps = 0;
+    for (size_t i = 0; i < N && i < NR; ++i) {
+        if (POPC_DURATIONS[i] == duration_months) {
+            reward_pct_bps = ESCROW_REWARD_RATES[i];
+            break;
+        }
+    }
     if (reward_pct_bps == 0 || gold_value_stocks <= 0) return 0;
     // reward_pct_bps is in basis-points (e.g. 100 = 1%)
     return (gold_value_stocks * (int64_t)reward_pct_bps) / 10000;

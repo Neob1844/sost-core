@@ -43,6 +43,7 @@
 #include "sost/popc.h"
 #include "sost/popc_tx_builder.h"
 #include "sost/popc_model_b.h"
+#include "sost/proposals.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -1511,8 +1512,36 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     int64_t bond_sost_stocks = (bond_micro * (int64_t)STOCKS_PER_SOST) / sost_price_micro;
     if (bond_sost_stocks <= 0) bond_sost_stocks = 1; // minimum 1 stock
 
-    // --- Reward calculation ---
-    int64_t reward_stocks = calculate_reward_stocks(bond_sost_stocks, reward_pct_bps);
+    // --- Anti-whale check ---
+    uint16_t whale_mult = whale_tier_multiplier(gold_amount_mg);
+    if (whale_mult == 0)
+        return rpc_error(id, -1, "gold_amount_mg exceeds hard cap (>200 oz / 6,220,700 mg)");
+
+    // --- Pool balance scan for PUR ---
+    int64_t pool_balance = 0;
+    {
+        PubKeyHash popc_pkh_reg{};
+        address_decode(ADDR_POPC_POOL, popc_pkh_reg);
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        const auto& umap = g_utxo_set.GetMap();
+        for (const auto& kv : umap) {
+            if (kv.second.pubkey_hash == popc_pkh_reg)
+                pool_balance += kv.second.amount;
+        }
+    }
+
+    int32_t pur = compute_pur_bps(g_popc_registry.committed_rewards(), pool_balance);
+    if (pur >= PUR_CLOSED_BPS)
+        return rpc_error(id, -1, "Pool fully committed (PUR=100%). No new registrations accepted.");
+
+    int32_t factor = compute_dynamic_factor_bps(pur);
+    uint16_t dyn_rate = apply_dynamic_reward(reward_pct_bps, factor, POPC_REWARD_FLOOR_A_BPS);
+    // Apply whale multiplier
+    dyn_rate = (uint16_t)(((int64_t)dyn_rate * (int64_t)whale_mult) / 10000);
+    if (dyn_rate < POPC_REWARD_FLOOR_A_BPS) dyn_rate = POPC_REWARD_FLOOR_A_BPS;
+
+    // --- Reward calculation (using dynamic rate) ---
+    int64_t reward_stocks = calculate_reward_stocks(bond_sost_stocks, dyn_rate);
     int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
     int64_t total_return  = bond_sost_stocks + net_reward;
 
@@ -1523,7 +1552,12 @@ static std::string handle_popc_register(const std::string& id, const std::vector
              (long long)(gold_value_micro / 1000000LL),
              (long long)((gold_value_micro % 1000000LL) / 10000LL));
 
-    // Store live prices in commitment
+    // Determine whale tier label
+    const char* whale_tier_label = "T1_FULL";
+    if (whale_mult == WHALE_MULT_T2) whale_tier_label = "T2_75PCT";
+    else if (whale_mult == WHALE_MULT_T3) whale_tier_label = "T3_50PCT";
+
+    // Store live prices in commitment (store dynamic rate in reward_pct_bps)
     PoPCCommitment c{};
     c.commitment_id        = commitment_id;
     c.user_pkh             = user_pkh;
@@ -1535,7 +1569,7 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     c.start_height         = current_height;
     c.end_height           = current_height + popc_duration_to_blocks(commitment_months);
     c.bond_pct_bps         = bond_pct_bps;
-    c.reward_pct_bps       = reward_pct_bps;
+    c.reward_pct_bps       = dyn_rate;
     c.status               = PoPCStatus::ACTIVE;
     c.sost_price_usd_micro = sost_price_micro;
     c.gold_price_usd_micro = gold_price_micro;
@@ -1543,6 +1577,9 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     std::string reg_err;
     if (!g_popc_registry.register_commitment(c, &reg_err))
         return rpc_error(id, -1, "register_commitment failed: " + reg_err);
+
+    // Reserve committed rewards for PUR tracking
+    g_popc_registry.add_committed(net_reward);
 
     // Save registry to disk
     std::string save_err;
@@ -1556,6 +1593,9 @@ static std::string handle_popc_register(const std::string& id, const std::vector
         cid_hex[i*2+1] = HEX[commitment_id[i] & 0x0F];
     }
 
+    int32_t pur_pct         = pur / 100;
+    int32_t factor_pct      = factor / 100;
+
     std::ostringstream s;
     s << "{"
       << "\"commitment_id\":\"" << cid_hex << "\""
@@ -1563,13 +1603,19 @@ static std::string handle_popc_register(const std::string& id, const std::vector
       << ",\"gold_value_usd\":\"" << gold_usd_buf << "\""
       << ",\"bond_percentage\":" << (int)bond_pct_bps
       << ",\"bond_required_sost\":\"" << format_sost(bond_sost_stocks) << "\""
-      << ",\"reward_percentage\":" << (int)reward_pct_bps
+      << ",\"base_reward_pct_bps\":" << (int)reward_pct_bps
+      << ",\"pur_pct\":" << pur_pct
+      << ",\"dynamic_factor_pct\":" << factor_pct
+      << ",\"effective_rate_bps\":" << (int)dyn_rate
+      << ",\"whale_tier\":\"" << whale_tier_label << "\""
       << ",\"expected_reward_sost\":\"" << format_sost(net_reward) << "\""
       << ",\"total_return_sost\":\"" << format_sost(total_return) << "\""
       << ",\"commitment_blocks\":" << popc_duration_to_blocks(commitment_months)
       << ",\"commitment_months\":" << (int)commitment_months
-      << ",\"expires_at_height\":" << c.end_height
-      << ",\"message\":\"Bond required before PoPC Pool releases reward. Operator verifies gold custody before release.\""
+      << ",\"expires_at_height\":" << c.end_height;
+    if (pur >= PUR_WARNING_BPS)
+        s << ",\"warning\":\"Pool utilization above 80% — reward rate reduced\"";
+    s << ",\"message\":\"Bond required before PoPC Pool releases reward. Operator verifies gold custody before release.\""
       << "}";
     return rpc_result(id, s.str());
 }
@@ -1620,11 +1666,20 @@ static std::string handle_popc_status(const std::string& id, const std::vector<s
     }
     arr << "]";
 
+    int64_t committed_rwd = g_popc_registry.committed_rewards();
+    int32_t pur_status    = compute_pur_bps(committed_rwd, pool_balance);
+    int32_t dyn_factor    = compute_dynamic_factor_bps(pur_status);
+    int32_t pur_pct       = pur_status / 100;
+    int32_t factor_pct    = dyn_factor / 100;
+
     std::ostringstream s;
     s << "{"
       << "\"active_count\":" << active_count
       << ",\"total_bonded\":\"" << format_sost(total_bonded) << "\""
       << ",\"pool_balance\":\"" << format_sost(pool_balance) << "\""
+      << ",\"committed_rewards\":\"" << format_sost(committed_rwd) << "\""
+      << ",\"pur_pct\":" << pur_pct
+      << ",\"dynamic_factor_pct\":" << factor_pct
       << ",\"commitments\":" << arr.str()
       << "}";
     return rpc_result(id, s.str());
@@ -1686,11 +1741,15 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
                          std::to_string(current_height) + ")");
 
     int64_t reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
+    int64_t net_reward_release = reward - (reward * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
 
     // Mark as COMPLETED
     std::string comp_err;
     if (!g_popc_registry.complete(commitment_id, &comp_err))
         return rpc_error(id, -1, "complete failed: " + comp_err);
+
+    // Release committed rewards from PUR tracking
+    g_popc_registry.release_committed(net_reward_release);
 
     // Save registry
     g_popc_registry.save(g_popc_registry_path, nullptr);
@@ -1701,7 +1760,7 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
       << ",\"status\":\"COMPLETED\""
       << ",\"bond\":\"" << format_sost(c->bond_sost_stocks) << "\""
       << ",\"reward_pct_bps\":" << (int)c->reward_pct_bps
-      << ",\"reward_amount\":\"" << format_sost(reward) << "\""
+      << ",\"reward_amount\":\"" << format_sost(net_reward_release) << "\""
       << ",\"instructions\":\"Broadcast a reward TX from the PoPC Pool to the user's SOST address using build_reward_tx()\""
       << "}";
     return rpc_result(id, s.str());
@@ -1736,9 +1795,16 @@ static std::string handle_popc_slash(const std::string& id, const std::vector<st
     if (!c) return rpc_error(id, -1, "commitment_id not found");
     if (c->status != PoPCStatus::ACTIVE) return rpc_error(id, -1, "commitment is not ACTIVE");
 
+    // Capture reward amount before slash (for committed release)
+    int64_t slash_reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
+    int64_t slash_net_reward = slash_reward - (slash_reward * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+
     std::string slash_err;
     if (!build_slash_marker(g_popc_registry, commitment_id, reason, &slash_err))
         return rpc_error(id, -1, "slash failed: " + slash_err);
+
+    // Release committed rewards from PUR tracking (slashed rewards are not paid)
+    g_popc_registry.release_committed(slash_net_reward);
 
     // Save registry
     g_popc_registry.save(g_popc_registry_path, nullptr);
@@ -1782,10 +1848,23 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
     if (gold_amount_mg <= 0)
         return rpc_error(id, -1, "gold_amount_mg must be > 0");
 
-    // Validate duration
-    uint16_t reward_pct_bps = compute_reward_pct(commitment_months);
-    if (reward_pct_bps == 0)
+    // Validate duration — use ESCROW_REWARD_RATES (Model B, halved from Model A)
+    static constexpr size_t ESCROW_RATES_N = sizeof(ESCROW_REWARD_RATES) / sizeof(ESCROW_REWARD_RATES[0]);
+    static constexpr size_t POPC_DUR_N     = sizeof(POPC_DURATIONS) / sizeof(POPC_DURATIONS[0]);
+    uint16_t base_reward_pct_bps = 0;
+    for (size_t di = 0; di < POPC_DUR_N && di < ESCROW_RATES_N; ++di) {
+        if (POPC_DURATIONS[di] == commitment_months) {
+            base_reward_pct_bps = ESCROW_REWARD_RATES[di];
+            break;
+        }
+    }
+    if (base_reward_pct_bps == 0)
         return rpc_error(id, -1, "commitment_months must be 1, 3, 6, 9, or 12");
+
+    // Anti-whale check
+    uint16_t whale_mult_e = whale_tier_multiplier(gold_amount_mg);
+    if (whale_mult_e == 0)
+        return rpc_error(id, -1, "gold_amount_mg exceeds hard cap (>200 oz / 6,220,700 mg)");
 
     // Compute escrow_id = SHA256(eth_escrow_address || sost_address || gold_token || commitment_months)
     Hash256 escrow_id{};
@@ -1803,6 +1882,29 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
         current_height = g_chain_height;
     }
 
+    // Pool balance scan for PUR
+    int64_t pool_balance_e = 0;
+    {
+        PubKeyHash popc_pkh_e{};
+        address_decode(ADDR_POPC_POOL, popc_pkh_e);
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        const auto& umap = g_utxo_set.GetMap();
+        for (const auto& kv : umap) {
+            if (kv.second.pubkey_hash == popc_pkh_e)
+                pool_balance_e += kv.second.amount;
+        }
+    }
+
+    int32_t pur_e = compute_pur_bps(g_popc_registry.committed_rewards(), pool_balance_e);
+    if (pur_e >= PUR_CLOSED_BPS)
+        return rpc_error(id, -1, "Pool fully committed (PUR=100%). No new registrations accepted.");
+
+    int32_t factor_e = compute_dynamic_factor_bps(pur_e);
+    uint16_t dyn_rate_e = apply_dynamic_reward(base_reward_pct_bps, factor_e, POPC_REWARD_FLOOR_B_BPS);
+    // Apply whale multiplier
+    dyn_rate_e = (uint16_t)(((int64_t)dyn_rate_e * (int64_t)whale_mult_e) / 10000);
+    if (dyn_rate_e < POPC_REWARD_FLOOR_B_BPS) dyn_rate_e = POPC_REWARD_FLOOR_B_BPS;
+
     // Load pricing
     double sost_per_usd   = 1.0;
     double gold_price_usd = 3000.0;
@@ -1816,11 +1918,11 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
 
     int64_t gold_value_micro = (gold_amount_mg * gold_price_micro) / 31103;
 
-    // Gold value in stocks (for reward calculation)
+    // Gold value in stocks (for reward calculation using dynamic rate)
     int64_t gold_value_stocks = (gold_value_micro * (int64_t)STOCKS_PER_SOST) / sost_price_micro;
 
-    // Calculate reward (paid immediately on Model B)
-    int64_t reward_stocks = calculate_escrow_reward(gold_value_stocks, commitment_months);
+    // Calculate reward using dynamic rate (applied to gold_value_stocks)
+    int64_t reward_stocks = (gold_value_stocks * (int64_t)dyn_rate_e) / 10000;
     int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
 
     // Gold value USD formatted
@@ -1828,6 +1930,11 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
     snprintf(gold_usd_buf, sizeof(gold_usd_buf), "%lld.%02lld",
              (long long)(gold_value_micro / 1000000LL),
              (long long)((gold_value_micro % 1000000LL) / 10000LL));
+
+    // Determine whale tier label
+    const char* whale_tier_label_e = "T1_FULL";
+    if (whale_mult_e == WHALE_MULT_T2) whale_tier_label_e = "T2_75PCT";
+    else if (whale_mult_e == WHALE_MULT_T3) whale_tier_label_e = "T3_50PCT";
 
     EscrowCommitment e{};
     e.escrow_id          = escrow_id;
@@ -1845,6 +1952,9 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
     if (!g_escrow_registry.register_escrow(e, &reg_err))
         return rpc_error(id, -1, "register_escrow failed: " + reg_err);
 
+    // Reserve committed rewards for PUR tracking
+    g_popc_registry.add_committed(net_reward);
+
     g_escrow_registry.save(g_escrow_registry_path, nullptr); // best-effort
 
     // Format escrow_id as hex
@@ -1855,6 +1965,9 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
         eid_hex[i*2+1] = HEX_E[escrow_id[i] & 0x0F];
     }
 
+    int32_t pur_pct_e    = pur_e / 100;
+    int32_t factor_pct_e = factor_e / 100;
+
     std::ostringstream s;
     s << "{"
       << "\"escrow_id\":\"" << eid_hex << "\""
@@ -1863,14 +1976,20 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
       << ",\"gold_token\":\"" << json_escape(gold_token) << "\""
       << ",\"gold_amount_mg\":" << gold_amount_mg
       << ",\"gold_value_usd\":\"" << gold_usd_buf << "\""
-      << ",\"reward_pct_bps\":" << (int)reward_pct_bps
+      << ",\"base_reward_pct_bps\":" << (int)base_reward_pct_bps
+      << ",\"pur_pct\":" << pur_pct_e
+      << ",\"dynamic_factor_pct\":" << factor_pct_e
+      << ",\"effective_rate_bps\":" << (int)dyn_rate_e
+      << ",\"whale_tier\":\"" << whale_tier_label_e << "\""
       << ",\"immediate_reward_sost\":\"" << format_sost(net_reward) << "\""
       << ",\"commitment_months\":" << (int)commitment_months
       << ",\"commitment_blocks\":" << popc_duration_to_blocks(commitment_months)
       << ",\"start_height\":" << current_height
       << ",\"end_height\":" << e.end_height
-      << ",\"status\":\"ACTIVE\""
-      << ",\"message\":\"Reward paid immediately. Gold held in Ethereum escrow contract until end_height.\""
+      << ",\"status\":\"ACTIVE\"";
+    if (pur_e >= PUR_WARNING_BPS)
+        s << ",\"warning\":\"Pool utilization above 80% — reward rate reduced\"";
+    s << ",\"message\":\"Reward paid immediately. Gold held in Ethereum escrow contract until end_height.\""
       << "}";
     return rpc_result(id, s.str());
 }
@@ -1968,9 +2087,14 @@ static std::string handle_escrow_complete(const std::string& id, const std::vect
                          std::to_string(e->end_height) + ", current_height=" +
                          std::to_string(current_height) + ")");
 
+    int64_t escrow_reward_amount = e->reward_stocks;
+
     std::string comp_err;
     if (!g_escrow_registry.complete(escrow_id, &comp_err))
         return rpc_error(id, -1, "complete failed: " + comp_err);
+
+    // Release committed rewards from PUR tracking
+    g_popc_registry.release_committed(escrow_reward_amount);
 
     g_escrow_registry.save(g_escrow_registry_path, nullptr);
 
@@ -1978,9 +2102,47 @@ static std::string handle_escrow_complete(const std::string& id, const std::vect
     s << "{"
       << "\"escrow_id\":\"" << json_escape(eid_hex) << "\""
       << ",\"status\":\"COMPLETED\""
-      << ",\"reward_paid\":\"" << format_sost(e->reward_stocks) << "\""
+      << ",\"reward_paid\":\"" << format_sost(escrow_reward_amount) << "\""
       << ",\"note\":\"Escrow timelock expired. Gold can be released back to depositor.\""
       << "}";
+    return rpc_result(id, s.str());
+}
+
+// handle_getproposals
+// Returns all defined version-bit signaling proposals and their current status.
+static std::string handle_getproposals(const std::string& id, const std::vector<std::string>&) {
+    auto proposals = get_proposals();
+    std::ostringstream s;
+    s << "[";
+    for (size_t i = 0; i < proposals.size(); ++i) {
+        if (i) s << ",";
+        const auto& p = proposals[i];
+        // Count signals from recent blocks
+        std::vector<uint32_t> versions;
+        {
+            std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+            int start = std::max(0, (int)g_blocks.size() - SIGNALING_WINDOW);
+            for (int j = start; j < (int)g_blocks.size(); ++j)
+                versions.push_back(1); // Current blocks all version=1, no signals yet
+        }
+        int32_t signal_count = count_version_signals(versions, p.bit);
+        int32_t window = std::min((int32_t)versions.size(), SIGNALING_WINDOW);
+        int32_t pct = window > 0 ? (signal_count * 100) / window : 0;
+
+        s << "{\"bit\":" << (int)p.bit
+          << ",\"name\":\"" << p.name << "\""
+          << ",\"description\":\"" << p.description << "\""
+          << ",\"status\":\"" << (p.status == ProposalStatus::DEFINED ? "defined" :
+                                   p.status == ProposalStatus::ACTIVE ? "active" : "pending") << "\""
+          << ",\"signal_count\":" << signal_count
+          << ",\"window\":" << window
+          << ",\"signal_pct\":" << pct
+          << ",\"threshold\":" << SIGNALING_THRESHOLD_PCT
+          << ",\"foundation_veto\":" << (p.foundation_veto ? "true" : "false")
+          << ",\"foundation_support\":" << (p.foundation_support ? "true" : "false")
+          << "}";
+    }
+    s << "]";
     return rpc_result(id, s.str());
 }
 
@@ -2018,6 +2180,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"escrow_status",handle_escrow_status},
     {"escrow_verify",handle_escrow_verify},
     {"escrow_complete",handle_escrow_complete},
+    {"getproposals",handle_getproposals},
 };
 
 static std::string dispatch_rpc(const std::string& req) {

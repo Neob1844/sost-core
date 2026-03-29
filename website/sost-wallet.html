@@ -1025,11 +1025,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="form-group">
           <label class="form-label">Commitment Period</label>
           <select id="popcDuration" class="form-input" onchange="updatePopcCalc()">
-            <option value="1">1 month (1% reward)</option>
-            <option value="3">3 months (4% reward)</option>
-            <option value="6">6 months (9% reward)</option>
-            <option value="9">9 months (15% reward)</option>
-            <option value="12" selected>12 months (22% reward)</option>
+            <option value="1">1 month (up to 1% reward)</option>
+            <option value="3">3 months (up to 4% reward)</option>
+            <option value="6">6 months (up to 9% reward)</option>
+            <option value="9">9 months (up to 15% reward)</option>
+            <option value="12" selected>12 months (up to 22% reward)</option>
           </select>
         </div>
         <div id="popcCalcResult" style="margin:12px 0;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.8">
@@ -1049,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr style="border-bottom:1px solid var(--border-dim)"><td style="padding:6px">9 months</td><td style="text-align:right;padding:6px">15%</td><td style="text-align:right;padding:6px;color:var(--text-dim)">20%</td></tr>
           <tr><td style="padding:6px">12 months</td><td style="text-align:right;padding:6px;color:var(--green-primary);font-weight:600">22%</td><td style="text-align:right;padding:6px;color:var(--green-primary)">22%</td></tr>
         </table>
-        <p style="font-size:11px;color:var(--text-dim);margin-top:8px">Reward rates are operational reference parameters, not guaranteed yields. Protocol fee: 5% on reward. Bond is 100% returned on successful completion.</p>
+        <p style="font-size:11px;color:var(--text-dim);margin-top:8px">Rates shown are <strong>maximums</strong>. Actual reward is dynamic, adjusted by Pool Utilization Ratio (PUR). Anti-whale tiers apply above 10 oz. Protocol fee: 5%. Bond is 100% returned on completion.</p>
       </div>
 
       <div class="notice" style="border-left:3px solid var(--red-primary)">

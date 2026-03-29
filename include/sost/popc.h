@@ -145,6 +145,71 @@ bool is_audit_triggered(const Hash256& audit_seed,
                         uint16_t audit_prob_permille);
 
 // =========================================================================
+// Dynamic Reward System (PUR-based)
+// =========================================================================
+
+// Pool Utilization Ratio thresholds
+inline constexpr int32_t PUR_CLOSED_BPS       = 10000; // 100% — no new registrations
+inline constexpr int32_t PUR_WARNING_BPS      = 8000;  // 80% — accept with warning
+inline constexpr int32_t PUR_FLOOR_BPS        = 8000;  // PUR above this → floor rate only
+
+// Reward floors (basis points) — minimum reward even at high PUR
+inline constexpr uint16_t POPC_REWARD_FLOOR_A_BPS = 100;  // 1% floor for Model A (12mo)
+inline constexpr uint16_t POPC_REWARD_FLOOR_B_BPS = 50;   // 0.5% floor for Model B (12mo)
+
+// Model B reward rates (halved from Model A)
+static constexpr uint16_t ESCROW_REWARD_RATES[] = {50, 200, 450, 750, 1100};
+
+// Anti-whale tiers (gold amount in milligrams)
+inline constexpr int64_t WHALE_TIER_1_MG = 311035;    // 10 oz — 100% reward
+inline constexpr int64_t WHALE_TIER_2_MG = 1555175;   // 50 oz — 75% reward
+inline constexpr int64_t WHALE_TIER_3_MG = 6220700;   // 200 oz — 50% reward, hard cap above
+inline constexpr uint16_t WHALE_MULT_T1  = 10000;     // 100%
+inline constexpr uint16_t WHALE_MULT_T2  = 7500;      // 75%
+inline constexpr uint16_t WHALE_MULT_T3  = 5000;      // 50%
+
+// Compute PUR in basis points (0-10000)
+// committed = total reserved rewards (stocks), pool = current pool balance (stocks)
+inline int32_t compute_pur_bps(int64_t committed_stocks, int64_t pool_balance_stocks) {
+    if (pool_balance_stocks <= 0) return PUR_CLOSED_BPS;
+    if (committed_stocks <= 0) return 0;
+    // Use 64-bit to avoid overflow: (committed * 10000) / pool
+    int64_t pur = (committed_stocks * 10000) / pool_balance_stocks;
+    if (pur > 10000) pur = 10000;
+    return (int32_t)pur;
+}
+
+// Compute dynamic factor in basis points using quadratic curve: (1 - PUR)^2
+// Input: pur_bps (0-10000), Output: factor_bps (0-10000)
+inline int32_t compute_dynamic_factor_bps(int32_t pur_bps) {
+    if (pur_bps >= PUR_CLOSED_BPS) return 0;
+    if (pur_bps <= 0) return 10000; // 100%
+    // (1 - pur/10000)^2 * 10000
+    int64_t inv = 10000 - pur_bps; // 0-10000
+    return (int32_t)((inv * inv) / 10000);
+}
+
+// Apply dynamic factor to a base reward rate
+// base_rate_bps = e.g. 2200 (22%), factor_bps = e.g. 2500 (25%)
+// Result: 2200 * 2500 / 10000 = 550 bps (5.5%)
+// Applies floor: never returns less than floor_bps
+inline uint16_t apply_dynamic_reward(uint16_t base_rate_bps, int32_t factor_bps, uint16_t floor_bps) {
+    int64_t adjusted = ((int64_t)base_rate_bps * (int64_t)factor_bps) / 10000;
+    if (adjusted < floor_bps) adjusted = floor_bps;
+    return (uint16_t)adjusted;
+}
+
+// Anti-whale multiplier based on gold amount
+// Returns multiplier in basis points (10000 = 100%, 7500 = 75%, etc.)
+// Returns 0 if above hard cap (>200 oz) → registration rejected
+inline uint16_t whale_tier_multiplier(int64_t gold_amount_mg) {
+    if (gold_amount_mg > WHALE_TIER_3_MG) return 0;       // >200 oz → REJECTED
+    if (gold_amount_mg > WHALE_TIER_2_MG) return WHALE_MULT_T3; // 50-200 oz → 50%
+    if (gold_amount_mg > WHALE_TIER_1_MG) return WHALE_MULT_T2; // 10-50 oz → 75%
+    return WHALE_MULT_T1;                                        // 0-10 oz → 100%
+}
+
+// =========================================================================
 // Registry (application-layer — NOT consensus)
 // =========================================================================
 class PoPCRegistry {
@@ -173,9 +238,18 @@ public:
     size_t active_count() const;
     int64_t total_bonded_stocks() const;
 
+    // Committed reward tracking (for PUR calculation)
+    int64_t committed_rewards() const { return committed_rewards_; }
+    void add_committed(int64_t amount) { committed_rewards_ += amount; }
+    void release_committed(int64_t amount) {
+        committed_rewards_ -= amount;
+        if (committed_rewards_ < 0) committed_rewards_ = 0;
+    }
+
 private:
     std::vector<PoPCCommitment> commitments_;
     std::vector<PoPCReputation> reputations_;
+    int64_t committed_rewards_{0};  // Total reserved rewards (stocks)
 };
 
 } // namespace sost

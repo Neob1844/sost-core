@@ -196,30 +196,31 @@ TEST(ESC09_mark_failed) {
 
 // =============================================================================
 // ESC10: Reward calculation for all valid durations
-// Rates (from POPC_REWARD_RATES): 1→1%, 3→4%, 6→9%, 9→15%, 12→22%
+// Rates (from ESCROW_REWARD_RATES — Model B, halved from Model A):
+//   1→0.5%, 3→2%, 6→4.5%, 9→7.5%, 12→11%
 // =============================================================================
 TEST(ESC10_reward_calculation) {
     int64_t base = 100000000; // 1 SOST in stocks
 
-    // Duration 1 month → 1% = 100 bps
+    // Duration 1 month → 0.5% = 50 bps
     int64_t r1 = calculate_escrow_reward(base, 1);
-    EXPECT(r1 == base * 100 / 10000, "1-month reward mismatch, got " + std::to_string(r1));
+    EXPECT(r1 == base * 50 / 10000, "1-month reward mismatch, got " + std::to_string(r1));
 
-    // Duration 3 months → 4% = 400 bps
+    // Duration 3 months → 2% = 200 bps
     int64_t r3 = calculate_escrow_reward(base, 3);
-    EXPECT(r3 == base * 400 / 10000, "3-month reward mismatch, got " + std::to_string(r3));
+    EXPECT(r3 == base * 200 / 10000, "3-month reward mismatch, got " + std::to_string(r3));
 
-    // Duration 6 months → 9% = 900 bps
+    // Duration 6 months → 4.5% = 450 bps
     int64_t r6 = calculate_escrow_reward(base, 6);
-    EXPECT(r6 == base * 900 / 10000, "6-month reward mismatch, got " + std::to_string(r6));
+    EXPECT(r6 == base * 450 / 10000, "6-month reward mismatch, got " + std::to_string(r6));
 
-    // Duration 9 months → 15% = 1500 bps
+    // Duration 9 months → 7.5% = 750 bps
     int64_t r9 = calculate_escrow_reward(base, 9);
-    EXPECT(r9 == base * 1500 / 10000, "9-month reward mismatch, got " + std::to_string(r9));
+    EXPECT(r9 == base * 750 / 10000, "9-month reward mismatch, got " + std::to_string(r9));
 
-    // Duration 12 months → 22% = 2200 bps
+    // Duration 12 months → 11% = 1100 bps
     int64_t r12 = calculate_escrow_reward(base, 12);
-    EXPECT(r12 == base * 2200 / 10000, "12-month reward mismatch, got " + std::to_string(r12));
+    EXPECT(r12 == base * 1100 / 10000, "12-month reward mismatch, got " + std::to_string(r12));
 
     // Invalid duration → 0
     int64_t r_invalid = calculate_escrow_reward(base, 7);
