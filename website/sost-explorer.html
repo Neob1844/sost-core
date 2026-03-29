@@ -4,7 +4,21 @@
 <meta charset="utf-8"/>
 <link rel="canonical" href="https://sostcore.com/sost-explorer.html">
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SOST Block Explorer</title>
+<title>SOST Explorer — Blockchain Explorer | Block, Transaction &amp; Address Search</title>
+<meta name="description" content="Explore the SOST blockchain in real time. Search blocks, transactions, addresses. Mining statistics, difficulty dashboard, gold reserve tracking, ConvergenceX PoW status.">
+<meta name="keywords" content="SOST explorer, blockchain explorer, SOST blocks, SOST transactions, mining statistics, ConvergenceX, difficulty, gold reserves, block search">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Explorer — Blockchain Explorer">
+<meta property="og:description" content="Explore the SOST blockchain in real time. Search blocks, transactions, addresses. Mining statistics, difficulty dashboard, gold reserve tracking, ConvergenceX PoW status.">
+<meta property="og:url" content="https://sostcore.com/sost-explorer.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOST Explorer — Blockchain Explorer">
+<meta name="twitter:description" content="Explore the SOST blockchain in real time. Search blocks, transactions, addresses. Mining statistics, difficulty dashboard, gold reserve tracking, ConvergenceX PoW status.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="icon" type="image/png" href="sost-logo.png"/>
 <link rel="apple-touch-icon" href="sost-logo.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -315,7 +329,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <div class="config">
   <span class="config-label">RPC&gt;</span>
-  <input id="rpcUrl" value="https://sostcore.com/rpc" spellcheck="false"/>
+  <input id="rpcUrl" value="/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
   <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
@@ -678,7 +692,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
 </div>
 <script>
-let RPC='https://sostcore.com/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
+let RPC='/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
 const COINBASE_MATURITY=1000;
 const PS=10;
