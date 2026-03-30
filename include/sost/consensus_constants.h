@@ -27,4 +27,28 @@ inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_DEV     = 1;
 inline constexpr uint16_t BOND_LOCK_PAYLOAD_LEN   = 8;   // lock_until (uint64 LE)
 inline constexpr uint16_t ESCROW_LOCK_PAYLOAD_LEN = 28;  // lock_until (8) + beneficiary_pkh (20)
 
+// =========================================================================
+// Gold Vault Governance — Consensus-level spending rules
+// Activates at BOND_ACTIVATION_HEIGHT (5000). Before that, no restriction.
+// =========================================================================
+
+// Activation (same height as Bond/Escrow/Capsule)
+inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 5000;
+
+// Signaling thresholds for large Gold Vault spends
+inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 75;   // 75% in Epoch 0-1 (blocks 5000-263105)
+inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 95;   // 95% in Epoch 2+ (blocks 263106+)
+inline constexpr int32_t  GV_APPROVAL_WINDOW    = 288;  // ~48h voting window
+
+// Foundation quality vote (expires at Epoch 2)
+inline constexpr int32_t  GV_FOUNDATION_VOTE_PCT = 10;  // +10% equivalent signaling
+// Foundation veto expires at FOUNDATION_VETO_EXPIRY_BLOCKS (263106) from proposals.h
+
+// Monthly operational limit (no voting required below this)
+inline constexpr int32_t  GV_MONTHLY_LIMIT_PCT  = 10;   // 10% of vault balance
+inline constexpr int64_t  GV_MONTHLY_WINDOW     = 4320; // ~30 days at 10min/block
+
+// Gold purchase payload marker
+inline constexpr uint8_t  GV_PAYLOAD_GOLD_PURCHASE = 0x47; // 'G' — marks TX as gold purchase
+
 } // namespace sost

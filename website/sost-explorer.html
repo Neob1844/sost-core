@@ -1713,26 +1713,58 @@ async function showTxDetail(txid){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('tx','TX '+sH(txid),txid);
   c.innerHTML='<div class="ld">loading transaction</div>';
+  // Try mempool first (getrawtransaction)
   try{var tx=await rpc('getrawtransaction',[txid,'true']);renderMempoolTx(tx,c);window.scrollTo({top:0,behavior:'smooth'});return;}catch(e){}
+  // Try tx-index (gettransaction) — returns full detail with fees for confirmed TXs
+  try{
+    var tx=await rpc('gettransaction',[txid]);
+    if(tx&&tx.txid){renderIndexedTx(tx,c);window.scrollTo({top:0,behavior:'smooth'});return;}
+  }catch(e){}
+  // Fallback: gettxout (partial data, no fees)
   try{
     var outputs=[];
     for(var v=0;v<20;v++){try{var o=await rpc('gettxout',[txid,String(v)]);if(!o||o==='null')break;outputs.push({vout:v,address:o.address,amount:o.value,type:o.type,confirmations:o.confirmations,coinbase:o.coinbase,height:H-(o.confirmations||0)+1});}catch(e2){break;}}
-    if(outputs.length===0){c.innerHTML='<div style="text-align:center;padding:40px"><div style="font-size:14px;color:var(--red);margin-bottom:12px">TX OUTPUTS SPENT</div><div style="font-size:12px;color:var(--text2);margin-bottom:8px">All outputs of <span style="color:var(--cyan)">'+sH(txid)+'</span> have been spent.</div><div style="font-size:11px;color:var(--text3)">Full TX history requires tx-index (planned feature).</div><div style="margin-top:16px;font-size:11px;color:var(--text3)">TXID: '+txid+cpBtn(txid)+'</div></div>';return;}
-    var isCB=outputs[0].coinbase;var bh=outputs[0].height;var confs=outputs[0].confirmations||0;
-    var totalOut=outputs.reduce(function(s,o){var v2=typeof o.amount==='number'?o.amount:parseFloat(o.amount);return s+v2;},0);
-    var inputsHtml='';
-    if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div><div class="tx-io-amt">'+totalOut.toFixed(8)+' SOST</div><div class="tx-io-meta">subsidy \u2192 50/25/25 constitutional split</div></div>';}
-    else{inputsHtml='<div class="tx-io-item"><div class="tx-io-label">INPUTS</div><div style="font-size:11px;color:var(--text2)">Spent outputs (input detail requires tx-index)</div><div class="tx-io-meta">total input \u2265 '+totalOut.toFixed(8)+' SOST + fee</div></div>';}
-    var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
-    var typeColors2=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
-    var changeIdx=-1;
-    if(!isCB&&outputs.length>=2){var minAmt=Infinity,minI=-1;for(var ci=0;ci<outputs.length;ci++){var a=typeof outputs[ci].amount==='number'?outputs[ci].amount:parseFloat(outputs[ci].amount);if(a<minAmt){minAmt=a;minI=ci;}}if(outputs.length===2)changeIdx=minI;}
-    var outputsHtml='';
-    for(var oi=0;oi<outputs.length;oi++){var o2=outputs[oi];var tl=typeLabels[o2.type]||'output';var tc=typeColors2[o2.type]||'var(--green)';var amt=typeof o2.amount==='number'?o2.amount.toFixed(8):o2.amount;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&outputs.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+o2.vout+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o2.address+'\')">'+o2.address+addrTag(o2.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div><div class="tx-io-meta">block #'+o2.height+' \u00B7 '+o2.confirmations+' confirmations</div></div>';}
-    var feeNote=!isCB?'<div class="fee-note"><b>\u2691 Fee info:</b> Fee = total inputs \u2212 total outputs. For confirmed TXs, input amounts are not stored after spending (no tx-index). The fee was included in the coinbase of block <span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> (50% miner / 25% gold / 25% PoPC). <br><b>Total output:</b> '+totalOut.toFixed(8)+' SOST across '+outputs.length+' output(s).</div>':'';
-    c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase (block reward)</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div><div class="k">outputs</div><div class="v">'+outputs.length+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>'+feeNote;
+    if(outputs.length===0){c.innerHTML='<div style="text-align:center;padding:40px"><div style="font-size:14px;color:var(--red);margin-bottom:12px">TX NOT FOUND</div><div style="font-size:12px;color:var(--text2);margin-bottom:8px"><span style="color:var(--cyan)">'+sH(txid)+'</span></div><div style="font-size:11px;color:var(--text3)">All outputs spent and tx-index not available for this TX.</div><div style="margin-top:16px;font-size:11px;color:var(--text3)">TXID: '+txid+cpBtn(txid)+'</div></div>';return;}
+    renderFallbackTx(txid,outputs,c);
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){c.innerHTML='<div class="td-err">Error: '+e.message+'</div>';}
+}
+// Render confirmed TX from tx-index (full fee/input data)
+function renderIndexedTx(tx,c){
+  var bh=tx.block_height||0;var confs=tx.confirmations||0;
+  var isCB=(tx.vin&&tx.vin.length===1&&tx.vin[0].prev_txid==='0000000000000000000000000000000000000000000000000000000000000000');
+  var fee=tx.fee||0;var feeSOST=fS(fee);
+  var sumIn=0,sumOut=0;
+  if(tx.vin)for(var i=0;i<tx.vin.length;i++){var a=tx.vin[i].amount;sumIn+=(typeof a==='number'?a:parseFloat(a||0))*1e8;}
+  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var a=tx.vout[i].amount;sumOut+=(typeof a==='number'?a:parseFloat(a||0))*1e8;}
+  // Estimate size for fee rate
+  var estSize=148*(tx.vin?tx.vin.length:1)+34*(tx.vout?tx.vout.length:1)+10;
+  var feeRate=estSize>0?(fee/estSize).toFixed(1):'?';
+  var inputsHtml='';
+  if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div></div>';}
+  else if(tx.vin){for(var i=0;i<tx.vin.length;i++){var inp=tx.vin[i];var iaddr=inp.address||'unknown';var iamt=inp.amount||0;inputsHtml+='<div class="tx-io-item"><div class="tx-io-label">INPUT #'+i+'</div><div class="tx-io-addr" onclick="showAddress(\''+iaddr+'\')">'+iaddr+addrTag(iaddr)+'</div><div class="tx-io-amt">'+parseFloat(iamt).toFixed(8)+' SOST</div><div class="tx-io-meta">from '+sH(inp.prev_txid||'')+':'+inp.index+'</div></div>';}}
+  var changeIdx=-1;
+  if(!isCB&&tx.vout&&tx.vout.length===2){var a0=parseFloat(tx.vout[0].amount||0),a1=parseFloat(tx.vout[1].amount||0);changeIdx=a0<a1?0:1;}
+  var outputsHtml='';
+  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);var isChange=i===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
+  var feeHtml='';
+  if(!isCB&&fee>0){feeHtml='<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div><div class="k">total input</div><div class="v">'+fS(Math.round(sumIn))+' SOST</div>';}
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+feeHtml+'<div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div><div class="k">inputs / outputs</div><div class="v">'+(tx.vin?tx.vin.length:0)+' / '+(tx.vout?tx.vout.length:0)+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+}
+// Render confirmed TX from gettxout fallback (partial data)
+function renderFallbackTx(txid,outputs,c){
+  var isCB=outputs[0].coinbase;var bh=outputs[0].height;var confs=outputs[0].confirmations||0;
+  var totalOut=outputs.reduce(function(s,o){var v2=typeof o.amount==='number'?o.amount:parseFloat(o.amount);return s+v2;},0);
+  var inputsHtml='';
+  if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div><div class="tx-io-amt">'+totalOut.toFixed(8)+' SOST</div></div>';}
+  else{inputsHtml='<div class="tx-io-item"><div class="tx-io-label">INPUTS</div><div style="font-size:11px;color:var(--text2)">Input details unavailable (outputs partially spent)</div></div>';}
+  var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
+  var typeColors2=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
+  var changeIdx=-1;
+  if(!isCB&&outputs.length===2){var a0=typeof outputs[0].amount==='number'?outputs[0].amount:parseFloat(outputs[0].amount);var a1=typeof outputs[1].amount==='number'?outputs[1].amount:parseFloat(outputs[1].amount);changeIdx=a0<a1?0:1;}
+  var outputsHtml='';
+  for(var oi=0;oi<outputs.length;oi++){var o2=outputs[oi];var tl=typeLabels[o2.type]||'output';var tc=typeColors2[o2.type]||'var(--green)';var amt=typeof o2.amount==='number'?o2.amount.toFixed(8):o2.amount;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+o2.vout+' '+changeBadge+'</div><div class="tx-io-addr" onclick="showAddress(\''+o2.address+'\')">'+o2.address+addrTag(o2.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div><div class="tx-io-meta">block #'+o2.height+' \u00B7 '+o2.confirmations+' confirmations</div></div>';}
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--text3);font-size:9px">PARTIAL \u00B7 gettxout fallback</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
 }
 function renderMempoolTx(tx,c){
   var totalOut=tx.vout.reduce(function(s,v){var a=typeof v.value==='number'?v.value:parseFloat(v.value);return s+a;},0);

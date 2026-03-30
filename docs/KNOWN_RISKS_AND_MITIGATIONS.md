@@ -45,11 +45,16 @@
 
 ## 5. Gold Vault Security
 
-- **Status:** PARTIALLY MITIGATED
-- **Impact:** Private key holder can move all Gold Vault funds
-- **Current protection:** AES-256 encryption, policy-level alerts on Gold Vault spends (logged by sost-node at the RPC layer), offline key storage
-- **Future protection:** Multisig 2-of-3 migration planned. Constitutional consensus restriction in future hard fork.
-- **Honest truth:** Until multisig is active, security depends on key management discipline
+- **Status:** CONSENSUS PROTECTED (from block 5000)
+- **Impact:** Even with the private key, unauthorized spends are REJECTED by all nodes
+- **Protection (4 rules, activated at block 5000):**
+  - **GV1:** Gold purchases (marked payload) → allowed without vote
+  - **GV2:** ≤10% monthly operational → allowed without vote
+  - **GV3:** >10% or non-standard → requires 75% miner signaling (Epoch 0-1) or 95% (Epoch 2+)
+  - **GV4:** No rule matched → REJECTED by ALL nodes
+- **Foundation quality vote:** +10% equivalent until Epoch 2 (block 263,106). Expires automatically.
+- **Key theft scenario:** Attacker steals key → tries to send to random address → GV4 rejects → funds safe
+- **Additional protection:** AES-256 encryption, policy-level alerts, offline key storage
 
 ---
 
