@@ -424,3 +424,17 @@ New research line translating intuitive geological concepts into physically test
 
 **Key lesson:** Zone-specific ML results are not generalizable without multi-zone proof. Magnetics is THE non-spectral breakthrough. The next real gain is geophysics (gravity/AEM), not more satellite features.
 **Recommendation:** Focus on DEPTH unlock (operator downloads gravity + AEM). Stop chasing frontier satellite features beyond magnetics.
+
+## Phase 44: First Real Gravity Integration (2026-03-30)
+
+**Classification:** DEPTH BREAKTHROUGH — first real geophysics data
+
+- GA Gravity (Bouguer Anomaly 2019): 290MB, 9601×13441 grid, ~460m, all Australia
+- Gravity OUTPERFORMS S2 at Mt Isa (0.720 vs 0.570) — first time geophysics beats satellite
+- S2+Mag+Gravity: 0.781 at Mt Isa (+0.013 over S2+Mag)
+- Full stack (S2+Mag+Grav+Terrain): Kalgoorlie 0.739, Tennant Creek 0.841, Mt Isa 0.743
+- Gravity most valuable where spectral baseline is weakest (subsurface deposits)
+- Partially redundant with magnetics at already-magnetic zones
+- Canonical: 23.4/40 under review — DEPTH may merit first adjustment
+
+**Recommendation:** Download AEM for full DEPTH unlock. Gravity confirms geophysics pathway works.
