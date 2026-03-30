@@ -397,3 +397,16 @@ New research line translating intuitive geological concepts into physically test
 - MINERAL: 4.0→4.3, CERTAINTY: 7.7→8.0
 
 **Recommendation:** Fix Peru EMIT overlap, test thermal at Mt Isa, start Temporal DNA frontier.
+
+## Phase 42: Frontier Sprint (2026-03-30)
+
+**Classification:** Frontier testing + Peru EMIT fix
+
+- Temporal DNA: **0.858 AUC standalone** (STRONGEST frontier family, +0.134 over S2)
+- MEGA stack: **0.889 AUC** (plateau — satellite ceiling ~0.89)
+- Vegetation stress: NEUTRAL at arid zone
+- Peru EMIT: geographic fix SUCCESS, 3 central Peru granules downloaded and validated
+- Performance ceiling: ~0.89 AUC from satellite features. Further gains need gravity/AEM.
+- Canonical: 23.4/40 UNCHANGED (Temporal DNA awaits 2nd zone)
+
+**Recommendation:** Test Temporal DNA at Mt Isa, Peru EMIT ML, vegetation stress at Zambia. The BIG multiplier remains gravity+AEM (operator download).
