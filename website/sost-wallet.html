@@ -698,8 +698,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <input type="text" id="sendAmount" class="form-input" placeholder="0.00000000">
         </div>
         <div class="form-group">
-          <label class="form-label">Fee (stocks/byte)</label>
-          <input type="text" id="sendFee" class="form-input" placeholder="Auto" readonly>
+          <label class="form-label">Fee Mode</label>
+          <select id="feeMode" class="form-input" onchange="onFeeModeChange()" style="font-size:13px;margin-bottom:6px">
+            <option value="recommended" selected>Recommended — node optimal</option>
+            <option value="auto">Auto — minimum relay fee</option>
+            <option value="manual">Manual — exact rate you set</option>
+          </select>
+          <input type="text" id="sendFee" class="form-input" placeholder="1000" style="display:none">
           <div class="fee-info" id="feeInfo">
             Estimating fee... <button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>
           </div>
@@ -2327,20 +2332,49 @@ function updateCapsuleActivation(height) {
 
 // ==================== SEND ====================
 
+let _recommendedFee = 1000;
+const MIN_RELAY_FEE = 1; // 1 stock/byte (consensus minimum)
+
+window.onFeeModeChange = function() {
+  const mode = document.getElementById('feeMode').value;
+  const feeInput = document.getElementById('sendFee');
+  const feeInfo = document.getElementById('feeInfo');
+  if (mode === 'manual') {
+    feeInput.style.display = '';
+    feeInput.readOnly = false;
+    feeInput.value = feeInput.value || '1000';
+    feeInfo.innerHTML = '<span style="color:var(--text-dim)">Enter exact fee rate. Minimum: 1 st/B. Your rate will be used exactly as entered.</span>';
+  } else if (mode === 'auto') {
+    feeInput.style.display = 'none';
+    feeInput.value = MIN_RELAY_FEE;
+    feeInfo.innerHTML = `Auto: <span class="fee-val">${MIN_RELAY_FEE} st/B</span> (minimum relay fee — slowest confirmation)`;
+  } else {
+    feeInput.style.display = 'none';
+    feeInput.value = _recommendedFee;
+    estimateFee();
+  }
+};
+
 window.estimateFee = async function() {
   try {
     const result = await rpcCall('estimatefee');
-    const feePerByte = result.fee_per_byte || 1000;
-    document.getElementById('sendFee').value = feePerByte;
-    const typicalFee = result.fee_for_typical_tx || (feePerByte * 250);
+    _recommendedFee = result.fee_per_byte || 1000;
+    const mode = document.getElementById('feeMode').value;
+    if (mode !== 'manual') {
+      document.getElementById('sendFee').value = mode === 'auto' ? MIN_RELAY_FEE : _recommendedFee;
+    }
+    const typicalFee = result.fee_for_typical_tx || (_recommendedFee * 250);
     const typicalSost = (typicalFee / SAT).toFixed(4);
-    document.getElementById('feeInfo').innerHTML =
-      `Recommended: <span class="fee-val">${feePerByte} stocks/byte</span> ` +
-      `(~${typicalFee.toLocaleString()} stocks for typical tx, ~${typicalSost} SOST) ` +
-      `<button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>`;
+    if (mode === 'recommended') {
+      document.getElementById('feeInfo').innerHTML =
+        `Recommended: <span class="fee-val">${_recommendedFee} st/B</span> ` +
+        `(~${typicalFee.toLocaleString()} stocks for typical tx, ~${typicalSost} SOST) ` +
+        `<button class="btn btn-small" onclick="estimateFee()" style="margin-left:8px">Refresh</button>`;
+    }
   } catch (e) {
+    _recommendedFee = 1000;
     document.getElementById('sendFee').value = '1000';
-    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1,000 stocks/byte</span> (~250,000 stocks for typical tx, ~0.0025 SOST)';
+    document.getElementById('feeInfo').innerHTML = 'Using default: <span class="fee-val">1,000 st/B</span>';
   }
 };
 
@@ -2395,11 +2429,14 @@ window.sendTransaction = async function() {
     const changeAmt = totalIn - amountStocks - feeStocks;
 
     // Show confirmation dialog BEFORE signing
+    const feeMode = document.getElementById('feeMode').value;
+    const feeModeLabel = feeMode === 'manual' ? 'MANUAL' : feeMode === 'auto' ? 'AUTO (min relay)' : 'RECOMMENDED';
     const confirmMsg = `TX CONFIRMATION\n\n` +
       `To: ${toAddr}\n` +
       `Amount: ${formatSost(amountStocks)} SOST\n` +
-      `Fee rate: ${feePerByte} st/B (manual) → ${actualFeeRate} st/B (actual)\n` +
-      `Estimated size: ${estSize} bytes\n` +
+      `Fee mode: ${feeModeLabel}\n` +
+      `Fee rate: ${feePerByte} st/B\n` +
+      `TX size: ~${estSize} bytes\n` +
       `Total fee: ${formatSost(feeStocks)} SOST\n` +
       `Inputs: ${inputCount} UTXOs\n` +
       `Outputs: 2 (payment + change)\n` +
