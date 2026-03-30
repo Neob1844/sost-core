@@ -370,18 +370,17 @@ New research line translating intuitive geological concepts into physically test
 
 **Recommendation:** Re-auth GEE, run S2 comparison, plan Mt Isa as third magnetics zone.
 
-## Phase 40: S2 Batch Export + Mt Isa Readiness (2026-03-29)
+## Phase 40: GEE Operational + S2 Closure + EMIT Recovery + Mt Isa (2026-03-30)
 
-**Classification:** S2 comparison blocked, Mt Isa assessed
+**Classification:** BREAKTHROUGH — first real S2 comparison + data recovery
 
-- GEE credentials: STILL EXPIRED (needs interactive `earthengine authenticate`)
-- Copernicus/AWS alternatives: FAILED (timeout/400)
-- TMI multi-scale proxy: not independent (within-magnetics self-comparison)
-- Phase 39 terrain comparison: REPRODUCED EXACTLY (0.694/0.668/0.763)
-- TRUE S2 comparison: NOT ACHIEVED (3 consecutive phases blocked)
-- Mt Isa assessed: 104 labels (Cu, U, Au+Cu), TMI download pending
-- Magnetics: CONSOLIDATED_VALIDATED_SELECTIVE (unchanged — terrain evidence stands)
-- Canonical: 22.8/40 UNCHANGED
+- GEE: FULLY OPERATIONAL (project ee-sost-geaspirit, batched sampleRegions works)
+- Tennant Creek S2 baseline: **0.784 AUC** (first real measurement)
+- S2 + magnetics: **0.832 AUC** (delta **+0.048** over S2 — CONFIRMED)
+- Full stack: **0.860 AUC** (delta +0.076 over S2)
+- Magnetics: **CONFIRMED OVER S2** (definitive — 2 zones, 2 deposit types, 2 baselines)
+- Peru EMIT: 3 valid granules recovered (1.77GB each), ready for ML
+- Mt Isa TMI: downloaded (5.7MB, 1201×1201), 104 labels, READY_FOR_ML
+- Canonical: 22.8/40 under review — first evidence for adjustment since Phase 13
 
-**Blocker:** Operator must run `earthengine authenticate` in an interactive terminal.
-**Recommendation:** Auth GEE → run Track A → download Mt Isa TMI → validate at 3rd zone.
+**Recommendation:** Execute Mt Isa magnetics + Peru EMIT ML. Review canonical after results.
