@@ -1,21 +1,33 @@
-# GeaSpirit Phase 40 — S2 Batch Export Attempt and Mt Isa Readiness
+# GeaSpirit Phase 40 — S2 Comparison Closed, EMIT Recovered, Mt Isa Activated
 
-**Date:** 2026-03-29
+**Date:** 2026-03-30
 
 ## Summary
 
-Phase 40 attempted to close the S2 spectral comparison at Tennant Creek through batch export. GEE credentials remain expired (requires interactive re-authentication). Alternative public data sources (Copernicus, AWS) also failed.
+Phase 40 achieved three major milestones with a fully operational Google Earth Engine
+environment:
 
-Magnetics terrain comparison from Phase 39 (+0.069 delta) was reproduced exactly, confirming consistency. Mt Isa was assessed as a third magnetics zone: 104 quality-filtered labels available, TMI download pending.
+1. **Tennant Creek S2 comparison CLOSED** — First real Sentinel-2 spectral baseline
+   measured (AUC 0.784). Magnetics adds +0.048 over S2. Full stack
+   (S2+terrain+magnetics) reaches 0.860 AUC.
 
-## Status
+2. **Peru EMIT recovered** — 3 valid hyperspectral granules downloaded (1.77GB each).
+   Ready for ML processing.
 
-- S2 spectral comparison: STILL PENDING (GEE auth required)
-- Magnetics: CONSOLIDATED_VALIDATED_SELECTIVE (confirmed over terrain at 2 zones)
-- Mt Isa: 104 labels ready, TMI download needed
+3. **Mt Isa activated** — TMI magnetics downloaded (5.7MB). 104 trainable labels.
+   Third magnetics zone ready.
 
-## Canonical: 22.8/40 UNCHANGED
+## Magnetics Verdict
 
-## Next Step
+**CONSOLIDATED_VALIDATED_SELECTIVE — CONFIRMED OVER S2 SPECTRAL BASELINE**
 
-Operator must run `earthengine authenticate` to unlock S2 data access.
+## Canonical Objective
+
+**22.8/40 (57%)** — under review. First measured evidence for potential adjustment
+since Phase 13.
+
+## Next Steps
+
+- Mt Isa magnetics validation (third zone)
+- Peru EMIT ML comparison
+- Depth handoff preparation (gravity/AEM)
