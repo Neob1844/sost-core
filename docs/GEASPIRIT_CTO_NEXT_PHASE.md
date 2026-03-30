@@ -410,3 +410,17 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 23.4/40 UNCHANGED (Temporal DNA awaits 2nd zone)
 
 **Recommendation:** Test Temporal DNA at Mt Isa, Peru EMIT ML, vegetation stress at Zambia. The BIG multiplier remains gravity+AEM (operator download).
+
+## Phase 43: Frontier Replication Test (2026-03-30)
+
+**Classification:** REALITY CHECK — frontiers don't replicate easily
+
+- Temporal DNA at Mt Isa: +0.034 over S2, REDUNDANT with magnetics (-0.007 when mag present)
+- Thermal inertia at Mt Isa: ALL NEGATIVE (0.416 standalone, does not replicate)
+- Peru EMIT: BLOCKED by spatial overlap (need granules lon > -77, current cover -78.8 to -77.3)
+- Vegetation stress at Zambia: NEGATIVE (-0.026 vs S2) — REJECTED globally (tested arid + vegetated)
+- Satellite feature ceiling confirmed at ~0.89 AUC
+- Canonical: 23.4/40 HOLD (magnetics solid, frontier families shaky)
+
+**Key lesson:** Zone-specific ML results are not generalizable without multi-zone proof. Magnetics is THE non-spectral breakthrough. The next real gain is geophysics (gravity/AEM), not more satellite features.
+**Recommendation:** Focus on DEPTH unlock (operator downloads gravity + AEM). Stop chasing frontier satellite features beyond magnetics.
