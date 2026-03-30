@@ -1,7 +1,7 @@
 # SOST Protocol — Internal Security Audit v1
 
 **Date:** 2026-03-28
-**Auditor:** Automated code review (Claude Opus 4.6)
+**Auditor:** Internal automated code review
 **Scope:** Full codebase — ConvergenceX PoW, consensus, wallet, networking
 **Test results:** 22/22 CTest suites passing
 

@@ -125,10 +125,7 @@ body {
 
 /* Rock layers under miner */
 #rock-layers {
-  width: 200px; height: 40px;
-  position: relative;
-  margin-bottom: 20px;
-  overflow: hidden;
+  display: none; /* Removed: fixed bar below sprite — more space for title */
 }
 .rock-layer {
   position: absolute; left: 0; right: 0; height: 10px;
@@ -1214,7 +1211,7 @@ function runSplash(callback) {
 
   // Type "SOST" title after 1.5s
   const titleEl = document.getElementById('splash-title');
-  const titleText = 'SOST';
+  const titleText = 'SOST APP';
   let titleIdx = 0;
   setTimeout(() => {
     titleEl.style.opacity = '1';
@@ -1229,7 +1226,7 @@ function runSplash(callback) {
         titleEl.classList.remove('typing');
         // Add subtitle after typing finishes
         const sub = document.createElement('div');
-        sub.style.cssText = 'font-size:14px;letter-spacing:5px;color:rgba(255,0,51,0.5);margin-top:6px;opacity:0;transition:opacity 1s';
+        sub.style.cssText = 'font-size:22px;letter-spacing:6px;color:rgba(255,0,51,0.7);margin-top:10px;opacity:0;transition:opacity 1s;font-weight:600';
         sub.textContent = 'SOVEREIGN STOCK TOKEN';
         titleEl.parentElement.insertBefore(sub, titleEl.nextSibling);
         setTimeout(() => { sub.style.opacity = '1'; }, 200);

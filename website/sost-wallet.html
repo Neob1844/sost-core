@@ -2387,8 +2387,28 @@ window.sendTransaction = async function() {
     }
 
     // Estimate tx size: ~148 * inputs + 34 * outputs + 10
-    const estSize = 148 * Math.min(utxos.length, 10) + 34 * 2 + 10;
+    const inputCount = Math.min(utxos.length, 10);
+    const estSize = 148 * inputCount + 34 * 2 + 10;
     const feeStocks = feePerByte * estSize;
+    const actualFeeRate = Math.ceil(feeStocks / estSize);
+    const totalIn = utxos.slice(0, inputCount).reduce((s, u) => s + u.amount, 0);
+    const changeAmt = totalIn - amountStocks - feeStocks;
+
+    // Show confirmation dialog BEFORE signing
+    const confirmMsg = `TX CONFIRMATION\n\n` +
+      `To: ${toAddr}\n` +
+      `Amount: ${formatSost(amountStocks)} SOST\n` +
+      `Fee rate: ${feePerByte} st/B (manual) → ${actualFeeRate} st/B (actual)\n` +
+      `Estimated size: ${estSize} bytes\n` +
+      `Total fee: ${formatSost(feeStocks)} SOST\n` +
+      `Inputs: ${inputCount} UTXOs\n` +
+      `Outputs: 2 (payment + change)\n` +
+      `Change: ${formatSost(Math.max(0, changeAmt))} SOST\n\n` +
+      `Confirm and broadcast?`;
+    if (!confirm(confirmMsg)) {
+      showError('sendResult', 'Transaction cancelled by user.');
+      return;
+    }
 
     const rawTx = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address);
 

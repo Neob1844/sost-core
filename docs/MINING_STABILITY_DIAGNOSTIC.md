@@ -30,11 +30,11 @@ Out of memory: Killed process 3147928 (sost-miner) total-vm:8402232kB, anon-rss:
 ## Contributing Factors
 
 1. **Primary:** sost-miner uses 8.2 GB RAM (ConvergenceX dataset + scratchpad)
-2. **Aggravating:** 4 zombie Python `train_baseline.py` processes running since March 22 (3 days), each using 100% CPU. These were orphaned background tasks from a prior Claude session.
-3. **Aggravating:** Claude Code itself uses ~2.5 GB RAM
+2. **Aggravating:** 4 zombie Python `train_baseline.py` processes running since March 22 (3 days), each using 100% CPU. These were orphaned background tasks from a prior development session.
+3. **Aggravating:** Development tools use ~2.5 GB RAM
 4. **Aggravating:** Only 4 GB swap — insufficient overflow capacity
 
-**Total demand:** 8.2 GB (miner) + 2.5 GB (claude) + 0.1 GB (zombies) + 1 GB (system) = ~11.8 GB
+**Total demand:** 8.2 GB (miner) + 2.5 GB (dev tools) + 0.1 GB (zombies) + 1 GB (system) = ~11.8 GB
 **Available:** 16 GB RAM + 4 GB swap = 20 GB total, but WSL memory management is more aggressive than bare Linux.
 
 ## Actions Taken
@@ -81,7 +81,7 @@ This script:
 
 ## Memory Leak Analysis
 
-**Not detected.** The miner's RSS is stable at ~8.2 GB (consistent with 4 GB dataset + 4 GB scratchpad). The OOM kills happen when OTHER processes (Claude, zombies, system caches) consume the remaining headroom. The miner itself does not leak.
+**Not detected.** The miner's RSS is stable at ~8.2 GB (consistent with 4 GB dataset + 4 GB scratchpad). The OOM kills happen when OTHER processes (dev tools, zombies, system caches) consume the remaining headroom. The miner itself does not leak.
 
 ## Tunnel Analysis
 
