@@ -196,6 +196,10 @@ add_executable(test-dynamic-rewards tests/test_dynamic_rewards.cpp)
 target_link_libraries(test-dynamic-rewards PRIVATE sost-core)
 add_test(NAME dynamic-rewards COMMAND test-dynamic-rewards)
 
+add_executable(test-gold-vault tests/test_gold_vault.cpp)
+target_link_libraries(test-gold-vault PRIVATE sost-core)
+add_test(NAME gold-vault COMMAND test-gold-vault)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 

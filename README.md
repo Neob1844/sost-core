@@ -265,7 +265,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | Capsule Protocol v1 (binary tx metadata, height 5000) | Complete |
 | cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete |
 
-**27/27 CTest targets pass.**
+**28/28 CTest targets pass.**
 
 **cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H9, with H10-H12 reserved) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
 
@@ -363,7 +363,7 @@ Current phase: Phase XV — full-corpus functional intersection discovery.
 
 SOST is **experimental, unaudited software**. It is a completely new proof-of-work protocol written from scratch — **NOT a fork** of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or mining algorithm. The ConvergenceX proof-of-work, cASERT difficulty adjustment, and constitutional economic model are original designs.
 
-**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 27 test suites, and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
+**This codebase has NOT been audited by any external security firm.** Testing has been conducted using internal tools, 28 test suites, and manual code review. The protocol has NOT been stress-tested by a large number of independent miners. Undiscovered vulnerabilities may exist.
 
 **Every participant is solely responsible for their own investment decisions.** You may lose your entire investment. The developer (NeoB) assumes NO liability for any losses resulting from the use of this software, whether caused by bugs, vulnerabilities, design flaws, or any other reason. This is not financial advice.
 

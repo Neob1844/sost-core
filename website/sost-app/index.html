@@ -1622,7 +1622,7 @@ SectionRenderers.dashboard = function(el) {
     </div>
   `;
 
-  // Fetch chain info
+  // Fetch chain info + block detail for interval/subsidy
   (async () => {
     const info = await rpcCall('getinfo');
     const statusEl = document.getElementById('dash-status');
@@ -1630,22 +1630,83 @@ SectionRenderers.dashboard = function(el) {
     if (info) {
       AudioEngine.success_connect();
       const height = info.blocks !== undefined ? info.blocks : 'N/A';
-      const diff = info.difficulty !== undefined ? parseFloat(info.difficulty).toFixed(4) : 'N/A';
+      const rawBitsQ = info.difficulty !== undefined ? parseInt(info.difficulty) : 0;
+      const diffReadable = rawBitsQ > 0 ? (rawBitsQ / 65536).toFixed(3) : 'N/A';
+      const diffDisplay = rawBitsQ > 0 ? `${diffReadable} (${rawBitsQ.toLocaleString()} bitsQ)` : 'N/A';
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
-      const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 'N/A');
-      const bestHash = info.bestblockhash || info.hash || 'N/A';
+      const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
       const casertProfile = info.casert_profile || info.equalizer || 'N/A';
+      const casertLag = info.casert_lag !== undefined ? info.casert_lag : '';
+      const lagDisplay = casertLag !== '' ? ` (lag: ${casertLag > 0 ? '+' : ''}${casertLag})` : '';
+
+      // Fetch best block hash and detail
+      let bestHash = 'N/A', interval = 'N/A', lastBlockTime = 'N/A', subsidy = 'N/A';
+      try {
+        const bh = await rpcCall('getblockhash', [height]);
+        if (bh) bestHash = bh;
+        const block = await rpcCall('getblock', [bestHash]);
+        if (block) {
+          // Subsidy
+          if (block.subsidy) subsidy = (parseFloat(block.subsidy) / 1e8).toFixed(4) + ' SOST';
+          else if (block.miner_reward) subsidy = (parseFloat(block.miner_reward) / 1e8).toFixed(4) + ' SOST (miner)';
+          // Last block time
+          if (block.time) {
+            const ago = Math.floor(Date.now()/1000 - block.time);
+            if (ago < 60) lastBlockTime = ago + 's ago';
+            else if (ago < 3600) lastBlockTime = Math.floor(ago/60) + 'm ago';
+            else lastBlockTime = Math.floor(ago/3600) + 'h ' + Math.floor((ago%3600)/60) + 'm ago';
+          }
+          // Interval (need previous block)
+          if (block.previousblockhash && block.time) {
+            try {
+              const prev = await rpcCall('getblock', [block.previousblockhash]);
+              if (prev && prev.time) {
+                const iv = block.time - prev.time;
+                const ivMin = Math.floor(iv / 60);
+                const ivSec = iv % 60;
+                interval = ivMin + 'm ' + ivSec + 's';
+              }
+            } catch(e) {}
+          }
+        }
+      } catch(e) {}
+
+      // Mempool detail
+      let mempoolDisplay = mempool + ' TX';
+      if (mempool > 0) {
+        try {
+          const mpInfo = await rpcCall('getmempoolinfo');
+          if (mpInfo) {
+            const bytes = mpInfo.bytes || 0;
+            const fees = mpInfo.total_fees || 0;
+            mempoolDisplay = `${mempool} TX · ${bytes.toLocaleString()} B · ${(fees/1e8).toFixed(4)} SOST fees`;
+          }
+        } catch(e) {}
+      }
+
+      // Interval color
+      let ivColor = 'var(--pip)';
+      if (interval !== 'N/A') {
+        const parts = interval.match(/(\d+)m/);
+        const mins = parts ? parseInt(parts[1]) : 0;
+        if (mins > 15) ivColor = '#fb010d';
+        else if (mins >= 10) ivColor = '#fbbf24';
+        else ivColor = '#4ade80';
+      }
 
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
-        <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diff}</span></div>
+        <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
+        <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
+        <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
+        <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}${lagDisplay}</span></div>
+        <div class="stat-row"><span class="stat-label">SUBSIDY</span><span class="stat-value">${subsidy}</span></div>
+        <div class="stat-row"><span class="stat-label">MEMPOOL</span><span class="stat-value">${mempoolDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">CONNECTIONS</span><span class="stat-value">${conns}</span></div>
-        <div class="stat-row"><span class="stat-label">MEMPOOL</span><span class="stat-value">${mempool} TX</span></div>
-        <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}</span></div>
         <div class="stat-row"><span class="stat-label">VERSION</span><span class="stat-value">${ver}</span></div>
-        <div class="stat-row"><span class="stat-label">BEST HASH</span><span class="stat-value" style="font-size:12px;word-break:break-all">${bestHash}</span></div>
+        <div class="stat-row"><span class="stat-label">BEST HASH</span><span class="stat-value" style="font-size:11px;word-break:break-all">${bestHash}</span></div>
       `;
       setTimeout(addTooltips, 500);
     } else {
@@ -1736,6 +1797,9 @@ function addTooltips() {
     'STATUS': 'Current network status. Online = node responding to RPC queries. Pre-market = mining active, no exchange listing yet.',
     'VERSION': 'Software version of the connected SOST node. Updated with each protocol release.',
     'BEST HASH': 'Hash of the most recent block accepted by the network. Changes with every new block mined.',
+    'INTERVAL': 'Time between the last two blocks. Target is 10 minutes (600 seconds). Green = fast, yellow = normal, red = slow.',
+    'LAST BLOCK': 'How long ago the most recent block was mined. Long gaps may indicate low hashrate or network issues.',
+    'SUBSIDY': 'Block reward for the current epoch. Decays smoothly following the Feigenbaum emission curve. Split 50/25/25 (miner/gold/PoPC).',
     // Documents
     'SOST Whitepaper': 'Core protocol design document. Covers economic model, PoW algorithm, constitutional split, emission schedule.',
     'ConvergenceX PoW': 'Technical specification of the CPU-friendly proof-of-work algorithm. Gradient descent on random matrices.',
@@ -2200,7 +2264,7 @@ SectionRenderers.about = function(el) {
     <div class="pip-panel">
       <h2>// ABOUT</h2>
       <p>SOST is a UTXO-based cryptocurrency with CPU-friendly proof-of-work (ConvergenceX) and a constitutional economic model. Every block permanently allocates 25% of the subsidy to a Gold Vault and 25% to the Proof of Personal Custody (PoPC) Pool.</p>
-      <p style="margin-top:8px">The protocol is written in C++17, built with CMake, and uses OpenSSL + libsecp256k1 for cryptography. The codebase passes 27 test suites (616 individual tests).</p>
+      <p style="margin-top:8px">The protocol is written in C++17, built with CMake, and uses OpenSSL + libsecp256k1 for cryptography. The codebase passes 28 test suites.</p>
     </div>
     <div class="pip-panel">
       <h2>// CORE PRINCIPLES</h2>
@@ -2215,7 +2279,7 @@ SectionRenderers.about = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// ECOSYSTEM</h2>
-      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 27 test suites (616 tests).</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 28 test suites.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">GEASPIRIT <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">MINERAL INTELLIGENCE</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Autonomous mineral prospectivity platform. Canonical Score 22.8/40 (57%). Validated at 3 zones across 3 continents: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. Crystal structure → property prediction. 19 campaign profiles including water/lithium/membrane. Zero cost on CPU.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">BLOCK EXPLORER <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">WEB-BASED</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Real-time blockchain explorer. Block details, transactions, mining status, address balances, difficulty history. Connects directly to the SOST node via RPC.</div></div>
