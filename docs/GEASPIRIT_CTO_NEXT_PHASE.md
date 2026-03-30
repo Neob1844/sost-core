@@ -384,3 +384,16 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 22.8/40 under review — first evidence for adjustment since Phase 13
 
 **Recommendation:** Execute Mt Isa magnetics + Peru EMIT ML. Review canonical after results.
+
+## Phase 41: Mt Isa + Peru EMIT + Frontier Thermal (2026-03-30)
+
+**Classification:** TRIPLE BREAKTHROUGH
+
+- Mt Isa magnetics: +0.153 over S2 (LARGEST delta ever, 3rd zone validated)
+- Frontier thermal inertia: +0.054 over S2 at Tennant Creek (FIRST frontier validated)
+- S2+magnetics+thermal: 0.872 AUC (BEST Tennant Creek result ever)
+- Peru EMIT: NO_LABEL_OVERLAP (geographic mismatch, fix identified)
+- Canonical: **22.8 → 23.4/40** (FIRST increase since Phase 13)
+- MINERAL: 4.0→4.3, CERTAINTY: 7.7→8.0
+
+**Recommendation:** Fix Peru EMIT overlap, test thermal at Mt Isa, start Temporal DNA frontier.
