@@ -947,6 +947,28 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
 
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
 
+    // -------------------------------------------------------------------------
+    // Gold Vault policy protection (not consensus — policy only)
+    // Detects and logs any TX that attempts to spend from the Gold Vault address.
+    // Currently WARNING only — does not block acceptance.
+    // To enable blocking: set a config flag and return rpc_error here instead.
+    // -------------------------------------------------------------------------
+    {
+        PubKeyHash gold_vault_pkh{};
+        address_decode(ADDR_GOLD_VAULT, gold_vault_pkh);
+        for (const auto& txin : tx.inputs) {
+            OutPoint op{txin.prev_txid, txin.prev_index};
+            auto utxo = g_utxo_set.GetUTXO(op);
+            if (utxo && utxo->pubkey_hash == gold_vault_pkh) {
+                // Log a critical alert — Gold Vault is being spent
+                printf("[GOLD-VAULT-ALERT] TX spending from Gold Vault detected! txid=%s amount=%lld stocks\n",
+                       to_hex(txid.data(), 32).c_str(), (long long)utxo->amount);
+                // NOTE: blocking can be enabled here later via a config flag,
+                // e.g. return rpc_error(id,-403,"Gold Vault spend blocked by policy");
+            }
+        }
+    }
+
     TxValidationContext ctx; ctx.genesis_hash=g_genesis_hash; ctx.spend_height=g_chain_height+1;
 
     int64_t now=(int64_t)time(nullptr);
