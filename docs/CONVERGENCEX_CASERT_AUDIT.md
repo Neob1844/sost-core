@@ -395,7 +395,7 @@ The ConvergenceX + cASERT system is operating correctly within its design parame
 
 1. **When a second miner joins:** Monitor if the 6.25% cap causes extended fast-block periods. If block times stay <300s for 100+ blocks, consider relaxing the cap (consensus change).
 
-2. **When hashrate grows 10x:** The current profiles (E4-H9) cover a wide range. If hashrate grows beyond H9's capability, the reserved H10-H12 profiles exist but would need activation (consensus change).
+2. **When hashrate grows 10x:** The current profiles (E4-H12) cover a wide range. If hashrate grows beyond H9's capability, the reserved H10-H12 profiles exist but would need activation (consensus change).
 
 3. **If an ASIC appears:** Monitor the stability ratio at different profiles. If stability tests become trivially easy (pass rate > 99.9%), the per-block program complexity may need increasing.
 

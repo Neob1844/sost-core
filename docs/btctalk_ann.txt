@@ -43,7 +43,7 @@ SOST is [b]experimental software[/b]. It is a [b]completely new, original proof-
 [tr][td]Max supply[/td][td]4,669,201 SOST (hard cap by construction)[/td][/tr]
 [tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788[/td][/tr]
 [tr][td]Coinbase split[/td][td]50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
-[tr][td]Difficulty[/td][td]cASERT unified. V1 (blocks <1450): 48h halflife, 6.25% cap. V2 (blocks >=1450): 24h halflife, 12.5% cap. 17 equalizer profiles E4-H9.[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified. V1 (blocks <1450): 48h halflife, 6.25% cap. V2 (blocks >=1450): 24h halflife, 12.5% cap. 17 equalizer profiles E4-H12.[/td][/tr]
 [tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point[/td][/tr]
 [tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
 [tr][td]Premine[/td][td]NONE[/td][/tr]

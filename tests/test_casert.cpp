@@ -159,7 +159,7 @@ int main() {
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
     TEST("H_MIN == -4", CASERT_H_MIN == -4);
-    TEST("H_MAX == 9", CASERT_H_MAX == 9);
+    TEST("H_MAX == 12", CASERT_H_MAX == 12);
     TEST("PROFILE_COUNT == 17", CASERT_PROFILE_COUNT == 17);
 
     printf("\n=== 8. SLEW RATE ===\n");
@@ -207,7 +207,7 @@ int main() {
         auto chain = make_chain(100, 100); // extremely fast chain
         int64_t now = chain.back().time + 100;
         auto dec = casert_compute(chain, 100, now);
-        TEST("H never exceeds H_MAX=9", dec.profile_index <= CASERT_H_MAX);
+        TEST("H never exceeds H_MAX=12", dec.profile_index <= CASERT_H_MAX);
     }
 
     printf("\n=== 12. BEHIND SCHEDULE CAP ===\n");
