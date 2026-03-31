@@ -1915,26 +1915,28 @@ SectionRenderers.geaspirit = function(el) {
         <li>Guarantee deposit existence at targets</li>
       </ul>
     </div>
-    <div id="gea-tech-locked" class="pip-panel" style="position:relative;">
+    <div id="gea-tech-locked" class="pip-panel" style="position:relative;min-height:250px;overflow:hidden;">
       <h2>// TECHNICAL DETAILS <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
-      <div id="gea-tech-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;">
-        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:14px">ENTER ACCESS CODE</p>
-        <input type="password" id="gea-tech-pw" style="background:#111;border:1px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;text-align:center;width:180px;border-radius:4px" placeholder="........">
-        <button onclick="if(document.getElementById('gea-tech-pw').value==='SOST2026'){document.getElementById('gea-tech-overlay').style.display='none';AudioEngine.success_big();}else{AudioEngine.error_hard();this.previousElementSibling.value='';}" class="pip-btn" style="margin-top:12px;font-size:14px">UNLOCK</button>
+      <div id="gea-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:250px;">
+        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
+        <p style="color:var(--pip-dim);margin-bottom:16px;font-size:12px">Enter access code to view GeaSpirit technical data</p>
+        <input type="password" id="gea-tech-pw" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:20px;padding:10px 20px;text-align:center;width:200px;border-radius:4px;outline:none" placeholder="........" onkeydown="if(event.key==='Enter')this.nextElementSibling.click()">
+        <button onclick="if(document.getElementById('gea-tech-pw').value==='SOST2026'){document.getElementById('gea-tech-overlay').style.display='none';try{AudioEngine.success_big();}catch(e){}}else{try{AudioEngine.error_hard();}catch(e){}this.previousElementSibling.value='';this.previousElementSibling.style.borderColor='#ff0000';setTimeout(function(){document.getElementById('gea-tech-pw').style.borderColor='var(--pip-dim)';},1500);}" class="pip-btn" style="margin-top:16px;font-size:14px;padding:8px 32px">UNLOCK</button>
+        <p style="color:var(--pip-dim);margin-top:12px;font-size:10px">Authorized personnel only</p>
       </div>
-      <div class="stat-row"><span class="stat-label">PORPHYRY Cu</span><span class="stat-value stat-ok">AUC 0.86</span></div>
-      <div class="stat-row"><span class="stat-label">OROGENIC Au</span><span class="stat-value stat-ok">AUC 0.81</span></div>
-      <div class="stat-row"><span class="stat-label">SEDIMENT-HOSTED Cu</span><span class="stat-value stat-warn">AUC 0.76</span></div>
-      <div class="stat-row"><span class="stat-label">THERMAL</span><span class="stat-value">UNIVERSAL MODEST (+0.013 AUC)</span></div>
-      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC ONLY</span></div>
-      <div class="stat-row"><span class="stat-label">PCA EMBEDDINGS</span><span class="stat-value">KALGOORLIE-SPECIFIC ONLY</span></div>
-      <div class="stat-row"><span class="stat-label">ML RESIDUAL</span><span class="stat-value stat-err">NEGATIVE (no signal)</span></div>
-      <div class="stat-row"><span class="stat-label">GRADIENTS</span><span class="stat-value stat-err">NEGATIVE</span></div>
-      <div class="stat-row"><span class="stat-label">NEIGHBORHOOD</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED (+0.024)</span></div>
-      <div class="stat-row"><span class="stat-label">HYDROLOGY</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED</span></div>
-      <div class="stat-row"><span class="stat-label">MAGNETICS</span><span class="stat-value">+0.009 AUC (TMI national)</span></div>
-      <div class="stat-row"><span class="stat-label">FULL FUSION</span><span class="stat-value stat-ok">+0.093 AUC (Chuquicamata)</span></div>
-      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">No single feature family is universal. Zone-specific model architecture confirmed.</p>
+      <div class="stat-row"><span class="stat-label">CHUQUICAMATA</span><span class="stat-value stat-ok">AUC 0.882 (Porphyry Cu)</span></div>
+      <div class="stat-row"><span class="stat-label">KALGOORLIE</span><span class="stat-value stat-ok">AUC 0.879 (Orogenic Au)</span></div>
+      <div class="stat-row"><span class="stat-label">TENNANT CREEK</span><span class="stat-value stat-ok">AUC 0.841 (IOCG)</span></div>
+      <div class="stat-row"><span class="stat-label">MT ISA</span><span class="stat-value stat-warn">AUC 0.781 (SEDEX Cu-Pb-Zn)</span></div>
+      <div class="stat-row"><span class="stat-label">ZAMBIA</span><span class="stat-value stat-warn">AUC 0.760 (Sediment Cu)</span></div>
+      <div class="stat-row"><span class="stat-label">MAGNETICS</span><span class="stat-value stat-ok">CONSOLIDATED 3 ZONES (+0.048-0.153)</span></div>
+      <div class="stat-row"><span class="stat-label">GRAVITY</span><span class="stat-value stat-ok">INTEGRATED (outperforms S2 at Mt Isa)</span></div>
+      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC (+0.052)</span></div>
+      <div class="stat-row"><span class="stat-label">THERMAL INERTIA</span><span class="stat-value stat-warn">+0.054 (Tennant Creek, zone-specific)</span></div>
+      <div class="stat-row"><span class="stat-label">NEIGHBORHOOD</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED</span></div>
+      <div class="stat-row"><span class="stat-label">GEOLOGY</span><span class="stat-value stat-ok">VALIDATED_SELECTIVE (3 zones)</span></div>
+      <div class="stat-row"><span class="stat-label">CANONICAL</span><span class="stat-value stat-ok">23.9/40 (59.75%)</span></div>
+      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">Satellite ceiling ~0.89 AUC. Next breakthrough requires AEM (depth geophysics).</p>
     </div>
   `;
   AudioEngine.ambient_scan();
@@ -1963,12 +1965,14 @@ SectionRenderers.materials = function(el) {
         <li>Property prediction (formation energy, band gap)</li>
       </ul>
     </div>
-    <div id="mat-tech-locked" class="pip-panel" style="position:relative;">
+    <div id="mat-tech-locked" class="pip-panel" style="position:relative;min-height:250px;overflow:hidden;">
       <h2>// TECHNICAL ARCHITECTURE <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
-      <div id="mat-tech-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;">
-        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:14px">ENTER ACCESS CODE</p>
-        <input type="password" id="mat-tech-pw" style="background:#111;border:1px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;text-align:center;width:180px;border-radius:4px" placeholder="........">
-        <button onclick="if(document.getElementById('mat-tech-pw').value==='SOST2026'){document.getElementById('mat-tech-overlay').style.display='none';AudioEngine.success_big();}else{AudioEngine.error_hard();this.previousElementSibling.value='';}" class="pip-btn" style="margin-top:12px;font-size:14px">UNLOCK</button>
+      <div id="mat-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:250px;">
+        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
+        <p style="color:var(--pip-dim);margin-bottom:16px;font-size:12px">Enter access code to view Materials Engine architecture</p>
+        <input type="password" id="mat-tech-pw" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:20px;padding:10px 20px;text-align:center;width:200px;border-radius:4px;outline:none" placeholder="........" onkeydown="if(event.key==='Enter')this.nextElementSibling.click()">
+        <button onclick="if(document.getElementById('mat-tech-pw').value==='SOST2026'){document.getElementById('mat-tech-overlay').style.display='none';try{AudioEngine.success_big();}catch(e){}}else{try{AudioEngine.error_hard();}catch(e){}this.previousElementSibling.value='';this.previousElementSibling.style.borderColor='#ff0000';setTimeout(function(){document.getElementById('mat-tech-pw').style.borderColor='var(--pip-dim)';},1500);}" class="pip-btn" style="margin-top:16px;font-size:14px;padding:8px 32px">UNLOCK</button>
+        <p style="color:var(--pip-dim);margin-top:12px;font-size:10px">Authorized personnel only</p>
       </div>
       <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
       <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
