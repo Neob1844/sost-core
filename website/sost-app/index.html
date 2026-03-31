@@ -1651,7 +1651,7 @@ SectionRenderers.dashboard = function(el) {
           const avgGold = (xautP + paxgP) / 2;
           const goldOz = 1.2; // Foundation commitment
           const R0 = 7.85100863, Q = 0.7788007830714049, EP = 131553;
-          let supply = 0, bh = 0, h = height || 17704;
+          let supply = 0, bh = 0, h = height || 2254;
           while (bh <= h) { let ep = Math.floor(bh/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h); supply += r*(ee-bh+1); bh = ee+1; }
           const refPrice = (goldOz * avgGold) / supply;
           sostPrice = '$' + (refPrice < 0.01 ? refPrice.toFixed(6) : refPrice.toFixed(4));

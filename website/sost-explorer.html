@@ -2706,9 +2706,8 @@ function calcSostRefPrice(){
   if(!xp&&!pp)return;
   var goldPrice=(xp&&pp)?(xp+pp)/2:(xp||pp);
   sostRefXaut=xp;sostRefPaxg=pp;
-  // Approximate supply: use chain height from DOM if available, else ~17704
-  var heightEl=document.querySelector('#chainHeight,#blockHeight,[data-field="height"]');
-  var h=heightEl?parseInt(heightEl.textContent)||17704:17704;
+  // Use global chain height H (from getinfo RPC), fallback to ~2254
+  var h=H>0?H:2254;
   // epoch-decay supply estimate: R0=7.85100863, Q=0.7788007830714049, EPOCH=131553
   var R0=7.85100863,Q=0.7788007830714049,EP=131553;
   var supply=0,bh=0;

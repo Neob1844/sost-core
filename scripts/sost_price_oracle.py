@@ -144,8 +144,8 @@ def get_sost_price(rpc_url=None, rpc_user="", rpc_pass=""):
     if rpc_url:
         height, supply = get_supply_from_rpc(rpc_url, rpc_user, rpc_pass)
     if supply is None:
-        height = 17704  # approximate current
-        supply = estimate_supply(height)
+        height = 2254  # approximate current BLOCK HEIGHT (not supply)
+        supply = estimate_supply(height)  # ~17,700 SOST at epoch 0
 
     gold_oz = FOUNDATION_TOTAL_OZ
     if rpc_url:
