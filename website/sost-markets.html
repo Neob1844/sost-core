@@ -342,6 +342,17 @@
         <div class="cp-tooltip" id="cpSostTooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>
       </div>
       <div class="cp-range" id="cpSostRange"></div>
+      <div id="cpSostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace;display:none">
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
+        <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
+        <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
+          Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
+          Price = (<span id="cpSostDiscGoldOz">1.2</span> oz × $<span id="cpSostDiscGoldP">0</span>) ÷ <span id="cpSostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">$0</span>
+        </div>
+        <div style="margin-top:6px">When SOST is listed on a CEX or DEX, this section will display actual market data.</div>
+        <div style="margin-top:4px">Current backing: 0.6 XAUT + 0.6 PAXG (Foundation PoPC commitment)</div>
+        <div style="margin-top:4px">Verify gold holdings: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan ↗</a></div>
+      </div>
     </div>
     <table class="data-table" id="sostFiatTable">
       <thead>
@@ -720,13 +731,23 @@
           // SOST row after BNB (index 2)
           if (i === 2) {
             var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
+            // If SOST not on CoinGecko, calculate PoPC reference price
+            if (!sostUsd && xaut.usd && paxg.usd) {
+              var _gp = (xaut.usd + paxg.usd) / 2;
+              var _R0=7.85100863,_Q=0.7788007830714049,_EP=131553;
+              var _sup=0,_bh=0,_h=2254;
+              try{var _xhr=new XMLHttpRequest();_xhr.open('POST','/rpc',false);_xhr.setRequestHeader('Content-Type','application/json');_xhr.send(JSON.stringify({method:'getblockcount',id:1}));if(_xhr.status===200){var _rr=JSON.parse(_xhr.responseText);if(_rr&&_rr.result)_h=_rr.result;}}catch(e){}
+              while(_bh<=_h){var _ep=Math.floor(_bh/_EP);var _r=_R0*Math.pow(_Q,_ep);var _ee=Math.min((_ep+1)*_EP-1,_h);_sup+=_r*(_ee-_bh+1);_bh=_ee+1;}
+              sostUsd = (1.2 * _gp) / _sup;
+            }
             var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
             var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
             if (sostUsd) {
               var sEl = document.getElementById('cpSostPrice');
-              if (sEl) sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4);
+              if (sEl) { sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4); sEl.style.color = 'var(--gold-primary,#ffd700)'; }
             }
-            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span></td>' +
+            var sostLabel = (stableData['sost-protocol'] || stableData['sost']) ? '' : ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">PoPC REF</span>';
+            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span>' + sostLabel + '</td>' +
               '<td style="color:#fb010d;font-weight:600">SOST</td>' +
               '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
@@ -778,15 +799,13 @@
   window._mktRetryGold = function() { fetchGold(); };
   window._mktRetryForex = function() { fetchForex(); };
 
-  // ===== SECTION 03: SOST PRICE =====
+  // ===== SECTION 03: SOST PRICE (PoPC Reference — NOT from CoinGecko) =====
+  // SOST is not listed on any exchange. Price is ALWAYS calculated as:
+  // sost_price = (1.2 oz gold × gold_price) / total_sost_supply
+  // gold_price = average of XAUT and PAXG from CoinGecko (those ARE listed)
   function fetchSost(cb) {
-    var vs = cgFiatCodes.join(',');
-    tryFetchSost('sost-protocol', vs, function() {
-      tryFetchSost('sost', vs, function() {
-        showSostNotListed();
-        if (cb) cb();
-      }, cb);
-    }, cb);
+    showSostPopcPrice();
+    if (cb) cb();
   }
 
   function sostInCurrency(prices, code) {
@@ -821,17 +840,97 @@
       .finally(function() { clearTimeout(timeoutId); });
   }
 
-  function showSostNotListed() {
+  // Calculate SOST PoPC reference price — same formula as explorer
+  // sost_price = (1.2 oz × avg(XAUT, PAXG)) / supply
+  // XAUT and PAXG prices come from CoinGecko (they ARE listed). SOST is NOT.
+  var _sostRefUsd = null, _sostRefGoldP = null, _sostRefSup = null;
+  function calcSostPopcPrice() {
+    // Get gold prices from already-fetched CoinGecko data (gold section loads first)
+    var xp = null, pp = null;
+    // Try chart cache first
+    var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
+    var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
+    if (xd && xd.length) xp = xd[xd.length-1][1];
+    if (pd && pd.length) pp = pd[pd.length-1][1];
+    if (!xp && !pp) return null;
+    _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
+    // Supply from chain height
+    var R0=7.85100863, Q=0.7788007830714049, EP=131553;
+    var sup=0, bh=0, h=2254;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/rpc', false);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({method:'getblockcount',id:1}));
+      if (xhr.status === 200) { var rr = JSON.parse(xhr.responseText); if (rr && rr.result) h = rr.result; }
+    } catch(e) {}
+    while (bh <= h) { var ep = Math.floor(bh/EP); var r = R0*Math.pow(Q,ep); var ee = Math.min((ep+1)*EP-1,h); sup += r*(ee-bh+1); bh = ee+1; }
+    _sostRefSup = sup;
+    _sostRefUsd = (1.2 * _sostRefGoldP) / sup;
+    return _sostRefUsd;
+  }
+
+  function showSostPopcPrice() {
+    var refUsd = calcSostPopcPrice();
+    // Update the big SOST price display
+    var pEl = document.getElementById('cpSostPrice');
+    if (pEl && refUsd) {
+      pEl.textContent = '$' + (refUsd < 0.01 ? refUsd.toFixed(6) : refUsd.toFixed(4));
+      pEl.style.color = 'var(--gold-primary,#ffd700)';
+      pEl.style.fontSize = '';
+    } else if (pEl) {
+      pEl.textContent = 'Loading gold prices...';
+      pEl.style.fontSize = '14px';
+    }
+    var chEl = document.getElementById('cpSostChange');
+    if (chEl) { chEl.textContent = 'PoPC Reference Price'; chEl.style.color = 'var(--text-dim,#888)'; }
+    var rEl = document.getElementById('cpSostRange');
+    if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
+      rEl.innerHTML = 'Gold backing: 1.2 oz &times; $' + _sostRefGoldP.toFixed(2) + '/oz = $' + (1.2*_sostRefGoldP).toFixed(2) + ' &divide; ' + _sostRefSup.toFixed(0) + ' SOST'
+        + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on PoPC gold commitments. Will be replaced when SOST is listed on an exchange.</span>';
+    }
+    // Update disclaimer with dynamic values
+    var discEl = document.getElementById('cpSostDisclaimer');
+    if (discEl && refUsd && _sostRefGoldP && _sostRefSup) {
+      discEl.style.display = 'block';
+      var dGp = document.getElementById('cpSostDiscGoldP'); if (dGp) dGp.textContent = _sostRefGoldP.toFixed(2);
+      var dSup = document.getElementById('cpSostDiscSupply'); if (dSup) dSup.textContent = _sostRefSup.toFixed(0);
+      var dPr = document.getElementById('cpSostDiscPrice'); if (dPr) dPr.textContent = refUsd < 0.01 ? '$'+refUsd.toFixed(6) : '$'+refUsd.toFixed(4);
+    }
+    // Fill SOST fiat table with PoPC reference price in all currencies
     var tbody = document.getElementById('sostFiatBody');
+    if (!tbody) return;
     var html = '';
     CURRENCY_GROUPS.forEach(function(g) {
       html += regionRow(g.region, 3);
       g.currencies.forEach(function(c) {
-        var label = (c.code === 'USD') ? 'Not Listed &mdash; est. mining cost ~$0.01' : 'Not Listed';
-        html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-na">' + label + '</td></tr>';
+        var label;
+        if (refUsd && c.code === 'USD') {
+          label = '<span style="color:#ffd700">$' + fmt(refUsd, refUsd < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">PoPC ref.</span>';
+        } else if (refUsd && forexRates[c.code]) {
+          var lp = refUsd * forexRates[c.code];
+          label = '<span style="color:#ffd700">' + fmt(lp, lp < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">PoPC ref.</span>';
+        } else {
+          label = '<span style="color:#555">Awaiting gold price data</span>';
+        }
+        html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td><td class="price-val">' + label + '</td></tr>';
       });
     });
+    if (refUsd && _sostRefGoldP) {
+      html += '<tr><td colspan="3" style="text-align:center;padding:12px;font-size:10px;color:#666;border-top:1px solid #222">'
+        + 'Formula: (0.6 XAUT + 0.6 PAXG) &times; gold price &divide; SOST supply = $' + refUsd.toFixed(6) + '/SOST. Not a market price.'
+        + '</td></tr>';
+    }
     tbody.innerHTML = html;
+    // Build chart data for SOST reference price
+    if (refUsd) {
+      var now = Date.now(), pts = [];
+      for (var i = 0; i <= 24; i++) { pts.push([now - i*3600000, refUsd]); }
+      pts.reverse();
+      if (!chartCache['sost-ref']) chartCache['sost-ref'] = {};
+      chartCache['sost-ref'][1] = pts;
+      sostChartId = 'sost-ref';
+    }
   }
 
   // ===== CHART DRAWING ENGINE =====
@@ -1003,54 +1102,25 @@
   var sostChartInited = false;
   function initSostChart() {
     if (sostChartInited && sostChartId) { drawMktChart('cpSost', sostChartId, '#fb010d'); return; }
-    if (sostChartChecked && !sostChartId) return;
     sostChartInited = true;
-    setupChartTfBtns('cpSost', sostChartId || 'sost-protocol', '#fb010d');
-    setupChartTooltip('cpSost', sostChartId || 'sost-protocol', '#fb010d');
-    fetchChartHist('sost-protocol', 1, function() {
-      if (chartCache['sost-protocol'] && chartCache['sost-protocol'][1] && chartCache['sost-protocol'][1].length) {
-        sostChartId = 'sost-protocol'; activateSostChart(); return;
+    sostChartChecked = true;
+    // SOST is NOT on CoinGecko. Always use PoPC reference price.
+    // The price was already calculated by showSostPopcPrice() — just draw the chart.
+    if (!sostChartId) sostChartId = 'sost-ref';
+    setupChartTfBtns('cpSost', sostChartId, '#ffd700');
+    setupChartTooltip('cpSost', sostChartId, '#ffd700');
+    // If chart data not yet built, recalculate
+    if (!chartCache['sost-ref'] || !chartCache['sost-ref'][1]) {
+      calcSostPopcPrice();
+      if (_sostRefUsd) {
+        var now = Date.now(), pts = [];
+        for (var i = 0; i <= 24; i++) { pts.push([now - i*3600000, _sostRefUsd]); }
+        pts.reverse();
+        if (!chartCache['sost-ref']) chartCache['sost-ref'] = {};
+        chartCache['sost-ref'][1] = pts;
       }
-      fetchChartHist('sost', 1, function() {
-        if (chartCache['sost'] && chartCache['sost'][1] && chartCache['sost'][1].length) {
-          sostChartId = 'sost'; activateSostChart(); return;
-        }
-        sostChartChecked = true;
-        // Calculate PoPC reference price from XAUT+PAXG data already cached
-        var xd=chartCache['tether-gold']&&chartCache['tether-gold'][1];
-        var pd=chartCache['pax-gold']&&chartCache['pax-gold'][1];
-        var xp=xd&&xd.length?xd[xd.length-1][1]:null;
-        var pp=pd&&pd.length?pd[pd.length-1][1]:null;
-        var pEl = document.getElementById('cpSostPrice');
-        if((xp||pp)&&pEl){
-          var goldP=(xp&&pp)?(xp+pp)/2:(xp||pp);
-          var R0=7.85100863,Q=0.7788007830714049,EP=131553;
-          var supply=0,bh=0,h=2254;
-          // Try to get real height from RPC (no await — use sync fallback)
-          try{
-            var xhr=new XMLHttpRequest();
-            xhr.open('POST','/rpc',false); // synchronous
-            xhr.setRequestHeader('Content-Type','application/json');
-            xhr.send(JSON.stringify({method:'getblockcount',id:1}));
-            if(xhr.status===200){var rr=JSON.parse(xhr.responseText);if(rr&&rr.result)h=rr.result;}
-          }catch(e){}
-          while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);supply+=r*(ee-bh+1);bh=ee+1;}
-          var refPrice=(1.2*goldP)/supply;
-          pEl.textContent='$'+(refPrice<0.01?refPrice.toFixed(6):refPrice.toFixed(4));
-          pEl.style.fontSize='';pEl.style.color='var(--gold-primary,#ffd700)';
-          var chEl=document.getElementById('cpSostChange');
-          if(chEl){chEl.textContent='PoPC Reference Price';chEl.style.color='var(--text-dim)';}
-          var rEl=document.getElementById('cpSostRange');
-          if(rEl){rEl.innerHTML='Gold backing: 1.2 oz &times; $'+goldP.toFixed(2)+'/oz = $'+(1.2*goldP).toFixed(2)+' &divide; '+supply.toFixed(0)+' SOST<br><span style="font-size:9px;color:var(--text-dim)">Not a market price. Based on PoPC gold commitments. Will be replaced by exchange data when SOST is listed.</span>';}
-          var now=Date.now(),pts=[];
-          for(var i=0;i<=24;i++){pts.push([now-i*3600000,refPrice]);}pts.reverse();
-          chartCache['sost-ref']={};chartCache['sost-ref'][1]=pts;
-          sostChartId='sost-ref';activateSostChart();return;
-        }
-        if (pEl) { pEl.textContent = 'Awaiting price data'; pEl.style.fontSize = '16px'; }
-        drawMktChart('cpSost', null, '#fb010d');
-      });
-    });
+    }
+    activateSostChart();
   }
 
   function activateSostChart() {
