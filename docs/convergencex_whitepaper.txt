@@ -2298,6 +2298,30 @@ C16: Progressive decentralization is irreversible. All operational roles held by
      manual control is permanently relinquished. Decentralization only moves forward.
 ```
 
+## 10.5 ConvergenceX Licensing
+
+ConvergenceX is source-available technology. The source code is publicly
+readable, auditable, and open to contribution without restriction.
+
+Commercial deployment, production use, and public-facing services require
+a valid license, obtained automatically by locking a refundable security
+deposit of USD 1,000 equivalent in SOST for one year (~52,560 blocks).
+
+The deposit is returned in full after the lock period. No fees, no
+deductions, no interest. The deposit is a system-protection measure, not
+a payment.
+
+No license is required for: reading/studying/auditing the source code,
+academic research, private non-commercial testing, contributing to the
+project, or running a personal non-commercial node.
+
+License verification is trustless: anyone can verify a license on-chain
+by checking the ECDSA signature and the ESCROW_LOCK deposit existence.
+
+The security deposit is denominated in SOST at the PoPC reference price
+at the time of lock. The Foundation makes no representation about future
+SOST value. This is not an investment product.
+
 ## 11. Roadmap
 
 | Date | Milestone |

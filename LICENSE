@@ -1,21 +1,53 @@
-MIT License
+ConvergenceX License — Source-Available with Refundable Deposit
 
-Copyright (c) 2026 SOST Foundation
+Copyright (c) 2026 NeoB / SOST Protocol Foundation
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+SOURCE CODE ACCESS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Permission is hereby granted to any person obtaining a copy of this software
+to read, study, audit, and contribute to the source code without restriction.
+
+COMMERCIAL USE REQUIRES LICENSE
+
+Commercial deployment, production use, and public-facing services based on
+ConvergenceX technology require a valid license, obtained automatically by
+locking a refundable security deposit of USD 1,000 equivalent in SOST for
+a period of one year (365 days / ~52,560 blocks).
+
+The deposit is returned in full after the lock period. No fees, no
+deductions, no interest.
+
+NO LICENSE REQUIRED FOR
+
+- Reading, studying, or auditing the source code
+- Academic research and educational use
+- Private, non-commercial testing
+- Contributing code, documentation, or translations to the project
+- Running a personal, non-commercial SOST node
+
+DEPOSIT TERMS
+
+The security deposit is denominated in SOST at the PoPC reference price at
+the time of lock. The deposit is returned in SOST, not in USD. The Foundation
+makes no representation about the future value of SOST. This is not an
+investment product, does not generate yield, and carries no expectation of
+profit.
+
+LICENSE VERIFICATION
+
+Licenses are cryptographically signed by the Foundation and verifiable
+on-chain without contacting any centralized authority.
+
+For verification: https://sostcore.com/sost-license.html
+
+ENFORCEMENT
+
+The Foundation reserves the right to pursue remedies for unauthorized
+commercial use of ConvergenceX technology, in accordance with applicable
+intellectual property law.
+
+DISCLAIMER
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+IMPLIED. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM USE OF THE SOFTWARE.
