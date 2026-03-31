@@ -1403,6 +1403,72 @@ static std::string handle_getaddressinfo(const std::string& id, const std::vecto
     return rpc_result(id, s.str());
 }
 
+// listtransfers: return blocks that contain non-coinbase transactions (transfers)
+// Scans the entire chain once and returns transfer TXIDs with block heights.
+// Efficient: only checks tx_hexes.size() > 1 per block (O(n) where n = chain height).
+static std::string handle_listtransfers(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    int limit = 50;
+    if (!p.empty()) { try { limit = std::stoi(p[0]); } catch(...) {} }
+    if (limit < 1) limit = 1;
+    if (limit > 200) limit = 200;
+
+    std::ostringstream s;
+    s << "[";
+    int count = 0;
+    // Scan from tip backwards
+    for (int64_t h = g_chain_height; h >= 0 && count < limit; --h) {
+        if (h >= (int64_t)g_blocks.size()) continue;
+        const auto& blk = g_blocks[h];
+        if (blk.tx_hexes.size() <= 1) continue; // only coinbase — skip
+
+        // This block has transfers
+        for (size_t t = 1; t < blk.tx_hexes.size() && count < limit; ++t) {
+            // Decode TX to get basic info
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(blk.tx_hexes[t], raw)) continue;
+            Transaction tx; std::string err;
+            if (!Transaction::Deserialize(raw, tx, &err)) continue;
+
+            Hash256 txid;
+            if (!tx.ComputeTxId(txid, &err)) continue;
+
+            // Compute fee via tx-index
+            int64_t sum_in = 0, sum_out = 0;
+            for (const auto& o : tx.outputs) sum_out += o.amount;
+            for (const auto& in : tx.inputs) {
+                auto iit = g_tx_index.find(in.prev_txid);
+                if (iit != g_tx_index.end()) {
+                    int64_t ibh = iit->second.block_height;
+                    uint32_t itpos = iit->second.tx_pos;
+                    if (ibh < (int64_t)g_blocks.size() && itpos < g_blocks[ibh].tx_hexes.size()) {
+                        std::vector<Byte> iraw;
+                        if (decode_tx_hex(g_blocks[ibh].tx_hexes[itpos], iraw)) {
+                            Transaction itx; std::string ie;
+                            if (Transaction::Deserialize(iraw, itx, &ie) && in.prev_index < itx.outputs.size()) {
+                                sum_in += itx.outputs[in.prev_index].amount;
+                            }
+                        }
+                    }
+                }
+            }
+            int64_t fee = sum_in > sum_out ? sum_in - sum_out : 0;
+
+            if (count > 0) s << ",";
+            s << "{\"txid\":\"" << to_hex(txid.data(), 32)
+              << "\",\"height\":" << h
+              << ",\"inputs\":" << tx.inputs.size()
+              << ",\"outputs\":" << tx.outputs.size()
+              << ",\"total_output\":" << sum_out
+              << ",\"fee\":" << fee
+              << ",\"size\":" << raw.size() << "}";
+            count++;
+        }
+    }
+    s << "]";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_listbonds(const std::string& id, const std::vector<std::string>&) {
     auto bonds=g_wallet.list_bonds(g_chain_height);
     std::ostringstream s; s<<"[";
@@ -2193,6 +2259,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getaddressbalance",handle_getaddressbalance},
     {"getaddressutxos",handle_getaddressutxos},
     {"listbonds",handle_listbonds},
+    {"listtransfers",handle_listtransfers},
     {"popc_register",handle_popc_register},
     {"popc_status",handle_popc_status},
     {"popc_check",handle_popc_check},
