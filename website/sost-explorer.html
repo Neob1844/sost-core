@@ -2395,53 +2395,45 @@ function renderTxTable(){
 async function loadLatestTxs(){
   try{
     _allTxRows=[];
-    // Phase 1: collect RECENT coinbase (last 30 blocks) for the ALL tab
-    var recentCoinbase=[];
+    // Phase 1: collect RECENT (last 30 blocks) — coinbase + any transfers
+    var rows=[];
     for(var h=H;h>=Math.max(0,H-30);h--){
       try{
         var hash=await rpc('getblockhash',[String(h)]);
         var b=await rpc('getblock',[hash]);
-        recentCoinbase.push({txid:b.txids?b.txids[0]:'cb_'+h,height:h,type:'COINBASE',inputs:0,outputs:3,amount:fS(b.subsidy)+' SOST',fee:'\u2014'});
-        // Also collect any transfers in these recent blocks
+        rows.push({txid:b.txids?b.txids[0]:'cb_'+h,height:h,type:'COINBASE',inputs:0,outputs:3,amount:fS(b.subsidy)+' SOST',fee:'\u2014'});
         if(b.txids&&b.txids.length>1){
           for(var t=1;t<b.txids.length;t++){
-            var txid=b.txids[t];
             try{
-              var tx=await rpc('gettransaction',[txid]);
-              var totalOut=0;
-              for(var v=0;v<(tx.vout||[]).length;v++){var a=tx.vout[v].amount;totalOut+=(typeof a==='number'?a:parseFloat(a));}
-              var fee=tx.fee?fS(tx.fee)+' SOST':'\u2014';
-              recentCoinbase.push({txid:txid,height:h,type:'TRANSFER',inputs:(tx.vin||[]).length,outputs:(tx.vout||[]).length,amount:totalOut.toFixed(4)+' SOST',fee:fee});
-            }catch(e2){
-              recentCoinbase.push({txid:txid,height:h,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});
-            }
+              var tx=await rpc('gettransaction',[b.txids[t]]);
+              var tot=0;for(var v=0;v<(tx.vout||[]).length;v++){var a=tx.vout[v].amount;tot+=(typeof a==='number'?a:parseFloat(a));}
+              rows.push({txid:b.txids[t],height:h,type:'TRANSFER',inputs:(tx.vin||[]).length,outputs:(tx.vout||[]).length,amount:tot.toFixed(4)+' SOST',fee:tx.fee?fS(tx.fee)+' SOST':'\u2014'});
+            }catch(e2){rows.push({txid:b.txids[t],height:h,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});}
           }
         }
       }catch(e){}
     }
-    // Phase 2: scan ALL blocks for transfers (blocks with tx_count > 1)
-    // This finds transfers that are NOT in the last 30 blocks
-    var transferRows=[];
-    for(var h2=H-31;h2>=Math.max(0,H-2500)&&transferRows.length<30;h2--){
-      try{
-        var hash2=await rpc('getblockhash',[String(h2)]);
-        var b2=await rpc('getblock',[hash2]);
-        if(b2.txids&&b2.txids.length>1){
-          for(var t2=1;t2<b2.txids.length;t2++){
-            try{
-              var tx2=await rpc('gettransaction',[b2.txids[t2]]);
-              var totalOut2=0;
-              for(var v2=0;v2<(tx2.vout||[]).length;v2++){var a2=tx2.vout[v2].amount;totalOut2+=(typeof a2==='number'?a2:parseFloat(a2));}
-              var fee2=tx2.fee?fS(tx2.fee)+' SOST':'\u2014';
-              transferRows.push({txid:b2.txids[t2],height:h2,type:'TRANSFER',inputs:(tx2.vin||[]).length,outputs:(tx2.vout||[]).length,amount:totalOut2.toFixed(4)+' SOST',fee:fee2});
-            }catch(e3){
-              transferRows.push({txid:b2.txids[t2],height:h2,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});
-            }
-          }
+    // Phase 2: fetch ALL transfers from the chain via dedicated RPC (fast, server-side scan)
+    try{
+      var transfers=await rpc('listtransfers',['50']);
+      if(transfers&&transfers.length>0){
+        for(var i=0;i<transfers.length;i++){
+          var tr=transfers[i];
+          // Skip if already in Phase 1 results
+          if(rows.some(function(r){return r.txid===tr.txid;}))continue;
+          rows.push({
+            txid:tr.txid,
+            height:tr.height,
+            type:'TRANSFER',
+            inputs:tr.inputs,
+            outputs:tr.outputs,
+            amount:fS(tr.total_output)+' SOST',
+            fee:tr.fee>0?fS(tr.fee)+' SOST':'\u2014'
+          });
         }
-      }catch(e){}
-    }
-    // Merge: recent + older transfers, sorted by height desc
+      }
+    }catch(e){/* listtransfers not available — old node version */}
+    // Merge: sorted by height desc
     _allTxRows=recentCoinbase.concat(transferRows);
     _allTxRows.sort(function(a,b){return b.height-a.height;});
     renderTxTable();
