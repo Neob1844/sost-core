@@ -316,14 +316,18 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     </div>
 
     <div class="panel">
-      <div class="panel-head">// VALIDATED ZONES — 3 Continents, 3 Deposit Types</div>
+      <div class="panel-head">// VALIDATED COMMODITIES — 4 Continents, 7 Commodity Types</div>
       <table class="tbl">
-        <tr><th>Zone</th><th>Country</th><th>Deposit Type</th><th>Baseline AUC</th><th>Fusion AUC</th><th>Improvement</th></tr>
-        <tr><td>Chuquicamata</td><td>Chile</td><td>Porphyry Copper</td><td>0.789</td><td style="color:var(--green)">0.882</td><td style="color:var(--green)">+0.093</td></tr>
-        <tr><td>Kalgoorlie</td><td>Australia</td><td>Orogenic Gold</td><td>0.865</td><td style="color:var(--green)">0.879</td><td style="color:var(--green)">+0.013</td></tr>
-        <tr><td>Zambia Copperbelt</td><td>Zambia</td><td>Sedimentary Copper</td><td>0.737</td><td style="color:var(--green)">0.760</td><td style="color:var(--green)">+0.024</td></tr>
+        <tr><th>Zone</th><th>Country</th><th>Commodity</th><th>Best AUC</th><th>Dominant Family</th></tr>
+        <tr><td>Chuquicamata</td><td>Chile</td><td>Porphyry Cu</td><td style="color:var(--green)">0.882</td><td>S2 spectral</td></tr>
+        <tr><td>Kalgoorlie</td><td>Australia</td><td>Orogenic Au</td><td style="color:var(--green)">0.879</td><td>Magnetics</td></tr>
+        <tr><td>Tennant Creek</td><td>Australia</td><td>IOCG</td><td style="color:var(--green)">0.841</td><td>Magnetics + gravity</td></tr>
+        <tr><td>Atacama + Uyuni</td><td>Chile / Bolivia</td><td style="color:var(--cyan)"><b>Lithium (salar)</b></td><td style="color:var(--green)">0.891</td><td><b>Terrain</b></td></tr>
+        <tr><td>Mt Isa</td><td>Australia</td><td>SEDEX Cu-Pb-Zn</td><td style="color:var(--green)">0.781</td><td>Gravity</td></tr>
+        <tr><td>Zambia</td><td>Zambia</td><td>Sediment Cu</td><td style="color:var(--green)">0.760</td><td>S2 + context</td></tr>
+        <tr><td>Madagascar</td><td>Madagascar</td><td style="color:var(--amber)">Graphite</td><td style="color:var(--amber)">0.730</td><td>S2 + geology</td></tr>
       </table>
-      <p style="margin-top:12px">Multi-source fusion improves performance at all 3 validated zones, across different deposit types and continents. This confirms the approach generalizes.</p>
+      <p style="margin-top:12px">GeaSpirit is a <b>multi-commodity</b> mineral intelligence platform. Each commodity has a different dominant detection family &mdash; the system automatically selects the optimal combination per target type.</p>
     </div>
 
     <div class="panel">
