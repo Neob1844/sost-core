@@ -1515,6 +1515,14 @@ m7.bindPopup(mp(mh('#666666','ARIZONA, USA')+'<b>Type:</b> Porphyry Cu<br><b>Coo
 var m8=L.marker([-22.0,118.0],{icon:makeIcon('#ff3344','pulse-red')}).addTo(map);
 m8.bindPopup(mp(mh('#cc0000','PILBARA, AUSTRALIA')+'<b>Type:</b> BIF Iron<br><b>Coords:</b> 22.0S, 118.0E<br><b>AUC:</b> 0.40<br><b>Status:</b> <span style="color:#ff3344;font-weight:700">FAILED</span><br><b>Reason:</b> Iron formation spectral signature too uniform'));
 
+// 9. Volcán de Barqueros (AUDITED amber — iron oxide anomaly)
+var m9=L.marker([37.96,-1.36],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m9.bindPopup(mp(mh('#b07800','VOLCÁN DE BARQUEROS, MURCIA')+'<b>Type:</b> Volcanic / Hydrothermal<br><b>Coords:</b> 37.96N, 1.36W<br><b>Status:</b> <span style="color:var(--amber)">AUDITED</span><br><b>Iron oxide ratio:</b> 1.71 (highest in region)<br><b>NDVI trend:</b> -0.001/yr (declining)<br><b>EMIT:</b> 19 granules available<br><b>IGME:</b> Sheet 912 (Mula) accessible'));
+
+// 10. Baños de Mula (AUDITED amber — thermal anomaly)
+var m10b=L.marker([38.04,-1.44],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m10b.bindPopup(mp(mh('#b07800','BAÑOS DE MULA, MURCIA')+'<b>Type:</b> Geothermal / Hydrothermal<br><b>Coords:</b> 38.04N, 1.44W<br><b>Status:</b> <span style="color:var(--amber)">AUDITED</span><br><b>Thermal variance:</b> 1.42 (highest in region)<br><b>Context:</b> Known thermal springs, Triassic evaporites<br><b>SIGEOF:</b> Geothermal data under request'));
+
 map.fitBounds([[-31.4,-112.1],[43.6,139.5]],{padding:[40,40]});
 
 // === SESSION TIMER + AUTO-LOCK ===
