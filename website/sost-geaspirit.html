@@ -276,7 +276,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="hero-label">GEASPIRIT PLATFORM v0.8</div>
     <h1><span>Mineral Intelligence</span> System</h1>
     <p class="hero-sub">Computational mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
-    <div class="status-badge">&#9632; OPERATIONAL — AUC 0.94 · TYPE-AWARE · 6 ZONES</div>
+    <div class="status-badge">&#9632; OPERATIONAL — AUC 0.882 BEST · TYPE-AWARE · 7 ZONES + GRAVITY</div>
   </div>
 </section>
 
@@ -1481,49 +1481,41 @@ document.head.appendChild(blueStyle);
 function mp(t){return '<div style="font-family:monospace;font-size:11px;line-height:1.6;color:#000">'+t+'</div>'}
 function mh(c,n){return '<b style="color:'+c+'">'+n+'</b><hr style="border-color:'+c+'">'}
 
-// === 10 AOI MARKERS ===
+// === PILOT ZONE MARKERS (Updated Phase 44) ===
 
-// 1. Chuquicamata (STRONG green)
-var m1=L.marker([-22.3,-68.9],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-m1.bindPopup(function(){var b=mh('#006600','CHUQUICAMATA, CHILE')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 22.3S, 68.9W<br><b>Status:</b> <span style="color:#006600">STRONG</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.8622<br><b>Labels:</b> 43 Cu/Au/Ag<br><b>Bands:</b> 24';return mp(b)});
+// 1. Chuquicamata (PRODUCTION green — 0.882 AUC)
+var m1=L.marker([-22.32,-68.93],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m1.bindPopup(function(){var b=mh('#006600','CHUQUICAMATA, CHILE')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 22.32S, 68.93W<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">CORE PRODUCTION</span><br><b>AUC:</b> 0.882 (best fusion)<br><b>Stack:</b> S2+thermal+EMIT+geology+NB+hydro<br><b>Labels:</b> 38<br><b>Delta:</b> +0.093';return mp(b)});
 
-// 2. Kalgoorlie (STRONG green)
+// 2. Kalgoorlie (PRODUCTION green — 0.879 AUC)
 var m2=L.marker([-30.75,121.47],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-m2.bindPopup(function(){var b=mh('#006600','KALGOORLIE, AUSTRALIA')+'<b>Type:</b> Orogenic Au<br><b>Coords:</b> 30.75S, 121.47E<br><b>Status:</b> <span style="color:#006600">STRONG</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.8063 (Au-only)<br><b>Labels:</b> 103 OZMIN<br><b>Bands:</b> 12';return mp(b)});
+m2.bindPopup(function(){var b=mh('#006600','KALGOORLIE, AUSTRALIA')+'<b>Type:</b> Orogenic Au<br><b>Coords:</b> 30.75S, 121.47E<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">CORE PRODUCTION</span><br><b>AUC:</b> 0.879 (full fusion)<br><b>Stack:</b> S2+thermal+PCA+magnetics+NB+hydro<br><b>Labels:</b> 205<br><b>Delta:</b> +0.013';return mp(b)});
 
-// 3. Zambia (ACCEPTABLE amber)
-var m3=L.marker([-12.8,28.2],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m3.bindPopup(function(){var b=mh('#b07800','ZAMBIA COPPERBELT')+'<b>Type:</b> Sediment-hosted Cu<br><b>Coords:</b> 12.8S, 28.2E<br><b>Status:</b> <span style="color:#b07800">ACCEPTABLE</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7626<br><b>Labels:</b> 28 Cu/Co';return mp(b)});
+// 3. Zambia (PRODUCTION green — 0.760 AUC)
+var m3=L.marker([-12.80,28.24],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m3.bindPopup(function(){var b=mh('#006600','ZAMBIA COPPERBELT')+'<b>Type:</b> Sediment-hosted Cu<br><b>Coords:</b> 12.80S, 28.24E<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">CORE PRODUCTION</span><br><b>AUC:</b> 0.760<br><b>Stack:</b> S2+NB+hydrology<br><b>Labels:</b> 28<br><b>Delta:</b> +0.024';return mp(b)});
 
-// 4. Peru (ACCEPTABLE amber)
-var m4=L.marker([-9.9,-77.3],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m4.bindPopup(function(){var b=mh('#b07800','PERU PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 9.9S, 77.3W<br><b>Status:</b> <span style="color:#b07800">ACCEPTABLE</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7577<br><b>Labels:</b> 71';return mp(b)});
+// 4. Tennant Creek (VALIDATED green — 0.841 AUC with full stack)
+var m4=L.marker([-19.65,134.19],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m4.bindPopup(function(){var b=mh('#006600','TENNANT CREEK, AUSTRALIA')+'<b>Type:</b> IOCG + Orogenic Au<br><b>Coords:</b> 19.65S, 134.19E<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">TRANSFER VALIDATED</span><br><b>AUC:</b> 0.841 (full stack)<br><b>Stack:</b> S2+magnetics+gravity+terrain<br><b>Labels:</b> 33<br><b>Magnetics delta:</b> +0.048 over S2';return mp(b)});
 
-// 5. Arizona (ACCEPTABLE amber)
-var m5=L.marker([32.5,-110.6],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m5.bindPopup(function(){var b=mh('#b07800','ARIZONA PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 32.5N, 110.6W<br><b>Status:</b> <span style="color:#b07800">MARGINAL</span>';if(geaspirit_unlocked)b+='<br><b>AUC:</b> 0.7178<br><b>Labels:</b> 5 (sparse)';return mp(b)});
+// 5. Mt Isa (VALIDATED amber — 0.781 AUC)
+var m5=L.marker([-20.73,139.49],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m5.bindPopup(function(){var b=mh('#b07800','MT ISA, AUSTRALIA')+'<b>Type:</b> SEDEX Cu-Pb-Zn + IOCG<br><b>Coords:</b> 20.73S, 139.49E<br><b>Status:</b> <span style="color:#ffb000;font-weight:700">VALIDATED</span><br><b>AUC:</b> 0.781 (S2+mag+grav)<br><b>Gravity outperforms S2:</b> 0.720 vs 0.570<br><b>Labels:</b> 104<br><b>Magnetics delta:</b> +0.153 over S2';return mp(b)});
 
-// 6. Banos de Mula (HEURISTIC blue)
-var m6=L.marker([38.04,-1.43],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
-m6.bindPopup(function(){var b=mh('#2266cc','BANOS DE MULA, SPAIN')+'<b>Type:</b> Hydrothermal<br><b>Coords:</b> 38.04N, 1.43W<br><b>Mode:</b> Heuristic';if(geaspirit_unlocked)b+='<br><b>Score:</b> 0.762<br><b>HIGH:</b> 10.0 km&#178;<br><b>Priority:</b> #1 Spain';return mp(b)});
+// 6. Peru (WEAK amber — 0.698 AUC)
+var m6=L.marker([-15.50,-70.00],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m6.bindPopup(function(){var b=mh('#b07800','PERU PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 15.50S, 70.00W<br><b>Status:</b> <span style="color:#ffb000">WEAK BASELINE</span><br><b>AUC:</b> 0.698<br><b>Stack:</b> S2+thermal<br><b>Labels:</b> 71<br><b>Note:</b> Fusion negative (-0.063). EMIT pending.';return mp(b)});
 
-// 7. Barqueros (HEURISTIC blue)
-var m7=L.marker([37.96,-1.36],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
-m7.bindPopup(function(){var b=mh('#2266cc','VOLCAN DE BARQUEROS, SPAIN')+'<b>Type:</b> Volcanic<br><b>Coords:</b> 37.96N, 1.36W<br><b>Mode:</b> Heuristic';if(geaspirit_unlocked)b+='<br><b>Score:</b> 0.713<br><b>HIGH:</b> 5.6 km&#178;<br><b>Priority:</b> #2 Spain';return mp(b)});
+// 7. Arizona (INSUFFICIENT grey)
+var m7=L.marker([33.45,-112.07],{icon:makeIcon('#888888','pulse-grey')}).addTo(map);
+m7.bindPopup(mp(mh('#666666','ARIZONA, USA')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 33.45N, 112.07W<br><b>Status:</b> <span style="color:#888">INSUFFICIENT LABELS</span><br><b>Labels:</b> 5 (too few for validation)'));
 
-// 8. Salave (HEURISTIC blue — no signal)
-var m8=L.marker([43.57,-6.90],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
-m8.bindPopup(mp(mh('#2266cc','SALAVE, SPAIN')+'<b>Type:</b> Orogenic Au (known)<br><b>Coords:</b> 43.57N, 6.90W<br><b>Mode:</b> Heuristic<br><b>Targets:</b> 0 (vegetation suppresses signal)<br><b>Next:</b> Magnetics needed'));
+// 8. Pilbara (FAILED red — 0.40 AUC)
+var m8=L.marker([-22.0,118.0],{icon:makeIcon('#ff3344','pulse-red')}).addTo(map);
+m8.bindPopup(mp(mh('#cc0000','PILBARA, AUSTRALIA')+'<b>Type:</b> BIF Iron<br><b>Coords:</b> 22.0S, 118.0E<br><b>AUC:</b> 0.40<br><b>Status:</b> <span style="color:#ff3344;font-weight:700">FAILED</span><br><b>Reason:</b> Iron formation spectral signature too uniform'));
 
-// 9. Tintic (DEMO blue)
-var m9=L.marker([39.9,-112.1],{icon:makeIcon('#4488ff','pulse-blue')}).addTo(map);
-m9.bindPopup(mp(mh('#2266cc','TINTIC, UTAH (DEMO)')+'<b>Mode:</b> Heuristic (untrained)<br><b>Coords:</b> 39.9N, 112.1W<br><b>Targets:</b> 50<br><b>HIGH:</b> 18.9 km&#178;'));
-
-// 10. Pilbara (FAILED red)
-var m10=L.marker([-22.0,118.0],{icon:makeIcon('#ff3344','pulse-red')}).addTo(map);
-m10.bindPopup(mp(mh('#cc0000','PILBARA, AUSTRALIA')+'<b>Type:</b> BIF Fe<br><b>Coords:</b> 22.0S, 118.0E<br><b>AUC:</b> 0.40 (FAILED)<br><b>Status:</b> Not recommended'));
-
-map.fitBounds([[-31.4,-112.1],[43.6,121.7]],{padding:[40,40]});
+map.fitBounds([[-31.4,-112.1],[43.6,139.5]],{padding:[40,40]});
 
 // === SESSION TIMER + AUTO-LOCK ===
 var countdownInterval=null;
