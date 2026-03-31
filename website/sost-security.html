@@ -508,7 +508,7 @@
           <tr><th>Component</th><th>Status</th></tr>
           <tr><td class="label">Transaction signing (libsecp256k1)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Consensus validation (R1-R14, S1-S12, CB1-CB10)</td><td class="green">Complete</td></tr>
-          <tr><td class="label">cASERT unified difficulty (bitsQ + equalizer, E4&ndash;H9 profiles)</td><td class="green">Complete</td></tr>
+          <tr><td class="label">cASERT unified difficulty (bitsQ + equalizer, E4&ndash;H12 profiles)</td><td class="green">Complete</td></tr>
           <tr><td class="label">Mempool validation and relay</td><td class="green">Complete</td></tr>
           <tr><td class="label">Transaction confirmation in blocks</td><td class="green">Complete</td></tr>
           <tr><td class="label">RPC authentication (--rpc-user/--rpc-pass)</td><td class="green">Complete</td></tr>
@@ -660,7 +660,7 @@ var D={
 'address book':'<b>Trusted Address Book</b> — Save addresses with labels and trust levels (Trusted, Known, Blocked, Unknown). Blocked addresses cannot receive funds. Unknown addresses trigger a first-time send warning.',
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
 'checkpoints':'<b>Checkpoints</b> — Hardcoded block hashes at known heights. The node rejects any chain that disagrees with these checkpoints. MAX_REORG_DEPTH = 500 blocks (~3.5 days) limits how far back a reorganization can go.',
-'cASERT':'<b>cASERT</b> — Continuous ASERT difficulty adjustment. Exponential formula adjusts difficulty every block. V1: 48h halflife, 6.25% cap. V2 (block 1450+): 24h halflife, 12.5% cap. 17 equalizer profiles (E4-H9) adapt stability requirements.',
+'cASERT':'<b>cASERT</b> — Continuous ASERT difficulty adjustment. Exponential formula adjusts difficulty every block. V1: 48h halflife, 6.25% cap. V2 (block 1450+): 24h halflife, 12.5% cap. 17 equalizer profiles (E4-H12) adapt stability requirements.',
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency prevents ASIC parallelism. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',

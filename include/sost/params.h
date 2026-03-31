@@ -111,7 +111,7 @@ inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatili
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
-inline constexpr int32_t  CASERT_H_MAX            = 9;      // H9 max (H10-H12 defined but capped)
+inline constexpr int32_t  CASERT_H_MAX            = 12;     // H12 max — all 17 profiles active (E4 through H12)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -128,7 +128,7 @@ inline constexpr int32_t  CASERT_ANTISTALL_INTEG_DECAY = 240; // I *= 240/256 pe
 // --- cASERT profile table (17 profiles) ---
 // Each profile: { scale, steps, k, margin }
 // Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 12=H12
-// Active range: E4(-4) to H9(+9). H10-H12 defined but capped (future reserve).
+// Active range: E4(-4) to H12(+12). All 17 profiles active.
 struct CasertProfile {
     int32_t scale, steps, k, margin;
 };
@@ -146,7 +146,7 @@ inline constexpr int32_t CASERT_PROFILE_COUNT = 17;
 // profile_index -4 → array[0] (E4)
 // profile_index  0 → array[4] (B0)
 // profile_index  9 → array[13] (H9)
-// profile_index 12 → array[16] (H12) — reserved, capped at H9
+// profile_index 12 → array[16] (H12) — highest hardening profile
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;

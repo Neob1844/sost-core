@@ -7,19 +7,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>cASERT Specification — Bidirectional Difficulty Adjustment for SOST</title>
-<meta name="description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H9), anti-stall recovery, EWMA signals. Complete specification.">
+<meta name="description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H12), anti-stall recovery, EWMA signals. Complete specification.">
 <meta name="keywords" content="cASERT, difficulty adjustment, bitsQ, equalizer profiles, SOST difficulty, bidirectional adjustment, anti-stall, EWMA">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="cASERT Specification — Bidirectional Difficulty Adjustment for SOST">
-<meta property="og:description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H9), anti-stall recovery, EWMA signals. Complete specification.">
+<meta property="og:description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H12), anti-stall recovery, EWMA signals. Complete specification.">
 <meta property="og:url" content="https://sostcore.com/casert-spec.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="cASERT Specification — Bidirectional Difficulty Adjustment for SOST">
-<meta name="twitter:description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H9), anti-stall recovery, EWMA signals. Complete specification.">
+<meta name="twitter:description" content="cASERT unified consensus-rate control: bitsQ controller, 17 equalizer profiles (E4-H12), anti-stall recovery, EWMA signals. Complete specification.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -254,7 +254,7 @@
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-label">Equalizer Profiles (E4&ndash;H9)</span>
+          <span class="spec-label">Equalizer Profiles (E4&ndash;H12)</span>
         </div>
         <span class="spec-tag">5-SIGNAL EWMA CONTROLLER</span>
       </div>
@@ -279,7 +279,7 @@
           <tr style="opacity:0.35"><td style="color:#64748b">H11</td><td style="color:#64748b">+11</td><td>3</td><td>7</td><td>7</td><td>110</td><td style="color:#64748b">147</td></tr>
           <tr style="opacity:0.35"><td style="color:#64748b">H12</td><td style="color:#64748b">+12</td><td>3</td><td>8</td><td>7</td><td>105</td><td style="color:#64748b">168</td></tr>
         </table>
-        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">17 profiles E4(-4) through H12(+12). Active: E4&ndash;H9 (CASERT_H_MAX=9). H10&ndash;H12 reserve profiles (activation via 75% miner signaling). Compute = scale &times; k &times; steps (relative CX work multiplier).</p>
+        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">17 profiles E4(-4) through H12(+12). Active: E4&ndash;H12 (CASERT_H_MAX=12). H10&ndash;H12 active high-difficulty profiles (scale=3). Compute = scale &times; k &times; steps (relative CX work multiplier).</p>
       </div>
     </div>
 
@@ -287,12 +287,12 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">BIDIRECTIONAL</div>
         <h3 style="color:var(--red-primary)">Easing &amp; Hardening</h3>
-        <p>The equalizer operates bidirectionally: E4&ndash;E1 ease stability (only after 6h extra at B0), B0 is the baseline, H1&ndash;H9 harden when blocks are fast. H10&ndash;H12 are reserve profiles for future high-hashrate (activation via 75% miner signaling). Safety rules cap at B0 when behind schedule or with &lt;10 blocks. Slew rate: &plusmn;1 profile level per block.</p>
+        <p>The equalizer operates bidirectionally: E4&ndash;E1 ease stability (only after 6h extra at B0), B0 is the baseline, H1&ndash;H9 harden when blocks are fast. H10&ndash;H12 are active high-difficulty profiles (scale=3). Safety rules cap at B0 when behind schedule or with &lt;10 blocks. Slew rate: &plusmn;1 profile level per block.</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">17 PROFILES</div>
         <h3 style="color:var(--cyan-primary)">Independent Tuning</h3>
-        <p>17 profiles E4(-4) through H12(+12). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H12 are reserve profiles (activation via 75% miner signaling).</p>
+        <p>17 profiles E4(-4) through H12(+12). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H12 are active high-difficulty profiles (scale=3).</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
