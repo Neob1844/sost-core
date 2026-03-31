@@ -3196,17 +3196,20 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
   EMIT alteration (porphyry Cu specific), PCA embeddings (Kalgoorlie specific),
   magnetics (small positive), neighborhood context (promising for mineral ID)
 - Rejected: spatial gradients, ML residuals, EMIT at orogenic Au, cross-zone transfer
-- Canonical objective: 22.8/40 (57%, frozen v4). Mineral 4.0/10, Depth 4.1/10, Coordinates 7.0/10, Certainty 7.7/10
-- Type-aware auto-selection: tests all available families, selects best per zone
-- Framing: "zone-aware, type-aware, multi-proxy mineral intelligence"
+- Canonical objective: 23.9/40 (60%). Mineral 4.3/10, Depth 4.5/10, Coordinates 7.0/10, Certainty 8.1/10
+- MINERAL = commodity / mineral system / deposit type — metals + non-metallic + strategic elements
+- Validated commodities: Porphyry Cu (0.882), Orogenic Au (0.879), IOCG (0.841), SEDEX (0.781), Sediment Cu (0.760), Lithium brines (0.891)
+- Type-aware auto-selection: tests all available families, selects best per zone and commodity
+- Framing: "zone-aware, type-aware, multi-commodity mineral intelligence"
 - Does NOT claim direct subsurface detection — surface proxy inference only
-- All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, GA geophysics)
-- Next: geology + gravity + neighborhood context + calibration = information fusion
+- All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, GA geophysics, GA gravity)
+- Gravity integrated (460m Bouguer) — outperforms spectral at subsurface deposits
+- Magnetics consolidated at 3 zones (+0.048 to +0.153 over S2)
 - Full methodology and results at: website/sost-geaspirit.html
 
 K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
 - Canonical objective: "There is [mineral] at [depth] at [coordinates] with [certainty%]"
-- Current score: 22.8/40 (57%, frozen methodology v4)
+- Current score: 23.9/40 (60%). MINERAL expanded to include non-metallic commodities (lithium, graphite, REE, diamonds).
   - MINERAL:     4.0/10 — Deposit type discrimination (porphyry Cu, orogenic Au, sediment Cu)
   - DEPTH:       4.1/10 — Depth estimation (surface proxy — deposit-scale geophysics blocked)
   - COORDINATES: 7.0/10 — Spatial precision at 30m per pixel

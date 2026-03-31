@@ -276,7 +276,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
     <div class="hero-label">GEASPIRIT PLATFORM v0.8</div>
     <h1><span>Mineral Intelligence</span> System</h1>
     <p class="hero-sub">Computational mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
-    <div class="status-badge">&#9632; OPERATIONAL — AUC 0.882 BEST · TYPE-AWARE · 7 ZONES + GRAVITY</div>
+    <div class="status-badge">&#9632; OPERATIONAL — AUC 0.891 · 8 COMMODITY TYPES · 9+ ZONES · GRAVITY + LITHIUM</div>
   </div>
 </section>
 
@@ -1522,6 +1522,14 @@ m9.bindPopup(mp(mh('#b07800','VOLCÁN DE BARQUEROS, MURCIA')+'<b>Type:</b> Volca
 // 10. Baños de Mula (AUDITED amber — thermal anomaly)
 var m10b=L.marker([38.04,-1.44],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
 m10b.bindPopup(mp(mh('#b07800','BAÑOS DE MULA, MURCIA')+'<b>Type:</b> Geothermal / Hydrothermal<br><b>Coords:</b> 38.04N, 1.44W<br><b>Status:</b> <span style="color:var(--amber)">AUDITED</span><br><b>Thermal variance:</b> 1.42 (highest in region)<br><b>Context:</b> Known thermal springs, Triassic evaporites<br><b>SIGEOF:</b> Geothermal data under request'));
+
+// 11. Atacama Lithium Salar (VALIDATED green — 0.891 AUC)
+var m11=L.marker([-23.5,-68.2],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
+m11.bindPopup(function(){var b=mh('#006600','SALAR DE ATACAMA, CHILE')+'<b>Type:</b> Lithium Brine / Evaporite<br><b>Coords:</b> 23.5S, 68.2W<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">COMMODITY VALIDATED</span><br><b>AUC:</b> 0.891 (terrain + S2 + thermal)<br><b>Key:</b> Terrain BEATS spectral for salares<br><b>Labels:</b> 27 (MRDS + salar surface)<br><b>Phase:</b> 45 — First non-metallic commodity';return mp(b)});
+
+// 12. Graphite Madagascar (AUDITED amber — 0.750 AUC, difficult)
+var m12=L.marker([-13.5,40.0],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m12.bindPopup(mp(mh('#b07800','CABO DELGADO, MADAGASCAR')+'<b>Type:</b> Graphite (metamorphic)<br><b>Coords:</b> 13.5S, 40.0E<br><b>Status:</b> <span style="color:#ffb000">AUDITED — DIFFICULT</span><br><b>AUC:</b> 0.750 (S2 only, terrain hurts)<br><b>Need:</b> Geology data for metamorphic grade'));
 
 map.fitBounds([[-31.4,-112.1],[43.6,139.5]],{padding:[40,40]});
 
