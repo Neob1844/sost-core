@@ -452,3 +452,18 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 23.9/40 (MINERAL expanded, DEPTH gravity, CERTAINTY multi-commodity)
 
 **Recommendation:** Validate lithium at second salar. Test phosphate. Continue AEM priority for DEPTH.
+
+## Phase 46: Multi-Commodity Canonical Expansion (2026-03-30)
+
+**Classification:** Doctrinal expansion + multi-commodity training
+
+- MINERAL redefined: commodity / mineral system / deposit type (metals + non-metallic + strategic)
+- **Lithium (Uyuni): AUC 0.778** — REPLICATED from Atacama (0.794). MULTI_ZONE_VALIDATED.
+- **Graphite + geology: AUC 0.730** — geology adds +0.067 over S2-only. POSITIVE.
+- **Evaporite: AUC 0.578** — DIFFICULT (subsurface labels not satellite-detectable)
+- **Phosphate: AUC 0.590** — NOT FEASIBLE with satellite alone
+- MRDS global inventory: 15K uranium, 3K phosphate, 2.8K evaporite, 1.6K REE, 752 graphite, 566 lithium, 493 diamond
+- Family dominance: each commodity has different #1 family (Au=magnetics, Li=terrain, graphite=geology)
+- Canonical: 23.9/40 UNCHANGED (doctrinal expansion, not score update)
+
+**Recommendation:** Train uranium (15K labels). Train REE. Filter evaporite labels by surface exposure. Test lithium pegmatite.
