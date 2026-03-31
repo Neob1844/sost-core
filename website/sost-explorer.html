@@ -482,6 +482,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div class="price-tooltip" id="sostTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
       <div class="price-card-range" id="sostRange"></div>
+      <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
+        <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
+        <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
+          Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
+          Price = (<span id="sostDiscGoldOz">1.2</span> oz × $<span id="sostDiscGoldP">0</span>) ÷ <span id="sostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">$0</span>
+        </div>
+        <div style="margin-top:6px">When SOST is listed on a CEX or DEX, this section will display actual market data.</div>
+        <div style="margin-top:4px">Current backing: 0.6 XAUT + 0.6 PAXG (Foundation PoPC commitment)</div>
+        <div style="margin-top:4px">Verify gold holdings: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
+      </div>
     </div>
   </div>
   <div style="margin-bottom:24px">
@@ -2725,10 +2736,15 @@ function calcSostRefPrice(){
   if(chEl){chEl.style.color='var(--text3)';chEl.textContent='PoPC reference price';}
   var rangeEl=document.getElementById('sostRange');
   if(rangeEl){
-    rangeEl.innerHTML='Gold backing: '+sostRefGoldOz+'oz × $'+goldPrice.toFixed(2)+'/oz'
-      +' = $'+totalGoldVal.toFixed(2)
-      +' &nbsp;|&nbsp; Supply: '+supply.toFixed(0)+' SOST'
-      +'<br><span style="color:#555;font-size:9px">Not a market price. SOST is not listed on any exchange. Reference price reflects PoPC gold commitment.</span>';
+    rangeEl.innerHTML='Gold: '+sostRefGoldOz+'oz × $'+goldPrice.toFixed(2)+'/oz = $'+totalGoldVal.toFixed(2)+' | Supply: '+supply.toFixed(0)+' SOST';
+  }
+  // Update disclaimer with dynamic values
+  var discEl=document.getElementById('sostDisclaimer');
+  if(discEl){
+    discEl.style.display='block';
+    var dGp=document.getElementById('sostDiscGoldP');if(dGp)dGp.textContent=goldPrice.toFixed(2);
+    var dSup=document.getElementById('sostDiscSupply');if(dSup)dSup.textContent=supply.toFixed(0);
+    var dPr=document.getElementById('sostDiscPrice');if(dPr)dPr.textContent=sostRefPrice<0.01?'$'+sostRefPrice.toFixed(6):'$'+sostRefPrice.toFixed(4);
   }
   // Build synthetic single-point chart data so canvas renders
   if(!cache['sost-ref']){cache['sost-ref']={};}
