@@ -2321,6 +2321,104 @@ static std::string handle_getsostprice(const std::string& id, const std::vector<
     return rpc_result(id, s.str());
 }
 
+// =========================================================================
+// License RPC handlers
+// =========================================================================
+
+static std::string handle_license_verify(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "missing license_id or deposit_txid");
+    std::string query = p[0];
+    // Search for the deposit TX in the tx-index
+    Hash256 txid{};
+    if (!hex_to_bytes(query, txid.data(), 32))
+        return rpc_error(id, -8, "invalid txid hex");
+    auto it = g_tx_index.find(txid);
+    if (it == g_tx_index.end())
+        return rpc_result(id, "{\"valid\":false,\"status\":\"NOT_FOUND\",\"reason\":\"Deposit TX not found in chain\"}");
+    int64_t bh = it->second.block_height;
+    // Check if it's an ESCROW_LOCK
+    if (bh >= (int64_t)g_blocks.size())
+        return rpc_result(id, "{\"valid\":false,\"status\":\"INVALID\",\"reason\":\"Block not available\"}");
+    uint32_t tpos = it->second.tx_pos;
+    if (tpos >= g_blocks[bh].tx_hexes.size())
+        return rpc_result(id, "{\"valid\":false,\"status\":\"INVALID\",\"reason\":\"TX position invalid\"}");
+    std::vector<Byte> raw;
+    if (!decode_tx_hex(g_blocks[bh].tx_hexes[tpos], raw))
+        return rpc_result(id, "{\"valid\":false,\"status\":\"INVALID\",\"reason\":\"Cannot decode TX\"}");
+    Transaction tx; std::string err;
+    if (!Transaction::Deserialize(raw, tx, &err))
+        return rpc_result(id, "{\"valid\":false,\"status\":\"INVALID\",\"reason\":\"Cannot deserialize TX\"}");
+    // Find ESCROW_LOCK output
+    bool has_escrow = false;
+    int64_t lock_amount = 0;
+    uint64_t lock_until = 0;
+    for (const auto& o : tx.outputs) {
+        if (o.type == OUT_ESCROW_LOCK) {
+            has_escrow = true;
+            lock_amount = o.amount;
+            lock_until = ReadLockUntil(o.payload);
+            break;
+        }
+    }
+    if (!has_escrow)
+        return rpc_result(id, "{\"valid\":false,\"status\":\"NOT_ESCROW\",\"reason\":\"TX does not contain ESCROW_LOCK output\"}");
+    // Check if still locked
+    bool active = (uint64_t)g_chain_height < lock_until;
+    // Grace period: within LICENSE_GRACE_BLOCKS after unlock → still valid (auto-renewal window)
+    bool in_grace = !active && ((uint64_t)g_chain_height < lock_until + 4320);
+    std::string status = active ? "ACTIVE" : (in_grace ? "GRACE_PERIOD" : "EXPIRED");
+    std::ostringstream s;
+    s << "{\"valid\":" << (active || in_grace ? "true" : "false")
+      << ",\"status\":\"" << status << "\""
+      << ",\"deposit_stocks\":" << lock_amount
+      << ",\"deposit_sost\":" << format_sost(lock_amount)
+      << ",\"lock_height\":" << bh
+      << ",\"unlock_height\":" << lock_until
+      << ",\"grace_end\":" << (lock_until + 4320)
+      << ",\"chain_height\":" << g_chain_height
+      << ",\"auto_renewal\":\"If deposit not withdrawn by block " << (lock_until + 4320) << ", license auto-renews\""
+      << ",\"type\":\"convergencex_operational\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+static std::string handle_license_list(const std::string& id, const std::vector<std::string>&) {
+    // Scan tx-index for ESCROW_LOCK transactions with sufficient amount
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    std::ostringstream s;
+    s << "[";
+    int count = 0;
+    for (const auto& [txid_key, entry] : g_tx_index) {
+        if (count >= 50) break;
+        if (entry.block_height >= (int64_t)g_blocks.size()) continue;
+        if (entry.tx_pos >= g_blocks[entry.block_height].tx_hexes.size()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(g_blocks[entry.block_height].tx_hexes[entry.tx_pos], raw)) continue;
+        Transaction tx; std::string err;
+        if (!Transaction::Deserialize(raw, tx, &err)) continue;
+        for (const auto& o : tx.outputs) {
+            if (o.type == OUT_ESCROW_LOCK && o.amount >= 100000000) { // min 1 SOST
+                uint64_t lock_until = ReadLockUntil(o.payload);
+                bool active = (uint64_t)g_chain_height < lock_until;
+                bool in_grace = !active && ((uint64_t)g_chain_height < lock_until + 4320);
+                if (active || in_grace) {
+                    if (count > 0) s << ",";
+                    s << "{\"txid\":\"" << to_hex(txid_key.data(), 32) << "\""
+                      << ",\"amount\":" << format_sost(o.amount)
+                      << ",\"lock_height\":" << entry.block_height
+                      << ",\"unlock_height\":" << lock_until
+                      << ",\"status\":\"" << (active ? "ACTIVE" : "GRACE_PERIOD") << "\""
+                      << "}";
+                    count++;
+                }
+                break;
+            }
+        }
+    }
+    s << "]";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -2358,6 +2456,8 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"escrow_complete",handle_escrow_complete},
     {"getproposals",handle_getproposals},
     {"getsostprice",handle_getsostprice},
+    {"license_verify",handle_license_verify},
+    {"license_list",handle_license_list},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
