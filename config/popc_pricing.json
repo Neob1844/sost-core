@@ -1,7 +1,11 @@
 {
-  "mode": "fixed",
-  "sost_per_usd": 1.0,
-  "gold_price_usd_per_oz": 3000.0,
-  "last_updated": "2026-03-29",
-  "note": "Initial fixed pricing. Will be replaced by market oracle when SOST trades on exchanges."
+  "mode": "dynamic",
+  "fallback_sost_per_usd": 1.0,
+  "fallback_gold_price_usd": 3000.0,
+  "foundation_committed_xaut_oz": 0.6,
+  "foundation_committed_paxg_oz": 0.6,
+  "foundation_commitment_months": 6,
+  "price_source": "popc_oracle",
+  "price_cache_file": "/opt/sost/data/current_price.json",
+  "note": "Dynamic pricing based on PoPC gold commitment / total supply. Fallback values used if oracle unavailable."
 }

@@ -2695,6 +2695,53 @@ function checkTfAvail(key){
   });
 }
 
+// Calculate SOST reference price from gold backing
+var sostRefPrice=null,sostRefXaut=null,sostRefPaxg=null,sostRefGoldOz=1.2,sostRefSupply=null;
+function calcSostRefPrice(){
+  // Use cached XAUT+PAXG data to derive gold price
+  var xd=cache['tether-gold']&&cache['tether-gold'][1];
+  var pd=cache['pax-gold']&&cache['pax-gold'][1];
+  var xp=xd&&xd.length?xd[xd.length-1][1]:null;
+  var pp=pd&&pd.length?pd[pd.length-1][1]:null;
+  if(!xp&&!pp)return;
+  var goldPrice=(xp&&pp)?(xp+pp)/2:(xp||pp);
+  sostRefXaut=xp;sostRefPaxg=pp;
+  // Approximate supply: use chain height from DOM if available, else ~17704
+  var heightEl=document.querySelector('#chainHeight,#blockHeight,[data-field="height"]');
+  var h=heightEl?parseInt(heightEl.textContent)||17704:17704;
+  // epoch-decay supply estimate: R0=7.85100863, Q=0.7788007830714049, EPOCH=131553
+  var R0=7.85100863,Q=0.7788007830714049,EP=131553;
+  var supply=0,bh=0;
+  while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);supply+=r*(ee-bh+1);bh=ee+1;}
+  sostRefSupply=supply;
+  var totalGoldVal=sostRefGoldOz*goldPrice;
+  sostRefPrice=totalGoldVal/supply;
+  // Update SOST price display
+  var el=document.getElementById('sostPrice');
+  if(el){
+    el.textContent=sostRefPrice<0.01?'$'+sostRefPrice.toFixed(6):'$'+sostRefPrice.toFixed(4);
+    el.style.color='var(--gold)';el.style.fontSize='';
+  }
+  var chEl=document.getElementById('sostChange');
+  if(chEl){chEl.style.color='var(--text3)';chEl.textContent='PoPC reference price';}
+  var rangeEl=document.getElementById('sostRange');
+  if(rangeEl){
+    rangeEl.innerHTML='Gold backing: '+sostRefGoldOz+'oz × $'+goldPrice.toFixed(2)+'/oz'
+      +' = $'+totalGoldVal.toFixed(2)
+      +' &nbsp;|&nbsp; Supply: '+supply.toFixed(0)+' SOST'
+      +'<br><span style="color:#555;font-size:9px">Not a market price. SOST is not listed on any exchange. Reference price reflects PoPC gold commitment.</span>';
+  }
+  // Build synthetic single-point chart data so canvas renders
+  if(!cache['sost-ref']){cache['sost-ref']={};}
+  // Generate a flat reference price line from now-24h to now
+  var now=Date.now(),pts=[];
+  for(var i=0;i<=24;i++){pts.push([now-i*3600000,sostRefPrice]);}
+  pts.reverse();
+  cache['sost-ref'][1]=pts;cache['sost-ref'][3]=pts;cache['sost-ref'][7]=pts;
+  sostId='sost-ref';COINS[2].id='sost-ref';
+  drawChart('sost');
+}
+
 function initSost(){
   if(sostChecked)return;
   fetchHist('sost-protocol',1,function(){
@@ -2706,11 +2753,15 @@ function initSost(){
         sostId='sost';COINS[2].id='sost';activateSost();return;
       }
       sostChecked=true;
-      document.getElementById('sostPrice').textContent='Awaiting market data';
-      document.getElementById('sostPrice').style.color='#444';
-      document.getElementById('sostPrice').style.fontSize='16px';
-      document.getElementById('sostChange').textContent='\u2014';
-      document.getElementById('sostRange').innerHTML='Mining cost estimate: ~$0.01<br><span style="color:#333">Price tracking activates upon market availability</span>';
+      // No exchange listing — show PoPC reference price
+      calcSostRefPrice();
+      if(!sostRefPrice){
+        document.getElementById('sostPrice').textContent='Awaiting price data';
+        document.getElementById('sostPrice').style.color='#444';
+        document.getElementById('sostPrice').style.fontSize='16px';
+        document.getElementById('sostChange').textContent='\u2014';
+        document.getElementById('sostRange').innerHTML='<span style="color:#555;font-size:9px">SOST is not listed on any exchange. Reference price reflects PoPC gold commitment.</span>';
+      }
       drawChart('sost');
     });
   });
@@ -2742,7 +2793,7 @@ function refresh(){
       if(d1&&d1.length)document.getElementById(key+'Price').textContent=fmtUsd(d1[d1.length-1][1]);
     });}
   });
-  if(sostId){
+  if(sostId&&sostId!=='sost-ref'){
     var sd=TF_MAP[activeTf.sost].days;
     fetchHist(sostId,sd,function(){
       var data=getData('sost');
@@ -2753,17 +2804,24 @@ function refresh(){
       var d=cache[sostId]&&cache[sostId][1];
       if(d&&d.length)document.getElementById('sostPrice').textContent=fmtUsd(d[d.length-1][1]);
     });}
+  }else if(sostChecked&&sostId==='sost-ref'){
+    // Recalculate reference price from refreshed gold data
+    calcSostRefPrice();
   }else if(!sostChecked){initSost();}
 }
 
 // Init
 ['xaut','paxg','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
+var goldFetchDone={xaut:false,paxg:false};
 ['tether-gold','pax-gold'].forEach(function(id){
   fetchHist(id,1,function(){
     var key=id==='tether-gold'?'xaut':'paxg';
     var d=cache[id]&&cache[id][1];
     if(d&&d.length)document.getElementById(key+'Price').textContent=fmtUsd(d[d.length-1][1]);
     drawChart(key);
+    goldFetchDone[key]=true;
+    // Recalculate SOST reference price once we have at least one gold price
+    if(sostChecked){calcSostRefPrice();}
   });
 });
 initSost();

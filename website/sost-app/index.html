@@ -1640,6 +1640,24 @@ SectionRenderers.dashboard = function(el) {
       const casertLag = info.casert_lag !== undefined ? info.casert_lag : '';
       const lagDisplay = casertLag !== '' ? ` (lag: ${casertLag > 0 ? '+' : ''}${casertLag})` : '';
 
+      // Calculate SOST PoPC reference price
+      let sostPrice = 'N/A';
+      try {
+        const goldResp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd');
+        const goldData = await goldResp.json();
+        const xautP = goldData['tether-gold'] ? goldData['tether-gold'].usd : 0;
+        const paxgP = goldData['pax-gold'] ? goldData['pax-gold'].usd : 0;
+        if (xautP > 0 && paxgP > 0) {
+          const avgGold = (xautP + paxgP) / 2;
+          const goldOz = 1.2; // Foundation commitment
+          const R0 = 7.85100863, Q = 0.7788007830714049, EP = 131553;
+          let supply = 0, bh = 0, h = height || 17704;
+          while (bh <= h) { let ep = Math.floor(bh/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h); supply += r*(ee-bh+1); bh = ee+1; }
+          const refPrice = (goldOz * avgGold) / supply;
+          sostPrice = '$' + (refPrice < 0.01 ? refPrice.toFixed(6) : refPrice.toFixed(4));
+        }
+      } catch(e) { sostPrice = 'N/A'; }
+
       // Fetch best block hash and detail
       let bestHash = 'N/A', interval = 'N/A', lastBlockTime = 'N/A', subsidy = 'N/A';
       try {
@@ -1697,6 +1715,7 @@ SectionRenderers.dashboard = function(el) {
 
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
+        <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
@@ -1797,6 +1816,7 @@ function addTooltips() {
     'STATUS': 'Current network status. Online = node responding to RPC queries. Pre-market = mining active, no exchange listing yet.',
     'VERSION': 'Software version of the connected SOST node. Updated with each protocol release.',
     'BEST HASH': 'Hash of the most recent block accepted by the network. Changes with every new block mined.',
+    'SOST PRICE': 'PoPC Reference Price: (gold committed in PoPC × gold price) ÷ total SOST supply. Foundation commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. NOT a market price — will be replaced when SOST is listed on an exchange.',
     'INTERVAL': 'Time between the last two blocks. Target is 10 minutes (600 seconds). Green = fast, yellow = normal, red = slow.',
     'LAST BLOCK': 'How long ago the most recent block was mined. Long gaps may indicate low hashrate or network issues.',
     'SUBSIDY': 'Block reward for the current epoch. Decays smoothly following the Feigenbaum emission curve. Split 50/25/25 (miner/gold/PoPC).',

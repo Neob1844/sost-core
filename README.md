@@ -229,7 +229,9 @@ SOST does not support smart contracts. Instead, purpose-built transaction types 
 
 Active output types at height 5000: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0x11). `OUT_BURN` (0x20) is reserved but **not planned for activation** — SOST supply is immutable by construction.
 
-**PoPC RPC commands (9 total):** `popc_register`, `popc_status`, `popc_check`, `popc_release`, `popc_slash`, `escrow_register`, `escrow_status`, `escrow_verify`, `escrow_complete`. Dynamic rewards adjusted by Pool Utilization Ratio (PUR). Anti-whale tiers above 10 oz. Step-by-step guide: `website/sost-popc.html`.
+**PoPC RPC commands (10 total):** `popc_register`, `popc_status`, `popc_check`, `popc_release`, `popc_slash`, `escrow_register`, `escrow_status`, `escrow_verify`, `escrow_complete`, `getsostprice`. Dynamic rewards adjusted by Pool Utilization Ratio (PUR). Anti-whale tiers above 10 oz. Step-by-step guide: `website/sost-popc.html`.
+
+**SOST Reference Price:** Calculated as `(gold committed in PoPC × gold price) ÷ total SOST supply`. Foundation commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. Gold prices fetched live from CoinGecko (XAUT + PAXG average). This is NOT a market price — it will be replaced by exchange data when SOST is listed on a CEX/DEX.
 
 ## Explorer (v4.2)
 
