@@ -1045,13 +1045,14 @@
       <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
     </div>
     <div class="stat-panel" id="panel-sost">
-      <div class="panel-title">SOST Market Data</div>
-      <div id="sostPanelContent">
-        <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:8px;">SOST is not yet trading. Price chart will activate automatically when market data is available.</p>
-        <p style="font-size:12px;color:var(--text-dim);">Mining cost estimate: <b style="color:var(--text-primary)">~$0.01 USD</b></p>
+      <div class="panel-title">SOST PoPC Reference Price &mdash; Last 24 Hours</div>
+      <canvas id="chartSost"></canvas>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle;"></span>SOST/USD (PoPC ref.)</span>
+        <span id="sostChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
       </div>
-      <canvas id="chartSost" style="display:none;"></canvas>
-      <a class="panel-link" href="sost-markets.html">View markets &rarr;</a>
+      <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px;">Not a market price. Calculated as: (1.2 oz &times; gold spot) &divide; SOST supply. Updates when SOST is listed on an exchange.</p>
+      <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
     </div>
   </div>
 </section>
@@ -1280,76 +1281,81 @@
 </script>
 <script>
 (function(){
-  var SOST_IDS=['sost-protocol','sost'];
   var CURRENCIES=['usd','eur','gbp','chf','jpy','cny','rub','aed'];
   var SYMBOLS={usd:'$',eur:'\u20AC',gbp:'\u00A3',chf:'Fr',jpy:'\u00A5',cny:'\u00A5',rub:'\u20BD',aed:'\u062F.\u0625'};
   var LABELS={usd:'USD',eur:'EUR',gbp:'GBP',chf:'CHF',jpy:'JPY',cny:'CNY',rub:'RUB',aed:'AED'};
   var curIdx=0;
-  var sostPrices=null; // null=not fetched, false=not listed, object=prices
+  var sostUsd=null;
+  var forexRates={}; // usd=1, others from CoinGecko gold prices
 
   var valEl=document.getElementById('sostPriceVal');
   var subEl=document.getElementById('sostPriceSub');
   var btnEl=document.getElementById('sostCurrBtn');
 
-  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 4px #4ade80;"></span><span style="font-size:9px;color:#4ade80;letter-spacing:1px;">LIVE</span></span>';}
+  function liveBadge(){return '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;"><span style="width:5px;height:5px;border-radius:50%;background:#ffd700;display:inline-block;box-shadow:0 0 4px #ffd700;"></span><span style="font-size:9px;color:#ffd700;letter-spacing:1px;">PoPC REF</span></span>';}
 
   function fmtPrice(n,cur){
     var sym=SYMBOLS[cur]||'$';
     if(cur==='jpy'||cur==='cny'||cur==='rub') return sym+Math.round(n).toLocaleString();
-    return sym+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});
+    if(n<0.01) return sym+n.toFixed(6);
+    return sym+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:4});
+  }
+
+  // SOST PoPC reference price = (1.2 oz × avg(XAUT,PAXG)) / supply
+  function calcSostPopc(){
+    try {
+      var xhr1=new XMLHttpRequest();
+      xhr1.open('GET','https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd,eur,gbp,chf,jpy,cny,rub,aed',false);
+      xhr1.send();
+      if(xhr1.status!==200) return;
+      var gd=JSON.parse(xhr1.responseText);
+      var xaut=gd['tether-gold']||{};
+      var paxg=gd['pax-gold']||{};
+      var goldUsd=((xaut.usd||0)+(paxg.usd||0))/2;
+      if(!goldUsd) return;
+      // Get supply from chain
+      var R0=7.85100863,Q=0.7788007830714049,EP=131553,h=2254;
+      try {
+        var xhr2=new XMLHttpRequest();
+        xhr2.open('POST','/rpc',false);
+        xhr2.setRequestHeader('Content-Type','application/json');
+        xhr2.send(JSON.stringify({method:'getblockcount',id:1}));
+        if(xhr2.status===200){var rr=JSON.parse(xhr2.responseText);if(rr&&rr.result)h=rr.result;}
+      } catch(e){}
+      var sup=0,bh=0;
+      while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);sup+=r*(ee-bh+1);bh=ee+1;}
+      sostUsd=(1.2*goldUsd)/sup;
+      // Build forex rates from gold token prices
+      forexRates={usd:1};
+      CURRENCIES.forEach(function(c){
+        if(c==='usd'){forexRates[c]=1;return;}
+        var xr=xaut[c]||0, pr=paxg[c]||0;
+        var avgLocal=((xr&&pr)?(xr+pr)/2:(xr||pr));
+        if(avgLocal&&goldUsd) forexRates[c]=avgLocal/goldUsd;
+      });
+    } catch(e){}
   }
 
   function renderSost(){
     var cur=CURRENCIES[curIdx];
     btnEl.textContent=SYMBOLS[cur];
-    if(sostPrices===null){
+    if(sostUsd===null){
       valEl.textContent='...';
-      subEl.textContent='loading';
+      subEl.textContent='loading gold prices';
       return;
     }
-    if(sostPrices===false){
-      valEl.textContent='Not Listed';
-      valEl.style.color='#475569';
-      valEl.style.fontSize='18px';
-      subEl.innerHTML='Awaiting market data<br><span style="color:#64748b;font-size:10px;">Mining cost estimate: ~$0.01</span>';
-      return;
-    }
-    var price=sostPrices[cur]||0;
-    if(price>0){
-      valEl.textContent=fmtPrice(price,cur);
-      valEl.style.color='var(--red-primary)';
-      valEl.style.fontSize='20px';
-      var now=new Date();
-      var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
-      subEl.innerHTML=LABELS[cur]+liveBadge()+' '+ts;
-    } else {
-      valEl.textContent='N/A';
-      subEl.textContent=LABELS[cur]+' — rate unavailable';
-    }
+    var price=sostUsd*(forexRates[cur]||1);
+    valEl.textContent=fmtPrice(price,cur);
+    valEl.style.color='#ffd700';
+    valEl.style.fontSize='20px';
+    var now=new Date();
+    var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+    subEl.innerHTML=LABELS[cur]+liveBadge()+' '+ts;
   }
 
   function fetchSost(){
-    var vsStr=CURRENCIES.join(',');
-    var tries=SOST_IDS.slice();
-    function tryNext(){
-      if(tries.length===0){
-        sostPrices=false;
-        renderSost();
-        return;
-      }
-      var id=tries.shift();
-      var url='https://api.coingecko.com/api/v3/simple/price?ids='+id+'&vs_currencies='+vsStr;
-      fetch(url).then(function(r){return r.json();}).then(function(d){
-        var obj=d[id];
-        if(obj&&obj.usd&&obj.usd>0){
-          sostPrices=obj;
-          renderSost();
-        } else {
-          tryNext();
-        }
-      }).catch(function(){tryNext();});
-    }
-    tryNext();
+    calcSostPopc();
+    renderSost();
   }
 
   btnEl.addEventListener('click',function(e){
@@ -1361,7 +1367,7 @@
   btnEl.addEventListener('mouseleave',function(){btnEl.style.borderColor='#2a2a2a';btnEl.style.color='#94a3b8';});
 
   fetchSost();
-  setInterval(fetchSost,60000);
+  setInterval(fetchSost,120000);
 })();
 </script>
 <script>
@@ -1481,77 +1487,103 @@ function initPanelChart(id){
 
 /* ── Gold 24h Chart ── */
 var _goldChartTimer=null;
+var _goldChartRetries=0;
 function fetchGoldChart(){
   var statusEl=document.getElementById('goldChartStatus');
   if(statusEl)statusEl.textContent='loading...';
-  Promise.all([
-    fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();}),
-    fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();})
-  ]).then(function(res){
-    var xautPrices=res[0].prices||[];
-    var paxgPrices=res[1].prices||[];
-    var labels=[],xData=[],pData=[];
-    xautPrices.forEach(function(p){
-      var d=new Date(p[0]);
-      labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
-      xData.push(p[1]);
-    });
-    paxgPrices.forEach(function(p){pData.push(p[1]);});
+  // Fetch sequentially to avoid CoinGecko rate limit (max 10-30 req/min on free tier)
+  fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1')
+    .then(function(r){if(!r.ok)throw new Error('XAUT '+r.status);return r.json();})
+    .then(function(xautRes){
+      // Small delay before second request to avoid rate limit
+      return new Promise(function(resolve){setTimeout(function(){
+        fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1')
+          .then(function(r){if(!r.ok)throw new Error('PAXG '+r.status);return r.json();})
+          .then(function(paxgRes){resolve({xaut:xautRes,paxg:paxgRes});})
+          .catch(function(){resolve({xaut:xautRes,paxg:{prices:[]}});});
+      },1500);});
+    })
+    .then(function(res){
+      var xautPrices=res.xaut.prices||[];
+      var paxgPrices=res.paxg.prices||[];
+      if(xautPrices.length<2&&paxgPrices.length<2) throw new Error('no data');
+      var labels=[],xData=[],pData=[];
+      xautPrices.forEach(function(p){
+        var d=new Date(p[0]);
+        labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
+        xData.push(p[1]);
+      });
+      paxgPrices.forEach(function(p){pData.push(p[1]);});
 
-    var ctx=document.getElementById('chartGold').getContext('2d');
-    if(_chartInstances.gold){_chartInstances.gold.destroy();}
-    _chartInstances.gold=new Chart(ctx,{
-      type:'line',
-      data:{labels:labels,datasets:[
-        {label:'XAUT',data:xData,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
-        {label:'PAXG',data:pData,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
-      ]},
-      options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toLocaleString();}},grid:{color:'#1a1a1a'}}}}
-    });
-    var now=new Date();
-    if(statusEl)statusEl.textContent=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      var ctx=document.getElementById('chartGold').getContext('2d');
+      if(_chartInstances.gold){_chartInstances.gold.destroy();}
+      _chartInstances.gold=new Chart(ctx,{
+        type:'line',
+        data:{labels:labels,datasets:[
+          {label:'XAUT',data:xData,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+          {label:'PAXG',data:pData,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+        ]},
+        options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toLocaleString();}},grid:{color:'#1a1a1a'}}}}
+      });
+      _goldChartRetries=0;
+      var now=new Date();
+      if(statusEl)statusEl.textContent=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
 
-    if(_goldChartTimer)clearInterval(_goldChartTimer);
-    _goldChartTimer=setInterval(function(){
-      var panel=document.getElementById('panel-gold');
-      if(panel&&panel.classList.contains('panel-open'))fetchGoldChart();
-    },60000);
-  }).catch(function(){
-    if(statusEl)statusEl.textContent='chart unavailable';
-  });
+      if(_goldChartTimer)clearInterval(_goldChartTimer);
+      _goldChartTimer=setInterval(function(){
+        var panel=document.getElementById('panel-gold');
+        if(panel&&panel.classList.contains('panel-open'))fetchGoldChart();
+      },90000);
+    }).catch(function(e){
+      if(statusEl)statusEl.textContent='chart unavailable'+(e.message?' ('+e.message+')':'');
+      // Retry once after 5s if rate-limited
+      if(_goldChartRetries<2){_goldChartRetries++;setTimeout(fetchGoldChart,5000);}
+    });
 }
 
-/* ── SOST 24h Chart (activates when listed) ── */
+/* ── SOST PoPC Reference Price Chart ── */
 function fetchSostChart(){
-  var contentEl=document.getElementById('sostPanelContent');
   var canvasEl=document.getElementById('chartSost');
-  fetch('https://api.coingecko.com/api/v3/coins/sost-protocol/market_chart?vs_currency=usd&days=1')
-    .then(function(r){if(!r.ok)throw new Error('not listed');return r.json();})
-    .then(function(d){
-      var prices=d.prices||[];
-      if(prices.length<2)throw new Error('no data');
-      contentEl.style.display='none';
-      canvasEl.style.display='';
-      var labels=[],data=[];
-      prices.forEach(function(p){
-        var dt=new Date(p[0]);
-        labels.push(dt.getUTCHours().toString().padStart(2,'0')+':'+dt.getUTCMinutes().toString().padStart(2,'0'));
-        data.push(p[1]);
-      });
-      var ctx=canvasEl.getContext('2d');
-      var grad=ctx.createLinearGradient(0,0,0,150);
-      grad.addColorStop(0,'rgba(251,1,13,0.25)');
-      grad.addColorStop(1,'rgba(251,1,13,0)');
-      if(_chartInstances.sost){_chartInstances.sost.destroy();}
-      _chartInstances.sost=new Chart(ctx,{
-        type:'line',
-        data:{labels:labels,datasets:[{label:'SOST/USD',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:1.5,pointRadius:0,tension:0.3}]},
-        options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v;}},grid:{color:'#1a1a1a'}}}}
-      });
-    }).catch(function(){
-      contentEl.style.display='';
-      canvasEl.style.display='none';
+  var statusEl=document.getElementById('sostChartStatus');
+  if(statusEl)statusEl.textContent='loading...';
+  // Get gold prices from CoinGecko (XAUT+PAXG are listed) to calculate SOST PoPC reference price
+  try {
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET','https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd',false);
+    xhr.send();
+    if(xhr.status!==200){if(statusEl)statusEl.textContent='gold price unavailable';return;}
+    var gd=JSON.parse(xhr.responseText);
+    var xaut=(gd['tether-gold']&&gd['tether-gold'].usd)||0;
+    var paxg=(gd['pax-gold']&&gd['pax-gold'].usd)||0;
+    var goldAvg=((xaut&&paxg)?(xaut+paxg)/2:(xaut||paxg));
+    if(!goldAvg){if(statusEl)statusEl.textContent='no gold data';return;}
+    // Calculate supply
+    var R0=7.85100863,Q=0.7788007830714049,EP=131553,h=2254;
+    try{var xhr2=new XMLHttpRequest();xhr2.open('POST','/rpc',false);xhr2.setRequestHeader('Content-Type','application/json');xhr2.send(JSON.stringify({method:'getblockcount',id:1}));if(xhr2.status===200){var rr=JSON.parse(xhr2.responseText);if(rr&&rr.result)h=rr.result;}}catch(e){}
+    var sup=0,bh=0;while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);sup+=r*(ee-bh+1);bh=ee+1;}
+    var sostPrice=(1.2*goldAvg)/sup;
+    // Build 24-hour flat reference line
+    var now=Date.now(),labels=[],data=[];
+    for(var i=0;i<=24;i++){
+      var d=new Date(now-((24-i)*3600000));
+      labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
+      data.push(sostPrice);
+    }
+    var ctx=canvasEl.getContext('2d');
+    var grad=ctx.createLinearGradient(0,0,0,150);
+    grad.addColorStop(0,'rgba(255,215,0,0.2)');
+    grad.addColorStop(1,'rgba(255,215,0,0)');
+    if(_chartInstances.sost){_chartInstances.sost.destroy();}
+    _chartInstances.sost=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[{label:'SOST/USD (PoPC ref.)',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:1.5,pointRadius:0,tension:0.3}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return '$'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:6});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(4);}},grid:{color:'#1a1a1a'}}}}
     });
+    var ts=new Date();
+    if(statusEl)statusEl.textContent='$'+sostPrice.toFixed(4)+' — '+ts.getUTCHours().toString().padStart(2,'0')+':'+ts.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+  }catch(e){
+    if(statusEl)statusEl.textContent='chart unavailable';
+  }
 }
 </script>
 <script src="sost-search.js"></script>
