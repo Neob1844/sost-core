@@ -70,6 +70,7 @@
 #include <chrono>
 #include <csignal>
 #include <stdexcept>
+#include <iomanip>
 
 // P2P encryption (X25519 + ChaCha20-Poly1305)
 #include <openssl/evp.h>
@@ -2234,6 +2235,92 @@ static std::string handle_getproposals(const std::string& id, const std::vector<
     return rpc_result(id, s.str());
 }
 
+static std::string handle_getsostprice(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+
+    // Read gold price from oracle cache file (written by sost_price_oracle.py cron)
+    double gold_price = 3000.0; // fallback
+    double xaut_price = 0.0, paxg_price = 0.0;
+    {
+        FILE* f = fopen("/opt/sost/data/current_price.json", "r");
+        if (!f) f = fopen("/tmp/sost_gold_price_cache.json", "r");
+        if (!f) f = fopen("data/current_price.json", "r");
+        if (f) {
+            char buf[4096];
+            size_t n = fread(buf, 1, sizeof(buf)-1, f);
+            fclose(f);
+            buf[n] = '\0';
+            std::string js(buf);
+            // Parse from oracle output format
+            auto gp = json_get_string(js, "gold_price_usd_per_oz");
+            if (!gp.empty()) { try { gold_price = std::stod(gp); } catch(...) {} }
+            auto xp = json_get_string(js, "xaut_price_usd");
+            if (!xp.empty()) { try { xaut_price = std::stod(xp); } catch(...) {} }
+            auto pp = json_get_string(js, "paxg_price_usd");
+            if (!pp.empty()) { try { paxg_price = std::stod(pp); } catch(...) {} }
+            // Also handle raw CoinGecko cache format (avg key)
+            if (gold_price == 3000.0) {
+                auto av = json_get_string(js, "avg");
+                if (!av.empty()) { try { gold_price = std::stod(av); } catch(...) {} }
+            }
+            if (xaut_price == 0.0) {
+                auto xv = json_get_string(js, "xaut");
+                if (!xv.empty()) { try { xaut_price = std::stod(xv); } catch(...) {} }
+            }
+            if (paxg_price == 0.0) {
+                auto pv = json_get_string(js, "paxg");
+                if (!pv.empty()) { try { paxg_price = std::stod(pv); } catch(...) {} }
+            }
+        }
+    }
+    if (xaut_price == 0.0) xaut_price = gold_price;
+    if (paxg_price == 0.0) paxg_price = gold_price;
+
+    // Calculate circulating supply using epoch-decay formula
+    // R0=7.85100863, Q=0.7788007830714049, EPOCH=131553
+    double supply = 0.0;
+    {
+        const double R0 = 7.85100863;
+        const double Q  = 0.7788007830714049;
+        const int64_t EP = 131553;
+        int64_t h = 0;
+        while (h <= g_chain_height) {
+            int64_t epoch = h / EP;
+            double reward = R0;
+            for (int64_t e = 0; e < epoch; ++e) reward *= Q;
+            int64_t epoch_end = (epoch + 1) * EP - 1;
+            if (epoch_end > g_chain_height) epoch_end = g_chain_height;
+            supply += reward * (double)(epoch_end - h + 1);
+            h = epoch_end + 1;
+        }
+    }
+
+    // Foundation committed gold (immutable)
+    const double FOUNDATION_XAUT_OZ = 0.6;
+    const double FOUNDATION_PAXG_OZ = 0.6;
+    const double gold_oz = FOUNDATION_XAUT_OZ + FOUNDATION_PAXG_OZ; // 1.2 oz total
+
+    double total_gold_value = gold_oz * gold_price;
+    double sost_price = supply > 0.0 ? total_gold_value / supply : 0.0;
+
+    std::ostringstream s;
+    s << std::fixed;
+    s << "{"
+      << "\"sost_price_usd\":"          << std::setprecision(6) << sost_price
+      << ",\"gold_committed_oz\":"       << std::setprecision(1) << gold_oz
+      << ",\"gold_price_usd_per_oz\":"   << std::setprecision(2) << gold_price
+      << ",\"xaut_price_usd\":"          << std::setprecision(2) << xaut_price
+      << ",\"paxg_price_usd\":"          << std::setprecision(2) << paxg_price
+      << ",\"total_gold_value_usd\":"    << std::setprecision(2) << total_gold_value
+      << ",\"total_sost_supply\":"       << std::setprecision(4) << supply
+      << ",\"chain_height\":"            << g_chain_height
+      << ",\"source\":\"popc_backed\""
+      << ",\"note\":\"Reference price based on PoPC gold commitment. Not a market price.\""
+      << ",\"disclaimer\":\"SOST is not listed on any exchange. This reference price reflects gold backing per token.\""
+      << "}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -2270,6 +2357,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"escrow_verify",handle_escrow_verify},
     {"escrow_complete",handle_escrow_complete},
     {"getproposals",handle_getproposals},
+    {"getsostprice",handle_getsostprice},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
