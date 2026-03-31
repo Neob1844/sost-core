@@ -103,7 +103,7 @@ These can be modified via hard fork to adapt the protocol to network conditions.
 |------|--------------|----------------|---------|
 | cASERT halflife | 24h (V2) | Hard fork | Was 48h, changed at block 1450 |
 | cASERT delta cap | 12.5% (V2) | Hard fork | Was 6.25% |
-| cASERT profiles | E4-H9 active | Hard fork | H10-H12 reserved |
+| cASERT profiles | E4-H9 active | Hard fork | H10-H12 reserve (activation via 75% signaling) |
 | Anti-stall parameters | Various | Hard fork | Thresholds, decay rates |
 | Multisig max keys | 15 | Hard fork | Could increase |
 | Script opcodes | Current set | Hard fork | Could add new opcodes |
