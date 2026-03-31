@@ -175,8 +175,8 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 
 [size=14pt][b]Ecosystem[/b][/size]
 
-[b]GeaSpirit — Mineral Intelligence Platform[/b]
-GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. Canonical Score 22.8/40 (57%). Validated at 3 zones across 3 continents (Chuquicamata 0.882 AUC, Kalgoorlie 0.879, Zambia 0.760). GEE-operationalized.
+[b]GeaSpirit — Multi-Commodity Mineral Intelligence Platform[/b]
+GeaSpirit is an advanced remote sensing and exploration intelligence platform for metallic AND non-metallic mineral systems. Canonical Score 23.9/40 (60%). Validated commodity types: Porphyry Cu (0.882 AUC), Orogenic Au (0.879), IOCG (0.841), SEDEX Cu-Pb-Zn (0.781), Sediment Cu (0.760), Lithium brines/salares (0.891). Gravity integrated. 9+ zones across 4 continents. GEE-operationalized.
 
 [b]Materials Discovery Engine[/b]
 Computational materials discovery. 76,193 materials corpus. 19 campaign profiles including water/lithium/membrane. 35,589 materials screened for multi-function candidates. Runs at $0/month on CPU.

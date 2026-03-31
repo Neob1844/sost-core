@@ -313,16 +313,20 @@ ctest --output-on-failure
 
 ### GeaSpirit — Mineral Intelligence Platform
 
-GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits from publicly available satellite, geophysical, and geological data.
+GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits — metallic AND non-metallic — from publicly available satellite, geophysical, and geological data.
 
 **Canonical Objective:** "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
 
+MINERAL = commodity / mineral system / deposit type — including metals (Cu, Au, Pb-Zn), non-metallic minerals (lithium, graphite, evaporites), industrial minerals, and strategic elements (REE, U).
+
+**Validated commodity types:** Porphyry Cu, Orogenic Au, IOCG, SEDEX Cu-Pb-Zn, Sediment-hosted Cu, **Lithium brines/salares** (Phase 45), Graphite (partial).
+
 | Dimension | Score | Description |
 |-----------|-------|-------------|
-| MINERAL | 4.0/10 | Deposit type discrimination (porphyry Cu, orogenic Au, sediment Cu) |
-| DEPTH | 4.1/10 | Depth estimation (surface proxy — deposit-scale geophysics blocked) |
+| MINERAL | 4.3/10 | Multi-commodity: Cu, Au, IOCG, SEDEX, Li. Magnetics + gravity + terrain |
+| DEPTH | 4.5/10 | Gravity integrated (460m). AEM pending for full depth unlock |
 | COORDINATES | 7.0/10 | Spatial precision at 30m per pixel |
-| CERTAINTY | 7.7/10 | Calibrated probability (isotonic, Brier validated) |
+| CERTAINTY | 8.1/10 | 3+ zones validated, multi-source confirmed, gravity pathway proven |
 
 **Canonical Score: 22.8/40 (57%)** — Methodology frozen v4.
 

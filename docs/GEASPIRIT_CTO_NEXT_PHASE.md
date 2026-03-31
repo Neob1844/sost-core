@@ -438,3 +438,17 @@ New research line translating intuitive geological concepts into physically test
 - Canonical: 23.4/40 under review — DEPTH may merit first adjustment
 
 **Recommendation:** Download AEM for full DEPTH unlock. Gravity confirms geophysics pathway works.
+
+## Phase 45: Commodity Expansion — Lithium Validated (2026-03-30)
+
+**Classification:** MINERAL dimension expansion
+
+- MINERAL doctrine updated: now covers metals + non-metallic + strategic elements
+- **Lithium brines (Atacama): AUC 0.891** — terrain dominates (elevation d=-1.50, flatness d=-0.99)
+- Graphite (Madagascar): AUC 0.750 — S2 only, terrain HURTS, needs geology layer
+- Diamond kimberlites (Botswana): observability only — requires geophysics
+- REE (Mountain Pass): observability only — 25 MRDS labels found, needs radiometrics
+- **Key insight:** Different commodities have different dominant families (Au=spectral, IOCG=magnetics, Li=terrain)
+- Canonical: 23.9/40 (MINERAL expanded, DEPTH gravity, CERTAINTY multi-commodity)
+
+**Recommendation:** Validate lithium at second salar. Test phosphate. Continue AEM priority for DEPTH.
