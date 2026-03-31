@@ -2434,7 +2434,7 @@ async function loadLatestTxs(){
       }
     }catch(e){/* listtransfers not available — old node version */}
     // Merge: sorted by height desc
-    _allTxRows=recentCoinbase.concat(transferRows);
+    _allTxRows=rows;
     _allTxRows.sort(function(a,b){return b.height-a.height;});
     renderTxTable();
   }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
