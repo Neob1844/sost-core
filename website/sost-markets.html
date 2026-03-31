@@ -643,7 +643,7 @@
   // ===== GOLD + CRYPTO =====
   function fetchGold(cb) {
     var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&include_24hr_change=true&vs_currencies=' + allVsCurrencies;
-    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether,sost-protocol,sost&vs_currencies=usd&include_24hr_change=true';
+    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether&vs_currencies=usd&include_24hr_change=true';
     var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
     var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd&include_24hr_change=true';
 
@@ -730,9 +730,9 @@
             '<td>' + change24Html + '</td></tr>';
           // SOST row after BNB (index 2)
           if (i === 2) {
-            var sostUsd = (stableData['sost-protocol'] && stableData['sost-protocol'].usd) || (stableData['sost'] && stableData['sost'].usd) || null;
-            // If SOST not on CoinGecko, calculate PoPC reference price
-            if (!sostUsd && xaut.usd && paxg.usd) {
+            // SOST is NOT on CoinGecko — always use PoPC reference price
+            var sostUsd = null;
+            if (xaut.usd || paxg.usd) {
               var _gp = (xaut.usd + paxg.usd) / 2;
               var _R0=7.85100863,_Q=0.7788007830714049,_EP=131553;
               var _sup=0,_bh=0,_h=2254;
@@ -746,7 +746,7 @@
               var sEl = document.getElementById('cpSostPrice');
               if (sEl) { sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4); sEl.style.color = 'var(--gold-primary,#ffd700)'; }
             }
-            var sostLabel = (stableData['sost-protocol'] || stableData['sost']) ? '' : ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">PoPC REF</span>';
+            var sostLabel = ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">PoPC REF</span>';
             html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span>' + sostLabel + '</td>' +
               '<td style="color:#fb010d;font-weight:600">SOST</td>' +
               '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
@@ -1655,6 +1655,20 @@
 
   setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
   setupChartToggle('sostChartToggle', 'sostChartPanel', initSostChart);
+
+  // Auto-open both charts on page load
+  setTimeout(function() {
+    var goldToggle = document.getElementById('goldChartToggle');
+    var goldPanel = document.getElementById('goldChartPanel');
+    if (goldToggle && goldPanel && !goldPanel.classList.contains('open')) {
+      goldToggle.classList.add('open'); goldPanel.classList.add('open'); initGoldChart();
+    }
+    var sostToggle = document.getElementById('sostChartToggle');
+    var sostPanel = document.getElementById('sostChartPanel');
+    if (sostToggle && sostPanel && !sostPanel.classList.contains('open')) {
+      sostToggle.classList.add('open'); sostPanel.classList.add('open'); initSostChart();
+    }
+  }, 2000); // Delay to let gold data load first
 
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');

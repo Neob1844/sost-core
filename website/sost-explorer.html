@@ -2759,27 +2759,17 @@ function calcSostRefPrice(){
 
 function initSost(){
   if(sostChecked)return;
-  fetchHist('sost-protocol',1,function(){
-    if(cache['sost-protocol']&&cache['sost-protocol'][1]&&cache['sost-protocol'][1].length){
-      sostId='sost-protocol';COINS[2].id='sost-protocol';activateSost();return;
-    }
-    fetchHist('sost',1,function(){
-      if(cache['sost']&&cache['sost'][1]&&cache['sost'][1].length){
-        sostId='sost';COINS[2].id='sost';activateSost();return;
-      }
-      sostChecked=true;
-      // No exchange listing — show PoPC reference price
-      calcSostRefPrice();
-      if(!sostRefPrice){
-        document.getElementById('sostPrice').textContent='Awaiting price data';
-        document.getElementById('sostPrice').style.color='#444';
-        document.getElementById('sostPrice').style.fontSize='16px';
-        document.getElementById('sostChange').textContent='\u2014';
-        document.getElementById('sostRange').innerHTML='<span style="color:#555;font-size:9px">SOST is not listed on any exchange. Reference price reflects PoPC gold commitment.</span>';
-      }
-      drawChart('sost');
-    });
-  });
+  sostChecked=true;
+  // SOST is NOT on CoinGecko — always use PoPC reference price
+  calcSostRefPrice();
+  if(!sostRefPrice){
+    document.getElementById('sostPrice').textContent='Awaiting price data';
+    document.getElementById('sostPrice').style.color='#444';
+    document.getElementById('sostPrice').style.fontSize='16px';
+    document.getElementById('sostChange').textContent='\u2014';
+    document.getElementById('sostRange').innerHTML='<span style="color:#555;font-size:9px">SOST is not listed on any exchange. Reference price reflects PoPC gold commitment.</span>';
+  }
+  drawChart('sost');
 }
 
 function activateSost(){
