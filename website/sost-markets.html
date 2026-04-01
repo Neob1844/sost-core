@@ -845,13 +845,28 @@
   // XAUT and PAXG prices come from CoinGecko (they ARE listed). SOST is NOT.
   var _sostRefUsd = null, _sostRefGoldP = null, _sostRefSup = null;
   function calcSostPopcPrice() {
-    // Get gold prices from already-fetched CoinGecko data (gold section loads first)
+    // SOST price = (1.2 oz × avg(XAUT, PAXG)) / supply
+    // SOST is NOT on CoinGecko. Price ALWAYS comes from PoPC gold commitment formula.
     var xp = null, pp = null;
-    // Try chart cache first
+    // Try chart cache first (gold section may have loaded)
     var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
     var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
     if (xd && xd.length) xp = xd[xd.length-1][1];
     if (pd && pd.length) pp = pd[pd.length-1][1];
+    // Fallback: fetch gold price directly if chart cache empty
+    if (!xp && !pp) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd', false);
+        xhr.timeout = 5000;
+        xhr.send();
+        if (xhr.status === 200) {
+          var gd = JSON.parse(xhr.responseText);
+          xp = (gd['tether-gold'] && gd['tether-gold'].usd) || null;
+          pp = (gd['pax-gold'] && gd['pax-gold'].usd) || null;
+        }
+      } catch(e) {}
+    }
     if (!xp && !pp) return null;
     _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
     // Supply from chain height (use cached or fallback — NO sync XHR)
@@ -1668,13 +1683,16 @@
       sostToggle.classList.add('open'); sostPanel.classList.add('open');
     }
     // Retry SOST chart until gold data is available
+    showSostPopcPrice();
+    initSostChart();
+    // If still no data, retry at 5s, 10s, 15s
     if (!chartCache['sost-ref'] || !chartCache['sost-ref'][1]) {
-      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 3000);
-    } else {
-      initSostChart();
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 5000);
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 10000);
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 15000);
     }
   }
-  setTimeout(autoOpenCharts, 2500);
+  setTimeout(autoOpenCharts, 2000);
 
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
