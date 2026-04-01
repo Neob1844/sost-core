@@ -71,3 +71,4 @@ gold_vault*.json
 popc_pool*.json
 founder_*.json
 CLAUDE.md
+# NeoB.md is the project instructions file (not ignored)
