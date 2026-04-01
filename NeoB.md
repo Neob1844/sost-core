@@ -177,15 +177,15 @@ Located in `geaspirit/`. Python-based satellite mineral prospectivity mapping.
 
 Located in `materials-engine-private/` (restricted). Python-based computational materials discovery.
 
-**Current state (v3.2.0 — Phase XVIII):**
-- 76,193 materials corpus (JARVIS-DFT + AFLOW), 70+ API endpoints
+**Current state (v3.2.0 — Phase XXV):**
+- 77,296 materials corpus (JARVIS-DFT 3D + 2D + AFLOW), 70+ API endpoints
 - CGCNN formation energy (MAE 0.1528 eV/atom), ALIGNN-Lite band gap (MAE 0.3422 eV)
 - Material Mixer MVP: generates theoretical candidates from parent pairs
 - Autonomous Discovery Engine: 29 campaign profiles, iterative candidate generation with error learning
 - 16 industrial application domains (emissions, catalysis, PV, proton energy, hydrogen storage, water, etc.)
 - Readiness Gate R0-R5 with honest bottleneck identification
 - Validation Bridge with DFT input generation (VASP/pymatgen, real POSCAR/INCAR/KPOINTS)
-- 155 tests passing, zero regressions across 4 test suites
+- 217 tests passing, zero regressions across 6 test suites
 - 22 elemental + 22 compound curated overrides
 - Multilingual search (9 languages, 270+ common names)
 
@@ -194,7 +194,7 @@ Located in `materials-engine-private/` (restricted). Python-based computational 
 - **Photovoltaic Absorbers:** 19 registered candidates (SOST-PV-01 to 19). Top: La₃S₃N (BG 1.340 eV = Shockley-Queisser optimum). Non-toxic Si/Pb-perovskite replacement. Maturity 6.2/10.
 - DFT inputs ready for 3 priority candidates (Ba₄CeMn₃O₁₂, Sr₂ZrMnO₆, La₃S₃N). NO DFT executed — awaiting HPC.
 
-**Phase history:** V (GNN integration) → V.B/V.C (direct inference 40-65%) → VII (uncertainty) → VIII (validation bridge) → IX (scientific ops) → XI (calibration intelligence) → XI.B (autonomy governance) → XII.B (water/lithium verticals) → XIV (functional intersection) → XV (full-corpus 35K screened) → XVI.C (application horizons, 16 domains, hazard layer) → XVII (dual-track consolidation, readiness gate) → XVIII (real DFT bridge, VASP inputs for top candidates) → XIX.A (CIF rescue, alias resolver, DFT queue complete: 5 candidates, 14 jobs, 613 CPU-h)
+**Phase history:** V (GNN integration) → V.B/V.C (direct inference 40-65%) → VII (uncertainty) → VIII (validation bridge) → IX (scientific ops) → XI (calibration intelligence) → XI.B (autonomy governance) → XII.B (water/lithium verticals) → XIV (functional intersection) → XV (full-corpus 35K screened) → XVI.C (application horizons, 16 domains, hazard layer) → XVII (dual-track consolidation, readiness gate) → XVIII (DFT bridge) → XIX.A (CIF rescue) → XIX.B (CHGNet GPU relaxation, 5 candidates) → XIX.C (CHGNet standard gate) → XIX.D (corpus +1,103 2D) → XX (full pipeline campaign) → XXI (active learning bridge) → XXII (9-domain industrial sweep, 74 candidates) → XXIII (economic intelligence) → XXIV (prototype screening, 92% false positive rejection) → XXIV.B (filtered sweep, 15 validated) → XXV (product report)
 
 ## GeaSpirit Status
 
