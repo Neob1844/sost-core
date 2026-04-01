@@ -1655,8 +1655,8 @@
   setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
   setupChartToggle('sostChartToggle', 'sostChartPanel', initSostChart);
 
-  // Auto-open both charts on page load
-  setTimeout(function() {
+  // Auto-open both charts on page load (retry until gold data arrives)
+  function autoOpenCharts() {
     var goldToggle = document.getElementById('goldChartToggle');
     var goldPanel = document.getElementById('goldChartPanel');
     if (goldToggle && goldPanel && !goldPanel.classList.contains('open')) {
@@ -1665,9 +1665,16 @@
     var sostToggle = document.getElementById('sostChartToggle');
     var sostPanel = document.getElementById('sostChartPanel');
     if (sostToggle && sostPanel && !sostPanel.classList.contains('open')) {
-      sostToggle.classList.add('open'); sostPanel.classList.add('open'); initSostChart();
+      sostToggle.classList.add('open'); sostPanel.classList.add('open');
     }
-  }, 2000); // Delay to let gold data load first
+    // Retry SOST chart until gold data is available
+    if (!chartCache['sost-ref'] || !chartCache['sost-ref'][1]) {
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 3000);
+    } else {
+      initSostChart();
+    }
+  }
+  setTimeout(autoOpenCharts, 2500);
 
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
