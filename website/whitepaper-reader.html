@@ -2479,7 +2479,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <p class="wp-p">The engine operates in layers:</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 1 &mdash; Data:</strong> A curated database of ~150,000 known materials sourced from open repositories (Materials Project, JARVIS, AFLOW). Each entry includes composition, crystal structure, and computed properties (hardness, density, conductivity, bandgap, thermal stability, corrosion resistance, cost estimate, toxicity, and elemental abundance).</p>
+<p class="wp-p"><strong>Layer 1 &mdash; Data:</strong> A curated database of 76,193 validated crystalline materials sourced from JARVIS-DFT (75,993) and AFLOW (200). Each entry includes composition, crystal structure (CIF), and DFT-computed properties (formation energy, band gap, spacegroup, lattice parameters). Dual-target GNN models (CGCNN for formation energy, ALIGNN-Lite for band gap) enable property prediction on novel candidates.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Layer 2 &mdash; Inverse Search:</strong> Users specify desired properties and constraints. The engine returns ranked candidates from known materials, scored by match percentage.</p>
 <div class="wp-spacer"></div>
