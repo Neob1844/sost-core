@@ -1641,19 +1641,24 @@ SectionRenderers.dashboard = function(el) {
       const lagDisplay = casertLag !== '' ? ` (lag: ${casertLag > 0 ? '+' : ''}${casertLag})` : '';
 
       // Calculate SOST PoPC reference price
+      // Calculate supply
+      const R0 = 7.85100863, Q = 0.7788007830714049, EP = 131553;
+      let totalSupply = 0, bh2 = 0, h2 = height || 2254;
+      while (bh2 <= h2) { let ep = Math.floor(bh2/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h2); totalSupply += r*(ee-bh2+1); bh2 = ee+1; }
+      const supplyDisplay = totalSupply.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
+      const goldVault = (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
+      const popcPool = (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
+
+      // Calculate SOST PoPC reference price
       let sostPrice = 'N/A';
       try {
         const goldResp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd');
         const goldData = await goldResp.json();
         const xautP = goldData['tether-gold'] ? goldData['tether-gold'].usd : 0;
         const paxgP = goldData['pax-gold'] ? goldData['pax-gold'].usd : 0;
-        if (xautP > 0 && paxgP > 0) {
-          const avgGold = (xautP + paxgP) / 2;
-          const goldOz = 1.2; // Foundation commitment
-          const R0 = 7.85100863, Q = 0.7788007830714049, EP = 131553;
-          let supply = 0, bh = 0, h = height || 2254;
-          while (bh <= h) { let ep = Math.floor(bh/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h); supply += r*(ee-bh+1); bh = ee+1; }
-          const refPrice = (goldOz * avgGold) / supply;
+        if (xautP > 0 || paxgP > 0) {
+          const avgGold = (xautP && paxgP) ? (xautP + paxgP) / 2 : (xautP || paxgP);
+          const refPrice = (1.2 * avgGold) / totalSupply;
           sostPrice = '$' + (refPrice < 0.01 ? refPrice.toFixed(6) : refPrice.toFixed(4));
         }
       } catch(e) { sostPrice = 'N/A'; }
@@ -1716,7 +1721,10 @@ SectionRenderers.dashboard = function(el) {
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
-        <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">PoPC Reference · Not listed · 1.2 oz gold ÷ supply · <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Verify ↗</a></div>
+        <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">PoPC Reference · Not listed · 1.2 oz gold ÷ supply</div>
+        <div class="stat-row"><span class="stat-label">TOTAL SUPPLY</span><span class="stat-value">${supplyDisplay}</span></div>
+        <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
+        <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
