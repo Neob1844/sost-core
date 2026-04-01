@@ -185,7 +185,7 @@ Located in `materials-engine-private/` (restricted). Python-based computational 
 - 16 industrial application domains (emissions, catalysis, PV, proton energy, hydrogen storage, water, etc.)
 - Readiness Gate R0-R5 with honest bottleneck identification
 - Validation Bridge with DFT input generation (VASP/pymatgen, real POSCAR/INCAR/KPOINTS)
-- 123 tests passing, zero regressions across 3 test suites
+- 155 tests passing, zero regressions across 4 test suites
 - 22 elemental + 22 compound curated overrides
 - Multilingual search (9 languages, 270+ common names)
 
@@ -194,7 +194,7 @@ Located in `materials-engine-private/` (restricted). Python-based computational 
 - **Photovoltaic Absorbers:** 19 registered candidates (SOST-PV-01 to 19). Top: La₃S₃N (BG 1.340 eV = Shockley-Queisser optimum). Non-toxic Si/Pb-perovskite replacement. Maturity 6.2/10.
 - DFT inputs ready for 3 priority candidates (Ba₄CeMn₃O₁₂, Sr₂ZrMnO₆, La₃S₃N). NO DFT executed — awaiting HPC.
 
-**Phase history:** V (GNN integration) → V.B/V.C (direct inference 40-65%) → VII (uncertainty) → VIII (validation bridge) → IX (scientific ops) → XI (calibration intelligence) → XI.B (autonomy governance) → XII.B (water/lithium verticals) → XIV (functional intersection) → XV (full-corpus 35K screened) → XVI.C (application horizons, 16 domains, hazard layer) → XVII (dual-track consolidation, readiness gate) → XVIII (real DFT bridge, VASP inputs for top candidates)
+**Phase history:** V (GNN integration) → V.B/V.C (direct inference 40-65%) → VII (uncertainty) → VIII (validation bridge) → IX (scientific ops) → XI (calibration intelligence) → XI.B (autonomy governance) → XII.B (water/lithium verticals) → XIV (functional intersection) → XV (full-corpus 35K screened) → XVI.C (application horizons, 16 domains, hazard layer) → XVII (dual-track consolidation, readiness gate) → XVIII (real DFT bridge, VASP inputs for top candidates) → XIX.A (CIF rescue, alias resolver, DFT queue complete: 5 candidates, 14 jobs, 613 CPU-h)
 
 ## GeaSpirit Status
 

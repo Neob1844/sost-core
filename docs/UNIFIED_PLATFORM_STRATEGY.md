@@ -18,7 +18,7 @@
 
 **Why the combination is more powerful than either alone:**
 
-The Materials Discovery Engine (75,993 materials, CGCNN/ALIGNN-Lite GNN models, novelty scoring, candidate generation, frontier ranking, validation pipeline, 635 tests) can predict what materials *should* exist and what properties they would have. The Remote Sensing capability (Sentinel-2, EMIT hyperspectral, Sentinel-1 radar — all free) can detect what minerals are *actually present* on Earth's surface. Separately, one is a library without a search party, and the other is a search party without a target list. Together, they form a directed discovery system: predict what is interesting, then go find it.
+The Materials Discovery Engine (76,193 materials, CGCNN/ALIGNN-Lite GNN models, novelty scoring, candidate generation, frontier ranking, validation pipeline, 635 tests) can predict what materials *should* exist and what properties they would have. The Remote Sensing capability (Sentinel-2, EMIT hyperspectral, Sentinel-1 radar — all free) can detect what minerals are *actually present* on Earth's surface. Separately, one is a library without a search party, and the other is a search party without a target list. Together, they form a directed discovery system: predict what is interesting, then go find it.
 
 The SOST blockchain provides the third ingredient neither component delivers alone: timestamped, immutable Proof of Discovery that creates intellectual property and economic value from the discovery cycle.
 
@@ -98,7 +98,7 @@ The gap exists because computational materials science and remote sensing geosci
 
 **Connection to Materials Engine:**
 
-When the remote sensing module detects a spectral anomaly (e.g., strong Al-OH absorption at 2200 nm), query the Materials Engine's 75,993-material database for minerals containing those elements with matching crystal systems. Report: "Spectral signature consistent with kaolinite-group minerals. Materials Engine identifies 47 matching phases in corpus, including 3 novel candidates with predicted formation energy < -2.0 eV/atom."
+When the remote sensing module detects a spectral anomaly (e.g., strong Al-OH absorption at 2200 nm), query the Materials Engine's 76,193-material database for minerals containing those elements with matching crystal systems. Report: "Spectral signature consistent with kaolinite-group minerals. Materials Engine identifies 47 matching phases in corpus, including 3 novel candidates with predicted formation energy < -2.0 eV/atom."
 
 **Deliverable:** Sentinel-2 mineral alteration probability maps for 3-5 arid regions. Color-coded maps showing iron oxide, clay, carbonate, and silica alteration zones at 10-20m resolution.
 
@@ -240,7 +240,7 @@ Crystal structure completely determines electronic structure (this is the founda
 | RRUFF Database | Raman + reflectance for minerals with known structures | ~4,000 minerals | Many have both structure and some optical data |
 | Materials Project | Crystal structures + computed band structure | ~150,000 materials | Computed optical properties for ~10,000 |
 | JARVIS-DFT | Crystal structures + optical properties (dielectric function) | ~55,000 materials | ~20,000 have optical absorption spectra (computed) |
-| Our Materials Engine | Crystal structures + properties | 75,993 materials | Need to add spectral data via cross-referencing |
+| Our Materials Engine | Crystal structures + properties | 76,193 materials | Need to add spectral data via cross-referencing |
 
 **The training data bottleneck:**
 
@@ -333,7 +333,7 @@ Train the GNN to directly output reflectance at 200 wavelengths spanning 350-250
 
 | Tier | Access | Price |
 |---|---|---|
-| Free | Search 75,993 known materials by composition, property, structure. 100 queries/day. | $0 |
+| Free | Search 76,193 known materials by composition, property, structure. 100 queries/day. | $0 |
 | Pro | Generative candidate pipeline + novelty scoring + frontier ranking. 1,000 queries/day. | $50/month or 5 SOST/month |
 | Enterprise | Full GNN inference + spectral prediction + remote sensing search. Unlimited. | $500/month or 50 SOST/month |
 
@@ -376,7 +376,7 @@ Train the GNN to directly output reflectance at 200 wavelengths spanning 350-250
 **Our unique position:**
 
 Nobody — not a single company or academic group — currently combines:
-1. Graph neural networks predicting material properties from crystal structure (75,993 materials)
+1. Graph neural networks predicting material properties from crystal structure (76,193 materials)
 2. Automated remote sensing mineral detection from satellite imagery
 3. Blockchain-anchored Proof of Discovery
 
@@ -482,7 +482,7 @@ The closest would be if KoBold Metals built a materials science division and add
 
 **Impact:** Loss of competitive advantage, price compression.
 
-**Mitigation:** Our moat is the integration itself — the Materials Engine with 75,993 materials, the blockchain layer, and the spectral prediction research are all hard to replicate quickly. Open-source the non-competitive components to build community and network effects. Patent the spectral prediction methodology if it works. Move fast.
+**Mitigation:** Our moat is the integration itself — the Materials Engine with 76,193 materials, the blockchain layer, and the spectral prediction research are all hard to replicate quickly. Open-source the non-competitive components to build community and network effects. Patent the spectral prediction methodology if it works. Move fast.
 
 ### Risk 5: SOST Blockchain Does Not Reach Sufficient Adoption
 
@@ -602,7 +602,7 @@ Monitoring the same area over months/years reveals processes: seasonal moisture 
 | RRUFF | rruff.info | Free | 4,000+ mineral structures + spectra |
 | Materials Project | materialsproject.org | Free (API) | 150,000+ computed structures |
 | JARVIS-DFT | jarvis.nist.gov | Free | 55,000+ structures + properties |
-| SOST Materials Engine | local | Operational | 75,993 materials, GNN models, generation pipeline |
+| SOST Materials Engine | local | Operational | 76,193 materials, GNN models, generation pipeline |
 
 ---
 

@@ -905,9 +905,10 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
         <table class="code-table">
           <tr><td class="key">Corpus</td><td class="val"><strong>76,193 materials</strong> &mdash; JARVIS DFT 3D (75,993) + AFLOW (200), 100% with validated CIF structures</td></tr>
           <tr><td class="key">ML Models</td><td class="val">Dual-target GNN prediction (formation energy + band gap) &mdash; accuracy metrics restricted</td></tr>
-          <tr><td class="key">Discovery</td><td class="val"><strong>Autonomous engine</strong> &mdash; 8 campaign profiles, direct GNN on lifted structures, validation queue</td></tr>
-          <tr><td class="key">API</td><td class="val"><strong>145 endpoints</strong> &mdash; FastAPI with predict, frontier, triage, campaigns, autonomous discovery</td></tr>
-          <tr><td class="key">Tests</td><td class="val"><strong>1,073 tests</strong> passing across 47 test files</td></tr>
+          <tr><td class="key">Discovery</td><td class="val"><strong>Autonomous engine</strong> &mdash; 29 campaign profiles across 16 industrial domains, direct GNN on lifted structures, readiness gate R0-R5, validation bridge with DFT input generation</td></tr>
+          <tr><td class="key">Research Tracks</td><td class="val"><strong>2 active</strong> &mdash; Exhaust catalysis (15 candidates, 7.8/10 maturity) + Photovoltaic absorbers (19 candidates, 6.2/10 maturity)</td></tr>
+          <tr><td class="key">API</td><td class="val"><strong>70+ endpoints</strong> &mdash; FastAPI with predict, frontier, triage, campaigns, autonomous discovery</td></tr>
+          <tr><td class="key">Tests</td><td class="val"><strong>155 tests</strong> passing across 4 test suites, zero regressions</td></tr>
           <tr><td class="key">Compute Cost</td><td class="val">$0/month &mdash; CPU-only, open data, no cloud required</td></tr>
         </table>
       </div>
@@ -1741,21 +1742,21 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <strong>76,193 materials</strong> with 100% crystal structures<br>
           Dual-target GNN prediction (CGCNN + ALIGNN-Lite)<br>
           <strong>Autonomous discovery engine</strong> with direct GNN inference<br>
-          8 campaign profiles &middot; structure lift &middot; validation queue<br>
-          Material intelligence dossiers with evidence tagging<br>
-          Frontier ranking + triage + niche campaigns<br>
-          Benchmark calibration with empirical confidence bands<br>
-          28 real structure descriptors (density, bonds, symmetry)<br>
-          1,073 tests passing &middot; 145 API endpoints &middot; 47 test files
+          29 campaign profiles &middot; 16 industrial domains &middot; structure lift + GNN<br>
+          Readiness gate R0-R5 &middot; validation bridge with DFT input generation<br>
+          Chemistry-aware scoring &middot; hazardous family tagging<br>
+          Application horizons &middot; 6-level novelty ladder<br>
+          Dual-track: exhaust catalysis + photovoltaic absorbers<br>
+          155 tests passing &middot; 70+ API endpoints &middot; 4 test suites
         </div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:var(--cyan-primary)"></span> In Progress</div>
         <div class="mode-params" style="font-size:11px;line-height:1.8">
-          Phase XI: calibration intelligence + autonomy governance<br>
-          Chemistry-aware scoring and campaign selection<br>
-          Validation economics: evidence ROI optimization<br>
-          15 campaign profiles &middot; 5 autonomy levels
+          Phase XIX: corpus expansion + M3GNet ML relaxation<br>
+          DFT jobs prepared for 5 priority candidates (613 CPU-hours)<br>
+          Alias resolution for mineral names and formula variants<br>
+          34 registered candidates across 2 research tracks
         </div>
       </div>
       <div class="mode-card">
