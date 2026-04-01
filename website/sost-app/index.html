@@ -2819,5 +2819,13 @@ if (document.readyState === 'loading') {
   setTimeout(function() { clearInterval(_authInterval); clearInterval(_authInterval2); }, 30000);
 })();
 </script>
+<script src="../js/sost-music.js"></script>
+<script>
+// 50% chance: play epic melody on first interaction instead of sprite sound
+document.addEventListener('click', function _appMelody() {
+  if (Math.random() > 0.5 && typeof playRandomMelody === 'function') playRandomMelody();
+  document.removeEventListener('click', _appMelody);
+}, {once: true});
+</script>
 </body>
 </html>

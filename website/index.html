@@ -792,8 +792,11 @@
     for(var k=0;k<12;k++){setTimeout(playMatrixTick,t0+k*200);}
   });
 
-  // === AUDIO: unlock context on user interaction ===
-  function _splashSound(){try{getAC();}catch(e){}}
+  // === AUDIO: unlock context + play epic melody on user interaction ===
+  function _splashSound(){
+    try{getAC();}catch(e){}
+    if(typeof playRandomMelody==='function') playRandomMelody();
+  }
   sp.addEventListener('click',_splashSound,{once:true});
   sp.addEventListener('touchstart',_splashSound,{once:true});
 
@@ -1567,6 +1570,6 @@ function fetchSostChart(){
 <!-- CRT effects -->
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/crt-effects.js"></script>
-<!-- Tooltips removed: direct navigation only -->
+<script src="js/sost-music.js"></script>
 </body>
 </html>

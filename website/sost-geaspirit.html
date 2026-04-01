@@ -1618,7 +1618,7 @@ async function checkAccess(){
         document.getElementById('gea-totp').focus();
         return;
       }
-      if(data.status==='authenticated'){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);return;}
+      if(data.status==='authenticated'){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);if(typeof playRandomMelody==='function')playRandomMelody();return;}
     }
     if(resp.status===401){msg.textContent='> Invalid credentials';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},3000);return;}
     if(resp.status===429){msg.textContent='> Too many attempts — try later';msg.style.color='#ff0000';setTimeout(function(){msg.textContent=''},3000);return;}
@@ -1635,7 +1635,7 @@ async function geaVerifyTotp(){
   msg.textContent='> Verifying...';msg.style.color='#006600';
   try{
     var r2=await fetch('/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp_code:code})});
-    if(r2.ok){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);return;}
+    if(r2.ok){document.getElementById('protected-content').style.display='block';document.getElementById('access-panel').style.display='none';geaspirit_unlocked=true;startSession(600);if(typeof playRandomMelody==='function')playRandomMelody();return;}
     if(r2.status===401){msg.textContent='> Invalid code';msg.style.color='#ff0000';return;}
     if(r2.status===429){msg.textContent='> Too many attempts — login again';msg.style.color='#ff0000';
       setTimeout(function(){document.getElementById('gea-login-step').style.display='block';document.getElementById('gea-totp-step').style.display='none';msg.textContent='';},2000);return;}
@@ -1718,5 +1718,6 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,200);
 })();
 </script>
+<script src="js/sost-music.js"></script>
 </body>
 </html>
