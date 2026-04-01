@@ -190,9 +190,10 @@ Located in `materials-engine-private/` (restricted). Python-based computational 
 - Multilingual search (9 languages, 270+ common names)
 
 **Active research tracks:**
-- **Exhaust Catalysis:** 15 registered candidates (SOST-CAT-01 to 15). Top: Ba₄CeMn₃O₁₂ "TripleSync". Replace Pt/Pd/Rh ($30K-140K/kg) with cheap oxides ($2-35/kg). Maturity 7.8/10.
-- **Photovoltaic Absorbers:** 19 registered candidates (SOST-PV-01 to 19). Top: La₃S₃N (BG 1.340 eV = Shockley-Queisser optimum). Non-toxic Si/Pb-perovskite replacement. Maturity 6.2/10.
-- DFT inputs ready for 3 priority candidates (Ba₄CeMn₃O₁₂, Sr₂ZrMnO₆, La₃S₃N). NO DFT executed — awaiting HPC.
+- **Exhaust Catalysis:** 15+ registered candidates. Cheap oxide alternatives to PGMs ($2-35/kg vs $30K-140K/kg). Maturity 7.8/10.
+- **Photovoltaic Absorbers:** 19+ registered candidates. Non-toxic alternatives to Si/Pb-perovskites. Maturity 6.2/10.
+- DFT inputs ready for 5 priority candidates (14 VASP jobs, 613 CPU-hours). NO DFT executed — awaiting HPC.
+- Prototype screening: 92% of novel compositions rejected as structurally implausible.
 
 **Phase history:** V (GNN integration) → V.B/V.C (direct inference 40-65%) → VII (uncertainty) → VIII (validation bridge) → IX (scientific ops) → XI (calibration intelligence) → XI.B (autonomy governance) → XII.B (water/lithium verticals) → XIV (functional intersection) → XV (full-corpus 35K screened) → XVI.C (application horizons, 16 domains, hazard layer) → XVII (dual-track consolidation, readiness gate) → XVIII (DFT bridge) → XIX.A (CIF rescue) → XIX.B (CHGNet GPU relaxation, 5 candidates) → XIX.C (CHGNet standard gate) → XIX.D (corpus +1,103 2D) → XX (full pipeline campaign) → XXI (active learning bridge) → XXII (9-domain industrial sweep, 74 candidates) → XXIII (economic intelligence) → XXIV (prototype screening, 92% false positive rejection) → XXIV.B (filtered sweep, 15 validated) → XXV (product report)
 
