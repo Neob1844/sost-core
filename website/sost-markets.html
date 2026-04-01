@@ -854,16 +854,10 @@
     if (pd && pd.length) pp = pd[pd.length-1][1];
     if (!xp && !pp) return null;
     _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
-    // Supply from chain height
+    // Supply from chain height (use cached or fallback — NO sync XHR)
     var R0=7.85100863, Q=0.7788007830714049, EP=131553;
-    var sup=0, bh=0, h=2254;
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', '/rpc', false);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({method:'getblockcount',id:1}));
-      if (xhr.status === 200) { var rr = JSON.parse(xhr.responseText); if (rr && rr.result) h = rr.result; }
-    } catch(e) {}
+    var h = window._sostChainHeight || 2254;
+    var sup=0, bh=0;
     while (bh <= h) { var ep = Math.floor(bh/EP); var r = R0*Math.pow(Q,ep); var ee = Math.min((ep+1)*EP-1,h); sup += r*(ee-bh+1); bh = ee+1; }
     _sostRefSup = sup;
     _sostRefUsd = (1.2 * _sostRefGoldP) / sup;
@@ -1650,6 +1644,11 @@
   }
 
   // ===== INIT =====
+  // Fetch chain height async (used by SOST price calc — no sync XHR)
+  window._sostChainHeight = 2254;
+  fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'getblockcount',id:1})})
+    .then(function(r){return r.json();}).then(function(rr){if(rr&&rr.result)window._sostChainHeight=rr.result;}).catch(function(){});
+
   refreshAll();
   setInterval(refreshAll, 60000);
 
