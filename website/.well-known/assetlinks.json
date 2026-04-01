@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.sostprotocol.app",
-    "sha256_cert_fingerprints": ["__PLACEHOLDER_REPLACE_WITH_REAL_FINGERPRINT__"]
+    "sha256_cert_fingerprints": ["A6:50:0F:C4:04:0D:DC:7E:DE:EB:E6:D9:34:14:39:00:01:25:6C:35:01:FC:9B:52:73:41:A8:9C:E1:83:0F:02"]
   }
 }]
