@@ -2117,6 +2117,7 @@ function meGrantAccess(){
   document.getElementById('me-access-panel').style.display='none';
   document.getElementById('me-session-bar').style.display='flex';
   meStartSession(600);
+  if(typeof playRandomMelody==='function')playRandomMelody();
 }
 document.getElementById('me-access-pwd').addEventListener('keypress',function(e){if(e.key==='Enter')meCheckAccess()});
 document.getElementById('me-totp-code').addEventListener('keypress',function(e){if(e.key==='Enter')meVerifyTotp()});
@@ -2492,5 +2493,6 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,500);
 })();
 </script>
+<script src="js/sost-music.js"></script>
 </body>
 </html>
