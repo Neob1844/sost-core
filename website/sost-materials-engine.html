@@ -621,7 +621,7 @@
       Discovery Platform
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Multi-objective autonomous discovery engine for computational materials science. 76,193 materials, dual-target GNN prediction, 29 campaign profiles across 16 industrial domains (catalysis, photovoltaics, hydrogen energy, emissions, water treatment), readiness-gated validation bridge with real DFT input generation &mdash; all at zero cost on CPU.
+      Integrated materials discovery pipeline combining GNN prediction, ML structural validation (CHGNet), economic assessment, and multi-domain prioritization. 77,296 materials, 29 campaign profiles across 16 industrial domains. Prototype screening filters 92% of structurally implausible candidates before they waste DFT or lab resources &mdash; all at zero cloud cost.
     </p>
     <div class="protocol-badge fade-in delay-3" id="statusBanner">
       <span class="tag" style="background:var(--green-primary,#4ade80);color:#000">OPERATIONAL</span>
@@ -1522,7 +1522,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       </div>
 
       <div style="background:#020008;border:1px solid #1a0a2a;border-left:3px solid #67e8f9;border-radius:0 6px 6px 0;padding:14px 18px;font-size:10px;color:#668;line-height:1.8">
-        <strong style="color:#67e8f9">Key finding:</strong> La&#8323;S&#8323;N has band gap <b>exactly</b> at the Shockley-Queisser optimum (1.340 eV). If it has a direct band gap and good absorption coefficient, it could theoretically exceed silicon efficiency at 1/3 the cost. MnNa&#8322;O&#8323; is a completely novel composition proposed by Materials Engine &mdash; sodium manganate as PV absorber has never been published. CuFeO&#8322; (delafossite) independently validates the engine: it found a material already being researched for PV. Full registry: <code>docs/PHOTOVOLTAIC_REGISTRY.md</code>.
+        <strong style="color:#67e8f9">Key finding:</strong> La&#8323;S&#8323;N is a particularly promising candidate with band gap positioned at the Shockley-Queisser optimum (1.340 eV) and excellent structural survival under CHGNet (geometry score 1.00). Electronic structure (direct vs indirect gap) and DFT validation pending. MnNa&#8322;O&#8323; is a novel composition proposed by the engine &mdash; not yet validated. CuFeO&#8322; (delafossite) independently validates the pipeline: it found a material already being researched for PV. All results are computational predictions pending experimental verification. Full registry: <code>docs/PHOTOVOLTAIC_REGISTRY.md</code>.
       </div>
     </div>
 
