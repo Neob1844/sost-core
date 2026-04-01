@@ -1302,6 +1302,156 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       <strong style="color:#cc4444">Honest limitations:</strong> All candidates are <strong>theoretical</strong>. No DFT or experimental validation performed. Structure lift &ne; correct structure. GNN prediction &ne; confirmation. Novelty relative to 76,193-material corpus only. Proxy estimates (~46%) carry higher uncertainty.
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- RESEARCH LINE: EXHAUST CATALYST DISCOVERY                     -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div style="margin-top:40px;border-top:2px solid #1a3a1a;padding-top:32px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.6);animation:cPulse 2s ease infinite"></span>
+        <span style="font-size:11px;color:#fbbf24;letter-spacing:2px;font-weight:600">ACTIVE RESEARCH LINE</span>
+      </div>
+      <div style="font-family:var(--font-display,'Space Grotesk',sans-serif);font-size:clamp(18px,2.5vw,26px);font-weight:700;color:#fbbf24;text-shadow:0 0 15px rgba(251,191,36,.2);letter-spacing:1px;margin-bottom:8px">EXHAUST CATALYST DISCOVERY</div>
+      <p style="font-size:12px;color:#888;line-height:1.8;margin-bottom:20px;max-width:700px">
+        Computational search for cheap metal oxide catalysts to replace platinum group metals (Pt $30K/kg, Pd $40K/kg, Rh $140K/kg) in hydrocarbon exhaust cleaning. Using perovskites, spinels and mixed oxides with Fe, Mn, Co, Ni, Cu, Ce, La, Ti, Sr, Zr &mdash; metals costing $0.50-30/kg.
+      </p>
+
+      <!-- STATS -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px">
+        <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:12px 14px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:#fbbf24">76,193</div>
+          <div style="font-size:9px;color:#666;letter-spacing:1px;margin-top:4px">MATERIALS SCREENED</div>
+        </div>
+        <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:12px 14px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:#fbbf24">2,711</div>
+          <div style="font-size:9px;color:#666;letter-spacing:1px;margin-top:4px">CANDIDATES PASSED</div>
+        </div>
+        <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:12px 14px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:#fbbf24">15</div>
+          <div style="font-size:9px;color:#666;letter-spacing:1px;margin-top:4px">REGISTERED (SOST-CAT)</div>
+        </div>
+        <div style="background:#020802;border:1px solid #0a3a0a;border-radius:6px;padding:12px 14px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:#4ade80">7</div>
+          <div style="font-size:9px;color:#666;letter-spacing:1px;margin-top:4px">PRIORITY (DFT READY)</div>
+        </div>
+      </div>
+
+      <!-- TIER A: PRIORITY CANDIDATES -->
+      <div style="font-size:10px;color:#fbbf24;letter-spacing:2px;margin-bottom:10px;font-weight:600">TIER A &mdash; PRIORITY SYNTHESIS</div>
+      <div style="overflow-x:auto;margin-bottom:20px">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:monospace">
+          <thead>
+            <tr style="border-bottom:1px solid #1a3a1a">
+              <th style="padding:8px;text-align:left;color:#006600;font-size:9px;letter-spacing:1px">ID</th>
+              <th style="padding:8px;text-align:left;color:#006600;font-size:9px;letter-spacing:1px">FORMULA</th>
+              <th style="padding:8px;text-align:left;color:#006600;font-size:9px;letter-spacing:1px">NAME</th>
+              <th style="padding:8px;text-align:left;color:#006600;font-size:9px;letter-spacing:1px">STRUCTURE</th>
+              <th style="padding:8px;text-align:right;color:#006600;font-size:9px;letter-spacing:1px">BG (eV)</th>
+              <th style="padding:8px;text-align:right;color:#006600;font-size:9px;letter-spacing:1px">FE (eV/at)</th>
+              <th style="padding:8px;text-align:right;color:#006600;font-size:9px;letter-spacing:1px">COST</th>
+              <th style="padding:8px;text-align:left;color:#006600;font-size:9px;letter-spacing:1px">ORIGIN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #061a06">
+              <td style="padding:8px;color:#fbbf24">SOST-CAT-01</td>
+              <td style="padding:8px;color:#00ff41;font-weight:600">Ba&#8324;CeMn&#8323;O&#8321;&#8322;</td>
+              <td style="padding:8px;color:#ccc">TripleSync</td>
+              <td style="padding:8px;color:#888">perovskite</td>
+              <td style="padding:8px;text-align:right;color:#4ade80">1.52</td>
+              <td style="padding:8px;text-align:right;color:#4ade80">-2.77</td>
+              <td style="padding:8px;text-align:right;color:#fbbf24">~$8/kg</td>
+              <td style="padding:8px;color:#888">DFT-PREDICTED <span style="color:#fbbf24;font-size:9px">(JARVIS)</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid #061a06">
+              <td style="padding:8px;color:#fbbf24">SOST-CAT-02</td>
+              <td style="padding:8px;color:#00ff41;font-weight:600">MnTiO&#8323;</td>
+              <td style="padding:8px;color:#ccc">RedoxTitan</td>
+              <td style="padding:8px;color:#888">ilmenite</td>
+              <td style="padding:8px;text-align:right;color:#fbbf24">0.28*</td>
+              <td style="padding:8px;text-align:right;color:#4ade80">-2.42</td>
+              <td style="padding:8px;text-align:right;color:#fbbf24">~$6/kg</td>
+              <td style="padding:8px;color:#4ade80">KNOWN MINERAL <span style="color:#888;font-size:9px">(pyrophanite)</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid #061a06">
+              <td style="padding:8px;color:#fbbf24">SOST-CAT-03</td>
+              <td style="padding:8px;color:#00ff41;font-weight:600">Sr&#8322;ZrMnO&#8326;</td>
+              <td style="padding:8px;color:#ccc">DoublePerov</td>
+              <td style="padding:8px;color:#888">double perovskite</td>
+              <td style="padding:8px;text-align:right;color:#4ade80">1.29</td>
+              <td style="padding:8px;text-align:right;color:#4ade80">-3.07</td>
+              <td style="padding:8px;text-align:right;color:#fbbf24">~$15/kg</td>
+              <td style="padding:8px;color:#888">DFT-PREDICTED <span style="color:#fbbf24;font-size:9px">(JARVIS)</span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px;color:#666">BENCH-01</td>
+              <td style="padding:8px;color:#888">CeO&#8322;</td>
+              <td style="padding:8px;color:#888">Ceria</td>
+              <td style="padding:8px;color:#888">fluorite</td>
+              <td style="padding:8px;text-align:right;color:#888">2.21</td>
+              <td style="padding:8px;text-align:right;color:#888">-3.69</td>
+              <td style="padding:8px;text-align:right;color:#888">~$5/kg</td>
+              <td style="padding:8px;color:#888">COMMERCIAL <span style="color:#666;font-size:9px">(benchmark)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER B+C SUMMARY -->
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:8px;font-weight:600">TIER B &mdash; PROMISING</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px;font-size:11px;font-family:monospace">
+        <div style="background:#020802;border:1px solid #0a2a0a;padding:10px;border-radius:4px"><span style="color:#fbbf24">SOST-CAT-04</span> Ca&#8323;ScCoO&#8326; <span style="color:#006600">"ScandCobalt"</span><br><span style="color:#888">BG 1.53 | FE -2.97 | ~$35/kg</span></div>
+        <div style="background:#020802;border:1px solid #0a2a0a;padding:10px;border-radius:4px"><span style="color:#fbbf24">SOST-CAT-05</span> Sr&#8324;Ti&#8323;Nb&#8322;O&#8321;&#8325; <span style="color:#006600">"LayeredNiobate"</span><br><span style="color:#888">BG 1.65 | FE -3.24 | ~$20/kg</span></div>
+        <div style="background:#020802;border:1px solid #0a2a0a;padding:10px;border-radius:4px"><span style="color:#fbbf24">SOST-CAT-06</span> Ti&#8324;MnP&#8326;O&#8322;&#8324; <span style="color:#006600">"NASICONcat"</span><br><span style="color:#888">BG 1.60 | FE -2.59 | ~$8/kg</span></div>
+        <div style="background:#020802;border:1px solid #0a2a0a;padding:10px;border-radius:4px"><span style="color:#fbbf24">SOST-CAT-07</span> AlBaO&#8323; <span style="color:#006600">"AluBar"</span><br><span style="color:#888">BG 0.0* | FE -2.80 | ~$2/kg</span><br><span style="color:#ff4444;font-size:9px">NOVEL &mdash; Phase 2</span></div>
+      </div>
+
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:8px;font-weight:600">TIER C &mdash; EXPLORATION (8 candidates)</div>
+      <div style="font-size:11px;color:#888;font-family:monospace;line-height:2;padding-left:12px;border-left:2px solid #0a2a0a;margin-bottom:20px">
+        SOST-CAT-08 FeMnO&#8323; "FerroMangan" | SOST-CAT-09 Fe&#8322;MnO&#8323; "IronMangan" | SOST-CAT-10 AlMnO&#8323; "AluMangan"<br>
+        SOST-CAT-11 CeNiO&#8322; "CeriaNickel" | SOST-CAT-12 CoTiO&#8323; "CobaltTitan" | SOST-CAT-13 Sr&#8322;TiMnO&#8326; "TiMnDouble"<br>
+        SOST-CAT-14 La&#8322;MgNiO&#8326; "LaNiDouble" | SOST-CAT-15 ZrMnO&#8323; "ZircoMangan"
+      </div>
+
+      <!-- RESEARCH FAMILIES -->
+      <div style="font-size:10px;color:#fbbf24;letter-spacing:2px;margin-bottom:10px;font-weight:600">RESEARCH FAMILIES</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:20px">
+        <div style="background:#0a0800;border:1px solid #2a2a0a;border-left:3px solid #fbbf24;padding:12px;border-radius:0 4px 4px 0">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:4px">Family 1: Ce-Mn-Ba</div>
+          <div style="font-size:10px;color:#888;line-height:1.6">Lead: Ba&#8324;CeMn&#8323;O&#8321;&#8322; "TripleSync"<br>Ce oxygen storage + Mn redox + Ba thermal stability<br><span style="color:#4ade80">Strong literature support</span></div>
+        </div>
+        <div style="background:#0a0800;border:1px solid #2a2a0a;border-left:3px solid #fbbf24;padding:12px;border-radius:0 4px 4px 0">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:4px">Family 2: Mn-Ti</div>
+          <div style="font-size:10px;color:#888;line-height:1.6">Lead: MnTiO&#8323; "RedoxTitan"<br>Ti structural stability + Mn redox activity<br><span style="color:#fbbf24">Known mineral, catalysis unexplored</span></div>
+        </div>
+        <div style="background:#0a0800;border:1px solid #2a2a0a;border-left:3px solid #fbbf24;padding:12px;border-radius:0 4px 4px 0">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:4px">Family 3: Sr-Mn</div>
+          <div style="font-size:10px;color:#888;line-height:1.6">Lead: Sr&#8322;ZrMnO&#8326; "DoublePerov"<br>Zr oxygen mobility + Mn redox in double perovskite<br><span style="color:#fbbf24">Moderate literature support</span></div>
+        </div>
+        <div style="background:#0a0800;border:1px solid #2a2a0a;border-left:3px solid #fbbf24;padding:12px;border-radius:0 4px 4px 0">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:4px">Family 4: Fe-Mn</div>
+          <div style="font-size:10px;color:#888;line-height:1.6">Lead: FeMnO&#8323; "FerroMangan"<br>Cheapest redox pair: Fe $0.50 + Mn $2/kg<br><span style="color:#ff6644">Novel &mdash; Phase 2 generated</span></div>
+        </div>
+      </div>
+
+      <!-- COST COMPARISON -->
+      <div style="font-size:10px;color:#006600;letter-spacing:2px;margin-bottom:8px;font-weight:600">COST vs PLATINUM GROUP METALS</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;font-size:11px;font-family:monospace">
+        <div style="background:#1a0000;border:1px solid #3a0a0a;padding:8px 14px;border-radius:4px"><span style="color:#ff4444">Pt</span> $30,000/kg</div>
+        <div style="background:#1a0000;border:1px solid #3a0a0a;padding:8px 14px;border-radius:4px"><span style="color:#ff4444">Pd</span> $40,000/kg</div>
+        <div style="background:#1a0000;border:1px solid #3a0a0a;padding:8px 14px;border-radius:4px"><span style="color:#ff4444">Rh</span> $140,000/kg</div>
+        <div style="background:#001a00;border:1px solid #003300;padding:8px 14px;border-radius:4px"><span style="color:#4ade80">Fe</span> $0.50/kg</div>
+        <div style="background:#001a00;border:1px solid #003300;padding:8px 14px;border-radius:4px"><span style="color:#4ade80">Mn</span> $2/kg</div>
+        <div style="background:#001a00;border:1px solid #003300;padding:8px 14px;border-radius:4px"><span style="color:#4ade80">Ce</span> $5/kg</div>
+        <div style="background:#001a00;border:1px solid #003300;padding:8px 14px;border-radius:4px"><span style="color:#4ade80">Ti</span> $10/kg</div>
+        <div style="background:#001a00;border:1px solid #003300;padding:8px 14px;border-radius:4px"><span style="color:#4ade80">Sr</span> $6/kg</div>
+      </div>
+
+      <!-- PROVENANCE -->
+      <div style="background:#0a0200;border:1px solid #2a0a0a;border-left:3px solid #fbbf24;border-radius:0 6px 6px 0;padding:14px 18px;font-size:10px;color:#886666;line-height:1.8">
+        <strong style="color:#cc8844">Data provenance:</strong> Phase 1 screening from JARVIS-DFT (NIST, 76,193 materials). Phase 2 candidates generated by Materials Engine Autonomous Discovery (CGCNN + ALIGNN-Lite). Band gaps from DFT are underestimated ~30-50% (PBE limitation). Formation energies reliable &plusmn;0.1 eV/atom. Novel compositions (SOST-CAT-07 through SOST-CAT-11) have NO experimental validation &mdash; they are computational proposals. Full registry: <code>docs/CATALYST_REGISTRY.md</code> (private repo).
+      </div>
+    </div>
+
   </div><!-- /me-protected -->
 
   </div><!-- /container -->
