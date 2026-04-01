@@ -1941,11 +1941,20 @@ SectionRenderers.geaspirit = function(el) {
       <div id="gea-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:280px;">
         <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
         <p style="color:var(--pip-dim);margin-bottom:12px;font-size:12px">Enter credentials to view GeaSpirit technical data</p>
-        <input type="text" id="gea-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="username" autocomplete="username">
-        <input type="password" id="gea-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('gea-app-login-btn').click()">
-        <p id="gea-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-        <button id="gea-app-login-btn" onclick="(async function(){var u=document.getElementById('gea-app-user').value.trim();var p=document.getElementById('gea-app-pwd').value;var m=document.getElementById('gea-app-msg');if(!u||!p){m.textContent='Enter username and password';m.style.color='#ff0000';return;}m.textContent='Authenticating...';m.style.color='var(--pip-dim)';try{var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});if(r.ok){var d=await r.json();if(d.status==='authenticated'||d.requires_otp){document.getElementById('gea-tech-overlay').style.display='none';try{AudioEngine.success_big();}catch(e){}return;}}m.textContent='Invalid credentials';m.style.color='#ff0000';try{AudioEngine.error_hard();}catch(e){}}catch(e){m.textContent='Auth service unavailable — try code: SOST2026';m.style.color='#ffaa00';document.getElementById('gea-app-pwd').value='';}})()" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
-        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Same credentials as sostcore.com</p>
+        <div id="gea-app-login-step">
+          <input type="text" id="gea-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="admin" autocomplete="username">
+          <input type="password" id="gea-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('gea-app-login-btn').click()">
+          <p id="gea-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
+          <button id="gea-app-login-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
+        </div>
+        <div id="gea-app-totp-step" style="display:none">
+          <p style="color:var(--pip-amber);font-size:12px;margin-bottom:8px">Two-Factor Authentication</p>
+          <input type="text" id="gea-app-totp" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;width:160px;text-align:center;letter-spacing:6px;border-radius:4px;outline:none" placeholder="000000" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')document.getElementById('gea-app-totp-btn').click()">
+          <p id="gea-app-totp-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
+          <button id="gea-app-totp-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">VERIFY</button>
+        </div>
+        <p id="gea-app-session-info" style="color:var(--pip-dim);margin-top:8px;font-size:9px;display:none">Session: <span id="gea-app-timer">10:00</span> — <span onclick="geaAppRefresh()" style="cursor:pointer;color:var(--pip-amber)">REFRESH</span></p>
+        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Server-side authentication required</p>
       </div>
       <div class="stat-row"><span class="stat-label">CHUQUICAMATA</span><span class="stat-value stat-ok">AUC 0.882 (Porphyry Cu)</span></div>
       <div class="stat-row"><span class="stat-label">KALGOORLIE</span><span class="stat-value stat-ok">AUC 0.879 (Orogenic Au)</span></div>
@@ -1993,11 +2002,20 @@ SectionRenderers.materials = function(el) {
       <div id="mat-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:280px;">
         <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
         <p style="color:var(--pip-dim);margin-bottom:12px;font-size:12px">Enter credentials to view Materials Engine architecture</p>
-        <input type="text" id="mat-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="username" autocomplete="username">
-        <input type="password" id="mat-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('mat-app-login-btn').click()">
-        <p id="mat-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-        <button id="mat-app-login-btn" onclick="(async function(){var u=document.getElementById('mat-app-user').value.trim();var p=document.getElementById('mat-app-pwd').value;var m=document.getElementById('mat-app-msg');if(!u||!p){m.textContent='Enter username and password';m.style.color='#ff0000';return;}m.textContent='Authenticating...';m.style.color='var(--pip-dim)';try{var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});if(r.ok){var d=await r.json();if(d.status==='authenticated'||d.requires_otp){document.getElementById('mat-tech-overlay').style.display='none';try{AudioEngine.success_big();}catch(e){}return;}}m.textContent='Invalid credentials';m.style.color='#ff0000';try{AudioEngine.error_hard();}catch(e){}}catch(e){m.textContent='Auth service unavailable — try code: SOST2026';m.style.color='#ffaa00';document.getElementById('mat-app-pwd').value='';}})()" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
-        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Same credentials as sostcore.com</p>
+        <div id="mat-app-login-step">
+          <input type="text" id="mat-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="admin" autocomplete="username">
+          <input type="password" id="mat-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('mat-app-login-btn').click()">
+          <p id="mat-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
+          <button id="mat-app-login-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
+        </div>
+        <div id="mat-app-totp-step" style="display:none">
+          <p style="color:var(--pip-amber);font-size:12px;margin-bottom:8px">Two-Factor Authentication</p>
+          <input type="text" id="mat-app-totp" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;width:160px;text-align:center;letter-spacing:6px;border-radius:4px;outline:none" placeholder="000000" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')document.getElementById('mat-app-totp-btn').click()">
+          <p id="mat-app-totp-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
+          <button id="mat-app-totp-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">VERIFY</button>
+        </div>
+        <p id="mat-app-session-info" style="color:var(--pip-dim);margin-top:8px;font-size:9px;display:none">Session: <span id="mat-app-timer">10:00</span> — <span onclick="matAppRefresh()" style="cursor:pointer;color:var(--pip-amber)">REFRESH</span></p>
+        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Server-side authentication required</p>
       </div>
       <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
       <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
@@ -2682,5 +2700,124 @@ if (document.readyState === 'loading') {
 })();
 </script>
 <div id="block-detail-overlay"><div class="bdo-content" id="bdo-content"></div></div>
+<script>
+// === UNIFIED AUTH FOR APP — Server-side only. No client-side fallback. No hardcoded codes. ===
+// Mirrors sost-geaspirit.html and sost-materials-engine.html auth flow exactly.
+(function(){
+  function appAuth(prefix, overlayId) {
+    var loginBtn = document.getElementById(prefix+'-login-btn');
+    var totpBtn = document.getElementById(prefix+'-totp-btn');
+    if (!loginBtn) return;
+
+    var _timer = null, _seconds = 0;
+
+    function startSession() {
+      _seconds = 600;
+      var info = document.getElementById(prefix+'-session-info');
+      if (info) info.style.display = '';
+      if (_timer) clearInterval(_timer);
+      _timer = setInterval(function() {
+        _seconds--;
+        var el = document.getElementById(prefix+'-timer');
+        if (el) {
+          var m = Math.floor(_seconds/60), s = _seconds%60;
+          el.textContent = m+':'+(s<10?'0':'')+s;
+        }
+        if (_seconds <= 0) { lockSession(); }
+      }, 1000);
+    }
+
+    function lockSession() {
+      if (_timer) clearInterval(_timer);
+      var ov = document.getElementById(overlayId);
+      if (ov) ov.style.display = 'flex';
+      var info = document.getElementById(prefix+'-session-info');
+      if (info) info.style.display = 'none';
+      var ls = document.getElementById(prefix+'-login-step');
+      var ts = document.getElementById(prefix+'-totp-step');
+      if (ls) ls.style.display = '';
+      if (ts) ts.style.display = 'none';
+      var msg = document.getElementById(prefix+'-msg');
+      if (msg) { msg.textContent = 'SESSION EXPIRED — login again'; msg.style.color = '#ffaa00'; }
+    }
+
+    window[prefix.replace('-','')+'AppRefresh'] = function() { _seconds = 600; };
+
+    loginBtn.addEventListener('click', async function() {
+      var u = document.getElementById(prefix+'-user').value.trim();
+      var p = document.getElementById(prefix+'-pwd').value;
+      var msg = document.getElementById(prefix+'-msg');
+      if (!u || !p) { msg.textContent = 'Enter username and password'; msg.style.color = '#ff0000'; return; }
+      msg.textContent = 'Authenticating...'; msg.style.color = 'var(--pip-dim)';
+      try {
+        var r = await fetch('/auth/login', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username: u, password: p})
+        });
+        if (r.ok) {
+          var d = await r.json();
+          if (d.requires_otp) {
+            document.getElementById(prefix+'-login-step').style.display = 'none';
+            document.getElementById(prefix+'-totp-step').style.display = '';
+            return;
+          }
+          if (d.status === 'authenticated') {
+            document.getElementById(overlayId).style.display = 'none';
+            startSession();
+            try { AudioEngine.success_big(); } catch(e) {}
+            return;
+          }
+        }
+        if (r.status === 429) { msg.textContent = 'Too many attempts. Wait and retry.'; msg.style.color = '#ff0000'; return; }
+        msg.textContent = 'Invalid credentials'; msg.style.color = '#ff0000';
+        try { AudioEngine.error_hard(); } catch(e) {}
+      } catch(e) {
+        msg.textContent = 'Auth service unavailable'; msg.style.color = '#ff0000';
+      }
+    });
+
+    if (totpBtn) {
+      totpBtn.addEventListener('click', async function() {
+        var code = document.getElementById(prefix+'-totp').value.trim();
+        var msg = document.getElementById(prefix+'-totp-msg');
+        if (!code || code.length !== 6) { msg.textContent = 'Enter 6-digit code'; msg.style.color = '#ff0000'; return; }
+        msg.textContent = 'Verifying...'; msg.style.color = 'var(--pip-dim)';
+        try {
+          var r = await fetch('/auth/verify-otp', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({otp_code: code})
+          });
+          if (r.ok) {
+            document.getElementById(overlayId).style.display = 'none';
+            startSession();
+            try { AudioEngine.success_big(); } catch(e) {}
+            return;
+          }
+          if (r.status === 429) { msg.textContent = 'Too many attempts.'; msg.style.color = '#ff0000'; return; }
+          msg.textContent = 'Invalid code'; msg.style.color = '#ff0000';
+        } catch(e) {
+          msg.textContent = 'Auth service unavailable'; msg.style.color = '#ff0000';
+        }
+      });
+    }
+  }
+
+  // Wait for section renderers to create the DOM elements, then attach auth
+  var _authInterval = setInterval(function() {
+    if (document.getElementById('gea-app-login-btn')) {
+      appAuth('gea-app', 'gea-tech-overlay');
+      clearInterval(_authInterval);
+    }
+  }, 500);
+  var _authInterval2 = setInterval(function() {
+    if (document.getElementById('mat-app-login-btn')) {
+      appAuth('mat-app', 'mat-tech-overlay');
+      clearInterval(_authInterval2);
+    }
+  }, 500);
+  // Clean up intervals after 30s
+  setTimeout(function() { clearInterval(_authInterval); clearInterval(_authInterval2); }, 30000);
+})();
+</script>
 </body>
 </html>
