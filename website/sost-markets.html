@@ -946,14 +946,18 @@
         return (1.2 * _sostRefGoldP) / sup;
       }
 
+      var GENESIS_TIME = 1773597600 * 1000; // 2026-03-15 18:00:00 UTC in ms
       [1, 3, 7, 30, 180, 365].forEach(function(days) {
         var pts = [], nPts = Math.min(days * 24, 720);
         var step = (days * 86400000) / nPts;
         var blocksBack = days * blocksPerDay;
         for (var i = 0; i <= nPts; i++) {
           var t = now - (nPts - i) * step;
+          if (t < GENESIS_TIME) continue; // NO data before genesis
           var hAtTime = Math.max(1, currentH - Math.round(blocksBack * (1 - i / nPts)));
+          if (hAtTime < 1) continue; // NO block 0
           var p = priceAtHeight(hAtTime);
+          if (p > 5.0 || p < 0.001) continue; // filter absurd values
           pts.push([t, p]);
         }
         chartCache['sost-ref'][days] = pts;
@@ -1152,13 +1156,19 @@
           while(b<=h){var e2=Math.floor(b/E);var r=R*Math.pow(Q,e2);var ee=Math.min((e2+1)*E-1,h);s+=r*(ee-b+1);b=ee+1;}
           return (1.2*_sostRefGoldP)/s;
         }
+        var GT = 1773597600 * 1000;
         [1, 3, 7, 30, 180, 365].forEach(function(days) {
           var pts = [], nPts = Math.min(days * 24, 720);
           var step = (days * 86400000) / nPts;
           var bb = days * bpd;
           for (var i = 0; i <= nPts; i++) {
+            var t = Date.now() - (nPts - i) * step;
+            if (t < GT) continue;
             var hh = Math.max(1, cH - Math.round(bb * (1 - i / nPts)));
-            pts.push([now - (nPts - i) * step, _pAH(hh)]);
+            if (hh < 1) continue;
+            var pv = _pAH(hh);
+            if (pv > 5.0 || pv < 0.001) continue;
+            pts.push([t, pv]);
           }
           chartCache['sost-ref'][days] = pts;
         });
