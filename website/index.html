@@ -1547,14 +1547,18 @@ function fetchSostChart(){
       // Build 24-hour DYNAMIC reference line (price drops as supply increases)
       var now=Date.now(),labels=[],data=[];
       var bpd=144; // blocks per day
+      var GENESIS_MS=1773597600000; // 2026-03-15 18:00 UTC
       for(var i=0;i<=24;i++){
-        var d=new Date(now-((24-i)*3600000));
+        var tMs=now-((24-i)*3600000);
+        if(tMs<GENESIS_MS) continue; // No data before genesis
+        var d=new Date(tMs);
         labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
-        // Calculate price at each hour based on supply at that block height
         var hAtTime=Math.max(1, h - Math.round(bpd * (1 - i/24)));
         var s2=0,b2=0;
         while(b2<=hAtTime){var e2=Math.floor(b2/EP);var r2=R0*Math.pow(Q,e2);var ee2=Math.min((e2+1)*EP-1,hAtTime);s2+=r2*(ee2-b2+1);b2=ee2+1;}
-        data.push((1.2*goldAvg)/s2);
+        var prc=(1.2*goldAvg)/s2;
+        if(prc>5.0||prc<0.001) continue; // filter absurd
+        data.push(prc);
       }
       var ctx=canvasEl.getContext('2d');
       var grad=ctx.createLinearGradient(0,0,0,150);
