@@ -821,8 +821,12 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                 bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
                 bm.powDiffQ=g_blocks[j].bits_q; meta.push_back(bm);
             }
-            auto cd=casert_compute(meta,b.height+1);
+            // Profile for THIS block (with anti-stall, using block's own timestamp)
+            auto cd=casert_compute(meta,b.height,b.timestamp);
+            // Base profile (no anti-stall) for reference
+            auto cd_base=casert_compute(meta,b.height,0);
             s<<",\"casert_mode\":\""<<casert_profile_name(cd.profile_index)
+             <<"\",\"casert_base\":\""<<casert_profile_name(cd_base.profile_index)
              <<"\",\"casert_signal\":"<<cd.lag<<"}";
             return rpc_result(id,s.str());
         }
