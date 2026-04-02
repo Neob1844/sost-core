@@ -30,7 +30,7 @@
   --pip-bg: #000000;
   --pip-panel: #0a0f0a;
   --pip-border: #00ff41;
-  --pip-red: #ff0033;
+  --pip-red: #fb010d;
   --pip-amber: #ffaa00;
   --font: 'VT323', 'Courier New', monospace;
   --scanline-opacity: 0.08;
@@ -1150,7 +1150,7 @@ function runSplash(callback) {
       // Red matrix palette
       const brightness = Math.random();
       if (brightness > 0.95) {
-        cctx.fillStyle = '#ff4444';
+        cctx.fillStyle = '#fb010d';
         cctx.shadowBlur = 15;
         cctx.shadowColor = '#ff0000';
       } else if (brightness > 0.8) {
@@ -2157,7 +2157,7 @@ SectionRenderers.settings = function(el) {
         <span class="stat-value" style="display:flex;gap:8px">
           <button class="theme-btn" data-color="#00ff41" style="background:#00ff41;width:28px;height:28px;border:2px solid #003300;cursor:pointer;border-radius:4px" title="Green / Matrix"></button>
           <button class="theme-btn" data-color="#ffaa00" style="background:#ffaa00;width:28px;height:28px;border:2px solid #332200;cursor:pointer;border-radius:4px" title="Amber / Retro"></button>
-          <button class="theme-btn" data-color="#ff3333" style="background:#ff3333;width:28px;height:28px;border:2px solid #330000;cursor:pointer;border-radius:4px" title="Red / Alert"></button>
+          <button class="theme-btn" data-color="#fb010d" style="background:#fb010d;width:28px;height:28px;border:2px solid #330000;cursor:pointer;border-radius:4px" title="Red / Alert"></button>
           <button class="theme-btn" data-color="#ff6600" style="background:#ff6600;width:28px;height:28px;border:2px solid #331100;cursor:pointer;border-radius:4px" title="Orange / Fire"></button>
           <button class="theme-btn" data-color="#00e5ff" style="background:#00e5ff;width:28px;height:28px;border:2px solid #003333;cursor:pointer;border-radius:4px" title="Cyan / Ice"></button>
           <button class="theme-btn" data-color="#bb44ff" style="background:#bb44ff;width:28px;height:28px;border:2px solid #220033;cursor:pointer;border-radius:4px" title="Purple / Synthwave"></button>
