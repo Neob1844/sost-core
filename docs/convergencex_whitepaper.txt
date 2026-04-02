@@ -2300,7 +2300,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 
 ## 10.5 ConvergenceX Licensing
 
-ConvergenceX is source-available technology. The source code is publicly
+ConvergenceX is open source technology. The source code is publicly
 readable, auditable, and open to contribution without restriction.
 
 Commercial deployment, production use, and public-facing services require
@@ -2318,7 +2318,7 @@ project, or running a personal non-commercial node.
 License verification is trustless: anyone can verify a license on-chain
 by checking the ECDSA signature and the ESCROW_LOCK deposit existence.
 
-The security deposit is denominated in SOST at the PoPC reference price
+ConvergenceX is released under the MIT License. No deposit or fee required
 at the time of lock. The Foundation makes no representation about future
 SOST value. This is not an investment product.
 
