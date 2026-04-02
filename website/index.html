@@ -1544,12 +1544,17 @@ function fetchSostChart(){
       var sup=0,bh=0;
       while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);sup+=r*(ee-bh+1);bh=ee+1;}
       var sostPrice=(1.2*goldAvg)/sup;
-      // Build 24-hour reference line
+      // Build 24-hour DYNAMIC reference line (price drops as supply increases)
       var now=Date.now(),labels=[],data=[];
+      var bpd=144; // blocks per day
       for(var i=0;i<=24;i++){
         var d=new Date(now-((24-i)*3600000));
         labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
-        data.push(sostPrice);
+        // Calculate price at each hour based on supply at that block height
+        var hAtTime=Math.max(1, h - Math.round(bpd * (1 - i/24)));
+        var s2=0,b2=0;
+        while(b2<=hAtTime){var e2=Math.floor(b2/EP);var r2=R0*Math.pow(Q,e2);var ee2=Math.min((e2+1)*EP-1,hAtTime);s2+=r2*(ee2-b2+1);b2=ee2+1;}
+        data.push((1.2*goldAvg)/s2);
       }
       var ctx=canvasEl.getContext('2d');
       var grad=ctx.createLinearGradient(0,0,0,150);
