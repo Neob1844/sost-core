@@ -536,6 +536,35 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id"></div>
+
+    <!-- POST-QUANTUM CRYPTOGRAPHY -->
+    <div class="section-header fade-in">
+      <div class="section-id">POST-QUANTUM</div>
+      <h2 class="section-title">Quantum <span class="accent">Resistance</span> Roadmap</h2>
+    </div>
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px" class="fade-in delay-1">SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures. While no practical quantum threat exists today, SOST has a constitutional migration plan to post-quantum cryptography.</p>
+
+    <table class="spec-table fade-in delay-2" style="margin-bottom:20px">
+      <tr><td class="label">Current scheme</td><td class="value">ECDSA secp256k1 (libsecp256k1) — 64-byte signatures</td></tr>
+      <tr><td class="label">Selected PQC algorithm</td><td class="value" style="color:var(--green-primary)">CRYSTALS-Dilithium (NIST FIPS 204 winner)</td></tr>
+      <tr><td class="label">PQC signature size</td><td class="value">2,420 bytes (Level 3)</td></tr>
+      <tr><td class="label">PQC address prefix</td><td class="value" style="color:var(--cyan-primary)">sost2 (reserved)</td></tr>
+      <tr><td class="label">SHA-256 status</td><td class="value" style="color:var(--green-primary)">Safe — Grover reduces to 128-bit, still sufficient</td></tr>
+      <tr><td class="label">Quantum threat timeline</td><td class="value">~4,000 logical qubits needed — estimated 10-15 years away</td></tr>
+    </table>
+
+    <div style="background:var(--bg-card,#0a0a0a);border:1px solid var(--border-dim,#1a1a1a);border-left:3px solid var(--cyan-primary,#22d3ee);padding:16px 20px;margin-bottom:24px;border-radius:0 6px 6px 0" class="fade-in delay-3">
+      <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:1px;font-weight:600;margin-bottom:8px">MIGRATION TIMELINE</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+        <b style="color:var(--green-primary)">Phase 1 (COMPLETED)</b> — Algorithm selected: CRYSTALS-Dilithium<br>
+        <b>Phase 2 (2027)</b> — liboqs prototype integration<br>
+        <b>Phase 3 (2028 Q1)</b> — Dual signatures on testnet (sost1 + sost2)<br>
+        <b>Phase 4 (2028 Q3)</b> — Mainnet activation of sost2 addresses<br>
+        <b>Phase 5 (2030+)</b> — ECDSA deprecation via 75% miner vote
+      </div>
+    </div>
+
       <h2 class="section-title">Vulnerability <span class="accent">Reporting</span></h2>
     </div>
 

@@ -3376,3 +3376,29 @@ validation. Phase 28 adds QGIS operational layer spec: practical tool map,
 reproducible workflows, and canonical tool mapping. QGIS strengthens COORDINATES
 (alignment QA) and CERTAINTY (visual inspection) but does NOT solve DEPTH or
 replace ML. Canonical score 22.8/40 (57%) unchanged.
+
+## 8.4 Post-Quantum Cryptography Roadmap
+
+SOST Protocol currently uses secp256k1 elliptic curve cryptography for transaction signing — the same battle-tested scheme used by Bitcoin since 2009. While no practical quantum threat exists today, SOST is designed with long-term constitutional integrity in mind.
+
+### Current Security Baseline
+
+All SOST addresses (prefix: sost1) are derived from secp256k1 public keys using HASH160 (SHA256 + RIPEMD160). Transaction signatures use ECDSA with DER encoding — producing compact 64-byte signatures verified by libsecp256k1. This provides strong security against all known classical attacks.
+
+The theoretical quantum threat (Shor's algorithm) requires approximately 4,000 stable logical qubits — a capability that current hardware does not possess and that credible estimates place at least 10-15 years away.
+
+### Post-Quantum Migration Plan
+
+SOST has reserved the address prefix sost2 for post-quantum addresses and will follow a phased migration approach:
+
+Phase 1 — Research (COMPLETED): Selected algorithm: CRYSTALS-Dilithium (NIST FIPS 204 winner). Signature size: 2,420 bytes. Signing time: ~0.5ms. Verification: ~0.3ms. Security level: NIST Level 3.
+
+Phase 2 — Prototype (2027 Q3-Q4): Integration of liboqs library. Performance benchmarks. Block size analysis.
+
+Phase 3 — Dual Signatures on Testnet (2028 Q1): Transactions carry both ECDSA and Dilithium signatures. sost2 addresses available for testing. Nodes accept both types.
+
+Phase 4 — Mainnet Activation (2028 Q3): sost2 addresses activated on mainnet. Both sost1 and sost2 fully supported.
+
+Phase 5 — ECDSA Deprecation (2030+): Constitutional hard fork via version signaling (75% threshold, 288-block window) when quantum threat materializes.
+
+Design Principle: The migration is intentionally gradual. Forcing immediate adoption would increase TX size by 16x. Dual signatures allow sustainable pace migration without sacrificing performance.
