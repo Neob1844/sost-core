@@ -224,6 +224,21 @@ Computational materials discovery. 76,193 materials corpus. 19 campaign profiles
 
 [size=10pt][b]LEGAL DISCLAIMER[/b]
 
+
+[b][size=14pt]Post-Quantum Security Roadmap[/size][/b]
+
+SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures. While no quantum threat exists today, SOST has a constitutional migration plan:
+
+[list]
+[li][b]Phase 1 (COMPLETED):[/b] Algorithm selected — CRYSTALS-Dilithium (NIST FIPS 204 winner). 2,420-byte signatures, ~0.5ms signing time.[/li]
+[li][b]Phase 2 (2027):[/b] liboqs integration prototype. Performance benchmarks on SOST TX structure.[/li]
+[li][b]Phase 3 (2028 Q1):[/b] Dual signatures on testnet. New [font=monospace]sost2[/font] address prefix for post-quantum keys.[/li]
+[li][b]Phase 4 (2028 Q3):[/b] Mainnet activation. Both sost1 (ECDSA) and sost2 (Dilithium) accepted.[/li]
+[li][b]Phase 5 (2030+):[/b] ECDSA deprecation via constitutional hard fork (75% miner vote).[/li]
+[/list]
+
+SHA-256 hashing remains safe against quantum attacks (Grover's algorithm reduces security to 128-bit, still sufficient). The migration targets only signatures (ECDSA → Dilithium), not hashing.
+
 SOST is experimental, unaudited software. It is a completely new proof-of-work protocol — not a fork of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or algorithm. The ConvergenceX proof-of-work algorithm, the cASERT difficulty adjustment, and the constitutional economic model are original designs that have not been independently verified by any third-party security auditing firm.
 
 This software is provided "AS IS" without warranty of any kind. The developer (NeoB) makes no representations or warranties regarding the security, reliability, or fitness for purpose of this software. The protocol has not been tested under adversarial conditions by a large number of independent miners. Undiscovered vulnerabilities, bugs, or design flaws may exist that could result in loss of funds, consensus failures, or other adverse outcomes.

@@ -3012,6 +3012,12 @@ SERIALIZATION (consensus-critical fix):
 <p class="wp-p">Last updated: March 2026</p>
 <p class="wp-p" style="color:#888;">Previous versions: v3.7 (deprecated)</p>
 <div class="wp-spacer"></div>
+<h3 class="wp-h">8.4 Post-Quantum Cryptography Roadmap</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p">SOST Protocol currently uses secp256k1 ECDSA &mdash; the same scheme used by Bitcoin since 2009. While no practical quantum threat exists today, SOST has a constitutional migration plan. Selected algorithm: <strong>CRYSTALS-Dilithium</strong> (NIST FIPS 204 winner). Signature size: 2,420 bytes. New address prefix: <strong>sost2</strong>.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Migration:</strong> Phase 1 Research (done) &rarr; Phase 2 Prototype (2027) &rarr; Phase 3 Dual signatures testnet (2028 Q1) &rarr; Phase 4 Mainnet sost2 (2028 Q3) &rarr; Phase 5 ECDSA deprecation via 75% vote (2030+). SHA-256 hashing remains quantum-safe.</p>
+<div class="wp-spacer"></div>
 <p class="wp-p" style="font-size:12px;color:#888;border-top:1px solid #333;padding-top:12px;">SOST source code is published under the MIT License — fully open source<a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:#4ecdc4;">LICENSE</a> file for full terms.</p>
   </main>
 </div>

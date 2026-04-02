@@ -1373,6 +1373,16 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
+
+    <!-- POST-QUANTUM SECURITY -->
+    <div class="section-header fade-in">
+      <div class="section-id">SECURITY</div>
+      <h2 class="section-title">Post-Quantum <span class="accent">Security</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px" class="fade-in delay-1">
+      SOST uses the same secp256k1 ECDSA signatures as Bitcoin. For the post-quantum era, SOST has selected <b style="color:var(--cyan-primary)">CRYSTALS-Dilithium</b> (NIST FIPS 204) as the migration target. A new address prefix <code style="color:var(--green-primary)">sost2</code> is reserved for post-quantum addresses. Migration follows a 5-phase plan: research (done) → prototype (2027) → dual signatures (2028) → mainnet (2028 Q3) → ECDSA deprecation (2030+). SHA-256 hashing remains quantum-safe.
+    </p>
+
       <div class="section-id">PoW COMPARISON</div>
       <h2 class="section-title">Bitcoin vs Monero vs <span class="accent">SOST</span></h2>
     </div>
