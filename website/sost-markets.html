@@ -1819,11 +1819,12 @@
     // Retry SOST chart until gold data is available
     showSostPopcPrice();
     initSostChart();
+    populateSostPairs();
     // If still no data, retry at 5s, 10s, 15s
     if (!chartCache['sost-ref'] || !chartCache['sost-ref'][1]) {
-      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 5000);
-      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 10000);
-      setTimeout(function() { showSostPopcPrice(); initSostChart(); }, 15000);
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); populateSostPairs(); }, 5000);
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); populateSostPairs(); }, 10000);
+      setTimeout(function() { showSostPopcPrice(); initSostChart(); populateSostPairs(); }, 15000);
     }
   }
   setTimeout(autoOpenCharts, 2000);
