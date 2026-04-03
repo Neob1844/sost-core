@@ -1718,6 +1718,24 @@ SectionRenderers.dashboard = function(el) {
         else ivColor = '#4ade80';
       }
 
+      // Calculate expected blocks and chain lag/lead
+      const GENESIS_TIME = 1773597600; // 2026-03-15 18:00 UTC
+      const nowSec = Math.floor(Date.now() / 1000);
+      const expectedBlocks = Math.floor((nowSec - GENESIS_TIME) / 600);
+      const realBlocks = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
+      const chainDiff = realBlocks - expectedBlocks;
+      let lagLeadText, lagLeadColor;
+      if (chainDiff < 0) {
+        lagLeadText = Math.abs(chainDiff) + ' behind';
+        lagLeadColor = '#fb010d';
+      } else if (chainDiff > 0) {
+        lagLeadText = chainDiff + ' ahead';
+        lagLeadColor = '#4ade80';
+      } else {
+        lagLeadText = 'on schedule';
+        lagLeadColor = '#4ade80';
+      }
+
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
@@ -1726,6 +1744,8 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
         <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
+        <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
+        <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>

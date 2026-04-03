@@ -2753,20 +2753,32 @@ function calcSostRefPrice(){
   var R0_e=7.85100863,Q_e=0.7788007830714049,EP_e=131553;
   var bpd_e=144; // blocks per day
   function priceAtH(h){var s=0,b=0;while(b<=h){var e=Math.floor(b/EP_e);var r=R0_e*Math.pow(Q_e,e);var ee=Math.min((e+1)*EP_e-1,h);s+=r*(ee-b+1);b=ee+1;}return(1.2*goldPrice)/s;}
-  [1,3,7,30].forEach(function(days){
-    var p=[],nPts=Math.min(days*24,720),step=(days*86400000)/nPts,bb=days*bpd_e;
+  // Generate data for ALL time ranges (not just 1,3,7,30)
+  [1,3,7,30,180,365,1095,1825].forEach(function(days){
+    var p=[];
+    // Clamp range to genesis
+    var rangeMs=days*86400000;
+    var startMs=Math.max(now-rangeMs,GENESIS_MS);
+    var actualMs=now-startMs;
+    var nPts=Math.min(Math.max(Math.round(actualMs/60000),2),720); // 1 point per minute, max 720
+    var step=actualMs/nPts;
+    var totalBlocks=Math.round((actualMs/1000)/600); // blocks in range
     for(var i=0;i<=nPts;i++){
-      var t=now-(nPts-i)*step;
+      var t=startMs+i*step;
       if(t<GENESIS_MS)continue;
-      var hh=Math.max(1,H-Math.round(bb*(1-i/nPts)));
+      var elapsedFromGenesis=(t-GENESIS_MS)/1000;
+      var hh=Math.max(1,Math.round(elapsedFromGenesis/600));
+      if(hh>H)hh=H;
       if(hh<1)continue;
       var pv=priceAtH(hh);
-      if(pv>5.0||pv<0.001)continue;
+      if(pv>50.0||pv<0.0001)continue;
       p.push([t,pv]);
     }
     cache['sost-ref'][days]=p;
   });
   sostId='sost-ref';COINS[2].id='sost-ref';
+  // Activate SOST buttons (remove disabled class)
+  activateSost();
   drawChart('sost');
 }
 
@@ -2789,11 +2801,15 @@ function activateSost(){
   sostChecked=true;
   var btns=document.querySelectorAll('#sostTfBtns .tf-btn');
   btns.forEach(function(b){b.classList.remove('disabled');});
-  var d1=cache[sostId][1];
-  var latest=d1[d1.length-1][1];
-  document.getElementById('sostPrice').textContent=fmtUsd(latest);
-  document.getElementById('sostPrice').style.color='var(--red)';
-  document.getElementById('sostPrice').style.fontSize='';
+  if(sostId&&cache[sostId]){
+    var d1=cache[sostId][1];
+    if(d1&&d1.length){
+      var latest=d1[d1.length-1][1];
+      document.getElementById('sostPrice').textContent=fmtUsd(latest);
+      document.getElementById('sostPrice').style.color='var(--red)';
+      document.getElementById('sostPrice').style.fontSize='';
+    }
+  }
   drawChart('sost');
 }
 

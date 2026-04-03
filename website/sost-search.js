@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  var EXPLORER = 'https://sostcore.com/sost-explorer.html';
+  var EXPLORER = 'sost-explorer.html';
 
   var PAGES = [
     { title: 'Home', desc: 'SOST Protocol overview — Sovereign Stock Token', url: 'index.html', kw: 'home protocol gold pow sovereign stock token' },
@@ -175,6 +175,95 @@
     }
   }
 
+  // Inject the prominent inline search bar (explorer-style) below nav on all pages
+  function initInlineSearch() {
+    // Skip if we're on the explorer page (it has its own search bar)
+    if (window.location.pathname.indexOf('sost-explorer') !== -1) return;
+
+    var nav = document.querySelector('nav');
+    if (!nav) return;
+
+    var bar = document.createElement('div');
+    bar.className = 'gs-search-bar';
+    bar.innerHTML =
+      '<div class="gs-search-inner">' +
+        '<span class="gs-search-pre">search&gt;</span>' +
+        '<input id="gsSearchIn" class="gs-search-field" placeholder="block height, hash, txid, or sost1 address..." autocomplete="off" spellcheck="false"/>' +
+        '<button class="gs-search-btn" id="gsSearchBtn">FIND</button>' +
+      '</div>' +
+      '<div class="gs-search-dropdown" id="gsSearchDrop"></div>';
+
+    nav.parentNode.insertBefore(bar, nav.nextSibling);
+
+    var input = document.getElementById('gsSearchIn');
+    var btn = document.getElementById('gsSearchBtn');
+    var drop = document.getElementById('gsSearchDrop');
+
+    function doGlobalSearch() {
+      var q = input.value.trim();
+      if (!q) return;
+
+      // Block height
+      if (/^\d+$/.test(q)) {
+        window.location.href = EXPLORER + '?search=' + encodeURIComponent(q);
+        return;
+      }
+      // sost1 address (45 chars: sost1 + 40 hex)
+      if (/^sost1[0-9a-fA-F]{40}$/i.test(q)) {
+        window.location.href = EXPLORER + '?search=' + encodeURIComponent(q);
+        return;
+      }
+      // 64-char hex hash (block hash or txid)
+      if (/^[0-9a-fA-F]{64}$/.test(q)) {
+        window.location.href = EXPLORER + '?search=' + encodeURIComponent(q);
+        return;
+      }
+      // Partial hex (possible hash prefix)
+      if (/^[0-9a-fA-F]{4,63}$/.test(q)) {
+        window.location.href = EXPLORER + '?search=' + encodeURIComponent(q);
+        return;
+      }
+      // Partial sost1 address
+      if (/^sost1/i.test(q)) {
+        drop.innerHTML = '<div class="gs-drop-item gs-drop-hint">Incomplete address — need 45 chars: sost1 + 40 hex (got ' + q.length + ')</div>';
+        drop.style.display = 'block';
+        return;
+      }
+      // Text: search pages
+      var words = q.toLowerCase().split(/\s+/);
+      var matches = PAGES.filter(function(p) {
+        var hay = (p.title + ' ' + p.desc + ' ' + p.kw).toLowerCase();
+        for (var i = 0; i < words.length; i++) {
+          if (hay.indexOf(words[i]) === -1) return false;
+        }
+        return true;
+      });
+      if (matches.length > 0) {
+        drop.innerHTML = matches.map(function(m) {
+          return '<a class="gs-drop-item gs-drop-link" href="' + m.url + '">' +
+            '<span class="gs-drop-title">' + m.title + '</span>' +
+            '<span class="gs-drop-desc">' + m.desc + '</span></a>';
+        }).join('');
+        drop.style.display = 'block';
+      } else {
+        // Fall through to explorer search
+        window.location.href = EXPLORER + '?search=' + encodeURIComponent(q);
+      }
+    }
+
+    btn.addEventListener('click', doGlobalSearch);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doGlobalSearch();
+      if (e.key === 'Escape') { input.value = ''; drop.style.display = 'none'; }
+    });
+    input.addEventListener('input', function() {
+      if (!input.value.trim()) drop.style.display = 'none';
+    });
+    document.addEventListener('click', function(e) {
+      if (!bar.contains(e.target)) drop.style.display = 'none';
+    });
+  }
+
   // inject styles
   var style = document.createElement('style');
   style.textContent =
@@ -197,12 +286,31 @@
     '.sost-search-title { display: block; color: var(--text-primary, #e2e8f0); font-size: 12px; font-weight: 500; }' +
     '.sost-search-desc { display: block; color: var(--text-dim, #64748b); font-size: 11px; margin-top: 2px; }' +
     '@media (min-width: 769px) { .sost-search-box { width: 340px; } }' +
-    '@media (max-width: 768px) { .sost-search-box { width: calc(100vw - 48px); right: -12px; } }';
+    '@media (max-width: 768px) { .sost-search-box { width: calc(100vw - 48px); right: -12px; } }' +
+    /* Inline search bar (explorer-style) */
+    '.gs-search-bar { max-width: 1200px; margin: 12px auto 0; padding: 0 24px; position: relative; z-index: 50; }' +
+    '.gs-search-inner { display: flex; border: 1px solid var(--border-dim, #1a1a1a); transition: border-color 0.15s; background: var(--bg-card, #0a0a0a); }' +
+    '.gs-search-inner:focus-within { border-color: var(--red-primary, #fb010d); }' +
+    '.gs-search-pre { background: var(--bg-panel, #050505); color: var(--red-primary, #fb010d); padding: 10px 14px; font-size: 12px; font-family: inherit; border-right: 1px solid var(--border-dim, #1a1a1a); white-space: nowrap; user-select: none; display: flex; align-items: center; }' +
+    '.gs-search-field { flex: 1; background: transparent; border: none; color: var(--text-primary, #e2e8f0); font-family: inherit; font-size: 12px; padding: 10px 14px; outline: none; }' +
+    '.gs-search-field::placeholder { color: var(--text-muted, #475569); }' +
+    '.gs-search-btn { background: rgba(251,1,13,0.15); color: var(--red-primary, #fb010d); border: none; border-left: 1px solid var(--border-dim, #1a1a1a); padding: 0 20px; font-family: inherit; font-weight: 600; font-size: 11px; cursor: pointer; letter-spacing: 2px; transition: all 0.15s; }' +
+    '.gs-search-btn:hover { background: var(--red-primary, #fb010d); color: #fff; }' +
+    '.gs-search-dropdown { display: none; position: absolute; left: 24px; right: 24px; top: 100%; margin-top: 4px; background: var(--bg-card, #0a0a0a); border: 1px solid var(--border-med, #2a2a2a); max-height: 300px; overflow-y: auto; z-index: 60; }' +
+    '.gs-drop-item { display: block; padding: 10px 14px; border-bottom: 1px solid var(--border-dim, #1a1a1a); font-size: 12px; }' +
+    '.gs-drop-item:last-child { border-bottom: none; }' +
+    '.gs-drop-link { text-decoration: none; transition: background 0.15s; cursor: pointer; }' +
+    '.gs-drop-link:hover { background: var(--bg-hover, #111111); }' +
+    '.gs-drop-title { display: block; color: var(--text-primary, #e2e8f0); font-weight: 500; }' +
+    '.gs-drop-desc { display: block; color: var(--text-dim, #64748b); font-size: 11px; margin-top: 2px; }' +
+    '.gs-drop-hint { color: var(--text-muted, #475569); }' +
+    '@media (max-width: 768px) { .gs-search-pre { display: none; } .gs-search-bar { padding: 0 12px; margin-top: 8px; } .gs-search-dropdown { left: 12px; right: 12px; } }';
   document.head.appendChild(style);
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() { init(); initInlineSearch(); });
   } else {
     init();
+    initInlineSearch();
   }
 })();
