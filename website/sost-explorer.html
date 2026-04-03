@@ -2746,13 +2746,26 @@ function calcSostRefPrice(){
     var dSup=document.getElementById('sostDiscSupply');if(dSup)dSup.textContent=supply.toFixed(0);
     var dPr=document.getElementById('sostDiscPrice');if(dPr)dPr.textContent=sostRefPrice<0.01?'$'+sostRefPrice.toFixed(6):'$'+sostRefPrice.toFixed(4);
   }
-  // Build synthetic single-point chart data so canvas renders
+  // Build DYNAMIC price chart (price drops as supply increases)
   if(!cache['sost-ref']){cache['sost-ref']={};}
-  // Generate a flat reference price line from now-24h to now
-  var now=Date.now(),pts=[];
-  for(var i=0;i<=24;i++){pts.push([now-i*3600000,sostRefPrice]);}
-  pts.reverse();
-  cache['sost-ref'][1]=pts;cache['sost-ref'][3]=pts;cache['sost-ref'][7]=pts;
+  var now=Date.now();
+  var GENESIS_MS=1773597600000;
+  var R0_e=7.85100863,Q_e=0.7788007830714049,EP_e=131553;
+  var bpd_e=144; // blocks per day
+  function priceAtH(h){var s=0,b=0;while(b<=h){var e=Math.floor(b/EP_e);var r=R0_e*Math.pow(Q_e,e);var ee=Math.min((e+1)*EP_e-1,h);s+=r*(ee-b+1);b=ee+1;}return(1.2*goldPrice)/s;}
+  [1,3,7,30].forEach(function(days){
+    var p=[],nPts=Math.min(days*24,720),step=(days*86400000)/nPts,bb=days*bpd_e;
+    for(var i=0;i<=nPts;i++){
+      var t=now-(nPts-i)*step;
+      if(t<GENESIS_MS)continue;
+      var hh=Math.max(1,H-Math.round(bb*(1-i/nPts)));
+      if(hh<1)continue;
+      var pv=priceAtH(hh);
+      if(pv>5.0||pv<0.001)continue;
+      p.push([t,pv]);
+    }
+    cache['sost-ref'][days]=p;
+  });
   sostId='sost-ref';COINS[2].id='sost-ref';
   drawChart('sost');
 }
