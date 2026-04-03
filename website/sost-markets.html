@@ -318,7 +318,7 @@
       <div class="section-sub">SOST value in 60 fiat currencies — source: PoPC reference price + forex rates</div>
       <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST PRICE CHART</button>
     </div>
-    <div class="chart-panel" id="sostChartPanel">
+    <div class="chart-panel open" id="sostChartPanel">
       <div class="cp-head">
         <div><div class="cp-title">// <b style="color:var(--red-primary)">SOST PRICE</b> — USD</div></div>
         <div class="cp-badge"><span class="pdot"></span>LIVE</div>
@@ -390,12 +390,27 @@
     <div class="section-header">
       <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
-      <div class="section-sub">SOST Market Data — pending</div>
+      <div class="section-sub">Simulated pair rates derived from PoPC reference price</div>
     </div>
-    <div class="placeholder-box">
-      <div class="ph-title">Trading pairs will appear here</div>
-      <div class="ph-sub">SOST market data will populate automatically once live trading activity is detected. Initial planned pairs include SOST/USDC, SOST/USDT, SOST/BTC, SOST/ETH, SOST/BNB, SOST/XAUT, and SOST/PAXG. All pairs planned and mentioned above and any additional pairs that may be introduced over time are subject to market conditions, liquidity availability, and the evolving operational needs of the ecosystem.</div>
+    <div style="margin-bottom:16px;padding:12px 16px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
+      <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// SIMULATED PAIR DATA &mdash; NOT LIVE MARKET</div>
+      <div>SOST is <strong>not currently listed</strong> on any centralized or decentralized exchange. The pair rates below are
+      <strong>theoretical values</strong> derived algorithmically from the PoPC (Proof of Personal Custody) reference price
+      and the live market price of each counterpart asset.</div>
+      <div style="margin-top:6px;color:#666">The PoPC reference price reflects the gold-backed floor value of SOST:
+      <code style="color:#4ade80">price = (0.6 XAUT + 0.6 PAXG) &times; gold_spot &divide; total_supply</code>.
+      This is a <strong>logical valuation</strong>, not a traded market price. Actual trading rates will differ once SOST
+      is listed, as market price is determined by supply, demand, and liquidity &mdash; not solely by backing.</div>
+      <div style="margin-top:6px;color:#555">Verify gold commitments: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
     </div>
+    <table class="data-table" id="sostPairsTable">
+      <thead>
+        <tr><th>Pair</th><th>Rate</th><th>Inverse</th><th>Counterpart Price</th><th>Source</th></tr>
+      </thead>
+      <tbody id="sostPairsBody">
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading simulated pairs...</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -1651,10 +1666,92 @@
     }
   }
 
+  // ===== SOST SIMULATED PAIRS =====
+  var SOST_PAIRS = [
+    { pair: 'SOST/USD', counterpart: 'USD', cgId: null, stablecoin: false, fiat: true },
+    { pair: 'SOST/EUR', counterpart: 'EUR', cgId: null, stablecoin: false, fiat: true },
+    { pair: 'SOST/BTC', counterpart: 'BTC', cgId: 'bitcoin', stablecoin: false, fiat: false },
+    { pair: 'SOST/ETH', counterpart: 'ETH', cgId: 'ethereum', stablecoin: false, fiat: false },
+    { pair: 'SOST/BNB', counterpart: 'BNB', cgId: 'binancecoin', stablecoin: false, fiat: false },
+    { pair: 'SOST/SOL', counterpart: 'SOL', cgId: 'solana', stablecoin: false, fiat: false },
+    { pair: 'SOST/XRP', counterpart: 'XRP', cgId: 'ripple', stablecoin: false, fiat: false },
+    { pair: 'SOST/DOT', counterpart: 'DOT', cgId: 'polkadot', stablecoin: false, fiat: false },
+    { pair: 'SOST/LTC', counterpart: 'LTC', cgId: 'litecoin', stablecoin: false, fiat: false },
+    { pair: 'SOST/LINK', counterpart: 'LINK', cgId: 'chainlink', stablecoin: false, fiat: false },
+    { pair: 'SOST/USDT', counterpart: 'USDT', cgId: 'tether', stablecoin: true, fiat: false },
+    { pair: 'SOST/USDC', counterpart: 'USDC', cgId: 'usd-coin', stablecoin: true, fiat: false },
+    { pair: 'SOST/XAUT', counterpart: 'XAUT', cgId: 'tether-gold', stablecoin: false, fiat: false },
+    { pair: 'SOST/PAXG', counterpart: 'PAXG', cgId: 'pax-gold', stablecoin: false, fiat: false },
+  ];
+
+  function populateSostPairs() {
+    var tbody = document.getElementById('sostPairsBody');
+    if (!tbody) return;
+    var sostUsd = _sostRefUsd || calcSostPopcPrice();
+    if (!sostUsd) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Awaiting gold price data for PoPC reference calculation...</td></tr>';
+      return;
+    }
+
+    var html = '';
+    SOST_PAIRS.forEach(function(p) {
+      var counterUsd = null;
+      var source = '';
+
+      if (p.fiat && p.counterpart === 'USD') {
+        counterUsd = 1;
+        source = 'PoPC formula';
+      } else if (p.fiat && p.counterpart === 'EUR') {
+        counterUsd = forexRates['EUR'] ? (1 / forexRates['EUR']) : null;
+        source = 'PoPC + forex';
+      } else if (p.cgId) {
+        counterUsd = cryptoUsdPrices[p.counterpart] || null;
+        if (!counterUsd) {
+          // Try from chart cache
+          var cd = chartCache[p.cgId] && chartCache[p.cgId][1];
+          if (cd && cd.length) counterUsd = cd[cd.length-1][1];
+        }
+        source = p.stablecoin ? 'PoPC + stablecoin' : 'PoPC + CoinGecko';
+      }
+
+      if (counterUsd && sostUsd) {
+        var rate = sostUsd / counterUsd; // how much counterpart per 1 SOST
+        var inverse = counterUsd / sostUsd; // how much SOST per 1 counterpart
+
+        var rateStr, invStr;
+        if (rate < 0.0001) { rateStr = rate.toExponential(4); }
+        else if (rate < 1) { rateStr = rate.toFixed(8); }
+        else { rateStr = fmt(rate, rate < 100 ? 6 : 2); }
+
+        if (inverse < 1) { invStr = inverse.toFixed(6); }
+        else if (inverse < 1000) { invStr = fmt(inverse, 2); }
+        else { invStr = fmt(inverse, 0); }
+
+        var cpStr = counterUsd < 1 ? '$' + counterUsd.toFixed(4) : '$' + fmt(counterUsd, 2);
+        var pairColor = p.counterpart === 'XAUT' || p.counterpart === 'PAXG' ? 'color:#b8860b' :
+                        p.stablecoin ? 'color:#4ade80' :
+                        p.fiat ? 'color:#e2e8f0' : 'color:#67e8f9';
+
+        html += '<tr>' +
+          '<td style="font-weight:600;' + pairColor + '">' + p.pair + '</td>' +
+          '<td class="price-val" style="color:#ffd700">' + rateStr + ' ' + p.counterpart + '</td>' +
+          '<td class="price-val" style="color:#999">' + invStr + ' SOST</td>' +
+          '<td class="price-val">' + cpStr + '</td>' +
+          '<td style="color:#555;font-size:10px">' + source + '</td>' +
+          '</tr>';
+      } else {
+        html += '<tr><td style="' + 'color:#555">' + p.pair + '</td>' +
+          '<td colspan="4" class="price-na">&mdash; (awaiting data)</td></tr>';
+      }
+    });
+
+    tbody.innerHTML = html;
+  }
+
   function refreshAll() {
     showUpdating();
     var done = 0, total = 3;
-    function onDone() { done++; if (done >= total) hideUpdating(); }
+    function onDone() { done++; if (done >= total) { hideUpdating(); populateSostPairs(); } }
     fetchForex(onDone);
     fetchGold(onDone);
     fetchSost(onDone);
