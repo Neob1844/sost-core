@@ -762,13 +762,24 @@
               if (sEl) { sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4); sEl.style.color = 'var(--gold-primary,#ffd700)'; }
             }
             var sostLabel = ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">PoPC REF</span>';
-            html4 += '<tr><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span>' + sostLabel + '</td>' +
+            html4 += '<tr class="clickable-crypto-sost" style="cursor:pointer" onclick="toggleSostGoldChart(this)"><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span>' + sostLabel + ' <span style="font-size:8px;color:#555">&#9656;</span></td>' +
               '<td style="color:#fb010d;font-weight:600">SOST</td>' +
               '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (sxv !== null ? fmtCrypto(sxv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td class="price-val">' + (spv !== null ? fmtCrypto(spv, 'SOST') : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td>' + (sxv !== null && spv !== null ? spreadHtml(sxv, spv) : '<span style="color:#444">\u2014</span>') + '</td>' +
               '<td><span class="price-na">&mdash;</span></td></tr>';
+            // SOST chart expansion row
+            html4 += '<tr class="sost-gold-chart-row" style="display:none"><td colspan="7" style="padding:0">' +
+              '<div style="background:#060606;border:1px solid #1a1a1a;border-top:none">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px">' +
+              '<span style="font-size:10px;color:#888;letter-spacing:1px">SOST/USD — 24H (PoPC reference)</span>' +
+              '<button onclick="event.stopPropagation();this.closest(\'.sost-gold-chart-row\').style.display=\'none\'" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:10px;padding:2px 8px;font-family:inherit">X</button>' +
+              '</div>' +
+              '<div style="position:relative">' +
+              '<canvas id="sostGoldChartCanvas" style="width:100%;height:180px;cursor:crosshair"></canvas>' +
+              '<div class="sost-pair-tooltip" id="sostGoldChartTip" style="display:none"></div>' +
+              '</div></div></td></tr>';
           }
         });
         CRYPTO_STABLE.forEach(function(c) {
@@ -859,16 +870,31 @@
   // sost_price = (1.2 oz × avg(XAUT, PAXG)) / supply
   // XAUT and PAXG prices come from CoinGecko (they ARE listed). SOST is NOT.
   var _sostRefUsd = null, _sostRefGoldP = null, _sostRefSup = null;
+
+  // localStorage cache for gold price — survives page reload and API failures
+  function _saveGoldCache(xp, pp) {
+    try { localStorage.setItem('sost_gold_cache', JSON.stringify({xp:xp,pp:pp,ts:Date.now()})); } catch(e){}
+  }
+  function _loadGoldCache() {
+    try {
+      var c = JSON.parse(localStorage.getItem('sost_gold_cache'));
+      if (c && c.ts && (Date.now() - c.ts < 3600000)) return c; // valid for 1 hour
+      if (c && c.ts) return c; // stale but usable as last resort
+    } catch(e){}
+    return null;
+  }
+
   function calcSostPopcPrice() {
     // SOST price = (1.2 oz × avg(XAUT, PAXG)) / supply
-    // SOST is NOT on CoinGecko. Price ALWAYS comes from PoPC gold commitment formula.
     var xp = null, pp = null;
     // Try chart cache first (gold section may have loaded)
     var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
     var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
     if (xd && xd.length) xp = xd[xd.length-1][1];
     if (pd && pd.length) pp = pd[pd.length-1][1];
-    // Fallback: fetch gold price directly if chart cache empty
+    // Save to localStorage if we got fresh data
+    if (xp || pp) _saveGoldCache(xp, pp);
+    // Fallback 1: async fetch with timeout
     if (!xp && !pp) {
       try {
         var xhr = new XMLHttpRequest();
@@ -879,8 +905,14 @@
           var gd = JSON.parse(xhr.responseText);
           xp = (gd['tether-gold'] && gd['tether-gold'].usd) || null;
           pp = (gd['pax-gold'] && gd['pax-gold'].usd) || null;
+          if (xp || pp) _saveGoldCache(xp, pp);
         }
       } catch(e) {}
+    }
+    // Fallback 2: localStorage cache (last known gold price)
+    if (!xp && !pp) {
+      var cached = _loadGoldCache();
+      if (cached) { xp = cached.xp; pp = cached.pp; }
     }
     if (!xp && !pp) return null;
     _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
@@ -1855,6 +1887,140 @@
     }
   }
   setTimeout(autoOpenCharts, 2000);
+
+  // ===== SOST row chart in Gold in Crypto table =====
+  window.toggleSostGoldChart = function(row) {
+    var chartRow = row.nextElementSibling;
+    if (!chartRow || !chartRow.classList.contains('sost-gold-chart-row')) return;
+    if (chartRow.style.display === 'none') {
+      chartRow.style.display = '';
+      drawSostGoldChart();
+    } else {
+      chartRow.style.display = 'none';
+    }
+  };
+
+  function drawSostGoldChart() {
+    var canvas = document.getElementById('sostGoldChartCanvas');
+    var tip = document.getElementById('sostGoldChartTip');
+    if (!canvas) return;
+
+    var sostData = chartCache['sost-ref'] && chartCache['sost-ref'][1];
+    if (!sostData || sostData.length < 2) {
+      var ctx = canvas.getContext('2d');
+      var dpr = window.devicePixelRatio || 1;
+      var w = canvas.offsetWidth, h = canvas.offsetHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#333'; ctx.font = '11px ' + fontMono; ctx.textAlign = 'center';
+      ctx.fillText('SOST price data loading...', w / 2, h / 2);
+      return;
+    }
+
+    // Gold price for oz conversion
+    var goldP = _sostRefGoldP || 3000;
+
+    // data[i] = [timestamp, usd_price, price_in_oz_gold]
+    var data = sostData.map(function(pt) {
+      return [pt[0], pt[1], pt[1] / goldP];
+    });
+
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.offsetWidth, h = canvas.offsetHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    var pL = 4, pR = 70, pT = 6, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
+
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cw, gy); ctx.stroke(); }
+
+    var prices = data.map(function(d) { return d[1]; });
+    var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
+    var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
+    mn -= rng * 0.05; mx += rng * 0.05; rng = mx - mn;
+
+    // Y labels (USD)
+    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
+    for (var yi = 0; yi < 4; yi++) {
+      var yv = mx - rng * yi / 3;
+      ctx.fillText('$' + (yv < 0.01 ? yv.toFixed(6) : yv.toFixed(4)), pL + cw + 4, pT + ch * yi / 3 + 3);
+    }
+
+    // X labels
+    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    for (var xi = 0; xi < 6; xi++) {
+      var di = Math.round(xi / 5 * (data.length - 1));
+      var dd = new Date(data[di][0]);
+      ctx.fillText(('0' + dd.getUTCHours()).slice(-2) + ':' + ('0' + dd.getUTCMinutes()).slice(-2), pL + di / (data.length - 1) * cw, h - 4);
+    }
+
+    // Line
+    ctx.strokeStyle = '#fb010d'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    for (var j = 0; j < data.length; j++) {
+      var px = pL + j / (data.length - 1) * cw;
+      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
+      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Gradient fill
+    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
+    grd.addColorStop(0, 'rgba(251,1,13,0.1)'); grd.addColorStop(1, 'rgba(251,1,13,0)');
+    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
+    ctx.fillStyle = grd; ctx.fill();
+
+    // Save base image for tooltip
+    canvas._baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas._chartData = data;
+    canvas._chartMeta = { pL: pL, pR: pR, pT: pT, pB: pB, cw: cw, ch: ch, mn: mn, rng: rng };
+
+    // Tooltip events (once)
+    if (!canvas._tooltipWired && tip) {
+      canvas._tooltipWired = true;
+
+      function handleMove(cx, cy) {
+        var d = canvas._chartData, m = canvas._chartMeta;
+        if (!d || !m || !tip) return;
+        var rect = canvas.getBoundingClientRect();
+        var mx2 = cx - rect.left;
+        var rel = (mx2 - m.pL) / m.cw;
+        if (rel < 0 || rel > 1) { tip.style.display = 'none'; return; }
+        var idx = Math.round(rel * (d.length - 1));
+        var pt = d[idx];
+        var t = new Date(pt[0]);
+        tip.innerHTML = '<div style="color:#888;font-size:9px">' + ('0' + t.getUTCHours()).slice(-2) + ':' + ('0' + t.getUTCMinutes()).slice(-2) + ' UTC</div>' +
+          '<div style="color:#ffd700;font-size:11px;font-weight:600">$' + (pt[1] < 0.01 ? pt[1].toFixed(6) : pt[1].toFixed(4)) + '</div>' +
+          '<div style="color:#b8860b;font-size:10px">' + pt[2].toExponential(4) + ' oz gold</div>';
+        tip.style.display = 'block';
+        var tipX = mx2 + 14; if (tipX + 140 > rect.width) tipX = mx2 - 150;
+        var tipY = (cy - rect.top) - 40; if (tipY < 0) tipY = (cy - rect.top) + 10;
+        tip.style.left = tipX + 'px'; tip.style.top = tipY + 'px';
+
+        // Crosshair
+        if (canvas._baseImage) {
+          var ctx2 = canvas.getContext('2d');
+          ctx2.putImageData(canvas._baseImage, 0, 0);
+          var dpr2 = window.devicePixelRatio || 1;
+          ctx2.save(); ctx2.scale(dpr2, dpr2);
+          var px2 = m.pL + idx / (d.length - 1) * m.cw;
+          var py2 = m.pT + m.ch - ((pt[1] - m.mn) / m.rng) * m.ch;
+          ctx2.strokeStyle = '#333'; ctx2.lineWidth = 1; ctx2.setLineDash([3, 3]);
+          ctx2.beginPath(); ctx2.moveTo(px2, m.pT); ctx2.lineTo(px2, m.pT + m.ch); ctx2.stroke();
+          ctx2.setLineDash([]);
+          ctx2.beginPath(); ctx2.arc(px2, py2, 3.5, 0, Math.PI * 2);
+          ctx2.fillStyle = '#fb010d'; ctx2.fill();
+          ctx2.strokeStyle = '#000'; ctx2.lineWidth = 1; ctx2.stroke();
+          ctx2.restore();
+        }
+      }
+
+      canvas.addEventListener('mousemove', function(e) { handleMove(e.clientX, e.clientY); });
+      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+      canvas.addEventListener('mouseleave', function() { tip.style.display = 'none'; if (canvas._baseImage) canvas.getContext('2d').putImageData(canvas._baseImage, 0, 0); });
+      canvas.addEventListener('touchend', function() { tip.style.display = 'none'; if (canvas._baseImage) canvas.getContext('2d').putImageData(canvas._baseImage, 0, 0); });
+    }
+  }
 
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
