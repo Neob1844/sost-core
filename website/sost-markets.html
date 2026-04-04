@@ -1761,7 +1761,10 @@
           '<span style="font-size:10px;color:#888;letter-spacing:1px">' + p.pair + ' — 24H</span>' +
           '<button onclick="event.stopPropagation();this.closest(\'.sost-pair-chart-row\').style.display=\'none\'" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:10px;padding:2px 8px;font-family:inherit">X</button>' +
           '</div>' +
-          '<canvas class="sost-pair-canvas" data-counterpart="' + p.counterpart + '" data-counter-usd="' + (counterUsd||0) + '" style="width:100%;height:150px"></canvas>' +
+          '<div style="position:relative">' +
+          '<canvas class="sost-pair-canvas" data-counterpart="' + p.counterpart + '" data-counter-usd="' + (counterUsd||0) + '" style="width:100%;height:150px;cursor:crosshair"></canvas>' +
+          '<div class="sost-pair-tooltip" style="display:none"></div>' +
+          '</div>' +
           '</div></td></tr>';
       } else {
         html += '<tr><td style="' + 'color:#555">' + p.pair + '</td>' +
@@ -1886,7 +1889,6 @@
     var counterpart = canvas.getAttribute('data-counterpart');
     if (!counterUsd || counterUsd === 0) counterUsd = 1;
 
-    // Get SOST price data (24H from sost-ref cache)
     var sostData = chartCache['sost-ref'] && chartCache['sost-ref'][1];
     if (!sostData || sostData.length < 2) {
       var ctx = canvas.getContext('2d');
@@ -1898,10 +1900,9 @@
       return;
     }
 
-    // Convert SOST/USD to SOST/counterpart: rate = sostUsd / counterUsd
-    var data = sostData.map(function(pt) { return [pt[0], pt[1] / counterUsd]; });
+    var data = sostData.map(function(pt) { return [pt[0], pt[1] / counterUsd, pt[1]]; });
+    // data[i] = [timestamp_ms, price_in_counterpart, price_usd]
 
-    // Draw (reuse chart engine logic)
     var ctx = canvas.getContext('2d');
     var dpr = window.devicePixelRatio || 1;
     var w = canvas.offsetWidth, h = canvas.offsetHeight;
@@ -1933,8 +1934,8 @@
     for (var xi = 0; xi < 6; xi++) {
       var di = Math.round(xi / 5 * (data.length - 1));
       var xp = pL + di / (data.length - 1) * cw;
-      var d = new Date(data[di][0]);
-      ctx.fillText(('0'+d.getUTCHours()).slice(-2) + ':' + ('0'+d.getUTCMinutes()).slice(-2), xp, h - 4);
+      var dd = new Date(data[di][0]);
+      ctx.fillText(('0'+dd.getUTCHours()).slice(-2) + ':' + ('0'+dd.getUTCMinutes()).slice(-2), xp, h - 4);
     }
 
     // Line
@@ -1951,14 +1952,90 @@
     grd.addColorStop(0, 'rgba(251,1,13,0.1)'); grd.addColorStop(1, 'rgba(251,1,13,0)');
     ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
     ctx.fillStyle = grd; ctx.fill();
+
+    // Save base image for tooltip crosshair overlay
+    canvas._baseImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Store chart metadata on canvas for tooltip
+    canvas._pairChartData = data;
+    canvas._pairChartMeta = { pL: pL, pR: pR, pT: pT, pB: pB, cw: cw, ch: ch, mn: mn, rng: rng, counterpart: counterpart };
+
+    // Wire tooltip events (only once)
+    if (!canvas._tooltipWired) {
+      canvas._tooltipWired = true;
+      var tip = canvas.parentElement.querySelector('.sost-pair-tooltip');
+
+      function handleMove(clientX, clientY) {
+        var d = canvas._pairChartData;
+        var m = canvas._pairChartMeta;
+        if (!d || !m || !tip) return;
+        var rect = canvas.getBoundingClientRect();
+        var mx = clientX - rect.left;
+        var rel = (mx - m.pL) / m.cw;
+        if (rel < 0 || rel > 1) { tip.style.display = 'none'; return; }
+        var idx = Math.round(rel * (d.length - 1));
+        var pt = d[idx];
+        var t = new Date(pt[0]);
+        var timeStr = ('0'+t.getUTCHours()).slice(-2) + ':' + ('0'+t.getUTCMinutes()).slice(-2) + ' UTC';
+        var pairVal = pt[1] < 0.0001 ? pt[1].toExponential(4) : pt[1] < 1 ? pt[1].toFixed(8) : pt[1].toFixed(6);
+        var usdVal = pt[2] < 0.01 ? '$' + pt[2].toFixed(6) : '$' + pt[2].toFixed(4);
+        tip.innerHTML = '<div style="color:#888;font-size:9px">' + timeStr + '</div>' +
+          '<div style="color:#ffd700;font-size:11px;font-weight:600">' + pairVal + ' ' + m.counterpart + '</div>' +
+          '<div style="color:#4ade80;font-size:10px">' + usdVal + '</div>';
+        tip.style.display = 'block';
+        var tipX = mx + 14;
+        var tipY = (clientY - rect.top) - 40;
+        if (tipX + 140 > rect.width) tipX = mx - 150;
+        if (tipY < 0) tipY = (clientY - rect.top) + 10;
+        tip.style.left = tipX + 'px';
+        tip.style.top = tipY + 'px';
+
+        // Draw crosshair (save/restore base image)
+        if (!canvas._baseImage) return;
+        var ctx2 = canvas.getContext('2d');
+        ctx2.putImageData(canvas._baseImage, 0, 0);
+        var dpr2 = window.devicePixelRatio || 1;
+        ctx2.save();
+        ctx2.scale(dpr2, dpr2);
+        var px = m.pL + idx / (d.length - 1) * m.cw;
+        var py = m.pT + m.ch - ((pt[1] - m.mn) / m.rng) * m.ch;
+        // Vertical guide line
+        ctx2.strokeStyle = '#333'; ctx2.lineWidth = 1; ctx2.setLineDash([3,3]);
+        ctx2.beginPath(); ctx2.moveTo(px, m.pT); ctx2.lineTo(px, m.pT + m.ch); ctx2.stroke();
+        ctx2.setLineDash([]);
+        // Dot
+        ctx2.beginPath(); ctx2.arc(px, py, 3.5, 0, Math.PI * 2);
+        ctx2.fillStyle = '#fb010d'; ctx2.fill();
+        ctx2.strokeStyle = '#000'; ctx2.lineWidth = 1; ctx2.stroke();
+        ctx2.restore();
+      }
+
+      canvas.addEventListener('mousemove', function(e) { handleMove(e.clientX, e.clientY); });
+      canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }, { passive: false });
+      canvas.addEventListener('mouseleave', function() {
+        tip.style.display = 'none';
+        if (canvas._baseImage) { canvas.getContext('2d').putImageData(canvas._baseImage, 0, 0); }
+      });
+      canvas.addEventListener('touchend', function() {
+        tip.style.display = 'none';
+        if (canvas._baseImage) { canvas.getContext('2d').putImageData(canvas._baseImage, 0, 0); }
+      });
+    }
   }
 
-  // Style for pair chart panels
+  // Style for pair chart panels + tooltip
   var pairStyle = document.createElement('style');
   pairStyle.textContent =
     '.sost-pair-chart-panel { background: #060606; border: 1px solid #1a1a1a; border-top: none; }' +
     '.sost-pair-row:hover { background: #0a0a0a; }' +
-    '.sost-pair-chart-row td { background: #060606; }';
+    '.sost-pair-chart-row td { background: #060606; }' +
+    '.sost-pair-tooltip { position: absolute; z-index: 10; pointer-events: none; ' +
+      'background: #000; border: 1px solid #fb010d; padding: 6px 10px; ' +
+      'font-family: ' + fontMono + '; line-height: 1.5; white-space: nowrap; }';
   document.head.appendChild(pairStyle);
 
 })();
