@@ -1636,9 +1636,52 @@ SectionRenderers.dashboard = function(el) {
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
-      const casertProfile = info.casert_profile || info.equalizer || 'N/A';
-      const casertLag = info.casert_lag !== undefined ? info.casert_lag : '';
-      const lagDisplay = casertLag !== '' ? ` (lag: ${casertLag > 0 ? '+' : ''}${casertLag})` : '';
+      // cASERT profile: read from actual best block, NOT from getinfo (which gives next block's base)
+      let casertProfile = 'N/A';
+      let lagDisplay = '';
+      try {
+        const bestHash = await rpcCall('getblockhash', [height]);
+        if (bestHash) {
+          const blk = await rpcCall('getblock', [bestHash]);
+          if (blk) {
+            // Read the actual cASERT signal from the block
+            const signal = blk.casert_signal !== undefined ? blk.casert_signal :
+                          (blk.bits_q !== undefined ? Math.round((blk.bits_q / 65536 - 1) * 10) / 10 : 0);
+            // Compute profile from signal (same logic as explorer)
+            const profiles = [
+              {name:'E4',min:-Infinity,max:-3},{name:'E3',min:-3,max:-2},{name:'E2',min:-2,max:-1},
+              {name:'E1',min:-1,max:-0.5},{name:'B0',min:-0.5,max:0.5},{name:'H1',min:0.5,max:1},
+              {name:'H2',min:1,max:2},{name:'H3',min:2,max:3},{name:'H4',min:3,max:5},
+              {name:'H5',min:5,max:8},{name:'H6',min:8,max:12},{name:'H7',min:12,max:18},
+              {name:'H8',min:18,max:25},{name:'H9',min:25,max:Infinity}
+            ];
+            let pName = 'B0';
+            for (const p of profiles) {
+              if (signal >= p.min && signal < p.max) { pName = p.name; break; }
+            }
+            casertProfile = pName;
+
+            // Calculate lag from actual block time
+            if (blk.previousblockhash && blk.time) {
+              try {
+                const prevBlk = await rpcCall('getblock', [blk.previousblockhash]);
+                if (prevBlk && prevBlk.time) {
+                  const blockTime = blk.time - prevBlk.time;
+                  const lagSecs = blockTime - 600; // target = 600s
+                  const lagMins = Math.round(lagSecs / 60);
+                  lagDisplay = lagMins > 0 ? ` (+${lagMins}m slow)` :
+                               lagMins < 0 ? ` (${lagMins}m fast)` : ' (on target)';
+                }
+              } catch(e) {}
+            }
+          }
+        }
+      } catch(e) {
+        // Fallback to getinfo data
+        casertProfile = info.casert_profile || info.equalizer || 'N/A';
+        const casertLag = info.casert_lag !== undefined ? info.casert_lag : '';
+        lagDisplay = casertLag !== '' ? ` (lag: ${casertLag > 0 ? '+' : ''}${casertLag})` : '';
+      }
 
       // Calculate SOST PoPC reference price
       // Calculate supply
