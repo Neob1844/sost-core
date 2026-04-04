@@ -1704,6 +1704,21 @@
       } else if (p.fiat && p.counterpart === 'EUR') {
         counterUsd = forexRates['EUR'] ? (1 / forexRates['EUR']) : null;
         source = 'PoPC + forex';
+      } else if (p.stablecoin) {
+        // USDT/USDC always ~$1.00
+        counterUsd = 1.00;
+        source = 'PoPC + stablecoin ($1.00)';
+      } else if (p.counterpart === 'PAXG') {
+        // PAXG = gold token, use gold price from chart cache (same source as XAUT)
+        var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
+        if (pd && pd.length) counterUsd = pd[pd.length-1][1];
+        if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP; // fallback to gold price
+        source = 'PoPC + gold spot';
+      } else if (p.counterpart === 'XAUT') {
+        var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
+        if (xd && xd.length) counterUsd = xd[xd.length-1][1];
+        if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP;
+        source = 'PoPC + gold spot';
       } else if (p.cgId) {
         counterUsd = cryptoUsdPrices[p.counterpart] || null;
         if (!counterUsd) {
@@ -1711,7 +1726,7 @@
           var cd = chartCache[p.cgId] && chartCache[p.cgId][1];
           if (cd && cd.length) counterUsd = cd[cd.length-1][1];
         }
-        source = p.stablecoin ? 'PoPC + stablecoin' : 'PoPC + CoinGecko';
+        source = 'PoPC + CoinGecko';
       }
 
       if (counterUsd && sostUsd) {
@@ -1732,13 +1747,22 @@
                         p.stablecoin ? 'color:#4ade80' :
                         p.fiat ? 'color:#e2e8f0' : 'color:#67e8f9';
 
-        html += '<tr>' +
-          '<td style="font-weight:600;' + pairColor + '">' + p.pair + '</td>' +
+        html += '<tr class="sost-pair-row" data-pair="' + p.pair + '" data-counterpart="' + p.counterpart + '" data-counter-usd="' + (counterUsd||0) + '" style="cursor:pointer" onclick="togglePairChart(this)">' +
+          '<td style="font-weight:600;' + pairColor + '">' + p.pair + ' <span style="font-size:8px;color:#555">&#9656;</span></td>' +
           '<td class="price-val" style="color:#ffd700">' + rateStr + ' ' + p.counterpart + '</td>' +
           '<td class="price-val" style="color:#999">' + invStr + ' SOST</td>' +
           '<td class="price-val">' + cpStr + '</td>' +
           '<td style="color:#555;font-size:10px">' + source + '</td>' +
-          '</tr>';
+          '</tr>' +
+          '<tr class="sost-pair-chart-row" data-pair="' + p.pair + '" style="display:none">' +
+          '<td colspan="5" style="padding:0">' +
+          '<div class="sost-pair-chart-panel">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px">' +
+          '<span style="font-size:10px;color:#888;letter-spacing:1px">' + p.pair + ' — 24H</span>' +
+          '<button onclick="event.stopPropagation();this.closest(\'.sost-pair-chart-row\').style.display=\'none\'" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:10px;padding:2px 8px;font-family:inherit">X</button>' +
+          '</div>' +
+          '<canvas class="sost-pair-canvas" data-counterpart="' + p.counterpart + '" data-counter-usd="' + (counterUsd||0) + '" style="width:100%;height:150px"></canvas>' +
+          '</div></td></tr>';
       } else {
         html += '<tr><td style="' + 'color:#555">' + p.pair + '</td>' +
           '<td colspan="4" class="price-na">&mdash; (awaiting data)</td></tr>';
@@ -1839,6 +1863,104 @@
       if (cgId) drawMktChart('cc_' + code, cgId, '#e2e8f0');
     });
   });
+  // ===== SOST PAIR CHART (click to expand) =====
+  window.togglePairChart = function(row) {
+    var pair = row.getAttribute('data-pair');
+    var chartRow = row.nextElementSibling;
+    if (!chartRow || !chartRow.classList.contains('sost-pair-chart-row')) return;
+
+    if (chartRow.style.display === 'none') {
+      // Close any other open pair chart
+      document.querySelectorAll('.sost-pair-chart-row').forEach(function(r) { r.style.display = 'none'; });
+      chartRow.style.display = '';
+      // Draw the chart
+      var canvas = chartRow.querySelector('.sost-pair-canvas');
+      if (canvas) drawPairChart(canvas);
+    } else {
+      chartRow.style.display = 'none';
+    }
+  };
+
+  function drawPairChart(canvas) {
+    var counterUsd = parseFloat(canvas.getAttribute('data-counter-usd'));
+    var counterpart = canvas.getAttribute('data-counterpart');
+    if (!counterUsd || counterUsd === 0) counterUsd = 1;
+
+    // Get SOST price data (24H from sost-ref cache)
+    var sostData = chartCache['sost-ref'] && chartCache['sost-ref'][1];
+    if (!sostData || sostData.length < 2) {
+      var ctx = canvas.getContext('2d');
+      var dpr = window.devicePixelRatio || 1;
+      var w = canvas.offsetWidth, h = canvas.offsetHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#333'; ctx.font = '11px ' + fontMono; ctx.textAlign = 'center';
+      ctx.fillText('No SOST price data available', w/2, h/2);
+      return;
+    }
+
+    // Convert SOST/USD to SOST/counterpart: rate = sostUsd / counterUsd
+    var data = sostData.map(function(pt) { return [pt[0], pt[1] / counterUsd]; });
+
+    // Draw (reuse chart engine logic)
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.offsetWidth, h = canvas.offsetHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    var pL = 4, pR = 70, pT = 6, pB = 22, cw = w - pL - pR, ch = h - pT - pB;
+
+    // Grid
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+    for (var g = 1; g <= 3; g++) { var gy = pT + ch * g / 4; ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL+cw, gy); ctx.stroke(); }
+
+    var prices = data.map(function(d) { return d[1]; });
+    var mn = Math.min.apply(null, prices), mx = Math.max.apply(null, prices);
+    var rng = mx - mn; if (rng === 0) rng = mn * 0.001 || 1;
+    mn -= rng * 0.05; mx += rng * 0.05; rng = mx - mn;
+
+    // Y labels
+    ctx.fillStyle = '#444'; ctx.font = '9px ' + fontMono; ctx.textAlign = 'left';
+    for (var yi = 0; yi < 4; yi++) {
+      var yv = mx - rng * yi / 3;
+      var yp = pT + ch * yi / 3;
+      var lbl = yv < 0.001 ? yv.toExponential(2) : yv < 1 ? yv.toFixed(6) : yv.toFixed(4);
+      ctx.fillText(lbl + ' ' + counterpart, pL + cw + 4, yp + 3);
+    }
+
+    // X labels
+    ctx.fillStyle = '#333'; ctx.textAlign = 'center';
+    for (var xi = 0; xi < 6; xi++) {
+      var di = Math.round(xi / 5 * (data.length - 1));
+      var xp = pL + di / (data.length - 1) * cw;
+      var d = new Date(data[di][0]);
+      ctx.fillText(('0'+d.getUTCHours()).slice(-2) + ':' + ('0'+d.getUTCMinutes()).slice(-2), xp, h - 4);
+    }
+
+    // Line
+    ctx.strokeStyle = '#fb010d'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    for (var j = 0; j < data.length; j++) {
+      var px = pL + j / (data.length - 1) * cw;
+      var py = pT + ch - ((data[j][1] - mn) / rng) * ch;
+      if (j === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Fill
+    var grd = ctx.createLinearGradient(0, pT, 0, pT + ch);
+    grd.addColorStop(0, 'rgba(251,1,13,0.1)'); grd.addColorStop(1, 'rgba(251,1,13,0)');
+    ctx.lineTo(pL + cw, pT + ch); ctx.lineTo(pL, pT + ch); ctx.closePath();
+    ctx.fillStyle = grd; ctx.fill();
+  }
+
+  // Style for pair chart panels
+  var pairStyle = document.createElement('style');
+  pairStyle.textContent =
+    '.sost-pair-chart-panel { background: #060606; border: 1px solid #1a1a1a; border-top: none; }' +
+    '.sost-pair-row:hover { background: #0a0a0a; }' +
+    '.sost-pair-chart-row td { background: #060606; }';
+  document.head.appendChild(pairStyle);
+
 })();
 </script>
 <link rel="stylesheet" href="css/crt-effects.css">
