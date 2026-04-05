@@ -1636,60 +1636,19 @@ SectionRenderers.dashboard = function(el) {
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
-      // cASERT profile: compute from block lag using SAME logic as explorer
-      // lag = expected_blocks - actual_height (positive = behind schedule)
-      // getProfile(lag): behind → ease (E profiles), ahead → harden (H profiles)
-      const GENESIS_TS_APP = 1773597600;
-      let casertProfile = 'B0';
+      // cASERT profile: READ DIRECTLY from getinfo RPC — the node is the source of truth
+      // No independent calculation. The node exposes casert_profile and casert_lag.
+      const casertProfile = info.casert_profile || 'N/A';
+      const casertLagRaw = info.casert_lag;
       let lagDisplay = '';
-      let blockLag = 0;
-
-      try {
-        const bestHash = await rpcCall('getblockhash', [height]);
-        if (bestHash) {
-          const blk = await rpcCall('getblock', [bestHash]);
-          if (blk && blk.time) {
-            // Compute lag AT THE TIME THE BLOCK WAS MINED (same as explorer computeBlockLag)
-            const elapsed = blk.time - GENESIS_TS_APP;
-            const expectedAtBlockTime = Math.floor(elapsed / 600);
-            blockLag = expectedAtBlockTime - height;
-            // blockLag > 0 = behind schedule (need to ease/facilitate)
-            // blockLag < 0 = ahead of schedule (need to harden)
-
-            // Map lag to profile using SAME logic as explorer getProfile()
-            let H = 0; // default B0
-            if (blockLag < 0) {
-              // Ahead of schedule → harden (H profiles)
-              const ahead = -blockLag;
-              if (ahead >= 20) H = Math.min(9, Math.floor(ahead / 10));
-              else if (ahead >= 5) H = 1;
-            } else if (blockLag > 5) {
-              // Behind schedule → ease (E profiles)
-              H = Math.max(-4, -Math.floor(blockLag / 10));
-            }
-
-            // Profile table (same as explorer CASERT_PROFILES)
-            const profileNames = ['E4','E3','E2','E1','B0','H1','H2','H3','H4','H5','H6','H7','H8','H9','H10','H11','H12'];
-            const idx = Math.max(0, Math.min(16, H + 4));
-            casertProfile = profileNames[idx] || 'B0';
-
-            // Lag display
-            if (blockLag > 0) {
-              lagDisplay = ` (${blockLag} behind)`;
-            } else if (blockLag < 0) {
-              lagDisplay = ` (${-blockLag} ahead)`;
-            } else {
-              lagDisplay = ' (on schedule)';
-            }
-          }
+      if (casertLagRaw !== undefined && casertLagRaw !== null) {
+        if (casertLagRaw < 0) {
+          lagDisplay = ` (${Math.abs(casertLagRaw)} ahead)`;
+        } else if (casertLagRaw > 0) {
+          lagDisplay = ` (${casertLagRaw} behind)`;
+        } else {
+          lagDisplay = ' (on schedule)';
         }
-      } catch(e) {
-        // Fallback: compute from wall clock
-        const nowSec = Math.floor(Date.now() / 1000);
-        const expected = Math.floor((nowSec - GENESIS_TS_APP) / 600);
-        blockLag = expected - (height || 0);
-        casertProfile = blockLag <= 5 && blockLag >= -5 ? 'B0' : (blockLag > 5 ? 'E1' : 'H1');
-        lagDisplay = blockLag > 0 ? ` (${blockLag} behind)` : blockLag < 0 ? ` (${-blockLag} ahead)` : ' (on schedule)';
       }
 
       // Calculate SOST PoPC reference price
