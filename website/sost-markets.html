@@ -298,6 +298,32 @@
       </div>
       <div class="cp-range" id="cpGoldRange"></div>
     </div>
+    <button class="chart-toggle" id="paxgChartToggle" style="margin-top:8px"><span class="ct-arrow">&#9656;</span> PAXG CHART</button>
+    <div class="chart-panel" id="paxgChartPanel">
+      <div class="cp-head">
+        <div><div class="cp-title">// <b style="color:var(--green-primary)">PAX GOLD</b> — PAXG/USD</div></div>
+        <div class="cp-badge"><span class="pdot" style="background:var(--green-primary)"></span>LIVE</div>
+      </div>
+      <div class="cp-val" id="cpPaxgPrice" style="color:var(--green-primary)">&mdash;</div>
+      <div class="cp-change" id="cpPaxgChange">&mdash;</div>
+      <div class="cp-tf-btns" id="cpPaxgTfBtns">
+        <button class="cp-tf-btn" data-tf="1H">1H</button>
+        <button class="cp-tf-btn" data-tf="4H">4H</button>
+        <button class="cp-tf-btn" data-tf="8H">8H</button>
+        <button class="cp-tf-btn active" data-tf="24H">24H</button>
+        <button class="cp-tf-btn" data-tf="3D">3D</button>
+        <button class="cp-tf-btn" data-tf="7D">7D</button>
+        <button class="cp-tf-btn" data-tf="30D">30D</button>
+        <button class="cp-tf-btn" data-tf="6M">6M</button>
+        <button class="cp-tf-btn" data-tf="1Y">1Y</button>
+      </div>
+      <div class="cp-chart-wrap">
+        <canvas id="cpPaxgChart" style="width:100%;height:200px"></canvas>
+        <canvas id="cpPaxgOverlay" class="cp-chart-overlay" style="width:100%;height:200px"></canvas>
+        <div class="cp-tooltip" id="cpPaxgTooltip"><div class="cp-tooltip-date"></div><div class="cp-tooltip-val"></div></div>
+      </div>
+      <div class="cp-range" id="cpPaxgRange"></div>
+    </div>
     <table class="data-table" id="goldFiatTable">
       <thead>
         <tr><th>Currency</th><th>Code</th><th>XAUT Price</th><th>PAXG Price</th><th>Spread</th><th>24H</th></tr>
@@ -1179,6 +1205,23 @@
     });
   }
 
+  // ===== PAXG CHART =====
+  var paxgChartInited = false;
+  function initPaxgChart() {
+    if (paxgChartInited) { drawMktChart('cpPaxg', 'pax-gold', '#4ade80'); return; }
+    paxgChartInited = true;
+    activeTfs.cpPaxg = '24H';
+    setupChartTfBtns('cpPaxg', 'pax-gold', '#4ade80');
+    setupChartTooltip('cpPaxg', 'pax-gold', '#4ade80');
+    fetchChartHist('pax-gold', 1, function() {
+      var d = chartCache['pax-gold'] && chartCache['pax-gold'][1];
+      if (d && d.length) {
+        document.getElementById('cpPaxgPrice').textContent = fmtUsd(d[d.length - 1][1]);
+      }
+      drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
+    });
+  }
+
   // ===== SOST CHART =====
   var sostChartInited = false;
   function initSostChart() {
@@ -1825,6 +1868,16 @@
       var gDays = TF_MAP[activeTfs.cpGold || '24H'].days;
       fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); });
     }
+    // Refresh PAXG chart if open
+    var paxgPanel = document.getElementById('paxgChartPanel');
+    if (paxgPanel && paxgPanel.classList.contains('open')) {
+      var pDays = TF_MAP[activeTfs.cpPaxg || '24H'].days;
+      fetchChartHist('pax-gold', pDays, function() {
+        var d = chartCache['pax-gold'] && chartCache['pax-gold'][pDays];
+        if (d && d.length) document.getElementById('cpPaxgPrice').textContent = fmtUsd(d[d.length-1][1]);
+        drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
+      });
+    }
     // Refresh SOST chart if open (recalculate from PoPC, no CoinGecko)
     var sostPanel = document.getElementById('sostChartPanel');
     if (sostPanel && sostPanel.classList.contains('open') && sostChartId) {
@@ -1861,6 +1914,7 @@
   setInterval(refreshAll, 60000);
 
   setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
+  setupChartToggle('paxgChartToggle', 'paxgChartPanel', initPaxgChart);
   setupChartToggle('sostChartToggle', 'sostChartPanel', initSostChart);
 
   // Auto-open both charts on page load (retry until gold data arrives)
@@ -1869,6 +1923,11 @@
     var goldPanel = document.getElementById('goldChartPanel');
     if (goldToggle && goldPanel && !goldPanel.classList.contains('open')) {
       goldToggle.classList.add('open'); goldPanel.classList.add('open'); initGoldChart();
+    }
+    var paxgToggle = document.getElementById('paxgChartToggle');
+    var paxgPanel = document.getElementById('paxgChartPanel');
+    if (paxgToggle && paxgPanel && !paxgPanel.classList.contains('open')) {
+      paxgToggle.classList.add('open'); paxgPanel.classList.add('open'); initPaxgChart();
     }
     var sostToggle = document.getElementById('sostChartToggle');
     var sostPanel = document.getElementById('sostChartPanel');
@@ -2024,6 +2083,7 @@
 
   window.addEventListener('resize', function() {
     if (document.getElementById('goldChartPanel').classList.contains('open')) drawMktChart('cpGold', 'tether-gold', '#b8860b');
+    if (document.getElementById('paxgChartPanel') && document.getElementById('paxgChartPanel').classList.contains('open')) drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
     if (sostChartId && document.getElementById('sostChartPanel').classList.contains('open')) drawMktChart('cpSost', sostChartId, '#fb010d');
     document.querySelectorAll('.crypto-chart-row').forEach(function(row) {
       if (row.style.display === 'none') return;

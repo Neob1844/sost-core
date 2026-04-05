@@ -996,9 +996,12 @@ function updateChainSync(){
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
-  if(lag>0){document.getElementById('csLag').textContent='+'+fComma(lag)+' behind';document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lag)+' blocks behind schedule';}
-  else if(lag<0){var ahead=-lag;var lvl=getCasertLevel(lag);document.getElementById('csLag').textContent=fComma(ahead)+' ahead \u00B7 '+getProfile(lag).name;document.getElementById('csLag').style.color=getLevelColor(lvl);document.getElementById('csLagSub').textContent='chain is '+fComma(ahead)+' blocks ahead \u2192 cASERT '+getProfile(lag).name;}
-  else{document.getElementById('csLag').textContent='on schedule';document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync';}
+  // Use NODE-reported lag and profile when available (source of truth)
+  var displayLag = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? _rpcCasertLag : lag;
+  var displayProfile = _rpcCasertProfile || getProfile(lag).name;
+  if(displayLag>0){document.getElementById('csLag').textContent='+'+fComma(displayLag)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(displayLag)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
+  else if(displayLag<0){var ahead2=-displayLag;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
+  else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
 
