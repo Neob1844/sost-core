@@ -741,15 +741,16 @@ const CASERT_PROFILES=[
   {name:'H12',H:12,scale:3,steps:8,k:7,margin:105},
 ];
 function getProfile(signal) {
-  // Estimate H from block timing lag (simplified equalizer model)
-  // In real consensus, H = clamp(U>>16, [-4,9]) from EWMA signals
+  // Estimate H from block timing lag
+  // C++ convention: lag > 0 = ahead → harden (H profiles)
+  //                 lag <= 0 = behind → ease (E profiles) or B0
   var H = 0; // default B0
-  if (signal < 0) { // ahead of schedule
-    var ahead = -signal;
+  if (signal > 0) { // ahead of schedule → harden
+    var ahead = signal;
     if (ahead >= 20) H = Math.min(9, Math.floor(ahead / 10));
     else if (ahead >= 5) H = 1;
-  } else if (signal > 5) { // behind schedule
-    H = Math.max(-4, -Math.floor(signal / 10));
+  } else if (signal < -5) { // behind schedule → ease (only via anti-stall)
+    H = Math.max(-4, Math.floor(signal / 10));
   }
   var idx = Math.max(0, Math.min(16, H + 4));
   return CASERT_PROFILES[idx];
@@ -760,16 +761,19 @@ const CASERT_LEVELS = CASERT_PROFILES.map(function(p,i){
 });
 function computeCurrentLag(){
   // Block lag from wall clock for current chain tip
+  // Convention matches C++ source: lag = actual - expected
+  // lag > 0 = ahead (more blocks than expected)
+  // lag < 0 = behind (fewer blocks than expected)
   var now=Math.floor(Date.now()/1000);
   var expected=Math.floor((now-GENESIS_TS)/600);
-  return expected-H;
+  return H-expected;
 }
 function computeBlockLag(blockHeight,blockTime){
   // Block lag at the time a specific block was mined
-  // Uses the block's own timestamp, not wall clock
+  // Convention matches C++ source: lag = height - expected
   var elapsed=blockTime-GENESIS_TS;
   var expected=Math.floor(elapsed/600);
-  return expected-blockHeight;
+  return blockHeight-expected;
 }
 function getCasertLevel(signal){
   return getProfile(signal).H;
@@ -997,10 +1001,11 @@ function updateChainSync(){
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   // Use NODE-reported lag and profile when available (source of truth)
+  // C++ convention: lag > 0 = ahead, lag < 0 = behind
   var displayLag = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? _rpcCasertLag : lag;
-  var displayProfile = _rpcCasertProfile || getProfile(lag).name;
-  if(displayLag>0){document.getElementById('csLag').textContent='+'+fComma(displayLag)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(displayLag)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
-  else if(displayLag<0){var ahead2=-displayLag;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
+  var displayProfile = _rpcCasertProfile || getProfile(displayLag).name;
+  if(displayLag>0){document.getElementById('csLag').textContent=fComma(displayLag)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(displayLag)+' blocks ahead of schedule \u2192 cASERT '+displayProfile;}
+  else if(displayLag<0){var behind2=-displayLag;document.getElementById('csLag').textContent=fComma(behind2)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(behind2)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
   else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
@@ -1120,9 +1125,9 @@ function drawSparkline(){
     // Interval
     var iv='\u2014';
     if(idx>0){var dt=pt.t-data[idx-1].t;iv=dt<60?dt+'s':Math.floor(dt/60)+'m '+dt%60+'s';}
-    // cASERT profile for this block
+    // cASERT profile for this block (C++ convention: lag = height - expected)
     var elapsed=pt.t-1773597600;var expected=Math.floor(elapsed/600);
-    var lag=pt.h-expected; // positive=ahead, negative=behind
+    var lag=pt.h-expected; // C++ convention: positive=ahead, negative=behind
     var prof=getProfile(lag);
     var ts=new Date(pt.t*1000);
     var tsStr=ts.getUTCFullYear()+'-'+('0'+(ts.getUTCMonth()+1)).slice(-2)+'-'+('0'+ts.getUTCDate()).slice(-2)+' '+('0'+ts.getUTCHours()).slice(-2)+':'+('0'+ts.getUTCMinutes()).slice(-2)+':'+('0'+ts.getUTCSeconds()).slice(-2)+' UTC';

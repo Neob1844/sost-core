@@ -9,9 +9,13 @@ import os
 # Add repo root to path so auth package imports work
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from fastapi import FastAPI
 from auth.gateway import create_auth_app
 
-app = create_auth_app()
+# Main app with /auth prefix to match website HTML expectations
+app = FastAPI(title="SOST Auth Gateway")
+auth_sub = create_auth_app()
+app.mount("/auth", auth_sub)
 
 if __name__ == "__main__":
     import uvicorn
