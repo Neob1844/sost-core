@@ -1,0 +1,14 @@
+===== PATTERN: BEGIN.*PRIVATE KEY =====
+
+===== PATTERN: AKIA[0-9A-Z]{16} =====
+
+===== PATTERN: ghp_[A-Za-z0-9]{36,} =====
+
+===== PATTERN: rpc[-_ ]?(user|pass) =====
+
+===== PATTERN: [Pp]assword[[:space:]]*[:=] =====
+
+===== PATTERN: mnemonic|seed.phrase|private_key|privateKey =====
+
+===== PATTERN: postgres:\/\/.*:.*@ =====
+
