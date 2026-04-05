@@ -1,7 +1,0 @@
-===== QUICK COUNTS =====
-00_summary.txt                                20 lines
-10_sensitive_filenames.txt                    42 lines
-20_current_tree_secret_hits.txt               372 lines
-30_large_files.txt                            9 lines
-40_history_hits.txt                           14 lines
-99_index.txt                                  6 lines
