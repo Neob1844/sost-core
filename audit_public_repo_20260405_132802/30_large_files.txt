@@ -1,0 +1,9 @@
+173375488	./materials-engine/materials.db
+32515648	./build/libsost-core.a
+15854616	./build/sost-node
+14681344	./build/CMakeFiles/sost-node.dir/src/sost-node.cpp.o
+7707128	./build/sost-rpc
+6888992	./build/sost-genesis
+5766408	./build/test-mempool
+5580248	./build/test-rbf
+5478616	./build/test-cpfp
