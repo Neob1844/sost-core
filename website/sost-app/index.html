@@ -1637,15 +1637,18 @@ SectionRenderers.dashboard = function(el) {
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
       // cASERT profile: READ DIRECTLY from getinfo RPC — the node is the source of truth
-      // No independent calculation. The node exposes casert_profile and casert_lag.
+      // C++ convention (verified in casert.cpp line 146):
+      //   lag = actual_height - expected_height
+      //   lag > 0 = ahead of schedule (more blocks than expected)
+      //   lag < 0 = behind schedule (fewer blocks than expected)
       const casertProfile = info.casert_profile || 'N/A';
       const casertLagRaw = info.casert_lag;
       let lagDisplay = '';
       if (casertLagRaw !== undefined && casertLagRaw !== null) {
-        if (casertLagRaw < 0) {
-          lagDisplay = ` (${Math.abs(casertLagRaw)} ahead)`;
-        } else if (casertLagRaw > 0) {
-          lagDisplay = ` (${casertLagRaw} behind)`;
+        if (casertLagRaw > 0) {
+          lagDisplay = ` (${casertLagRaw} ahead)`;
+        } else if (casertLagRaw < 0) {
+          lagDisplay = ` (${Math.abs(casertLagRaw)} behind)`;
         } else {
           lagDisplay = ' (on schedule)';
         }
