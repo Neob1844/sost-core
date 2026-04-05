@@ -9,6 +9,42 @@
 
 [hr]
 
+[size=14pt][b][color=#DAA520]⚡ PRE-MARKET STATUS ⚡[/color][/b][/size]
+
+SOST is currently in [b]PRE-MARKET phase[/b].
+
+[list]
+[li]There is [b]NO active market[/b] yet.[/li]
+[li]There is [b]NO exchange listing[/b] yet.[/li]
+[li]There is [b]NO guaranteed price[/b].[/li]
+[/list]
+
+Current value references are based on an internal model (PoPC — Proof of Personal Custody), which is used [b]exclusively for economic testing[/b]. Approximately $6,000 USD equivalent has been committed within PoPC as a reference layer for internal valuation experiments. PoPC does NOT represent a real market price, does NOT imply liquidity, and does NOT guarantee future valuation.
+
+[b]We are actively inviting:[/b]
+[list]
+[li]Miners[/li]
+[li]Node operators[/li]
+[li]Early contributors[/li]
+[/list]
+to participate in network stress testing and validation.
+
+This phase is designed to:
+[list]
+[li]Identify bugs[/li]
+[li]Validate consensus stability (ConvergenceX + cASERT)[/li]
+[li]Test emission dynamics[/li]
+[li]Improve infrastructure[/li]
+[/list]
+
+[b]Public launch and exchange listing requests will begin on: → June 16, 2026[/b]
+
+Until then: SOST should be considered an [b]experimental system in live testing[/b].
+
+[i]"SOST does not simulate a market — it prepares for one."[/i]
+
+[hr]
+
 [size=14pt][b][color=red]⚠ IMPORTANT DISCLAIMER — READ BEFORE PARTICIPATING ⚠[/color][/b][/size]
 
 SOST is [b]experimental software[/b]. It is a [b]completely new, original proof-of-work protocol[/b] written from scratch in C++17. SOST is [b]NOT a fork[/b] of Bitcoin, Litecoin, Monero, Ethereum, RandomX, Ethash, Equihash, CryptoNight, or any other existing cryptocurrency or mining algorithm. The entire codebase — consensus rules, PoW algorithm (ConvergenceX), difficulty adjustment (cASERT), transaction validation, UTXO model, P2P networking, and wallet — has been designed and implemented independently.

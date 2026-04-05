@@ -2322,12 +2322,49 @@ ConvergenceX is released under the MIT License. No deposit or fee required
 at the time of lock. The Foundation makes no representation about future
 SOST value. This is not an investment product.
 
+## 10.5 Pre-Market Phase and Internal Valuation Model (PoPC)
+
+SOST is currently operating in a pre-market phase.
+
+An internal valuation system, called Proof of Personal Custody (PoPC), has been implemented to simulate value dynamics and stress-test the economic model. Approximately $6,000 USD equivalent has been committed within PoPC as a reference layer for internal valuation experiments.
+
+IMPORTANT:
+- PoPC DOES NOT represent a real market price
+- PoPC DOES NOT imply liquidity
+- PoPC DOES NOT guarantee future valuation
+
+PoPC is:
+- A theoretical and experimental valuation framework
+- A system to test convergence-based economics
+- A reference mechanism for early-stage analysis
+
+Real market price will ONLY be determined when:
+- SOST is listed on exchanges
+- Real liquidity exists
+- Open market trading begins
+
+Until then, all displayed values are strictly non-binding and should be interpreted as experimental indicators only.
+
+### How Value Will Emerge
+
+SOST does not impose a price. Value will emerge through:
+1. Mining participation
+2. Network usage
+3. Market interaction
+4. Liquidity formation
+
+Initial market conditions may be: low liquidity, high volatility, manual order seeding. This is expected and natural. SOST follows a pure price discovery model, similar to early Bitcoin stages.
+
+"SOST does not simulate a market — it prepares for one."
+
 ## 11. Roadmap
 
 | Date | Milestone |
 |---|---|
 | Mar 15, 2026 | GENESIS BLOCK — 18:00:00 UTC. Solo mining (C++). Chain begins. |
-| Mar 15, 2026 | PUBLIC LAUNCH — BTCTalk ANN. C++ miner released. GitHub public. |
+| Mar 30, 2026 | PUBLIC ANNOUNCEMENT — BTCTalk ANN. C++ miner released. GitHub public. |
+| Mar-Jun 2026 | PRE-MARKET PHASE — Infrastructure testing, external miner onboarding, bug fixing. PoPC internal valuation active. No exchange listing. |
+| Jun 16, 2026 | PUBLIC LAUNCH — Exchange outreach begins. Initial market formation. Real price discovery starts. |
 | Q2 2027 | Gold purchases begin (8 months post-public-launch per G4, subject to sufficient SOST market liquidity). First XAUT/PAXG acquired. Heritage Reserve deployed on Ethereum mainnet. Dashboard published. |
 | Q1 2027 | PoPC Model A + B launch on Ethereum mainnet. First custody contracts active. |
 | Aug 2027 | Physical gold extension. Mobile app for audit challenges. Verifier network. |
