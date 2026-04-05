@@ -232,11 +232,16 @@
 
 
 
+<!-- PRE-MARKET BANNER -->
+<div style="background:linear-gradient(90deg,#1a0a00,#2a1500,#1a0a00);border-bottom:1px solid #fbbf24;padding:10px 20px;text-align:center;font-size:11px;letter-spacing:2px;color:#fbbf24;font-family:var(--font-mono,'JetBrains Mono',monospace)">
+  PRE-MARKET PHASE &mdash; NETWORK UNDER ACTIVE TESTING &mdash; PUBLIC LAUNCH: JUNE 16, 2026
+</div>
+
 <section class="hero">
   <div class="container">
     <div class="hero-label">Live Data Dashboard</div>
     <h1>Global <span>Markets</span></h1>
-    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST valuations across 60 fiat currencies and 13 cryptocurrencies. <span style="color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.5),0 0 20px rgba(74,222,128,0.2);">Data refreshes automatically every 60 seconds.</span></p>
+    <p class="hero-sub">Real-time currency exchange rates, gold prices, and SOST reference valuations across 60 fiat currencies and 13 cryptocurrencies. <span style="color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.5),0 0 20px rgba(74,222,128,0.2);">Data refreshes automatically every 60 seconds.</span></p>
     <div class="status-bar">
       <div class="live-badge"><span class="live-dot"></span>LIVE</div>
       <span class="status-time" id="lastUpdate">loading...</span>
@@ -339,9 +344,20 @@
 <section class="section" id="sostFiat">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">SOST PRICES</div>
-      <div class="section-title">SOST Price in <span class="accent">World Currencies</span></div>
-      <div class="section-sub">SOST value in 60 fiat currencies — source: PoPC reference price + forex rates</div>
+      <div class="section-id">SOST REFERENCE VALUE</div>
+      <div class="section-title">SOST Reference Value <span class="accent">(PoPC Simulation)</span></div>
+      <div class="section-sub">Internal reference value in 60 fiat currencies &mdash; source: PoPC model + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
+      <div style="margin:12px 0;padding:10px 16px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
+        <div style="color:#fbbf24;font-weight:600;letter-spacing:1px;margin-bottom:6px">// PRICE DISCOVERY STATUS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px">
+          <span>Liquidity:</span><span style="color:#fb010d">Not available</span>
+          <span>Market:</span><span style="color:#fb010d">Not active</span>
+          <span>Exchange listing:</span><span style="color:#fbbf24">Pending (June 2026)</span>
+          <span>Valuation model:</span><span style="color:#4ade80">Internal (PoPC)</span>
+          <span>Phase:</span><span style="color:#fbbf24">Pre-Market Testing</span>
+        </div>
+        <div style="margin-top:8px;color:#666;font-size:9px">SOST does not simulate a market &mdash; it prepares for one.</div>
+      </div>
       <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST PRICE CHART</button>
     </div>
     <div class="chart-panel open" id="sostChartPanel">
