@@ -1,7 +1,7 @@
 [center][img]https://sostcore.com/sost-logo.png[/img]
 
-[size=18pt][b]SOST — Sovereign Stock Token[/b][/size]
-[size=11pt]Gold-backed Proof-of-Work protocol. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
+[size=18pt][b]SOST — Sovereign Monetary Protocol[/b][/size]
+[size=11pt]Proof-of-Work protocol with protocol-level gold reserve allocation. Native chain. No bridges. No smart contracts. No governance tokens.[/size]
 
 [b]Genesis Block: March 15, 2026 — 18:00:00 UTC[/b]
 [b][color=red]Public announcement: March 30, 2026 — Decision to advance the originally planned launch date[/color][/b]
