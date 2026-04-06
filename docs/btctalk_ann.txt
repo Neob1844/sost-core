@@ -181,11 +181,11 @@ cd sost-core && mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 
 # Run node
-./sost-node --wallet wallet.json --genesis genesis_block.json --chain chain.json \
+./sost-node --connect seed.sostcore.com:19333 \
     --rpc-user YOUR_USER --rpc-pass YOUR_PASS --profile mainnet
 
 # Run miner
-./sost-miner --genesis genesis_block.json --chain chain.json \
+./sost-miner \
     --rpc 127.0.0.1:18232 --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
     --address YOUR_SOST_ADDRESS --blocks 0 --profile mainnet --realtime
 [/code]
@@ -212,7 +212,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 [size=14pt][b]Ecosystem[/b][/size]
 
 [b]GeaSpirit — Multi-Commodity Mineral Intelligence Platform[/b]
-GeaSpirit is an advanced remote sensing and exploration intelligence platform for metallic AND non-metallic mineral systems. Canonical Score 23.9/40 (60%). Validated commodity types: Porphyry Cu (0.882 AUC), Orogenic Au (0.879), IOCG (0.841), SEDEX Cu-Pb-Zn (0.781), Sediment Cu (0.760), Lithium brines/salares (0.891). Gravity integrated. 9+ zones across 4 continents. GEE-operationalized.
+GeaSpirit is an advanced remote sensing and exploration intelligence platform for metallic AND non-metallic mineral systems. Canonical Score 25.1/40 (63%). Validated commodity types: Porphyry Cu (0.882 AUC), Orogenic Au (0.922), IOCG (0.841), SEDEX Cu-Pb-Zn (0.781), Sediment Cu (0.760), Lithium brines/salares (0.891). Gravity integrated. 9+ zones across 4 continents. GEE-operationalized.
 
 [b]Materials Discovery Engine[/b]
 Computational materials discovery. 76,193 materials corpus. 19 campaign profiles including water/lithium/membrane. 35,589 materials screened for multi-function candidates. Runs at $0/month on CPU.
@@ -252,7 +252,7 @@ Computational materials discovery. 76,193 materials corpus. 19 campaign profiles
 [list]
 [li][b]Developer:[/b] NeoB[/li]
 [li][b]GitHub:[/b] [url=https://github.com/Neob1844]https://github.com/Neob1844[/url][/li]
-[li][b]Email:[/b] contact@sostcore.com[/li]
+[li][b]Contact:[/b] [url=https://sostcore.com/sost-contact.html]sostcore.com/sost-contact.html[/url][/li]
 [li][b]This thread:[/b] Questions, feedback, and bug reports welcome below[/li]
 [/list]
 

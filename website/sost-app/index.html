@@ -1586,7 +1586,7 @@ SectionRenderers.dashboard = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// SUPPLY INFO</h2>
-      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,202 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,201 SOST</span></div>
       <div class="stat-row"><span class="stat-label">EMISSION</span><span class="stat-value">EXPONENTIAL DECAY</span></div>
       <div class="stat-row"><span class="stat-label">DECAY FACTOR q</span><span class="stat-value">e^(-1/4) &asymp; 0.7788</span></div>
       <div class="stat-row"><span class="stat-label">EPOCH LENGTH</span><span class="stat-value">131,553 BLOCKS (~2.5 YR)</span></div>
@@ -2086,7 +2086,7 @@ SectionRenderers.documents = function(el) {
     ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
     ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
     ['cASERT Difficulty', 'Unified rate control with equalizer profiles', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks >=1450): 24h halflife, 12.5% delta cap. 17 equalizer profiles (E4-H12). Anti-stall recovery zones.'],
-    ['Emission Schedule', 'Smooth exponential decay, epoch = 131,553 blocks', 'Genesis reward: 7.85100863 SOST. Decay factor q=e^(-1/4). Epoch length: 131,553 blocks (~2.5 years). Max supply converges to ~4,669,000 SOST. All values in stocks (1 SOST = 100,000,000 stocks).'],
+    ['Emission Schedule', 'Smooth exponential decay, epoch = 131,553 blocks', 'Genesis reward: 7.85100863 SOST. Decay factor q=e^(-1/4). Epoch length: 131,553 blocks (~2.5 years). Max supply converges to ~4,669,201 SOST. All values in stocks (1 SOST = 100,000,000 stocks).'],
     ['Security Audit', '20 cryptographic and consensus security features', '6 layers of protection: ECDSA secp256k1, LOW-S enforcement, 4-layer block validation, UTXO model, coinbase maturity (1000 blocks), constitutional addresses. RBF + CPFP for fee market. P2SH multisig support.'],
     ['HD Wallet (BIP39)', '12-word seed phrases, PBKDF2-HMAC-SHA512', 'Deterministic key derivation from 12-word mnemonic. Compatible with web wallet. Encrypted wallet storage (AES-256-GCM + scrypt). Address format: sost1 + 40 hex chars.'],
     ['Governance Framework', 'Constitutional vs operational rules', 'Constitutional rules (immutable): subsidy split, max supply, address format. Operational rules (upgradeable): block size, relay fees, activation heights. Fork process requires 95% miner signaling.'],
@@ -2126,7 +2126,7 @@ SectionRenderers.markets = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// TOKENOMICS</h2>
-      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,000 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,201 SOST</span></div>
       <div class="stat-row"><span class="stat-label">EMISSION</span><span class="stat-value">SMOOTH EXPONENTIAL DECAY</span></div>
       <div class="stat-row"><span class="stat-label">EPOCH</span><span class="stat-value">131,553 BLOCKS (~2.5 YR)</span></div>
       <div class="stat-row"><span class="stat-label">BLOCK TIME</span><span class="stat-value">~10 MINUTES</span></div>
