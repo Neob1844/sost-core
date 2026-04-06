@@ -3181,7 +3181,7 @@ B.4 DYNAMIC FEE MARKET
 - Neither changes consensus — relay/mempool/miner policy only
 
 C. GEASPIRIT MINERAL INTELLIGENCE PLATFORM
-- 11 AOIs across 5 continents, zone-specific ML models
+- 11+ AOIs across 5 continents, zone-specific ML models
 - AUC 0.72-0.86 (5 supervised zones), heuristic scanner for arbitrary AOIs
 - Direct GNN inference (CGCNN forward pass) on crystal structures
 - 162 mineral targets with exact coordinates exported
@@ -3251,8 +3251,9 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 - Satellite-based mineral prospectivity mapping using free data and AI
 - NOT part of consensus — research/exploration module within SOST ecosystem
 - Phase 8 (March 2026): Multi-source exploration intelligence platform
-- 7 supervised zones: Kalgoorlie (0.882 AUC), Chuquicamata (0.862), Peru (0.758),
-  Arizona (0.718), Zambia (0.763), Pilbara (FAILED), Pebble Alaska (QUEUED — porphyry Cu-Au-Mo)
+- 8 supervised zones: Kalgoorlie (0.882 AUC), Chuquicamata (0.862), Peru (0.758),
+  Arizona (0.718), Zambia (0.763), Pilbara (FAILED), Pebble Alaska (20/40, COMPLETED),
+  Rosia Montana (QUEUED — epithermal Au-Ag)
 - Validated families: satellite baseline (universal), thermal 20yr (universal modest),
   EMIT alteration (porphyry Cu specific), PCA embeddings (Kalgoorlie specific),
   magnetics (small positive), neighborhood context (promising for mineral ID)
@@ -3362,7 +3363,9 @@ Canonical Score: 22.8/40 (57%), frozen methodology v4.
 Validated at 3 zones: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).
 Multi-source fusion confirmed at all zones. Architecture: type-aware + zone-aware + baseline-aware.
 GEE operationalized (terrain infrastructure at 4 zones). Depth remains primary bottleneck (blocked geophysical data).
-New zone queued: Pebble, Alaska (porphyry Cu-Au-Mo, 22 labels, Chuquicamata analog). EMIT limited by ISS orbit at 59.9N.
+11+ zones tracked. Validated commodities: porphyry Cu, orogenic Au, sediment Cu, epithermal Au-Ag.
+Case studies: Pebble Alaska (20/40, completed — 10/10 tools, 497 frontier targets, no EMIT at 59.9N)
+  and Rosia Montana (queued — epithermal Au-Ag, EMIT coverage available at 46N).
 
 RESTRICTED — Implementation Details:
   Model architecture, feature engineering algorithms, training data, hyperparameters,
