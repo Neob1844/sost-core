@@ -4,26 +4,43 @@
 [b]PoPC Reference:[/b] ~$0.22 (you're buying below protocol reference value)
 [b]Total available:[/b] $600 worth
 
-[b]100% of proceeds → Gold Vault[/b]
-Every dollar from this sale goes directly to purchasing tokenized gold (XAUT/PAXG) for the protocol's Gold Vault. This increases the gold backing for ALL SOST holders.
+[b]Source:[/b] These SOST come from the founder's mining rewards (50% miner share of each block). As the sole active miner since genesis, I have earned ~12,400 SOST from ~3,170 mined blocks. The on-chain Gold Vault and PoPC Pool are untouched — you can verify this on the explorer.
 
-[b]Verify the gold yourself:[/b]
-Etherscan: https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6
-Current: 0.600 PAXG + 0.600 XAUT = ~$5,553 in gold
+[b]100% of proceeds → Gold Reserve[/b]
+Every dollar from this sale goes directly to purchasing tokenized gold (XAUT/PAXG) for the protocol's gold reserve. This increases the gold backing for ALL SOST holders. The gold reserve is held in tokenized form on Ethereum and is publicly verifiable.
+
+[b]Verify everything yourself:[/b]
+[list]
+[li]Gold reserve on Etherscan: https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6[/li]
+[li]Current gold: 0.600 PAXG + 0.600 XAUT = ~$5,553[/li]
+[li]SOST chain explorer: https://sostcore.com/sost-explorer.html[/li]
+[li]Gold Vault on-chain (untouched): search address sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d[/li]
+[li]PoPC Pool on-chain (untouched): search address sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f[/li]
+[/list]
 
 [b]How to buy:[/b]
-1. Create a free SOST wallet: https://sostcore.com/sost-wallet.html
-2. Contact me: https://sostcore.com/sost-contact.html
-   — Include: amount wanted, payment method, your sost1... address
-3. I confirm and send you a payment address
-4. You pay (XAUT, PAXG, USDT, USDC, ETH, or BTC)
-5. I send SOST to your address immediately after confirmation
-6. Verify on explorer: https://sostcore.com/sost-explorer.html
+[list=1]
+[li]Create a free SOST wallet: https://sostcore.com/sost-wallet.html[/li]
+[li]Contact me: https://sostcore.com/sost-contact.html
+   — Include: amount of SOST wanted, payment method, your sost1... address[/li]
+[li]I confirm availability and send you a payment address[/li]
+[li]You pay (XAUT, PAXG preferred — also USDT, USDC, ETH, BTC)[/li]
+[li]I send SOST to your sost1... address immediately after on-chain confirmation[/li]
+[li]Verify receipt on explorer: https://sostcore.com/sost-explorer.html[/li]
+[/list]
 
-[b]Full OTC page with details:[/b] https://sostcore.com/sost-otc.html
+[b]Full OTC page:[/b] https://sostcore.com/sost-otc.html
 
 [b]Why $0.20?[/b]
-The PoPC reference is ~$0.22. I'm offering below reference to demonstrate good faith and attract early participants. The sale strengthens the protocol — more gold in the vault means higher reference value for everyone.
+The PoPC internal reference is ~$0.22. I'm offering below reference to demonstrate good faith and attract early participants. The proceeds strengthen the protocol directly — more gold in the reserve means a higher reference value for everyone.
+
+[b]Transparency:[/b]
+[list]
+[li]The SOST sold come from my miner rewards, NOT from the Gold Vault or PoPC Pool[/li]
+[li]The constitutional vaults are untouched and verifiable on-chain[/li]
+[li]All sale transactions will be confirmed publicly in this thread[/li]
+[li]The gold purchase will be visible on Etherscan after each sale[/li]
+[/list]
 
 No minimum purchase. All transactions verifiable on-chain.
 Questions? Reply here or use the contact form.
