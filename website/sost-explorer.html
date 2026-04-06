@@ -351,6 +351,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
+  <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -998,11 +999,13 @@ function updateChainSync(){
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
-  document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   // Use NODE-reported lag and profile when available (source of truth)
   // C++ convention: lag > 0 = ahead, lag < 0 = behind
   var displayLag = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? _rpcCasertLag : lag;
+  // Show expected consistent with displayLag so overview and chain timing match
+  var displayExpected = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? (actual - _rpcCasertLag) : expected;
+  document.getElementById('csExpected').textContent=fComma(displayExpected);
   var displayProfile = _rpcCasertProfile || getProfile(displayLag).name;
   if(displayLag>0){document.getElementById('csLag').textContent=fComma(displayLag)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(displayLag)+' blocks ahead of schedule \u2192 cASERT '+displayProfile;}
   else if(displayLag<0){var behind2=-displayLag;document.getElementById('csLag').textContent=fComma(behind2)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(behind2)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
@@ -1287,6 +1290,49 @@ function renderDashPanel(key,body,title){
       '<span style="color:var(--text3)">Expected difficulty:</span> <span style="color:var(--purple);font-weight:600">'+diff+'</span><br>'+
       '<span style="color:var(--text3)">Time elapsed:</span> <span style="color:'+eClr+';font-weight:600">'+eStr+'</span> <span style="color:var(--text3)">/ target 10m 00s</span><br>'+
       '<span style="color:var(--text3)">Status:</span> <span style="color:#fbbf24">searching nonce\u2026</span></div>';
+  } else if(key==='miners'){
+    title.textContent='// UNIQUE MINERS (last 288 blocks)';
+    // Count unique miner addresses from _diffHistory (which stores recent blocks)
+    if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading miner data...</div>';return;}
+    // Fetch miner addresses from recent blocks
+    (async function(){
+      var miners={};
+      var lookback=Math.min(288,H);
+      for(var bh=H;bh>=Math.max(0,H-lookback);bh--){
+        try{
+          var hash=await rpc('getblockhash',[String(bh)]);
+          var blk=await rpc('getblock',[hash]);
+          if(blk&&blk.miner_address){
+            var addr=blk.miner_address;
+            if(!miners[addr])miners[addr]={count:0,first:bh,last:bh};
+            miners[addr].count++;
+            if(bh<miners[addr].first)miners[addr].first=bh;
+            if(bh>miners[addr].last)miners[addr].last=bh;
+          }
+        }catch(e){break;} // RPC may fail for old blocks
+      }
+      var addrs=Object.keys(miners);
+      document.getElementById('dMiners').textContent=addrs.length;
+      document.getElementById('dMinersSub').textContent='last '+lookback+' blocks';
+      var html='<div style="line-height:2;font-size:12px">';
+      html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--purple);font-weight:600">'+addrs.length+'</span><br>';
+      html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">blocks '+(H-lookback)+' \u2014 '+H+'</span><br>';
+      html+='<div style="margin-top:10px"><table style="width:100%;font-size:11px;border-collapse:collapse">';
+      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Share</th><th style="text-align:right;padding:4px">Latest</th></tr>';
+      var sorted=addrs.sort(function(a,b){return miners[b].count-miners[a].count;});
+      for(var i=0;i<sorted.length;i++){
+        var a=sorted[i],m=miners[a];
+        var pct=(m.count/lookback*100).toFixed(1);
+        var barW=Math.max(2,m.count/lookback*200);
+        html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.count+'</td>';
+        html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--text3)">#'+m.last+'</td></tr>';
+      }
+      html+='</table></div></div>';
+      body.innerHTML=html;
+    })();
+    body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses...</div>';
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
@@ -2451,7 +2497,10 @@ async function loadLatestTxs(){
           });
         }
       }
-    }catch(e){/* listtransfers not available — old node version */}
+    }catch(e){
+      // listtransfers RPC failed — show helpful message
+      console.warn('listtransfers failed:', e.message);
+    }
     // Merge: sorted by height desc
     _allTxRows=rows;
     _allTxRows.sort(function(a,b){return b.height-a.height;});
