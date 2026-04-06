@@ -432,10 +432,11 @@
         <span class="step-title">Start the SOST node</span>
       </div>
       <div class="step-body">
-        <p>The node connects you to the SOST network. Run this command:</p>
-        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--wallet</span> <span class="val">wallet.json</span> <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
+        <p>The node connects you to the SOST network and syncs the blockchain. Run this command from the <code>build/</code> directory (make sure <code>genesis_block.json</code> is in the same directory &mdash; copy it from the repo root if needed: <code style="color:var(--cyan-primary)">cp ../genesis_block.json .</code>):</p>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--connect</span> <span class="val">seed.sostcore.com:19333</span> \
     <span class="flag">--rpc-user</span> <span class="val">PICK_A_USERNAME</span> <span class="flag">--rpc-pass</span> <span class="val">PICK_A_PASSWORD</span> <span class="flag">--profile</span> <span class="val">mainnet</span></div>
         <p>Replace <span style="color:var(--red-primary)">PICK_A_USERNAME</span> and <span style="color:var(--red-primary)">PICK_A_PASSWORD</span> with anything you want (example: <span style="color:var(--green-primary)">myuser</span> / <span style="color:var(--green-primary)">mypass123</span>). These are your private credentials for connecting the miner.</p>
+        <p>The node will automatically connect to the seed node and start syncing. You should see messages like: <span style="color:var(--green-primary)">[BLOCK] Height N accepted</span></p>
         <p><strong style="color:var(--text-primary)">Leave this window open. Do NOT close it.</strong></p>
         <div class="notice yellow" style="margin-top:12px;">
           <strong>Open a NEW terminal window for the next step.</strong> On Windows WSL: press Win+R, type <span style="color:var(--green-primary)">ubuntu</span>, press Enter.
@@ -447,7 +448,7 @@
   <div class="container" style="margin-top:24px;">
     <div class="notice" style="background:#0a0f14;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);padding:16px 20px;border-radius:4px;font-size:12px;line-height:1.8;">
       <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">Initial Sync (Fast Sync Enabled by Default)</strong>
-      <span style="color:var(--text-secondary);">Your node uses fast sync by default. Trusted historical blocks skip expensive ConvergenceX recomputation while structural, economic, and semantic validation still runs.</span>
+      <span style="color:var(--text-secondary);">Your node connects to <code>seed.sostcore.com:19333</code> and downloads the entire blockchain. Fast sync is enabled by default &mdash; trusted historical blocks (verified via hard checkpoints + assumevalid anchor) skip expensive ConvergenceX proof recomputation. All other validation (headers, timestamps, difficulty, coinbase split, transactions, UTXO) still runs for every block.</span>
       <ul style="margin:8px 0 8px 16px;padding:0;color:var(--text-dim);list-style:none;">
         <li style="margin-bottom:4px;"><span style="color:var(--green-primary);">&#9632;</span> &nbsp;First month (~4,320 blocks): <strong style="color:var(--text-primary);">seconds</strong></li>
         <li style="margin-bottom:4px;"><span style="color:var(--text-muted);">&#9632;</span> &nbsp;First year (~52,560 blocks): <strong style="color:var(--text-primary);">1–5 minutes</strong></li>

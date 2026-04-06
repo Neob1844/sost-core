@@ -393,10 +393,13 @@ ctest --output-on-failure</div>
         <span class="spec-tag">TERMINAL 1</span>
       </div>
       <div class="spec-body">
-        <div class="code-snippet"><span class="comment"># Start full node — connects to seed.sostcore.com automatically</span>
-<span class="comment"># genesis_block.json must be in the current directory (from the repo root)</span>
-./sost-node --genesis genesis_block.json --chain chain.json \
+        <div class="code-snippet"><span class="comment"># Start full node — connects to seed node and syncs the blockchain</span>
+<span class="comment"># Run from build/ directory. Copy genesis_block.json first: cp ../genesis_block.json .</span>
+./sost-node --connect seed.sostcore.com:19333 \
     --rpc-user myuser --rpc-pass mypass --profile mainnet
+
+<span class="comment"># The node will sync ~3000+ blocks in under a minute (fast sync enabled by default)</span>
+<span class="comment"># You should see: [BLOCK] Height N accepted: ... for each block</span>
 
 <span class="comment"># Verify node is running (in another terminal)</span>
 curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
