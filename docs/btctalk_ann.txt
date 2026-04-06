@@ -125,6 +125,22 @@ ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×3
 [b]cASERT difficulty:[/b] Per-block adjustment, 17 equalizer profiles, anti-stall recovery zones.
 [b]Integer-only consensus:[/b] Zero floating-point operations. Q16.16 fixed-point difficulty encoding.
 
+[b]Difficulty adjustment — how SOST compares:[/b]
+
+[table]
+[tr][td][b]Feature[/b][/td][td][b]Bitcoin[/b][/td][td][b]Monero[/b][/td][td][b]SOST[/b][/td][/tr]
+[tr][td]Adjustment frequency[/td][td]Every 2,016 blocks (~2 weeks)[/td][td]Every block[/td][td]Every block[/td][/tr]
+[tr][td]Response speed[/td][td]2-week lag[/td][td]~720-block EWMA[/td][td]8-block short + 96-block long EWMA[/td][/tr]
+[tr][td]Halflife[/td][td]~2 weeks (fixed)[/td][td]~720 blocks (~24h)[/td][td]24h, with 5 PID-weighted signals[/td][/tr]
+[tr][td]Max change per block[/td][td]N/A (bulk)[/td][td]EWMA smoothed[/td][td]12.5% hard cap per block[/td][/tr]
+[tr][td]Dynamic profiles[/td][td]None (1 formula)[/td][td]None (1 formula)[/td][td]17 profiles (E4 through H12)[/td][/tr]
+[tr][td]Anti-stall[/td][td]None[/td][td]None[/td][td]Zone-based decay + emergency easing[/td][/tr]
+[tr][td]Control signals[/td][td]1 (time delta)[/td][td]1 (timestamp EWMA)[/td][td]5 (rate, lag, integrator, burst, volatility)[/td][/tr]
+[tr][td]Math type[/td][td]Floating-point[/td][td]128-bit integer[/td][td]Q16.16 fixed-point (zero float)[/td][/tr]
+[/table]
+
+Bitcoin adjusts in bulk every ~14 days — if hashrate doubles overnight, difficulty doesn't respond for up to 2 weeks. Monero adjusts every block but uses a single EWMA formula with one control signal. SOST adjusts every block using a PID controller with 5 weighted inputs (U = 0.05·r + 0.40·lag + 0.15·I + 0.05·burst + 0.02·V) and 17 dynamic profiles that modify not just the difficulty target but the stability basin parameters of the ConvergenceX puzzle itself.
+
 [hr]
 
 [size=14pt][b]Fair Launch — Full Transparency[/b][/size]
