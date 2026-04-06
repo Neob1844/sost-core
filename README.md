@@ -325,9 +325,11 @@ GeaSpirit is an advanced remote sensing and exploration intelligence platform ba
 
 **Canonical Score: 25.1/40 (63%)** — Methodology frozen v4. Gravity integrated. 11+ zones across 4 continents.
 
-**Case studies:** Pebble Mine Alaska (20/40, completed — 516 S2 images, 497 frontier targets), Roșia Montană Romania (queued — epithermal Au-Ag, Golden Quadrilateral).
+**Remote-first multi-zone (Phase 53):** Roșia Montană 27.4/40, Pebble Alaska 24.2/40, Kalgoorlie 15.0/40 — all without local geophysics. 3-tier architecture: universal remote baseline + public evidence + optional local bonus.
 
-Current phase: Phase 49 — MINERAL uplift, Mindat.org integration, temporal DNA.
+**Case studies:** Pebble Mine Alaska (completed — 516 S2 images, 497 frontier targets, DS608 ground-truth integration), Roșia Montană Romania (epithermal Au-Ag, Golden Quadrilateral).
+
+Current phase: Phase 53 — Remote-first global mineral search engine with public evidence fusion.
 
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
@@ -342,7 +344,7 @@ Autonomous computational materials discovery platform. Predicts formation energy
 - **Validation bridge:** Prediction → observation lifecycle with reconciliation
 - **Cost:** $0/month — runs entirely on CPU
 
-Current phase: Phase XV — full-corpus functional intersection discovery.
+**Phase 30 — Consensus ranking:** Multi-track consensus ranker, PV false-positive risk flags (6 physics-informed), DFT triage queues (exploit/explore/cross-track). 21 candidates ranked → 11 DFT-queued. Cross-track winner: GaIn.
 
 ## Security
 
