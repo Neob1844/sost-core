@@ -663,7 +663,7 @@ const SPLASH_LINES = [
   '> CAPSULE PROTOCOL v1... ARMED',
   '> BLOCK VALIDATION LAYERS L1-L4... OK',
   '> TX RULES R1-R14, S1-S12, CB1-CB10',
-  '> EMISSION SCHEDULE: 4.669M MAX SUPPLY',
+  '> EMISSION SCHEDULE: 4,669,201 MAX SUPPLY',
   '> CONNECTING TO SOST NETWORK...',
   '> TERMINAL READY. WELCOME OPERATOR.'
 ];
@@ -1643,17 +1643,8 @@ SectionRenderers.dashboard = function(el) {
       //   lag > 0 = ahead of schedule (more blocks than expected)
       //   lag < 0 = behind schedule (fewer blocks than expected)
       const casertProfile = info.casert_profile || 'N/A';
-      const casertLagRaw = info.casert_lag;
+      // lagDisplay computed later alongside Chain Lag/Lead (same wall-clock formula)
       let lagDisplay = '';
-      if (casertLagRaw !== undefined && casertLagRaw !== null) {
-        if (casertLagRaw > 0) {
-          lagDisplay = ` (${casertLagRaw} ahead)`;
-        } else if (casertLagRaw < 0) {
-          lagDisplay = ` (${Math.abs(casertLagRaw)} behind)`;
-        } else {
-          lagDisplay = ' (on schedule)';
-        }
-      }
 
       // Calculate SOST PoPC reference price
       // Calculate supply
@@ -1746,12 +1737,15 @@ SectionRenderers.dashboard = function(el) {
       if (lagBehind > 0) {
         lagLeadText = lagBehind + ' behind';
         lagLeadColor = '#fb010d';
+        lagDisplay = ` (${lagBehind} behind)`;
       } else if (lagBehind < 0) {
         lagLeadText = Math.abs(lagBehind) + ' ahead';
         lagLeadColor = '#4ade80';
+        lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
       } else {
         lagLeadText = 'on schedule';
         lagLeadColor = '#4ade80';
+        lagDisplay = ' (on schedule)';
       }
 
       statusEl.innerHTML = `
@@ -2080,7 +2074,7 @@ SectionRenderers.documents = function(el) {
   el.style.overflow = 'auto';
 
   const docs = [
-    ['SOST Whitepaper', 'Core protocol design, economic model, constitutional split 50/25/25', 'SOST is a CPU-friendly, gold-backed cryptocurrency. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. UTXO-based transaction model with secp256k1 ECDSA signatures. ConvergenceX proof-of-work requires ~8GB RAM, ASIC-resistant. Max supply: ~4.669M SOST. Smooth exponential emission decay.'],
+    ['SOST Whitepaper', 'Core protocol design, economic model, constitutional split 50/25/25', 'SOST is a CPU-friendly, gold-backed cryptocurrency. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. UTXO-based transaction model with secp256k1 ECDSA signatures. ConvergenceX proof-of-work requires ~8GB RAM, ASIC-resistant. Max supply: 4,669,201 SOST. Smooth exponential emission decay.'],
     ['ConvergenceX PoW', 'CPU-friendly gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. ASIC-resistant by design.'],
     ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
     ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
