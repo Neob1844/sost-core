@@ -2422,13 +2422,13 @@ function showCXInfo(){
   '&nbsp;&nbsp;Exponential: next_bitsq = anchor × 2<sup>(-td/halflife)</sup><br>'+
   '&nbsp;&nbsp;No per-block clamps — smooth continuous adjustment<br>'+
   '&nbsp;&nbsp;Global bounds: MIN_BITSQ=65,536 / MAX_BITSQ=16,711,680<br>'+
-  '&nbsp;&nbsp;After 48h of 2× faster blocks → difficulty doubles'+
+  '&nbsp;&nbsp;After 24h of 2× faster blocks → difficulty doubles'+
   '</div></div>'+
   '<div style="margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--orange)">'+
   '<div style="font-size:11px;color:var(--orange);letter-spacing:2px;margin-bottom:10px">UNIFIED cASERT DIFFICULTY</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
   '<b style="color:var(--cyan)">cASERT bitsQ</b> — Adjusts the <b>base difficulty</b> (SOSTCompact Q16.16) using exponential moving average. '+
-  'Half-life: <b>48 hours</b>. Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
+  'Half-life: <b>24 hours</b> (V2, since block 1,450). Exponential (no per-block clamps). Anchor-based per epoch ('+131553+' blocks).<br><br>'+
   '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>17 profiles</b> (E4 through H12, active range E4–H12). '+
   'Computes control signal U from instantaneous rate, schedule lag, integrator, burst score, and volatility.<br><br>'+
   '<b>Formula:</b> U = <span style="color:var(--cyan)">0.05</span>·r + <span style="color:var(--green)">0.40</span>·lag + <span style="color:var(--purple)">0.15</span>·I + <span style="color:var(--orange)">0.05</span>·burst + <span style="color:var(--yellow)">0.02</span>·V<br>'+
