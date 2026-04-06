@@ -16,3 +16,11 @@ Materials Engine now includes:
 This improves candidate prioritization and reduces wasted compute on false positives.
 
 Detailed candidate identities, full score breakdowns, and complete DFT queues remain private.
+
+## Phase 32 Update — Novelty-aware scoring
+
+- Known-material filter: 42 entries + 3 pattern matchers
+- **Rediscovery rate: 63.6% → 0.0%**
+- Famous materials (LiCoO2, EGaIn) correctly penalized
+- New top candidates are genuinely unexplored compositions
+- 9 novel materials in DFT queue (was 1)
