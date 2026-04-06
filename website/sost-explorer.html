@@ -994,7 +994,7 @@ function updateChainSync(){
   var chainSec=H*600+Math.max(0,elapsedSinceLast);
   var expected=Math.floor(wallSec/600);
   var actual=H;
-  var lag=expected-actual;
+  var lag=actual-expected; // C++ convention: positive = ahead, negative = behind
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
@@ -2488,9 +2488,10 @@ refresh();setInterval(refresh,30000);
         // Parse elapsed (e.g. "5m 23s" or "12m 01s")
         var mins=0;
         var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
-        if(mins<20){
+        // 10min target: blocks taking up to 60min is normal variance
+        if(mins<60){
           setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
-        }else if(mins<60){
+        }else if(mins<180){
           setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
         }else{
           setBadge('minerStatusBadge','MINER: STALLED','#ff3333');
@@ -2502,7 +2503,8 @@ refresh();setInterval(refresh,30000);
         var elapsedEl=document.getElementById('miningElapsed');
         var elapsedText=elapsedEl?elapsedEl.textContent:'';
         var mins=0;var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
-        if(mins<20){
+        // 10min target: up to 60min between blocks is normal variance
+        if(mins<60){
           setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
         }else{
           setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
@@ -2517,8 +2519,9 @@ refresh();setInterval(refresh,30000);
   function tryStatusJson(){
     fetch('/node-status.json?t='+Date.now()).then(r=>r.json()).then(d=>{
       if(d.node) setBadge('nodeStatusBadge','NODE: ACTIVE','#00ff41');
+      // Only set miner status from JSON if it explicitly says miner is active
+      // Do NOT set IDLE from JSON — the RPC-based detection is more reliable
       if(d.miner) setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
-      else if(d.node) setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
     }).catch(()=>{/* JSON not available, use RPC-based detection */});
   }
   setInterval(updateStatus,15000);
