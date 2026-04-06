@@ -3200,47 +3200,66 @@ static bool process_block(const std::string& block_json) {
         // CONSENSUS-CRITICAL: Profile verification
         // The commit now includes profile_index, so we must verify the miner
         // used exactly the correct profile. No more trusting free params.
+        //
+        // For trusted blocks (under assumevalid anchor), skip this check if
+        // the block JSON doesn't contain profile_index (P2P fallback format).
         {
-            // 1. Recompute base profile deterministically from chain history (no anti-stall)
-            std::vector<BlockMeta> meta;
-            meta.reserve(g_blocks.size());
-            for (size_t j = 0; j < g_blocks.size(); ++j) {
-                BlockMeta bm; bm.block_id = g_blocks[j].block_id;
-                bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
-                bm.powDiffQ = g_blocks[j].bits_q;
-                meta.push_back(bm);
+            // Check if this block is in the trusted range
+            bool trusted_block = false;
+            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT && !g_full_verify_mode){
+                trusted_block = true;
             }
-            auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
-            int32_t base_profile = base_dec.profile_index;
 
             // 2. Read miner's declared profile_index
             int32_t declared_pi = (int32_t)jint(block_json, "profile_index");
 
-            // 3. Validate: declared profile must be in [CASERT_H_MIN, base_profile]
-            //    Anti-stall can only EASE (lower profile), never harden beyond base.
-            //    If no anti-stall was active, declared must equal base exactly.
-            if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX) {
-                printf("[BLOCK] REJECTED: profile_index %d out of bounds [%d, %d]\n",
-                       declared_pi, CASERT_H_MIN, CASERT_H_MAX);
-                return false;
-            }
-            if (declared_pi > base_profile) {
-                printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
-                       declared_pi, base_profile);
-                return false;
-            }
+            if (declared_pi == -1 && trusted_block) {
+                // Profile index missing from P2P data but block is trusted — use B0 default
+                printf("[BLOCK] fast-sync height=%lld: profile_index missing, trusted block (assuming B0)\n",
+                       (long long)height);
+                declared_pi = 0; // B0
+                g_last_accepted_profile = declared_pi;
+                CasertDecision dec_for_profile;
+                dec_for_profile.profile_index = declared_pi;
+                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+            } else {
+                // 1. Recompute base profile deterministically from chain history (no anti-stall)
+                std::vector<BlockMeta> meta;
+                meta.reserve(g_blocks.size());
+                for (size_t j = 0; j < g_blocks.size(); ++j) {
+                    BlockMeta bm; bm.block_id = g_blocks[j].block_id;
+                    bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
+                    bm.powDiffQ = g_blocks[j].bits_q;
+                    meta.push_back(bm);
+                }
+                auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
+                int32_t base_profile = base_dec.profile_index;
 
-            // 4. Store last accepted profile for getinfo reporting
-            g_last_accepted_profile = declared_pi;
+                // 3. Validate: declared profile must be in [CASERT_H_MIN, base_profile]
+                //    Anti-stall can only EASE (lower profile), never harden beyond base.
+                if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX) {
+                    printf("[BLOCK] REJECTED: profile_index %d out of bounds [%d, %d]\n",
+                           declared_pi, CASERT_H_MIN, CASERT_H_MAX);
+                    return false;
+                }
+                if (declared_pi > base_profile) {
+                    printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
+                           declared_pi, base_profile);
+                    return false;
+                }
 
-            // 5. Derive exact params from canonical table — no free params
-            CasertDecision dec_for_profile;
-            dec_for_profile.profile_index = declared_pi;
-            cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+                // 4. Store last accepted profile for getinfo reporting
+                g_last_accepted_profile = declared_pi;
+
+                // 5. Derive exact params from canonical table — no free params
+                CasertDecision dec_for_profile;
+                dec_for_profile.profile_index = declared_pi;
+                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+            }
             cx_params.verbose = g_verbose;
 
-            if(g_verbose) printf("[BLOCK-V3] Profile: declared=%d base=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
-                   declared_pi, base_profile, cx_params.stab_scale, cx_params.stab_k,
+            if(g_verbose) printf("[BLOCK-V3] Profile: declared=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
+                   declared_pi, cx_params.stab_scale, cx_params.stab_k,
                    cx_params.stab_margin, cx_params.stab_steps);
             fflush(stdout);
         }
@@ -3269,36 +3288,56 @@ static bool process_block(const std::string& block_json) {
             if (sha256(cbuf_v) != commit32) { printf("[BLOCK] REJECTED: commit V3 mismatch\n"); return false; }
             printf("[BLOCK] Genesis CX proof verified (commit V3 + checkpoint merkle)\n");
         } else {
-            // Full Transcript V2 verification for non-genesis blocks
-            if (!sost::verify_cx_proof(hc72, nonce, extra,
-                    commit32, croot32, sroot, fstate,
-                    x_bytes_raw.data(), x_bytes_raw.size(),
-                    stb, checkpoint_leaves_vec,
-                    seg_proofs_vec, round_witnesses_vec, cx_params)) {
-                printf("[BLOCK] REJECTED: CX Transcript V2 verification failed\n");
-                return false;
+            // FAST SYNC DECISION: check BEFORE attempting CX proof verification
+            // If this block is trusted (hard checkpoint or under assumevalid anchor),
+            // skip CX proof verification entirely — the proof data may not be available
+            // from peers that don't store raw_block_json for historical blocks.
+            std::string bid_hex = to_hex(computed_bid.data(), 32);
+            bool anchor_on_chain = false;
+            // For initial sync, we trust the assumevalid anchor optimistically:
+            // we don't yet have the anchor block on our chain, but we will verify it
+            // when we reach that height. This is the same trust model as Bitcoin Core.
+            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT){
+                anchor_on_chain = true; // optimistic trust during initial sync
+            } else if(sost::has_assumevalid_anchor() && sost::ASSUMEVALID_HEIGHT < g_blocks.size()){
+                std::string chain_hash = to_hex(g_blocks[sost::ASSUMEVALID_HEIGHT].block_id.data(), 32);
+                anchor_on_chain = (chain_hash == sost::ASSUMEVALID_BLOCK_HASH);
             }
-            printf("[BLOCK] CX Transcript V2 verified\n");
+            bool skip_cx = sost::can_skip_cx_recomputation(
+                (uint32_t)height, bid_hex, anchor_on_chain, g_full_verify_mode);
+
+            if(skip_cx){
+                printf("[BLOCK] fast-sync height=%lld (trusted: checkpoint/assumevalid, CX proof skipped)\n",
+                       (long long)height);
+            } else {
+                // Full Transcript V2 verification for non-trusted blocks
+                if (!sost::verify_cx_proof(hc72, nonce, extra,
+                        commit32, croot32, sroot, fstate,
+                        x_bytes_raw.data(), x_bytes_raw.size(),
+                        stb, checkpoint_leaves_vec,
+                        seg_proofs_vec, round_witnesses_vec, cx_params)) {
+                    printf("[BLOCK] REJECTED: CX Transcript V2 verification failed\n");
+                    return false;
+                }
+                printf("[BLOCK] CX Transcript V2 verified\n");
+            }
         }
     } else if (height > 0) {
-        printf("[BLOCK] REJECTED: missing CX proof data\n");
-        return false;
-    }
-
-    // FAST SYNC DECISION:
-    // Hard checkpoints and assumevalid anchors allow skipping expensive full CX recomputation
-    // (100K rounds), but the lightweight proof verification above always runs.
-    std::string bid_hex = to_hex(computed_bid.data(), 32);
-    bool anchor_on_chain = false;
-    if(sost::has_assumevalid_anchor() && sost::ASSUMEVALID_HEIGHT < g_blocks.size()){
-        std::string chain_hash = to_hex(g_blocks[sost::ASSUMEVALID_HEIGHT].block_id.data(), 32);
-        anchor_on_chain = (chain_hash == sost::ASSUMEVALID_BLOCK_HASH);
-    }
-    bool skip_cx = sost::can_skip_cx_recomputation(
-        (uint32_t)height, bid_hex, anchor_on_chain, g_full_verify_mode);
-    if(skip_cx){
-        printf("[BLOCK] fast-sync height=%lld (lightweight CX proof passed, full recompute skipped)\n",
-               (long long)height);
+        // Missing CX proof data — only acceptable for trusted blocks
+        std::string bid_hex_nodata = to_hex(computed_bid.data(), 32);
+        bool anchor_trust = false;
+        if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT){
+            anchor_trust = true;
+        }
+        bool skip_nodata = sost::can_skip_cx_recomputation(
+            (uint32_t)height, bid_hex_nodata, anchor_trust, g_full_verify_mode);
+        if(skip_nodata){
+            printf("[BLOCK] fast-sync height=%lld (no CX data, trusted via checkpoint/assumevalid)\n",
+                   (long long)height);
+        } else {
+            printf("[BLOCK] REJECTED: missing CX proof data (not in trusted range)\n");
+            return false;
+        }
     }
 
     // Checkpoint validation: if this height has a checkpoint, block_id must match
