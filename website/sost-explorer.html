@@ -1298,7 +1298,8 @@ function renderDashPanel(key,body,title){
     (async function(){
       var miners={};
       var lookback=Math.min(288,H);
-      for(var bh=H;bh>=Math.max(0,H-lookback);bh--){
+      var totalBlocksCounted=0;
+      for(var bh=H;bh>Math.max(0,H-lookback);bh--){
         try{
           var hash=await rpc('getblockhash',[String(bh)]);
           var blk=await rpc('getblock',[hash]);
@@ -1306,6 +1307,7 @@ function renderDashPanel(key,body,title){
             var addr=blk.miner_address;
             if(!miners[addr])miners[addr]={count:0,first:bh,last:bh};
             miners[addr].count++;
+            totalBlocksCounted++;
             if(bh<miners[addr].first)miners[addr].first=bh;
             if(bh>miners[addr].last)miners[addr].last=bh;
           }
@@ -1322,8 +1324,9 @@ function renderDashPanel(key,body,title){
       var sorted=addrs.sort(function(a,b){return miners[b].count-miners[a].count;});
       for(var i=0;i<sorted.length;i++){
         var a=sorted[i],m=miners[a];
-        var pct=(m.count/lookback*100).toFixed(1);
-        var barW=Math.max(2,m.count/lookback*200);
+        var denom=totalBlocksCounted||1;
+        var pct=Math.min((m.count/denom*100),100.0).toFixed(1);
+        var barW=Math.max(2,m.count/denom*200);
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
         html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.count+'</td>';
         html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
@@ -1388,7 +1391,10 @@ function renderProdChart(info, diffs) {
   var wallSec=nowTs-GENESIS_TS;
   var expectedNow=Math.floor(wallSec/600);
   var actualNow=info.blocks;
-  var lag=expectedNow-actualNow; // positive = behind schedule
+  // Unified lag: use node-reported value when available
+  // Chart convention: positive = behind schedule (red), negative/zero = ahead (green)
+  var nodeLagBehind = (_rpcCasertLag!==undefined&&_rpcCasertLag!==null) ? (-_rpcCasertLag) : (expectedNow-actualNow);
+  var lag = nodeLagBehind;
   ctx.fillStyle=lag<=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
@@ -2498,8 +2504,13 @@ async function loadLatestTxs(){
         }
       }
     }catch(e){
-      // listtransfers RPC failed — show helpful message
-      console.warn('listtransfers failed:', e.message);
+      // listtransfers RPC failed — log and try fallback
+      console.warn('listtransfers RPC failed:', e.message, '— transfers from last 30 blocks only');
+    }
+    // If still no transfer rows after both phases, show clear message
+    var transferCount = rows.filter(function(r){return r.type==='TRANSFER';}).length;
+    if(transferCount === 0) {
+      console.log('No transfers found in Phase 1 (last 30 blocks) or Phase 2 (listtransfers RPC)');
     }
     // Merge: sorted by height desc
     _allTxRows=rows;
