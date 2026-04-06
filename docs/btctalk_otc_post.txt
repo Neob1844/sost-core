@@ -1,0 +1,29 @@
+[size=14pt][b]SOST Pre-Market Sale — $0.20 per SOST[/b][/size]
+
+[b]Offer:[/b] Up to 3,000 SOST at $0.20 each
+[b]PoPC Reference:[/b] ~$0.22 (you're buying below protocol reference value)
+[b]Total available:[/b] $600 worth
+
+[b]100% of proceeds → Gold Vault[/b]
+Every dollar from this sale goes directly to purchasing tokenized gold (XAUT/PAXG) for the protocol's Gold Vault. This increases the gold backing for ALL SOST holders.
+
+[b]Verify the gold yourself:[/b]
+Etherscan: https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6
+Current: 0.600 PAXG + 0.600 XAUT = ~$5,553 in gold
+
+[b]How to buy:[/b]
+1. Create a free SOST wallet: https://sostcore.com/sost-wallet.html
+2. Contact me: https://sostcore.com/sost-contact.html
+   — Include: amount wanted, payment method, your sost1... address
+3. I confirm and send you a payment address
+4. You pay (XAUT, PAXG, USDT, USDC, ETH, or BTC)
+5. I send SOST to your address immediately after confirmation
+6. Verify on explorer: https://sostcore.com/sost-explorer.html
+
+[b]Full OTC page with details:[/b] https://sostcore.com/sost-otc.html
+
+[b]Why $0.20?[/b]
+The PoPC reference is ~$0.22. I'm offering below reference to demonstrate good faith and attract early participants. The sale strengthens the protocol — more gold in the vault means higher reference value for everyone.
+
+No minimum purchase. All transactions verifiable on-chain.
+Questions? Reply here or use the contact form.
