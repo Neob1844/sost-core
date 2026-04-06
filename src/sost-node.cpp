@@ -4029,11 +4029,18 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"BLCK")) {
           try {
             // Rate limiting: check blocks per minute
+            // Sync mode if EITHER side is far ahead (both directions need fast transfer)
+            // Case 1: peer ahead of us → we're catching up from them
+            // Case 2: we're ahead of peer → they're catching up, may relay blocks back
             bool is_syncing = false;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for (auto& p : g_peers) {
-                    if (p.fd == fd) { is_syncing = (p.their_height > g_chain_height + 10); break; }
+                    if (p.fd == fd) {
+                        is_syncing = (p.their_height > g_chain_height + 10) ||
+                                     (g_chain_height > p.their_height + 10);
+                        break;
+                    }
                 }
             }
             if (!check_block_rate(fd, is_syncing)) {
