@@ -1586,13 +1586,14 @@ SectionRenderers.dashboard = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// SUPPLY INFO</h2>
-      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,000 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,202 SOST</span></div>
       <div class="stat-row"><span class="stat-label">EMISSION</span><span class="stat-value">EXPONENTIAL DECAY</span></div>
-      <div class="stat-row"><span class="stat-label">DECAY FACTOR q</span><span class="stat-value">e^(-1/4)</span></div>
-      <div class="stat-row"><span class="stat-label">EPOCH LENGTH</span><span class="stat-value">131,553 BLOCKS</span></div>
+      <div class="stat-row"><span class="stat-label">DECAY FACTOR q</span><span class="stat-value">e^(-1/4) &asymp; 0.7788</span></div>
+      <div class="stat-row"><span class="stat-label">EPOCH LENGTH</span><span class="stat-value">131,553 BLOCKS (~2.5 YR)</span></div>
       <div class="stat-row"><span class="stat-label">TARGET SPACING</span><span class="stat-value">600 SEC (10 MIN)</span></div>
       <div class="stat-row"><span class="stat-label">GENESIS REWARD</span><span class="stat-value">7.85100863 SOST</span></div>
-      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">1e-8 (STOCKS)</span></div>
+      <div class="stat-row"><span class="stat-label">TOTAL EPOCHS</span><span class="stat-value">82 (reward &rarr; 0)</span></div>
+      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">1e-8 (1 stock = 0.00000001 SOST)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// BLOCK REWARD SPLIT</h2>
@@ -1733,17 +1734,21 @@ SectionRenderers.dashboard = function(el) {
       }
 
       // Calculate expected blocks and chain lag/lead
+      // Use node-reported casert_lag as primary source (matches explorer)
+      // C++ convention: casert_lag > 0 = ahead, casert_lag < 0 = behind
       const GENESIS_TIME = 1773597600; // 2026-03-15 18:00 UTC
       const nowSec = Math.floor(Date.now() / 1000);
-      const expectedBlocks = Math.floor((nowSec - GENESIS_TIME) / 600);
+      const wallExpected = Math.floor((nowSec - GENESIS_TIME) / 600);
       const realBlocks = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
-      const chainDiff = realBlocks - expectedBlocks;
+      // Use node lag when available, fall back to wall clock
+      const nodeLag = (casertLagRaw !== undefined && casertLagRaw !== null) ? casertLagRaw : (realBlocks - wallExpected);
+      const expectedBlocks = realBlocks - nodeLag; // derive expected from node lag for consistency
       let lagLeadText, lagLeadColor;
-      if (chainDiff < 0) {
-        lagLeadText = Math.abs(chainDiff) + ' behind';
+      if (nodeLag < 0) {
+        lagLeadText = Math.abs(nodeLag) + ' behind';
         lagLeadColor = '#fb010d';
-      } else if (chainDiff > 0) {
-        lagLeadText = chainDiff + ' ahead';
+      } else if (nodeLag > 0) {
+        lagLeadText = nodeLag + ' ahead';
         lagLeadColor = '#4ade80';
       } else {
         lagLeadText = 'on schedule';
