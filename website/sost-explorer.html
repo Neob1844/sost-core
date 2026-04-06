@@ -993,22 +993,21 @@ function updateChainSync(){
   // Chain time: (height × 600) + elapsed since last block (ticks every second)
   var elapsedSinceLast=_lastBlockTime?(now-_lastBlockTime):0;
   var chainSec=H*600+Math.max(0,elapsedSinceLast);
+  // UNIFIED LAG FORMULA: wall clock, positive = behind (same as app)
+  //   expected = floor((now - genesis) / 600)
+  //   lagBehind = expected - height (positive = behind, negative = ahead)
   var expected=Math.floor(wallSec/600);
   var actual=H;
-  var lag=actual-expected; // C++ convention: positive = ahead, negative = behind
+  var lagBehind=expected-actual; // positive = behind schedule
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
+  document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
-  // Use NODE-reported lag and profile when available (source of truth)
-  // C++ convention: lag > 0 = ahead, lag < 0 = behind
-  var displayLag = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? _rpcCasertLag : lag;
-  // Show expected consistent with displayLag so overview and chain timing match
-  var displayExpected = (_rpcCasertLag !== undefined && _rpcCasertLag !== null) ? (actual - _rpcCasertLag) : expected;
-  document.getElementById('csExpected').textContent=fComma(displayExpected);
-  var displayProfile = _rpcCasertProfile || getProfile(displayLag).name;
-  if(displayLag>0){document.getElementById('csLag').textContent=fComma(displayLag)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(displayLag)+' blocks ahead of schedule \u2192 cASERT '+displayProfile;}
-  else if(displayLag<0){var behind2=-displayLag;document.getElementById('csLag').textContent=fComma(behind2)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(behind2)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
+  // Profile from node RPC (source of truth for the profile name)
+  var displayProfile = _rpcCasertProfile || 'B0';
+  if(lagBehind>0){document.getElementById('csLag').textContent=fComma(lagBehind)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lagBehind)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
+  else if(lagBehind<0){var ahead2=-lagBehind;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
   else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
@@ -1391,10 +1390,8 @@ function renderProdChart(info, diffs) {
   var wallSec=nowTs-GENESIS_TS;
   var expectedNow=Math.floor(wallSec/600);
   var actualNow=info.blocks;
-  // Unified lag: use node-reported value when available
-  // Chart convention: positive = behind schedule (red), negative/zero = ahead (green)
-  var nodeLagBehind = (_rpcCasertLag!==undefined&&_rpcCasertLag!==null) ? (-_rpcCasertLag) : (expectedNow-actualNow);
-  var lag = nodeLagBehind;
+  // UNIFIED: wall clock, positive = behind (same formula as chain timing and app)
+  var lag = expectedNow - actualNow; // positive = behind schedule
   ctx.fillStyle=lag<=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;

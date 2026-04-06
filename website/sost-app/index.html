@@ -1734,21 +1734,20 @@ SectionRenderers.dashboard = function(el) {
       }
 
       // Calculate expected blocks and chain lag/lead
-      // Use node-reported casert_lag as primary source (matches explorer)
-      // C++ convention: casert_lag > 0 = ahead, casert_lag < 0 = behind
+      // UNIFIED FORMULA: wall clock based, same as explorer
+      //   expected = floor((now - genesis) / 600)
+      //   lag = expected - height  (positive = behind, negative = ahead)
       const GENESIS_TIME = 1773597600; // 2026-03-15 18:00 UTC
       const nowSec = Math.floor(Date.now() / 1000);
-      const wallExpected = Math.floor((nowSec - GENESIS_TIME) / 600);
+      const expectedBlocks = Math.floor((nowSec - GENESIS_TIME) / 600);
       const realBlocks = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
-      // Use node lag when available, fall back to wall clock
-      const nodeLag = (casertLagRaw !== undefined && casertLagRaw !== null) ? casertLagRaw : (realBlocks - wallExpected);
-      const expectedBlocks = realBlocks - nodeLag; // derive expected from node lag for consistency
+      const lagBehind = expectedBlocks - realBlocks; // positive = behind schedule
       let lagLeadText, lagLeadColor;
-      if (nodeLag < 0) {
-        lagLeadText = Math.abs(nodeLag) + ' behind';
+      if (lagBehind > 0) {
+        lagLeadText = lagBehind + ' behind';
         lagLeadColor = '#fb010d';
-      } else if (nodeLag > 0) {
-        lagLeadText = nodeLag + ' ahead';
+      } else if (lagBehind < 0) {
+        lagLeadText = Math.abs(lagBehind) + ' ahead';
         lagLeadColor = '#4ade80';
       } else {
         lagLeadText = 'on schedule';
@@ -1827,7 +1826,7 @@ function addTooltips() {
     'EPOCH LENGTH': '131,553 blocks per epoch (~2.5 years). At each epoch boundary, the reward decreases according to the decay factor.',
     'GENESIS REWARD': 'The very first block reward: 7.85100863 SOST. All subsequent rewards decay from this starting point.',
     'COINBASE MATURITY': 'Mining rewards cannot be spent until 1000 blocks later (~7 days). This prevents spending of rewards from orphaned blocks.',
-    'MAX SUPPLY': 'The total SOST that will ever exist: approximately 4,669,000 SOST. Determined by the exponential decay emission curve.',
+    'MAX SUPPLY': 'The total SOST that will ever exist: 4,669,201 SOST. Determined by the exponential decay emission curve.',
     'PRECISION': '1 SOST = 100,000,000 stocks. The smallest unit (1 stock) is like a satoshi in Bitcoin.',
     'CONVERGENCEX': 'CPU-friendly proof-of-work algorithm. Uses gradient descent on a random 32x32 matrix. Requires ~8GB RAM for mining, ~500MB for validation.',
     'BLOCK HEIGHT': 'The current number of blocks in the chain since genesis. Each block takes approximately 10 minutes.',
