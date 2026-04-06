@@ -27,3 +27,17 @@ rather than depending on rare local datasets for every target area.
 
 When local geophysics IS available, results improve dramatically
 (Pebble gravity alone: +0.194 AUC). But the system works without them.
+
+## Phase 55 Update — All 7 zones scored
+
+| Zone | Score | Evidence Items |
+|------|-------|---------------|
+| Roșia Montană | 27.4/40 | 5 |
+| Peru Porphyry | 25.1/40 | 2 |
+| Pebble Alaska | 24.2/40 | 12 |
+| Kalgoorlie | 17.7/40 | 7 |
+| Zambia Copperbelt | 17.3/40 | 5 |
+| Arizona Porphyry | 17.0/40 | 12 |
+| Chuquicamata | 16.5/40 | 11 |
+
+Canonical public score remains **25.1/40**. These are zone-level remote-first validations.
