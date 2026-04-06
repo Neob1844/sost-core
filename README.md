@@ -315,26 +315,19 @@ ctest --output-on-failure
 
 ### GeaSpirit — Mineral Intelligence Platform
 
-GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits — metallic AND non-metallic — from publicly available satellite, geophysical, and geological data.
+GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits — metallic AND non-metallic — from publicly available satellite, geophysical, geological, and mineralogical data.
 
 **Canonical Objective:** "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
 
-MINERAL = commodity / mineral system / deposit type — including metals (Cu, Au, Pb-Zn), non-metallic minerals (lithium, graphite, evaporites), industrial minerals, and strategic elements (REE, U).
+**Data sources:** Sentinel-2, Landsat 8/9, EMIT, SRTM DEM, MRDS, OZMIN, Macrostrat, Mindat.org, EarthMRI, Google Earth Engine.
 
-**Validated commodity types:** Porphyry Cu, Orogenic Au, IOCG, SEDEX Cu-Pb-Zn, Sediment-hosted Cu, **Lithium brines/salares** (Phase 45), Graphite (partial).
+**Validated commodity types:** Porphyry Cu (0.882 AUC), Orogenic Au (0.922 AUC), IOCG (0.841), SEDEX Cu-Pb-Zn (0.781), Sediment-hosted Cu (0.760), Lithium brines/salares (0.891), Epithermal Au-Ag (queued).
 
-| Dimension | Score | Description |
-|-----------|-------|-------------|
-| MINERAL | 4.3/10 | Multi-commodity: Cu, Au, IOCG, SEDEX, Li. Magnetics + gravity + terrain |
-| DEPTH | 4.5/10 | Gravity integrated (460m). AEM pending for full depth unlock |
-| COORDINATES | 7.0/10 | Spatial precision at 30m per pixel |
-| CERTAINTY | 8.1/10 | 3+ zones validated, multi-source confirmed, gravity pathway proven |
+**Canonical Score: 25.1/40 (63%)** — Methodology frozen v4. Gravity integrated. 11+ zones across 4 continents.
 
-**Canonical Score: 22.8/40 (57%)** — Methodology frozen v4.
+**Case studies:** Pebble Mine Alaska (20/40, completed — 516 S2 images, 497 frontier targets), Roșia Montană Romania (queued — epithermal Au-Ag, Golden Quadrilateral).
 
-**Validated zones:** Chuquicamata (Chile, porphyry Cu, 0.882 AUC), Kalgoorlie (Australia, orogenic Au, 0.879 AUC), Zambia Copperbelt (sedimentary Cu, 0.760 AUC). Multi-source fusion validated at all 3 zones across 3 continents.
-
-Current phase: Phase 28 — QGIS operational layer spec (tool map, reproducible workflows, canonical tool mapping). Canonical 22.8/40 unchanged.
+Current phase: Phase 49 — MINERAL uplift, Mindat.org integration, temporal DNA.
 
 See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
