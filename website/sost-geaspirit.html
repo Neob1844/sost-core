@@ -326,6 +326,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
         <tr><td>Mt Isa</td><td>Australia</td><td>SEDEX Cu-Pb-Zn</td><td style="color:var(--green)">0.781</td><td>Gravity</td></tr>
         <tr><td>Zambia</td><td>Zambia</td><td>Sediment Cu</td><td style="color:var(--green)">0.760</td><td>S2 + context</td></tr>
         <tr><td>Madagascar</td><td>Madagascar</td><td style="color:var(--amber)">Graphite</td><td style="color:var(--amber)">0.730</td><td>S2 + geology</td></tr>
+        <tr><td>Pebble, Alaska</td><td>USA</td><td>Porphyry Cu-Au-Mo</td><td style="color:var(--amber)">—</td><td>Analysis in progress</td></tr>
       </table>
       <p style="margin-top:12px">GeaSpirit is a <b>multi-commodity</b> mineral intelligence platform. Each commodity has a different dominant detection family &mdash; the system automatically selects the optimal combination per target type.</p>
     </div>
@@ -741,8 +742,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <b>Global scanner</b> for any AOI worldwide without training data (heuristic mode)<br><br>
       <b style="color:var(--amber)">DOMAIN NORMALIZATION</b><br>
       Z-score normalization per AOI improved 2-zone transfer by +0.12 AUC (0.52 &#8594; 0.64). But with 3+ diverse zones, the improvement vanishes. The model learns <b>local terrain patterns</b>, not universal geology.<br><br>
-      <b style="color:var(--amber)">10 AOIs OPERATIONAL</b><br>
-      Chile, Peru, Australia, Zambia, Arizona, Tintic (Utah), Pilbara, Salave (Spain), Barqueros (Spain), Banos de Mula (Spain)
+      <b style="color:var(--amber)">11 AOIs OPERATIONAL</b><br>
+      Chile, Peru, Australia, Zambia, Arizona, Tintic (Utah), Pilbara, Salave (Spain), Barqueros (Spain), Banos de Mula (Spain), Pebble (Alaska)
     </div>
   </div>
 </section>
@@ -1016,6 +1017,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr><td>Peru</td><td>Porphyry Cu</td><td>satellite + thermal</td><td>PCA embeddings</td><td class="val">0.758</td></tr>
           <tr><td>Arizona</td><td>Porphyry Cu</td><td>satellite + thermal</td><td>PCA embeddings</td><td class="val">0.718</td></tr>
           <tr><td>Zambia</td><td>Sediment Cu</td><td>satellite</td><td>—</td><td class="val">0.763</td></tr>
+          <tr style="color:var(--amber)"><td>Pebble, Alaska</td><td>Porphyry Cu-Au-Mo</td><td>S2 baseline + thermal + PCA + spectral unmixing + NDVI + geophysics</td><td>EMIT (orbital limitation)</td><td class="val">—</td></tr>
         </tbody>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
@@ -1534,6 +1536,10 @@ m11.bindPopup(function(){var b=mh('#006600','SALAR DE ATACAMA, CHILE')+'<b>Type:
 // 12. Graphite Madagascar (AUDITED amber — 0.750 AUC, difficult)
 var m12=L.marker([-13.5,40.0],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
 m12.bindPopup(mp(mh('#b07800','CABO DELGADO, MADAGASCAR')+'<b>Type:</b> Graphite (metamorphic)<br><b>Coords:</b> 13.5S, 40.0E<br><b>Status:</b> <span style="color:#ffb000">AUDITED — DIFFICULT</span><br><b>AUC:</b> 0.750 (S2 only, terrain hurts)<br><b>Need:</b> Geology data for metamorphic grade'));
+
+// 13. Pebble Alaska (QUEUED amber — analysis in progress)
+var m13=L.marker([59.8937,-155.2733],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
+m13.bindPopup(mp(mh('#b07800','PEBBLE, ALASKA')+'<b>Type:</b> Porphyry Cu-Au-Mo<br><b>Coords:</b> 59.89N, 155.27W<br><b>Owner:</b> Northern Dynasty Minerals (TSX: NDM)<br><b>Status:</b> <span style="color:#ffb000">ANALYSIS IN PROGRESS</span><br><b>Labels:</b> 22 mineral occurrences<br><b>Commodity:</b> Cu-Au-Mo (~57B lbs Cu, ~70M oz Au, ~3.4B lbs Mo, ~345M oz Ag)<br><b>Tools:</b> S2 baseline, thermal 20yr, PCA embeddings, spectral unmixing, NDVI trends, geophysics (USGS), heuristic scoring, frontier targets<br><b>Analog:</b> Chuquicamata (0.882 AUC)<br><b>Continent:</b> North America<br><b style="color:var(--amber)">Note:</b> EMIT coverage limited by ISS orbital inclination (51.6&deg; vs 59.9&deg;N)'));
 
 map.fitBounds([[-31.4,-112.1],[43.6,139.5]],{padding:[40,40]});
 
