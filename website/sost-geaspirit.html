@@ -1569,6 +1569,37 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
+<!-- Phase 53 — Remote-first architecture note (public) -->
+<section id="phase53-remote-first-note" style="margin:30px 0;border:1px solid var(--border);border-left:3px solid var(--green);padding:20px;">
+  <div style="font-size:10px;letter-spacing:3px;color:var(--green);margin-bottom:10px;">// PHASE 53 — REMOTE-FIRST UPDATE</div>
+  <h3 style="margin:0 0 10px 0;color:var(--text);">Remote-first architecture validated</h3>
+  <p style="color:var(--text2);font-size:12px;line-height:1.7;margin:0;">
+    <strong style="color:var(--text);">Public canonical score remains 25.1/40</strong> from Phase 48 (Kalgoorlie S2+gravity fusion, AUC 0.922).<br><br>
+    In a remote-first case study, GeaSpirit analyzed the <strong>Pebble Mine (Alaska)</strong> using only satellite imagery, terrain data, and public evidence — <strong>no local geophysics</strong> — and reached <strong>24.2/40 (60.5%)</strong>.<br><br>
+    This confirms the platform can operate as a <strong>global remote mineral search engine</strong>:
+  </p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;">
+    <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
+      <div style="font-size:9px;color:var(--green);letter-spacing:2px;">TIER 1 — ALWAYS</div>
+      <div style="font-size:13px;color:var(--text);margin-top:4px;">Satellite + Terrain</div>
+      <div style="font-size:10px;color:var(--text3);">S2, Landsat, DEM, NDVI</div>
+    </div>
+    <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
+      <div style="font-size:9px;color:#fbbf24;letter-spacing:2px;">TIER 2 — WHEN AVAILABLE</div>
+      <div style="font-size:13px;color:var(--text);margin-top:4px;">Public Evidence</div>
+      <div style="font-size:10px;color:var(--text3);">Macrostrat, Mindat, literature</div>
+    </div>
+    <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
+      <div style="font-size:9px;color:#67e8f9;letter-spacing:2px;">TIER 3 — BONUS</div>
+      <div style="font-size:13px;color:var(--text);margin-top:4px;">Local Geophysics</div>
+      <div style="font-size:10px;color:var(--text3);">Magnetics, gravity, geochemistry</div>
+    </div>
+  </div>
+  <p style="color:var(--text3);font-size:10px;margin:8px 0 0 0;font-style:italic;">
+    Local geophysics dramatically improves results (Pebble gravity alone: +0.194 AUC) but is not required. The system degrades gracefully.
+  </p>
+</section>
+
 <!-- END PROTECTED CONTENT -->
 </div>
 
