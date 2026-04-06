@@ -3264,7 +3264,7 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 - Type-aware auto-selection: tests all available families, selects best per zone and commodity
 - Framing: "zone-aware, type-aware, multi-commodity mineral intelligence"
 - Does NOT claim direct subsurface detection — surface proxy inference only
-- All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, GA geophysics, GA gravity)
+- All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, Mindat.org, EarthMRI, GA geophysics, GA gravity)
 - Gravity integrated (460m Bouguer) — outperforms spectral at subsurface deposits
 - Magnetics consolidated at 3 zones (+0.048 to +0.153 over S2)
 - Full methodology and results at: website/sost-geaspirit.html
