@@ -2621,13 +2621,22 @@ static void p2p_send_version(int fd) {
     p2p_send(fd, "VERS", buf, 40);
 }
 
-static void p2p_send_block(int fd, int64_t h) {
+// Forward declaration for encryption-aware send
+static bool p2p_send_adaptive(int fd, PeerCrypto& crypto, const char* cmd,
+    const uint8_t* payload, size_t len);
+
+static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(h<0||h>=(int64_t)g_blocks.size()) return;
     const auto& b=g_blocks[h];
     // Use raw_block_json if available (contains complete Transcript V2 proof)
     if (!b.raw_block_json.empty()) {
-        p2p_send(fd, "BLCK", (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+        if (crypto && crypto->encrypted) {
+            p2p_send_encrypted(fd, *crypto, "BLCK",
+                (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+        } else {
+            p2p_send(fd, "BLCK", (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+        }
         return;
     }
     // Fallback for genesis/legacy blocks without raw JSON
@@ -2660,7 +2669,11 @@ static void p2p_send_block(int fd, int64_t h) {
     }
     s << "}";
     std::string js=s.str();
-    p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
+    if (crypto && crypto->encrypted) {
+        p2p_send_encrypted(fd, *crypto, "BLCK", (const uint8_t*)js.data(), js.size());
+    } else {
+        p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
+    }
 }
 
 static void p2p_broadcast_tx(const std::string& hex_str) {
@@ -4067,9 +4080,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
                 for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
-                    // p2p_send_block uses plaintext framing; for encrypted mode
-                    // we'd need to refactor. Keep block sends plaintext-framed for now.
-                    p2p_send_block(fd, h);
+                    p2p_send_block(fd, h, &crypto);
                 }
                 p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
             }
