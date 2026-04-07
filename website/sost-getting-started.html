@@ -396,7 +396,7 @@ ctest --output-on-failure</div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Start full node — connects to seed node and syncs the blockchain</span>
 <span class="comment"># Run from build/ directory. Copy genesis_block.json first: cp ../genesis_block.json .</span>
-./sost-node --connect seed.sostcore.com:19333 \
+./sost-node --genesis genesis_block.json --connect seed.sostcore.com:19333 \
     --rpc-user myuser --rpc-pass mypass --profile mainnet
 
 <span class="comment"># The node will sync ~3000+ blocks in under a minute (fast sync enabled by default)</span>

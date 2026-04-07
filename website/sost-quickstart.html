@@ -434,7 +434,7 @@
       </div>
       <div class="step-body">
         <p>The node connects you to the SOST network and syncs the blockchain. Run this command from the <code>build/</code> directory (make sure <code>genesis_block.json</code> is in the same directory &mdash; copy it from the repo root if needed: <code style="color:var(--cyan-primary)">cp ../genesis_block.json .</code>):</p>
-        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--connect</span> <span class="val">seed.sostcore.com:19333</span> \
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-node</span> <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--connect</span> <span class="val">seed.sostcore.com:19333</span> \
     <span class="flag">--rpc-user</span> <span class="val">PICK_A_USERNAME</span> <span class="flag">--rpc-pass</span> <span class="val">PICK_A_PASSWORD</span> <span class="flag">--profile</span> <span class="val">mainnet</span></div>
         <p>Replace <span style="color:var(--red-primary)">PICK_A_USERNAME</span> and <span style="color:var(--red-primary)">PICK_A_PASSWORD</span> with anything you want (example: <span style="color:var(--green-primary)">myuser</span> / <span style="color:var(--green-primary)">mypass123</span>). These are your private credentials for connecting the miner.</p>
         <p>The node will automatically connect to the seed node and start syncing. You should see messages like: <span style="color:var(--green-primary)">[BLOCK] Height N accepted</span></p>
