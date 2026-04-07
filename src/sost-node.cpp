@@ -2933,7 +2933,7 @@ static bool process_block(const std::string& block_json) {
             g_blocks.push_back(sb);
             g_chain_height = height;
             mark_block_known(bid);
-            auto_save_chain();
+            // Note: chain auto-saved when next normal block arrives
             return true;
         }
         printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
