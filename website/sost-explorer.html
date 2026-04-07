@@ -1755,14 +1755,36 @@ function updateMiningPanel(elapsed){
   var asInd=document.getElementById('asIndicator');
   var asCd=document.getElementById('asCountdown');
   if(asInd&&asCd){
+    // Get current profile level from RPC (0=B0, positive=H, negative=E)
+    var currentH = effProf ? effProf.H : 0;
     if(elapsed<threshold){
       var rem=threshold-elapsed;var rH=Math.floor(rem/3600),rM=Math.floor((rem%3600)/60),rS=Math.floor(rem%60);
       asInd.innerHTML='<span style="color:var(--red);">\u25CF OFF</span>';
       asCd.textContent='activates in '+rH+'h '+('0'+rM).slice(-2)+'m '+('0'+rS).slice(-2)+'s';asCd.style.color='var(--text3)';
-    }else{
+    }else if(currentH > 0){
+      // Hardening profile — anti-stall is decaying toward B0
       var decFor=elapsed-threshold;var dM=Math.floor(decFor/60),dS=Math.floor(decFor%60);
-      asInd.innerHTML='<span style="color:var(--green);animation:blink 1s infinite;">\u25CF ACTIVE</span>';
-      asCd.textContent='decay for '+dM+'m '+('0'+dS).slice(-2)+'s \u2014 profile drops every 1200s';asCd.style.color='var(--green)';
+      var cost=currentH>=7?600:currentH>=4?900:1200;
+      asInd.innerHTML='<span style="color:var(--green);animation:blink 1s infinite;">\u25CF ACTIVE — decaying to B0</span>';
+      asCd.textContent='decay for '+dM+'m '+('0'+dS).slice(-2)+'s \u2014 next drop in '+Math.floor(cost/60)+'m';asCd.style.color='var(--green)';
+    }else if(currentH <= 0){
+      // Already at B0 or easing — show time to easing activation
+      var timeAtB0=elapsed-threshold;
+      var easingExtra=21600; // 6h = 21600s before E1 activates
+      if(timeAtB0 < easingExtra){
+        var remToEase=easingExtra-timeAtB0;
+        var eH=Math.floor(remToEase/3600),eM=Math.floor((remToEase%3600)/60);
+        asInd.innerHTML='<span style="color:#fbbf24;">\u25CF WATCHING</span>';
+        asCd.textContent='at B0 \u2014 easing (E1) activates in '+eH+'h '+('0'+eM).slice(-2)+'m';asCd.style.color='#fbbf24';
+      }else{
+        // Easing active — show current easing level
+        var easingTime=timeAtB0-easingExtra;
+        var easingLevel=Math.min(4,Math.floor(easingTime/1800)); // 30min per E level
+        var nextEaseIn=1800-(easingTime%1800);
+        var nM=Math.floor(nextEaseIn/60);
+        asInd.innerHTML='<span style="color:var(--cyan);animation:blink 1s infinite;">\u25CF EASING E'+easingLevel+'</span>';
+        asCd.textContent='emergency easing active \u2014 next level in '+nM+'m';asCd.style.color='var(--cyan)';
+      }
     }
   }
 }
