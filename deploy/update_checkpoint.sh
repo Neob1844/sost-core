@@ -11,7 +11,7 @@ set -euo pipefail
 RPC_URL="http://127.0.0.1:18232"
 CHECKPOINT_FILE="/opt/sost/build/checkpoint.json"
 LOG="/var/log/sost-checkpoint.log"
-MIN_ADVANCE=100  # only update if chain is >100 blocks past checkpoint
+MIN_ADVANCE=25   # update when chain advances >25 blocks past checkpoint
 
 NOW=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -34,8 +34,8 @@ if [ "$ADVANCE" -lt "$MIN_ADVANCE" ]; then
     exit 0  # not enough advance, skip silently
 fi
 
-# Use height - 50 as the new checkpoint (50-block safety margin)
-NEW_CP=$((HEIGHT - 50))
+# Use height - 10 as the new checkpoint (10-block safety margin)
+NEW_CP=$((HEIGHT - 10))
 
 # Get block hash at checkpoint height
 HASH=$(curl -sf -m 5 -d "{\"method\":\"getblockhash\",\"params\":[\"$NEW_CP\"],\"id\":1}" "$RPC_URL" 2>/dev/null \
