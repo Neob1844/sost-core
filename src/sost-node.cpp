@@ -2733,6 +2733,14 @@ static bool process_block(const std::string& block_json) {
     std::string commit_hex = jstr(block_json,"commit");
     std::string croot_hex  = jstr(block_json,"checkpoints_root");
 
+    // Debug: log every block near the 2500 boundary
+    int64_t dbg_h = jint(block_json,"height");
+    if(dbg_h >= 2498 && dbg_h <= 2505) {
+        bool has_tx = block_json.find("\"transactions\"") != std::string::npos;
+        printf("[P2PDBG] process_block h=%lld bid=%s has_tx=%d json_len=%zu chain_size=%zu\n",
+               (long long)dbg_h, bid.substr(0,16).c_str(), (int)has_tx, block_json.size(), g_blocks.size());
+    }
+
     if(bid.size()!=64 || prev.size()!=64 || mrkl.size()!=64 || commit_hex.size()!=64 || croot_hex.size()!=64){
         printf("[BLOCK] REJECTED: missing/invalid required hex fields\n");
         return false;
@@ -4079,9 +4087,18 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"GETB")) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
+                int64_t sent_count = 0;
+                printf("[P2PDBG] GETB from %s: from_h=%lld, chain_height=%lld, enc=%d\n",
+                       addr.c_str(), (long long)from_h, (long long)g_chain_height, (int)crypto.encrypted);
                 for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
                     p2p_send_block(fd, h, &crypto);
+                    sent_count++;
+                    if(h == from_h || h == from_h+1 || h == from_h+499 || h == 2500 || h == 2501)
+                        printf("[P2PDBG] Sent block h=%lld to %s (enc=%d)\n",
+                               (long long)h, addr.c_str(), (int)crypto.encrypted);
                 }
+                printf("[P2PDBG] GETB batch complete: sent %lld blocks (%lld..%lld) to %s\n",
+                       (long long)sent_count, (long long)from_h, (long long)(from_h+sent_count-1), addr.c_str());
                 p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
             }
         }
@@ -4190,6 +4207,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers) if(p.fd==fd){their_h=p.their_height;break;}
             }
+            printf("[P2PDBG] DONE received from %s: our_height=%lld, their_height=%lld, blocks_size=%zu\n",
+                   addr.c_str(), (long long)g_chain_height, (long long)their_h, g_blocks.size());
             if(g_chain_height<their_h){
                 printf("[SYNC] Batch done from %s. Requesting blocks %lld..%lld\n",
                        addr.c_str(), (long long)(g_chain_height+1), (long long)their_h);
