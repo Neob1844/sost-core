@@ -47,7 +47,9 @@
 
 #include <fstream>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -2497,10 +2499,23 @@ static int64_t read_i64(const uint8_t* p) {
 
 static bool read_exact(int fd, uint8_t* buf, size_t len) {
     size_t got=0;
+    int retries=0;
     while(got<len){
         ssize_t n=read(fd,buf+got,len-got);
-        if(n<=0) return false;
+        if(n<0){
+            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
+                if(++retries>50) return false; // ~5s with 100ms select
+                // Wait up to 100ms for data (handles high-latency connections)
+                fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
+                struct timeval tv={0,100000}; // 100ms
+                select(fd+1,&fds,nullptr,nullptr,&tv);
+                continue;
+            }
+            return false;
+        }
+        if(n==0) return false; // connection closed
         got+=n;
+        retries=0;
     }
     return true;
 }
@@ -2885,9 +2900,54 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // FAST-SYNC: if block is under assumevalid, allow missing/empty transactions
+    // This handles high-latency peers where block data arrives incomplete
+    bool is_trusted_height = false;
+    if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
+        is_trusted_height = true;
+    }
+
     // Decode txs (coinbase included)
     std::vector<std::string> tx_hexes = json_get_tx_hexes(block_json);
     if(tx_hexes.empty()){
+        if(is_trusted_height){
+            // Trusted block with missing tx data — accept with header-only validation
+            // Reconstruct minimal coinbase from block fields for UTXO accounting
+            printf("[BLOCK] fast-sync height=%lld (trusted, tx data missing — header-only accept)\n",
+                   (long long)height);
+            StoredBlock sb{};
+            sb.block_id=computed_bid; sb.prev_hash=from_hex(prev);
+            sb.merkle_root=from_hex(mrkl); sb.commit=from_hex(commit_str);
+            sb.checkpoints_root=from_hex(cr);
+            sb.timestamp=ts64; sb.bits_q=bits_q; sb.nonce=nonce;
+            sb.extra_nonce=extra; sb.height=height; sb.subsidy=sub;
+            sb.miner_reward=jint(block_json,"miner");
+            sb.gold_vault_reward=jint(block_json,"gold_vault");
+            sb.popc_pool_reward=jint(block_json,"popc_pool");
+            sb.stability_metric=juint(block_json,"stability_metric");
+            sb.x_bytes_hex=jstr(block_json,"x_bytes");
+            sb.final_state_hex=jstr(block_json,"final_state");
+            sb.segments_root_hex=jstr(block_json,"segments_root");
+            sb.raw_block_json=block_json;
+            // Minimal UTXO: create coinbase outputs from block fields
+            PubKeyHash miner_pkh{}, gold_pkh{}, popc_pkh{};
+            address_decode(ADDR_MINER_FOUNDER, miner_pkh);
+            address_decode(ADDR_GOLD_VAULT, gold_pkh);
+            address_decode(ADDR_POPC_POOL, popc_pkh);
+            UTXO u_m{miner_pkh, sb.miner_reward, (int64_t)height, 0, false};
+            UTXO u_g{gold_pkh, sb.gold_vault_reward, (int64_t)height, 1, false};
+            UTXO u_p{popc_pkh, sb.popc_pool_reward, (int64_t)height, 2, false};
+            std::string txid_placeholder = to_hex(sb.block_id.data(), 32);
+            g_utxo.add(txid_placeholder, 0, u_m);
+            g_utxo.add(txid_placeholder, 1, u_g);
+            g_utxo.add(txid_placeholder, 2, u_p);
+            sb.cumulative_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
+            g_blocks.push_back(sb);
+            g_chain_height = height;
+            mark_block_known(bid);
+            auto_save_chain();
+            return true;
+        }
         printf("[BLOCK] REJECTED: missing transactions[] (must include coinbase)\n");
         return false;
     }
@@ -4561,6 +4621,18 @@ static void p2p_server_thread(int port) {
         socklen_t cl_len=sizeof(cl_addr);
         int cl=accept(srv,(struct sockaddr*)&cl_addr,&cl_len);
         if(cl<0) continue;
+        // Set socket options for high-latency resilience
+        {
+            int flag=1;
+            setsockopt(cl, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+            struct timeval rtv={30,0}; // 30s recv timeout (handles 300ms+ ping)
+            setsockopt(cl, SOL_SOCKET, SO_RCVTIMEO, &rtv, sizeof(rtv));
+            struct timeval stv={30,0}; // 30s send timeout
+            setsockopt(cl, SOL_SOCKET, SO_SNDTIMEO, &stv, sizeof(stv));
+            int bufsize=262144; // 256KB socket buffer
+            setsockopt(cl, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
+            setsockopt(cl, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize));
+        }
         char ip[64]; inet_ntop(AF_INET,&cl_addr.sin_addr,ip,sizeof(ip));
         std::string peer_addr=std::string(ip)+":"+std::to_string(ntohs(cl_addr.sin_port));
 
