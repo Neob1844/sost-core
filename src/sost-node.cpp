@@ -2679,9 +2679,11 @@ static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
 static void p2p_broadcast_tx(const std::string& hex_str) {
     std::lock_guard<std::mutex> lk(g_peers_mu);
     for(auto& p:g_peers){
-        if(p.version_acked){
-            p2p_send(p.fd, "TXXX", (const uint8_t*)hex_str.data(), hex_str.size());
-        }
+        if(!p.version_acked) continue;
+        // Skip syncing peers — same race condition as broadcast_block_to_peers
+        if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
+            continue;
+        p2p_send(p.fd, "TXXX", (const uint8_t*)hex_str.data(), hex_str.size());
     }
 }
 
@@ -5005,6 +5007,10 @@ int main(int argc, char** argv) {
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers){
+                    // Skip syncing peers — writing PING while GETB handler
+                    // is sending blocks corrupts the TCP stream (race condition)
+                    if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
+                        continue;
                     if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
                 }
             }
