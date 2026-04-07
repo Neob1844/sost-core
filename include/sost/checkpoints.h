@@ -55,19 +55,20 @@ static const std::vector<HardCheckpoint> HARD_CHECKPOINTS = {
     {3150, "2089540e4c08dd6fb0bd90e181c995ef53b991215e7a4a566cb82c5443731a4c"},
     {3200, "1af5229815b9df80899c32db9a809b26367b402bb8630c9dd227d1bf607be830"},
     {3225, "41cd3f888b64a9a04051f49129764b2153414685c9ad23ad902abe3e8d75a43d"},
+    {3300, "2894a6b3b4392d6679c6dce95a1bb9d2e406d0d661baeef553e49ba2229aa230"},
 };
 
 // Quick range pre-check before iterating checkpoints.
 // Do NOT use this alone to trust blocks.
-static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 3225;
+static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 3300;
 
 // Assumevalid anchor: if this block hash exists on the active chain,
 // ancestors of that branch can skip expensive ConvergenceX recomputation
 // (but NOT cheap/semantic verification).
 // This allows new nodes to sync without full CX proof data for historical blocks.
-// Updated: 2026-04-07 — block 3225 verified on mainnet.
-static const std::string ASSUMEVALID_BLOCK_HASH = "41cd3f888b64a9a04051f49129764b2153414685c9ad23ad902abe3e8d75a43d";
-static const uint32_t ASSUMEVALID_HEIGHT = 3225;
+// Updated: 2026-04-08 — block 3300 verified on mainnet.
+static const std::string ASSUMEVALID_BLOCK_HASH = "2894a6b3b4392d6679c6dce95a1bb9d2e406d0d661baeef553e49ba2229aa230";
+static const uint32_t ASSUMEVALID_HEIGHT = 3300;
 
 // ═══════════════════════════════════════════════════════════════════
 // Dynamic checkpoint override — loaded from checkpoint.json at startup
@@ -87,7 +88,7 @@ inline DynamicCheckpoints& get_dynamic() {
 }
 
 // Load checkpoint.json from working directory or /etc/sost/checkpoint.json
-// Format: {"assumevalid_height":3225,"assumevalid_hash":"41cd3f...","checkpoints":[{"height":3200,"hash":"1af5..."}]}
+// Format: {"assumevalid_height":3300,"assumevalid_hash":"2894a6...","checkpoints":[{"height":3200,"hash":"1af5..."}]}
 // Returns true if file was loaded, false if using hardcoded fallback.
 inline bool load_dynamic_checkpoints(const std::string& path = "") {
     auto& dc = get_dynamic();
