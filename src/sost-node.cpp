@@ -3880,16 +3880,22 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 // Serializes block data from StoredBlock directly (caller holds g_chain_mu).
 static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
     // Use the raw_block_json which contains the COMPLETE Transcript V2 proof
-    // (segment_proofs, round_witnesses, checkpoint_leaves, stab_*, x_bytes, etc.)
-    // This ensures remote nodes can fully validate the block.
     const std::string& js = sb.raw_block_json;
-    if (js.empty()) return; // genesis or legacy block without raw JSON
+    if (js.empty()) return;
 
     std::lock_guard<std::mutex> lk(g_peers_mu);
     int sent = 0;
     for (auto& p : g_peers) {
         if (p.fd == exclude_fd) continue;
         if (!p.version_acked) continue;
+        // CRITICAL FIX: Do NOT broadcast to peers that are still syncing
+        // (their_height far below ours). Broadcasting plaintext BLCKs into
+        // an encrypted connection while the handle_peer thread is also writing
+        // causes interleaved frames → corrupted TCP stream → silent block loss.
+        // Syncing peers will get these blocks via the normal GETB flow.
+        if (p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50) {
+            continue; // skip — peer is still syncing, will get blocks via GETB
+        }
         p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
         ++sent;
     }
