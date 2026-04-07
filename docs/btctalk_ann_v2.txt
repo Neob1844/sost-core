@@ -1,4 +1,4 @@
-[center][size=18pt][b]SOST — Sovereign Monetary Protocol[/b][/size]
+[center][size=18pt][b]SOST — Sovereign Stock Token[/b][/size]
 Native Proof-of-Work protocol with protocol-level gold reserve allocation. Native chain. No bridges. No smart contracts. No governance tokens.
 
 [b]Genesis Block:[/b] March 15, 2026 — 18:00:00 UTC
