@@ -24,3 +24,12 @@ Detailed candidate identities, full score breakdowns, and complete DFT queues re
 - Famous materials (LiCoO2, EGaIn) correctly penalized
 - New top candidates are genuinely unexplored compositions
 - 9 novel materials in DFT queue (was 1)
+
+## Phase 34 Update — ML Surrogate Prescreen (CHGNet)
+
+- **17 candidates screened in 40 seconds** (vs ~200h if all went to DFT)
+- CHGNet predicts formation energy and stability before committing to expensive DFT
+- Results: 7 PASS, 6 FLAG, 4 REJECT
+- **64 CPU-hours of DFT saved** by eliminating unstable candidates early
+- Top candidate confirmed: FeMgO2 (-2.09 eV/atom, strongly stable)
+- InNP rejected: +1.84 eV/atom (would have wasted 12h DFT)
