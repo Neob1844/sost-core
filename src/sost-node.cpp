@@ -3206,7 +3206,7 @@ static bool process_block(const std::string& block_json) {
         {
             // Check if this block is in the trusted range
             bool trusted_block = false;
-            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT && !g_full_verify_mode){
+            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height() && !g_full_verify_mode){
                 trusted_block = true;
             }
 
@@ -3297,11 +3297,11 @@ static bool process_block(const std::string& block_json) {
             // For initial sync, we trust the assumevalid anchor optimistically:
             // we don't yet have the anchor block on our chain, but we will verify it
             // when we reach that height. This is the same trust model as Bitcoin Core.
-            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT){
+            if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
                 anchor_on_chain = true; // optimistic trust during initial sync
-            } else if(sost::has_assumevalid_anchor() && sost::ASSUMEVALID_HEIGHT < g_blocks.size()){
-                std::string chain_hash = to_hex(g_blocks[sost::ASSUMEVALID_HEIGHT].block_id.data(), 32);
-                anchor_on_chain = (chain_hash == sost::ASSUMEVALID_BLOCK_HASH);
+            } else if(sost::has_assumevalid_anchor() && sost::get_assumevalid_height() < g_blocks.size()){
+                std::string chain_hash = to_hex(g_blocks[sost::get_assumevalid_height()].block_id.data(), 32);
+                anchor_on_chain = (chain_hash == sost::get_assumevalid_hash());
             }
             bool skip_cx = sost::can_skip_cx_recomputation(
                 (uint32_t)height, bid_hex, anchor_on_chain, g_full_verify_mode);
@@ -3326,7 +3326,7 @@ static bool process_block(const std::string& block_json) {
         // Missing CX proof data — only acceptable for trusted blocks
         std::string bid_hex_nodata = to_hex(computed_bid.data(), 32);
         bool anchor_trust = false;
-        if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::ASSUMEVALID_HEIGHT){
+        if(sost::has_assumevalid_anchor() && (uint32_t)height <= sost::get_assumevalid_height()){
             anchor_trust = true;
         }
         bool skip_nodata = sost::can_skip_cx_recomputation(
@@ -4812,11 +4812,17 @@ int main(int argc, char** argv) {
         ACTIVE_PROFILE==Profile::TESTNET ? "TESTNET" : "DEV";
 
     const char* enc_str = g_p2p_enc==P2PEncMode::OFF?"off":g_p2p_enc==P2PEncMode::ON?"on":"required";
+    // Load dynamic checkpoints (override hardcoded if file exists)
+    sost::load_dynamic_checkpoints();
+
     printf("=== SOST Node v0.4.0 ===\n");
-    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s | Fast sync: %s\n\n",
+    printf("Profile: %s | P2P: %d | RPC: %d | RPC auth: %s | P2P enc: %s | Fast sync: %s\n",
            profile_name, p2p_port, rpc_port,
            g_rpc_auth_required ? "ON" : "OFF", enc_str,
            g_full_verify_mode ? "OFF (--full-verify)" : "ON");
+    printf("Assumevalid: height=%u hash=%s\n\n",
+           sost::get_assumevalid_height(),
+           sost::get_assumevalid_hash().substr(0,16).c_str());
 
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());

@@ -70,60 +70,120 @@ static const std::string ASSUMEVALID_BLOCK_HASH = "41cd3f888b64a9a04051f49129764
 static const uint32_t ASSUMEVALID_HEIGHT = 3225;
 
 // ═══════════════════════════════════════════════════════════════════
-// Functions — explicit, non-ambiguous
+// Dynamic checkpoint override — loaded from checkpoint.json at startup
+// Falls back to hardcoded values above if file doesn't exist.
 // ═══════════════════════════════════════════════════════════════════
+struct DynamicCheckpoints {
+    bool loaded{false};
+    std::string assumevalid_hash;
+    uint32_t assumevalid_height{0};
+    std::vector<HardCheckpoint> extra_checkpoints;
+};
 
-// Returns true ONLY if height matches a checkpoint AND hash matches
-// exactly. Returns false for: wrong hash, lower height without exact
-// match, or lower height alone.
-inline bool is_hard_checkpoint(uint32_t height, const std::string& hash) {
-    if (height > LAST_HARD_CHECKPOINT_HEIGHT) return false;
-    for (const auto& cp : HARD_CHECKPOINTS) {
-        if (cp.height == height && cp.block_hash == hash) {
+// Global dynamic state (set once at startup by load_dynamic_checkpoints)
+inline DynamicCheckpoints& get_dynamic() {
+    static DynamicCheckpoints dc;
+    return dc;
+}
+
+// Load checkpoint.json from working directory or /etc/sost/checkpoint.json
+// Format: {"assumevalid_height":3225,"assumevalid_hash":"41cd3f...","checkpoints":[{"height":3200,"hash":"1af5..."}]}
+// Returns true if file was loaded, false if using hardcoded fallback.
+inline bool load_dynamic_checkpoints(const std::string& path = "") {
+    auto& dc = get_dynamic();
+    std::vector<std::string> paths;
+    if (!path.empty()) paths.push_back(path);
+    paths.push_back("checkpoint.json");
+    paths.push_back("/etc/sost/checkpoint.json");
+
+    for (const auto& p : paths) {
+        FILE* f = fopen(p.c_str(), "r");
+        if (!f) continue;
+        std::string data;
+        char buf[4096];
+        while (size_t n = fread(buf, 1, sizeof(buf), f)) data.append(buf, n);
+        fclose(f);
+
+        // Simple JSON parsing (no dependency) — find assumevalid_height and hash
+        auto find_str = [&](const std::string& key) -> std::string {
+            auto pos = data.find("\"" + key + "\"");
+            if (pos == std::string::npos) return "";
+            pos = data.find("\"", pos + key.size() + 2);
+            if (pos == std::string::npos) return "";
+            auto end = data.find("\"", pos + 1);
+            if (end == std::string::npos) return "";
+            return data.substr(pos + 1, end - pos - 1);
+        };
+        auto find_int = [&](const std::string& key) -> uint32_t {
+            auto pos = data.find("\"" + key + "\"");
+            if (pos == std::string::npos) return 0;
+            pos = data.find(":", pos);
+            if (pos == std::string::npos) return 0;
+            return (uint32_t)atoi(data.c_str() + pos + 1);
+        };
+
+        uint32_t h = find_int("assumevalid_height");
+        std::string hash = find_str("assumevalid_hash");
+        if (h > 0 && hash.size() == 64) {
+            dc.assumevalid_height = h;
+            dc.assumevalid_hash = hash;
+            dc.loaded = true;
+            printf("[CHECKPOINT] Loaded dynamic checkpoint from %s: height=%u hash=%s\n",
+                   p.c_str(), h, hash.substr(0, 16).c_str());
             return true;
         }
+    }
+    return false; // use hardcoded fallback
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Functions — use dynamic override if loaded, else hardcoded
+// ═══════════════════════════════════════════════════════════════════
+
+inline uint32_t get_assumevalid_height() {
+    auto& dc = get_dynamic();
+    return dc.loaded ? dc.assumevalid_height : ASSUMEVALID_HEIGHT;
+}
+
+inline const std::string& get_assumevalid_hash() {
+    auto& dc = get_dynamic();
+    return dc.loaded ? dc.assumevalid_hash : ASSUMEVALID_BLOCK_HASH;
+}
+
+inline bool is_hard_checkpoint(uint32_t height, const std::string& hash) {
+    // Check hardcoded first
+    if (height <= LAST_HARD_CHECKPOINT_HEIGHT) {
+        for (const auto& cp : HARD_CHECKPOINTS) {
+            if (cp.height == height && cp.block_hash == hash) return true;
+        }
+    }
+    // Check dynamic extras
+    auto& dc = get_dynamic();
+    for (const auto& cp : dc.extra_checkpoints) {
+        if (cp.height == height && cp.block_hash == hash) return true;
     }
     return false;
 }
 
-// Returns true only if an assumevalid anchor is configured
-// (non-empty hash and height > 0).
 inline bool has_assumevalid_anchor() {
-    return !ASSUMEVALID_BLOCK_HASH.empty() && ASSUMEVALID_HEIGHT > 0;
+    return !get_assumevalid_hash().empty() && get_assumevalid_height() > 0;
 }
 
-// Returns true if a block can skip expensive CX recomputation because
-// it is an ancestor of the assumevalid anchor on the active chain.
-//
-// chain_contains_anchor: the caller MUST verify this by checking that
-// the active chain at ASSUMEVALID_HEIGHT has hash == ASSUMEVALID_BLOCK_HASH.
-// If the anchor is NOT on the active chain, this returns false.
 inline bool is_block_under_assumevalid(uint32_t block_height,
                                         bool chain_contains_anchor) {
     if (!has_assumevalid_anchor()) return false;
     if (!chain_contains_anchor) return false;
-    return block_height <= ASSUMEVALID_HEIGHT;
+    return block_height <= get_assumevalid_height();
 }
 
-// Master decision: should we skip expensive CX recomputation?
-// Returns true ONLY if one of:
-//   1. Block matches a hard checkpoint exactly (height + hash)
-//   2. Block is under assumevalid anchor AND anchor is on active chain
-// Returns false in ALL other cases (including full-verify mode).
 inline bool can_skip_cx_recomputation(uint32_t block_height,
                                        const std::string& block_hash,
                                        bool chain_contains_anchor,
                                        bool full_verify_mode) {
-    // --full-verify overrides everything
     if (full_verify_mode) return false;
-
-    // Hard checkpoint exact match
     if (is_hard_checkpoint(block_height, block_hash)) return true;
-
-    // Assumevalid ancestor trust
     if (is_block_under_assumevalid(block_height, chain_contains_anchor))
         return true;
-
     return false;
 }
 
