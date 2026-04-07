@@ -4742,46 +4742,49 @@ static bool save_chain_internal(const std::string& path) {
       << "\",\n  \"blocks\": [\n";
     for (size_t i = 0; i < g_blocks.size(); ++i) {
         const auto& b = g_blocks[i];
-        f << "    {\"block_id\":\"" << to_hex(b.block_id.data(),32)
-          << "\",\"prev_hash\":\"" << to_hex(b.prev_hash.data(),32)
-          << "\",\"merkle_root\":\"" << to_hex(b.merkle_root.data(),32)
-          << "\",\"commit\":\"" << to_hex(b.commit.data(),32)
-          << "\",\"checkpoints_root\":\"" << to_hex(b.checkpoints_root.data(),32)
-          << "\",\"height\":" << b.height
-          << ",\"timestamp\":" << b.timestamp
-          << ",\"bits_q\":" << b.bits_q
-          << ",\"nonce\":" << b.nonce
-          << ",\"extra_nonce\":" << b.extra_nonce
-          << ",\"subsidy\":" << b.subsidy
-          << ",\"miner\":" << b.miner_reward
-          << ",\"gold_vault\":" << b.gold_vault_reward
-          << ",\"popc_pool\":" << b.popc_pool_reward
-          << ",\"stability_metric\":" << b.stability_metric;
+        if (!b.raw_block_json.empty()) {
+            // Write complete original JSON — preserves ALL Transcript V2 proof data
+            // (checkpoint_leaves, segment_proofs, round_witnesses)
+            f << "    " << b.raw_block_json;
+        } else {
+            // Fallback reconstruction for genesis/legacy blocks without raw JSON
+            f << "    {\"block_id\":\"" << to_hex(b.block_id.data(),32)
+              << "\",\"prev_hash\":\"" << to_hex(b.prev_hash.data(),32)
+              << "\",\"merkle_root\":\"" << to_hex(b.merkle_root.data(),32)
+              << "\",\"commit\":\"" << to_hex(b.commit.data(),32)
+              << "\",\"checkpoints_root\":\"" << to_hex(b.checkpoints_root.data(),32)
+              << "\",\"height\":" << b.height
+              << ",\"timestamp\":" << b.timestamp
+              << ",\"bits_q\":" << b.bits_q
+              << ",\"nonce\":" << b.nonce
+              << ",\"extra_nonce\":" << b.extra_nonce
+              << ",\"subsidy\":" << b.subsidy
+              << ",\"miner\":" << b.miner_reward
+              << ",\"gold_vault\":" << b.gold_vault_reward
+              << ",\"popc_pool\":" << b.popc_pool_reward
+              << ",\"stability_metric\":" << b.stability_metric;
 
-        // Transcript V2 proof fields
-        if (!b.x_bytes_hex.empty()) f << ",\"x_bytes\":\"" << b.x_bytes_hex << "\"";
-        if (!b.final_state_hex.empty()) f << ",\"final_state\":\"" << b.final_state_hex << "\"";
-        if (!b.segments_root_hex.empty()) f << ",\"segments_root\":\"" << b.segments_root_hex << "\"";
-        // Declared stability profile
-        if (b.stab_scale > 0) {
-            f << ",\"stab_scale\":" << b.stab_scale
-              << ",\"stab_k\":" << b.stab_k
-              << ",\"stab_margin\":" << b.stab_margin
-              << ",\"stab_steps\":" << b.stab_steps;
-            if (b.stab_lr_shift > 0) f << ",\"stab_lr_shift\":" << b.stab_lr_shift;
-        }
-
-        // WRITE TRANSACTIONS (v0.3.2 — critical for TX persistence)
-        if (!b.tx_hexes.empty()) {
-            f << ",\"transactions\":[";
-            for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
-                if (t) f << ",";
-                f << "\"" << b.tx_hexes[t] << "\"";
+            if (!b.x_bytes_hex.empty()) f << ",\"x_bytes\":\"" << b.x_bytes_hex << "\"";
+            if (!b.final_state_hex.empty()) f << ",\"final_state\":\"" << b.final_state_hex << "\"";
+            if (!b.segments_root_hex.empty()) f << ",\"segments_root\":\"" << b.segments_root_hex << "\"";
+            if (b.stab_scale > 0) {
+                f << ",\"stab_scale\":" << b.stab_scale
+                  << ",\"stab_k\":" << b.stab_k
+                  << ",\"stab_margin\":" << b.stab_margin
+                  << ",\"stab_steps\":" << b.stab_steps;
+                if (b.stab_lr_shift > 0) f << ",\"stab_lr_shift\":" << b.stab_lr_shift;
             }
-            f << "]";
+            if (!b.tx_hexes.empty()) {
+                f << ",\"transactions\":[";
+                for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
+                    if (t) f << ",";
+                    f << "\"" << b.tx_hexes[t] << "\"";
+                }
+                f << "]";
+            }
+            f << "}";
         }
-
-        f << "}" << (i + 1 < g_blocks.size() ? ",\n" : "\n");
+        f << (i + 1 < g_blocks.size() ? ",\n" : "\n");
     }
     f << "  ]\n}\n";
     f.flush();
