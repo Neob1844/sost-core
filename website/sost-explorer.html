@@ -761,21 +761,23 @@ const CASERT_PROFILES=[
 // from the node whenever available.
 // ═══════════════════════════════════════════════════════════════
 function getProfileFromLag(lag) {
-  var abs = Math.abs(lag);
+  // C++ safety rule (casert.cpp line 206): if chain is behind or on schedule,
+  // NEVER harden beyond B0. Easing profiles (E1-E4) only come from anti-stall
+  // during mining, NOT from validation. So for block display, behind = B0.
+  if (lag <= 0) {
+    // Behind or on schedule → always B0 (C++ caps H at 0 when lag <= 0)
+    return CASERT_PROFILES[4]; // B0
+  }
+  // Ahead of schedule → harden (H profiles)
+  var ahead = lag;
   var level;
-  if      (abs <= 5)  level = 0;
-  else if (abs <= 20) level = 1;
-  else if (abs <= 50) level = 2;
-  else if (abs <= 75) level = 3;
-  else                level = 4;
+  if      (ahead <= 5)  level = 0;
+  else if (ahead <= 20) level = 1;
+  else if (ahead <= 50) level = 2;
+  else if (ahead <= 75) level = 3;
+  else                  level = 4;
 
   if (level === 0) return CASERT_PROFILES[4]; // B0
-
-  if (lag < 0) {
-    // Behind schedule → ease (E profiles)
-    return CASERT_PROFILES[4 - level]; // E1=3, E2=2, E3=1, E4=0
-  }
-  // Ahead of schedule → harden (H profiles), cap at H12
   var idx = Math.min(16, 4 + level);
   return CASERT_PROFILES[idx];
 }
