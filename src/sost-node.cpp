@@ -2916,11 +2916,11 @@ static bool process_block(const std::string& block_json) {
             printf("[BLOCK] fast-sync height=%lld (trusted, tx data missing — header-only accept)\n",
                    (long long)height);
             StoredBlock sb{};
-            sb.block_id=computed_bid; sb.prev_hash=from_hex(prev);
-            sb.merkle_root=from_hex(mrkl); sb.commit=from_hex(commit_str);
-            sb.checkpoints_root=from_hex(cr);
+            sb.block_id=from_hex(bid); sb.prev_hash=from_hex(prev);
+            sb.merkle_root=from_hex(mrkl); sb.commit=from_hex(commit_hex);
+            sb.checkpoints_root=from_hex(croot_hex);
             sb.timestamp=ts64; sb.bits_q=bits_q; sb.nonce=nonce;
-            sb.extra_nonce=extra; sb.height=height; sb.subsidy=sub;
+            sb.extra_nonce=extra; sb.height=height; sb.subsidy=subsidy;
             sb.miner_reward=jint(block_json,"miner");
             sb.gold_vault_reward=jint(block_json,"gold_vault");
             sb.popc_pool_reward=jint(block_json,"popc_pool");
@@ -2929,18 +2929,6 @@ static bool process_block(const std::string& block_json) {
             sb.final_state_hex=jstr(block_json,"final_state");
             sb.segments_root_hex=jstr(block_json,"segments_root");
             sb.raw_block_json=block_json;
-            // Minimal UTXO: create coinbase outputs from block fields
-            PubKeyHash miner_pkh{}, gold_pkh{}, popc_pkh{};
-            address_decode(ADDR_MINER_FOUNDER, miner_pkh);
-            address_decode(ADDR_GOLD_VAULT, gold_pkh);
-            address_decode(ADDR_POPC_POOL, popc_pkh);
-            UTXO u_m{miner_pkh, sb.miner_reward, (int64_t)height, 0, false};
-            UTXO u_g{gold_pkh, sb.gold_vault_reward, (int64_t)height, 1, false};
-            UTXO u_p{popc_pkh, sb.popc_pool_reward, (int64_t)height, 2, false};
-            std::string txid_placeholder = to_hex(sb.block_id.data(), 32);
-            g_utxo.add(txid_placeholder, 0, u_m);
-            g_utxo.add(txid_placeholder, 1, u_g);
-            g_utxo.add(txid_placeholder, 2, u_p);
             sb.cumulative_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
             g_blocks.push_back(sb);
             g_chain_height = height;
