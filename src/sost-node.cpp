@@ -390,7 +390,7 @@ struct PeerRateLimit {
 static std::map<int, PeerRateLimit> g_peer_rates; // fd -> rate state
 static std::mutex g_rate_mu;
 static const int STEADY_STATE_BLOCKS_PER_MIN = 50;
-static const int SYNC_MODE_BLOCKS_PER_MIN = 500;
+static const int SYNC_MODE_BLOCKS_PER_MIN = 5000;  // effectively unlimited during sync
 
 static bool check_block_rate(int fd, bool is_syncing) {
     std::lock_guard<std::mutex> lk(g_rate_mu);
@@ -4044,8 +4044,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
             }
             if (!check_block_rate(fd, is_syncing)) {
-                printf("[P2P] Rate limit exceeded from %s (mode=%s)\n", addr.c_str(),
-                       is_syncing ? "sync" : "relay");
+                if (is_syncing) {
+                    // In sync mode: NEVER penalize — just throttle silently
+                    continue;
+                }
+                printf("[P2P] Rate limit exceeded from %s (mode=relay)\n", addr.c_str());
                 if (add_misbehavior(fd, addr, 5, "block rate limit")) break;
                 continue;
             }
