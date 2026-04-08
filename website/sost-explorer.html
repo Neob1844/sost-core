@@ -1037,8 +1037,8 @@ function updateChainSync(){
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
-  // Profile from node RPC (source of truth for the profile name)
-  var displayProfile = _rpcCasertProfile || 'B0';
+  // Profile from wall-clock lag (lagBehind is positive=behind, getProfileFromLag uses negative=behind)
+  var displayProfile = getProfileFromLag(-lagBehind).name;
   if(lagBehind>0){document.getElementById('csLag').textContent=fComma(lagBehind)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lagBehind)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
   else if(lagBehind<0){var ahead2=-lagBehind;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
   else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
@@ -1590,18 +1590,11 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  // Profile: prefer RPC (node source of truth), fall back to lag estimate
+  // Profile: always use wall-clock lag estimation (matches chain timing display)
+  // RPC casert_profile uses block-timestamp lag which doesn't reflect wall-clock stall
   var tipLag=computeBlockLag(H,_lastBlockTime);
-  var effProf;
-  var profSource='est';
-  if(_rpcCasertProfileIdx!==undefined && _rpcCasertProfileIdx!==null){
-    // Use node RPC profile (authoritative)
-    var rpcIdx=Math.max(0,Math.min(16,_rpcCasertProfileIdx+4));
-    effProf=CASERT_PROFILES[rpcIdx];
-    profSource='rpc';
-  } else {
-    effProf=getProfileFromLag(tipLag);
-  }
+  var effProf=getProfileFromLag(tipLag);
+  var profSource='lag';
   var dc={active:false};
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
