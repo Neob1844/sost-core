@@ -4118,7 +4118,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for (auto& p : g_peers) {
                     if (p.fd == fd) {
-                        is_syncing = (p.their_height > g_chain_height + 10) ||
+                        is_syncing = (p.their_height < 0) || // handshake not complete
+                                     (p.their_height > g_chain_height) || // peer ahead → still syncing
                                      (g_chain_height > p.their_height + 10);
                         break;
                     }
