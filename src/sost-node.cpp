@@ -65,6 +65,7 @@
 #include <unordered_set>
 #include <deque>
 #include <mutex>
+#include <memory>
 #include <functional>
 #include <ctime>
 #include <atomic>
@@ -315,9 +316,19 @@ struct Peer {
     bool outbound;
     time_t last_seen;
     int ban_score;         // misbehavior score, ban at >= 100
+    std::shared_ptr<std::mutex> write_mu{std::make_shared<std::mutex>()}; // per-fd write serialization
 };
 static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
+
+// Get per-fd write mutex (returns nullptr if peer not found)
+static std::shared_ptr<std::mutex> get_peer_write_mu(int fd) {
+    std::lock_guard<std::mutex> lk(g_peers_mu);
+    for (auto& p : g_peers) {
+        if (p.fd == fd) return p.write_mu;
+    }
+    return nullptr;
+}
 
 // Checkpoints: known block_id at specific heights (hex → height)
 // Prevents deep reorgs past a checkpoint and validates chain integrity.
@@ -2681,7 +2692,10 @@ static void p2p_broadcast_tx(const std::string& hex_str) {
         // Skip syncing peers — same race condition as broadcast_block_to_peers
         if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
             continue;
-        p2p_send(p.fd, "TXXX", (const uint8_t*)hex_str.data(), hex_str.size());
+        {
+            std::lock_guard<std::mutex> wlk(*p.write_mu);
+            p2p_send(p.fd, "TXXX", (const uint8_t*)hex_str.data(), hex_str.size());
+        }
     }
 }
 
@@ -3896,7 +3910,10 @@ static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
         if (p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50) {
             continue; // skip — peer is still syncing, will get blocks via GETB
         }
-        p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
+        {
+            std::lock_guard<std::mutex> wlk(*p.write_mu); // serialize with handle_peer writes
+            p2p_send(p.fd, "BLCK", (const uint8_t*)js.data(), js.size());
+        }
         ++sent;
     }
     if (sent > 0) {
@@ -4093,16 +4110,19 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"GETB")) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
-                // CRITICAL: Send blocks in PLAINTEXT during GETB sync batches.
-                // The encrypted path has a confirmed bug where blocks get corrupted
-                // after ~2500 messages due to concurrent writes from broadcast_block_to_peers.
-                // Plaintext works reliably. p2p_recv_encrypted handles plaintext gracefully
-                // (line 2590: non-ENCR commands are read as plaintext).
-                // TODO: Fix encrypted batch sends properly with per-fd mutex.
-                for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
-                    p2p_send_block(fd, h, nullptr); // force plaintext for sync reliability
+                auto wmu = get_peer_write_mu(fd);
+                if (wmu) {
+                    std::lock_guard<std::mutex> wlk(*wmu); // block broadcasts while sending batch
+                    for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
+                        p2p_send_block(fd, h, &crypto); // use encryption if available
+                    }
+                    p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
+                } else {
+                    for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
+                        p2p_send_block(fd, h, &crypto);
+                    }
+                    p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
                 }
-                p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
