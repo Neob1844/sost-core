@@ -856,11 +856,9 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
-        // Use the last accepted block's declared profile (matches actual chain state)
-        // The base formula may show B0, but the miner can use anti-stall to ease to E4
-        casert_profile_idx = g_last_accepted_profile;
-        // Compute lag for informational purposes
-        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), 0);
+        // Compute live profile with current wall-clock time (includes anti-stall easing)
+        auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), std::time(nullptr));
+        casert_profile_idx = dec.profile_index;
         casert_lag = dec.lag;
     }
     // Profile name from index
