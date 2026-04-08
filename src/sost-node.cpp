@@ -183,7 +183,7 @@ static std::atomic<bool> g_running{true};
 
 // P2P encryption mode
 enum class P2PEncMode { OFF, ON, REQUIRED };
-static P2PEncMode g_p2p_enc = P2PEncMode::ON;
+static P2PEncMode g_p2p_enc = P2PEncMode::OFF;
 
 // P2PMsg defined early for use by encryption functions
 struct P2PMsg {
@@ -4892,7 +4892,7 @@ int main(int argc, char** argv) {
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
             printf("  --rpc-public               Bind RPC to 0.0.0.0 (default: 127.0.0.1)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
-            printf("  --p2p-enc off|on|required      P2P encryption mode (default: on)\n");
+            printf("  --p2p-enc off|on|required      P2P encryption mode (default: off)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
             printf("  --no-fast-sync             Same as --full-verify\n");
             printf("  --verbose / -v             Show CX-VERIFY and PARSE debug output\n");
