@@ -4027,6 +4027,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
     struct timeval tv; tv.tv_sec=30; tv.tv_usec=0;
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
+    int64_t sync_last_getb_height = -1;
+    int64_t sync_blocks_since_done = 0;
+    auto sync_last_done_time = std::chrono::steady_clock::now();
+    auto sync_last_blck_time = std::chrono::steady_clock::now();
+
     while(g_running) {
         P2PMsg msg;
         bool recv_ok;
@@ -4191,6 +4196,32 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             } else {
                 if (is_syncing) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
+                    sync_blocks_since_done++;
+                    sync_last_blck_time = std::chrono::steady_clock::now();
+                    // Catch-up: if we processed blocks but no DONE arrived recently,
+                    // and we're still behind, proactively request next batch.
+                    // This handles the race where DONE was consumed before blocks finished.
+                    auto since_done = std::chrono::duration_cast<std::chrono::seconds>(
+                        sync_last_blck_time - sync_last_done_time).count();
+                    if (sync_blocks_since_done >= 10 && since_done > 3) {
+                        int64_t catchup_h = -1;
+                        {
+                            std::lock_guard<std::mutex> lk2(g_peers_mu);
+                            for(auto& p2:g_peers) if(p2.fd==fd){catchup_h=p2.their_height;break;}
+                        }
+                        if (catchup_h > 0 && g_chain_height < catchup_h &&
+                            g_chain_height + 1 != sync_last_getb_height) {
+                            printf("[SYNC] Catch-up: %lld blocks since DONE (%llds ago), requesting %lld..%lld\n",
+                                   (long long)sync_blocks_since_done, (long long)since_done,
+                                   (long long)(g_chain_height+1), (long long)catchup_h);
+                            uint8_t buf2[8];
+                            write_i64(buf2, g_chain_height+1);
+                            p2p_send_adaptive(fd, crypto, "GETB", buf2, 8);
+                            sync_last_getb_height = g_chain_height + 1;
+                            sync_blocks_since_done = 0;
+                            sync_last_done_time = std::chrono::steady_clock::now();
+                        }
+                    }
                 }
             }
           } catch (const std::exception& e) {
@@ -4233,6 +4264,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             // no-op, just update last_seen (already done above)
         }
         else if(!strcmp(msg.cmd,"DONE")) {
+            sync_blocks_since_done = 0;
+            sync_last_done_time = std::chrono::steady_clock::now();
             int64_t their_h=-1;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
@@ -4246,8 +4279,12 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height+1);
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                // Mark that we have an active GETB request — the BLCK handler
+                // will re-request if needed when the batch ends without a new DONE
+                sync_last_getb_height = g_chain_height + 1;
             } else {
                 printf("[SYNC] Sync complete: height %lld\n",(long long)g_chain_height);
+                sync_last_getb_height = -1;
             }
         }
         else {
