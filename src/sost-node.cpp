@@ -4161,6 +4161,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         return true;
     };
 
+    bool should_disconnect = false;
+
     // --- Helper: check sync progress and advance if stalled ---
     auto check_sync_advance = [&]() {
         if (sync.mode != SyncState::HISTORICAL) return;
@@ -4200,7 +4202,6 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
     // --- Helper: process one decoded message ---
     // Returns false if the peer should be disconnected.
-    bool should_disconnect = false;
     auto process_message = [&](P2PMsg& msg) -> bool {
         // Update last_seen
         {
