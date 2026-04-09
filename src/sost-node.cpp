@@ -2508,19 +2508,22 @@ static int64_t read_i64(const uint8_t* p) {
 
 static bool read_exact(int fd, uint8_t* buf, size_t len) {
     size_t got=0;
+    int retries=0;
     while(got<len){
-        // Wait for data with 30s timeout using select (works even if socket is blocking)
-        fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
-        struct timeval tv={30,0}; // 30s absolute timeout per wait
-        int sel = select(fd+1,&fds,nullptr,nullptr,&tv);
-        if(sel <= 0) return false; // timeout or error
         ssize_t n=read(fd,buf+got,len-got);
         if(n<0){
-            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR) continue;
+            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
+                if(++retries>300) return false; // ~30s with 100ms waits
+                fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
+                struct timeval tv={0,100000};
+                select(fd+1,&fds,nullptr,nullptr,&tv);
+                continue;
+            }
             return false;
         }
-        if(n==0) return false; // connection closed
+        if(n==0) return false;
         got+=n;
+        retries=0; // reset on successful read
     }
     return true;
 }
@@ -4032,6 +4035,32 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
     auto sync_last_done_time = std::chrono::steady_clock::now();
     auto sync_last_blck_time = std::chrono::steady_clock::now();
 
+    // Sync watchdog: every 30s, check if sync is stalled and re-request
+    std::atomic<bool> peer_alive{true};
+    std::atomic<int64_t> watchdog_last_height{0};
+    std::thread watchdog([&](){
+        while(peer_alive && g_running){
+            std::this_thread::sleep_for(std::chrono::seconds(30));
+            if(!peer_alive || !g_running) break;
+            int64_t wh = -1;
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for(auto& p:g_peers) if(p.fd==fd){wh=p.their_height;break;}
+            }
+            int64_t cur = g_chain_height;
+            int64_t prev = watchdog_last_height.load();
+            if(wh > 0 && cur < wh && cur == prev && cur > 0){
+                // Height hasn't changed in 30s and we're behind — re-request
+                printf("[SYNC-WATCHDOG] Stall detected at height %lld (peer has %lld), sending GETB\n",
+                       (long long)cur, (long long)wh);
+                uint8_t buf[8];
+                write_i64(buf, cur+1);
+                p2p_send(fd, "GETB", buf, 8); // plaintext GETB
+            }
+            watchdog_last_height.store(cur);
+        }
+    });
+
     while(g_running) {
         P2PMsg msg;
         bool recv_ok;
@@ -4292,6 +4321,8 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         }
     }
 
+    peer_alive = false;
+    if(watchdog.joinable()) watchdog.join();
     close(fd);
     cleanup_peer_rate(fd);
     {
