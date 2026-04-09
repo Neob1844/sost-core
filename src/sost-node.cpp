@@ -4029,28 +4029,29 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
     // P2P encryption handshake
     PeerCrypto crypto{};
+    P2PMsg saved_msg{}; // message read during EKEY negotiation that wasn't EKEY
+    bool has_saved_msg = false;
+
     if(g_p2p_enc != P2PEncMode::OFF){
         uint8_t our_priv[32], our_pub[32];
         if(x25519_keygen(our_priv, our_pub)){
-            // Send our ephemeral public key
             p2p_send(fd, "EKEY", our_pub, 32);
 
-            // Wait for their key (with timeout)
             struct timeval ht; ht.tv_sec=10; ht.tv_usec=0;
             setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &ht, sizeof(ht));
 
             P2PMsg ekey_msg;
-            if(p2p_recv(fd, ekey_msg) && !strcmp(ekey_msg.cmd,"EKEY") && ekey_msg.payload.size()==32){
+            bool got_msg = p2p_recv(fd, ekey_msg);
+            if(got_msg && !strcmp(ekey_msg.cmd,"EKEY") && ekey_msg.payload.size()==32){
                 uint8_t shared[32];
                 if(x25519_derive(our_priv, ekey_msg.payload.data(), shared)){
                     derive_session_keys(shared, outbound, crypto.send_key, crypto.recv_key);
                     crypto.encrypted = true;
-                    printf("[P2P] %s: encryption established (X25519+ChaCha20)\n", addr.c_str());
+                    printf("[ENC] %s: encryption established (X25519+ChaCha20)\n", addr.c_str());
                 }
-                // Zero shared secret
                 OPENSSL_cleanse(shared, 32);
             } else if(g_p2p_enc == P2PEncMode::REQUIRED){
-                printf("[P2P] %s: encryption required but peer doesn't support it, dropping\n", addr.c_str());
+                printf("[ENC] %s: encryption required but peer doesn't support it, dropping\n", addr.c_str());
                 OPENSSL_cleanse(our_priv, 32);
                 close(fd);
                 std::lock_guard<std::mutex> lk(g_peers_mu);
@@ -4058,7 +4059,13 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     [fd](const Peer& p){return p.fd==fd;}),g_peers.end());
                 return;
             } else {
-                printf("[P2P] %s: peer doesn't support encryption, falling back to plaintext\n", addr.c_str());
+                printf("[ENC] %s: peer doesn't support encryption, falling back to plaintext\n", addr.c_str());
+                // Save the non-EKEY message we read — it's probably VERSION from the peer
+                if(got_msg) {
+                    saved_msg = ekey_msg;
+                    has_saved_msg = true;
+                    printf("[ENC] %s: saved %s message from failed EKEY handshake\n", addr.c_str(), ekey_msg.cmd);
+                }
             }
             OPENSSL_cleanse(our_priv, 32);
         }
@@ -4399,11 +4406,22 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 sync.mode = SyncState::LIVE;
             }
         }
+        else if (!strcmp(msg.cmd, "EKEY")) {
+            // Ignore EKEY from peers when we have encryption disabled — don't penalize
+            printf("[ENC] %s: ignoring EKEY (our enc mode is off)\n", addr.c_str());
+        }
         else {
             if (add_misbehavior(fd, addr, 10, "unknown command")) return false;
         }
         return true;
     };
+
+    // Process saved message from failed EKEY handshake (usually VERSION from peer)
+    if (has_saved_msg) {
+        printf("[ENC] Processing saved %s message from EKEY fallback\n", saved_msg.cmd);
+        process_message(saved_msg);
+        has_saved_msg = false;
+    }
 
     // =========================================================================
     // Main event loop — non-blocking reads with 1-second select timeout
