@@ -4176,10 +4176,10 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         auto now = std::chrono::steady_clock::now();
         double elapsed = std::chrono::duration<double>(now - sync.last_progress).count();
 
-        if (elapsed > 10.0) {
-            // No progress for 10 seconds — request next batch
+        if (elapsed > 30.0) {
+            // No progress for 30 seconds — request next batch
             sync.retries++;
-            if (sync.retries > 200) {
+            if (sync.retries > 100) {
                 printf("[SYNC] Too many stall recoveries (%d), giving up on %s\n",
                        sync.retries, addr.c_str());
                 sync.mode = SyncState::IDLE;
