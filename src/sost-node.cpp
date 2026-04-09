@@ -4123,18 +4123,10 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if(!strcmp(msg.cmd,"GETB")) {
             if(msg.payload.size()>=8){
                 int64_t from_h=read_i64(msg.payload.data());
-                auto wmu = get_peer_write_mu(fd);
-                if (wmu) {
-                    std::lock_guard<std::mutex> wlk(*wmu);
-                    for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
-                        p2p_send_block(fd, h, &crypto);
-                    }
-                } else {
-                    for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
-                        p2p_send_block(fd, h, &crypto);
-                    }
+                for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
+                    p2p_send_block(fd, h, nullptr); // plaintext — avoids write_mu deadlock
                 }
-                p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
+                p2p_send(fd, "DONE", nullptr, 0); // plaintext DONE
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
