@@ -56,19 +56,20 @@ static const std::vector<HardCheckpoint> HARD_CHECKPOINTS = {
     {3200, "1af5229815b9df80899c32db9a809b26367b402bb8630c9dd227d1bf607be830"},
     {3225, "41cd3f888b64a9a04051f49129764b2153414685c9ad23ad902abe3e8d75a43d"},
     {3300, "2894a6b3b4392d6679c6dce95a1bb9d2e406d0d661baeef553e49ba2229aa230"},
+    {3490, "14f7b7a9bc52ae0151ed5db33b906552f45a7667f4a274e46507144303311a3b"},
 };
 
 // Quick range pre-check before iterating checkpoints.
 // Do NOT use this alone to trust blocks.
-static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 3300;
+static const uint32_t LAST_HARD_CHECKPOINT_HEIGHT = 3490;
 
 // Assumevalid anchor: if this block hash exists on the active chain,
 // ancestors of that branch can skip expensive ConvergenceX recomputation
 // (but NOT cheap/semantic verification).
 // This allows new nodes to sync without full CX proof data for historical blocks.
-// Updated: 2026-04-08 — block 3300 verified on mainnet.
-static const std::string ASSUMEVALID_BLOCK_HASH = "2894a6b3b4392d6679c6dce95a1bb9d2e406d0d661baeef553e49ba2229aa230";
-static const uint32_t ASSUMEVALID_HEIGHT = 3300;
+// Updated: 2026-04-09 — block 3490 verified on mainnet.
+static const std::string ASSUMEVALID_BLOCK_HASH = "14f7b7a9bc52ae0151ed5db33b906552f45a7667f4a274e46507144303311a3b";
+static const uint32_t ASSUMEVALID_HEIGHT = 3490;
 
 // ═══════════════════════════════════════════════════════════════════
 // Dynamic checkpoint override — loaded from checkpoint.json at startup
