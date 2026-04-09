@@ -352,6 +352,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
+  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -725,8 +726,8 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     <tbody id="nodesBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
     <div style="font-size:9px;color:var(--text3);margin-top:8px;line-height:1.6;font-family:var(--code);">
       Disclaimer: This view shows peers connected to YOUR node only. It is not a complete picture of the network.
-      IP addresses are partially masked for privacy. Node count, heights, and encryption status reflect this node's
-      local perspective and may differ from the global network state.
+      Node IDs are derived hashes — no IP addresses are exposed. Node count, heights, and encryption status reflect
+      this node's local perspective and may differ from the global network state.
     </div>
   </div>
 </div>
@@ -2652,22 +2653,43 @@ refresh();setInterval(refresh,30000);
 
 // Active Nodes polling
 (function(){
+  function nodeId(addr){
+    // Derive a short pseudo-hash node ID from the address string for privacy
+    var h=0;for(var i=0;i<addr.length;i++){h=((h<<5)-h+addr.charCodeAt(i))|0;}
+    var hex=(h>>>0).toString(16).padStart(8,'0');
+    return 'node-'+hex.slice(0,6);
+  }
+  function relTime(connTimeSec){
+    // connTimeSec = seconds connected (from conntime or similar)
+    if(!connTimeSec||connTimeSec<=0) return 'just now';
+    var sec=connTimeSec;
+    if(sec<60) return 'just now';
+    if(sec<3600) return Math.floor(sec/60)+'m ago';
+    if(sec<86400) return Math.floor(sec/3600)+'h ago';
+    return Math.floor(sec/86400)+'d ago';
+  }
   async function loadPeerInfo(){
     try{
       var peers=await rpc('getpeerinfo');
       if(!Array.isArray(peers)){document.getElementById('nodesInfo').textContent='RPC error';return;}
-      var nConn=peers.length,nNear=0,nEnc=0,nPlain=0;
+      var nConn=peers.length,nNear=0,nEnc=0,nPlain=0,nAcked=0;
       var tipH=H||0;
+      var nowSec=Math.floor(Date.now()/1000);
       for(var i=0;i<peers.length;i++){
         var p=peers[i];
-        if(Math.abs(p.height-tipH)<=3)nNear++;
+        // Near tip: peer height >= (our height - 3)
+        if(p.height>=0&&tipH>0&&p.height>=(tipH-3))nNear++;
         if(p.enc_mode==='encrypted')nEnc++;else nPlain++;
+        if(p.version_acked)nAcked++;
       }
       document.getElementById('nConnected').textContent=nConn;
       document.getElementById('nNearTip').textContent=nNear;
       document.getElementById('nEncrypted').textContent=nEnc;
       document.getElementById('nPlaintext').textContent=nPlain;
       document.getElementById('nodesInfo').textContent=nConn+' peers connected';
+      // Update the header card — count only version_acked peers as unique nodes
+      var dNodesEl=document.getElementById('dNodes');
+      if(dNodesEl) dNodesEl.textContent=nAcked;
       var tbody=document.getElementById('nodesBody');
       if(!peers.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
       var html='';
@@ -2681,11 +2703,19 @@ refresh();setInterval(refresh,30000);
           else deltaClr='var(--yellow)';
         }
         var encClr=p.enc_mode==='encrypted'?'var(--purple)':'var(--text3)';
-        var statusClr=p.version_acked?'var(--green)':'var(--yellow)';
-        var statusTxt=p.version_acked?'synced':'handshaking';
+        // Status: handshaking if not acked, near-tip (synced) if delta<=3, otherwise tracking
+        var statusTxt='handshaking';var statusClr='var(--yellow)';
+        if(p.version_acked){
+          var isNearTip=(p.height>=0&&tipH>0&&p.height>=(tipH-3));
+          if(isNearTip){statusTxt='synced';statusClr='var(--green)';}
+          else{statusTxt='tracking';statusClr='var(--orange)';}
+        }
         var dirClr=p.direction==='inbound'?'var(--cyan)':'var(--orange)';
+        // Compute connected duration for relative timestamp
+        var connSec=(p.conntime&&p.conntime>0)?(nowSec-p.conntime):0;
+        var nid=nodeId(p.addr);
         html+='<tr>';
-        html+='<td style="font-size:11px;color:var(--text);">'+p.addr+'</td>';
+        html+='<td style="font-size:11px;color:var(--cyan);" title="Connected '+relTime(connSec)+'">'+nid+'</td>';
         html+='<td style="color:'+dirClr+'">'+p.direction+'</td>';
         html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+'</td>';
         html+='<td style="color:'+deltaClr+';font-weight:600;">'+(typeof delta==='number'?(delta>0?'+':'')+delta:delta)+'</td>';
