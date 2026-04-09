@@ -2508,23 +2508,19 @@ static int64_t read_i64(const uint8_t* p) {
 
 static bool read_exact(int fd, uint8_t* buf, size_t len) {
     size_t got=0;
-    int retries=0;
     while(got<len){
+        // Wait for data with 30s timeout using select (works even if socket is blocking)
+        fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
+        struct timeval tv={30,0}; // 30s absolute timeout per wait
+        int sel = select(fd+1,&fds,nullptr,nullptr,&tv);
+        if(sel <= 0) return false; // timeout or error
         ssize_t n=read(fd,buf+got,len-got);
         if(n<0){
-            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
-                if(++retries>50) return false; // ~5s with 100ms select
-                // Wait up to 100ms for data (handles high-latency connections)
-                fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
-                struct timeval tv={0,100000}; // 100ms
-                select(fd+1,&fds,nullptr,nullptr,&tv);
-                continue;
-            }
+            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR) continue;
             return false;
         }
         if(n==0) return false; // connection closed
         got+=n;
-        retries=0;
     }
     return true;
 }
