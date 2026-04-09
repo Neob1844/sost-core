@@ -4187,10 +4187,31 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 if (is_syncing) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
                 }
-                auto t_end = std::chrono::steady_clock::now();
-                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
-                if (ms > 100) {
-                    printf("[P2P] Warning: block processing took %lldms from %s\n", (long long)ms, addr.c_str());
+                // Sync catch-up: after accepting a block, check if the message
+                // queue is empty (no more BLCKs waiting) and we're still behind.
+                // Use non-blocking peek via select() to see if more data is coming.
+                if (is_syncing) {
+                    fd_set rset;
+                    FD_ZERO(&rset);
+                    FD_SET(fd, &rset);
+                    struct timeval peek_tv = {0, 50000}; // 50ms peek
+                    int ready = select(fd+1, &rset, nullptr, nullptr, &peek_tv);
+                    if (ready == 0) {
+                        // No more data coming — we might be stalled.
+                        // If we're still behind, request next batch.
+                        int64_t catchup_h = -1;
+                        {
+                            std::lock_guard<std::mutex> lk(g_peers_mu);
+                            for(auto& p:g_peers) if(p.fd==fd){catchup_h=p.their_height;break;}
+                        }
+                        if (catchup_h > 0 && g_chain_height < catchup_h) {
+                            printf("[SYNC] No more data after block %lld, requesting %lld..%lld\n",
+                                   (long long)g_chain_height, (long long)(g_chain_height+1), (long long)catchup_h);
+                            uint8_t buf[8];
+                            write_i64(buf, g_chain_height+1);
+                            p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                        }
+                    }
                 }
             }
           } catch (const std::exception& e) {
@@ -4212,6 +4233,22 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         }
         else if(!strcmp(msg.cmd,"PING")) {
             p2p_send_adaptive(fd, crypto, "PONG", nullptr, 0);
+            // Sync catch-up: if we're still behind after a PING interval,
+            // re-request blocks. This handles the case where DONE arrived
+            // before all blocks from the previous batch were processed.
+            int64_t ping_their_h = -1;
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for(auto& p:g_peers) if(p.fd==fd){ping_their_h=p.their_height;break;}
+            }
+            if (ping_their_h > 0 && g_chain_height < ping_their_h) {
+                printf("[SYNC] Catch-up on PING: still behind (%lld < %lld), requesting blocks %lld..%lld\n",
+                       (long long)g_chain_height, (long long)ping_their_h,
+                       (long long)(g_chain_height+1), (long long)ping_their_h);
+                uint8_t buf[8];
+                write_i64(buf, g_chain_height+1);
+                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+            }
         }
         else if(!strcmp(msg.cmd,"PONG")) {
             // no-op, just update last_seen (already done above)
