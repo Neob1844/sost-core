@@ -53,6 +53,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -2506,24 +2507,52 @@ static int64_t read_i64(const uint8_t* p) {
     int64_t v=0; for(int i=0;i<8;++i) v|=((int64_t)p[i]<<(i*8)); return v;
 }
 
+// Interrupt pipe for breaking out of blocking reads
+static int g_interrupt_pipe[2] = {-1, -1};
+static void init_interrupt_pipe() {
+    if(g_interrupt_pipe[0] < 0) {
+        pipe(g_interrupt_pipe);
+        fcntl(g_interrupt_pipe[0], F_SETFL, O_NONBLOCK);
+        fcntl(g_interrupt_pipe[1], F_SETFL, O_NONBLOCK);
+    }
+}
+static void signal_interrupt() {
+    if(g_interrupt_pipe[1] >= 0) {
+        char c = 1;
+        auto r = write(g_interrupt_pipe[1], &c, 1); (void)r;
+    }
+}
+static void drain_interrupt() {
+    if(g_interrupt_pipe[0] >= 0) {
+        char buf[64];
+        while(read(g_interrupt_pipe[0], buf, sizeof(buf)) > 0) {}
+    }
+}
+
 static bool read_exact(int fd, uint8_t* buf, size_t len) {
     size_t got=0;
-    int retries=0;
     while(got<len){
+        fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
+        int maxfd = fd;
+        if(g_interrupt_pipe[0] >= 0) {
+            FD_SET(g_interrupt_pipe[0], &fds);
+            if(g_interrupt_pipe[0] > maxfd) maxfd = g_interrupt_pipe[0];
+        }
+        struct timeval tv={30,0};
+        int sel = select(maxfd+1,&fds,nullptr,nullptr,&tv);
+        if(sel <= 0) return false; // timeout
+        // Check interrupt pipe first
+        if(g_interrupt_pipe[0] >= 0 && FD_ISSET(g_interrupt_pipe[0], &fds)) {
+            drain_interrupt();
+            return false; // interrupted by watchdog
+        }
         ssize_t n=read(fd,buf+got,len-got);
         if(n<0){
-            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
-                if(++retries>300) return false; // ~30s with 100ms waits
-                fd_set fds; FD_ZERO(&fds); FD_SET(fd,&fds);
-                struct timeval tv={0,100000};
-                select(fd+1,&fds,nullptr,nullptr,&tv);
-                continue;
-            }
+            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR) continue;
             return false;
         }
         if(n==0) return false;
         got+=n;
-        retries=0; // reset on successful read
     }
     return true;
 }
@@ -4027,8 +4056,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
     p2p_send_version(fd);
 
-    struct timeval tv; tv.tv_sec=30; tv.tv_usec=0;
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    // No SO_RCVTIMEO — read_exact uses select() for timeouts instead
 
     // Sync state machine — tracks batch progress so the BLCK handler can
     // trigger the next GETB when DONE arrived before blocks were processed.
@@ -4057,11 +4085,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             int64_t cur = g_chain_height;
             int64_t prev = watchdog_last_height.load();
             if(wh > 0 && cur < wh && cur == prev && cur > 0){
-                printf("[SYNC-WATCHDOG] Stall detected at height %lld (peer has %lld), sending GETB\n",
+                printf("[SYNC-WATCHDOG] Stall detected at height %lld (peer has %lld), closing socket to force reconnect\n",
                        (long long)cur, (long long)wh);
-                uint8_t buf[8];
-                write_i64(buf, cur+1);
-                p2p_send(fd, "GETB", buf, 8);
+                signal_interrupt(); // break the select() in read_exact via interrupt pipe
             }
             watchdog_last_height.store(cur);
         }
@@ -4963,6 +4989,7 @@ static void crash_handler(int sig) {
 // main
 // =============================================================================
 int main(int argc, char** argv) {
+    init_interrupt_pipe(); // self-pipe for sync watchdog
     // Crash diagnostics
     signal(SIGSEGV, crash_handler);
     signal(SIGABRT, crash_handler);
@@ -5147,15 +5174,25 @@ int main(int argc, char** argv) {
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers){
-                    // Skip syncing peers — writing PING while GETB handler
-                    // is sending blocks corrupts the TCP stream (race condition)
                     if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
                         continue;
                     if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
                 }
+                // Auto-reconnect: if no peers and we have connect addresses, reconnect
+                if(g_peers.empty() && !connect_addrs.empty()){
+                    printf("[P2P] No peers connected, attempting reconnect...\n");
+                    for(const auto& a:connect_addrs){
+                        auto colon=a.rfind(':');
+                        if(colon!=std::string::npos){
+                            connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()));
+                        } else {
+                            connect_peer(a, P2P_PORT_DEFAULT);
+                        }
+                    }
+                }
             }
             if(!chain_path.empty()) save_chain(chain_path);
-            g_popc_registry.save(g_popc_registry_path, nullptr); // best-effort periodic save
+            g_popc_registry.save(g_popc_registry_path, nullptr);
         }
     } catch (const std::exception& e) {
         fprintf(stderr, "[CRASH] Main loop exception: %s (height=%lld)\n",
