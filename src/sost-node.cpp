@@ -2562,7 +2562,17 @@ static bool write_exact(int fd, const void* buf, size_t len) {
     const uint8_t* p=static_cast<const uint8_t*>(buf);
     while(sent<len){
         ssize_t n=write(fd,p+sent,len-sent);
-        if(n<=0) return false;
+        if(n<0){
+            if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
+                // Socket buffer full — wait up to 30s for space
+                fd_set wfds; FD_ZERO(&wfds); FD_SET(fd,&wfds);
+                struct timeval tv={30,0};
+                if(select(fd+1,nullptr,&wfds,nullptr,&tv)<=0) return false;
+                continue;
+            }
+            return false;
+        }
+        if(n==0) return false;
         sent+=n;
     }
     return true;
