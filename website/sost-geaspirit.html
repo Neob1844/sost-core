@@ -1489,7 +1489,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="human-box">
-      <b>Phase 23 summary:</b> GEE pipelines built for raw S2 reflectance (10 bands, 4 zones, cloud-masked) and multi-year NDVI (Landsat 8, 2013-2024, 12 annual composites, 4 zones). Both pipelines sample-tested with real satellite data. Real NDVI trends measured: Zambia +0.0043/yr (greening, vegetation signal present), Chuquicamata ~0.0/yr (hyperarid, no signal). Full raster export pending (async GEE batch). Frontier validation advances to <b>PIPELINE_READY_VALIDATION_PENDING</b>. Depth unchanged at 4.1/10. Canonical unchanged at 22.8/40 (57%). Progress is in infrastructure (pipelines built), not in validated science (AUC gains). Phase 24 will execute exports, download, and validate.
+      <b>Phase 60 summary:</b> SAR/InSAR subsurface proxy stack built with 3-tier architecture (remote proxy, public evidence, local geophysics). 14 SAR features + 5 InSAR features + 13 hydrostructural features defined. Honesty matrix applied per zone with environment-specific confidence penalties. Banos de Mula (Murcia, Spain) geothermal validation completed with mixed-signal target ranking. Phase 59 blind comparison validated across 3 new zones (Menzies WA: 0.995 AUC, Boulia QLD: 0.885, Atacama: 0.894). Canonical score remains <b>22.8/40 (57%)</b> &mdash; SAR features extracted 0 usable features at validation zones (GEE/data pipeline incomplete). Phases 61-70 planned: ERA5 climate, WorldCover land cover, advanced DEM derivatives, gravity data unblocking, PALSAR L-band, and cross-validation architecture upgrade.
     </div>
   </div>
 </section>
@@ -1515,7 +1515,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 25</span> Spatial alignment layer + AUC measurement <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 26</span> Terrain depth pilot &mdash; 8 sources audited, 4 zones piloted <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 57-59</span> Geomorphometric signatures + drainage analysis + blind comparison <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 60</span> SAR/InSAR subsurface proxy &mdash; surface anomaly detection for buried structure inference <span class="phase-bar"><span class="phase-fill" style="width:40%"></span></span> <span style="color:var(--amber)">IN PROGRESS</span></div>
+    <div class="phase"><span class="phase-label">PHASE 60</span> SAR/InSAR subsurface proxy &mdash; 3-tier architecture + honesty matrix + Banos de Mula validation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 61</span> ERA5 climate reanalysis + topographic wetness index &mdash; cross-zone normalization <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:#555">PLANNED</span></div>
+    <div class="phase"><span class="phase-label">PHASE 62</span> ESA WorldCover + Global Forest Watch &mdash; land cover masking + vegetation correction <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:#555">PLANNED</span></div>
+    <div class="phase"><span class="phase-label">PHASE 63-65</span> DEM advanced derivatives + PCA/ICA on SAR temporal stacks <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:#555">PLANNED</span></div>
+    <div class="phase"><span class="phase-label">PHASE 66</span> Public gravity + magnetics data push &mdash; depth score breakthrough target <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:#555">PLANNED</span></div>
+    <div class="phase"><span class="phase-label">PHASE 67-70</span> OneGeology + PALSAR L-band + GRACE + cross-validation architecture <span class="phase-bar"><span class="phase-fill pending" style="width:100%"></span></span> <span style="color:#555">PLANNED</span></div>
   </div>
 </section>
 
