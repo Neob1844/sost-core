@@ -699,6 +699,36 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     <table class="tbl"><thead><tr><th>TXID</th><th>SIZE</th><th>FEE</th><th>RATE</th></tr></thead>
     <tbody id="mpBody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr></tbody></table>
   </div>
+
+  <!-- ACTIVE NODES SECTION -->
+  <div class="section" id="nodesSection">
+    <div class="sec-head"><div class="sec-title">// <b>ACTIVE NODES</b></div><div class="sec-meta" id="nodesInfo">refreshing...</div></div>
+    <div id="nodesSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">CONNECTED</div>
+        <div style="font-size:16px;font-weight:600;color:var(--green);" id="nConnected">0</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">NEAR TIP</div>
+        <div style="font-size:16px;font-weight:600;color:var(--cyan);" id="nNearTip">0</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">ENCRYPTED</div>
+        <div style="font-size:16px;font-weight:600;color:var(--purple);" id="nEncrypted">0</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">PLAINTEXT</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text3);" id="nPlaintext">0</div>
+      </div>
+    </div>
+    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th>HEIGHT</th><th>DELTA</th><th>TRANSPORT</th><th>STATUS</th></tr></thead>
+    <tbody id="nodesBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
+    <div style="font-size:9px;color:var(--text3);margin-top:8px;line-height:1.6;font-family:var(--code);">
+      Disclaimer: This view shows peers connected to YOUR node only. It is not a complete picture of the network.
+      IP addresses are partially masked for privacy. Node count, heights, and encryption status reflect this node's
+      local perspective and may differ from the global network state.
+    </div>
+  </div>
 </div>
 <div class="footer">
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
@@ -1348,23 +1378,64 @@ function renderDashPanel(key,body,title){
       var addrs=Object.keys(miners);
       document.getElementById('dMiners').textContent=addrs.length;
       document.getElementById('dMinersSub').textContent='last '+lookback+' blocks';
+
+      // --- Simultaneous mining share calculation ---
+      // Build ordered block list: [{height, miner}]
+      var blockList=[];
+      for(var bh2=Math.max(1,H-lookback+1);bh2<=H;bh2++){
+        try{
+          var hash2=await rpc('getblockhash',[String(bh2)]);
+          var blk2=await rpc('getblock',[hash2]);
+          if(blk2&&blk2.miner_address) blockList.push({h:bh2,m:blk2.miner_address});
+        }catch(e2){break;}
+      }
+      // For each block, determine active miners (mined >=1 in previous 12 blocks)
+      var WINDOW=12;
+      var simultaneousTotal=0;
+      var simultaneousPerMiner={};
+      var soloPerMiner={};
+      for(var bi=0;bi<blockList.length;bi++){
+        var activeSet={};
+        var lo=Math.max(0,bi-WINDOW);
+        for(var bj=lo;bj<bi;bj++){activeSet[blockList[bj].m]=true;}
+        var activeCount=Object.keys(activeSet).length;
+        var curMiner=blockList[bi].m;
+        if(activeCount>=2){
+          simultaneousTotal++;
+          if(!simultaneousPerMiner[curMiner])simultaneousPerMiner[curMiner]=0;
+          simultaneousPerMiner[curMiner]++;
+        } else if(activeCount<=1){
+          // solo: this miner is the only one active (or first blocks)
+          if(!soloPerMiner[curMiner])soloPerMiner[curMiner]=0;
+          soloPerMiner[curMiner]++;
+        }
+      }
+
       var html='<div style="line-height:2;font-size:12px">';
       html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--purple);font-weight:600">'+addrs.length+'</span><br>';
       html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">blocks '+(H-lookback)+' \u2014 '+H+'</span><br>';
+      html+='<span style="color:var(--text3)">Simultaneous blocks:</span> <span style="color:var(--cyan);font-weight:600">'+simultaneousTotal+'</span> / '+blockList.length+' <span style="color:var(--text3)">('+(blockList.length?((simultaneousTotal/blockList.length)*100).toFixed(1):'0')+'%)</span><br>';
       html+='<div style="margin-top:10px"><table style="width:100%;font-size:11px;border-collapse:collapse">';
-      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Share</th><th style="text-align:right;padding:4px">Latest</th></tr>';
+      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Raw Share</th><th style="text-align:right;padding:4px">Simul. Share</th><th style="text-align:right;padding:4px">Solo</th><th style="text-align:right;padding:4px">Latest</th></tr>';
       var sorted=addrs.sort(function(a,b){return miners[b].count-miners[a].count;});
       for(var i=0;i<sorted.length;i++){
         var a=sorted[i],m=miners[a];
         var denom=totalBlocksCounted||1;
         var pct=Math.min((m.count/denom*100),100.0).toFixed(1);
         var barW=Math.max(2,m.count/denom*200);
+        var simBlocks=simultaneousPerMiner[a]||0;
+        var simPct=simultaneousTotal?(simBlocks/simultaneousTotal*100).toFixed(1):'0.0';
+        var solo=soloPerMiner[a]||0;
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
         html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.count+'</td>';
         html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--cyan)">'+simPct+'%</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--text3)">'+solo+'</td>';
         html+='<td style="text-align:right;padding:4px;color:var(--text3)">#'+m.last+'</td></tr>';
       }
-      html+='</table></div></div>';
+      html+='</table></div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Disclaimer: Observed simultaneous mining share is calculated from this node\'s view of the last '+lookback+' blocks. "Simultaneous" means 2+ distinct miners were active (mined at least 1 block) in the previous '+WINDOW+' blocks. This is an approximation — different nodes may see slightly different values. Solo blocks are those mined when only 1 miner was active in the lookback window.</div>';
+      html+='</div>';
       body.innerHTML=html;
     })();
     body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses...</div>';
@@ -2578,6 +2649,58 @@ async function loadLatestTxs(){
 }
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
+
+// Active Nodes polling
+(function(){
+  async function loadPeerInfo(){
+    try{
+      var peers=await rpc('getpeerinfo');
+      if(!Array.isArray(peers)){document.getElementById('nodesInfo').textContent='RPC error';return;}
+      var nConn=peers.length,nNear=0,nEnc=0,nPlain=0;
+      var tipH=H||0;
+      for(var i=0;i<peers.length;i++){
+        var p=peers[i];
+        if(Math.abs(p.height-tipH)<=3)nNear++;
+        if(p.enc_mode==='encrypted')nEnc++;else nPlain++;
+      }
+      document.getElementById('nConnected').textContent=nConn;
+      document.getElementById('nNearTip').textContent=nNear;
+      document.getElementById('nEncrypted').textContent=nEnc;
+      document.getElementById('nPlaintext').textContent=nPlain;
+      document.getElementById('nodesInfo').textContent=nConn+' peers connected';
+      var tbody=document.getElementById('nodesBody');
+      if(!peers.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
+      var html='';
+      for(var i=0;i<peers.length;i++){
+        var p=peers[i];
+        var delta=p.height>=0?(p.height-tipH):'\u2014';
+        var deltaClr='var(--text3)';
+        if(typeof delta==='number'){
+          if(delta===0)deltaClr='var(--green)';
+          else if(Math.abs(delta)<=3)deltaClr='var(--cyan)';
+          else deltaClr='var(--yellow)';
+        }
+        var encClr=p.enc_mode==='encrypted'?'var(--purple)':'var(--text3)';
+        var statusClr=p.version_acked?'var(--green)':'var(--yellow)';
+        var statusTxt=p.version_acked?'synced':'handshaking';
+        var dirClr=p.direction==='inbound'?'var(--cyan)':'var(--orange)';
+        html+='<tr>';
+        html+='<td style="font-size:11px;color:var(--text);">'+p.addr+'</td>';
+        html+='<td style="color:'+dirClr+'">'+p.direction+'</td>';
+        html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+'</td>';
+        html+='<td style="color:'+deltaClr+';font-weight:600;">'+(typeof delta==='number'?(delta>0?'+':'')+delta:delta)+'</td>';
+        html+='<td style="color:'+encClr+';">'+p.enc_mode+'</td>';
+        html+='<td style="color:'+statusClr+';">'+statusTxt+(p.ban_score>0?' <span style="color:var(--red);font-size:9px;">[ban:'+p.ban_score+']</span>':'')+'</td>';
+        html+='</tr>';
+      }
+      tbody.innerHTML=html;
+    }catch(e){
+      document.getElementById('nodesInfo').textContent='error: '+e.message;
+    }
+  }
+  loadPeerInfo();
+  setInterval(loadPeerInfo,30000);
+})();
 
 // Node/Miner status badges
 (function(){

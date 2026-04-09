@@ -317,6 +317,7 @@ struct Peer {
     bool outbound;
     time_t last_seen;
     int ban_score;         // misbehavior score, ban at >= 100
+    bool encrypted{false}; // true if P2P encryption established
     std::shared_ptr<std::mutex> write_mu{std::make_shared<std::mutex>()}; // per-fd write serialization
 };
 static std::vector<Peer> g_peers;
@@ -1042,13 +1043,35 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     return rpc_result(id,s.str());
 }
 
+static std::string mask_addr(const std::string& a) {
+    // Show first 2 octets only: "203.0.xxx.xxx" or "203.0.xxx.xxx:port"
+    size_t colon=a.rfind(':');
+    std::string ip=(colon!=std::string::npos)?a.substr(0,colon):a;
+    std::string port=(colon!=std::string::npos)?a.substr(colon):"";
+    int dots=0; std::string masked;
+    for(size_t i=0;i<ip.size();++i){
+        if(ip[i]=='.') dots++;
+        if(dots>=2){masked+=".xxx.xxx";break;}
+        masked+=ip[i];
+    }
+    if(dots<2) masked=ip; // fallback
+    return masked+port;
+}
+
 static std::string handle_getpeerinfo(const std::string& id, const std::vector<std::string>&) {
     std::lock_guard<std::mutex> lk(g_peers_mu);
     std::ostringstream s; s<<"[";
     for(size_t i=0;i<g_peers.size();++i){
         if(i)s<<",";
-        s<<"{\"addr\":\""<<g_peers[i].addr<<"\",\"height\":"<<g_peers[i].their_height
-         <<",\"inbound\":"<<(!g_peers[i].outbound?"true":"false")<<"}";
+        auto& p=g_peers[i];
+        s<<"{\"addr\":\""<<mask_addr(p.addr)<<"\""
+         <<",\"direction\":\""<<(p.outbound?"outbound":"inbound")<<"\""
+         <<",\"height\":"<<p.their_height
+         <<",\"version_acked\":"<<(p.version_acked?"true":"false")
+         <<",\"connected\":true"
+         <<",\"enc_mode\":\""<<(p.encrypted?"encrypted":"plaintext")<<"\""
+         <<",\"ban_score\":"<<p.ban_score
+         <<"}";
     }
     s<<"]"; return rpc_result(id,s.str());
 }
@@ -4047,6 +4070,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 if(x25519_derive(our_priv, ekey_msg.payload.data(), shared)){
                     derive_session_keys(shared, outbound, crypto.send_key, crypto.recv_key);
                     crypto.encrypted = true;
+                    { std::lock_guard<std::mutex> elk(g_peers_mu); for(auto& pp:g_peers) if(pp.fd==fd){pp.encrypted=true;break;} }
                     printf("[ENC] %s: encryption established (X25519+ChaCha20)\n", addr.c_str());
                 }
                 OPENSSL_cleanse(shared, 32);
