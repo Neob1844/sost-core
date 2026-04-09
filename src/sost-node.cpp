@@ -4177,12 +4177,12 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         double elapsed = std::chrono::duration<double>(now - sync.last_progress).count();
 
         if (elapsed > 30.0) {
-            // No progress for 30 seconds — request next batch
             sync.retries++;
-            if (sync.retries > 100) {
-                printf("[SYNC] Too many stall recoveries (%d), giving up on %s\n",
-                       sync.retries, addr.c_str());
-                sync.mode = SyncState::IDLE;
+            if (sync.retries > 3) {
+                // After 3 retries without progress, disconnect to force fresh reconnect
+                printf("[SYNC] Stall at height %lld after %d retries, disconnecting to reconnect\n",
+                       (long long)g_chain_height, sync.retries);
+                should_disconnect = true;
                 return;
             }
             printf("[SYNC] Stall recovery #%d: height=%lld, peer=%lld, requesting %lld+\n",
