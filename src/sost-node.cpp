@@ -4112,42 +4112,33 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 int64_t from_h=read_i64(msg.payload.data());
                 auto wmu = get_peer_write_mu(fd);
                 if (wmu) {
-                    std::lock_guard<std::mutex> wlk(*wmu); // block broadcasts while sending batch
+                    std::lock_guard<std::mutex> wlk(*wmu);
                     for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
-                        p2p_send_block(fd, h, &crypto); // use encryption if available
+                        p2p_send_block(fd, h, &crypto);
                     }
-                    p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
                 } else {
                     for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
                         p2p_send_block(fd, h, &crypto);
                     }
-                    p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
                 }
+                p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
             }
         }
         else if(!strcmp(msg.cmd,"BLCK")) {
           try {
-            // Rate limiting: check blocks per minute
-            // Sync mode if EITHER side is far ahead (both directions need fast transfer)
-            // Case 1: peer ahead of us → we're catching up from them
-            // Case 2: we're ahead of peer → they're catching up, may relay blocks back
             bool is_syncing = false;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for (auto& p : g_peers) {
                     if (p.fd == fd) {
-                        is_syncing = (p.their_height < 0) || // handshake not complete
-                                     (p.their_height > g_chain_height) || // peer ahead → still syncing
+                        is_syncing = (p.their_height < 0) ||
+                                     (p.their_height > g_chain_height) ||
                                      (g_chain_height > p.their_height + 10);
                         break;
                     }
                 }
             }
-            if (!check_block_rate(fd, is_syncing)) {
-                if (is_syncing) {
-                    // In sync mode: NEVER penalize — just throttle silently
-                    continue;
-                }
+            if (!is_syncing && !check_block_rate(fd, is_syncing)) {
                 printf("[P2P] Rate limit exceeded from %s (mode=relay)\n", addr.c_str());
                 if (add_misbehavior(fd, addr, 5, "block rate limit")) break;
                 continue;
