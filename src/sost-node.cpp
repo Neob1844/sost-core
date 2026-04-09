@@ -4039,7 +4039,24 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         } else {
             recv_ok = p2p_recv(fd, msg);
         }
-        if(!recv_ok) break;
+        if(!recv_ok) {
+            // Socket timeout or error — check if we're syncing and should retry
+            int64_t timeout_their_h = -1;
+            {
+                std::lock_guard<std::mutex> lk(g_peers_mu);
+                for(auto& p:g_peers) if(p.fd==fd){timeout_their_h=p.their_height;break;}
+            }
+            if (timeout_their_h > 0 && g_chain_height < timeout_their_h) {
+                // Still syncing — re-request instead of disconnecting
+                printf("[SYNC] Timeout during sync at height %lld (peer has %lld), re-requesting\n",
+                       (long long)g_chain_height, (long long)timeout_their_h);
+                uint8_t buf[8];
+                write_i64(buf, g_chain_height+1);
+                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                continue; // retry recv loop
+            }
+            break; // not syncing — normal disconnect
+        }
 
         // Handle EKEY during session (late encryption handshake from peer)
         if(!strcmp(msg.cmd,"EKEY") && !crypto.encrypted && g_p2p_enc != P2PEncMode::OFF){
@@ -4186,32 +4203,6 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             } else {
                 if (is_syncing) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
-                }
-                // Sync catch-up: after accepting a block, check if the message
-                // queue is empty (no more BLCKs waiting) and we're still behind.
-                // Use non-blocking peek via select() to see if more data is coming.
-                if (is_syncing) {
-                    fd_set rset;
-                    FD_ZERO(&rset);
-                    FD_SET(fd, &rset);
-                    struct timeval peek_tv = {0, 50000}; // 50ms peek
-                    int ready = select(fd+1, &rset, nullptr, nullptr, &peek_tv);
-                    if (ready == 0) {
-                        // No more data coming — we might be stalled.
-                        // If we're still behind, request next batch.
-                        int64_t catchup_h = -1;
-                        {
-                            std::lock_guard<std::mutex> lk(g_peers_mu);
-                            for(auto& p:g_peers) if(p.fd==fd){catchup_h=p.their_height;break;}
-                        }
-                        if (catchup_h > 0 && g_chain_height < catchup_h) {
-                            printf("[SYNC] No more data after block %lld, requesting %lld..%lld\n",
-                                   (long long)g_chain_height, (long long)(g_chain_height+1), (long long)catchup_h);
-                            uint8_t buf[8];
-                            write_i64(buf, g_chain_height+1);
-                            p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                        }
-                    }
                 }
             }
           } catch (const std::exception& e) {
