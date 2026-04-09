@@ -785,6 +785,39 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                (long long)h);
                         return false; // will be retried by outer loop
                     } else {
+                        // Block rejected — check if chain advanced (another miner won)
+                        std::string info = rpc_call("getinfo");
+                        if (!info.empty()) {
+                            auto bp = info.find("\"blocks\":");
+                            if (bp != std::string::npos) {
+                                int64_t node_height = atoll(info.c_str() + bp + 9);
+                                if (node_height >= h) {
+                                    printf("  -> NODE REJECTED — chain already at height %lld (we tried %lld). Advancing.\n",
+                                           (long long)node_height, (long long)h);
+                                    // Update local chain tip from node
+                                    auto tp = info.find("\"tip\":\"");
+                                    if (tp != std::string::npos) {
+                                        std::string tip_hex = info.substr(tp + 7, 64);
+                                        Bytes32 new_tip{};
+                                        for (int i = 0; i < 32; ++i) {
+                                            unsigned int byte;
+                                            sscanf(tip_hex.c_str() + i * 2, "%02x", &byte);
+                                            new_tip[i] = (uint8_t)byte;
+                                        }
+                                        g_tip_hash = new_tip;
+                                    }
+                                    // Pad local chain to match node height
+                                    while ((int64_t)g_chain.size() - 1 < node_height) {
+                                        BlockMeta pad{};
+                                        pad.height = (int64_t)g_chain.size();
+                                        pad.time = (int64_t)time(nullptr);
+                                        pad.powDiffQ = bits_q;
+                                        g_chain.push_back(pad);
+                                    }
+                                    return false; // restart mining at new height
+                                }
+                            }
+                        }
                         printf("  -> NODE REJECTED BLOCK — will retry same height\n");
                         continue;
                     }
