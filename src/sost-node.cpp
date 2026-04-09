@@ -4056,83 +4056,156 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
     p2p_send_version(fd);
 
-    // No SO_RCVTIMEO — read_exact uses select() for timeouts instead
+    // =========================================================================
+    // Non-blocking event-driven sync loop
+    // =========================================================================
+    // Make socket non-blocking for the message loop. The encryption handshake
+    // above used blocking I/O (with SO_RCVTIMEO), but from here on we use
+    // select() + non-blocking reads so the sync state machine can run on
+    // every iteration — no more stalls from DONE arriving before BLCKs.
+    {
+        struct timeval zero_tv = {0, 0};
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &zero_tv, sizeof(zero_tv));
+    }
+    {
+        int flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    }
 
-    // Sync state machine — tracks batch progress so the BLCK handler can
-    // trigger the next GETB when DONE arrived before blocks were processed.
+    // Sync state
     struct SyncState {
-        bool   active{false};
+        enum Mode { IDLE, HISTORICAL, LIVE } mode = IDLE;
         int64_t peer_height{-1};
-        int64_t range_start{-1};       // first height we requested
-        int64_t range_end{-1};         // peer height at request time
-        int64_t blocks_received{0};    // blocks accepted in current batch
-        int64_t last_height_at_done{-1}; // g_chain_height when DONE arrived (-1 = no DONE yet)
-        bool    done_waiting{false};   // DONE arrived but height hadn't caught up
+        int64_t range_start{-1};
+        int64_t blocks_received{0};
         std::chrono::steady_clock::time_point last_progress;
         int retries{0};
     };
     SyncState sync;
     sync.last_progress = std::chrono::steady_clock::now();
 
-    // Sync watchdog: every 30s, check if sync is stalled and re-request (safety net)
-    std::atomic<bool> peer_alive{true};
-    std::atomic<int64_t> watchdog_last_height{0};
-    std::thread watchdog([&](){
-        while(peer_alive && g_running){
-            std::this_thread::sleep_for(std::chrono::seconds(30));
-            if(!peer_alive || !g_running) break;
-            int64_t wh = sync.peer_height;
-            int64_t cur = g_chain_height;
-            int64_t prev = watchdog_last_height.load();
-            if(wh > 0 && cur < wh && cur == prev && cur > 0){
-                printf("[SYNC-WATCHDOG] Stall detected at height %lld (peer has %lld), closing socket to force reconnect\n",
-                       (long long)cur, (long long)wh);
-                signal_interrupt(); // break the select() in read_exact via interrupt pipe
-            }
-            watchdog_last_height.store(cur);
-        }
-    });
+    // Input buffer for incremental message parsing
+    std::vector<uint8_t> recv_buf;
+    recv_buf.reserve(64 * 1024);
 
-    while(g_running) {
-        P2PMsg msg;
-        bool recv_ok;
-        if(crypto.encrypted){
-            recv_ok = p2p_recv_encrypted(fd, crypto, msg);
-        } else {
-            recv_ok = p2p_recv(fd, msg);
+    // --- Helper: try to extract one complete P2P message from recv_buf ---
+    // Returns true if a complete message was extracted into `out`.
+    // For encrypted connections, handles both ENCR and plaintext frames.
+    auto try_parse_message = [&](P2PMsg& out) -> bool {
+        if (recv_buf.size() < 12) return false; // need header
+
+        uint32_t magic = read_u32(recv_buf.data());
+        if (magic != P2P_MAGIC) {
+            // Bad magic — discard one byte and let caller retry
+            recv_buf.erase(recv_buf.begin());
+            return false;
         }
-        if(!recv_ok) {
-            // Socket timeout or error — check if we're syncing and should retry
-            if (sync.active && sync.peer_height > 0 && g_chain_height < sync.peer_height) {
-                sync.retries++;
-                if (sync.retries > 10) {
-                    printf("[SYNC] Too many retries (%d), giving up on %s\n",
-                           sync.retries, addr.c_str());
-                    break;
-                }
-                printf("[SYNC] Timeout during sync at height %lld (peer has %lld), "
-                       "retry %d, re-requesting\n",
-                       (long long)g_chain_height, (long long)sync.peer_height, sync.retries);
-                sync.range_start = g_chain_height + 1;
-                sync.blocks_received = 0;
-                sync.last_height_at_done = -1;
-                sync.done_waiting = false;
-                uint8_t buf[8];
-                write_i64(buf, g_chain_height+1);
-                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                continue;
+
+        char cmd[5];
+        memcpy(cmd, recv_buf.data() + 4, 4);
+        cmd[4] = 0;
+        uint32_t payload_len = read_u32(recv_buf.data() + 8);
+
+        if (payload_len > MAX_P2P_MSG_SIZE) {
+            // Corrupt length — skip this header
+            recv_buf.erase(recv_buf.begin(), recv_buf.begin() + 12);
+            return false;
+        }
+
+        size_t frame_size = 12 + payload_len;
+        if (recv_buf.size() < frame_size) return false; // incomplete
+
+        if (crypto.encrypted && strcmp(cmd, "ENCR") == 0) {
+            // Encrypted frame: payload = ciphertext(N-16) + tag(16)
+            if (payload_len < 20) {
+                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
+                return false;
             }
-            break; // not syncing — normal disconnect
+            uint32_t clen = payload_len - 16;
+            const uint8_t* cipher_ptr = recv_buf.data() + 12;
+            const uint8_t* tag_ptr = recv_buf.data() + 12 + clen;
+
+            std::vector<uint8_t> plain(clen);
+            uint64_t nonce_val = crypto.recv_nonce;
+            if (!chacha20_poly1305_decrypt(crypto.recv_key, nonce_val,
+                    cipher_ptr, clen, tag_ptr, plain.data())) {
+                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
+                return false;
+            }
+            crypto.recv_nonce = nonce_val + 1;
+
+            if (clen < 4) {
+                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
+                return false;
+            }
+            memcpy(out.cmd, plain.data(), 4);
+            out.cmd[4] = 0;
+            out.payload.assign(plain.begin() + 4, plain.end());
+        } else {
+            // Plaintext frame
+            memcpy(out.cmd, cmd, 5);
+            out.payload.assign(recv_buf.begin() + 12, recv_buf.begin() + frame_size);
+        }
+
+        recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
+        return true;
+    };
+
+    // --- Helper: check sync progress and advance if stalled ---
+    auto check_sync_advance = [&]() {
+        if (sync.mode != SyncState::HISTORICAL) return;
+
+        // Check if we've reached the peer's height
+        if (g_chain_height >= sync.peer_height) {
+            printf("[SYNC] Historical sync complete at height %lld\n",
+                   (long long)g_chain_height);
+            sync.mode = SyncState::LIVE;
+            return;
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(now - sync.last_progress).count();
+
+        if (elapsed > 5.0) {
+            // No progress for 5 seconds — request next batch
+            sync.retries++;
+            if (sync.retries > 50) {
+                printf("[SYNC] Too many stall recoveries (%d), giving up on %s\n",
+                       sync.retries, addr.c_str());
+                sync.mode = SyncState::IDLE;
+                return;
+            }
+            printf("[SYNC] Stall recovery #%d: height=%lld, peer=%lld, requesting %lld+\n",
+                   sync.retries, (long long)g_chain_height,
+                   (long long)sync.peer_height, (long long)(g_chain_height + 1));
+            sync.range_start = g_chain_height + 1;
+            sync.blocks_received = 0;
+            sync.last_progress = now;
+
+            uint8_t buf[8];
+            write_i64(buf, g_chain_height + 1);
+            p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+        }
+    };
+
+    // --- Helper: process one decoded message ---
+    // Returns false if the peer should be disconnected.
+    bool should_disconnect = false;
+    auto process_message = [&](P2PMsg& msg) -> bool {
+        // Update last_seen
+        {
+            std::lock_guard<std::mutex> lk(g_peers_mu);
+            for (auto& p : g_peers) if (p.fd == fd) { p.last_seen = time(nullptr); break; }
         }
 
         // Handle EKEY during session (late encryption handshake from peer)
-        if(!strcmp(msg.cmd,"EKEY") && !crypto.encrypted && g_p2p_enc != P2PEncMode::OFF){
-            if(msg.payload.size()==32){
+        if (!strcmp(msg.cmd, "EKEY") && !crypto.encrypted && g_p2p_enc != P2PEncMode::OFF) {
+            if (msg.payload.size() == 32) {
                 uint8_t our_priv[32], our_pub[32];
-                if(x25519_keygen(our_priv, our_pub)){
+                if (x25519_keygen(our_priv, our_pub)) {
                     p2p_send(fd, "EKEY", our_pub, 32);
                     uint8_t shared[32];
-                    if(x25519_derive(our_priv, msg.payload.data(), shared)){
+                    if (x25519_derive(our_priv, msg.payload.data(), shared)) {
                         derive_session_keys(shared, false, crypto.send_key, crypto.recv_key);
                         crypto.encrypted = true;
                         printf("[P2P] %s: late encryption established\n", addr.c_str());
@@ -4141,84 +4214,72 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     OPENSSL_cleanse(our_priv, 32);
                 }
             }
-            continue;
+            return true;
         }
 
-        {
-            std::lock_guard<std::mutex> lk(g_peers_mu);
-            for(auto& p:g_peers) if(p.fd==fd) { p.last_seen=time(nullptr); break; }
-        }
-
-        if(!strcmp(msg.cmd,"VERS")) {
-            if(msg.payload.size()>=40){
-                int64_t their_h=read_i64(msg.payload.data());
+        if (!strcmp(msg.cmd, "VERS")) {
+            if (msg.payload.size() >= 40) {
+                int64_t their_h = read_i64(msg.payload.data());
                 Hash256 their_genesis;
-                memcpy(their_genesis.data(), msg.payload.data()+8, 32);
-                if(their_genesis!=g_genesis_hash){
-                    printf("[P2P] %s: genesis mismatch, disconnecting\n",addr.c_str());
-                    break;
+                memcpy(their_genesis.data(), msg.payload.data() + 8, 32);
+                if (their_genesis != g_genesis_hash) {
+                    printf("[P2P] %s: genesis mismatch, disconnecting\n", addr.c_str());
+                    return false;
                 }
                 {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
-                    for(auto& p:g_peers) if(p.fd==fd){p.their_height=their_h;p.version_acked=true;break;}
+                    for (auto& p : g_peers) if (p.fd == fd) { p.their_height = their_h; p.version_acked = true; break; }
                 }
                 p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
-                printf("[P2P] %s: version OK, their height=%lld\n",addr.c_str(),(long long)their_h);
+                printf("[P2P] %s: version OK, their height=%lld\n", addr.c_str(), (long long)their_h);
 
-                if(their_h > g_chain_height){
+                if (their_h > g_chain_height) {
                     printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
                            addr.c_str(), (long long)their_h, (long long)g_chain_height,
-                           (long long)(g_chain_height+1), (long long)their_h);
-                    sync.active = true;
+                           (long long)(g_chain_height + 1), (long long)their_h);
+                    sync.mode = SyncState::HISTORICAL;
                     sync.peer_height = their_h;
                     sync.range_start = g_chain_height + 1;
-                    sync.range_end = their_h;
                     sync.blocks_received = 0;
-                    sync.last_height_at_done = -1;
-                    sync.done_waiting = false;
                     sync.last_progress = std::chrono::steady_clock::now();
                     sync.retries = 0;
                     uint8_t buf[8];
-                    write_i64(buf, g_chain_height+1);
+                    write_i64(buf, g_chain_height + 1);
                     p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                 }
             }
         }
-        else if(!strcmp(msg.cmd,"VACK")) {
+        else if (!strcmp(msg.cmd, "VACK")) {
             int64_t their_h = -1;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
-                for(auto& p:g_peers) if(p.fd==fd){p.version_acked=true; their_h=p.their_height; break;}
+                for (auto& p : g_peers) if (p.fd == fd) { p.version_acked = true; their_h = p.their_height; break; }
             }
-            // If peer has more blocks, initiate sync
-            if(their_h > g_chain_height){
+            if (their_h > g_chain_height) {
                 printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
                        addr.c_str(), (long long)their_h, (long long)g_chain_height,
-                       (long long)(g_chain_height+1), (long long)their_h);
-                sync.active = true;
+                       (long long)(g_chain_height + 1), (long long)their_h);
+                sync.mode = SyncState::HISTORICAL;
                 sync.peer_height = their_h;
                 sync.range_start = g_chain_height + 1;
-                sync.range_end = their_h;
                 sync.blocks_received = 0;
-                sync.last_height_at_done = -1;
-                sync.done_waiting = false;
                 sync.last_progress = std::chrono::steady_clock::now();
                 sync.retries = 0;
                 uint8_t buf[8];
-                write_i64(buf, g_chain_height+1);
+                write_i64(buf, g_chain_height + 1);
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
             }
         }
-        else if(!strcmp(msg.cmd,"GETB")) {
-            if(msg.payload.size()>=8){
-                int64_t from_h=read_i64(msg.payload.data());
-                for(int64_t h=from_h;h<=g_chain_height && h<from_h+500;++h){
+        else if (!strcmp(msg.cmd, "GETB")) {
+            if (msg.payload.size() >= 8) {
+                int64_t from_h = read_i64(msg.payload.data());
+                for (int64_t h = from_h; h <= g_chain_height && h < from_h + 500; ++h) {
                     p2p_send_block(fd, h, nullptr); // plaintext — avoids write_mu deadlock
                 }
                 p2p_send(fd, "DONE", nullptr, 0); // plaintext DONE
             }
         }
-        else if(!strcmp(msg.cmd,"BLCK")) {
+        else if (!strcmp(msg.cmd, "BLCK")) {
           try {
             bool is_syncing = false;
             {
@@ -4234,31 +4295,27 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             }
             if (!is_syncing && !check_block_rate(fd, is_syncing)) {
                 printf("[P2P] Rate limit exceeded from %s (mode=relay)\n", addr.c_str());
-                if (add_misbehavior(fd, addr, 5, "block rate limit")) break;
-                continue;
+                if (add_misbehavior(fd, addr, 5, "block rate limit")) return false;
+                return true;
             }
 
             std::string block_json((char*)msg.payload.data(), msg.payload.size());
 
             // Check if block is already known BEFORE expensive validation
-            // This is normal relay behavior — NOT misbehavior
             std::string blk_bid_check = jstr(block_json, "block_id");
             {
                 std::lock_guard<std::mutex> lk3(g_known_mu);
                 if (blk_bid_check.size() == 64 && g_known_blocks.count(blk_bid_check)) {
-                    continue; // silently skip — normal relay, no penalty
+                    return true; // silently skip — normal relay, no penalty
                 }
             }
 
             int64_t blk_height = jint(block_json, "height");
             auto t_start = std::chrono::steady_clock::now();
-            if(!process_block(block_json)){
-                // process_block returned false — determine severity
-                // Only penalize for genuinely invalid blocks, NOT for forks with less work
+            if (!process_block(block_json)) {
                 std::string blk_bid = jstr(block_json, "block_id");
                 uint32_t blk_bitsq = (uint32_t)jint(block_json, "bits_q");
 
-                // Check if this block was stored as fork/orphan (not an error)
                 bool stored_as_fork = false;
                 {
                     std::lock_guard<std::mutex> lk3(g_known_mu);
@@ -4268,130 +4325,131 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 if (stored_as_fork) {
                     // Block was valid but stored as fork/orphan — no penalty
                 } else if (blk_bid.size() != 64) {
-                    if (add_misbehavior(fd, addr, 25, "malformed block")) break;
+                    if (add_misbehavior(fd, addr, 25, "malformed block")) return false;
                 } else if (blk_bitsq == 0) {
-                    if (add_misbehavior(fd, addr, 100, "zero difficulty")) break;
+                    if (add_misbehavior(fd, addr, 100, "zero difficulty")) return false;
                 } else {
-                    // Genuinely invalid block during sync — stop syncing from this peer
                     printf("[SYNC] Block #%lld from %s failed validation — stopping sync\n",
                            (long long)blk_height, addr.c_str());
-                    if (add_misbehavior(fd, addr, 10, "invalid block")) break;
+                    if (add_misbehavior(fd, addr, 10, "invalid block")) return false;
                 }
             } else {
-                if (sync.active) {
+                if (sync.mode == SyncState::HISTORICAL) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
                     sync.blocks_received++;
                     sync.last_progress = std::chrono::steady_clock::now();
-
-                    // KEY FIX: If DONE already arrived for this batch but height
-                    // hadn't caught up at that time, check now whether we've
-                    // processed enough to request the next batch.
-                    if (sync.done_waiting && g_chain_height >= sync.last_height_at_done) {
-                        if (g_chain_height < sync.peer_height) {
-                            printf("[SYNC] BLCK-triggered GETB: DONE was early (at height %lld), "
-                                   "now at %lld, requesting %lld..%lld\n",
-                                   (long long)sync.last_height_at_done,
-                                   (long long)g_chain_height,
-                                   (long long)(g_chain_height+1),
-                                   (long long)sync.peer_height);
-                            sync.range_start = g_chain_height + 1;
-                            sync.blocks_received = 0;
-                            sync.last_height_at_done = -1;
-                            sync.done_waiting = false;
-                            sync.retries = 0;
-                            uint8_t buf2[8];
-                            write_i64(buf2, g_chain_height+1);
-                            p2p_send_adaptive(fd, crypto, "GETB", buf2, 8);
-                        } else {
-                            printf("[SYNC] Sync complete at height %lld (triggered by BLCK)\n",
-                                   (long long)g_chain_height);
-                            sync.active = false;
-                            sync.done_waiting = false;
-                        }
-                    }
+                    sync.retries = 0; // reset stall counter on actual progress
                 }
             }
           } catch (const std::exception& e) {
             fprintf(stderr, "[ERROR] BLCK handler exception from %s: %s\n", addr.c_str(), e.what());
           }
         }
-        else if(!strcmp(msg.cmd,"TXXX")) {
+        else if (!strcmp(msg.cmd, "TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
-            if(process_tx(hex_str)){
+            if (process_tx(hex_str)) {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
-                for(auto& p:g_peers){
-                    if(p.fd!=fd && p.version_acked){
+                for (auto& p : g_peers) {
+                    if (p.fd != fd && p.version_acked) {
                         p2p_send(p.fd, "TXXX", msg.payload.data(), msg.payload.size());
                     }
                 }
             } else {
-                if(add_misbehavior(fd, addr, 10, "invalid tx")) break;
+                if (add_misbehavior(fd, addr, 10, "invalid tx")) return false;
             }
         }
-        else if(!strcmp(msg.cmd,"PING")) {
+        else if (!strcmp(msg.cmd, "PING")) {
             p2p_send_adaptive(fd, crypto, "PONG", nullptr, 0);
-            // Sync catch-up on PING: safety net if state machine missed something
-            if (sync.active && sync.peer_height > 0 && g_chain_height < sync.peer_height) {
-                printf("[SYNC] Catch-up on PING: still behind (%lld < %lld), requesting blocks %lld..%lld\n",
-                       (long long)g_chain_height, (long long)sync.peer_height,
-                       (long long)(g_chain_height+1), (long long)sync.peer_height);
-                sync.range_start = g_chain_height + 1;
-                sync.blocks_received = 0;
-                sync.last_height_at_done = -1;
-                sync.done_waiting = false;
-                uint8_t buf[8];
-                write_i64(buf, g_chain_height+1);
-                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-            }
         }
-        else if(!strcmp(msg.cmd,"PONG")) {
+        else if (!strcmp(msg.cmd, "PONG")) {
             // no-op, just update last_seen (already done above)
         }
-        else if(!strcmp(msg.cmd,"DONE")) {
+        else if (!strcmp(msg.cmd, "DONE")) {
             printf("[P2PDBG] DONE received from %s: our_height=%lld, peer_height=%lld, "
                    "blocks_received=%lld, blocks_size=%zu\n",
                    addr.c_str(), (long long)g_chain_height, (long long)sync.peer_height,
                    (long long)sync.blocks_received, g_blocks.size());
 
-            if (sync.active && g_chain_height < sync.peer_height) {
-                // We're still behind. Did height actually advance during this batch?
-                int64_t expected_end = sync.range_start + sync.blocks_received - 1;
-                if (g_chain_height >= expected_end && sync.blocks_received > 0) {
-                    // All blocks from this batch are already processed — request next
-                    printf("[SYNC] Batch done from %s (all processed). "
-                           "Requesting blocks %lld..%lld\n",
-                           addr.c_str(), (long long)(g_chain_height+1),
-                           (long long)sync.peer_height);
-                    sync.range_start = g_chain_height + 1;
-                    sync.blocks_received = 0;
-                    sync.last_height_at_done = -1;
-                    sync.done_waiting = false;
-                    sync.retries = 0;
-                    uint8_t buf[8];
-                    write_i64(buf, g_chain_height+1);
-                    p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                } else {
-                    // DONE arrived before blocks finished processing.
-                    // Record state so the BLCK handler can trigger next GETB.
-                    printf("[SYNC] DONE early: height=%lld but expected_end=%lld, "
-                           "deferring next GETB to BLCK handler\n",
-                           (long long)g_chain_height, (long long)expected_end);
-                    sync.last_height_at_done = expected_end;
-                    sync.done_waiting = true;
-                }
-            } else if (sync.active) {
+            if (sync.mode == SyncState::HISTORICAL && g_chain_height < sync.peer_height) {
+                // Request next batch immediately — don't wait for stall timer.
+                // Any unprocessed BLCKs from the old batch are still in recv_buf
+                // and will be parsed in subsequent loop iterations.
+                printf("[SYNC] DONE at height %lld, requesting %lld..%lld\n",
+                       (long long)g_chain_height,
+                       (long long)(g_chain_height + 1), (long long)sync.peer_height);
+                sync.range_start = g_chain_height + 1;
+                sync.blocks_received = 0;
+                sync.last_progress = std::chrono::steady_clock::now();
+                uint8_t buf[8];
+                write_i64(buf, g_chain_height + 1);
+                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+            } else if (sync.mode == SyncState::HISTORICAL) {
                 printf("[SYNC] Sync complete: height %lld\n", (long long)g_chain_height);
-                sync.active = false;
-                sync.done_waiting = false;
+                sync.mode = SyncState::LIVE;
             }
         }
         else {
-            if(add_misbehavior(fd, addr, 10, "unknown command")) break;
+            if (add_misbehavior(fd, addr, 10, "unknown command")) return false;
+        }
+        return true;
+    };
+
+    // =========================================================================
+    // Main event loop — non-blocking reads with 1-second select timeout
+    // =========================================================================
+    while (g_running && !should_disconnect) {
+        // 1. select() with short timeout so sync state machine runs often
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(fd, &rfds);
+        struct timeval tv = {1, 0}; // 1 second
+        int sel = select(fd + 1, &rfds, nullptr, nullptr, &tv);
+
+        if (sel < 0) {
+            if (errno == EINTR) continue;
+            break; // select error
+        }
+
+        // 2. Read whatever data is available (non-blocking)
+        if (sel > 0 && FD_ISSET(fd, &rfds)) {
+            uint8_t tmp[65536];
+            while (true) {
+                ssize_t n = read(fd, tmp, sizeof(tmp));
+                if (n > 0) {
+                    recv_buf.insert(recv_buf.end(), tmp, tmp + n);
+                } else if (n == 0) {
+                    // Peer closed connection
+                    should_disconnect = true;
+                    break;
+                } else {
+                    // EAGAIN/EWOULDBLOCK = no more data right now
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+                    if (errno == EINTR) continue;
+                    should_disconnect = true; // real error
+                    break;
+                }
+            }
+        }
+
+        // 3. Parse and process all complete messages in the buffer
+        P2PMsg msg;
+        while (try_parse_message(msg)) {
+            if (!process_message(msg)) {
+                should_disconnect = true;
+                break;
+            }
+        }
+
+        // 4. Check sync progress on EVERY iteration (the key fix)
+        check_sync_advance();
+
+        // 5. Guard against recv_buf growing without bound (bad peer)
+        if (recv_buf.size() > 16 * 1024 * 1024) {
+            printf("[P2P] recv buffer overflow from %s (%zu bytes), disconnecting\n",
+                   addr.c_str(), recv_buf.size());
+            break;
         }
     }
-
-    peer_alive = false;
-    if(watchdog.joinable()) watchdog.join();
     close(fd);
     cleanup_peer_rate(fd);
     {
