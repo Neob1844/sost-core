@@ -570,6 +570,22 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
     uint32_t bits_q = casert_next_bitsq(g_chain, h);
+    // When mining with RPC, always use the node's difficulty (authoritative)
+    // Local cASERT calculation can diverge if g_chain has pad entries from REJECTED recovery
+    if (!g_rpc_url.empty()) {
+        std::string info = rpc_call("getinfo");
+        if (!info.empty()) {
+            auto dp = info.find("\"next_difficulty\":");
+            if (dp != std::string::npos) {
+                uint32_t node_diff = (uint32_t)atoll(info.c_str() + dp + 18);
+                if (node_diff > 0 && node_diff != bits_q) {
+                    printf("[MINING] Local bitsQ=%u, node says %u — using node difficulty\n",
+                           bits_q, node_diff);
+                    bits_q = node_diff;
+                }
+            }
+        }
+    }
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_compute(g_chain, h, std::time(nullptr));
     params = casert_apply_profile(params, cdec);
