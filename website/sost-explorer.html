@@ -1071,8 +1071,8 @@ function updateChainSync(){
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
-  // Profile from wall-clock lag (lagBehind is positive=behind, getProfileFromLag uses negative=behind)
-  var displayProfile = getProfileFromLag(-lagBehind).name;
+  // Profile: use RPC casert_profile (authoritative from C++ PID), fallback to wall-clock estimate
+  var displayProfile = _rpcCasertProfile || getProfileFromLag(-lagBehind).name;
   if(lagBehind>0){document.getElementById('csLag').textContent=fComma(lagBehind)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lagBehind)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
   else if(lagBehind<0){var ahead2=-lagBehind;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
   else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
@@ -1874,7 +1874,8 @@ async function loadBlocks(){
       var iv='\u2014';if(i<rows.length-1){var d=b.time-rows[i+1].time;iv=d<60?d+'s':Math.floor(d/60)+'m '+d%60+'s';}
       else if(b.height>0){try{var ph=await rpc('getblockhash',[String(b.height-1)]);var pb=await rpc('getblock',[ph]);var d2=b.time-pb.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}catch(ex){}}
       var tr=document.createElement('tr');if(b.height===H&&off===0&&i===0)tr.className='new-row';
-      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+getLevelLabel(computeBlockLag(b.height,b.time))+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
+      var blockProfileLabel=b.casert_mode?('<span style="color:'+getLevelColor(getCasertLevel(computeBlockLag(b.height,b.time)))+';font-weight:600">'+b.casert_mode+'</span>'):getLevelLabel(computeBlockLag(b.height,b.time));
+      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
       tb.appendChild(tr);}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
   }catch(e){tb.innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
@@ -1899,10 +1900,17 @@ async function showBlock(hash){
     else if(txC>1){txRows+='<tr><td><span style="color:var(--cyan)">transfer</span></td><td colspan="3" style="color:var(--text3)">'+(txC-1)+' standard tx(s) \u2014 search by txid for detail</td></tr>';}
     var prevLink=isGen?'<span style="color:var(--text3)">null // genesis</span>':'<span class="v-hash" onclick="showBlock(\''+b.previousblockhash+'\')">'+b.previousblockhash+'</span>'+cpBtn(b.previousblockhash);
     var signal=computeBlockLag(b.height,b.time);
-    var lvl=getCasertLevel(signal);
-    var casertDesc=(signal>0)?(signal+' ahead'):(signal<0)?(Math.abs(signal)+' behind'):'on schedule';
-    // Use lag-based profile estimation (matches list view)
-    var displayProf=getProfileFromLag(signal);
+    // Use RPC casert_mode (authoritative from C++ PID controller) when available
+    var rpcSignal=b.casert_signal!==undefined?b.casert_signal:signal;
+    var casertDesc=(rpcSignal>0)?(rpcSignal+' ahead'):(rpcSignal<0)?(Math.abs(rpcSignal)+' behind'):'on schedule';
+    var displayProf;
+    if(b.casert_mode){
+      // Find profile by name from RPC
+      var found=CASERT_PROFILES.find(function(p){return p.name===b.casert_mode;});
+      displayProf=found||getProfileFromLag(signal);
+    } else {
+      displayProf=getProfileFromLag(signal);
+    }
     // Mining time: fetch prev block timestamp
     var miningTimeStr='\u2014';var mtSecs=0;var mtColor='var(--text3)';
     if(!isGen){try{var pb=await rpc('getblock',[b.previousblockhash]);mtSecs=b.time-pb.time;mtColor=mtSecs<120?'var(--green)':mtSecs<1200?'#fbbf24':mtSecs<3600?'var(--orange)':'var(--red)';miningTimeStr=mtSecs<60?mtSecs+'s':Math.floor(mtSecs/60)+'m '+mtSecs%60+'s';}catch(e){}}
