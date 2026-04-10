@@ -680,6 +680,41 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 printf("\r  nonce=%u extra=%u", nonce, extra_nonce);
                 fflush(stdout);
 
+                // Check if chain advanced (another miner won) — abort early to avoid wasting time
+                if (!g_rpc_url.empty()) {
+                    std::string info_check = rpc_call("getinfo");
+                    if (!info_check.empty()) {
+                        auto bp2 = info_check.find("\"blocks\":");
+                        if (bp2 != std::string::npos) {
+                            int64_t cur_h = atoll(info_check.c_str() + bp2 + 9);
+                            if (cur_h >= h) {
+                                printf("\n[MINING] Chain advanced to %lld while mining %lld — aborting and advancing\n",
+                                       (long long)cur_h, (long long)h);
+                                fflush(stdout);
+                                // Update tip
+                                std::string best = rpc_call("getbestblockhash");
+                                auto rp2 = best.find("\"result\":\"");
+                                if (rp2 != std::string::npos) {
+                                    std::string th = best.substr(rp2 + 10, 64);
+                                    if (th.size() == 64) {
+                                        Bytes32 nt{};
+                                        for (int i2=0;i2<32;++i2){unsigned int by;sscanf(th.c_str()+i2*2,"%02x",&by);nt[i2]=(uint8_t)by;}
+                                        g_tip_hash = nt;
+                                    }
+                                }
+                                auto dp2 = info_check.find("\"next_difficulty\":");
+                                uint32_t nd = 0;
+                                if (dp2 != std::string::npos) nd = (uint32_t)atoll(info_check.c_str() + dp2 + 18);
+                                while ((int64_t)g_chain.size() - 1 < cur_h) {
+                                    BlockMeta pad{}; pad.height=(int64_t)g_chain.size(); pad.time=(int64_t)time(nullptr);
+                                    pad.powDiffQ = nd > 0 ? nd : bits_q; g_chain.push_back(pad);
+                                }
+                                return false; // restart at new height
+                            }
+                        }
+                    }
+                }
+
                 // Refresh timestamp and cASERT level every 30s
                 if (!sim_time) {
                     auto now_check = std::chrono::steady_clock::now();
