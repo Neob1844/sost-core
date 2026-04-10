@@ -945,8 +945,11 @@ async function updateDashboard(info){
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var diffs=[];var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time});}
+  try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
     _diffHistory=diffs.reverse();drawSparkline();
+    // Update unique miners card from freshly fetched data
+    document.getElementById('dMiners').textContent=minerSet.size;
+    document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
     // Compute dynamic E[nonce] from real block nonces/times
     _prevAvgNonceReal=_avgNonceReal;
     if(_diffHistory.length>=3){
