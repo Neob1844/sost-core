@@ -28,6 +28,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <atomic>
+#include <thread>
 #include <chrono>
 #include <ctime>
 #include <string>
@@ -563,6 +565,40 @@ static bool load_chain(const std::string& path) {
 }
 
 // =============================================================================
+// Block monitor — background thread that detects new blocks instantly
+// =============================================================================
+static std::atomic<bool> g_chain_advanced{false};
+static std::atomic<int64_t> g_monitor_height{0};
+static std::atomic<bool> g_monitor_running{false};
+
+static void start_block_monitor(int64_t mining_height) {
+    g_chain_advanced = false;
+    g_monitor_height = mining_height;
+    if (g_monitor_running || g_rpc_url.empty()) return;
+    g_monitor_running = true;
+    std::thread([]{
+        while (g_monitor_running) {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            if (!g_monitor_running) break;
+            std::string resp = rpc_call("getblockcount");
+            if (!resp.empty()) {
+                auto rp = resp.find("\"result\":");
+                if (rp != std::string::npos) {
+                    int64_t node_h = atoll(resp.c_str() + rp + 9);
+                    if (node_h >= g_monitor_height) {
+                        g_chain_advanced = true;
+                    }
+                }
+            }
+        }
+    }).detach();
+}
+
+static void stop_block_monitor() {
+    g_monitor_running = false;
+}
+
+// =============================================================================
 // Mine one block
 // =============================================================================
 static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
@@ -665,6 +701,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
            params.stab_scale, params.stab_k, params.stab_margin, params.stab_steps);
     fflush(stdout);
 
+    // Start background monitor that checks for new blocks every 2s
+    start_block_monitor(h);
+
     while (!found) {
         for (uint32_t nonce = 0; nonce <= max_nonce; ++nonce) {
             if ((nonce % 1000) == 0 && nonce > 0) {
@@ -676,59 +715,48 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     diag_stable = 0; diag_target = 0; diag_total = 0;
                 }
             }
-            // Check chain height every 30 seconds (real time, not nonce-based)
-            {
-                static auto last_chain_check = std::chrono::steady_clock::now();
-                auto now_cc = std::chrono::steady_clock::now();
-                auto secs_since_check = std::chrono::duration_cast<std::chrono::seconds>(now_cc - last_chain_check).count();
-                if (secs_since_check >= 30 && !g_rpc_url.empty()) {
-                    last_chain_check = now_cc;
-                    std::string info_check = rpc_call("getinfo");
-                    if (!info_check.empty()) {
-                        auto bp2 = info_check.find("\"blocks\":");
-                        if (bp2 != std::string::npos) {
-                            int64_t cur_h = atoll(info_check.c_str() + bp2 + 9);
-                            if (cur_h >= h) {
-                                printf("\n[MINING] Chain advanced to %lld while mining %lld — aborting and advancing\n",
-                                       (long long)cur_h, (long long)h);
-                                fflush(stdout);
-                                // Update tip
-                                std::string best = rpc_call("getbestblockhash");
-                                auto rp2 = best.find("\"result\":\"");
-                                if (rp2 != std::string::npos) {
-                                    std::string th = best.substr(rp2 + 10, 64);
-                                    if (th.size() == 64) {
-                                        Bytes32 nt{};
-                                        for (int i2=0;i2<32;++i2){unsigned int by;sscanf(th.c_str()+i2*2,"%02x",&by);nt[i2]=(uint8_t)by;}
-                                        g_tip_hash = nt;
-                                    }
-                                }
-                                auto dp2 = info_check.find("\"next_difficulty\":");
-                                uint32_t nd = 0;
-                                if (dp2 != std::string::npos) nd = (uint32_t)atoll(info_check.c_str() + dp2 + 18);
-                                while ((int64_t)g_chain.size() - 1 < cur_h) {
-                                    BlockMeta pad{}; pad.height=(int64_t)g_chain.size(); pad.time=(int64_t)time(nullptr);
-                                    pad.powDiffQ = nd > 0 ? nd : bits_q; g_chain.push_back(pad);
-                                }
-                                return false; // restart at new height
-                            }
+            // Instant abort: background thread detected chain advanced
+            if (g_chain_advanced) {
+                printf("\n[MINING] New block detected! Aborting mining of %lld\n", (long long)h);
+                fflush(stdout);
+                stop_block_monitor();
+                // Fetch current state from node
+                std::string info_check = rpc_call("getinfo");
+                std::string best = rpc_call("getbestblockhash");
+                if (!info_check.empty()) {
+                    auto bp2 = info_check.find("\"blocks\":");
+                    int64_t cur_h = (bp2 != std::string::npos) ? atoll(info_check.c_str() + bp2 + 9) : h;
+                    auto rp2 = best.find("\"result\":\"");
+                    if (rp2 != std::string::npos) {
+                        std::string th = best.substr(rp2 + 10, 64);
+                        if (th.size() == 64) {
+                            Bytes32 nt{};
+                            for (int i2=0;i2<32;++i2){unsigned int by;sscanf(th.c_str()+i2*2,"%02x",&by);nt[i2]=(uint8_t)by;}
+                            g_tip_hash = nt;
                         }
                     }
+                    auto dp2 = info_check.find("\"next_difficulty\":");
+                    uint32_t nd = 0;
+                    if (dp2 != std::string::npos) nd = (uint32_t)atoll(info_check.c_str() + dp2 + 18);
+                    while ((int64_t)g_chain.size() - 1 < cur_h) {
+                        BlockMeta pad{}; pad.height=(int64_t)g_chain.size(); pad.time=(int64_t)time(nullptr);
+                        pad.powDiffQ = nd > 0 ? nd : bits_q; g_chain.push_back(pad);
+                    }
                 }
+                return false; // restart at new height
+            }
 
-                // Refresh timestamp and cASERT level
-                if (!sim_time && secs_since_check >= 30) {
-                    ts = std::chrono::duration_cast<std::chrono::seconds>(
-                        std::chrono::system_clock::now().time_since_epoch()).count();
-                    build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
-                    ts_last_update = now_cc;
-                    auto new_cdec = casert_compute(g_chain, h, ts);
-                    auto new_params = get_consensus_params(prof, h);
-                    new_params = casert_apply_profile(new_params, new_cdec);
-                    if (new_params.stab_scale != params.stab_scale) {
-                        printf("\n[DECAY] cASERT level changed: scale %d -> %d\n",
-                               params.stab_scale, new_params.stab_scale);
-                        params = new_params;
+            // Refresh timestamp periodically
+            if ((nonce % 5000) == 0 && nonce > 0) {
+                printf("\r  nonce=%u extra=%u", nonce, extra_nonce); fflush(stdout);
+                if (!sim_time) {
+                    auto now_check = std::chrono::steady_clock::now();
+                    auto since_update = std::chrono::duration_cast<std::chrono::seconds>(now_check - ts_last_update).count();
+                    if (since_update >= 30) {
+                        ts = std::chrono::duration_cast<std::chrono::seconds>(
+                            std::chrono::system_clock::now().time_since_epoch()).count();
+                        build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
+                        ts_last_update = now_check;
                     }
                 }
             }
@@ -927,6 +955,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 }
 
                 found = true;
+                stop_block_monitor();
                 break;
             }
         }
