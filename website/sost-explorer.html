@@ -1669,10 +1669,13 @@ function updateMiningPanel(elapsed){
   var now_mp=Math.floor(Date.now()/1000);
   var expected_mp=Math.floor((now_mp-GENESIS_TS)/600);
   var tipLag=H-expected_mp; // negative = behind, positive = ahead (same as chain status)
-  var effProf=_rpcCasertProfile?
-    (CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;})||getProfileFromLag(tipLag)):
-    getProfileFromLag(tipLag);
-  var profSource=_rpcCasertProfile?'rpc':'lag';
+  // Always prefer RPC profile (node truth). Fallback to wall-clock estimate only if RPC unavailable.
+  var rpcProf=_rpcCasertProfile?CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;}):null;
+  var effProf=rpcProf||getProfileFromLag(tipLag);
+  var profSource=rpcProf?'rpc':'lag';
+  // Use RPC lag for display if available (matches chain status exactly)
+  var rpcLag=_rpcCasertLag;
+  if(rpcLag!==null&&rpcLag!==undefined){tipLag=parseInt(rpcLag);}
   var dc={active:false};
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
