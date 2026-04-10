@@ -911,7 +911,7 @@ int main(int argc, char** argv) {
     ACTIVE_PROFILE = Profile::MAINNET;
 
     int num_blocks = 5;
-    uint32_t max_nonce = 500000;
+    uint32_t max_nonce = 0xFFFFFFFF; // unlimited by default
     Profile prof = Profile::MAINNET;
     bool sim_time = false;
     std::string genesis_path = "genesis_block.json";
@@ -936,7 +936,7 @@ int main(int argc, char** argv) {
             printf("SOST Miner v0.6\n");
             printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
-            printf("  --max-nonce <n>    Max nonce (default: 500000)\n");
+            printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
             printf("  --genesis <path>   Genesis JSON\n");
             printf("  --chain <path>     Chain file (default: chain.json)\n");
             printf("  --rpc <host:port>  Submit blocks to node via RPC\n");
@@ -965,9 +965,9 @@ int main(int argc, char** argv) {
 
     printf("=== SOST Miner v0.6 (FULL submitblock) ===\n");
     printf("Miner address: %s\n", g_miner_address.c_str());
-    printf("Profile: %s | Blocks: %d | Max nonce: %u%s\n\n",
+    printf("Profile: %s | Blocks: %d%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
-           num_blocks, max_nonce,
+           num_blocks,
            g_rpc_url.empty() ? "" : (" | RPC: " + g_rpc_url).c_str());
 
     if (!load_genesis(genesis_path)) {
