@@ -212,6 +212,8 @@ add_executable(sost-miner src/sost-miner.cpp)
 target_link_libraries(sost-miner PRIVATE sost-core)
 add_executable(sost-node src/sost-node.cpp)
 target_link_libraries(sost-node PRIVATE sost-core)
+add_executable(tx_send src/tx_send.cpp)
+target_link_libraries(tx_send PRIVATE sost-core)
 
 # Calibration tools
 add_executable(cx-benchmark tools/cx-benchmark.cpp)
