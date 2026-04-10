@@ -1665,17 +1665,14 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  // Profile: use wall-clock lag (same formula as chain timing) + RPC profile
+  // Lag: ALWAYS wall-clock (same formula as chain timing — one source of truth)
   var now_mp=Math.floor(Date.now()/1000);
   var expected_mp=Math.floor((now_mp-GENESIS_TS)/600);
-  var tipLag=H-expected_mp; // negative = behind, positive = ahead (same as chain status)
-  // Always prefer RPC profile (node truth). Fallback to wall-clock estimate only if RPC unavailable.
+  var tipLag=H-expected_mp; // negative = behind, positive = ahead
+  // Profile: RPC casert_profile (node PID truth), fallback to wall-clock estimate
   var rpcProf=_rpcCasertProfile?CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;}):null;
   var effProf=rpcProf||getProfileFromLag(tipLag);
-  var profSource=rpcProf?'rpc':'lag';
-  // Use RPC lag for display if available (matches chain status exactly)
-  var rpcLag=_rpcCasertLag;
-  if(rpcLag!==null&&rpcLag!==undefined){tipLag=parseInt(rpcLag);}
+  var profSource=rpcProf?'rpc':'est';
   var dc={active:false};
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
