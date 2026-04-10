@@ -2706,7 +2706,7 @@ refresh();setInterval(refresh,30000);
         // Status: handshaking if not acked, near-tip (synced) if delta<=3, otherwise tracking
         var statusTxt='handshaking';var statusClr='var(--yellow)';
         if(p.version_acked){
-          var isNearTip=(p.height>=0&&tipH>0&&p.height>=(tipH-3));
+          var isNearTip=(p.height>=0&&tipH>0&&p.height>=(tipH-2));
           if(isNearTip){statusTxt='synced';statusClr='var(--green)';}
           else{statusTxt='tracking';statusClr='var(--orange)';}
         }
@@ -2747,38 +2747,32 @@ refresh();setInterval(refresh,30000);
       setBadge('nodeStatusBadge','NODE: ACTIVE','#00ff41');
       // Miner: detect if blocks are advancing
       if(H>lastSeenH){
-        // Height increased — miner is producing blocks
         lastBlockChangeTime=now;
         lastSeenH=H;
-        setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+        setBadge('minerStatusBadge','MINING: ACTIVE','#00ff41');
+        firstCheck=false;
       }else if(firstCheck){
-        // First check after page load — we see a height but can't compare yet
-        // Use the elapsed time shown in the mining panel as proxy
         var elapsedEl=document.getElementById('miningElapsed');
         var elapsedText=elapsedEl?elapsedEl.textContent:'';
-        // Parse elapsed (e.g. "5m 23s" or "12m 01s")
         var mins=0;
         var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
-        // 10min target: blocks taking up to 60min is normal variance
-        if(mins<60){
-          setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
-        }else if(mins<180){
-          setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
+        if(mins<30){
+          setBadge('minerStatusBadge','MINING: ACTIVE','#00ff41');
+        }else if(mins<120){
+          setBadge('minerStatusBadge','MINING: SLOW','#ffaa00');
         }else{
-          setBadge('minerStatusBadge','MINER: STALLED','#ff3333');
+          setBadge('minerStatusBadge','MINING: STALLED','#ff3333');
         }
         lastSeenH=H;lastBlockChangeTime=now;
         firstCheck=false;
-      }else if((now-lastBlockChangeTime)>120000){
-        // No new block in 2 min — check elapsed time
-        var elapsedEl=document.getElementById('miningElapsed');
-        var elapsedText=elapsedEl?elapsedEl.textContent:'';
-        var mins=0;var mm=elapsedText.match(/(\d+)m/);if(mm)mins=parseInt(mm[1]);
-        // 10min target: up to 60min between blocks is normal variance
-        if(mins<60){
-          setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+      }else{
+        var secsSince=(now-lastBlockChangeTime)/1000;
+        if(secsSince<1800){
+          setBadge('minerStatusBadge','MINING: ACTIVE','#00ff41');
+        }else if(secsSince<7200){
+          setBadge('minerStatusBadge','MINING: SLOW','#ffaa00');
         }else{
-          setBadge('minerStatusBadge','MINER: IDLE','#ffaa00');
+          setBadge('minerStatusBadge','MINING: STALLED','#ff3333');
         }
       }
     }else{
@@ -2792,7 +2786,7 @@ refresh();setInterval(refresh,30000);
       if(d.node) setBadge('nodeStatusBadge','NODE: ACTIVE','#00ff41');
       // Only set miner status from JSON if it explicitly says miner is active
       // Do NOT set IDLE from JSON — the RPC-based detection is more reliable
-      if(d.miner) setBadge('minerStatusBadge','MINER: ACTIVE','#00ff41');
+      // node-status.json miner flag only used as hint, not as override
     }).catch(()=>{/* JSON not available, use RPC-based detection */});
   }
   setInterval(updateStatus,15000);
