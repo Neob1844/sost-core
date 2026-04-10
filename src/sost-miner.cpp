@@ -768,13 +768,41 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                             std::string info = rpc_call("getinfo");
                             if (!info.empty()) {
                                 printf("[RPC] Reconnected to node!\n");
-                                // Refresh chain height from node
                                 auto bp = info.find("\"blocks\":");
                                 if (bp != std::string::npos) {
                                     int64_t nh = atoll(info.c_str() + bp + 9);
                                     if (nh > (int64_t)g_chain.size() - 1) {
                                         printf("[RPC] Node height %lld > local %zu — chain advanced while disconnected\n",
                                                (long long)nh, g_chain.size() - 1);
+                                    }
+                                    // Update tip hash from node
+                                    std::string best = rpc_call("getbestblockhash");
+                                    auto rp = best.find("\"result\":\"");
+                                    if (rp != std::string::npos) {
+                                        std::string tip_hex = best.substr(rp + 10, 64);
+                                        if (tip_hex.size() == 64) {
+                                            Bytes32 new_tip{};
+                                            for (int i = 0; i < 32; ++i) {
+                                                unsigned int byte;
+                                                sscanf(tip_hex.c_str() + i * 2, "%02x", &byte);
+                                                new_tip[i] = (uint8_t)byte;
+                                            }
+                                            g_tip_hash = new_tip;
+                                            printf("[RPC] Updated tip to %s\n", tip_hex.substr(0, 16).c_str());
+                                        }
+                                    }
+                                    // Get difficulty from node
+                                    uint32_t node_diff = 0;
+                                    auto dp = info.find("\"next_difficulty\":");
+                                    if (dp != std::string::npos) node_diff = (uint32_t)atoll(info.c_str() + dp + 18);
+                                    else { auto dp2 = info.find("\"difficulty\":"); if (dp2 != std::string::npos) node_diff = (uint32_t)atoll(info.c_str() + dp2 + 13); }
+                                    // Pad chain to match node
+                                    while ((int64_t)g_chain.size() - 1 < nh) {
+                                        BlockMeta pad{};
+                                        pad.height = (int64_t)g_chain.size();
+                                        pad.time = (int64_t)time(nullptr);
+                                        pad.powDiffQ = node_diff > 0 ? node_diff : GENESIS_BITSQ;
+                                        g_chain.push_back(pad);
                                     }
                                 }
                                 break;
