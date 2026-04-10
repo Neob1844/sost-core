@@ -770,6 +770,12 @@ static std::string handle_getblockcount(const std::string& id, const std::vector
     return rpc_result(id, std::to_string(g_chain_height));
 }
 
+static std::string handle_getbestblockhash(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    if(g_blocks.empty()) return rpc_error(id,-1,"No blocks");
+    return rpc_result(id, "\"" + to_hex(g_blocks.back().block_id.data(), 32) + "\"");
+}
+
 static std::string handle_getblockhash(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing height");
@@ -2462,6 +2468,7 @@ static std::string handle_license_list(const std::string& id, const std::vector<
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
     {"getblockcount",handle_getblockcount},
+    {"getbestblockhash",handle_getbestblockhash},
     {"getblockhash",handle_getblockhash},
     {"getblock",handle_getblock},
     {"getinfo",handle_getinfo},
