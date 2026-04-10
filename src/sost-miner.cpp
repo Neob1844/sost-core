@@ -676,11 +676,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     diag_stable = 0; diag_target = 0; diag_total = 0;
                 }
             }
-            if ((nonce % 500) == 0 && nonce > 0) {
-                if ((nonce % 5000) == 0) { printf("\r  nonce=%u extra=%u", nonce, extra_nonce); fflush(stdout); }
-
-                // Check if chain advanced (another miner won) — abort early
-                if (!g_rpc_url.empty()) {
+            // Check chain height every 30 seconds (real time, not nonce-based)
+            {
+                static auto last_chain_check = std::chrono::steady_clock::now();
+                auto now_cc = std::chrono::steady_clock::now();
+                auto secs_since_check = std::chrono::duration_cast<std::chrono::seconds>(now_cc - last_chain_check).count();
+                if (secs_since_check >= 30 && !g_rpc_url.empty()) {
+                    last_chain_check = now_cc;
                     std::string info_check = rpc_call("getinfo");
                     if (!info_check.empty()) {
                         auto bp2 = info_check.find("\"blocks\":");
@@ -714,23 +716,19 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     }
                 }
 
-                // Refresh timestamp and cASERT level (time-based, not nonce-based)
-                if (!sim_time) {
-                    auto now_check = std::chrono::steady_clock::now();
-                    auto since_update = std::chrono::duration_cast<std::chrono::seconds>(now_check - ts_last_update).count();
-                    if (since_update >= 30) {
-                        ts = std::chrono::duration_cast<std::chrono::seconds>(
-                            std::chrono::system_clock::now().time_since_epoch()).count();
-                        build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
-                        ts_last_update = now_check;
-                        auto new_cdec = casert_compute(g_chain, h, ts);
-                        auto new_params = get_consensus_params(prof, h);
-                        new_params = casert_apply_profile(new_params, new_cdec);
-                        if (new_params.stab_scale != params.stab_scale) {
-                            printf("\n[DECAY] cASERT level changed: scale %d -> %d\n",
-                                   params.stab_scale, new_params.stab_scale);
-                            params = new_params;
-                        }
+                // Refresh timestamp and cASERT level
+                if (!sim_time && secs_since_check >= 30) {
+                    ts = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count();
+                    build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
+                    ts_last_update = now_cc;
+                    auto new_cdec = casert_compute(g_chain, h, ts);
+                    auto new_params = get_consensus_params(prof, h);
+                    new_params = casert_apply_profile(new_params, new_cdec);
+                    if (new_params.stab_scale != params.stab_scale) {
+                        printf("\n[DECAY] cASERT level changed: scale %d -> %d\n",
+                               params.stab_scale, new_params.stab_scale);
+                        params = new_params;
                     }
                 }
             }
