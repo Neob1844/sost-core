@@ -785,37 +785,51 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                (long long)h);
                         return false; // will be retried by outer loop
                     } else {
-                        // Block rejected — check if chain advanced (another miner won)
+                        // Block rejected — query node for current state
                         std::string info = rpc_call("getinfo");
+                        std::string best = rpc_call("getbestblockhash");
                         if (!info.empty()) {
                             auto bp = info.find("\"blocks\":");
-                            if (bp != std::string::npos) {
-                                int64_t node_height = atoll(info.c_str() + bp + 9);
-                                if (node_height >= h) {
-                                    printf("  -> NODE REJECTED — chain already at height %lld (we tried %lld). Advancing.\n",
-                                           (long long)node_height, (long long)h);
-                                    // Update local chain tip from node
-                                    auto tp = info.find("\"tip\":\"");
-                                    if (tp != std::string::npos) {
-                                        std::string tip_hex = info.substr(tp + 7, 64);
-                                        Bytes32 new_tip{};
-                                        for (int i = 0; i < 32; ++i) {
-                                            unsigned int byte;
-                                            sscanf(tip_hex.c_str() + i * 2, "%02x", &byte);
-                                            new_tip[i] = (uint8_t)byte;
-                                        }
-                                        g_tip_hash = new_tip;
+                            int64_t node_height = (bp != std::string::npos) ? atoll(info.c_str() + bp + 9) : -1;
+
+                            // Get tip hash from getbestblockhash
+                            auto rp = best.find("\"result\":\"");
+                            if (rp != std::string::npos) {
+                                std::string tip_hex = best.substr(rp + 10, 64);
+                                if (tip_hex.size() == 64) {
+                                    Bytes32 new_tip{};
+                                    for (int i = 0; i < 32; ++i) {
+                                        unsigned int byte;
+                                        sscanf(tip_hex.c_str() + i * 2, "%02x", &byte);
+                                        new_tip[i] = (uint8_t)byte;
                                     }
-                                    // Pad local chain to match node height
-                                    while ((int64_t)g_chain.size() - 1 < node_height) {
-                                        BlockMeta pad{};
-                                        pad.height = (int64_t)g_chain.size();
-                                        pad.time = (int64_t)time(nullptr);
-                                        pad.powDiffQ = bits_q;
-                                        g_chain.push_back(pad);
-                                    }
-                                    return false; // restart mining at new height
+                                    g_tip_hash = new_tip;
+                                    printf("  -> Updated tip to %s\n", tip_hex.substr(0, 16).c_str());
                                 }
+                            }
+
+                            if (node_height >= h) {
+                                printf("  -> NODE REJECTED — chain at height %lld (we tried %lld). Advancing.\n",
+                                       (long long)node_height, (long long)h);
+                                // Get next_difficulty from node for accurate cASERT
+                                uint32_t node_diff = bits_q;
+                                auto dp = info.find("\"next_difficulty\":");
+                                if (dp != std::string::npos) {
+                                    node_diff = (uint32_t)atoll(info.c_str() + dp + 18);
+                                } else {
+                                    auto dp2 = info.find("\"difficulty\":");
+                                    if (dp2 != std::string::npos)
+                                        node_diff = (uint32_t)atoll(info.c_str() + dp2 + 13);
+                                }
+                                // Pad local chain to match node height with real difficulty
+                                while ((int64_t)g_chain.size() - 1 < node_height) {
+                                    BlockMeta pad{};
+                                    pad.height = (int64_t)g_chain.size();
+                                    pad.time = (int64_t)time(nullptr);
+                                    pad.powDiffQ = node_diff;
+                                    g_chain.push_back(pad);
+                                }
+                                return false; // restart mining at new height
                             }
                         }
                         printf("  -> NODE REJECTED BLOCK — will retry same height\n");
