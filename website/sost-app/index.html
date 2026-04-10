@@ -1643,7 +1643,8 @@ SectionRenderers.dashboard = function(el) {
       //   lag > 0 = ahead of schedule (more blocks than expected)
       //   lag < 0 = behind schedule (fewer blocks than expected)
       const casertProfile = info.casert_profile || 'N/A';
-      // lagDisplay computed later alongside Chain Lag/Lead (same wall-clock formula)
+      // lagDisplay for cASERT profile: prefer RPC casert_lag (node truth), fall back to wall-clock
+      const rpcLag = info.casert_lag;
       let lagDisplay = '';
 
       // Calculate SOST PoPC reference price
@@ -1652,8 +1653,8 @@ SectionRenderers.dashboard = function(el) {
       let totalSupply = 0, bh2 = 0, h2 = height || 2254;
       while (bh2 <= h2) { let ep = Math.floor(bh2/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h2); totalSupply += r*(ee-bh2+1); bh2 = ee+1; }
       const supplyDisplay = totalSupply.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
-      const goldVault = (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
-      const popcPool = (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
+      const goldVault = '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (25% of emission)';
+      const popcPool = '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (25% of emission)';
 
       // Calculate SOST PoPC reference price
       let sostPrice = 'N/A';
@@ -1714,6 +1715,29 @@ SectionRenderers.dashboard = function(el) {
         } catch(e) {}
       }
 
+      // Fetch connected nodes count via getpeerinfo
+      let connectedNodes = 'N/A';
+      try {
+        const peers = await rpcCall('getpeerinfo');
+        if (Array.isArray(peers)) {
+          connectedNodes = peers.filter(p => p.version_acked).length;
+        }
+      } catch(e) { connectedNodes = 'N/A'; }
+
+      // Count unique miners from last 20 blocks
+      let uniqueMiners = 'N/A';
+      try {
+        let minerAddrs = new Set();
+        const tipHash = await rpcCall('getblockhash', [parseInt(height)]);
+        let bHash = tipHash;
+        for (let i = 0; i < 20 && bHash; i++) {
+          const blk = await rpcCall('getblock', [bHash]);
+          if (blk && blk.miner_address) minerAddrs.add(blk.miner_address);
+          bHash = blk ? blk.previousblockhash : null;
+        }
+        uniqueMiners = minerAddrs.size;
+      } catch(e) { uniqueMiners = 'N/A'; }
+
       // Interval color
       let ivColor = 'var(--pip)';
       if (interval !== 'N/A') {
@@ -1737,15 +1761,26 @@ SectionRenderers.dashboard = function(el) {
       if (lagBehind > 0) {
         lagLeadText = lagBehind + ' behind';
         lagLeadColor = '#fb010d';
-        lagDisplay = ` (${lagBehind} behind)`;
       } else if (lagBehind < 0) {
         lagLeadText = Math.abs(lagBehind) + ' ahead';
         lagLeadColor = '#4ade80';
-        lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
       } else {
         lagLeadText = 'on schedule';
         lagLeadColor = '#4ade80';
-        lagDisplay = ' (on schedule)';
+      }
+
+      // lagDisplay next to cASERT profile: use RPC casert_lag (node truth) when available
+      // C++ convention: lag > 0 = ahead of schedule, lag < 0 = behind schedule
+      if (rpcLag !== undefined && rpcLag !== null) {
+        const rpcLagVal = parseInt(rpcLag);
+        if (rpcLagVal > 0) lagDisplay = ` (${rpcLagVal} ahead)`;
+        else if (rpcLagVal < 0) lagDisplay = ` (${Math.abs(rpcLagVal)} behind)`;
+        else lagDisplay = ' (on schedule)';
+      } else {
+        // Fallback to wall-clock lag
+        if (lagBehind > 0) lagDisplay = ` (${lagBehind} behind)`;
+        else if (lagBehind < 0) lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
+        else lagDisplay = ' (on schedule)';
       }
 
       statusEl.innerHTML = `
@@ -1753,11 +1788,13 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
         <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">PoPC Reference · Not listed · 1.2 oz gold ÷ supply</div>
         <div class="stat-row"><span class="stat-label">TOTAL SUPPLY</span><span class="stat-value">${supplyDisplay}</span></div>
-        <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
-        <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool} <span style="font-size:9px;color:var(--pip-dim)">(25%)</span></span></div>
+        <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault}</span></div>
+        <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool}</span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
+        <div class="stat-row"><span class="stat-label">ACTIVE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 20 blocks)</span></span></div>
+        <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
