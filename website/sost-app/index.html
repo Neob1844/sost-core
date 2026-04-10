@@ -1769,16 +1769,8 @@ SectionRenderers.dashboard = function(el) {
       else if (lagBehind < 0) lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
       else lagDisplay = ' (on schedule)';
 
-      // Compute cASERT profile from wall-clock lag (same logic as explorer getProfileFromLag)
-      // lag convention for profile: negative = behind = easing, positive = ahead = hardening
-      const profileLag = -lagBehind; // convert: lagBehind>0 → profileLag<0 (behind)
-      let casertProfile;
-      const absLag = Math.abs(profileLag);
-      if (absLag <= 5) casertProfile = 'B0';
-      else if (absLag <= 20) casertProfile = profileLag > 0 ? 'H1' : 'E1';
-      else if (absLag <= 50) casertProfile = profileLag > 0 ? 'H2' : 'E2';
-      else if (absLag <= 75) casertProfile = profileLag > 0 ? 'H3' : 'E3';
-      else casertProfile = profileLag > 0 ? 'H4' : 'E4';
+      // cASERT profile: use RPC casert_profile (authoritative from C++ PID controller)
+      const casertProfile = info.casert_profile || 'B0';
 
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>

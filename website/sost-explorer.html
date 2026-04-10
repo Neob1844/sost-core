@@ -1665,11 +1665,14 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  // Profile: always use wall-clock lag estimation (matches chain timing display)
-  // RPC casert_profile uses block-timestamp lag which doesn't reflect wall-clock stall
-  var tipLag=computeBlockLag(H,_lastBlockTime);
-  var effProf=getProfileFromLag(tipLag);
-  var profSource='lag';
+  // Profile: use wall-clock lag (same formula as chain timing) + RPC profile
+  var now_mp=Math.floor(Date.now()/1000);
+  var expected_mp=Math.floor((now_mp-GENESIS_TS)/600);
+  var tipLag=H-expected_mp; // negative = behind, positive = ahead (same as chain status)
+  var effProf=_rpcCasertProfile?
+    (CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;})||getProfileFromLag(tipLag)):
+    getProfileFromLag(tipLag);
+  var profSource=_rpcCasertProfile?'rpc':'lag';
   var dc={active:false};
   // Profile name + params + stability rate
   var pn=document.getElementById('miningProfileName');
