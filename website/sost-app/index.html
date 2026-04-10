@@ -1637,14 +1637,8 @@ SectionRenderers.dashboard = function(el) {
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
-      // cASERT profile: READ DIRECTLY from getinfo RPC — the node is the source of truth
-      // C++ convention (verified in casert.cpp line 146):
-      //   lag = actual_height - expected_height
-      //   lag > 0 = ahead of schedule (more blocks than expected)
-      //   lag < 0 = behind schedule (fewer blocks than expected)
-      const casertProfile = info.casert_profile || 'N/A';
-      // lagDisplay for cASERT profile: prefer RPC casert_lag (node truth), fall back to wall-clock
-      const rpcLag = info.casert_lag;
+      // cASERT profile: compute from wall-clock lag to match Chain Lag/Lead display
+      // This ensures consistency — both use the same lag source
       let lagDisplay = '';
 
       // Calculate SOST PoPC reference price
@@ -1769,19 +1763,22 @@ SectionRenderers.dashboard = function(el) {
         lagLeadColor = '#4ade80';
       }
 
-      // lagDisplay next to cASERT profile: use RPC casert_lag (node truth) when available
-      // C++ convention: lag > 0 = ahead of schedule, lag < 0 = behind schedule
-      if (rpcLag !== undefined && rpcLag !== null) {
-        const rpcLagVal = parseInt(rpcLag);
-        if (rpcLagVal > 0) lagDisplay = ` (${rpcLagVal} ahead)`;
-        else if (rpcLagVal < 0) lagDisplay = ` (${Math.abs(rpcLagVal)} behind)`;
-        else lagDisplay = ' (on schedule)';
-      } else {
-        // Fallback to wall-clock lag
-        if (lagBehind > 0) lagDisplay = ` (${lagBehind} behind)`;
-        else if (lagBehind < 0) lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
-        else lagDisplay = ' (on schedule)';
-      }
+      // lagDisplay and cASERT profile: both from wall-clock lag for consistency
+      // lagBehind > 0 = behind schedule, lagBehind < 0 = ahead
+      if (lagBehind > 0) lagDisplay = ` (${lagBehind} behind)`;
+      else if (lagBehind < 0) lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
+      else lagDisplay = ' (on schedule)';
+
+      // Compute cASERT profile from wall-clock lag (same logic as explorer getProfileFromLag)
+      // lag convention for profile: negative = behind = easing, positive = ahead = hardening
+      const profileLag = -lagBehind; // convert: lagBehind>0 → profileLag<0 (behind)
+      let casertProfile;
+      const absLag = Math.abs(profileLag);
+      if (absLag <= 5) casertProfile = 'B0';
+      else if (absLag <= 20) casertProfile = profileLag > 0 ? 'H1' : 'E1';
+      else if (absLag <= 50) casertProfile = profileLag > 0 ? 'H2' : 'E2';
+      else if (absLag <= 75) casertProfile = profileLag > 0 ? 'H3' : 'E3';
+      else casertProfile = profileLag > 0 ? 'H4' : 'E4';
 
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
