@@ -30,6 +30,7 @@
 #include <cstring>
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <chrono>
 #include <ctime>
 #include <string>
@@ -571,6 +572,11 @@ static std::atomic<bool> g_chain_advanced{false};
 static std::atomic<int64_t> g_monitor_height{0};
 static std::atomic<bool> g_monitor_running{false};
 
+// Multi-threaded mining
+static int g_num_threads = 1;
+static std::atomic<bool> g_block_found{false};
+static std::mutex g_submit_mu;  // protects block submission
+
 static void start_block_monitor(int64_t mining_height) {
     g_chain_advanced = false;
     g_monitor_height = mining_height;
@@ -703,7 +709,184 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
     // Start background monitor that checks for new blocks every 2s
     start_block_monitor(h);
+    g_block_found = false;
 
+    // =========================================================================
+    // Multi-threaded mining: each thread tries different nonces in parallel.
+    // Scratchpad is shared (read-only). First thread to find a block wins.
+    // =========================================================================
+    if (g_num_threads > 1) {
+        printf("[MINING] Starting %d threads for parallel nonce search\n", g_num_threads);
+        fflush(stdout);
+
+        struct ThreadResult {
+            bool found{false};
+            MinedBlock mb{};
+            uint32_t win_nonce{0};
+            uint32_t win_extra{0};
+            int64_t  win_ts{0};
+            std::string coinbase_hex_copy;
+            std::vector<std::string> mempool_hex_copy;
+        };
+        std::vector<ThreadResult> results(g_num_threads);
+        std::vector<std::thread> threads;
+
+        for (int tid = 0; tid < g_num_threads; ++tid) {
+            results[tid].coinbase_hex_copy = coinbase_hex;
+            results[tid].mempool_hex_copy = mempool_tx_hexes;
+            threads.emplace_back([&, tid]() {
+                uint32_t my_stable = 0, my_target = 0, my_total = 0;
+                uint32_t my_extra = 0;
+                // Each thread starts at nonce=tid and steps by g_num_threads
+                for (uint32_t n = (uint32_t)tid; ; n += (uint32_t)g_num_threads) {
+                    if (g_block_found || g_chain_advanced) return;
+
+                    // Thread-local timestamp
+                    int64_t my_ts = std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count();
+                    uint8_t my_hc72[72];
+                    build_hc72(my_hc72, g_tip_hash, mrkl, (uint32_t)my_ts, bits_q);
+
+                    auto res = convergencex_attempt(
+                        scratch.data(), scratch.size(), bk,
+                        n, my_extra, params, my_hc72, epoch);
+
+                    my_total++;
+                    if (res.is_stable) my_stable++;
+                    if (pow_meets_target(res.commit, bits_q)) my_target++;
+
+                    if (tid == 0 && (my_total % 200) == 0 && my_total > 0) {
+                        printf("\n[DIAG] threads=%d nonce~%u stable=%u/%u target=%u/%u\n",
+                               g_num_threads, n, my_stable, my_total, my_target, my_total);
+                        fflush(stdout);
+                    }
+
+                    if (res.is_stable && pow_meets_target(res.commit, bits_q)) {
+                        // Found! Signal others to stop
+                        bool expected = false;
+                        if (!g_block_found.compare_exchange_strong(expected, true)) return; // another thread won
+
+                        auto t1 = std::chrono::steady_clock::now();
+                        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+                        auto full_hdr = build_full_header_bytes(my_hc72, res.checkpoints_root, n, my_extra);
+                        Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
+
+                        printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu (thread %d)\n",
+                               (long long)h, hex(block_id).substr(0, 16).c_str(),
+                               n, my_extra, (long long)elapsed, block_txs.size(), tid);
+                        printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
+                               (long long)subsidy, (long long)total_fees,
+                               (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
+
+                        printf("  Generating Transcript V2 witnesses...\n");
+                        generate_transcript_witnesses(res, scratch.data(), scratch.size(),
+                            bk, n, my_extra, params, my_hc72, epoch);
+                        printf("  %zu segment proofs, %zu round witnesses\n",
+                               res.segment_proofs.size(), res.round_witnesses.size());
+
+                        auto& tr = results[tid];
+                        tr.found = true;
+                        tr.win_nonce = n;
+                        tr.win_extra = my_extra;
+                        tr.win_ts = my_ts;
+                        tr.mb.block_id = block_id;
+                        tr.mb.prev_hash = g_tip_hash;
+                        tr.mb.merkle_root = mrkl;
+                        tr.mb.commit = res.commit;
+                        tr.mb.checkpoints_root = res.checkpoints_root;
+                        tr.mb.segments_root = res.segments_root;
+                        tr.mb.height = h; tr.mb.timestamp = my_ts; tr.mb.bits_q = bits_q;
+                        tr.mb.nonce = n; tr.mb.extra_nonce = my_extra;
+                        tr.mb.stability_metric = res.stability_metric;
+                        tr.mb.stab_scale = params.stab_scale;
+                        tr.mb.stab_k = params.stab_k;
+                        tr.mb.stab_margin = params.stab_margin;
+                        tr.mb.stab_steps = params.stab_steps;
+                        tr.mb.stab_lr_shift = params.stab_lr_shift;
+                        tr.mb.profile_index = params.stab_profile_index;
+                        tr.mb.x_bytes = res.x_bytes;
+                        tr.mb.final_state = res.final_state;
+                        tr.mb.checkpoint_leaves = res.checkpoint_leaves;
+                        tr.mb.segment_proofs = res.segment_proofs;
+                        tr.mb.round_witnesses = res.round_witnesses;
+                        tr.mb.subsidy = subsidy;
+                        tr.mb.miner_reward = split.miner;
+                        tr.mb.gold_vault_reward = split.gold_vault;
+                        tr.mb.popc_pool_reward = split.popc_pool;
+                        return;
+                    }
+                }
+            });
+        }
+
+        // Wait for all threads to finish
+        for (auto& t : threads) t.join();
+
+        // Check if chain advanced (abort)
+        if (g_chain_advanced) {
+            printf("\n[MINING] New block detected! Aborting mining of %lld\n", (long long)h);
+            fflush(stdout);
+            stop_block_monitor();
+            std::string info_check = rpc_call("getinfo");
+            std::string best = rpc_call("getbestblockhash");
+            if (!info_check.empty()) {
+                auto bp2 = info_check.find("\"blocks\":");
+                int64_t cur_h = (bp2 != std::string::npos) ? atoll(info_check.c_str() + bp2 + 9) : h;
+                auto rp2 = best.find("\"result\":\"");
+                if (rp2 != std::string::npos) {
+                    std::string th = best.substr(rp2 + 10, 64);
+                    if (th.size() == 64) {
+                        Bytes32 nt{};
+                        for (int i2=0;i2<32;++i2){unsigned int by;sscanf(th.c_str()+i2*2,"%02x",&by);nt[i2]=(uint8_t)by;}
+                        g_tip_hash = nt;
+                    }
+                }
+                auto dp2 = info_check.find("\"next_difficulty\":");
+                uint32_t nd = 0;
+                if (dp2 != std::string::npos) nd = (uint32_t)atoll(info_check.c_str() + dp2 + 18);
+                while ((int64_t)g_chain.size() - 1 < cur_h) {
+                    BlockMeta pad{}; pad.height=(int64_t)g_chain.size(); pad.time=(int64_t)time(nullptr);
+                    pad.powDiffQ = nd > 0 ? nd : bits_q; g_chain.push_back(pad);
+                }
+            }
+            return false;
+        }
+
+        // Submit winning block
+        for (int tid2 = 0; tid2 < g_num_threads; ++tid2) {
+            if (results[tid2].found) {
+                auto& tr = results[tid2];
+                stop_block_monitor();
+                if (!g_rpc_url.empty()) {
+                    std::vector<std::string> all_hexes;
+                    all_hexes.push_back(tr.coinbase_hex_copy);
+                    for (const auto& hx : tr.mempool_hex_copy) all_hexes.push_back(hx);
+                    int submit_rc = rpc_submit_block_full(tr.mb, all_hexes);
+                    if (submit_rc == 1) {
+                        printf("  -> submitted to node OK (%zu txs)\n", all_hexes.size());
+                        g_tip_hash = tr.mb.block_id;
+                        BlockMeta bm{}; bm.block_id=tr.mb.block_id; bm.height=h;
+                        bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q; g_chain.push_back(bm);
+                        return true;
+                    } else {
+                        printf("  -> node REJECTED block\n");
+                        return false;
+                    }
+                }
+                // Standalone mode
+                g_mined_blocks.push_back(tr.mb);
+                g_tip_hash = tr.mb.block_id;
+                BlockMeta bm{}; bm.block_id=tr.mb.block_id; bm.height=h;
+                bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q; g_chain.push_back(bm);
+                return true;
+            }
+        }
+        return false; // shouldn't reach here
+    }
+
+    // =========================================================================
+    // Single-threaded mining (original path, --threads 1 or default)
+    // =========================================================================
     while (!found) {
         for (uint32_t nonce = 0; nonce <= max_nonce; ++nonce) {
             if ((nonce % 1000) == 0 && nonce > 0) {
@@ -1007,8 +1190,13 @@ int main(int argc, char** argv) {
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
             else if (!strcmp(argv[i], "dev")) prof = Profile::DEV;
         }
+        else if (!strcmp(argv[i], "--threads") && i + 1 < argc) {
+            g_num_threads = atoi(argv[++i]);
+            if (g_num_threads < 1) g_num_threads = 1;
+            if (g_num_threads > 64) g_num_threads = 64;
+        }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.6\n");
+            printf("SOST Miner v0.7 (multi-threaded)\n");
             printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
@@ -1018,6 +1206,7 @@ int main(int argc, char** argv) {
             printf("  --rpc-user <u>     RPC Basic Auth user\n");
             printf("  --rpc-pass <p>     RPC Basic Auth pass\n");
             printf("  --profile <p>      mainnet|testnet|dev\n");
+            printf("  --threads <n>      Parallel mining threads (default: 1). Share 1 scratchpad.\n");
             printf("  --realtime         Real timestamps\n");
             return 0;
         }
@@ -1038,7 +1227,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("=== SOST Miner v0.6 (FULL submitblock) ===\n");
+    printf("=== SOST Miner v0.7 (multi-threaded, FULL submitblock) ===\n");
+    if (g_num_threads > 1) printf("Threads: %d (parallel nonce search)\n", g_num_threads);
     printf("Miner address: %s\n", g_miner_address.c_str());
     printf("Profile: %s | Blocks: %d%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
