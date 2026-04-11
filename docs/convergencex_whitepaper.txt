@@ -2016,7 +2016,46 @@ SUSTAINABILITY EXAMPLE (Year 1):
   System: sustainable indefinitely, even at maximum demand
 ```
 
-### 6.13 Year 2-3: Physical Gold Extension
+### 6.13 Activation Conditions
+
+PoPC will be activated once ALL of the following technical and network conditions are met.
+Reaching block 5,000 is a necessary condition, but activation will only proceed once the
+system is considered stable and all required components are fully operational.
+
+```
+ACTIVATION CONDITIONS (all must be satisfied):
+
+  1. Block height ≥ 5,000
+     Activation is tied to a protocol milestone and will not occur before this threshold.
+
+  2. Sustained network stability
+     Consistent block production, stable sync across nodes, no critical consensus
+     or networking issues.
+
+  3. Sufficient node and miner participation
+     Minimum level of independent nodes and active miners to ensure reliable
+     operation under real network conditions.
+
+  4. Model A contract validation
+     Registration, audit, reward, and slashing flows fully validated under live
+     network testing conditions.
+
+  5. Ethereum escrow deployment (Model B)
+     Final escrow contracts deployed, verified, and publicly auditable before
+     Model B activation.
+
+  6. Explorer & wallet integration readiness
+     Public interfaces correctly reflect all PoPC states (pending, active,
+     completed, slashed).
+
+ACTIVATION NOTE:
+  PoPC activation is protocol-scheduled but condition-dependent. The Foundation
+  will announce activation with sufficient advance notice once all conditions
+  are verified. This is not a date-based commitment — it is a readiness-based
+  milestone.
+```
+
+### 6.14 Year 2-3: Physical Gold Extension
 
 In Year 2, PoPC extends to physical gold (bars, coins, ingots). Users commit to custody of physical precious metals without revealing identity, location, or exact quantity. Audit challenges are derived from ConvergenceX entropy and executed via a mobile app.
 ```
