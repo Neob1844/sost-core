@@ -20,8 +20,10 @@
 <meta name="twitter:title" content="MIT License — fully open source
 <meta name="twitter:description" content="MIT License — fully open source. Free to use, modify, and deploy.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#000;--bg2:#080808;--bg3:#111;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--gold:#ffd700;--border:#1a1a1a;--font:'JetBrains Mono',monospace}
+:root{--bg:#000;--bg2:#080808;--bg3:#111;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--red:#fb010d;--green:#4ade80;--green-primary:#4ade80;--cyan:#22d3ee;--cyan-primary:#22d3ee;--gold:#ffd700;--border:#1a1a1a;--border-dim:#1a1a1a;--font:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.8}
 .container{max-width:900px;margin:0 auto;padding:40px 24px}
@@ -39,17 +41,58 @@ li{margin-bottom:4px}
 .nav a{color:var(--text3);text-decoration:none;font-size:12px;letter-spacing:1px}
 .nav a:hover{color:var(--cyan)}
 code{background:var(--bg3);padding:2px 6px;border-radius:3px;font-size:12px;color:var(--cyan)}
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+nav .container{max-width:1100px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 24px}
+.nav-logo{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--text);letter-spacing:2px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand-sost{color:var(--red)}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links a{color:#888;text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;transition:all .2s;letter-spacing:.5px}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-links a.active{color:var(--gold);border-bottom:1px solid var(--gold)}
+.nav-hamburger{display:none;background:none;border:1px solid var(--border);color:var(--text);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px}
+@media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
 </style>
 </head>
 <body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
 <div class="container">
-<div class="nav">
-<a href="index.html">HOME</a>
-<a href="sost-explorer.html">EXPLORER</a>
-<a href="sost-technology.html">TECHNOLOGY</a>
-<a href="sost-popc.html">PoPC</a>
-<a href="sost-license.html" style="color:var(--gold)">LICENSE</a>
-</div>
 
 <h1>MIT License — fully open source</h1>
 <p style="color:var(--green);font-size:14px;margin-bottom:24px">MIT License &mdash; Fully Open Source</p>
