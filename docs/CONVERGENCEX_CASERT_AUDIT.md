@@ -219,13 +219,13 @@ With 1 miner at 5.5 att/s:
 #### Issue 1: Slow Upward Adjustment (6.25% Cap)
 When hashrate doubles, the 6.25% per-block cap means it takes:
 - `log(2) / log(1.0625) ≈ 11.4 blocks` minimum to double difficulty
-- But the ASERT formula also has exponential smoothing with 48h halflife
+- But the cASERT formula also has exponential smoothing with 48h halflife
 - Combined effect: **hundreds of blocks to fully converge after 2x hashrate increase**
 - In simulation: scenario 2 never fully converged in 400 blocks
 
 **Risk:** If a large miner joins, block times will be too fast for an extended period. With current single-miner network, this is low risk. If SOST grows to multiple miners, this could cause extended periods of fast blocks.
 
-**Mitigation already in place:** The 48h halflife means the ASERT formula itself adjusts exponentially, and the cap just limits the per-block rate. Over time it converges.
+**Mitigation already in place:** The 48h halflife means the cASERT bitsQ formula itself adjusts exponentially, and the cap just limits the per-block rate. Over time it converges.
 
 #### Issue 2: B0/E1 Profile Oscillation
 234 profile transitions in 1,252 blocks means a transition every ~5.3 blocks on average. Most are B0↔E1 ping-pong in the recent chain. This is cosmetic — both profiles are very similar (B0: margin=185, E1: margin=205). The oscillation doesn't affect mining or security.
@@ -316,14 +316,14 @@ Simulation scenario 6 shows selfish mining pattern produces 641s mean block time
 
 **Problem:** Miners can game this. If the algorithm looks at the last 50 blocks to predict future hashrate, a miner can mine 50 easy blocks then stop, causing the algorithm to predict high hashrate and raise difficulty, freezing the chain for legitimate miners.
 
-**Verdict: REJECTED.** Introduces a new manipulation vector. The ASERT formula's reactive approach is safer — it adjusts based on what happened, not what might happen.
+**Verdict: REJECTED.** Introduces a new manipulation vector. The cASERT formula's reactive approach is safer — it adjusts based on what happened, not what might happen.
 
 ### 4.4 Comparison with Other Projects
 
 | Project | Difficulty Adjustment | ML Used? | Notes |
 |---------|----------------------|----------|-------|
 | Bitcoin | Fixed retarget every 2016 blocks | No | Simple, proven, slow response |
-| Bitcoin Cash | ASERT (exponential per-block) | No | Closest to SOST's approach |
+| Bitcoin Cash | Exponential per-block retarget | No | Closest to SOST's cASERT approach |
 | Monero | Moving average, per-block | No | More reactive, some oscillation |
 | Ethereum (pre-merge) | Bomb + adjustment | No | Complex but no ML |
 | Zcash | Digishield variant | No | Per-block, momentum-based |
@@ -361,9 +361,9 @@ Simulation scenario 6 shows selfish mining pattern produces 641s mean block time
 
 **Scenario 2 (×2 hashrate):** The delta cap (6.25%) prevents rapid upward adjustment. After 400 blocks, mean block time is still 355s (41% below target). This is the primary weakness of the current configuration. However, the halflife-based exponential does eventually converge — it just takes much longer than the simulation window.
 
-**Scenario 3 (÷2 hashrate):** Downward adjustment works faster because the ASERT formula naturally reduces difficulty when blocks are slow. Last 100 blocks: 784s (30% above target) — still converging but functional.
+**Scenario 3 (÷2 hashrate):** Downward adjustment works faster because the cASERT bitsQ formula naturally reduces difficulty when blocks are slow. Last 100 blocks: 784s (30% above target) — still converging but functional.
 
-**Scenario 5 (flash):** Excellent recovery. After 100× hashrate flash (10 blocks), post-flash mean is 679s and max is 2,532s. The delta cap prevents difficulty from spiking too high during the flash, and the ASERT formula brings it back to equilibrium. This demonstrates robustness against temporary hashrate spikes.
+**Scenario 5 (flash):** Excellent recovery. After 100× hashrate flash (10 blocks), post-flash mean is 679s and max is 2,532s. The delta cap prevents difficulty from spiking too high during the flash, and the cASERT bitsQ formula brings it back to equilibrium. This demonstrates robustness against temporary hashrate spikes.
 
 **Scenario 6 (selfish):** Mean block time 641s (6.8% above target). The pattern of burst/pause creates moderate instability but the cASERT handles it without diverging.
 
