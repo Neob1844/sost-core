@@ -1678,7 +1678,7 @@ static std::string handle_popc_register(const std::string& id, const std::vector
 
     // --- Reward calculation (using dynamic rate) ---
     int64_t reward_stocks = calculate_reward_stocks(bond_sost_stocks, dyn_rate);
-    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_A_BPS / 10000);
     int64_t total_return  = bond_sost_stocks + net_reward;
 
     // Gold value in USD (formatted as string, 2 decimal places)
@@ -1877,7 +1877,7 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
                          std::to_string(current_height) + ")");
 
     int64_t reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
-    int64_t net_reward_release = reward - (reward * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+    int64_t net_reward_release = reward - (reward * (int64_t)POPC_PROTOCOL_FEE_A_BPS / 10000);
 
     // Mark as COMPLETED
     std::string comp_err;
@@ -1933,7 +1933,7 @@ static std::string handle_popc_slash(const std::string& id, const std::vector<st
 
     // Capture reward amount before slash (for committed release)
     int64_t slash_reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
-    int64_t slash_net_reward = slash_reward - (slash_reward * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+    int64_t slash_net_reward = slash_reward - (slash_reward * (int64_t)POPC_PROTOCOL_FEE_A_BPS / 10000);
 
     std::string slash_err;
     if (!build_slash_marker(g_popc_registry, commitment_id, reason, &slash_err))
@@ -2059,7 +2059,7 @@ static std::string handle_escrow_register(const std::string& id, const std::vect
 
     // Calculate reward using dynamic rate (applied to gold_value_stocks)
     int64_t reward_stocks = (gold_value_stocks * (int64_t)dyn_rate_e) / 10000;
-    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_BPS / 10000);
+    int64_t net_reward    = reward_stocks - (reward_stocks * (int64_t)POPC_PROTOCOL_FEE_B_BPS / 10000);
 
     // Gold value USD formatted
     char gold_usd_buf[64];

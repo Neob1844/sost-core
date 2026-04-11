@@ -843,7 +843,7 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
           <tr><td class="key">12 months</td><td class="val">up to <code>20%</code> of bond in SOST</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
-          Rates are <strong>base maximums</strong> (Tier 1 &mdash; first 25 contracts). A <strong>dynamic participation tier</strong> system reduces rates as the number of active contracts grows: 100% (0-25), 75% (26-50), 50% (51-100), 30% (101-200), 15% (201-500), 8% (501-1000). Hard cap: <code>1,000 SOST</code> max per contract. Max <code>1,000</code> active contracts. Anti-whale tiers apply above 10 oz. Protocol fee: 5%.
+          Rates are <strong>base maximums</strong> (Tier 1 &mdash; first 25 contracts). A <strong>dynamic participation tier</strong> system reduces rates as the number of active contracts grows: 100% (0-25), 75% (26-50), 50% (51-100), 30% (101-200), 15% (201-500), 8% (501-1000). Hard cap: <code>1,000 SOST</code> max per contract. Max <code>1,000</code> active contracts. Anti-whale tiers apply above 10 oz. Protocol fee: <code>3%</code> (Model A &mdash; lower fee rewards risk-taking).
         </p>
       </div>
     </div>
@@ -922,7 +922,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
           <tr><td class="key">12 months</td><td class="val">up to <code>8%</code> of gold value, paid in SOST at deposit</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
-          Rates are <strong>base maximums</strong> (Tier 1). Same dynamic participation tiers apply as Model A. Hard cap: <code>1,000 SOST</code> max per contract. Anti-whale tiers apply. Protocol fee: 5%.
+          Rates are <strong>base maximums</strong> (Tier 1). Same dynamic participation tiers apply as Model A. Hard cap: <code>1,000 SOST</code> max per contract. Anti-whale tiers apply. Protocol fee: <code>8%</code> (Model B &mdash; higher fee compensates zero risk).
         </p>
       </div>
     </div>
@@ -1008,7 +1008,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
 <span class="num">1.</span> Gold value: <span class="str">$10,000</span> = 10,000 SOST equivalent
 <span class="num">2.</span> Bond: <span class="str">25%</span> of gold value = <span class="fn">2,500 SOST</span> locked
 <span class="num">3.</span> Max reward: <span class="str">9%</span> of bond = 225 SOST (dynamic, adjusted by PUR)
-<span class="num">4.</span> Protocol fee: 5% of reward = 11.25 SOST
+<span class="num">4.</span> Protocol fee: 3% of reward = 6.75 SOST
 <span class="num">5.</span> Net reward: <span class="fn">~213.75 SOST</span> (at PUR=0%)
 <span class="num">6.</span> Total return: 2,500 + 213.75 = <span class="fn">2,713.75 SOST</span>
 <span class="num">7.</span> Your gold: <span class="str">never moved</span> &mdash; stays in your Ethereum wallet
@@ -1080,7 +1080,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
 <span class="num">1.</span> Deposit 1 oz XAUT into escrow contract (Ethereum TX)
 <span class="num">2.</span> Register on SOST &rarr; system verifies escrow deposit
 <span class="num">3.</span> Max reward: <span class="str">3.5%</span> of gold value = 350 SOST (dynamic, Tier 1)
-<span class="num">4.</span> Protocol fee: 5% = 22.50 SOST
+<span class="num">4.</span> Protocol fee: 8% = 28 SOST
 <span class="num">5.</span> Net reward: <span class="fn">~427.50 SOST</span> paid immediately
 <span class="num">6.</span> After 6 months: withdraw 1 oz XAUT from escrow
 <span class="num">7.</span> Result: you keep <span class="fn">427.50 SOST + your 1 oz gold</span>
@@ -1137,10 +1137,35 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
           <tr><td class="key">Max active contracts</td><td class="val"><code>1,000</code> &mdash; no new registrations beyond this</td></tr>
           <tr><td class="key">Max gold per contract</td><td class="val"><code>200 oz</code> &mdash; anti-whale hard cap (above 10 oz: reduced rates)</td></tr>
           <tr><td class="key">Reward floor</td><td class="val"><code>10 SOST</code> (Model A) / <code>5 SOST</code> (Model B) &mdash; minimum per contract</td></tr>
-          <tr><td class="key">Protocol fee</td><td class="val"><code>5%</code> deducted from rewards</td></tr>
+          <tr><td class="key">Protocol fee</td><td class="val"><code>3%</code> Model A (risk-taker discount) / <code>8%</code> Model B (zero-risk premium)</td></tr>
           <tr><td class="key">Pool protection</td><td class="val">PUR quadratic curve <code>(1-PUR)&sup2;</code> + solvency check at registration</td></tr>
         </table>
       </div>
+    </div>
+
+    <!-- WHERE REWARDS COME FROM + DISCLAIMER -->
+    <div class="spec-block fade-in delay-4">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Where Rewards Come From</span>
+        </div>
+        <span class="spec-tag consensus">TRANSPARENT</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">PoPC rewards are funded exclusively by the <strong>PoPC Pool</strong>, which receives <strong>25% of every mined block</strong> by consensus rule. This is not printed money &mdash; it is a fixed share of new SOST emission, allocated at genesis and enforced by every node on the network. The pool grows with every block and shrinks only when rewards are paid out.</p>
+        <table class="code-table">
+          <tr><td class="key">Source</td><td class="val">25% of coinbase reward &rarr; PoPC Pool (consensus-enforced)</td></tr>
+          <tr><td class="key">Income</td><td class="val">~283 SOST/day at current emission rate (~8,479 SOST/month)</td></tr>
+          <tr><td class="key">Protection</td><td class="val">PUR (Pool Utilization Ratio) closes new registrations before pool is depleted</td></tr>
+          <tr><td class="key">Sustainability</td><td class="val">Pool income continues for 30+ years (smooth emission decay, no halvings)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:16px 20px;margin-top:16px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+      <strong style="color:#fbbf24;">&#9888; Important Notice</strong><br>
+      All SOST and USD values shown in examples are <strong>illustrative only</strong>, based on temporary reference prices. Actual values depend on market conditions at the time of contract creation. Reward percentages are fixed protocol rules; SOST and USD equivalents are not. PoPC is <strong>not a yield product, not a price guarantee, and not financial advice</strong>. It is a structured incentive mechanism with transparent, predefined rules.
     </div>
 
   </div>

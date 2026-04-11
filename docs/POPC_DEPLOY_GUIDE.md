@@ -170,7 +170,7 @@ curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
 | Tier system | 6 tiers | 100%/75%/50%/30%/15%/8% by active contracts |
 | Hard cap | 1,000 SOST | Max reward per contract |
 | Max contracts | 1,000 | Active simultaneously |
-| Protocol fee | 5% | On rewards |
+| Protocol fee | 3% (A) / 8% (B) | Differentiated: risk-taker discount vs zero-risk premium |
 | Slash split | 50/50 | PoPC Pool / Gold Vault |
 | Audit grace | 288 blocks | ~48 hours |
 

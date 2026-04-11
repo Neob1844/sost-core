@@ -1626,7 +1626,7 @@ HARD CAPS:
   Max active contracts:     1,000 (no new registrations beyond this)
   Max gold per contract:    200 oz (anti-whale hard cap; >10 oz = reduced rates)
   Reward floor:             10 SOST (Model A) / 5 SOST (Model B)
-  Protocol fee:             5% deducted from rewards
+  Protocol fee:             3% Model A (risk-taker discount) / 8% Model B (zero-risk premium)
   Pool protection:          PUR quadratic curve (1-PUR)² + solvency check at registration
 ```
 EXAMPLE: Model A — 12 month commitment
@@ -1690,7 +1690,7 @@ is returned in full regardless.
 
 EXAMPLE (12-month, same assumptions as Section 6.7):
   Base reward (22%):     6.75 × 0.22 = 1.485 SOST
-  Protocol fee (5%):     1.485 × 0.05 = 0.074 SOST
+  Protocol fee (3%):     1.485 × 0.03 = 0.045 SOST
   User receives:         6.75 + 1.411 = 8.161 SOST
   Foundation receives:   0.074 SOST
   User effective rate:   20.9% (vs 22% nominal, non-guaranteed)
