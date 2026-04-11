@@ -30,8 +30,13 @@ static constexpr uint16_t POPC_DURATIONS[] = {1, 3, 6, 9, 12};
 // Actual rate = base × tier_multiplier. See compute_tier_multiplier().
 static constexpr uint16_t POPC_REWARD_RATES[] = {100, 400, 900, 1400, 2000};
 
-// Protocol fee on rewards (5% × 100 = 500 basis points)
-static constexpr uint16_t POPC_PROTOCOL_FEE_BPS = 500;
+// Protocol fees — differentiated by model
+// Model A: lower fee (participant assumes slash risk + buys SOST for bond)
+// Model B: higher fee (no risk, no SOST purchase required, simpler)
+static constexpr uint16_t POPC_PROTOCOL_FEE_A_BPS = 300;  // 3% for Model A
+static constexpr uint16_t POPC_PROTOCOL_FEE_B_BPS = 800;  // 8% for Model B
+// Legacy unified fee (kept for backward compat in tests)
+static constexpr uint16_t POPC_PROTOCOL_FEE_BPS = 300;    // default = Model A
 
 // Slash distribution: 50% PoPC Pool, 50% Gold Vault
 static constexpr uint16_t POPC_SLASH_POOL_PCT = 50;

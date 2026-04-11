@@ -38,7 +38,8 @@ BOND_TABLE = [
 # Reward table (% of bond × 100)
 REWARD_TABLE = {1: 100, 3: 400, 6: 900, 9: 1400, 12: 2000}  # base rates (Tier 1)
 
-PROTOCOL_FEE_BPS = 500  # 5%
+PROTOCOL_FEE_A_BPS = 300  # 3% Model A (risk-taker discount)
+PROTOCOL_FEE_B_BPS = 800  # 8% Model B (zero-risk premium)
 
 # Public Ethereum RPC endpoints (no key needed, may be rate-limited)
 PUBLIC_RPCS = [
