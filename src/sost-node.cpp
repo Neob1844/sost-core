@@ -385,8 +385,10 @@ static void mark_block_known(const std::string& hash) {
 static const int BAN_THRESHOLD = 100;
 static const int BAN_DURATION  = 86400;  // 24 hours
 static const size_t MAX_P2P_MSG_SIZE = 4 * 1024 * 1024;  // 4MB max message
-static const int MAX_INBOUND_PEERS = 64;
-static const int MAX_PEERS_PER_IP  = 4;
+static const int MAX_INBOUND_PEERS = 32;
+static const int MAX_PEERS_PER_IP  = 2;
+static std::map<std::string, time_t> g_ip_cooldown; // IP → last connect time
+static const int IP_COOLDOWN_SECS = 30; // min seconds between connections from same IP
 static std::map<std::string, time_t> g_banned;  // IP → ban expiry
 static std::mutex g_ban_mu;
 
@@ -4958,6 +4960,14 @@ static void p2p_server_thread(int port) {
                 close(cl);
                 continue;
             }
+            // Cooldown: reject rapid reconnections from same IP
+            time_t now_cd = time(nullptr);
+            auto cd_it = g_ip_cooldown.find(std::string(ip));
+            if (cd_it != g_ip_cooldown.end() && (now_cd - cd_it->second) < IP_COOLDOWN_SECS) {
+                close(cl);
+                continue;
+            }
+            g_ip_cooldown[std::string(ip)] = now_cd;
         }
 
         std::thread([cl,peer_addr](){handle_peer(cl,peer_addr,false);}).detach();
