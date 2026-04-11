@@ -37,7 +37,7 @@
 | PoPC Registry (Model A) | Section 6 | NO | YES | YES (popc, popc-tx) | 5 RPC commands |
 | PoPC Model B (Escrow) | Section 6.8 | NO | YES | YES (escrow) | 4 RPC commands |
 | Bond sizing table | Section 6.5 | NO | YES | YES (popc) | Operational |
-| Reward calculation | Section 6.6 | NO | YES | YES (popc) | 1-22% by duration |
+| Reward calculation | Section 6.6 | NO | YES | YES (popc) | 1-20% base × 6 dynamic tiers |
 | Reputation system | Section 6.7 | NO | YES | YES (popc) | 0/1/3/5 stars |
 | Audit entropy | Section 6.3 | NO | YES | YES (popc) | SHA256-based |
 | Etherscan checker | Section 6 | NO | YES (Python) | Manual | scripts/popc_etherscan_checker.py |

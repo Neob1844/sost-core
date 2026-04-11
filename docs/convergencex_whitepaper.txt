@@ -1602,8 +1602,13 @@ Rewards are denominated in SOST (percentage of bond). This ensures the PoPC Pool
 | 1 month | 1% of bond in SOST | 12% annualized |
 | 3 months | 4% of bond in SOST | 16% annualized |
 | 6 months | 9% of bond in SOST | 18% annualized |
-| 9 months | 15% of bond in SOST | 20% annualized |
-| 12 months | 22% of bond in SOST | 22% annualized |
+| 9 months | 14% of bond in SOST | 18.7% annualized |
+| 12 months | 20% of bond in SOST | 20% annualized |
+
+Rates are base maximums at Tier 1 (first 25 active contracts). A dynamic participation
+tier system reduces effective rates as the network grows:
+  0-25 contracts: 100% | 26-50: 75% | 51-100: 50% | 101-200: 30% | 201-500: 15% | 501-1000: 8%
+Hard cap: 1,000 SOST max per contract. Max 1,000 active contracts.
 ```
 EXAMPLE: Model A — 12 month commitment
 
@@ -1769,11 +1774,14 @@ Reward-rate parameters (non-guaranteed), expressed as annualized reference rates
 
 | Duration | Reward rate (reference) | Total Reward |
 |---|---|---|
-| 1 month | 0.25% annualized | 0.02% of gold value |
-| 3 months | 1% annualized | 0.25% of gold value |
-| 6 months | 3% annualized | 1.5% of gold value |
-| 9 months | 5% annualized | 3.75% of gold value |
-| 12 months | 7% annualized | 7% of gold value |
+| 1 month | 0.4% of gold value | paid immediately in SOST |
+| 3 months | 1.5% of gold value | paid immediately in SOST |
+| 6 months | 3.5% of gold value | paid immediately in SOST |
+| 9 months | 5.5% of gold value | paid immediately in SOST |
+| 12 months | 8% of gold value | paid immediately in SOST |
+
+Same dynamic participation tiers apply as Model A (100%/75%/50%/30%/15%/8%).
+Hard cap: 1,000 SOST max per contract.
 ```
 CALCULATION:
 

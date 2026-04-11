@@ -26,8 +26,9 @@ namespace sost {
 // Valid commitment durations (months)
 static constexpr uint16_t POPC_DURATIONS[] = {1, 3, 6, 9, 12};
 
-// Reward rates (% of bond × 100) — operational, not consensus
-static constexpr uint16_t POPC_REWARD_RATES[] = {100, 400, 900, 1500, 2200};
+// Base reward rates (% of bond × 100) — maximum at Tier 1 (EARLY ADOPTER)
+// Actual rate = base × tier_multiplier. See compute_tier_multiplier().
+static constexpr uint16_t POPC_REWARD_RATES[] = {100, 400, 900, 1400, 2000};
 
 // Protocol fee on rewards (5% × 100 = 500 basis points)
 static constexpr uint16_t POPC_PROTOCOL_FEE_BPS = 500;
@@ -153,12 +154,43 @@ inline constexpr int32_t PUR_CLOSED_BPS       = 10000; // 100% — no new regist
 inline constexpr int32_t PUR_WARNING_BPS      = 8000;  // 80% — accept with warning
 inline constexpr int32_t PUR_FLOOR_BPS        = 8000;  // PUR above this → floor rate only
 
-// Reward floors (basis points) — minimum reward even at high PUR
-inline constexpr uint16_t POPC_REWARD_FLOOR_A_BPS = 100;  // 1% floor for Model A (12mo)
-inline constexpr uint16_t POPC_REWARD_FLOOR_B_BPS = 50;   // 0.5% floor for Model B (12mo)
+// Reward floors — minimum SOST reward per contract (in stocks)
+inline constexpr int64_t POPC_REWARD_FLOOR_A = 1000000000;  // 10 SOST minimum (Model A)
+inline constexpr int64_t POPC_REWARD_FLOOR_B = 500000000;   // 5 SOST minimum (Model B)
+// Legacy BPS floors (for PUR dynamic factor — still used)
+inline constexpr uint16_t POPC_REWARD_FLOOR_A_BPS = 100;  // 1% floor for Model A
+inline constexpr uint16_t POPC_REWARD_FLOOR_B_BPS = 50;   // 0.5% floor for Model B
 
-// Model B reward rates (halved from Model A)
-static constexpr uint16_t ESCROW_REWARD_RATES[] = {50, 200, 450, 750, 1100};
+// Model B base reward rates (% of gold value × 100)
+static constexpr uint16_t ESCROW_REWARD_RATES[] = {40, 150, 350, 550, 800};
+
+// Hard cap: maximum SOST reward per contract (in stocks)
+inline constexpr int64_t POPC_MAX_REWARD_STOCKS = 100000000000;  // 1000 SOST
+
+// Maximum active contracts (hard cap)
+inline constexpr int32_t POPC_MAX_ACTIVE_CONTRACTS = 1000;
+
+// =========================================================================
+// Dynamic Participation Tiers
+// Reward multiplier decreases as active contract count grows.
+// Early adopters get higher rates; mass adoption gets lower rates.
+// This prevents pool depletion while incentivizing early participation.
+// =========================================================================
+
+// Tier thresholds (active contract count)
+inline constexpr int32_t POPC_TIER_THRESHOLDS[] = {25, 50, 100, 200, 500, 1000};
+// Tier multipliers (basis points: 10000 = 100%)
+inline constexpr uint16_t POPC_TIER_MULTIPLIERS[] = {10000, 7500, 5000, 3000, 1500, 800};
+inline constexpr int32_t POPC_TIER_COUNT = 6;
+
+// Returns tier multiplier in basis points based on active contract count
+inline uint16_t compute_tier_multiplier(int32_t active_contracts) {
+    for (int32_t i = 0; i < POPC_TIER_COUNT; ++i) {
+        if (active_contracts < POPC_TIER_THRESHOLDS[i])
+            return POPC_TIER_MULTIPLIERS[i];
+    }
+    return 500;  // beyond max tier: 5% (minimal)
+}
 
 // Anti-whale tiers (gold amount in milligrams)
 inline constexpr int64_t WHALE_TIER_1_MG = 311035;    // 10 oz — 100% reward
