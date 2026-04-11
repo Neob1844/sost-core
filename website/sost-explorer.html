@@ -1246,6 +1246,14 @@ function drawSparkline(){
   });
 })();
 var _activeDashPanel=null;
+// Auto-refresh miners panel every 60s if open
+setInterval(function(){
+  if(_activeDashPanel==='miners'){
+    var body=document.getElementById('dashPanelBody');
+    var title=document.getElementById('dashPanelTitle');
+    if(body&&title)renderDashPanel('miners',body,title);
+  }
+},60000);
 function toggleDashPanel(key){
   if(_activeDashPanel===key){closeDashPanel();return;}
   _activeDashPanel=key;
