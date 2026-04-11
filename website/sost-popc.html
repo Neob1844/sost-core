@@ -839,12 +839,11 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
           <tr><td class="key">1 month</td><td class="val">up to <code>1%</code> of bond in SOST</td></tr>
           <tr><td class="key">3 months</td><td class="val">up to <code>4%</code> of bond in SOST</td></tr>
           <tr><td class="key">6 months</td><td class="val">up to <code>9%</code> of bond in SOST</td></tr>
-          <tr><td class="key">9 months</td><td class="val">up to <code>15%</code> of bond in SOST</td></tr>
-          <tr><td class="key">12 months</td><td class="val">up to <code>22%</code> of bond in SOST</td></tr>
+          <tr><td class="key">9 months</td><td class="val">up to <code>14%</code> of bond in SOST</td></tr>
+          <tr><td class="key">12 months</td><td class="val">up to <code>20%</code> of bond in SOST</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
-          Rates are <strong>maximums</strong>. Actual reward is dynamically adjusted by Pool Utilization Ratio (PUR).
-          Anti-whale tiers apply above 10 oz. Protocol fee: 5%.
+          Rates are <strong>base maximums</strong> (Tier 1 &mdash; first 25 contracts). A <strong>dynamic participation tier</strong> system reduces rates as the number of active contracts grows: 100% (0-25), 75% (26-50), 50% (51-100), 30% (101-200), 15% (201-500), 8% (501-1000). Hard cap: <code>1,000 SOST</code> max per contract. Max <code>1,000</code> active contracts. Anti-whale tiers apply above 10 oz. Protocol fee: 5%.
         </p>
       </div>
     </div>
@@ -916,15 +915,14 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         </div>
 
         <table class="code-table" style="margin-top:16px;">
-          <tr><td class="key">1 month</td><td class="val">up to <code>0.5%</code> of gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">3 months</td><td class="val">up to <code>2%</code> of gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">6 months</td><td class="val">up to <code>4.5%</code> of gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">9 months</td><td class="val">up to <code>7.5%</code> of gold value, paid in SOST at deposit</td></tr>
-          <tr><td class="key">12 months</td><td class="val">up to <code>11%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">1 month</td><td class="val">up to <code>0.4%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">3 months</td><td class="val">up to <code>1.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">6 months</td><td class="val">up to <code>3.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">9 months</td><td class="val">up to <code>5.5%</code> of gold value, paid in SOST at deposit</td></tr>
+          <tr><td class="key">12 months</td><td class="val">up to <code>8%</code> of gold value, paid in SOST at deposit</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:8px;font-size:11px;color:var(--text-dim)">
-          Rates are <strong>maximums</strong>, dynamically adjusted by PUR. Anti-whale tiers apply. Protocol fee: 5%.
-          Model B pays on gold value (higher base than Model A bond), but at halved rates.
+          Rates are <strong>base maximums</strong> (Tier 1). Same dynamic participation tiers apply as Model A. Hard cap: <code>1,000 SOST</code> max per contract. Anti-whale tiers apply. Protocol fee: 5%.
         </p>
       </div>
     </div>
@@ -1106,7 +1104,8 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
           <tr><td class="key">When do you get reward?</td><td class="val">At completion (end)</td><td class="val" style="color:var(--green-primary)">Immediately</td></tr>
           <tr><td class="key">Audits?</td><td class="val" style="color:var(--red-primary)">Yes (random, PoW entropy)</td><td class="val" style="color:var(--green-primary)">No</td></tr>
           <tr><td class="key">Slash risk?</td><td class="val" style="color:var(--red-primary)">Yes (bond lost if custody fails)</td><td class="val" style="color:var(--green-primary)">No</td></tr>
-          <tr><td class="key">Max reward (12mo)</td><td class="val">22% of bond</td><td class="val">11% of gold value</td></tr>
+          <tr><td class="key">Max reward (12mo)</td><td class="val">20% of bond (Tier 1)</td><td class="val">8% of gold value (Tier 1)</td></tr>
+          <tr><td class="key">Hard cap</td><td class="val" colspan="2" style="text-align:center;color:var(--red-primary)">1,000 SOST max per contract &middot; 1,000 active contracts max</td></tr>
           <tr><td class="key">Best for</td><td class="val">Crypto natives, HODLers</td><td class="val">Gold investors, risk-averse</td></tr>
         </table>
       </div>
@@ -1143,17 +1142,12 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
             <div class="node-detail">or 48h no-response<br>after GRACE</div>
           </div>
           <div class="arch-node">
-            <div class="node-label">33.33%</div>
-            <div class="node-name" style="color:var(--red-primary)">BURN</div>
-            <div class="node-detail">Permanent deflation</div>
-          </div>
-          <div class="arch-node">
-            <div class="node-label">33.33%</div>
+            <div class="node-label">50%</div>
             <div class="node-name">PoPC Pool</div>
-            <div class="node-detail">Future rewards</div>
+            <div class="node-detail">Funds future rewards</div>
           </div>
           <div class="arch-node">
-            <div class="node-label">33.33%</div>
+            <div class="node-label">50%</div>
             <div class="node-name">Gold Vault</div>
             <div class="node-detail">Buys more gold</div>
           </div>

@@ -19,7 +19,7 @@
 | popc.h declarations | READY | `include/sost/popc.h` |
 | **PoPCRegistry implementation** | **IMPLEMENTED** | `src/popc.cpp` (31 tests, all pass) |
 | **Bond sizing (compute_bond_pct)** | **IMPLEMENTED** | `src/popc.cpp` — 5-tier table |
-| **Reward calculation** | **IMPLEMENTED** | `src/popc.cpp` — 1/4/9/15/22% by duration |
+| **Reward calculation** | **IMPLEMENTED** | `src/popc.cpp` — 1/4/9/14/20% base × 6 dynamic tiers, 1000 SOST cap |
 | **Reputation system** | **IMPLEMENTED** | `src/popc.cpp` — 0/1/3/5 stars |
 | **Audit entropy** | **IMPLEMENTED** | `src/popc.cpp` — ConvergenceX-derived |
 | **Save/Load (JSON)** | **IMPLEMENTED** | `src/popc.cpp` |
