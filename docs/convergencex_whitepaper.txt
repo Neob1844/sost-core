@@ -733,7 +733,7 @@ Stability baseline (B0)    scale=1, steps=4, k=4, margin=185
 3.11 cASERT bitsQ Difficulty Adjustment (Consensus-Critical)
 
 cASERT bitsQ compares observed timing to expected schedule and adjusts powDiffQ
-deterministically. Inspired by BCH ASERT but redesigned as a unified system with
+deterministically. Redesigned as a unified system with
 equalizer profiles and anti-stall.
 
 slow chain → decrease powDiffQ → larger target → easier

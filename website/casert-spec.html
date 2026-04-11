@@ -217,10 +217,10 @@
           <div class="spec-icon cyan"></div>
           <span class="spec-label">Exponential Foundation</span>
         </div>
-        <span class="spec-tag">INSPIRED BY BCH ASERT (2020)</span>
+        <span class="spec-tag">EXPONENTIAL FOUNDATION (2020)</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller uses an exponential moving average inspired by BCH's ASERT algorithm (designed by Mark Lundeberg and Jonathan Toomim, November 2020 hard fork). cASERT was designed by NeoB for SOST Protocol (2026), unifying the exponential controller with equalizer profiles and anti-stall decay into a single consensus-rate control system for ConvergenceX.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller uses an exponential moving average formula. The exponential per-block retargeting approach was pioneered by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork). cASERT was designed by NeoB for SOST Protocol (2026), extending the exponential controller with equalizer profiles and anti-stall decay into a unified consensus-rate control system for ConvergenceX.</p>
         <table class="code-table">
           <tr><th>Property</th><th>Detail</th></tr>
           <tr><td class="label">Core formula</td><td class="value" style="font-family:var(--font-mono);">next_bitsq = anchor_bitsq * 2^(-td / halflife)</td></tr>
@@ -314,19 +314,19 @@
   </div>
 </section>
 
-<!-- SECTION 03: BCH ASERT HERITAGE -->
+<!-- SECTION 03: EXPONENTIAL HERITAGE -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id"></div>
-      <h2 class="section-title">BCH ASERT <span class="accent">Heritage</span></h2>
+      <h2 class="section-title">Exponential <span class="accent">Heritage</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-label">Properties Inherited from BCH ASERT</span>
+          <span class="spec-label">Properties Inherited from BCH Exponential Retarget</span>
         </div>
         <span class="spec-tag">SHARED LINEAGE</span>
       </div>
@@ -344,7 +344,7 @@
     </div>
 
     <div class="notice fade-in delay-2">
-      <strong>Heritage note:</strong> cASERT's bitsQ controller is inspired by BCH ASERT's exponential approach but uses a 24h half-life (V2, since block 1,450; V1 was 48h) and a 12.5% symmetric per-block delta cap. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
+      <strong>Heritage note:</strong> cASERT's bitsQ controller builds on BCH's exponential per-block retarget approach but uses a 24h half-life (V2, since block 1,450; V1 was 48h) and a 12.5% symmetric per-block delta cap. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
     </div>
   </div>
 </section>

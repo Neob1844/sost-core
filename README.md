@@ -245,7 +245,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| ASERT + ccASERT bitsQ difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
+| cASERT bitsQ difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |
