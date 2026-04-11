@@ -392,10 +392,10 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <div class="warn"><strong>Status:</strong> Output types OUT_BOND_LOCK (0x10) and OUT_ESCROW_LOCK (0x11) are declared in code but blocked before height 5000 (R11). Full PoPC audit/slash/reward logic is NOT yet implemented. Design only.</div>
 
 <h3>Model A &mdash; Self-Custody Bonds</h3>
-<p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 12-22% annualized (1-12 months).</p>
+<p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 12-20% annualized (1-12 months), dynamic participation tiers (100%→8% based on active contracts), 1,000 SOST hard cap per contract.</p>
 
 <h3>Model B &mdash; Escrow Timelock</h3>
-<p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.25-7% annualized.</p>
+<p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.4-8% of gold value. Same dynamic tiers apply.</p>
 
 <h3>Activation Timeline</h3>
 <p>On-chain BOND_LOCK/ESCROW_LOCK: height 5000 (~35 days post-genesis). PoPC Ethereum contracts: Q1 2027 target. Full custody audit system: Q1 2027 target. Gold purchases: no earlier than Q2 2027 (8 months post public launch, per rule G4).</p>
