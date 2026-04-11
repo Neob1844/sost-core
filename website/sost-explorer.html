@@ -635,7 +635,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   </div>
   <div class="section" id="blocksSection">
     <div class="sec-head"><div class="sec-title">// <b style="cursor:pointer" onclick="off=0;loadBlocks();">LATEST BLOCKS</b></div><div class="sec-meta" id="blockRange"></div></div>
-    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>SUBSIDY</th></tr></thead>
+    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th></tr></thead>
     <tbody id="blocksBody"><tr><td colspan="7" class="ld">loading blocks</td></tr></tbody></table>
     <div class="pager">
       <button onclick="newestPage()" id="btnFirst" style="display:none">⟪ NEWEST</button>
@@ -1876,7 +1876,7 @@ function updateMiningPanel(elapsed){
 }
 async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
 async function loadBlocks(){
-  var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="7" class="ld">loading blocks</td></tr>';
+  var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="8" class="ld">loading blocks</td></tr>';
   try{var s=H-off,e=Math.max(s-PS+1,0),rows=[];
     for(var h=s;h>=e;h--){var hash=await rpc('getblockhash',[String(h)]);rows.push(await rpc('getblock',[hash]));}
     document.getElementById('blockRange').textContent='['+e+'..'+s+'] of '+H;tb.innerHTML='';
@@ -1885,7 +1885,9 @@ async function loadBlocks(){
       else if(b.height>0){try{var ph=await rpc('getblockhash',[String(b.height-1)]);var pb=await rpc('getblock',[ph]);var d2=b.time-pb.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}catch(ex){}}
       var tr=document.createElement('tr');if(b.height===H&&off===0&&i===0)tr.className='new-row';
       var blockProfileLabel=b.casert_mode?('<span style="color:'+getLevelColor(getCasertLevel(computeBlockLag(b.height,b.time)))+';font-weight:600">'+b.casert_mode+'</span>'):getLevelLabel(computeBlockLag(b.height,b.time));
-      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
+      var minerAddr=b.miner_address||'';
+      var minerShort=minerAddr?'<span class="td-link" onclick="showAddress(\''+minerAddr+'\')" style="color:var(--orange);font-size:10px" title="'+minerAddr+'">'+minerAddr.substr(0,10)+'\u2026'+minerAddr.substr(-4)+'</span>':'';
+      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
       tb.appendChild(tr);}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
   }catch(e){tb.innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
