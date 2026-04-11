@@ -12,7 +12,7 @@ ConvergenceX and cASERT are working correctly. The chain is producing blocks at 
 
 **ConvergenceX:** Solid memory-hard PoW. 8GB RAM per attempt (4GB dataset + 4GB scratchpad), 100K sequential rounds, pseudo-random state-dependent memory access. ASIC resistance is strong but not absolute — estimated low single-digit multiplier advantage for custom hardware, vs 1000x+ for SHA-256 ASICs. Transcript V2 verification is sound (11-phase, sampling-based, ~500MB node RAM).
 
-**cASERT:** The per-block exponential adjustment with 48h halflife, 6.25% delta cap, and ±1 profile slew rate works well for steady-state operation. The 6.25% per-block cap causes slow adaptation when hashrate changes suddenly (scenario 2: doubling hashrate never fully converges in 400 blocks). Anti-stall activated twice in real chain data and recovered correctly.
+**cASERT:** The per-block exponential adjustment with 24h halflife (V2), 12.5% delta cap (V2), and ±1 profile slew rate works well for steady-state operation. Anti-stall activated twice in real chain data and recovered correctly. Note: This audit was originally run against V1 parameters (48h/6.25%). V2 (activated at block 1,450) doubled responsiveness.
 
 **Verdict:** LEAVE CORE ALGORITHM AS IS. Two parameter-level items worth monitoring. No ML/learning recommendation — determinism risk outweighs marginal benefit.
 
@@ -130,8 +130,8 @@ Round r+1 cannot begin until state[r] is computed because:
 
 | Parameter | Value | Purpose |
 |-----------|-------|---------|
-| Half-life | 172,800s (48h) | Time to double/halve difficulty |
-| Per-block delta cap | 6.25% (1/16) | Prevent oscillation |
+| Half-life | 86,400s (24h) — V2 | Time to double/halve difficulty (V1 was 48h) |
+| Per-block delta cap | 12.5% (1/8) — V2 | Prevent oscillation (V1 was 6.25%) |
 | Epoch length | 131,553 blocks | Anchor reset |
 | Active profiles | E4 to H9 (14 levels) | Stability difficulty band |
 | Reserved profiles | H10-H12 (3 levels) | Future headroom |

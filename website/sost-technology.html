@@ -905,7 +905,7 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
           performs per-block exponential difficulty adjustment in continuous Q16.16 log-space.
           Unlike legacy epoch-based retarget systems that wait for large windows, bitsQ corrects
           difficulty every single block with a 24-hour half-life (V2, since block 1,450) and a per-block relative delta
-          cap of 6.25% (1/16), producing smooth transitions and faster convergence to the
+          cap of 12.5% (1/8), producing smooth transitions and faster convergence to the
           target interval.
         </p>
 
@@ -924,7 +924,7 @@ factor   = Q16_ONE + polynomial_approx(frac)
 result   = (anchor_bitsq * factor) >> <span class="num">16</span>
 result   = result << shifts       <span class="cmt">// apply integer power-of-two</span>
 
-<span class="cmt">// Per-block relative delta cap: 6.25% (1/16)</span>
+<span class="cmt">// Per-block relative delta cap: 12.5% (1/8)</span>
 new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
         </div>
 
