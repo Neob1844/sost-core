@@ -229,7 +229,7 @@
           <tr><td class="label">SOST implementation</td><td class="cyan">Integer-only cubic polynomial approximation of 2^x</td></tr>
           <tr><td class="label">Encoding</td><td class="value">Q16.16 fixed-point arithmetic, no floating point in consensus</td></tr>
           <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">86,400s (24 hours) — V2 since block 1,450</td></tr>
-          <tr><td class="label">Per-block delta cap</td><td class="highlight">6.25%</td></tr>
+          <tr><td class="label">Per-block delta cap</td><td class="highlight">12.5% symmetric — V2 since block 1,450</td></tr>
           <tr><td class="label">TARGET_SPACING</td><td class="highlight">600s (10 minutes)</td></tr>
         </table>
       </div>
@@ -423,7 +423,7 @@
         <table class="code-table">
           <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
           <tr><td class="label">BITSQ_HALF_LIFE</td><td class="highlight">86,400s (V2)</td><td class="value">24-hour half-life for bitsQ (V1 was 48h, changed at block 1,450)</td></tr>
-          <tr><td class="label">BITSQ_DELTA_CAP</td><td class="highlight">6.25%</td><td class="value">Per-block relative delta cap for bitsQ adjustment</td></tr>
+          <tr><td class="label">BITSQ_DELTA_CAP</td><td class="highlight">12.5% (V2)</td><td class="value">Per-block relative delta cap for bitsQ adjustment (V1 was 6.25%, changed at block 1,450)</td></tr>
           <tr><td class="label">TARGET_SPACING</td><td class="highlight">600s</td><td class="value">10-minute target between blocks</td></tr>
           <tr><td class="label">BLOCKS_PER_EPOCH</td><td class="value">131,553</td><td class="value">Blocks per difficulty epoch (~2.5 years)</td></tr>
           <tr><td class="label">GENESIS_BITSQ</td><td class="value">765,730</td><td class="value">Initial difficulty in Q16.16 (11.6841, calibrated)</td></tr>

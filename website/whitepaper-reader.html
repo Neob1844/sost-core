@@ -876,8 +876,8 @@ PROPERTIES:
 <p class="wp-p">Regularization λ           100</p>
 <p class="wp-p">Checkpoint interval        6,250 (16 checkpoints)</p>
 <p class="wp-p">Difficulty encoding        SOSTCompact Q16.16</p>
-<p class="wp-p">Difficulty algorithm       cASERT bitsQ, 12h half-life</p>
-<p class="wp-p">Per-block delta cap        6.25%</p>
+<p class="wp-p">Difficulty algorithm       cASERT bitsQ, 24h half-life (V2)</p>
+<p class="wp-p">Per-block delta cap        12.5% (V2)</p>
 <p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (bidirectional)</p>
 <p class="wp-p">Equalizer profiles         E4(-4) through H12(+12)</p>
 <p class="wp-p">Stability baseline         scale=1, k=4, margin=185, steps=4, stab_shift=20</p>
@@ -891,7 +891,7 @@ PROPERTIES:
 <p class="wp-p">fast chain → increase powDiffQ → smaller target → harder</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Per-block delta cap bounds the response:</p>
-<p class="wp-p">6.25% per-block delta cap</p>
+<p class="wp-p">12.5% per-block delta cap (V2, since block 1,450)</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.12 cASERT Equalizer — Consensus-Critical Structural Correction</p>
 <div class="wp-spacer"></div>
@@ -945,7 +945,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  The cASERT equalizer addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
 <pre class="wp-code-inline">  mining blocks much faster than the 600s target, which would accelerate coin</pre>
 <pre class="wp-code-inline">  emission before cASERT bitsQ can fully compensate. bitsQ adjusts numerical difficulty</pre>
-<pre class="wp-code-inline">  every block, but its response is bounded by the 6.25% per-block delta cap.</pre>
+<pre class="wp-code-inline">  every block, but its response is bounded by the 12.5% per-block delta cap.</pre>
 <pre class="wp-code-inline">  A massive hashrate spike can outrun the bitsQ delta cap for many blocks,</pre>
 <pre class="wp-code-inline">  emitting coins ahead of the intended schedule.</pre>
 <div class="wp-spacer"></div>
@@ -2389,7 +2389,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Initial reward</td><td>7.85100863 SOST/block</td></tr>
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
-<tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 12h half-life, per-block, 6.25% per-block delta cap</td></tr>
+<tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 24h half-life, per-block, 12.5% per-block delta cap</td></tr>
 <tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H12(+12), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H9) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. H10-H12 are active high-difficulty profiles (scale=3) for extreme hashrate scenarios.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
