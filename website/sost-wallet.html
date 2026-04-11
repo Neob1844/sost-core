@@ -2817,8 +2817,8 @@ function renderTxHistory() {
     const counterparty = isSent
       ? (tx.to ? tx.to.substring(0, 16) + '...' : '?')
       : (tx.from ? tx.from.substring(0, 16) + '...' : 'coinbase/transfer');
-    const statusColor = tx.status === 'confirmed' ? 'var(--green-primary,#4ade80)' : 'var(--yellow-primary,#fbbf24)';
-    const statusText = tx.status === 'confirmed' ? 'Confirmed' : 'Pending';
+    const statusColor = tx.status === 'confirmed' ? 'var(--green-primary,#4ade80)' : tx.status === 'expired' ? 'var(--text-dim,#888)' : 'var(--yellow-primary,#fbbf24)';
+    const statusText = tx.status === 'confirmed' ? 'Confirmed' : tx.status === 'expired' ? 'Expired' : 'Pending';
     const date = tx.timestamp ? new Date(tx.timestamp).toLocaleString() : '';
 
     html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
@@ -2841,6 +2841,54 @@ function renderTxHistory() {
   html += '</div>';
   el.innerHTML = html;
 }
+
+// ==================== PENDING TX EXPIRY ====================
+
+async function checkPendingTxExpiry() {
+  const history = loadTxHistory();
+  const pending = history.filter(tx => tx.status === 'pending');
+  if (pending.length === 0) return;
+
+  let mempool = null;
+  try {
+    mempool = await rpcCall('getrawmempool');
+  } catch (e) {
+    // Node offline or RPC error — skip check
+    return;
+  }
+
+  const mempoolSet = new Set(Array.isArray(mempool) ? mempool : []);
+  let changed = false;
+
+  for (const tx of history) {
+    if (tx.status !== 'pending') continue;
+
+    // Check if TX is confirmed (appears in our received UTXOs)
+    if (window._lastUtxos && window._lastUtxos.some(u => u.txid === tx.txid)) {
+      tx.status = 'confirmed';
+      changed = true;
+      continue;
+    }
+
+    // If not in mempool, it was either mined or dropped
+    if (!mempoolSet.has(tx.txid)) {
+      // Grace period: don't expire within first 2 minutes (node may still be propagating)
+      const age = Date.now() - new Date(tx.timestamp).getTime();
+      if (age > 2 * 60 * 1000) {
+        tx.status = 'expired';
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
+    renderTxHistory();
+  }
+}
+
+// Check pending TXs every 30 seconds (piggyback on node status interval)
+setInterval(checkPendingTxExpiry, 30000);
 
 // ==================== ADDRESS BOOK ====================
 
@@ -2903,10 +2951,12 @@ function renderAddressBook() {
   if (!ab.addresses.length) { el.innerHTML = '<span style="color:var(--text-dim)">No addresses saved</span>'; return; }
   el.innerHTML = ab.addresses.map(a => {
     const trustColor = a.trust==='trusted'?'var(--green-primary)':a.trust==='known'?'#fbbf24':'#fb010d';
-    const short = a.address.slice(0,14)+'...'+a.address.slice(-6);
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #222">' +
-      '<div><span style="color:'+trustColor+';font-weight:600">'+a.label+'</span> <span style="color:var(--text-dim)">'+short+'</span> <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+trustColor+'">'+a.trust+'</span></div>' +
-      '<button class="btn btn-small" style="font-size:10px;padding:2px 8px;color:#fb010d" onclick="removeFromAddressBook(\''+a.address+'\')">Remove</button></div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222;gap:8px">' +
+      '<div style="min-width:0;flex:1"><span style="color:'+trustColor+';font-weight:600">'+a.label+'</span> <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+trustColor+'">'+a.trust+'</span>' +
+      '<div style="font-family:monospace;font-size:11px;color:var(--text-dim);word-break:break-all;margin-top:2px">'+a.address+'</div></div>' +
+      '<div style="display:flex;gap:4px;flex-shrink:0">' +
+      '<button class="btn btn-small" style="font-size:10px;padding:2px 8px" onclick="navigator.clipboard.writeText(\''+a.address+'\');this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)">Copy</button>' +
+      '<button class="btn btn-small" style="font-size:10px;padding:2px 8px;color:#fb010d" onclick="removeFromAddressBook(\''+a.address+'\')">Remove</button></div></div>';
   }).join('');
 }
 
