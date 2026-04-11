@@ -1008,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p><strong>1.</strong> You hold XAUT or PAXG in your Ethereum wallet</p>
           <p><strong>2.</strong> You lock a SOST bond (12-30% of gold value) on the SOST chain</p>
           <p><strong>3.</strong> Random audits verify your gold balance via Ethereum RPC</p>
-          <p><strong>4.</strong> If you maintain custody: <span style="color:var(--green-primary)">bond returned + reward (up to 22% APR)</span></p>
+          <p><strong>4.</strong> If you maintain custody: <span style="color:var(--green-primary)">bond returned + reward (up to 20%, dynamic tiers)</span></p>
           <p><strong>5.</strong> If you sell your gold: <span style="color:var(--red-primary)">bond is slashed automatically</span></p>
           <p style="margin-top:8px;font-style:italic;color:var(--text-dim)">Your gold NEVER leaves your wallet. Only the SOST bond is at risk.</p>
         </div>
@@ -1034,8 +1034,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <option value="1">1 month (up to 1% reward)</option>
             <option value="3">3 months (up to 4% reward)</option>
             <option value="6">6 months (up to 9% reward)</option>
-            <option value="9">9 months (up to 15% reward)</option>
-            <option value="12" selected>12 months (up to 22% reward)</option>
+            <option value="9">9 months (up to 14% reward)</option>
+            <option value="12" selected>12 months (up to 20% reward)</option>
           </select>
         </div>
         <div id="popcCalcResult" style="margin:12px 0;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border-dim);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.8">
@@ -2150,7 +2150,7 @@ window.refreshBalance = async function() {
 
 // ==================== PoPC ====================
 
-const POPC_REWARD_TABLE = {1: 0.01, 3: 0.04, 6: 0.09, 9: 0.15, 12: 0.22};
+const POPC_REWARD_TABLE = {1: 0.01, 3: 0.04, 6: 0.09, 9: 0.14, 12: 0.20};
 const POPC_BOND_TABLE = [
   [0.0001, 0.12], [0.001, 0.15], [0.01, 0.20], [0.1, 0.25],
   [0.2, 0.26], [0.3, 0.27], [0.4, 0.28], [0.5, 0.29], [Infinity, 0.30]
