@@ -2870,14 +2870,15 @@ async function checkPendingTxExpiry() {
       continue;
     }
 
-    // If not in mempool, it was either mined or dropped
-    if (!mempoolSet.has(tx.txid)) {
-      // Grace period: don't expire within first 2 minutes (node may still be propagating)
-      const age = Date.now() - new Date(tx.timestamp).getTime();
-      if (age > 2 * 60 * 1000) {
-        tx.status = 'expired';
-        changed = true;
-      }
+    // If still in mempool, keep as pending (do nothing)
+    if (mempoolSet.has(tx.txid)) continue;
+
+    // Not in mempool and not confirmed — only expire after 30 minutes
+    // (TX may still be propagating, or waiting for a miner to include it)
+    const age = Date.now() - new Date(tx.timestamp).getTime();
+    if (age > 30 * 60 * 1000) {
+      tx.status = 'expired';
+      changed = true;
     }
   }
 
