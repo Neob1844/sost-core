@@ -893,7 +893,29 @@ function fS(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(4);}
 function fS8(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(8);}
 function fComma(n){return n.toLocaleString();}
 function playBlockBeep(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);o.start(ac.currentTime);o.stop(ac.currentTime+0.3);}catch(e){}}
-function showNewBlockToast(h){var t=document.getElementById('newBlockToast');t.textContent='\u26CF NEW BLOCK #'+h;t.classList.add('show');playBlockBeep();setTimeout(function(){t.classList.remove('show');},3000);}
+function playMyBlockFanfare(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var t=ac.currentTime;
+  // Victory fanfare: C-E-G-C ascending chord with harmonics
+  var notes=[523,659,784,1047];
+  notes.forEach(function(f,i){
+    var o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+    o.type='square';o.frequency.value=f;
+    g.gain.setValueAtTime(0,t+i*0.12);g.gain.linearRampToValueAtTime(0.12,t+i*0.12+0.05);
+    g.gain.linearRampToValueAtTime(0.08,t+i*0.12+0.2);g.gain.linearRampToValueAtTime(0,t+0.8);
+    o.start(t+i*0.12);o.stop(t+0.9);
+  });
+  // Triumphant high note
+  var o2=ac.createOscillator(),g2=ac.createGain();o2.connect(g2);g2.connect(ac.destination);
+  o2.type='sine';o2.frequency.value=1568;
+  g2.gain.setValueAtTime(0,t+0.5);g2.gain.linearRampToValueAtTime(0.15,t+0.6);
+  g2.gain.linearRampToValueAtTime(0,t+1.5);o2.start(t+0.5);o2.stop(t+1.6);
+}catch(e){}}
+async function showNewBlockToast(h){var t=document.getElementById('newBlockToast');
+  // Check if this block was mined by us
+  var isMyBlock=false;
+  if(_activeMiner){try{var bh=await rpc('getblockhash',[String(h)]);var blk=await rpc('getblock',[bh]);if(blk&&blk.miner_address===_activeMiner)isMyBlock=true;}catch(e){}}
+  if(isMyBlock){t.textContent='\u26CF\u26CF\u26CF YOUR BLOCK #'+h+' \u26CF\u26CF\u26CF';t.style.background='linear-gradient(135deg,rgba(74,222,128,0.95),rgba(34,197,94,0.9))';t.style.color='#000';t.style.fontWeight='700';playMyBlockFanfare();}
+  else{t.textContent='\u26CF NEW BLOCK #'+h;t.style.background='';t.style.color='';t.style.fontWeight='';playBlockBeep();}
+  t.classList.add('show');setTimeout(function(){t.classList.remove('show');t.style.background='';t.style.color='';t.style.fontWeight='';},isMyBlock?5000:3000);}
 function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'gold':r==='POPC POOL'?'cyan':'yellow';return ' <span style="color:var(--'+c+');font-size:9px;font-weight:600">['+r+']</span>';}
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
