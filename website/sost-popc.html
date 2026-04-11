@@ -1110,6 +1110,39 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         </table>
       </div>
     </div>
+
+    <!-- DYNAMIC TIER TABLE -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Dynamic Participation Tiers</span>
+        </div>
+        <span class="spec-tag overlay">AUTO-REGULATING</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">Reward rates decrease automatically as the number of active contracts grows. Early adopters receive the highest rates. This prevents pool depletion while incentivizing early participation.</p>
+        <table class="code-table">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.08)"><td class="key" style="width:20%">Tier</td><td class="val" style="width:25%">Active Contracts</td><td class="val" style="width:15%">Multiplier</td><td class="val" style="width:20%">Model A 12mo</td><td class="val">Model B 12mo</td></tr>
+          <tr><td class="key" style="color:var(--green-primary)">EARLY ADOPTER</td><td class="val">0 &ndash; 25</td><td class="val" style="color:var(--green-primary)">100%</td><td class="val"><code>20%</code> of bond</td><td class="val"><code>8%</code> of gold</td></tr>
+          <tr><td class="key" style="color:var(--cyan-primary)">GROWTH</td><td class="val">26 &ndash; 50</td><td class="val" style="color:var(--cyan-primary)">75%</td><td class="val"><code>15%</code></td><td class="val"><code>6%</code></td></tr>
+          <tr><td class="key">ESTABLISHED</td><td class="val">51 &ndash; 100</td><td class="val">50%</td><td class="val"><code>10%</code></td><td class="val"><code>4%</code></td></tr>
+          <tr><td class="key" style="color:var(--text-dim)">MATURE</td><td class="val">101 &ndash; 200</td><td class="val" style="color:var(--text-dim)">30%</td><td class="val"><code>6%</code></td><td class="val"><code>2.4%</code></td></tr>
+          <tr><td class="key" style="color:var(--text-dim)">SCALE</td><td class="val">201 &ndash; 500</td><td class="val" style="color:var(--text-dim)">15%</td><td class="val"><code>3%</code></td><td class="val"><code>1.2%</code></td></tr>
+          <tr><td class="key" style="color:var(--text-dim)">MASS</td><td class="val">501 &ndash; 1,000</td><td class="val" style="color:var(--text-dim)">8%</td><td class="val"><code>1.6%</code></td><td class="val"><code>0.64%</code></td></tr>
+        </table>
+        <table class="code-table" style="margin-top:12px;">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.08)"><td class="key" colspan="2" style="color:var(--red-primary);letter-spacing:1px;">HARD CAPS</td></tr>
+          <tr><td class="key">Max reward per contract</td><td class="val"><code>1,000 SOST</code> &mdash; absolute ceiling regardless of tier</td></tr>
+          <tr><td class="key">Max active contracts</td><td class="val"><code>1,000</code> &mdash; no new registrations beyond this</td></tr>
+          <tr><td class="key">Max gold per contract</td><td class="val"><code>200 oz</code> &mdash; anti-whale hard cap (above 10 oz: reduced rates)</td></tr>
+          <tr><td class="key">Reward floor</td><td class="val"><code>10 SOST</code> (Model A) / <code>5 SOST</code> (Model B) &mdash; minimum per contract</td></tr>
+          <tr><td class="key">Protocol fee</td><td class="val"><code>5%</code> deducted from rewards</td></tr>
+          <tr><td class="key">Pool protection</td><td class="val">PUR quadratic curve <code>(1-PUR)&sup2;</code> + solvency check at registration</td></tr>
+        </table>
+      </div>
+    </div>
+
   </div>
 </section>
 
