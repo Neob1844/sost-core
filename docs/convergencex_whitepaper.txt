@@ -1306,6 +1306,19 @@ Phase 3 — Sovereign Reserve & Multi-Metal Platform (Year 3-5+):
 
 No consensus changes. All PoPC logic remains operational/application-layer except that the PoPC Pool receives 25% coinbase by consensus.
 
+```
+IMPLEMENTATION STATUS:
+
+  ✔ Implemented in SOST node software (C++)
+  ✔ Documented publicly (whitepaper, website, repository)
+  ✔ RPC interfaces ready (popc_register, escrow_register, etc.)
+  ✘ Not yet active on mainnet
+  ✘ Ethereum escrow contracts: pending deployment
+
+  Activation is protocol-scheduled after block 5,000 and subject to
+  network readiness (see Section 6.13 — Activation Conditions).
+```
+
 ### 6.1 What PoPC Is — And Is Not
 
 PoPC is not a tokenization of gold. It does not promise yield, stability, or redeemability. It is a voluntary time-bound commitment protocol with automatic economic consequences. A participant promises to maintain custody of precious metals for a defined period, backs that promise with a SOST bond, and is rewarded if they keep their word. If they break it, their bond is slashed automatically — no human judge involved.
