@@ -703,7 +703,7 @@
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:20px 24px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
       <div style="font-size:11px;letter-spacing:2px;color:#fbbf24;font-weight:600;margin-bottom:10px;">&#9888; CURRENT STATUS</div>
-      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. Activation is scheduled after <strong>block 5,000</strong> (Capsule Protocol phase).</p>
+      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. Activation is scheduled after <strong>block 5,000</strong> (Capsule Protocol phase). Activation is protocol-scheduled and subject to network readiness.</p>
       <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:11px;">
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Implemented in software</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Documented publicly</span>
@@ -1185,6 +1185,40 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       All SOST and USD values shown in examples are <strong>illustrative only</strong>, based on temporary reference prices. Actual values depend on market conditions at the time of contract creation. Reward percentages are fixed protocol rules; SOST and USD equivalents are not. PoPC is <strong>not a yield product, not a price guarantee, and not financial advice</strong>. It is a structured incentive mechanism with transparent, predefined rules.
     </div>
 
+  </div>
+</section>
+
+<!-- ACTIVATION CONDITIONS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">DEPLOYMENT</div>
+      <h2 class="section-title">Activation <span class="accent">Conditions</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">PoPC Activation Requirements</span>
+        </div>
+        <span class="spec-tag overlay">CONDITION-DEPENDENT</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">PoPC will be activated once <strong>all</strong> of the following technical and network conditions are met. Reaching block 5,000 is necessary but not sufficient &mdash; activation proceeds only when the system is stable and all components are operational.</p>
+        <table class="code-table">
+          <tr><td class="key">Block height &ge; 5,000</td><td class="val">Activation is tied to a protocol milestone and will not occur before this threshold.</td></tr>
+          <tr><td class="key">Sustained network stability</td><td class="val">Consistent block production, stable sync across nodes, no critical consensus or networking issues.</td></tr>
+          <tr><td class="key">Sufficient participation</td><td class="val">Minimum level of independent nodes and active miners to ensure reliable operation.</td></tr>
+          <tr><td class="key">Model A contract validation</td><td class="val">Registration, audit, reward, and slashing flows fully validated under live network testing.</td></tr>
+          <tr><td class="key">Ethereum escrow deployment</td><td class="val">Final escrow contracts deployed, verified, and publicly auditable before Model B activation.</td></tr>
+          <tr><td class="key">Explorer &amp; wallet integration</td><td class="val">Public interfaces correctly reflect all PoPC states (pending, active, completed, slashed).</td></tr>
+        </table>
+        <p class="spec-desc" style="margin-top:12px;font-size:11px;color:var(--text-dim);">
+          <strong>Activation note:</strong> PoPC activation is protocol-scheduled but condition-dependent. The Foundation will announce activation with sufficient advance notice once all conditions are verified.
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
