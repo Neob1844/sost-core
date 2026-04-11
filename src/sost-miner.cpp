@@ -725,6 +725,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             uint32_t win_nonce{0};
             uint32_t win_extra{0};
             int64_t  win_ts{0};
+            uint8_t  win_hc72[72]{};
             std::string coinbase_hex_copy;
             std::vector<std::string> mempool_hex_copy;
         };
@@ -777,12 +778,10 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                                (long long)subsidy, (long long)total_fees,
                                (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
+                        fflush(stdout);
 
-                        printf("  Generating Transcript V2 witnesses...\n");
-                        generate_transcript_witnesses(res, scratch.data(), scratch.size(),
-                            bk, n, my_extra, params, my_hc72, epoch);
-                        printf("  %zu segment proofs, %zu round witnesses\n",
-                               res.segment_proofs.size(), res.round_witnesses.size());
+                        // Save hc72 for witness generation after join()
+                        memcpy(results[tid].win_hc72, my_hc72, 72);
 
                         auto& tr = results[tid];
                         tr.found = true;
@@ -850,6 +849,28 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 }
             }
             return false;
+        }
+
+        // Generate witnesses AFTER all threads stopped (no CPU contention)
+        for (int tid2 = 0; tid2 < g_num_threads; ++tid2) {
+            if (results[tid2].found && results[tid2].mb.segment_proofs.empty()) {
+                auto& tr = results[tid2];
+                printf("  Generating Transcript V2 witnesses...\n");
+                fflush(stdout);
+                // Re-run convergencex_attempt to get full result for witness generation
+                auto res2 = convergencex_attempt(
+                    scratch.data(), scratch.size(), bk,
+                    tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch);
+                generate_transcript_witnesses(res2, scratch.data(), scratch.size(),
+                    bk, tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch);
+                printf("  %zu segment proofs, %zu round witnesses\n",
+                       res2.segment_proofs.size(), res2.round_witnesses.size());
+                fflush(stdout);
+                tr.mb.segment_proofs = res2.segment_proofs;
+                tr.mb.round_witnesses = res2.round_witnesses;
+                tr.mb.segments_root = res2.segments_root;
+                break;
+            }
         }
 
         // Submit winning block
