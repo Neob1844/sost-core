@@ -88,6 +88,12 @@ inline constexpr int64_t  CASERT_V2_FORK_HEIGHT   = 1450;
 inline constexpr int64_t  BITSQ_HALF_LIFE_V2      = 86400;   // 24 hours (144 blocks) — V2
 inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta cap denominator (12.5%) — V2
 
+// cASERT V3 fork — activated at block 4100
+// Improved equalizer responsiveness: slew rate ±1 → ±3, lag floor, real prev_H
+inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
+inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 3;       // max ±3 profile levels per block
+inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
+
 // --- cASERT equalizer ---
 // EWMA smoothing constants (denominator = 256 for shift-by-8 division)
 inline constexpr int32_t  CASERT_EWMA_SHORT_ALPHA = 32;    // 256/8  = 8-block window

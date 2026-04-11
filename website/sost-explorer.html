@@ -341,6 +341,19 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
+<div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ MANDATORY HARD FORK — cASERT V3 AT BLOCK 4,100</div>
+    <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
+      <b>ALL nodes and miners MUST update before block 4,100.</b> Nodes running older versions will reject V3 blocks and fork off the main chain.<br>
+      <b>What changes:</b> cASERT equalizer slew rate increases from ±1 to ±3 levels per block, plus a lag-floor mechanism. This fixes the current issue where the chain is ahead of schedule but the equalizer cannot respond fast enough (trapped at H4 when PID targets H7-H9).<br>
+      <b>Why now:</b> With 5 miners and 6 nodes, coordination is simple. After public launch this type of change becomes exponentially harder.<br>
+      <b>Action required:</b> Pull latest code from <span style="color:#67e8f9;">github.com/Neob1844/sost-core</span>, rebuild, and restart your node/miner before block <span style="color:#fbbf24;font-weight:700;">4,100</span>.<br>
+      <span style="color:var(--text3);font-size:9px;">Blocks remaining: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">—</span> · Estimated activation: <span id="forkEta" style="color:#fbbf24;">—</span></span>
+    </div>
+  </div>
+</div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
@@ -950,6 +963,9 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
+  // cASERT V3 fork banner — show before block 4100, hide after
+  var FORK_V3=4100;var fb=document.getElementById('forkBanner');
+  if(fb){if(info.blocks<FORK_V3){fb.style.display='block';var rem=FORK_V3-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks';var eta=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent=eta.toISOString().replace('T',' ').substring(0,16)+' UTC';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
