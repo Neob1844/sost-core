@@ -335,6 +335,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
   <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" style="width:120px"/>
   <button onclick="connectRPC()">CONNECT</button>
+  <span style="color:var(--text3);margin-left:12px;font-size:9px;">MY MINER&gt;</span>
+  <input id="myMinerAddr" value="" placeholder="sost1... (for block alerts)" spellcheck="false" style="width:180px;font-size:10px;"
+    onchange="localStorage.setItem('sost_my_miner',this.value.trim());_myMinerAddress=this.value.trim();"/>
+  <script>document.getElementById('myMinerAddr').value=localStorage.getItem('sost_my_miner')||'';</script>
 </div>
 <div class="search"><div class="search-box">
   <span class="search-pre">search&gt;</span>
@@ -750,6 +754,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
 <script>
 let RPC='/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
 var _activeMiner='';
+var _myMinerAddress=localStorage.getItem('sost_my_miner')||''; // persistent user miner address
 const COINBASE_MATURITY=1000;
 const PS=10;
 let _loading=false;
@@ -910,9 +915,10 @@ function playMyBlockFanfare(){try{var ac=new(window.AudioContext||window.webkitA
   g2.gain.linearRampToValueAtTime(0,t+1.5);o2.start(t+0.5);o2.stop(t+1.6);
 }catch(e){}}
 async function showNewBlockToast(h){var t=document.getElementById('newBlockToast');
-  // Check if this block was mined by us
+  // Check if this block was mined by us (uses persistent _myMinerAddress)
   var isMyBlock=false;
-  if(_activeMiner){try{var bh=await rpc('getblockhash',[String(h)]);var blk=await rpc('getblock',[bh]);if(blk&&blk.miner_address===_activeMiner)isMyBlock=true;}catch(e){}}
+  var checkAddr=_myMinerAddress||_activeMiner;
+  if(checkAddr){try{var bh=await rpc('getblockhash',[String(h)]);var blk=await rpc('getblock',[bh]);if(blk&&blk.miner_address===checkAddr)isMyBlock=true;}catch(e){}}
   if(isMyBlock){t.textContent='\u26CF\u26CF\u26CF YOUR BLOCK #'+h+' \u26CF\u26CF\u26CF';t.style.background='linear-gradient(135deg,rgba(74,222,128,0.95),rgba(34,197,94,0.9))';t.style.color='#000';t.style.fontWeight='700';playMyBlockFanfare();}
   else{t.textContent='\u26CF NEW BLOCK #'+h;t.style.background='';t.style.color='';t.style.fontWeight='';playBlockBeep();}
   t.classList.add('show');setTimeout(function(){t.classList.remove('show');t.style.background='';t.style.color='';t.style.fontWeight='';},isMyBlock?5000:3000);}
