@@ -1449,7 +1449,14 @@ function renderDashPanel(key,body,title){
       html+='</div>';
       body.innerHTML=html;
     })();
-    body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses...</div>';
+    body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses... <span id="minerScanCountdown" style="color:var(--cyan)"></span></div>';
+    var _msc=120;var _msci=setInterval(function(){
+      var el=document.getElementById('minerScanCountdown');
+      if(!el){clearInterval(_msci);return;}
+      _msc--;
+      if(_msc>0){var mm=Math.floor(_msc/60),ss=_msc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
+      else{el.textContent='(still loading...)';clearInterval(_msci);}
+    },1000);
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
