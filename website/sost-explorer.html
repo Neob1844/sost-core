@@ -924,7 +924,14 @@ function renderNav(){
   html+='</div>';nav.innerHTML=html;
 }
 function renderCasertPanel(signal,mode){
-  var prof=getProfile(signal);
+  // Use RPC casert_mode for highlight (authoritative), fallback to JS estimate
+  var prof;
+  if(mode){
+    var found=CASERT_PROFILES.find(function(p){return p.name===mode;});
+    prof=found||getProfile(signal);
+  } else {
+    prof=getProfile(signal);
+  }
   var tableRows='';
   for(var li=0;li<CASERT_PROFILES.length;li++){
     var p=CASERT_PROFILES[li];var active=p.H===prof.H;
