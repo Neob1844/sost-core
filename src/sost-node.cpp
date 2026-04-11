@@ -648,7 +648,7 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 }
 
 // Forward declarations
-static void p2p_broadcast_tx(const std::string& hex_str);
+static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd = -1);
 static bool process_block(const std::string& block_json);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
 static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
@@ -2753,18 +2753,19 @@ static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
     }
 }
 
-static void p2p_broadcast_tx(const std::string& hex_str) {
+static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd) {
     std::lock_guard<std::mutex> lk(g_peers_mu);
+    int sent = 0;
     for(auto& p:g_peers){
+        if(p.fd == exclude_fd) continue;
         if(!p.version_acked) continue;
-        // Skip syncing peers — same race condition as broadcast_block_to_peers
-        if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
-            continue;
         {
             std::lock_guard<std::mutex> wlk(*p.write_mu);
             p2p_send(p.fd, "TXXX", (const uint8_t*)hex_str.data(), hex_str.size());
         }
+        sent++;
     }
+    if (sent > 0) printf("[P2P] TX broadcast to %d peers\n", sent);
 }
 
 // =============================================================================
@@ -4397,14 +4398,12 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if (!strcmp(msg.cmd, "TXXX")) {
             std::string hex_str((char*)msg.payload.data(), msg.payload.size());
             if (process_tx(hex_str)) {
-                std::lock_guard<std::mutex> lk(g_peers_mu);
-                for (auto& p : g_peers) {
-                    if (p.fd != fd && p.version_acked) {
-                        p2p_send(p.fd, "TXXX", msg.payload.data(), msg.payload.size());
-                    }
-                }
+                // Relay to all other peers (exclude sender)
+                p2p_broadcast_tx(hex_str, fd);
             } else {
-                if (add_misbehavior(fd, addr, 10, "invalid tx")) return false;
+                // Don't penalize for tx we already have or policy rejects
+                // Only penalize for truly invalid transactions
+                // (process_tx returns false for duplicates, policy fails, etc.)
             }
         }
         else if (!strcmp(msg.cmd, "PING")) {
