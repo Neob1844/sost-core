@@ -4806,6 +4806,14 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
 }
 
 static void rpc_handle_connection(int fd) {
+    // Set socket timeouts to prevent CLOSE-WAIT accumulation
+    struct timeval tv{5, 0}; // 5 second timeout for read/write
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    // Disable lingering — close immediately, don't wait for FIN
+    struct linger lg{1, 0}; // linger on, timeout 0 = RST on close
+    setsockopt(fd, SOL_SOCKET, SO_LINGER, &lg, sizeof(lg));
+
     char buf[65536]{};
     ssize_t total=0;
 
@@ -4815,7 +4823,7 @@ static void rpc_handle_connection(int fd) {
         total+=n; buf[total]=0;
         if(strstr(buf,"\r\n\r\n")) break;
     }
-    if(total<=0){ close(fd); return; }
+    if(total<=0){ shutdown(fd, SHUT_RDWR); close(fd); return; }
 
     std::string req(buf,total);
 
@@ -4827,9 +4835,10 @@ static void rpc_handle_connection(int fd) {
             "Access-Control-Allow-Methods: POST,GET,OPTIONS\r\n"
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
             "Access-Control-Max-Age: 86400\r\n"
+            "Connection: close\r\n"
             "Content-Length: 0\r\n\r\n";
         write_exact(fd,resp.c_str(),resp.size());
-        close(fd);
+        shutdown(fd, SHUT_RDWR); close(fd);
         return;
     }
 
@@ -4841,9 +4850,10 @@ static void rpc_handle_connection(int fd) {
             "Content-Type: application/json\r\n"
             "Access-Control-Allow-Origin: *\r\n"
             "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
+            "Connection: close\r\n"
             "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
         write_exact(fd,resp.c_str(),resp.size());
-        close(fd);
+        shutdown(fd, SHUT_RDWR); close(fd);
         return;
     }
 
@@ -4872,7 +4882,7 @@ static void rpc_handle_connection(int fd) {
     if (!readonly) {
         if(!rpc_check_basic_auth(req)){
             rpc_reply_401(fd);
-            close(fd);
+            shutdown(fd, SHUT_RDWR); close(fd);
             return;
         }
     }
@@ -4885,9 +4895,11 @@ static void rpc_handle_connection(int fd) {
         "Access-Control-Allow-Origin: *\r\n"
         "Access-Control-Allow-Headers: Content-Type,Authorization\r\n"
         "Access-Control-Max-Age: 86400\r\n"
+        "Connection: close\r\n"
         "Content-Length: " + std::to_string(result.size()) + "\r\n\r\n" + result;
 
     write_exact(fd,resp.c_str(),resp.size());
+    shutdown(fd, SHUT_RDWR);
     close(fd);
 }
 
