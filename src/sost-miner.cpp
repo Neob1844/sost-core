@@ -630,6 +630,22 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     }
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_compute(g_chain, h, std::time(nullptr));
+    // When mining with RPC, use the node's profile_index (authoritative)
+    // Local casert_compute can diverge if g_chain has pad entries
+    if (!g_rpc_url.empty()) {
+        std::string info2 = rpc_call("getinfo");
+        if (!info2.empty()) {
+            auto pp = info2.find("\"casert_profile_index\":");
+            if (pp != std::string::npos) {
+                int32_t node_pi = (int32_t)atoll(info2.c_str() + pp + 23);
+                if (node_pi != cdec.profile_index) {
+                    printf("[MINING] Local profile=%d, node says %d — using node profile\n",
+                           cdec.profile_index, node_pi);
+                    cdec.profile_index = node_pi;
+                }
+            }
+        }
+    }
     params = casert_apply_profile(params, cdec);
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
