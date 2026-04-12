@@ -4829,8 +4829,8 @@ static void rpc_handle_connection(int fd) {
     struct timeval tv{5, 0}; // 5 second timeout for read/write
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-    // Disable lingering — close immediately, don't wait for FIN
-    struct linger lg{1, 0}; // linger on, timeout 0 = RST on close
+    // Linger with short timeout — allow data to flush before close
+    struct linger lg{1, 2}; // linger on, 2 second timeout (enough for large responses)
     setsockopt(fd, SOL_SOCKET, SO_LINGER, &lg, sizeof(lg));
 
     char buf[65536]{};
