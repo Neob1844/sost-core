@@ -4131,7 +4131,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         int64_t blocks_received{0};
         std::chrono::steady_clock::time_point last_progress;
         int retries{0};
+        int empty_done_count{0};  // consecutive DONE with 0 blocks received
     };
+    static constexpr int MAX_EMPTY_DONE = 3; // disconnect after 3 empty DONEs
     SyncState sync;
     sync.last_progress = std::chrono::steady_clock::now();
 
@@ -4295,6 +4297,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     sync.blocks_received = 0;
                     sync.last_progress = std::chrono::steady_clock::now();
                     sync.retries = 0;
+                    sync.empty_done_count = 0;
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height + 1);
                     p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
@@ -4421,9 +4424,25 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                    (long long)sync.blocks_received, g_blocks.size());
 
             if (sync.mode == SyncState::HISTORICAL && g_chain_height < sync.peer_height) {
-                // Request next batch immediately — don't wait for stall timer.
-                // Any unprocessed BLCKs from the old batch are still in recv_buf
-                // and will be parsed in subsequent loop iterations.
+                // Track empty DONE responses (peer claims height but sends no blocks)
+                if (sync.blocks_received == 0) {
+                    sync.empty_done_count++;
+                    if (sync.empty_done_count >= MAX_EMPTY_DONE) {
+                        printf("[SYNC] Peer %s sent %d consecutive empty DONEs (claims height %lld "
+                               "but sends no blocks) — disconnecting as suspicious\n",
+                               addr.c_str(), sync.empty_done_count, (long long)sync.peer_height);
+                        if (add_misbehavior(fd, addr, 50, "empty DONE spam (fake height)")) return false;
+                        sync.mode = SyncState::IDLE;
+                        return true;
+                    }
+                    printf("[SYNC] Empty DONE #%d from %s (claims %lld, we have %lld)\n",
+                           sync.empty_done_count, addr.c_str(),
+                           (long long)sync.peer_height, (long long)g_chain_height);
+                } else {
+                    sync.empty_done_count = 0; // reset on successful block receipt
+                }
+
+                // Request next batch
                 printf("[SYNC] DONE at height %lld, requesting %lld..%lld\n",
                        (long long)g_chain_height,
                        (long long)(g_chain_height + 1), (long long)sync.peer_height);
