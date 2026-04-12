@@ -217,64 +217,69 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // V3 (blocks >= 4100): ±3 per block with recomputed prev_H + lag floor.
     if (chain.size() >= 3) {
         if (next_height >= CASERT_V3_FORK_HEIGHT) {
-            // --- V3: Recompute previous block's H for accurate slew rate ---
-            // Build truncated chain (all blocks except the last one)
-            std::vector<BlockMeta> prev_chain(chain.begin(), chain.end() - 1);
             int32_t prev_H = 0; // B0 default
-            if (prev_chain.size() >= 2) {
-                // Compute previous block's lag
-                int64_t prev_elapsed = prev_chain.back().time - GENESIS_TIME;
-                int64_t prev_exp_h = (prev_elapsed >= 0) ? (prev_elapsed / TARGET_SPACING)
-                    : -((-prev_elapsed + TARGET_SPACING - 1) / TARGET_SPACING);
-                int32_t prev_lag = (int32_t)((int64_t)(next_height - 2) - prev_exp_h);
 
-                // Compute previous block's PID signal (same EWMA/integrator logic)
-                int32_t pS = 0, pM = 0, pV = 0;
-                int64_t pI = 0;
-                size_t plb = std::min<size_t>(prev_chain.size(), 128);
-                size_t pst = prev_chain.size() - plb;
-                for (size_t pi = pst + 1; pi < prev_chain.size(); ++pi) {
-                    int64_t pd = prev_chain[pi].time - prev_chain[pi-1].time;
-                    pd = std::max<int64_t>(CASERT_DT_MIN, std::min<int64_t>(CASERT_DT_MAX, pd));
-                    int32_t pr = log2_q16(TARGET_SPACING) - log2_q16(pd);
-                    pS = (int32_t)(((int64_t)CASERT_EWMA_SHORT_ALPHA * pr +
-                                   (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_SHORT_ALPHA) * pS) >> 8);
-                    pM = (int32_t)(((int64_t)CASERT_EWMA_LONG_ALPHA * pr +
-                                   (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_LONG_ALPHA) * pM) >> 8);
-                    int32_t pabs = (pr > pS) ? (pr - pS) : (pS - pr);
-                    pV = (int32_t)(((int64_t)CASERT_EWMA_VOL_ALPHA * pabs +
-                                   (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_VOL_ALPHA) * pV) >> 8);
-                    int64_t ph_i = (int64_t)prev_chain[pi].height;
-                    int64_t pe_i = prev_chain[pi].time - GENESIS_TIME;
-                    int64_t pexp_i = (pe_i >= 0) ? (pe_i / TARGET_SPACING) : -((-pe_i + TARGET_SPACING - 1) / TARGET_SPACING);
-                    int32_t plag_i = (int32_t)(ph_i - pexp_i);
-                    int64_t pL_q16 = (int64_t)plag_i * (int64_t)Q16_ONE;
-                    pI = ((int64_t)CASERT_INTEG_RHO * pI + (int64_t)CASERT_EWMA_DENOM * CASERT_INTEG_ALPHA * pL_q16) >> 8;
-                    pI = std::max<int64_t>(-CASERT_INTEG_MAX, std::min<int64_t>(CASERT_INTEG_MAX, pI));
-                }
-                // Previous block's instantaneous r
-                int64_t prev_dt = prev_chain.back().time - prev_chain[prev_chain.size()-2].time;
-                prev_dt = std::max<int64_t>(CASERT_DT_MIN, std::min<int64_t>(CASERT_DT_MAX, prev_dt));
-                int32_t prev_r = log2_q16(TARGET_SPACING) - log2_q16(prev_dt);
-
-                int64_t pL_q16 = (int64_t)prev_lag * (int64_t)Q16_ONE;
-                int64_t pU = (int64_t)CASERT_K_R * prev_r +
-                             (int64_t)CASERT_K_L * (pL_q16 >> 16) +
-                             (int64_t)CASERT_K_I * (pI >> 16) +
-                             (int64_t)CASERT_K_B * (pS - pM) +
-                             (int64_t)CASERT_K_V * pV;
-                prev_H = (int32_t)(pU >> 16);
+            if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
+                // --- V3.1: Use stored profile_index from BlockMeta (accurate) ---
+                // This is the actual profile_index that was used to mine the previous block,
+                // including slew rate. No PID recomputation needed.
+                prev_H = chain.back().profile_index;
                 prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
-                // Apply same safety rules to prev_H
-                if (prev_lag <= 0) prev_H = std::min<int32_t>(prev_H, 0);
-                if (prev_chain.size() < 10) prev_H = std::min<int32_t>(prev_H, 0);
+            } else {
+                // --- V3 (blocks 4100-4199): Original PID recomputation (has slew rate bug) ---
+                // Kept for backward compatibility with already-mined blocks.
+                std::vector<BlockMeta> prev_chain(chain.begin(), chain.end() - 1);
+                if (prev_chain.size() >= 2) {
+                    int64_t prev_elapsed = prev_chain.back().time - GENESIS_TIME;
+                    int64_t prev_exp_h = (prev_elapsed >= 0) ? (prev_elapsed / TARGET_SPACING)
+                        : -((-prev_elapsed + TARGET_SPACING - 1) / TARGET_SPACING);
+                    int32_t prev_lag = (int32_t)((int64_t)(next_height - 2) - prev_exp_h);
+
+                    int32_t pS = 0, pM = 0, pV = 0;
+                    int64_t pI = 0;
+                    size_t plb = std::min<size_t>(prev_chain.size(), 128);
+                    size_t pst = prev_chain.size() - plb;
+                    for (size_t pi = pst + 1; pi < prev_chain.size(); ++pi) {
+                        int64_t pd = prev_chain[pi].time - prev_chain[pi-1].time;
+                        pd = std::max<int64_t>(CASERT_DT_MIN, std::min<int64_t>(CASERT_DT_MAX, pd));
+                        int32_t pr = log2_q16(TARGET_SPACING) - log2_q16(pd);
+                        pS = (int32_t)(((int64_t)CASERT_EWMA_SHORT_ALPHA * pr +
+                                       (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_SHORT_ALPHA) * pS) >> 8);
+                        pM = (int32_t)(((int64_t)CASERT_EWMA_LONG_ALPHA * pr +
+                                       (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_LONG_ALPHA) * pM) >> 8);
+                        int32_t pabs = (pr > pS) ? (pr - pS) : (pS - pr);
+                        pV = (int32_t)(((int64_t)CASERT_EWMA_VOL_ALPHA * pabs +
+                                       (int64_t)(CASERT_EWMA_DENOM - CASERT_EWMA_VOL_ALPHA) * pV) >> 8);
+                        int64_t ph_i = (int64_t)prev_chain[pi].height;
+                        int64_t pe_i = prev_chain[pi].time - GENESIS_TIME;
+                        int64_t pexp_i = (pe_i >= 0) ? (pe_i / TARGET_SPACING) : -((-pe_i + TARGET_SPACING - 1) / TARGET_SPACING);
+                        int32_t plag_i = (int32_t)(ph_i - pexp_i);
+                        int64_t pL_q16 = (int64_t)plag_i * (int64_t)Q16_ONE;
+                        pI = ((int64_t)CASERT_INTEG_RHO * pI + (int64_t)CASERT_EWMA_DENOM * CASERT_INTEG_ALPHA * pL_q16) >> 8;
+                        pI = std::max<int64_t>(-CASERT_INTEG_MAX, std::min<int64_t>(CASERT_INTEG_MAX, pI));
+                    }
+                    int64_t prev_dt = prev_chain.back().time - prev_chain[prev_chain.size()-2].time;
+                    prev_dt = std::max<int64_t>(CASERT_DT_MIN, std::min<int64_t>(CASERT_DT_MAX, prev_dt));
+                    int32_t prev_r = log2_q16(TARGET_SPACING) - log2_q16(prev_dt);
+
+                    int64_t pL_q16 = (int64_t)prev_lag * (int64_t)Q16_ONE;
+                    int64_t pU = (int64_t)CASERT_K_R * prev_r +
+                                 (int64_t)CASERT_K_L * (pL_q16 >> 16) +
+                                 (int64_t)CASERT_K_I * (pI >> 16) +
+                                 (int64_t)CASERT_K_B * (pS - pM) +
+                                 (int64_t)CASERT_K_V * pV;
+                    prev_H = (int32_t)(pU >> 16);
+                    prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
+                    if (prev_lag <= 0) prev_H = std::min<int32_t>(prev_H, 0);
+                    if (prev_chain.size() < 10) prev_H = std::min<int32_t>(prev_H, 0);
+                }
             }
 
-            // V3 slew rate: ±3 per block
+            // V3/V3.1 slew rate: ±3 per block
             H = std::max<int32_t>(prev_H - CASERT_V3_SLEW_RATE,
                     std::min<int32_t>(prev_H + CASERT_V3_SLEW_RATE, H));
 
-            // V3 lag floor: if chain is significantly ahead, enforce minimum profile
+            // V3/V3.1 lag floor: if chain is significantly ahead, enforce minimum profile
             if (lag > 10) {
                 int32_t lag_floor = std::min<int32_t>((int32_t)(lag / CASERT_V3_LAG_FLOOR_DIV),
                                                        CASERT_H_MAX);
@@ -303,8 +308,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // B0 is the natural destination. Easing (E1-E4) only after 6h extra at B0.
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
-        int64_t t_act = std::max<int64_t>(CASERT_ANTISTALL_FLOOR,
-                                           std::max<int64_t>(lag, 0) * TARGET_SPACING);
+        // Anti-stall threshold: always max 7200s (2 hours), regardless of lag.
+        // Previous formula (lag × 600s) was absurd at high lag values (67 ahead = 11h).
+        int64_t t_act = CASERT_ANTISTALL_FLOOR; // always 7200s (2 hours)
         if (stall >= t_act && H > 0) {
             // Hardening decay: drop toward B0
             int64_t decay_time = stall - t_act;
