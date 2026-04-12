@@ -52,7 +52,7 @@ inline const char* casert_profile_name(int32_t idx) {
     if (ai < 0 || ai >= 17) return "?";
     return names[ai];
 }
-struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; };
+struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; int32_t profile_index{0}; };
 // --- Transcript V2 structures ---
 struct SegmentLeaf {
     uint32_t segment_index;

@@ -3386,6 +3386,11 @@ static bool process_block(const std::string& block_json) {
                     bm.powDiffQ = g_blocks[j].bits_q;
                     meta.push_back(bm);
                 }
+                // V3.1: store last accepted profile_index in the last BlockMeta entry
+                // so casert_compute can use it for accurate slew rate
+                if (!meta.empty() && height >= CASERT_V3_1_FORK_HEIGHT) {
+                    meta.back().profile_index = g_last_accepted_profile;
+                }
                 auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
                 int32_t base_profile = base_dec.profile_index;
 

@@ -94,6 +94,11 @@ inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
 inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 3;       // max ±3 profile levels per block
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
+// cASERT V3.1 fork — activated at block 4200
+// Fix: slew rate uses stored profile_index from BlockMeta instead of PID recomputation
+// This prevents the equalizer from jumping more than ±3 in practice
+inline constexpr int64_t  CASERT_V3_1_FORK_HEIGHT = 4200;
+
 // --- cASERT equalizer ---
 // EWMA smoothing constants (denominator = 256 for shift-by-8 division)
 inline constexpr int32_t  CASERT_EWMA_SHORT_ALPHA = 32;    // 256/8  = 8-block window
