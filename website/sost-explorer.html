@@ -1275,12 +1275,14 @@ function drawSparkline(){
   });
 })();
 var _activeDashPanel=null;
-// Auto-refresh miners panel every 60s if open
+var _minersScanInProgress=false;
+// Auto-refresh miners panel every 60s if open (silent — no "Scanning..." overlay)
 setInterval(function(){
-  if(_activeDashPanel==='miners'){
+  if(_activeDashPanel==='miners'&&!_minersScanInProgress){
+    _minersScanInProgress=true;
     var body=document.getElementById('dashPanelBody');
     var title=document.getElementById('dashPanelTitle');
-    if(body&&title)renderDashPanel('miners',body,title);
+    if(body&&title)renderDashPanel('miners',body,title,true); // true = silent refresh
   }
 },60000);
 function toggleDashPanel(key){
@@ -1299,7 +1301,7 @@ function closeDashPanel(){
   document.getElementById('dashPanel').style.display='none';
   document.querySelectorAll('.dash-card[data-panel]').forEach(function(c){c.style.borderColor='';});
 }
-function renderDashPanel(key,body,title){
+function renderDashPanel(key,body,title,silent){
   var data=_diffHistory;
   if(key==='height'){
     title.textContent='// BLOCKS PER HOUR (last 24h)';
@@ -1501,15 +1503,18 @@ function renderDashPanel(key,body,title){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Disclaimer: Observed simultaneous mining share is calculated from this node\'s view of the last '+lookback+' blocks. "Simultaneous" means 2+ distinct miners were active (mined at least 1 block) in the previous '+WINDOW+' blocks. This is an approximation — different nodes may see slightly different values. Solo blocks are those mined when only 1 miner was active in the lookback window.</div>';
       html+='</div>';
       body.innerHTML=html;
+      _minersScanInProgress=false;
     })();
-    body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses... <span id="minerScanCountdown" style="color:var(--cyan)"></span></div>';
-    var _msc=120;var _msci=setInterval(function(){
-      var el=document.getElementById('minerScanCountdown');
-      if(!el){clearInterval(_msci);return;}
-      _msc--;
-      if(_msc>0){var mm=Math.floor(_msc/60),ss=_msc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
-      else{el.textContent='(still loading...)';clearInterval(_msci);}
-    },1000);
+    if(!silent){
+      body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses... <span id="minerScanCountdown" style="color:var(--cyan)"></span></div>';
+      var _msc=120;var _msci=setInterval(function(){
+        var el=document.getElementById('minerScanCountdown');
+        if(!el){clearInterval(_msci);return;}
+        _msc--;
+        if(_msc>0){var mm=Math.floor(_msc/60),ss=_msc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
+        else{el.textContent='(still loading...)';clearInterval(_msci);}
+      },1000);
+    }
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
