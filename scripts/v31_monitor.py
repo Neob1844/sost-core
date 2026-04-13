@@ -69,8 +69,9 @@ from datetime import datetime, timezone
 # ---------- Constants (mirror src/pow/casert.cpp and include/sost/params.h) ----------
 
 TARGET_SPACING = 600                  # seconds
-GENESIS_TIME = 1773680400             # 2026-03-15 18:00:00 UTC (unix)
+GENESIS_TIME = 1773597600             # 2026-03-15 18:00:00 UTC (must match params.h)
 CASERT_V4_FORK_HEIGHT = 4170
+CASERT_V5_FORK_HEIGHT = 4500
 CASERT_AHEAD_ENTER = 16               # Ahead Guard entry threshold
 
 # Profile name → index (matches include/sost/params.h)
