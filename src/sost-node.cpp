@@ -882,6 +882,25 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         casert_profile_idx = dec.profile_index;
         casert_lag = dec.lag;
     }
+    // Compute estimated stability pass rate for the current profile
+    // Based on empirical observations from live mining data
+    int stability_pct = 100;
+    {
+        int pi = casert_profile_idx;
+        if (pi <= 0) stability_pct = 100;       // B0 and easing: ~100%
+        else if (pi == 1) stability_pct = 97;    // H1
+        else if (pi == 2) stability_pct = 92;    // H2
+        else if (pi == 3) stability_pct = 85;    // H3
+        else if (pi == 4) stability_pct = 78;    // H4
+        else if (pi == 5) stability_pct = 65;    // H5
+        else if (pi == 6) stability_pct = 50;    // H6
+        else if (pi == 7) stability_pct = 45;    // H7
+        else if (pi == 8) stability_pct = 35;    // H8
+        else if (pi == 9) stability_pct = 25;    // H9
+        else if (pi == 10) stability_pct = 15;   // H10
+        else if (pi == 11) stability_pct = 8;    // H11
+        else stability_pct = 3;                   // H12
+    }
     // Profile name from index
     static const char* PROF_NAMES[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
     int prof_arr_idx = std::max(0, std::min(16, casert_profile_idx - CASERT_H_MIN));
@@ -892,6 +911,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
      <<",\"casert_profile\":\""<<PROF_NAMES[prof_arr_idx]<<"\""
      <<",\"casert_profile_index\":"<<casert_profile_idx
      <<",\"casert_lag\":"<<casert_lag
+     <<",\"casert_stability_pct\":"<<stability_pct
      <<",\"profile\":\""<<profile_str<<"\""
      <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
      <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))

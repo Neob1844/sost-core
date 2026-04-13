@@ -1756,12 +1756,13 @@ function updateMiningPanel(elapsed){
   if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+profSrc;
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
-  // Stability rate estimate
+  // Stability rate — use RPC value if available, otherwise estimate
   var sr=document.getElementById('miningStabRate');
   if(sr){
-    var stabEst='~100%';var stabColor='#4ade80';
-    if(effProf.H>=5){stabEst='~73%';stabColor='#fbbf24';}
-    if(effProf.H>=6){stabEst='~0%';stabColor='#fb010d';}
+    var rpcStab=(typeof info.casert_stability_pct==='number')?info.casert_stability_pct:-1;
+    var stabEst,stabColor;
+    if(rpcStab>=0){stabEst='~'+rpcStab+'%';stabColor=rpcStab>=80?'#4ade80':rpcStab>=40?'#fbbf24':'#fb010d';}
+    else{stabEst='~100%';stabColor='#4ade80';if(effProf.H>=5){stabEst='~73%';stabColor='#fbbf24';}if(effProf.H>=6){stabEst='~0%';stabColor='#fb010d';}}
     sr.innerHTML='<span style="color:'+stabColor+'">'+stabEst+'</span>';
   }
   var di=document.getElementById('miningDecayInfo');
