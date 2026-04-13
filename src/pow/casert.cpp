@@ -243,20 +243,17 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             int32_t prev_H = 0; // B0 default
 
             if (next_height >= CASERT_V4_FORK_HEIGHT) {
-                // --- V4: Sentinel-based detection of missing profile_index ---
-                // BlockMeta default is INT32_MIN; legit B0 stores 0. Only
-                // genuinely-missing blocks (pre-V4 loaded without the field)
-                // trigger the fallback — a legit B0 now enforces slew rate.
+                // --- V4: Strict stored profile_index — NO fallback ---
+                // Invariant after V4 activation: every BlockMeta in the chain
+                // window has profile_index set to a real value (V3+ miners
+                // always write it into block JSON, load_chain parses it, and
+                // StoredBlock persists it across restarts). INT32_MIN should
+                // never reach here; if it somehow does (legacy anomaly), we
+                // default conservatively to B0 (0) instead of disabling the
+                // slew rate — the old V3.1 `prev_H = H` escape hatch is gone.
                 int32_t stored_pi = chain.back().profile_index;
-                if (stored_pi == INT32_MIN) {
-                    // Legacy block without persisted profile_index. One-off
-                    // fallback: disable slew for this transition only. Next
-                    // block mined under V4 rules will have the field set.
-                    prev_H = H;
-                } else {
-                    prev_H = stored_pi; // trust stored, including legit 0 = B0
-                }
-                prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
+                if (stored_pi == INT32_MIN) stored_pi = 0; // conservative
+                prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, stored_pi));
             } else if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
                 // --- V3.1 (blocks 4110-4169): Use stored profile_index ---
                 // Historical quirk: default was 0, so legit B0 was misread as
