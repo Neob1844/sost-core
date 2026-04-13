@@ -3391,21 +3391,33 @@ static bool process_block(const std::string& block_json) {
                 trusted_block = true;
             }
 
-            // 2. Read miner's declared profile_index
+            // 2. Read miner's declared profile_index. jint returns -1 when the
+            //    field is missing, which is ambiguous with legit E1. Disambiguate
+            //    with an explicit presence check.
+            bool pi_present = (block_json.find("\"profile_index\"") != std::string::npos);
             int32_t declared_pi = (int32_t)jint(block_json, "profile_index");
+            bool pi_missing = !pi_present;
 
-            // SECURITY: if profile_index is missing (-1) on a non-trusted block
-            // post-V3, reject it. Miners MUST declare their profile.
-            if (declared_pi == -1 && !trusted_block && height >= CASERT_V3_FORK_HEIGHT) {
-                printf("[BLOCK] REJECTED: profile_index missing on non-trusted block at height %lld (V3+ requires profile_index)\n",
+            // SECURITY: V4+ strictly requires profile_index on every non-trusted
+            // block. Pre-V4 (heights < CASERT_V4_FORK_HEIGHT) the field is OPTIONAL
+            // so that old miners still mining under V3.1 rules are not rejected.
+            // Missing field on pre-V4 blocks defaults to B0 (same behaviour as
+            // the trusted fast-sync path).
+            if (pi_missing && !trusted_block && height >= CASERT_V4_FORK_HEIGHT) {
+                printf("[BLOCK] REJECTED: profile_index missing on non-trusted block at height %lld (V4+ requires profile_index)\n",
                        (long long)height);
                 return false;
             }
 
-            if (declared_pi == -1 && trusted_block) {
-                // Profile index missing from P2P data but block is trusted — use B0 default
-                printf("[BLOCK] fast-sync height=%lld: profile_index missing, trusted block (assuming B0)\n",
-                       (long long)height);
+            if (pi_missing) {
+                // Missing field on (a) trusted fast-sync or (b) pre-V4 legacy
+                // miner. Default to B0 — legacy miners ran without the field,
+                // and pre-V4 consensus doesn't enforce an exact profile match.
+                const char* reason = trusted_block
+                    ? "trusted fast-sync"
+                    : (height >= CASERT_V3_FORK_HEIGHT ? "pre-V4 legacy miner" : "pre-V3 legacy");
+                printf("[BLOCK] height=%lld: profile_index missing, assuming B0 (%s)\n",
+                       (long long)height, reason);
                 declared_pi = 0; // B0
                 g_last_accepted_profile = declared_pi;
                 CasertDecision dec_for_profile;
