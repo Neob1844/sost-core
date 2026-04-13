@@ -353,7 +353,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <b>ALL nodes and miners must update before block 4,110.</b> Critical slew rate bug causing profile oscillation H3↔H12. Activation accelerated from 4,200 to 4,110.<br>
       <b>What changed:</b> V3.1 fixes a slew rate computation bug where the equalizer could jump more than ±3 levels. Anti-stall threshold now always activates after 2 hours max (was scaling to 11h+ at high lag).<br>
       <b>Context:</b> SOST is a completely new PoW protocol. Live operation under real conditions reveals edge cases that require precise correction. The core protocol is secure — these are refinements.<br>
-      <b>Action:</b> <span style="color:#67e8f9;">git pull origin main</span>, rebuild, restart. Same process as V3.<br>
+      <b>Action:</b> <span style="color:#67e8f9;">git pull origin main</span>, rebuild, restart. Same process as V3. You can update now — the consensus fix activates at block 4,110 but the miner improvements (anti-stall detection, hashrate display) are active immediately after rebuild.<br>
       <span style="color:var(--text3);font-size:9px;">Blocks remaining: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">—</span> · Estimated activation: <span id="forkEta" style="color:#fbbf24;">—</span></span>
     </div>
   </div>
