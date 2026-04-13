@@ -350,10 +350,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
     <div style="font-size:12px;font-weight:700;color:#ff4444;letter-spacing:2px;text-shadow:0 0 8px rgba(255,68,68,0.5);margin-bottom:8px;">⚠ SECURITY FIX — ALL NODES AND MINERS MUST UPDATE NOW</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>What was found:</b> Blocks sent without <code>profile_index</code> were accepted with E1 difficulty (margin=205) instead of the correct H12 (margin=105). This allowed miners with outdated code to mine at drastically reduced difficulty while the network required H12. The validation gap has been closed.<br>
-      <b>What's fixed:</b> The node now <span style="color:#ff4444;">rejects any block without profile_index</span> at V3+ heights. All miners must include the correct profile in their blocks. Nodes with old code will have their blocks rejected by updated nodes.<br>
-      <b>Action required:</b> <span style="color:#67e8f9;">git pull origin main</span>, rebuild <b>both</b> node and miner, restart both. <span style="color:#fbbf24;">This is mandatory — old nodes will reject and be rejected by the network.</span><br>
-      <b>Context:</b> SOST is an <span style="color:#fbbf24;">experimental protocol</span>. This pre-launch phase exists precisely to find and fix these issues under real conditions. Each fix strengthens the protocol for public launch.<br>
+      <b>What was fixed:</b> Blocks without <code>profile_index</code> were accepted at E1 difficulty instead of H12. Lag floor now enforced as minimum profile. Profile fallback for chain-imported blocks corrected.<br>
+      <b>Action required:</b><br>
+      1. <span style="color:#67e8f9;">git pull origin main</span><br>
+      2. <span style="color:#67e8f9;">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
+      3. Restart <b>both</b> node and miner<br>
+      4. If stuck: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart node<br>
+      <b>Old code will have blocks rejected.</b> This is mandatory.<br>
       <span style="color:var(--text3);font-size:9px;">Status: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">ACTIVE</span> · <span id="forkEta" style="color:#fbbf24;">Update immediately for correct equalizer behavior</span></span>
     </div>
   </div>
