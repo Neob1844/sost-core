@@ -348,7 +348,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- cASERT V5 PLANNED UPDATE BANNER — informational, auto-hides when activation passes -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(0,255,65,0.06);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">cASERT V5 — DETERMINISM + LIVENESS UPDATE (PLANNED · BLOCK 4,500) · NO IMMEDIATE ACTION REQUIRED</div>
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">cASERT V5 — DETERMINISM + LIVENESS UPDATE (PLANNED · BLOCK 4,350) · NO IMMEDIATE ACTION REQUIRED</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
       <b>Current network status:</b> V4 is active since block 4,170 and the chain is producing blocks. Recent updates improved responsiveness and resolved the B0 ↔ H12 oscillation loop. Live operation has now revealed a second edge case that V5 addresses. Continue mining on your current V4 build — <b>no action is required at this time</b>.<br><br>
 
@@ -367,7 +367,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <b>Part 2 — V5.1 liveness / overshoot fix:</b> V5.0 alone does NOT fully solve the stuck-chain scenario. When the chain moves from ahead to behind while the equalizer is still at very high profiles, block production becomes excessively delayed. V5.1 adds:<br>
       &nbsp;&nbsp;• <b>Safety rule post-slew:</b> if the chain is already behind, hardening is immediately capped back toward baseline<br>
       &nbsp;&nbsp;• <b>EBR (Emergency Behind Release):</b> stateless cliffs force the profile downward when lag falls below -10 (100 min behind)<br>
-      &nbsp;&nbsp;• <b>Anti-stall floor 2h → 75min</b> at V5 heights for faster rescue<br>
+      &nbsp;&nbsp;• <b>Anti-stall floor 2h → 60min</b> at V5 heights for faster rescue<br>
       Future cases like the recent H12 stuck-block event should be resolved much faster.<br><br>
 
       <b>In summary:</b> V5.0 fixes correctness · V5.1 fixes recovery behavior · both ship together in one coordinated hard fork.<br><br>
@@ -381,7 +381,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <b>Monitoring &amp; measurement:</b> a dedicated monitor (<span style="color:#67e8f9;">scripts/v31_monitor.py</span>) tracks overshoot events, time in H12, blocks &gt; 20/40min, lag extremes, and Ahead Guard activation conditions — so protocol decisions are measured, not intuited.<br><br>
 
       <b>Planned deployment:</b><br>
-      &nbsp;&nbsp;• Activation target: <b style="color:#fbbf24;">block 4,500</b> (subject to final confirmation after observation)<br>
+      &nbsp;&nbsp;• Activation target: <b style="color:#fbbf24;">block 4,350</b> (subject to final confirmation after observation — ~14–20h of margin from current height)<br>
       &nbsp;&nbsp;• Standard update procedure when activation is announced:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span><br>
       &nbsp;&nbsp;• Restart your miner with <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch<br>
@@ -389,7 +389,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
       <b>Nodes and miners still on V3.1 or earlier should update to the current V4 build now.</b> V5 will require another update when announced.<br><br>
 
-      <span style="color:var(--text3);font-size:9px;">Fork status: <span id="forkCountdown" style="color:#00ff41;font-weight:600;">—</span> · <span id="forkEta" style="color:#00ff41;">—</span> · Banner auto-hides at block 4,500 + 200</span>
+      <span style="color:var(--text3);font-size:9px;">Fork status: <span id="forkCountdown" style="color:#00ff41;font-weight:600;">—</span> · <span id="forkEta" style="color:#00ff41;">—</span> · Banner auto-hides at block 4,550</span>
     </div>
   </div>
 </div>
@@ -1027,8 +1027,8 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // V5 planned-update banner (informational). Visible until FORK_V5+200
-  // (block 4700), then auto-hides. V5 activation target: block 4500.
-  var FORK_V4=4170;var FORK_V5=4500;var fb=document.getElementById('forkBanner');
+  // (block 4550), then auto-hides. V5 activation target: block 4350.
+  var FORK_V4=4170;var FORK_V5=4350;var fb=document.getElementById('forkBanner');
   if(fb){if(info.blocks<FORK_V5){fb.style.display='block';var rem=FORK_V5-info.blocks;document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent=fComma(rem)+' blocks until V5 activation target (block '+fComma(FORK_V5)+')';}else if(info.blocks<FORK_V5+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V5 ACTIVE since block '+FORK_V5+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='If your node has not updated yet, pull and restart now';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
