@@ -220,10 +220,17 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             int32_t prev_H = 0; // B0 default
 
             if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
-                // --- V3.1: Use stored profile_index from BlockMeta (accurate) ---
-                // This is the actual profile_index that was used to mine the previous block,
-                // including slew rate. No PID recomputation needed.
-                prev_H = chain.back().profile_index;
+                // --- V3.1: Use stored profile_index from BlockMeta ---
+                int32_t stored_pi = chain.back().profile_index;
+                if (stored_pi != 0 || chain.back().height < CASERT_V3_FORK_HEIGHT) {
+                    // Valid stored profile or pre-V3 block (B0 is correct default)
+                    prev_H = stored_pi;
+                } else {
+                    // Post-V3 block with profile_index=0 means not stored (chain import).
+                    // Skip slew rate entirely — let H_raw + lag_floor determine profile.
+                    // This avoids the V3 PID recomputation bug while allowing proper response.
+                    prev_H = H; // effectively disables slew rate for this transition
+                }
                 prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
             } else {
                 // --- V3 (blocks 4100-4199): Original PID recomputation (has slew rate bug) ---
