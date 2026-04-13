@@ -348,16 +348,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#ff4444;letter-spacing:2px;text-shadow:0 0 8px rgba(255,68,68,0.5);margin-bottom:8px;">⚠ SECURITY FIX — ALL NODES AND MINERS MUST UPDATE NOW</div>
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ HARD FORK — cASERT V4 AT BLOCK 4,200 — Ahead Guard</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>What was fixed:</b> Blocks without <code>profile_index</code> were accepted at E1 difficulty instead of H12. Lag floor now enforced as minimum profile. Profile fallback for chain-imported blocks corrected.<br>
-      <b>Action required:</b><br>
-      1. <span style="color:#67e8f9;">git pull origin main</span><br>
+      <b>What it fixes:</b> When the chain is ahead of schedule, the equalizer brakes (H8-H12) but bitsQ drops difficulty during the slow blocks — undoing the correction. V4 adds an <b>Ahead Guard</b>: while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5%. This keeps both controllers aligned.<br>
+      <b>How it works:</b> Enter AHEAD_CORRECTION at ≥16 ahead · Exit at ≤8 ahead (hysteresis) · bitsQ upward adjustments unchanged · Equalizer/PID/anti-stall unchanged.<br>
+      <b>Action required before block 4,200:</b><br>
+      1. <span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull origin main</span><br>
       2. <span style="color:#67e8f9;">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
       3. Restart <b>both</b> node and miner<br>
-      4. If stuck: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart node<br>
-      <b>Old code will have blocks rejected.</b> This is mandatory.<br>
-      <span style="color:var(--text3);font-size:9px;">Status: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">ACTIVE</span> · <span id="forkEta" style="color:#fbbf24;">Update immediately for correct equalizer behavior</span></span>
+      4. If stuck: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart node with fresh chain<br>
+      <b>Nodes that do not update will stop syncing at block 4,200.</b><br>
+      <span style="color:var(--text3);font-size:9px;">Blocks remaining: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">—</span> · Estimated activation: <span id="forkEta" style="color:#fbbf24;">—</span></span>
     </div>
   </div>
 </div>
@@ -995,8 +996,8 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // cASERT V3 fork banner — show before block 4100, hide after
-  var FORK_V3=4110;var fb=document.getElementById('forkBanner');
-  if(fb){if(info.blocks>=FORK_V3&&info.blocks<FORK_V3+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='ACTIVE since block '+FORK_V3;document.getElementById('forkEta').textContent='Update now if you haven\u0027t already';}else if(info.blocks<FORK_V3){fb.style.display='block';var rem=FORK_V3-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks';var avgBt=(_avgBlockTime&&_avgBlockTime>0)?_avgBlockTime:600;var eta=new Date(Date.now()+rem*avgBt*1000);document.getElementById('forkEta').textContent=eta.toISOString().replace('T',' ').substring(0,16)+' UTC';}else{fb.style.display='none';}}
+  var FORK_V4=4200;var fb=document.getElementById('forkBanner');
+  if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var avgBt=(_avgBlockTime&&_avgBlockTime>0)?_avgBlockTime:600;var eta=new Date(Date.now()+rem*avgBt*1000);document.getElementById('forkEta').textContent=eta.toISOString().replace('T',' ').substring(0,16)+' UTC (at '+Math.round(avgBt/60)+'m/block avg)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='ACTIVE since block '+FORK_V4;document.getElementById('forkEta').textContent='Update now if you haven\u0027t already';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
