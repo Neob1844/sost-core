@@ -101,7 +101,7 @@ inline constexpr int64_t  CASERT_V3_1_FORK_HEIGHT = 4110;
 
 // cASERT V4 fork — Ahead Guard coordination fix
 // Prevents bitsQ from dropping aggressively while chain is materially ahead
-inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4250;
+inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4200;
 inline constexpr int32_t  CASERT_AHEAD_ENTER          = 16;   // enter AHEAD_CORRECTION when >= 16 ahead
 inline constexpr int32_t  CASERT_AHEAD_EXIT           = 8;    // exit when <= 8 ahead (hysteresis)
 // In AHEAD_CORRECTION + profile >= H8: max downward delta = prev_bitsq / 64 (~1.56%)
