@@ -1053,6 +1053,7 @@ async function updateDashboard(info){
     if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
     if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
     if(info.casert_lag!==undefined)_rpcCasertLag=info.casert_lag;
+    if(info.casert_stability_pct!==undefined)_rpcStabilityPct=info.casert_stability_pct;
     startCountdown();
     // Update cASERT equalizer from block data
     updateEqualizer(info, times, diffs);
@@ -1065,6 +1066,7 @@ async function updateDashboard(info){
       if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
       if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
       if(info.casert_lag!==undefined)_rpcCasertLag=info.casert_lag;
+      if(info.casert_stability_pct!==undefined)_rpcStabilityPct=info.casert_stability_pct;
       startCountdown();
       console.warn('Block fetch failed, using fallback timing',e);
     }
@@ -1547,7 +1549,7 @@ function setupDpTooltip(canvasId,dataArr,fmtFn){
   cv.addEventListener('mouseleave',function(){tip.style.display='none';});
 }
 var _lastBitsQ=0;
-var _rpcCasertProfile='';var _rpcCasertProfileIdx=null;var _rpcCasertLag=null;
+var _rpcCasertProfile='';var _rpcCasertProfileIdx=null;var _rpcCasertLag=null;var _rpcStabilityPct=-1;
 var _lastBlockCasertMode='';
 var _nextBitsQ=0;
 var _tipBlockHash='';
@@ -1769,7 +1771,7 @@ function updateMiningPanel(elapsed){
   // Stability rate — use RPC value if available, otherwise estimate
   var sr=document.getElementById('miningStabRate');
   if(sr){
-    var rpcStab=(typeof info.casert_stability_pct==='number')?info.casert_stability_pct:-1;
+    var rpcStab=_rpcStabilityPct;
     var stabEst,stabColor;
     if(rpcStab>=0){stabEst='~'+rpcStab+'%';stabColor=rpcStab>=80?'#4ade80':rpcStab>=40?'#fbbf24':'#fb010d';}
     else{stabEst='~100%';stabColor='#4ade80';if(effProf.H>=5){stabEst='~73%';stabColor='#fbbf24';}if(effProf.H>=6){stabEst='~0%';stabColor='#fb010d';}}
