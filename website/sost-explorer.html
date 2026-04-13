@@ -1004,9 +1004,11 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
-  // cASERT V3 fork banner — show before block 4100, hide after
+  // cASERT V4 fork banner — countdown before 4170, post-activation notice
+  // until FORK_V4+200 (block 4370), then auto-hide. Minimum visibility
+  // post-activation: 200 blocks (>= requested floor of block 4180).
   var FORK_V4=4170;var fb=document.getElementById('forkBanner');
-  if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var etaFast=new Date(Date.now()+rem*120*1000);var etaSlow=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent='between '+etaFast.toISOString().substring(11,16)+' and '+etaSlow.toISOString().substring(11,16)+' UTC (depends on block speed)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='ACTIVE since block '+FORK_V4;document.getElementById('forkEta').textContent='Update now if you haven\u0027t already';}else{fb.style.display='none';}}
+  if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var etaFast=new Date(Date.now()+rem*120*1000);var etaSlow=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent='between '+etaFast.toISOString().substring(11,16)+' and '+etaSlow.toISOString().substring(11,16)+' UTC (depends on block speed)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V4 ACTIVE since block '+FORK_V4+' \u2014 current '+info.blocks;document.getElementById('forkEta').textContent='If your node still rejects blocks, update and restart now';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
