@@ -537,6 +537,11 @@ static bool load_chain(const std::string& path) {
         BlockMeta bm;
         bm.block_id = from_hex(bid); bm.height = height;
         bm.time = jint(bj, "timestamp"); bm.powDiffQ = (uint32_t)jint(bj, "bits_q");
+        // V4: populate profile_index so miner's local casert_compute matches
+        // the node post-V4. Absent field => INT32_MIN (default), not 0/-1.
+        if (bj.find("\"profile_index\"") != std::string::npos) {
+            bm.profile_index = (int32_t)jint(bj, "profile_index");
+        }
         g_chain.push_back(bm);
 
         MinedBlock mb{};
@@ -887,7 +892,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 if (dp2 != std::string::npos) nd = (uint32_t)atoll(info_check.c_str() + dp2 + 18);
                 while ((int64_t)g_chain.size() - 1 < cur_h) {
                     BlockMeta pad{}; pad.height=(int64_t)g_chain.size(); pad.time=(int64_t)time(nullptr);
-                    pad.powDiffQ = nd > 0 ? nd : bits_q; g_chain.push_back(pad);
+                    pad.powDiffQ = nd > 0 ? nd : bits_q;
+                    pad.profile_index = 0; // conservative B0 for pad entries
+                    g_chain.push_back(pad);
                 }
             }
             return false;
@@ -929,7 +936,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         printf("  -> submitted to node OK (%zu txs)\n", all_hexes.size());
                         g_tip_hash = tr.mb.block_id;
                         BlockMeta bm{}; bm.block_id=tr.mb.block_id; bm.height=h;
-                        bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q; g_chain.push_back(bm);
+                        bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q;
+                        bm.profile_index = tr.mb.profile_index;
+                        g_chain.push_back(bm);
                         return true;
                     } else {
                         printf("  -> node REJECTED block\n");
@@ -940,7 +949,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 g_mined_blocks.push_back(tr.mb);
                 g_tip_hash = tr.mb.block_id;
                 BlockMeta bm{}; bm.block_id=tr.mb.block_id; bm.height=h;
-                bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q; g_chain.push_back(bm);
+                bm.time=tr.mb.timestamp; bm.powDiffQ=bits_q;
+                bm.profile_index = tr.mb.profile_index;
+                g_chain.push_back(bm);
                 return true;
             }
         }
@@ -1126,6 +1137,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                         pad.height = (int64_t)g_chain.size();
                                         pad.time = (int64_t)time(nullptr);
                                         pad.powDiffQ = node_diff > 0 ? node_diff : GENESIS_BITSQ;
+                                        pad.profile_index = 0; // conservative B0
                                         g_chain.push_back(pad);
                                     }
                                 }
@@ -1179,6 +1191,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                     pad.height = (int64_t)g_chain.size();
                                     pad.time = (int64_t)time(nullptr);
                                     pad.powDiffQ = node_diff;
+                                    pad.profile_index = 0; // conservative B0
                                     g_chain.push_back(pad);
                                 }
                                 return false; // restart mining at new height
@@ -1199,6 +1212,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     meta.height = h;
                     meta.time = ts;
                     meta.powDiffQ = bits_q;
+                    meta.profile_index = mb.profile_index;
                     g_chain.push_back(meta);
                     g_tip_hash = block_id;
                     g_mined_blocks.push_back(mb);

@@ -347,21 +347,26 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ HARD FORK — cASERT V4 AT BLOCK 4,200 — Ahead Guard</div>
-    <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b style="color:#fbbf24;">Current status:</b> chain is operating under V3.1 rules. You may see visible oscillation in block times and profiles (B0↔H12 jumps) — this is an observed coordination bug between bitsQ and the equalizer that will be fixed by V4 at block 4,200. <b>The chain is NOT stuck</b>, it is self-correcting while the V4 activation approaches.<br>
-      <b>What V4 fixes:</b> When the chain is ahead of schedule, the equalizer brakes (H8-H12) but bitsQ drops difficulty during the slow blocks — undoing the correction. V4 adds an <b>Ahead Guard</b>: while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5%. This keeps both controllers aligned.<br>
-      <b>How it works:</b> Enter AHEAD_CORRECTION at ≥16 ahead · Exit at ≤8 ahead (hysteresis) · bitsQ upward adjustments unchanged · Equalizer/PID/anti-stall unchanged.<br>
-      <b style="color:#fbbf24;">⚠ DO NOT update early:</b> the V4 code is committed on main but will only take effect at block 4,200. Updating before the announced activation block is safe (the fork is height-gated), but you must ensure the <b>entire network</b> updates together — isolated upgraders will be unable to submit blocks until 4,200.<br>
-      <b>Action required BEFORE block 4,200:</b><br>
+  <div style="background:rgba(255,0,0,0.12);border:3px solid #ff2222;padding:16px 22px;font-family:var(--code);position:relative;box-shadow:0 0 24px rgba(255,34,34,0.45);">
+    <div style="font-size:14px;font-weight:900;color:#ff2222;letter-spacing:2px;text-shadow:0 0 10px rgba(255,34,34,0.8);margin-bottom:10px;">🚨 URGENT HARD FORK — cASERT V4 AT BLOCK 4,170 — UPDATE NOW OR BE REJECTED 🚨</div>
+    <div style="font-size:11px;color:#ff6666;line-height:1.8;text-shadow:0 0 4px rgba(255,68,68,0.4);">
+      <b style="color:#ffdd00;">CRITICAL FIX — MUST UPDATE BEFORE BLOCK 4,170.</b> A latent bug in the V3.1 slew rate is causing the <b>B0 ↔ H12 oscillation loop</b> you are observing right now (blocks alternating between 37-second bursts and 2-hour waits). The chain is stalling. V4 fixes it.<br><br>
+      <b style="color:#ffdd00;">Root cause:</b> when a block is mined at profile B0 (the normal baseline), the ±3 per-block slew rate is silently disabled because <span style="color:#67e8f9;">profile_index=0</span> cannot be distinguished from "missing". The next block is free to jump straight to H12, mining freezes for 2 hours, anti-stall drops back to B0, the cycle repeats. <b>This is why block 4167 has not been mined.</b><br><br>
+      <b style="color:#ffdd00;">What V4 fixes:</b><br>
+      1. <b>Slew-rate bug:</b> BlockMeta uses an explicit INT32_MIN sentinel. Legit B0 is preserved, ±3 slew is enforced on every transition. No more B0→H12 jumps.<br>
+      2. <b>Ahead Guard:</b> while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5% — prevents difficulty from undoing equalizer braking.<br>
+      3. <b>Persistence:</b> profile_index is stored per block in chain.json so every node computes the same slew rate after restart.<br><br>
+      <b style="color:#ff2222;font-size:13px;">⚠ EVERY node and miner MUST update before block 4,170. Nodes/miners still on V3.1 will be rejected from the network after the fork activates.</b><br><br>
+      <b style="color:#ffdd00;">Update procedure (do this NOW):</b><br>
       1. <span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull origin main</span><br>
       2. <span style="color:#67e8f9;">cmake --build build -j$(nproc)</span><br>
-      3. Restart <b>both</b> node and miner (process must pick up new binary — rebuilding alone is not enough)<br>
-      4. Confirm commit with <span style="color:#67e8f9;">git log --oneline -1</span> — should show <span style="color:#fbbf24;">e7625d5</span> or later<br>
-      5. If stuck: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart node with fresh chain<br>
-      <b>Nodes that do not update will stop syncing at block 4,200.</b><br>
-      <span style="color:var(--text3);font-size:9px;">Blocks remaining: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">—</span> · Estimated activation: <span id="forkEta" style="color:#fbbf24;">—</span></span>
+      3. <b>Kill and restart</b> both node and miner processes — rebuilding alone is not enough, the old process is still in memory:<br>
+      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">pkill -x sost-node &amp;&amp; pkill -x sost-miner</span><br>
+      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">sudo systemctl restart sost-node</span> (or relaunch manually)<br>
+      4. Verify commit: <span style="color:#67e8f9;">git log --oneline -1</span> — must show <span style="color:#ffdd00;">a commit at or after the V4 fork</span><br>
+      5. Verify running binary matches build: <span style="color:#67e8f9;">md5sum /proc/$(pgrep -x sost-node)/exe build/sost-node</span> — hashes must match<br>
+      6. If your chain.json is in a bad state: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> then restart<br><br>
+      <b style="color:#ff2222;">Deadline: block 4,170.</b> <span style="color:var(--text3);font-size:10px;">Blocks remaining: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · ETA: <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span></span>
     </div>
   </div>
 </div>
@@ -999,7 +1004,7 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // cASERT V3 fork banner — show before block 4100, hide after
-  var FORK_V4=4200;var fb=document.getElementById('forkBanner');
+  var FORK_V4=4170;var fb=document.getElementById('forkBanner');
   if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var etaFast=new Date(Date.now()+rem*120*1000);var etaSlow=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent='between '+etaFast.toISOString().substring(11,16)+' and '+etaSlow.toISOString().substring(11,16)+' UTC (depends on block speed)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='ACTIVE since block '+FORK_V4;document.getElementById('forkEta').textContent='Update now if you haven\u0027t already';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
