@@ -784,6 +784,24 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         printf("\n[HASHRATE] %.1f att/s | threads=%d | total=%llu | stable=%.0f%% | elapsed=%.0fs\n",
                                hashrate, g_num_threads, (unsigned long long)total_att, stab_pct, elapsed_s);
                         fflush(stdout);
+
+                        // Check if anti-stall changed the profile (when stability is 0%)
+                        if (stab_pct < 1.0 && elapsed_s > 120 && !g_rpc_url.empty()) {
+                            std::string pi_check = rpc_call("getinfo");
+                            if (!pi_check.empty()) {
+                                auto ppc = pi_check.find("\"casert_profile_index\":");
+                                if (ppc != std::string::npos) {
+                                    int32_t new_pi = (int32_t)atoll(pi_check.c_str() + ppc + 23);
+                                    if (new_pi != params.stab_profile_index) {
+                                        printf("\n[ANTI-STALL] Profile changed: %d → %d — restarting with easier profile\n",
+                                               params.stab_profile_index, new_pi);
+                                        fflush(stdout);
+                                        g_chain_advanced = true; // triggers clean restart
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     if (res.is_stable && pow_meets_target(res.commit, bits_q)) {
