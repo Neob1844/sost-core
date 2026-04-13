@@ -3367,6 +3367,14 @@ static bool process_block(const std::string& block_json) {
             // 2. Read miner's declared profile_index
             int32_t declared_pi = (int32_t)jint(block_json, "profile_index");
 
+            // SECURITY: if profile_index is missing (-1) on a non-trusted block
+            // post-V3, reject it. Miners MUST declare their profile.
+            if (declared_pi == -1 && !trusted_block && height >= CASERT_V3_FORK_HEIGHT) {
+                printf("[BLOCK] REJECTED: profile_index missing on non-trusted block at height %lld (V3+ requires profile_index)\n",
+                       (long long)height);
+                return false;
+            }
+
             if (declared_pi == -1 && trusted_block) {
                 // Profile index missing from P2P data but block is trusted — use B0 default
                 printf("[BLOCK] fast-sync height=%lld: profile_index missing, trusted block (assuming B0)\n",
