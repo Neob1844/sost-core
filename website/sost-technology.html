@@ -986,7 +986,7 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
           (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E4&ndash;H12 that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E4) through baseline (B0) to maximum hardening (H9). H10&ndash;H12 are active high-difficulty profiles (scale=3).
+          deep easing (E4) through baseline (B0) to maximum hardening (H12). All 17 profiles active (E4 through H12).
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -1001,14 +1001,15 @@ I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256
 <span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
 U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
 
-H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H9=<span class="num">9</span>)   <span class="cmt">// max hardening (H10-H12 defined but capped)</span>
+H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H12=<span class="num">12</span>)  <span class="cmt">// all 17 profiles active</span>
 
 <span class="cmt">// Safety rules</span>
 <span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
 <span class="kw">if</span> chain.size() &lt; <span class="num">10</span>:        H = min(H, B0)  <span class="cmt">// require 10 blocks</span>
 
-<span class="cmt">// Slew rate: &plusmn;1 profile level per block (prevents oscillation)</span>
-H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</span>)
+<span class="cmt">// Slew rate: &plusmn;3 profile levels per block (V3+, was &plusmn;1)</span>
+H = clamp(H, prev_H - <span class="num">3</span>, prev_H + <span class="num">3</span>)
+<span class="cmt">// prev_H from stored profile_index in BlockMeta (V3.1+)</span>
         </div>
 
         <div class="mode-grid">
@@ -1066,13 +1067,13 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
 
         <div class="code-snippet" data-label="ANTI-STALL (mining only)" style="margin-top:16px;">
 <span class="cmt">// Zone-based decay to B0 — mining only</span>
-<span class="cmt">// Activation: max(ahead &times; 600s, 7200s) — floor 2 hours</span>
+<span class="cmt">// Activation: always 7,200s (2 hours) — V3.1+</span>
 stall = now - last_block_time
-threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <span class="num">600</span>)
+threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">// always 2 hours</span>
 
 <span class="kw">if</span> stall &gt;= threshold:
     <span class="cmt">// Zone decay rates (current level determines speed):</span>
-    <span class="cmt">// H9&ndash;H7: 600s/level (fast)     — 1800s total</span>
+    <span class="cmt">// H12&ndash;H7: 600s/level (fast)    — 3600s total</span>
     <span class="cmt">// H6&ndash;H4: 900s/level (medium)   — 2700s total</span>
     <span class="cmt">// H3&ndash;H1: 1200s/level (slow)    — 3600s total</span>
     <span class="cmt">// Decays to B0. Easing E1&ndash;E4 only after 6h extra at B0.</span>
@@ -1084,9 +1085,9 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
             &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H12 active high-difficulty profiles (scale=3). Full range: E4&ndash;H12.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
-            &bull; Slew rate &plusmn;1/block ensures smooth profile transitions.<br>
+            &bull; Slew rate &plusmn;3/block (V3+) ensures responsive yet smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
-            &bull; Anti-stall: zone-based decay to B0 (H9&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E4 only after 6h extra at B0.
+            &bull; Anti-stall: always 7,200s (V3.1+), zone-based decay to B0 (H12&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E4 only after 6h extra at B0.
           </p>
         </div>
 
@@ -1097,7 +1098,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>9</code> <span class="comment">// H9 (max hardening; H10-H12 defined but capped)</span></td>
+            <td class="val"><code>12</code> <span class="comment">// H12 (max hardening; all 17 profiles active)</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>
@@ -1105,7 +1106,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">SLEW_RATE</td>
-            <td class="val"><code>&plusmn;1</code> <span class="comment">// profile level per block</span></td>
+            <td class="val"><code>&plusmn;3</code> <span class="comment">// profile levels per block (V3+, was &plusmn;1)</span></td>
           </tr>
           <tr>
             <td class="key">ANTISTALL_FLOOR</td>
@@ -1113,7 +1114,7 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           </tr>
           <tr>
             <td class="key">ANTISTALL_DECAY</td>
-            <td class="val"><code>zone-based</code> <span class="comment">// H9-H7: 600s/lvl, H6-H4: 900s/lvl, H3-H1: 1200s/lvl</span></td>
+            <td class="val"><code>zone-based</code> <span class="comment">// H12-H7: 600s/lvl, H6-H4: 900s/lvl, H3-H1: 1200s/lvl</span></td>
           </tr>
           <tr>
             <td class="key">Safety rules</td>
@@ -1417,8 +1418,8 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
           <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">17 profiles (E4 through H12)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
-          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H9&rarr;B0 10-20min/lvl, then E1-E4 after 6h)</td></tr>
-          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E4&ndash;H12 (&plusmn;1/block, slew rate limited)</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H12&rarr;B0, always 7200s activation, then E1-E4 after 6h)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E4&ndash;H12 (&plusmn;3/block V3+, slew rate limited)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
           <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>
@@ -1432,8 +1433,8 @@ threshold = max(ANTISTALL_FLOOR=<span class="num">7200</span>, ahead &times; <sp
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; ConvergenceX proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a> &mdash; Refundable deposit</p>
   </div>
 </footer>

@@ -203,7 +203,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: V2: 24 hours (86,400s) since block 1,450. Delta cap: V2: 12.5% symmetric. (V1 was 48h/6.25%.) <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 9]. 17 profiles E4(-4) through H12(+12); H10&ndash;H12 active high-difficulty profiles (scale=3). Profile changes limited to &plusmn;1 level per block (slew rate limit) to prevent oscillation.</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 12]. 17 profiles E4(-4) through H12(+12); all active. Profile changes limited to &plusmn;3 levels per block (V3+, was &plusmn;1). Slew rate uses stored profile_index from BlockMeta (V3.1+).</p>
 
 <table>
 <tr><th>Profile</th><th>H</th><th>Scale</th><th>Steps</th><th>K</th><th>Margin</th><th>Effect</th></tr>
@@ -225,10 +225,10 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr style="color:var(--t3)"><td>H11</td><td>11</td><td>3</td><td>7</td><td>7</td><td>110</td><td>Active high-difficulty (scale=3)</td></tr>
 <tr style="color:var(--t3)"><td>H12</td><td>12</td><td>3</td><td>8</td><td>7</td><td>105</td><td>Active high-difficulty (scale=3)</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles. CASERT_H_MIN=-4 (E4), CASERT_H_MAX=12 (H9). H10&ndash;H12 active high-difficulty profiles (scale=3). Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles. CASERT_H_MIN=-4 (E4), CASERT_H_MAX=12 (H12). All 17 profiles active. Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
 
 <h3>Anti-Stall</h3>
-<p>Mining-only (now_time &gt; 0). If stalled &gt; max(7200s, lag&times;600s), zone-based decay to B0: H9&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
+<p>Mining-only (now_time &gt; 0). If stalled &gt; 7,200s (always 2 hours, V3.1+), zone-based decay to B0: H12&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
 </div></section>
 
 <!-- 3. TRANSACTIONS -->
@@ -392,10 +392,10 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <div class="warn"><strong>Status:</strong> Output types OUT_BOND_LOCK (0x10) and OUT_ESCROW_LOCK (0x11) are declared in code but blocked before height 5000 (R11). Full PoPC audit/slash/reward logic is NOT yet implemented. Design only.</div>
 
 <h3>Model A &mdash; Self-Custody Bonds</h3>
-<p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 12-20% annualized (1-12 months), dynamic participation tiers (100%→8% based on active contracts), 1,000 SOST hard cap per contract.</p>
+<p>User locks SOST bond (20-30% of gold value), maintains XAUT/PAXG in own Ethereum wallet (EOA only). Random audits from ConvergenceX entropy triple (block_id, commit, checkpoints_root). Audit probability: 30% at 0 stars, 5% at 5 stars. Slash on failure: 50% to PoPC Pool + 50% to Gold Vault. Rewards: 1/4/9/14/20% annualized (1-5 year tiers), protocol fee 3%. Dynamic participation tiers (100%/75%/50%/30%/15%/8% based on active contracts: 0-25/26-50/51-100/101-200/201-500/501-1000). 1,000 SOST hard cap per contract.</p>
 
 <h3>Model B &mdash; Escrow Timelock</h3>
-<p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.4-8% of gold value. Same dynamic tiers apply.</p>
+<p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.4/1.5/3.5/5.5/8% of gold value (1-5 year tiers), protocol fee 8%. Same dynamic participation tiers apply.</p>
 
 <h3>Activation Timeline</h3>
 <p>On-chain BOND_LOCK/ESCROW_LOCK: height 5000 (~35 days post-genesis). PoPC Ethereum contracts: Q1 2027 target. Full custody audit system: Q1 2027 target. Gold purchases: no earlier than Q2 2027 (8 months post public launch, per rule G4).</p>
@@ -405,8 +405,8 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 
 <footer><div class="c">
 <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
-<p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
-<p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; Sovereign proof-of-work</p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; ConvergenceX proof-of-work</p>
 </div></footer>
 
 <script src="sost-search.js"></script>
