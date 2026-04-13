@@ -348,9 +348,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ MINOR FORK — cASERT V3.1 AT BLOCK 4,200</div>
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ URGENT FIX — cASERT V3.1 AT BLOCK 4,110</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>ALL nodes and miners must update before block 4,200.</b> Equalizer slew rate enforcement fix + anti-stall improvement.<br>
+      <b>ALL nodes and miners must update before block 4,110.</b> Critical slew rate bug causing profile oscillation H3↔H12. Activation accelerated from 4,200 to 4,110.<br>
       <b>What changed:</b> V3.1 fixes a slew rate computation bug where the equalizer could jump more than ±3 levels. Anti-stall threshold now always activates after 2 hours max (was scaling to 11h+ at high lag).<br>
       <b>Context:</b> SOST is a completely new PoW protocol. Live operation under real conditions reveals edge cases that require precise correction. The core protocol is secure — these are refinements.<br>
       <b>Action:</b> <span style="color:#67e8f9;">git pull origin main</span>, rebuild, restart. Same process as V3.<br>
@@ -992,7 +992,7 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // cASERT V3 fork banner — show before block 4100, hide after
-  var FORK_V3=4200;var fb=document.getElementById('forkBanner');
+  var FORK_V3=4110;var fb=document.getElementById('forkBanner');
   if(fb){if(info.blocks<FORK_V3){fb.style.display='block';var rem=FORK_V3-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks';var avgBt=(_avgBlockTime&&_avgBlockTime>0)?_avgBlockTime:600;var eta=new Date(Date.now()+rem*avgBt*1000);document.getElementById('forkEta').textContent=eta.toISOString().replace('T',' ').substring(0,16)+' UTC (at '+Math.round(avgBt/60)+'m/block avg)';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
