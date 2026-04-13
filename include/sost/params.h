@@ -99,9 +99,12 @@ inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag 
 // This prevents the equalizer from jumping more than ±3 in practice
 inline constexpr int64_t  CASERT_V3_1_FORK_HEIGHT = 4110;
 
-// cASERT V4 fork — Ahead Guard coordination fix
-// Prevents bitsQ from dropping aggressively while chain is materially ahead
-inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4200;
+// cASERT V4 fork — Ahead Guard + profile_index persistence fix
+// 1. Prevents bitsQ from dropping aggressively while chain is materially ahead.
+// 2. Uses INT32_MIN sentinel so legit B0 (profile_index=0) can no longer trigger
+//    the V3.1 "missing profile" fallback that disables the slew rate (the bug
+//    causing B0→H12 jumps observed in the 4150-4170 oscillation loop).
+inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4170;
 inline constexpr int32_t  CASERT_AHEAD_ENTER          = 16;   // enter AHEAD_CORRECTION when >= 16 ahead
 inline constexpr int32_t  CASERT_AHEAD_EXIT           = 8;    // exit when <= 8 ahead (hysteresis)
 // In AHEAD_CORRECTION + profile >= H8: max downward delta = prev_bitsq / 64 (~1.56%)

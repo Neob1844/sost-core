@@ -242,17 +242,35 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         if (next_height >= CASERT_V3_FORK_HEIGHT) {
             int32_t prev_H = 0; // B0 default
 
-            if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
-                // --- V3.1: Use stored profile_index from BlockMeta ---
+            if (next_height >= CASERT_V4_FORK_HEIGHT) {
+                // --- V4: Sentinel-based detection of missing profile_index ---
+                // BlockMeta default is INT32_MIN; legit B0 stores 0. Only
+                // genuinely-missing blocks (pre-V4 loaded without the field)
+                // trigger the fallback — a legit B0 now enforces slew rate.
                 int32_t stored_pi = chain.back().profile_index;
+                if (stored_pi == INT32_MIN) {
+                    // Legacy block without persisted profile_index. One-off
+                    // fallback: disable slew for this transition only. Next
+                    // block mined under V4 rules will have the field set.
+                    prev_H = H;
+                } else {
+                    prev_H = stored_pi; // trust stored, including legit 0 = B0
+                }
+                prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
+            } else if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
+                // --- V3.1 (blocks 4110-4169): Use stored profile_index ---
+                // Historical quirk: default was 0, so legit B0 was misread as
+                // missing and fell through to `prev_H = H`. Kept identical to
+                // preserve consensus for already-validated blocks in this range.
+                int32_t stored_pi = chain.back().profile_index;
+                // Normalize: V3.1 didn't know about INT32_MIN sentinel. Treat
+                // INT32_MIN the same as 0 so newly-built BlockMeta behaves like
+                // the old default for these heights.
+                if (stored_pi == INT32_MIN) stored_pi = 0;
                 if (stored_pi != 0 || chain.back().height < CASERT_V3_FORK_HEIGHT) {
-                    // Valid stored profile or pre-V3 block (B0 is correct default)
                     prev_H = stored_pi;
                 } else {
-                    // Post-V3 block with profile_index=0 means not stored (chain import).
-                    // Skip slew rate entirely — let H_raw + lag_floor determine profile.
-                    // This avoids the V3 PID recomputation bug while allowing proper response.
-                    prev_H = H; // effectively disables slew rate for this transition
+                    prev_H = H; // historical fallback — see comment above
                 }
                 prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
             } else {

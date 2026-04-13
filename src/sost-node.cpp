@@ -129,6 +129,10 @@ struct StoredBlock {
     std::vector<std::string> checkpoint_leaves_hex;
     // Declared stability profile (miner's profile for CX verification)
     int32_t stab_scale{0}, stab_k{0}, stab_margin{0}, stab_steps{0}, stab_lr_shift{0};
+    // cASERT profile index declared by the miner for this block (V3+).
+    // Persisted so every BlockMeta rebuilt from g_blocks carries the real
+    // value — legit B0 (0) is distinguishable from missing (INT32_MIN).
+    int32_t profile_index{INT32_MIN};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
     // This avoids re-serializing complex nested proof structures.
@@ -842,7 +846,9 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
             for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){
                 BlockMeta bm; bm.block_id=g_blocks[j].block_id;
                 bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
-                bm.powDiffQ=g_blocks[j].bits_q; meta.push_back(bm);
+                bm.powDiffQ=g_blocks[j].bits_q;
+                bm.profile_index=g_blocks[j].profile_index;
+                meta.push_back(bm);
             }
             // Profile for THIS block (with anti-stall, using block's own timestamp)
             auto cd=casert_compute(meta,b.height,b.timestamp);
@@ -875,7 +881,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     int32_t casert_lag = 0;
     if (!g_blocks.empty()) {
         std::vector<BlockMeta> meta;
-        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
+        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
         // Compute live profile with current wall-clock time (includes anti-stall easing)
         auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), std::time(nullptr));
@@ -1125,7 +1131,7 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     uint32_t next_bits = GENESIS_BITSQ;
     if (!g_blocks.empty()) {
         std::vector<BlockMeta> meta;
-        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; meta.push_back(bm); }
+        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
         next_bits = sost::casert_next_bitsq(meta, next_height);
     }
     int64_t curtime = (int64_t)time(nullptr);
@@ -3018,6 +3024,7 @@ static bool process_block(const std::string& block_json) {
     chain_meta.reserve(g_blocks.size());
     for(const auto& b:g_blocks){
         BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q;
+        bm.profile_index=b.profile_index;
         chain_meta.push_back(bm);
     }
     uint32_t expected_diff = casert_next_bitsq(chain_meta, height);
@@ -3412,6 +3419,7 @@ static bool process_block(const std::string& block_json) {
                     BlockMeta bm; bm.block_id = g_blocks[j].block_id;
                     bm.height = g_blocks[j].height; bm.time = g_blocks[j].timestamp;
                     bm.powDiffQ = g_blocks[j].bits_q;
+                    bm.profile_index = g_blocks[j].profile_index;
                     meta.push_back(bm);
                 }
                 // V3.1: store last accepted profile_index in the last BlockMeta entry
@@ -3607,6 +3615,9 @@ static bool process_block(const std::string& block_json) {
     sb.stab_margin = (int32_t)jint(block_json, "stab_margin");
     sb.stab_steps = (int32_t)jint(block_json, "stab_steps");
     sb.stab_lr_shift = (int32_t)jint(block_json, "stab_lr_shift");
+    // V4: persist profile_index per block so slew rate can trust stored values.
+    // g_last_accepted_profile was set above to the declared profile for this block.
+    sb.profile_index = g_last_accepted_profile;
     sb.raw_block_json = block_json; // full JSON for relay
 
     // Compute cumulative chainwork: parent_work + this block's work
@@ -4723,6 +4734,11 @@ static bool load_chain(const std::string& path) {
         sb.stab_margin=(int32_t)jint(bj,"stab_margin");
         sb.stab_steps=(int32_t)jint(bj,"stab_steps");
         sb.stab_lr_shift=(int32_t)jint(bj,"stab_lr_shift");
+        // V4: parse persisted profile_index. Use explicit presence check so
+        // a missing field stays as INT32_MIN (not -1 from jint's error return).
+        if (bj.find("\"profile_index\"") != std::string::npos) {
+            sb.profile_index = (int32_t)jint(bj,"profile_index");
+        } // else keeps INT32_MIN default
         sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
         // Parse transactions if present (v0.3.2+)
@@ -4827,6 +4843,12 @@ static bool load_chain(const std::string& path) {
     if(g_chain_height != ch){
         printf("[CHAIN-LOAD] Warning: JSON claimed height=%lld but loaded %lld blocks (using %lld)\n",
                (long long)ch, (long long)g_blocks.size(), (long long)g_chain_height);
+    }
+    // Restore last accepted profile from loaded tip so runtime state matches.
+    // If the tip was persisted without profile_index (pre-V4 format), leave
+    // g_last_accepted_profile at its default (0 = B0).
+    if (!g_blocks.empty() && g_blocks.back().profile_index != INT32_MIN) {
+        g_last_accepted_profile = g_blocks.back().profile_index;
     }
     // Log chainwork for tip (skip leading zeros for readability)
     if (!g_blocks.empty()) {
