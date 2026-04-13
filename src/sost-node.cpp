@@ -3414,6 +3414,16 @@ static bool process_block(const std::string& block_json) {
                            declared_pi, base_profile);
                     return false;
                 }
+                // V3.1 SECURITY: enforce lag floor as minimum profile
+                // Miners cannot declare a profile below the lag floor
+                if (height >= CASERT_V3_1_FORK_HEIGHT && base_dec.lag > 10) {
+                    int32_t min_profile = std::min<int32_t>(base_dec.lag / CASERT_V3_LAG_FLOOR_DIV, CASERT_H_MAX);
+                    if (declared_pi < min_profile) {
+                        printf("[BLOCK] REJECTED: profile_index %d below lag floor %d (lag=%d, minimum enforcement)\n",
+                               declared_pi, min_profile, base_dec.lag);
+                        return false;
+                    }
+                }
 
                 // 4. Store last accepted profile for getinfo reporting
                 g_last_accepted_profile = declared_pi;
