@@ -615,7 +615,7 @@ psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calc
 thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThresholds calculated from the AVERAGE nonce of the last 288 blocks (~48h).\nThe average = 100%. Each threshold is a percentage of that average.\n\n  25% \u2014 quarter of average effort (lucky early find)\n  50% \u2014 half the average effort\n  75% \u2014 three quarters of typical effort\n  90% \u2014 approaching full average\n  95% \u2014 nearly at the average nonce count\n 100% \u2014 E[288] average \u2014 most blocks found around here\n\nPassing 100% means the block is taking longer than usual.\nThis is normal variance \u2014 some blocks take 2-3x average.\nThe checkmark \u2713 appears when the miner PASSES a threshold.\n\nUnlike theoretical probability, these reflect ACTUAL chain\nconditions: difficulty changes, hashrate, real variance.',
 exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[288] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
-antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for max(ahead\u00D7600, 7200) seconds (min 2h).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
+antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 7200 seconds (2 hours).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
     };
     var _openParam=null;
     function _closeAllCharts(){
@@ -1701,7 +1701,7 @@ function getDecayCost(level){
   return 1200;
 }
 function computeDecayLevel(rawLevel,ahead,elapsedSecs){
-  var threshold=Math.max(ahead*600,7200);
+  var threshold=7200; // always 2h (V3.1 fix)
   if(elapsedSecs<threshold)return{level:rawLevel,active:false,threshold:threshold,nextDrop:0};
   var decayTime=elapsedSecs-threshold;
   var eff=rawLevel;
@@ -1905,7 +1905,7 @@ function updateMiningPanel(elapsed){
   }
   // C++ convention: tipLag > 0 = ahead of schedule. Anti-stall uses ahead blocks.
   var ahead=(tipLag>0)?tipLag:0;
-  var threshold=Math.max(7200,ahead*600);
+  var threshold=7200; // always 2h (V3.1 fix)
   var asInd=document.getElementById('asIndicator');
   var asCd=document.getElementById('asCountdown');
   if(asInd&&asCd){
