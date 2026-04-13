@@ -109,6 +109,29 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
 
     int64_t delta = raw_result - (int64_t)prev_bitsq;
     delta = std::max<int64_t>(-max_delta, std::min<int64_t>(max_delta, delta));
+
+    // V4 Ahead Guard: if chain is materially ahead and delta wants to lower bitsQ,
+    // clamp the downward adjustment to prevent bitsQ from undoing equalizer braking.
+    // Uses persistent state via static variable with hysteresis.
+    if (next_height >= CASERT_V4_FORK_HEIGHT && delta < 0) {
+        // Compute schedule lag: positive = ahead
+        int64_t elapsed = chain.back().time - GENESIS_TIME;
+        int64_t expected_h = (elapsed >= 0) ? (elapsed / TARGET_SPACING) : 0;
+        int32_t schedule_lag = (int32_t)((int64_t)(next_height - 1) - expected_h);
+
+        // Hysteresis: enter at >=16, exit at <=8
+        static bool ahead_correction_mode = false;
+        if (schedule_lag >= CASERT_AHEAD_ENTER) ahead_correction_mode = true;
+        if (schedule_lag <= CASERT_AHEAD_EXIT)  ahead_correction_mode = false;
+
+        if (ahead_correction_mode) {
+            // Clamp downward delta: allow only ~1.56% drop instead of 12.5%
+            int64_t ahead_max_drop = (int64_t)prev_bitsq / CASERT_AHEAD_DELTA_DEN;
+            if (ahead_max_drop < 1) ahead_max_drop = 1;
+            delta = std::max<int64_t>(-ahead_max_drop, delta);
+        }
+    }
+
     int64_t result = (int64_t)prev_bitsq + delta;
 
     // Global clamp

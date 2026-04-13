@@ -99,6 +99,16 @@ inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag 
 // This prevents the equalizer from jumping more than ±3 in practice
 inline constexpr int64_t  CASERT_V3_1_FORK_HEIGHT = 4110;
 
+// cASERT V4 fork — Ahead Guard coordination fix
+// Prevents bitsQ from dropping aggressively while chain is materially ahead
+inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4250;
+inline constexpr int32_t  CASERT_AHEAD_ENTER          = 16;   // enter AHEAD_CORRECTION when >= 16 ahead
+inline constexpr int32_t  CASERT_AHEAD_EXIT           = 8;    // exit when <= 8 ahead (hysteresis)
+// In AHEAD_CORRECTION + profile >= H8: max downward delta = prev_bitsq / 64 (~1.56%)
+// vs normal max delta = prev_bitsq / 8 (12.5%). This is 8× slower relaxation.
+inline constexpr int32_t  CASERT_AHEAD_DELTA_DEN      = 64;   // 1/64 ≈ 1.56% max downward per block
+inline constexpr int32_t  CASERT_AHEAD_PROFILE_THRESH = 8;    // H8+ triggers stronger clamp
+
 // --- cASERT equalizer ---
 // EWMA smoothing constants (denominator = 256 for shift-by-8 division)
 inline constexpr int32_t  CASERT_EWMA_SHORT_ALPHA = 32;    // 256/8  = 8-block window
