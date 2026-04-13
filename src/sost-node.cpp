@@ -3402,6 +3402,11 @@ static bool process_block(const std::string& block_json) {
                 auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
                 int32_t base_profile = base_dec.profile_index;
 
+                printf("[BLOCK-VALIDATE] h=%lld declared_pi=%d base_profile=%d lag=%d last_stored_pi=%d\n",
+                       (long long)height, declared_pi, base_profile, base_dec.lag,
+                       meta.empty() ? -99 : meta.back().profile_index);
+                fflush(stdout);
+
                 // 3. Validate: declared profile must be in [CASERT_H_MIN, base_profile]
                 //    Anti-stall can only EASE (lower profile), never harden beyond base.
                 if (declared_pi < CASERT_H_MIN || declared_pi > CASERT_H_MAX) {
