@@ -1485,8 +1485,15 @@ function renderDashPanel(key,body,title,silent){
       html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--purple);font-weight:600">'+addrs.length+'</span><br>';
       html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">blocks '+(H-lookback)+' \u2014 '+H+'</span><br>';
       html+='<span style="color:var(--text3)">Simultaneous blocks:</span> <span style="color:var(--cyan);font-weight:600">'+simultaneousTotal+'</span> / '+blockList.length+' <span style="color:var(--text3)">('+(blockList.length?((simultaneousTotal/blockList.length)*100).toFixed(1):'0')+'%)</span><br>';
+      // Compute average block time and network hashrate estimate
+      var avgBtMiner=600;
+      if(blockList.length>=2){var tSpan=blockList[blockList.length-1].t-blockList[0].t;if(tSpan>0)avgBtMiner=tSpan/(blockList.length-1);}
+      // Network hashrate estimate: difficulty / avg_block_time
+      var netDiff=_diffHistory&&_diffHistory.length>0?_diffHistory[_diffHistory.length-1].d:765730;
+      var netHashrate=netDiff/avgBtMiner;
+      html+='<span style="color:var(--text3)">Est. network hashrate:</span> <span style="color:var(--orange);font-weight:600">'+(netHashrate>=1000?(netHashrate/1000).toFixed(1)+'K':Math.round(netHashrate))+'</span> <span style="color:var(--text3)">h/s (avg block '+Math.round(avgBtMiner)+'s)</span><br>';
       html+='<div style="margin-top:10px"><table style="width:100%;font-size:11px;border-collapse:collapse">';
-      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Raw Share</th><th style="text-align:right;padding:4px">Simul. Share</th><th style="text-align:right;padding:4px">Solo</th><th style="text-align:right;padding:4px">Latest</th></tr>';
+      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Raw Share</th><th style="text-align:right;padding:4px">Est. Hashrate</th><th style="text-align:right;padding:4px">Simul. Share</th><th style="text-align:right;padding:4px">Solo</th><th style="text-align:right;padding:4px">Latest</th></tr>';
       var sorted=addrs.sort(function(a,b){return miners[b].count-miners[a].count;});
       for(var i=0;i<sorted.length;i++){
         var a=sorted[i],m=miners[a];
@@ -1496,9 +1503,12 @@ function renderDashPanel(key,body,title,silent){
         var simBlocks=simultaneousPerMiner[a]||0;
         var simPct=simultaneousTotal?(simBlocks/simultaneousTotal*100).toFixed(1):'0.0';
         var solo=soloPerMiner[a]||0;
+        var minerHr=netHashrate*(m.count/denom);
+        var minerHrStr=minerHr>=1000?(minerHr/1000).toFixed(1)+'K':Math.round(minerHr);
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
         html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.count+'</td>';
         html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--green)">~'+minerHrStr+' h/s</td>';
         html+='<td style="text-align:right;padding:4px;color:var(--cyan)">'+simPct+'%</td>';
         html+='<td style="text-align:right;padding:4px;color:var(--text3)">'+solo+'</td>';
         html+='<td style="text-align:right;padding:4px;color:var(--text3)">#'+m.last+'</td></tr>';
