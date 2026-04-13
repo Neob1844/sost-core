@@ -368,6 +368,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       &nbsp;&nbsp;• <b>Safety rule post-slew:</b> if the chain is already behind, hardening is immediately capped back toward baseline<br>
       &nbsp;&nbsp;• <b>EBR (Emergency Behind Release):</b> stateless cliffs force the profile downward when lag falls below -10 (100 min behind)<br>
       &nbsp;&nbsp;• <b>Anti-stall floor 2h → 60min</b> at V5 heights for faster rescue<br>
+      &nbsp;&nbsp;• <b>Extreme profile entry cap:</b> H10, H11 and H12 (the strongest brakes) may only be climbed one level per block, preventing the B0 → H6 → H9 → H12 overshoot pattern observed on the live chain. The equalizer still gets full slew rate (±3) below H10 and on the way back down — the cap is asymmetric by design.<br>
       Future cases like the recent H12 stuck-block event should be resolved much faster.<br><br>
 
       <b>In summary:</b> V5.0 fixes correctness · V5.1 fixes recovery behavior · both ship together in one coordinated hard fork.<br><br>
