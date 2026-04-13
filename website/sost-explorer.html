@@ -345,26 +345,51 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
-<!-- cASERT V5.0 PLANNED UPDATE BANNER — informational, auto-hides after block 4370 -->
+<!-- cASERT V5 PLANNED UPDATE BANNER — informational, auto-hides when activation passes -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(0,255,65,0.06);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">cASERT V5.0 — DETERMINISM FIX (PLANNED) · NO IMMEDIATE ACTION REQUIRED</div>
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">cASERT V5 — DETERMINISM + LIVENESS UPDATE (PLANNED · BLOCK 4,500) · NO IMMEDIATE ACTION REQUIRED</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>Current network status:</b> V4 is active as of block 4,170 and the chain is producing blocks normally. The B0 ↔ H12 oscillation loop from earlier this week has been resolved. Continue mining on your current V4 build — <b>no action is required at this time</b>.<br><br>
-      <b>What V5.0 is:</b> a minimal, surgical determinism fix for the V4 Ahead Guard implementation. During review, a potential consensus-determinism risk was identified: the Ahead Guard uses a <span style="color:#67e8f9;">static bool</span> persistent flag to track ahead-correction mode, which is undesirable in consensus-critical code. V5.0 replaces it with a fully stateless condition derived directly from current schedule lag.<br><br>
-      <b>Important clarification:</b> this risk has <b>NOT</b> been observed causing live divergence. It is being treated as a must-fix before it has the chance to manifest. V5.0 is preventive, not reactive.<br><br>
-      <b>What V5.0 does NOT change:</b><br>
+      <b>Current network status:</b> V4 is active since block 4,170 and the chain is producing blocks. Recent updates improved responsiveness and resolved the B0 ↔ H12 oscillation loop. Live operation has now revealed a second edge case that V5 addresses. Continue mining on your current V4 build — <b>no action is required at this time</b>.<br><br>
+
+      <b style="color:#fbbf24;">The observed pattern (edge case under investigation):</b><br>
+      &nbsp;&nbsp;1. The chain accelerates under baseline conditions<br>
+      &nbsp;&nbsp;2. The equalizer hardens rapidly (H6 → H9 → H12)<br>
+      &nbsp;&nbsp;3. A block becomes excessively delayed under H12<br>
+      &nbsp;&nbsp;4. The chain falls behind schedule<br>
+      &nbsp;&nbsp;5. The equalizer remains too high for too long, delaying recovery<br>
+      In short: <b>the system brakes correctly when ahead, but can remain braking too long once the chain is already behind.</b> This has now been observed on the live chain.<br><br>
+
+      <b style="color:#fbbf24;">V5 is split into two logical parts (shipped in one fork):</b><br><br>
+
+      <b>Part 1 — V5.0 determinism fix:</b> the current V4 Ahead Guard uses a <span style="color:#67e8f9;">static bool</span> persistent flag internally. Persistent local state is undesirable in consensus-critical code — decisions must be derived only from deterministic chain data. This has <b>NOT</b> been observed causing live divergence, but it is a must-fix. V5.0 replaces it with a stateless condition derived directly from current schedule lag.<br><br>
+
+      <b>Part 2 — V5.1 liveness / overshoot fix:</b> V5.0 alone does NOT fully solve the stuck-chain scenario. When the chain moves from ahead to behind while the equalizer is still at very high profiles, block production becomes excessively delayed. V5.1 adds:<br>
+      &nbsp;&nbsp;• <b>Safety rule post-slew:</b> if the chain is already behind, hardening is immediately capped back toward baseline<br>
+      &nbsp;&nbsp;• <b>EBR (Emergency Behind Release):</b> stateless cliffs force the profile downward when lag falls below -10 (100 min behind)<br>
+      &nbsp;&nbsp;• <b>Anti-stall floor 2h → 75min</b> at V5 heights for faster rescue<br>
+      Future cases like the recent H12 stuck-block event should be resolved much faster.<br><br>
+
+      <b>In summary:</b> V5.0 fixes correctness · V5.1 fixes recovery behavior · both ship together in one coordinated hard fork.<br><br>
+
+      <b>What V5 does NOT change:</b><br>
       &nbsp;&nbsp;• ConvergenceX proof-of-work design<br>
       &nbsp;&nbsp;• The 17-profile equalizer table (E4–H12)<br>
-      &nbsp;&nbsp;• PID controller, anti-stall logic, emission rules<br>
-      &nbsp;&nbsp;• Economic structure<br><br>
-      <b>Why V5.0 comes before any other changes:</b> a determinism fix must be isolated from feature changes whenever possible. Other potential improvements (behind-recovery optimization, equalizer tuning) are being evaluated separately under V5.1 and will only proceed if live network data justifies them.<br><br>
-      <b>Timeline:</b><br>
-      &nbsp;&nbsp;• <b>Now:</b> 150–200 block observation window under current V4 rules<br>
-      &nbsp;&nbsp;• <b>Next:</b> V5.0 activation block will be announced with advance notice<br>
-      &nbsp;&nbsp;• <b>Later:</b> V5.1 (conditional on observation data)<br><br>
-      <b>When V5.0 activates:</b> standard update procedure — <span style="color:#67e8f9;">git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span> — full instructions will be published before activation.<br><br>
-      <span style="color:var(--text3);font-size:9px;">Fork status: <span id="forkCountdown" style="color:#00ff41;font-weight:600;">—</span> · <span id="forkEta" style="color:#00ff41;">—</span> · This banner auto-hides at block 4,370</span>
+      &nbsp;&nbsp;• PID weights, burst/volatility signals, lag_floor<br>
+      &nbsp;&nbsp;• Emission rules, coinbase split, economic structure<br><br>
+
+      <b>Monitoring &amp; measurement:</b> a dedicated monitor (<span style="color:#67e8f9;">scripts/v31_monitor.py</span>) tracks overshoot events, time in H12, blocks &gt; 20/40min, lag extremes, and Ahead Guard activation conditions — so protocol decisions are measured, not intuited.<br><br>
+
+      <b>Planned deployment:</b><br>
+      &nbsp;&nbsp;• Activation target: <b style="color:#fbbf24;">block 4,500</b> (subject to final confirmation after observation)<br>
+      &nbsp;&nbsp;• Standard update procedure when activation is announced:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span><br>
+      &nbsp;&nbsp;• Restart your miner with <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch<br>
+      &nbsp;&nbsp;• Full instructions and commit hash published before activation<br><br>
+
+      <b>Nodes and miners still on V3.1 or earlier should update to the current V4 build now.</b> V5 will require another update when announced.<br><br>
+
+      <span style="color:var(--text3);font-size:9px;">Fork status: <span id="forkCountdown" style="color:#00ff41;font-weight:600;">—</span> · <span id="forkEta" style="color:#00ff41;">—</span> · Banner auto-hides at block 4,500 + 200</span>
     </div>
   </div>
 </div>
@@ -1001,11 +1026,10 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
-  // V5.0 planned-update banner (informational). Visible until block
-  // FORK_V4+200 (4370) to maximize V5.0 awareness, then auto-hides.
-  // V5.0 activation height is TBD pending observation window.
-  var FORK_V4=4170;var fb=document.getElementById('forkBanner');
-  if(fb){if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='V5.0 activation height pending observation window (150\u2013200 blocks)';}else{fb.style.display='none';}}
+  // V5 planned-update banner (informational). Visible until FORK_V5+200
+  // (block 4700), then auto-hides. V5 activation target: block 4500.
+  var FORK_V4=4170;var FORK_V5=4500;var fb=document.getElementById('forkBanner');
+  if(fb){if(info.blocks<FORK_V5){fb.style.display='block';var rem=FORK_V5-info.blocks;document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent=fComma(rem)+' blocks until V5 activation target (block '+fComma(FORK_V5)+')';}else if(info.blocks<FORK_V5+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V5 ACTIVE since block '+FORK_V5+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='If your node has not updated yet, pull and restart now';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
