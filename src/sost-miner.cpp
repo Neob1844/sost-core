@@ -575,6 +575,7 @@ static std::atomic<bool> g_monitor_running{false};
 // Multi-threaded mining
 static int g_num_threads = 1;
 static std::atomic<bool> g_block_found{false};
+static std::atomic<uint64_t> g_total_attempts{0};  // global attempt counter for hashrate
 static std::mutex g_submit_mu;  // protects block submission
 
 static void start_block_monitor(int64_t mining_height) {
@@ -726,6 +727,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     // Start background monitor that checks for new blocks every 2s
     start_block_monitor(h);
     g_block_found = false;
+    g_total_attempts = 0;
 
     // =========================================================================
     // Multi-threaded mining: each thread tries different nonces in parallel.
@@ -769,12 +771,18 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         n, my_extra, params, my_hc72, epoch);
 
                     my_total++;
+                    g_total_attempts.fetch_add(1, std::memory_order_relaxed);
                     if (res.is_stable) my_stable++;
                     if (pow_meets_target(res.commit, bits_q)) my_target++;
 
                     if (tid == 0 && (my_total % 200) == 0 && my_total > 0) {
-                        printf("\n[DIAG] threads=%d nonce~%u stable=%u/%u target=%u/%u\n",
-                               g_num_threads, n, my_stable, my_total, my_target, my_total);
+                        auto now_diag = std::chrono::steady_clock::now();
+                        double elapsed_s = std::chrono::duration<double>(now_diag - t0).count();
+                        uint64_t total_att = g_total_attempts.load(std::memory_order_relaxed);
+                        double hashrate = (elapsed_s > 0) ? total_att / elapsed_s : 0;
+                        double stab_pct = (my_total > 0) ? (double)my_stable / my_total * 100.0 : 0;
+                        printf("\n[HASHRATE] %.1f att/s | threads=%d | total=%llu | stable=%.0f%% | elapsed=%.0fs\n",
+                               hashrate, g_num_threads, (unsigned long long)total_att, stab_pct, elapsed_s);
                         fflush(stdout);
                     }
 
@@ -928,9 +936,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         for (uint32_t nonce = 0; nonce <= max_nonce; ++nonce) {
             if ((nonce % 1000) == 0 && nonce > 0) {
                 if (diag_total > 0 && (diag_total % 1000) == 0) {
-                    printf("\n[DIAG] nonce=%u stable=%u/1000 target=%u/1000 (total: %u stable, %u target)\n",
-                           nonce + extra_nonce * max_nonce, diag_stable, diag_target,
-                           diag_stable, diag_target);
+                    auto now_diag = std::chrono::steady_clock::now();
+                    double elapsed_s = std::chrono::duration<double>(now_diag - t0).count();
+                    uint32_t total_nonces = nonce + extra_nonce * max_nonce;
+                    double hashrate = (elapsed_s > 0) ? total_nonces / elapsed_s : 0;
+                    double stab_pct = (diag_total > 0) ? (double)diag_stable / diag_total * 100.0 : 0;
+                    printf("\n[HASHRATE] %.1f att/s | nonce=%u | stable=%.0f%% | elapsed=%.0fs\n",
+                           hashrate, total_nonces, stab_pct, elapsed_s);
                     fflush(stdout);
                     diag_stable = 0; diag_target = 0; diag_total = 0;
                 }
