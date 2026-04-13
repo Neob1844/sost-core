@@ -370,12 +370,14 @@
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.8;">Relaxed stability is only available when the chain needs help (hashrate dropped), never when an attacker is dominating. This is the correct security trade-off.</p>
         <table class="code-table" style="margin-top:16px">
-          <tr><th>Parameter</th><th>V1 (blocks &lt;1450)</th><th>V2 (blocks &ge;1450)</th></tr>
-          <tr><td class="label">Halflife</td><td class="value">48 hours</td><td class="green">24 hours</td></tr>
-          <tr><td class="label">Per-block delta cap</td><td class="value">6.25%</td><td class="green">12.5% symmetric</td></tr>
-          <tr><td class="label">Target spacing</td><td class="value" colspan="2">600s (unchanged)</td></tr>
+          <tr><th>Parameter</th><th>V1 (&lt;1450)</th><th>V2 (&ge;1450)</th><th>V3 (&ge;4100)</th><th>V3.1 (&ge;4110)</th><th>V4 (&ge;4200)</th></tr>
+          <tr><td class="label">Halflife</td><td class="value">48h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td><td class="green">24h</td></tr>
+          <tr><td class="label">Delta cap</td><td class="value">6.25%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="green">12.5%</td><td class="cyan">1.56% when ahead*</td></tr>
+          <tr><td class="label">Slew rate</td><td class="value">&plusmn;1</td><td class="value">&plusmn;1</td><td class="green">&plusmn;3</td><td class="green">&plusmn;3 (stored)</td><td class="green">&plusmn;3 (stored)</td></tr>
+          <tr><td class="label">Anti-stall</td><td class="value" colspan="2">max(lag&times;600, 7200s)</td><td class="value">max(lag&times;600, 7200s)</td><td class="green">Always 7,200s</td><td class="green">Always 7,200s</td></tr>
+          <tr><td class="label">Ahead Guard</td><td class="value" colspan="4">&mdash;</td><td class="cyan">Enter &ge;16, exit &le;8</td></tr>
         </table>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">V2 activated at block 1450 (no regenesis). Faster response to hashrate changes while maintaining stability.</p>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). *V4 Ahead Guard: when chain &ge;16 blocks ahead and profile &ge;H8, bitsQ downward delta clamped to 1/64 (&asymp;1.56%) per block, preventing oscillation between bitsQ and equalizer.</p>
       </div>
     </div>
   </div>
@@ -650,8 +652,8 @@ in the project&rsquo;s Security Hall of Fame.</pre>
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>SOST PROTOCOL &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
-    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; Sovereign proof-of-work</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; ConvergenceX proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a> &mdash; Refundable deposit</p>
   </div>
 </footer>
@@ -690,7 +692,7 @@ var D={
 'address book':'<b>Trusted Address Book</b> — Save addresses with labels and trust levels (Trusted, Known, Blocked, Unknown). Blocked addresses cannot receive funds. Unknown addresses trigger a first-time send warning.',
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
 'checkpoints':'<b>Checkpoints</b> — Hardcoded block hashes at known heights. The node rejects any chain that disagrees with these checkpoints. MAX_REORG_DEPTH = 500 blocks (~3.5 days) limits how far back a reorganization can go.',
-'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. Exponential bitsQ controller adjusts difficulty every block. V1: 48h halflife, 6.25% cap. V2 (block 1450+): 24h halflife, 12.5% cap. 17 equalizer profiles (E4-H12) adapt ConvergenceX stability requirements.',
+'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall always 7200s. V4 (4200+): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. 17 profiles E4-H12.',
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency prevents ASIC parallelism. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',
