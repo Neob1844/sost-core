@@ -348,16 +348,19 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ HARD FORK — cASERT V4 AT BLOCK 4,200 — Ahead Guard</div>
+    <div style="font-size:12px;font-weight:700;color:#ff4444;letter-spacing:2px;text-shadow:0 0 8px rgba(255,68,68,0.6);margin-bottom:8px;">⚠ HARD FORK MOVED — cASERT V4 NOW AT BLOCK 4,170 (was 4,200) — Ahead Guard + Slew Fix</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>What it fixes:</b> When the chain is ahead of schedule, the equalizer brakes (H8-H12) but bitsQ drops difficulty during the slow blocks — undoing the correction. V4 adds an <b>Ahead Guard</b>: while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5%. This keeps both controllers aligned.<br>
-      <b>How it works:</b> Enter AHEAD_CORRECTION at ≥16 ahead · Exit at ≤8 ahead (hysteresis) · bitsQ upward adjustments unchanged · Equalizer/PID/anti-stall unchanged.<br>
-      <b>Action required before block 4,200:</b><br>
+      <b style="color:#fbbf24;">Why moved forward:</b> Observed oscillation loop between B0↔H12 at block 4,150-4,166 traced to a latent V3.1 bug. When a block lands at legit B0 (profile_index=0), the ±3 slew rate misreads 0 as "missing" and disables itself — letting the next block jump straight to H12. V4 activation was pulled in from 4,200 to <b>4,170</b> to fix the chain faster.<br>
+      <b>What V4 fixes:</b><br>
+      1. <b>Slew rate bug (B0→H12 jumps):</b> BlockMeta now uses an explicit INT32_MIN sentinel for "missing" profile_index. Legit B0 is preserved, ±3 slew rate is enforced on every transition. No more unbounded jumps out of B0.<br>
+      2. <b>Ahead Guard (bitsQ coordination):</b> While ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5% — preventing difficulty relaxation from undoing equalizer braking.<br>
+      3. <b>Persistence:</b> profile_index is now stored per block in chain.json so every node computes the same slew rate after restart/import.<br>
+      <b>Action required BEFORE block 4,170:</b><br>
       1. <span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull origin main</span><br>
       2. <span style="color:#67e8f9;">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
       3. Restart <b>both</b> node and miner<br>
       4. If stuck: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart node with fresh chain<br>
-      <b>Nodes that do not update will stop syncing at block 4,200.</b><br>
+      <b>Nodes that do not update will stop syncing at block 4,170.</b><br>
       <span style="color:var(--text3);font-size:9px;">Blocks remaining: <span id="forkCountdown" style="color:#fbbf24;font-weight:600;">—</span> · Estimated activation: <span id="forkEta" style="color:#fbbf24;">—</span></span>
     </div>
   </div>
@@ -616,7 +619,7 @@ psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calc
 thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThresholds calculated from the AVERAGE nonce of the last 288 blocks (~48h).\nThe average = 100%. Each threshold is a percentage of that average.\n\n  25% \u2014 quarter of average effort (lucky early find)\n  50% \u2014 half the average effort\n  75% \u2014 three quarters of typical effort\n  90% \u2014 approaching full average\n  95% \u2014 nearly at the average nonce count\n 100% \u2014 E[288] average \u2014 most blocks found around here\n\nPassing 100% means the block is taking longer than usual.\nThis is normal variance \u2014 some blocks take 2-3x average.\nThe checkmark \u2713 appears when the miner PASSES a threshold.\n\nUnlike theoretical probability, these reflect ACTUAL chain\nconditions: difficulty changes, hashrate, real variance.',
 exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[288] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
-antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 7200 seconds (2 hours).\n\nDecay zones toward B0:\nH9-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
+antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 7200 seconds (2 hours).\n\nDecay zones toward B0:\nH12-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E4 only after 6 additional hours at B0 (1800s/level).\n\nEnsures the chain NEVER permanently stalls.'
     };
     var _openParam=null;
     function _closeAllCharts(){
@@ -996,7 +999,7 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // cASERT V3 fork banner — show before block 4100, hide after
-  var FORK_V4=4200;var fb=document.getElementById('forkBanner');
+  var FORK_V4=4170;var fb=document.getElementById('forkBanner');
   if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var etaFast=new Date(Date.now()+rem*120*1000);var etaSlow=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent='between '+etaFast.toISOString().substring(11,16)+' and '+etaSlow.toISOString().substring(11,16)+' UTC (depends on block speed)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='ACTIVE since block '+FORK_V4;document.getElementById('forkEta').textContent='Update now if you haven\u0027t already';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
@@ -2008,7 +2011,7 @@ async function showBlock(hash){
     // Mining time: fetch prev block timestamp
     var miningTimeStr='\u2014';var mtSecs=0;var mtColor='var(--text3)';
     if(!isGen){try{var pb=await rpc('getblock',[b.previousblockhash]);mtSecs=b.time-pb.time;mtColor=mtSecs<120?'var(--green)':mtSecs<1200?'#fbbf24':mtSecs<3600?'var(--orange)':'var(--red)';miningTimeStr=mtSecs<60?mtSecs+'s':Math.floor(mtSecs/60)+'m '+mtSecs%60+'s';}catch(e){}}
-    var asThreshold=Math.max(Math.max(signal,0)*600,7200); /* C++: max(max(lag,0)*600, 7200) */ var asActive=(!isGen&&mtSecs>=asThreshold);var asHtml=isGen?'<span style="color:var(--text3)">N/A</span>':(asActive?'<span style="color:var(--green);font-weight:600">\u26A1 ACTIVE \u2014 decay activated at '+fmtCountdown(asThreshold)+'</span>':(mtSecs>0?'<span style="color:#fb010d;font-weight:600">OFF \u2014 block found in '+miningTimeStr+'</span>':'<span style="color:var(--text3)">data unavailable</span>'));
+    var asThreshold=7200; /* V3.1+: always 7200s (2 hours) */ var asActive=(!isGen&&mtSecs>=asThreshold);var asHtml=isGen?'<span style="color:var(--text3)">N/A</span>':(asActive?'<span style="color:var(--green);font-weight:600">\u26A1 ACTIVE \u2014 decay activated at '+fmtCountdown(asThreshold)+'</span>':(mtSecs>0?'<span style="color:#fb010d;font-weight:600">OFF \u2014 block found in '+miningTimeStr+'</span>':'<span style="color:var(--text3)">data unavailable</span>'));
     c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT</div><div class="v"><span style="color:'+getLevelColor(displayProf.H)+';font-weight:600">'+displayProf.name+'</span> <span style="color:var(--text3)">// '+casertDesc+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div><div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
     _navStack[_navStack.length-1].label='Block #'+b.height;renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
@@ -2643,15 +2646,16 @@ function showCXInfo(){
   '<span style="color:#4ade80">B0</span> (baseline, k=4, margin=185) → '+
   '<span style="color:#fb923c">H1→H4</span> (hardening, scale=1) → '+
   '<span style="color:#fb010d">H5→H9</span> (hardening, scale=2) → '+
-  '<span style="color:var(--text3)">H10–H12</span> (active high-difficulty profiles, scale=3 2014 activation via 75% miner signaling).<br><br>'+
-  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block.</b><br><br>'+
-  '<b style="color:var(--green)">ANTI-STALL (mining only):</b> Zone-based decay targeting B0: H9–H7 at 600s/level, H6–H4 at 900s/level, H3–H1 at 1200s/level. B0 is natural destination. Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level). Miner declares profile in block JSON; node validates within E4–H12 bounds.<br><br>'+
+  '<span style="color:var(--text3)">H10–H12</span> (high-difficulty profiles, scale=3 — all active).<br><br>'+
+  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±3 profiles/block (V3+).</b> Lag floor: profile ≥ lag/8.<br><br>'+
+  '<b style="color:var(--green)">ANTI-STALL (mining only):</b> Always activates after 7,200s (2 hours). Zone-based decay targeting B0: H12–H7 at 600s/level, H6–H4 at 900s/level, H3–H1 at 1200s/level. B0 is natural destination. Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level). Miner declares profile in block JSON; node validates within E4–H12 bounds.<br><br>'+
+  '<b style="color:var(--cyan)">AHEAD GUARD (V4):</b> When chain ≥16 blocks ahead and profile ≥H8, bitsQ downward delta clamped to 1/64 (≈1.56%/block). Hysteresis: enter ≥16 ahead, exit ≤8 ahead. Prevents oscillation between bitsQ and equalizer.<br><br>'+
   '<b>Chain selection:</b> Best chain by <b>cumulative work</b> (NOT longest chain). work = floor(2^256 / (target + 1)). Reorg is atomic with full rollback on failure. MAX_REORG_DEPTH = 500 blocks.</div></div>'+
   '<div class="dtl-grid">'+
   '<div class="k">TARGET SPACING</div><div class="v"><span style="color:var(--green)">'+targetSec+'s</span> ('+Math.round(targetSec/60)+' min) between blocks</div>'+
   '<div class="k">EPOCH LENGTH</div><div class="v"><span style="color:var(--cyan)">131,553</span> blocks per epoch</div>'+
   '<div class="k">BITSQ HALF-LIFE</div><div class="v">86,400s (24 hours) 2014 V2 since block 1,450</div>'+
-  '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--cyan)">Bidirectional</span> — hardens (H1–H9) when blocks are fast, eases (E1–E4) when blocks are slow for 6+ hours</div>'+
+  '<div class="k">CASERT MODE</div><div class="v"><span style="color:var(--cyan)">Bidirectional</span> — hardens (H1–H12) when blocks are fast, eases (E1–E4) when blocks are slow for 6+ hours</div>'+
   '<div class="k">CASERT METRIC</div><div class="v">Lag in blocks vs ideal schedule (genesis + h × 600s)</div>'+
   '<div class="k">STABILITY K</div><div class="v">4 perturbation tests per hash</div>'+
   '<div class="k">STABILITY STEPS</div><div class="v">4 gradient descent steps per test</div>'+

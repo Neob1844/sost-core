@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <cstddef>
@@ -52,7 +53,12 @@ inline const char* casert_profile_name(int32_t idx) {
     if (ai < 0 || ai >= 17) return "?";
     return names[ai];
 }
-struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; int32_t profile_index{0}; };
+// BlockMeta: profile_index uses INT32_MIN as "missing" sentinel. Legit B0 is 0.
+// This lets casert_compute distinguish a block mined at B0 from one whose
+// profile_index was never persisted (e.g. loaded from an old chain.json).
+// Pre-V4 fork the check was `stored_pi != 0`, which misclassified every
+// legitimate B0 block as "missing" and disabled the ±3 slew rate.
+struct BlockMeta { Bytes32 block_id; int64_t height, time; uint32_t powDiffQ; int32_t profile_index{INT32_MIN}; };
 // --- Transcript V2 structures ---
 struct SegmentLeaf {
     uint32_t segment_index;
