@@ -348,24 +348,25 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(255,0,0,0.12);border:3px solid #ff2222;padding:16px 22px;font-family:var(--code);position:relative;box-shadow:0 0 24px rgba(255,34,34,0.45);">
-    <div style="font-size:14px;font-weight:900;color:#ff2222;letter-spacing:2px;text-shadow:0 0 10px rgba(255,34,34,0.8);margin-bottom:10px;">🚨 URGENT HARD FORK — cASERT V4 AT BLOCK 4,170 — UPDATE NOW OR BE REJECTED 🚨</div>
+    <div style="font-size:14px;font-weight:900;color:#ff2222;letter-spacing:2px;text-shadow:0 0 10px rgba(255,34,34,0.8);margin-bottom:10px;">🚨 HARD FORK — cASERT V4 ACTIVATES AT BLOCK 4,170 — UPDATE BEFORE THEN OR BE EJECTED 🚨</div>
     <div style="font-size:11px;color:#ff6666;line-height:1.8;text-shadow:0 0 4px rgba(255,68,68,0.4);">
-      <b style="color:#ffdd00;">CRITICAL FIX — MUST UPDATE BEFORE BLOCK 4,170.</b> A latent bug in the V3.1 slew rate is causing the <b>B0 ↔ H12 oscillation loop</b> you are observing right now (blocks alternating between 37-second bursts and 2-hour waits). The chain is stalling. V4 fixes it.<br><br>
-      <b style="color:#ffdd00;">Root cause:</b> when a block is mined at profile B0 (the normal baseline), the ±3 per-block slew rate is silently disabled because <span style="color:#67e8f9;">profile_index=0</span> cannot be distinguished from "missing". The next block is free to jump straight to H12, mining freezes for 2 hours, anti-stall drops back to B0, the cycle repeats. <b>This is why block 4167 has not been mined.</b><br><br>
+      <b style="color:#ffdd00;">Status:</b> the chain is recovering under a compatibility patch and is advancing again. Blocks 4,100–4,169 are being accepted under V3.1 rules (with legacy blocks defaulting to B0). <b>From block 4,170 onwards, V4 rules become mandatory</b> and any node or miner still running V3.1 code will have its blocks rejected.<br><br>
+      <b style="color:#ffdd00;">What caused the oscillation (already fixed in V4):</b> a latent V3.1 bug produced the <b>B0 ↔ H12 oscillation loop</b> you saw in blocks 4,150–4,166 (37-second bursts followed by 2-hour waits). Root cause: <span style="color:#67e8f9;">BlockMeta::profile_index</span> defaulted to 0, making a legit B0 block indistinguishable from a missing profile, silently disabling the ±3 slew rate and letting the next block jump straight to H12.<br><br>
       <b style="color:#ffdd00;">What V4 fixes:</b><br>
-      1. <b>Slew-rate bug:</b> BlockMeta uses an explicit INT32_MIN sentinel. Legit B0 is preserved, ±3 slew is enforced on every transition. No more B0→H12 jumps.<br>
+      1. <b>Slew-rate bug:</b> BlockMeta uses an explicit INT32_MIN sentinel. Legit B0 is preserved, ±3 slew is enforced on every transition. No more B0 → H12 jumps.<br>
       2. <b>Ahead Guard:</b> while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5% — prevents difficulty from undoing equalizer braking.<br>
-      3. <b>Persistence:</b> profile_index is stored per block in chain.json so every node computes the same slew rate after restart.<br><br>
-      <b style="color:#ff2222;font-size:13px;">⚠ EVERY node and miner MUST update before block 4,170. Nodes/miners still on V3.1 will be rejected from the network after the fork activates.</b><br><br>
+      3. <b>Persistence:</b> profile_index is stored per block in chain.json so every node computes the same slew rate after restart.<br>
+      4. <b>Transition window:</b> V4 nodes accept legacy blocks (without profile_index) at heights 4,100–4,169 with a B0 default, so the network can catch up safely before activation.<br><br>
+      <b style="color:#ff2222;font-size:13px;">⚠ EVERY node and miner must be on V4 code by block 4,170. After that height, blocks without a valid profile_index will be rejected.</b><br><br>
       <b style="color:#ffdd00;">Update procedure (do this NOW):</b><br>
       1. <span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull origin main</span><br>
       2. <span style="color:#67e8f9;">cmake --build build -j$(nproc)</span><br>
-      3. <b>Kill and restart</b> both node and miner processes — rebuilding alone is not enough, the old process is still in memory:<br>
-      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">pkill -x sost-node &amp;&amp; pkill -x sost-miner</span><br>
-      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">sudo systemctl restart sost-node</span> (or relaunch manually)<br>
-      4. Verify commit: <span style="color:#67e8f9;">git log --oneline -1</span> — must show <span style="color:#ffdd00;">a commit at or after the V4 fork</span><br>
-      5. Verify running binary matches build: <span style="color:#67e8f9;">md5sum /proc/$(pgrep -x sost-node)/exe build/sost-node</span> — hashes must match<br>
-      6. If your chain.json is in a bad state: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> then restart<br><br>
+      3. Restart the node to pick up the new binary (rebuilding alone is not enough — the old process stays in memory):<br>
+      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">sudo systemctl restart sost-node</span> &nbsp;<span style="color:var(--text3);">(or stop and relaunch manually)</span><br>
+      4. Restart your miner: <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch.<br>
+      5. Verify the commit on main: <span style="color:#67e8f9;">git log --oneline -1</span> — must show <span style="color:#ffdd00;">66c8629</span> or later.<br>
+      6. Verify running binary matches the rebuilt one: <span style="color:#67e8f9;">md5sum build/sost-node /proc/$(pgrep -x sost-node)/exe</span> — both hashes must be identical.<br>
+      7. If your chain.json is in a bad state after the oscillation: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> then restart.<br><br>
       <b style="color:#ff2222;">Deadline: block 4,170.</b> <span style="color:var(--text3);font-size:10px;">Blocks remaining: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · ETA: <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span></span>
     </div>
   </div>
