@@ -345,26 +345,25 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
-<!-- cASERT V3 HARD FORK BANNER — auto-hides after block 4100 -->
+<!-- cASERT V5.0 PLANNED UPDATE BANNER — informational, auto-hides after block 4370 -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(0,255,65,0.08);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
-    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">⚠ HARD FORK — cASERT V4 ACTIVE SINCE BLOCK 4,170 — UPDATE NOW IF YOUR BLOCKS ARE BEING REJECTED</div>
+  <div style="background:rgba(0,255,65,0.06);border:2px solid #00ff41;padding:14px 20px;font-family:var(--code);position:relative;">
+    <div style="font-size:12px;font-weight:700;color:#00ff41;letter-spacing:2px;text-shadow:0 0 8px rgba(0,255,65,0.5);margin-bottom:8px;">cASERT V5.0 — DETERMINISM FIX (PLANNED) · NO IMMEDIATE ACTION REQUIRED</div>
     <div style="font-size:10px;color:#00ff41;line-height:1.8;text-shadow:0 0 4px rgba(0,255,65,0.3);">
-      <b>Status:</b> V4 activated cleanly at block 4,170. The chain is advancing normally under the new rules. Nodes still running V3.1 code are being ejected from consensus — if your node is stuck at blocks 4,166–4,169, update now to rejoin.<br><br>
-      <b>What caused the oscillation (already fixed in V4):</b> a latent V3.1 bug produced the <b>B0 ↔ H12 oscillation loop</b> seen in blocks 4,150–4,166 (37-second bursts followed by 2-hour waits). Root cause: <span style="color:#67e8f9;">BlockMeta::profile_index</span> defaulted to 0, making a legit B0 block indistinguishable from a missing profile, silently disabling the ±3 slew rate and letting the next block jump straight to H12.<br><br>
-      <b>What V4 fixes:</b><br>
-      1. <b>Slew-rate bug:</b> BlockMeta uses an explicit INT32_MIN sentinel. Legit B0 is preserved, ±3 slew is enforced on every transition. No more B0 → H12 jumps.<br>
-      2. <b>Ahead Guard:</b> while ≥16 blocks ahead, bitsQ can only drop ~1.56%/block instead of 12.5% — prevents difficulty from undoing equalizer braking.<br>
-      3. <b>Persistence:</b> profile_index is stored per block in chain.json so every node computes the same slew rate after restart.<br>
-      4. <b>Transition window:</b> blocks 4,100–4,169 accepted legacy blocks without profile_index with a B0 default, so the network could catch up before activation.<br><br>
-      <b>Update procedure:</b><br>
-      1. <span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull origin main</span><br>
-      2. <span style="color:#67e8f9;">cmake --build build -j$(nproc)</span><br>
-      3. Restart the node to pick up the new binary (rebuilding alone is not enough — the old process stays in memory):<br>
-      &nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">sudo systemctl restart sost-node</span> &nbsp;<span style="color:var(--text3);">(or stop and relaunch manually)</span><br>
-      4. Restart your miner: <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch.<br>
-      5. Verify the commit: <span style="color:#67e8f9;">git log --oneline -1</span> — should show <span style="color:#fbbf24;">4ba0403</span> or later.<br>
-      6. If your chain.json is in a bad state after the oscillation: <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> then restart.<br><br>
+      <b>Current network status:</b> V4 is active as of block 4,170 and the chain is producing blocks normally. The B0 ↔ H12 oscillation loop from earlier this week has been resolved. Continue mining on your current V4 build — <b>no action is required at this time</b>.<br><br>
+      <b>What V5.0 is:</b> a minimal, surgical determinism fix for the V4 Ahead Guard implementation. During review, a potential consensus-determinism risk was identified: the Ahead Guard uses a <span style="color:#67e8f9;">static bool</span> persistent flag to track ahead-correction mode, which is undesirable in consensus-critical code. V5.0 replaces it with a fully stateless condition derived directly from current schedule lag.<br><br>
+      <b>Important clarification:</b> this risk has <b>NOT</b> been observed causing live divergence. It is being treated as a must-fix before it has the chance to manifest. V5.0 is preventive, not reactive.<br><br>
+      <b>What V5.0 does NOT change:</b><br>
+      &nbsp;&nbsp;• ConvergenceX proof-of-work design<br>
+      &nbsp;&nbsp;• The 17-profile equalizer table (E4–H12)<br>
+      &nbsp;&nbsp;• PID controller, anti-stall logic, emission rules<br>
+      &nbsp;&nbsp;• Economic structure<br><br>
+      <b>Why V5.0 comes before any other changes:</b> a determinism fix must be isolated from feature changes whenever possible. Other potential improvements (behind-recovery optimization, equalizer tuning) are being evaluated separately under V5.1 and will only proceed if live network data justifies them.<br><br>
+      <b>Timeline:</b><br>
+      &nbsp;&nbsp;• <b>Now:</b> 150–200 block observation window under current V4 rules<br>
+      &nbsp;&nbsp;• <b>Next:</b> V5.0 activation block will be announced with advance notice<br>
+      &nbsp;&nbsp;• <b>Later:</b> V5.1 (conditional on observation data)<br><br>
+      <b>When V5.0 activates:</b> standard update procedure — <span style="color:#67e8f9;">git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span> — full instructions will be published before activation.<br><br>
       <span style="color:var(--text3);font-size:9px;">Fork status: <span id="forkCountdown" style="color:#00ff41;font-weight:600;">—</span> · <span id="forkEta" style="color:#00ff41;">—</span> · This banner auto-hides at block 4,370</span>
     </div>
   </div>
@@ -1002,11 +1001,11 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
-  // cASERT V4 fork banner — countdown before 4170, post-activation notice
-  // until FORK_V4+200 (block 4370), then auto-hide. Minimum visibility
-  // post-activation: 200 blocks (>= requested floor of block 4180).
+  // V5.0 planned-update banner (informational). Visible until block
+  // FORK_V4+200 (4370) to maximize V5.0 awareness, then auto-hides.
+  // V5.0 activation height is TBD pending observation window.
   var FORK_V4=4170;var fb=document.getElementById('forkBanner');
-  if(fb){if(info.blocks<FORK_V4){fb.style.display='block';var rem=FORK_V4-info.blocks;document.getElementById('forkCountdown').textContent=fComma(rem)+' blocks remaining';var etaFast=new Date(Date.now()+rem*120*1000);var etaSlow=new Date(Date.now()+rem*600*1000);document.getElementById('forkEta').textContent='between '+etaFast.toISOString().substring(11,16)+' and '+etaSlow.toISOString().substring(11,16)+' UTC (depends on block speed)';}else if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V4 ACTIVE since block '+FORK_V4+' \u2014 current '+info.blocks;document.getElementById('forkEta').textContent='If your node still rejects blocks, update and restart now';}else{fb.style.display='none';}}
+  if(fb){if(info.blocks<FORK_V4+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='V5.0 activation height pending observation window (150\u2013200 blocks)';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
