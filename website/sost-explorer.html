@@ -835,15 +835,6 @@ function getProfile(signal) { return getProfileFromLag(signal); }
 const CASERT_LEVELS = CASERT_PROFILES.map(function(p,i){
   return {signal:p.name,level:p.H,scale:p.scale,k:p.k,steps:p.steps,margin:p.margin};
 });
-function computeCurrentLag(){
-  // Block lag from wall clock for current chain tip
-  // Convention matches C++ source: lag = actual - expected
-  // lag > 0 = ahead (more blocks than expected)
-  // lag < 0 = behind (fewer blocks than expected)
-  var now=Math.floor(Date.now()/1000);
-  var expected=Math.floor((now-GENESIS_TS)/600);
-  return H-expected;
-}
 function computeBlockLag(blockHeight,blockTime){
   // Block lag at the time a specific block was mined
   // Convention matches C++ source: lag = height - expected
@@ -1577,14 +1568,13 @@ function renderProdChart(info, diffs) {
   for(var i=0;i<d.length;i++){var x=tx(d[i].t);ctx.lineTo(x,ty(d[i].h));}
   for(var i=d.length-1;i>=0;i--){var ex=(d[i].t-GENESIS_TS)/600;ctx.lineTo(tx(d[i].t),ty(ex));}
   ctx.closePath();
-  // Delta: use info.blocks (actual tip) and same formula as CHAIN TIMING panel
+  // Delta indicator: MUST use the same source of truth as the Chain Timing panel,
+  // otherwise the chart and the header contradict each other during idle periods
+  // after a fast burst or slow block. Priority: RPC casert_lag > wall-clock fallback.
   var nowTs=Date.now()/1000;
-  var wallSec=nowTs-GENESIS_TS;
-  var expectedNow=Math.floor(wallSec/600);
   var actualNow=info.blocks;
-  // UNIFIED LAG CONVENTION (C++): positive = ahead, negative = behind
-  // Matches casert.cpp and the casert_lag field from getinfo RPC.
-  var lag = actualNow - expectedNow; // positive = ahead, negative = behind
+  var rpcLagAvail=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined);
+  var lag = rpcLagAvail ? parseInt(_rpcCasertLag) : (actualNow - Math.floor((nowTs-GENESIS_TS)/600));
   ctx.fillStyle=lag>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
