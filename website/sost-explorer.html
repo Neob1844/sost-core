@@ -1100,21 +1100,25 @@ function updateChainSync(){
   // Chain time: (height × 600) + elapsed since last block (ticks every second)
   var elapsedSinceLast=_lastBlockTime?(now-_lastBlockTime):0;
   var chainSec=H*600+Math.max(0,elapsedSinceLast);
-  // UNIFIED LAG FORMULA: wall clock, positive = behind (same as app)
-  //   expected = floor((now - genesis) / 600)
-  //   lagBehind = expected - height (positive = behind, negative = ahead)
+  // UNIFIED LAG CONVENTION (C++, matches casert.cpp and getinfo.casert_lag):
+  //   lag > 0  = chain is AHEAD of schedule
+  //   lag < 0  = chain is BEHIND schedule
+  //   lag = 0  = on schedule
+  // Source of truth priority:
+  //   1. _rpcCasertLag from getinfo RPC (node authoritative)
+  //   2. wall-clock fallback (actual - expected)
   var expected=Math.floor(wallSec/600);
   var actual=H;
-  var lagBehind=expected-actual; // positive = behind schedule
+  var lag=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined)?parseInt(_rpcCasertLag):(actual-expected);
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   // Profile: use RPC casert_profile (authoritative from C++ PID), fallback to wall-clock estimate
-  var displayProfile = _rpcCasertProfile || getProfileFromLag(-lagBehind).name;
-  if(lagBehind>0){document.getElementById('csLag').textContent=fComma(lagBehind)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(lagBehind)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
-  else if(lagBehind<0){var ahead2=-lagBehind;document.getElementById('csLag').textContent=fComma(ahead2)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(ahead2)+' blocks ahead \u2192 cASERT '+displayProfile;}
+  var displayProfile = _rpcCasertProfile || getProfileFromLag(lag).name;
+  if(lag<0){document.getElementById('csLag').textContent=fComma(-lag)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(-lag)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
+  else if(lag>0){document.getElementById('csLag').textContent=fComma(lag)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(lag)+' blocks ahead \u2192 cASERT '+displayProfile;}
   else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
@@ -1568,9 +1572,10 @@ function renderProdChart(info, diffs) {
   var wallSec=nowTs-GENESIS_TS;
   var expectedNow=Math.floor(wallSec/600);
   var actualNow=info.blocks;
-  // UNIFIED: wall clock, positive = behind (same formula as chain timing and app)
-  var lag = expectedNow - actualNow; // positive = behind schedule
-  ctx.fillStyle=lag<=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
+  // UNIFIED LAG CONVENTION (C++): positive = ahead, negative = behind
+  // Matches casert.cpp and the casert_lag field from getinfo RPC.
+  var lag = actualNow - expectedNow; // positive = ahead, negative = behind
+  ctx.fillStyle=lag>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
   for(var i=0;i<d.length;i++){var x=tx(d[i].t),y=ty(d[i].h);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
@@ -1578,11 +1583,11 @@ function renderProdChart(info, diffs) {
   // Y labels
   ctx.fillStyle='#444'; ctx.font='8px monospace'; ctx.textAlign='right';
   for(var yi=0;yi<=3;yi++){var v=hMin+yi/3*hRange;ctx.fillText(Math.round(v),pad.l-4,ty(v)+3);}
-  // Delta indicator
+  // Delta indicator (C++ convention: lag > 0 = ahead)
   var de=document.getElementById('prodDelta');
   if(de){
-    if(lag>0){de.textContent='+'+lag+' behind';de.style.color='var(--red)';}
-    else if(lag<0){de.textContent=(-lag)+' ahead';de.style.color='var(--green)';}
+    if(lag>0){de.textContent='+'+lag+' ahead';de.style.color='var(--green)';}
+    else if(lag<0){de.textContent=(-lag)+' behind';de.style.color='var(--red)';}
     else{de.textContent='On target';de.style.color='#4488ff';}
   }
   // Tooltip
@@ -1735,18 +1740,20 @@ function updateMiningPanel(elapsed){
     me.style.color=es<600?'#4ade80':es<1200?'#fbbf24':'#fb010d';}
   var ms=document.getElementById('miningStatus');
   if(ms){ms.textContent=elapsed<600?'searching nonce...':elapsed<1200?'slower than target':'block overdue';}
-  // Lag: ALWAYS wall-clock (same formula as chain timing — one source of truth)
+  // Lag: use RPC casert_lag if available (node truth), fallback to wall-clock.
+  // C++ convention: positive = ahead, negative = behind (matches casert.cpp).
   var now_mp=Math.floor(Date.now()/1000);
   var expected_mp=Math.floor((now_mp-GENESIS_TS)/600);
-  var tipLag=H-expected_mp; // negative = behind, positive = ahead
+  var tipLag=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined)?parseInt(_rpcCasertLag):(H-expected_mp);
   // Profile: RPC casert_profile (node PID truth), fallback to wall-clock estimate
   var rpcProf=_rpcCasertProfile?CASERT_PROFILES.find(function(p){return p.name===_rpcCasertProfile;}):null;
   var effProf=rpcProf||getProfileFromLag(tipLag);
   var profSource=rpcProf?'rpc':'est';
   var dc={active:false};
-  // Profile name + params + stability rate
+  // Profile name + params + stability rate (human-readable lag, matches Chain Timing panel)
   var pn=document.getElementById('miningProfileName');
-  var profSrc=' <span style="color:#555;font-size:8px">(lag='+tipLag+', src='+profSource+')</span>';
+  var lagTxt=tipLag>0?(tipLag+' ahead'):tipLag<0?((-tipLag)+' behind'):'on schedule';
+  var profSrc=' <span style="color:#555;font-size:8px">(lag='+lagTxt+', src='+profSource+')</span>';
   if(pn)pn.innerHTML='<span style="color:'+getLevelColor(effProf.H)+'">'+effProf.name+'</span>'+profSrc;
   var pp=document.getElementById('miningProfileParams');
   if(pp)pp.textContent='(scale='+effProf.scale+' k='+effProf.k+' margin='+effProf.margin+' steps='+effProf.steps+')';
