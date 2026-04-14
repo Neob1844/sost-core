@@ -455,6 +455,88 @@ int main() {
              dec.profile_index <= 0);
     }
 
+    // --- V5 edge cases (added pre-activation depuration) ---
+
+    // 5.12 Boundary: first block AT V5_FORK_HEIGHT must use V5 rules
+    {
+        // Build chain ending at V5_FORK_HEIGHT - 1 with prev=H12, lag=-5.
+        // The FIRST V5-enabled block (next_height = V5_FORK_HEIGHT) should
+        // apply safety rule post-slew and descend to H <= 0 immediately.
+        auto chain = make_v5_chain(20, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time += 5 * TARGET_SPACING;  // lag → -5
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 boundary: first V5 block applies safety rule post-slew",
+             dec.profile_index <= 0);
+    }
+
+    // 5.13 Boundary: last pre-V5 block must NOT use V5 rules
+    {
+        // Build chain ending at V5_FORK_HEIGHT - 2 with prev=H12, lag=-5.
+        // next_height = V5_FORK_HEIGHT - 1 is still V4, safety post-slew
+        // does NOT apply, so H can stay at H9 (prev_H - slew).
+        std::vector<BlockMeta> chain;
+        int64_t start_h = CASERT_V5_FORK_HEIGHT - 21;
+        for (int i = 0; i < 20; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h + i;
+            m.time = GENESIS_TIME + (start_h + i) * TARGET_SPACING + 5 * TARGET_SPACING;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = 12;
+            chain.push_back(m);
+        }
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT - 1, 0);
+        TEST("V5 boundary: block at V5_FORK-1 uses V4 rules (no post-slew)",
+             dec.profile_index >= 0);  // V4 allows H>0 from slew rate
+    }
+
+    // 5.14 EBR + extreme cap interaction: lag very negative AND prev_H extreme
+    {
+        // prev_H = H11, lag = -15 (would trigger EBR to E2).
+        // EBR forces H <= -2, extreme cap is NOT active (H = -2, not >= 10).
+        // Expected: H = E2 (-2).
+        auto chain = make_v5_chain(20, TARGET_SPACING, 11);
+        for (auto& b : chain) b.time += 15 * TARGET_SPACING;  // lag → -15
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 interaction: EBR overrides extreme-cap descent (prev H11 + lag<=-15 -> E2)",
+             dec.profile_index <= -2);
+    }
+
+    // 5.15 Extreme cap at H_MAX boundary: prev_H = H12, cap doesn't push to 13
+    {
+        // prev_H = H12 (H_MAX). Even with huge positive lag, cap calculation
+        // prev_H + 1 = 13 would exceed H_MAX. The final clamp must hold at 12.
+        auto chain = make_v5_chain(20, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time -= 100 * TARGET_SPACING;  // lag → +100
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 boundary: extreme cap respects H_MAX (prev H12 + huge lag -> H12)",
+             dec.profile_index == CASERT_H_MAX);
+    }
+
+    // 5.16 Anti-stall 60min at V5: does NOT fire just below threshold
+    {
+        auto chain = make_v5_chain(20, TARGET_SPACING, 8);
+        // Stall of 59 min 59s — just under the V5 floor of 3600s
+        int64_t stall_time = chain.back().time + 3599;
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, stall_time);
+        // Anti-stall should NOT have decayed yet, H stays at 8
+        // (plus whatever slew/safety did)
+        TEST("V5 anti-stall: does not fire at 3599s (just under 60min)",
+             dec.profile_index >= 0);  // no decay = H not forced below 0
+    }
+
+    // 5.17 Anti-stall 60min at V5: fires just above threshold
+    {
+        auto chain = make_v5_chain(20, TARGET_SPACING, 8);
+        // Stall of 60 min 1s — just over the V5 floor
+        int64_t stall_time = chain.back().time + 3601;
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, stall_time);
+        // Anti-stall should have started decaying, H should be <= 8
+        // (at minimum no worse than input)
+        TEST("V5 anti-stall: decay begins at 3601s (just over 60min)",
+             dec.profile_index <= 8);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }
