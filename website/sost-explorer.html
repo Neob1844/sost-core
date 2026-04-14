@@ -345,62 +345,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
-<!-- cASERT V5 PLANNED UPDATE BANNER — informational, auto-hides when activation passes -->
-<div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(255,170,0,0.10);border:2px solid #ffaa00;padding:15px 20px;font-family:var(--code);position:relative;box-shadow:0 0 16px rgba(255,170,0,0.30);">
-    <div style="font-size:13px;font-weight:800;color:#ff2222;letter-spacing:2px;text-shadow:0 0 8px rgba(255,34,34,0.7);margin-bottom:6px;">⚠ cASERT V5 — HARD FORK ACTIVATES AT BLOCK 4,300 — UPDATE BEFORE ACTIVATION</div>
-    <div style="font-size:10px;font-weight:600;color:#ff6666;line-height:1.6;text-shadow:0 0 4px rgba(255,34,34,0.4);margin-bottom:12px;font-style:italic;">
-      (I sincerely apologize for requesting another consensus update so soon after V4. Each hard fork imposes real cost on miner operations and I understand that cost. I am taking this fork only because live monitor data confirmed that the B0 → H12 overshoot loop would otherwise keep repeating every ~19–35 blocks indefinitely. Postponing further would have caused progressively worse liveness incidents. Thank you for your patience. I expect V5 to resolve the currently observed overshoot and stuck-chain behavior and to bring cASERT much closer to its intended stable form, although no protocol change can ever be guaranteed to solve every edge case with 100% certainty in advance.)
-    </div>
-    <div style="font-size:11px;color:#ffcc66;line-height:1.8;text-shadow:0 0 4px rgba(255,170,0,0.3);">
-      <b style="color:#ffdd00;">Activation confirmed at block 4,300.</b> This target is derived from the live monitor's RED reading: 4 overshoot events in a 97-block window, pattern repeating every ~19–35 blocks. Block 4,300 gives roughly 6–10 hours from current height for miners to pull, rebuild and restart — enough for a coordinated update while still cutting the overshoot cycle after at most one more occurrence. <b>Please update your node and miner before the activation block.</b><br><br>
-
-      <b style="color:#fbbf24;">The observed pattern (edge case under investigation):</b><br>
-      &nbsp;&nbsp;1. The chain accelerates under baseline conditions<br>
-      &nbsp;&nbsp;2. The equalizer hardens rapidly (H6 → H9 → H12)<br>
-      &nbsp;&nbsp;3. A block becomes excessively delayed under H12<br>
-      &nbsp;&nbsp;4. The chain falls behind schedule<br>
-      &nbsp;&nbsp;5. The equalizer remains too high for too long, delaying recovery<br>
-      In short: <b>the system brakes correctly when ahead, but can remain braking too long once the chain is already behind.</b> This has now been observed on the live chain.<br><br>
-
-      <b style="color:#fbbf24;">V5 is split into two logical parts (shipped in one fork):</b><br><br>
-
-      <b>Part 1 — V5.0 determinism fix:</b> the current V4 Ahead Guard uses a <span style="color:#67e8f9;">static bool</span> persistent flag internally. Persistent local state is undesirable in consensus-critical code — decisions must be derived only from deterministic chain data. This has <b>NOT</b> been observed causing live divergence, but it is a must-fix. V5.0 replaces it with a stateless condition derived directly from current schedule lag.<br><br>
-
-      <b>Part 2 — V5.1 liveness / overshoot fix:</b> V5.0 alone does NOT fully solve the stuck-chain scenario. When the chain moves from ahead to behind while the equalizer is still at very high profiles, block production becomes excessively delayed. V5.1 adds:<br>
-      &nbsp;&nbsp;• <b>Safety rule post-slew:</b> if the chain is already behind, hardening is immediately capped back toward baseline<br>
-      &nbsp;&nbsp;• <b>EBR (Emergency Behind Release):</b> stateless cliffs force the profile downward when lag falls below -10 (100 min behind)<br>
-      &nbsp;&nbsp;• <b>Anti-stall floor 2h → 60min</b> at V5 heights for faster rescue<br>
-      &nbsp;&nbsp;• <b>Extreme profile entry cap:</b> H10, H11 and H12 (the strongest brakes) may only be climbed one level per block, preventing the B0 → H6 → H9 → H12 overshoot pattern observed on the live chain. The equalizer still gets full slew rate (±3) below H10 and on the way back down — the cap is asymmetric by design.<br>
-      Future cases like the recent H12 stuck-block event should be resolved much faster.<br><br>
-
-      <b>In summary:</b> V5.0 fixes correctness · V5.1 fixes recovery behavior · both ship together in one coordinated hard fork.<br><br>
-
-      <b>What V5 does NOT change:</b><br>
-      &nbsp;&nbsp;• ConvergenceX proof-of-work design<br>
-      &nbsp;&nbsp;• The 17-profile equalizer table (E4–H12)<br>
-      &nbsp;&nbsp;• PID weights, burst/volatility signals, lag_floor<br>
-      &nbsp;&nbsp;• Emission rules, coinbase split, economic structure<br><br>
-
-      <b>Monitoring &amp; measurement:</b> a dedicated monitor (<span style="color:#67e8f9;">scripts/v31_monitor.py</span>) tracks overshoot events, time in H12, blocks &gt; 20/40min, lag extremes, and Ahead Guard activation conditions — so protocol decisions are measured, not intuited.<br><br>
-
-      <b>Deployment (confirmed):</b><br>
-      &nbsp;&nbsp;• Activation block: <b style="color:#ffdd00;">4,300</b> — chosen after monitor confirmed RED status (4 overshoots, pattern every ~19–35 blocks). ~6–10 hours of margin from current height for a coordinated update cycle.<br>
-      &nbsp;&nbsp;• <b style="color:#ffdd00;">Estimated activation time: 12:00–13:00 UTC</b> (approximate, subject to real block rate)<br>
-      &nbsp;&nbsp;• Standard update procedure:<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span><br>
-      &nbsp;&nbsp;• Restart your miner with <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch<br>
-      &nbsp;&nbsp;• Full instructions and commit hash published with this banner<br><br>
-
-      <b>All nodes and miners — including those still on V3.1, V4 or any earlier build — must update to the current V5 code before block 4,300.</b> V5 is the live target; there is no "later" version pending.<br><br>
-
-      <span style="color:var(--text3);font-size:10px;">Fork status: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span> · Banner auto-hides at block 4,350</span><br><br>
-      <div style="margin-top:10px;padding:10px 14px;background:rgba(0,255,65,0.1);border-left:3px solid #00ff41;color:#00ff41;font-size:11px;line-height:1.7;text-shadow:0 0 4px rgba(0,255,65,0.4);">
-        <b>Expected outcome:</b> V5 closes the cASERT equalizer tuning cycle that began at V2 (block 1,450). After activation, the equalizer is expected to operate symmetrically around B0 under normal conditions, with extreme profiles (H10–H12) reserved exclusively for genuine runaway-chain scenarios and cleared within ±3 blocks of lag returning to schedule. The B0↔H12 oscillation loop, the post-ahead overshoot into behind territory, and the latent Ahead Guard determinism risk are all addressed in this single coordinated fork. Block production should converge tightly on the 10-minute target from activation onwards.
-      </div>
-    </div>
-  </div>
-</div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
@@ -1034,11 +978,8 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
-  // V5 activation banner. Auto-hides at block 4350 (50 blocks post
-  // activation at 4300). V5 target was iterated 4350 -> 4260 -> 4300
-  // balancing data-driven urgency with operational margin for miners.
-  var FORK_V4=4170;var FORK_V5=4300;var FORK_V5_HIDE=4350;var fb=document.getElementById('forkBanner');
-  if(fb){if(info.blocks<FORK_V5){fb.style.display='block';var rem=FORK_V5-info.blocks;document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent=fComma(rem)+' blocks until V5 activation target (block '+fComma(FORK_V5)+')';}else if(info.blocks<FORK_V5_HIDE){fb.style.display='block';document.getElementById('forkCountdown').textContent='V5 ACTIVE since block '+FORK_V5+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='If your node has not updated yet, pull and restart now';}else{fb.style.display='none';}}
+  // V5 activation banner removed after successful fork activation at block 4,300.
+  // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
   try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
