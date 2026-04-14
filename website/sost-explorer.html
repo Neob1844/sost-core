@@ -1122,7 +1122,12 @@ function updateChainSync(){
   var rpcLag=rpcLagAvail?parseInt(_rpcCasertLag):null;
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
-  var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
+  // LIVE offset: (scheduled tip time) - (wall clock). Positive = chain is ahead
+  // of the wall-clock schedule RIGHT NOW. Ticks 1s/s down between blocks and
+  // jumps on new block by (600 - interval). Matches live BLOCK LAG: offSec ≈
+  // lag × 600, not the frozen tip-time value chainSec-wallSec would return.
+  var offSec=H*600-wallSec;
+  var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   // Live ticking counter showing elapsed since last block — always moves.
   var stEl=document.getElementById('csSinceTip');
   if(stEl){var stH=Math.floor(timeSinceTip/3600),stM=Math.floor((timeSinceTip%3600)/60),stS=Math.floor(timeSinceTip%60);stEl.textContent=(stH>0?stH+'h ':'')+stM+'m '+('0'+stS).slice(-2)+'s';}
