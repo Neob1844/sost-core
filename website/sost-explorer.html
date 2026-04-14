@@ -1111,11 +1111,15 @@ function updateChainSync(){
   //   lag < 0  = chain is BEHIND schedule
   //   lag = 0  = on schedule
   // Source of truth priority:
-  //   1. _rpcCasertLag from getinfo RPC (node authoritative)
-  //   2. wall-clock fallback (actual - expected)
-  var expected=Math.floor(wallSec/600);
+  //   1. _rpcCasertLag from getinfo RPC (node authoritative, computed at tip time)
+  //   2. wall-clock fallback (actual - expected_now)
+  // Invariant enforced: actual - expected === lag (all three numbers always coherent).
+  // When the RPC value is available we derive expected backwards from it so the panel
+  // shows one consistent view of the chain state at tip time.
   var actual=H;
-  var lag=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined)?parseInt(_rpcCasertLag):(actual-expected);
+  var rpcLagAvail=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined);
+  var lag=rpcLagAvail?parseInt(_rpcCasertLag):(actual-Math.floor(wallSec/600));
+  var expected=actual-lag;
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
