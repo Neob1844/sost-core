@@ -1094,14 +1094,15 @@ function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/360
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
   var wallSec=now-GENESIS_TS;
-  // LIVE wall-clock semantics — reflect the chain state *right now*, not the
-  // frozen state at the last sealed block. The RPC casert_lag field is still
-  // shown as a secondary "at tip" annotation next to the mining profile, but
-  // the main Chain Timing cards use live math so a long stall is visible
-  // (tip_lag might say +2 ahead, but if 1h passed without a new block the
-  // real-time lag is several blocks behind — that's what we show here).
+  // COHERENT live semantics: CHAIN TIME is the schedule time at tip (H*600).
+  // It does NOT tick between blocks — it jumps by +600 each time a new block
+  // arrives. This keeps the invariant chainSec - wallSec === offSec so the
+  // three numbers (chain, wall, offset) always line up exactly. Between
+  // blocks offSec ticks 1s/s downward (wallSec advances, chainSec static).
+  // The "since last block" ticker under the offset card gives the panel
+  // visual motion without breaking the math.
   var timeSinceTip=_lastBlockTime?(now-_lastBlockTime):0;
-  var chainSec=H*600+Math.max(0,timeSinceTip);
+  var chainSec=H*600;
   // UNIFIED LAG CONVENTION (C++, matches casert.cpp and getinfo.casert_lag):
   //   lag > 0  = chain is AHEAD of schedule
   //   lag < 0  = chain is BEHIND schedule
@@ -1124,9 +1125,9 @@ function updateChainSync(){
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   // LIVE offset: (scheduled tip time) - (wall clock). Positive = chain is ahead
   // of the wall-clock schedule RIGHT NOW. Ticks 1s/s down between blocks and
-  // jumps on new block by (600 - interval). Matches live BLOCK LAG: offSec ≈
-  // lag × 600, not the frozen tip-time value chainSec-wallSec would return.
-  var offSec=H*600-wallSec;
+  // jumps on new block by (600 - interval). Invariant: offSec === chainSec - wallSec
+  // (both use chainSec = H*600 now, fully coherent with the card values).
+  var offSec=chainSec-wallSec;
   var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
   // Live ticking counter showing elapsed since last block — always moves.
   var stEl=document.getElementById('csSinceTip');
