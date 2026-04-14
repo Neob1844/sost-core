@@ -124,7 +124,9 @@ inline constexpr int32_t  CASERT_AHEAD_PROFILE_THRESH = 8;    // H8+ triggers st
 //    Prevents overshoot into the worst brake profiles (observed at block 4184
 //    where B0→H6→H9→H12 in 3 blocks crashed stability 100% → 3%).
 // See docs/internal/casert-v5-design.md for full rationale.
-inline constexpr int64_t  CASERT_V5_FORK_HEIGHT       = 4350;
+// Activation accelerated from 4350 to 4260 after monitor confirmed RED
+// status: 4 overshoots in 97 blocks, pattern repeating every ~19-35 blocks.
+inline constexpr int64_t  CASERT_V5_FORK_HEIGHT       = 4260;
 inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V5   = 3600;  // 60 min (V4 was 7200 = 2h)
 // EBR cliff thresholds — the lower the lag, the lower the forced H floor
 inline constexpr int32_t  CASERT_EBR_ENTER            = -10;   // 100 min behind → force H <= B0
