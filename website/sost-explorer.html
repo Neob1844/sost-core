@@ -1094,12 +1094,12 @@ function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/360
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
   var wallSec=now-GENESIS_TS;
-  // Single unified formula:
-  //   chainSec = H*600 + time_since_tip  (ticks visibly at 1/s)
-  //   offSec   = chainSec - wallSec      (constant between blocks on purpose —
-  //              equals lag × 600, only changes when a new block arrives and the
-  //              interval deviated from target. This is the correct semantics of
-  //              "chain clock minus wall clock" and it matches BLOCK LAG exactly.)
+  // LIVE wall-clock semantics — reflect the chain state *right now*, not the
+  // frozen state at the last sealed block. The RPC casert_lag field is still
+  // shown as a secondary "at tip" annotation next to the mining profile, but
+  // the main Chain Timing cards use live math so a long stall is visible
+  // (tip_lag might say +2 ahead, but if 1h passed without a new block the
+  // real-time lag is several blocks behind — that's what we show here).
   var timeSinceTip=_lastBlockTime?(now-_lastBlockTime):0;
   var chainSec=H*600+Math.max(0,timeSinceTip);
   // UNIFIED LAG CONVENTION (C++, matches casert.cpp and getinfo.casert_lag):
@@ -1113,9 +1113,13 @@ function updateChainSync(){
   // When the RPC value is available we derive expected backwards from it so the panel
   // shows one consistent view of the chain state at tip time.
   var actual=H;
+  // Live expected from wall clock — ticks forward 1 block every 600s as wall
+  // advances, regardless of when the last block arrived.
+  var expected=Math.floor(wallSec/600);
+  var lag=actual-expected;
+  // Keep the RPC (tip-state) value for the secondary "at tip" annotation.
   var rpcLagAvail=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined);
-  var lag=rpcLagAvail?parseInt(_rpcCasertLag):(actual-Math.floor(wallSec/600));
-  var expected=actual-lag;
+  var rpcLag=rpcLagAvail?parseInt(_rpcCasertLag):null;
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
@@ -1124,11 +1128,18 @@ function updateChainSync(){
   if(stEl){var stH=Math.floor(timeSinceTip/3600),stM=Math.floor((timeSinceTip%3600)/60),stS=Math.floor(timeSinceTip%60);stEl.textContent=(stH>0?stH+'h ':'')+stM+'m '+('0'+stS).slice(-2)+'s';}
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
-  // Profile: use RPC casert_profile (authoritative from C++ PID), fallback to wall-clock estimate
-  var displayProfile = _rpcCasertProfile || getProfileFromLag(lag).name;
-  if(lag<0){document.getElementById('csLag').textContent=fComma(-lag)+' behind \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='chain is '+fComma(-lag)+' blocks behind schedule \u2192 cASERT '+displayProfile;}
-  else if(lag>0){document.getElementById('csLag').textContent=fComma(lag)+' ahead \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='chain is '+fComma(lag)+' blocks ahead \u2192 cASERT '+displayProfile;}
-  else{document.getElementById('csLag').textContent='on schedule \u00B7 '+displayProfile;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='perfect sync \u2192 cASERT '+displayProfile;}
+  // Profile label: show the RPC value (tip state, what the node says) so the
+  // mining panel and chain timing stay consistent on profile identity. Live
+  // lag is shown as the main number; tip lag is shown as an annotation so the
+  // user can see both.
+  var displayProfile=_rpcCasertProfile||getProfileFromLag(lag).name;
+  var tipAnnotation='';
+  if(rpcLag!==null&&rpcLag!==lag){
+    tipAnnotation=' <span style="color:var(--text3);font-size:10px">(at tip: '+(rpcLag>0?'+'+rpcLag+' ahead':rpcLag<0?rpcLag+' behind':'on schedule')+')</span>';
+  }
+  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='live: '+fComma(-lag)+' blocks behind wall-clock schedule';}
+  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: '+fComma(lag)+' blocks ahead of wall-clock schedule';}
+  else{document.getElementById('csLag').innerHTML='on schedule \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: perfect wall-clock sync';}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
 
