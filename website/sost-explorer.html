@@ -384,14 +384,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
       <b>Monitoring &amp; measurement:</b> a dedicated monitor (<span style="color:#67e8f9;">scripts/v31_monitor.py</span>) tracks overshoot events, time in H12, blocks &gt; 20/40min, lag extremes, and Ahead Guard activation conditions — so protocol decisions are measured, not intuited.<br><br>
 
-      <b>Planned deployment:</b><br>
+      <b>Deployment (confirmed):</b><br>
       &nbsp;&nbsp;• Activation block: <b style="color:#ffdd00;">4,300</b> — chosen after monitor confirmed RED status (4 overshoots, pattern every ~19–35 blocks). ~6–10 hours of margin from current height for a coordinated update cycle.<br>
-      &nbsp;&nbsp;• Standard update procedure when activation is announced:<br>
+      &nbsp;&nbsp;• Standard update procedure:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span><br>
       &nbsp;&nbsp;• Restart your miner with <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch<br>
-      &nbsp;&nbsp;• Full instructions and commit hash published before activation<br><br>
+      &nbsp;&nbsp;• Full instructions and commit hash published with this banner<br><br>
 
-      <b>Nodes and miners still on V3.1 or earlier should update to the current V4 build now.</b> V5 will require another update when announced.<br><br>
+      <b>All nodes and miners — including those still on V3.1, V4 or any earlier build — must update to the current V5 code before block 4,300.</b> V5 is the live target; there is no "later" version pending.<br><br>
 
       <span style="color:var(--text3);font-size:10px;">Fork status: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span> · Banner auto-hides at block 4,350</span><br><br>
       <div style="margin-top:10px;padding:10px 14px;background:rgba(0,255,65,0.1);border-left:3px solid #00ff41;color:#00ff41;font-size:11px;line-height:1.7;text-shadow:0 0 4px rgba(0,255,65,0.4);">
