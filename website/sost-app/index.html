@@ -1637,8 +1637,9 @@ SectionRenderers.dashboard = function(el) {
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
-      // cASERT profile: compute from wall-clock lag to match Chain Lag/Lead display
-      // This ensures consistency — both use the same lag source
+      // cASERT lag/profile: prefer RPC values (node authoritative).
+      // C++ convention throughout: positive = ahead, negative = behind.
+      // Matches src/pow/casert.cpp and getinfo.casert_lag.
       let lagDisplay = '';
 
       // Calculate SOST PoPC reference price
@@ -1742,31 +1743,33 @@ SectionRenderers.dashboard = function(el) {
         else ivColor = '#4ade80';
       }
 
-      // Calculate expected blocks and chain lag/lead
-      // UNIFIED FORMULA: wall clock based, same as explorer
-      //   expected = floor((now - genesis) / 600)
-      //   lag = expected - height  (positive = behind, negative = ahead)
+      // Calculate expected blocks and chain lag/lead.
+      // C++ CONVENTION: positive = ahead, negative = behind (matches casert.cpp).
+      // Source of truth priority:
+      //   1. info.casert_lag from getinfo RPC (node authoritative)
+      //   2. Wall-clock fallback: lag = actual - expected
       const GENESIS_TIME = 1773597600; // 2026-03-15 18:00 UTC
       const nowSec = Math.floor(Date.now() / 1000);
       const expectedBlocks = Math.floor((nowSec - GENESIS_TIME) / 600);
       const realBlocks = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
-      const lagBehind = expectedBlocks - realBlocks; // positive = behind schedule
+      const rpcLag = (info.casert_lag !== undefined && info.casert_lag !== null)
+          ? parseInt(info.casert_lag) : null;
+      const lag = rpcLag !== null ? rpcLag : (realBlocks - expectedBlocks);
       let lagLeadText, lagLeadColor;
-      if (lagBehind > 0) {
-        lagLeadText = lagBehind + ' behind';
+      if (lag < 0) {
+        lagLeadText = Math.abs(lag) + ' behind';
         lagLeadColor = '#fb010d';
-      } else if (lagBehind < 0) {
-        lagLeadText = Math.abs(lagBehind) + ' ahead';
+      } else if (lag > 0) {
+        lagLeadText = lag + ' ahead';
         lagLeadColor = '#4ade80';
       } else {
         lagLeadText = 'on schedule';
         lagLeadColor = '#4ade80';
       }
 
-      // lagDisplay and cASERT profile: both from wall-clock lag for consistency
-      // lagBehind > 0 = behind schedule, lagBehind < 0 = ahead
-      if (lagBehind > 0) lagDisplay = ` (${lagBehind} behind)`;
-      else if (lagBehind < 0) lagDisplay = ` (${Math.abs(lagBehind)} ahead)`;
+      // lagDisplay next to profile uses the SAME lag value — one source of truth
+      if (lag < 0) lagDisplay = ` (${Math.abs(lag)} behind)`;
+      else if (lag > 0) lagDisplay = ` (${lag} ahead)`;
       else lagDisplay = ' (on schedule)';
 
       // cASERT profile: use RPC casert_profile (authoritative from C++ PID controller)
