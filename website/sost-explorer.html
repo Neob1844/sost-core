@@ -347,10 +347,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </div></div>
 <!-- cASERT V5 PLANNED UPDATE BANNER — informational, auto-hides when activation passes -->
 <div id="forkBanner" style="display:none;max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(255,0,0,0.12);border:3px solid #ff2222;padding:16px 22px;font-family:var(--code);position:relative;box-shadow:0 0 24px rgba(255,34,34,0.45);">
-    <div style="font-size:14px;font-weight:900;color:#ff2222;letter-spacing:2px;text-shadow:0 0 10px rgba(255,34,34,0.8);margin-bottom:10px;">🚨 cASERT V5 — HARD FORK ACTIVATES AT BLOCK 4,260 — UPDATE NOW 🚨</div>
-    <div style="font-size:11px;color:#ff6666;line-height:1.8;text-shadow:0 0 4px rgba(255,68,68,0.4);">
-      <b style="color:#ffdd00;">URGENT — activation accelerated from 4,350 to 4,260.</b> Live monitor confirmed the bug loop repeats every ~19–35 blocks: 4 confirmed overshoots in a 97-block observation window, each producing a 40+ minute stuck block. The chain is currently stuck at H12 again with lag -7. V5 activation has been pulled forward to stop this cycle as soon as possible. <b>All nodes and miners must update immediately.</b><br><br>
+  <div style="background:rgba(255,170,0,0.10);border:2px solid #ffaa00;padding:15px 20px;font-family:var(--code);position:relative;box-shadow:0 0 16px rgba(255,170,0,0.30);">
+    <div style="font-size:13px;font-weight:800;color:#ffaa00;letter-spacing:2px;text-shadow:0 0 8px rgba(255,170,0,0.6);margin-bottom:10px;">⚠ cASERT V5 — HARD FORK ACTIVATES AT BLOCK 4,300 — UPDATE BEFORE ACTIVATION</div>
+    <div style="font-size:11px;color:#ffcc66;line-height:1.8;text-shadow:0 0 4px rgba(255,170,0,0.3);">
+      <b style="color:#ffdd00;">Activation confirmed at block 4,300.</b> This target is derived from the live monitor's RED reading: 4 overshoot events in a 97-block window, pattern repeating every ~19–35 blocks. Block 4,300 gives roughly 6–10 hours from current height for miners to pull, rebuild and restart — enough for a coordinated update while still cutting the overshoot cycle after at most one more occurrence. <b>Please update your node and miner before the activation block.</b><br><br>
 
       <b style="color:#fbbf24;">The observed pattern (edge case under investigation):</b><br>
       &nbsp;&nbsp;1. The chain accelerates under baseline conditions<br>
@@ -382,7 +382,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <b>Monitoring &amp; measurement:</b> a dedicated monitor (<span style="color:#67e8f9;">scripts/v31_monitor.py</span>) tracks overshoot events, time in H12, blocks &gt; 20/40min, lag extremes, and Ahead Guard activation conditions — so protocol decisions are measured, not intuited.<br><br>
 
       <b>Planned deployment:</b><br>
-      &nbsp;&nbsp;• Activation block: <b style="color:#ffdd00;">4,260</b> — accelerated from 4,350 after monitor confirmed RED status (4 overshoots, pattern every ~19–35 blocks). ~3h margin from current height 4,234.<br>
+      &nbsp;&nbsp;• Activation block: <b style="color:#ffdd00;">4,300</b> — chosen after monitor confirmed RED status (4 overshoots, pattern every ~19–35 blocks). ~6–10 hours of margin from current height for a coordinated update cycle.<br>
       &nbsp;&nbsp;• Standard update procedure when activation is announced:<br>
       &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#67e8f9;">cd ~/sost-core &amp;&amp; git pull &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span><br>
       &nbsp;&nbsp;• Restart your miner with <span style="color:#67e8f9;">pkill -x sost-miner</span> and relaunch<br>
@@ -390,7 +390,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
       <b>Nodes and miners still on V3.1 or earlier should update to the current V4 build now.</b> V5 will require another update when announced.<br><br>
 
-      <span style="color:var(--text3);font-size:10px;">Fork status: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span> · Banner auto-hides at block 4,460</span><br><br>
+      <span style="color:var(--text3);font-size:10px;">Fork status: <span id="forkCountdown" style="color:#ffdd00;font-weight:700;">—</span> · <span id="forkEta" style="color:#ffdd00;font-weight:700;">—</span> · Banner auto-hides at block 4,500</span><br><br>
       <div style="margin-top:10px;padding:10px 14px;background:rgba(0,255,65,0.1);border-left:3px solid #00ff41;color:#00ff41;font-size:11px;line-height:1.7;text-shadow:0 0 4px rgba(0,255,65,0.4);">
         <b>Expected outcome:</b> V5 closes the cASERT equalizer tuning cycle that began at V2 (block 1,450). After activation, the equalizer is expected to operate symmetrically around B0 under normal conditions, with extreme profiles (H10–H12) reserved exclusively for genuine runaway-chain scenarios and cleared within ±3 blocks of lag returning to schedule. The B0↔H12 oscillation loop, the post-ahead overshoot into behind territory, and the latent Ahead Guard determinism risk are all addressed in this single coordinated fork. Block production should converge tightly on the 10-minute target from activation onwards.
       </div>
@@ -1030,10 +1030,10 @@ function renderStats(i){
 async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
-  // V5 URGENT activation banner. Visible until FORK_V5+200 (block 4460),
-  // then auto-hides. V5 activation: block 4260 (accelerated from 4350 after
-  // monitor confirmed RED status with 4 overshoots in 97 blocks).
-  var FORK_V4=4170;var FORK_V5=4260;var fb=document.getElementById('forkBanner');
+  // V5 activation banner. Visible until FORK_V5+200 (block 4500), then
+  // auto-hides. V5 activation: block 4300 (from earlier iterations 4350
+  // → 4260 → 4300 balancing data-driven urgency with operational margin).
+  var FORK_V4=4170;var FORK_V5=4300;var fb=document.getElementById('forkBanner');
   if(fb){if(info.blocks<FORK_V5){fb.style.display='block';var rem=FORK_V5-info.blocks;document.getElementById('forkCountdown').textContent='V4 active since block '+FORK_V4+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent=fComma(rem)+' blocks until V5 activation target (block '+fComma(FORK_V5)+')';}else if(info.blocks<FORK_V5+200){fb.style.display='block';document.getElementById('forkCountdown').textContent='V5 ACTIVE since block '+FORK_V5+' \u2014 current height '+info.blocks;document.getElementById('forkEta').textContent='If your node has not updated yet, pull and restart now';}else{fb.style.display='none';}}
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
