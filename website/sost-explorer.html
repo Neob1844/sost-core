@@ -345,6 +345,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- V5 post-activation reminder — small, discrete, dismissible style -->
+<div id="v5Reminder" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:rgba(0,255,65,0.05);border-left:3px solid #00ff41;padding:8px 16px;font-family:var(--code);font-size:10px;color:#00ff41;line-height:1.6;">
+    <b>✓ cASERT V5 active since block 4,300.</b> Network converged on V5 rules (determinism fix + liveness + extreme-profile entry cap). If your node or miner is still stuck on a pre-V5 fork, sync with a fresh chain: <span style="color:#67e8f9;">git pull origin main &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span>. If your chain.json is in a bad state, <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart the node.
+  </div>
+</div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
