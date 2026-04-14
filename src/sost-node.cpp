@@ -842,21 +842,45 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                 }
                 s<<",\"txids\":[\""<<to_hex(b.block_id.data(),32)<<"\"]";
             }
+            // Display the ACTUAL stored profile_index of this block — that is
+            // the value consensus uses. Previously this endpoint recomputed
+            // casert_compute with meta = [0..b.height] (INCLUDING the block
+            // itself) and next_height = b.height, which is an off-by-one: it
+            // treated the block being queried as its own predecessor, using
+            // its own profile_index as prev_H and its own timestamp to derive
+            // lag. During long-stall tails that produced nonsense outputs
+            // like B0 on a block that was actually mined at H9, leaking
+            // "phantom slew-rate violations" into the explorer and confusing
+            // everyone trying to diagnose the equalizer.
+            //
+            // Stored profile_index is authoritative; also expose it as a raw
+            // integer so tooling can reason about consensus without parsing
+            // the mode string.
+            int32_t stored_pi = b.profile_index;
+            // Recompute what casert_compute WOULD have returned for this
+            // block at validation time, using the correct window [0..h-1].
+            // This is the "base_profile" — the upper bound the miner was
+            // allowed to declare. Useful to see how close the declared
+            // profile was to the ceiling.
             std::vector<BlockMeta> meta;
-            for(size_t j=0;j<=size_t(b.height)&&j<g_blocks.size();++j){
+            for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
                 BlockMeta bm; bm.block_id=g_blocks[j].block_id;
                 bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
                 bm.powDiffQ=g_blocks[j].bits_q;
                 bm.profile_index=g_blocks[j].profile_index;
                 meta.push_back(bm);
             }
-            // Profile for THIS block (with anti-stall, using block's own timestamp)
-            auto cd=casert_compute(meta,b.height,b.timestamp);
-            // Base profile (no anti-stall) for reference
-            auto cd_base=casert_compute(meta,b.height,0);
-            s<<",\"casert_mode\":\""<<casert_profile_name(cd.profile_index)
-             <<"\",\"casert_base\":\""<<casert_profile_name(cd_base.profile_index)
-             <<"\",\"casert_signal\":"<<cd.lag<<"}";
+            int32_t base_pi = stored_pi;
+            int32_t display_lag = 0;
+            if (!meta.empty()) {
+                auto cd_base = casert_compute(meta, b.height, 0);
+                base_pi = cd_base.profile_index;
+                display_lag = cd_base.lag;
+            }
+            s<<",\"casert_mode\":\""<<casert_profile_name(stored_pi)
+             <<"\",\"casert_base\":\""<<casert_profile_name(base_pi)
+             <<"\",\"casert_profile_index\":"<<stored_pi
+             <<",\"casert_signal\":"<<display_lag<<"}";
             return rpc_result(id,s.str());
         }
     }
