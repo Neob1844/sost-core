@@ -1094,9 +1094,12 @@ function fDuration(sec){var d=Math.floor(sec/86400),h=Math.floor((sec%86400)/360
 function updateChainSync(){
   var now=Math.floor(Date.now()/1000);
   var wallSec=now-GENESIS_TS;
-  // Chain time: (height × 600) + elapsed since last block (ticks every second)
-  var elapsedSinceLast=_lastBlockTime?(now-_lastBlockTime):0;
-  var chainSec=H*600+Math.max(0,elapsedSinceLast);
+  // Chain time: elapsed since genesis AT THE TIMESTAMP of the most recent block.
+  // Do NOT add `now - _lastBlockTime`, that makes chainSec grow in lockstep with
+  // wallSec and freezes the offset. The honest value is the physical chain clock
+  // at tip, which stays fixed between blocks and lets TIME OFFSET shrink toward
+  // zero (or cross it) as the wall clock catches up while we wait for the next block.
+  var chainSec=_lastBlockTime?(_lastBlockTime-GENESIS_TS):(H*600);
   // UNIFIED LAG CONVENTION (C++, matches casert.cpp and getinfo.casert_lag):
   //   lag > 0  = chain is AHEAD of schedule
   //   lag < 0  = chain is BEHIND schedule
