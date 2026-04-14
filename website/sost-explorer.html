@@ -528,7 +528,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED BLOCKS</div><div id="csExpected" style="font-size:16px;font-weight:600;color:var(--yellow)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at 10 min/block target</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACTUAL BLOCKS</div><div id="csActual" style="font-size:16px;font-weight:600;color:var(--red)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">mined on chain</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">chain clock − wall clock</div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at tip · <span id="csSinceTip" style="color:var(--yellow)">—</span> since last block</div></div>
       </div>
     </div>
   </div>
@@ -1119,6 +1119,9 @@ function updateChainSync(){
   document.getElementById('csWall').textContent=fDuration(wallSec);
   document.getElementById('csChain').textContent=H>0?fDuration(chainSec):'\u2014';
   var offSec=chainSec-wallSec;var absOff=Math.abs(offSec);var oH=Math.floor(absOff/3600);var oMin=Math.floor((absOff%3600)/60);var oSec2=Math.floor(absOff%60);var sign=offSec>0?'+':offSec<0?'-':'';var offTxt=absOff<2?'synced':sign+' '+(oH>0?oH+'h ':'')+oMin+'m '+oSec2+'s';document.getElementById('csOffset').textContent=offTxt;document.getElementById('csOffset').style.color=offSec>0?'var(--green)':absOff<600?'var(--yellow)':'var(--orange)';
+  // Live ticking counter showing elapsed since last block — always moves.
+  var stEl=document.getElementById('csSinceTip');
+  if(stEl){var stH=Math.floor(timeSinceTip/3600),stM=Math.floor((timeSinceTip%3600)/60),stS=Math.floor(timeSinceTip%60);stEl.textContent=(stH>0?stH+'h ':'')+stM+'m '+('0'+stS).slice(-2)+'s';}
   document.getElementById('csExpected').textContent=fComma(expected);
   document.getElementById('csActual').textContent=fComma(actual);
   // Profile: use RPC casert_profile (authoritative from C++ PID), fallback to wall-clock estimate
