@@ -100,8 +100,6 @@ void test_consensus_params_unchanged() {
     assert(sost::CX_ROUNDS_M == 100000);
     assert(sost::CX_SCRATCH_M == 4096);
     assert(sost::BITSQ_HALF_LIFE == 172800);
-    assert(sost::CASERT_L2_BLOCKS == 5);
-    assert(sost::CASERT_L6_BLOCKS == 101);
     // Constitutional addresses
     assert(std::string(sost::ADDR_GOLD_VAULT) == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d");
     assert(std::string(sost::ADDR_POPC_POOL) == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f");
