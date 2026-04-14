@@ -1593,13 +1593,13 @@ function renderProdChart(info, diffs) {
   for(var i=0;i<d.length;i++){var x=tx(d[i].t);ctx.lineTo(x,ty(d[i].h));}
   for(var i=d.length-1;i>=0;i--){var ex=(d[i].t-GENESIS_TS)/600;ctx.lineTo(tx(d[i].t),ty(ex));}
   ctx.closePath();
-  // Delta indicator: MUST use the same source of truth as the Chain Timing panel,
-  // otherwise the chart and the header contradict each other during idle periods
-  // after a fast burst or slow block. Priority: RPC casert_lag > wall-clock fallback.
+  // Delta indicator: LIVE wall-clock lag, identical semantics to the Chain
+  // Timing BLOCK LAG card. lag = actual - floor((now - genesis) / 600).
+  // The RPC casert_lag (tip-state) is intentionally NOT used here — we want
+  // the chart and the header to speak the same live language.
   var nowTs=Date.now()/1000;
   var actualNow=info.blocks;
-  var rpcLagAvail=(_rpcCasertLag!==null&&_rpcCasertLag!==undefined);
-  var lag = rpcLagAvail ? parseInt(_rpcCasertLag) : (actualNow - Math.floor((nowTs-GENESIS_TS)/600));
+  var lag = actualNow - Math.floor((nowTs-GENESIS_TS)/600);
   ctx.fillStyle=lag>=0?'rgba(74,222,128,.08)':'rgba(255,50,50,.08)'; ctx.fill();
   // Real line (green)
   ctx.beginPath(); ctx.strokeStyle='rgba(74,222,128,.8)'; ctx.lineWidth=1.5;
