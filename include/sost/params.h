@@ -105,12 +105,38 @@ inline constexpr int64_t  CASERT_V3_1_FORK_HEIGHT = 4110;
 //    the V3.1 "missing profile" fallback that disables the slew rate (the bug
 //    causing B0→H12 jumps observed in the 4150-4170 oscillation loop).
 inline constexpr int64_t  CASERT_V4_FORK_HEIGHT       = 4170;
-inline constexpr int32_t  CASERT_AHEAD_ENTER          = 16;   // enter AHEAD_CORRECTION when >= 16 ahead
-inline constexpr int32_t  CASERT_AHEAD_EXIT           = 8;    // exit when <= 8 ahead (hysteresis)
-// In AHEAD_CORRECTION + profile >= H8: max downward delta = prev_bitsq / 64 (~1.56%)
+inline constexpr int32_t  CASERT_AHEAD_ENTER          = 16;   // enter ahead correction when >= 16 ahead
+inline constexpr int32_t  CASERT_AHEAD_EXIT           = 8;    // V4-only hysteresis exit (V5 is stateless)
+// In ahead correction: max downward delta = prev_bitsq / 64 (~1.56%)
 // vs normal max delta = prev_bitsq / 8 (12.5%). This is 8× slower relaxation.
 inline constexpr int32_t  CASERT_AHEAD_DELTA_DEN      = 64;   // 1/64 ≈ 1.56% max downward per block
 inline constexpr int32_t  CASERT_AHEAD_PROFILE_THRESH = 8;    // H8+ triggers stronger clamp
+
+// cASERT V5 fork — unified liveness + determinism fix
+// 1. Ahead Guard becomes stateless (removes V4 static bool latent consensus risk).
+// 2. Safety rule 1 re-applied AFTER slew rate (was being shadowed by slew when
+//    prev_H was high and chain had just crossed into lag <= 0).
+// 3. Emergency Behind Release (EBR): stateless cliffs force H downward when chain
+//    falls materially behind schedule (lag <= -10).
+// 4. Anti-stall floor reduced from 2h to 60min at V5 heights for faster rescue
+//    in small networks with limited hashrate.
+// 5. Extreme profile entry cap: H10, H11, H12 may only be climbed +1 per block.
+//    Prevents overshoot into the worst brake profiles (observed at block 4184
+//    where B0→H6→H9→H12 in 3 blocks crashed stability 100% → 3%).
+// See docs/internal/casert-v5-design.md for full rationale.
+inline constexpr int64_t  CASERT_V5_FORK_HEIGHT       = 4350;
+inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V5   = 3600;  // 60 min (V4 was 7200 = 2h)
+// EBR cliff thresholds — the lower the lag, the lower the forced H floor
+inline constexpr int32_t  CASERT_EBR_ENTER            = -10;   // 100 min behind → force H <= B0
+inline constexpr int32_t  CASERT_EBR_LEVEL_E2         = -15;   // 150 min behind → force H <= E2
+inline constexpr int32_t  CASERT_EBR_LEVEL_E3         = -20;   // 200 min behind → force H <= E3
+inline constexpr int32_t  CASERT_EBR_LEVEL_E4         = -25;   // 250 min behind → force H <= E4 (H_MIN)
+// Extreme profile entry cap — H10+ is "extreme range" (stability ≤15%).
+// When the PID/slew/lag_floor would push H into this range, only +1 per block
+// is allowed. Descent from extreme is unrestricted (normal slew + safety rule
+// post-slew + EBR all still apply). Asymmetric by design: slow brake entry,
+// fast brake exit.
+inline constexpr int32_t  CASERT_V5_EXTREME_MIN       = 10;    // H10 is the first "extreme" profile
 
 // --- cASERT equalizer ---
 // EWMA smoothing constants (denominator = 256 for shift-by-8 division)

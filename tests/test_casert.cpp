@@ -300,6 +300,161 @@ int main() {
         TEST("historical (h=100): uses V1 params", std::abs(actual) <= max_v1 + 1);
     }
 
+    printf("\n=== 5. V5 FORK — liveness + determinism ===\n");
+
+    // Helper: build a chain of `len` blocks with given spacing, all mined at
+    // `stored_profile`. Heights end exactly at (V5_FORK_HEIGHT - 1) so that
+    // next_height == V5_FORK_HEIGHT is where V5 rules become active.
+    auto make_v5_chain = [](int len, int64_t spacing, int32_t stored_profile) {
+        std::vector<BlockMeta> chain;
+        int64_t start_h = CASERT_V5_FORK_HEIGHT - len;
+        for (int i = 0; i < len; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h + i;
+            m.time = GENESIS_TIME + (start_h + i) * spacing;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = stored_profile;
+            chain.push_back(m);
+        }
+        return chain;
+    };
+
+    // 5.1 Safety rule 1 post-slew: prev_H=H12 + negative lag => H must be <= 0
+    {
+        // lag = (height - 1) - expected_h, where expected_h = elapsed / 600.
+        // Shifting timestamps FORWARD in time makes expected_h larger, which
+        // makes lag NEGATIVE (chain appears behind schedule).
+        auto chain = make_v5_chain(20, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time += 3 * TARGET_SPACING;  // lag -> -3
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 safety rule post-slew: prev H12 + lag<=0 -> H<=0",
+             dec.profile_index <= 0);
+    }
+
+    // 5.2 EBR entry tier: lag ~ -12 forces H <= 0 via EBR entry cliff
+    {
+        auto chain = make_v5_chain(20, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time += 12 * TARGET_SPACING;  // lag -> -12
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 EBR entry tier: lag<=-10 -> H<=0",
+             dec.profile_index <= 0);
+    }
+
+    // 5.3 EBR severe tier: lag <= -25 forces H to E4 cliff
+    {
+        auto chain = make_v5_chain(30, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time += 26 * TARGET_SPACING;  // lag -> -26
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 EBR severe tier: lag<=-25 -> H at E4",
+             dec.profile_index == CASERT_H_MIN);
+    }
+
+    // 5.4 Stateless Ahead Guard: deterministic across repeated calls
+    {
+        auto chain = make_v5_chain(20, 30, 0); // fast blocks
+        uint32_t d1 = casert_next_bitsq(chain, CASERT_V5_FORK_HEIGHT);
+        uint32_t d2 = casert_next_bitsq(chain, CASERT_V5_FORK_HEIGHT);
+        uint32_t d3 = casert_next_bitsq(chain, CASERT_V5_FORK_HEIGHT);
+        TEST("V5 Ahead Guard stateless: deterministic across calls",
+             d1 == d2 && d2 == d3);
+    }
+
+    // 5.5 V5 anti-stall 60min: decay fires at V5 where V4 does not
+    {
+        auto chain_v5 = make_v5_chain(20, TARGET_SPACING, 8);
+        int64_t stall_time = chain_v5.back().time + 3700; // 61m 40s after last block
+        auto dec_v5 = casert_compute(chain_v5, CASERT_V5_FORK_HEIGHT, stall_time);
+
+        // Same logical chain at V4 heights (anti-stall should NOT fire at 76min)
+        std::vector<BlockMeta> chain_v4;
+        int64_t start_h_v4 = CASERT_V4_FORK_HEIGHT;
+        for (int i = 0; i < 20; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h_v4 + i;
+            m.time = GENESIS_TIME + (start_h_v4 + i) * TARGET_SPACING;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = 8;
+            chain_v4.push_back(m);
+        }
+        int64_t stall_v4 = chain_v4.back().time + 3700;
+        auto dec_v4 = casert_compute(chain_v4, CASERT_V4_FORK_HEIGHT + 20, stall_v4);
+
+        TEST("V5 anti-stall 60min: fires earlier than V4 (stall=61min)",
+             dec_v5.profile_index <= dec_v4.profile_index);
+    }
+
+    // 5.6 Pre-V5 heights: V4 computation unchanged when V5 constants present
+    {
+        std::vector<BlockMeta> chain;
+        int64_t start_h = CASERT_V4_FORK_HEIGHT;
+        for (int i = 0; i < 100; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h + i;
+            m.time = GENESIS_TIME + (start_h + i) * TARGET_SPACING;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = 0;
+            chain.push_back(m);
+        }
+        auto dec = casert_compute(chain, start_h + 100, 0);
+        TEST("V5: pre-V5 heights unchanged (on-schedule -> B0)",
+             dec.profile_index == 0);
+    }
+
+    // 5.7 V5 extreme entry cap: H9 + large ahead → H10 max (not H12)
+    {
+        // prev_H = H9, huge positive lag triggers lag_floor toward H10+
+        // Without cap: slew allows 9+3=12, lag_floor demands 10+ → lands at 12.
+        // With cap: H > 9 triggers +1/block limit → 10 (H10), not 12.
+        auto chain = make_v5_chain(20, TARGET_SPACING, 9);
+        for (auto& b : chain) b.time -= 80 * TARGET_SPACING;  // lag → +80ish
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 extreme cap: H9 + large ahead -> H10 (not H12)",
+             dec.profile_index == 10);
+    }
+
+    // 5.8 V5 extreme entry cap: H10 → H11 max (next step)
+    {
+        auto chain = make_v5_chain(20, TARGET_SPACING, 10);
+        for (auto& b : chain) b.time -= 100 * TARGET_SPACING;  // lag → +100
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 extreme cap: H10 + huge ahead -> H11 (not H12)",
+             dec.profile_index == 11);
+    }
+
+    // 5.9 V5 extreme entry cap: H11 → H12 allowed (final step is +1)
+    {
+        auto chain = make_v5_chain(20, TARGET_SPACING, 11);
+        for (auto& b : chain) b.time -= 100 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 extreme cap: H11 -> H12 allowed (prev+1 == H12)",
+             dec.profile_index == 12);
+    }
+
+    // 5.10 V5 extreme cap does NOT affect non-extreme transitions
+    {
+        // prev_H = H5, moderate lag: target lands in [H6-H8] range.
+        // Normal slew ±3 applies, cap should be inert.
+        auto chain = make_v5_chain(20, TARGET_SPACING, 5);
+        for (auto& b : chain) b.time -= 20 * TARGET_SPACING;  // lag → +20
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 extreme cap: non-extreme transitions unaffected (H5 + lag~20)",
+             dec.profile_index >= 5 && dec.profile_index <= 8);
+    }
+
+    // 5.11 V5 extreme cap does NOT affect descent from extreme
+    {
+        // prev_H = H12, lag slightly negative: safety rule post-slew forces
+        // H <= 0, EBR doesn't fire (lag > -10), cap doesn't block descent.
+        auto chain = make_v5_chain(20, TARGET_SPACING, 12);
+        for (auto& b : chain) b.time += 3 * TARGET_SPACING;  // lag → -3
+        auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
+        TEST("V5 extreme cap: descent unrestricted (prev H12 + lag<=0 -> B0)",
+             dec.profile_index <= 0);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }

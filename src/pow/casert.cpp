@@ -110,21 +110,39 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
     int64_t delta = raw_result - (int64_t)prev_bitsq;
     delta = std::max<int64_t>(-max_delta, std::min<int64_t>(max_delta, delta));
 
-    // V4 Ahead Guard: if chain is materially ahead and delta wants to lower bitsQ,
-    // clamp the downward adjustment to prevent bitsQ from undoing equalizer braking.
-    // Uses persistent state via static variable with hysteresis.
+    // Ahead Guard: clamp downward bitsQ adjustment when chain is materially ahead
+    // of schedule, to prevent bitsQ from undoing the equalizer's braking.
+    //
+    // V4 (4170 <= height < 4500): stateful hysteresis via static bool.
+    //   Determinism risk: `static` persists across calls and is not reconstructed
+    //   from chain state, so nodes on different sync paths can disagree. No live
+    //   divergence observed, but flagged as must-fix in the V5 design doc.
+    //
+    // V5 (height >= 4500): stateless. The flag is derived on every call directly
+    //   from the current schedule_lag. Trade-off: loses the enter/exit hysteresis,
+    //   but the Ahead Guard is a one-block clamp anyway — no meaningful
+    //   behavioural loss versus the safety gained.
     if (next_height >= CASERT_V4_FORK_HEIGHT && delta < 0) {
         // Compute schedule lag: positive = ahead
         int64_t elapsed = chain.back().time - GENESIS_TIME;
         int64_t expected_h = (elapsed >= 0) ? (elapsed / TARGET_SPACING) : 0;
         int32_t schedule_lag = (int32_t)((int64_t)(next_height - 1) - expected_h);
 
-        // Hysteresis: enter at >=16, exit at <=8
-        static bool ahead_correction_mode = false;
-        if (schedule_lag >= CASERT_AHEAD_ENTER) ahead_correction_mode = true;
-        if (schedule_lag <= CASERT_AHEAD_EXIT)  ahead_correction_mode = false;
+        bool clamp = false;
+        if (next_height >= CASERT_V5_FORK_HEIGHT) {
+            // V5: stateless — fires iff schedule_lag crosses the entry threshold
+            // on the current block. No memory of prior blocks, no static flag.
+            clamp = (schedule_lag >= CASERT_AHEAD_ENTER);
+        } else {
+            // V4: stateful hysteresis (kept bit-for-bit to preserve consensus of
+            // already-validated blocks in the range [4170, 4500)).
+            static bool ahead_correction_mode = false;
+            if (schedule_lag >= CASERT_AHEAD_ENTER) ahead_correction_mode = true;
+            if (schedule_lag <= CASERT_AHEAD_EXIT)  ahead_correction_mode = false;
+            clamp = ahead_correction_mode;
+        }
 
-        if (ahead_correction_mode) {
+        if (clamp) {
             // Clamp downward delta: allow only ~1.56% drop instead of 12.5%
             int64_t ahead_max_drop = (int64_t)prev_bitsq / CASERT_AHEAD_DELTA_DEN;
             if (ahead_max_drop < 1) ahead_max_drop = 1;
@@ -331,6 +349,56 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 H = std::max<int32_t>(H, lag_floor);
             }
 
+            // V5: Safety rule 1 re-applied POST-SLEW + Emergency Behind Release (EBR).
+            //
+            // Before V5, the slew rate was applied *after* safety rule 1, which
+            // meant `prev_H = 12, lag = -5` left H at 9 (slew clamped a PID-desired
+            // -2 up to prev_H-3=9), shadowing the "never harden when behind" rule.
+            // Chain stayed at H9/H12 for 4 blocks of slew decay while lag kept
+            // dropping — the overshoot observed at block 4184.
+            //
+            // V5 fix: at post-V5 heights, re-apply safety rule 1 AFTER the slew
+            // rate and lag_floor. If lag <= 0, H is forced to <= 0 regardless of
+            // what the slew rate allowed. This guarantees the hard invariant
+            // "never hardened while behind" in a single block.
+            //
+            // For severely negative lag (<= -10), EBR cliffs force H progressively
+            // toward the easing range, giving the chain rapid liveness recovery
+            // without waiting for anti-stall (which itself is reduced to 75min
+            // at V5 heights — see `ANTISTALL_FLOOR_V5`).
+            if (next_height >= CASERT_V5_FORK_HEIGHT) {
+                // Safety rule 1 post-slew: never hardened when behind
+                if (lag <= 0) {
+                    H = std::min<int32_t>(H, 0);
+                }
+                // Emergency Behind Release: stateless cliffs
+                if (lag <= CASERT_EBR_ENTER) {
+                    int32_t ebr_floor;
+                    if      (lag <= CASERT_EBR_LEVEL_E4) ebr_floor = CASERT_H_MIN;  // E4
+                    else if (lag <= CASERT_EBR_LEVEL_E3) ebr_floor = -3;            // E3
+                    else if (lag <= CASERT_EBR_LEVEL_E2) ebr_floor = -2;            // E2
+                    else                                 ebr_floor =  0;            // B0
+                    H = std::min<int32_t>(H, ebr_floor);
+                }
+                // Extreme profile entry cap: H10+ requires +1/block climb.
+                //
+                // Profiles H10 (15% stability), H11 (8%) and H12 (3%) are the
+                // strongest brakes in the 17-profile table. Reaching them with
+                // +3 slew or via lag_floor jumps causes the chain to overshoot:
+                // the new profile is so hard to mine that production stalls
+                // while lag was already going the other way (observed at
+                // block 4184: B0→H6→H9→H12 in 3 blocks, then 155min stuck).
+                //
+                // Capping entry at +1/block gives the equalizer 2-3 extra
+                // blocks at intermediate profiles (H9→H10→H11) during which
+                // the chain still mines and lag can self-correct before the
+                // worst brake is applied. Descent from extreme range is
+                // unrestricted — the asymmetry is intentional.
+                if (H >= CASERT_V5_EXTREME_MIN && H > prev_H + 1) {
+                    H = prev_H + 1;
+                }
+            }
+
             H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));
         } else {
             // --- V2: Original ±1 slew rate with heuristic estimation ---
@@ -353,9 +421,13 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // B0 is the natural destination. Easing (E1-E4) only after 6h extra at B0.
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
-        // Anti-stall threshold: always max 7200s (2 hours), regardless of lag.
-        // Previous formula (lag × 600s) was absurd at high lag values (67 ahead = 11h).
-        int64_t t_act = CASERT_ANTISTALL_FLOOR; // always 7200s (2 hours)
+        // Anti-stall threshold: V4 and earlier use 7200s (2h). V5 reduces it to
+        // 4500s (75 min) so the safety net fires faster in small networks —
+        // complements EBR which handles lag-triggered recovery, while anti-stall
+        // handles time-triggered recovery (block completely stuck).
+        int64_t t_act = (next_height >= CASERT_V5_FORK_HEIGHT)
+            ? CASERT_ANTISTALL_FLOOR_V5   // 4500s = 75 min
+            : CASERT_ANTISTALL_FLOOR;     // 7200s = 2 hours
         if (stall >= t_act && H > 0) {
             // Hardening decay: drop toward B0
             int64_t decay_time = stall - t_act;
