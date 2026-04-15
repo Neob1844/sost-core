@@ -1520,7 +1520,18 @@ function refreshAllLogos() {
 
 
 // ── Section Renderers ──────────────────────────────────────────
+// Per-section auto-refresh intervals. renderSection() clears any handle
+// registered by the previous section before building the new one, so
+// background polls don't leak when the user navigates away.
+window._sectionIntervals = window._sectionIntervals || [];
+function _clearSectionIntervals() {
+  (window._sectionIntervals || []).forEach(function(h) { try { clearInterval(h); } catch(e) {} });
+  window._sectionIntervals = [];
+}
+function _registerSectionInterval(h) { window._sectionIntervals.push(h); }
+
 function renderSection(id) {
+  _clearSectionIntervals();
   const content = document.getElementById('content');
   // Clear iframes first to stop loading
   content.querySelectorAll('iframe').forEach(f => f.src = 'about:blank');
@@ -1623,8 +1634,10 @@ SectionRenderers.dashboard = function(el) {
     </div>
   `;
 
-  // Fetch chain info + block detail for interval/subsidy
-  (async () => {
+  // Named loaders so we can call them on an interval. Each loader is
+  // resilient to the section being swapped out: it bails if the target
+  // DOM node is gone, which happens when the user navigates away.
+  async function loadDashStatus() {
     const info = await rpcCall('getinfo');
     const statusEl = document.getElementById('dash-status');
     if (!statusEl) return;
@@ -1637,11 +1650,6 @@ SectionRenderers.dashboard = function(el) {
       const conns = info.connections !== undefined ? info.connections : 'N/A';
       const ver = info.version || info.subversion || 'N/A';
       const mempool = info.mempool_size !== undefined ? info.mempool_size : (info.mempoolsize !== undefined ? info.mempoolsize : 0);
-      // cASERT lag/profile: prefer RPC values (node authoritative).
-      // C++ convention throughout: positive = ahead, negative = behind.
-      // Matches src/pow/casert.cpp and getinfo.casert_lag.
-      let lagDisplay = '';
-
       // Calculate SOST PoPC reference price
       // Calculate supply
       const R0 = 7.85100863, Q = 0.7788007830714049, EP = 131553;
@@ -1767,11 +1775,6 @@ SectionRenderers.dashboard = function(el) {
         lagLeadColor = '#4ade80';
       }
 
-      // lagDisplay next to profile uses the SAME lag value — one source of truth
-      if (lag < 0) lagDisplay = ` (${Math.abs(lag)} behind)`;
-      else if (lag > 0) lagDisplay = ` (${lag} ahead)`;
-      else lagDisplay = ' (on schedule)';
-
       // cASERT profile: use RPC casert_profile (authoritative from C++ PID controller)
       const casertProfile = info.casert_profile || 'B0';
 
@@ -1790,7 +1793,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
-        <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}${lagDisplay}</span></div>
+        <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}</span></div>
         <div class="stat-row"><span class="stat-label">SUBSIDY</span><span class="stat-value">${subsidy}</span></div>
         <div class="stat-row"><span class="stat-label">MEMPOOL</span><span class="stat-value">${mempoolDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">CONNECTIONS</span><span class="stat-value">${conns}</span></div>
@@ -1805,10 +1808,9 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">RPC ENDPOINT</span><span class="stat-value" style="font-size:14px">${RPC_URL}</span></div>
       `;
     }
-  })();
+  }
 
-  // Fetch latest blocks
-  (async () => {
+  async function loadDashBlocks() {
     const blocksEl = document.getElementById('dash-blocks');
     if (!blocksEl) return;
     const info = await rpcCall('getinfo');
@@ -1835,7 +1837,17 @@ SectionRenderers.dashboard = function(el) {
       }
     }
     blocksEl.innerHTML = html || '<p style="color:var(--pip-dim)">NO BLOCKS RETRIEVED</p>';
-  })();
+  }
+
+  // Initial load + refresh every 10s while the dashboard is visible.
+  // renderSection() clears this interval automatically on navigation.
+  loadDashStatus();
+  loadDashBlocks();
+  _registerSectionInterval(setInterval(function() {
+    if (!document.getElementById('dash-status')) return; // section swapped
+    loadDashStatus();
+    loadDashBlocks();
+  }, 10000));
 
   setTimeout(addTooltips, 2000);
 };
