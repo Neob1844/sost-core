@@ -640,12 +640,18 @@ const SECTIONS = [
   { id: 'dashboard',  label: 'DASHBOARD',        icon: '[1]' },
   { id: 'wallet',     label: 'WALLET',            icon: '[2]' },
   { id: 'explorer',   label: 'EXPLORER',          icon: '[3]' },
-  { id: 'security',   label: 'SECURITY',          icon: '[4]' },
-  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[5]' },
-  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[6]' },
-  { id: 'documents',  label: 'DOCUMENTS',         icon: '[7]' },
-  { id: 'markets',    label: 'MARKETS',           icon: '[8]' },
-  { id: 'settings',   label: 'SETTINGS',          icon: '[9]' },
+  { id: 'popc',       label: 'POPC',              icon: '[4]' },
+  { id: 'otc',        label: 'OTC',               icon: '[5]' },
+  { id: 'security',   label: 'SECURITY',          icon: '[6]' },
+  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[7]' },
+  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[8]' },
+  { id: 'documents',  label: 'DOCUMENTS',         icon: '[9]' },
+  { id: 'markets',    label: 'MARKETS',           icon: '[A]' },
+  { id: 'tokenomics', label: 'TOKENOMICS',        icon: '[B]' },
+  { id: 'roadmap',    label: 'ROADMAP',           icon: '[C]' },
+  { id: 'foundation', label: 'FOUNDATION',        icon: '[D]' },
+  { id: 'faq',        label: 'FAQ',               icon: '[E]' },
+  { id: 'settings',   label: 'SETTINGS',          icon: '[F]' },
   { id: 'about',      label: 'ABOUT',             icon: '[0]' }
 ];
 
@@ -1543,7 +1549,8 @@ function renderSection(id) {
   if (renderer) renderer(content);
   setTimeout(addTooltips, 300);
 
-  // Add ↗ link to web for each section title
+  // Add ↗ link to web for each section title. The icon opens the full web
+  // page where the user can actually operate (purchase, register, sign, etc).
   const sectionLinks = {
     dashboard: '/sost-explorer.html',
     security: '/sost-security.html',
@@ -1551,6 +1558,12 @@ function renderSection(id) {
     materials: '/sost-materials-engine.html',
     documents: '/sost-whitepaper.html',
     markets: '/sost-markets.html',
+    popc: '/sost-popc.html',
+    otc: '/sost-otc.html',
+    tokenomics: '/sost-tokenomics.html',
+    roadmap: '/sost-roadmap.html',
+    foundation: '/sost-foundation.html',
+    faq: '/sost-faq.html',
   };
   if (sectionLinks[id]) {
     const h2s = content.querySelectorAll('h2');
@@ -2193,6 +2206,256 @@ SectionRenderers.markets = function(el) {
       </div>
     </div>
   `;
+  AudioEngine.ambient_pulse();
+};
+
+// ── POPC ───────────────────────────────────────────────────────
+// Proof of Personal Custody — cooperative gold-backed reward system.
+// Activates at block 5,000. This section explains the system in app-format
+// and links out to the full web pages for actual operation.
+SectionRenderers.popc = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// PROOF OF PERSONAL CUSTODY</h2>
+      <p>Cooperative reward system for gold-token holders.</p>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:13px">Commit XAUT or PAXG under your own Ethereum custody, receive SOST rewards from the pool. The gold never leaves your wallet.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge ok">READY</span></span></div>
+      <div class="stat-row"><span class="stat-label">ACTIVATION BLOCK</span><span class="stat-value">5,000</span></div>
+      <div class="stat-row"><span class="stat-label">POOL ADDRESS</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</span></div>
+      <div class="stat-row"><span class="stat-label">POOL ACCUMULATION</span><span class="stat-value">25% of every block subsidy</span></div>
+      <div class="stat-row"><span class="stat-label">CURRENT BALANCE</span><span class="stat-value">~8,700+ SOST (growing)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// HOW IT WORKS</h2>
+      <div class="stat-row"><span class="stat-label">1. DECLARE CUSTODY</span><span class="stat-value">Your ETH wallet + token (XAUT/PAXG)</span></div>
+      <div class="stat-row"><span class="stat-label">2. LOCK BOND</span><span class="stat-value">10-25% of gold value in SOST</span></div>
+      <div class="stat-row"><span class="stat-label">3. COMMIT DURATION</span><span class="stat-value">1, 3, 6, 9 or 12 months</span></div>
+      <div class="stat-row"><span class="stat-label">4. RANDOM AUDITS</span><span class="stat-value">ConvergenceX entropy-based</span></div>
+      <div class="stat-row"><span class="stat-label">5. CLAIM REWARD</span><span class="stat-value">From PoPC Pool at expiry</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// REWARDS (MODEL A)</h2>
+      <div class="stat-row"><span class="stat-label">1 MONTH</span><span class="stat-value">1% of bond</span></div>
+      <div class="stat-row"><span class="stat-label">3 MONTHS</span><span class="stat-value">4% of bond</span></div>
+      <div class="stat-row"><span class="stat-label">6 MONTHS</span><span class="stat-value">9% of bond</span></div>
+      <div class="stat-row"><span class="stat-label">9 MONTHS</span><span class="stat-value">15% of bond</span></div>
+      <div class="stat-row"><span class="stat-label">12 MONTHS</span><span class="stat-value" style="color:var(--pip);font-weight:700">22% of bond</span></div>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:12px">First 24 commitments get 100% tier multiplier (EARLY ADOPTER). After that: 75%, 50%, 30%, 15%, 8% as the pool fills. Protocol fee: 5%.</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// REPUTATION TIERS</h2>
+      <div class="stat-row"><span class="stat-label">NEW (0 ★)</span><span class="stat-value">0.5 oz max · 30% audit prob</span></div>
+      <div class="stat-row"><span class="stat-label">ESTABLISHED (1 ★)</span><span class="stat-value">1 oz max · 20% audit prob</span></div>
+      <div class="stat-row"><span class="stat-label">TRUSTED (3 ★)</span><span class="stat-value">3 oz max · 10% audit prob</span></div>
+      <div class="stat-row"><span class="stat-label">VETERAN (5 ★)</span><span class="stat-value">10 oz max · 5% audit prob</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// MODEL B (FUTURE)</h2>
+      <p>Immutable Ethereum escrow variant. Deposit gold into an audited smart contract; reward paid immediately; withdraw 100% at expiry. Zero slash risk.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge warn">ROADMAP Q3 2026</span></span></div>
+      <div class="stat-row"><span class="stat-label">BLOCKER</span><span class="stat-value">Ethereum smart contract + audit</span></div>
+      <div class="stat-row"><span class="stat-label">EST. WORK</span><span class="stat-value">16-22 weeks from green-light</span></div>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-popc-quickstart.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN QUICK START GUIDE</button>
+      <br>
+      <button onclick="window.open('https://sostcore.com/sost-popc.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">FULL SPEC ↗</button>
+      <br>
+      <span style="color:var(--pip-dim);font-size:10px">Operating PoPC requires a running sost-node + cli<br>The app shows info; the website is where you act.</span>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── OTC ────────────────────────────────────────────────────────
+// Over-the-counter pre-market info. SOST is not yet listed on any exchange;
+// the Foundation sells reserved stock against gold-backed commitments.
+SectionRenderers.otc = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// OTC PRE-MARKET</h2>
+      <p>SOST is in pre-market phase. No exchange listing yet. The Foundation offers a limited OTC window backed by the PoPC Gold Reserve.</p>
+      <div class="stat-row"><span class="stat-label">PHASE</span><span class="stat-value stat-warn">PRE-MARKET</span></div>
+      <div class="stat-row"><span class="stat-label">BACKING</span><span class="stat-value">1.2 oz gold (XAUT+PAXG on Ethereum)</span></div>
+      <div class="stat-row"><span class="stat-label">REFERENCE PRICE</span><span class="stat-value">PoPC: (gold_oz × gold_price) ÷ supply</span></div>
+      <div class="stat-row"><span class="stat-label">REFUND POLICY</span><span class="stat-value">Full refund in gold if project fails</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// HOW TO BUY</h2>
+      <p style="margin-bottom:10px;color:var(--pip-dim);font-size:13px">Contact the Foundation directly through the official channels on the SOST website. OTC orders are processed manually with gold-backed escrow guarantees.</p>
+      <div class="stat-row"><span class="stat-label">1. CONTACT</span><span class="stat-value">Foundation via website</span></div>
+      <div class="stat-row"><span class="stat-label">2. QUOTE</span><span class="stat-value">Receive PoPC reference + OTC terms</span></div>
+      <div class="stat-row"><span class="stat-label">3. SETTLEMENT</span><span class="stat-value">Gold-backed escrow</span></div>
+      <div class="stat-row"><span class="stat-label">4. DELIVERY</span><span class="stat-value">SOST sent to your address</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// RESERVE TRANSPARENCY</h2>
+      <p style="color:var(--pip-dim);font-size:12px">Every OTC sale is backed by verifiable gold held in the Foundation's public Ethereum wallet. Balances are readable by anyone.</p>
+      <div class="stat-row"><span class="stat-label">GOLD VAULT ADDR</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</span></div>
+      <div class="stat-row"><span class="stat-label">VAULT BALANCE</span><span class="stat-value">~8,675 SOST (growing)</span></div>
+      <div class="stat-row"><span class="stat-label">GOLD BACKING</span><span class="stat-value">Verifiable on Etherscan</span></div>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-otc.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN OTC PAGE</button>
+      <br>
+      <button onclick="window.open('https://sostcore.com/sost-foundation-balances.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">FOUNDATION BALANCES ↗</button>
+      <br>
+      <span style="color:var(--pip-dim);font-size:10px">OTC transactions are processed on the website<br>This section shows terms and transparency data.</span>
+    </div>
+  `;
+  AudioEngine.ambient_pulse();
+};
+
+// ── TOKENOMICS ─────────────────────────────────────────────────
+SectionRenderers.tokenomics = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// TOKENOMICS</h2>
+      <p>Smooth exponential emission — no halvings, no cliffs.</p>
+      <div class="stat-row"><span class="stat-label">MAX SUPPLY</span><span class="stat-value">~4,669,201 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">GENESIS REWARD</span><span class="stat-value">7.85100863 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">EMISSION CURVE</span><span class="stat-value">Feigenbaum e^(-1/4) decay</span></div>
+      <div class="stat-row"><span class="stat-label">DECAY FACTOR q</span><span class="stat-value">≈ 0.7788 per epoch</span></div>
+      <div class="stat-row"><span class="stat-label">EPOCH LENGTH</span><span class="stat-value">131,553 blocks (~2.5 yr)</span></div>
+      <div class="stat-row"><span class="stat-label">TOTAL EPOCHS</span><span class="stat-value">12 (reward → 0)</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK TIME TARGET</span><span class="stat-value">600s (10 min)</span></div>
+      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">1 SOST = 100,000,000 stocks</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// BLOCK REWARD SPLIT</h2>
+      <div class="stat-row"><span class="stat-label">MINER</span><span class="stat-value stat-ok">50%</span></div>
+      <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value stat-warn">25%</span></div>
+      <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value stat-warn">25%</span></div>
+      <div class="stat-row"><span class="stat-label">SPLIT RULE</span><span class="stat-value">Hardcoded / immutable</span></div>
+      <p style="margin-top:10px;color:var(--pip-dim);font-size:12px">The 50/25/25 split cannot be changed by any fork, vote or governance decision. It is constitutional and enforced at every block by consensus (CB-rules).</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// WHY GOLD-BACKED</h2>
+      <p style="font-size:13px;line-height:1.6">Every block permanently allocates 25% of subsidy to a constitutional Gold Vault address. As the chain grows, so does the gold reserve. This creates an ever-increasing floor of real-world value under every SOST in circulation.</p>
+      <p style="margin-top:8px;font-size:13px;line-height:1.6">The other 25% goes to the PoPC Pool, which rewards participants who commit to holding verifiable gold under their own custody. Both halves feed the same cooperative: more participation = more backing = more value for every holder.</p>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-tokenomics.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► TOKENOMICS DETAIL</button>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── ROADMAP ────────────────────────────────────────────────────
+SectionRenderers.roadmap = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// ROADMAP</h2>
+      <p>Live status of protocol milestones. Dates approximate; block heights exact.</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// PHASE 1 — GENESIS &amp; CORE</h2>
+      <div class="stat-row"><span class="stat-label">MAR 2026</span><span class="stat-value stat-ok">Genesis + ConvergenceX live</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 1,450</span><span class="stat-value stat-ok">bitsQ V2 (24h halflife, 12.5% cap)</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 4,100</span><span class="stat-value stat-ok">cASERT V3 (slew rate ±3)</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 4,170</span><span class="stat-value stat-ok">cASERT V4 (sentinel fix, Ahead Guard)</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 4,300</span><span class="stat-value stat-ok">cASERT V5 (liveness + determinism)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// PHASE 2 — POPC ACTIVATION</h2>
+      <div class="stat-row"><span class="stat-label">BLOCK 5,000</span><span class="stat-value stat-warn">PoPC Model A activates</span></div>
+      <div class="stat-row"><span class="stat-label">WEEKS 1-4</span><span class="stat-value">Manual-supervised reward payouts</span></div>
+      <div class="stat-row"><span class="stat-label">WEEK 5+</span><span class="stat-value">Automatic cron distribution</span></div>
+      <div class="stat-row"><span class="stat-label">MONTH 2+</span><span class="stat-value">PoPC oracle daemon (automatic audits)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// PHASE 3 — MODEL B &amp; DECENTRALIZATION</h2>
+      <div class="stat-row"><span class="stat-label">Q2 2026</span><span class="stat-value">Model B smart contract draft</span></div>
+      <div class="stat-row"><span class="stat-label">Q3 2026</span><span class="stat-value">Model B audit + mainnet deploy</span></div>
+      <div class="stat-row"><span class="stat-label">TBD</span><span class="stat-value">Consensus rule: PoPC-only spending</span></div>
+      <div class="stat-row"><span class="stat-label">TBD</span><span class="stat-value">Operator fully removed from loop</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// PHASE 4 — ECOSYSTEM</h2>
+      <div class="stat-row"><span class="stat-label">2026-2027</span><span class="stat-value">Exchange listings (post PoPC)</span></div>
+      <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">GeaSpirit mineral data platform</span></div>
+      <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Materials Engine integration</span></div>
+      <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Independent miner + node growth</span></div>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-roadmap.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► FULL ROADMAP</button>
+    </div>
+  `;
+  AudioEngine.ambient_pulse();
+};
+
+// ── FOUNDATION ─────────────────────────────────────────────────
+SectionRenderers.foundation = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// SOST FOUNDATION</h2>
+      <p>Non-profit entity coordinating the early SOST protocol while operational responsibilities are gradually transferred to the network itself.</p>
+      <div class="stat-row"><span class="stat-label">ROLE</span><span class="stat-value">Bootstrap phase operator</span></div>
+      <div class="stat-row"><span class="stat-label">COMMITMENT</span><span class="stat-value">Full decentralization ASAP</span></div>
+      <div class="stat-row"><span class="stat-label">GOVERNANCE</span><span class="stat-value">Constitutional rules only</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CONSTITUTIONAL RESERVES</h2>
+      <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</span></div>
+      <div class="stat-row"><span class="stat-label">VAULT BALANCE</span><span class="stat-value">~8,675 SOST</span></div>
+      <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</span></div>
+      <div class="stat-row"><span class="stat-label">POOL BALANCE</span><span class="stat-value">~8,675 SOST</span></div>
+      <p style="margin-top:10px;color:var(--pip-dim);font-size:12px">Both reserves grow by 25% of every block's subsidy forever. The Foundation holds the private keys to operate these addresses during the bootstrap phase; consensus-level restrictions are planned for a future fork.</p>
+    </div>
+    <div class="pip-panel">
+      <h2>// TRANSPARENCY</h2>
+      <p style="font-size:13px;line-height:1.6">All Foundation balances — both on SOST and on Ethereum — are publicly readable at any time. There are no private treasury accounts, no hidden allocations, no insider supply.</p>
+      <div class="stat-row"><span class="stat-label">SOST BALANCES</span><span class="stat-value">Readable via explorer</span></div>
+      <div class="stat-row"><span class="stat-label">ETH GOLD HOLDINGS</span><span class="stat-value">Readable via Etherscan</span></div>
+      <div class="stat-row"><span class="stat-label">CODE</span><span class="stat-value">MIT licensed, open source</span></div>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-foundation.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► FOUNDATION PAGE</button>
+      <br>
+      <button onclick="window.open('https://sostcore.com/sost-foundation-balances.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">LIVE BALANCES ↗</button>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── FAQ ────────────────────────────────────────────────────────
+SectionRenderers.faq = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  const faqs = [
+    ['What is SOST?', 'A native proof-of-work blockchain with a constitutional gold reserve. 50% of each block reward goes to miners, 25% to a Gold Vault, 25% to the PoPC cooperative pool.'],
+    ['How is SOST backed by gold?', 'Every block permanently allocates 25% of subsidy to a constitutional Gold Vault address. PoPC participants commit XAUT/PAXG under their own Ethereum custody, verified via read-only RPC — no trust required.'],
+    ['Can I mine SOST?', 'Yes. ConvergenceX is CPU-friendly (no ASIC advantage) and requires ~8 GB RAM for mining. Any Linux/WSL2 machine with CMake can build and run a miner.'],
+    ['Is there a pre-mine?', 'No. All supply comes from block rewards starting at genesis. The Gold Vault and PoPC Pool are filled by the per-block 25% allocation, not by pre-minted stock.'],
+    ['When is PoPC live?', 'Block 5,000 — approximately 4 days from the PoPC announcement post. Model A (bond + autocustody) activates automatically; Model B (Ethereum escrow) comes later in Q3 2026.'],
+    ['What is the max supply?', '4,669,201 SOST total. Smooth Feigenbaum exponential decay — no abrupt halvings.'],
+    ['How do I participate in PoPC?', 'Use "sost-cli popc register" with flags for your SOST address, ETH wallet, token (XAUT/PAXG), gold amount in mg, and duration. See the Quick Start guide in the POPC section.'],
+    ['Where can I buy SOST?', 'Currently via the Foundation OTC pre-market. No exchange listings yet. See the OTC section for details.'],
+    ['Is the project fully decentralized?', 'Not yet. During bootstrap the Foundation operates the PoPC Pool key. Full decentralization is the explicit long-term goal, planned for when the network has proven stable operation.'],
+    ['Where can I see the code?', 'Open source on GitHub: github.com/Neob1844/sost-core. MIT license.']
+  ];
+  let html = '<div class="pip-panel"><h2>// FREQUENTLY ASKED</h2>';
+  faqs.forEach((qa, i) => {
+    html += `<div class="stat-row" style="flex-direction:column;align-items:stretch">
+      <span class="stat-label" style="color:var(--pip);font-size:13px;margin-bottom:6px"><span style="color:var(--pip-dim)">${String(i+1).padStart(2,'0')}.</span> ${qa[0]}</span>
+      <span style="font-size:12px;color:var(--pip-dim);line-height:1.6">${qa[1]}</span>
+    </div>`;
+  });
+  html += '</div>';
+  html += `<div class="pip-panel" style="text-align:center;padding:20px">
+    <button onclick="window.open('https://sostcore.com/sost-faq.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► FULL FAQ</button>
+  </div>`;
+  el.innerHTML = html;
   AudioEngine.ambient_pulse();
 };
 
