@@ -307,29 +307,24 @@ for keeping it there, you are in the right place.
   <span class="num">3</span>
   <span class="title">Register your commitment</span>
   <div class="body">
-    <p>Call the <code>popc_register</code> RPC with 5 positional parameters:</p>
-    <pre>curl --user YOUR_RPC_USER:YOUR_RPC_PASS -s \
-  -H "Content-Type: application/json" \
-  -d '{
-    "method": "popc_register",
-    "params": [
-      "sost1YOUR_SOST_ADDRESS",
-      "0xYOUR_ETH_WALLET_WITH_XAUT_OR_PAXG",
-      "XAUT",
-      "31103",
-      "12"
-    ],
-    "id": 1
-  }' \
-  http://127.0.0.1:18232</pre>
-    <p>Parameter meaning, in order:</p>
+    <p>Use the <code>sost-cli popc register</code> command with human-readable flags:</p>
+    <pre>./build/sost-cli popc register \
+  --sost-address sost1YOUR_SOST_ADDRESS \
+  --eth-wallet 0xYOUR_ETH_WALLET_WITH_XAUT_OR_PAXG \
+  --token XAUT \
+  --gold-mg 31103 \
+  --duration 12</pre>
+    <p>Flag meaning:</p>
     <table>
-      <tr><td>sost_address</td><td>Your SOST address where the reward will be paid</td></tr>
-      <tr><td>eth_address</td><td>Ethereum wallet (0x...) holding the gold tokens</td></tr>
-      <tr><td>gold_token</td><td>"XAUT" or "PAXG" (case-sensitive)</td></tr>
-      <tr><td>gold_amount_mg</td><td>Gold amount in milligrams (31103 = 1 troy ounce)</td></tr>
-      <tr><td>commitment_months</td><td>1, 3, 6, 9 or 12</td></tr>
+      <tr><td>--sost-address</td><td>Your SOST address where the reward will be paid</td></tr>
+      <tr><td>--eth-wallet</td><td>Ethereum wallet (0x...) holding the gold tokens</td></tr>
+      <tr><td>--token</td><td>XAUT or PAXG (case-sensitive)</td></tr>
+      <tr><td>--gold-mg</td><td>Gold amount in milligrams (31103 = 1 troy ounce)</td></tr>
+      <tr><td>--duration</td><td>1, 3, 6, 9 or 12 (months)</td></tr>
     </table>
+    <div class="info">
+      The bond amount is calculated automatically by the node based on the current SOST/gold price ratio. You do not need to pass it manually. The wallet must hold enough SOST to cover the computed bond before the tx is broadcast.
+    </div>
     <p>
       The node returns a <code>commitment_id</code>. Save it — you will need it to check status later.
     </p>
@@ -341,13 +336,9 @@ for keeping it there, you are in the right place.
   <span class="title">Check the status of your commitment</span>
   <div class="body">
     <p>At any time you can see all active commitments:</p>
-    <pre>curl --user USER:PASS -s -H "Content-Type: application/json" \
-  -d '{"method":"popc_status","params":[],"id":1}' \
-  http://127.0.0.1:18232</pre>
+    <pre>./build/sost-cli popc status</pre>
     <p>Or check a specific commitment by ID:</p>
-    <pre>curl --user USER:PASS -s -H "Content-Type: application/json" \
-  -d '{"method":"popc_check","params":["YOUR_COMMITMENT_ID"],"id":1}' \
-  http://127.0.0.1:18232</pre>
+    <pre>./build/sost-cli popc check YOUR_COMMITMENT_ID</pre>
     <p>Possible statuses:</p>
     <ul>
       <li><code>ACTIVE</code> — the commitment is running. Keep holding your gold.</li>
