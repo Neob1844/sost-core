@@ -1586,6 +1586,138 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    // ---- popc subcommand suite ----
+    // Friendly wrapper over the raw JSON-RPC PoPC methods. Translates human
+    // flags to the positional parameters the node expects. Read-only helpers
+    // (status, check) do not require any wallet unlock.
+    //
+    // Usage:
+    //   sost-cli popc register --sost-address sost1...
+    //                          --eth-wallet 0x...
+    //                          --token XAUT|PAXG
+    //                          --gold-mg 31103
+    //                          --duration 12
+    //   sost-cli popc status
+    //   sost-cli popc check <commitment_id>
+    //
+    // Note: --bond is accepted for forward compatibility but ignored by the
+    // node today — the bond amount is computed automatically from the
+    // SOST/gold price ratio in config/popc_pricing.json.
+    if (cmd == "popc") {
+        if (argc < 3) {
+            fprintf(stderr,
+                "Usage:\n"
+                "  sost-cli popc register --sost-address <addr> --eth-wallet <0x...> \\\n"
+                "                         --token <XAUT|PAXG> --gold-mg <amount> \\\n"
+                "                         --duration <1|3|6|9|12> [--bond <sost>]\n"
+                "  sost-cli popc status\n"
+                "  sost-cli popc check <commitment_id>\n");
+            return 1;
+        }
+        std::string sub = argv[2];
+
+        if (sub == "register") {
+            std::string sost_addr, eth_wallet, token;
+            int64_t gold_mg = -1;
+            int     duration = -1;
+            int64_t bond_sost_ignored = -1; // accepted but unused
+
+            for (int i = 3; i < argc; ++i) {
+                std::string a = argv[i];
+                if ((a == "--sost-address" || a == "--sost") && i + 1 < argc) {
+                    sost_addr = argv[++i];
+                } else if ((a == "--eth-wallet" || a == "--eth") && i + 1 < argc) {
+                    eth_wallet = argv[++i];
+                } else if (a == "--token" && i + 1 < argc) {
+                    token = argv[++i];
+                } else if ((a == "--gold-mg" || a == "--gold-amount-mg") && i + 1 < argc) {
+                    gold_mg = std::stoll(argv[++i]);
+                } else if (a == "--duration" && i + 1 < argc) {
+                    duration = std::stoi(argv[++i]);
+                } else if ((a == "--bond" || a == "--bond-sost") && i + 1 < argc) {
+                    bond_sost_ignored = std::stoll(argv[++i]);
+                } else {
+                    fprintf(stderr, "Unknown flag for 'popc register': %s\n", a.c_str());
+                    return 1;
+                }
+            }
+
+            if (sost_addr.empty() || eth_wallet.empty() || token.empty()
+                || gold_mg <= 0 || duration <= 0) {
+                fprintf(stderr, "Missing required flags.\n");
+                fprintf(stderr, "Required: --sost-address --eth-wallet --token --gold-mg --duration\n");
+                return 1;
+            }
+            if (token != "XAUT" && token != "PAXG") {
+                fprintf(stderr, "--token must be XAUT or PAXG (case sensitive)\n");
+                return 1;
+            }
+            if (duration != 1 && duration != 3 && duration != 6 && duration != 9 && duration != 12) {
+                fprintf(stderr, "--duration must be one of 1, 3, 6, 9, 12\n");
+                return 1;
+            }
+            if (bond_sost_ignored >= 0) {
+                printf("Note: --bond is accepted but ignored — the node computes\n"
+                       "      the bond automatically from the current SOST/gold ratio.\n");
+            }
+
+            // Build positional JSON-RPC params: [sost, eth, token, gold_mg, duration]
+            std::string params =
+                "[\"" + sost_addr + "\","
+                "\"" + eth_wallet + "\","
+                "\"" + token + "\","
+                "\"" + std::to_string(gold_mg) + "\","
+                "\"" + std::to_string(duration) + "\"]";
+
+            printf("Registering PoPC commitment:\n");
+            printf("  SOST address : %s\n", sost_addr.c_str());
+            printf("  ETH wallet   : %s\n", eth_wallet.c_str());
+            printf("  Token        : %s\n", token.c_str());
+            printf("  Gold amount  : %lld mg (%.4f oz)\n",
+                   (long long)gold_mg, (double)gold_mg / 31103.4768);
+            printf("  Duration     : %d months\n", duration);
+            printf("\nCalling popc_register RPC...\n");
+
+            std::string resp = rpc_call("popc_register", params);
+            if (resp.empty()) {
+                fprintf(stderr, "ERROR: no response from node RPC\n");
+                return 1;
+            }
+            // Print the JSON body (everything after the HTTP headers)
+            auto hdr_end = resp.find("\r\n\r\n");
+            std::string body = (hdr_end != std::string::npos) ? resp.substr(hdr_end + 4) : resp;
+            printf("\n%s\n", body.c_str());
+
+            // Best-effort exit code: 0 if node returned a result, 1 if it returned an error.
+            return (body.find("\"error\"") != std::string::npos && body.find("\"error\":null") == std::string::npos) ? 1 : 0;
+        }
+
+        if (sub == "status") {
+            std::string resp = rpc_call("popc_status", "[]");
+            if (resp.empty()) { fprintf(stderr, "ERROR: no response from node\n"); return 1; }
+            auto hdr_end = resp.find("\r\n\r\n");
+            std::string body = (hdr_end != std::string::npos) ? resp.substr(hdr_end + 4) : resp;
+            printf("%s\n", body.c_str());
+            return 0;
+        }
+
+        if (sub == "check") {
+            if (argc < 4) { fprintf(stderr, "Usage: sost-cli popc check <commitment_id>\n"); return 1; }
+            std::string cid = argv[3];
+            std::string params = "[\"" + cid + "\"]";
+            std::string resp = rpc_call("popc_check", params);
+            if (resp.empty()) { fprintf(stderr, "ERROR: no response from node\n"); return 1; }
+            auto hdr_end = resp.find("\r\n\r\n");
+            std::string body = (hdr_end != std::string::npos) ? resp.substr(hdr_end + 4) : resp;
+            printf("%s\n", body.c_str());
+            return 0;
+        }
+
+        fprintf(stderr, "Unknown popc subcommand: %s\n", sub.c_str());
+        fprintf(stderr, "Valid: register, status, check\n");
+        return 1;
+    }
+
     // Unknown command
     fprintf(stderr, "Unknown command: %s\n", cmd.c_str());
     print_usage();
