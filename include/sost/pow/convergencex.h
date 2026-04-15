@@ -24,8 +24,12 @@ struct CXDataset {
     bool is_valid_for(const Bytes32& block_prev_hash) const;
 };
 
-// Global dataset — reused across mining attempts for same block
-extern thread_local CXDataset g_cx_dataset;
+// Global dataset — shared across all mining threads for the same block.
+// Read-only after generate(); the generate path is protected by a mutex
+// in convergencex.cpp. Previously this was thread_local, which allocated
+// an independent 4 GB copy per worker and caused OOM above 4 threads on
+// machines with ≤16 GB free.
+extern CXDataset g_cx_dataset;
 
 // O(1) single-value dataset access (for verification without 4GB)
 uint64_t compute_single_dataset_value(const Bytes32& prev_hash, uint64_t index);

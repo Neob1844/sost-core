@@ -6,12 +6,19 @@
 #include <cstring>
 #include <algorithm>
 #include <map>
+#include <mutex>
 namespace sost {
 
 // ---- CXDataset v2: O(1) single-value access + bulk generation ----
 // Each entry is independently computable from (prev_hash, index) via SplitMix64.
 // Miner builds full 4GB for speed; verifier recomputes individual entries.
-thread_local CXDataset g_cx_dataset;
+// Shared across all mining threads: generate() is protected by g_cx_dataset_mu,
+// and after generate() completes, concurrent read-only access from multiple
+// threads is safe. Previously this was thread_local, which forced each worker
+// thread to allocate its own 4 GB copy and caused OOM / swap thrashing when
+// running with more than ~2-4 threads on machines with ≤16 GB free.
+CXDataset g_cx_dataset;
+static std::mutex g_cx_dataset_mu;
 
 // Compute a single dataset value at given index (O(1), no 4GB needed)
 static uint64_t compute_dataset_seed(const Bytes32& prev_hash) {
@@ -282,8 +289,16 @@ CXAttemptResult convergencex_attempt(
     // Extract prev_hash from header_core (first 32 bytes)
     Bytes32 prev_hash;
     std::memcpy(prev_hash.data(), header_core, 32);
+    // Shared-dataset fast path: in steady state, all mining threads work on
+    // the same prev_hash and hit this check with the dataset already valid,
+    // so the lock-free load completes without contention. Only the first
+    // thread to see a new prev_hash (or the first call ever) grabs the mutex
+    // and regenerates — the double-check inside the lock handles the race.
     if (!g_cx_dataset.is_valid_for(prev_hash)) {
-        g_cx_dataset.generate(prev_hash);
+        std::lock_guard<std::mutex> lk(g_cx_dataset_mu);
+        if (!g_cx_dataset.is_valid_for(prev_hash)) {
+            g_cx_dataset.generate(prev_hash);
+        }
     }
 
     // v2.0: Generate per-block program from block_key
@@ -842,7 +857,10 @@ void generate_transcript_witnesses(
     // Replay the full loop, only capturing witnesses for challenged rounds
     Bytes32 prev_hash;
     std::memcpy(prev_hash.data(), header_core, 32);
-    if (!g_cx_dataset.is_valid_for(prev_hash)) g_cx_dataset.generate(prev_hash);
+    if (!g_cx_dataset.is_valid_for(prev_hash)) {
+        std::lock_guard<std::mutex> lk(g_cx_dataset_mu);
+        if (!g_cx_dataset.is_valid_for(prev_hash)) g_cx_dataset.generate(prev_hash);
+    }
     CXProgram program; program.generate(block_key);
 
     std::vector<uint8_t> sbuf;
