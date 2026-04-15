@@ -345,10 +345,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
-<!-- V5 post-activation reminder — small, discrete -->
-<div id="v5Reminder" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(0,255,65,0.05);border-left:3px solid #00ff41;padding:8px 16px;font-family:var(--code);font-size:10px;color:#00ff41;line-height:1.6;">
-    <b>✓ cASERT V5 active since block 4,300.</b> Network converged on V5 rules (determinism fix + liveness + extreme-profile entry cap). If your node or miner is still stuck on a pre-V5 fork, follow the full update instructions in <a href="https://bitcointalk.org/index.php?topic=5579432.msg66650220#msg66650220" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #80</a>. Quick recovery: <span style="color:#67e8f9;">git pull origin main &amp;&amp; cmake --build build -j$(nproc) &amp;&amp; sudo systemctl restart sost-node</span>. If your chain.json is in a bad state, <span style="color:#67e8f9;">curl -o chain.json https://sostcore.com/bootstrap-chain.json</span> and restart the node.
+<!-- V6 coordinated fork notice — block 10,000. Short, technical, non-alarming. -->
+<div id="v6Notice" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:rgba(103,232,249,0.05);border-left:3px solid #67e8f9;padding:8px 16px;font-family:var(--code);font-size:10px;color:#67e8f9;line-height:1.6;">
+    <b>V6 coordinated hard fork → block 10,000.</b> Bundles: Gold Vault GV1–GV4 consensus enforcement, signature-bound PoW (anti-pool), PoPC operational launch, Bond/Escrow/Capsule activation. Activation height pushed from 5,000 → 10,000 to allow proper testnet burn-in. Node operators: V5.1 hotfix release in 1–2 weeks (constants only, no consensus rule changes). Miners: V6 binary required ~4 weeks before block 10,000. Full technical explanation, audit findings and timeline: <a href="https://bitcointalk.org/index.php?topic=5579432.msg0#new" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #89</a>.
   </div>
 </div>
 <div class="dashboard" id="dashboard">
@@ -1294,6 +1294,7 @@ function drawSparkline(){
 })();
 var _activeDashPanel=null;
 var _minersScanInProgress=false;
+var _minersCountdownInterval=null;
 // Auto-refresh miners panel every 60s if open (silent — no "Scanning..." overlay)
 setInterval(function(){
   if(_activeDashPanel==='miners'&&!_minersScanInProgress){
@@ -1440,6 +1441,8 @@ function renderDashPanel(key,body,title,silent){
     title.textContent='// UNIQUE MINERS (last 288 blocks)';
     // Count unique miner addresses from _diffHistory (which stores recent blocks)
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading miner data...</div>';return;}
+    if(_minersScanInProgress&&!silent){return;}
+    _minersScanInProgress=true;
     // Fetch miner addresses from recent blocks
     (async function(){
       var miners={};
@@ -1531,16 +1534,19 @@ function renderDashPanel(key,body,title,silent){
       html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Disclaimer: Observed simultaneous mining share is calculated from this node\'s view of the last '+lookback+' blocks. "Simultaneous" means 2+ distinct miners were active (mined at least 1 block) in the previous '+WINDOW+' blocks. This is an approximation — different nodes may see slightly different values. Solo blocks are those mined when only 1 miner was active in the lookback window.</div>';
       html+='</div>';
       body.innerHTML=html;
+      if(_minersCountdownInterval){clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       _minersScanInProgress=false;
     })();
     if(!silent){
+      if(_minersCountdownInterval){clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       body.innerHTML='<div style="color:var(--text3)">Scanning blocks for miner addresses... <span id="minerScanCountdown" style="color:var(--cyan)"></span></div>';
-      var _msc=120;var _msci=setInterval(function(){
+      var _msc=120;
+      _minersCountdownInterval=setInterval(function(){
         var el=document.getElementById('minerScanCountdown');
-        if(!el){clearInterval(_msci);return;}
+        if(!el){clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;return;}
         _msc--;
         if(_msc>0){var mm=Math.floor(_msc/60),ss=_msc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
-        else{el.textContent='(still loading...)';clearInterval(_msci);}
+        else{el.textContent='(still loading...)';clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       },1000);
     }
   }
