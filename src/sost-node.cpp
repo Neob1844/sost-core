@@ -1308,9 +1308,14 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
     return rpc_result(id,s.str());
 }
 
-// ESTIMATEFEE: analyze last 10 blocks + mempool for fee recommendation
+// ESTIMATEFEE: analyze last 10 blocks + mempool for fee recommendation.
+// Consensus minimum is MIN_RELAY_FEE_PER_BYTE = 1 stock/byte. The wallet
+// recommendation floor is 10× that (10 stocks/byte) — a small safety
+// margin for burst-time inclusion without making fees abusive. The
+// previous value here (1000) was a 1000× overshoot that made typical
+// txs pay ~0.02 SOST per tx instead of ~0.0002.
 static std::string handle_estimatefee(const std::string& id, const std::vector<std::string>&) {
-    const int64_t MIN_FEE = 1000; // relay minimum in stocks/byte
+    const int64_t MIN_FEE = 10;   // recommended floor in stocks/byte (10× consensus)
     const int LOOKBACK = 10;
 
     // Analyze fees in last LOOKBACK blocks
