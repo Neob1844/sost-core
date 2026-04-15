@@ -19,7 +19,7 @@ inline constexpr uint16_t MAX_OUTPUTS_CONSENSUS     = 256;
 
 // Bond/Escrow activation — BOND_LOCK (0x10) and ESCROW_LOCK (0x11) become valid
 // output types after this height. Before activation, R11 rejects them.
-inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_MAINNET = 5000;
+inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_MAINNET = 10000;
 inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_TESTNET = 100;
 inline constexpr int64_t  BOND_ACTIVATION_HEIGHT_DEV     = 1;
 
@@ -29,14 +29,14 @@ inline constexpr uint16_t ESCROW_LOCK_PAYLOAD_LEN = 28;  // lock_until (8) + ben
 
 // =========================================================================
 // Gold Vault Governance — Consensus-level spending rules
-// Activates at BOND_ACTIVATION_HEIGHT (5000). Before that, no restriction.
+// Activates at BOND_ACTIVATION_HEIGHT (10000). Before that, no restriction.
 // =========================================================================
 
 // Activation (same height as Bond/Escrow/Capsule)
-inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 5000;
+inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 10000;
 
 // Signaling thresholds for large Gold Vault spends
-inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 75;   // 75% in Epoch 0-1 (blocks 5000-263105)
+inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 75;   // 75% in Epoch 0-1 (blocks 10000-263105). Note: V6 hard fork raises this to 95% — see docs/internal/btctalk-ann-v2-block-10000.txt
 inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 95;   // 95% in Epoch 2+ (blocks 263106+)
 inline constexpr int32_t  GV_APPROVAL_WINDOW    = 288;  // ~48h voting window
 

@@ -48,8 +48,8 @@ TEST(GV01_before_activation) {
 // =============================================================================
 TEST(GV02_gold_purchase_no_vote) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, true, nullptr, tracker, 6000);
+    tracker.reset(10000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, true, nullptr, tracker, 11000);
     EXPECT(result == GVSpendType::GOLD_PURCHASE, "Gold purchase should be allowed without vote");
 }
 
@@ -58,8 +58,8 @@ TEST(GV02_gold_purchase_no_vote) {
 // =============================================================================
 TEST(GV03_small_spend_no_vote) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
-    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 6000);
+    tracker.reset(10000);
+    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 11000);
     EXPECT(result == GVSpendType::OPERATIONAL_SMALL, "Small spend (8%) should be allowed without vote");
 }
 
@@ -68,10 +68,10 @@ TEST(GV03_small_spend_no_vote) {
 // =============================================================================
 TEST(GV04_small_spend_exceeds_monthly) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     tracker.spent_stocks = 45'000'000'000LL; // already spent 9%
     // Try to spend another 8% → total 17% > 10%
-    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "Exceeding 10% monthly should be rejected without approval");
 }
 
@@ -80,8 +80,8 @@ TEST(GV04_small_spend_exceeds_monthly) {
 // =============================================================================
 TEST(GV05_large_spend_no_approval) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, nullptr, tracker, 6000);
+    tracker.reset(10000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, nullptr, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "Large spend (20%) without approval should be rejected");
 }
 
@@ -90,12 +90,12 @@ TEST(GV05_large_spend_no_approval) {
 // =============================================================================
 TEST(GV06_large_spend_75_approved) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     GVApprovalToken token{};
     token.signal_pct = 76;
     token.threshold_required = 75;
     token.foundation_supported = false;
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "76% signaling should approve at 75% threshold");
 }
 
@@ -104,12 +104,12 @@ TEST(GV06_large_spend_75_approved) {
 // =============================================================================
 TEST(GV07_large_spend_74_rejected) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     GVApprovalToken token{};
     token.signal_pct = 74;
     token.threshold_required = 75;
     token.foundation_supported = false;
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "74% signaling should be rejected at 75% threshold");
 }
 
@@ -118,12 +118,12 @@ TEST(GV07_large_spend_74_rejected) {
 // =============================================================================
 TEST(GV08_foundation_support_65_plus_10) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     GVApprovalToken token{};
     token.signal_pct = 65;
     token.threshold_required = 75;
     token.foundation_supported = true;
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "65% + 10% foundation = 75% should approve");
 }
 
@@ -132,12 +132,12 @@ TEST(GV08_foundation_support_65_plus_10) {
 // =============================================================================
 TEST(GV09_foundation_support_64_plus_10) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     GVApprovalToken token{};
     token.signal_pct = 64;
     token.threshold_required = 75;
     token.foundation_supported = true;
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "64% + 10% = 74% should be rejected");
 }
 
@@ -185,9 +185,9 @@ TEST(GV12_epoch2_no_foundation_bonus) {
 // =============================================================================
 TEST(GV13_random_address_rejected) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     // Large spend, no gold marker, no approval
-    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, nullptr, tracker, 6000);
+    auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, nullptr, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "Random large spend should be rejected");
 }
 
@@ -196,10 +196,10 @@ TEST(GV13_random_address_rejected) {
 // =============================================================================
 TEST(GV14_monthly_counter_reset) {
     GVMonthlyTracker tracker;
-    tracker.reset(5000);
+    tracker.reset(10000);
     tracker.spent_stocks = 45'000'000'000LL; // 9% already spent in old window
     // 5000 blocks later (> 4320), window has expired → fresh allowance
-    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 10000);
+    auto result = classify_gv_spend(VAULT_BAL, SMALL_SPEND, false, nullptr, tracker, 15000);
     EXPECT(result == GVSpendType::OPERATIONAL_SMALL, "After window expires, fresh allowance should apply");
 }
 
@@ -207,15 +207,15 @@ TEST(GV14_monthly_counter_reset) {
 // Proposal passing check
 // =============================================================================
 TEST(GV15_proposal_passes_75) {
-    EXPECT(gv_proposal_passes(216, 288, false, 6000) == true, "216/288 = 75% should pass");
-    EXPECT(gv_proposal_passes(215, 288, false, 6000) == false, "215/288 = 74.6% should fail");
+    EXPECT(gv_proposal_passes(216, 288, false, 11000) == true, "216/288 = 75% should pass");
+    EXPECT(gv_proposal_passes(215, 288, false, 11000) == false, "215/288 = 74.6% should fail");
 }
 
 TEST(GV16_proposal_foundation_support) {
     // 188/288 = 65.3% + 10% = 75.3% → pass
-    EXPECT(gv_proposal_passes(188, 288, true, 6000) == true, "65.3% + 10% foundation should pass");
+    EXPECT(gv_proposal_passes(188, 288, true, 11000) == true, "65.3% + 10% foundation should pass");
     // 187/288 = 64.9% + 10% = 74.9% → fail
-    EXPECT(gv_proposal_passes(187, 288, true, 6000) == false, "64.9% + 10% should fail");
+    EXPECT(gv_proposal_passes(187, 288, true, 11000) == false, "64.9% + 10% should fail");
 }
 
 TEST(GV17_proposal_epoch2_no_bonus) {

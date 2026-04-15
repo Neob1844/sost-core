@@ -14,7 +14,7 @@ namespace sost {
 // Capsule activation — payload allowed in OUT_TRANSFER after this height
 // Before: R14 enforces payload_len == 0 on all active types (genesis-safe)
 // After:  OUT_TRANSFER may carry payload <= 255 (Capsule Protocol v1)
-inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_MAINNET = 5000;
+inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_MAINNET = 10000;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_TESTNET = 100;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_DEV     = 1;
 
