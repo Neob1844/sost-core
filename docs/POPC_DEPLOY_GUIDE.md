@@ -165,8 +165,8 @@ curl -s -u user:pass -X POST http://127.0.0.1:18232 -d '{
 | Reward 1mo | 1% | Of bond (Tier 1 base max) |
 | Reward 3mo | 4% | |
 | Reward 6mo | 9% | |
-| Reward 9mo | 14% | |
-| Reward 12mo | 20% | |
+| Reward 9mo | 15% | |
+| Reward 12mo | 22% | |
 | Tier system | 6 tiers | 100%/75%/50%/30%/15%/8% by active contracts |
 | Hard cap | 1,000 SOST | Max reward per contract |
 | Max contracts | 1,000 | Active simultaneously |

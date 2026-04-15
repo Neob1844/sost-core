@@ -26,17 +26,18 @@ namespace sost {
 // Valid commitment durations (months)
 static constexpr uint16_t POPC_DURATIONS[] = {1, 3, 6, 9, 12};
 
-// Base reward rates (% of bond × 100) — maximum at Tier 1 (EARLY ADOPTER)
+// Base reward rates (% of bond × 100) — whitepaper Section 6.7 / POPC_MODEL_A_SPECIFICATION.md
+// Index matches POPC_DURATIONS: 1mo=1%, 3mo=4%, 6mo=9%, 9mo=15%, 12mo=22%.
 // Actual rate = base × tier_multiplier. See compute_tier_multiplier().
-static constexpr uint16_t POPC_REWARD_RATES[] = {100, 400, 900, 1400, 2000};
+static constexpr uint16_t POPC_REWARD_RATES[] = {100, 400, 900, 1500, 2200};
 
-// Protocol fees — differentiated by model
-// Model A: lower fee (participant assumes slash risk + buys SOST for bond)
-// Model B: higher fee (no risk, no SOST purchase required, simpler)
-static constexpr uint16_t POPC_PROTOCOL_FEE_A_BPS = 300;  // 3% for Model A
-static constexpr uint16_t POPC_PROTOCOL_FEE_B_BPS = 800;  // 8% for Model B
-// Legacy unified fee (kept for backward compat in tests)
-static constexpr uint16_t POPC_PROTOCOL_FEE_BPS = 300;    // default = Model A
+// Protocol fee — 5% uniform per whitepaper Section 6.7 / POPC_MODEL_A_SPECIFICATION.md:216
+// "protocol_fee = base_reward × 0.05"
+// Previous Model A/B differentiation (3%/8%) was a draft that never made it into the
+// whitepaper; collapsed to a single 5% rate until a future amendment says otherwise.
+static constexpr uint16_t POPC_PROTOCOL_FEE_BPS   = 500;  // 5% uniform (authoritative)
+static constexpr uint16_t POPC_PROTOCOL_FEE_A_BPS = 500;  // alias — kept for API compat
+static constexpr uint16_t POPC_PROTOCOL_FEE_B_BPS = 500;  // alias — kept for API compat
 
 // Slash distribution: 50% PoPC Pool, 50% Gold Vault
 static constexpr uint16_t POPC_SLASH_POOL_PCT = 50;
