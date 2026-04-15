@@ -786,8 +786,24 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         uint64_t total_att = g_total_attempts.load(std::memory_order_relaxed);
                         double hashrate = (elapsed_s > 0) ? total_att / elapsed_s : 0;
                         double stab_pct = (my_total > 0) ? (double)my_stable / my_total * 100.0 : 0;
-                        printf("\n[HASHRATE] %.1f att/s | threads=%d | total=%llu | stable=%.0f%% | elapsed=%.0fs\n",
-                               hashrate, g_num_threads, (unsigned long long)total_att, stab_pct, elapsed_s);
+                        double target_pct = (my_total > 0) ? (double)my_target / my_total * 100.0 : 0;
+                        // Rate of "useful work" = attempts that passed BOTH stability and target filters.
+                        // When this is near zero and hashrate is high, the bottleneck is the filters,
+                        // not raw compute.
+                        double effective_rate = hashrate * (stab_pct / 100.0);
+                        // Profile name for readability in the diagnostic line.
+                        static const char* PROF_NAMES[] = {
+                            "E4","E3","E2","E1","B0","H1","H2","H3","H4",
+                            "H5","H6","H7","H8","H9","H10","H11","H12"
+                        };
+                        int32_t pi = params.stab_profile_index;
+                        int pn_idx = (pi < -4) ? 0 : (pi > 12) ? 16 : (pi + 4);
+                        const char* prof_name = PROF_NAMES[pn_idx];
+                        printf("\n[MINING] %s bitsQ=%.3f | %.1f att/s | stable=%.1f%% | target_hits=%u | "
+                               "eff=%.1f stable/s | threads=%d | elapsed=%.0fs\n",
+                               prof_name, (double)bits_q / 65536.0,
+                               hashrate, stab_pct, my_target, effective_rate,
+                               g_num_threads, elapsed_s);
                         fflush(stdout);
 
                         // Check if anti-stall changed the profile (when stability is 0%)
