@@ -245,6 +245,14 @@
     </div>
   </aside>
   <main class="wp-content">
+
+<!-- POST-V6 REVISION BANNER — inserted during V6 hardening sprint -->
+<div id="wpRevisionBanner" style="margin:0 0 24px 0;padding:0;">
+  <div style="background:rgba(251,191,36,0.06);border-left:3px solid #fbbf24;padding:14px 18px;font-family:var(--code,monospace);font-size:11px;color:#fbbf24;line-height:1.7;border-radius:2px;">
+    <b>⚠ POST-V6 REVISION IN PROGRESS.</b> This whitepaper is being revised to reflect the V6 coordinated hard fork (block 10,000), which introduces signature-bound Proof of Work, the 5-defense Gold Vault model (purpose restriction + dual destination whitelists + per-spend cap + rate limiting + 95% supermajority), and replaces the original "Foundation Execution Order" framing with a direct developer→protocol custody transition at block 10,000. Activation height was moved from 5,000 to 10,000 to allow proper testnet burn-in. <b>For the canonical current architecture</b>, see <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #89</a> and the <a href="https://github.com/Neob1844/sost-core" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">project repository</a>. Sections of this document referring to "Foundation Execution Order", "75% threshold", "block 5,000 activation", or "multisig/timelock custody" describe the pre-V6 design and are being rewritten. The next whitepaper revision is scheduled before the V6 release candidate.
+  </div>
+</div>
+
 <h2 id="sec-0" class="wp-h">SOST</h2>
 <div class="wp-spacer"></div>
 <h3 id="sec-1" class="wp-h">Proof of Irreversible Convergence</h3>
