@@ -2359,7 +2359,7 @@ window.onFeeModeChange = function() {
 window.estimateFee = async function() {
   try {
     const result = await rpcCall('estimatefee');
-    _recommendedFee = result.fee_per_byte || 1000;
+    _recommendedFee = result.fee_per_byte || 10;
     const mode = document.getElementById('feeMode').value;
     if (mode !== 'manual') {
       document.getElementById('sendFee').value = mode === 'auto' ? MIN_RELAY_FEE : _recommendedFee;

@@ -233,13 +233,14 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     s<<"]}"; return rpc_result(id,s.str());
 }
 
-// estimatefee (standalone: always returns minimum relay)
+// estimatefee (standalone wallet-backed sost-rpc: returns recommended floor).
+// Consensus minimum is 1 stock/byte; wallets get a 10× safety margin.
 static std::string handle_estimatefee(const std::string& id, const std::vector<std::string>&) {
-    const int64_t MIN_FEE = 1000;
+    const int64_t RECOMMENDED_FEE = 10;  // stocks/byte (10× consensus floor)
     std::ostringstream s;
-    s<<"{\"fee_per_byte\":"<<MIN_FEE
-     <<",\"fee_for_typical_tx\":"<<(MIN_FEE*250)
-     <<",\"basis\":\"minimum_relay\"}";
+    s<<"{\"fee_per_byte\":"<<RECOMMENDED_FEE
+     <<",\"fee_for_typical_tx\":"<<(RECOMMENDED_FEE*250)
+     <<",\"basis\":\"recommended_floor\"}";
     return rpc_result(id,s.str());
 }
 

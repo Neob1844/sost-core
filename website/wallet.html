@@ -1337,7 +1337,7 @@ window.refreshBalance = async function() {
 window.estimateFee = async function() {
   try {
     const result = await rpcCall('estimatefee');
-    const feePerByte = result.fee_per_byte || 1;
+    const feePerByte = result.fee_per_byte || 10;
     document.getElementById('sendFee').value = feePerByte;
     document.getElementById('feeInfo').innerHTML =
       `Recommended: <span class="fee-val">${feePerByte} stocks/byte</span> ` +

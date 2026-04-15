@@ -57,8 +57,12 @@
 static const char* DEFAULT_WALLET = "wallet.json";
 static const int64_t STOCKS_PER_SOST = 100000000LL;
 
-// v1.3: fee is now dynamic — this is only the absolute floor
-static const int64_t MIN_FEE_STOCKS   = 1000;  // 0.00001 SOST floor
+// Fee policy. MIN_FEE_STOCKS is a flat dust floor (total fee cannot be
+// lower than this even for tiny txs); FEE_RATE_DEFAULT is the per-byte
+// rate used for normal tx sizing. Consensus S8 requires ≥1 stock/byte,
+// so FEE_RATE_DEFAULT=1 is already valid. The 100-stock flat floor is
+// a dust-protection safety margin, not a per-byte multiplier.
+static const int64_t MIN_FEE_STOCKS   = 100;    // flat floor: 0.000001 SOST
 static const int64_t FEE_RATE_DEFAULT  = 1;     // 1 stock/byte (consensus min S8)
 
 // RPC auth credentials (empty = no auth header sent)
