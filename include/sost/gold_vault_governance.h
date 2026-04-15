@@ -1,7 +1,7 @@
 // gold_vault_governance.h — Consensus-level Gold Vault spending rules
 //
-// Activates at block 5000 (same as Bond/Escrow/Capsule).
-// Before block 5000: no spending restrictions on Gold Vault.
+// Activates at block 10000 (same as Bond/Escrow/Capsule).
+// Before block 10000: no spending restrictions on Gold Vault.
 //
 // 4 rules:
 //   GV1: Gold purchase (marked payload) → no vote needed

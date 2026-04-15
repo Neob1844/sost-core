@@ -1,6 +1,6 @@
 // popc_model_b.h — PoPC Model B (Escrow-Based)
 // No consensus changes — application layer only.
-// ESCROW_LOCK (0x11) is already active at height 5000.
+// ESCROW_LOCK (0x11) is active at height 10000 (V6 hard fork).
 #pragma once
 #include "sost/transaction.h"
 #include "sost/popc.h"
