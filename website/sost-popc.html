@@ -660,6 +660,7 @@
       <a href="sost-foundation.html">Foundation</a>
       <a href="sost-foundation-balances.html">Foundation Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="casert-spec.html">cASERT</a>
@@ -1313,6 +1314,52 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
     <div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:20px 0;font-size:12px;color:var(--text-secondary);line-height:1.8;">
 <strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
 </div>
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">TOOLING</div>
+      <h2 class="section-title">Operator &amp; Participant <span class="accent">Tools</span></h2>
+      <p style="color:var(--text-secondary);margin-top:10px;">Read-only scripts for monitoring the pool, auditing commitments, and understanding Model B's roadmap. All live in <code style="color:var(--cyan-primary);">scripts/</code> in the repository.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:24px;">
+
+      <div style="background:var(--bg-panel);border:1px solid var(--border-med);border-left:3px solid var(--cyan-primary);padding:18px 20px;border-radius:4px;">
+        <h3 style="font-family:var(--font-display);font-size:16px;color:var(--cyan-primary);margin-bottom:8px;">popc_monitor.py</h3>
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Live dashboard for the PoPC Pool. Shows pool balance, active contracts, PUR%, current reward tier, dynamic factor, and effective rewards at the current tier. Alerts when PUR crosses 50%.</p>
+        <pre style="background:var(--bg-card);padding:10px 12px;font-size:11px;color:var(--green-primary);overflow-x:auto;border-radius:2px;">python3 scripts/popc_monitor.py \
+  --rpc-user USER --rpc-pass PASS \
+  --watch 30</pre>
+        <p style="color:var(--text-dim);font-size:11px;margin-top:8px;">Read-only · no consensus interaction · one-shot or --watch N mode.</p>
+      </div>
+
+      <div style="background:var(--bg-panel);border:1px solid var(--border-med);border-left:3px solid var(--cyan-primary);padding:18px 20px;border-radius:4px;">
+        <h3 style="font-family:var(--font-display);font-size:16px;color:var(--cyan-primary);margin-bottom:8px;">popc_oracle.py</h3>
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Etherscan audit tool. For each active commitment, queries the declared Ethereum wallet's XAUT/PAXG balance and compares it to the committed gold amount. Prints PASS/FAIL/ERROR per commitment and writes a CSV snapshot.</p>
+        <pre style="background:var(--bg-card);padding:10px 12px;font-size:11px;color:var(--green-primary);overflow-x:auto;border-radius:2px;">python3 scripts/popc_oracle.py \
+  --rpc-user USER --rpc-pass PASS \
+  --etherscan-key KEY \
+  --csv /tmp/audit.csv</pre>
+        <p style="color:var(--text-dim);font-size:11px;margin-top:8px;">Read-only · never slashes automatically · operator decides on failures.</p>
+      </div>
+
+      <div style="background:var(--bg-panel);border:1px solid var(--border-med);border-left:3px solid var(--gold, #DAA520);padding:18px 20px;border-radius:4px;">
+        <h3 style="font-family:var(--font-display);font-size:16px;color:#DAA520;margin-bottom:8px;">Model B roadmap</h3>
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Formal roadmap for the Ethereum escrow smart contract that Model B requires. Covers what is missing, required security audit, realistic 16-22 week timeline, open design questions, and go/no-go criteria for mainnet launch.</p>
+        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">Status: <strong style="color:#DAA520;">draft</strong> — not ready to deploy. Model A is the primary system at block 5,000 activation.</p>
+        <a href="https://github.com/Neob1844/sost-core/blob/main/docs/popc_model_b_roadmap.md" target="_blank" rel="noopener" style="display:inline-block;color:var(--cyan-primary);text-decoration:none;font-size:12px;border:1px solid var(--cyan-primary);padding:6px 12px;border-radius:2px;margin-top:4px;">Read the roadmap on GitHub &rarr;</a>
+      </div>
+
+    </div>
+
+    <div style="margin-top:32px;padding:16px 20px;background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.3);border-left:3px solid var(--green-primary);border-radius:4px;">
+      <strong style="color:var(--green-primary);">First-time participant?</strong>
+      <span style="color:var(--text-secondary);font-size:13px;">Read the step-by-step guide at <a href="sost-popc-quickstart.html" style="color:var(--green-primary);text-decoration:underline;">sost-popc-quickstart.html</a> &mdash; no prior SOST experience required.</span>
+    </div>
 
   </div>
 </section>

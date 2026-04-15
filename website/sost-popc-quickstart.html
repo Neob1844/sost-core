@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-popc-quickstart.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoPC Quick Start — Step by step guide for first-time participants</title>
+<meta name="description" content="Quick start guide for Proof of Personal Custody on SOST. How to register your first gold commitment, check audit status, and receive rewards. No prior SOST experience required.">
+<meta name="keywords" content="PoPC quick start, SOST how to, gold custody tutorial, XAUT PAXG SOST, popc_register guide">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PoPC Quick Start — Step by step guide">
+<meta property="og:description" content="From zero to your first PoPC commitment in 15 minutes.">
+<meta property="og:url" content="https://sostcore.com/sost-popc-quickstart.html">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --gold: #DAA520;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px; position: relative; z-index: 1; }
+  header { border-bottom: 2px solid var(--red-primary); padding-bottom: 24px; margin-bottom: 32px; }
+  header h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  header .sub { color: var(--text-secondary); font-size: 13px; }
+  header .nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    margin-right: 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  header .nav a:hover { color: var(--red-primary); }
+  header .nav { margin-top: 16px; }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--red-primary);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-med);
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--cyan-primary);
+    margin: 24px 0 12px;
+  }
+  p { margin-bottom: 12px; color: var(--text-primary); }
+  .muted { color: var(--text-secondary); font-size: 13px; }
+
+  .step {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-med);
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 2px;
+  }
+  .step .num {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--bg-deep);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-weight: 700;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .step .title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 16px;
+  }
+  .step .body { margin-top: 8px; padding-left: 38px; }
+
+  pre, code {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    padding: 12px 16px;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--green-primary);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  code {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+  pre { margin: 12px 0; line-height: 1.5; }
+
+  .warn {
+    background: rgba(251, 1, 13, 0.08);
+    border: 1px solid var(--red-primary);
+    border-left: 3px solid var(--red-primary);
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: var(--red-bright);
+    font-size: 13px;
+  }
+  .warn strong { color: var(--red-primary); }
+
+  .info {
+    background: rgba(34, 211, 238, 0.06);
+    border: 1px solid var(--cyan-primary);
+    border-left: 3px solid var(--cyan-primary);
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  .ok {
+    background: rgba(74, 222, 128, 0.06);
+    border: 1px solid var(--green-primary);
+    border-left: 3px solid var(--green-primary);
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  ul, ol { margin-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; color: var(--text-primary); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: var(--bg-panel);
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid var(--border-med);
+    padding: 10px 14px;
+    text-align: left;
+  }
+  th {
+    background: var(--bg-card);
+    color: var(--gold);
+    font-weight: 600;
+  }
+  td { color: var(--text-primary); }
+  td:first-child { color: var(--cyan-primary); font-weight: 500; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-med);
+    color: var(--text-dim);
+    font-size: 12px;
+    text-align: center;
+  }
+  footer a { color: var(--text-secondary); text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: var(--red-primary); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>PoPC Quick Start</h1>
+  <div class="sub">From zero to your first Proof of Personal Custody commitment — step by step</div>
+  <div class="nav">
+    <a href="index.html">← home</a>
+    <a href="sost-popc.html">full PoPC spec</a>
+    <a href="sost-explorer.html">explorer</a>
+    <a href="https://github.com/Neob1844/sost-core" target="_blank">github</a>
+  </div>
+</header>
+
+<h2>// What this guide covers</h2>
+
+<p>
+This is a <strong>plain-English step-by-step guide</strong> for first-time PoPC participants. No prior
+SOST experience assumed. If you hold XAUT or PAXG in an Ethereum wallet and want to earn SOST rewards
+for keeping it there, you are in the right place.
+</p>
+
+<div class="info">
+  <strong>Time required:</strong> ~15 minutes to register your first commitment once you have SOST, a
+  node, and some gold tokens in an Ethereum wallet.
+  <br><br>
+  <strong>What you risk:</strong> only the SOST bond you lock. Your gold never leaves your wallet. If you
+  keep custody for the committed period, the bond is returned in full plus the reward.
+</div>
+
+<h2>// Requirements before you start</h2>
+
+<ol>
+  <li>
+    <strong>An Ethereum wallet you control</strong> (MetaMask, hardware wallet, etc.) holding XAUT
+    (Tether Gold) or PAXG (Pax Gold). Minimum recommended: 0.5 troy ounce (~$1,500 at current prices).
+  </li>
+  <li>
+    <strong>A SOST wallet</strong> with enough SOST to cover the bond. At current prices the bond is
+    25% of the gold's USD value expressed in SOST.
+  </li>
+  <li>
+    <strong>A running sost-node</strong> synced to the latest block. If you do not have one yet, follow
+    the node setup guide linked from the main README.
+  </li>
+  <li>
+    <strong>Current block height ≥ 5,000</strong>. PoPC registration is only accepted after the
+    activation gate.
+  </li>
+</ol>
+
+<h2>// Step by step</h2>
+
+<div class="step">
+  <span class="num">1</span>
+  <span class="title">Verify your sost-node is running and synced</span>
+  <div class="body">
+    <p>Run this command and check the output:</p>
+    <pre>curl --user YOUR_RPC_USER:YOUR_RPC_PASS -s \
+  -H "Content-Type: application/json" \
+  -d '{"method":"getinfo","params":[],"id":1}' \
+  http://127.0.0.1:18232</pre>
+    <p>
+      You should see a JSON response with <code>blocks</code> matching the current tip shown on
+      <a href="https://sostcore.com/sost-explorer.html" style="color:var(--cyan-primary)">sost-explorer.html</a>.
+      If <code>blocks</code> is more than 10 behind the explorer, wait for the node to sync before continuing.
+    </p>
+  </div>
+</div>
+
+<div class="step">
+  <span class="num">2</span>
+  <span class="title">Choose your commitment parameters</span>
+  <div class="body">
+    <p>Decide:</p>
+    <ul>
+      <li><strong>Gold amount</strong> in milligrams (1 troy oz = 31,103 mg)</li>
+      <li><strong>Gold token</strong>: <code>XAUT</code> or <code>PAXG</code></li>
+      <li><strong>Duration</strong>: 1, 3, 6, 9 or 12 months (longer = higher reward)</li>
+    </ul>
+    <p>The bond amount and reward are calculated automatically by the node from the current SOST/gold price ratio.</p>
+    <table>
+      <tr><th>Duration</th><th>Base reward</th><th>At Tier 1 (early adopter)</th></tr>
+      <tr><td>1 month</td><td>1.0% of bond</td><td>1.0% effective</td></tr>
+      <tr><td>3 months</td><td>4.0% of bond</td><td>4.0% effective</td></tr>
+      <tr><td>6 months</td><td>9.0% of bond</td><td>9.0% effective</td></tr>
+      <tr><td>9 months</td><td>15.0% of bond</td><td>15.0% effective</td></tr>
+      <tr><td>12 months</td><td>22.0% of bond</td><td>22.0% effective</td></tr>
+    </table>
+    <div class="info">
+      The tier multiplier decreases as more people join. The first 24 contracts get 100% (Tier 1), then
+      75%, 50%, 30%, 15%, 8%. <strong>Early adopters get the highest effective rate.</strong>
+    </div>
+  </div>
+</div>
+
+<div class="step">
+  <span class="num">3</span>
+  <span class="title">Register your commitment</span>
+  <div class="body">
+    <p>Call the <code>popc_register</code> RPC with 5 positional parameters:</p>
+    <pre>curl --user YOUR_RPC_USER:YOUR_RPC_PASS -s \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "popc_register",
+    "params": [
+      "sost1YOUR_SOST_ADDRESS",
+      "0xYOUR_ETH_WALLET_WITH_XAUT_OR_PAXG",
+      "XAUT",
+      "31103",
+      "12"
+    ],
+    "id": 1
+  }' \
+  http://127.0.0.1:18232</pre>
+    <p>Parameter meaning, in order:</p>
+    <table>
+      <tr><td>sost_address</td><td>Your SOST address where the reward will be paid</td></tr>
+      <tr><td>eth_address</td><td>Ethereum wallet (0x...) holding the gold tokens</td></tr>
+      <tr><td>gold_token</td><td>"XAUT" or "PAXG" (case-sensitive)</td></tr>
+      <tr><td>gold_amount_mg</td><td>Gold amount in milligrams (31103 = 1 troy ounce)</td></tr>
+      <tr><td>commitment_months</td><td>1, 3, 6, 9 or 12</td></tr>
+    </table>
+    <p>
+      The node returns a <code>commitment_id</code>. Save it — you will need it to check status later.
+    </p>
+  </div>
+</div>
+
+<div class="step">
+  <span class="num">4</span>
+  <span class="title">Check the status of your commitment</span>
+  <div class="body">
+    <p>At any time you can see all active commitments:</p>
+    <pre>curl --user USER:PASS -s -H "Content-Type: application/json" \
+  -d '{"method":"popc_status","params":[],"id":1}' \
+  http://127.0.0.1:18232</pre>
+    <p>Or check a specific commitment by ID:</p>
+    <pre>curl --user USER:PASS -s -H "Content-Type: application/json" \
+  -d '{"method":"popc_check","params":["YOUR_COMMITMENT_ID"],"id":1}' \
+  http://127.0.0.1:18232</pre>
+    <p>Possible statuses:</p>
+    <ul>
+      <li><code>ACTIVE</code> — the commitment is running. Keep holding your gold.</li>
+      <li><code>COMPLETED</code> — the period finished successfully. Your reward is pending release.</li>
+      <li><code>SLASHED</code> — an audit failed. Your bond has been partially taken.</li>
+      <li><code>EXPIRED</code> — the period ended without a release call (the operator will release it).</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <span class="num">5</span>
+  <span class="title">Receive your reward</span>
+  <div class="body">
+    <p>
+      When your commitment period ends, the operator will verify that your gold was held and
+      broadcast a reward transaction from the PoPC Pool to your SOST address. <strong>This happens
+      automatically within 24 hours</strong> of the period ending.
+    </p>
+    <p>
+      You can verify the payment landed by checking your wallet balance or searching for the tx on
+      the explorer. The bond is unlocked at the same time — the full amount is spendable again.
+    </p>
+    <div class="ok">
+      <strong>During the first 4 weeks</strong> after PoPC activation, reward releases are processed
+      with <strong>manual operator oversight</strong> as a safety measure. After 4 weeks, the process
+      becomes fully automatic via the <code>popc_auto_distribute.sh</code> cron daemon already
+      committed to the repository. You do not have to do anything for this transition — you simply
+      keep receiving rewards.
+    </div>
+  </div>
+</div>
+
+<h2>// What happens during an audit</h2>
+
+<p>
+PoPC audits are derived from ConvergenceX block entropy, so no one — not even the operator — can
+predict or bias them. For each active commitment period, there is a certain probability of being
+selected for audit:
+</p>
+
+<table>
+  <tr><th>Reputation tier</th><th>Audit probability</th><th>Max gold allowed</th></tr>
+  <tr><td>NEW (0 ★)</td><td>30% per period</td><td>0.5 oz</td></tr>
+  <tr><td>ESTABLISHED (1 ★)</td><td>20%</td><td>1 oz</td></tr>
+  <tr><td>TRUSTED (3 ★)</td><td>10%</td><td>3 oz</td></tr>
+  <tr><td>VETERAN (5 ★)</td><td>5%</td><td>10 oz</td></tr>
+</table>
+
+<p>
+When an audit fires, the operator runs
+<code>scripts/popc_oracle.py</code> against your declared Ethereum wallet and checks that the
+token balance still meets or exceeds your committed amount. If yes, audit passes silently. If no,
+the bond is slashed.
+</p>
+
+<div class="warn">
+  <strong>Important:</strong> the gold must be in the exact wallet you declared. If you move it to
+  another wallet, even one you also own, the audit will fail. If you need to move gold during your
+  commitment period, contact the operator first — there is no automatic recovery path.
+</div>
+
+<h2>// Common mistakes and how to avoid them</h2>
+
+<ol>
+  <li>
+    <strong>Declaring an Ethereum wallet you do not fully control.</strong> The audit reads the balance
+    directly from Etherscan — if someone else moves the gold, you lose the bond.
+  </li>
+  <li>
+    <strong>Committing more gold than your reputation tier allows.</strong> New users are capped at 0.5
+    oz per contract. If you try to declare more, the registration will be rejected.
+  </li>
+  <li>
+    <strong>Choosing a duration longer than you are sure you can hold.</strong> Start with 1 or 3 months
+    to build reputation. Move to 12 months only after completing several shorter commitments cleanly.
+  </li>
+  <li>
+    <strong>Wrong token symbol.</strong> Must be exactly <code>XAUT</code> or <code>PAXG</code>,
+    uppercase, no quotes in the actual value.
+  </li>
+  <li>
+    <strong>Not having enough SOST for the bond.</strong> Compute the bond roughly as
+    (gold_oz × gold_price_usd × 0.25) ÷ sost_price_usd. Always keep a 20% safety margin.
+  </li>
+</ol>
+
+<h2>// Monitoring tools</h2>
+
+<p>Two read-only scripts in <code>scripts/</code> help you and operators verify everything:</p>
+
+<div class="step">
+  <span class="title">popc_monitor.py — live pool dashboard</span>
+  <div class="body">
+    <pre>python3 scripts/popc_monitor.py \
+  --rpc-user USER --rpc-pass PASS --watch 30</pre>
+    <p>Shows pool balance, active contracts, PUR (Pool Utilization Ratio), current reward tier, and
+    effective rewards at the current tier. Alerts when PUR crosses 50%. Refreshes every 30 seconds
+    with <code>--watch</code>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <span class="title">popc_oracle.py — Etherscan audit tool</span>
+  <div class="body">
+    <pre>python3 scripts/popc_oracle.py \
+  --rpc-user USER --rpc-pass PASS \
+  --etherscan-key YOUR_FREE_API_KEY \
+  --csv /tmp/popc_audit.csv</pre>
+    <p>Queries Etherscan for every active commitment's declared wallet and checks that the XAUT/PAXG
+    balance still covers the committed amount. Prints PASS/FAIL/ERROR per commitment. Read-only — does
+    not call popc_slash automatically. Get a free Etherscan API key at
+    <a href="https://etherscan.io/apis" style="color:var(--cyan-primary)">etherscan.io/apis</a>.</p>
+  </div>
+</div>
+
+<h2>// Frequently asked questions</h2>
+
+<h3>Can I lose my gold?</h3>
+<p>
+No. The gold never leaves your Ethereum wallet. PoPC only verifies that you are holding it. The only
+thing at risk is the SOST bond, and only if you voluntarily move the gold out before the commitment
+period ends.
+</p>
+
+<h3>What happens if SOST price changes dramatically during my commitment?</h3>
+<p>
+The bond amount is frozen in SOST at registration time. If SOST appreciates, your bond becomes more
+valuable in USD — good for you. If SOST depreciates, the bond is worth less — but the reward
+percentage is unchanged, so you still receive the same fraction of the bond you locked.
+</p>
+
+<h3>Can I have multiple commitments at the same time?</h3>
+<p>
+Yes, as many as your reputation tier allows. Each commitment is independent. Veterans (5 ★) can run
+several simultaneous 10 oz commitments.
+</p>
+
+<h3>What about Model B (escrow)?</h3>
+<p>
+Model B requires an Ethereum smart contract that has not been deployed yet. The target activation is
+Q3 2026, pending security audit. The full roadmap is at
+<a href="https://github.com/Neob1844/sost-core/blob/main/docs/popc_model_b_roadmap.md"
+   style="color:var(--cyan-primary)">docs/popc_model_b_roadmap.md</a>. For now, use Model A.
+</p>
+
+<h3>Is PoPC really fully decentralized?</h3>
+<p>
+Not yet. During the first 4 weeks after block 5,000 activation, reward releases are processed
+semi-manually as a safety measure. After that window, an automatic cron daemon handles them without
+operator intervention. The long-term goal — explicitly stated — is 100% autonomous operation with no
+operator in the loop. Every component of the system is designed to reach that state as soon as the
+initial operating conditions confirm there are no unknown issues.
+</p>
+
+<h3>How is PoPC different from staking?</h3>
+<p>
+You are not staking SOST to secure the chain. The chain is secured by ConvergenceX proof of work.
+PoPC is a separate cooperative system where participants demonstrate real-world economic backing
+(gold) and receive SOST rewards in return. It is closer to "proof of reserves" than to staking.
+</p>
+
+<h2>// Share this guide</h2>
+
+<p>
+PoPC is cooperative by nature: the more participants, the more everyone earns, and the faster the
+protocol reaches full decentralization. If you know anyone who holds XAUT or PAXG and might be
+interested in earning passive SOST rewards without giving up custody, please forward them this page.
+</p>
+
+<div class="info">
+  Suggested audiences: gold-backed stablecoin holders, crypto-native precious metals investors,
+  miners looking to diversify yield sources, long-term SOST holders who want to participate in the
+  cooperative economy.
+</div>
+
+<footer>
+  <p>
+    <a href="index.html">Home</a> ·
+    <a href="sost-popc.html">PoPC full spec</a> ·
+    <a href="sost-explorer.html">Explorer</a> ·
+    <a href="https://github.com/Neob1844/sost-core" target="_blank">GitHub</a> ·
+    <a href="sost-btctalk-ann.html">ANN thread</a>
+  </p>
+  <p style="margin-top:8px;">SOST Protocol · Proof of Personal Custody · Not financial advice</p>
+</footer>
+
+</div>
+</body>
+</html>
