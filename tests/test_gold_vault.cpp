@@ -92,8 +92,8 @@ TEST(GV06_large_spend_75_approved) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 76;
-    token.threshold_required = 75;
+    token.signal_pct = 96;
+    token.threshold_required = 95;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "76% signaling should approve at 75% threshold");
@@ -106,8 +106,8 @@ TEST(GV07_large_spend_74_rejected) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 74;
-    token.threshold_required = 75;
+    token.signal_pct = 94;
+    token.threshold_required = 95;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "74% signaling should be rejected at 75% threshold");
@@ -120,8 +120,8 @@ TEST(GV08_foundation_support_65_plus_10) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 65;
-    token.threshold_required = 75;
+    token.signal_pct = 86;
+    token.threshold_required = 95;
     token.foundation_supported = true;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "65% + 10% foundation = 75% should approve");
@@ -134,8 +134,8 @@ TEST(GV09_foundation_support_64_plus_10) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 64;
-    token.threshold_required = 75;
+    token.signal_pct = 84;
+    token.threshold_required = 95;
     token.foundation_supported = true;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
     EXPECT(result == GVSpendType::REJECTED, "64% + 10% = 74% should be rejected");
@@ -207,15 +207,15 @@ TEST(GV14_monthly_counter_reset) {
 // Proposal passing check
 // =============================================================================
 TEST(GV15_proposal_passes_75) {
-    EXPECT(gv_proposal_passes(216, 288, false, 11000) == true, "216/288 = 75% should pass");
-    EXPECT(gv_proposal_passes(215, 288, false, 11000) == false, "215/288 = 74.6% should fail");
+    EXPECT(gv_proposal_passes(274, 288, false, 11000) == true, "274/288 = 95.1% should pass");
+    EXPECT(gv_proposal_passes(273, 288, false, 11000) == false, "273/288 = 94.8% should fail");
 }
 
 TEST(GV16_proposal_foundation_support) {
     // 188/288 = 65.3% + 10% = 75.3% → pass
-    EXPECT(gv_proposal_passes(188, 288, true, 11000) == true, "65.3% + 10% foundation should pass");
+    EXPECT(gv_proposal_passes(246, 288, true, 11000) == true, "85.4% + 10% foundation should pass");
     // 187/288 = 64.9% + 10% = 74.9% → fail
-    EXPECT(gv_proposal_passes(187, 288, true, 11000) == false, "64.9% + 10% should fail");
+    EXPECT(gv_proposal_passes(244, 288, true, 11000) == false, "84.7% + 10% = 94.7% should fail at 95% threshold");
 }
 
 TEST(GV17_proposal_epoch2_no_bonus) {

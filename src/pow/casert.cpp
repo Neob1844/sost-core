@@ -339,8 +339,11 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             }
 
             // V3/V3.1 slew rate: ±3 per block
-            H = std::max<int32_t>(prev_H - CASERT_V3_SLEW_RATE,
-                    std::min<int32_t>(prev_H + CASERT_V3_SLEW_RATE, H));
+            int32_t slew = (next_height >= CASERT_V6_FORK_HEIGHT)
+                ? CASERT_V6_SLEW_RATE   // ±1 after block 5000
+                : CASERT_V3_SLEW_RATE;  // ±3 before block 5000
+            H = std::max<int32_t>(prev_H - slew,
+                    std::min<int32_t>(prev_H + slew, H));
 
             // V3/V3.1 lag floor: if chain is significantly ahead, enforce minimum profile
             if (lag > 10) {
