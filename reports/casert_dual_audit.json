@@ -1,0 +1,104 @@
+{
+  "audit_date": "2026-04-15",
+  "source_files": [
+    "include/sost/params.h",
+    "src/pow/casert.cpp"
+  ],
+  "bitsq_subsystem": {
+    "genesis_bitsq": 765730,
+    "genesis_bitsq_float": 11.6841,
+    "half_life_v1_s": 172800,
+    "half_life_v2_s": 86400,
+    "half_life_v2_blocks": 144,
+    "delta_cap_v1_den": 16,
+    "delta_cap_v1_pct": 6.25,
+    "delta_cap_v2_den": 8,
+    "delta_cap_v2_pct": 12.5,
+    "delta_cap_symmetric": true,
+    "ahead_guard_enter": 16,
+    "ahead_guard_exit_v4": 8,
+    "ahead_guard_delta_den": 64,
+    "ahead_guard_delta_pct": 1.5625,
+    "min_bitsq": 65536,
+    "max_bitsq": 16711680,
+    "epoch_length": 131553,
+    "fork_heights": {
+      "v2": 1450,
+      "v4_ahead_guard": 4170,
+      "v5_stateless": 4300
+    }
+  },
+  "equalizer_subsystem": {
+    "pid_gains": {
+      "K_R": {"q16": 3277, "float": 0.05, "pct_total": 7.5},
+      "K_L": {"q16": 26214, "float": 0.40, "pct_total": 59.7},
+      "K_I": {"q16": 9830, "float": 0.15, "pct_total": 22.4},
+      "K_B": {"q16": 3277, "float": 0.05, "pct_total": 7.5},
+      "K_V": {"q16": 1311, "float": 0.02, "pct_total": 3.0}
+    },
+    "total_gain": 0.67,
+    "dominant_term": "K_L (schedule lag, 60%)",
+    "ewma": {
+      "short_alpha": 32,
+      "short_window_blocks": 8,
+      "long_alpha": 3,
+      "long_window_blocks": 96,
+      "vol_alpha": 16,
+      "vol_window_blocks": 16,
+      "denom": 256
+    },
+    "integrator": {
+      "rho": 253,
+      "leak_factor": 0.988,
+      "alpha": 1,
+      "max": 6553600
+    },
+    "slew_rate_current": 1,
+    "slew_rate_v3_v5": 3,
+    "lag_floor_div": 8,
+    "lag_floor_threshold": 10,
+    "extreme_entry_min": 10,
+    "ebr_thresholds": {
+      "enter_lag": -10,
+      "level_e2_lag": -15,
+      "level_e3_lag": -20,
+      "level_e4_lag": -25
+    },
+    "antistall_floor_v5_s": 3600,
+    "antistall_easing_extra_s": 21600,
+    "profile_count": 17,
+    "profile_range": {"min": -4, "max": 12},
+    "fork_heights": {
+      "v3": 4100,
+      "v3_1": 4110,
+      "v4": 4170,
+      "v5": 4300
+    }
+  },
+  "interaction_analysis": {
+    "shared_inputs": ["block timestamps", "schedule lag (derived from timestamps + genesis)"],
+    "computation_order": "bitsQ first, then equalizer (sequential)",
+    "bitsq_reads_profile": false,
+    "profile_reads_bitsq": false,
+    "feedback_between_subsystems": false,
+    "both_respond_to_same_lag_signal": true,
+    "direction_coherence": {
+      "ahead": "coherent (both harden)",
+      "behind": "coherent (both ease)",
+      "transition_ahead_to_behind": "timing mismatch (profile snaps, bitsQ slow)"
+    },
+    "sawtooth_source": "primarily equalizer (rapid climb + safety snap-back)",
+    "bitsq_amplification": "minor (ratchet from cap asymmetry during transitions)",
+    "dominant_controller": "equalizer (30x effective range vs 12.5%/block bitsQ cap)"
+  },
+  "v6_recommendation": {
+    "slew_change_sufficient": true,
+    "slew_from": 3,
+    "slew_to": 1,
+    "bitsq_change_needed": false,
+    "bitsq_change_recommended_v7": "tighter delta cap (den=16, 6.25%)",
+    "ahead_guard_change_needed": false,
+    "halflife_change_needed": false,
+    "verdict": "V6 can proceed with slew=1 alone. bitsQ is coherent and non-interfering."
+  }
+}
