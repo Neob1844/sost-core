@@ -1629,7 +1629,8 @@ SectionRenderers.dashboard = function(el) {
     <div class="pip-panel">
       <h2>// CONSENSUS</h2>
       <div class="stat-row"><span class="stat-label">POW ALGORITHM</span><span class="stat-value">CONVERGENCEX</span></div>
-      <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">CASERT (Q16.16)</span></div>
+      <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">CASERT BITQ (Q16.16)</span></div>
+      <div class="stat-row"><span class="stat-label">EQUALIZER</span><span class="stat-value">CASERT EQUALIZER (17 profiles E4–H12)</span></div>
       <div class="stat-row"><span class="stat-label">COINBASE MATURITY</span><span class="stat-value">1000 BLOCKS</span></div>
       <div class="stat-row"><span class="stat-label">MAX BLOCK SIZE</span><span class="stat-value">1,000,000 BYTES</span></div>
       <div class="stat-row"><span class="stat-label">MAX TX SIZE</span><span class="stat-value">100,000 BYTES</span></div>
@@ -1911,7 +1912,7 @@ function addTooltips() {
     'STATUS': 'Current network status. Online = node responding to RPC queries. Pre-market = mining active, no exchange listing yet.',
     'VERSION': 'Software version of the connected SOST node. Updated with each protocol release.',
     'BEST HASH': 'Hash of the most recent block accepted by the network. Changes with every new block mined.',
-    'SOST PRICE': 'PoPC Reference Price: (gold committed in PoPC × gold price) ÷ total SOST supply. Foundation commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. NOT a market price — will be replaced when SOST is listed on an exchange.',
+    'SOST PRICE': 'PoPC Reference Price: (gold committed in PoPC × gold price) ÷ total SOST supply. Developer commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. NOT a market price — will be replaced when SOST is listed on an exchange.',
     'INTERVAL': 'Time between the last two blocks. Target is 10 minutes (600 seconds). Green = fast, yellow = normal, red = slow.',
     'LAST BLOCK': 'How long ago the most recent block was mined. Long gaps may indicate low hashrate or network issues.',
     'SUBSIDY': 'Block reward for the current epoch. Decays smoothly following the Feigenbaum emission curve. Split 50/25/25 (miner/gold/PoPC).',
@@ -2168,6 +2169,7 @@ SectionRenderers.markets = function(el) {
       <h2>// MARKETS</h2>
       <p>SOST trading and market data.</p>
       <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-warn">PRE-MARKET</span></div>
+      <div class="stat-row"><span class="stat-label">TOKEN NAME</span><span class="stat-value">SOVEREIGN STOCK TOKEN</span></div>
       <div class="stat-row"><span class="stat-label">TICKER</span><span class="stat-value">SOST</span></div>
       <div class="stat-row"><span class="stat-label">BACKING</span><span class="stat-value">GOLD-BACKED (25% TO VAULT)</span></div>
     </div>
@@ -2271,14 +2273,14 @@ SectionRenderers.popc = function(el) {
 
 // ── OTC ────────────────────────────────────────────────────────
 // Over-the-counter pre-market info. SOST is not yet listed on any exchange;
-// the Foundation sells reserved stock against gold-backed commitments.
+// the protocol developer sells reserved stock against gold-backed commitments.
 SectionRenderers.otc = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// OTC PRE-MARKET</h2>
-      <p>SOST is in pre-market phase. No exchange listing yet. The Foundation offers a limited OTC window backed by the PoPC Gold Reserve.</p>
+      <p>SOST is in pre-market phase. No exchange listing yet. The protocol developer offers a limited OTC window backed by the PoPC Gold Reserve.</p>
       <div class="stat-row"><span class="stat-label">PHASE</span><span class="stat-value stat-warn">PRE-MARKET</span></div>
       <div class="stat-row"><span class="stat-label">BACKING</span><span class="stat-value">1.2 oz gold (XAUT+PAXG on Ethereum)</span></div>
       <div class="stat-row"><span class="stat-label">REFERENCE PRICE</span><span class="stat-value">PoPC: (gold_oz × gold_price) ÷ supply</span></div>
@@ -2286,15 +2288,15 @@ SectionRenderers.otc = function(el) {
     </div>
     <div class="pip-panel">
       <h2>// HOW TO BUY</h2>
-      <p style="margin-bottom:10px;color:var(--pip-dim);font-size:13px">Contact the Foundation directly through the official channels on the SOST website. OTC orders are processed manually with gold-backed escrow guarantees.</p>
-      <div class="stat-row"><span class="stat-label">1. CONTACT</span><span class="stat-value">Foundation via website</span></div>
+      <p style="margin-bottom:10px;color:var(--pip-dim);font-size:13px">Contact the developer directly through the official channels on the SOST website. OTC orders are processed manually with gold-backed escrow guarantees.</p>
+      <div class="stat-row"><span class="stat-label">1. CONTACT</span><span class="stat-value">Developer via website</span></div>
       <div class="stat-row"><span class="stat-label">2. QUOTE</span><span class="stat-value">Receive PoPC reference + OTC terms</span></div>
       <div class="stat-row"><span class="stat-label">3. SETTLEMENT</span><span class="stat-value">Gold-backed escrow</span></div>
       <div class="stat-row"><span class="stat-label">4. DELIVERY</span><span class="stat-value">SOST sent to your address</span></div>
     </div>
     <div class="pip-panel">
       <h2>// RESERVE TRANSPARENCY</h2>
-      <p style="color:var(--pip-dim);font-size:12px">Every OTC sale is backed by verifiable gold held in the Foundation's public Ethereum wallet. Balances are readable by anyone.</p>
+      <p style="color:var(--pip-dim);font-size:12px">Every OTC sale is backed by verifiable gold held in the developer's public Ethereum wallet. Balances are readable by anyone.</p>
       <div class="stat-row"><span class="stat-label">GOLD VAULT ADDR</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</span></div>
       <div class="stat-row"><span class="stat-label">VAULT BALANCE</span><span class="stat-value">~8,675 SOST (growing)</span></div>
       <div class="stat-row"><span class="stat-label">GOLD BACKING</span><span class="stat-value">Verifiable on Etherscan</span></div>
@@ -2410,11 +2412,11 @@ SectionRenderers.foundation = function(el) {
       <div class="stat-row"><span class="stat-label">VAULT BALANCE</span><span class="stat-value">~8,675 SOST</span></div>
       <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</span></div>
       <div class="stat-row"><span class="stat-label">POOL BALANCE</span><span class="stat-value">~8,675 SOST</span></div>
-      <p style="margin-top:10px;color:var(--pip-dim);font-size:12px">Both reserves grow by 25% of every block's subsidy forever. The Foundation holds the private keys to operate these addresses during the bootstrap phase; consensus-level restrictions are planned for a future fork.</p>
+      <p style="margin-top:10px;color:var(--pip-dim);font-size:12px">Both reserves grow by 25% of every block's subsidy forever. The protocol developer holds the private keys to operate these addresses during the bootstrap phase; consensus-level restrictions are planned for a future fork.</p>
     </div>
     <div class="pip-panel">
       <h2>// TRANSPARENCY</h2>
-      <p style="font-size:13px;line-height:1.6">All Foundation balances — both on SOST and on Ethereum — are publicly readable at any time. There are no private treasury accounts, no hidden allocations, no insider supply.</p>
+      <p style="font-size:13px;line-height:1.6">All developer-operated balances — both on SOST and on Ethereum — are publicly readable at any time. There are no private treasury accounts, no hidden allocations, no insider supply.</p>
       <div class="stat-row"><span class="stat-label">SOST BALANCES</span><span class="stat-value">Readable via explorer</span></div>
       <div class="stat-row"><span class="stat-label">ETH GOLD HOLDINGS</span><span class="stat-value">Readable via Etherscan</span></div>
       <div class="stat-row"><span class="stat-label">CODE</span><span class="stat-value">MIT licensed, open source</span></div>
@@ -2440,8 +2442,8 @@ SectionRenderers.faq = function(el) {
     ['When is PoPC live?', 'Block 5,000 — approximately 4 days from the PoPC announcement post. Model A (bond + autocustody) activates automatically; Model B (Ethereum escrow) comes later in Q3 2026.'],
     ['What is the max supply?', '4,669,201 SOST total. Smooth Feigenbaum exponential decay — no abrupt halvings.'],
     ['How do I participate in PoPC?', 'Use "sost-cli popc register" with flags for your SOST address, ETH wallet, token (XAUT/PAXG), gold amount in mg, and duration. See the Quick Start guide in the POPC section.'],
-    ['Where can I buy SOST?', 'Currently via the Foundation OTC pre-market. No exchange listings yet. See the OTC section for details.'],
-    ['Is the project fully decentralized?', 'Not yet. During bootstrap the Foundation operates the PoPC Pool key. Full decentralization is the explicit long-term goal, planned for when the network has proven stable operation.'],
+    ['Where can I buy SOST?', 'Currently via the developer OTC pre-market. No exchange listings yet. See the OTC section for details.'],
+    ['Is the project fully decentralized?', 'Not yet. During bootstrap the protocol developer operates the PoPC Pool key. Full decentralization is the explicit long-term goal, planned for when the network has proven stable operation.'],
     ['Where can I see the code?', 'Open source on GitHub: github.com/Neob1844/sost-core. MIT license.']
   ];
   let html = '<div class="pip-panel"><h2>// FREQUENTLY ASKED</h2>';
