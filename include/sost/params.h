@@ -91,7 +91,7 @@ inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta c
 // cASERT V3 fork — activated at block 4100
 // Improved equalizer responsiveness: slew rate ±1 → ±3, lag floor, real prev_H
 inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
-inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 3;       // max ±3 profile levels per block
+inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 1;       // max ±1 profile level per block (V6: reduced from ±3 to eliminate sawtooth oscillation)
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200
