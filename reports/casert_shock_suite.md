@@ -6,156 +6,335 @@ Why does the SOST explorer show H9/H10 blocks cycling in a sawtooth
 pattern (H10->H9->H6->H3->B0->H10) when the v5_simulator predicts
 mostly B0/E profiles?
 
-## Scenarios Tested
+## Summary Table
 
-### S0: Uniform Baseline (single hashrate)
+| Scenario | H9+% | Sawtooth | B0% | LagMax |
+|----------|-------|----------|-----|--------|
+| S0: Simulator baseline (uniform, sim PID+diff) | 0.0% | 0.365 | 48.5% | +10 |
+| S1: Concentrated (sim PID+diff, no shocks) | 0.0% | 0.363 | 49.1% | +7 |
+| S2: Concentrated + realistic diff (sim PID) | 0.0% | 0.368 | 44.5% | +10 |
+| S3: Real PID + sim diff (concentrated) | 0.1% | 0.230 | 69.8% | +2 |
+| S4: Real PID + realistic diff (concentrated) | 1.3% | 0.248 | 72.2% | +3 |
+| S5: Real PID + real diff + top miner drops 2h | 1.2% | 0.249 | 71.7% | +4 |
+| S6: Real PID + real diff + top-2 drop 3h | 1.2% | 0.249 | 72.1% | +3 |
+| S7: Real PID + real diff + staggered recovery | 1.1% | 0.250 | 71.3% | +3 |
+| S8: Real PID + real diff + lag+20 (no shock) | 1.4% | 0.250 | 71.3% | +23 |
+| S9: Real PID + real diff + lag+20 + shock | 1.4% | 0.251 | 70.5% | +23 |
+| S10: Immediate-drop (real PID+diff, lag+20, shock) | 1.4% | 0.251 | 70.5% | +23 |
 
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.7m, **Median:** 6.8m
-- **Sawtooth score:** 0.367
-- **Anti-stall activations (avg):** 0.0
-- **Max consecutive B0:** 6.0
-- **Max consecutive H9+:** 0.0
+## Detailed Results
 
-| Profile | % |
-|---------|---|
-| E3 | 2.0% |
-| E2 | 3.0% |
-| E1 | 18.0% |
-| B0 | 49.0% |
-| H1 | 17.0% |
-| H2 | 7.0% |
-| H3 | 4.0% |
+### S0: Simulator baseline (uniform, sim PID+diff)
 
-### S1: Concentrated Baseline (real distribution, no shocks)
-
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.5m, **Median:** 6.7m
-- **Sawtooth score:** 0.388
-- **Anti-stall activations (avg):** 2.0
-- **Max consecutive B0:** 5.0
-- **Max consecutive H9+:** 0.0
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.6m
+- H9+ blocks: 0.0%
+- Sawtooth: 0.365, Anti-stall: 9.4
+- Max consec B0: 11.2, H9+: 0.0
 
 | Profile | % |
 |---------|---|
-| E3 | 1.0% |
-| E2 | 8.0% |
-| E1 | 28.0% |
-| B0 | 47.0% |
-| H1 | 9.0% |
-| H2 | 6.0% |
-| H3 | 1.0% |
+| E3 | 1.6% |
+| E2 | 9.2% |
+| E1 | 24.4% |
+| B0 | 48.5% |
+| H1 | 9.3% |
+| H2 | 4.8% |
+| H3 | 1.7% |
+| H4 | 0.3% |
 
-### S2: Top Miner Drops (A offline 2h)
+### S1: Concentrated (sim PID+diff, no shocks)
 
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.7m, **Median:** 7.3m
-- **Sawtooth score:** 0.388
-- **Anti-stall activations (avg):** 2.0
-- **Max consecutive B0:** 9.0
-- **Max consecutive H9+:** 0.0
-
-| Profile | % |
-|---------|---|
-| E2 | 8.0% |
-| E1 | 24.0% |
-| B0 | 54.0% |
-| H1 | 5.0% |
-| H2 | 5.0% |
-| H3 | 4.0% |
-
-### S3: Top 2 Drop (A+B offline 3h)
-
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.2m, **Median:** 5.0m
-- **Sawtooth score:** 0.398
-- **Anti-stall activations (avg):** 1.0
-- **Max consecutive B0:** 4.0
-- **Max consecutive H9+:** 0.0
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.5m
+- H9+ blocks: 0.0%
+- Sawtooth: 0.363, Anti-stall: 7.4
+- Max consec B0: 10.0, H9+: 0.0
 
 | Profile | % |
 |---------|---|
-| E4 | 2.0% |
-| E3 | 11.0% |
-| E2 | 26.0% |
-| E1 | 28.0% |
-| B0 | 26.0% |
-| H1 | 2.0% |
-| H2 | 4.0% |
-| H3 | 1.0% |
+| E4 | 0.2% |
+| E3 | 1.8% |
+| E2 | 9.1% |
+| E1 | 25.7% |
+| B0 | 49.1% |
+| H1 | 8.3% |
+| H2 | 4.2% |
+| H3 | 1.3% |
+| H4 | 0.2% |
 
-### S4: Staggered Recovery (B@2h, A@4h)
+### S2: Concentrated + realistic diff (sim PID)
 
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.1m, **Median:** 6.4m
-- **Sawtooth score:** 0.449
-- **Anti-stall activations (avg):** 1.0
-- **Max consecutive B0:** 9.0
-- **Max consecutive H9+:** 0.0
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.6m
+- H9+ blocks: 0.0%
+- Sawtooth: 0.368, Anti-stall: 3.4
+- Max consec B0: 10.4, H9+: 0.0
 
 | Profile | % |
 |---------|---|
-| E4 | 1.0% |
-| E2 | 12.0% |
-| E1 | 28.0% |
-| B0 | 46.0% |
-| H1 | 5.0% |
-| H2 | 5.0% |
+| E4 | 0.2% |
+| E3 | 1.9% |
+| E2 | 8.5% |
+| E1 | 23.1% |
+| B0 | 44.5% |
+| H1 | 12.0% |
+| H2 | 6.9% |
+| H3 | 2.4% |
+| H4 | 0.4% |
+
+### S3: Real PID + sim diff (concentrated)
+
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.1m, Median: 5.8m
+- H9+ blocks: 0.1%
+- Sawtooth: 0.230, Anti-stall: 13.9
+- Max consec B0: 27.0, H9+: 1.1
+
+| Profile | % |
+|---------|---|
+| E4 | 5.4% |
+| E3 | 16.6% |
+| E2 | 3.9% |
+| E1 | 1.5% |
+| B0 | 69.8% |
+| H3 | 1.8% |
+| H6 | 0.7% |
+| H9 | 0.1% |
+
+### S4: Real PID + realistic diff (concentrated)
+
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.3m
+- H9+ blocks: 1.3%
+- Sawtooth: 0.248, Anti-stall: 10.5
+- Max consec B0: 23.9, H9+: 3.0
+
+| Profile | % |
+|---------|---|
+| E4 | 2.5% |
+| E3 | 15.9% |
+| E2 | 1.1% |
+| E1 | 2.1% |
+| B0 | 72.2% |
+| H3 | 3.1% |
+| H6 | 1.7% |
+| H9 | 0.9% |
+| H10 | 0.3% |
+
+### S5: Real PID + real diff + top miner drops 2h
+
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.3m
+- H9+ blocks: 1.2%
+- Sawtooth: 0.249, Anti-stall: 10.3
+- Max consec B0: 25.1, H9+: 3.2
+
+| Profile | % |
+|---------|---|
+| E4 | 2.5% |
+| E3 | 16.0% |
+| E2 | 1.7% |
+| E1 | 2.1% |
+| B0 | 71.7% |
 | H3 | 3.0% |
+| H6 | 1.7% |
+| H9 | 0.8% |
+| H10 | 0.3% |
 
-### S5: Immediate-Drop Anti-Stall (same shock as S2)
+### S6: Real PID + real diff + top-2 drop 3h
 
-- **Blocks/run:** 100, **Seeds:** 1
-- **Mean interval:** 10.7m, **Median:** 7.3m
-- **Sawtooth score:** 0.388
-- **Anti-stall activations (avg):** 2.0
-- **Max consecutive B0:** 9.0
-- **Max consecutive H9+:** 0.0
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.3m
+- H9+ blocks: 1.2%
+- Sawtooth: 0.249, Anti-stall: 10.8
+- Max consec B0: 25.6, H9+: 3.5
 
 | Profile | % |
 |---------|---|
-| E2 | 8.0% |
-| E1 | 24.0% |
-| B0 | 54.0% |
-| H1 | 5.0% |
-| H2 | 5.0% |
-| H3 | 4.0% |
+| E4 | 2.6% |
+| E3 | 16.2% |
+| E2 | 1.5% |
+| E1 | 2.1% |
+| B0 | 72.1% |
+| H3 | 2.7% |
+| H6 | 1.6% |
+| H9 | 0.8% |
+| H10 | 0.3% |
 
-## Analysis
+### S7: Real PID + real diff + staggered recovery
 
-### Does hash concentration alone explain the discrepancy?
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.0m, Median: 6.3m
+- H9+ blocks: 1.1%
+- Sawtooth: 0.250, Anti-stall: 10.7
+- Max consec B0: 26.0, H9+: 3.1
 
-- Uniform baseline: 0.0% of blocks at H9+
-- Concentrated (no shocks): 0.0% of blocks at H9+
-- Sawtooth: Uniform=0.367 vs Concentrated=0.388
+| Profile | % |
+|---------|---|
+| E4 | 2.6% |
+| E3 | 15.9% |
+| E2 | 2.2% |
+| E1 | 2.1% |
+| B0 | 71.3% |
+| H3 | 3.0% |
+| H6 | 1.7% |
+| H9 | 0.8% |
+| H10 | 0.2% |
 
-### Effect of miner shocks
+### S8: Real PID + real diff + lag+20 (no shock)
 
-- Top miner drop: 0.0% H9+, sawtooth=0.388
-- Top 2 drop: 0.0% H9+, sawtooth=0.398
-- Staggered recovery: 0.0% H9+, sawtooth=0.449
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.1m, Median: 6.4m
+- H9+ blocks: 1.4%
+- Sawtooth: 0.250, Anti-stall: 11.8
+- Max consec B0: 23.0, H9+: 3.7
 
-### Does immediate-drop help?
+| Profile | % |
+|---------|---|
+| E4 | 2.5% |
+| E3 | 15.8% |
+| E2 | 1.3% |
+| E1 | 2.1% |
+| B0 | 71.3% |
+| H2 | 0.2% |
+| H3 | 3.0% |
+| H5 | 0.2% |
+| H6 | 1.8% |
+| H8 | 0.1% |
+| H9 | 0.9% |
+| H10 | 0.3% |
 
-- Standard anti-stall: 0.0% H9+, sawtooth=0.388
-- Immediate-drop:      0.0% H9+, sawtooth=0.388
-- Anti-stall activations: standard=2.0 vs immediate=2.0
+### S9: Real PID + real diff + lag+20 + shock
 
-## Conclusion
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.1m, Median: 6.3m
+- H9+ blocks: 1.4%
+- Sawtooth: 0.251, Anti-stall: 11.5
+- Max consec B0: 24.3, H9+: 4.2
 
-The explorer-simulator discrepancy is primarily explained by:
+| Profile | % |
+|---------|---|
+| E4 | 2.5% |
+| E3 | 15.9% |
+| E2 | 2.2% |
+| E1 | 2.0% |
+| B0 | 70.5% |
+| H2 | 0.2% |
+| H3 | 2.9% |
+| H5 | 0.2% |
+| H6 | 1.8% |
+| H8 | 0.1% |
+| H9 | 0.9% |
+| H10 | 0.4% |
+| H11 | 0.1% |
 
-1. **Hash concentration**: When 3 miners control ~70% of hashrate, the
-   effective block time variance is much higher than a uniform model
-   predicts. Fast blocks from the top miner push lag positive, driving
-   profiles up to H9/H10.
+### S10: Immediate-drop (real PID+diff, lag+20, shock)
 
-2. **Miner shocks**: When a top miner goes offline, the remaining hash
-   cannot sustain the same block rate. This creates the characteristic
-   sawtooth: profiles climb during fast periods, then anti-stall kicks
-   in during slow periods.
+- Blocks/run: 2000, Seeds: 10
+- Mean interval: 10.1m, Median: 6.3m
+- H9+ blocks: 1.4%
+- Sawtooth: 0.251, Anti-stall: 11.5
+- Max consec B0: 24.3, H9+: 4.2
 
-3. **The v5_simulator averages over these effects**: By using a single
-   hashrate value (even with variance), it cannot capture the bimodal
-   distribution of block times that concentrated mining creates.
+| Profile | % |
+|---------|---|
+| E4 | 2.5% |
+| E3 | 15.9% |
+| E2 | 2.2% |
+| E1 | 2.0% |
+| B0 | 70.5% |
+| H2 | 0.2% |
+| H3 | 2.9% |
+| H5 | 0.2% |
+| H6 | 1.8% |
+| H8 | 0.1% |
+| H9 | 0.9% |
+| H10 | 0.4% |
+| H11 | 0.1% |
+
+## Root Cause Analysis
+
+The v5_simulator has **two compounding model errors** that explain
+why it cannot reproduce the explorer's H9/H10 behavior:
+
+### Bug 1: Wrong PID Coefficients (PRIMARY CAUSE)
+
+The simulator uses a simplified PID:
+```
+H_raw = lag * 0.25 + burst_signal * 0.50
+```
+
+The real C++ casert.cpp (params.h) uses:
+```
+U = K_R * r + K_L * L + K_I * I + K_B * B + K_V * V
+  = 0.05*r + 0.40*lag + 0.15*integrator + 0.05*burst + 0.02*vol
+```
+
+Key differences:
+- **K_L (lag weight) = 0.40 in C++, 0.25 in simulator** -- 60% under-weighted
+- **Integrator (K_I=0.15)** -- entirely missing from simulator. The
+  integrator accumulates persistent lag over time with a 0.988 leak
+  rate, amplifying the effect of sustained positive lag.
+- **K_B (burst) = 0.05 in C++, 0.50 in simulator** -- 10x over-weighted,
+  which compensates somewhat but creates wrong dynamics.
+
+Effect: At lag=25 the simulator computes H_raw=6, the real PID computes
+H_raw=10+. This single error is why the simulator never reaches H9/H10.
+
+### Bug 2: Unrealistic Difficulty Multiplier at High Profiles
+
+The simulator's block-time sampling uses:
+```
+effective_time = base_time * PROFILE_DIFFICULTY[p] / STAB_PCT[p]
+```
+
+This gives a 93x multiplier at H10. Real explorer data shows H10 blocks
+average 15-25 minutes (2.5-4x target), not 930 minutes. The 93x penalty
+creates artificially strong negative feedback that kills any profile
+excursion.
+
+### Evidence from the Suite
+
+The transition from S0 to S4 isolates each factor:
+
+- **S0: Simulator baseline (uniform, sim PID+diff)**: 0.0% H9+
+- **S1: Concentrated (sim PID+diff, no shocks)**: 0.0% H9+
+- **S2: Concentrated + realistic diff (sim PID)**: 0.0% H9+
+- **S3: Real PID + sim diff (concentrated)**: 0.1% H9+
+- **S4: Real PID + realistic diff (concentrated)**: 1.3% H9+
+- **S5: Real PID + real diff + top miner drops 2h**: 1.2% H9+
+- **S6: Real PID + real diff + top-2 drop 3h**: 1.2% H9+
+- **S7: Real PID + real diff + staggered recovery**: 1.1% H9+
+- **S8: Real PID + real diff + lag+20 (no shock)**: 1.4% H9+
+- **S9: Real PID + real diff + lag+20 + shock**: 1.4% H9+
+- **S10: Immediate-drop (real PID+diff, lag+20, shock)**: 1.4% H9+
+
+With the real PID (S3+), profiles jump in slew-rate multiples of 3:
+B0 -> H3 -> H6 -> H9 -> H10, with almost no H1/H2/H4/H5 -- exactly
+the staircase pattern seen on the explorer.
+
+### Why Concentration and Shocks Don't Matter (Much)
+
+Hash concentration (Scenario S1 vs S0) has no effect because the
+minimum of independent exponentials has the same distribution as a
+single exponential with the combined rate (memoryless property).
+
+Miner shocks (S5-S7 vs S4) have marginal effect because a single 2h
+outage is a small perturbation over 2000 blocks. The sawtooth pattern
+is primarily driven by the PID oscillation around lag=0, not by
+miner availability changes.
+
+## Recommendations
+
+1. **Fix the PID in v5_simulator.py**: Replace the simplified
+   `lag * 0.25 + burst * 0.50` with the actual C++ coefficients
+   (K_L=0.40, K_I=0.15, K_B=0.05, K_R=0.05, K_V=0.02) and add
+   the EWMA/integrator state tracking.
+
+2. **Fix the difficulty model**: Replace PROFILE_DIFFICULTY/STAB_PCT
+   with empirical effective multipliers from explorer data.
+
+3. **Initialize with actual chain lag**: Query the explorer for the
+   current lag value and use it as the starting condition.
 
