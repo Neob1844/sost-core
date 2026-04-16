@@ -36,7 +36,7 @@ inline constexpr uint16_t ESCROW_LOCK_PAYLOAD_LEN = 28;  // lock_until (8) + ben
 inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 10000;
 
 // Signaling thresholds for large Gold Vault spends
-inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 75;   // 75% in Epoch 0-1 (blocks 10000-263105). Note: V6 hard fork raises this to 95% — see docs/internal/btctalk-ann-v2-block-10000.txt
+inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 95;   // 95% in Epoch 0-1 (V6: raised from 75% — see BTCTalk ANN post #89)
 inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 95;   // 95% in Epoch 2+ (blocks 263106+)
 inline constexpr int32_t  GV_APPROVAL_WINDOW    = 288;  // ~48h voting window
 

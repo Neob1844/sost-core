@@ -2314,7 +2314,7 @@ static std::string handle_getproposals(const std::string& id, const std::vector<
             std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
             int start = std::max(0, (int)g_blocks.size() - SIGNALING_WINDOW);
             for (int j = start; j < (int)g_blocks.size(); ++j)
-                versions.push_back(1); // Current blocks all version=1, no signals yet
+                versions.push_back(1); // V6-TODO: StoredBlock needs version field to read real signaling bits
         }
         int32_t signal_count = count_version_signals(versions, p.bit);
         int32_t window = std::min((int32_t)versions.size(), SIGNALING_WINDOW);
