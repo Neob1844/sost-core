@@ -231,10 +231,10 @@
 <a href="#sec-75" class="toc-l1">Appendix C: PRNG Specification (Normative)</a>
 <a href="#sec-76" class="toc-l1">Appendix D: Test Vectors (Normative)</a>
 <a href="#sec-77" class="toc-l2">D.1 Required Vector Set</a>
-<a href="#sec-78" class="toc-l1">Appendix G: Emergency Authorization &amp; Execution Order (Normative)</a>
+<a href="#sec-78" class="toc-l1">Appendix G: Emergency Reserve Authorization (V6 5-Defense Model) (Normative)</a>
 <a href="#sec-79" class="toc-l2">G.1 EmergencyProposal (SOST chain)</a>
 <a href="#sec-80" class="toc-l2">G.2 PoW Miner Signaling</a>
-<a href="#sec-81" class="toc-l2">G.3 Foundation Execution Order (Ethereum)</a>
+<a href="#sec-81" class="toc-l2">G.3 V6 5-Defense Vault Execution (Ethereum)</a>
 <a href="#sec-82" class="toc-l2">G.4 Ethereum Contract Verification</a>
 <a href="#sec-83" class="toc-l2">G.5 Mandatory Audit Trail</a>
 <a href="#sec-84" class="toc-l1" style="color:#888;">Appendix F: Errata v3.3 (Historical)</a>
@@ -268,7 +268,7 @@
 <blockquote class="wp-bq">Consensus rules (Section 10) remain immutable at genesis. Updated versions will be published with</blockquote>
 <blockquote class="wp-bq">full errata documentation.</blockquote>
 <div class="wp-spacer"></div>
-<p class="wp-p">SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Gold Funding Vault (Phase 1: gold-first, tokenized XAUt/PAXG) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Heritage Reserve on Ethereum mainnet. The Heritage Reserve is a Heritage reserve by default (sealed). Reserve assets are intended to remain perpetual and untouched while SOST exists, except under the Emergency Catastrophe procedure authorized by SOST PoW miner signaling (≥75%) and executed by a Foundation Execution Order.</p>
+<p class="wp-p">SOST is a Proof-of-Work protocol where each mined block allocates 25% of issuance to an on-chain Gold Funding Vault (Phase 1: gold-first, tokenized XAUt/PAXG) by consensus. Conversions to XAUT/PAXG are operational actions executed with public attestations and auditable trails. Purchased precious-metal tokens are deposited into a separate Heritage Reserve on Ethereum mainnet. The Heritage Reserve is sealed by default. Reserve assets are intended to remain perpetual and untouched while SOST exists. During Phase I (before block 10,000), the protocol developer executes reserve operations operationally. After V6 activation (block 10,000), reserve custody transitions to the protocol itself under the 5-defense Gold Vault model, requiring ≥95% miner supermajority signaling and satisfying all five constitutional defenses for any non-routine reserve movement.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">A mathematically grounded Proof-of-Work based on verifiable dynamical-system certificates.</p>
 <div class="wp-spacer"></div>
@@ -310,7 +310,7 @@
 <p class="wp-p">Appendix B — Serialization (Normative)</p>
 <p class="wp-p">Appendix C — PRNG Specification (Normative)</p>
 <p class="wp-p">Appendix D — Test Vectors (Normative)</p>
-<p class="wp-p">Appendix G — Emergency Authorization &amp; Execution Order (Normative)</p>
+<p class="wp-p">Appendix G — Emergency Reserve Authorization (V6 5-Defense Model) (Normative)</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">1. Abstract</div>
 <div class="wp-spacer"></div>
@@ -324,11 +324,11 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">25% to a PoPC Pool powering Proof of Personal Custody.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve (sealed by default). The Foundation may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally, but previously purchased reserve assets are intended to remain perpetual and cannot be moved except under the Emergency Catastrophe procedure (≥75% miner signaling + Foundation Execution Order).</p>
+<p class="wp-p">Purchased precious-metal tokens are held on Ethereum mainnet in a Heritage Reserve (sealed by default). During Phase I (before block 10,000), the protocol developer may adjust future purchase execution (including the default 50/50 XAUt/PAXG split) operationally. After V6 activation (block 10,000), all reserve adjustments require protocol-level governance under the 5-defense Gold Vault model. Previously purchased reserve assets are intended to remain perpetual and cannot be moved except under Emergency Catastrophe authorization (≥95% miner supermajority + all five constitutional defenses satisfied).</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">PoPC audit randomness derives exclusively from ConvergenceX block entropy: (block_id, commit, checkpoints_root). No external oracle is required for consensus-critical validation; off-chain data is used only for operational PoPC policy and settlement.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">No ongoing parameter governance exists. Monetary rules, emission schedules, coinbase splits, and constitutional constraints are immutable at genesis. Only narrow emergency authorization signaling exists, requiring ≥75% miner supermajority. Operational actions (vault execution, reporting, emergency rotations) are Foundation-executed, constitutionally constrained, and publicly auditable.</p>
+<p class="wp-p">No ongoing parameter governance exists. Monetary rules, emission schedules, coinbase splits, and constitutional constraints are immutable at genesis. Only narrow emergency authorization signaling exists, requiring ≥95% miner supermajority under the V6 5-defense Gold Vault model. During Phase I (before block 10,000), operational actions (vault execution, reporting, emergency rotations) are executed by the protocol developer, constitutionally constrained, and publicly auditable. After V6 activation, these functions transition to automated on-chain governance.</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">2. The Problem</div>
 <p class="wp-p">2.1 Proof-of-Work: A Standard Worth Studying</p>
@@ -1217,8 +1217,8 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">ASSET POLICY:</p>
 <p class="wp-p">Default split: The conversion pipeline targets 50/50 acquisition of XAUt and PAXG</p>
-<p class="wp-p">by default. The Foundation may adjust this split operationally at any time;</p>
-<p class="wp-p">adjustments apply only to future purchases and must be disclosed in batch reports.</p>
+<p class="wp-p">by default. During Phase I (before block 10,000), the protocol developer may adjust this split operationally;</p>
+<p class="wp-p">after V6 activation, adjustments require protocol-level governance. All adjustments apply only to future purchases and must be disclosed in batch reports.</p>
 <p class="wp-p">Previously purchased reserve assets are not rebalanced except under Emergency Catastrophe.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-32" class="wp-h">5.2 Constitutional Rules — Metals Reserve</h4>
@@ -1251,37 +1251,44 @@ PROPERTIES:
 <p class="wp-p">execution (≤72 hours) and are not Reserve assets.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">G7 (Default 50/50; Future Purchases Only): Default acquisition targets 50/50 XAUt/PAXG.</p>
-<p class="wp-p">The Foundation may adjust the split operationally at any time; adjustments apply only to future</p>
+<p class="wp-p">During Phase I (before block 10,000), the protocol developer may adjust the split operationally; after V6 activation,</p>
+<p class="wp-p">adjustments require protocol-level governance. Adjustments apply only to future</p>
 <p class="wp-p">purchases and must be disclosed in batch reports. Previously purchased reserve assets are not</p>
 <p class="wp-p">rebalanced except under Emergency Catastrophe.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">G8 (Issuer Risk Policy): The Foundation may redirect future purchases away from a threatened issuer</p>
-<p class="wp-p">without consensus. Previously purchased reserve assets remain sealed unless Emergency Catastrophe</p>
+<p class="wp-p">G8 (Issuer Risk Policy): During Phase I, the protocol developer may redirect future purchases away from a threatened issuer</p>
+<p class="wp-p">without consensus. After V6 activation (block 10,000), redirection requires protocol-level governance. Previously purchased reserve assets remain sealed unless Emergency Catastrophe</p>
 <p class="wp-p">is authorized.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">G9 (Emergency Catastrophe — Dual Gate):</p>
-<p class="wp-p">Reserve movements are permitted only under a narrowly defined catastrophe procedure intended for</p>
-<p class="wp-p">issuer failure/migration events or existential reserve-safety events. Emergency execution requires both:</p>
-<pre class="wp-code-inline">  (i) SOST PoW miner signaling ≥75% in a defined activation window, recorded on-chain as</pre>
-<pre class="wp-code-inline">      EmergencyApproved(proposalId, paramsHash, startHeight, endHeight), and</pre>
-<pre class="wp-code-inline">  (ii) a Foundation Execution Order (signature) authorizing the corresponding Ethereum execution.</pre>
+<p class="wp-p">G9 (Emergency Catastrophe — V6 5-Defense Gold Vault Model):</p>
+<p class="wp-p">The Gold Vault must be able to change form, but not purpose. Reserve movements are permitted only under a narrowly defined catastrophe procedure intended for issuer failure/migration events or existential reserve-safety events. After V6 activation (block 10,000), emergency reserve operations require ALL five constitutional defenses to be satisfied simultaneously:</p>
+<div class="wp-spacer"></div>
+<pre class="wp-code-inline">  Defense 1 (Purpose Restriction): Vault funds may only be used for reserve operations</pre>
+<pre class="wp-code-inline">           (rotation, migration, or redistribution). No general-purpose spending.</pre>
+<pre class="wp-code-inline">  Defense 2 (Dual Destination Whitelist): Outbound transfers are restricted to constitutional</pre>
+<pre class="wp-code-inline">           addresses only. Adding a new valid destination requires a hard fork, not a vote.</pre>
+<pre class="wp-code-inline">  Defense 3 (Hard Per-Spend Cap): No single transaction may move more than 2% of vault balance.</pre>
+<pre class="wp-code-inline">  Defense 4 (Asymmetric Rate Limiting): GV1 (routine rotation): max 5% of balance per 30-day</pre>
+<pre class="wp-code-inline">           window. GV3 (non-routine migration): 30-day cooldown between operations.</pre>
+<pre class="wp-code-inline">  Defense 5 (95% Supermajority): Non-routine reserve migration (GV3) requires ≥95% miner</pre>
+<pre class="wp-code-inline">           signaling in a defined activation window, recorded on-chain as</pre>
+<pre class="wp-code-inline">           EmergencyApproved(proposalId, paramsHash, startHeight, endHeight).</pre>
+<div class="wp-spacer"></div>
+<p class="wp-p">GV2 (operational small spend ≤10%) is eliminated. Vault SOST is never burned.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Signaling window (default): Approval is measured over a window of 24 hours, equivalent to</p>
 <p class="wp-p">W = 144 blocks with a target of 600s per block (10 minutes).</p>
-<p class="wp-p">Qualified majority (3/4): The emergency shall be considered approved if, within that window,</p>
-<p class="wp-p">at least 75% of blocks include the support signal (YES ≥ ceil(0.75 × W)). With the default</p>
-<p class="wp-p">value W = 144, this requires YES ≥ 108 signaled blocks. (W may be defined in the network</p>
-<p class="wp-p">profile if the block target is adjusted or for operational reasons, without altering the 75% threshold.)</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><em>Note: The Foundation may propose increasing this threshold to 90% or 95% if deemed appropriate for the long-term security of the protocol.</em></p>
+<p class="wp-p">Supermajority (95%): The emergency shall be considered approved if, within that window,</p>
+<p class="wp-p">at least 95% of blocks include the support signal (YES ≥ ceil(0.95 × W)). With the default</p>
+<p class="wp-p">value W = 144, this requires YES ≥ 137 signaled blocks.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Emergency actions are limited to exactly two action types:</p>
 <pre class="wp-code-inline">  (E1) ROTATE: rotate reserve holdings to other allowlisted precious-metal tokens (including XAUt↔PAXG).</pre>
 <pre class="wp-code-inline">  (E2) LIQUIDATE→BUY→REDISTRIBUTE: liquidate precious-metal tokens to acquire SOST and redistribute it,</pre>
 <pre class="wp-code-inline">       with a fully auditable trail.</pre>
 <div class="wp-spacer"></div>
-<p class="wp-p">The Foundation may pause purchases or adjust future purchase policy operationally without consensus,</p>
-<p class="wp-p">disclosed via batch reports.</p>
+<p class="wp-p">During Phase I (before block 10,000), the protocol developer may pause purchases or adjust future purchase policy operationally without consensus,</p>
+<p class="wp-p">disclosed via batch reports. After V6 activation, such adjustments require protocol-level governance.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">G10 (Transparency): Both vault addresses, all batch reports, and all relevant transaction proofs</p>
 <p class="wp-p">MUST be publicly published in a reproducible format.</p>
@@ -1309,8 +1316,9 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">TRUST MODEL:</p>
 <pre class="wp-code-inline">  Consensus-level allocation to the Gold Funding Vault: trustless (hardcoded by validation rules).</pre>
-<pre class="wp-code-inline">  Conversions and purchases are operational and auditable. The Foundation may adjust execution</pre>
-<pre class="wp-code-inline">  parameters (including the default 50/50 split) and may pause purchases at any time.</pre>
+<pre class="wp-code-inline">  Conversions and purchases are operational and auditable. During Phase I (before block 10,000),</pre>
+<pre class="wp-code-inline">  the protocol developer may adjust execution parameters (including the default 50/50 split)</pre>
+<pre class="wp-code-inline">  and may pause purchases. After V6 activation, adjustments require protocol-level governance.</pre>
 <pre class="wp-code-inline">  Movements of previously purchased reserve assets require Emergency Catastrophe</pre>
 <pre class="wp-code-inline">  authorization (Appendix G).</pre>
 <pre class="wp-code-inline">  No bridge, no wSOST, no smart contract dependency between chains beyond the Heritage Reserve itself.</pre>
@@ -1319,7 +1327,7 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <h4 id="sec-34" class="wp-h">5.3.1 Execution Policy: TWAP Batch Sales (Operational, Non-Consensus)</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">SOST&#x27;s Gold Funding Vault accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the Foundation or an automated execution stack, with the explicit goal of minimizing market impact while maximizing auditability and predictability.</p>
+<p class="wp-p">SOST&#x27;s Gold Funding Vault accumulates SOST by consensus (25% of coinbase). Conversions from SOST into tokenized gold exposure (XAUT/PAXG) are operational actions executed by the protocol developer (Phase I) or the automated execution stack (post-V6), with the explicit goal of minimizing market impact while maximizing auditability and predictability.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">TWAP (Time-Weighted Average Price) means executing a daily sell budget as many small, evenly spaced limit orders over time (e.g., across 24 hours), so the realized execution price approximates the market&#x27;s average price over that window and minimizes market impact.</p>
 <div class="wp-spacer"></div>
@@ -1362,7 +1370,7 @@ PROPERTIES:
 <div class="wp-bullet">Purchase proof for XAUT/PAXG,</div>
 <div class="wp-bullet">Transaction hash proving deposit into the Heritage Reserve.</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">This framework exists to prevent the common criticism that a Foundation &quot;dumps whenever it wants.&quot;</p>
+<p class="wp-p">This framework exists to prevent the common criticism that a project &quot;dumps whenever it wants.&quot;</p>
 <p class="wp-p">Execution is rate-limited, rule-based, and publicly auditable.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-35" class="wp-h">5.4 Heritage Reserve and Dissolution</h4>
@@ -1380,11 +1388,11 @@ PROPERTIES:
 <p class="wp-p">The chain is declared terminated operationally (&quot;project wind-down&quot;).</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Reserve assets may only be accessed under:</p>
-<div class="wp-bullet">(a) Emergency Catastrophe: ≥75% miner signaling + Foundation Execution Order</div>
-<div class="wp-bullet">(b) Formal Dissolution: declared by Foundation when chain is irreversibly dead, subject to public attestation and maximum 90-day notice period</div>
+<div class="wp-bullet">(a) Emergency Catastrophe: ≥95% miner supermajority signaling + all five constitutional defenses (V6 5-defense Gold Vault model)</div>
+<div class="wp-bullet">(b) Formal Dissolution: During Phase I, declared by the protocol developer when chain is irreversibly dead. After V6 activation (block 10,000), dissolution is triggered automatically by the protocol's dead-man switch, subject to public attestation and maximum 90-day notice period</div>
 <div class="wp-bullet">(c) Reserve Lifecycle transitions: planned custody migrations per Section 5.5, with 30-day notice</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">Dissolution enables access to the reserve for orderly wind-down. The Foundation is responsible for distributing reserve assets transparently after the 60-day public notice window expires.</p>
+<p class="wp-p">Dissolution enables access to the reserve for orderly wind-down. During Phase I, the protocol developer is responsible for distributing reserve assets transparently after the 60-day public notice window expires. After V6 activation, distribution is executed via the protocol's automated governance mechanism.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-38" class="wp-h">5.4.1 Liveness Monitoring and Dissolution Process (Operational, Non-Consensus)</h4>
 <div class="wp-spacer"></div>
@@ -1413,7 +1421,7 @@ PROPERTIES:
 <div class="wp-bullet">Day 150: wind-down execution (network lifecycle / operational shutdown).</div>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Important constraint</strong></p>
-<p class="wp-p">Dissolution enables orderly access to reserve assets for wind-down and distribution. If the chain dies, the Foundation declares Formal Dissolution after the 90-day dead-man switch triggers, followed by a 60-day public notice period. After notice expires, the Foundation may access the reserve for transparent distribution to stakeholders.</p>
+<p class="wp-p">Dissolution enables orderly access to reserve assets for wind-down and distribution. If the chain dies, the 90-day dead-man switch triggers, followed by a 60-day public notice period. During Phase I, the protocol developer declares Formal Dissolution and executes the wind-down. After V6 activation (block 10,000), dissolution and reserve distribution are governed by the protocol's automated mechanisms.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-39" class="wp-h">5.5 Reserve Evolution Path</h4>
 <div class="wp-spacer"></div>
@@ -1435,11 +1443,11 @@ PROPERTIES:
 <p class="wp-p">┌─────────────────────────────────────────┐</p>
 <p class="wp-p">│ When Reserve exceeds 500 oz equivalent: │</p>
 <p class="wp-p">│                                         │</p>
-<p class="wp-p">│ 1. Foundation establishes legal entity  │</p>
-<p class="wp-p">│    (Swiss/Liechtenstein jurisdiction)   │</p>
+<p class="wp-p">│ 1. Protocol developer establishes legal │</p>
+<p class="wp-p">│    entity (Swiss/Liechtenstein)         │</p>
 <p class="wp-p">│ 2. Contract with LBMA-approved vault    │</p>
 <p class="wp-p">│ 3. Redeem XAUT/PAXG → physical delivery │</p>
-<p class="wp-p">│ 4. Transfer to Foundation vault custody │</p>
+<p class="wp-p">│ 4. Transfer to protocol-controlled vault│</p>
 <p class="wp-p">│ 5. Independent quarterly audits         │</p>
 <p class="wp-p">└─────────────────────────────────────────┘</p>
 <div class="wp-spacer"></div>
@@ -1451,7 +1459,7 @@ PROPERTIES:
 <p class="wp-p">│   Rhodium, Iridium, Ruthenium, Osmium,  │</p>
 <p class="wp-p">│   Rhenium, silver (allocation TBD)      │</p>
 <p class="wp-p">│ • Zero intermediaries                   │</p>
-<p class="wp-p">│ • Foundation-controlled vault           │</p>
+<p class="wp-p">│ • Protocol-governed vault custody       │</p>
 <p class="wp-p">│ • Public serial numbers + audit reports │</p>
 <p class="wp-p">│ • 100% independent of token issuers     │</p>
 <p class="wp-p">│                                         │</p>
@@ -1495,7 +1503,7 @@ PROPERTIES:
 &#10004; RPC interfaces ready &nbsp;
 &#10008; <b>Not yet active on mainnet</b> &nbsp;
 &#10008; Ethereum escrow: pending deployment<br>
-Activation: protocol-scheduled after block 5,000, subject to network readiness (see §6.13).
+Activation: protocol-scheduled after block 10,000, subject to network readiness (see §6.13).
 </div>
 <h4 id="sec-41" class="wp-h">6.1 What PoPC Is — And Is Not</h4>
 <div class="wp-spacer"></div>
@@ -1675,10 +1683,10 @@ REPUTATION SCOPE:
 <div class="wp-spacer"></div>
 <h4 id="sec-46" class="wp-h">6.6 Price Bulletin and Bond Consent (Normative)</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">Bond sizing requires a market reference for SOST and gold prices. To avoid on-chain oracle dependency and discretionary Foundation pricing, PoPC uses a <strong>Price Bulletin</strong> model with explicit user consent:</p>
+<p class="wp-p">Bond sizing requires a market reference for SOST and gold prices. To avoid on-chain oracle dependency and discretionary pricing, PoPC uses a <strong>Price Bulletin</strong> model with explicit user consent:</p>
 <pre class="wp-code">PRICE BULLETIN (off-chain, publicly auditable):
 
-  Published daily by the Foundation:
+  Published daily by the protocol developer (Phase I) / automated oracle (post-V6):
     bulletin = {
       day:              YYYY-MM-DD,
       sost_usd_twap_7d: P_sost,
@@ -1692,7 +1700,7 @@ REPUTATION SCOPE:
                          publicly accessible and reproducible API],
       method:           &quot;TWAP_7d&quot;,
       bulletin_hash:    SHA256(canonical_json(bulletin)),
-      foundation_sig:   EIP-712_sign(foundation_key, bulletin_typed_data)
+      developer_sig:    EIP-712_sign(developer_key, bulletin_typed_data)
     }
 
   Publication: website + GitHub + IPFS mirror (redundant, immutable).
@@ -1718,8 +1726,8 @@ BOND TERMS (client-side calculation + user consent):
 
 ON-CHAIN FINALIZATION (no oracle, no daily updates):
 
-  The PoPC contract accepts (terms + foundation_sig + user_sig) and verifies:
-    1. EIP-712_recover(foundation_sig, terms_typed_data) == foundation_key
+  The PoPC contract accepts (terms + developer_sig + user_sig) and verifies:
+    1. EIP-712_recover(developer_sig, terms_typed_data) == developer_key
     2. ecrecover(user_sig, terms_hash) == user_wallet
     3. terms.expiry &gt;= block.timestamp  (freshness / anti-replay)
     4. bond_pct matches constitutional table for provided ratio
@@ -1741,23 +1749,25 @@ PRICE VOLATILITY DURING CONTRACT:
       at entry price. No repricing during the term.
   This eliminates oracle risk and discretionary pricing entirely.
 
-FOUNDATION SIGNATURE (EIP-712 typed data):
+DEVELOPER SIGNATURE (EIP-712 typed data — Phase I):
   Terms (including P_sost, P_gold, bond_pct, and reward) are signed by an
-  authorized Foundation key using EIP-712 typed data signatures. The smart
-  contract verifies the Foundation signature before accepting any commitment.
-  Users cannot submit self-signed terms.
+  authorized developer key using EIP-712 typed data signatures. The smart
+  contract verifies the developer signature before accepting any commitment.
+  Users cannot submit self-signed terms. After V6 activation (block 10,000),
+  this signing role transitions to an automated oracle with on-chain verification.
 
 SECURITY PROPERTIES:
   - No on-chain oracle: pricing is not consensus-critical.
-  - No discretionary pricing: Foundation cannot set a user&#x27;s bond.
-  - Dual consent: every contract requires both a Foundation EIP-712 signature
+  - No discretionary pricing: the protocol developer cannot set a user&#x27;s bond.
+  - Dual consent: every contract requires both a developer EIP-712 signature
     on the terms and a user signature. Neither party can act unilaterally.
   - Auditability: any party can reproduce bond sizing from bulletin + terms.
   - Permissionless verification: bulletin data + sources are public.
-  - Foundation-attested: the PoPC contract verifies the Foundation&#x27;s EIP-712
+  - Developer-attested (Phase I): the PoPC contract verifies the developer&#x27;s EIP-712
     signature on terms before accepting any commitment. Independent parties
-    may audit bulletin data, but on-chain terms require Foundation attestation.
-  - Malicious bulletin protection: because both the Foundation must sign the
+    may audit bulletin data, but on-chain terms require developer attestation.
+    Post-V6, attestation transitions to automated oracle.
+  - Malicious bulletin protection: because both the developer must sign the
     terms and the user must explicitly co-sign, neither party can impose
     pricing unilaterally. A malicious or incorrect bulletin simply results in
     participants refusing to co-sign contracts based on it. No funds are at
@@ -1849,16 +1859,16 @@ the user&#x27;s bond is returned in full regardless.
   Fee is locked at creation (immutable for the contract&#x27;s lifetime).
   Disbursement at completion (single atomic operation):
     user receives:       bond_sost + user_reward
-    foundation receives: protocol_fee
+    protocol fee address receives: protocol_fee
 
 EXAMPLE (12-month, same assumptions as Section 6.7):
   Base reward (22%):     6.75 × 0.22 = 1.485 SOST
   Protocol fee (5%):     1.485 × 0.05 = 0.074 SOST
   User receives:         6.75 + 1.411 = 8.161 SOST
-  Foundation receives:   0.074 SOST
+  Protocol fee address:  0.074 SOST
   User effective APR:    20.9% (vs 22% nominal)
 
-Fee destination: Foundation operational wallet (publicly auditable).
+Fee destination: protocol fee address (publicly auditable).
 Fee purpose: infrastructure, watcher operation, bulletin publication,
 exchange execution, security audits, development.
 
@@ -1928,7 +1938,7 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <pre class="wp-code-inline">    invoke claimReward(depositId) on a publicly deployed claims contract.</pre>
 <pre class="wp-code-inline">    The claims contract verifies the escrow deposit on-chain (event log +</pre>
 <pre class="wp-code-inline">    deposit parameters) and disburses the NET reward (after protocol fee)</pre>
-<pre class="wp-code-inline">    directly from the PoPC Pool, routing the protocol fee to the Foundation</pre>
+<pre class="wp-code-inline">    directly from the PoPC Pool, routing the protocol fee to the protocol fee</pre>
 <pre class="wp-code-inline">    wallet in the same atomic transaction. The watcher is a convenience for</pre>
 <pre class="wp-code-inline">    instant payouts; the autonomous claim is the trustless fallback that</pre>
 <pre class="wp-code-inline">    guarantees delivery regardless of Foundation liveness.</pre>
@@ -2028,7 +2038,7 @@ Reward-rate parameters (non-guaranteed), expressed as annualized reference rates
 <h4 id="sec-48" class="wp-h">6.9.1 Protocol Fee — Model B</h4>
 <div class="wp-spacer"></div>
 <p class="wp-p">A protocol fee of 10% is collected upfront at commitment creation. Model B has a higher fee</p>
-<p class="wp-p">because participants bear no slash risk and the Foundation assumes greater operational</p>
+<p class="wp-p">because participants bear no slash risk and the protocol developer assumes greater operational</p>
 <p class="wp-p">burden (watcher, immediate payout, escrow monitoring).</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  base_reward    = gold_value × APR × (duration/12) / sost_price</pre>
@@ -2039,7 +2049,7 @@ Reward-rate parameters (non-guaranteed), expressed as annualized reference rates
 <pre class="wp-code-inline">  Base reward (7%):      1.89 SOST</pre>
 <pre class="wp-code-inline">  Protocol fee (10%):    0.189 SOST</pre>
 <pre class="wp-code-inline">  User receives:         1.701 SOST immediately</pre>
-<pre class="wp-code-inline">  Foundation receives:   0.189 SOST</pre>
+<pre class="wp-code-inline">  Protocol fee address:  0.189 SOST</pre>
 <pre class="wp-code-inline">  User effective APR:    6.3% (vs 7% nominal)</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Same operational rules apply: fee destination auditable, 30-day notice</p>
@@ -2170,11 +2180,11 @@ SUSTAINABILITY EXAMPLE (Year 1):
 <div class="wp-spacer"></div>
 <h4 class="wp-h">6.13 Activation Conditions</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">PoPC will be activated once <b>all</b> of the following conditions are met. Block 5,000 is necessary but not sufficient — activation proceeds only when the system is stable and all components are operational.</p>
+<p class="wp-p">PoPC will be activated once <b>all</b> of the following conditions are met. Block 10,000 is necessary but not sufficient — activation proceeds only when the system is stable and all components are operational.</p>
 <div class="wp-spacer"></div>
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td><b>Condition</b></td><td><b>Requirement</b></td></tr>
-<tr><td>Block height</td><td>&ge; 5,000 (protocol milestone)</td></tr>
+<tr><td>Block height</td><td>&ge; 10,000 (V6 activation milestone)</td></tr>
 <tr><td>Network stability</td><td>Consistent block production, stable sync, no critical issues</td></tr>
 <tr><td>Participation</td><td>Minimum independent nodes and active miners</td></tr>
 <tr><td>Model A validation</td><td>Registration, audit, reward, slash flows tested under live conditions</td></tr>
@@ -2235,37 +2245,37 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-54" class="wp-h">7.1 No Ongoing Parameter Governance</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">No entity — including the Foundation, its members, or any future organization — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. All consensus rules — emission schedule, coinbase split, difficulty algorithm, supply cap, constitutional constraints — are immutable at genesis. No mechanism exists to alter them after block 0. Only narrow emergency authorization signaling exists, requiring ≥75% miner supermajority (Section 5.2, Appendix G).</p>
+<p class="wp-p">No entity — including the protocol developer, or any future organization — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. All consensus rules — emission schedule, coinbase split, difficulty algorithm, supply cap, constitutional constraints — are immutable at genesis. No mechanism exists to alter them after block 0. Only narrow emergency authorization signaling exists, requiring ≥95% miner supermajority under the V6 5-defense Gold Vault model (Section 5.2, Appendix G).</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Emergency Catastrophe authorization does not modify consensus rules or monetary policy; it only gates movements of external reserve assets held on Ethereum.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-55" class="wp-h">7.2 Operational Governance</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">Foundation executes operational actions under constitutional constraints and public attestations.</p>
+<p class="wp-p">During Phase I (before block 10,000), the protocol developer executes operational actions under constitutional constraints and public attestations. After V6 activation (block 10,000), custody transitions from the developer to the protocol itself — there is no intermediate multisig stage.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Operational scope (exhaustive):</p>
 <div class="wp-spacer"></div>
-<div class="wp-bullet"><strong>Gold Funding Vault conversion:</strong> Foundation executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). Every batch is attested on-chain.</div>
-<div class="wp-bullet"><strong>50/50 split adjustment:</strong> Foundation may change the XAUt/PAXG acquisition split for future purchases at any time. Adjustments apply only to future purchases and must be disclosed in batch reports.</div>
-<div class="wp-bullet"><strong>Purchase pause:</strong> Foundation may pause purchases without consensus, disclosed via batch reports.</div>
-<div class="wp-bullet"><strong>Future purchase redirection:</strong> Foundation may redirect future purchases from one issuer to another without consensus (e.g., if issuer risk increases).</div>
-<div class="wp-bullet"><strong>PoPC contract management:</strong> Foundation may pause new PoPC contracts in case of critical bugs. Existing contracts continue unaffected.</div>
-<div class="wp-bullet"><strong>Dissolution declaration:</strong> Foundation declares dissolution only after the dead-man switch triggers (90 days of zero blocks), with 60-day public timelock.</div>
+<div class="wp-bullet"><strong>Gold Funding Vault conversion:</strong> During Phase I, the protocol developer executes SOST→XAUT/PAXG purchases per the automated pipeline (Section 5.3). After V6, execution is automated with on-chain attestation. Every batch is attested on-chain.</div>
+<div class="wp-bullet"><strong>50/50 split adjustment:</strong> During Phase I, the protocol developer may change the XAUt/PAXG acquisition split for future purchases. After V6 activation, adjustments require protocol-level governance. Adjustments apply only to future purchases and must be disclosed in batch reports.</div>
+<div class="wp-bullet"><strong>Purchase pause:</strong> During Phase I, the protocol developer may pause purchases without consensus, disclosed via batch reports. After V6, pausing requires protocol-level governance.</div>
+<div class="wp-bullet"><strong>Future purchase redirection:</strong> During Phase I, the protocol developer may redirect future purchases from one issuer to another without consensus (e.g., if issuer risk increases). After V6, redirection requires protocol-level governance.</div>
+<div class="wp-bullet"><strong>PoPC contract management:</strong> During Phase I, the protocol developer may pause new PoPC contracts in case of critical bugs. After V6, this is governed by the protocol. Existing contracts continue unaffected.</div>
+<div class="wp-bullet"><strong>Dissolution declaration:</strong> During Phase I, the protocol developer declares dissolution only after the dead-man switch triggers (90 days of zero blocks), with 60-day public timelock. After V6, dissolution is triggered automatically by the protocol.</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">Moving previously purchased reserve assets requires Emergency Catastrophe authorization (≥75% miner signaling + Foundation Execution Order). No other mechanism exists.</p>
+<p class="wp-p">Moving previously purchased reserve assets requires Emergency Catastrophe authorization under the V6 5-defense Gold Vault model (≥95% miner supermajority signaling + all five constitutional defenses). No other mechanism exists. The vault is a constitutional reserve engine, not a general treasury.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">No operational action can modify consensus rules, alter the emission schedule, or redirect coinbase allocations. Reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned Reserve Lifecycle transitions (Section 5.5).</p>
+<p class="wp-p">No operational action can modify consensus rules, alter the emission schedule, or redirect coinbase allocations. Reserve assets may only be accessed under Emergency Catastrophe (≥95% miner supermajority + 5-defense model), formally declared Dissolution (Section 5.4), or planned Reserve Lifecycle transitions (Section 5.5).</p>
 <div class="wp-spacer"></div>
 <div style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid #4ade80;padding:16px 20px;margin:16px 0;border-radius:0 6px 6px 0">
 <p class="wp-p" style="color:#4ade80;font-weight:600;letter-spacing:1px;margin-bottom:8px">DECENTRALIZATION COMMITMENT (C16)</p>
-<p class="wp-p">Every operational function described in this section — vault execution, purchase management, PoPC verification, and reporting — is designed for progressive automation and decentralization. The Foundation holds these roles as a transitional necessity during Phase 1. As each process is automated, tested, and independently verified, the Foundation permanently relinquishes manual control. This trajectory is irreversible: decentralization only moves forward. See Section 7.3 for the full commitment.</p>
+<p class="wp-p">Every operational function described in this section — vault execution, purchase management, PoPC verification, and reporting — is designed for progressive automation and decentralization. The protocol developer holds these roles as a transitional necessity during Phase I (before block 10,000). At V6 activation, custody transitions directly from developer to protocol — no intermediate multisig. As each process is automated, tested, and independently verified, manual control is permanently relinquished. This trajectory is irreversible: decentralization only moves forward. See Section 7.3 for the full commitment.</p>
 </div>
 <div class="wp-spacer"></div>
 <h4 id="sec-55b" class="wp-h">7.3 Progressive Decentralization</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The Foundation commits to progressive decentralization and full automation of all operational processes as soon as technically viable. Manual operations during Phase 1 — PoPC balance verification, reward payouts, vault batch conversions, and reporting — are transitional by design, not permanent. Each process has a documented automation path: PoPC verification moves to on-chain smart contracts, reward payouts to the sost-popc-daemon, and vault conversions to a deterministic execution stack with public attestations.</p>
+<p class="wp-p">The protocol is committed to progressive decentralization and full automation of all operational processes. At V6 activation (block 10,000), custody transitions directly from the protocol developer to the protocol — no intermediate multisig stage. Manual operations during Phase I — PoPC balance verification, reward payouts, vault batch conversions, and reporting — are transitional by design, not permanent. Each process has a documented automation path: PoPC verification moves to on-chain smart contracts, reward payouts to the sost-popc-daemon, and vault conversions to a deterministic execution stack with public attestations.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">This is a <strong>constitutional commitment</strong> (C16), not a discretionary goal. As each operational process is automated and independently verified, the Foundation permanently relinquishes manual control over that process. The trajectory is irreversible: decentralization only moves forward.</p>
+<p class="wp-p">This is a <strong>constitutional commitment</strong> (C16), not a discretionary goal. As each operational process is automated and independently verified, the protocol developer permanently relinquishes manual control over that process. The trajectory is irreversible: decentralization only moves forward.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-56" class="wp-h">8. Economic Model</h3>
 <div class="wp-spacer"></div>
@@ -2274,7 +2284,7 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-bullet"><strong>Mining:</strong> miners earn SOST and decide to hold or sell.</div>
 <div class="wp-bullet"><strong>Model A bonds:</strong> participants must buy SOST on CEX to create bonds — direct buy pressure.</div>
 <div class="wp-bullet"><strong>Model B distribution:</strong> SOST distributed to gold holders — organic distribution to non-crypto users.</div>
-<div class="wp-bullet"><strong>Gold Reserve sales:</strong> Foundation sells SOST to buy gold — provides sell-side liquidity and price discovery.</div>
+<div class="wp-bullet"><strong>Gold Reserve sales:</strong> Gold Funding Vault SOST is sold to buy gold via the automated conversion pipeline — provides sell-side liquidity and price discovery.</div>
 <div class="wp-bullet"><strong>Speculation:</strong> market prices SOST partly on observable gold reserve backing.</div>
 <div class="wp-spacer"></div>
 <h4 id="sec-58" class="wp-h">8.2 Deflationary Mechanics</h4>
@@ -2361,11 +2371,11 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-spacer"></div>
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Scenario</td><td>Response</td></tr>
-<tr><td>Critical bug</td><td>Foundation pauses new PoPC contracts. Existing contracts continue unaffected.</td></tr>
-<tr><td>Exchange hack</td><td>The Heritage Reserve on Ethereum operates as a sealed vault with no operational interaction. The Gold Funding Vault on SOST chain interacts with execution venues via the conversion pipeline but is not a hot wallet — all operations require Foundation authorization.</td></tr>
-<tr><td>XAUT/PAXG issuer risk</td><td>Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-redistribute (E2). Requires dual gate: ≥75% miner signaling + Foundation Execution Order.</td></tr>
-<tr><td>Issuer risk (future purchases only)</td><td>Foundation redirects future purchases without consensus. Previously purchased assets remain sealed.</td></tr>
-<tr><td>Chain death (90 days)</td><td>Dead-man switch activates. 60-day public Dissolution notice begins. After notice period, Foundation may access reserve for orderly wind-down and transparent distribution (Section 5.4).</td></tr>
+<tr><td>Critical bug</td><td>During Phase I, the protocol developer pauses new PoPC contracts. After V6, pausing is governed by the protocol. Existing contracts continue unaffected.</td></tr>
+<tr><td>Exchange hack</td><td>The Heritage Reserve on Ethereum operates as a sealed vault with no operational interaction. The Gold Funding Vault on SOST chain interacts with execution venues via the conversion pipeline but is not a hot wallet — during Phase I, all operations require developer authorization; after V6, operations are protocol-governed.</td></tr>
+<tr><td>XAUT/PAXG issuer risk</td><td>Emergency Catastrophe: rotate to allowlisted metals (E1) OR liquidate-buy-redistribute (E2). Requires ≥95% miner supermajority signaling + all five constitutional defenses under the V6 5-defense Gold Vault model.</td></tr>
+<tr><td>Issuer risk (future purchases only)</td><td>During Phase I, the protocol developer redirects future purchases without consensus. After V6, redirection requires protocol-level governance. Previously purchased assets remain sealed.</td></tr>
+<tr><td>Chain death (90 days)</td><td>Dead-man switch activates. 60-day public Dissolution notice begins. During Phase I, the protocol developer executes orderly wind-down. After V6, dissolution and reserve distribution are protocol-governed (Section 5.4).</td></tr>
 </table></div>
 <div class="wp-spacer"></div>
 <h3 id="sec-68" class="wp-h">10. The Constitution</h3>
@@ -2380,8 +2390,8 @@ C1:  Total supply is upper-bounded by SUPPLY_MAX_STOCKS by construction of the e
 C2:  Coinbase split is immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.
      Exact integer conservation guaranteed: miner + gold + popc == reward always.
 C3:  Gold Funding Vault coinbase destination is immutable at genesis. Heritage Reserve is sealed;
-     reserve assets may only be accessed under Emergency Catastrophe (≥75% miner signaling +
-     Foundation Execution Order), formally declared Dissolution (Section 5.4), or planned
+     reserve assets may only be accessed under Emergency Catastrophe (≥95% miner supermajority +
+     V6 5-defense Gold Vault model), formally declared Dissolution (Section 5.4), or planned
      Reserve Lifecycle transitions (Section 5.5).
 C4:  Gold Reserve shall not be sold except under Emergency Catastrophe (E2: liquidate-buy-redistribute)
      or formally declared Dissolution.
@@ -2395,14 +2405,19 @@ C11: ConvergenceX parameters are fixed at genesis and apply to all epochs. Deter
 C12: All consensus arithmetic is integer-only. No floating-point in any consensus path.
 C13: Model B escrow contracts must be non-upgradeable, have no admin key, and allow
      withdrawal only by the original depositor after expiry.
-C14: Default 50/50 XAUt/PAXG acquisition split; adjustable operationally by Foundation
-     for future purchases only. Previously purchased assets are not rebalanced.
-C15: Emergency Catastrophe dual gate: ≥75% miner signaling (W=144 blocks, YES≥108)
-     + Foundation Execution Order. Only two actions permitted: E1 (ROTATE) and
-     E2 (LIQUIDATE→BUY→REDISTRIBUTE). No other mechanism to move reserve assets.
-C16: Progressive decentralization is irreversible. All operational roles held by the
-     Foundation are transitional. As each process is automated and independently verified,
-     manual control is permanently relinquished. Decentralization only moves forward.</pre>
+C14: Default 50/50 XAUt/PAXG acquisition split; during Phase I, adjustable operationally
+     by the protocol developer for future purchases only. After V6, adjustments require
+     protocol-level governance. Previously purchased assets are not rebalanced.
+C15: Emergency Catastrophe requires the V6 5-defense Gold Vault model: (1) purpose restriction,
+     (2) dual destination whitelists (hard fork to modify), (3) hard per-spend cap (2% of balance),
+     (4) asymmetric rate limiting, (5) ≥95% miner supermajority (W=144 blocks, YES≥137).
+     Only two actions permitted: E1 (ROTATE) and E2 (LIQUIDATE→BUY→REDISTRIBUTE).
+     No other mechanism to move reserve assets. Vault SOST is never burned.
+C16: Progressive decentralization is irreversible. At V6 activation (block 10,000), custody
+     transitions directly from the protocol developer to the protocol — no intermediate multisig.
+     All operational roles held by the developer are transitional. As each process is automated
+     and independently verified, manual control is permanently relinquished.
+     Decentralization only moves forward.</pre>
 <div class="wp-spacer"></div>
 <h3 id="sec-69" class="wp-h">11. Roadmap</h3>
 <div class="wp-spacer"></div>
@@ -2421,7 +2436,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <pre class="wp-code-inline">  platinum, palladium, rhodium, iridium, ruthenium, osmium, and others as market conditions permit). </pre>
 <pre class="wp-code-inline">  The goal is for every tokenized asset to be backed 1:1 by physical reserves in auditable vaults with independent proof of reserves. |</pre>
 <div class="wp-table-wrap"><table class="wp-table">
-<tr><td>Indefinite</td><td>Heritage Reserve. Gold sealed by default. Emergency dual-gate if needed. Chain runs on fees.</td></tr>
+<tr><td>Indefinite</td><td>Heritage Reserve. Gold sealed by default. Emergency 5-defense model if needed. Chain runs on fees.</td></tr>
 </table></div>
 <div class="wp-spacer"></div>
 <h3 id="sec-70" class="wp-h">12. Technical Specifications</h3>
@@ -2448,13 +2463,13 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <tr><td>Consensus arithmetic</td><td>100% integer (zero floating-point)</td></tr>
 <tr><td>Reserve chain</td><td>Ethereum mainnet</td></tr>
 <tr><td>Reserve mode</td><td>Heritage (sealed by default)</td></tr>
-<tr><td>Emergency</td><td>PoW ≥75% (W=144) + Foundation Execution Order</td></tr>
+<tr><td>Emergency</td><td>≥95% miner signaling (W=144) + V6 5-defense Gold Vault model</td></tr>
 <tr><td>Emergency actions</td><td>E1: ROTATE / E2: LIQUIDATE→BUY→REDISTRIBUTE</td></tr>
 <tr><td>Default gold split</td><td>50/50 XAUt/PAXG (adjustable operationally, future purchases only)</td></tr>
 <tr><td>Premine</td><td>0 SOST — zero</td></tr>
 <tr><td>ICO / VCs</td><td>None</td></tr>
 <tr><td>Consensus governance</td><td>None — immutable at genesis</td></tr>
-<tr><td>Operational governance</td><td>Foundation-executed, constitutionally constrained, publicly auditable</td></tr>
+<tr><td>Operational governance</td><td>Phase I: developer-executed; Phase II (V6, block 10,000): protocol-governed. Constitutionally constrained, publicly auditable</td></tr>
 </table></div>
 <div class="wp-spacer"></div>
 <h3 id="sec-71" class="wp-h">13. Conclusion</h3>
@@ -2463,7 +2478,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Proof-of-Work that produces a mathematical certificate.</strong> ConvergenceX replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is not just a hash below a target — it is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Automatic, constitutional accumulation of gold reserve.</strong> Every mined block allocates 25% to a Gold Funding Vault. The Foundation converts accumulated SOST to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default, movable only under Emergency Catastrophe (≥75% miner signaling + Foundation Execution Order). No governance can alter this. The accumulation is a structural property of the protocol, not a promise made by people.</p>
+<p class="wp-p"><strong>Automatic, constitutional accumulation of gold reserve.</strong> Every mined block allocates 25% to a Gold Funding Vault. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default. After V6 activation (block 10,000), custody transitions directly from the protocol developer to the protocol under the 5-defense Gold Vault model, requiring ≥95% miner supermajority for any non-routine reserve movement. The Gold Vault must be able to change form, but not purpose. The accumulation is a structural property of the protocol, not a promise made by people.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Voluntary custody commitments audited by PoW-derived entropy.</strong> PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.</p>
 <div class="wp-spacer"></div>
@@ -2504,7 +2519,7 @@ C16: Progressive decentralization is irreversible. All operational roles held by
 <p class="wp-p">Activate BOND_LOCK and ESCROW_LOCK transaction types via block height activation. Enables native PoPC bonds and escrow on the SOST chain without Ethereum dependency. Changes limited to consensus validation (R11, S9, S11) and wallet CLI.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Phase 2 — Native Metal Tokens (Q4 2027-Q1 2028, ~6 months):</strong></p>
-<p class="wp-p">Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Foundation-only issuance initially. Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings. Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal acquisition. Token registration fees are paid to the Gold Funding Vault, not burned.</p>
+<p class="wp-p">Implement TOKEN_REGISTER, TOKEN_ISSUE, TOKEN_TRANSFER. Developer-only issuance initially (Phase I). Enables native XAUT-SOST, PAXG-SOST, SLVR-SOST tokens backed by verified metal holdings. Each TOKEN_ISSUE includes a Capsule attestation with the Ethereum TX hash proving metal acquisition. Token registration fees are paid to the Gold Funding Vault, not burned.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Phase 3 — Fully Native PoPC (Q2 2028):</strong></p>
 <p class="wp-p">Migrate all PoPC operations from Ethereum to the SOST chain. Bond locks, escrow, verification, and reward distribution fully on-chain. No Ethereum dependency for any core protocol operation.</p>
@@ -2646,9 +2661,9 @@ cASERT EQUALIZER PARAMETERS:
 
 EMERGENCY PARAMETERS:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
-  EMERGENCY_THRESHOLD_NUM      = 75        // 75%
+  EMERGENCY_THRESHOLD_NUM      = 95        // 95%
   EMERGENCY_THRESHOLD_DEN      = 100
-  EMERGENCY_YES_REQUIRED       = 108       // ceil(0.75 × 144)</pre>
+  EMERGENCY_YES_REQUIRED       = 137       // ceil(0.95 × 144)</pre>
 <div class="wp-spacer"></div>
 <h3 id="sec-74" class="wp-h">Appendix B: Serialization (Normative)</h3>
 <div class="wp-spacer"></div>
@@ -2783,9 +2798,9 @@ GENERATION:
   reference implementation and outputs hex-encoded JSON.
   A conforming implementation MUST match every vector bit-for-bit.</pre>
 <div class="wp-spacer"></div>
-<h3 id="sec-78" class="wp-h">Appendix G: Emergency Authorization &amp; Execution Order (Normative)</h3>
+<h3 id="sec-78" class="wp-h">Appendix G: Emergency Reserve Authorization (V6 5-Defense Model) (Normative)</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">This appendix formally defines the Emergency Catastrophe procedure referenced in G9 and C15.</p>
+<p class="wp-p">This appendix formally defines the Emergency Catastrophe procedure referenced in G9 and C15. The Gold Vault must be able to change form, but not purpose. After V6 activation (block 10,000), the Heritage Reserve contract on Ethereum is governed by a Zodiac + Reality.eth module architecture — no single key or entity controls the vault. During Phase I (before block 10,000), the protocol developer holds operational custody as a transitional necessity.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-79" class="wp-h">G.1 EmergencyProposal (SOST chain)</h4>
 <div class="wp-spacer"></div>
@@ -2814,37 +2829,59 @@ SIGNALING WINDOW:
 APPROVAL CONDITION:
   YES = number of blocks in window containing the signaling tag
   TOTAL = W
-  Approved if: YES &gt;= ceil(0.75 × W)
-  With W = 144: YES &gt;= 108
+  Approved if: YES &gt;= ceil(0.95 × W)
+  With W = 144: YES &gt;= 137
 
 RECORD:
   EmergencyApproved(proposalId, paramsHash, startHeight, endHeight)
   Recorded on-chain (event, RPC, or recognized state).</pre>
 <div class="wp-spacer"></div>
-<h4 id="sec-81" class="wp-h">G.3 Foundation Execution Order (Ethereum)</h4>
+<h4 id="sec-81" class="wp-h">G.3 V6 5-Defense Vault Execution (Ethereum — Zodiac + Reality.eth)</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">After on-chain approval is confirmed on SOST, the Foundation signs an Execution Order for the Ethereum Heritage Reserve contract:</p>
+<p class="wp-p">After on-chain approval is confirmed on SOST with ≥95% supermajority, the Heritage Reserve contract on Ethereum enforces the 5-defense model via a Zodiac module with Reality.eth oracle integration:</p>
 <div class="wp-spacer"></div>
-<pre class="wp-code">ExecutionOrder:
+<pre class="wp-code">V6 5-DEFENSE EXECUTION:
+  Defense 1 (Purpose Restriction):
+    actionType must be 1 (ROTATE) or 2 (LIQUIDATE→BUY→REDISTRIBUTE).
+    No general-purpose spending. Vault SOST is never burned.
+
+  Defense 2 (Dual Destination Whitelist):
+    Target addresses are hardcoded in the contract. Adding a new valid
+    destination requires a hard fork of the Heritage Reserve contract —
+    no vote or key can modify the whitelist.
+
+  Defense 3 (Hard Per-Spend Cap):
+    No single transaction may move more than 2% of the vault balance
+    at the time of execution.
+
+  Defense 4 (Asymmetric Rate Limiting):
+    GV1 (routine rotation): max 5% of balance per rolling 30-day window.
+    GV3 (non-routine migration): 30-day cooldown between operations.
+
+  Defense 5 (95% Supermajority):
+    Non-routine reserve migration (GV3) requires EmergencyApproved
+    confirmation from the SOST chain with YES >= 137 (95% of W=144).
+
   proposalId:    bytes32
   paramsHash:    bytes32
   actionType:    uint8        // 1 = ROTATE, 2 = LIQUIDATE→BUY→REDISTRIBUTE
   expiry:        uint256      // Ethereum block.timestamp deadline
   nonce:         uint256      // replay protection
-  params:        bytes        // action-specific parameters (target tokens, amounts)
-  signature:     bytes        // Foundation key ECDSA signature</pre>
+  params:        bytes        // action-specific parameters (target tokens, amounts)</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-82" class="wp-h">G.4 Ethereum Contract Verification</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">The Heritage Reserve contract on Ethereum mainnet verifies:</p>
+<p class="wp-p">The Heritage Reserve contract on Ethereum mainnet verifies all five defenses:</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code">VERIFICATION STEPS:
-  1. Recover signer from signature → must match Foundation address
+  1. Verify proposal approval via Reality.eth oracle (SOST chain ≥95% signaling confirmed)
   2. Verify nonce (sequential, prevents replay)
   3. Verify expiry &gt;= block.timestamp
-  4. Verify actionType is 1 or 2 (no other actions possible)
-  5. Verify target tokens are on allowlist
-  6. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + redistribute to vaults)</pre>
+  4. Verify actionType is 1 or 2 (Defense 1: purpose restriction)
+  5. Verify target addresses are on hardcoded whitelist (Defense 2: destination whitelist)
+  6. Verify amount &lt;= 2% of vault balance (Defense 3: per-spend cap)
+  7. Verify rate limits not exceeded (Defense 4: asymmetric rate limiting)
+  8. Execute E1 (transfer to allowlisted token) or E2 (sell + buy SOST + redistribute to vaults)</pre>
 <div class="wp-spacer"></div>
 <h4 id="sec-83" class="wp-h">G.5 Mandatory Audit Trail</h4>
 <div class="wp-spacer"></div>
@@ -2998,7 +3035,7 @@ SERIALIZATION (consensus-critical fix):
 <pre class="wp-code-inline">  PROTOCOL FEES:</pre>
 <div class="wp-bullet">  63) Section 6.7.1 added: Model A protocol fee (5% of reward, calculated at creation, disbursed at completion).</div>
 <div class="wp-bullet">  64) Section 6.9.1 added: Model B protocol fee (10% of reward, deducted from immediate payout).</div>
-<pre class="wp-code-inline">      Fees fund Foundation operations. 30-day notice for changes.</pre>
+<pre class="wp-code-inline">      Fees fund protocol operations. 30-day notice for changes.</pre>
 <pre class="wp-code-inline">      Existing contracts locked at creation fee rate.</pre>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  SECURITY IMPROVEMENTS:</pre>
@@ -3069,7 +3106,7 @@ SERIALIZATION (consensus-critical fix):
 <div class="wp-spacer"></div>
 <p class="wp-p">SOST Protocol currently uses secp256k1 ECDSA &mdash; the same scheme used by Bitcoin since 2009. While no practical quantum threat exists today, SOST has a constitutional migration plan. Selected algorithm: <strong>CRYSTALS-Dilithium</strong> (NIST FIPS 204 winner). Signature size: 2,420 bytes. New address prefix: <strong>sost2</strong>.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Migration:</strong> Phase 1 Research (done) &rarr; Phase 2 Prototype (2027) &rarr; Phase 3 Dual signatures testnet (2028 Q1) &rarr; Phase 4 Mainnet sost2 (2028 Q3) &rarr; Phase 5 ECDSA deprecation via 75% vote (2030+). SHA-256 hashing remains quantum-safe.</p>
+<p class="wp-p"><strong>Migration:</strong> Phase 1 Research (done) &rarr; Phase 2 Prototype (2027) &rarr; Phase 3 Dual signatures testnet (2028 Q1) &rarr; Phase 4 Mainnet sost2 (2028 Q3) &rarr; Phase 5 ECDSA deprecation via 95% vote (2030+). SHA-256 hashing remains quantum-safe.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p" style="font-size:12px;color:#888;border-top:1px solid #333;padding-top:12px;">SOST source code is published under the MIT License — fully open source<a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:#4ecdc4;">LICENSE</a> file for full terms.</p>
   </main>
