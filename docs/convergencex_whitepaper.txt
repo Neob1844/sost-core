@@ -3251,7 +3251,7 @@ B.1 HD WALLET (BIP39)
 
 B.2 SOST-PSBT (OFFLINE SIGNING)
 - SOST-specific offline signing format — NOT BIP174
-- Transport: JSON + base64 with "sost-psbt\xff" magic prefix
+- Transport: JSON + base64 with "sost-psbt" magic prefix (0xff terminated)
 - Supports P2PKH inputs and REDEEMSCRIPT_HASH_MULTISIG inputs
 - Multiple partial signatures per input (for M-of-N multisig)
 - Flow: psbt_create → psbt_sign (offline) → psbt_combine → psbt_finalize → broadcast
