@@ -1,0 +1,447 @@
+{
+  "timestamp": "2026-04-16 17:26:56 UTC",
+  "sources": {
+    "cpp": [
+      "src/pow/casert.cpp",
+      "include/sost/params.h"
+    ],
+    "python": "scripts/v5_simulator.py"
+  },
+  "constants_comparison": [
+    {
+      "name": "GENESIS_TIME",
+      "cpp_name": "GENESIS_TIME",
+      "py_name": "GENESIS_TIME",
+      "cpp_val": 1773597600,
+      "py_val": 1773597600,
+      "category": "core",
+      "status": "PASS"
+    },
+    {
+      "name": "TARGET_SPACING",
+      "cpp_name": "TARGET_SPACING",
+      "py_name": "TARGET_SPACING",
+      "cpp_val": 600,
+      "py_val": 600,
+      "category": "core",
+      "status": "PASS"
+    },
+    {
+      "name": "GENESIS_BITSQ",
+      "cpp_name": "GENESIS_BITSQ",
+      "py_name": "GENESIS_BITSQ",
+      "cpp_val": 765730,
+      "py_val": 765730,
+      "category": "core",
+      "status": "PASS"
+    },
+    {
+      "name": "H_MIN",
+      "cpp_name": "CASERT_H_MIN",
+      "py_name": "CASERT_H_MIN",
+      "cpp_val": -4,
+      "py_val": -4,
+      "category": "profile_range",
+      "status": "PASS"
+    },
+    {
+      "name": "H_MAX",
+      "cpp_name": "CASERT_H_MAX",
+      "py_name": "CASERT_H_MAX",
+      "cpp_val": 12,
+      "py_val": 12,
+      "category": "profile_range",
+      "status": "PASS"
+    },
+    {
+      "name": "V3_SLEW_RATE",
+      "cpp_name": "CASERT_V3_SLEW_RATE",
+      "py_name": "CASERT_V3_SLEW_RATE",
+      "cpp_val": 3,
+      "py_val": 3,
+      "category": "slew",
+      "status": "PASS"
+    },
+    {
+      "name": "V3_LAG_FLOOR_DIV",
+      "cpp_name": "CASERT_V3_LAG_FLOOR_DIV",
+      "py_name": "CASERT_V3_LAG_FLOOR_DIV",
+      "cpp_val": 8,
+      "py_val": 8,
+      "category": "slew",
+      "status": "PASS"
+    },
+    {
+      "name": "V4_FORK_HEIGHT",
+      "cpp_name": "CASERT_V4_FORK_HEIGHT",
+      "py_name": "CASERT_V4_FORK_HEIGHT",
+      "cpp_val": 4170,
+      "py_val": 4170,
+      "category": "fork",
+      "status": "PASS"
+    },
+    {
+      "name": "AHEAD_ENTER",
+      "cpp_name": "CASERT_AHEAD_ENTER",
+      "py_name": "CASERT_AHEAD_ENTER",
+      "cpp_val": 16,
+      "py_val": 16,
+      "category": "ahead_guard",
+      "status": "PASS"
+    },
+    {
+      "name": "V5_FORK_HEIGHT",
+      "cpp_name": "CASERT_V5_FORK_HEIGHT",
+      "py_name": "CASERT_V5_FORK_HEIGHT",
+      "cpp_val": 4300,
+      "py_val": 4300,
+      "category": "fork",
+      "status": "PASS"
+    },
+    {
+      "name": "ANTISTALL_FLOOR_V5",
+      "cpp_name": "CASERT_ANTISTALL_FLOOR_V5",
+      "py_name": "CASERT_ANTISTALL_FLOOR_V5",
+      "cpp_val": 3600,
+      "py_val": 3600,
+      "category": "antistall",
+      "status": "PASS"
+    },
+    {
+      "name": "ANTISTALL_FLOOR",
+      "cpp_name": "CASERT_ANTISTALL_FLOOR",
+      "py_name": "CASERT_ANTISTALL_FLOOR",
+      "cpp_val": 7200,
+      "py_val": 7200,
+      "category": "antistall",
+      "status": "PASS"
+    },
+    {
+      "name": "ANTISTALL_EASING_EXTRA",
+      "cpp_name": "CASERT_ANTISTALL_EASING_EXTRA",
+      "py_name": "CASERT_ANTISTALL_EASING_EXTRA",
+      "cpp_val": 21600,
+      "py_val": 21600,
+      "category": "antistall",
+      "status": "PASS"
+    },
+    {
+      "name": "EBR_ENTER",
+      "cpp_name": "CASERT_EBR_ENTER",
+      "py_name": "CASERT_EBR_ENTER",
+      "cpp_val": -10,
+      "py_val": -10,
+      "category": "ebr",
+      "status": "PASS"
+    },
+    {
+      "name": "EBR_LEVEL_E2",
+      "cpp_name": "CASERT_EBR_LEVEL_E2",
+      "py_name": "CASERT_EBR_LEVEL_E2",
+      "cpp_val": -15,
+      "py_val": -15,
+      "category": "ebr",
+      "status": "PASS"
+    },
+    {
+      "name": "EBR_LEVEL_E3",
+      "cpp_name": "CASERT_EBR_LEVEL_E3",
+      "py_name": "CASERT_EBR_LEVEL_E3",
+      "cpp_val": -20,
+      "py_val": -20,
+      "category": "ebr",
+      "status": "PASS"
+    },
+    {
+      "name": "EBR_LEVEL_E4",
+      "cpp_name": "CASERT_EBR_LEVEL_E4",
+      "py_name": "CASERT_EBR_LEVEL_E4",
+      "cpp_val": -25,
+      "py_val": -25,
+      "category": "ebr",
+      "status": "PASS"
+    },
+    {
+      "name": "V5_EXTREME_MIN",
+      "cpp_name": "CASERT_V5_EXTREME_MIN",
+      "py_name": "CASERT_V5_EXTREME_MIN",
+      "cpp_val": 10,
+      "py_val": 10,
+      "category": "extreme_cap",
+      "status": "PASS"
+    }
+  ],
+  "antistall_decay_comparison": [
+    {
+      "zone": "H>=7",
+      "cpp": 600,
+      "py": 600,
+      "status": "PASS"
+    },
+    {
+      "zone": "H>=4",
+      "cpp": 900,
+      "py": 900,
+      "status": "PASS"
+    },
+    {
+      "zone": "else (H1-H3)",
+      "cpp": 1200,
+      "py": 1200,
+      "status": "PASS"
+    }
+  ],
+  "easing_comparison": {
+    "cpp": 1800,
+    "py": "N/A (not implemented)",
+    "status": "WARN"
+  },
+  "profiles_match": true,
+  "cpp_only_constants": [
+    {
+      "name": "CASERT_EWMA_SHORT_ALPHA",
+      "value": 32
+    },
+    {
+      "name": "CASERT_EWMA_LONG_ALPHA",
+      "value": 3
+    },
+    {
+      "name": "CASERT_EWMA_VOL_ALPHA",
+      "value": 16
+    },
+    {
+      "name": "CASERT_EWMA_DENOM",
+      "value": 256
+    },
+    {
+      "name": "CASERT_INTEG_RHO",
+      "value": 253
+    },
+    {
+      "name": "CASERT_INTEG_ALPHA",
+      "value": 1
+    },
+    {
+      "name": "CASERT_INTEG_MAX",
+      "value": 6553600
+    },
+    {
+      "name": "CASERT_K_R",
+      "value": 3277
+    },
+    {
+      "name": "CASERT_K_L",
+      "value": 26214
+    },
+    {
+      "name": "CASERT_K_I",
+      "value": 9830
+    },
+    {
+      "name": "CASERT_K_B",
+      "value": 3277
+    },
+    {
+      "name": "CASERT_K_V",
+      "value": 1311
+    },
+    {
+      "name": "CASERT_HYSTERESIS",
+      "value": 0
+    },
+    {
+      "name": "CASERT_DT_MIN",
+      "value": 1
+    },
+    {
+      "name": "CASERT_DT_MAX",
+      "value": 86400
+    },
+    {
+      "name": "BITSQ_HALF_LIFE",
+      "value": 172800
+    },
+    {
+      "name": "BITSQ_HALF_LIFE_V2",
+      "value": 86400
+    },
+    {
+      "name": "BITSQ_MAX_DELTA_DEN",
+      "value": 16
+    },
+    {
+      "name": "BITSQ_MAX_DELTA_DEN_V2",
+      "value": 8
+    },
+    {
+      "name": "CASERT_V2_FORK_HEIGHT",
+      "value": 1450
+    },
+    {
+      "name": "CASERT_V3_FORK_HEIGHT",
+      "value": 4100
+    },
+    {
+      "name": "CASERT_V3_1_FORK_HEIGHT",
+      "value": 4110
+    },
+    {
+      "name": "CASERT_AHEAD_EXIT",
+      "value": 8
+    },
+    {
+      "name": "CASERT_AHEAD_DELTA_DEN",
+      "value": 64
+    },
+    {
+      "name": "CASERT_AHEAD_PROFILE_THRESH",
+      "value": 8
+    },
+    {
+      "name": "CASERT_ANTISTALL_INTEG_DECAY",
+      "value": 240
+    }
+  ],
+  "logic_findings": [
+    {
+      "id": "LOGIC-001",
+      "title": "PID controller is simplified in simulator",
+      "detail": "C++ uses a full 5-term PID controller (K_R*r + K_L*lag + K_I*I + K_B*burst + K_V*vol) with EWMA smoothing. Python uses a simplified approximation: H_raw = int(round(lag * 0.25 + burst_signal * 0.5)). The gains are NOT the same as the C++ K_L=0.40, K_R=0.05, etc.",
+      "severity": "HIGH",
+      "impact": "Profile selection will differ between C++ and Python for the same chain state. The simulator is a behavioral model, not a bit-exact replica. This is documented in the simulator header.",
+      "cpp_location": "casert.cpp:234-238",
+      "py_location": "v5_simulator.py:124"
+    },
+    {
+      "id": "LOGIC-002",
+      "title": "bitsQ primary controller absent from simulator",
+      "detail": "C++ computes bitsQ (Q16.16 difficulty) using exponential adjustment with epoch anchoring, half-life, delta caps, and Ahead Guard. Python simulator does not model bitsQ at all; it uses a separate block-time sampling model (exponential distribution based on PROFILE_DIFFICULTY and STAB_PCT).",
+      "severity": "MEDIUM",
+      "impact": "Simulator cannot verify bitsQ-related behavior (delta caps, Ahead Guard on bitsQ). Equalizer policy is tested, bitsQ is not.",
+      "cpp_location": "casert.cpp:67-158",
+      "py_location": "v5_simulator.py:188-208 (sample_block_dt)"
+    },
+    {
+      "id": "LOGIC-003",
+      "title": "EWMA signal computation absent from simulator",
+      "detail": "C++ computes S (short EWMA), M (long EWMA), V (volatility), and I (integrator) iteratively over the last 128 blocks. Python simulator approximates the control signal directly from lag and a single burst_signal term.",
+      "severity": "MEDIUM",
+      "impact": "Volatility-driven and integrator-driven profile adjustments are not captured. The simulator may under- or over-respond to sustained deviations.",
+      "cpp_location": "casert.cpp:192-224",
+      "py_location": "v5_simulator.py:121-124"
+    },
+    {
+      "id": "LOGIC-004",
+      "title": "Safety rule 1 post-slew: MATCHES C++ V5 logic",
+      "detail": "Both C++ and Python apply safety rule 1 (if lag <= 0: H = min(H, 0)) AFTER the slew rate when V5 is active. This is the key V5 fix.",
+      "severity": "OK",
+      "impact": "Correct behavior.",
+      "cpp_location": "casert.cpp:371-373",
+      "py_location": "v5_simulator.py:143-144"
+    },
+    {
+      "id": "LOGIC-005",
+      "title": "V2 slew rate heuristic not modeled in simulator",
+      "detail": "C++ has a V2 code path (blocks < 4100) with +/-1 slew and heuristic prev_H estimation. The simulator only models V3+ behavior (starts at height 4300 by default).",
+      "severity": "LOW",
+      "impact": "Not relevant for V5 analysis since the simulator focuses on heights >= 4300.",
+      "cpp_location": "casert.cpp:404-416",
+      "py_location": "N/A"
+    },
+    {
+      "id": "LOGIC-006",
+      "title": "V3/V3.1 prev_H recomputation not modeled",
+      "detail": "C++ has separate code paths for V3 (PID recompute) and V3.1 (stored profile_index with fallback). The simulator uses chain[-1]['profile_index'] directly (V4+ behavior).",
+      "severity": "LOW",
+      "impact": "Not relevant for V5 analysis. V3/V3.1 heights are in the past.",
+      "cpp_location": "casert.cpp:292-339",
+      "py_location": "v5_simulator.py:111"
+    },
+    {
+      "id": "LOGIC-008",
+      "title": "PID lag gain mismatch: C++ K_L=0.4000 vs Python lag*0.25",
+      "detail": "C++ K_L = 26214/65536 = 0.4000. Python uses lag * 0.25. The Python weight is applied to raw lag (integer), while C++ applies K_L to L_q16 >> 16. The effective scaling differs because C++ also includes K_R, K_I, K_B, K_V terms and a final >> 16 normalization.",
+      "severity": "HIGH",
+      "impact": "Exact profile indices will differ. The simulator is a behavioral approximation, not a consensus-exact replica.",
+      "cpp_location": "casert.cpp:234 (CASERT_K_L = 26214)",
+      "py_location": "v5_simulator.py:124 (lag * 0.25)"
+    }
+  ],
+  "behavioral_checks": [
+    {
+      "id": "BEH-001",
+      "name": "Determinism (same seed, same output)",
+      "status": "PASS",
+      "detail": "Ran 500 blocks twice with seed=42. Identical=yes."
+    },
+    {
+      "id": "BEH-002",
+      "name": "No unexplained profile jumps (delta > 3 without lag_floor/safety justification)",
+      "status": "PASS",
+      "detail": "Max observed jump: 4. Unexplained violations: 0. (Jumps > 3 from lag_floor or safety-rule-post-slew are expected.)"
+    },
+    {
+      "id": "BEH-003",
+      "name": "Target mean near 600s over 5000 blocks",
+      "status": "PASS",
+      "detail": "Mean block interval: 600.0s (target: 600s, tolerance: +/-15%). Within tolerance."
+    },
+    {
+      "id": "BEH-004",
+      "name": "Anti-stall monotonicity (profile never increases during stall)",
+      "status": "PASS",
+      "detail": "Tested stall from 0 to 40000s. Monotonic=yes. Violations: 0."
+    },
+    {
+      "id": "BEH-005",
+      "name": "No undefined profile indices (outside H_MIN to H_MAX)",
+      "status": "PASS",
+      "detail": "Observed profiles: [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]. Valid range: [-4, 12]. Out-of-range: none."
+    }
+  ],
+  "verdict": {
+    "confidence": "MEDIUM",
+    "detail": "Equalizer policy constants match, but the simulator uses a simplified PID model and omits bitsQ/EWMA computation. It is a behavioral approximation, not a bit-exact replica.",
+    "stats": {
+      "constants_pass": 18,
+      "constants_warn": 0,
+      "constants_fail": 0,
+      "logic_high": 2,
+      "logic_medium": 2,
+      "behavioral_pass": 5,
+      "behavioral_warn": 0,
+      "behavioral_fail": 0
+    }
+  },
+  "discrepancies": [
+    {
+      "type": "logic",
+      "id": "LOGIC-001",
+      "title": "PID controller is simplified in simulator",
+      "severity": "HIGH",
+      "impact": "Profile selection will differ between C++ and Python for the same chain state. The simulator is a behavioral model, not a bit-exact replica. This is documented in the simulator header."
+    },
+    {
+      "type": "logic",
+      "id": "LOGIC-002",
+      "title": "bitsQ primary controller absent from simulator",
+      "severity": "MEDIUM",
+      "impact": "Simulator cannot verify bitsQ-related behavior (delta caps, Ahead Guard on bitsQ). Equalizer policy is tested, bitsQ is not."
+    },
+    {
+      "type": "logic",
+      "id": "LOGIC-003",
+      "title": "EWMA signal computation absent from simulator",
+      "severity": "MEDIUM",
+      "impact": "Volatility-driven and integrator-driven profile adjustments are not captured. The simulator may under- or over-respond to sustained deviations."
+    },
+    {
+      "type": "logic",
+      "id": "LOGIC-008",
+      "title": "PID lag gain mismatch: C++ K_L=0.4000 vs Python lag*0.25",
+      "severity": "HIGH",
+      "impact": "Exact profile indices will differ. The simulator is a behavioral approximation, not a consensus-exact replica."
+    }
+  ]
+}
