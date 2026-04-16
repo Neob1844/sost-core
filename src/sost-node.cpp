@@ -2940,8 +2940,9 @@ static bool process_block(const std::string& block_json) {
 
     if (!extends_tip) {
         // This block doesn't extend our current tip — classify as fork or orphan
-        printf("[FORK] Block h=%lld bid=%s does not extend tip (our height=%zu).\n",
-               (long long)height, bid.substr(0,16).c_str(), g_blocks.size());
+        printf("[FORK] Block h=%lld bid=%s does not extend tip (our height=%lld, delta=%lld).\n",
+               (long long)height, bid.substr(0,16).c_str(),
+               (long long)g_chain_height, (long long)(g_chain_height - height));
         fflush(stdout);
 
         // Check if parent is known (in active chain or block index)
@@ -3026,10 +3027,15 @@ static bool process_block(const std::string& block_json) {
                     try { try_reorganize(bid); }
                     catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
                 } else {
+                    auto cw_strip = [](const Bytes32& w) -> std::string {
+                        std::string h = to_hex(w.data(), 32);
+                        size_t s = h.find_first_not_of('0');
+                        return (s == std::string::npos) ? "0" : h.substr(s);
+                    };
                     printf("[FORK] Fork stored but has LESS cumulative work (no reorg). "
-                           "Fork work vs active: %s vs %s\n",
-                           to_hex(entry.cumulative_work.data(),32).substr(0,16).c_str(),
-                           to_hex(active_tip_work.data(),32).substr(0,16).c_str());
+                           "Fork work vs active: 0x%s vs 0x%s\n",
+                           cw_strip(entry.cumulative_work).c_str(),
+                           cw_strip(active_tip_work).c_str());
                 }
             }
         }
