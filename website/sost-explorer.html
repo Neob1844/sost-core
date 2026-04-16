@@ -2156,8 +2156,7 @@ async function showAddress(addr){
     // Balance section — clean vertical rows
     var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
     balHtml+='<div class="k" style="color:#ffd700" title="Total coinbase rewards from mining '+minedCount+' blocks">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
-    balHtml+='<div class="k" style="color:#00ff88">\u2193 IN</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' transfers)</span></div>';
-    balHtml+='<div class="k" style="color:#ff4444">\u2191 OUT</div><div class="v"><span style="color:#ff4444;font-weight:600">0.00000000 SOST</span></div>';
+    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
     if(immatureCount>0){
       balHtml+='<div class="k" style="color:#00ff88">\u25A0 SPENDABLE</div><div class="v"><span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span></div>';
       balHtml+='<div class="k" style="color:#fbbf24">\u25A1 IMMATURE</div><div class="v"><span style="color:#fbbf24;font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
