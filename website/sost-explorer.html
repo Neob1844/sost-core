@@ -1616,14 +1616,14 @@ function renderDashPanel(key,body,title,silent){
       if(sorted.length>10){
         var restBlocks=0,restSost=0;
         for(var i=10;i<sorted.length;i++){restBlocks+=miners[sorted[i]].blocks;restSost+=miners[sorted[i]].sost;}
-        html+='<tr style="border-top:1px solid var(--border);color:var(--text3)"><td style="padding:4px;font-style:italic">'+( sorted.length-10)+' other addresses</td>';
+        html+='<tr style="border-top:1px solid var(--border);color:#fbbf24"><td style="padding:4px;font-style:italic">'+( sorted.length-10)+' other addresses</td>';
         html+='<td style="text-align:right;padding:4px">'+restBlocks+'</td>';
         html+='<td style="text-align:right;padding:4px">'+restSost.toFixed(2)+'</td>';
         html+='<td style="text-align:right;padding:4px">'+(totalBlocks?(restBlocks/totalBlocks*100).toFixed(1):'0')+'%</td>';
         html+='<td></td></tr>';
       }
       html+='</table></div>';
-      html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Mining Distribution shows blocks mined and SOST earned (miner share only, 50% of subsidy) in the last '+lookback+' blocks. This reflects mining contribution, not total balance. Addresses are truncated for privacy.</div>';
+      html+='<div style="font-size:9px;color:#ffffff;margin-top:10px;line-height:1.6;">Mining Distribution shows blocks mined and SOST earned (miner share only, 50% of subsidy) in the last '+lookback+' blocks. This reflects mining contribution, not total balance. Addresses are truncated for privacy.</div>';
       html+='</div>';
       body.innerHTML=html;
     })();
