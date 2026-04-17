@@ -370,6 +370,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
+  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -1558,6 +1559,69 @@ function renderDashPanel(key,body,title,silent){
         if(_msc>0){var mm=Math.floor(_msc/60),ss=_msc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
         else{el.textContent='(still loading...)';clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       },1000);
+    }
+  } else if(key==='distribution'){
+    title.textContent='// MINING DISTRIBUTION';
+    if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading distribution data...</div>';return;}
+    (async function(){
+      var miners={};
+      var lookback=Math.min(288,H);
+      for(var bh=H;bh>Math.max(0,H-lookback);bh--){
+        try{
+          var hash=await rpc('getblockhash',[String(bh)]);
+          var blk=await rpc('getblock',[hash]);
+          if(blk&&blk.miner_address){
+            var addr=blk.miner_address;
+            if(!miners[addr])miners[addr]={blocks:0,sost:0,last:bh};
+            miners[addr].blocks++;
+            miners[addr].sost+=(blk.subsidy||785100863)/100000000*0.5;
+            if(bh>miners[addr].last)miners[addr].last=bh;
+          }
+        }catch(e){break;}
+      }
+      var addrs=Object.keys(miners);
+      var sorted=addrs.sort(function(a,b){return miners[b].blocks-miners[a].blocks;});
+      var top10=sorted.slice(0,10);
+      var totalBlocks=0;for(var i=0;i<sorted.length;i++)totalBlocks+=miners[sorted[i]].blocks;
+      var top3share=0;for(var i=0;i<Math.min(3,sorted.length);i++)top3share+=miners[sorted[i]].blocks;
+      var top10share=0;for(var i=0;i<Math.min(10,sorted.length);i++)top10share+=miners[sorted[i]].blocks;
+      document.getElementById('dDistribution').textContent=sorted.length;
+      document.getElementById('dDistributionSub').textContent='top 3: '+(totalBlocks?(top3share/totalBlocks*100).toFixed(1):'0')+'%';
+      var html='<div style="line-height:2;font-size:12px">';
+      html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">last '+lookback+' blocks</span><br>';
+      html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--green);font-weight:600">'+sorted.length+'</span><br>';
+      html+='<span style="color:var(--text3)">Top 3 share:</span> <span style="color:'+(top3share/totalBlocks>0.7?'#ff4444':'var(--green)')+';font-weight:600">'+(totalBlocks?(top3share/totalBlocks*100).toFixed(1):'0')+'%</span>';
+      if(top3share/totalBlocks>0.7)html+=' <span style="color:#ff4444;font-size:10px">\u26A0 concentration risk</span>';
+      html+='<br>';
+      html+='<span style="color:var(--text3)">Top 10 share:</span> <span style="color:var(--text);font-weight:600">'+(totalBlocks?(top10share/totalBlocks*100).toFixed(1):'0')+'%</span><br>';
+      html+='<div style="margin-top:12px"><table style="width:100%;font-size:11px;border-collapse:collapse">';
+      html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">SOST Mined</th><th style="text-align:right;padding:4px">Share</th><th style="text-align:right;padding:4px">Latest</th></tr>';
+      for(var i=0;i<top10.length;i++){
+        var a=top10[i],m=miners[a];
+        var pct=totalBlocks?(m.blocks/totalBlocks*100).toFixed(1):'0.0';
+        var barW=Math.max(2,m.blocks/totalBlocks*180);
+        html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.blocks+'</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--green)">'+m.sost.toFixed(2)+'</td>';
+        html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
+        html+='<td style="text-align:right;padding:4px;color:var(--text3)">#'+m.last+'</td></tr>';
+      }
+      if(sorted.length>10){
+        var restBlocks=0,restSost=0;
+        for(var i=10;i<sorted.length;i++){restBlocks+=miners[sorted[i]].blocks;restSost+=miners[sorted[i]].sost;}
+        html+='<tr style="border-top:1px solid var(--border);color:var(--text3)"><td style="padding:4px;font-style:italic">'+( sorted.length-10)+' other addresses</td>';
+        html+='<td style="text-align:right;padding:4px">'+restBlocks+'</td>';
+        html+='<td style="text-align:right;padding:4px">'+restSost.toFixed(2)+'</td>';
+        html+='<td style="text-align:right;padding:4px">'+(totalBlocks?(restBlocks/totalBlocks*100).toFixed(1):'0')+'%</td>';
+        html+='<td></td></tr>';
+      }
+      html+='</table></div>';
+      html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Mining Distribution shows blocks mined and SOST earned (miner share only, 50% of subsidy) in the last '+lookback+' blocks. This reflects mining contribution, not total balance. Addresses are truncated for privacy.</div>';
+      html+='</div>';
+      body.innerHTML=html;
+    })();
+    if(!silent){
+      body.innerHTML='<div style="color:var(--text3)">Scanning blocks for mining distribution... <span id="distScanCountdown" style="color:var(--cyan)"></span></div>';
     }
   }
 }
