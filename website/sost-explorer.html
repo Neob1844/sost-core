@@ -1622,6 +1622,13 @@ function renderDashPanel(key,body,title,silent){
     })();
     if(!silent){
       body.innerHTML='<div style="color:var(--text3)">Scanning blocks for mining distribution... <span id="distScanCountdown" style="color:var(--cyan)"></span></div>';
+      var _dsc=120;var _dsci=setInterval(function(){
+        var el=document.getElementById('distScanCountdown');
+        if(!el){clearInterval(_dsci);return;}
+        _dsc--;
+        if(_dsc>0){var mm=Math.floor(_dsc/60),ss=_dsc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
+        else{el.textContent='(still loading...)';clearInterval(_dsci);}
+      },1000);
     }
   }
 }
