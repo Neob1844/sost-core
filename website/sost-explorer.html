@@ -362,7 +362,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff"><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">—</div><div class="dash-sub" id="dMinerSub">50% · click for UTXOs</div></div>
+  <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
@@ -1080,17 +1080,20 @@ async function updateDashboard(info){
     if(tipBlock.time)_lastBlockTime=tipBlock.time; // ensure mining panel has timing
   }catch(e){console.warn('tip block fetch:',e)}
   if(RPC_USER&&RPC_PASS){try{
-    // Use MY MINER address if set, otherwise fall back to tip block miner
-    var minerAddr=_myMinerAddress||((typeof tipBlock!=='undefined'&&tipBlock)?tipBlock.miner_address||'':'');
+    // Only show miner balance for the user's OWN address (from MY MINER input).
+    // Never fall back to tipBlock.miner_address — that shows someone else's balance.
+    var minerAddr=_myMinerAddress;
     _activeMiner=minerAddr;
     if(minerAddr){
+      document.getElementById('dMinerBal').textContent='loading...';
+      document.getElementById('dMinerSub').textContent='50% \u00B7 loading data\u2026';
       var am=await rpc('getaddressinfo',[minerAddr]);
       var bm=am.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
       document.getElementById('dMinerBal').textContent=bm.toFixed(4)+' SOST';
       document.getElementById('dMinerSub').textContent='50% \u00B7 '+sH(minerAddr);
     } else {
       document.getElementById('dMinerBal').textContent='\u2014';
-      document.getElementById('dMinerSub').textContent='50% \u00B7 awaiting miner_address';
+      document.getElementById('dMinerSub').textContent='enter your address in MY MINER \u2191';
     }
   }catch(e){console.error('miner balance error:',e);}}
   updateChainSync();
