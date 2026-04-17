@@ -992,6 +992,13 @@ async function updateDashboard(info){
     // Update unique miners card from freshly fetched data
     document.getElementById('dMiners').textContent=minerSet.size;
     document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
+    // Update mining distribution card with top-3 share
+    var _distMiners={};for(var di2=0;di2<diffs.length;di2++){var dm=diffs[di2].miner;if(dm){if(!_distMiners[dm])_distMiners[dm]=0;_distMiners[dm]++;}}
+    var _distSorted=Object.keys(_distMiners).sort(function(a,b){return _distMiners[b]-_distMiners[a];});
+    var _distTotal=0;for(var di3=0;di3<_distSorted.length;di3++)_distTotal+=_distMiners[_distSorted[di3]];
+    var _distTop3=0;for(var di4=0;di4<Math.min(3,_distSorted.length);di4++)_distTop3+=_distMiners[_distSorted[di4]];
+    document.getElementById('dDistribution').textContent=_distSorted.length;
+    document.getElementById('dDistributionSub').textContent='top 3: '+(_distTotal?(_distTop3/_distTotal*100).toFixed(1):'0')+'%';
     // Compute dynamic E[nonce] from real block nonces/times
     _prevAvgNonceReal=_avgNonceReal;
     if(_diffHistory.length>=3){
