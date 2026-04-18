@@ -198,7 +198,7 @@ inline constexpr CasertProfile CASERT_PROFILES[] = {
     // H1       H2       H3       H4       H5
     {1,5,4,170}, {1,5,5,160}, {1,6,5,150}, {1,6,6,145}, {2,5,5,140},
     // H6       H7       H8       H9       H10      H11      H12
-    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120}, {2,7,7,118}, {2,8,7,112}, {3,8,7,105}
+    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120}, {2,7,7,115}, {2,8,7,110}, {3,8,7,105}
 };
 inline constexpr int32_t CASERT_PROFILE_COUNT = 17;
 // Index offset: profile_index - CASERT_H_MIN = array index
