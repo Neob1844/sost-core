@@ -203,7 +203,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p>Half-life: V2: 24 hours (86,400s) since block 1,450. Delta cap: V2: 12.5% symmetric. (V1 was 48h/6.25%.) <em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 12]. 17 profiles E4(-4) through H12(+12); all active. Profile changes limited to &plusmn;3 levels per block (V3+, was &plusmn;1). Slew rate uses stored profile_index from BlockMeta (V3.1+).</p>
+<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 12]. 17 profiles E4(-4) through H12(+12); all active. Profile changes limited to &plusmn;1 level per block (V6, block 5,000+). Slew rate uses stored profile_index from BlockMeta (V3.1+).</p>
 
 <table>
 <tr><th>Profile</th><th>H</th><th>Scale</th><th>Steps</th><th>K</th><th>Margin</th><th>Effect</th></tr>
@@ -221,9 +221,9 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr><td>H7</td><td>7</td><td>2</td><td>6</td><td>6</td><td>130</td><td>Severe+</td></tr>
 <tr><td>H8</td><td>8</td><td>2</td><td>7</td><td>6</td><td>125</td><td>Maximum</td></tr>
 <tr><td>H9</td><td>9</td><td>2</td><td>7</td><td>7</td><td>120</td><td>Maximum (CASERT_H_MAX)</td></tr>
-<tr style="color:var(--t3)"><td>H10</td><td>10</td><td>3</td><td>7</td><td>6</td><td>115</td><td>Active high-difficulty (scale=3)</td></tr>
-<tr style="color:var(--t3)"><td>H11</td><td>11</td><td>3</td><td>7</td><td>7</td><td>110</td><td>Active high-difficulty (scale=3)</td></tr>
-<tr style="color:var(--t3)"><td>H12</td><td>12</td><td>3</td><td>8</td><td>7</td><td>105</td><td>Active high-difficulty (scale=3)</td></tr>
+<tr style="color:var(--t3)"><td>H10</td><td>10</td><td>2</td><td>7</td><td>7</td><td>118</td><td>Smoothed high-difficulty (scale=2, V6)</td></tr>
+<tr style="color:var(--t3)"><td>H11</td><td>11</td><td>2</td><td>8</td><td>7</td><td>112</td><td>Smoothed high-difficulty (scale=2, V6)</td></tr>
+<tr style="color:var(--t3)"><td>H12</td><td>12</td><td>3</td><td>8</td><td>7</td><td>105</td><td>Reserve high-difficulty (scale=3)</td></tr>
 </table>
 <p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles. CASERT_H_MIN=-4 (E4), CASERT_H_MAX=12 (H12). All 17 profiles active. Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
 
