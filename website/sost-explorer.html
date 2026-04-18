@@ -289,7 +289,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     var sv=s.textContent||'';
     if(/\d{2,}/.test(hv)&&hv!=='—'&&/\d/.test(sv)&&sv!=='—'&&elapsed>=3){
       done=true;clearInterval(cd);clearInterval(dt);
-      try{if(window.speechSynthesis){var _rs=function(d,p,v){setTimeout(function(){var u=new SpeechSynthesisUtterance('retard');u.rate=1.1;u.pitch=p;u.volume=v;u.lang='en-US';window.speechSynthesis.speak(u);},d);};_rs(0,0.7,0.5);_rs(600,0.65,0.6);_rs(1200,0.6,0.7);}}catch(e){}
       num.textContent='✓';num.style.color='#00ff88';num.style.fontSize='42px';
       lbl.textContent='READY';lbl.style.color='#00ff88';lbl.style.animation='none';lbl.style.opacity='1';
       setTimeout(function(){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},800);sessionStorage.setItem('exLoaded','1');},1000);
