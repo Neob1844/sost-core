@@ -21,7 +21,8 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
 // Apply cASERT profile to ConvergenceX consensus params.
 ConsensusParams casert_apply_profile(const ConsensusParams& base,
-                                      const CasertDecision& dec);
+                                      const CasertDecision& dec,
+                                      int64_t height = 0);
 
 // ---- Timestamp validation ----
 int64_t median_time_past(const std::vector<BlockMeta>& chain,

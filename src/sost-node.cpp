@@ -3457,7 +3457,7 @@ static bool process_block(const std::string& block_json) {
                 g_last_accepted_profile = declared_pi;
                 CasertDecision dec_for_profile;
                 dec_for_profile.profile_index = declared_pi;
-                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile, height);
             } else {
                 // 1. Recompute base profile deterministically from chain history (no anti-stall)
                 std::vector<BlockMeta> meta;
@@ -3511,7 +3511,7 @@ static bool process_block(const std::string& block_json) {
                 // 5. Derive exact params from canonical table — no free params
                 CasertDecision dec_for_profile;
                 dec_for_profile.profile_index = declared_pi;
-                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile);
+                cx_params = sost::casert_apply_profile(cx_params, dec_for_profile, height);
             }
             cx_params.verbose = g_verbose;
 

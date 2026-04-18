@@ -26,7 +26,7 @@ MineResult mine_block(
 
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_compute(chain, h, std::time(nullptr));
-    params = casert_apply_profile(params, cdec);
+    params = casert_apply_profile(params, cdec, h);
 
     uint32_t expected = casert_next_bitsq(chain, h);
     if (powDiffQ != expected) {
