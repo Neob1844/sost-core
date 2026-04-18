@@ -318,8 +318,8 @@ Profile table (struct: {scale, steps, k, margin}):
 | H7(+7) | 2 | 6 | 6 | 130 |
 | H8(+8) | 2 | 7 | 6 | 125 |
 | H9(+9) | 2 | 7 | 7 | 120 |
-| H10(+10) | 2 | 7 | 7 | 118 | Smoothed high-difficulty (scale=2, V6) |
-| H11(+11) | 2 | 8 | 7 | 112 | Smoothed high-difficulty (scale=2, V6) |
+| H10(+10) | 2 | 7 | 7 | 115 | Smoothed high-difficulty (scale=2, V6) |
+| H11(+11) | 2 | 8 | 7 | 110 | Smoothed high-difficulty (scale=2, V6) |
 | H12(+12) | 3 | 8 | 7 | 105 | Reserve high-difficulty (scale=3) |
 
 Anti-Stall Decay (zone-based, targeting B0):
@@ -767,8 +767,8 @@ PROFILE TABLE (struct: {scale, steps, k, margin}):
   H7(+7):  scale=2, steps=6, k=6, margin=130
   H8(+8):  scale=2, steps=7, k=6, margin=125
   H9(+9):  scale=2, steps=7, k=7, margin=120
-  H10(+10): scale=2, steps=7, k=7, margin=118  Smoothed high-difficulty (scale=2, V6)
-  H11(+11): scale=2, steps=8, k=7, margin=112  Smoothed high-difficulty (scale=2, V6)
+  H10(+10): scale=2, steps=7, k=7, margin=115  Smoothed high-difficulty (scale=2, V6)
+  H11(+11): scale=2, steps=8, k=7, margin=110  Smoothed high-difficulty (scale=2, V6)
   H12(+12): scale=3, steps=8, k=7, margin=105  Reserve high-difficulty (scale=3)
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):

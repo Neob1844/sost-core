@@ -433,8 +433,10 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             : CASERT_ANTISTALL_FLOOR;     // 7200s = 2 hours
         if (stall >= t_act && H > 0) {
             // Hardening decay: drop toward B0
+            // V6: first drop is immediate — the full t_act wait IS the penalty.
+            // Subsequent drops follow zone-based costs.
             int64_t decay_time = stall - t_act;
-            int32_t decayed_H = H;
+            int32_t decayed_H = H - 1; // immediate first drop
             while (decayed_H > 0 && decay_time > 0) {
                 int64_t cost;
                 if (decayed_H >= 7) cost = 600;       // H9-H7: fast (10 min)
