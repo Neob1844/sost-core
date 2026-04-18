@@ -889,7 +889,8 @@ function sH(h){return h&&h.length>=16?h.slice(0,10)+'\u00B7\u00B7\u00B7'+h.slice
 function fS(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(4);}
 function fS8(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(8);}
 function fComma(n){return n.toLocaleString();}
-function playRetardCallout(){try{if(!window.speechSynthesis)return;var u=new SpeechSynthesisUtterance('retard');u.rate=1.1;u.pitch=0.7;u.volume=0.6;u.lang='en-US';window.speechSynthesis.speak(u);setTimeout(function(){var u2=new SpeechSynthesisUtterance('retard');u2.rate=1.2;u2.pitch=0.6;u2.volume=0.7;u2.lang='en-US';window.speechSynthesis.speak(u2);},700);}catch(e){}}
+var _retardPlayed=false;
+function playRetardCallout(){try{if(_retardPlayed||!window.speechSynthesis)return;_retardPlayed=true;var say=function(d,p,v){setTimeout(function(){var u=new SpeechSynthesisUtterance('retard');u.rate=1.1;u.pitch=p;u.volume=v;u.lang='en-US';window.speechSynthesis.speak(u);},d);};say(0,0.7,0.5);say(600,0.65,0.6);say(1200,0.6,0.7);}catch(e){}}
 function playBlockBeep(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);o.start(ac.currentTime);o.stop(ac.currentTime+0.3);}catch(e){}}
 function playMyBlockFanfare(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var t=ac.currentTime;
   // Victory fanfare: C-E-G-C ascending chord with harmonics
@@ -1463,11 +1464,15 @@ function renderDashPanel(key,body,title,silent){
     if(_minersScanInProgress&&!silent){return;}
     _minersScanInProgress=true;
     // Fetch miner addresses from recent blocks
+    _retardPlayed=false;
     (async function(){
       var miners={};
       var lookback=Math.min(288,H);
       var totalBlocksCounted=0;
+      var scanProgress=0;
       for(var bh=H;bh>Math.max(0,H-lookback);bh--){
+        scanProgress++;
+        if(scanProgress===Math.floor(lookback*0.95)){playRetardCallout();}
         try{
           var hash=await rpc('getblockhash',[String(bh)]);
           var blk=await rpc('getblock',[hash]);
@@ -1552,7 +1557,6 @@ function renderDashPanel(key,body,title,silent){
       html+='</table></div>';
       html+='<div style="font-size:9px;color:var(--text3);margin-top:10px;line-height:1.6;">Disclaimer: Observed simultaneous mining share is calculated from this node\'s view of the last '+lookback+' blocks. "Simultaneous" means 2+ distinct miners were active (mined at least 1 block) in the previous '+WINDOW+' blocks. This is an approximation — different nodes may see slightly different values. Solo blocks are those mined when only 1 miner was active in the lookback window.</div>';
       html+='</div>';
-      playRetardCallout();
       body.innerHTML=html;
       if(_minersCountdownInterval){clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       _minersScanInProgress=false;
@@ -1572,10 +1576,14 @@ function renderDashPanel(key,body,title,silent){
   } else if(key==='distribution'){
     title.textContent='// MINING DISTRIBUTION';
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading distribution data...</div>';return;}
+    _retardPlayed=false;
     (async function(){
       var miners={};
       var lookback=Math.min(288,H);
+      var distProgress=0;
       for(var bh=H;bh>Math.max(0,H-lookback);bh--){
+        distProgress++;
+        if(distProgress===Math.floor(lookback*0.95)){playRetardCallout();}
         try{
           var hash=await rpc('getblockhash',[String(bh)]);
           var blk=await rpc('getblock',[hash]);
@@ -1627,7 +1635,6 @@ function renderDashPanel(key,body,title,silent){
       html+='</table></div>';
       html+='<div style="font-size:9px;color:#ffffff;margin-top:10px;line-height:1.6;">Mining Distribution shows blocks mined and SOST earned (miner share only, 50% of subsidy) in the last '+lookback+' blocks. This reflects mining contribution, not total balance. Addresses are truncated for privacy.</div>';
       html+='</div>';
-      playRetardCallout();
       body.innerHTML=html;
     })();
     if(!silent){
