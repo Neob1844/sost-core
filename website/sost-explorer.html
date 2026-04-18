@@ -289,6 +289,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     var sv=s.textContent||'';
     if(/\d{2,}/.test(hv)&&hv!=='—'&&/\d/.test(sv)&&sv!=='—'&&elapsed>=3){
       done=true;clearInterval(cd);clearInterval(dt);
+      try{if(window.speechSynthesis){var _rs=function(d,p,v){setTimeout(function(){var u=new SpeechSynthesisUtterance('retard');u.rate=1.1;u.pitch=p;u.volume=v;u.lang='en-US';window.speechSynthesis.speak(u);},d);};_rs(0,0.7,0.5);_rs(600,0.65,0.6);_rs(1200,0.6,0.7);}}catch(e){}
       num.textContent='✓';num.style.color='#00ff88';num.style.fontSize='42px';
       lbl.textContent='READY';lbl.style.color='#00ff88';lbl.style.animation='none';lbl.style.opacity='1';
       setTimeout(function(){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},800);sessionStorage.setItem('exLoaded','1');},1000);
@@ -889,8 +890,6 @@ function sH(h){return h&&h.length>=16?h.slice(0,10)+'\u00B7\u00B7\u00B7'+h.slice
 function fS(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(4);}
 function fS8(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(8);}
 function fComma(n){return n.toLocaleString();}
-var _retardPlayed=false;
-function playRetardCallout(){try{if(_retardPlayed||!window.speechSynthesis)return;_retardPlayed=true;var say=function(d,p,v){setTimeout(function(){var u=new SpeechSynthesisUtterance('retard');u.rate=1.1;u.pitch=p;u.volume=v;u.lang='en-US';window.speechSynthesis.speak(u);},d);};say(0,0.7,0.5);say(600,0.65,0.6);say(1200,0.6,0.7);}catch(e){}}
 function playBlockBeep(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);o.start(ac.currentTime);o.stop(ac.currentTime+0.3);}catch(e){}}
 function playMyBlockFanfare(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var t=ac.currentTime;
   // Victory fanfare: C-E-G-C ascending chord with harmonics
@@ -1464,15 +1463,11 @@ function renderDashPanel(key,body,title,silent){
     if(_minersScanInProgress&&!silent){return;}
     _minersScanInProgress=true;
     // Fetch miner addresses from recent blocks
-    _retardPlayed=false;
     (async function(){
       var miners={};
       var lookback=Math.min(288,H);
       var totalBlocksCounted=0;
-      var scanProgress=0;
       for(var bh=H;bh>Math.max(0,H-lookback);bh--){
-        scanProgress++;
-        if(scanProgress===Math.floor(lookback*0.95)){playRetardCallout();}
         try{
           var hash=await rpc('getblockhash',[String(bh)]);
           var blk=await rpc('getblock',[hash]);
@@ -1576,14 +1571,10 @@ function renderDashPanel(key,body,title,silent){
   } else if(key==='distribution'){
     title.textContent='// MINING DISTRIBUTION';
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading distribution data...</div>';return;}
-    _retardPlayed=false;
     (async function(){
       var miners={};
       var lookback=Math.min(288,H);
-      var distProgress=0;
       for(var bh=H;bh>Math.max(0,H-lookback);bh--){
-        distProgress++;
-        if(distProgress===Math.floor(lookback*0.95)){playRetardCallout();}
         try{
           var hash=await rpc('getblockhash',[String(bh)]);
           var blk=await rpc('getblock',[hash]);
