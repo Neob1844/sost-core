@@ -1669,7 +1669,7 @@ EXAMPLE: Model A — 12 month commitment
   PROFIT (at original prices):
     - Deposited: 6.75 SOST
     - Received: 8.235 SOST
-    - Net gain: 1.485 SOST (22% return on bond)
+    - Net gain: 1.485 SOST (20% return on bond)
     - Gold: Still owns 1 oz XAUT
 
 EXAMPLE: Model A — Slash (failure)
@@ -1688,12 +1688,12 @@ EXAMPLE: Model A — Slash (failure)
 
 ### 6.7.1 Protocol Fee — Model A
 
-A protocol fee of 5% is applied to the reward. The fee is calculated at commitment
+A protocol fee of 3% (Model A) or 8% (Model B) is applied to the reward. The fee is calculated at commitment
 creation and locked; disbursement occurs at successful completion. The user's bond
 is returned in full regardless.
 
   base_reward    = bond_sost × reward_table[duration]
-  protocol_fee   = base_reward × 0.05
+  protocol_fee   = base_reward × fee_rate  // 0.03 (Model A) or 0.08 (Model B)
   user_reward    = base_reward - protocol_fee
 
   Fee is locked at creation (immutable for the contract's lifetime).
@@ -2156,7 +2156,7 @@ MODEL A — AUTOCUSTODY (BOND + AUDIT):
 
   Maximum reward rates (Model A — % of bond):
     1 month:  1%   | 3 months: 4%  | 6 months: 9%
-    9 months: 15%  | 12 months: 22%
+    9 months: 14%  | 12 months: 20%
 
 MODEL B — ESCROW (DEPOSIT + IMMEDIATE REWARD):
 
