@@ -467,7 +467,8 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 // =========================================================================
 
 ConsensusParams casert_apply_profile(const ConsensusParams& base,
-                                      const CasertDecision& dec)
+                                      const CasertDecision& dec,
+                                      int64_t /*height*/)
 {
     ConsensusParams out = base;
     int32_t idx = dec.profile_index - CASERT_H_MIN; // convert to array index

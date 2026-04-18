@@ -652,7 +652,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             }
         }
     }
-    params = casert_apply_profile(params, cdec);
+    params = casert_apply_profile(params, cdec, h);
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
