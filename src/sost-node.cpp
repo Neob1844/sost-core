@@ -927,9 +927,9 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         else if (pi == 7) stability_pct = 45;    // H7
         else if (pi == 8) stability_pct = 35;    // H8
         else if (pi == 9) stability_pct = 25;    // H9
-        else if (pi == 10) stability_pct = 15;   // H10
-        else if (pi == 11) stability_pct = 8;    // H11
-        else stability_pct = 3;                   // H12
+        else if (pi == 10) stability_pct = 12;   // H10 (V6: scale=2, estimated ~10-15%)
+        else if (pi == 11) stability_pct = 5;    // H11 (V6: scale=2, estimated ~4-6%)
+        else stability_pct = 0;                   // H12 (scale=3, currently unreachable)
     }
     // Profile name from index
     static const char* PROF_NAMES[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
