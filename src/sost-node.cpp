@@ -907,25 +907,13 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
-        // Compute profile with current wall-clock time (includes anti-stall)
+        // Compute profile with current wall-clock time
+        // casert_compute uses now_time for anti-stall and (at V6 calibration height)
+        // for live lag calculation. Both mining and validation agree because the
+        // validator passes block_timestamp as now_time.
         auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), std::time(nullptr));
         casert_profile_idx = dec.profile_index;
         casert_lag = dec.lag;
-        // Live lag: use wall clock instead of tip timestamp for mining recommendation.
-        // The PID lag uses chain.back().time which is frozen at the last block.
-        // For mining, the miner needs a profile based on CURRENT time so lag-adjust works.
-        int64_t now_ts = std::time(nullptr);
-        int64_t live_elapsed = now_ts - GENESIS_TIME;
-        int64_t live_expected = (live_elapsed >= 0) ? (live_elapsed / TARGET_SPACING) : 0;
-        int32_t live_lag = (int32_t)((int64_t)(g_blocks.size()) - 1 - live_expected);
-        // If live lag is lower than chain lag, cap the profile at live lag (lag-adjust)
-        if (live_lag < casert_lag && casert_profile_idx > 0) {
-            int32_t live_cap = std::max(0, live_lag);
-            if (casert_profile_idx > live_cap) {
-                casert_profile_idx = live_cap;
-            }
-        }
-        casert_lag = live_lag;
     }
     // Compute estimated stability pass rate for the current profile
     // Based on empirical observations from live mining data
