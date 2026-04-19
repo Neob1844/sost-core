@@ -101,8 +101,8 @@ inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // V6-only: H12 res
 // 1. Extended profile table: 37 profiles (E4 through H32), margin 5-point gradient
 // 2. Dynamic lag cap: H <= lag for all hardening profiles (replaces H11/H12 reservation)
 // 3. H_MAX raised from 12 to 32
-inline constexpr int64_t  CASERT_V7_FORK_HEIGHT   = 5050;
-inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V7 = 5400;  // 90 min (was 3600 = 60 min)
+inline constexpr int64_t  CASERT_V6_CALIBRATION_HEIGHT   = 5050;
+inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 5400;  // 90 min (was 3600 = 60 min)
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200
@@ -179,7 +179,7 @@ inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatili
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
-inline constexpr int32_t  CASERT_H_MAX_V6         = 12;     // V6: H12 max (pre-V7)
+inline constexpr int32_t  CASERT_H_MAX_PRE_CAL         = 12;     // V6: H12 max (pre-V7)
 inline constexpr int32_t  CASERT_H_MAX            = 32;     // V7: H32 max — all 37 profiles active (E4 through H32)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 

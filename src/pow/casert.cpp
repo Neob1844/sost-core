@@ -240,7 +240,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     int32_t H_raw = (int32_t)(U >> 16);
 
     // Clamp to profile bounds (V7 extends H_MAX from 12 to 32)
-    int32_t h_max = (next_height >= CASERT_V7_FORK_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_V6;
+    int32_t h_max = (next_height >= CASERT_V6_CALIBRATION_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_V6;
     int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H_raw));
 
     // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
@@ -407,7 +407,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             // Replaces V6 H11/H12 fixed reservation with a universal rule:
             // the brake strength is proportional to how far ahead the chain is.
             // bitsQ handles hashrate shocks independently.
-            if (next_height >= CASERT_V7_FORK_HEIGHT) {
+            if (next_height >= CASERT_V6_CALIBRATION_HEIGHT) {
                 if (H > 0 && H > lag) {
                     H = std::max<int32_t>(0, lag);
                 }
@@ -443,8 +443,8 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // 3600s (60 min) so the safety net fires faster in small networks —
         // complements EBR which handles lag-triggered recovery, while anti-stall
         // handles time-triggered recovery (block completely stuck).
-        int64_t t_act = (next_height >= CASERT_V7_FORK_HEIGHT)
-            ? CASERT_ANTISTALL_FLOOR_V7   // 5400s = 90 min
+        int64_t t_act = (next_height >= CASERT_V6_CALIBRATION_HEIGHT)
+            ? CASERT_ANTISTALL_FLOOR_V6C   // 5400s = 90 min
             : (next_height >= CASERT_V5_FORK_HEIGHT)
             ? CASERT_ANTISTALL_FLOOR_V5   // 3600s = 60 min
             : CASERT_ANTISTALL_FLOOR;     // 7200s = 2 hours
