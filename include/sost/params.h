@@ -102,18 +102,46 @@ inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // V6-only: H12 res
 // 2. Dynamic lag cap: H <= lag for all hardening profiles (replaces H11/H12 reservation)
 // 3. H_MAX raised from 12 to 32
 inline constexpr int64_t  CASERT_V6_CALIBRATION_HEIGHT   = 5050;
-inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 5400;  // 90 min (was 3600 = 60 min)
+inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 3600;  // 60 min (kept at V5 level)
 
-// Dynamic slew — activated at block 5100
-// When blocks arrive much faster than target, the equalizer needs to climb
-// faster than ±1/block to keep up. The slew rate adapts based on the last
-// block's interval: shorter intervals = higher slew for upward movement.
-// Downward movement is handled by the dynamic lag cap (unrestricted).
-inline constexpr int64_t  CASERT_DYNSLEW_HEIGHT      = 5100;
-inline constexpr int64_t  CASERT_DYNSLEW_FAST_DT     = 60;    // dt < 60s → slew ±5
-inline constexpr int64_t  CASERT_DYNSLEW_MED_DT      = 120;   // dt < 120s → slew ±3
-inline constexpr int32_t  CASERT_DYNSLEW_FAST         = 5;
-inline constexpr int32_t  CASERT_DYNSLEW_MED          = 3;
+// ─────────────────────────────────────────────────────────────────────
+// Burst Controller (block 5100)
+//
+// Accelerates UPWARD equalizer climb during real bursts (multiple fast
+// blocks + chain materially ahead). Hard ceiling at H10 during burst
+// mode — profiles H11+ are NOT pursued via fast-ramp. Downward movement
+// remains unrestricted via lag cap.
+//
+// Also introduces a bitsQ relax guard: prevents bitsQ from softening
+// too much while the chain is ahead and the profile is already high.
+// ─────────────────────────────────────────────────────────────────────
+inline constexpr int64_t  CASERT_BURST_HEIGHT          = 5100;
+
+// Burst trigger: tier 1 (moderate)
+inline constexpr int32_t  CASERT_BURST_LAG_ENTER_1     = 8;    // lag >= 8
+inline constexpr int64_t  CASERT_BURST_MEDIAN_FAST_1   = 120;  // median(last3) < 120s
+inline constexpr int32_t  CASERT_BURST_UP_SLEW_1       = 2;    // upward slew ±2
+
+// Burst trigger: tier 2 (severe)
+inline constexpr int32_t  CASERT_BURST_LAG_ENTER_2     = 12;   // lag >= 12
+inline constexpr int64_t  CASERT_BURST_MEDIAN_FAST_2   = 60;   // median(last3) < 60s
+inline constexpr int32_t  CASERT_BURST_UP_SLEW_2       = 3;    // upward slew ±3
+
+// Burst exit conditions
+inline constexpr int32_t  CASERT_BURST_EXIT_LAG        = 4;    // exit when lag <= 4
+inline constexpr int64_t  CASERT_BURST_EXIT_MEDIAN     = 180;  // or median(last3) >= 180s
+
+// Burst ceiling: NEVER push above H10 in burst mode
+inline constexpr int32_t  CASERT_BURST_PROFILE_CEILING = 10;   // H10
+
+// Confirmation: require 2 consecutive evaluations
+inline constexpr int32_t  CASERT_BURST_CONFIRM_TICKS   = 2;
+
+// bitsQ high-profile relax guard
+// When profile >= H9 AND lag >= 8, limit bitsQ downward adjustment
+inline constexpr int32_t  CASERT_BITSQ_GUARD_PROFILE   = 9;    // H9+
+inline constexpr int32_t  CASERT_BITSQ_GUARD_LAG       = 8;    // lag >= 8
+inline constexpr int32_t  CASERT_BITSQ_RELAX_GUARD_DEN = 64;   // max 1/64 ≈ 1.56% relax
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200

@@ -150,6 +150,25 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         }
     }
 
+    // Burst bitsQ relax guard (block 5100+): when the chain is ahead and
+    // the equalizer profile is already high (H9+), prevent bitsQ from
+    // softening too much. This avoids the rebound effect where bitsQ drops
+    // during a stall and then causes another burst when the profile drops.
+    // Only limits the DOWNWARD direction; upward is unrestricted.
+    if (next_height >= CASERT_BURST_HEIGHT && delta < 0) {
+        // Compute current lag and profile from last block
+        int64_t el2 = chain.back().time - GENESIS_TIME;
+        int64_t eh2 = (el2 >= 0) ? (el2 / TARGET_SPACING) : 0;
+        int32_t lag2 = (int32_t)((int64_t)(next_height - 1) - eh2);
+        int32_t last_profile = chain.back().profile_index;
+
+        if (lag2 >= CASERT_BITSQ_GUARD_LAG && last_profile >= CASERT_BITSQ_GUARD_PROFILE) {
+            int64_t guard_max = (int64_t)prev_bitsq / CASERT_BITSQ_RELAX_GUARD_DEN;
+            if (guard_max < 1) guard_max = 1;
+            delta = std::max<int64_t>(-guard_max, delta);
+        }
+    }
+
     int64_t result = (int64_t)prev_bitsq + delta;
 
     // Global clamp
@@ -349,21 +368,54 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 }
             }
 
-            // Slew rate: limits how fast the profile can change per block.
-            // Dynamic slew (block 5100+): adapts based on last block interval.
-            // Fast blocks need fast profile climb to prevent lag accumulation.
-            int32_t slew;
-            if (next_height >= CASERT_DYNSLEW_HEIGHT) {
-                if (dt < CASERT_DYNSLEW_FAST_DT) slew = CASERT_DYNSLEW_FAST;      // ±5
-                else if (dt < CASERT_DYNSLEW_MED_DT) slew = CASERT_DYNSLEW_MED;   // ±3
-                else slew = CASERT_V6_SLEW_RATE;                                    // ±1
-            } else if (next_height >= CASERT_V6_FORK_HEIGHT) {
-                slew = CASERT_V6_SLEW_RATE;   // ±1 (V6)
-            } else {
-                slew = CASERT_V3_SLEW_RATE;   // ±3 (pre-V6)
+            // Slew rate with burst controller (block 5100+).
+            // Base slew is ±1 (V6). Burst controller accelerates UPWARD only
+            // when there is confirmed evidence of a real burst (multiple fast
+            // blocks + chain materially ahead). Hard ceiling at H10 during burst.
+            // Downward slew is always 1 — lag cap handles fast descent.
+            int32_t up_slew = CASERT_V6_SLEW_RATE;   // default ±1
+            int32_t down_slew = CASERT_V6_SLEW_RATE;  // always ±1 down
+
+            if (next_height >= CASERT_BURST_HEIGHT && chain.size() >= 4) {
+                // Compute median of last 3 block intervals
+                int64_t dts[3];
+                for (int di = 0; di < 3; ++di) {
+                    size_t idx = chain.size() - 1 - di;
+                    dts[di] = chain[idx].time - chain[idx-1].time;
+                    dts[di] = std::max<int64_t>(1, dts[di]);
+                }
+                // Sort 3 elements to find median
+                if (dts[0] > dts[1]) std::swap(dts[0], dts[1]);
+                if (dts[1] > dts[2]) std::swap(dts[1], dts[2]);
+                if (dts[0] > dts[1]) std::swap(dts[0], dts[1]);
+                int64_t median3 = dts[1];
+
+                // Tier 2 burst: severe
+                if (lag >= CASERT_BURST_LAG_ENTER_2 && median3 < CASERT_BURST_MEDIAN_FAST_2) {
+                    up_slew = CASERT_BURST_UP_SLEW_2;  // ±3 up
+                }
+                // Tier 1 burst: moderate
+                else if (lag >= CASERT_BURST_LAG_ENTER_1 && median3 < CASERT_BURST_MEDIAN_FAST_1) {
+                    up_slew = CASERT_BURST_UP_SLEW_1;  // ±2 up
+                }
+
+                // Burst ceiling: NEVER push above H10 in burst mode
+                if (up_slew > 1 && H > CASERT_BURST_PROFILE_CEILING) {
+                    H = CASERT_BURST_PROFILE_CEILING;
+                }
             }
-            H = std::max<int32_t>(prev_H - slew,
-                    std::min<int32_t>(prev_H + slew, H));
+
+            if (next_height < CASERT_V6_FORK_HEIGHT) {
+                up_slew = CASERT_V3_SLEW_RATE;
+                down_slew = CASERT_V3_SLEW_RATE;
+            }
+
+            // Apply asymmetric slew: up_slew for climbing, down_slew for descending
+            if (H > prev_H) {
+                H = std::min<int32_t>(prev_H + up_slew, H);
+            } else if (H < prev_H) {
+                H = std::max<int32_t>(prev_H - down_slew, H);
+            }
 
             // V3/V3.1 lag floor: if chain is significantly ahead, enforce minimum profile
             if (lag > 10) {

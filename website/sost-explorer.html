@@ -1848,7 +1848,7 @@ function getDecayCost(level){
   return 1200;
 }
 function computeDecayLevel(rawLevel,ahead,elapsedSecs){
-  var threshold=3600; // V5: 1h floor (block 4300+)
+  var threshold=3600; // 60 min
   if(elapsedSecs<threshold)return{level:rawLevel,active:false,threshold:threshold,nextDrop:0};
   var decayTime=elapsedSecs-threshold;
   var eff=rawLevel;
@@ -2055,7 +2055,7 @@ function updateMiningPanel(elapsed){
   }
   // C++ convention: tipLag > 0 = ahead of schedule. Anti-stall uses ahead blocks.
   var ahead=(tipLag>0)?tipLag:0;
-  var threshold=3600; // V5: 1h floor (block 4300+)
+  var threshold=3600; // 60 min
   var asInd=document.getElementById('asIndicator');
   var asCd=document.getElementById('asCountdown');
   if(asInd&&asCd){
