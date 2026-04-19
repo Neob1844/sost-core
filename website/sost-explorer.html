@@ -881,13 +881,14 @@ function getCasertScale(signal){
   return getProfile(signal).scale;
 }
 function getLevelColor(lv){
-  if(lv<=-2)return '#67e8f9'; // E3/E2 = cyan (easing)
-  if(lv===-1)return '#4ade80';// E1 = green
-  if(lv===0)return '#4ade80'; // B0 = green (baseline)
-  if(lv===1)return '#67e8f9'; // H1 = cyan
-  if(lv===2)return '#fbbf24'; // H2 = yellow
-  if(lv<=4)return '#fb923c';  // H3/H4 = orange
-  return '#fb010d';           // H5/H6 = red
+  // Rainbow gradient: E4(-4)=deep blue → B0(0)=green → H35(+35)=deep red
+  // HSL hue: 240 (blue) at E4 → 120 (green) at B0 → 0 (red) at H35
+  var minLv=-4,maxLv=35;
+  var clamped=Math.max(minLv,Math.min(maxLv,lv));
+  var t=(clamped-minLv)/(maxLv-minLv); // 0=E4, ~0.1=B0, 1=H35
+  var hue=240-(t*240); // 240(blue)→120(green)→0(red)
+  var sat=85,lit=lv<=0?65:Math.max(45,65-t*25);
+  return 'hsl('+Math.round(hue)+','+sat+'%,'+Math.round(lit)+'%)';
 }
 function getLevelLabel(signal){
   var p=getProfile(signal);
