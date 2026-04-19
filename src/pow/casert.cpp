@@ -182,7 +182,17 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     dec.r_q16 = r_n;
 
     // Schedule lag: L_n = h_n - floor((t_n - GENESIS_TIME) / T)
-    int64_t elapsed = chain.back().time - GENESIS_TIME;
+    // Pre-V6-calibration: lag from last block's timestamp (deterministic, frozen between blocks)
+    // V6-calibration (block 5050+): lag from now_time (wall clock for mining, block timestamp
+    // for validation). This makes the lag — and therefore the profile — decrease in real time
+    // as wall clock advances, enabling the lag cap and lag-adjust to self-correct without
+    // waiting for anti-stall. Mining and validation agree because the validator passes
+    // block_timestamp as now_time, which is the time the miner set when building the block.
+    int64_t lag_time = chain.back().time;
+    if (next_height >= CASERT_V6_CALIBRATION_HEIGHT && now_time > 0 && now_time > lag_time) {
+        lag_time = now_time;
+    }
+    int64_t elapsed = lag_time - GENESIS_TIME;
     int64_t expected_h = (elapsed >= 0) ? (elapsed / TARGET_SPACING) : -((-elapsed + TARGET_SPACING - 1) / TARGET_SPACING);
     int32_t lag = (int32_t)((int64_t)(next_height - 1) - expected_h);
     dec.lag = lag;
