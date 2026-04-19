@@ -134,7 +134,7 @@ Round r+1 cannot begin until state[r] is computed because:
 | Per-block delta cap | 12.5% (1/8) — V2 | Prevent oscillation (V1 was 6.25%) |
 | Epoch length | 131,553 blocks | Anchor reset |
 | Active profiles | E4 to H9 (14 levels) | Stability difficulty band |
-| Reserved profiles | H10-H12 (3 levels) | Future headroom |
+| Active profiles | E4 to H35 (40 levels) | Full stability difficulty band |
 | Slew rate | ±1 level/block | Profile change damping |
 | Anti-stall floor | 7,200s (2h) | Minimum stall detection |
 | Anti-stall easing | 21,600s (6h at B0) | Emergency easing trigger |
@@ -263,7 +263,7 @@ Simulation scenario 6 shows selfish mining pattern produces 641s mean block time
 | Target 600s | Yes (598s mature) | No change needed | — | None |
 | Halflife 48h | Adequate | Could reduce to 24h for faster response | More oscillation | **Monitor** |
 | 6.25% delta cap | Conservative | Could relax to 12.5% (1/8) | More oscillation | **Monitor** |
-| 17 profiles | Adequate (14 active) | No change needed | — | None |
+| 40 profiles | Adequate (all active) | No change needed | — | None |
 | Anti-stall | Works (activated 2x) | Adequate | — | None |
 | Slew rate ±1 | Correct | No change needed | — | None |
 | B0/E1 oscillation | Cosmetic | Could add hysteresis | Complexity | Low |
@@ -395,7 +395,7 @@ The ConvergenceX + cASERT system is operating correctly within its design parame
 
 1. **When a second miner joins:** Monitor if the 6.25% cap causes extended fast-block periods. If block times stay <300s for 100+ blocks, consider relaxing the cap (consensus change).
 
-2. **When hashrate grows 10x:** The current profiles (E4-H12) cover a wide range. If hashrate grows beyond H9's capability, the reserved H10-H12 profiles exist but would need activation (consensus change).
+2. **When hashrate grows 10x:** The current profiles (E4-H35) cover a wide range. All 40 profiles are active and available for the equalizer to use.
 
 3. **If an ASIC appears:** Monitor the stability ratio at different profiles. If stability tests become trivially easy (pass rate > 99.9%), the per-block program complexity may need increasing.
 

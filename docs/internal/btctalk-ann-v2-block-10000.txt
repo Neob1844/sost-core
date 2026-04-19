@@ -1,0 +1,320 @@
+[center][size=14pt][b][color=#DAA520]SOST Protocol — Update & V6 Coordinated Hard Fork[/color][/b][/size]
+[size=12pt][b]PoPC operational launch & Gold Vault governance: block 10,000[/b][/size]
+[size=10pt]Original target was block 5,000. The activation is being moved to 10,000 — the reasons are explained below.[/size][/center]
+
+[hr]
+
+[size=12pt][b]TL;DR — 5 lines[/b][/size]
+
+[list]
+[li][b]V6 coordinated hard fork at block 10,000[/b] (~10 weeks from now). Bundles four mechanisms into one upgrade.[/li]
+[li][b]Gold Vault governance enforced by consensus[/b] from block 10,000. Spending requires ≥95% miner approval for any large transaction. The protocol developer loses executive vault control at the same block.[/li]
+[li][b]Signature-bound Proof of Work[/b] makes conventional mining pools structurally incompatible with SOST consensus. Solo and P2Pool-style cooperative mining unaffected.[/li]
+[li][b]PoPC operational launch[/b] at block 10,000 — Tier 1 (100% multiplier) for the first 25 contracts. Five distinct ways to earn SOST as a small participant.[/li]
+[li][b]Honest audit disclosure[/b] inside: an internal audit found that GV1-GV4 rules were unit-tested but never wired into production validation. The fix ships as part of V6 instead of a panic patch before block 5,000.[/li]
+[/list]
+
+[hr]
+
+[size=12pt][b]Status of the chain[/b][/size]
+
+The SOST Protocol is alive, mined by ~24 independent miners, and accumulating its constitutional 25% Gold Vault and 25% PoPC Pool allocations every block since genesis (March 15, 2026). [b]The chain is healthy.[/b]
+
+The original activation height for [b]four[/b] mechanisms was block 5,000:
+
+[list]
+[li]PoPC operational launch (registration + reward payout)[/li]
+[li]Gold Vault governance rules (GV1-GV4 spending control)[/li]
+[li]Bond / Escrow lock output types[/li]
+[li]Capsule activation[/li]
+[/list]
+
+After a thorough internal audit of the codebase, [b]the activation height is being moved from 5,000 to 10,000[/b] and bundled with a coordinated protocol upgrade ("V6") that adds a structural [b]anti-pool defense[/b] to the consensus rules. This post explains what the audit found, what is changing, what is NOT changing, and why every active participant — miner, gold holder, observer — comes out stronger.
+
+[hr]
+
+[size=12pt][b]What the audit found[/b][/size]
+
+The Gold Vault governance system (rules GV1 through GV4 — gold purchases, monthly operational limits, miner-voted approvals, automatic rejection) was [b]designed and unit-tested[/b] (17/17 tests passing in [tt]tests/test_gold_vault.cpp[/tt]), but the validator wiring connecting it to the live transaction pipeline [b]was never completed[/b]. In practical terms: at block 5,000 the activation height would have triggered nothing, because the rules engine sits in the codebase as a library with no production caller.
+
+This was found by reading the source code line by line, the same way the project asks anyone else to verify its claims. The honest sequence of events: the rules logic was written first, the wiring was scheduled for "later", and "later" did not happen before mainnet shipped. This is the developer's responsibility, and it is being fixed the right way rather than patched on a 3-day deadline before block 5,000 arrives.
+
+The audit also found that the version-bit signaling RPC ([tt]getproposals[/tt]) was returning placeholder data instead of reading actual block versions from the chain. Same root cause: a primitive that was written but never wired to its data source.
+
+[b]What this means in practice today[/b]: the Gold Vault and PoPC Pool addresses have been accumulating their 25% allocations since genesis, just as the whitepaper specifies. That part is enforced at the deepest consensus level — every node rejects a block whose coinbase doesn't pay these allocations. [b]The accumulation is real and verifiable.[/b] What is NOT yet enforced by consensus is the [i]spending[/i] of those balances. Until V6 activates at block 10,000, the Gold Vault is custodied by [b]the protocol developer[/b] (the single person who maintains the SOST codebase). This is a temporary operational reality of an early-stage chain, not the target architecture. After block 10,000, the protocol itself enforces all spending via on-chain miner governance, and the developer loses executive control of the vault. The transition is direct from developer custody to protocol custody, with no intermediate institutional layer.
+
+Disclosing this proactively was a deliberate choice over shipping a hotfix in 3 days, because [b]a hard fork done right is worth more than a constant fix done in panic[/b].
+
+[hr]
+
+[size=12pt][b]V6 — what is being bundled at block 10,000[/b][/size]
+
+The V6 coordinated upgrade does five things in a single hard fork. This approach is preferred because each piece is small, all of them are interrelated, and a single fork is cheaper than five sequential ones for everyone running a node.
+
+[b]1. Gold Vault governance enforcement (GV1-GV4 wired into consensus)[/b]
+
+The classification engine that has been unit-tested for months gets connected to the live transaction validator. From block 10,000 onwards, any transaction spending from the Gold Vault address must satisfy one of:
+
+[list]
+[li][b]GV1[/b] — A gold purchase, marked with the constitutional payload byte (0x47 = 'G'). No vote required. The vault was created to fund gold reserves; this is its constitutional purpose.[/li]
+[li][b]GV2[/b] — A small operational spend, ≤10% of the vault balance per ~30-day window. No vote required. Reserved for emergency operational needs only.[/li]
+[li][b]GV3[/b] — A larger spend (>10%) requires miner approval via signaling. [b]The threshold is being set at 95% from the start[/b] — see "Epoch policy" below.[/li]
+[li][b]GV4[/b] — Any spend that does not match GV1, GV2, or GV3 is REJECTED at consensus. Every honest node will refuse to include such a transaction in any block it builds, and refuse to validate any block that contains one.[/li]
+[/list]
+
+[b]Epoch policy change — 95% from day one[/b]
+
+The original whitepaper specified a 75% threshold during Epoch 0-1 (blocks 5,000 to 263,105) and 95% from Epoch 2 onwards. After internal review, [b]the Epoch 0-1 threshold is being raised to 95% as well[/b]. With ~24 active miners today, 95% means at least 23 of 24 must sign off on any large vault spend. This is intentionally strict. The protocol developer does not need easy access to the vault. The vault exists to back the protocol with gold, not to fund operations or pay anyone. Anyone proposing a large spend should expect to convince essentially every active miner — and that is the point.
+
+[b]2. Signature-bound Proof of Work (anti-pool protocol)[/b]
+
+This is the structural defense that has been quietly designed for the last few weeks. Every winning block must include a digital signature, made by the miner's private key, over the PoW commitment. The block is only valid if:
+
+[list]
+[li]The signature verifies against a public key included in the block header[/li]
+[li]The coinbase output that pays the miner sends to the address derived from that exact public key[/li]
+[/list]
+
+[b]Why this matters[/b]: a mining pool operator cannot delegate work to thousands of remote workers without either giving them the pool's private key (which lets any worker steal block rewards) or signing every nonce attempt centrally (which makes the workers redundant — the operator becomes the only real miner). [b]Conventional pool models become economically incompatible with the SOST consensus rules.[/b]
+
+P2Pool-style cooperative mining where each participant signs their own blocks remains fully supported. The goal is not to prevent miners from cooperating — the goal is to prevent custody of mining work from concentrating in one operator.
+
+This is a structural defense, not a heuristic. There are no addresses to blacklist, no patterns to detect, no false positives. A non-pool miner is unaffected by V6 except that the miner binary must be rebuilt from V6 sources, with a hot mining key configured (separate from cold storage if preferred), and mining continues normally.
+
+[b]3. Pushing GV_GOVERNANCE_ACTIVATION from 5,000 to 10,000[/b]
+
+A single constant change in [tt]consensus_constants.h[/tt] that aligns the activation with the V6 hard fork height. This is done in the same release as #1 and #2, so all four constitutional mechanisms (PoPC operational, Gold Vault rules, Bond/Escrow types, Capsule) activate together at block 10,000.
+
+[b]4. Real version-bit signaling[/b]
+
+The [tt]getproposals[/tt] RPC bug is fixed (it now reads actual block header versions instead of placeholder data). Miners can flip signaling bits in their version field via a new [tt]--signal-bits[/tt] flag. This change is not consensus-affecting — it just fixes a broken read path — but it is bundled with V6 for clean release coordination.
+
+[b]5. Bond / Escrow / Capsule activation[/b]
+
+The lock output types ([tt]BOND_LOCK = 0x10[/tt], [tt]ESCROW_LOCK = 0x11[/tt]) become valid post-block 10,000. Same activation height for code clarity. These were already scheduled for the 5,000 activation; just moving the height.
+
+[hr]
+
+[size=12pt][b]The cooperative angle — five ways to earn SOST[/b][/size]
+
+SOST is built on cooperativism in the literal sense, not as a slogan. The protocol creates [b]multiple parallel income paths[/b] for participants of all sizes, so a meaningful contribution does not require a large miner with expensive hardware. After V6 activates at block 10,000, the full menu is:
+
+[b]1. Mining the chain[/b]
+
+The classical path. Every block awards 50% of the subsidy to whoever found the nonce. With CPU-friendly ConvergenceX (8 GB RAM, no ASIC), [b]any laptop can participate[/b]. Anti-pool defenses in V6 ensure that a small miner's hashrate cannot be silently absorbed into a centralized operator that captures most of the rewards.
+
+[b]2. Anti-stall windows (CASERT)[/b]
+
+When the network goes more than ~50 minutes without a block, CASERT (the SOST difficulty controller) automatically lowers the profile from H10 to H9, then H8, eventually to B0. During these windows, [b]small miners with modest hashrate have a structurally higher chance of winning a block[/b] than during normal H10 operation. Most of the small-miner rewards observed in the last 30 days came from anti-stall windows. This is by design — CASERT was built to make sure no one is permanently squeezed out by larger miners.
+
+[b]3. PoPC — Proof of Personal Custody[/b]
+
+A holder of tokenized gold (XAUT or PAXG) in their own Ethereum wallet can commit to keep holding it for a fixed period and earn SOST in exchange. [b]The gold never leaves the holder's wallet.[/b] No deposits, no bridges, no custody surrender. The participant is providing real-world economic backing to the protocol just by continuing to hold what is already held.
+
+Every block since genesis has accumulated 25% of the subsidy in the PoPC Pool — currently around 8,800 SOST and growing by ~1.96 SOST every 10 minutes. At block 10,000 the PoPC Pool becomes operationally active and participants can begin claiming rewards.
+
+Reward schedule:
+
+[code]
+Duration    Base reward    Tier 1 (first 25 contracts)
+1 month     1% of bond     1.0%
+3 months    4% of bond     4.0%
+6 months    9% of bond     9.0%
+9 months   15% of bond    15.0%
+12 months  22% of bond    22.0%
+[/code]
+
+The first [b]25 active contracts get the full 100% multiplier (Tier 1)[/b]. After that, the multiplier decreases automatically — 75%, 50%, 30%, 15%, 8%. This is how the system bootstraps the cooperative: the earliest committers earn the most.
+
+A 5% protocol fee applies uniformly. Contracts have a hard reward cap of 1,000 SOST per contract and the system has a hard limit of 1,000 active contracts globally. Anti-whale tiers reduce the multiplier above 10 oz committed (the maximum is 200 oz, beyond which registration is rejected) so that no single large holder can drain the pool.
+
+[b]Architectural note[/b]: PoPC is intentionally application-layer, not consensus-layer. Whitepaper Section 6 specifies: "All PoPC logic remains operational/application-layer except that the PoPC Pool receives 25% coinbase by consensus." The 25% accumulation is consensus-enforced. The reward distribution itself is operator-mediated for the first weeks of operation, transitioning to fully automatic via the [tt]popc_daemon.py[/tt] cron daemon (already committed to the repository) once the system has 4 weeks of safe production data. This was planned from the start and is not a change.
+
+[b]4. Gold Vault OTC participation[/b]
+
+The protocol developer operates an OTC desk that buys and sells SOST against USDC/EUR. The proceeds of vault sales fund actual gold purchases (XAUT/PAXG) which back the protocol. [b]Anyone can participate in the OTC[/b] without an exchange account, directly via Telegram or BTCTalk.
+
+This is the bridge between SOST and real-world gold. Every SOST sold to the OTC desk becomes gold backing the protocol. Every SOST bought from the OTC desk is funded by miners selling their rewards. The cycle is: miners earn SOST → OTC sells SOST for stablecoins → stablecoins buy XAUT/PAXG → vault balance grows → SOST becomes more credible → next OTC round happens at a slightly higher implied price.
+
+[b]5. Phase II governance bot operation[/b]
+
+The Phase II governance system (vault control transitioning from developer custody to on-chain automated governance at block 10,000) includes a relayer bot that posts SOST chain state to Reality.eth on Ethereum. [b]Anyone can run a competing bot[/b], and bots earn small ETH rewards from their bonds when they post correct answers that go undisputed. This is a niche income stream but it is real, permissionless, and helps decentralize the system.
+
+[b]The point[/b]: a small participant — a single laptop, no specialized mining hardware, and 0.5 oz of gold in a MetaMask wallet — can earn meaningful SOST through paths 2, 3, and 5 simultaneously. Earning a return does not depend on outcompeting a $10,000 mining rig. The protocol is built so that diverse participation is more valuable than concentrated participation.
+
+[hr]
+
+[size=12pt][b]Vault custody — two phases[/b][/size]
+
+Vault custody transitions in a single, irreversible step from developer custody to protocol custody at the V6 hard fork activation height (block 10,000). There is no intermediate institutional layer, no foundation council, no committee — there is no foundation. There is one developer who maintains the protocol until the protocol can maintain itself, and then the developer steps out.
+
+[b]Phase I — now to block 10,000 (developer custody)[/b]
+
+The Gold Vault is custodied by the protocol developer (NeoB) until V6 activates protocol-level governance at block 10,000. [b]The custody arrangement is at the developer's operational discretion and is intentionally not detailed publicly[/b] — disclosing operational security details creates attack surface, not transparency. What IS disclosed and verifiable:
+
+[list]
+[li]The developer commits not to move funds from the Gold Vault for any purpose other than the constitutional one (gold purchases backing the protocol).[/li]
+[li]Every gold purchase will be documented publicly: the SOST tx that sells from the vault, the corresponding stablecoin tx that funds the purchase, the resulting XAUT/PAXG tx that places the gold in a publicly verifiable Ethereum address.[/li]
+[li]The developer has no salary, no premine, no allocation. The only way the developer earns SOST is by mining the chain like everyone else (under the same anti-pool rules everyone else faces post-V6).[/li]
+[li]This is reputation-based trust during Phase I, openly declared. Anyone evaluating SOST during Phase I should evaluate it on this basis: the protocol is real, the chain is real, the accumulation is real, but vault spending discipline relies on the developer's stated commitment until the protocol takes over at block 10,000.[/li]
+[/list]
+
+[b]Phase II — block 10,000 onwards (automated on-chain governance)[/b]
+
+At the V6 hard fork activation height, vault control transitions in a single, irreversible step from developer custody to a [url=https://github.com/gnosisguild/zodiac-module-reality]Zodiac Reality Module[/url] connected to the [url=https://reality.eth.link]Reality.eth[/url] oracle. From that block onwards:
+
+[list]
+[li]The only way to release any amount from the Gold Vault is for a SOST GV3 proposal to pass with ≥95% miner signaling on the SOST chain.[/li]
+[li]A relayer bot posts the SOST chain verdict to Reality.eth (with a bond), where it sits for a 7-day public dispute window. Anyone can run a competing bot and dispute a dishonest answer for profit.[/li]
+[li]If the Reality.eth answer goes unchallenged, the Zodiac module triggers the on-chain release of XAUT/PAXG to the destination specified in the proposal.[/li]
+[li][b]The protocol developer cannot move the vault anymore.[/b] Not even a single satoshi. The only privilege retained is the ability to propose a spend like anyone else, which still requires 95% miner approval.[/li]
+[/list]
+
+This is not "trust the developer until retirement". This is "trust the developer until block 10,000, then trust the protocol and the miners". The transition has a [b]hard date encoded in the consensus rules[/b] (the V6 activation height). It is not subject to the developer's later willingness to step back. The protocol takes over automatically.
+
+[b]Phase III — 12 to 24 months out, conditional on growth[/b]
+
+Migration from tokenized gold (XAUT, PAXG) to physical gold custody in a regulated vault (Switzerland or London), audited by a recognized custodian. This eliminates issuer risk (Tether, Paxos), eliminates smart-contract risk, and provides physical audit reports tied to specific bar serial numbers. [b]No bridges, no wSOST, no cross-chain attack surface.[/b] This path was chosen explicitly over building a cross-chain bridge because every bridge in crypto history has eventually been exploited. SOST exits the smart-contract dependency entirely.
+
+[hr]
+
+[size=12pt][b]Why this is being done — the philosophical part[/b][/size]
+
+SOST exists on the assumption that the post-fiat era requires infrastructure with [b]three properties simultaneously[/b]:
+
+[list]
+[li][b]Decentralized mining[/b] — no single entity, including the developer, controls block production[/li]
+[li][b]Real-world backing[/b] — value tied to physical gold, not to abstract scarcity[/li]
+[li][b]Cooperative economics[/b] — multiple participation paths so that small participants can earn alongside large ones[/li]
+[/list]
+
+Most projects deliver one of these. A few deliver two. SOST is deliberately attempting all three.
+
+There is no foundation behind SOST. There is no council, no DAO, no allocation of pre-mined tokens. There is one developer who wrote the codebase, one set of consensus rules anyone can read, and a chain that is mined by ~24 independent participants today. The developer does not have a salary, an investor, a token allocation, or any income from the protocol other than mining the same way every miner does. The developer does not own SOST. Nobody owns SOST. The developer maintains it until the protocol can maintain itself, and then steps back.
+
+The audit findings disclosed above are not a setback. They are the kind of finding that distinguishes a serious project from theater. A theater project would have shipped the activation at block 5,000, watched nothing happen, and moved on. A serious project pauses, audits, and bundles a coordinated fork that does the work properly.
+
+[b]The cooperative ethos at the core[/b]: every change in this V6 hard fork is engineered to maximize the value [i]all[/i] participants extract from the protocol — not to enrich a small group. The 95% threshold for vault spending makes the vault hard to abuse. The anti-pool defense protects small miners from being absorbed by a single operator. The PoPC tier system rewards early committers proportionally more. The Phase II vault transition removes the developer from the vault loop entirely on a hard-coded date. Each piece reinforces the others.
+
+[b]The goal is that nobody, not even the developer, ever has to be trusted.[/b]
+
+[hr]
+
+[size=12pt][b]Timeline (concrete dates, not promises)[/b][/size]
+
+[code]
+NOW (block ~4,470)        Audit publicly disclosed (this post)
+                          Anyone can verify findings via:
+                          - cd build && ./test-gold-vault   (17/17 pass)
+                          - grep -rn classify_gv_spend src/ (returns nothing)
+                          - inspect sost-node.cpp:2316     (dummy versions bug)
+
+T+1 to T+2 weeks          Hotfix release (V5.1):
+                          Pushes GV_GOVERNANCE_ACTIVATION 5000 -> 10000
+                          Pushes BOND_ACTIVATION_HEIGHT_MAINNET to 10000
+                          Pushes Capsule activation to 10000
+                          NO consensus rule changes — only constants.
+                          Required upgrade for all node operators
+                          before block 5,000.
+
+T+4 to T+8 weeks          V6 testnet:
+                          Full V6 implementation deployed on testnet.
+                          Signature-bound PoW, GV rules wired,
+                          version signaling fixed, P2P proposal gossip.
+                          30-day burn-in period.
+
+Block ~9,000              V6 release candidate published.
+(approx T+8 weeks)        4-week upgrade window opens.
+                          Miners and node operators upgrade.
+
+Block 10,000              V6 ACTIVATION HEIGHT
+(approx T+10 weeks)       All four mechanisms activate simultaneously:
+                          - Gold Vault GV1-GV4 enforced
+                          - Signature-bound PoW required
+                          - PoPC operational launch
+                          - Bond/Escrow/Capsule output types valid
+
+Block 10,000 + 4 weeks    PoPC reward distribution transitions
+                          from manual to automatic (cron daemon)
+
+Block 10,000              Vault custody transition is automatic.
+                          From this block onwards, the Gold Vault
+                          is controlled by Zodiac + Reality.eth
+                          anchored to >=95% miner approval.
+                          The developer no longer has executive
+                          control of the vault. No human in the
+                          loop after this height.
+[/code]
+
+[hr]
+
+[size=12pt][b]What participants need to do[/b][/size]
+
+[b]Node operators[/b]: upgrade to V5.1 when it ships in the next 1-2 weeks. This is required to remain on the canonical chain. The change is a single constant push and recompile. The release will be published with a one-line changelog and the commit hash so anyone can verify it independently.
+
+[b]Miners[/b]: continue mining as usual today. V5.1 is a node upgrade, not a miner upgrade. The miner binary must be rebuilt from V6 sources approximately 4 weeks before block 10,000, when the V6 release candidate is published. The release will include detailed migration notes for the new mining key requirement (signature-bound PoW means the miner must hold a hot private key, separate from cold storage if preferred).
+
+[b]Tokenized gold holders interested in PoPC[/b]: nothing to do until block 10,000. The registration guide at [url=https://sostcore.com/sost-popc-quickstart.html]sostcore.com/sost-popc-quickstart.html[/url] documents the full process; an Ethereum wallet address holding XAUT or PAXG is required. The first 25 contracts after block 10,000 receive Tier 1 (full 100% multiplier).
+
+[b]Verifiers[/b]: clone the repo at [url=https://github.com/Neob1844/sost-core]github.com/Neob1844/sost-core[/url] and run the audit commands listed in the timeline above. Public scrutiny is welcome — the strength of this approach is that there is nothing to hide.
+
+[hr]
+
+[size=12pt][b]Q&A — questions to expect[/b][/size]
+
+[b]Q: Is SOST safe to hold today?[/b]
+A: Yes. The 25% accumulation to Gold Vault and PoPC Pool has been enforced at consensus level since genesis and continues to work correctly. The audit findings concern the [i]spending[/i] of those balances, which until V6 activates at block 10,000 is governed by operational discipline rather than protocol enforcement. After V6, both are protocol-enforced.
+
+[b]Q: Could the developer drain the Gold Vault right now?[/b]
+A: Technically yes. The Gold Vault address ([tt]sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d[/tt]) is custodied by the protocol developer (NeoB) until the V6 hard fork activates protocol-level governance at block 10,000. The custody arrangement is at the developer's operational discretion and is intentionally not detailed publicly — disclosing operational security details creates attack surface, not transparency. There is no consensus rule blocking spends from this address until V6 activates. This is openly disclosed because it is the honest state of an early-stage chain.
+
+Why should anyone believe this won't happen? Three reasons:
+
+[list]
+[li]The developer earns nothing from draining the vault. There is no buyer market for vault SOST that does not pass through the developer directly. Selling vault SOST without producing actual gold backing would destroy the protocol the developer built.[/li]
+[li]Every Gold Vault transaction is publicly visible on-chain. Any movement of vault funds will be detected in seconds. The developer's personal reputation is the collateral.[/li]
+[li]The transition to automated control happens at a hard-coded block height (10,000) in the protocol code. It is not at the developer's discretion. Once V6 ships, the consensus rules take over whether the developer wants them to or not.[/li]
+[/list]
+
+If this honesty disqualifies SOST in the reader's eyes, that is a fair conclusion to reach during Phase I. The right time to reconsider is after V6 has activated at block 10,000 and the vault is no longer under any single human's control.
+
+[b]Q: Why wasn't this found before mainnet launch?[/b]
+A: It was found now, by reading the source code line by line. The right answer to "why wasn't it found earlier" is "it should have been". The right answer to "what is being done about it" is this post, the V5.1 hotfix, and the V6 fork. There is no pretense that the timeline was always this. It was not. The correction is being made transparently.
+
+[b]Q: Does V6 break anything in current usage?[/b]
+A: V6 requires miners to recompile from new sources and to use a hot mining key. That is the only operational change. Nodes upgrade and continue running. Wallet addresses are unchanged. Existing UTXOs are unchanged. Coinbase maturity is unchanged. PoPC is unchanged operationally (it was always application-layer per the whitepaper).
+
+[b]Q: Why 95% threshold for GV3 instead of the original 75%?[/b]
+A: With ~24 miners, 95% means ~23 must sign off. This is intentionally strict. The protocol developer does not need easy access to the vault — the developer doesn't need the vault at all. The vault exists to back the protocol with gold, not to fund operations or pay anyone. Anyone proposing a large spend should expect to convince essentially every active miner — and that is the point. The threshold will be revisited only if network growth makes it impractical, and any change requires its own miner-approved proposal at the new threshold (so the strict rule is self-protecting).
+
+Note: 95% miner approval is necessary but not sufficient. See the next question for the full vault model.
+
+[b]Q: What can the Gold Vault be used for? Could a colluding majority of miners drain it?[/b]
+A: No. After V6 activates, the Gold Vault is constrained by FIVE independent consensus-level defenses, all of which must hold simultaneously for any spend to be valid:
+
+[list]
+[li][b]Purpose restriction[/b] — the vault can only be used for gold reserve operations. Any other purpose is rejected at consensus, regardless of voting outcome.[/li]
+[li][b]Destination whitelists[/b] — the vault can only send to a small set of constitutional addresses hardcoded in the protocol source code, organized into two categories: normal reserve destinations (gold purchases, rebalancing) and emergency reserve destinations (initially empty). Adding any new destination requires a hard fork. No miner vote, no matter how unanimous, can authorize a transfer to any address outside these whitelists — including any miner-controlled wallet.[/li]
+[li][b]Hard per-spend cap[/b] — no single transaction can move more than 2% of the current vault balance.[/li]
+[li][b]Aggregate rate limit[/b] — routine gold purchases are capped at 5% of the vault balance per ~30-day window combined. Emergency spends additionally require a hard 30-day cooldown between transactions.[/li]
+[li][b]Supermajority approval for non-routine spends[/b] — emergency spends require ≥95% miner signaling over a 288-block window.[/li]
+[/list]
+
+The vault has no burn route. Vault SOST is never destroyed under any conditions. The supply is too small to permit destruction; the vault preserves and transforms value, never removes it.
+
+[b]The Gold Vault must be able to change form, but not purpose.[/b] Even a hostile 100% colluding cabal of miners cannot drain the vault to a wallet they control — the destination whitelists make that mathematically impossible at consensus level. The vault is structurally single-purpose by default, with miners able to vote on HOW the reserve is managed (which custodian, when to migrate, how to rebalance) but never on WHAT the vault funds.
+
+[b]Q: Is there a Telegram group?[/b]
+A: Telegram group launching next week. The invite link will be added to [url=https://sostcore.com]sostcore.com[/url] as soon as it is ready. Community channels are deliberately minimal: BTCTalk for technical discussion and announcements, Telegram for OTC and direct contact. No Discord, no Twitter farming, no fake-volume marketing.
+
+[b]Q: When will SOST be on an exchange?[/b]
+A: When it is ready, not before. The conditions for considering an exchange listing are: publishable transparency reports backing the listing, verifiable Gold Vault balance, a working Phase II governance loop, and sustained OTC volume that justifies the move. Until then, the OTC desk operates from Telegram and BTCTalk directly. No specific exchange has been targeted or announced. Listing late and listing well is preferred over listing early and listing badly.
+
+[b]Q: How can someone contribute?[/b]
+A: Run a node. Run a miner. Run an explorer mirror. Verify the audit. For contributors with technical skills interested in V6 implementation, the workstreams that need help are: testnet validation, P2P proposal gossip, the Phase II bot relayer, the public dashboard, and Solidity work for the Zodiac Reality Module integration. Contact via this thread or the upcoming Telegram channel.
+
+[hr]
+
+[center][b]NeoB — SOST Protocol[/b]
+[url=https://sostcore.com]sostcore.com[/url] · [url=https://github.com/Neob1844/sost-core]GitHub[/url] · [url=https://sostcore.com/sost-explorer.html]Explorer[/url]
+[size=8pt]Not financial advice. SOST is experimental software. PoPC is an experimental cooperative reward system. The Gold Vault does not yet have full consensus-enforced spending governance — that activates at block 10,000 with the V6 hard fork described in this post. Review the source code, run the verification commands, and form an independent opinion before participating.[/size][/center]

@@ -296,9 +296,9 @@ The stability context `stctx` is derived from `header_core`, `seed`, and `checkp
 #### cASERT Equalizer Parameters
 
 The intensity of perturbation probes adapts to network conditions through the cASERT
-equalizer (Section 3.12). The equalizer is consensus-critical. It uses 17 profiles
-from E4(-4) through H12(+12), with CASERT_H_MIN=-4 and CASERT_H_MAX=12
-(H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)). B0 is baseline.
+equalizer (Section 3.12). The equalizer is consensus-critical. It uses 40 profiles
+from E4(-4) through H35(+35), with CASERT_H_MIN=-4 and CASERT_H_MAX=35
+(all scale=2 above H4, H35 hardest active). B0 is baseline.
 
 Profile table (struct: {scale, steps, k, margin}):
 
@@ -318,9 +318,10 @@ Profile table (struct: {scale, steps, k, margin}):
 | H7(+7) | 2 | 6 | 6 | 130 |
 | H8(+8) | 2 | 7 | 6 | 125 |
 | H9(+9) | 2 | 7 | 7 | 120 |
-| H10(+10) | 2 | 7 | 7 | 115 | Smoothed high-difficulty (scale=2, V6) |
-| H11(+11) | 2 | 8 | 7 | 110 | Smoothed high-difficulty (scale=2, V6) |
-| H12(+12) | 2 | 8 | 8 | 105 | Hardest active (scale=2) |
+| H10(+10) | 2 | 7 | 7 | 115 | |
+| H11(+11) | 2 | 8 | 7 | 110 | |
+| H12(+12) | 2 | 8 | 8 | 105 | |
+| H13-H35 | 2 | 8-20 | 8-20 | 105-100 | Extended range (H35 hardest active) |
 
 Anti-Stall Decay (zone-based, targeting B0):
 
@@ -722,10 +723,10 @@ Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ (V1: 48h half-life, V2: 24h half-life from block 1450)
 Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450
-Equalizer profiles         E4(-4) through H12(+12), all scale=2, H12 hardest active (17 total)
+Equalizer profiles         E4(-4) through H35(+35), all scale=2, H35 hardest active (40 total)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
 CASERT_H_MIN               -4
-CASERT_H_MAX               12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active))
+CASERT_H_MAX               35 (all scale=2, H35 hardest active)
 cASERT decay               zone-based anti-stall targeting B0: H9-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E4 after 6+ additional hours at B0 (1800s/level)
 Block target spacing       600s
 Stability baseline (B0)    scale=1, steps=4, k=4, margin=185
@@ -747,8 +748,8 @@ The cASERT equalizer is consensus-critical. It adjusts ConvergenceX stability
 parameters according to the equalizer profile. Block validation verifies the
 equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 
-The equalizer uses 17 profiles from E4(-4) through H12(+12), with
-CASERT_H_MIN=-4 and CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)). B0 is baseline.
+The equalizer uses 40 profiles from E4(-4) through H35(+35), with
+CASERT_H_MIN=-4 and CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest active). B0 is baseline.
 It adjusts stability verification intensity based on how far ahead the chain
 is relative to the ideal schedule.
 
@@ -767,9 +768,10 @@ PROFILE TABLE (struct: {scale, steps, k, margin}):
   H7(+7):  scale=2, steps=6, k=6, margin=130
   H8(+8):  scale=2, steps=7, k=6, margin=125
   H9(+9):  scale=2, steps=7, k=7, margin=120
-  H10(+10): scale=2, steps=7, k=7, margin=115  Smoothed high-difficulty (scale=2, V6)
-  H11(+11): scale=2, steps=8, k=7, margin=110  Smoothed high-difficulty (scale=2, V6)
-  H12(+12): scale=2, steps=8, k=8, margin=105  Hardest active
+  H10(+10): scale=2, steps=7, k=7, margin=115
+  H11(+11): scale=2, steps=8, k=7, margin=110
+  H12(+12): scale=2, steps=8, k=8, margin=105
+  H13-H35:  scale=2, steps=8-20, k=8-20, margin=105-100  (H35 hardest active)
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
@@ -2478,7 +2480,7 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap |
-| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H12(+12), all scale=2, B0 baseline, bidirectional: hardens (H1-H12) when ahead of schedule, eases (E1-E4) after 6h+ at B0. Slew rate: ±1 profile/block (V6, block 5,000+) |
+| cASERT equalizer | Consensus-critical, 40 profiles E4(-4) through H35(+35), all scale=2, B0 baseline, bidirectional: hardens (H1-H35) when ahead of schedule, eases (E1-E4) after 6h+ at B0. Slew rate: ±1 profile/block (V6, block 5,000+) |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2727,10 +2729,10 @@ DIFFICULTY PARAMETERS:
   BITSQ_HALF_LIFE_V2 (V2)      = 86,400    // 24h — blocks >= 1450
   MAX_FUTURE_DRIFT             = 600
 
-cASERT EQUALIZER PARAMETERS (consensus-critical, 17 profiles):
+cASERT EQUALIZER PARAMETERS (consensus-critical, 40 profiles):
   CASERT_H_MIN                 = -4    // E4 is lowest profile
-  CASERT_H_MAX                 = 12    // all scale=2 (V6), H12 hardest active
-  // 17 profiles: E4(-4) through H12(+12), each with {scale, steps, k, margin}
+  CASERT_H_MAX                 = 35    // all scale=2 (V6), H35 hardest active
+  // 40 profiles: E4(-4) through H35(+35), each with {scale, steps, k, margin}
   // B0(0) baseline: scale=1, steps=4, k=4, margin=185
   // See profile table in Section 3.12
 
@@ -3161,9 +3163,9 @@ Changes from v3.4 to v3.5:
       Consensus rules remain immutable at genesis.
   
   cASERT MODIFICATIONS:
-  70) cASERT rewritten: 17 discrete profiles E4(-4) through H12(+12),
+  70) cASERT rewritten: 40 discrete profiles E4(-4) through H35(+35),
       each with unique {scale, steps, k, margin}. CASERT_H_MIN=-4,
-      CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)).
+      CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest active).
   71) Anti-stall: zone-based decay targeting B0. H9-H7: 600s/level,
       H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
       at B0 (1800s/level).
