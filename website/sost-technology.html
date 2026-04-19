@@ -1060,7 +1060,7 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
             </div>
             <div class="mode-params">
               scale=2&ndash;3 &middot; k=6&ndash;8 &middot; margin=130&ndash;110 &middot; steps=6&ndash;8<br>
-              <em>Maximum hardening. H10&ndash;H11 (scale=2, V6 smoothed), H12 reserve (scale=3).</em>
+              <em>Maximum hardening. H10&ndash;H11 (scale=2, V6 smoothed), H12 (scale=2, hardest active).</em>
             </div>
           </div>
         </div>
@@ -1083,7 +1083,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H11 (scale=2, V6 smoothed), H12 reserve (scale=3). Full range: E4&ndash;H12.<br>
+            &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H11 (scale=2, V6 smoothed), H12 (scale=2, hardest active). Full range: E4&ndash;H12.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
