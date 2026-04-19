@@ -431,7 +431,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
         // Anti-stall threshold: V4 and earlier use 7200s (2h). V5 reduces it to
-        // 4500s (75 min) so the safety net fires faster in small networks —
+        // 3600s (60 min) so the safety net fires faster in small networks —
         // complements EBR which handles lag-triggered recovery, while anti-stall
         // handles time-triggered recovery (block completely stuck).
         int64_t t_act = (next_height >= CASERT_V5_FORK_HEIGHT)
