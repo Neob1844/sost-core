@@ -349,12 +349,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div id="v6Notice" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <style>@keyframes v6pulse{0%,100%{border-left-color:#00ff41;box-shadow:none}50%{border-left-color:#DAA520;box-shadow:inset 0 0 30px rgba(218,165,32,0.04),0 0 10px rgba(0,255,65,0.06)}}</style>
   <div style="background:rgba(0,255,65,0.06);border-left:3px solid #00ff41;padding:10px 16px;font-family:var(--code);font-size:10px;color:#00ff41;line-height:1.7;animation:v6pulse 3s ease-in-out infinite;">
-    <b style="color:#00ff41;font-size:11px;">&#10003; V6 CHAIN STABILITY FORK &mdash; ACTIVE (block 5,000+)</b><br>
-    <span style="color:var(--text3)">V6 consensus changes (all active since block 5,000):</span> Slew rate &plusmn;3 &rarr; &plusmn;1. H10/H11/H12 smoothed (all scale=2). Anti-stall immediate first drop. Ahead Guard removed (bitsQ free at 12.5% cap). H11 reserved (lag&ge;11), H12 reserved (lag&ge;21).<br>
-    <span style="color:#00ff88;font-weight:600">&#9670; NEW &mdash; MINER LAG-ADJUST (optional, non-consensus):</span> The miner now checks every 30 seconds whether the equalizer profile should change based on current lag. If the profile shifted, the miner restarts search immediately with the correct profile instead of waiting for anti-stall (60 min). This reduces wasted mining time at suboptimal profiles from up to 60 minutes to ~30 seconds. <b>Miner-only update</b> &mdash; node does not need restart. Old miners remain fully compatible.<br>
-    <span style="color:#fbbf24">&#9670; HOW TO UPDATE:</span> <span style="color:#67e8f9">git pull origin main &amp;&amp; cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span>. Restart <b>miner only</b>. Node does not need restart. Not mandatory &mdash; old miners keep working, just less efficient.<br>
-    <span style="color:#fbbf24">&#9670; BLOCK 10,000 (VT fork):</span> Gold Vault 5-defense governance (purpose restriction, destination whitelists, 2% per-spend cap, rate limiting, &ge;95% miner supermajority). Signature-bound PoW (anti-pool). PoPC Model A + Model B. Anti-stall threshold 60 &rarr; 90 min (consensus). Bond/Escrow/Capsule activation. Custody transition. <em style="color:var(--text3)">The Gold Vault must be able to change form, but not purpose.</em><br>
-    Details: <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">VT governance &amp; PoPC (post #80)</a> · <a href="https://bitcointalk.org/index.php?topic=5579432.new#new" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">V6 + lag-adjust (latest post)</a> · <a href="https://github.com/Neob1844/sost-core/tree/main/contracts" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">Smart contract source</a> · <a href="https://github.com/Neob1844/sost-core" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">Repository</a>.
+    <b style="color:#DAA520;font-size:11px;">&#9888; V7 DYNAMIC LAG CAP FORK &rarr; BLOCK 5,100 &mdash; ACTION REQUIRED</b><br>
+    <span style="color:var(--text3)">V6 (active since block 5,000):</span> Slew &plusmn;1, all profiles scale=2, anti-stall immediate drop, Ahead Guard removed, bitsQ free at 12.5%.<br>
+    <span style="color:#00ff88;font-weight:600">&#9670; V7 CHANGE 1 &mdash; DYNAMIC LAG CAP (consensus):</span> The equalizer profile can never exceed the current schedule lag. If the chain is 5 blocks ahead, maximum profile is H5. If 10 ahead, max H10. The brake strength is always proportional to how far ahead the chain is. Replaces the fixed H11/H12 reservation.<br>
+    <span style="color:#00ff88;font-weight:600">&#9670; V7 CHANGE 2 &mdash; EXTENDED PROFILES (consensus):</span> 37 profiles (E4 through H32, was 17). H10-H32 follow a uniform pattern: scale=2, k and steps alternate +1, margin decreases by 5 per level (115 &rarr; 110 &rarr; ... &rarr; 5). The network can now scale to much higher hashrates without running out of difficulty headroom.<br>
+    <span style="color:#fbbf24">&#9670; MINER LAG-ADJUST (non-consensus):</span> Every 30s the miner checks if the node&rsquo;s profile changed and restarts search immediately. Reduces wasted mining from 60min (anti-stall) to ~30s. Old miners remain compatible.<br>
+    <span style="color:#fbbf24">&#9670; WHEN:</span> Block 5,100. <b>Consensus-critical &mdash; all miners and nodes MUST upgrade before this height.</b><br>
+    <span style="color:#fbbf24">&#9670; HOW TO UPGRADE:</span> <span style="color:#67e8f9">git pull origin main &amp;&amp; cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span>. Restart <b>both node and miner</b>.<br>
+    <span style="color:#fbbf24">&#9670; BLOCK 10,000 (VT fork):</span> Gold Vault governance, signature-bound PoW, PoPC, anti-stall 60&rarr;90min, Bond/Escrow/Capsule. <em style="color:var(--text3)">The Gold Vault must be able to change form, but not purpose.</em><br>
+    Details: <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">VT governance &amp; PoPC (post #80)</a> · <a href="https://bitcointalk.org/index.php?topic=5579432.new#new" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">Latest post</a> · <a href="https://github.com/Neob1844/sost-core" style="color:#fbbf24;text-decoration:underline;" target="_blank" rel="noopener">Repository</a>.
   </div>
 </div>
 <div class="dashboard" id="dashboard">
@@ -786,9 +789,30 @@ const CASERT_PROFILES=[
   {name:'H7',H:7,scale:2,steps:6,k:6,margin:130},
   {name:'H8',H:8,scale:2,steps:7,k:6,margin:125},
   {name:'H9',H:9,scale:2,steps:7,k:7,margin:120},
-  {name:'H10',H:10,scale:2,steps:7,k:7,margin:115},
-  {name:'H11',H:11,scale:2,steps:8,k:7,margin:110},
-  {name:'H12',H:12,scale:2,steps:8,k:8,margin:105},
+  // V7 (block 5100): extended profiles H10-H32, k/steps alternate +1, margin -5
+  {name:'H10',H:10,scale:2,steps:8,k:7,margin:115},
+  {name:'H11',H:11,scale:2,steps:8,k:8,margin:110},
+  {name:'H12',H:12,scale:2,steps:9,k:8,margin:105},
+  {name:'H13',H:13,scale:2,steps:9,k:9,margin:100},
+  {name:'H14',H:14,scale:2,steps:10,k:9,margin:95},
+  {name:'H15',H:15,scale:2,steps:10,k:10,margin:90},
+  {name:'H16',H:16,scale:2,steps:11,k:10,margin:85},
+  {name:'H17',H:17,scale:2,steps:11,k:11,margin:80},
+  {name:'H18',H:18,scale:2,steps:12,k:11,margin:75},
+  {name:'H19',H:19,scale:2,steps:12,k:12,margin:70},
+  {name:'H20',H:20,scale:2,steps:13,k:12,margin:65},
+  {name:'H21',H:21,scale:2,steps:13,k:13,margin:60},
+  {name:'H22',H:22,scale:2,steps:14,k:13,margin:55},
+  {name:'H23',H:23,scale:2,steps:14,k:14,margin:50},
+  {name:'H24',H:24,scale:2,steps:15,k:14,margin:45},
+  {name:'H25',H:25,scale:2,steps:15,k:15,margin:40},
+  {name:'H26',H:26,scale:2,steps:16,k:15,margin:35},
+  {name:'H27',H:27,scale:2,steps:16,k:16,margin:30},
+  {name:'H28',H:28,scale:2,steps:17,k:16,margin:25},
+  {name:'H29',H:29,scale:2,steps:17,k:17,margin:20},
+  {name:'H30',H:30,scale:2,steps:18,k:17,margin:15},
+  {name:'H31',H:31,scale:2,steps:18,k:18,margin:10},
+  {name:'H32',H:32,scale:2,steps:19,k:18,margin:5},
 ];
 // ═══════════════════════════════════════════════════════════════
 // CANONICAL profile estimation from lag — matches C++ casert.cpp
@@ -824,16 +848,10 @@ function getProfileFromLag(lag) {
     return CASERT_PROFILES[eidx];
   }
   // Ahead of schedule → harden (H profiles)
-  var ahead = lag;
-  var level;
-  if      (ahead <= 5)  level = 0;
-  else if (ahead <= 20) level = 1;
-  else if (ahead <= 50) level = 2;
-  else if (ahead <= 75) level = 3;
-  else                  level = 4;
-
-  if (level === 0) return CASERT_PROFILES[4]; // B0
-  var idx = Math.min(16, 4 + level);
+  // V7 (block 5100): dynamic lag cap — profile = min(PID_output, lag)
+  // Since we don't have the full PID here, estimate profile ≈ lag (capped at H32)
+  var profile_h = Math.min(lag, 32);
+  var idx = Math.min(CASERT_PROFILES.length - 1, 4 + profile_h);
   return CASERT_PROFILES[idx];
 }
 // Backward compat: old callers used getProfile(signal)
@@ -2793,7 +2811,7 @@ function showCXInfo(){
   '<span style="color:#fb923c">H1→H4</span> (hardening, scale=1) → '+
   '<span style="color:#fb010d">H5→H9</span> (hardening, scale=2) → '+
   '<span style="color:var(--text3)">H10–H11</span> (scale=2, V6 smoothed), <span style="color:var(--text3)">H12</span> (scale=2, k=8, steps=8, margin=105).<br><br>'+
-  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block (V6, block 5,000+).</b> Lag floor: profile ≥ lag/8. <b>V6: H11 reserved (lag≥11), H12 reserved (lag≥21). Ahead Guard removed — bitsQ free at 12.5% cap.</b><br><br>'+
+  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block (V6+).</b> Lag floor: profile ≥ lag/8. <b>V7 (block 5,100): dynamic lag cap H ≤ lag. 37 profiles E4-H32. Ahead Guard removed — bitsQ free at 12.5%.</b><br><br>'+
   '<b style="color:var(--green)">ANTI-STALL (mining only):</b> V5 (block 4,300+) activates after 3,600s (1 hour). Zone-based decay targeting B0: H12–H7 at 600s/level, H6–H4 at 900s/level, H3–H1 at 1200s/level. B0 is natural destination. Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level). Miner declares profile in block JSON; node validates within E4–H12 bounds.<br><br>'+
   '<b style="color:var(--cyan)">AHEAD GUARD (V4):</b> When chain ≥16 blocks ahead and profile ≥H8, bitsQ downward delta clamped to 1/64 (≈1.56%/block). Hysteresis: enter ≥16 ahead, exit ≤8 ahead. Prevents oscillation between bitsQ and equalizer.<br><br>'+
   '<b>Chain selection:</b> Best chain by <b>cumulative work</b> (NOT longest chain). work = floor(2^256 / (target + 1)). Reorg is atomic with full rollback on failure. MAX_REORG_DEPTH = 500 blocks.</div></div>'+
