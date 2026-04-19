@@ -106,7 +106,7 @@ No miner signaling. No version check. Pure height comparison. If a node doesn't 
 
 | Feature | WP Section | Change Type | Consensus? | Estimated Effort | Priority | Status |
 |---------|-----------|-------------|-----------|-----------------|----------|--------|
-| **H10-H12 profile activation** | 3.12 | Hard fork (parameter) | YES — increase CASERT_H_MAX from 9 to 12 | 1 day | LOW | Reserved in code, not active |
+| **Extended profile range** | 3.12 | Hard fork (parameter) | YES — CASERT_H_MAX=35 (40 profiles E4-H35 now active) | 1 day | LOW | All 40 profiles active |
 | **Native metal tokens (TOKEN_ISSUE, TOKEN_TRANSFER)** | 10.2 Phase 2 | Hard fork (new output types) | YES — new output type validation | 3-6 months | MEDIUM | Not started. Output types not reserved. |
 | **Fully native PoPC** | 10.2 Phase 3 | Hard fork (validation rules) | YES — on-chain audit verification | 3-6 months | LOW | Depends on Phase 2 |
 | **Additional metals (silver, platinum)** | 1.3 (allowlist) | Soft fork | NO — operational (Foundation can add issuers) | N/A | LOW | No code change needed |
@@ -161,7 +161,7 @@ Soft forks add NEW restrictions that old nodes don't enforce but don't violate. 
 | Change | Why Hard Fork |
 |--------|---------------|
 | New output types (TOKEN_ISSUE, etc.) | Old nodes reject unknown types (R11) |
-| Increase CASERT_H_MAX | Old nodes reject profiles > H9 |
+| Increase CASERT_H_MAX beyond 35 | Old nodes reject profiles > H35 |
 | Change PoW algorithm parameters | Old nodes reject invalid PoW |
 | Change signature scheme | Old nodes can't verify new signatures |
 | Increase MAX_BLOCK_BYTES | Old nodes reject larger blocks |
@@ -202,7 +202,7 @@ These cost nothing to implement and prevent future hard fork complexity:
 
 | Feature | Preparation | When to Implement |
 |---------|-------------|-------------------|
-| H10-H12 activation | Code exists, just increase CASERT_H_MAX | When hashrate demands it |
+| Profile range (E4-H35) | All 40 profiles active, CASERT_H_MAX=35 | Currently active |
 | Native metal tokens | Reserve output types 0x30-0x3F | Phase 2 (Q4 2027) |
 | Version-bit signaling | Document bit allocation | When 10+ miners exist |
 | Post-quantum | Monitor NIST standardization | 2028+ earliest |

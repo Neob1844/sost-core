@@ -1,0 +1,23 @@
+metric,value
+blocks,50
+avg_interval_s,589.1020408163265
+median_interval_s,43
+p95_interval_s,4377.0
+avg_lag,-0.62
+min_lag,-10
+max_lag,4
+lag_std,3.6872211758992703
+avg_bitsq,759607.4
+avg_sawtooth_bitsq_q16,32414
+overshoots,0
+h10plus_entries,6
+long20,5
+long40,5
+long60,5
+h10_time_s,611
+h11_time_s,0
+h12_time_s,185
+unique_miners,5
+top_miner_share_pct,46.0
+profile_counts,"{""0"": 31, ""3"": 1, ""6"": 6, ""9"": 6, ""10"": 5, ""12"": 1}"
+top_miners,"[[""sost148772d2cf16007421483b50556f892cb3903ca8e"", 23], [""sost15c4a01afa90f83ce1349a995246716b128ab451c"", 16], [""sost1507172ec62e761619958dd588463eb96a1994fa9"", 9], [""sost1d34f7759dc9502a192a8061167f8dfd6615295d2"", 1], [""sost13e5acf3053278a258e0f1526c2ef655c5ad70ca2"", 1]]"

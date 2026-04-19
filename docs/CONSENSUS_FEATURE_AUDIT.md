@@ -11,7 +11,7 @@
 | ConvergenceX PoW | Section 3 | YES | YES | YES (chunk1, chunk2, transcript-v2) | Genesis | OK |
 | cASERT v1 (48h halflife) | Section 3.12 | YES | YES | YES (casert) | Genesis | OK |
 | cASERT v2 (24h halflife) | Section 3.12 | YES | YES | YES (casert) | Block 1450 | OK |
-| 17 equalizer profiles E4-H12 | Section 3.12 | YES | YES | YES (casert) | Genesis | OK |
+| 40 equalizer profiles E4-H35 | Section 3.12 | YES | YES | YES (casert) | Genesis | OK |
 | Constitutional split 50/25/25 | Section 2 | YES | YES | YES (tx-validation, CB1-CB10) | Genesis | OK |
 | Feigenbaum emission | Section 4 | YES | YES | YES (chunk1, chunk2) | Genesis | OK |
 | UTXO-based transactions | Section 5 | YES | YES | YES (transaction, utxo-set) | Genesis | OK |

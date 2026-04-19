@@ -32,7 +32,7 @@ cASERT currently operates with three interacting components:
 ### 2.2 Equalizer (Profile System)
 
 - Fast controller
-- 17 discrete profiles (E4 → H12)
+- 40 discrete profiles (E4 → H35)
 - Driven by PID-style multi-signal input:
   - rate
   - lag
@@ -157,7 +157,7 @@ When the chain transitions from:
 
 `ahead → normal → behind`
 
-the equalizer may remain at high profiles (H8–H12) longer than desired due to slew rate constraints (±3 per block).
+the equalizer may remain at high profiles (H8–H35) longer than desired due to slew rate constraints (±3 per block).
 
 This can result in:
 
@@ -226,7 +226,7 @@ Before implementing V5.1, the network must be observed under V4 rules.
 | Metric | Definition |
 |---|---|
 | `overshoot_events` | Count of (profile ≥ H6) AND (subsequent lag ≤ -3) AND (block_time ≥ 20 min) |
-| `time_in_H12` | Seconds accumulated with profile == 12 |
+| `time_in_H35` | Seconds accumulated with profile == 35 |
 | `blocks_over_20min` | Count of blocks with interval ≥ 20 min |
 | `blocks_over_40min` | Count of blocks with interval ≥ 40 min |
 | `lag_min` | Minimum lag reached in the window |
@@ -249,7 +249,7 @@ overshoot_event = (max(profile[t-5..t]) >= 6)
 | Ahead Guard divergence observed between nodes | **Immediate V5.0** — activate at next available fork height |
 | `overshoot_events >= 2` per 200 blocks | **V5.1 justified** — fork after V5.0 |
 | `blocks_over_40min >= 3` per 200 blocks | **V5.1 justified** — fork after V5.0 |
-| `time_in_H12 >= 2 hours` per 200 blocks | **V5.1 borderline** — measure another 200 before deciding |
+| `time_in_H35 >= 2 hours` per 200 blocks | **V5.1 borderline** — measure another 200 before deciding |
 | None of the above | **Defer V5.1** — V5.0 ships alone |
 
 ---

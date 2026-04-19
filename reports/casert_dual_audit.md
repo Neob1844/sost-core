@@ -67,7 +67,7 @@
 | `CASERT_ANTISTALL_FLOOR_V5` | 3600s (60min) | Anti-stall activation threshold |
 | `CASERT_ANTISTALL_EASING_EXTRA` | 21600s (6h) | Time at B0 before easing profiles |
 
-### Profile Table (17 profiles: E4 through H12)
+### Profile Table (40 profiles: E4 through H35)
 
 | Profile | Index | Scale | Steps | K | Margin | Stability % | Rel. Difficulty |
 |---------|-------|-------|-------|---|--------|-------------|----------------|
@@ -85,9 +85,10 @@
 | H7 | 7 | 2 | 6 | 6 | 130 | 45% | 5.50x |
 | H8 | 8 | 2 | 7 | 6 | 125 | 35% | 7.50x |
 | H9 | 9 | 2 | 7 | 7 | 120 | 25% | 10.0x |
-| H10 | 10 | 3 | 7 | 6 | 115 | 15% | 14.0x |
-| H11 | 11 | 3 | 7 | 7 | 110 | 8% | 20.0x |
-| H12 | 12 | 3 | 8 | 7 | 105 | 3% | 30.0x |
+| H10 | 10 | 2 | 7 | 7 | 115 | 15% | 14.0x |
+| H11 | 11 | 2 | 8 | 7 | 110 | 8% | 20.0x |
+| H12 | 12 | 2 | 8 | 8 | 105 | 3% | 30.0x |
+| H13-H35 | 13-35 | 2 | 8-20 | 8-20 | 105-100 | <3% | 30x+ |
 
 ---
 
@@ -120,7 +121,7 @@ casert_compute(chain, next_height, now_time):
   ┌─── STEP 3: Compute PID control signal ─────────────────────────┐
   │  U = K_R*r_n + K_L*lag + K_I*I + K_B*burst + K_V*V             │
   │  H_raw = U >> 16                                                │
-  │  H = clamp(H_raw, H_MIN=-4, H_MAX=12)                          │
+  │  H = clamp(H_raw, H_MIN=-4, H_MAX=35)                          │
   └─────────────────────────────────────────────────────────────────┘
 
   ┌─── STEP 4: Apply safety rules (pre-slew) ──────────────────────┐
@@ -175,7 +176,7 @@ Over 10 blocks, bitsQ can compound: approximately `0.875^10` to `1.125^10` = 0.2
 
 ### Profile's effect on effective difficulty
 
-The profile changes effective difficulty by a **multiplicative factor** that is independent of bitsQ. Moving from B0 to H9 multiplies difficulty by 10x. Moving from B0 to H12 multiplies by 30x.
+The profile changes effective difficulty by a **multiplicative factor** that is independent of bitsQ. Moving from B0 to H9 multiplies difficulty by 10x. Moving from B0 to H35 multiplies by 30x+.
 
 With slew=3 (V3-V5): the profile can move from B0 to H9 in 3 blocks (B0 -> H3 -> H6 -> H9). This is a 10x difficulty change in 3 blocks.
 
@@ -305,7 +306,7 @@ The Ahead Guard (1.56% cap when ahead) is the more important bitsQ parameter. Wi
 
 ### 7. Which is the true "dominant" controller today?
 
-**The equalizer is the dominant controller.** It can change effective mining time by 30x (E4 to H12), while bitsQ can change by at most 12.5% per block. The profile table's nonlinear difficulty curve means that profile changes dominate the block time distribution.
+**The equalizer is the dominant controller.** It can change effective mining time by 30x+ (E4 to H35), while bitsQ can change by at most 12.5% per block. The profile table's nonlinear difficulty curve means that profile changes dominate the block time distribution.
 
 bitsQ serves as a **slow-moving baseline adjustment** that tracks the fundamental hashrate level. The equalizer provides **fast structural correction** for schedule deviations.
 
