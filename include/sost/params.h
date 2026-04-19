@@ -115,7 +115,7 @@ inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 3600;  // 60 min (kept at
 // Also introduces a bitsQ relax guard: prevents bitsQ from softening
 // too much while the chain is ahead and the profile is already high.
 // ─────────────────────────────────────────────────────────────────────
-inline constexpr int64_t  CASERT_BURST_HEIGHT          = 5100;
+inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
 // Burst trigger: tier 1 (moderate)
 inline constexpr int32_t  CASERT_BURST_LAG_ENTER_1     = 8;    // lag >= 8
