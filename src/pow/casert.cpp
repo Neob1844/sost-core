@@ -240,7 +240,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     int32_t H_raw = (int32_t)(U >> 16);
 
     // Clamp to profile bounds (V7 extends H_MAX from 12 to 32)
-    int32_t h_max = (next_height >= CASERT_V6_CALIBRATION_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_V6;
+    int32_t h_max = (next_height >= CASERT_V6_CALIBRATION_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_PRE_CAL;
     int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H_raw));
 
     // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
