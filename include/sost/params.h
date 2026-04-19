@@ -103,6 +103,17 @@ inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // V6-only: H12 res
 // 3. H_MAX raised from 12 to 32
 inline constexpr int64_t  CASERT_V6_CALIBRATION_HEIGHT   = 5050;
 inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 5400;  // 90 min (was 3600 = 60 min)
+
+// Dynamic slew — activated at block 5100
+// When blocks arrive much faster than target, the equalizer needs to climb
+// faster than ±1/block to keep up. The slew rate adapts based on the last
+// block's interval: shorter intervals = higher slew for upward movement.
+// Downward movement is handled by the dynamic lag cap (unrestricted).
+inline constexpr int64_t  CASERT_DYNSLEW_HEIGHT      = 5100;
+inline constexpr int64_t  CASERT_DYNSLEW_FAST_DT     = 60;    // dt < 60s → slew ±5
+inline constexpr int64_t  CASERT_DYNSLEW_MED_DT      = 120;   // dt < 120s → slew ±3
+inline constexpr int32_t  CASERT_DYNSLEW_FAST         = 5;
+inline constexpr int32_t  CASERT_DYNSLEW_MED          = 3;
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200
