@@ -1166,9 +1166,15 @@ function updateChainSync(){
   if(rpcLag!==null&&rpcLag!==lag){
     tipAnnotation=' <span style="color:var(--text3);font-size:10px">(at tip: '+(rpcLag>0?'+'+rpcLag+' ahead':rpcLag<0?rpcLag+' behind':'on schedule')+')</span>';
   }
-  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='live: '+fComma(-lag)+' blocks behind wall-clock schedule';}
-  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: '+fComma(lag)+' blocks ahead of wall-clock schedule';}
-  else{document.getElementById('csLag').innerHTML='on schedule \u00B7 '+displayProfile+tipAnnotation;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: perfect wall-clock sync';}
+  // Lag-adjust indicator: show when live lag implies a different profile than what miner is using
+  var lagAdjustHtml='';
+  var expectedProf=getProfileFromLag(lag);
+  if(_rpcCasertProfile&&expectedProf.name!==_rpcCasertProfile){
+    lagAdjustHtml=' <span style="color:#fbbf24;font-size:10px;animation:v6pulse 1.5s ease-in-out infinite">\u27F3 lag-adjust pending: expected '+expectedProf.name+' (mining '+_rpcCasertProfile+')</span>';
+  }
+  if(lag<0){document.getElementById('csLag').innerHTML=fComma(-lag)+' behind \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--orange)';document.getElementById('csLagSub').textContent='live: '+fComma(-lag)+' blocks behind wall-clock schedule';}
+  else if(lag>0){document.getElementById('csLag').innerHTML=fComma(lag)+' ahead \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: '+fComma(lag)+' blocks ahead of wall-clock schedule';}
+  else{document.getElementById('csLag').innerHTML='on schedule \u00B7 '+displayProfile+tipAnnotation+lagAdjustHtml;document.getElementById('csLag').style.color='var(--green)';document.getElementById('csLagSub').textContent='live: perfect wall-clock sync';}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
 

@@ -577,6 +577,11 @@ static std::atomic<bool> g_chain_advanced{false};
 static std::atomic<int64_t> g_monitor_height{0};
 static std::atomic<bool> g_monitor_running{false};
 
+// Lag-adjust: detect profile changes during mining and restart search
+static std::atomic<bool> g_lag_changed{false};
+static std::atomic<int32_t> g_mining_profile{0};     // profile we started mining with
+static std::atomic<int32_t> g_node_profile{0};        // latest profile from node
+
 // Multi-threaded mining
 static int g_num_threads = 1;
 static std::atomic<bool> g_block_found{false};
@@ -585,10 +590,12 @@ static std::mutex g_submit_mu;  // protects block submission
 
 static void start_block_monitor(int64_t mining_height) {
     g_chain_advanced = false;
+    g_lag_changed = false;
     g_monitor_height = mining_height;
     if (g_monitor_running || g_rpc_url.empty()) return;
     g_monitor_running = true;
     std::thread([]{
+        int lag_check_counter = 0;
         while (g_monitor_running) {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             if (!g_monitor_running) break;
@@ -599,6 +606,23 @@ static void start_block_monitor(int64_t mining_height) {
                     int64_t node_h = atoll(resp.c_str() + rp + 9);
                     if (node_h >= g_monitor_height) {
                         g_chain_advanced = true;
+                    }
+                }
+            }
+            // Lag-adjust: every 30s (15 iterations × 2s), check if node profile changed
+            lag_check_counter++;
+            if (lag_check_counter >= 15) {
+                lag_check_counter = 0;
+                std::string info = rpc_call("getinfo");
+                if (!info.empty()) {
+                    auto pp = info.find("\"casert_profile_index\":");
+                    if (pp != std::string::npos) {
+                        int32_t node_pi = (int32_t)atoll(info.c_str() + pp + 23);
+                        g_node_profile = node_pi;
+                        int32_t mining_pi = g_mining_profile.load();
+                        if (node_pi != mining_pi && !g_chain_advanced) {
+                            g_lag_changed = true;
+                        }
                     }
                 }
             }
@@ -653,6 +677,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         }
     }
     params = casert_apply_profile(params, cdec, h);
+    g_mining_profile = cdec.profile_index;
+    g_node_profile = cdec.profile_index;
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
     auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
@@ -763,7 +789,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 uint32_t my_extra = 0;
                 // Each thread starts at nonce=tid and steps by g_num_threads
                 for (uint32_t n = (uint32_t)tid; ; n += (uint32_t)g_num_threads) {
-                    if (g_block_found || g_chain_advanced) return;
+                    if (g_block_found || g_chain_advanced || g_lag_changed) return;
 
                     // Thread-local timestamp
                     int64_t my_ts = std::chrono::duration_cast<std::chrono::seconds>(
@@ -916,6 +942,18 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             return false;
         }
 
+        // Check if lag changed (profile needs recalculation)
+        if (g_lag_changed) {
+            int32_t old_pi = g_mining_profile.load();
+            int32_t new_pi = g_node_profile.load();
+            printf("\n[LAG-ADJUST] Profile changed: H%d -> H%d. Restarting search.\n",
+                   old_pi, new_pi);
+            fflush(stdout);
+            stop_block_monitor();
+            g_lag_changed = false;
+            return false;
+        }
+
         // Generate witnesses AFTER all threads stopped (no CPU contention)
         for (int tid2 = 0; tid2 < g_num_threads; ++tid2) {
             if (results[tid2].found && results[tid2].mb.segment_proofs.empty()) {
@@ -991,6 +1029,17 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     fflush(stdout);
                     diag_stable = 0; diag_target = 0; diag_total = 0;
                 }
+            }
+            // Lag-adjust: profile changed, restart search
+            if (g_lag_changed) {
+                int32_t old_pi = g_mining_profile.load();
+                int32_t new_pi = g_node_profile.load();
+                printf("\n[LAG-ADJUST] Profile changed: H%d -> H%d. Restarting search.\n",
+                       old_pi, new_pi);
+                fflush(stdout);
+                stop_block_monitor();
+                g_lag_changed = false;
+                return false;
             }
             // Instant abort: background thread detected chain advanced
             if (g_chain_advanced) {
