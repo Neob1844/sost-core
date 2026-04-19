@@ -722,7 +722,7 @@ Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ (V1: 48h half-life, V2: 24h half-life from block 1450)
 Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450
-Equalizer profiles         E4(-4) through H12(+12), H10-H11 accessible (scale=2), H12 reserve (scale=3) (17 total)
+Equalizer profiles         E4(-4) through H12(+12), all scale=2, H12 hardest active (17 total)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
 CASERT_H_MIN               -4
 CASERT_H_MAX               12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active))
@@ -769,7 +769,7 @@ PROFILE TABLE (struct: {scale, steps, k, margin}):
   H9(+9):  scale=2, steps=7, k=7, margin=120
   H10(+10): scale=2, steps=7, k=7, margin=115  Smoothed high-difficulty (scale=2, V6)
   H11(+11): scale=2, steps=8, k=7, margin=110  Smoothed high-difficulty (scale=2, V6)
-  H12(+12): scale=3, steps=8, k=7, margin=105  Hardest active (scale=2)
+  H12(+12): scale=2, steps=8, k=8, margin=105  Hardest active
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
@@ -2478,7 +2478,7 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap |
-| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H12(+12), H10-H11 accessible (scale=2), H12 reserve (scale=3), B0 baseline, bidirectional: hardens (H1-H12) when ahead of schedule, eases (E1-E4) after 6h+ at B0. Slew rate: ±1 profile/block (V6, block 5,000+) |
+| cASERT equalizer | Consensus-critical, 17 profiles E4(-4) through H12(+12), all scale=2, B0 baseline, bidirectional: hardens (H1-H12) when ahead of schedule, eases (E1-E4) after 6h+ at B0. Slew rate: ±1 profile/block (V6, block 5,000+) |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -2729,7 +2729,7 @@ DIFFICULTY PARAMETERS:
 
 cASERT EQUALIZER PARAMETERS (consensus-critical, 17 profiles):
   CASERT_H_MIN                 = -4    // E4 is lowest profile
-  CASERT_H_MAX                 = 12    // H10-H11 scale=2 (V6), H12 scale=3 (reserve)
+  CASERT_H_MAX                 = 12    // all scale=2 (V6), H12 hardest active
   // 17 profiles: E4(-4) through H12(+12), each with {scale, steps, k, margin}
   // B0(0) baseline: scale=1, steps=4, k=4, margin=185
   // See profile table in Section 3.12
