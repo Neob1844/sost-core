@@ -278,9 +278,9 @@
           <tr style="background:rgba(220,38,38,0.10)"><td style="color:#dc2626;font-weight:600">H9</td><td style="color:#dc2626">+9</td><td>2</td><td>7</td><td>7</td><td>120</td><td style="color:#22d3ee">98</td></tr>
           <tr style="opacity:0.35"><td style="color:#64748b">H10</td><td style="color:#64748b">+10</td><td>2</td><td>7</td><td>7</td><td>115</td><td style="color:#64748b">98</td></tr>
           <tr style="opacity:0.35"><td style="color:#64748b">H11</td><td style="color:#64748b">+11</td><td>2</td><td>8</td><td>7</td><td>110</td><td style="color:#64748b">112</td></tr>
-          <tr style="opacity:0.35"><td style="color:#64748b">H12</td><td style="color:#64748b">+12</td><td>3</td><td>8</td><td>7</td><td>105</td><td style="color:#64748b">168</td></tr>
+          <tr style="opacity:0.35"><td style="color:#64748b">H12</td><td style="color:#64748b">+12</td><td>2</td><td>8</td><td>8</td><td>105</td><td style="color:#64748b">128</td></tr>
         </table>
-        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">17 profiles E4(-4) through H12(+12). Active: E4&ndash;H12 (CASERT_H_MAX=12). H10&ndash;H11 (scale=2, V6 smoothed), H12 reserve (scale=3). Compute = scale &times; k &times; steps (relative CX work multiplier).</p>
+        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">17 profiles E4(-4) through H12(+12). Active: E4&ndash;H12 (CASERT_H_MAX=12). H10&ndash;H11 (scale=2, V6 smoothed), H12 (scale=2, hardest active). Compute = scale &times; k &times; steps (relative CX work multiplier).</p>
       </div>
     </div>
 
@@ -293,7 +293,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">17 PROFILES</div>
         <h3 style="color:var(--cyan-primary)">Independent Tuning</h3>
-        <p>17 profiles E4(-4) through H12(+12). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H11 use scale=2 (V6 smoothed), H12 retains scale=3 as reserve.</p>
+        <p>17 profiles E4(-4) through H12(+12). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H11 use scale=2 (V6 smoothed), All profiles now use scale=2. H12 is the hardest active profile (k=8, steps=8, margin=105).</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
@@ -363,7 +363,7 @@
           <tr><td class="label">V3</td><td class="highlight">4,100</td><td class="value">Slew rate &plusmn;1 &rarr; &plusmn;3, lag floor (lag/8 minimum profile), improved equalizer responsiveness</td></tr>
           <tr><td class="label">V3.1</td><td class="highlight">4,110</td><td class="value">Stored profile_index from BlockMeta (prevents slew rate bypass), anti-stall always 7,200s</td></tr>
           <tr><td class="label">V4</td><td class="highlight">4,200</td><td class="cyan">Ahead Guard: clamps bitsQ relaxation to 1.56%/block when chain &ge;16 blocks ahead (H8+). Hysteresis: enter &ge;16, exit &le;8</td></tr>
-          <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10/H11 scale 3&rarr;2 (smoothed), H12 remains scale=3 (reserve)</td></tr>
+          <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10/H11 scale 3&rarr;2 (smoothed), H12 also moved to scale=2 (k=8, steps=8)</td></tr>
         </table>
         <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). Nodes enforce fork rules based on block height.</p>
       </div>

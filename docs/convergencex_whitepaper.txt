@@ -298,7 +298,7 @@ The stability context `stctx` is derived from `header_core`, `seed`, and `checkp
 The intensity of perturbation probes adapts to network conditions through the cASERT
 equalizer (Section 3.12). The equalizer is consensus-critical. It uses 17 profiles
 from E4(-4) through H12(+12), with CASERT_H_MIN=-4 and CASERT_H_MAX=12
-(H10-H11 scale=2 V6 smoothed, H12 reserve scale=3). B0 is baseline.
+(H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)). B0 is baseline.
 
 Profile table (struct: {scale, steps, k, margin}):
 
@@ -320,7 +320,7 @@ Profile table (struct: {scale, steps, k, margin}):
 | H9(+9) | 2 | 7 | 7 | 120 |
 | H10(+10) | 2 | 7 | 7 | 115 | Smoothed high-difficulty (scale=2, V6) |
 | H11(+11) | 2 | 8 | 7 | 110 | Smoothed high-difficulty (scale=2, V6) |
-| H12(+12) | 3 | 8 | 7 | 105 | Reserve high-difficulty (scale=3) |
+| H12(+12) | 2 | 8 | 8 | 105 | Hardest active (scale=2) |
 
 Anti-Stall Decay (zone-based, targeting B0):
 
@@ -725,7 +725,7 @@ Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450
 Equalizer profiles         E4(-4) through H12(+12), H10-H11 accessible (scale=2), H12 reserve (scale=3) (17 total)
 cASERT model               unified: bitsQ primary + equalizer + anti-stall
 CASERT_H_MIN               -4
-CASERT_H_MAX               12 (H10-H11 scale=2 V6 smoothed, H12 reserve scale=3)
+CASERT_H_MAX               12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active))
 cASERT decay               zone-based anti-stall targeting B0: H9-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E4 after 6+ additional hours at B0 (1800s/level)
 Block target spacing       600s
 Stability baseline (B0)    scale=1, steps=4, k=4, margin=185
@@ -748,7 +748,7 @@ parameters according to the equalizer profile. Block validation verifies the
 equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 
 The equalizer uses 17 profiles from E4(-4) through H12(+12), with
-CASERT_H_MIN=-4 and CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 reserve scale=3). B0 is baseline.
+CASERT_H_MIN=-4 and CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)). B0 is baseline.
 It adjusts stability verification intensity based on how far ahead the chain
 is relative to the ideal schedule.
 
@@ -769,7 +769,7 @@ PROFILE TABLE (struct: {scale, steps, k, margin}):
   H9(+9):  scale=2, steps=7, k=7, margin=120
   H10(+10): scale=2, steps=7, k=7, margin=115  Smoothed high-difficulty (scale=2, V6)
   H11(+11): scale=2, steps=8, k=7, margin=110  Smoothed high-difficulty (scale=2, V6)
-  H12(+12): scale=3, steps=8, k=7, margin=105  Reserve high-difficulty (scale=3)
+  H12(+12): scale=3, steps=8, k=7, margin=105  Hardest active (scale=2)
 
 SIGNAL COMPUTATION (deterministic, block-timestamp based):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
@@ -889,7 +889,7 @@ then clamp per-block change and global bounds.
 
 3.14.4 cASERT Equalizer — What the stability parameters mean
 
-scale=3: each perturbation component in [-3, +3] ("how far we poke")
+scale=2: each perturbation component in [-2, +2] (all profiles now use scale=2) ("how far we poke")
 k=4: number of probes (more probes = stronger certificate)
 steps=4: refinement steps per probe
 margin=180: tolerated bounded growth in local distance
@@ -3163,7 +3163,7 @@ Changes from v3.4 to v3.5:
   cASERT MODIFICATIONS:
   70) cASERT rewritten: 17 discrete profiles E4(-4) through H12(+12),
       each with unique {scale, steps, k, margin}. CASERT_H_MIN=-4,
-      CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 reserve scale=3).
+      CASERT_H_MAX=12 (H10-H11 scale=2 V6 smoothed, H12 scale=2 (hardest active)).
   71) Anti-stall: zone-based decay targeting B0. H9-H7: 600s/level,
       H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
       at B0 (1800s/level).
