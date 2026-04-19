@@ -907,10 +907,25 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
-        // Compute live profile with current wall-clock time (includes anti-stall easing)
+        // Compute profile with current wall-clock time (includes anti-stall)
         auto dec = sost::casert_compute(meta, (int64_t)g_blocks.size(), std::time(nullptr));
         casert_profile_idx = dec.profile_index;
         casert_lag = dec.lag;
+        // Live lag: use wall clock instead of tip timestamp for mining recommendation.
+        // The PID lag uses chain.back().time which is frozen at the last block.
+        // For mining, the miner needs a profile based on CURRENT time so lag-adjust works.
+        int64_t now_ts = std::time(nullptr);
+        int64_t live_elapsed = now_ts - GENESIS_TIME;
+        int64_t live_expected = (live_elapsed >= 0) ? (live_elapsed / TARGET_SPACING) : 0;
+        int32_t live_lag = (int32_t)((int64_t)(g_blocks.size()) - 1 - live_expected);
+        // If live lag is lower than chain lag, cap the profile at live lag (lag-adjust)
+        if (live_lag < casert_lag && casert_profile_idx > 0) {
+            int32_t live_cap = std::max(0, live_lag);
+            if (casert_profile_idx > live_cap) {
+                casert_profile_idx = live_cap;
+            }
+        }
+        casert_lag = live_lag;
     }
     // Compute estimated stability pass rate for the current profile
     // Based on empirical observations from live mining data
@@ -927,13 +942,21 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         else if (pi == 7) stability_pct = 45;    // H7
         else if (pi == 8) stability_pct = 35;    // H8
         else if (pi == 9) stability_pct = 25;    // H9
-        else if (pi == 10) stability_pct = 12;   // H10 (V6: scale=2, estimated ~10-15%)
-        else if (pi == 11) stability_pct = 5;    // H11 (V6: scale=2, estimated ~4-6%)
-        else stability_pct = 0;                   // H12 (scale=3, currently unreachable)
+        else if (pi == 10) stability_pct = 12;
+        else if (pi == 11) stability_pct = 5;
+        else if (pi == 12) stability_pct = 3;
+        else if (pi <= 15) stability_pct = 1;
+        else stability_pct = 0;
     }
-    // Profile name from index
-    static const char* PROF_NAMES[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
-    int prof_arr_idx = std::max(0, std::min(16, casert_profile_idx - CASERT_H_MIN));
+    // Profile name from index (37 profiles: E4 through H32)
+    static const char* PROF_NAMES[] = {
+        "E4","E3","E2","E1","B0",
+        "H1","H2","H3","H4","H5","H6","H7","H8","H9",
+        "H10","H11","H12","H13","H14","H15","H16","H17","H18","H19",
+        "H20","H21","H22","H23","H24","H25","H26","H27","H28","H29",
+        "H30","H31","H32"
+    };
+    int prof_arr_idx = std::max(0, std::min((int)CASERT_PROFILE_COUNT - 1, casert_profile_idx - CASERT_H_MIN));
     s<<"{\"version\":\"0.3.2\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
      <<",\"connections\":"<<peers_count
      <<",\"difficulty\":"<<(g_blocks.empty()?0:g_blocks.back().bits_q)
