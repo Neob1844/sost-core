@@ -122,7 +122,7 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
     //   from the current schedule_lag. Trade-off: loses the enter/exit hysteresis,
     //   but the Ahead Guard is a one-block clamp anyway — no meaningful
     //   behavioural loss versus the safety gained.
-    if (next_height >= CASERT_V4_FORK_HEIGHT && delta < 0) {
+    if (next_height >= CASERT_V4_FORK_HEIGHT && next_height < CASERT_V6_FORK_HEIGHT && delta < 0) {
         // Compute schedule lag: positive = ahead
         int64_t elapsed = chain.back().time - GENESIS_TIME;
         int64_t expected_h = (elapsed >= 0) ? (elapsed / TARGET_SPACING) : 0;
@@ -400,6 +400,12 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 if (H >= CASERT_V5_EXTREME_MIN && H > prev_H + 1) {
                     H = prev_H + 1;
                 }
+            }
+
+            // V6: Reserve H11/H12 — only activate with sufficient lag
+            if (next_height >= CASERT_V6_FORK_HEIGHT) {
+                if (H >= 12 && lag < CASERT_V6_H12_MIN_LAG) H = 11;
+                if (H >= 11 && lag < CASERT_V6_H11_MIN_LAG) H = 10;
             }
 
             H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));

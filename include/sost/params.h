@@ -94,6 +94,8 @@ inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
 inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 3;       // max ±3 profile levels per block (pre-V6)
 inline constexpr int32_t  CASERT_V6_SLEW_RATE     = 1;       // max ±1 profile level per block (V6: reduced to eliminate sawtooth)
 inline constexpr int64_t  CASERT_V6_FORK_HEIGHT   = 5000;    // V6 chain-stability fork activation
+inline constexpr int32_t  CASERT_V6_H11_MIN_LAG   = 11;      // H11 reserved: requires lag >= 11
+inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // H12 reserved: requires lag >= 21
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200
