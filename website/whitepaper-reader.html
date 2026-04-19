@@ -552,7 +552,7 @@
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Mainnet profiles: E4(-4) through H12(+12), 17 total</pre>
 <pre class="wp-code-inline">  B0 (baseline): scale=1, k=4, steps=4, margin=185</pre>
-<pre class="wp-code-inline">  H12 (maximum): scale=3, k=7, steps=8, margin=105</pre>
+<pre class="wp-code-inline">  H12 (maximum): scale=2, k=8, steps=8, margin=105</pre>
 <pre class="wp-code-inline">  E4 (easing):   scale=1, k=3, steps=2, margin=280</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Examples:</p>
@@ -2456,7 +2456,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, 24h half-life, per-block, 12.5% per-block delta cap</td></tr>
-<tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H12(+12), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H9) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. H10-H11 use scale=2 (V6 smoothed), H12 retains scale=3 as reserve for extreme hashrate scenarios.</td></tr>
+<tr><td>cASERT Equalizer</td><td>17 consensus-critical profiles E4(-4) through H12(+12), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H9) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. All profiles use scale=2. H10-H12 are the hardest active profiles, with H12 {scale=2, k=8, steps=8, margin=105} as the maximum.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
