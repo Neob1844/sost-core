@@ -180,7 +180,7 @@ inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatili
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
 inline constexpr int32_t  CASERT_H_MAX_PRE_CAL         = 12;     // V6: H12 max (pre-V7)
-inline constexpr int32_t  CASERT_H_MAX            = 32;     // V7: H32 max — all 37 profiles active (E4 through H32)
+inline constexpr int32_t  CASERT_H_MAX            = 35;     // V6-cal: H35 max — all 40 profiles active (E4 through H35)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -236,8 +236,11 @@ inline constexpr CasertProfile CASERT_PROFILES[] = {
     {2,18,17,100},  // H30
     {2,18,18,100},  // H31
     {2,19,18,100},  // H32
+    {2,19,19,100},  // H33
+    {2,20,19,100},  // H34
+    {2,20,20,100},  // H35
 };
-inline constexpr int32_t CASERT_PROFILE_COUNT = 37;
+inline constexpr int32_t CASERT_PROFILE_COUNT = 40;
 // Index offset: profile_index - CASERT_H_MIN = array index
 // profile_index -4 → array[0] (E4)
 // profile_index  0 → array[4] (B0)
