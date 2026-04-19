@@ -443,8 +443,10 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // 3600s (60 min) so the safety net fires faster in small networks —
         // complements EBR which handles lag-triggered recovery, while anti-stall
         // handles time-triggered recovery (block completely stuck).
-        int64_t t_act = (next_height >= CASERT_V5_FORK_HEIGHT)
-            ? CASERT_ANTISTALL_FLOOR_V5   // 4500s = 75 min
+        int64_t t_act = (next_height >= CASERT_V7_FORK_HEIGHT)
+            ? CASERT_ANTISTALL_FLOOR_V7   // 5400s = 90 min
+            : (next_height >= CASERT_V5_FORK_HEIGHT)
+            ? CASERT_ANTISTALL_FLOOR_V5   // 3600s = 60 min
             : CASERT_ANTISTALL_FLOOR;     // 7200s = 2 hours
         if (stall >= t_act && H > 0) {
             // Hardening decay: drop toward B0
