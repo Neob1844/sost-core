@@ -94,8 +94,14 @@ inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
 inline constexpr int32_t  CASERT_V3_SLEW_RATE     = 3;       // max ±3 profile levels per block (pre-V6)
 inline constexpr int32_t  CASERT_V6_SLEW_RATE     = 1;       // max ±1 profile level per block (V6: reduced to eliminate sawtooth)
 inline constexpr int64_t  CASERT_V6_FORK_HEIGHT   = 5000;    // V6 chain-stability fork activation
-inline constexpr int32_t  CASERT_V6_H11_MIN_LAG   = 11;      // H11 reserved: requires lag >= 11
-inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // H12 reserved: requires lag >= 21
+inline constexpr int32_t  CASERT_V6_H11_MIN_LAG   = 11;      // V6-only: H11 reserved (replaced by V7 lag cap)
+inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // V6-only: H12 reserved (replaced by V7 lag cap)
+
+// cASERT V7 fork — activated at block 5100
+// 1. Extended profile table: 37 profiles (E4 through H32), margin 5-point gradient
+// 2. Dynamic lag cap: H <= lag for all hardening profiles (replaces H11/H12 reservation)
+// 3. H_MAX raised from 12 to 32
+inline constexpr int64_t  CASERT_V7_FORK_HEIGHT   = 5100;
 inline constexpr int32_t  CASERT_V3_LAG_FLOOR_DIV = 8;       // lag_floor = lag / 8
 
 // cASERT V3.1 fork — activated at block 4200
@@ -172,7 +178,8 @@ inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatili
 
 // Profile index bounds
 inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
-inline constexpr int32_t  CASERT_H_MAX            = 12;     // H12 max — all 17 profiles active (E4 through H12)
+inline constexpr int32_t  CASERT_H_MAX_V6         = 12;     // V6: H12 max (pre-V7)
+inline constexpr int32_t  CASERT_H_MAX            = 32;     // V7: H32 max — all 37 profiles active (E4 through H32)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -186,10 +193,13 @@ inline constexpr int64_t  CASERT_ANTISTALL_FLOOR  = 7200;   // minimum 2 hours
 inline constexpr int64_t  CASERT_ANTISTALL_EASING_EXTRA = 21600; // 6h at B0 before easing
 inline constexpr int32_t  CASERT_ANTISTALL_INTEG_DECAY = 240; // I *= 240/256 per 600s
 
-// --- cASERT profile table (17 profiles) ---
+// --- cASERT profile table (37 profiles) ---
 // Each profile: { scale, steps, k, margin }
-// Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 12=H12
-// Active range: E4(-4) to H12(+12). All 17 profiles active.
+// Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 32=H32
+// Active range: E4(-4) to H32(+32).
+// V7 (block 5100): extended from 17 to 37 profiles. H10+ redesigned with
+// alternating k/steps increments and uniform 5-point margin gradient.
+// Dynamic lag cap (H <= lag) replaces fixed H11/H12 reservation.
 struct CasertProfile {
     int32_t scale, steps, k, margin;
 };
@@ -199,15 +209,39 @@ inline constexpr CasertProfile CASERT_PROFILES[] = {
     {1,2,3,280}, {1,3,3,240}, {1,4,3,225}, {1,4,4,205}, {1,4,4,185},
     // H1       H2       H3       H4       H5
     {1,5,4,170}, {1,5,5,160}, {1,6,5,150}, {1,6,6,145}, {2,5,5,140},
-    // H6       H7       H8       H9       H10      H11      H12
-    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120}, {2,7,7,115}, {2,8,7,110}, {2,8,8,105}
+    // H6       H7       H8       H9
+    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120},
+    // H10-H32: scale=2, k and steps alternate +1, margin -5 per level
+    {2, 8, 7,115},  // H10
+    {2, 8, 8,110},  // H11
+    {2, 9, 8,105},  // H12
+    {2, 9, 9,100},  // H13
+    {2,10, 9, 95},  // H14
+    {2,10,10, 90},  // H15
+    {2,11,10, 85},  // H16
+    {2,11,11, 80},  // H17
+    {2,12,11, 75},  // H18
+    {2,12,12, 70},  // H19
+    {2,13,12, 65},  // H20
+    {2,13,13, 60},  // H21
+    {2,14,13, 55},  // H22
+    {2,14,14, 50},  // H23
+    {2,15,14, 45},  // H24
+    {2,15,15, 40},  // H25
+    {2,16,15, 35},  // H26
+    {2,16,16, 30},  // H27
+    {2,17,16, 25},  // H28
+    {2,17,17, 20},  // H29
+    {2,18,17, 15},  // H30
+    {2,18,18, 10},  // H31
+    {2,19,18,  5},  // H32
 };
-inline constexpr int32_t CASERT_PROFILE_COUNT = 17;
+inline constexpr int32_t CASERT_PROFILE_COUNT = 37;
 // Index offset: profile_index - CASERT_H_MIN = array index
 // profile_index -4 → array[0] (E4)
 // profile_index  0 → array[4] (B0)
 // profile_index  9 → array[13] (H9)
-// profile_index 12 → array[16] (H12) — highest hardening profile
+// profile_index 32 → array[36] (H32) — highest hardening profile
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;

@@ -239,8 +239,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // U is in Q16.16 * Q16.16 territory, normalize
     int32_t H_raw = (int32_t)(U >> 16);
 
-    // Clamp to profile bounds
-    int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H_raw));
+    // Clamp to profile bounds (V7 extends H_MAX from 12 to 32)
+    int32_t h_max = (next_height >= CASERT_V7_FORK_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_V6;
+    int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H_raw));
 
     // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
     // lag > 0 means chain is AHEAD; lag <= 0 means behind or on schedule
@@ -348,7 +349,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             // V3/V3.1 lag floor: if chain is significantly ahead, enforce minimum profile
             if (lag > 10) {
                 int32_t lag_floor = std::min<int32_t>((int32_t)(lag / CASERT_V3_LAG_FLOOR_DIV),
-                                                       CASERT_H_MAX);
+                                                       h_max);
                 H = std::max<int32_t>(H, lag_floor);
             }
 
@@ -402,13 +403,21 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 }
             }
 
-            // V6: Reserve H11/H12 — only activate with sufficient lag
-            if (next_height >= CASERT_V6_FORK_HEIGHT) {
+            // V7: Dynamic lag cap — profile cannot exceed current schedule lag.
+            // Replaces V6 H11/H12 fixed reservation with a universal rule:
+            // the brake strength is proportional to how far ahead the chain is.
+            // bitsQ handles hashrate shocks independently.
+            if (next_height >= CASERT_V7_FORK_HEIGHT) {
+                if (H > 0 && H > lag) {
+                    H = std::max<int32_t>(0, lag);
+                }
+            } else if (next_height >= CASERT_V6_FORK_HEIGHT) {
+                // V6 (blocks 5000-5099): fixed H11/H12 reservation
                 if (H >= 12 && lag < CASERT_V6_H12_MIN_LAG) H = 11;
                 if (H >= 11 && lag < CASERT_V6_H11_MIN_LAG) H = 10;
             }
 
-            H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));
+            H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H));
         } else {
             // --- V2: Original ±1 slew rate with heuristic estimation ---
             int64_t prev_elapsed = chain[chain.size()-2].time - GENESIS_TIME;
