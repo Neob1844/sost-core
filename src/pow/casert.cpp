@@ -349,10 +349,19 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 }
             }
 
-            // V3/V3.1 slew rate: ±3 per block
-            int32_t slew = (next_height >= CASERT_V6_FORK_HEIGHT)
-                ? CASERT_V6_SLEW_RATE   // ±1 after block 5000
-                : CASERT_V3_SLEW_RATE;  // ±3 before block 5000
+            // Slew rate: limits how fast the profile can change per block.
+            // Dynamic slew (block 5100+): adapts based on last block interval.
+            // Fast blocks need fast profile climb to prevent lag accumulation.
+            int32_t slew;
+            if (next_height >= CASERT_DYNSLEW_HEIGHT) {
+                if (dt < CASERT_DYNSLEW_FAST_DT) slew = CASERT_DYNSLEW_FAST;      // ±5
+                else if (dt < CASERT_DYNSLEW_MED_DT) slew = CASERT_DYNSLEW_MED;   // ±3
+                else slew = CASERT_V6_SLEW_RATE;                                    // ±1
+            } else if (next_height >= CASERT_V6_FORK_HEIGHT) {
+                slew = CASERT_V6_SLEW_RATE;   // ±1 (V6)
+            } else {
+                slew = CASERT_V3_SLEW_RATE;   // ±3 (pre-V6)
+            }
             H = std::max<int32_t>(prev_H - slew,
                     std::min<int32_t>(prev_H + slew, H));
 
