@@ -942,7 +942,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         "H1","H2","H3","H4","H5","H6","H7","H8","H9",
         "H10","H11","H12","H13","H14","H15","H16","H17","H18","H19",
         "H20","H21","H22","H23","H24","H25","H26","H27","H28","H29",
-        "H30","H31","H32"
+        "H30","H31","H32","H33","H34","H35"
     };
     int prof_arr_idx = std::max(0, std::min((int)CASERT_PROFILE_COUNT - 1, casert_profile_idx - CASERT_H_MIN));
     s<<"{\"version\":\"0.3.2\",\"protocolversion\":1,\"blocks\":"<<g_chain_height
