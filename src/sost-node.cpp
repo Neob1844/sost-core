@@ -3485,7 +3485,10 @@ static bool process_block(const std::string& block_json) {
                 if (!meta.empty() && height >= CASERT_V3_1_FORK_HEIGHT) {
                     meta.back().profile_index = g_last_accepted_profile;
                 }
-                auto base_dec = sost::casert_compute(meta, height, 0); // now_time=0 → no anti-stall
+                // V6 calibration: pass block timestamp so live lag is computed correctly.
+                // Pre-calibration: now_time=0 (no anti-stall, no live lag).
+                int64_t validate_time = (height >= CASERT_V6_CALIBRATION_HEIGHT) ? ts64 : 0;
+                auto base_dec = sost::casert_compute(meta, height, validate_time);
                 int32_t base_profile = base_dec.profile_index;
 
                 printf("[BLOCK-VALIDATE] h=%lld declared_pi=%d base_profile=%d lag=%d last_stored_pi=%d\n",
