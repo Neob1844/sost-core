@@ -505,6 +505,13 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         }
     }
 
+    // ---- Hard profile ceiling (block 5100+) ----
+    // H10 is the last practically minable profile. H11+ causes stalls on
+    // modest hardware (0.0% stable observed in production). Simple final clamp.
+    if (next_height >= CASERT_CEILING_HEIGHT && H > CASERT_HARD_PROFILE_CEILING) {
+        H = CASERT_HARD_PROFILE_CEILING;
+    }
+
     // ---- Anti-stall (mining only): zone-based decay targeting B0 ----
     // Decay zones: H9-H7 = 600s/lvl, H6-H4 = 900s/lvl, H3-H1 = 1200s/lvl
     // B0 is the natural destination. Easing (E1-E4) only after 6h extra at B0.
