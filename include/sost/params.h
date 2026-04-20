@@ -88,6 +88,13 @@ inline constexpr int64_t  CASERT_V2_FORK_HEIGHT   = 1450;
 inline constexpr int64_t  BITSQ_HALF_LIFE_V2      = 86400;   // 24 hours (144 blocks) — V2
 inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta cap denominator (12.5%) — V2
 
+// V6++ bitsQ tuning — activated at block 5150
+// Faster reaction to hashrate changes: bitsQ absorbs more load, equalizer less.
+// Ahead Guard already disabled since V6 (block 5000).
+inline constexpr int64_t  CASERT_V6PP_HEIGHT        = 5150;
+inline constexpr int64_t  BITSQ_HALF_LIFE_V6PP      = 43200;  // 12 hours (72 blocks)
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V6PP  = 4;      // 25% cap per block
+
 // cASERT V3 fork — activated at block 4100
 // Improved equalizer responsiveness: slew rate ±1 → ±3, lag floor, real prev_H
 inline constexpr int64_t  CASERT_V3_FORK_HEIGHT   = 4100;
