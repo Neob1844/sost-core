@@ -88,15 +88,7 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
             count++;
         }
 
-        // Include current elapsed time as a virtual interval (live bitsQ)
-        // This makes bitsQ decrease gradually during long waits.
-        if (now_time > 0 && now_time > chain.back().time) {
-            int64_t current_elapsed = now_time - chain.back().time;
-            current_elapsed = std::min<int64_t>(current_elapsed, CASERT_DT_MAX);
-            total_time += current_elapsed;
-            count++;
-        }
-
+        // avg288 pure: one block, one target. No live/intrabloque adjustment.
         int64_t avg_interval = (count > 0) ? (total_time / count) : TARGET_SPACING;
 
         // Dead band: no adjustment if avg is within ±30s of target
