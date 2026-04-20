@@ -64,10 +64,72 @@ static int64_t horner_2exp(uint32_t frac) {
     return (int64_t)Q16_ONE + ((t * x) >> 16);
 }
 
-uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_height) {
+uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_height,
+                           int64_t now_time) {
     if (chain.empty() || next_height <= 0) return GENESIS_BITSQ;
 
-    // Anchor: first block of current epoch (genesis for epoch 0)
+    uint32_t prev_bitsq = chain.back().powDiffQ ? chain.back().powDiffQ : GENESIS_BITSQ;
+
+    // =========================================================================
+    // V6++ (block 5175+): avg288-based bitsQ with live adjustment.
+    // Replaces the anchor-based exponential with a direct comparison of the
+    // observed average block interval against the 600s target.
+    // =========================================================================
+    if (next_height >= CASERT_V6PP_HEIGHT && chain.size() >= 10) {
+        // Compute average interval over last 288 blocks (or all available)
+        size_t window = std::min<size_t>(chain.size(), (size_t)BITSQ_AVG288_WINDOW);
+        size_t start = chain.size() - window;
+        int64_t total_time = 0;
+        int64_t count = 0;
+        for (size_t i = start + 1; i < chain.size(); ++i) {
+            int64_t dt = chain[i].time - chain[i-1].time;
+            dt = std::max<int64_t>(1, std::min<int64_t>(CASERT_DT_MAX, dt));
+            total_time += dt;
+            count++;
+        }
+
+        // Include current elapsed time as a virtual interval (live bitsQ)
+        // This makes bitsQ decrease gradually during long waits.
+        if (now_time > 0 && now_time > chain.back().time) {
+            int64_t current_elapsed = now_time - chain.back().time;
+            current_elapsed = std::min<int64_t>(current_elapsed, CASERT_DT_MAX);
+            total_time += current_elapsed;
+            count++;
+        }
+
+        int64_t avg_interval = (count > 0) ? (total_time / count) : TARGET_SPACING;
+
+        // Dead band: no adjustment if avg is within ±30s of target
+        int64_t deviation = avg_interval - TARGET_SPACING;  // negative = too fast
+        int64_t delta = 0;
+
+        if (deviation < -BITSQ_AVG288_DEADBAND) {
+            // Chain too fast → increase difficulty
+            // Proportional: scale delta by how far outside the dead band
+            int64_t excess = (-deviation) - BITSQ_AVG288_DEADBAND;
+            // delta = prev_bitsq * excess / (TARGET_SPACING * 4)
+            // This gives ~3% adjustment when 60s outside dead band
+            delta = ((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4);
+        } else if (deviation > BITSQ_AVG288_DEADBAND) {
+            // Chain too slow → decrease difficulty
+            int64_t excess = deviation - BITSQ_AVG288_DEADBAND;
+            delta = -(((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4));
+        }
+        // else: within dead band, delta = 0
+
+        // Cap at 12.5% per block
+        int64_t max_delta = (int64_t)prev_bitsq / BITSQ_MAX_DELTA_DEN_V6PP;
+        if (max_delta < 1) max_delta = 1;
+        delta = std::max<int64_t>(-max_delta, std::min<int64_t>(max_delta, delta));
+
+        int64_t result = (int64_t)prev_bitsq + delta;
+        result = std::max<int64_t>((int64_t)MIN_BITSQ, std::min<int64_t>((int64_t)MAX_BITSQ, result));
+        return (uint32_t)result;
+    }
+
+    // =========================================================================
+    // Pre-V6++ (blocks < 5175): anchor-based exponential (original logic)
+    // =========================================================================
     int64_t epoch = next_height / BLOCKS_PER_EPOCH;
     size_t anchor_idx = 0;
     if (epoch > 0) {
@@ -77,16 +139,13 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
     auto anchor_time = chain[anchor_idx].time;
     auto anchor_bitsq = (anchor_idx == 0) ? GENESIS_BITSQ : chain[anchor_idx].powDiffQ;
 
-    // Time delta: negative when blocks arrive faster than target
     int64_t parent_idx = (int64_t)chain.size() - 1;
     int64_t expected_pt = anchor_time + (parent_idx - (int64_t)anchor_idx) * TARGET_SPACING;
     int64_t td = chain.back().time - expected_pt;
 
-    // Exponential: next_bitsq = anchor_bitsq * 2^(-td / halflife)
     int64_t halflife;
-    if (next_height >= CASERT_V6PP_HEIGHT)       halflife = BITSQ_HALF_LIFE_V6PP;  // 12h
-    else if (next_height >= CASERT_V2_FORK_HEIGHT) halflife = BITSQ_HALF_LIFE_V2;  // 24h
-    else                                           halflife = BITSQ_HALF_LIFE;      // 48h
+    if (next_height >= CASERT_V2_FORK_HEIGHT) halflife = BITSQ_HALF_LIFE_V2;
+    else                                       halflife = BITSQ_HALF_LIFE;
     int64_t exponent = ((-td) * (int64_t)Q16_ONE) / halflife;
 
     int32_t shifts = (int32_t)(exponent >> 16);
@@ -104,12 +163,9 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         else              raw_result >>= rshifts;
     }
 
-    // Relative per-block delta cap: prev_bitsq / delta_den
-    uint32_t prev_bitsq = chain.back().powDiffQ ? chain.back().powDiffQ : GENESIS_BITSQ;
     int32_t delta_den;
-    if (next_height >= CASERT_V6PP_HEIGHT)       delta_den = BITSQ_MAX_DELTA_DEN_V6PP;  // 25%
-    else if (next_height >= CASERT_V2_FORK_HEIGHT) delta_den = BITSQ_MAX_DELTA_DEN_V2;  // 12.5%
-    else                                           delta_den = BITSQ_MAX_DELTA_DEN;      // 6.25%
+    if (next_height >= CASERT_V2_FORK_HEIGHT) delta_den = BITSQ_MAX_DELTA_DEN_V2;
+    else                                       delta_den = BITSQ_MAX_DELTA_DEN;
     int64_t max_delta = (int64_t)prev_bitsq / delta_den;
     if (max_delta < 1) max_delta = 1;
 
@@ -191,7 +247,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                                int64_t now_time)
 {
     CasertDecision dec{};
-    dec.bitsq = casert_next_bitsq(chain, next_height);
+    dec.bitsq = casert_next_bitsq(chain, next_height, now_time);
     dec.profile_index = 0; // B0 baseline default
 
     if (chain.size() < 2 || next_height <= 1) {

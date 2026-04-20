@@ -88,12 +88,21 @@ inline constexpr int64_t  CASERT_V2_FORK_HEIGHT   = 1450;
 inline constexpr int64_t  BITSQ_HALF_LIFE_V2      = 86400;   // 24 hours (144 blocks) — V2
 inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta cap denominator (12.5%) — V2
 
-// V6++ bitsQ tuning — activated at block 5150
-// Faster reaction to hashrate changes: bitsQ absorbs more load, equalizer less.
-// Ahead Guard already disabled since V6 (block 5000).
-inline constexpr int64_t  CASERT_V6PP_HEIGHT        = 5150;
-inline constexpr int64_t  BITSQ_HALF_LIFE_V6PP      = 43200;  // 12 hours (72 blocks)
-inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V6PP  = 8;      // 12.5% cap per block (same as V2)
+// V6++ bitsQ tuning — activated at block 5175
+// Replaces anchor-based exponential with avg288-based adjustment.
+// bitsQ is the primary controller. Equalizer is emergency-only.
+inline constexpr int64_t  CASERT_V6PP_HEIGHT        = 5175;
+inline constexpr int64_t  BITSQ_HALF_LIFE_V6PP      = 43200;  // 12h fallback (used pre-5175)
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V6PP  = 8;      // 12.5% cap per block
+
+// avg288-based bitsQ (block 5175+)
+// bitsQ adjusts based on the average interval of the last 288 blocks.
+// Dead band: no adjustment if avg is within ±30s of target.
+// Outside dead band: proportional correction capped at 12.5%/block.
+// Live bitsQ: during mining, bitsQ decreases as wall clock advances
+// (current elapsed time counts as a virtual interval).
+inline constexpr int32_t  BITSQ_AVG288_WINDOW       = 288;
+inline constexpr int64_t  BITSQ_AVG288_DEADBAND     = 30;     // ±30s around target (570-630s)
 
 // cASERT V3 fork — activated at block 4100
 // Improved equalizer responsiveness: slew rate ±1 → ±3, lag floor, real prev_H

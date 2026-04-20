@@ -9,7 +9,8 @@ namespace sost {
 
 // ---- bitsQ primary controller ----
 // Computes next block's bitsQ from chain history. Deterministic.
-uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_height);
+uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_height,
+                           int64_t now_time = 0);
 
 // ---- Unified cASERT decision ----
 // Computes the full decision (bitsQ + equalizer profile) from chain history.

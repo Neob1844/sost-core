@@ -906,7 +906,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     if (!g_blocks.empty()) {
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
-        next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size());
+        next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size(), std::time(nullptr));
         // Compute profile with current wall-clock time
         // casert_compute uses now_time for anti-stall and (at V6 calibration height)
         // for live lag calculation. Both mining and validation agree because the
@@ -3073,7 +3073,8 @@ static bool process_block(const std::string& block_json) {
         bm.profile_index=b.profile_index;
         chain_meta.push_back(bm);
     }
-    uint32_t expected_diff = casert_next_bitsq(chain_meta, height);
+    uint32_t expected_diff = casert_next_bitsq(chain_meta, height,
+        (height >= CASERT_V6PP_HEIGHT) ? ts64 : 0);
     if(bits_q != expected_diff){
         printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
         return false;
