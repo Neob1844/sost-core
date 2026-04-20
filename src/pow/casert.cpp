@@ -91,28 +91,45 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         // avg288 pure: one block, one target. No live/intrabloque adjustment.
         int64_t avg_interval = (count > 0) ? (total_time / count) : TARGET_SPACING;
 
-        // Dead band: no adjustment if avg is within ±30s of target
+        // Dead band + dynamic cap (block 5230+)
+        // The cap scales with deviation: close to target = tiny correction,
+        // far from target = stronger correction, max 3%.
         int64_t deviation = avg_interval - TARGET_SPACING;  // negative = too fast
+        int64_t abs_dev = (deviation < 0) ? -deviation : deviation;
         int64_t delta = 0;
 
-        if (deviation < -BITSQ_AVG288_DEADBAND) {
-            // Chain too fast → increase difficulty
-            // Proportional: scale delta by how far outside the dead band
-            int64_t excess = (-deviation) - BITSQ_AVG288_DEADBAND;
-            // delta = prev_bitsq * excess / (TARGET_SPACING * 4)
-            // This gives ~3% adjustment when 60s outside dead band
-            delta = ((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4);
-        } else if (deviation > BITSQ_AVG288_DEADBAND) {
-            // Chain too slow → decrease difficulty
-            int64_t excess = deviation - BITSQ_AVG288_DEADBAND;
-            delta = -(((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4));
+        // Dynamic cap: proportional to deviation magnitude
+        // 0-30s:   0% (dead band)
+        // 30-60s:  0.5% (prev_bitsq / 200)
+        // 60-120s: 1.5% (prev_bitsq / 67)
+        // 120-240s: 2.5% (prev_bitsq / 40)
+        // >240s:   3.0% (prev_bitsq / 33)
+        int64_t max_delta;
+        if (next_height >= 5230) {
+            if (abs_dev <= BITSQ_AVG288_DEADBAND) {
+                max_delta = 0;  // dead band
+            } else if (abs_dev <= 60) {
+                max_delta = (int64_t)prev_bitsq / 200;  // 0.5%
+            } else if (abs_dev <= 120) {
+                max_delta = (int64_t)prev_bitsq / 67;   // 1.5%
+            } else if (abs_dev <= 240) {
+                max_delta = (int64_t)prev_bitsq / 40;   // 2.5%
+            } else {
+                max_delta = (int64_t)prev_bitsq / 33;   // 3.0%
+            }
+        } else {
+            // Pre-5230: fixed 12.5% cap (V6++ original)
+            max_delta = (int64_t)prev_bitsq / BITSQ_MAX_DELTA_DEN_V6PP;
         }
-        // else: within dead band, delta = 0
+        if (max_delta < 1 && abs_dev > BITSQ_AVG288_DEADBAND) max_delta = 1;
 
-        // Cap at 12.5% per block
-        int64_t max_delta = (int64_t)prev_bitsq / BITSQ_MAX_DELTA_DEN_V6PP;
-        if (max_delta < 1) max_delta = 1;
-        delta = std::max<int64_t>(-max_delta, std::min<int64_t>(max_delta, delta));
+        // Proportional correction within the dynamic cap
+        if (abs_dev > BITSQ_AVG288_DEADBAND) {
+            int64_t excess = abs_dev - BITSQ_AVG288_DEADBAND;
+            int64_t raw_delta = ((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4);
+            if (deviation < 0) delta = std::min(raw_delta, max_delta);    // too fast → up
+            else                delta = -std::min(raw_delta, max_delta);  // too slow → down
+        }
 
         int64_t result = (int64_t)prev_bitsq + delta;
         result = std::max<int64_t>((int64_t)MIN_BITSQ, std::min<int64_t>((int64_t)MAX_BITSQ, result));
