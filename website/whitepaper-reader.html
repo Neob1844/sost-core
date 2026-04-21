@@ -552,7 +552,7 @@
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Mainnet profiles: E4(-4) through H35(+35), 40 total</pre>
 <pre class="wp-code-inline">  B0 (baseline): scale=1, k=4, steps=4, margin=185</pre>
-<pre class="wp-code-inline">  H35 (maximum): scale=2, k=20, steps=20, margin=100</pre>
+<pre class="wp-code-inline">  H35 (maximum): scale=2, k=20, steps=20, margin=115</pre>
 <pre class="wp-code-inline">  E4 (easing):   scale=1, k=3, steps=2, margin=280</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Examples:</p>
@@ -2456,7 +2456,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, per-block, avg288-based (block 5,175+), dynamic cap (5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Median288 reality check. Legacy half-life preserved for pre-5175 blocks</td></tr>
-<tr><td>cASERT Equalizer</td><td>40 consensus-critical profiles E4(-4) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. All profiles use scale=2. H35 {scale=2, k=20, steps=20, margin=100} as the maximum.</td></tr>
+<tr><td>cASERT Equalizer</td><td>40 consensus-critical profiles E4(-4) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. All profiles use scale=2. H35 {scale=2, k=20, steps=20, margin=115} as the maximum.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>

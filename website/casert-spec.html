@@ -305,7 +305,7 @@
           <tr><td style="color:hsl(0,85%,36%);font-weight:600">H34</td><td style="color:#4ade80;font-weight:700;font-size:9px">A</td><td style="color:hsl(0,85%,36%)">+34</td><td>2</td><td>19</td><td>20</td><td>100</td><td style="color:#22d3ee">760</td></tr>
           <tr><td style="color:hsl(0,90%,33%);font-weight:600">H35</td><td style="color:#4ade80;font-weight:700;font-size:9px">A</td><td style="color:hsl(0,90%,33%)">+35</td><td>2</td><td>20</td><td>20</td><td>100</td><td style="color:#22d3ee">800</td></tr>
         </table>
-        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">40 profiles E4(-4) through H35(+35). All scale=2. H13&ndash;H35 margin fixed at 100. Compute = scale &times; k &times; steps.<br><span style="color:#4ade80;font-weight:700">A</span> = Active &mdash; profiles E4 through H10. Currently minable and used in production.<br><span style="color:#fb010d;font-weight:700">R</span> = Reserved &mdash; profiles H11 through H35. Defined in specification, reserved for future activation when network hashrate grows sufficiently. Hard ceiling at H10 (block 5,075+).<br>V6 calibration (5,050): lag cap H &le; lag, live lag, anti-stall 60 min. bitsQ avg288-based (5,175+), dynamic cap (5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Median288 override.</p>
+        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">40 profiles E4(-4) through H35(+35). All scale=2. H11&ndash;H35 margin fixed at 115. Compute = scale &times; k &times; steps.<br><span style="color:#4ade80;font-weight:700">A</span> = Active &mdash; profiles E4 through H10. Currently minable and used in production.<br><span style="color:#fb010d;font-weight:700">R</span> = Reserved &mdash; profiles H11 through H35. Defined in specification, reserved for future activation when network hashrate grows sufficiently. Hard ceiling at H10 (block 5,075+).<br>V6 calibration (5,050): lag cap H &le; lag, live lag, anti-stall 60 min. bitsQ avg288-based (5,175+), dynamic cap (5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Median288 override.</p>
       </div>
     </div>
 
@@ -318,7 +318,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">40 PROFILES</div>
         <h3 style="color:var(--cyan-primary)">Independent Tuning</h3>
-        <p>40 profiles E4(-4) through H35(+35). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H35 use scale=2 (V6 calibration). H35 is the hardest active profile (k=20, steps=20, margin=100).</p>
+        <p>40 profiles E4(-4) through H35(+35). Each profile has independently tuned scale, k, steps, and margin. Higher profiles impose stricter stability_metric thresholds on ConvergenceX, making it progressively harder to produce fast blocks. H10&ndash;H35 use scale=2 (V6 calibration). H35 is the hardest reserved profile (k=20, steps=20, margin=115).</p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
@@ -388,7 +388,7 @@
           <tr><td class="label">V3</td><td class="highlight">4,100</td><td class="value">Slew rate &plusmn;1 &rarr; &plusmn;3, lag floor (lag/8 minimum profile), improved equalizer responsiveness</td></tr>
           <tr><td class="label">V3.1</td><td class="highlight">4,110</td><td class="value">Stored profile_index from BlockMeta (prevents slew rate bypass), anti-stall always 7,200s</td></tr>
           <tr><td class="label">V4</td><td class="highlight">4,200</td><td class="cyan">Ahead Guard: clamps bitsQ relaxation to 1.56%/block when chain &ge;16 blocks ahead (H8+). Hysteresis: enter &ge;16, exit &le;8</td></tr>
-          <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10&ndash;H35 scale=2 (V6 calibration), H35 hardest (k=20, steps=20, margin=100)</td></tr>
+          <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10&ndash;H35 scale=2 (V6 calibration), H35 hardest (k=20, steps=20, margin=115)</td></tr>
           <tr><td class="label">V7 avg288</td><td class="highlight">5,175</td><td class="cyan">bitsQ switches to avg288-based: avg of last 288 block intervals vs 600s target. Half-life exponential no longer used (preserved for historical blocks only)</td></tr>
           <tr><td class="label">V7 dyncap</td><td class="highlight">5,260</td><td class="cyan">Dynamic cap: 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max scaling with deviation. Median288 reality check: if avg in dead band but median not, median overrides direction</td></tr>
         </table>
