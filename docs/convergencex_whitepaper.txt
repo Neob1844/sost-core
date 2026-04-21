@@ -2504,6 +2504,51 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 | Consensus governance | None — immutable at genesis |
 | Operational governance | Phase I: developer-executed; Phase II (V6, block 10,000): protocol-governed. Constitutionally constrained, publicly auditable |
 
+## 12.5 Sovereign Value Stack
+
+SOST is implementing a cooperative value system based on self-custodied tokenized gold.
+
+### 12.5.1 E2E Encrypted Coordination Layer
+
+Signed trade offers, acceptances, cancellations, and settlement notices flow over an
+end-to-end encrypted messaging layer purpose-built for economic coordination between
+counterparties. The protocol is off-chain first, replay-resistant, and produces canonical
+hashes for every message. This is not general-purpose chat — it is authenticated intent
+exchange: private economic coordination between identified participants.
+
+### 12.5.2 DEX and Settlement Layer for Tokenized Gold
+
+The Gold DEX enables SOST to XAUT/PAXG exchange and native precious-metal positions.
+Architecture follows a thin-chain / fat-edge model: deal state machines, watchers, and
+settlement daemons operate off-chain. Ethereum serves as the minimal onboarding/exit rail;
+SOST is the sovereign center for all registration, trading, and settlement.
+
+Position Registry supports two models:
+  - Model B (transferable escrow): FULL_POSITION, REWARD_RIGHT, PRINCIPAL_CLAIM
+  - Model A (reward rights only)
+
+Settlement is bilateral escrow with a refund engine and full audit log.
+
+### 12.5.3 PoPC Contract Infrastructure
+
+  - Model B: SOSTEscrow.sol — no admin, no proxy, no pause, immutable
+  - Model A: self-custody with PoPC proof verification
+  - Timelocked collateral participation
+  - Constitutional contract design: contracts enforce protocol rules, not governance decisions
+
+### 12.5.4 Architecture
+
+  sost-core          — chain base, consensus, settlement anchoring
+  sost-gold-exchange — positions, watchers, deals, settlement, pricing
+  sost-comms         — trade protocol schemas (offer/accept/cancel/notice)
+
+ETH is used only for onboarding/exit. SOST handles all registration, trading, and settlement.
+
+### 12.5.5 Strategic Direction
+
+Encrypted communication, signed coordination, verifiable settlement, self-custodied
+gold-backed value, peer-to-peer exchange, constitutional contracts, cooperative monetary logic.
+
 ## 13. Conclusion
 
 SOST is built on three ideas that individually exist, but have never been combined:

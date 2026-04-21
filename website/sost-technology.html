@@ -1374,6 +1374,76 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
   </div>
 </section>
 
+<!-- SOVEREIGN VALUE STACK -->
+<section class="section" id="value-stack">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SOVEREIGN VALUE STACK</div>
+      <h2 class="section-title">E2E, Gold DEX, <span class="accent">PoPC Contracts</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in delay-1">
+      Beyond the consensus layer, SOST builds a complete sovereign value stack: encrypted peer coordination,
+      a decentralized exchange for tokenized gold, and immutable on-chain escrow contracts.
+      Each layer reinforces the others &mdash; private negotiation feeds the DEX, the DEX settles through
+      PoPC escrow, and escrow enforces the constitutional reserve.
+    </p>
+
+    <!-- E2E Encrypted Coordination -->
+    <div class="spec-block fade-in delay-1" style="margin-bottom:20px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon" style="background:var(--cyan-primary);"></div>
+          <span class="spec-name">E2E Encrypted Coordination</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="width:100%;font-size:12px;">
+          <tr><td class="key" style="width:35%;">Message types</td><td class="val">Signed offers, acceptances, cancellations, settlement notices</td></tr>
+          <tr><td class="key">Transport</td><td class="val">Off-chain, replay-resistant, cryptographically authenticated</td></tr>
+          <tr><td class="key">Integrity</td><td class="val">Canonical hashes, deterministic serialization</td></tr>
+          <tr><td class="key">Design principle</td><td class="val">Not chat &mdash; private economic coordination between sovereign counterparties</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- DEX and Settlement Layer -->
+    <div class="spec-block fade-in delay-1" style="margin-bottom:20px;">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon" style="background:var(--green-primary);"></div>
+          <span class="spec-name">DEX &amp; Settlement Layer for Tokenized Gold</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="width:100%;font-size:12px;">
+          <tr><td class="key" style="width:35%;">Trading pairs</td><td class="val">SOST &harr; XAUT/PAXG and native precious-metal positions</td></tr>
+          <tr><td class="key">Architecture</td><td class="val">Peer-to-peer, thin-chain / fat-edge &mdash; Ethereum as minimal onboarding rail, SOST as sovereign center</td></tr>
+          <tr><td class="key">Deal engine</td><td class="val">State machine with watchers and settlement daemon</td></tr>
+          <tr><td class="key">Position registry</td><td class="val">Model B (transferable escrow) and Model A (reward rights)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- PoPC Contract Layer -->
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">PoPC Contract Layer</span>
+        </div>
+      </div>
+      <div class="spec-body">
+        <table class="code-table" style="width:100%;font-size:12px;">
+          <tr><td class="key" style="width:35%;">Mechanism</td><td class="val">Timelocked collateral for self-custodied gold participation</td></tr>
+          <tr><td class="key">Guarantees</td><td class="val">No admin key, no proxy, no pause, no emergency withdrawal</td></tr>
+          <tr><td class="key">Philosophy</td><td class="val">Constitutional and immutable &mdash; code is the only authority</td></tr>
+          <tr><td class="key">Base contract</td><td class="val"><code style="color:var(--green-primary);">SOSTEscrow.sol</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- POW COMPARISON -->
 <section class="section">
   <div class="container">
