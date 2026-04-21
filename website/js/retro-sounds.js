@@ -270,11 +270,41 @@ function _nesAutoplay(){
   if(btn)btn.title='NES #'+(idx+1)+'/100 — click to mute';
   setTimeout(function(){_nesPlaying=false;if(btn)btn.style.opacity='0.4'},10500);
 }
-function nesToggleMute(){
-  _nesMuted=!_nesMuted;
-  if(_nesGain)_nesGain.gain.value=_nesMuted?0:0.04;
+function _nesStop(){
+  if(_nesCtx){try{_nesCtx.close()}catch(e){}_nesCtx=null;_nesGain=null;_nesPlaying=false;}
+}
+function _nesPlayRandom(){
+  _nesStop();
+  var c=_ctx();if(!c)return;_nesCtx=c;_nesPlaying=true;
+  var master=c.createGain();master.gain.value=0.04;master.connect(c.destination);_nesGain=master;
+  var m=CHIPTUNES[Math.floor(Math.random()*CHIPTUNES.length)];
+  var dur=10,nt=60/m.t,t=c.currentTime,total=0;
+  var bass=c.createOscillator(),bg=c.createGain();
+  bass.type='triangle';bass.frequency.value=m.n[0]*0.25;
+  bg.gain.setValueAtTime(0.6,t);bg.gain.setValueAtTime(0.6,t+dur-2);bg.gain.linearRampToValueAtTime(0,t+dur);
+  bass.connect(bg);bg.connect(master);bass.start(t);bass.stop(t+dur);
+  while(total<dur){
+    m.n.forEach(function(freq,i){
+      var s=t+total+i*nt;if(s-t>=dur)return;
+      var o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(master);o.type='square';
+      o.frequency.setValueAtTime(freq,s);
+      var vol=(s-t>dur-2)?Math.max(0,1-(s-t-(dur-2))/2):1;
+      g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(vol,s+0.01);
+      g.gain.linearRampToValueAtTime(vol*0.6,s+nt*0.5);g.gain.linearRampToValueAtTime(0,s+nt*0.9);
+      o.start(s);o.stop(s+nt);
+    });
+    total+=m.n.length*nt;
+  }
+  var idx=CHIPTUNES.indexOf(m);
   var btn=document.getElementById('nesMuteBtn');
-  if(btn)btn.textContent=_nesMuted?'\uD83D\uDD07':'\uD83C\uDFAE';
+  if(btn){btn.title='NES #'+(idx+1)+'/100';btn.style.opacity='1';btn.textContent='\uD83C\uDFAE';}
+  setTimeout(function(){_nesPlaying=false;if(btn)btn.style.opacity='0.4'},10500);
+}
+function nesToggleMute(){
+  if(_nesPlaying){_nesStop();_nesMuted=true;
+    var btn=document.getElementById('nesMuteBtn');
+    if(btn){btn.textContent='\uD83D\uDD07';btn.style.opacity='0.4';}
+  } else {_nesMuted=false;_nesPlayRandom();}
 }
 (function(){
   var triggered=false;
