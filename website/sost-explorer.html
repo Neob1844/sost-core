@@ -1310,7 +1310,25 @@ function drawFullEmission(ch){
   ctx.textAlign='left';ctx.fillStyle='rgba(192,132,252,.3)';
   ctx.fillText(R0.toFixed(2)+'/blk',W-p.r+4,p.t+3);
   ctx.fillText('0',W-p.r+4,p.t+cH+3);
+  // Store epoch data for tooltip
+  var fullData=[];var cumT=0;
+  for(var e4=0;e4<=FULL_EPOCHS;e4++){
+    var re4=R0*Math.pow(q,e4);var ee4=re4*EMI.EPOCH;cumT+=ee4;
+    fullData.push({epoch:e4,reward:re4,epoch_emission:ee4,cumulative:cumT,
+      year:e4*EMI.ALPHA_YEARS,pct:cumT/maxS*100,
+      miner:re4*0.5,gold:re4*0.25,popc:re4*0.25});
+  }
+  cv._fullData=fullData;cv._fullParams={pad:p,cW:cW,cH:cH,FULL_EPOCHS:FULL_EPOCHS};
 }
+var _emFullTip=null;
+document.getElementById('emissionFullCanvas').addEventListener('mousemove',function(evt){
+  if(!this._fullData)return;var rect=this.getBoundingClientRect(),mx=evt.clientX-rect.left;
+  var fp=this._fullParams,e=Math.max(0,Math.min(fp.FULL_EPOCHS,Math.floor((mx-fp.pad.l)/fp.cW*fp.FULL_EPOCHS))),d=this._fullData[e];if(!d)return;
+  if(!_emFullTip){_emFullTip=document.createElement('div');_emFullTip.style.cssText='position:fixed;background:rgba(6,6,6,.95);border:1px solid var(--border2);padding:10px 14px;font-family:var(--code);font-size:10px;line-height:1.8;color:var(--text);pointer-events:none;z-index:200;min-width:220px';document.body.appendChild(_emFullTip);}
+  _emFullTip.style.display='block';_emFullTip.style.left=(evt.clientX+16)+'px';_emFullTip.style.top=(evt.clientY-10)+'px';
+  _emFullTip.innerHTML='<span style="color:var(--purple);font-weight:600">EPOCH '+d.epoch+'</span> <span style="color:var(--text3)">\u00B7 ~'+d.year.toFixed(1)+' years</span><br><span style="color:var(--text3)">reward:</span> <span style="color:var(--purple)">'+d.reward.toFixed(8)+'</span> SOST/blk<br><span style="color:var(--text3)">split:</span> <span style="color:var(--orange)">'+d.miner.toFixed(4)+'</span> \u00B7 <span style="color:var(--gold)">'+d.gold.toFixed(4)+'</span> \u00B7 <span style="color:var(--cyan)">'+d.popc.toFixed(4)+'</span><br><span style="color:var(--text3)">epoch emission:</span> <span style="color:var(--green)">'+Math.floor(d.epoch_emission).toLocaleString()+' SOST</span><br><span style="color:var(--text3)">cumulative:</span> <span style="color:var(--green)">'+Math.floor(d.cumulative).toLocaleString()+'</span> ('+d.pct.toFixed(2)+'%)<br><span style="color:var(--text3)">remaining:</span> '+(100-d.pct).toFixed(2)+'%';
+});
+document.getElementById('emissionFullCanvas').addEventListener('mouseleave',function(){if(_emFullTip)_emFullTip.style.display='none';});
 document.getElementById('emissionCanvas').addEventListener('mousemove',function(evt){
   if(!this._epochData)return;var rect=this.getBoundingClientRect(),mx=evt.clientX-rect.left;
   var params=this._params,e=Math.max(0,Math.min(EMI.TOTAL_EPOCHS,Math.floor((mx-params.pad.l)/params.cW*EMI.TOTAL_EPOCHS))),d=this._epochData[e];if(!d)return;
