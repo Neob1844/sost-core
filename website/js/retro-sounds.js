@@ -301,10 +301,8 @@ function _nesPlayRandom(){
   setTimeout(function(){_nesPlaying=false;if(btn)btn.style.opacity='0.4'},10500);
 }
 function nesToggleMute(){
-  if(_nesPlaying){_nesStop();_nesMuted=true;
-    var btn=document.getElementById('nesMuteBtn');
-    if(btn){btn.textContent='\uD83D\uDD07';btn.style.opacity='0.4';}
-  } else {_nesMuted=false;_nesPlayRandom();}
+  if(_nesPlaying)return;
+  _nesPlayRandom();
 }
 (function(){
   var triggered=false;
