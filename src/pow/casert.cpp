@@ -113,7 +113,7 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
 
         // Dynamic cap based on deviation magnitude
         int64_t max_delta;
-        if (next_height >= 5230) {
+        if (next_height >= 5260) {
             // Use the LARGER of avg and median deviation to determine the cap.
             // This prevents the "hidden oscillation" where avg is fine but
             // median reveals the real center is off.
