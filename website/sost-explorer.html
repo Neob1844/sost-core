@@ -2185,9 +2185,9 @@ function updateMiningPanel(elapsed){
       var easingExtra=21600; // 6h = 21600s before E1 activates
       if(timeAtB0 < easingExtra){
         var remToEase=easingExtra-timeAtB0;
-        var eH=Math.floor(remToEase/3600),eM=Math.floor((remToEase%3600)/60);
+        var eH=Math.floor(remToEase/3600),eM=Math.floor((remToEase%3600)/60),eS=Math.floor(remToEase%60);
         asInd.innerHTML='<span style="color:#fbbf24;">\u25CF WATCHING</span>';
-        asCd.textContent='at B0 \u2014 easing (E1) activates in '+eH+'h '+('0'+eM).slice(-2)+'m';asCd.style.color='#fbbf24';
+        asCd.textContent='at B0 \u2014 easing (E1) activates in '+eH+'h '+('0'+eM).slice(-2)+'m '+('0'+eS).slice(-2)+'s';asCd.style.color='#fbbf24';
       }else{
         // Easing active — show current easing level
         var easingTime=timeAtB0-easingExtra;
