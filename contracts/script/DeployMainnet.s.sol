@@ -10,9 +10,12 @@ contract DeployMainnet is Script {
     address constant PAXG = 0x45804880De22913dAFE09f4980848ECE6EcbAf78;
 
     function run() external {
+        require(block.chainid == 1, "Not mainnet -- aborting to prevent misdeployment");
+
         uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
 
-        console.log("=== MAINNET DEPLOYMENT ===");
+        console.log("=== ETHEREUM MAINNET DEPLOYMENT ===");
+        console.log("Chain ID: 1 (Mainnet)");
         console.log("XAUT:", XAUT);
         console.log("PAXG:", PAXG);
         console.log("THIS IS REAL MONEY. Press Ctrl+C to abort.");
@@ -22,7 +25,13 @@ contract DeployMainnet is Script {
         SOSTEscrow escrow = new SOSTEscrow(XAUT, PAXG);
         vm.stopBroadcast();
 
-        console.log("SOSTEscrow deployed at:", address(escrow));
-        console.log("Verify: forge verify-contract", address(escrow), "SOSTEscrow --chain mainnet --constructor-args $(cast abi-encode 'constructor(address,address)' 0x68749665FF8D2d112Fa859AA293F07a622782F38 0x45804880De22913dAFE09f4980848ECE6EcbAf78)");
+        console.log("Deployment complete.");
+        console.log("  SOSTEscrow:", address(escrow));
+        console.log("");
+        console.log("Post-deploy checklist:");
+        console.log("  1. Verify source on Etherscan with constructor args");
+        console.log("  2. Confirm no proxy/admin/selfdestruct in deployed bytecode");
+        console.log("  3. Test small deposit before announcing publicly");
+        console.log("  4. Publish contract address on sostcore.com");
     }
 }

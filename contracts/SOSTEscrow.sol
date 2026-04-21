@@ -68,12 +68,16 @@ contract SOSTEscrow is ReentrancyGuard {
     // Maximum lock duration: 366 days (12 months + 1 day buffer)
     uint256 public constant MAX_LOCK_DURATION = 366 days;
 
-    // Minimum deposit: 1 mg of gold in token units
-    // XAUT: 6 decimals, 1 mg = 1000 (0.001 oz ≈ 1e-3, in 6 dec = 1000)
-    // PAXG: 18 decimals, 1 mg = 1e15 (0.001 oz ≈ 1e-3, in 18 dec = 1e15)
-    // We use a per-token minimum checked at deposit time.
-    uint256 public constant XAUT_MIN_AMOUNT = 1000;         // 0.001 oz XAUT (6 dec)
-    uint256 public constant PAXG_MIN_AMOUNT = 1e15;          // 0.001 oz PAXG (18 dec)
+    // Minimum deposit amounts in each token's smallest unit.
+    //
+    // Both XAUT and PAXG represent 1 troy ounce per 1e(decimals) token units.
+    //   XAUT: 6 decimals  -> 1 oz = 1e6,   0.001 oz = 1e3
+    //   PAXG: 18 decimals -> 1 oz = 1e18,  0.001 oz = 1e15
+    //
+    // The 0.001 oz minimum (~$2-3 at current gold prices) exists to prevent
+    // dust-deposit spam that would bloat the _userDepositIds arrays.
+    uint256 public constant XAUT_MIN_AMOUNT = 1000;          // 0.001 oz (1e3 in 6-decimal token)
+    uint256 public constant PAXG_MIN_AMOUNT = 1e15;           // 0.001 oz (1e15 in 18-decimal token)
 
     // Auto-incrementing deposit counter
     uint256 public depositCount;
@@ -83,6 +87,10 @@ contract SOSTEscrow is ReentrancyGuard {
 
     // Active deposit IDs per user (for enumeration)
     mapping(address => uint256[]) internal _userDepositIds;
+
+    // O(1) running total of locked (non-withdrawn) tokens per token address.
+    // Updated on deposit (+) and withdraw (-). Avoids O(n) loop in totalLocked().
+    mapping(address => uint256) public totalLockedByToken;
 
     // ---- Events ----
 
@@ -107,6 +115,7 @@ contract SOSTEscrow is ReentrancyGuard {
 
     error TokenNotAllowed(address token);
     error AmountBelowMinimum(uint256 amount, uint256 minimum);
+    error UnlockTimeNotInFuture(uint256 unlockTime, uint256 currentTime);
     error LockDurationTooShort(uint256 duration, uint256 minimum);
     error LockDurationTooLong(uint256 duration, uint256 maximum);
     error DepositNotFound(uint256 depositId);
@@ -164,7 +173,14 @@ contract SOSTEscrow is ReentrancyGuard {
             revert AmountBelowMinimum(amount, minAmount);
         }
 
-        // Validate lock duration
+        // Validate unlockTime is strictly in the future BEFORE subtracting.
+        // This prevents underflow and rejects unlockTime == block.timestamp
+        // (which would mean "locked for zero seconds" — not a real lock).
+        if (unlockTime <= block.timestamp) {
+            revert UnlockTimeNotInFuture(unlockTime, block.timestamp);
+        }
+
+        // Safe to subtract now: unlockTime > block.timestamp is guaranteed above.
         uint256 duration = unlockTime - block.timestamp;
         if (duration < MIN_LOCK_DURATION) {
             revert LockDurationTooShort(duration, MIN_LOCK_DURATION);
@@ -173,14 +189,12 @@ contract SOSTEscrow is ReentrancyGuard {
             revert LockDurationTooLong(duration, MAX_LOCK_DURATION);
         }
 
-        // Transfer tokens from caller to this contract
-        // Uses transferFrom — caller must have approved beforehand
-        bool success = IERC20(token).transferFrom(msg.sender, address(this), amount);
-        if (!success) {
-            revert TransferFailed();
-        }
+        // --- Checks-Effects-Interactions pattern ---
+        // CHECKS: all validation above.
+        // EFFECTS: state changes below (before external call).
+        // INTERACTIONS: ERC-20 transferFrom is last.
 
-        // Record the deposit
+        // Record the deposit (effects before interaction)
         depositId = depositCount;
         depositCount++;
 
@@ -193,6 +207,14 @@ contract SOSTEscrow is ReentrancyGuard {
         });
 
         _userDepositIds[msg.sender].push(depositId);
+        totalLockedByToken[token] += amount;
+
+        // Transfer tokens from caller to this contract (interaction — last step)
+        // Uses transferFrom — caller must have approved beforehand.
+        bool success = IERC20(token).transferFrom(msg.sender, address(this), amount);
+        if (!success) {
+            revert TransferFailed();
+        }
 
         emit GoldDeposited(depositId, msg.sender, token, amount, unlockTime);
     }
@@ -210,7 +232,11 @@ contract SOSTEscrow is ReentrancyGuard {
     function withdraw(uint256 depositId) external nonReentrant {
         Deposit storage d = deposits[depositId];
 
-        // Deposit must exist
+        // --- CHECKS ---
+
+        // Deposit must exist. A zero depositor means the struct was never
+        // written (Solidity default). This is sufficient because deposit()
+        // always stores msg.sender, which is never address(0).
         if (d.depositor == address(0)) {
             revert DepositNotFound(depositId);
         }
@@ -225,15 +251,18 @@ contract SOSTEscrow is ReentrancyGuard {
             revert AlreadyWithdrawn(depositId);
         }
 
-        // Must be past unlock time
+        // Must be at or past unlock time (>= allows withdrawal exactly at unlockTime)
         if (block.timestamp < d.unlockTime) {
             revert StillLocked(d.unlockTime, block.timestamp);
         }
 
-        // Mark as withdrawn BEFORE transfer (checks-effects-interactions)
-        d.withdrawn = true;
+        // --- EFFECTS (state changes before external call) ---
 
-        // Transfer tokens back to depositor
+        d.withdrawn = true;
+        totalLockedByToken[d.token] -= d.amount;
+
+        // --- INTERACTIONS (external call last) ---
+
         bool success = IERC20(d.token).transfer(d.depositor, d.amount);
         if (!success) {
             revert TransferFailed();
@@ -269,13 +298,9 @@ contract SOSTEscrow is ReentrancyGuard {
         return block.timestamp >= d.unlockTime;
     }
 
-    /// @notice Get the total gold locked for a specific token
-    function totalLocked(address token) external view returns (uint256 total) {
-        for (uint256 i = 0; i < depositCount; i++) {
-            Deposit storage d = deposits[i];
-            if (d.token == token && !d.withdrawn) {
-                total += d.amount;
-            }
-        }
+    /// @notice Get the total gold locked for a specific token.
+    /// @dev O(1) — reads from the running total maintained by deposit/withdraw.
+    function totalLocked(address token) external view returns (uint256) {
+        return totalLockedByToken[token];
     }
 }

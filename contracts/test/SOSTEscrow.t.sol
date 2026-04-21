@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import "../SOSTEscrow.sol";
 import "./MockERC20.sol";
+import "./MockFailERC20.sol";
 
 contract SOSTEscrowTest is Test {
     SOSTEscrow public escrow;
@@ -256,5 +257,263 @@ contract SOSTEscrowTest is Test {
 
         assertEq(escrow.totalLocked(address(xaut)), 3 * ONE_OZ_XAUT);
         assertEq(escrow.totalLocked(address(paxg)), 0);
+    }
+
+    // ========================================================================
+    // PHASE 3 — Additional hardening tests
+    // ========================================================================
+
+    // ---- A. unlockTime == block.timestamp -> revert (not in the future) ----
+    function test_deposit_unlockTime_equal_to_now_reverts() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SOSTEscrow.UnlockTimeNotInFuture.selector,
+                block.timestamp,
+                block.timestamp
+            )
+        );
+        escrow.deposit(address(xaut), ONE_OZ_XAUT, block.timestamp);
+        vm.stopPrank();
+    }
+
+    // ---- B. unlockTime < block.timestamp -> revert ----
+    function test_deposit_unlockTime_in_past_reverts() public {
+        // warp forward so we can set an unlock time in the past
+        vm.warp(1000000);
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SOSTEscrow.UnlockTimeNotInFuture.selector,
+                1,
+                block.timestamp
+            )
+        );
+        escrow.deposit(address(xaut), ONE_OZ_XAUT, 1);
+        vm.stopPrank();
+    }
+
+    // ---- C. Exact MIN_LOCK_DURATION -> should work ----
+    function test_deposit_exact_min_lock_duration() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 unlockTime = block.timestamp + 28 days;
+        uint256 id = escrow.deposit(address(xaut), ONE_OZ_XAUT, unlockTime);
+        vm.stopPrank();
+
+        (, , , uint256 unlock, ) = escrow.getDeposit(id);
+        assertEq(unlock, unlockTime);
+    }
+
+    // ---- D. Exact MAX_LOCK_DURATION -> should work ----
+    function test_deposit_exact_max_lock_duration() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 unlockTime = block.timestamp + 366 days;
+        uint256 id = escrow.deposit(address(xaut), ONE_OZ_XAUT, unlockTime);
+        vm.stopPrank();
+
+        (, , , uint256 unlock, ) = escrow.getDeposit(id);
+        assertEq(unlock, unlockTime);
+    }
+
+    // ---- E. Just below min lock duration -> revert ----
+    function test_deposit_just_below_min_lock_reverts() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 unlockTime = block.timestamp + 28 days - 1;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SOSTEscrow.LockDurationTooShort.selector,
+                28 days - 1,
+                28 days
+            )
+        );
+        escrow.deposit(address(xaut), ONE_OZ_XAUT, unlockTime);
+        vm.stopPrank();
+    }
+
+    // ---- F. Just above max lock duration -> revert ----
+    function test_deposit_just_above_max_lock_reverts() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 unlockTime = block.timestamp + 366 days + 1;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SOSTEscrow.LockDurationTooLong.selector,
+                366 days + 1,
+                366 days
+            )
+        );
+        escrow.deposit(address(xaut), ONE_OZ_XAUT, unlockTime);
+        vm.stopPrank();
+    }
+
+    // ---- G. Deposit exactly at minimum amount -> should work ----
+    function test_deposit_exact_minimum_xaut() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), 1000); // XAUT_MIN_AMOUNT
+        uint256 id = escrow.deposit(address(xaut), 1000, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+
+        (, , uint256 amount, , ) = escrow.getDeposit(id);
+        assertEq(amount, 1000);
+    }
+
+    function test_deposit_exact_minimum_paxg() public {
+        vm.startPrank(alice);
+        paxg.approve(address(escrow), 1e15); // PAXG_MIN_AMOUNT
+        uint256 id = escrow.deposit(address(paxg), 1e15, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+
+        (, , uint256 amount, , ) = escrow.getDeposit(id);
+        assertEq(amount, 1e15);
+    }
+
+    // ---- H. Deposit just below minimum -> revert ----
+    function test_deposit_just_below_minimum_xaut_reverts() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), 999);
+        vm.expectRevert(
+            abi.encodeWithSelector(SOSTEscrow.AmountBelowMinimum.selector, 999, 1000)
+        );
+        escrow.deposit(address(xaut), 999, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+    }
+
+    function test_deposit_just_below_minimum_paxg_reverts() public {
+        vm.startPrank(alice);
+        paxg.approve(address(escrow), 1e15 - 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(SOSTEscrow.AmountBelowMinimum.selector, 1e15 - 1, 1e15)
+        );
+        escrow.deposit(address(paxg), 1e15 - 1, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+    }
+
+    // ---- I. Double withdraw -> revert (already covered above, explicit selector check) ----
+    function test_double_withdraw_emits_correct_error() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 id = escrow.deposit(address(xaut), ONE_OZ_XAUT, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + THIRTY_DAYS + 1);
+
+        vm.prank(alice);
+        escrow.withdraw(id);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SOSTEscrow.AlreadyWithdrawn.selector, id));
+        escrow.withdraw(id);
+    }
+
+    // ---- J. Withdraw at exact unlockTime -> should work ----
+    function test_withdraw_at_exact_unlockTime() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), ONE_OZ_XAUT);
+        uint256 unlockTime = block.timestamp + THIRTY_DAYS;
+        uint256 id = escrow.deposit(address(xaut), ONE_OZ_XAUT, unlockTime);
+        vm.stopPrank();
+
+        vm.warp(unlockTime); // exactly at unlockTime, not +1
+
+        vm.prank(alice);
+        escrow.withdraw(id);
+
+        (, , , , bool withdrawn) = escrow.getDeposit(id);
+        assertTrue(withdrawn);
+    }
+
+    // ---- K. Withdraw with nonexistent ID -> revert ----
+    function test_withdraw_nonexistent_id_reverts() public {
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SOSTEscrow.DepositNotFound.selector, 42));
+        escrow.withdraw(42);
+    }
+
+    // ---- L. Verify events have correct values ----
+    function test_deposit_event_values() public {
+        vm.startPrank(alice);
+        paxg.approve(address(escrow), 5 * ONE_OZ_PAXG);
+        uint256 unlockTime = block.timestamp + 90 days;
+
+        vm.expectEmit(true, true, true, true);
+        emit SOSTEscrow.GoldDeposited(0, alice, address(paxg), 5 * ONE_OZ_PAXG, unlockTime);
+
+        escrow.deposit(address(paxg), 5 * ONE_OZ_PAXG, unlockTime);
+        vm.stopPrank();
+    }
+
+    function test_withdraw_event_values() public {
+        vm.startPrank(alice);
+        paxg.approve(address(escrow), 2 * ONE_OZ_PAXG);
+        uint256 unlockTime = block.timestamp + THIRTY_DAYS;
+        uint256 id = escrow.deposit(address(paxg), 2 * ONE_OZ_PAXG, unlockTime);
+        vm.stopPrank();
+
+        vm.warp(unlockTime);
+
+        vm.expectEmit(true, true, false, true);
+        emit SOSTEscrow.GoldWithdrawn(id, alice, address(paxg), 2 * ONE_OZ_PAXG);
+
+        vm.prank(alice);
+        escrow.withdraw(id);
+    }
+
+    // ---- Test: totalLocked decreases after withdrawal ----
+    function test_totalLocked_decreases_after_withdraw() public {
+        vm.startPrank(alice);
+        xaut.approve(address(escrow), 3 * ONE_OZ_XAUT);
+        uint256 id0 = escrow.deposit(address(xaut), ONE_OZ_XAUT, block.timestamp + THIRTY_DAYS);
+        escrow.deposit(address(xaut), 2 * ONE_OZ_XAUT, block.timestamp + ONE_YEAR);
+        vm.stopPrank();
+
+        assertEq(escrow.totalLocked(address(xaut)), 3 * ONE_OZ_XAUT);
+
+        vm.warp(block.timestamp + THIRTY_DAYS);
+        vm.prank(alice);
+        escrow.withdraw(id0);
+
+        assertEq(escrow.totalLocked(address(xaut)), 2 * ONE_OZ_XAUT);
+    }
+
+    // ---- Test: token that returns false on transfer ----
+    function test_deposit_transfer_returns_false_reverts() public {
+        // Deploy a fail-token and register it as XAUT in a new escrow
+        MockFailERC20 failToken = new MockFailERC20("Fail Gold", "FAIL", 6);
+        SOSTEscrow escrow2 = new SOSTEscrow(address(failToken), address(paxg));
+
+        failToken.mint(alice, 10 * ONE_OZ_XAUT);
+
+        vm.startPrank(alice);
+        failToken.approve(address(escrow2), ONE_OZ_XAUT);
+        failToken.setFailTransfers(true);
+        vm.expectRevert(abi.encodeWithSelector(SOSTEscrow.TransferFailed.selector));
+        escrow2.deposit(address(failToken), ONE_OZ_XAUT, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+    }
+
+    function test_withdraw_transfer_returns_false_reverts() public {
+        MockFailERC20 failToken = new MockFailERC20("Fail Gold", "FAIL", 6);
+        SOSTEscrow escrow2 = new SOSTEscrow(address(failToken), address(paxg));
+
+        failToken.mint(alice, 10 * ONE_OZ_XAUT);
+
+        vm.startPrank(alice);
+        failToken.approve(address(escrow2), ONE_OZ_XAUT);
+        uint256 id = escrow2.deposit(address(failToken), ONE_OZ_XAUT, block.timestamp + THIRTY_DAYS);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + THIRTY_DAYS);
+
+        // Now make transfers fail
+        failToken.setFailTransfers(true);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SOSTEscrow.TransferFailed.selector));
+        escrow2.withdraw(id);
     }
 }

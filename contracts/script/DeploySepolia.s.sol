@@ -7,7 +7,13 @@ import "../test/MockERC20.sol";
 
 contract DeploySepolia is Script {
     function run() external {
+        require(block.chainid == 11155111, "Not Sepolia -- aborting to prevent misdeployment");
+
         uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+
+        console.log("=== SEPOLIA TESTNET DEPLOYMENT ===");
+        console.log("Chain ID: 11155111 (Sepolia)");
+        console.log("");
 
         vm.startBroadcast(deployerKey);
 
@@ -20,12 +26,14 @@ contract DeploySepolia is Script {
 
         vm.stopBroadcast();
 
-        console.log("Mock XAUT deployed at:", address(mockXAUT));
-        console.log("Mock PAXG deployed at:", address(mockPAXG));
-        console.log("SOSTEscrow deployed at:", address(escrow));
+        console.log("Deployment complete.");
+        console.log("  Mock XAUT: ", address(mockXAUT));
+        console.log("  Mock PAXG: ", address(mockPAXG));
+        console.log("  SOSTEscrow:", address(escrow));
         console.log("");
         console.log("Next steps:");
-        console.log("1. Verify: forge verify-contract", address(escrow), "SOSTEscrow --chain sepolia");
-        console.log("2. Mint test tokens: cast send", address(mockXAUT), "'mint(address,uint256)' YOUR_ADDRESS 1000000 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL");
+        console.log("  1. Verify contracts on Etherscan (Sepolia)");
+        console.log("  2. Mint test tokens via cast send");
+        console.log("  3. Test deposit/withdraw flow end-to-end");
     }
 }
