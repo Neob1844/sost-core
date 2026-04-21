@@ -1104,6 +1104,35 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
 <span class="num">7.</span> Result: you keep <span class="fn">427.50 SOST + your 1 oz gold</span>
         </div>
       </div>
+
+      <!-- MODEL B SMART CONTRACT -->
+      <div class="spec-body" style="margin-top:16px;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">// SOSTEscrow.sol &mdash; IMMUTABLE TIMELOCKED GOLD ESCROW CONTRACT</div>
+        <div style="background:rgba(6,6,6,.9);border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 18px;font-family:var(--code);font-size:10px;color:#ccc;line-height:1.7;">
+          <b style="color:var(--purple)">SOSTEscrow</b> <span style="color:var(--text3)">&mdash; Solidity ^0.8.24 &mdash; MIT License</span><br><br>
+          <b style="color:var(--gold)">Constitutional Properties:</b><br>
+          <span style="color:#4ade80">&bull;</span> NO admin key &bull; NO upgrade proxy &bull; NO pause &bull; NO emergency withdrawal<br>
+          <span style="color:#4ade80">&bull;</span> Only the original depositor can withdraw &bull; Only after timelock expires<br>
+          <span style="color:#4ade80">&bull;</span> Accepted tokens: <span style="color:var(--gold)">XAUT</span> (Tether Gold) + <span style="color:var(--gold)">PAXG</span> (Paxos Gold) &mdash; immutable allowlist<br>
+          <span style="color:#4ade80">&bull;</span> Lock duration: 28&ndash;366 days &bull; ReentrancyGuard on all external calls<br><br>
+          <b style="color:var(--gold)">Functions:</b><br>
+          <span style="color:var(--purple)">deposit</span>(token, amount, unlockTime) &rarr; depositId<br>
+          <span style="color:var(--text3)">&nbsp;&nbsp;Transfers ERC-20 gold tokens to contract. Records deposit. Emits GoldDeposited.</span><br>
+          <span style="color:var(--purple)">withdraw</span>(depositId)<br>
+          <span style="color:var(--text3)">&nbsp;&nbsp;Returns tokens to depositor after timelock. Checks-effects-interactions pattern. Emits GoldWithdrawn.</span><br>
+          <span style="color:var(--purple)">getDeposit</span>(id) &bull; <span style="color:var(--purple)">canWithdraw</span>(id) &bull; <span style="color:var(--purple)">getUserDepositIds</span>(user) &bull; <span style="color:var(--purple)">totalLocked</span>(token)<br><br>
+          <b style="color:var(--gold)">Minimum Deposits:</b><br>
+          XAUT: 1,000 units (6 decimals) &asymp; 0.001 oz troy<br>
+          PAXG: 1,000,000,000,000,000 units (18 decimals) &asymp; 0.001 oz troy<br><br>
+          <b style="color:var(--gold)">Trust Model:</b><br>
+          The contract holds gold tokens on Ethereum. SOST rewards are paid on the SOST chain by an off-chain watcher daemon that detects GoldDeposited events. The contract does NOT know or control SOST chain addresses. Reward payout, PoPC Pool, and Gold Vault are SOST-side consensus logic &mdash; separate from this Ethereum contract.<br><br>
+          <b style="color:#ff4444">Status:</b> Internally hardened and reviewed. Not externally audited. Testnet deployment pending.<br><br>
+          <span style="color:var(--text3)">Full source:</span> <a href="https://github.com/Neob1844/sost-core/blob/main/contracts/SOSTEscrow.sol" style="color:var(--purple);text-decoration:underline;" target="_blank" rel="noopener">contracts/SOSTEscrow.sol</a> &bull;
+          <a href="https://github.com/Neob1844/sost-core/tree/main/contracts" style="color:var(--purple);text-decoration:underline;" target="_blank" rel="noopener">Full contracts directory</a> &bull;
+          <a href="https://github.com/Neob1844/sost-core/blob/main/contracts/INTERNAL_REVIEW.md" style="color:var(--purple);text-decoration:underline;" target="_blank" rel="noopener">Internal review report</a>
+        </div>
+      </div>
+      </div>
     </div>
 
     <!-- KEY DIFFERENCES -->
