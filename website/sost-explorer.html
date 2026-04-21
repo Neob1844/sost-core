@@ -558,10 +558,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED BLOCKS</div><div id="csExpected" style="font-size:16px;font-weight:600;color:var(--yellow)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at 10 min/block target</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACTUAL BLOCKS</div><div id="csActual" style="font-size:16px;font-weight:600;color:var(--red)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">mined on chain</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at tip · <span id="csSinceTip" style="color:var(--yellow)">—</span> since last block</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at tip · <span id="csSinceTip" style="color:var(--yellow)">—</span> since last block</div></div>
       </div>
     </div>
   </div>
@@ -1221,21 +1221,28 @@ function updateChainSync(){
     var nextBoundary=(expected+1)*600;
     var secsToNext=Math.max(0,Math.ceil(nextBoundary-wallSec));
     var cdM=Math.floor(secsToNext/60),cdS=Math.floor(secsToNext%60);
-    var curProf=Math.min(lag,10),nextProf=Math.min(lag-1,10);
-    var curName=curProf>0?'H'+curProf:'B0',nextName=nextProf>0?'H'+nextProf:'B0';
-    if(curProf!==nextProf){
-      cdEl.style.display='block';
-      cdEl.innerHTML='\u23F1 lag \u2192 '+(lag-1)+' in <b style="color:#00ff88">'+cdM+'m '+('0'+cdS).slice(-2)+'s</b> \u00B7 profile '+curName+' \u2192 '+nextName;
+    var targetProf=Math.min(lag,10);
+    var nextLagProf=Math.min(Math.max(lag-1,0),10);
+    var targetName=targetProf>0?'H'+targetProf:'B0';
+    var nextName=nextLagProf>0?'H'+nextLagProf:'B0';
+    var miningProf=_rpcCasertProfile||targetName;
+    var line='\u23F1 lag '+lag+' \u2192 '+(lag-1)+' in <b style="color:#00ff88">'+cdM+'m '+('0'+cdS).slice(-2)+'s</b>';
+    if(miningProf!==targetName){
+      line+=' \u00B7 mining <b style="color:#ff8800">'+miningProf+'</b> \u2192 target <b style="color:#00ff88">'+targetName+'</b>';
     } else {
-      cdEl.style.display='block';
-      cdEl.innerHTML='\u23F1 lag \u2192 '+(lag-1)+' in <b style="color:#00ff88">'+cdM+'m '+('0'+cdS).slice(-2)+'s</b> \u00B7 profile stays '+curName;
+      line+=' \u00B7 '+targetName+' \u2192 '+nextName;
     }
+    cdEl.style.display='block';
+    cdEl.innerHTML=line;
     if(secsToNext<=30)cdEl.style.color='#00ff88';
     else if(secsToNext<=120)cdEl.style.color='#fbbf24';
     else cdEl.style.color='#67e8f9';
   } else if(cdEl&&lag===0){
     cdEl.style.display='block';cdEl.style.color='#67e8f9';
-    cdEl.innerHTML='\u23F1 on schedule \u00B7 next block ahead \u2192 lag-adjust to H1';
+    cdEl.innerHTML='\u23F1 on schedule \u00B7 profile B0';
+  } else if(cdEl&&lag<0){
+    cdEl.style.display='block';cdEl.style.color='var(--orange)';
+    cdEl.innerHTML='\u23F1 behind schedule \u00B7 profile B0';
   } else if(cdEl){cdEl.style.display='none';}
 }
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
