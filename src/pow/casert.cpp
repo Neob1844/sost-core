@@ -305,24 +305,16 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
     // =========================================================================
     // Direct lag mapping (block 5320+): bypasses PID entirely.
-    // profile = clamp(lag, 0, H10) with downward hysteresis.
-    //
-    // Why: simulation of 7 PID configs (A-G) showed identical profile paths
-    // because slew ±1 and lag cap dominate. The PID adds complexity without
-    // measurable benefit. Direct mapping is simpler, more predictable, and
-    // produced the best results in testing (lowest sawtooth, fastest H9 reach).
-    //
-    // Hysteresis: upward transitions are immediate (lag rises → profile rises).
-    // Downward transitions require the lower lag to persist for 3 consecutive
-    // blocks, preventing noisy H-level bouncing from single slow blocks.
-    // Implemented from chain-visible state only (last 3 stored profile_indices).
+    // profile = clamp(lag, 0, H10) with asymmetric movement:
+    //   - upward:   immediate (lag rises → profile follows)
+    //   - downward: max 1 level per block (smooth descent, no bounce)
     // =========================================================================
     if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
         int32_t target_profile;
         if (lag <= 0) {
-            target_profile = 0;  // behind or on schedule → B0
+            target_profile = 0;
         } else {
-            target_profile = std::min<int32_t>(lag, CASERT_HARD_PROFILE_CEILING);  // cap at H10
+            target_profile = std::min<int32_t>(lag, CASERT_HARD_PROFILE_CEILING);
         }
 
         int32_t prev_H = 0;
@@ -334,25 +326,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
         int32_t H;
         if (target_profile >= prev_H) {
-            // Upward: immediate, follow lag directly
             H = target_profile;
         } else {
-            // Downward: hysteresis — check if last 3 blocks all had lower profile
-            // This prevents dropping from a single slow block
-            bool persist = true;
-            int32_t lookback = std::min<int32_t>(CASERT_HYST_DOWN_BLOCKS, (int32_t)chain.size());
-            for (int32_t hi = 0; hi < lookback; ++hi) {
-                int32_t idx = (int32_t)chain.size() - 1 - hi;
-                if (idx < 0) { persist = false; break; }
-                int32_t stored = chain[idx].profile_index;
-                if (stored == INT32_MIN) stored = 0;
-                if (stored >= prev_H) { persist = false; break; }
-            }
-            if (persist) {
-                H = target_profile;  // confirmed lower for 3 blocks → drop
-            } else {
-                H = prev_H;  // hold current profile
-            }
+            H = std::max<int32_t>(target_profile, prev_H - 1);
         }
 
         // Safety: behind schedule → max B0

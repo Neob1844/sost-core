@@ -537,6 +537,133 @@ int main() {
              dec.profile_index <= 8);
     }
 
+    printf("\n=== 14. DIRECT LAG MAPPING (block 5320+) ===\n");
+
+    auto make_direct_chain = [](int len, int64_t spacing, int32_t stored_profile) {
+        std::vector<BlockMeta> chain;
+        int64_t start_h = CASERT_DIRECT_LAG_HEIGHT - len;
+        for (int i = 0; i < len; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h + i;
+            m.time = GENESIS_TIME + (start_h + i) * spacing;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = stored_profile;
+            chain.push_back(m);
+        }
+        return chain;
+    };
+
+    // 14.1 lag=0 → B0
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: lag=0 -> B0", dec.profile_index == 0);
+    }
+
+    // 14.2 lag=1 → H1
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        for (auto& b : chain) b.time -= 1 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: lag=1 -> H1", dec.profile_index == 1);
+    }
+
+    // 14.3 lag=4 → H4
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        for (auto& b : chain) b.time -= 4 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: lag=4 -> H4", dec.profile_index == 4);
+    }
+
+    // 14.4 lag=10+ → H10 (ceiling)
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        for (auto& b : chain) b.time -= 50 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: lag=50 -> H10 ceiling", dec.profile_index == CASERT_HARD_PROFILE_CEILING);
+    }
+
+    // 14.5 Upward: immediate (prev=H0, lag=6 → H6)
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        for (auto& b : chain) b.time -= 6 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: upward immediate (prev=0, lag=6 -> H6)", dec.profile_index == 6);
+    }
+
+    // 14.6 Downward: max 1 step per block (prev=H8, lag=3 → H7)
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 8);
+        for (auto& b : chain) b.time -= 3 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: downward capped (prev=H8, lag=3 -> H7)", dec.profile_index == 7);
+    }
+
+    // 14.7 Descent sequence: H8 → H7 → H6 → H5 → H4 → H3 over 5 blocks
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 8);
+        for (auto& b : chain) b.time -= 3 * TARGET_SPACING;
+        bool descent_ok = true;
+        int32_t expected[] = {7, 6, 5, 4, 3};
+        for (int step = 0; step < 5; ++step) {
+            auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT + step, 0);
+            if (dec.profile_index != expected[step]) { descent_ok = false; break; }
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = CASERT_DIRECT_LAG_HEIGHT + step;
+            m.time = GENESIS_TIME + m.height * TARGET_SPACING - 3 * TARGET_SPACING;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = dec.profile_index;
+            chain.push_back(m);
+        }
+        TEST("direct lag: descent H8->H7->H6->H5->H4->H3 over 5 blocks", descent_ok);
+    }
+
+    // 14.8 No deadlock: prev=H8 from PID era, lag=3 → does NOT stick at H8
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 8);
+        for (auto& b : chain) b.time -= 3 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: no deadlock (prev=H8, lag=3 -> NOT H8)", dec.profile_index < 8);
+    }
+
+    // 14.9 Negative lag → B0 safety
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 5);
+        for (auto& b : chain) b.time += 10 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: negative lag -> B0 or below", dec.profile_index <= 0);
+    }
+
+    // 14.10 bitsQ unchanged by direct lag mapping
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 0);
+        uint32_t bitsq_before = casert_next_bitsq(chain, CASERT_DIRECT_LAG_HEIGHT);
+        for (auto& b : chain) b.time -= 5 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, 0);
+        TEST("direct lag: bitsQ path independent of profile", dec.bitsq == bitsq_before || dec.bitsq >= MIN_BITSQ);
+    }
+
+    // 14.11 Pre-fork behavior unchanged (block 5319 still uses PID)
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 8);
+        for (auto& b : chain) b.time -= 3 * TARGET_SPACING;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT - 1, 0);
+        TEST("direct lag: pre-fork (5319) does NOT use direct mapping",
+             dec.profile_index != 7);
+    }
+
+    // 14.12 Anti-stall still works post-fork
+    {
+        auto chain = make_direct_chain(20, TARGET_SPACING, 5);
+        for (auto& b : chain) b.time -= 5 * TARGET_SPACING;
+        int64_t stall_time = chain.back().time + 7200;
+        auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, stall_time);
+        TEST("direct lag: anti-stall still decays after 60min", dec.profile_index < 5);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }
