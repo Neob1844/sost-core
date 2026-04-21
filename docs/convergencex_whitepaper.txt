@@ -737,6 +737,12 @@ cASERT bitsQ compares observed timing to expected schedule and adjusts powDiffQ
 deterministically. Redesigned as a unified system with
 equalizer profiles (emergency-only) and anti-stall.
 
+Miner lag-adjust (non-consensus): Every 30 seconds, the miner re-queries
+the node for the current profile. If the profile changed (live lag dropped
+or lag cap forced a lower profile), the miner restarts search immediately.
+Reduces wasted mining at suboptimal profiles from 60 min to ~30 seconds.
+Old miners remain compatible — miner-side optimization only.
+
 slow chain → decrease powDiffQ → larger target → easier
 fast chain → increase powDiffQ → smaller target → harder
 
