@@ -2437,7 +2437,19 @@ async function showAddress(addr){
         balHtml+
         '<div class="k">utxos</div><div class="v">'+a.utxo_count+' unspent outputs</div>'+
       '</div>'+
-      '<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+
+      '<div style="margin-top:16px;background:var(--bg2);border:1px solid var(--border);padding:16px;">'+
+        '<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:10px;">// WALLET OVERVIEW</div>'+
+        '<canvas id="addrMainChart" style="width:100%;height:200px;cursor:crosshair"></canvas>'+
+        '<div id="addrMainTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #fb010d44;padding:8px 12px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);box-shadow:0 0 15px rgba(251,1,13,0.15);"></div>'+
+        '<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:9px;color:var(--text3);">'+
+          '<span>\u2500 <span style="color:#fb010d">\u2588</span> balance</span>'+
+          '<span>\u2500 <span style="color:#00ff88">\u2588</span> spendable</span>'+
+          '<span>\u2502 <span style="color:#fbbf24">\u2588</span> mined block</span>'+
+          '<span>\u25CB received</span>'+
+          '<span>\u25B2 <span style="color:#fb010d">\u2588</span> sent</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+
         '<div style="background:var(--bg2);border:1px solid var(--border);padding:12px;">'+
           '<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;">BALANCE HISTORY</div>'+
           '<div style="position:relative;"><canvas id="addrBalCanvas" style="width:100%;height:100px;cursor:crosshair"></canvas>'+
@@ -2469,8 +2481,105 @@ async function showAddress(addr){
     _navStack[_navStack.length-1].label=sH(addr);renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
     // Render address charts
-    setTimeout(function(){renderAddrCharts(sorted);},100);
+    setTimeout(function(){renderAddrCharts(sorted);renderMainWalletChart(sorted,totalBalance,matureBalance,immatureBalance,minedAmt,minedCount,inAmt);},100);
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
+}
+function renderMainWalletChart(utxos,totalBal,matureBal,immatureBal,minedAmt,minedCount,inAmt){
+  var cv=document.getElementById('addrMainChart');if(!cv||!utxos||!utxos.length)return;
+  var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1;
+  var W=cv.offsetWidth,Hc=cv.offsetHeight;
+  cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
+  var byH=utxos.slice().sort(function(a,b){return a.height-b.height;});
+  // Build balance + spendable timelines
+  var cum=0,cumMature=0,pts=[],minH=byH[0].height,maxH=byH[byH.length-1].height;
+  byH.forEach(function(u){
+    var a=typeof u.amount==='number'?u.amount:parseFloat(u.amount);
+    cum+=a;
+    var confs=H-u.height+1;var mature=!u.coinbase||(confs>=COINBASE_MATURITY);
+    if(mature)cumMature+=a;
+    pts.push({h:u.height,bal:cum,mature:cumMature,amt:a,coinbase:u.coinbase,txid:u.txid});
+  });
+  if(pts.length<2)return;
+  var mx=pts[pts.length-1].bal;if(mx===0)mx=1;
+  var pad={l:55,r:12,t:12,b:24},cw=W-pad.l-pad.r,ch=Hc-pad.t-pad.b;
+  // Background grid
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+  for(var i=0;i<=4;i++){var y=pad.t+i*(ch/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
+  // Spendable area (green)
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch);
+  pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.mature/mx)*ch;ctx.lineTo(x,y);});
+  ctx.lineTo(pad.l+cw,pad.t+ch);ctx.closePath();
+  var gm=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);gm.addColorStop(0,'rgba(0,255,136,.12)');gm.addColorStop(1,'rgba(0,255,136,.02)');ctx.fillStyle=gm;ctx.fill();
+  // Spendable line
+  ctx.beginPath();ctx.strokeStyle='rgba(0,255,136,.5)';ctx.lineWidth=1;
+  pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.mature/mx)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+  // Total balance area (red glow)
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch);
+  pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.bal/mx)*ch;ctx.lineTo(x,y);});
+  ctx.lineTo(pad.l+cw,pad.t+ch);ctx.closePath();
+  var gr=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);gr.addColorStop(0,'rgba(251,1,13,.15)');gr.addColorStop(1,'rgba(251,1,13,.02)');ctx.fillStyle=gr;ctx.fill();
+  // Total balance line (red with glow)
+  ctx.shadowColor='rgba(251,1,13,0.5)';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.strokeStyle='#fb010d';ctx.lineWidth=2;
+  pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.bal/mx)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();ctx.shadowBlur=0;
+  // Block markers
+  pts.forEach(function(p,i){
+    var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-(p.bal/mx)*ch;
+    if(p.coinbase){ctx.fillStyle='#fbbf24';ctx.fillRect(x-1,y-1,3,3);}
+    else{ctx.strokeStyle='#00ff88';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.stroke();}
+  });
+  // Y axis labels
+  ctx.fillStyle='rgba(251,1,13,.4)';ctx.font='8px monospace';ctx.textAlign='right';
+  for(var yi=0;yi<=4;yi++){var v=mx*yi/4;ctx.fillText(v.toFixed(2),pad.l-4,pad.t+ch-yi/4*ch+3);}
+  // X axis labels
+  ctx.fillStyle='rgba(255,255,255,.2)';ctx.textAlign='center';ctx.font='8px monospace';
+  for(var xi=0;xi<=4;xi++){var idx=Math.floor(xi/4*(pts.length-1));var x2=pad.l+idx/(pts.length-1)*cw;ctx.fillText('#'+pts[idx].h,x2,pad.t+ch+14);}
+  // Stats overlay
+  ctx.fillStyle='rgba(251,1,13,.6)';ctx.font='bold 10px monospace';ctx.textAlign='left';
+  ctx.fillText(totalBal.toFixed(4)+' SOST',pad.l+6,pad.t+14);
+  ctx.fillStyle='rgba(0,255,136,.5)';ctx.font='9px monospace';
+  ctx.fillText('spendable: '+matureBal.toFixed(4),pad.l+6,pad.t+26);
+  ctx.fillStyle='rgba(251,191,36,.5)';
+  ctx.fillText('immature: '+immatureBal.toFixed(4),pad.l+6,pad.t+38);
+  // Tooltip
+  var baseImg=ctx.getImageData(0,0,cv.width,cv.height);
+  var tip=document.getElementById('addrMainTip');
+  cv.addEventListener('mousemove',function(e){
+    var rect=cv.getBoundingClientRect(),mx2=e.clientX-rect.left;
+    var idx=Math.round(((mx2-pad.l)/cw)*(pts.length-1));
+    if(idx<0)idx=0;if(idx>=pts.length)idx=pts.length-1;
+    var d=pts[idx];
+    var ctxR=cv.getContext('2d'),dprR=window.devicePixelRatio||1;
+    ctxR.putImageData(baseImg,0,0);ctxR.save();ctxR.scale(dprR,dprR);
+    var dx=pad.l+idx/(pts.length-1)*cw,dy=pad.t+ch-(d.bal/mx)*ch;
+    ctxR.strokeStyle='rgba(251,1,13,.3)';ctxR.lineWidth=1;ctxR.setLineDash([3,3]);
+    ctxR.beginPath();ctxR.moveTo(dx,pad.t);ctxR.lineTo(dx,pad.t+ch);ctxR.stroke();ctxR.setLineDash([]);
+    ctxR.shadowColor='rgba(251,1,13,0.6)';ctxR.shadowBlur=10;
+    ctxR.beginPath();ctxR.arc(dx,dy,5,0,Math.PI*2);ctxR.fillStyle='#fb010d';ctxR.fill();ctxR.shadowBlur=0;
+    ctxR.fillStyle='#fff';ctxR.beginPath();ctxR.arc(dx,dy,2,0,Math.PI*2);ctxR.fill();
+    ctxR.restore();
+    if(tip){
+      var type=d.coinbase?'\u26CF mined':'\u2193 received';
+      tip.innerHTML='<span style="color:#fb010d;font-weight:600">Block #'+d.h+'</span><br>'+
+        '<span style="color:var(--text3)">balance:</span> <span style="color:#fb010d;font-weight:600">'+d.bal.toFixed(4)+' SOST</span><br>'+
+        '<span style="color:var(--text3)">spendable:</span> <span style="color:#00ff88">'+d.mature.toFixed(4)+'</span><br>'+
+        '<span style="color:var(--text3)">change:</span> <span style="color:#fbbf24">+'+d.amt.toFixed(4)+'</span> ('+type+')';
+      tip.style.display='block';tip.style.position='fixed';
+      tip.style.left=(e.clientX+16)+'px';tip.style.top=(e.clientY-10)+'px';
+    }
+  });
+  cv.addEventListener('mouseleave',function(){
+    var ctxR=cv.getContext('2d');ctxR.putImageData(baseImg,0,0);
+    if(tip)tip.style.display='none';
+  });
+  cv.addEventListener('click',function(e){
+    var rect=cv.getBoundingClientRect(),mx2=e.clientX-rect.left;
+    var idx=Math.round(((mx2-pad.l)/cw)*(pts.length-1));
+    if(idx<0)idx=0;if(idx>=pts.length)idx=pts.length-1;
+    showBlockByHeight(pts[idx].h);
+  });
 }
 function renderAddrCharts(utxos){
   if(!utxos||!utxos.length)return;
