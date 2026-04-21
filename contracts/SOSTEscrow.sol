@@ -189,12 +189,19 @@ contract SOSTEscrow is ReentrancyGuard {
             revert LockDurationTooLong(duration, MAX_LOCK_DURATION);
         }
 
-        // --- Checks-Effects-Interactions pattern ---
-        // CHECKS: all validation above.
-        // EFFECTS: state changes below (before external call).
-        // INTERACTIONS: ERC-20 transferFrom is last.
+        // --- deposit() order: Checks → Interaction → Effects ---
+        // For deposit, the external call (transferFrom) comes BEFORE state
+        // changes. This ensures that if the transfer fails or the token
+        // behaves unexpectedly, no deposit is recorded. nonReentrant
+        // protects against reentrancy from malicious tokens.
 
-        // Record the deposit (effects before interaction)
+        // INTERACTION: transfer tokens first
+        bool success = IERC20(token).transferFrom(msg.sender, address(this), amount);
+        if (!success) {
+            revert TransferFailed();
+        }
+
+        // EFFECTS: record deposit only after successful transfer
         depositId = depositCount;
         depositCount++;
 
@@ -208,13 +215,6 @@ contract SOSTEscrow is ReentrancyGuard {
 
         _userDepositIds[msg.sender].push(depositId);
         totalLockedByToken[token] += amount;
-
-        // Transfer tokens from caller to this contract (interaction — last step)
-        // Uses transferFrom — caller must have approved beforehand.
-        bool success = IERC20(token).transferFrom(msg.sender, address(this), amount);
-        if (!success) {
-            revert TransferFailed();
-        }
 
         emit GoldDeposited(depositId, msg.sender, token, amount, unlockTime);
     }
