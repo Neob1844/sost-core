@@ -349,31 +349,28 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div id="v6Notice" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <style>@keyframes v6pulse{0%,100%{border-left-color:#00ff41;box-shadow:none}50%{border-left-color:#DAA520;box-shadow:inset 0 0 30px rgba(218,165,32,0.04),0 0 10px rgba(0,255,65,0.06)}}</style>
   <div style="background:rgba(0,255,65,0.06);border-left:3px solid #DAA520;padding:12px 18px;font-family:var(--code);font-size:10px;color:#67e8f9;line-height:1.8;animation:v6pulse 3s ease-in-out infinite;">
-    <b style="color:#fb010d;font-size:13px;letter-spacing:2px;">&#9888; CALIBRATION NOTICE &mdash; CONSENSUS UPDATE PLANNED FOR BLOCK 5,320</b><br><br>
-    <span style="color:#00ff88">Recent consensus adjustments are part of the live calibration phase of <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span>. The purpose is not arbitrary change, but progressive convergence through iterative error reduction under real mainnet conditions. <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> follows a simple but demanding principle: observe the deviation, measure the residual error, apply a correction, observe again, and continue reducing error. The process is comparable to arrows progressively tightening around a target: each correction is intended to reduce the remaining distance to stable convergence, not to claim instant perfection in a single step.</span><br><br>
-    <span style="color:#00ff88">This calibration is being performed on mainnet deliberately, during the current pre-public-deployment window, because only mainnet provides the variables that actually matter for this system: independent miners, real timing variance, real hardware diversity, real entry and exit of hashpower, and real production behavior. A testnet can validate code paths, but it cannot reproduce the statistical and strategic value of live network conditions. The objective is to minimize oscillation, reduce over-correction, and move the chain toward more coherent 10-minute convergence.</span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">BLOCK 5,320 &mdash; PLANNED CHANGE</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; PID bypassed:</b> profile selection becomes direct lag mapping &rarr; profile = min(lag, H10)</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Upward response:</b> immediate (if lag rises, profile rises immediately)</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Downward response:</b> 3-block hysteresis (profile does not step down until 3 consecutive block evaluations confirm the lower lag condition)</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; H10 ceiling:</b> unchanged</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Anti-stall:</b> unchanged</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; bitsQ:</b> unchanged (avg288 + dynamic cap remains exactly as currently implemented)</span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">WHAT DOES NOT CHANGE</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> bitsQ, avg288, dynamic cap, dead band &plusmn;15s</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Lag-adjust refresh interval (30s)</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Anti-stall threshold (60 min)</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> E4&ndash;H35 profile table</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Validation, sync rules, and all unrelated consensus logic</span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">WHAT THIS IS INTENDED TO ACHIEVE</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Remove unnecessary PID complexity where tests showed no measurable benefit</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Make profile behavior easier to reason about, easier to audit, and more directly tied to observable schedule lag</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Preserve rapid upward braking when the chain runs ahead</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Prevent noisy downward bouncing through controlled hysteresis</span><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Keep bitsQ as the primary numeric controller while making the structural controller simpler and more coherent</span><br><br>
-    <span style="color:#00ff88">Status: implemented and pushed, pending deployment confirmation. All miners and node operators should be prepared to upgrade before block 5,320.</span><br><br>
+    <b style="color:#fb010d;font-size:14px;letter-spacing:2px;">&#9888;&#9888;&#9888; CRITICAL HOTFIX &mdash; BLOCK 5,323 &mdash; RESTART REQUIRED &#9888;&#9888;&#9888;</b><br><br>
+    <span style="color:#ff4444;font-weight:600;font-size:12px;">A consensus bug was found in the block 5,320 initial deployment. All node operators and miners must update and restart before block 5,322.</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">BUG DESCRIPTION</span><br>
+    <span style="color:#00ff88">The downward hysteresis logic deployed at block 5,320 contained a <b style="color:#ff4444">deadlock condition</b>. The 3-block lookback compared stored profile indices against the previous profile (<span style="color:#67e8f9">stored &ge; prev_H</span>), which always evaluated to <span style="color:#ff4444">true</span> in steady state because the output profile was self-reinforcing: if the system computed H8, it stored H8, and the next evaluation found H8 &ge; H8, preventing any descent. The profile became permanently locked at whatever level it inherited from the pre-fork PID, regardless of actual lag.</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">OBSERVED IMPACT</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Profile stuck at H8 when direct lag mapping should have computed H3&ndash;H4</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Miners operating at ~35% stability instead of the correct ~65&ndash;78%</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Block times significantly inflated due to unnecessary structural difficulty</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">BLOCK 5,323 &mdash; HOTFIX</span><br>
+    <span style="color:#00ff88">The broken 3-block hysteresis is replaced with a deterministic asymmetric descent rule:</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Direct lag mapping:</b> <span style="color:#67e8f9">profile = clamp(lag, 0, H10)</span></span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Upward:</b> immediate &mdash; if lag increases, profile follows instantly</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Downward:</b> maximum 1 level per block &mdash; smooth descent, no bounce, <b>no deadlock</b></span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; Example:</b> prev=H8, lag=3 &rarr; H7 &rarr; H6 &rarr; H5 &rarr; H4 &rarr; H3 (5 blocks to converge)</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">UNCHANGED</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> bitsQ (avg288 + dynamic cap + dead band &plusmn;15s)</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> Anti-stall (60 min threshold, zone-based decay)</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> H10 ceiling, lag-adjust (30s), E4&ndash;H35 profile table</span><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670;</b> PID bypass from block 5,320 remains active</span><br><br>
+    <span style="color:#ff4444;font-weight:700;font-size:12px;">&#9654; ACTION REQUIRED: UPDATE AND RESTART BOTH NODE AND MINER BEFORE BLOCK 5,323</span><br><br>
     <span style="color:#DAA520;font-weight:600;">&#9670; HOW TO UPGRADE:</span> <span style="color:#67e8f9;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;">git pull origin main &amp;&amp; cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span> <span style="color:#fff">Restart both node and miner.</span><br><br>
-    <span style="color:var(--text3)">Details:</span> <a href="https://bitcointalk.org/index.php?topic=5579432.new#new" style="color:#DAA520;text-decoration:underline;" target="_blank" rel="noopener">BTCTalk</a> &middot; <a href="https://github.com/Neob1844/sost-core" style="color:#DAA520;text-decoration:underline;" target="_blank" rel="noopener">Source code</a>
+    <span style="color:var(--text3)">Details:</span> <a href="https://github.com/Neob1844/sost-core" style="color:#DAA520;text-decoration:underline;" target="_blank" rel="noopener">Source code</a> &middot; Commit: <span style="color:#67e8f9">cf04e39</span>
   </div>
 </div>
 <div class="dashboard" id="dashboard">
