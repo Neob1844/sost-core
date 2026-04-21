@@ -907,8 +907,8 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
           difficulty every single block. Historical: anchor-based exponential with 24-hour half-life
           (V2, since block 1,450) and 12.5% delta cap. Current (V5, block 5,175+): avg288-based
           &mdash; compares average of last 288 block intervals against 600s target, replacing the
-          anchor-based exponential. Dynamic cap (block 5,260+): 0% dead band &plusmn;30s, then
-          0.5%/1.5%/2.5%/3.0% max based on deviation; median288 overrides when avg lies.
+          anchor-based exponential. Dynamic cap (block 5,270+): 0% dead band &plusmn;15s, then
+          0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix.
         </p>
 
         <div class="code-snippet" data-label="cASERT bitsQ (V5: AVG288-BASED)">
@@ -916,17 +916,16 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
 avg_interval = average(last 288 block intervals)
 deviation    = avg_interval - <span class="num">600</span>  <span class="cmt">// compare against target</span>
 
-<span class="cmt">// Dynamic cap (block 5260+): tiered by deviation magnitude</span>
-<span class="cmt">// |deviation| &le; 30s: 0% (dead band)</span>
+<span class="cmt">// Dynamic cap (block 5270+): tiered by deviation magnitude</span>
+<span class="cmt">// |deviation| &le; 15s: 0% (dead band)</span>
 <span class="cmt">// |deviation| &le; 60s: 0.5% max</span>
-<span class="cmt">// |deviation| &le; 120s: 1.5% max</span>
-<span class="cmt">// |deviation| &le; 240s: 2.5% max</span>
+<span class="cmt">// |deviation| &le; 120s: 1.0% max</span>
+<span class="cmt">// |deviation| &le; 240s: 2.0% max</span>
 <span class="cmt">// |deviation| &gt; 240s: 3.0% max</span>
 cap      = dynamic_cap(deviation)
 
-<span class="cmt">// median288 overrides when avg lies</span>
-median   = median(last 288 block intervals)
-<span class="kw">if</span> median deviates significantly from avg: use median
+<span class="cmt">// Median removed from consensus (block 5,270+)</span>
+<span class="cmt">// Block 5,323 hotfix</span>
 
 new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
         </div>

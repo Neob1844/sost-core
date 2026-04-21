@@ -547,7 +547,7 @@
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100        → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101              → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
-<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> The level system below (L1–L6+) was the pre-genesis design. The mainnet implementation uses <b>40 discrete profiles (E4 through H35)</b> with a <b>PID controller</b> using 5 weighted signals (instantaneous rate 0.05, schedule lag 0.40, integrator 0.15, burst score 0.05, volatility 0.02). Each profile has independently tuned scale, k, steps, and margin. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Specification</a> for current parameters. V3 fork at block 4,100 increased slew rate ±1 → ±3; V6 (block 5,000) returns to ±1. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 40 profiles E4–H35, anti-stall 90 min.</div>
+<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> The level system below (L1–L6+) was the pre-genesis design. The mainnet implementation uses <b>40 discrete profiles (E4 through H35)</b> with <b>direct lag mapping (block 5,320+): profile = clamp(lag, 0, H10). Upward: immediate. Downward: max 1 level/block (block 5,323 hotfix).</b> Each profile has independently tuned scale, k, steps, and margin. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Specification</a> for current parameters. V3 fork at block 4,100 increased slew rate ±1 → ±3; V6 (block 5,000) returns to ±1. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 40 profiles E4–H35, anti-stall 60 min.</div>
 <p class="wp-p">Stability parameters by level (pre-genesis design — see note above):</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Mainnet profiles: E4(-4) through H35(+35), 40 total</pre>
@@ -936,7 +936,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100   → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101         → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
-<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> Mainnet uses 40 profiles (E4–H35) with variable scale, k, steps, margin per profile. PID controller with 5 signals replaces direct lag thresholds. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Spec</a>.</div>
+<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> Mainnet uses 40 profiles (E4–H35) with variable scale, k, steps, margin per profile. Direct lag mapping (block 5,320+) replaces PID controller. Asymmetric descent: up=immediate, down=max 1/block (block 5,323). See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Spec</a>.</div>
 <p class="wp-p">STABILITY PARAMETERS (mainnet — see note above):</p>
 <pre class="wp-code-inline">  40 profiles: E4(-4) through H35(+35)</pre>
 <pre class="wp-code-inline">  B0 baseline: scale=1, k=4, steps=4, margin=185</pre>
@@ -2649,12 +2649,12 @@ cASERT EQUALIZER PARAMETERS:
   CASERT_PROFILE_COUNT         = 40    // E4 through H35
   CASERT_V2_FORK_HEIGHT        = 1,450 // 24h halflife + 12.5% cap (historical, replaced by avg288 at 5,175)
   CASERT_V3_FORK_HEIGHT        = 4,100 // slew rate ±3 (V3); returned to ±1 at V6
-  CASERT_V6_FORK_HEIGHT        = 5,000 // slew rate ±1, H10/H11 scale=2. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 40 profiles E4–H35, anti-stall 60 min.
+  CASERT_V6_FORK_HEIGHT        = 5,000 // slew rate ±1, H10/H11 scale=2. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 40 profiles E4–H35, anti-stall 60 min. Block 5,323: asymmetric descent hotfix (down max 1/block).
   CASERT_AVG288_FORK_HEIGHT    = 5,175 // bitsQ switches to avg288-based (no half-life). Compares avg of last 288 intervals vs 600s target.
-  CASERT_DYNCAP_FORK_HEIGHT    = 5,260 // Dynamic cap: 0% dead band (±30s), 0.5%/1.5%/2.5%/3.0% max. Median288 reality check.
+  CASERT_DYNCAP_FORK_HEIGHT    = 5,270 // Dynamic cap: 0% dead band (±15s), 0.5%/1.0%/2.0%/3.0% max. Median288 removed from consensus at block 5,270.
   CASERT_V6_SLEW_RATE          = 1     // max ±1 profile level per block (V6)
   CASERT_V3_LAG_FLOOR_DIV      = 8     // lag floor = lag / 8
-  // PID gains: K_R=0.05, K_L=0.40, K_I=0.15, K_B=0.05, K_V=0.02
+  // PID gains: OBSOLETE (block 5,320+). Replaced by direct lag mapping: profile = clamp(lag, 0, H10).
   // 40 profiles with variable scale(1-2), k(3-20), steps(2-20), margin(100-280)
   // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
   CASERT_DECAY_STEP            = 50    // blocks per additional level beyond L5

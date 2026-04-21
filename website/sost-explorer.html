@@ -870,8 +870,8 @@ const CASERT_PROFILES=[
 //   |lag| 51-75 → level 3 (E3 or H3)
 //   |lag| > 75  → level 4 (E4 or H4+)
 //
-// NOTE: This is an ESTIMATE. The actual C++ uses a full PID controller
-// with 5 signals + slew rate + anti-stall. Use RPC casert_profile
+// NOTE: This is an ESTIMATE. Post block 5,320 the C++ uses direct lag
+// mapping (PID bypassed). Use RPC casert_profile
 // from the node whenever available.
 // ═══════════════════════════════════════════════════════════════
 function getProfileFromLag(lag) {
@@ -889,8 +889,8 @@ function getProfileFromLag(lag) {
     return CASERT_PROFILES[eidx];
   }
   // Ahead of schedule → harden (H profiles)
-  // V6 calibration (block 5050): dynamic lag cap — profile = min(PID_output, lag)
-  // Since we don't have the full PID here, estimate profile ≈ lag (capped at H35)
+  // Post block 5,320: direct lag mapping — profile = clamp(lag, 0, H10)
+  // Estimate profile ≈ lag (capped at H10 ceiling)
   var profile_h = Math.min(lag, 32);
   var idx = Math.min(CASERT_PROFILES.length - 1, 4 + profile_h);
   return CASERT_PROFILES[idx];
@@ -2292,7 +2292,7 @@ async function showBlock(hash){
     else if(txC>1){txRows+='<tr><td><span style="color:var(--cyan)">transfer</span></td><td colspan="3" style="color:var(--text3)">'+(txC-1)+' standard tx(s) \u2014 search by txid for detail</td></tr>';}
     var prevLink=isGen?'<span style="color:var(--text3)">null // genesis</span>':'<span class="v-hash" onclick="showBlock(\''+b.previousblockhash+'\')">'+b.previousblockhash+'</span>'+cpBtn(b.previousblockhash);
     var signal=computeBlockLag(b.height,b.time);
-    // Use RPC casert_mode (authoritative from C++ PID controller) when available
+    // Use RPC casert_mode (authoritative from C++ consensus engine) when available
     var rpcSignal=b.casert_signal!==undefined?b.casert_signal:signal;
     var casertDesc=(rpcSignal>0)?(rpcSignal+' ahead'):(rpcSignal<0)?(Math.abs(rpcSignal)+' behind'):'on schedule';
     var displayProf;
@@ -3072,10 +3072,8 @@ function showCXInfo(){
   'Dynamic cap (block 5,270+): \u00B115s dead band, 0%/0.5%/1.0%/2.0%/3.0% max scaling with deviation. '+
   'Median removed from consensus at block 5,270. avg288 is the sole signal. '+
   'Half-life exponential (V1 48h, V2 24h) preserved for pre-5175 blocks only. Anchor-based per epoch ('+131553+' blocks).<br><br>'+
-  '<b style="color:var(--orange)">cASERT equalizer</b> — 5-signal EWMA controller with <b>40 profiles</b> (E4 through H35, active range E4–H35). '+
-  'Computes control signal U from instantaneous rate, schedule lag, integrator, burst score, and volatility.<br><br>'+
-  '<b>Formula:</b> U = <span style="color:var(--cyan)">0.05</span>·r + <span style="color:var(--green)">0.40</span>·lag + <span style="color:var(--purple)">0.15</span>·I + <span style="color:var(--orange)">0.05</span>·burst + <span style="color:var(--yellow)">0.02</span>·V<br>'+
-  'Lag dominates (60% of total signal), preventing oscillation.<br><br>'+
+  '<b style="color:var(--orange)">cASERT equalizer</b> — direct lag-mapped controller with <b>40 profiles</b> (E4 through H35, active range E4–H10 ceiling). '+
+  'Post block 5,320: PID bypassed. profile = clamp(lag, 0, H10). Upward: immediate. Downward: max 1 level/block (block 5,323 hotfix).<br><br>'+
   '<b>Profiles:</b> '+
   '<span style="color:#67e8f9">E4</span> (emergency easing, margin=280) → '+
   '<span style="color:#22d3ee">E3→E1</span> (easing) → '+
@@ -3083,7 +3081,7 @@ function showCXInfo(){
   '<span style="color:#fb923c">H1→H4</span> (hardening, scale=1) → '+
   '<span style="color:#fb010d">H5→H9</span> (hardening, scale=2) → '+
   '<span style="color:var(--text3)">H10</span> (ceiling, scale=2, k=7, steps=8, margin=115), <span style="color:var(--text3)">H11–H35</span> (reserved, margin=115).<br><br>'+
-  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Slew rate: ±1 profile/block (V6+).</b> Lag floor: profile ≥ lag/8. <b>V6 calibration (block 5,050): dynamic lag cap H ≤ lag. Live lag from wall clock. 40 profiles E4-H35. Ahead Guard removed. bitsQ avg288-based (5,175+), dynamic cap (5,270+). Median removed (5,270+).</b><br><br>'+
+  '<b>Safety:</b> Behind schedule → cap at B0. &lt;10 blocks → cap at B0. <b>Asymmetric descent: upward immediate, downward max 1 level/block (block 5,323+).</b> Lag floor: profile ≥ lag/8. <b>V6 calibration (block 5,050): dynamic lag cap H ≤ lag. Live lag from wall clock. 40 profiles E4-H35. Ahead Guard removed. bitsQ avg288-based (5,175+), dynamic cap (5,270+). Median removed (5,270+).</b><br><br>'+
   '<b style="color:var(--green)">ANTI-STALL (mining only):</b> V5 (block 4,300+) activates after 3,600s (1 hour). Emergency-only. Zone-based decay targeting B0: H10–H7 at 600s/level, H6–H4 at 900s/level, H3–H1 at 1200s/level. B0 is natural destination. Easing (E1–E4) only after 6+ additional hours at B0 (1800s/level). Miner declares profile in block JSON; node validates within E4–H35 bounds (H10 ceiling active).<br><br>'+
   '<b style="color:var(--cyan)">MINER LAG-ADJUST (non-consensus):</b> Every 30 seconds, the miner re-queries the node for the current profile. If the profile changed (because live lag dropped or the lag cap forced a lower profile), the miner restarts search immediately with the correct profile. This reduces wasted mining time at suboptimal profiles from up to 60 minutes (anti-stall) to approximately 30 seconds. Old miners without lag-adjust remain fully compatible \u2014 this is a miner-side optimization only.<br><br>'+
   '<b>Chain selection:</b> Best chain by <b>cumulative work</b> (NOT longest chain). work = floor(2^256 / (target + 1)). Reorg is atomic with full rollback on failure. MAX_REORG_DEPTH = 500 blocks.</div></div>'+

@@ -202,7 +202,7 @@ raw = anchor_bitsq &times; factor
 delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/8)
 result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p><strong>Current (V5, block 5175+):</strong> avg288-based &mdash; compares average of last 288 block intervals against 600s target. Replaces anchor-based exponential.</p>
-<p><strong>Dynamic cap (block 5260+):</strong> 0% dead band &plusmn;30s, then 0.5%/1.5%/2.5%/3.0% max based on deviation. Median288 overrides when avg lies.</p>
+<p><strong>Dynamic cap (block 5270+):</strong> 0% dead band &plusmn;15s, then 0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix.</p>
 <p><em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
