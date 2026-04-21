@@ -326,7 +326,7 @@ Profile table (struct: {scale, steps, k, margin}):
 Anti-Stall Decay (zone-based, targeting B0):
 
   Hardening profiles decay toward B0 (natural destination):
-    H9–H7: drop 1 level every 600s (10 min/level)
+    H10–H7: drop 1 level every 600s (10 min/level)
     H6–H4: drop 1 level every 900s (15 min/level)
     H3–H1: drop 1 level every 1200s (20 min/level)
     B0   : natural destination, no further decay toward easing
@@ -722,12 +722,12 @@ Regularization λ           100
 Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ (V1: 48h half-life, V2: 24h half-life from block 1450; V5 (block 5175+): avg288-based with dynamic cap)
-Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450; V5 (block 5260+): dynamic cap — 0% dead band ±30s, then 0.5%/1.5%/2.5%/3.0% max based on deviation; median288 overrides when avg lies
+Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450; V5 (block 5270+): dynamic cap — ±15s dead band, 0%/0.5%/1.0%/2.0%/3.0% max based on deviation; median removed from consensus at block 5,270, avg288 is the sole signal
 Equalizer profiles         40 total (15 active A: E4-H10, 25 reserved R: H11-H35); H10 ceiling active, H35 max reserved; equalizer is emergency-only
 cASERT model               unified: bitsQ primary + equalizer (emergency-only) + anti-stall
 CASERT_H_MIN               -4
 CASERT_H_MAX               35 (H10 ceiling active, H11-H35 reserved, margin=115)
-cASERT decay               zone-based anti-stall targeting B0: H9-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E4 after 6+ additional hours at B0 (1800s/level)
+cASERT decay               zone-based anti-stall targeting B0: H10-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E4 after 6+ additional hours at B0 (1800s/level)
 Block target spacing       600s
 Stability baseline (B0)    scale=1, steps=4, k=4, margin=185
 
@@ -742,7 +742,7 @@ fast chain → increase powDiffQ → smaller target → harder
 
 Historical: V1 (blocks <1450): 48h half-life exponential, 6.25% cap; V2 (blocks >=1450): 24h half-life exponential, 12.5% cap.
 Current: V5 (block 5175+): avg288-based — compares average of last 288 block intervals against 600s target. Replaces anchor-based exponential for current blocks (historical fork descriptions preserved).
-Dynamic cap (block 5260+): 0% dead band ±30s, then 0.5%/1.5%/2.5%/3.0% max based on deviation. Median288 overrides when avg lies.
+Dynamic cap (block 5270+): ±15s dead band, 0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Median removed from consensus at block 5,270; avg288 is the sole signal.
 
 3.12 cASERT Equalizer (Consensus-Critical)
 
@@ -785,7 +785,7 @@ SIGNAL COMPUTATION (deterministic, block-timestamp based):
 
 DECAY ANTI-STALL (zone-based, targeting B0):
   Hardening profiles decay toward B0 (natural destination):
-    H9–H7: drop 1 level every 600s (10 min/level)
+    H10–H7: drop 1 level every 600s (10 min/level)
     H6–H4: drop 1 level every 900s (15 min/level)
     H3–H1: drop 1 level every 1200s (20 min/level)
     B0   : natural destination, no further decay toward easing
@@ -2482,7 +2482,7 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 | Initial reward | 7.85100863 SOST/block |
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
-| Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap; V5 (block 5175+): avg288-based with dynamic cap (0% dead band ±30s, then 0.5%/1.5%/2.5%/3.0%; median288 overrides when avg lies) |
+| Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap; V5 (block 5175+): avg288-based with dynamic cap (±15s dead band, 0%/0.5%/1.0%/2.0%/3.0%; median removed at block 5,270, avg288 sole signal) |
 | cASERT equalizer | Emergency-only, consensus-critical, 40 profiles (15 active A: E4-H10, 25 reserved R: H11-H35), H10 ceiling active, H35 max reserved, H11-H35 margin=115, B0 baseline. Slew rate: ±1 profile/block (V6, block 5,000+) |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
@@ -2740,7 +2740,7 @@ cASERT EQUALIZER PARAMETERS (consensus-critical, 40 profiles):
   // See profile table in Section 3.12
 
 cASERT DECAY ANTI-STALL (zone-based, targeting B0):
-  cASERT_DECAY_H9_H7_SECS     = 600    // 10 min/level for H9-H7
+  cASERT_DECAY_H10_H7_SECS    = 600    // 10 min/level for H10-H7
   cASERT_DECAY_H6_H4_SECS     = 900    // 15 min/level for H6-H4
   cASERT_DECAY_H3_H1_SECS     = 1,200  // 20 min/level for H3-H1
   cASERT_DECAY_EASE_SECS       = 1,800  // 30 min/level for E1-E4 (after 6h+ at B0)
@@ -3169,7 +3169,7 @@ Changes from v3.4 to v3.5:
   70) cASERT rewritten: 40 discrete profiles E4(-4) through H35(+35),
       each with unique {scale, steps, k, margin}. CASERT_H_MIN=-4,
       CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest active).
-  71) Anti-stall: zone-based decay targeting B0. H9-H7: 600s/level,
+  71) Anti-stall: zone-based decay targeting B0. H10-H7: 600s/level,
       H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
       at B0 (1800s/level).
 
