@@ -94,57 +94,54 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
 
         int64_t avg_interval = (count > 0) ? (total_time / count) : TARGET_SPACING;
 
-        // Compute median
-        int64_t median_interval = TARGET_SPACING;
-        if (!intervals.empty()) {
-            std::sort(intervals.begin(), intervals.end());
-            median_interval = intervals[intervals.size() / 2];
-        }
-
-        // Primary signal: avg288 deviation from target
+        // avg288 only — median removed from consensus (caused 3%/block
+        // saturation even when avg was near target, block 5260-5268).
         int64_t deviation = avg_interval - TARGET_SPACING;
         int64_t abs_dev = (deviation < 0) ? -deviation : deviation;
-
-        // Secondary signal: median288 deviation (reality check)
-        int64_t median_dev = median_interval - TARGET_SPACING;
-        int64_t abs_median_dev = (median_dev < 0) ? -median_dev : median_dev;
-
         int64_t delta = 0;
 
-        // Dynamic cap based on deviation magnitude
+        // Dynamic cap: avg288 only, dead band ±15s (block 5270+)
         int64_t max_delta;
-        if (next_height >= 5260) {
-            // Use the LARGER of avg and median deviation to determine the cap.
-            // This prevents the "hidden oscillation" where avg is fine but
-            // median reveals the real center is off.
-            int64_t effective_dev = std::max(abs_dev, abs_median_dev);
-
-            if (effective_dev <= BITSQ_AVG288_DEADBAND) {
-                max_delta = 0;  // dead band: both avg AND median are near target
-            } else if (effective_dev <= 60) {
-                max_delta = (int64_t)prev_bitsq / 200;  // 0.5%
-            } else if (effective_dev <= 120) {
-                max_delta = (int64_t)prev_bitsq / 67;   // 1.5%
-            } else if (effective_dev <= 240) {
-                max_delta = (int64_t)prev_bitsq / 40;   // 2.5%
+        if (next_height >= 5270) {
+            if (abs_dev <= 15) {
+                max_delta = 0;                           // dead band ±15s
+            } else if (abs_dev <= 60) {
+                max_delta = (int64_t)prev_bitsq / 200;   // 0.5%
+            } else if (abs_dev <= 120) {
+                max_delta = (int64_t)prev_bitsq / 100;   // 1.0%
+            } else if (abs_dev <= 240) {
+                max_delta = (int64_t)prev_bitsq / 50;    // 2.0%
             } else {
-                max_delta = (int64_t)prev_bitsq / 33;   // 3.0%
+                max_delta = (int64_t)prev_bitsq / 33;    // 3.0%
             }
-
-            // Direction: use median when avg is in dead band but median is not.
-            // The median tells the real story when extremes cancel each other.
+        } else if (next_height >= 5260) {
+            // Legacy 5260-5269: median-based (preserved for historical consensus)
+            int64_t median_interval = TARGET_SPACING;
+            if (!intervals.empty()) {
+                std::sort(intervals.begin(), intervals.end());
+                median_interval = intervals[intervals.size() / 2];
+            }
+            int64_t median_dev = median_interval - TARGET_SPACING;
+            int64_t abs_median_dev = (median_dev < 0) ? -median_dev : median_dev;
+            int64_t effective_dev = std::max(abs_dev, abs_median_dev);
+            if (effective_dev <= BITSQ_AVG288_DEADBAND) max_delta = 0;
+            else if (effective_dev <= 60) max_delta = (int64_t)prev_bitsq / 200;
+            else if (effective_dev <= 120) max_delta = (int64_t)prev_bitsq / 67;
+            else if (effective_dev <= 240) max_delta = (int64_t)prev_bitsq / 40;
+            else max_delta = (int64_t)prev_bitsq / 33;
             if (abs_dev <= BITSQ_AVG288_DEADBAND && abs_median_dev > BITSQ_AVG288_DEADBAND) {
-                deviation = median_dev;  // median overrides avg direction
+                deviation = median_dev;
                 abs_dev = abs_median_dev;
             }
         } else {
             max_delta = (int64_t)prev_bitsq / BITSQ_MAX_DELTA_DEN_V6PP;
         }
-        if (max_delta < 1 && std::max(abs_dev, abs_median_dev) > BITSQ_AVG288_DEADBAND) max_delta = 1;
+        if (max_delta < 1 && abs_dev > 15) max_delta = 1;
 
         // Proportional correction within the dynamic cap
-        if (max_delta > 0 && abs_dev > BITSQ_AVG288_DEADBAND) {
-            int64_t excess = abs_dev - BITSQ_AVG288_DEADBAND;
+        int64_t deadband = (next_height >= 5270) ? 15 : BITSQ_AVG288_DEADBAND;
+        if (max_delta > 0 && abs_dev > deadband) {
+            int64_t excess = abs_dev - deadband;
             int64_t raw_delta = ((int64_t)prev_bitsq * excess) / (TARGET_SPACING * 4);
             if (deviation < 0) delta = std::min(raw_delta, max_delta);
             else                delta = -std::min(raw_delta, max_delta);
