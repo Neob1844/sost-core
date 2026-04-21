@@ -120,6 +120,15 @@ inline constexpr int32_t  CASERT_V6_H12_MIN_LAG   = 21;      // V6-only: H12 res
 inline constexpr int64_t  CASERT_V6_CALIBRATION_HEIGHT   = 5050;
 inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 3600;  // 60 min (kept at V5 level)
 
+// Direct lag mapping (block 5320+): replaces PID-based profile selection.
+// profile = clamp(lag, 0, H10). Much simpler: profile equals lag directly.
+// Downward hysteresis: profile only drops if lower lag persists for 3 blocks.
+// PID is bypassed entirely — test data showed it adds no measurable benefit
+// when lag cap + slew ±1 are active (all 7 PID weight configs produced
+// identical profile paths in simulation).
+inline constexpr int64_t  CASERT_DIRECT_LAG_HEIGHT       = 5320;
+inline constexpr int32_t  CASERT_HYST_DOWN_BLOCKS        = 3;     // require 3 consecutive lower-lag blocks to drop
+
 // ─────────────────────────────────────────────────────────────────────
 // Burst Controller (block 5100)
 //

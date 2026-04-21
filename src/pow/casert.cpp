@@ -303,6 +303,93 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     int32_t lag = (int32_t)((int64_t)(next_height - 1) - expected_h);
     dec.lag = lag;
 
+    // =========================================================================
+    // Direct lag mapping (block 5320+): bypasses PID entirely.
+    // profile = clamp(lag, 0, H10) with downward hysteresis.
+    //
+    // Why: simulation of 7 PID configs (A-G) showed identical profile paths
+    // because slew ±1 and lag cap dominate. The PID adds complexity without
+    // measurable benefit. Direct mapping is simpler, more predictable, and
+    // produced the best results in testing (lowest sawtooth, fastest H9 reach).
+    //
+    // Hysteresis: upward transitions are immediate (lag rises → profile rises).
+    // Downward transitions require the lower lag to persist for 3 consecutive
+    // blocks, preventing noisy H-level bouncing from single slow blocks.
+    // Implemented from chain-visible state only (last 3 stored profile_indices).
+    // =========================================================================
+    if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
+        int32_t target_profile;
+        if (lag <= 0) {
+            target_profile = 0;  // behind or on schedule → B0
+        } else {
+            target_profile = std::min<int32_t>(lag, CASERT_HARD_PROFILE_CEILING);  // cap at H10
+        }
+
+        int32_t prev_H = 0;
+        if (!chain.empty()) {
+            prev_H = chain.back().profile_index;
+            if (prev_H == INT32_MIN) prev_H = 0;
+            prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_HARD_PROFILE_CEILING, prev_H));
+        }
+
+        int32_t H;
+        if (target_profile >= prev_H) {
+            // Upward: immediate, follow lag directly
+            H = target_profile;
+        } else {
+            // Downward: hysteresis — check if last 3 blocks all had lower profile
+            // This prevents dropping from a single slow block
+            bool persist = true;
+            int32_t lookback = std::min<int32_t>(CASERT_HYST_DOWN_BLOCKS, (int32_t)chain.size());
+            for (int32_t hi = 0; hi < lookback; ++hi) {
+                int32_t idx = (int32_t)chain.size() - 1 - hi;
+                if (idx < 0) { persist = false; break; }
+                int32_t stored = chain[idx].profile_index;
+                if (stored == INT32_MIN) stored = 0;
+                if (stored >= prev_H) { persist = false; break; }
+            }
+            if (persist) {
+                H = target_profile;  // confirmed lower for 3 blocks → drop
+            } else {
+                H = prev_H;  // hold current profile
+            }
+        }
+
+        // Safety: behind schedule → max B0
+        if (lag <= 0) H = std::min<int32_t>(H, 0);
+
+        // Anti-stall still applies (unchanged)
+        if (now_time > 0 && !chain.empty()) {
+            int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
+            int64_t t_act = CASERT_ANTISTALL_FLOOR_V6C;
+            if (stall >= t_act && H > 0) {
+                int32_t decayed_H = H - 1;
+                int64_t decay_time = stall - t_act;
+                while (decayed_H > 0 && decay_time > 0) {
+                    int64_t cost = (decayed_H >= 7) ? 600 : ((decayed_H >= 4) ? 900 : 1200);
+                    if (decay_time < cost) break;
+                    decay_time -= cost;
+                    decayed_H--;
+                }
+                H = decayed_H;
+            }
+            if (stall >= t_act && H <= 0) {
+                int64_t time_at_b0 = stall - t_act;
+                if (time_at_b0 > CASERT_ANTISTALL_EASING_EXTRA) {
+                    int64_t easing_time = time_at_b0 - CASERT_ANTISTALL_EASING_EXTRA;
+                    H = std::max<int32_t>(CASERT_H_MIN, -(int32_t)(easing_time / 1800));
+                }
+            }
+        }
+
+        dec.profile_index = H;
+        return dec;
+    }
+
+    // =========================================================================
+    // Pre-5320: PID-based profile selection (preserved for historical consensus)
+    // =========================================================================
+
     // EWMA computation from recent blocks
     // We compute EWMAs iteratively over the last min(chain.size(), 96+8) blocks
     int32_t S = 0, M = 0, V = 0;
