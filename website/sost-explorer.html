@@ -1543,25 +1543,63 @@ function renderDashPanel(key,body,title,silent){
   } else if(key==='hashrate'){
     title.textContent='// EST. HASHRATE (last '+data.length+' blocks)';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
-    body.innerHTML='<div style="position:relative"><canvas id="dpHashCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
+    body.innerHTML='<div style="position:relative"><canvas id="dpHashCanvas" style="width:100%;height:200px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid rgba(251,146,60,.3);padding:8px 12px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);box-shadow:0 0 15px rgba(251,146,60,.15);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpHashCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
       cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
-      var pts=[];for(var i=1;i<data.length;i++){var dt=data[i].t-data[i-1].t;if(dt>0)pts.push({h:data[i].h,v:data[i].d/dt});}
+      var pts=[];for(var i=1;i<data.length;i++){var dt=data[i].t-data[i-1].t;if(dt>0)pts.push({h:data[i].h,v:data[i].d/dt,dt:dt});}
       if(!pts.length)return;
       var mn=Math.min.apply(null,pts.map(function(p){return p.v;}));
       var mx2=Math.max.apply(null,pts.map(function(p){return p.v;}));
-      var rng=mx2-mn||1;mn-=rng*.05;mx2+=rng*.05;rng=mx2-mn;
-      var pad={l:50,r:10,t:10,b:20},cw=W-pad.l-pad.r,ch=Hc-pad.t-pad.b;
-      ctx.beginPath();ctx.strokeStyle='rgba(251,146,60,.7)';ctx.lineWidth=1.5;
+      var rng=mx2-mn||1;mn-=rng*.08;mx2+=rng*.08;rng=mx2-mn;
+      var pad={l:55,r:12,t:16,b:24},cw=W-pad.l-pad.r,ch=Hc-pad.t-pad.b;
+      // Grid with depth effect
+      for(var gi=0;gi<=5;gi++){var gy=pad.t+gi*(ch/5);ctx.strokeStyle='rgba(251,146,60,'+(0.03+gi*0.01)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);ctx.stroke();}
+      // Moving average (20-block EMA) — smooth cyan line
+      var ema=pts[0].v,emaAlpha=2/(20+1),emaPts=[];
+      pts.forEach(function(p){ema=emaAlpha*p.v+(1-emaAlpha)*ema;emaPts.push(ema);});
+      ctx.beginPath();ctx.strokeStyle='rgba(103,232,249,.3)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+      emaPts.forEach(function(e,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-((e-mn)/rng)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.stroke();ctx.setLineDash([]);
+      // Main area fill with gradient
+      ctx.beginPath();ctx.moveTo(pad.l,pad.t+ch);
+      pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-((p.v-mn)/rng)*ch;ctx.lineTo(x,y);});
+      ctx.lineTo(pad.l+cw,pad.t+ch);ctx.closePath();
+      var grd=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);grd.addColorStop(0,'rgba(251,146,60,.12)');grd.addColorStop(0.5,'rgba(251,1,13,.06)');grd.addColorStop(1,'rgba(251,1,13,.01)');ctx.fillStyle=grd;ctx.fill();
+      // Main line with glow
+      ctx.shadowColor='rgba(251,146,60,0.5)';ctx.shadowBlur=6;
+      ctx.beginPath();ctx.strokeStyle='rgba(251,146,60,.85)';ctx.lineWidth=2;
       pts.forEach(function(p,i){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-((p.v-mn)/rng)*ch;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
-      ctx.stroke();
-      ctx.fillStyle='#444';ctx.font='8px monospace';ctx.textAlign='right';
-      for(var i=0;i<=3;i++){var v=mn+rng*i/3;var yp=pad.t+ch-i/3*ch;
+      ctx.stroke();ctx.shadowBlur=0;
+      // Peak markers with glow dots
+      var avgV=pts.reduce(function(s,p){return s+p.v;},0)/pts.length;
+      pts.forEach(function(p,i){
+        if(p.v>avgV*1.5){var x=pad.l+i/(pts.length-1)*cw,y=pad.t+ch-((p.v-mn)/rng)*ch;
+          ctx.shadowColor='rgba(251,146,60,0.6)';ctx.shadowBlur=8;ctx.fillStyle='rgba(251,146,60,.8)';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+      });
+      // Current value indicator — pulsing dot at last point
+      var lastX=pad.l+(pts.length-1)/(pts.length-1)*cw,lastY=pad.t+ch-((pts[pts.length-1].v-mn)/rng)*ch;
+      ctx.shadowColor='rgba(251,146,60,0.8)';ctx.shadowBlur=12;
+      ctx.fillStyle='#fb923c';ctx.beginPath();ctx.arc(lastX,lastY,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(lastX,lastY,2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      // Current value label
+      var curLbl=pts[pts.length-1].v>=1e3?(pts[pts.length-1].v/1e3).toFixed(1)+'K':Math.floor(pts[pts.length-1].v);
+      ctx.fillStyle='rgba(251,146,60,.9)';ctx.font='bold 10px monospace';ctx.textAlign='left';
+      ctx.fillText(curLbl+' H/s',lastX-40,lastY-10);
+      // Y axis labels
+      ctx.fillStyle='rgba(251,146,60,.35)';ctx.font='8px monospace';ctx.textAlign='right';
+      for(var i=0;i<=4;i++){var v=mn+rng*i/4;var yp=pad.t+ch-i/4*ch;
         var lbl=v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.floor(v);
         ctx.fillText(lbl+' H/s',pad.l-4,yp+3);}
-      setupDpTooltip("dpHashCanvas",pts,function(d){var lbl=d.v>=1e6?(d.v/1e6).toFixed(1)+"M":d.v>=1e3?(d.v/1e3).toFixed(1)+"K":Math.floor(d.v);return "<span style=\"color:var(--purple);font-weight:600\">Block #"+d.h+"</span><br>Hashrate: <span style=\"color:var(--orange)\">"+lbl+" H/s</span>";});
+      // X axis — block numbers
+      ctx.fillStyle='rgba(255,255,255,.15)';ctx.textAlign='center';ctx.font='8px monospace';
+      for(var xi=0;xi<=4;xi++){var xIdx=Math.floor(xi/4*(pts.length-1));var xx=pad.l+xIdx/(pts.length-1)*cw;ctx.fillText('#'+pts[xIdx].h,xx,pad.t+ch+14);}
+      // Legend
+      ctx.fillStyle='rgba(251,146,60,.5)';ctx.font='8px monospace';ctx.textAlign='left';
+      ctx.fillText('\u2500 hashrate',pad.l+4,pad.t+ch+22);
+      ctx.fillStyle='rgba(103,232,249,.4)';ctx.fillText('- - EMA(20)',pad.l+80,pad.t+ch+22);
+      setupDpTooltip("dpHashCanvas",pts,function(d){var lbl=d.v>=1e6?(d.v/1e6).toFixed(2)+"M":d.v>=1e3?(d.v/1e3).toFixed(2)+"K":Math.floor(d.v);var dtLbl=d.dt<60?d.dt+'s':Math.floor(d.dt/60)+'m '+d.dt%60+'s';return "<span style=\"color:var(--orange);font-weight:600\">Block #"+d.h+"</span><br><span style=\"color:var(--text3)\">hashrate:</span> <span style=\"color:#fb923c;font-weight:600\">"+lbl+" H/s</span><br><span style=\"color:var(--text3)\">interval:</span> "+dtLbl;});
     },50);
   } else if(key==='mempool'){
     title.textContent='// MEMPOOL';
