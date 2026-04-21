@@ -127,7 +127,6 @@ inline constexpr int64_t  CASERT_ANTISTALL_FLOOR_V6C = 3600;  // 60 min (kept at
 // when lag cap + slew ±1 are active (all 7 PID weight configs produced
 // identical profile paths in simulation).
 inline constexpr int64_t  CASERT_DIRECT_LAG_HEIGHT       = 5323;
-inline constexpr int32_t  CASERT_HYST_DOWN_BLOCKS        = 3;     // require 3 consecutive lower-lag blocks to drop
 
 // ─────────────────────────────────────────────────────────────────────
 // Burst Controller (block 5100)
