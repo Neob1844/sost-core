@@ -21,11 +21,11 @@ The pipeline is sequential — each layer must pass before the next runs.
 - Genesis block: timestamp=1773597600, bits_q=765730
 
 ### Layer 3 — cASERT bitsQ Difficulty (CHEAP, ~microseconds)
-- Exponential cASERT bitsQ: `next_bitsq = anchor × 2^(-td / 86400)` (V2, 24h halflife since block 1,450)
-- Cubic polynomial approximation of 2^x in Q16.16
+- avg288-based bitsQ (block 5175+): compares average of last 288 block intervals against 600s target
+- Dynamic cap (block 5260+): per-block change limited by deviation band (0%/0.5%/1.5%/2.5%/3.0%), median288 sanity check
+- Historical: exponential half-life formula (12h/24h/48h) was active for blocks 0&ndash;5174
 - Epoch 0 anchor always uses GENESIS_BITSQ (765,730)
 - Global bounds: MIN_BITSQ=65,536, MAX_BITSQ=16,711,680
-- No per-block clamps
 
 ### Layer 4 — PoW Inequality (CHEAP, ~microseconds)
 - `commit ≤ target_from_bitsQ(bits_q)`
@@ -78,10 +78,10 @@ Reorg depth limit: 500 blocks.
 | Sync time (full verify) | ~hours (billions of SHA-256d) | ~days (RandomX JIT per block) | ~weeks (CX recompute per block) |
 | Sync time (fast/headers) | ~minutes (headers-first) | ~hours (pruned sync) | ~minutes (checkpoint skip, L1-L7 only) |
 | Verification layers | 4 (structure, scripts, UTXO, PoW) | 4 (structure, RingCT, UTXO, PoW) | 8 (structure, time, cASERT, PoW ineq, coinbase, txs, UTXO, CX recompute) |
-| Difficulty adjustment | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (exponential cASERT, 12h half-life) |
+| Difficulty adjustment | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (cASERT, avg288 + dynamic cap) |
 | Block time target | 600s (10 min) | 120s (2 min) | 600s (10 min) |
 | Anti-stall mechanism | None (2-week retarget) | LWMA handles stalls | cASERT Decay: 2h activation, tiered level decay |
-| Anti-acceleration | None | LWMA handles acceleration | cASERT: L1-L5 fixed bands, L6+ unbounded hardening |
+| Anti-acceleration | None | LWMA handles acceleration | cASERT: dynamic cap + equalizer (emergency-only, ceiling H10, 40 profiles) |
 | Emission model | Halving every 210,000 blocks | Smooth tail emission (0.6 XMR/block) | Smooth exponential decay (q=e^(-1/4), ~9% annual) |
 | Max supply | 21,000,000 BTC | Infinite (tail emission) | ~4,669,201 SOST (Feigenbaum δ × 10⁶) |
 | Constitutional reserve | None | None | 25% gold vault + 25% PoPC pool (enforced at consensus) |

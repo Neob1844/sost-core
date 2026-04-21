@@ -93,7 +93,7 @@ Defined in `include/sost/tx_validation.h`:
 ### PoW system (two layers)
 
 1. **ConvergenceX** (`include/sost/pow/convergencex.h`) — CPU-friendly gradient descent over random 32x32 matrix. Mining requires ~8GB RAM total (4GB dataset + 4GB scratchpad); node validation requires only ~500MB (no dataset/scratchpad). ASIC-resistant. Checkpoint merkle tree for verification.
-2. **cASERT** (`include/sost/pow/casert.h`) — Unified consensus-rate control system combining three integrated components: bitsQ Q16.16 primary hardness regulator, 40 equalizer profiles (E4 through H35), CASERT_H_MIN=-4, CASERT_H_MAX=35, slew rate limit (±1 level per block), and zone-based anti-stall recovery. **V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks >=1450): 24h halflife, 12.5% delta cap.**
+2. **cASERT** (`include/sost/pow/casert.h`) — Unified consensus-rate control system combining three integrated components: bitsQ Q16.16 primary hardness regulator, 40 equalizer profiles (E4 through H35), CASERT_H_MIN=-4, CASERT_H_MAX=35, slew rate limit (±1 level per block), and zone-based anti-stall recovery. V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap. **Current (block 5175+): avg288 bitsQ (avg of last 288 block intervals vs 600s target). Dynamic cap (block 5260+): scales 0%/0.5%/1.5%/2.5%/3.0% by deviation with median288 check. Equalizer: emergency-only, ceiling H10, 40 profiles (15 active E4-H10, 25 reserved H11-H35), H11+ margin=115.**
 
 Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 

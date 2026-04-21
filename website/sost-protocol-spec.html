@@ -194,16 +194,19 @@ split:            miner 392,550,433 | gold 196,275,215 | popc 196,275,215</pre>
 <p>Difficulty encoded as 32-bit fixed-point: upper 16 bits = integer (leading zero bits in target), lower 16 = fraction. GENESIS_BITSQ = 765730 &rarr; 11 + 44834/65536 = 11.6841. Higher bitsQ = harder blocks.</p>
 
 <h3>casert_next_bitsq()</h3>
+<p><strong>Historical (V1/V2, blocks &lt; 5175):</strong> Anchor-based exponential half-life (V1: 48h, V2: 24h from block 1,450). Delta cap: V1: 6.25%, V2: 12.5%.</p>
 <pre>td = actual_time - (anchor_time + blocks_since_anchor &times; 600)
-exponent = (-td &times; 65536) / 43200
+exponent = (-td &times; 65536) / halflife
 factor = 2^(frac/65536) via Horner cubic polynomial
 raw = anchor_bitsq &times; factor
-delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/16)
+delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/8)
 result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
-<p>Half-life: V2: 24 hours (86,400s) since block 1,450. Delta cap: V2: 12.5% symmetric. (V1 was 48h/6.25%.) <em>Source: casert.cpp:67-115</em></p>
+<p><strong>Current (V5, block 5175+):</strong> avg288-based &mdash; compares average of last 288 block intervals against 600s target. Replaces anchor-based exponential.</p>
+<p><strong>Dynamic cap (block 5260+):</strong> 0% dead band &plusmn;30s, then 0.5%/1.5%/2.5%/3.0% max based on deviation. Median288 overrides when avg lies.</p>
+<p><em>Source: casert.cpp:67-115</em></p>
 
 <h3>Equalizer</h3>
-<p>5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 12]. 17 profiles E4(-4) through H12(+12); all active. Profile changes limited to &plusmn;1 level per block (V6, block 5,000+). Slew rate uses stored profile_index from BlockMeta (V3.1+).</p>
+<p>Emergency-only. 40 profiles (15 active A: E4-H10, 25 reserved R: H11-H35). H10 ceiling active, H35 max reserved, H11-H35 margin=115. 5 EWMA signals computed over last 128 blocks: short (8-block), long (96-block), volatility (16-block), integrator (leaky accumulator), burst score (short - long). Control signal: <code>U = 0.05&middot;r + 0.40&middot;lag + 0.15&middot;I + 0.05&middot;burst + 0.02&middot;V</code>. Schedule lag dominates (60% of total signal). Maps to profile index H &isin; [-4, 10] (active). Profile changes limited to &plusmn;1 level per block (V6, block 5,000+). Slew rate uses stored profile_index from BlockMeta (V3.1+).</p>
 
 <table>
 <tr><th>Profile</th><th>H</th><th>Scale</th><th>Steps</th><th>K</th><th>Margin</th><th>Effect</th></tr>
@@ -220,15 +223,15 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr><td>H6</td><td>6</td><td>2</td><td>6</td><td>5</td><td>135</td><td>Severe</td></tr>
 <tr><td>H7</td><td>7</td><td>2</td><td>6</td><td>6</td><td>130</td><td>Severe+</td></tr>
 <tr><td>H8</td><td>8</td><td>2</td><td>7</td><td>6</td><td>125</td><td>Maximum</td></tr>
-<tr><td>H9</td><td>9</td><td>2</td><td>7</td><td>7</td><td>120</td><td>Maximum (CASERT_H_MAX)</td></tr>
-<tr style="color:var(--t3)"><td>H10</td><td>10</td><td>2</td><td>7</td><td>7</td><td>115</td><td>Smoothed high-difficulty (scale=2, V6)</td></tr>
-<tr style="color:var(--t3)"><td>H11</td><td>11</td><td>2</td><td>8</td><td>7</td><td>110</td><td>Smoothed high-difficulty (scale=2, V6)</td></tr>
-<tr style="color:var(--t3)"><td>H12</td><td>12</td><td>2</td><td>8</td><td>8</td><td>105</td><td>Hardest active profile (scale=2)</td></tr>
+<tr><td>H9</td><td>9</td><td>2</td><td>7</td><td>7</td><td>120</td><td>Near-maximum active</td></tr>
+<tr style="color:var(--t3)"><td>H10</td><td>10</td><td>2</td><td>7</td><td>7</td><td>115</td><td>Ceiling active profile (scale=2)</td></tr>
+<tr style="color:var(--t3)"><td>H11</td><td>11</td><td>2</td><td>8</td><td>7</td><td>115</td><td>Reserved (R)</td></tr>
+<tr style="color:var(--t3)"><td>H12&ndash;H35</td><td>12&ndash;35</td><td>2</td><td>8&ndash;20</td><td>8&ndash;20</td><td>115</td><td>Reserved (R); H35 max reserved</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">17 profiles. CASERT_H_MIN=-4 (E4), CASERT_H_MAX=12 (H12). All 17 profiles active. Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">40 profiles (15 active A: E4&ndash;H10, 25 reserved R: H11&ndash;H35). CASERT_H_MIN=-4 (E4), H10 ceiling active, H35 max reserved. H11&ndash;H35 margin=115. Equalizer is emergency-only. Easing profiles E1&ndash;E4 only activate after 6+ hours at B0. <em>Source: params.h:131-138</em></p>
 
 <h3>Anti-Stall</h3>
-<p>Mining-only (now_time &gt; 0). If stalled &gt; 7,200s (always 2 hours, V3.1+), zone-based decay to B0: H12&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
+<p>Mining-only (now_time &gt; 0). If stalled &gt; 7,200s (always 2 hours, V3.1+), zone-based decay to B0: H10&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>
 </div></section>
 
 <!-- 3. TRANSACTIONS -->
@@ -370,7 +373,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>Node verification memory</td><td>Negligible</td><td><strong>~2GB (must build dataset)</strong></td><td><strong>~500MB (no dataset needed)</strong></td></tr>
 <tr><td>Verification method</td><td>Recompute hash</td><td>Recompute full RandomX</td><td>Transcript V2: segments + round witnesses (~0.2ms)</td></tr>
 <tr><td>Verification cost/block</td><td>~1&mu;s</td><td>~50-200ms</td><td>~0.2ms</td></tr>
-<tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT, 24h half-life V2)</td></tr>
+<tr><td>Difficulty adjustment</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT; V2: 24h half-life; V5: avg288-based with dynamic cap)</td></tr>
 </table>
 </div></section>
 

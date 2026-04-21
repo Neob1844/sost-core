@@ -171,7 +171,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX Transcript V2 (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation via 11-phase segment/round verification at ~0.2ms, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | cASERT unified (bitsQ Q16.16, 40 equalizer profiles E4-H35). V1 (blocks <1450): 48h halflife, 6.25% delta cap. **V2 (blocks >=1450): 24h halflife, 12.5% delta cap.** |
+| Difficulty | cASERT unified (bitsQ Q16.16, 40 equalizer profiles E4-H35). V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap. **Current (block 5175+): avg288 bitsQ (compares avg of last 288 block intervals vs 600s target). Dynamic cap (block 5260+): scales 0%/0.5%/1.5%/2.5%/3.0% by deviation with median288 check. Equalizer: emergency-only, ceiling H10, 40 profiles (15 active E4-H10, 25 reserved H11-H35), H11+ margin=115.** |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
@@ -265,7 +265,8 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | CPFP (Child-Pays-for-Parent) | Complete |
 | Build hardening (6 compiler/linker flags) | Complete |
 | Capsule Protocol v1 (binary tx metadata, height 5000) | Complete |
-| cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete |
+| cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete (historical) |
+| cASERT avg288 bitsQ (block 5175+) + dynamic cap (block 5260+) | Complete |
 
 **28/28 CTest targets pass.**
 

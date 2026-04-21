@@ -73,3 +73,5 @@ founder_*.json
 CLAUDE.md
 # NeoB.md is the project instructions file (not ignored)
 audit_public_repo_*/
+data/mode_arbiter/*.jsonl
+data/mode_arbiter/cases/

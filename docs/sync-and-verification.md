@@ -53,7 +53,7 @@ The miner trusts the node for chain state and focuses on:
 | **Verification method** | Recompute SHA256d hash (trivial) | **Recompute full RandomX program** | Transcript V2: segment commitments + sampled round witnesses + stability basin (~0.2ms) |
 | **Verification cost per block** | ~1μs (one SHA256d) | ~50-200ms (full RandomX execution) | ~0.2ms (11-phase verification with challenge derivation + local round checks) |
 | **Block sync cost (1000 blocks)** | ~1ms total PoW | ~50-200 seconds PoW | ~0.2 seconds PoW |
-| **Difficulty adjustment** | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (cASERT, 12h half-life) |
+| **Difficulty adjustment** | Every 2016 blocks (~2 weeks) | Every block (LWMA) | Every block (cASERT, avg288 + dynamic cap) |
 | **Node needs heavy dataset?** | No | **Yes** (~2GB RandomX dataset for verification) | **No** (verification is dataset-free; Dataset v2 and Scratchpad v2 are independently indexable at O(1)) |
 | **Proof data in block** | 80-byte header | 80-byte header | Header + x_bytes (128B) + final_state (32B) + segments_root (32B) + segment_proofs + round_witnesses + 16 checkpoint leaves (512B) |
 

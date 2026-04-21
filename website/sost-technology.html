@@ -7,19 +7,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Technology — ConvergenceX PoW, cASERT Difficulty, Constitutional Gold</title>
-<meta name="description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 17 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
+<meta name="description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 40 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
 <meta name="keywords" content="ConvergenceX, cASERT, memory hard mining, CPU mining, proof of work, difficulty adjustment, constitutional gold, Feigenbaum emission, SOST technology">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta property="og:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 17 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
+<meta property="og:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 40 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
 <meta property="og:url" content="https://sostcore.com/sost-technology.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta name="twitter:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 17 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
+<meta name="twitter:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 40 profiles. Constitutional 50/25/25 coinbase split. Feigenbaum emission curve.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
@@ -902,30 +902,33 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
         <p class="spec-desc">
           SOST implements cASERT bitsQ as the primary hardness regulator within the unified
           cASERT consensus-rate control system. The bitsQ controller
-          performs per-block exponential difficulty adjustment in continuous Q16.16 log-space.
+          performs per-block difficulty adjustment in continuous Q16.16 log-space.
           Unlike legacy epoch-based retarget systems that wait for large windows, bitsQ corrects
-          difficulty every single block with a 24-hour half-life (V2, since block 1,450) and a per-block relative delta
-          cap of 12.5% (1/8), producing smooth transitions and faster convergence to the
-          target interval.
+          difficulty every single block. Historical: anchor-based exponential with 24-hour half-life
+          (V2, since block 1,450) and 12.5% delta cap. Current (V5, block 5,175+): avg288-based
+          &mdash; compares average of last 288 block intervals against 600s target, replacing the
+          anchor-based exponential. Dynamic cap (block 5,260+): 0% dead band &plusmn;30s, then
+          0.5%/1.5%/2.5%/3.0% max based on deviation; median288 overrides when avg lies.
         </p>
 
-        <div class="code-snippet" data-label="cASERT bitsQ (EXPONENTIAL)">
-<span class="cmt">// Compute expected parent time from epoch anchor</span>
-expected_pt = anchor_time + (parent_idx - anchor_idx) * <span class="num">600</span>
-td          = prev_time - expected_pt
+        <div class="code-snippet" data-label="cASERT bitsQ (V5: AVG288-BASED)">
+<span class="cmt">// V5 (block 5175+): avg288-based retarget</span>
+avg_interval = average(last 288 block intervals)
+deviation    = avg_interval - <span class="num">600</span>  <span class="cmt">// compare against target</span>
 
-<span class="cmt">// Exponential cASERT bitsQ: next_bitsq = anchor_bitsq * 2^(-td / halflife)</span>
-exponent = (-td * Q16_ONE) / CASERT_HALF_LIFE
-shifts   = exponent >> <span class="num">16</span>        <span class="cmt">// integer part</span>
-frac     = exponent & <span class="num">0xFFFF</span>     <span class="cmt">// fractional part</span>
+<span class="cmt">// Dynamic cap (block 5260+): tiered by deviation magnitude</span>
+<span class="cmt">// |deviation| &le; 30s: 0% (dead band)</span>
+<span class="cmt">// |deviation| &le; 60s: 0.5% max</span>
+<span class="cmt">// |deviation| &le; 120s: 1.5% max</span>
+<span class="cmt">// |deviation| &le; 240s: 2.5% max</span>
+<span class="cmt">// |deviation| &gt; 240s: 3.0% max</span>
+cap      = dynamic_cap(deviation)
 
-<span class="cmt">// 2^frac via cubic polynomial (Horner's form, Q0.16)</span>
-factor   = Q16_ONE + polynomial_approx(frac)
-result   = (anchor_bitsq * factor) >> <span class="num">16</span>
-result   = result << shifts       <span class="cmt">// apply integer power-of-two</span>
+<span class="cmt">// median288 overrides when avg lies</span>
+median   = median(last 288 block intervals)
+<span class="kw">if</span> median deviates significantly from avg: use median
 
-<span class="cmt">// Per-block relative delta cap: 12.5% (1/8)</span>
-new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
+new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
         </div>
 
         <table class="code-table">
@@ -934,8 +937,8 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
             <td class="val"><code>600</code> seconds <span class="comment">// 10-minute target block time</span></td>
           </tr>
           <tr>
-            <td class="key">bitsQ Half-Life</td>
-            <td class="val"><code>86,400</code> seconds <span class="comment">// 24 hours (V2, since block 1,450)</span></td>
+            <td class="key">bitsQ Model</td>
+            <td class="val">V5 (block 5,175+): avg288-based <span class="comment">// historical V2: 24h half-life exponential</span></td>
           </tr>
           <tr>
             <td class="key">MIN_BITSQ</td>
@@ -947,7 +950,7 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
           </tr>
           <tr>
             <td class="key">Anchor rotation</td>
-            <td class="val">Per-epoch <span class="comment">// resets at epoch boundary blocks</span></td>
+            <td class="val">Per-epoch (historical V1/V2 only) <span class="comment">// V5: no anchors, uses avg288</span></td>
           </tr>
           <tr>
             <td class="key">Encoding</td>
@@ -983,10 +986,11 @@ new_powDiffQ = <span class="fn">clamp</span>( result, MIN_BITSQ, MAX_BITSQ )
         <p class="spec-desc">
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
           consensus-rate control system. It integrates three components:
-          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer profiles E4&ndash;H12 that adjust
+          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer (emergency-only) with 40 profiles
+          (15 active A: E4&ndash;H10, 25 reserved R: H11&ndash;H35) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E4) through baseline (B0) to maximum hardening (H12). All 17 profiles active (E4 through H12).
+          deep easing (E4) through baseline (B0) to ceiling active (H10). H11&ndash;H35 reserved, margin=115.
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -1001,7 +1005,7 @@ I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256
 <span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
 U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
 
-H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H12=<span class="num">12</span>)  <span class="cmt">// all 17 profiles active</span>
+H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H10=<span class="num">10</span>)  <span class="cmt">// 15 active profiles (H10 ceiling); emergency-only</span>
 
 <span class="cmt">// Safety rules</span>
 <span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
@@ -1060,7 +1064,7 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
             </div>
             <div class="mode-params">
               scale=2&ndash;3 &middot; k=6&ndash;8 &middot; margin=130&ndash;110 &middot; steps=6&ndash;8<br>
-              <em>Maximum hardening. H10&ndash;H11 (scale=2, V6 smoothed), H12 (scale=2, hardest active).</em>
+              <em>Maximum hardening. H10 ceiling active (scale=2). H11&ndash;H35 reserved (margin=115).</em>
             </div>
           </div>
         </div>
@@ -1073,7 +1077,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
 
 <span class="kw">if</span> stall &gt;= threshold:
     <span class="cmt">// Zone decay rates (current level determines speed):</span>
-    <span class="cmt">// H12&ndash;H7: 600s/level (fast)    — 3600s total</span>
+    <span class="cmt">// H10&ndash;H7: 600s/level (fast)    — 2400s total</span>
     <span class="cmt">// H6&ndash;H4: 900s/level (medium)   — 2700s total</span>
     <span class="cmt">// H3&ndash;H1: 1200s/level (slow)    — 3600s total</span>
     <span class="cmt">// Decays to B0. Easing E1&ndash;E4 only after 6h extra at B0.</span>
@@ -1083,11 +1087,11 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 17 profiles E4(-4) through H12(+12); H10&ndash;H11 (scale=2, V6 smoothed), H12 (scale=2, hardest active). Full range: E4&ndash;H12.<br>
+            &bull; 40 profiles (15 active A: E4&ndash;H10, 25 reserved R: H11&ndash;H35). H10 ceiling active, H35 max reserved, H11&ndash;H35 margin=115. Equalizer is emergency-only.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
-            &bull; Anti-stall: always 7,200s (V3.1+), zone-based decay to B0 (H12&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E4 only after 6h extra at B0.
+            &bull; Anti-stall: always 7,200s (V3.1+), zone-based decay to B0 (H10&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E4 only after 6h extra at B0.
           </p>
         </div>
 
@@ -1098,7 +1102,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>12</code> <span class="comment">// H12 (max hardening; all 17 profiles active)</span></td>
+            <td class="val"><code>10</code> <span class="comment">// H10 (ceiling active; 15 active A, 25 reserved R; 40 total)</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>
@@ -1114,7 +1118,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">ANTISTALL_DECAY</td>
-            <td class="val"><code>zone-based</code> <span class="comment">// H12-H7: 600s/lvl, H6-H4: 900s/lvl, H3-H1: 1200s/lvl</span></td>
+            <td class="val"><code>zone-based</code> <span class="comment">// H10-H7: 600s/lvl, H6-H4: 900s/lvl, H3-H1: 1200s/lvl</span></td>
           </tr>
           <tr>
             <td class="key">Safety rules</td>
@@ -1412,14 +1416,14 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>
           <tr><td class="key">Difficulty adjust</td><td class="val">Every 2,016 blocks (~2 weeks)</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--green-primary);">Every block (cASERT PID)</td></tr>
           <tr><td class="key">Response speed</td><td class="val" style="color:var(--red-primary);">2-week lag</td><td class="val">~720-block EWMA (~24h)</td><td class="val" style="color:var(--green-primary);">8-block short + 96-block long EWMA</td></tr>
-          <tr><td class="key">Halflife</td><td class="val">~2 weeks (fixed)</td><td class="val">~720 blocks (~24h)</td><td class="val" style="color:var(--text-primary);">24h, PID-weighted (5 signals)</td></tr>
-          <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">12.5% hard cap per block</td></tr>
+          <tr><td class="key">Halflife</td><td class="val">~2 weeks (fixed)</td><td class="val">~720 blocks (~24h)</td><td class="val" style="color:var(--text-primary);">V5: avg288-based (historical: 24h half-life)</td></tr>
+          <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">V5: dynamic cap (0%&ndash;3.0% tiered by deviation)</td></tr>
           <tr><td class="key">Control signals</td><td class="val">1 (time delta)</td><td class="val">1 (timestamp EWMA)</td><td class="val" style="color:var(--green-primary);">5 (rate, lag, integrator, burst, volatility)</td></tr>
-          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">17 profiles (E4 through H12)</td></tr>
+          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">40 profiles (15 active E4&ndash;H10, 25 reserved H11&ndash;H35)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
-          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H12&rarr;B0, always 7200s activation, then E1-E4 after 6h)</td></tr>
-          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E4&ndash;H12 (&plusmn;1/block V6+, slew rate limited)</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 7200s activation, then E1-E4 after 6h)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E4&ndash;H10 active (&plusmn;1/block V6+, slew rate limited, emergency-only)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
           <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>

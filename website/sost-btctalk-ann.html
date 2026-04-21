@@ -141,7 +141,7 @@
   <tr><td>Max supply</td><td>4,669,201 SOST (hard cap by construction)</td></tr>
   <tr><td>Emission</td><td>Exponential decay, q = e<sup>(-1/4)</sup> &asymp; 0.7788</td></tr>
   <tr><td>Coinbase split</td><td>50% miner / 25% Gold Funding Vault / 25% PoPC Pool</td></tr>
-  <tr><td>Difficulty</td><td>cASERT unified (12h bitsQ half-life + equalizer profiles)</td></tr>
+  <tr><td>Difficulty</td><td>cASERT unified (avg288 bitsQ + dynamic cap + equalizer 40 profiles)</td></tr>
   <tr><td>Encoding</td><td>SOSTCompact Q16.16 fixed-point</td></tr>
   <tr><td>Coinbase maturity</td><td>1,000 blocks (~7 days)</td></tr>
   <tr><td>Premine</td><td>NONE</td></tr>
@@ -196,9 +196,7 @@
 
 <p><b>Per-block program:</b> Each block generates a unique 256-operation program derived deterministically from the block hash. Operations: MUL, XOR, ADD, ROT, AND, OR, NOT, SUB (8 types). The program changes every block. No fixed circuit can be optimized for a program that does not yet exist. An ASIC for ConvergenceX v2.0 would require 8GB LPDDR5 on-package (4GB dataset + 4GB scratchpad) and a general-purpose ALU &mdash; economically equivalent to building a CPU.</p>
 
-<p><b>Unified cASERT difficulty:</b> The bitsQ primary controller handles long-term hashrate calibration with a 24-hour half-life (V2, since block 1,450) and per-block adjustment. The equalizer is a bidirectional stability controller: it hardens ConvergenceX stability parameters when the chain runs ahead of schedule (emission protection), and eases after 6+ hours at B0. The equalizer uses 17 profiles (E4&ndash;H12, with all 17 profiles active including H10&ndash;H12 for extreme hashrate) that progressively tighten or loosen stability requirements. If no block is found for an extended period (max(ahead &times; 10min, 2 hours)), a zone-based decay mechanism gradually reduces the equalizer level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
-
-<p><b>Decay zones (to B0):</b> H9&ndash;H7 at 600s/level (fast), H6&ndash;H4 at 900s/level (medium), H3&ndash;H1 at 1200s/level (slow). Decay stops at B0. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0.</p>
+<p><b>Unified cASERT difficulty:</b> Since block 5175, the bitsQ primary controller uses avg288 &mdash; comparing the average of the last 288 block intervals against the 600s target &mdash; with per-block adjustment. A dynamic cap (active since block 5260) limits per-block bitsQ changes by deviation band: 0%/0.5%/1.5%/2.5%/3.0% depending on how far the avg288 deviates from target, with a median288 sanity check. The half-life exponential formula (12h, later 24h) is historical only (blocks 0&ndash;5174). The equalizer is an emergency-only stability controller with a ceiling of H10 and 40 profiles (15 active, 25 reserved): it hardens ConvergenceX stability parameters when the chain runs significantly ahead of schedule (emission protection). If no block is found for an extended period, a zone-based decay mechanism gradually reduces the equalizer level to prevent permanent chain stall. Decay affects mining only, never block validation.</p>
 
 <p>All consensus arithmetic is integer-only. Zero floating-point operations exist in any consensus path. Difficulty is encoded as SOSTCompact Q16.16 fixed-point (uint32_t), eliminating cross-platform rounding divergence.</p>
 
@@ -304,7 +302,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
   <tr><td>Memory (mining)</td><td>Negligible</td><td>256MB-2GB</td><td>8GB (4GB scratchpad + 4GB dataset)</td></tr>
   <tr><td>Memory (node)</td><td>Negligible</td><td>~256MB</td><td>~500MB (no scratchpad/dataset)</td></tr>
   <tr><td>ASIC resistance</td><td>None</td><td>High</td><td>Very high</td></tr>
-  <tr><td>Difficulty adjust</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT exp.)</td></tr>
+  <tr><td>Difficulty adjust</td><td>Every 2016 blocks</td><td>Every block (LWMA)</td><td>Every block (cASERT avg288 + dynamic cap)</td></tr>
   <tr><td>Block time</td><td>600s</td><td>120s</td><td>600s</td></tr>
   <tr><td>Anti-stall</td><td>None</td><td>LWMA</td><td>cASERT Decay (4h/8h tiered)</td></tr>
   <tr><td>Emission</td><td>Halving / 210K blocks</td><td>Tail emission</td><td>Smooth exp. decay (q=e^-&frac14;)</td></tr>
