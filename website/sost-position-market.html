@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-position-market.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Position Market — Signed Market for Gold-Backed Positions</title>
+<meta name="description" content="SOST Position Market: a signed market infrastructure for identified positions and rights linked to tokenized gold, with private coordination and verifiable settlement.">
+<meta name="keywords" content="SOST position market, gold-backed positions, signed trading, OTC market, PoPC positions, reward rights, settlement">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Position Market — Signed Market for Gold-Backed Positions">
+<meta property="og:description" content="SOST Position Market: signed market infrastructure for identified positions and rights linked to tokenized gold.">
+<meta property="og:url" content="https://sostcore.com/sost-position-market.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--green-primary:#4ade80;--cyan-primary:#22d3ee;--gold:#f59e0b;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+.c{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.hero{padding:80px 0 60px;border-bottom:1px solid var(--border-dim)}
+.hero-label{font-size:11px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+.hero-label::before{content:'//';color:var(--text-muted);margin-right:8px}
+.hero h1{font-family:var(--font-display);font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.1;margin-bottom:20px;letter-spacing:-1px}
+.hero h1 span{color:var(--gold)}
+.hero-sub{font-size:15px;color:var(--text-secondary);max-width:680px;line-height:1.8;font-weight:300}
+section{padding:48px 0;border-bottom:1px solid var(--border-dim)}
+h2{font-family:var(--font-display);font-size:22px;font-weight:600;margin-bottom:20px;color:var(--text-primary)}
+h2 span{color:var(--gold)}
+h3{font-size:14px;font-weight:600;color:var(--gold);margin:24px 0 10px;letter-spacing:1px}
+p,li{color:var(--text-secondary);margin-bottom:12px;line-height:1.8}
+strong{color:var(--text-primary)}
+code{background:#111720;padding:1px 5px;border-radius:3px;font-size:12px;color:var(--red-primary)}
+ul{padding-left:20px;margin-bottom:16px}
+.card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12px}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border-med);color:var(--text-muted);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase}
+td{padding:7px 10px;border-bottom:1px solid var(--border-dim);color:var(--text-secondary)}
+td:first-child{color:var(--text-primary);font-weight:500}
+.note{background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:16px 20px;margin:20px 0;font-size:12px;color:var(--text-secondary);line-height:1.8}
+.note strong{color:var(--gold)}
+.status-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:3px;letter-spacing:1px;font-weight:600}
+.status-alpha{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24}
+footer{padding:40px 0;text-align:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-dim)}
+footer a{color:var(--text-dim);text-decoration:none}
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+nav .container{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-logo{font-family:var(--font-display);font-weight:700;font-size:26px;color:var(--text-primary);letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:14px}
+.nav-logo .brand-sost{color:var(--red-primary)}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:11px;font-weight:400;padding:4px 10px;border-radius:4px;transition:all .2s;letter-spacing:.5px;white-space:nowrap}
+.nav-links a:hover{color:var(--text-primary);background:rgba(255,255,255,.05)}
+.nav-links a.active{color:var(--gold);border-bottom:1px solid var(--gold)}
+.nav-hamburger{display:none;background:none;border:1px solid var(--border-dim);color:var(--text-dim);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px;line-height:1}
+@media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-positions.html" style="color:#f59e0b">Positions</a>
+      <a href="sost-position-market.html" class="active" style="color:#f59e0b">Position Market</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="c">
+    <div class="hero-label">Position Market</div>
+    <h1>SOST <span>Position Market</span></h1>
+    <p class="hero-sub">A signed market infrastructure for identified positions and rights linked to tokenized gold, with private coordination, verifiable settlement, and full auditability.</p>
+    <div style="margin-top:16px"><span class="status-badge status-alpha">LIMITED ALPHA</span></div>
+  </div>
+</section>
+
+<section><div class="c">
+<h2>1. <span>Overview</span></h2>
+<p>SOST is developing a signed market infrastructure for identified positions and contractual rights linked to tokenized gold, precious metals, and Proof of Personal Custody structures.</p>
+<p>The system is not designed as a traditional AMM. Its core tradeable objects are not generic pool-based fungible assets, but <strong>identified positions</strong> with specific backing, maturity, and rights configurations.</p>
+<p>The market is therefore being built as a <strong>signed OTC/RFQ-style venue</strong> for positions and rights, with private coordination, verifiable settlement, and full auditability.</p>
+<div class="note"><strong>Current status:</strong> The system operates as a limited alpha. It is operator-assisted, participant-restricted, and not an open public trading venue.</div>
+</div></section>
+
+<section><div class="c">
+<h2>2. What the System Is Designed to <span>Trade</span></h2>
+<p>The SOST market is designed to support the exchange of <strong>identified positions</strong>, rather than generic pool tokens.</p>
+
+<h3>Model B Positions</h3>
+<p>Model B positions are backed through an escrow structure. These are the most straightforward positions to register, value, transfer, and settle.</p>
+<div class="two-col">
+  <div class="card"><div class="card-title" style="color:var(--gold)">Full Position Transfer</div><p style="margin:0;font-size:12px">A participant transfers the entire identified position to another participant. Ownership, backing, and reward all transfer together.</p></div>
+  <div class="card"><div class="card-title" style="color:var(--cyan-primary)">Reward-Right Transfer</div><p style="margin:0;font-size:12px">A participant keeps the principal position but transfers only the right to the future reward. The buyer gets a child position (reward only).</p></div>
+</div>
+
+<h3>Model A Rights</h3>
+<p>Model A is based on personal custody rather than escrow. Because the custody obligation is more closely linked to the original holder, Model A does not enter the market in the same way as Model B.</p>
+<p>The intended path is:</p>
+<ul>
+<li><strong>First:</strong> reward rights or identified claims</li>
+<li><strong>Later, where appropriate:</strong> controlled novation or reassignment paths</li>
+</ul>
+</div></section>
+
+<section><div class="c">
+<h2>3. How a <span>Trade</span> Works</h2>
+<p>A trade is based on signed private coordination and deterministic settlement logic:</p>
+<table>
+<tr><td style="color:var(--gold);font-weight:600">1</td><td>A seller creates a <strong>signed offer</strong> (ED25519 signature, canonical hash, unique nonce, expiry)</td></tr>
+<tr><td style="color:var(--gold);font-weight:600">2</td><td>A buyer responds with a <strong>signed acceptance</strong></td></tr>
+<tr><td style="color:var(--gold);font-weight:600">3</td><td>The system derives a deterministic <code>deal_id</code></td></tr>
+<tr><td style="color:var(--gold);font-weight:600">4</td><td>The settlement layer verifies: ownership, position status, expiry, signature validity, nonce uniqueness</td></tr>
+<tr><td style="color:var(--gold);font-weight:600">5</td><td>If all checks pass: full position transfer <em>or</em> reward-right split is executed</td></tr>
+<tr><td style="color:var(--gold);font-weight:600">6</td><td>A signed <strong>settlement notice</strong> is generated</td></tr>
+<tr><td style="color:var(--gold);font-weight:600">7</td><td>The complete event trail is recorded for auditability</td></tr>
+</table>
+<p>The system is designed around <strong>identified contractual objects</strong>, not anonymous pool interactions.</p>
+</div></section>
+
+<section><div class="c">
+<h2>4. Why a Position Market <span>Exists</span></h2>
+<p>Different participants value the same position differently.</p>
+<div class="two-col">
+  <div class="card">
+    <div class="card-title" style="color:var(--green-primary)">Sellers may prefer</div>
+    <ul style="font-size:12px;margin:0">
+      <li>Immediate liquidity</li>
+      <li>Earlier exit</li>
+      <li>Reduced waiting time</li>
+      <li>Reduced operational burden</li>
+      <li>Selling only the reward, keeping the principal</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--cyan-primary)">Buyers may prefer</div>
+    <ul style="font-size:12px;margin:0">
+      <li>Discounted entry</li>
+      <li>Exposure to future value</li>
+      <li>Access to existing positions without originating from scratch</li>
+      <li>Portfolio construction across maturities</li>
+    </ul>
+  </div>
+</div>
+<p style="color:var(--gold);font-style:italic;text-align:center">The market exists because future value and present liquidity are not valued equally by all participants.</p>
+</div></section>
+
+<section><div class="c">
+<h2>5. Position <span>Structure</span></h2>
+<p>Within the SOST architecture, a position is an identified registry object linked to:</p>
+<ul>
+<li>A specific <strong>backing structure</strong> (escrow or autocustody)</li>
+<li>A <strong>maturity or lock profile</strong></li>
+<li>A defined <strong>reward configuration</strong></li>
+<li>A current <strong>owner</strong></li>
+<li>An <strong>auditable lifecycle</strong></li>
+</ul>
+<p>The objective is to build a market for identified positions and rights, not a broad public fungible token market.</p>
+</div></section>
+
+<section><div class="c">
+<h2>6. Current <span>Phase</span></h2>
+<p>The system is currently in <strong>limited alpha</strong>. That means:</p>
+<table>
+<tr><td>Participants</td><td>Restricted</td></tr>
+<tr><td>Settlement</td><td>Operator-assisted</td></tr>
+<tr><td>Positions</td><td>Identified only</td></tr>
+<tr><td>Coordination</td><td>Signed private messages</td></tr>
+<tr><td>Settlement</td><td>Verifiable with audit trail</td></tr>
+<tr><td>Public trading</td><td>Not available at this stage</td></tr>
+</table>
+<p>The purpose of the current phase is to validate lifecycle integrity, settlement behavior, transfer logic, reward-right handling, auditability, and operational reliability.</p>
+</div></section>
+
+<section><div class="c">
+<h2>7. Regulatory and Operational <span>Posture</span></h2>
+<p>Any broader public market phase would be subject to legal and operational review.</p>
+<p>Under the EU Markets in Crypto-Assets Regulation (MiCA), operating a public trading platform for crypto-assets can trigger significant obligations around operating rules, system resilience, transparency of trading information, order handling, data retention, and settlement timing.</p>
+<p>MiCA also excludes crypto-assets that qualify as financial instruments under existing financial law, which means some structures may require a different legal analysis depending on their design.</p>
+<div class="note"><strong>For that reason:</strong> the current system should be understood as a <strong>limited alpha position market</strong>, not as an unrestricted public exchange.</div>
+</div></section>
+
+<section><div class="c">
+<h2>8. Strategic <span>Direction</span></h2>
+<p>The long-term direction of SOST is to support:</p>
+<ul>
+<li>Private signed coordination</li>
+<li>Verifiable settlement</li>
+<li>Identified position markets</li>
+<li>Tokenized precious-metal participation</li>
+<li>Increasing use of native SOST-side positions</li>
+<li>Minimal dependence on external rails except where necessary for onboarding or exit</li>
+</ul>
+<p style="color:var(--gold);font-weight:600;font-style:italic;margin-top:16px">Trade identified positions and rights, coordinate privately, settle verifiably.</p>
+</div></section>
+
+<section style="border-bottom:none"><div class="c">
+<h2>9. <span>Summary</span></h2>
+<p>SOST is building a market infrastructure for identified precious-metal-linked positions and rights.</p>
+<p>The system is designed to:</p>
+<ul>
+<li>Support signed offers and acceptances</li>
+<li>Settle transfers verifiably</li>
+<li>Maintain full audit trails</li>
+<li>Treat positions as contractual registry objects</li>
+<li>Roll out in phases, beginning with a limited alpha</li>
+</ul>
+<p>At this stage, the focus is on <strong>reliability, lifecycle completion, controlled participation, and operational validation</strong> before any broader public expansion.</p>
+</div></section>
+
+<footer>
+<div class="c">
+<p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim)">SOST</p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/Neob1844/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-positions.html">Live Positions</a></p>
+</div>
+</footer>
+
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>
