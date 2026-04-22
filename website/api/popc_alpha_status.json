@@ -1,6 +1,6 @@
 {
-  "alpha_mode": "controlled-alpha",
-  "status": "deployed-on-sepolia",
+  "alpha_mode": "limited-public-alpha",
+  "status": "position-registered",
   "trustless": false,
   "sepolia": {
     "chain_id": 11155111,
@@ -9,21 +9,31 @@
     "mock_xaut": "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
     "mock_paxg": "0x754A7D020D559EDD60848450c563303262cAdec7",
     "first_deposit_tx": "0x63a3c051e56188fe391c90ef7e041db49ff98805d26a1cbd35a0b549b6e0516d",
-    "first_deposit_amount": "0.05 oz XAUT",
-    "first_deposit_id": 0
+    "model_b_deposit_tx": "0x4d3a6beff787b8fe24f37bb1e8945f823e2b29244a65c7853f89767dc329a8c6",
+    "model_b_deposit_id": 1,
+    "model_b_amount": "0.5 oz XAUT",
+    "model_b_lock_days": 28,
+    "total_locked_xaut": "0.55 oz"
+  },
+  "positions": {
+    "active": 1,
+    "first_position_id": "8afed8fcd27553a7",
+    "first_position_owner": "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de",
+    "first_position_model": "B-escrow",
+    "first_position_reward_rate": "0.4%"
   },
   "latest_demo": {
     "deal_id": "bd16dd25595fc000",
     "outcome": "settled",
     "timestamp": "2026-04-22T13:33:13Z"
   },
-  "phase": "VII",
+  "phase": "IX",
   "tests_passed": {
-    "python": 171,
-    "typescript": 69,
+    "python": 183,
+    "typescript": 115,
     "solidity": 19,
-    "total": 259
+    "total": 317
   },
-  "notice": "Controlled alpha — SOSTEscrow deployed on Sepolia with first on-chain gold deposit. Operator-assisted settlement. Mock tokens (not mainnet XAUT/PAXG). Not yet a public trustless market.",
+  "notice": "Limited public alpha — First PoPC Model B position registered (0.5 oz XAUT, 28-day lock). Operator-assisted. Sepolia testnet with mock tokens. 317 tests, 0 failures.",
   "updated_at": "2026-04-22"
 }
