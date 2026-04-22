@@ -144,6 +144,74 @@ footer a{color:var(--t3);text-decoration:none}
   </div>
 </section>
 
+<!-- HOW IT WORKS — SIMPLE -->
+<section style="border-bottom:none;padding-bottom:0"><div class="c">
+<h2 style="color:var(--gold);margin-bottom:16px">How It Works &mdash; <span style="color:var(--t1)">Simple</span></h2>
+
+<div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:20px;border-radius:4px;line-height:2;font-size:13px;color:var(--t2)">
+<p style="color:var(--t1);font-weight:600;margin-bottom:12px">SOST lets you hold positions backed by tokenized gold, trade them with signed private messages, and settle automatically.</p>
+
+<p><strong style="color:var(--gold)">1.</strong> You deposit tokenized gold (XAUT or PAXG) into an <strong>immutable escrow contract</strong> on Ethereum. No admin key &mdash; nobody can touch your gold except you, after the lock period.</p>
+
+<p><strong style="color:var(--gold)">2.</strong> The system registers a <strong>native SOST position</strong> with its own ID, owner, reward schedule, and expiry date. That position is now a tradeable asset inside the SOST ecosystem.</p>
+
+<p><strong style="color:var(--gold)">3.</strong> You can <strong>sell the entire position</strong> to someone else for SOST. You get immediate liquidity without waiting for the lock to expire.</p>
+
+<p><strong style="color:var(--gold)">4.</strong> Or you can <strong>sell just the reward right</strong> &mdash; keep the gold-backed principal, monetize only the future yield.</p>
+
+<p><strong style="color:var(--gold)">5.</strong> Trades happen through <strong>signed private messages</strong> (ED25519 cryptographic signatures). Every message &mdash; offer, accept, cancel, settlement notice &mdash; has a hash, a signature, a nonce, and an expiry. No forgery. No replay. No middleman.</p>
+
+<p><strong style="color:var(--gold)">6.</strong> The settlement engine <strong>verifies everything automatically</strong>: valid signatures, correct owner, no double-spend, no expired offers. Then it executes the transfer and records the complete audit trail.</p>
+</div>
+
+<h3 style="color:var(--gold);margin:24px 0 12px">Example &mdash; <span style="color:var(--t1)">Angel sells a position to Pedro</span></h3>
+
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:20px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2">
+<p>Angel has a <strong>Model B position</strong>: 0.5 oz of XAUT locked for 28 days, with a future reward of 2,000 SOST units. The position is valued at ~9.7 SOST.</p>
+
+<p>Angel needs liquidity now. Pedro is willing to wait.</p>
+
+<p><strong style="color:var(--gold)">Step 1:</strong> Angel creates a signed offer: <em>&ldquo;I sell position 8afed8fc for 9.7 SOST.&rdquo;</em> The offer is signed with Angel&rsquo;s ED25519 key, includes a unique nonce and expires in 1 hour.</p>
+
+<p><strong style="color:var(--gold)">Step 2:</strong> Pedro receives the offer through the private relay channel. He verifies the signature is valid, checks the position exists, and accepts: <em>&ldquo;I buy position 8afed8fc for 9.7 SOST.&rdquo;</em> Also signed.</p>
+
+<p><strong style="color:var(--gold)">Step 3:</strong> The system derives a unique <code style="background:var(--bg3);padding:1px 5px;color:var(--red)">deal_id</code> from both signatures and creates the deal.</p>
+
+<p><strong style="color:var(--gold)">Step 4:</strong> The settlement engine verifies: Angel is the real owner, the position is active, signatures are valid, no replay. Everything checks out.</p>
+
+<p><strong style="color:var(--gold)">Step 5:</strong> Ownership transfers. Pedro is now the owner of position 8afed8fc. Angel receives 9.7 SOST. A settlement notice is emitted and the full history is recorded in the audit log.</p>
+
+<p style="margin-top:12px"><strong style="color:var(--cyan)">Alternative:</strong> Angel could instead sell <em>only the reward right</em> &mdash; keeping the gold-backed principal and selling the future 2,000 SOST reward to Pedro at a discount. The system creates a &ldquo;child position&rdquo; for Pedro (reward only) while Angel keeps the parent (principal only).</p>
+</div>
+
+<h3 style="color:var(--gold);margin:24px 0 12px">Why Trade Positions?</h3>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
+<p style="color:var(--green);font-weight:600;margin-bottom:8px">&#9654; Sellers</p>
+<ul style="color:var(--t2);font-size:12px;line-height:1.8;padding-left:16px">
+<li>Get immediate liquidity</li>
+<li>Exit early without waiting for lock expiry</li>
+<li>Reduce risk exposure</li>
+<li>Rotate capital into new opportunities</li>
+<li>Sell only the reward, keep the principal</li>
+</ul>
+</div>
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
+<p style="color:var(--cyan);font-weight:600;margin-bottom:8px">&#9654; Buyers</p>
+<ul style="color:var(--t2);font-size:12px;line-height:1.8;padding-left:16px">
+<li>Acquire positions at a discount</li>
+<li>Earn future rewards by waiting</li>
+<li>Gain gold exposure without creating a contract from scratch</li>
+<li>Build a portfolio of positions with different maturities</li>
+</ul>
+</div>
+</div>
+
+<p style="color:var(--gold);font-style:italic;font-size:12px;text-align:center;margin-bottom:0">The market exists because the same position doesn&rsquo;t have the same value for everyone: some prefer money today, others prefer future value.</p>
+
+</div></section>
+
 <!-- TABLE OF CONTENTS -->
 <section><div class="c">
 <div class="toc">
