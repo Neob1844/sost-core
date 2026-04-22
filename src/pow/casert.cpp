@@ -314,14 +314,20 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         if (lag <= 0) {
             target_profile = 0;
         } else {
-            target_profile = std::min<int32_t>(lag, CASERT_HARD_PROFILE_CEILING);
+            int32_t current_ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
+                                   ? CASERT_HARD_PROFILE_CEILING_H11
+                                   : CASERT_HARD_PROFILE_CEILING;
+            target_profile = std::min<int32_t>(lag, current_ceiling);
         }
 
         int32_t prev_H = 0;
         if (!chain.empty()) {
+            int32_t current_ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
+                                   ? CASERT_HARD_PROFILE_CEILING_H11
+                                   : CASERT_HARD_PROFILE_CEILING;
             prev_H = chain.back().profile_index;
             if (prev_H == INT32_MIN) prev_H = 0;
-            prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_HARD_PROFILE_CEILING, prev_H));
+            prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(current_ceiling, prev_H));
         }
 
         int32_t H;
@@ -549,9 +555,14 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                     up_slew = CASERT_BURST_UP_SLEW_1;  // ±2 up
                 }
 
-                // Burst ceiling: NEVER push above H10 in burst mode
-                if (up_slew > 1 && H > CASERT_BURST_PROFILE_CEILING) {
-                    H = CASERT_BURST_PROFILE_CEILING;
+                // Burst ceiling: follows hard ceiling (H10 or H11 depending on height)
+                {
+                    int32_t burst_cap = (next_height >= CASERT_CEILING_H11_HEIGHT)
+                                      ? CASERT_BURST_PROFILE_CEILING_H11
+                                      : CASERT_BURST_PROFILE_CEILING;
+                    if (up_slew > 1 && H > burst_cap) {
+                        H = burst_cap;
+                    }
                 }
             }
 
@@ -655,11 +666,14 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         }
     }
 
-    // ---- Hard profile ceiling (block 5100+) ----
-    // H10 is the last practically minable profile. H11+ causes stalls on
-    // modest hardware (0.0% stable observed in production). Simple final clamp.
-    if (next_height >= CASERT_CEILING_HEIGHT && H > CASERT_HARD_PROFILE_CEILING) {
-        H = CASERT_HARD_PROFILE_CEILING;
+    // ---- Hard profile ceiling (progressive activation) ----
+    // Block 5075+: H10 ceiling. Block 5480+: H11 ceiling.
+    // All safety nets (lag-adjust, anti-stall, bitsQ, slew) apply equally.
+    if (next_height >= CASERT_CEILING_HEIGHT) {
+        int32_t ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
+                        ? CASERT_HARD_PROFILE_CEILING_H11
+                        : CASERT_HARD_PROFILE_CEILING;
+        if (H > ceiling) H = ceiling;
     }
 
     // ---- Anti-stall (mining only): zone-based decay targeting B0 ----

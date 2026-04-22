@@ -139,11 +139,14 @@ inline constexpr int64_t  CASERT_DIRECT_LAG_HEIGHT       = 5323;
 // Also introduces a bitsQ relax guard: prevents bitsQ from softening
 // too much while the chain is ahead and the profile is already high.
 // ─────────────────────────────────────────────────────────────────────
-// Hard profile ceiling (block 5100): H10 is the last practically minable profile.
-// Production data confirms H11 is non-viable on modest hardware (0.0% stable).
-// This is the simplest possible fix: cap the effective profile at H10.
+// Hard profile ceiling: progressive activation.
+// Block 5075: H10 ceiling (V6 era).
+// Block 5480: H11 ceiling �� equalizer expansion for finer granularity.
+// All safety nets (lag-adjust 30s, anti-stall 60min, bitsQ, slew ±1) apply equally.
 inline constexpr int64_t  CASERT_CEILING_HEIGHT        = 5075;
-inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING  = 10;    // H10
+inline constexpr int64_t  CASERT_CEILING_H11_HEIGHT    = 5480;
+inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING  = 10;    // H10 (block 5075+)
+inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H11 = 11; // H11 (block 5480+)
 
 inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
@@ -161,8 +164,9 @@ inline constexpr int32_t  CASERT_BURST_UP_SLEW_2       = 3;    // upward slew ±
 inline constexpr int32_t  CASERT_BURST_EXIT_LAG        = 4;    // exit when lag <= 4
 inline constexpr int64_t  CASERT_BURST_EXIT_MEDIAN     = 180;  // or median(last3) >= 180s
 
-// Burst ceiling: NEVER push above H10 in burst mode
-inline constexpr int32_t  CASERT_BURST_PROFILE_CEILING = 10;   // H10
+// Burst ceiling: follows hard ceiling
+inline constexpr int32_t  CASERT_BURST_PROFILE_CEILING = 10;   // H10 (block 5075+)
+inline constexpr int32_t  CASERT_BURST_PROFILE_CEILING_H11 = 11; // H11 (block 5480+)
 
 // Confirmation: require 2 consecutive evaluations
 inline constexpr int32_t  CASERT_BURST_CONFIRM_TICKS   = 2;
