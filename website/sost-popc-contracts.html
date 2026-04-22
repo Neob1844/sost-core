@@ -200,7 +200,7 @@
 <section style="padding:0;">
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-      <strong style="color:#fbbf24;">&#9888; PRE-ACTIVATION</strong> &mdash; PoPC contracts are <strong>fully specified and implemented</strong>, pending final activation after block 10,000. Foundation contracts will be the first to go live. Ethereum escrow contract deployed and verified. Phase V+VI validation: <strong style="color:var(--green-primary)">231 tests passed</strong> (Python 163 + TypeScript 49 + Solidity 19).
+      <strong style="color:#00ff88;">&#9889; ALPHA LIVE ON SEPOLIA</strong> &mdash; SOSTEscrow is <strong>deployed and working on Sepolia</strong> with live on-chain deposits using mock tokenized gold. First deposit: 0.05 oz XAUT (depositId #0, 90-day lock). End-to-end settlement flow verified. The contract logic, locking model, and state transitions are functioning exactly as designed. <strong style="color:var(--green-primary)">259 tests passed</strong> (Python 171 + TypeScript 69 + Solidity 19). PoPC activation on mainnet after block 10,000. <span style="color:#fb923c">Mock tokens only — not mainnet XAUT/PAXG.</span>
     </div>
   </div>
 </section>
@@ -488,12 +488,19 @@
       <div class="section-title">SOSTEscrow <span class="accent">Contract</span></div>
     </div>
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Ethereum Escrow Smart Contract (Model B)</span><span class="spec-tag">IMMUTABLE &middot; NO ADMIN KEY</span></div>
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Ethereum Escrow Smart Contract (Model B)</span><span class="spec-tag" style="color:#00ff88;border-color:rgba(0,255,136,0.3)">DEPLOYED ON SEPOLIA</span></div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">The SOSTEscrow contract holds tokenized gold for Model B participants. It is fully immutable with zero admin capabilities.</p>
+        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">The SOSTEscrow contract holds tokenized gold for Model B participants. It is fully immutable with zero admin capabilities. <strong style="color:#00ff88">Now deployed and verified on Sepolia testnet with first on-chain gold deposit.</strong></p>
+        <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:14px 18px;font-size:11px;color:var(--text-secondary);line-height:2;margin-bottom:16px;">
+          <strong style="color:#00ff88">SEPOLIA DEPLOYMENT (Testnet &mdash; chain_id: 11155111)</strong><br>
+          SOSTEscrow: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113</span><br>
+          Mock XAUT: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0</span> (6 decimals)<br>
+          Mock PAXG: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x754A7D020D559EDD60848450c563303262cAdec7</span> (18 decimals)<br>
+          First deposit: <span style="color:var(--gold)">0.05 oz XAUT, depositId #0, 90-day lock</span> &mdash; <span style="color:#fb923c">mock tokens, not mainnet XAUT/PAXG</span>
+        </div>
         <table class="code-table">
           <tr><th>Property</th><th>Value</th></tr>
-          <tr><td class="highlight">Accepted tokens</td><td><span class="gold">XAUT</span> (0x68749665FF8D2d112Fa859AA293F07A622782F38, 6 decimals) &middot; <span class="gold">PAXG</span> (0x45804880De22913dAFE09f4980848ECE6EcbAf78, 18 decimals)</td></tr>
+          <tr><td class="highlight">Mainnet tokens</td><td><span class="gold">XAUT</span> (0x68749665FF8D2d112Fa859AA293F07A622782F38, 6 decimals) &middot; <span class="gold">PAXG</span> (0x45804880De22913dAFE09f4980848ECE6EcbAf78, 18 decimals)</td></tr>
           <tr><td class="highlight">Min lock duration</td><td>28 days (MIN_LOCK_DURATION)</td></tr>
           <tr><td class="highlight">Max lock duration</td><td>366 days (MAX_LOCK_DURATION)</td></tr>
           <tr><td class="highlight">Min deposit XAUT</td><td>1,000 units = 0.001 oz (XAUT_MIN_AMOUNT)</td></tr>

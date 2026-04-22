@@ -1,25 +1,29 @@
 {
-  "alpha_mode": "pre-deployment",
-  "status": "operator-assisted",
+  "alpha_mode": "controlled-alpha",
+  "status": "deployed-on-sepolia",
   "trustless": false,
   "sepolia": {
     "chain_id": 11155111,
-    "escrow_address": "pending deployment",
-    "mock_xaut": "pending deployment",
-    "mock_paxg": "pending deployment"
+    "deployed_at_block": 10709651,
+    "escrow_address": "0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113",
+    "mock_xaut": "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
+    "mock_paxg": "0x754A7D020D559EDD60848450c563303262cAdec7",
+    "first_deposit_tx": "0x63a3c051e56188fe391c90ef7e041db49ff98805d26a1cbd35a0b549b6e0516d",
+    "first_deposit_amount": "0.05 oz XAUT",
+    "first_deposit_id": 0
   },
   "latest_demo": {
-    "deal_id": null,
-    "outcome": null,
-    "timestamp": null
+    "deal_id": "bd16dd25595fc000",
+    "outcome": "settled",
+    "timestamp": "2026-04-22T13:33:13Z"
   },
-  "phase": "VI",
+  "phase": "VII",
   "tests_passed": {
-    "python": 163,
-    "typescript": 49,
+    "python": 171,
+    "typescript": 69,
     "solidity": 19,
-    "total": 231
+    "total": 259
   },
-  "notice": "Alpha phase — operator-assisted settlement. Not yet a public trustless market.",
+  "notice": "Controlled alpha — SOSTEscrow deployed on Sepolia with first on-chain gold deposit. Operator-assisted settlement. Mock tokens (not mainnet XAUT/PAXG). Not yet a public trustless market.",
   "updated_at": "2026-04-22"
 }
