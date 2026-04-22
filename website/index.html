@@ -962,6 +962,7 @@
         };
         return {label:'H'+profile, color:colors[profile]||'#e63946'};
       }
+      var _lastBlockTime=0;
       function update(){
         fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getinfo","params":[],"id":1}'})
         .then(function(r){return r.json();})
@@ -971,15 +972,50 @@
           var bits=(d.difficulty||765730)/65536.0;
           var sost=(h+1)*7.85100863;
           var utxos=d.utxo_count||0;
-          var cs=casertProfile(h);
-          el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
-            ' <span style="color:#333">&middot;</span> '+
-            '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
-            ' - <span style="color:'+cs.color+';font-weight:600">'+cs.label+'</span>'+
-            ' <span style="color:#333">&middot;</span> '+
-            '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+Math.floor(sost).toLocaleString('en-US')+' SOST</span>'+
-            ' <span style="color:#333">&middot;</span> '+
-            '<span style="color:#999">UTXOs: '+utxos.toLocaleString()+'</span>';
+          // Use casert_profile from RPC (last mined block)
+          var profileLabel=d.casert_profile||casertProfile(h).label;
+          var pi=d.casert_profile_index;
+          var profileColor='#4ade80';
+          if(pi!==undefined){
+            if(pi<0)profileColor='#a78bfa';
+            else if(pi===0)profileColor='#4ade80';
+            else if(pi<=4)profileColor='#67e8f9';
+            else if(pi<=7)profileColor='#fbbf24';
+            else if(pi<=9)profileColor='#fb923c';
+            else profileColor='#e63946';
+          }
+          // Get block timestamp for "ago" display
+          fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getbestblockhash","params":[],"id":2}'})
+          .then(function(r2){return r2.json();})
+          .then(function(j2){
+            var bh=(j2.result&&typeof j2.result==='string')?j2.result:(j2.result||'');
+            if(bh)return fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getblock","params":["'+bh+'"],"id":3}'});
+            return Promise.resolve(null);
+          })
+          .then(function(r3){return r3?r3.json():null;})
+          .then(function(j3){
+            if(j3&&j3.result)_lastBlockTime=j3.result.time||j3.result.timestamp||0;
+          })
+          .catch(function(){})
+          .finally(function(){
+            var ago='';
+            if(_lastBlockTime>0){
+              var secAgo=Math.floor(Date.now()/1000)-_lastBlockTime;
+              if(secAgo<0)secAgo=0;
+              if(secAgo<60)ago=secAgo+'s ago';
+              else if(secAgo<3600)ago=Math.floor(secAgo/60)+'m '+Math.floor(secAgo%60)+'s ago';
+              else ago=Math.floor(secAgo/3600)+'h '+Math.floor((secAgo%3600)/60)+'m ago';
+            }
+            el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
+              (ago?' <span style="color:#666;font-size:11px">('+ago+')</span>':'')+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
+              ' - <span style="color:'+profileColor+';font-weight:600">'+profileLabel+'</span>'+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+Math.floor(sost).toLocaleString('en-US')+' SOST</span>'+
+              ' <span style="color:#333">&middot;</span> '+
+              '<span style="color:#999">UTXOs: '+utxos.toLocaleString()+'</span>';
+          });
         })
         .catch(function(){
           el.innerHTML='<span style="color:#666">Node offline</span>';
