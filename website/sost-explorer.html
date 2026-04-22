@@ -346,75 +346,54 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <button onclick="doSearch()">FIND</button>
 </div></div>
 <!-- V6 chain-stability fork at block 5,000 + VT governance fork at block 10,000 -->
-<div id="v6Notice" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <style>@keyframes v6pulse{0%,100%{border-left-color:#00ff41;box-shadow:none}50%{border-left-color:#DAA520;box-shadow:inset 0 0 30px rgba(218,165,32,0.04),0 0 10px rgba(0,255,65,0.06)}}</style>
-  <div style="background:rgba(0,255,65,0.06);border-left:3px solid #DAA520;padding:12px 18px;font-family:var(--code);font-size:10px;color:#67e8f9;line-height:1.8;animation:v6pulse 3s ease-in-out infinite;">
-    <b style="color:#DAA520;font-size:13px;letter-spacing:2px;">SOST SOVEREIGN VALUE STACK</b><br><br>
-    <span style="color:#00ff88;font-size:11px">SOST lets you hold <b>positions backed by tokenized gold</b>, trade them with <b>signed private messages</b>, and settle automatically &mdash; all without trusting a central authority. Your gold stays in your custody. Your trades are cryptographically signed. The system verifies, registers, and settles everything.</span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">HOW IT WORKS &mdash; SIMPLE</span><br><br>
-    <span style="color:#e2e8f0;font-size:10px;line-height:2">
-      <b style="color:#DAA520">1.</b> You deposit tokenized gold (XAUT/PAXG) into an <b>immutable escrow</b> &mdash; no admin key, no one can touch it except you after the lock period.<br>
-      <b style="color:#DAA520">2.</b> The system registers a <b>native SOST position</b> with its own ID, owner, reward, and expiry date. That position is now a tradeable asset.<br>
-      <b style="color:#DAA520">3.</b> You can <b>sell the entire position</b> to someone else for SOST &mdash; instant liquidity, no need to wait for the lock to expire.<br>
-      <b style="color:#DAA520">4.</b> Or you can <b>sell just the reward right</b> &mdash; keep the principal, monetize the future yield now.<br>
-      <b style="color:#DAA520">5.</b> Trades happen through <b>signed private messages</b> (ED25519) &mdash; offer, accept, cancel, settlement notice. Every message has a hash, a signature, a nonce, and an expiry. No forgery, no replay.<br>
-      <b style="color:#DAA520">6.</b> The settlement engine <b>verifies everything automatically</b>: valid signatures, correct owner, no double-spend, no expired offers. Then it executes the transfer and records it in the audit log.
-    </span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">WHY TRADE POSITIONS?</span><br><br>
-    <span style="color:#e2e8f0;font-size:10px;line-height:2">
-      <b style="color:#00ff88">Sellers</b> get immediate liquidity, exit early, reduce risk, or rotate capital into new opportunities.<br>
-      <b style="color:#67e8f9">Buyers</b> acquire positions at a discount, earn future rewards, or gain gold exposure without setting up the contract themselves.<br>
-      <span style="color:#DAA520;font-style:italic">The market exists because the same position doesn&rsquo;t have the same value for everyone: some prefer money today, others prefer future value.</span>
-    </span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">THREE PILLARS</span><br>
-    <span style="color:#e2e8f0;font-size:10px;line-height:2">
-      <b style="color:#DAA520">&#9670; E2E Encrypted Coordination</b> &mdash; Private signed messages for economic deals. Not chat. <a href="sost-e2e.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a><br>
-      <b style="color:#DAA520">&#9670; SOST DEX</b> &mdash; Trade SOST against gold tokens and native positions. Ethereum is only the entry/exit rail. <a href="sost-gold-dex.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a><br>
-      <b style="color:#DAA520">&#9670; PoPC Contracts</b> &mdash; Timelocked gold custody. No admin, no pause, no emergency withdrawal. Constitutional. <a href="sost-popc-contracts.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a>
-    </span><br><br>
-    <div style="margin-top:4px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:4px;padding:12px 16px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px rgba(0,255,136,0.6);animation:pulse 2s ease infinite"></span>
-        <b style="color:#00ff88;font-size:13px;letter-spacing:3px;">ALPHA LIVE &mdash; SEPOLIA TESTNET</b>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px;">
-        <span style="color:#00ff88">&#10003; <b>SOSTEscrow</b> deployed</span>
-        <a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:#67e8f9;font-size:9px;font-family:var(--code);text-decoration:none">0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113 &#8599;</a>
-        <span style="color:#00ff88">&#10003; <b>Mock XAUT</b> deployed</span>
-        <a href="https://sepolia.etherscan.io/address/0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0" target="_blank" rel="noopener" style="color:#67e8f9;font-size:9px;font-family:var(--code);text-decoration:none">0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0 &#8599;</a>
-        <span style="color:#00ff88">&#10003; <b>Mock PAXG</b> deployed</span>
-        <a href="https://sepolia.etherscan.io/address/0x754A7D020D559EDD60848450c563303262cAdec7" target="_blank" rel="noopener" style="color:#67e8f9;font-size:9px;font-family:var(--code);text-decoration:none">0x754A7D020D559EDD60848450c563303262cAdec7 &#8599;</a>
-      </div>
-      <div style="margin-top:10px;border-top:1px solid rgba(0,255,136,0.15);padding-top:10px;font-size:10px;line-height:2;">
-        <span style="color:#00ff88;font-weight:600">&#9889; FIRST PoPC MODEL B POSITION</span> &mdash; 0.5 oz XAUT, 28-day lock, position <span style="font-family:var(--code);font-size:9px">8afed8fcd27553a7</span> ACTIVE <a href="https://sepolia.etherscan.io/tx/0x4d3a6beff787b8fe24f37bb1e8945f823e2b29244a65c7853f89767dc329a8c6" target="_blank" rel="noopener" style="color:#67e8f9;text-decoration:none;font-size:9px">[view tx &#8599;]</a><br>
-        <span style="color:#00ff88;font-weight:600">&#9889; TOTAL GOLD LOCKED</span> &mdash; 0.55 oz XAUT in escrow (2 deposits) <a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:#67e8f9;text-decoration:none;font-size:9px">[view escrow &#8599;]</a><br>
-        <span style="color:#00ff88;font-weight:600">&#9889; END-TO-END SETTLEMENT</span> &mdash; offer &rarr; accept &rarr; deal &rarr; ETH lock &rarr; SOST lock &rarr; <b style="color:#00ff88">SETTLED</b> + refund path verified<br>
-        <span style="color:#DAA520">&#9889; ED25519 real signatures</span> on all trade messages + relay node with deal channels<br>
-        <span style="color:#DAA520">&#9889; 371 tests passed</span> (Python 213 + TypeScript 139 + Solidity 19) &mdash; <b style="color:#00ff88">0 failed</b>
-      </div>
-      <div style="margin-top:8px;font-size:9px;color:#fb923c;border-top:1px solid rgba(251,147,60,0.15);padding-top:6px;">
-        &#9888; Limited public alpha &mdash; operator-assisted &mdash; Sepolia testnet with mock tokens &mdash; not yet a public trustless market.
-      </div>
+<!-- PROTOCOL UPDATES — collapsible news section, replaces old banner -->
+<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:var(--bg2);border:1px solid var(--border);padding:0;">
+    <div id="newsHeader" onclick="document.getElementById('newsBody').style.display=document.getElementById('newsBody').style.display==='none'?'block':'none';document.getElementById('newsToggle').textContent=document.getElementById('newsBody').style.display==='none'?'\u25BC':'\u25B2';" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;">
+      <span style="font-size:10px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--red)">PROTOCOL UPDATES</b> <span style="color:var(--text3);font-size:9px;margin-left:8px"><a href="feed.xml" style="color:var(--orange);text-decoration:none;font-size:8px;letter-spacing:1px" title="RSS Feed">RSS &#9741;</a></span></span>
+      <span id="newsToggle" style="color:var(--text3);font-size:12px">&#9660;</span>
     </div>
-    <div style="margin-top:8px;background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.3);border-radius:4px;padding:12px 16px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,0.6);animation:pulse 1.5s ease infinite"></span>
-        <b style="color:#fb010d;font-size:13px;letter-spacing:3px;">cASERT EQUALIZER &mdash; H11 ACTIVATION AT BLOCK 5,480</b>
-      </div>
-      <div style="font-size:10px;line-height:2;color:#e2e8f0;">
-        <b style="color:#fb010d">&#9670; What:</b> Profile ceiling raised from H10 to H11. The equalizer can now engage one additional hardening level for finer-grained surplus absorption. Ceiling remains at H11 &mdash; no higher.<br>
-        <b style="color:#fb010d">&#9670; Why:</b> The avg288 bitsQ controller is performing perfectly (10m 16s average). However, the chain maintains a persistent ~10-block lead over wall-clock schedule. H9 produces blocks at 6.4 min average and H10 only activates in ~8% of blocks &mdash; not enough pressure to absorb the surplus of ~0.19 blocks/hour. H11 provides the additional granularity and sensitivity needed to close the gap between expected and actual block count. <span style="color:#DAA520">The equalizer was designed with 40 profiles (E4&ndash;H35) precisely for this: progressive, incremental refinement toward ideal timing. Only 14 of 40 profiles have been activated so far. Now is the right moment to expand &mdash; the primary controller is stable, the safety nets are proven, and the network has enough miners to validate the change under real conditions. Each new profile activated brings the system closer to the precision it was engineered to achieve.</span><br>
-        <b style="color:#fb010d">&#9670; Safety:</b> The system is solid, reliable, and functioning exactly as designed. H11 activation was always planned as part of the 40-profile equalizer architecture (16 active, 24 reserved). All existing safety nets remain active: <span style="color:#00ff88">lag-adjust every 30s</span> (miners auto-adapt), <span style="color:#00ff88">anti-stall at 60 min</span> (emergency easing), <span style="color:#00ff88">avg288 bitsQ</span> (primary difficulty controller compensates automatically), <span style="color:#00ff88">slew &plusmn;1 per block</span> (no profile jumps). If H11 slows blocks too much, bitsQ reduces numeric difficulty to compensate &mdash; the two controllers self-balance.<br>
-        <b style="color:#fb010d">&#9670; Impact:</b> Miners at H11 will see lower stability rates (~5&ndash;8% vs ~12% at H10). Effective hash rate per miner decreases at H11, making blocks harder to find. This is intentional and temporary &mdash; the equalizer will drop back to H10 or lower as the block lead decreases.<br>
-        <b style="color:#fb010d">&#9670; Node &amp; miner update required before block 5,480.</b> Both the node and miner binaries must be updated to accept H11 blocks. Nodes running the old binary will reject H11 blocks after activation.<br>
-        <div style="margin-top:8px;background:rgba(251,1,13,0.12);border:1px solid rgba(251,1,13,0.3);border-radius:4px;padding:10px 14px;font-family:var(--code);font-size:9px;line-height:2.2;color:#e2e8f0;">
-          <b style="color:#fb010d;font-size:10px;letter-spacing:1px">HOW TO UPDATE:</b><br>
-          <span style="color:#67e8f9">1.</span> <span style="color:#94a3b8">Pull latest code:</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
-          <span style="color:#67e8f9">2.</span> <span style="color:#94a3b8">Rebuild:</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
-          <span style="color:#67e8f9">3.</span> <span style="color:#94a3b8">Restart node:</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span> <span style="color:#94a3b8">(or stop &amp; restart manually)</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#94a3b8">Restart miner:</span> <span style="color:#00ff88">stop miner, start with same arguments</span><br>
-          <span style="color:#94a3b8">The miner&rsquo;s lag-adjust (30s) will automatically detect H11 profile changes. No configuration change needed &mdash; only the binary update.</span>
+    <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
+      <!-- NEWS ITEMS — newest first -->
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--red);font-size:9px;font-weight:600;letter-spacing:1px">UPCOMING HARD FORK</span>
+          <span style="color:var(--text3);font-size:8px;">Block 10,000</span>
         </div>
+        <b style="color:var(--text);font-size:11px;">VT Activation Package &mdash; Governance, PoPC, Signature-Bound PoW</b><br>
+        <span style="color:var(--text2)">Six changes in one coordinated fork: (1) Gold Vault 5-defense governance, (2) Signature-bound Proof of Work (anti-pool), (3) PoPC Model A operational launch, (4) PoPC Model B escrow on Ethereum mainnet, (5) Real version-bit signaling, (6) Bond/Escrow/Capsule output types. Developer custody transitions to protocol custody. <a href="sost-popc-contracts.html" style="color:var(--cyan);text-decoration:none">[details]</a></span>
+      </div>
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--green);font-size:9px;font-weight:600;letter-spacing:1px">COMPLETED</span>
+          <span style="color:var(--text3);font-size:8px;">Block 5,480 &middot; April 22, 2026</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">cASERT H11 Ceiling Activation</b><br>
+        <span style="color:var(--text2)">Equalizer ceiling raised from H10 to H11 (16 of 40 profiles active). Finer-grained lag absorption. All safety nets active: lag-adjust 30s, anti-stall 60min, bitsQ auto-compensates, slew &plusmn;1/block. 118 cASERT tests passing.</span>
+      </div>
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--green);font-size:9px;font-weight:600;letter-spacing:1px">COMPLETED</span>
+          <span style="color:var(--text3);font-size:8px;">April 22, 2026</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">Sovereign Value Stack &mdash; Alpha Live on Sepolia</b><br>
+        <span style="color:var(--text2)">SOSTEscrow deployed on Sepolia (<a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none">0x01Ea...f113 &#8599;</a>). First PoPC Model B position: 0.5 oz XAUT, 28-day lock. End-to-end settlement + refund demonstrated. ED25519 signatures on all trade messages. Position market with full trades and reward-right splits. 375 tests, 0 failures. <a href="sost-positions.html" style="color:var(--gold);text-decoration:none">[positions]</a> <a href="sost-position-market.html" style="color:var(--gold);text-decoration:none">[market]</a></span>
+      </div>
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--green);font-size:9px;font-weight:600;letter-spacing:1px">COMPLETED</span>
+          <span style="color:var(--text3);font-size:8px;">Block 5,175 &middot; April 2026</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">V6++ avg288 bitsQ Controller</b><br>
+        <span style="color:var(--text2)">Half-life exponential replaced with avg288-based controller. Dynamic cap (block 5,260+): &plusmn;15s dead band, 0%/0.5%/1.5%/2.5%/3.0% max. Median removed from consensus. Profile ceiling H10 (block 5,075).</span>
+      </div>
+      <div style="padding:10px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--green);font-size:9px;font-weight:600;letter-spacing:1px">COMPLETED</span>
+          <span style="color:var(--text3);font-size:8px;">Block 5,000 &middot; April 2026</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">V6 Chain Stability Fork</b><br>
+        <span style="color:var(--text2)">Slew rate &plusmn;3 &rarr; &plusmn;1. H10/H11/H12 smoothed (all scale=2). Anti-stall immediate first drop. 40 profiles (E4&ndash;H35). Live lag from wall clock. Dynamic lag cap H &le; lag.</span>
       </div>
     </div>
   </div>
