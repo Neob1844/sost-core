@@ -3253,6 +3253,28 @@ async function loadLatestTxs(){
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
 
+// Version-based auto-reload: checks api/explorer_version.json every 60s.
+// When version changes (after git push), reloads page automatically.
+// Only reloads if user is on main overview (not viewing detail panel).
+(function(){
+  var _currentVersion=null;
+  function checkVersion(){
+    fetch('api/explorer_version.json?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+      if(!_currentVersion){_currentVersion=d.v;return;}
+      if(d.v!==_currentVersion){
+        var detail=document.getElementById('detailPanel');
+        if(!detail||!detail.classList.contains('show')){
+          location.reload();
+        }else{
+          _currentVersion=d.v; // update silently, reload next check
+        }
+      }
+    }).catch(function(){});
+  }
+  checkVersion();
+  setInterval(checkVersion,60000);
+})();
+
 // Active Nodes polling
 (function(){
   function nodeId(addr){
