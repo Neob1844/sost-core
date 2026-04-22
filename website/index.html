@@ -933,6 +933,26 @@
     <script>
     (function(){
       var el=document.getElementById('chainLive');
+      var GENESIS_TS=1772236800;
+      function casertProfile(h){
+        var now=Math.floor(Date.now()/1000);
+        var expected=Math.floor((now-GENESIS_TS)/600);
+        var lag=expected-h;
+        // lag>0 = behind schedule → easing (E1-E4)
+        // lag<0 = ahead of schedule → hardening (H1-H4)
+        // lag==0 or small → B0 (baseline)
+        if(lag>36)return {label:'E4',color:'#a78bfa'};  // 6h+ behind
+        if(lag>18)return {label:'E3',color:'#a78bfa'};  // 3h+ behind
+        if(lag>9)return  {label:'E2',color:'#a78bfa'};  // 1.5h+ behind
+        if(lag>3)return  {label:'E1',color:'#a78bfa'};  // 30min+ behind
+        if(lag>=0)return {label:'B0',color:'#4ade80'};  // on schedule or slightly behind
+        var ahead=-lag;
+        if(ahead<5)return  {label:'B0',color:'#4ade80'}; // 0-4 ahead
+        if(ahead<20)return {label:'H1',color:'#67e8f9'}; // 5-19 ahead
+        if(ahead<50)return {label:'H2',color:'#fbbf24'}; // 20-49 ahead
+        if(ahead<75)return {label:'H3',color:'#fb923c'}; // 50-74 ahead
+        return {label:'H4',color:'#e63946'};              // 75+ ahead
+      }
       function update(){
         fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getinfo","params":[],"id":1}'})
         .then(function(r){return r.json();})
@@ -942,9 +962,11 @@
           var bits=(d.difficulty||765730)/65536.0;
           var sost=(h+1)*7.85100863;
           var utxos=d.utxo_count||0;
+          var cs=casertProfile(h);
           el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
             ' <span style="color:#333">&middot;</span> '+
             '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
+            ' - <span style="color:'+cs.color+';font-weight:600">'+cs.label+'</span>'+
             ' <span style="color:#333">&middot;</span> '+
             '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+Math.floor(sost).toLocaleString('en-US')+' SOST</span>'+
             ' <span style="color:#333">&middot;</span> '+

@@ -203,6 +203,42 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 .nav-crumb .nc-link:hover{color:var(--red2)}
 .nav-crumb .nc-sep{color:var(--border2)}
 .nav-crumb .nc-cur{color:var(--text2)}
+.proto-section{margin-bottom:32px}
+.proto-head{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.proto-head b{font-weight:600}
+.proto-desc{font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:16px;padding:0 2px}
+.proto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:18px}
+.proto-card{background:var(--bg2);border:1px solid var(--border);padding:14px 16px;transition:border-color .15s}
+.proto-card:hover{border-color:var(--border2)}
+.proto-card-label{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.proto-card-val{font-size:16px;font-weight:600;line-height:1.3}
+.proto-card-sub{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.5}
+.proto-flow{background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-bottom:16px;font-size:11px;line-height:2;overflow-x:auto;white-space:pre;color:var(--text2)}
+.proto-flow b{font-weight:600}
+.proto-tbl{width:100%;border-collapse:collapse;border:1px solid var(--border);margin-bottom:16px}
+.proto-tbl th{text-align:left;padding:8px 12px;font-size:9px;letter-spacing:2px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);font-weight:400}
+.proto-tbl td{padding:8px 12px;font-size:11px;border-bottom:1px solid var(--border);color:var(--text2)}
+.proto-tbl tr:last-child td{border-bottom:none}
+.proto-tbl tr:hover td{background:var(--red-dim)}
+.proto-tbl .cmd{color:var(--cyan);font-weight:600}
+.proto-tbl .type{color:var(--purple);font-weight:500}
+.state-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.state-node{background:var(--bg3);border:1px solid var(--border);padding:6px 14px;font-size:10px;letter-spacing:1px;color:var(--text)}
+.state-node.active{border-color:var(--green);color:var(--green)}
+.state-node.warn{border-color:var(--yellow);color:var(--yellow)}
+.state-node.err{border-color:var(--red);color:var(--red)}
+.state-arrow{color:var(--text3);font-size:14px}
+.proto-note{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--cyan);padding:12px 16px;font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:16px}
+.proto-note b{font-weight:600}
+.proto-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:18px}
+@media(max-width:1024px){
+  .proto-two-col{grid-template-columns:1fr}
+  .proto-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .proto-grid{grid-template-columns:1fr}
+  .proto-tbl th:nth-child(n+4),.proto-tbl td:nth-child(n+4){display:none}
+}
 @media(max-width:1024px){
   .dashboard{grid-template-columns:repeat(3,1fr)}
   .two-col{grid-template-columns:1fr}
@@ -340,6 +376,325 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
     <table class="tbl"><thead><tr><th>TXID</th><th>SIZE</th><th>FEE</th></tr></thead>
     <tbody id="mpBody"><tr><td colspan="3" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr></tbody></table>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- E2E ENCRYPTED P2P PROTOCOL                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="proto-section" id="e2eSection">
+    <div class="sec-head"><div class="sec-title">// <b style="color:var(--green)">E2E ENCRYPTED P2P PROTOCOL</b></div><div class="sec-meta">end-to-end node communications</div></div>
+
+    <div class="proto-desc">
+      Every SOST node communicates through an encrypted peer-to-peer channel. Messages are framed with a 12-byte header
+      (<span style="color:var(--cyan)">magic</span> + <span style="color:var(--purple)">cmd</span> + <span style="color:var(--orange)">payload_len</span>),
+      then wrapped in authenticated encryption after the handshake completes. All block sync, transaction broadcast, and keepalive
+      traffic flows through this channel.
+    </div>
+
+    <div class="proto-grid">
+      <div class="proto-card">
+        <div class="proto-card-label">KEY EXCHANGE</div>
+        <div class="proto-card-val" style="color:var(--green)">X25519</div>
+        <div class="proto-card-sub">Elliptic-curve Diffie-Hellman · 256-bit keys<br/>per-connection ephemeral keypairs</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">ENCRYPTION</div>
+        <div class="proto-card-val" style="color:var(--cyan)">ChaCha20-Poly1305</div>
+        <div class="proto-card-sub">AEAD authenticated encryption<br/>16-byte auth tag · 64-bit nonce counter</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">KEY DERIVATION</div>
+        <div class="proto-card-val" style="color:var(--purple)">HKDF-SHA256</div>
+        <div class="proto-card-sub">labels: "sost-p2p-key-a" / "sost-p2p-key-b"<br/>separate send/recv keys per direction</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">MAGIC</div>
+        <div class="proto-card-val" style="color:var(--red)">0x534F5354</div>
+        <div class="proto-card-sub">"SOST" in ASCII · 4-byte frame identifier<br/>max message: 4 MB · port 19333</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">ENCRYPTION MODES</div>
+        <div class="proto-card-val" style="color:var(--yellow)">OFF · ON · REQUIRED</div>
+        <div class="proto-card-sub">configurable per node<br/>REQUIRED rejects unencrypted peers</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">DoS PROTECTION</div>
+        <div class="proto-card-val" style="color:var(--orange)">BAN SCORE 100</div>
+        <div class="proto-card-sub">max 32 inbound · 2 per IP<br/>24h ban · 30s reconnect cooldown</div>
+      </div>
+    </div>
+
+    <div class="proto-two-col">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--green)">ENCRYPTION HANDSHAKE</span></div>
+        <div class="proto-flow"><b style="color:var(--cyan)">Peer A (initiator)</b>                    <b style="color:var(--orange)">Peer B (responder)</b>
+    │                                          │
+    │── <b style="color:var(--green)">EKEY</b> [32-byte X25519 pubkey] ──────→│
+    │                                  generate (priv_B, pub_B)
+    │                                  shared = X25519(priv_B, pub_A)
+    │                                  derive send_key_B, recv_key_B
+    │←─ <b style="color:var(--green)">EKEY</b> [32-byte X25519 pubkey] ───────│
+    │                                          │
+    shared = X25519(priv_A, pub_B)             │
+    derive send_key_A, recv_key_A              │
+    │                                          │
+    │── <b style="color:var(--purple)">VERS</b> (encrypted) ─────────────────→│  height + genesis hash
+    │←─ <b style="color:var(--purple)">VACK</b> (encrypted) ──────────────────│  version acknowledged
+    │                                          │
+    ╰──────── <b style="color:var(--green)">encrypted P2P flow begins</b> ──────╯</div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--cyan)">BLOCK SYNC FLOW</span></div>
+        <div class="proto-flow"><b style="color:var(--cyan)">Syncing Node</b>                          <b style="color:var(--orange)">Source Peer</b>
+    │                                          │
+    │── <b style="color:var(--yellow)">GETB</b> [height: 1] ────────────────→│  request from height
+    │                                          │
+    │←─ <b style="color:var(--red)">BLCK</b> [block 1 JSON] ──────────────│
+    │←─ <b style="color:var(--red)">BLCK</b> [block 2 JSON] ──────────────│
+    │←─ ... (up to 100 per batch) ─────────────│
+    │←─ <b style="color:var(--green)">DONE</b> ─────────────────────────────│  batch complete
+    │                                          │
+    │── <b style="color:var(--yellow)">GETB</b> [height: 101] ──────────────→│  next batch
+    │←─ <b style="color:var(--red)">BLCK</b> [101..200] ──────────────────│
+    │←─ <b style="color:var(--green)">DONE</b> ─────────────────────────────│
+    ╰───── continues until heights match ──────╯</div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--cyan)">PROTOCOL COMMANDS</span></div>
+    <table class="proto-tbl">
+      <thead><tr><th>COMMAND</th><th>DIRECTION</th><th>PAYLOAD</th><th>PURPOSE</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd">EKEY</td><td>bidirectional</td><td>32 bytes (X25519 pubkey)</td><td>encryption key exchange</td></tr>
+        <tr><td class="cmd">ENCR</td><td>bidirectional</td><td>ciphertext + 16-byte tag</td><td>encrypted message wrapper</td></tr>
+        <tr><td class="cmd">VERS</td><td>bidirectional</td><td>40 bytes (height + genesis hash)</td><td>version/height exchange</td></tr>
+        <tr><td class="cmd">VACK</td><td>bidirectional</td><td>empty</td><td>version acknowledgement</td></tr>
+        <tr><td class="cmd">GETB</td><td>requester → source</td><td>8 bytes (block height i64)</td><td>request blocks from height N</td></tr>
+        <tr><td class="cmd">BLCK</td><td>source → requester</td><td>JSON block data</td><td>block payload (encrypted in transit)</td></tr>
+        <tr><td class="cmd">DONE</td><td>source → requester</td><td>empty</td><td>end of sync batch marker</td></tr>
+        <tr><td class="cmd">TXXX</td><td>bidirectional</td><td>hex-encoded transaction</td><td>transaction broadcast</td></tr>
+        <tr><td class="cmd">PING</td><td>bidirectional</td><td>empty</td><td>keepalive probe</td></tr>
+        <tr><td class="cmd">PONG</td><td>bidirectional</td><td>empty</td><td>keepalive response</td></tr>
+      </tbody>
+    </table>
+
+    <div class="proto-note">
+      <b style="color:var(--green)">ENCRYPTED FRAME FORMAT:</b> <span style="color:var(--cyan)">[magic: 0x534F5354]</span><span style="color:var(--purple)">[cmd: "ENCR"]</span><span style="color:var(--orange)">[payload_len: u32]</span><span style="color:var(--text)">[ciphertext]</span><span style="color:var(--red)">[tag: 16 bytes]</span><br/>
+      Plaintext = <span style="color:var(--cyan)">[cmd: 4 bytes]</span> || <span style="color:var(--text)">[original payload]</span> · Nonce = 64-bit counter (incremented per message, prevents replay)
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- GOLD DEX & POPC CONTRACTS                                      -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="proto-section" id="dexSection">
+    <div class="sec-head"><div class="sec-title">// <b style="color:var(--gold)">TOKENIZED GOLD DEX</b> & <b style="color:var(--cyan)">POPC CONTRACTS</b></div><div class="sec-meta">decentralized exchange · proof of personal custody</div></div>
+
+    <div class="proto-desc">
+      SOST integrates a decentralized exchange for tokenized gold (XAUT, PAXG) paired against SOST.
+      Trades are settled via bilateral escrow — both sides lock assets before settlement finalizes.
+      All trade messages are <span style="color:var(--green)">ED25519-signed</span> with replay-preventing nonces.
+      PoPC contracts incentivize gold custody by rewarding participants who prove they hold tokenized gold on Ethereum.
+    </div>
+
+    <!-- DEX SUBSECTION -->
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:12px">// <span style="color:var(--gold)">EXCHANGE ENGINE</span></div>
+
+    <div class="proto-grid">
+      <div class="proto-card">
+        <div class="proto-card-label">TRADING PAIRS</div>
+        <div class="proto-card-val" style="color:var(--gold)">SOST/XAUT · SOST/PAXG</div>
+        <div class="proto-card-sub">Tether Gold (XAUT) · Pax Gold (PAXG)<br/>1 token = 1 troy ounce = 31,103 mg</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">SETTLEMENT MODE</div>
+        <div class="proto-card-val" style="color:var(--green)">ESCROW BILATERAL</div>
+        <div class="proto-card-sub">both sides lock assets before release<br/>ETH escrow + SOST lock address</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">MESSAGE SIGNING</div>
+        <div class="proto-card-val" style="color:var(--purple)">ED25519</div>
+        <div class="proto-card-sub">canonical hash: fields joined by "|"<br/>16-byte random nonce per message</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">ETH CONFIRMATIONS</div>
+        <div class="proto-card-val" style="color:var(--cyan)">6 BLOCKS</div>
+        <div class="proto-card-sub">watcher polls every 15 seconds<br/>max 1,000 blocks per query</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">DEAL EXPIRY</div>
+        <div class="proto-card-val" style="color:var(--yellow)">3,600 s</div>
+        <div class="proto-card-sub">default 1 hour timeout<br/>auto-refund on expiration</div>
+      </div>
+      <div class="proto-card">
+        <div class="proto-card-label">DAEMON TICK</div>
+        <div class="proto-card-val" style="color:var(--orange)">5 s</div>
+        <div class="proto-card-sub">settlement daemon checks expirations<br/>ETH watcher: 15s · SOST watcher: live</div>
+      </div>
+    </div>
+
+    <!-- Trade message types -->
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--gold)">TRADE MESSAGE TYPES</span></div>
+    <table class="proto-tbl">
+      <thead><tr><th>TYPE</th><th>SENDER</th><th>KEY FIELDS</th><th>PURPOSE</th></tr></thead>
+      <tbody>
+        <tr><td class="type">trade_offer</td><td>maker</td><td>pair, side, amounts, price, addresses, expires_at</td><td>publish buy/sell offer to the market</td></tr>
+        <tr><td class="type">trade_accept</td><td>taker</td><td>offer_id, deal_id, fill amounts, taker addresses</td><td>accept offer (partial fills supported)</td></tr>
+        <tr><td class="type">trade_cancel</td><td>either party</td><td>target_id, target_type (offer | deal), reason</td><td>cancel an open offer or active deal</td></tr>
+        <tr><td class="type">settlement_notice</td><td>daemon</td><td>deal_id, outcome, eth_tx_hash, sost_txid</td><td>notify settlement result to both parties</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Deal State Machine -->
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">// <span style="color:var(--gold)">DEAL STATE MACHINE</span></div>
+    <div class="state-flow">
+      <span class="state-node">CREATED</span><span class="state-arrow">→</span>
+      <span class="state-node">NEGOTIATED</span><span class="state-arrow">→</span>
+      <span class="state-node" style="border-color:var(--cyan);color:var(--cyan)">AWAITING_ETH_LOCK</span><span class="state-arrow">→</span>
+      <span class="state-node" style="border-color:var(--purple);color:var(--purple)">AWAITING_SOST_LOCK</span><span class="state-arrow">→</span>
+      <span class="state-node active">BOTH_LOCKED</span><span class="state-arrow">→</span>
+      <span class="state-node" style="border-color:var(--yellow);color:var(--yellow)">SETTLING</span><span class="state-arrow">→</span>
+      <span class="state-node active">SETTLED</span>
+    </div>
+    <div class="state-flow" style="margin-top:-8px">
+      <span style="font-size:9px;color:var(--text3);letter-spacing:1px">ALTERNATIVE FLOWS:</span>
+      <span class="state-node warn">EXPIRED</span>
+      <span class="state-node" style="border-color:var(--orange);color:var(--orange)">REFUND_PENDING</span><span class="state-arrow">→</span>
+      <span class="state-node" style="border-color:var(--orange);color:var(--orange)">REFUNDED</span>
+      <span class="state-node err">DISPUTED</span>
+    </div>
+
+    <!-- Position Pricing -->
+    <div class="proto-note" style="border-left-color:var(--gold)">
+      <b style="color:var(--gold)">POSITION PRICING:</b> Positions are valued by gold backing + time-discounted remaining rewards.
+      Discount rate: <span style="color:var(--green)">5%/yr</span> (Model B escrow) · <span style="color:var(--orange)">12%/yr</span> (Model A custody).
+      Illiquidity discount: <span style="color:var(--purple)">3% flat</span> applied to gross value.
+    </div>
+
+    <!-- POPC SUBSECTION -->
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:12px;margin-top:24px">// <span style="color:var(--cyan)">PROOF OF PERSONAL CUSTODY (PoPC)</span></div>
+
+    <div class="proto-two-col">
+      <div>
+        <div class="proto-grid" style="grid-template-columns:1fr 1fr">
+          <div class="proto-card">
+            <div class="proto-card-label">MODEL A</div>
+            <div class="proto-card-val" style="color:var(--orange)">SELF-CUSTODY</div>
+            <div class="proto-card-sub">user holds gold in own ETH wallet<br/>SOST bond required · higher rewards<br/>entropy-based audits via ConvergenceX</div>
+          </div>
+          <div class="proto-card">
+            <div class="proto-card-label">MODEL B</div>
+            <div class="proto-card-val" style="color:var(--cyan)">ESCROW-BASED</div>
+            <div class="proto-card-sub">gold locked in SOSTEscrow contract<br/>no bond required · instant reward payout<br/>lower rates · 8% protocol fee</div>
+          </div>
+          <div class="proto-card">
+            <div class="proto-card-label">SUPPORTED TOKENS</div>
+            <div class="proto-card-val" style="color:var(--gold)">XAUT · PAXG</div>
+            <div class="proto-card-sub">XAUT: 6 decimals · PAXG: 18 decimals<br/>amounts tracked in milligrams (integer)</div>
+          </div>
+          <div class="proto-card">
+            <div class="proto-card-label">DURATIONS</div>
+            <div class="proto-card-val" style="color:var(--purple)">1 · 3 · 6 · 9 · 12</div>
+            <div class="proto-card-sub">months · longer = higher reward rate<br/>start/end tracked by block height</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--cyan)">REWARD RATES</span> (base % of bond)</div>
+        <table class="proto-tbl" style="margin-bottom:12px">
+          <thead><tr><th>DURATION</th><th>MODEL A</th><th>MODEL B</th></tr></thead>
+          <tbody>
+            <tr><td>1 month</td><td style="color:var(--green)">1%</td><td style="color:var(--cyan)">0.4%</td></tr>
+            <tr><td>3 months</td><td style="color:var(--green)">4%</td><td style="color:var(--cyan)">1.5%</td></tr>
+            <tr><td>6 months</td><td style="color:var(--green)">9%</td><td style="color:var(--cyan)">3.5%</td></tr>
+            <tr><td>9 months</td><td style="color:var(--green)">14%</td><td style="color:var(--cyan)">5.5%</td></tr>
+            <tr><td>12 months</td><td style="color:var(--green)">20%</td><td style="color:var(--cyan)">8%</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:9px;color:var(--text3);line-height:1.6;padding:0 2px">
+          Floors: Model A ≥ 1% (min 10 SOST) · Model B ≥ 0.5% (min 5 SOST)<br/>
+          Hard cap: 1,000 SOST max per contract · 1,000 max active contracts
+        </div>
+      </div>
+    </div>
+
+    <!-- Bond sizing & anti-whale -->
+    <div class="proto-two-col">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--orange)">BOND SIZING</span> (Model A, constitutional §6.5)</div>
+        <table class="proto-tbl">
+          <thead><tr><th>SOST/GOLD RATIO (bps)</th><th>BOND %</th></tr></thead>
+          <tbody>
+            <tr><td>< 100</td><td style="color:var(--red)">25%</td></tr>
+            <tr><td>100 – 500</td><td style="color:var(--orange)">20%</td></tr>
+            <tr><td>500 – 1,000</td><td style="color:var(--yellow)">15%</td></tr>
+            <tr><td>1,000 – 5,000</td><td style="color:var(--green)">12%</td></tr>
+            <tr><td>≥ 5,000</td><td style="color:var(--cyan)">10%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--red)">ANTI-WHALE TIERS</span></div>
+        <table class="proto-tbl">
+          <thead><tr><th>GOLD AMOUNT</th><th>REWARD MULTIPLIER</th></tr></thead>
+          <tbody>
+            <tr><td>0 – 10 oz (311,035 mg)</td><td style="color:var(--green)">100%</td></tr>
+            <tr><td>10 – 50 oz</td><td style="color:var(--yellow)">75%</td></tr>
+            <tr><td>50 – 200 oz</td><td style="color:var(--orange)">50%</td></tr>
+            <tr><td>> 200 oz</td><td style="color:var(--red)">REJECTED</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reputation & audits -->
+    <div class="proto-two-col">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--purple)">REPUTATION SYSTEM</span></div>
+        <table class="proto-tbl">
+          <thead><tr><th>STARS</th><th>STATUS</th><th>AUDIT PROBABILITY</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text3)">0 ☆</td><td>New</td><td style="color:var(--red)">30%</td></tr>
+            <tr><td style="color:var(--yellow)">1 ★</td><td>Established</td><td style="color:var(--orange)">20%</td></tr>
+            <tr><td style="color:var(--green)">3 ★★★</td><td>Trusted</td><td style="color:var(--yellow)">10%</td></tr>
+            <tr><td style="color:var(--cyan)">5 ★★★★★</td><td>Veteran</td><td style="color:var(--green)">5%</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">
+          Blacklisted after 3 slashes · audit grace period: 288 blocks (48h)
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">// <span style="color:var(--yellow)">DYNAMIC REWARD ADJUSTMENT</span></div>
+        <div class="proto-flow" style="white-space:normal;font-size:10px;line-height:2">
+          <b style="color:var(--yellow)">PUR</b> = committed_rewards / pool_balance × 10,000<br/>
+          <b style="color:var(--green)">dynamic_factor</b> = (1 − PUR/10,000)²<br/>
+          <b style="color:var(--cyan)">applied_reward</b> = base_reward × dynamic_factor<br/><br/>
+          <b style="color:var(--purple)">PARTICIPATION TIERS:</b><br/>
+          <span style="color:var(--green)">&lt;25 contracts → 100%</span> · <span style="color:var(--yellow)">25-49 → 75%</span> · <span style="color:var(--orange)">50-99 → 50%</span><br/>
+          <span style="color:var(--red)">100-199 → 30%</span> · <span style="color:var(--text3)">200-499 → 15%</span> · <span style="color:var(--text3)">500+ → 8%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gold vault governance -->
+    <div style="font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">// <span style="color:var(--gold)">GOLD VAULT GOVERNANCE</span> · activates at block 10,000</div>
+    <table class="proto-tbl">
+      <thead><tr><th>RULE</th><th>TYPE</th><th>VOTE REQUIRED</th><th>CONDITION</th></tr></thead>
+      <tbody>
+        <tr><td class="cmd">GV1</td><td style="color:var(--green)">Gold Purchase</td><td style="color:var(--green)">No</td><td>TX marked with GV_PAYLOAD_GOLD_PURCHASE · direct gold acquisition</td></tr>
+        <tr><td class="cmd">GV2</td><td style="color:var(--yellow)">Small Operational</td><td style="color:var(--green)">No</td><td>≤ 10% of monthly vault balance · within 4,320-block (48h) window</td></tr>
+        <tr><td class="cmd">GV3</td><td style="color:var(--orange)">Large / Non-standard</td><td style="color:var(--red)">Yes (miner vote)</td><td>Epoch 0-1: 75% threshold (65% signaling + 10% foundation) · Epoch 2+: 95%</td></tr>
+        <tr><td class="cmd">GV4</td><td style="color:var(--red)">Rejected</td><td>—</td><td>spend doesn't match any rule → returned to vault</td></tr>
+      </tbody>
+    </table>
+
+    <div class="proto-note" style="border-left-color:var(--gold);margin-top:16px">
+      <b style="color:var(--gold)">POPC POOL:</b> <span style="color:var(--cyan)">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</span> · 25% of every block reward ·
+      entropy-based audits use <span style="color:var(--purple)">SHA256(block_id || commit || checkpoints_root)</span> as random seed via ConvergenceX.<br/>
+      <b style="color:var(--gold)">GOLD VAULT:</b> <span style="color:var(--cyan)">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</span> · 25% of every block reward · constitutional treasury for physical gold acquisition.
+    </div>
+  </div>
+
 </div>
 <div class="footer">
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
