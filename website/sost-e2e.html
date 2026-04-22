@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-e2e.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E2E Encrypted P2P Protocol — SOST Secure Node Communications</title>
+<meta name="description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
+<meta name="keywords" content="SOST E2E protocol, encrypted P2P, X25519, ChaCha20-Poly1305, HKDF-SHA256, node encryption, block sync, DoS protection">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="E2E Encrypted P2P Protocol — SOST Secure Node Communications">
+<meta property="og:description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
+<meta property="og:url" content="https://sostcore.com/sost-e2e.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="E2E Encrypted P2P Protocol — SOST Secure Node Communications">
+<meta name="twitter:description" content="SOST E2E Encrypted P2P Protocol: X25519 key exchange, ChaCha20-Poly1305 AEAD encryption, secure node handshake, block sync, DoS protection.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;--red-glow:#fb010d33;--red-subtle:#fb010d18;--green-primary:#4ade80;--cyan-primary:#22d3ee;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+.c{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.hero{padding:80px 0 60px;border-bottom:1px solid var(--bdr);position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(74,222,128,.06) 0%,transparent 70%);pointer-events:none}
+.hero-label{font-size:11px;color:#00ff88;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-label::before{content:'//';color:var(--t2)}
+.hero h1{font-family:var(--disp);font-size:clamp(32px,5vw,52px);font-weight:700;line-height:1.1;letter-spacing:-1px;margin-bottom:20px}
+.hero h1 span{color:#00ff88}
+.hero-sub{font-size:15px;color:var(--t2);max-width:680px;line-height:1.8;font-weight:300}
+.fade-in{opacity:0;transform:translateY(12px);animation:fadeUp .6s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}
+section{padding:48px 0;border-bottom:1px solid var(--bdr)}
+h2{font-family:var(--disp);font-size:20px;font-weight:600;margin-bottom:20px;color:var(--t1)}
+h2 span{color:var(--green)}
+h3{font-size:14px;font-weight:600;color:var(--green);margin:24px 0 10px;letter-spacing:1px}
+p,li{color:var(--t2);margin-bottom:10px}
+strong{color:var(--t1)}
+code{background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--red)}
+pre{background:var(--bg3);border:1px solid var(--bdr2);border-radius:4px;padding:14px;font-size:11px;line-height:1.7;overflow-x:auto;color:var(--t2);margin:12px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--bdr2);color:var(--t3);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase}
+td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--t2)}
+td:first-child{color:var(--t1);font-weight:500}
+.warn{background:rgba(251,1,13,.06);border:1px solid rgba(251,1,13,.2);border-left:3px solid var(--red);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+.note{background:rgba(251,1,13,.06);border:1px solid rgba(251,1,13,.15);border-left:3px solid var(--red);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+footer{padding:40px 0;text-align:center;font-size:11px;color:var(--t4);border-top:1px solid var(--bdr)}
+footer a{color:var(--t3);text-decoration:none}
+.toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
+.toc a{color:var(--green);text-decoration:none;display:block;padding:3px 0;font-size:12px}
+.toc a:hover{color:#6ee7a0}
+
+@media(max-width:768px){h2{font-size:17px}pre{font-size:10px} .nav-links{display:none;width:100%} .nav-links.open{display:flex} .nav-hamburger{display:block} }
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: #00ff88; }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: #00ff88; border-bottom: 1px solid #00ff88; }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-e2e.html" class="active" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+
+
+<section class="hero">
+  <div class="c">
+    <div class="hero-label fade-in">E2E ENCRYPTED P2P</div>
+    <h1 class="fade-in delay-1">
+      <span>E2E Encrypted</span><br>
+      P2P Protocol
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      End-to-end encrypted node communications using X25519 key exchange and ChaCha20-Poly1305 AEAD. Every peer connection is authenticated and encrypted by default. Port 19333, magic <code style="color:#00ff88">0x534F5354</code> ("SOST").
+    </p>
+  </div>
+</section>
+
+<section><div class="c">
+<div class="toc">
+<strong style="color:var(--t1);display:block;margin-bottom:8px">TABLE OF CONTENTS</strong>
+<a href="#crypto">1. Cryptographic Stack</a>
+<a href="#modes">2. Encryption Modes</a>
+<a href="#handshake">3. Handshake Flow</a>
+<a href="#commands">4. Protocol Commands</a>
+<a href="#sync">5. Block Sync Flow</a>
+<a href="#frame">6. Encrypted Frame Format</a>
+<a href="#header">7. Frame Header</a>
+<a href="#dos">8. DoS Protection</a>
+</div>
+</div></section>
+
+<!-- 1. CRYPTOGRAPHIC STACK -->
+<section id="crypto"><div class="c">
+<h2>1. Cryptographic <span>Stack</span></h2>
+<p>All peer-to-peer encryption uses modern, well-audited primitives. Each connection generates fresh ephemeral keys &mdash; no long-term key material is reused across sessions.</p>
+
+<h3>X25519 Key Exchange</h3>
+<p>256-bit ephemeral Curve25519 keypairs generated per connection. Each side produces a 32-byte public key and derives a 32-byte shared secret via Diffie-Hellman. The ephemeral nature ensures <strong>forward secrecy</strong> &mdash; compromising one session reveals nothing about past or future sessions.</p>
+
+<h3>ChaCha20-Poly1305 AEAD</h3>
+<p>Authenticated Encryption with Associated Data. 256-bit key, 96-bit nonce (64-bit counter + 32-bit zero padding), 16-byte authentication tag per message. Provides both confidentiality and integrity &mdash; any tampering is detected and the message is rejected.</p>
+
+<h3>HKDF-SHA256 Key Derivation</h3>
+<p>The shared secret from X25519 is never used directly. HKDF-SHA256 derives separate send and receive keys using distinct labels:</p>
+<pre>send_key = HKDF-SHA256(shared_secret, label="sost-p2p-key-a")
+recv_key = HKDF-SHA256(shared_secret, label="sost-p2p-key-b")</pre>
+<p>The initiator uses <code>key-a</code> to send and <code>key-b</code> to receive; the responder reverses this. Each direction has an independent 64-bit nonce counter starting at 0, incremented per message.</p>
+</div></section>
+
+<!-- 2. ENCRYPTION MODES -->
+<section id="modes"><div class="c">
+<h2>2. Encryption <span>Modes</span></h2>
+<p>Node operators can configure their encryption policy via the <code>--encryption</code> flag. Three modes are supported:</p>
+
+<table>
+<tr><th>Mode</th><th>Flag</th><th>Behavior</th></tr>
+<tr><td><strong>off</strong></td><td><code>--encryption off</code></td><td>No encryption. Messages sent in plaintext. EKEY exchange is skipped. Useful for debugging or trusted LAN environments only.</td></tr>
+<tr><td><strong>on</strong> (default)</td><td><code>--encryption on</code></td><td>Encryption enabled. Node sends EKEY and encrypts if the peer reciprocates. Falls back to plaintext if the peer does not support encryption. Recommended for most deployments.</td></tr>
+<tr><td><strong>required</strong></td><td><code>--encryption required</code></td><td>Encryption mandatory. Node disconnects any peer that does not complete the EKEY handshake. Maximum security &mdash; no plaintext connections allowed.</td></tr>
+</table>
+
+<div class="note"><strong>Default:</strong> Encryption is <strong>ON</strong> by default. All official SOST nodes ship with encryption enabled. The <code>off</code> mode exists for development and diagnostics only.</div>
+</div></section>
+
+<!-- 3. HANDSHAKE FLOW -->
+<section id="handshake"><div class="c">
+<h2>3. Handshake <span>Flow</span></h2>
+<p>The connection handshake establishes encryption before any protocol data is exchanged. The EKEY exchange happens first, then VERS/VACK, then all subsequent messages are encrypted.</p>
+
+<pre>
+    Initiator                          Responder
+    ─────────                          ─────────
+        │                                  │
+        │──── EKEY (pubkey_a, 32B) ───────>│
+        │                                  │
+        │<─── EKEY (pubkey_b, 32B) ────────│
+        │                                  │
+        │  [Both derive shared_secret via X25519]
+        │  [HKDF-SHA256 → send_key, recv_key]
+        │                                  │
+        │════════ ENCRYPTED CHANNEL ═══════│
+        │                                  │
+        │──── VERS (version, height) ─────>│
+        │                                  │
+        │<─── VACK (version, height) ──────│
+        │                                  │
+        │══ HANDSHAKE COMPLETE ════════════│
+        │                                  │
+        │  [GETB, BLCK, TXXX, PING/PONG]  │
+        │  [All messages encrypted]        │
+        │                                  │
+</pre>
+
+<p><strong>Timeout:</strong> If EKEY is not received within 10 seconds of connection, the peer is disconnected. If VERS/VACK is not completed within 30 seconds, the peer is disconnected and scored for misbehavior.</p>
+</div></section>
+
+<!-- 4. PROTOCOL COMMANDS -->
+<section id="commands"><div class="c">
+<h2>4. Protocol <span>Commands</span></h2>
+<p>All commands use the same 12-byte frame header. Command names are 4-byte ASCII identifiers padded with null bytes if shorter.</p>
+
+<table>
+<tr><th>Command</th><th>Direction</th><th>Payload</th><th>Purpose</th></tr>
+<tr><td><strong>EKEY</strong></td><td>Both</td><td>32-byte X25519 public key</td><td>Exchange ephemeral encryption keys. Must be the first message on a new connection.</td></tr>
+<tr><td><strong>ENCR</strong></td><td>Both</td><td>1-byte mode flag</td><td>Declare encryption capability and mode. Sent alongside or after EKEY.</td></tr>
+<tr><td><strong>VERS</strong></td><td>Initiator &rarr; Responder</td><td>Protocol version (u32), best height (u64), genesis hash (32B)</td><td>Version handshake. Initiator announces its chain state.</td></tr>
+<tr><td><strong>VACK</strong></td><td>Responder &rarr; Initiator</td><td>Protocol version (u32), best height (u64), genesis hash (32B)</td><td>Version acknowledgement. Responder confirms compatibility.</td></tr>
+<tr><td><strong>GETB</strong></td><td>Either</td><td>Start height (u64), count (u16)</td><td>Request a batch of blocks starting from the given height. Max 100 blocks per request.</td></tr>
+<tr><td><strong>BLCK</strong></td><td>Either</td><td>Serialized block data</td><td>Deliver a single block in response to GETB, or relay a newly mined block.</td></tr>
+<tr><td><strong>DONE</strong></td><td>Either</td><td>None (0 bytes)</td><td>Signal end of a GETB batch. Sender has no more blocks to send for this request.</td></tr>
+<tr><td><strong>TXXX</strong></td><td>Either</td><td>Serialized transaction</td><td>Relay an unconfirmed transaction for mempool inclusion.</td></tr>
+<tr><td><strong>PING</strong></td><td>Either</td><td>8-byte nonce</td><td>Keepalive probe. Peer must respond with PONG containing the same nonce.</td></tr>
+<tr><td><strong>PONG</strong></td><td>Either</td><td>8-byte nonce (echo)</td><td>Keepalive response. Nonce must match the corresponding PING.</td></tr>
+</table>
+</div></section>
+
+<!-- 5. BLOCK SYNC FLOW -->
+<section id="sync"><div class="c">
+<h2>5. Block Sync <span>Flow</span></h2>
+<p>When a node discovers a peer with a higher best height, it initiates block synchronization. Blocks are requested and delivered in batches of up to 100.</p>
+
+<pre>
+    Node (behind)                      Peer (ahead)
+    ─────────────                      ────────────
+        │                                  │
+        │  [VERS/VACK: peer height &gt; ours]│
+        │                                  │
+        │── GETB (height=1000, n=100) ────>│
+        │                                  │
+        │<──── BLCK (block 1000) ──────────│
+        │<──── BLCK (block 1001) ──────────│
+        │<──── BLCK (block 1002) ──────────│
+        │          ...                     │
+        │<──── BLCK (block 1099) ──────────│
+        │<──── DONE ──────────────────────│
+        │                                  │
+        │  [Validate &amp; connect blocks]    │
+        │                                  │
+        │── GETB (height=1100, n=100) ────>│
+        │                                  │
+        │<──── BLCK (block 1100) ──────────│
+        │          ...                     │
+        │<──── BLCK (block 1155) ──────────│
+        │<──── DONE ──────────────────────│
+        │                                  │
+        │  [Sync complete: heights match]  │
+        │                                  │
+</pre>
+
+<h3>Sync Parameters</h3>
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
+<tr><td>Batch size</td><td>100 blocks max</td><td>Maximum blocks per GETB request</td></tr>
+<tr><td>Timeout</td><td>30 seconds</td><td>Per-batch timeout. If no BLCK/DONE received within 30s, retry or disconnect.</td></tr>
+<tr><td>Retries</td><td>3</td><td>Maximum retry attempts per batch before disconnecting the peer.</td></tr>
+<tr><td>Rate (sync)</td><td>5,000 blocks/min</td><td>Elevated rate limit during active sync to allow fast catch-up.</td></tr>
+<tr><td>Rate (steady)</td><td>50 blocks/min</td><td>Normal rate limit after sync is complete.</td></tr>
+</table>
+</div></section>
+
+<!-- 6. ENCRYPTED FRAME FORMAT -->
+<section id="frame"><div class="c">
+<h2>6. Encrypted Frame <span>Format</span></h2>
+<p>Once the EKEY handshake is complete, all messages are wrapped in an encrypted frame. The frame header is sent in plaintext (so the receiver knows how much ciphertext to read), but the payload is encrypted.</p>
+
+<pre>
+┌──────────────────────────────────────────────────────────┐
+│                    ENCRYPTED FRAME                        │
+├──────────┬──────────┬─────────────┬─────────────┬────────┤
+│  magic   │   cmd    │ payload_len │ ciphertext  │  tag   │
+│  4 bytes │ 4 bytes  │   4 bytes   │   N bytes   │ 16 B   │
+├──────────┼──────────┼─────────────┼─────────────┼────────┤
+│ 0x534F5354│ "BLCK"  │  len(ct)    │ ChaCha20    │ Poly   │
+│  "SOST"  │ "GETB"  │  + 16       │  encrypted  │ 1305   │
+│          │ "TXXX"  │             │  payload    │  MAC   │
+│          │  etc.   │             │             │        │
+└──────────┴──────────┴─────────────┴─────────────┴────────┘
+
+Header (12 bytes, plaintext):
+  magic:       0x534F5354 ("SOST") — identifies SOST protocol frames
+  cmd:         4-byte ASCII command identifier
+  payload_len: total encrypted payload size including 16-byte auth tag
+
+Encrypted payload:
+  ciphertext:  ChaCha20 encrypted message body (N bytes)
+  tag:         Poly1305 16-byte authentication tag
+</pre>
+
+<p>The <code>payload_len</code> field includes the 16-byte Poly1305 tag, so actual plaintext length = <code>payload_len - 16</code>. Maximum <code>payload_len</code> = 4,194,304 bytes (4 MB). Any frame exceeding this is rejected and the peer is banned.</p>
+
+<h3>Nonce Management</h3>
+<p>Each direction maintains an independent 64-bit nonce counter, starting at 0 and incremented after each message. The nonce is <strong>not transmitted</strong> &mdash; both sides track it implicitly. If counters desync (decryption fails), the connection is terminated immediately.</p>
+</div></section>
+
+<!-- 7. FRAME HEADER -->
+<section id="header"><div class="c">
+<h2>7. Frame <span>Header</span></h2>
+<p>Every P2P message begins with a fixed 12-byte header, whether encrypted or plaintext. This header is always sent unencrypted so the receiver can determine the message type and allocate the correct buffer size.</p>
+
+<pre>
+Offset  Size   Field         Description
+──────  ────   ─────         ───────────
+  0      4     magic         0x534F5354 ("SOST") — protocol identifier
+  4      4     cmd           ASCII command (e.g., "EKEY", "BLCK", "GETB")
+  8      4     payload_len   Payload size in bytes (network byte order)
+──────  ────
+ 12 bytes total
+</pre>
+
+<h3>Magic Bytes</h3>
+<table>
+<tr><th>Byte</th><th>Hex</th><th>ASCII</th></tr>
+<tr><td>0</td><td>0x53</td><td>S</td></tr>
+<tr><td>1</td><td>0x4F</td><td>O</td></tr>
+<tr><td>2</td><td>0x53</td><td>S</td></tr>
+<tr><td>3</td><td>0x54</td><td>T</td></tr>
+</table>
+<p>Any frame that does not begin with <code>0x534F5354</code> is immediately rejected. This allows quick rejection of non-SOST traffic and port-scanning probes.</p>
+
+<h3>Payload Size Limits</h3>
+<p>Maximum message size: <strong>4 MB</strong> (4,194,304 bytes). The <code>payload_len</code> field is a 32-bit unsigned integer but values above 4 MB are rejected at the frame parser level. A peer sending an oversized frame is disconnected and receives ban points.</p>
+</div></section>
+
+<!-- 8. DOS PROTECTION -->
+<section id="dos"><div class="c">
+<h2>8. DoS <span>Protection</span></h2>
+<p>The P2P layer implements multiple defensive mechanisms to prevent denial-of-service attacks, resource exhaustion, and misbehaving peers.</p>
+
+<h3>Rate Limiting</h3>
+<table>
+<tr><th>Context</th><th>Rate</th><th>Description</th></tr>
+<tr><td>Steady state</td><td>50 blocks/min</td><td>Normal operation after initial sync. Prevents block flooding.</td></tr>
+<tr><td>Active sync</td><td>5,000 blocks/min</td><td>Elevated limit during initial block download to allow fast catch-up.</td></tr>
+<tr><td>Max message size</td><td>4 MB</td><td>Any frame with payload_len &gt; 4,194,304 bytes is rejected immediately.</td></tr>
+</table>
+
+<h3>Peer Limits</h3>
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
+<tr><td>Max inbound</td><td>32</td><td>Maximum simultaneous inbound peer connections.</td></tr>
+<tr><td>Per-IP limit</td><td>2</td><td>Maximum connections from a single IP address.</td></tr>
+<tr><td>IP cooldown</td><td>30 seconds</td><td>Minimum time between connection attempts from the same IP after disconnect.</td></tr>
+</table>
+
+<h3>Ban Scoring</h3>
+<p>Each peer accumulates misbehavior points for protocol violations. When a peer reaches the ban threshold, it is disconnected and its IP is blocked for the ban duration.</p>
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Ban threshold</td><td>100 points</td></tr>
+<tr><td>Ban duration</td><td>24 hours</td></tr>
+</table>
+
+<p><strong>Misbehavior examples:</strong></p>
+<ul>
+<li>Sending an invalid block: <strong>+20 points</strong></li>
+<li>Sending an invalid transaction: <strong>+10 points</strong></li>
+<li>Oversized message: <strong>+50 points</strong></li>
+<li>Invalid magic bytes: <strong>+100 points</strong> (immediate ban)</li>
+<li>Handshake timeout: <strong>+25 points</strong></li>
+<li>Duplicate EKEY: <strong>+50 points</strong></li>
+<li>Wrong genesis hash in VERS: <strong>+100 points</strong> (immediate ban)</li>
+</ul>
+
+<div class="note"><strong>Defense in depth:</strong> Rate limiting, peer limits, ban scoring, and encryption together provide layered protection. An attacker must overcome all layers simultaneously, making resource exhaustion attacks impractical against well-connected SOST nodes.</div>
+</div></section>
+
+<footer><div class="c">
+<p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+</div></footer>
+
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>

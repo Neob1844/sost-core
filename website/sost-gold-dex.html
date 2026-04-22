@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-gold-dex.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokenized Gold DEX & PoPC Contracts — SOST Protocol</title>
+<meta name="description" content="SOST Tokenized Gold DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement, ED25519 signing, and Proof of Personal Custody contracts.">
+<meta name="keywords" content="SOST gold DEX, tokenized gold, XAUT, PAXG, PoPC contracts, bilateral escrow, gold exchange, proof of personal custody">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tokenized Gold DEX & PoPC Contracts — SOST Protocol">
+<meta property="og:description" content="SOST Tokenized Gold DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement and Proof of Personal Custody contracts.">
+<meta property="og:url" content="https://sostcore.com/sost-gold-dex.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tokenized Gold DEX & PoPC Contracts — SOST Protocol">
+<meta name="twitter:description" content="SOST Tokenized Gold DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement and Proof of Personal Custody contracts.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;--border-dim:#1a1a1a;--border-med:#2a2a2a;--red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;--red-glow:#fb010d33;--red-subtle:#fb010d18;--green-primary:#4ade80;--cyan-primary:#22d3ee;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;--font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;--bg:#000;--bg2:#0a0a0a;--bg3:#111720;--bdr:#1a2233;--bdr2:#243044;--red:#fb010d;--green:#4ade80;--cyan:#22d3ee;--yellow:#fbbf24;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;--gold:#f59e0b;--gold-bright:#DAA520;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+.c{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.hero{padding:80px 0 60px;border-bottom:1px solid var(--bdr);position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(245,158,11,.08) 0%,transparent 70%);pointer-events:none}
+.hero-label{font-size:11px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-label::before{content:'//';color:var(--t2)}
+.hero h1{font-family:var(--disp);font-size:clamp(32px,5vw,52px);font-weight:700;line-height:1.1;letter-spacing:-1px;margin-bottom:20px}
+.hero h1 span.gold{color:var(--gold)}
+.hero h1 span.cyan{color:var(--cyan)}
+.hero-sub{font-size:15px;color:var(--t2);max-width:680px;line-height:1.8;font-weight:300}
+.fade-in{opacity:0;transform:translateY(12px);animation:fadeUp .6s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}
+section{padding:48px 0;border-bottom:1px solid var(--bdr)}
+h2{font-family:var(--disp);font-size:20px;font-weight:600;margin-bottom:20px;color:var(--t1)}
+h2 span.gold{color:var(--gold)}
+h2 span.cyan{color:var(--cyan)}
+h2 span{color:var(--gold)}
+h3{font-size:14px;font-weight:600;color:var(--gold);margin:24px 0 10px;letter-spacing:1px}
+h3.cyan{color:var(--cyan)}
+p,li{color:var(--t2);margin-bottom:10px}
+strong{color:var(--t1)}
+code{background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--gold)}
+pre{background:var(--bg3);border:1px solid var(--bdr2);border-radius:4px;padding:14px;font-size:11px;line-height:1.7;overflow-x:auto;color:var(--t2);margin:12px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--bdr2);color:var(--t3);font-weight:500;letter-spacing:1px;font-size:10px;text-transform:uppercase}
+td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--t2)}
+td:first-child{color:var(--t1);font-weight:500}
+.warn{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-left:3px solid var(--gold);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+.note{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-left:3px solid var(--cyan);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+.note-gold{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-left:3px solid var(--gold);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--t2);margin:12px 0}
+footer{padding:40px 0;text-align:center;font-size:11px;color:var(--t4);border-top:1px solid var(--bdr)}
+footer a{color:var(--t3);text-decoration:none}
+.toc{margin:20px 0;padding:16px;background:var(--bg2);border:1px solid var(--bdr);border-radius:4px}
+.toc a{color:var(--gold);text-decoration:none;display:block;padding:3px 0;font-size:12px}
+.toc a:hover{color:#fbbf24}
+.toc a.cyan{color:var(--cyan)}
+.toc a.cyan:hover{color:#67e8f9}
+.state-flow{background:var(--bg3);border:1px solid var(--bdr2);border-radius:4px;padding:18px;margin:12px 0;font-size:12px;line-height:2;color:var(--t2);overflow-x:auto;white-space:nowrap}
+.state-flow .state{color:var(--gold);font-weight:600}
+.state-flow .alt{color:var(--red-bright);font-weight:500}
+.state-flow .arrow{color:var(--t3)}
+.part-divider{padding:40px 0 20px;text-align:center;border-bottom:2px solid var(--bdr2)}
+.part-divider h2{font-size:24px;letter-spacing:2px;margin-bottom:8px}
+.part-divider p{font-size:12px;color:var(--t3)}
+
+@media(max-width:768px){h2{font-size:17px}pre{font-size:10px} .nav-links{display:none;width:100%} .nav-links.open{display:flex} .nav-hamburger{display:block} }
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: #00ff88; }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: #f59e0b; border-bottom: 1px solid #f59e0b; }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html" class="active" style="color:#f59e0b">SOST DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">&#128241; App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- HERO -->
+<section class="hero">
+  <div class="c">
+    <div class="hero-label fade-in">GOLD DEX &amp; PoPC</div>
+    <h1 class="fade-in delay-1">
+      <span class="gold">Tokenized Gold DEX</span><br>
+      &amp; PoPC Contracts
+    </h1>
+    <p class="hero-sub fade-in delay-2">
+      Decentralized exchange for tokenized gold (XAUT, PAXG) with bilateral escrow settlement, ED25519 message signing, and Proof of Personal Custody contract specifications. On-chain gold backing meets trustless peer-to-peer trading.
+    </p>
+  </div>
+</section>
+
+<!-- TABLE OF CONTENTS -->
+<section><div class="c">
+<div class="toc">
+<strong style="color:var(--t1);display:block;margin-bottom:8px">TABLE OF CONTENTS</strong>
+<strong style="color:var(--gold);display:block;margin:8px 0 4px;font-size:10px;letter-spacing:2px">PART 1 &mdash; TOKENIZED GOLD DEX</strong>
+<a href="#params">1. Exchange Parameters</a>
+<a href="#messages">2. Trade Message Types</a>
+<a href="#states">3. Deal State Machine</a>
+<a href="#settlement">4. Settlement Flow</a>
+<a href="#pricing">5. Position Pricing</a>
+<strong style="color:var(--cyan);display:block;margin:12px 0 4px;font-size:10px;letter-spacing:2px">PART 2 &mdash; PoPC CONTRACTS</strong>
+<a href="#models" class="cyan">6. Model A vs Model B</a>
+<a href="#rewards" class="cyan">7. Reward Rates</a>
+<a href="#bonds" class="cyan">8. Bond Sizing</a>
+<a href="#antiwhale" class="cyan">9. Anti-Whale Tiers</a>
+<a href="#dynamic" class="cyan">10. Dynamic Reward Adjustment</a>
+<a href="#reputation" class="cyan">11. Reputation System</a>
+<a href="#governance" class="cyan">12. Gold Vault Governance</a>
+<a href="#addresses" class="cyan">13. Constitutional Addresses</a>
+</div>
+</div></section>
+
+
+<!-- ======================================================================== -->
+<!-- PART 1 — TOKENIZED GOLD DEX                                             -->
+<!-- ======================================================================== -->
+
+<div class="part-divider">
+  <div class="c">
+    <h2 style="color:var(--gold)">PART 1 &mdash; Tokenized Gold DEX</h2>
+    <p>Decentralized peer-to-peer exchange for tokenized gold assets</p>
+  </div>
+</div>
+
+<!-- 1. EXCHANGE PARAMETERS -->
+<section id="params"><div class="c">
+<h2>1. Exchange <span class="gold">Parameters</span></h2>
+<p>Core configuration for the SOST Gold DEX bilateral exchange engine. All trades settle through peer-to-peer escrow with no central counterparty.</p>
+
+<table>
+<tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
+<tr><td>Trading Pairs</td><td><code>SOST/XAUT</code>, <code>SOST/PAXG</code></td><td>Tokenized gold pairs only</td></tr>
+<tr><td>Settlement Mode</td><td>Bilateral Escrow</td><td>Both parties lock funds before settlement</td></tr>
+<tr><td>Message Signing</td><td>ED25519</td><td>All trade messages cryptographically signed</td></tr>
+<tr><td>ETH Confirmations</td><td>6</td><td>Required confirmations for ETH-side locks</td></tr>
+<tr><td>Deal Expiry</td><td>3,600 s</td><td>Unmatched offers expire after 1 hour</td></tr>
+<tr><td>Daemon Tick</td><td>5 s</td><td>Trade engine polling interval</td></tr>
+<tr><td>ETH Watcher</td><td>15 s</td><td>Ethereum chain polling interval</td></tr>
+</table>
+
+<h3>Supported Gold Tokens</h3>
+<table>
+<tr><th>Token</th><th>Decimals</th><th>Backing</th><th>Standard</th></tr>
+<tr><td>XAUT (Tether Gold)</td><td>6</td><td>1 token = 1 troy oz = 31,103 mg</td><td>ERC-20</td></tr>
+<tr><td>PAXG (Paxos Gold)</td><td>18</td><td>1 token = 1 troy oz = 31,103 mg</td><td>ERC-20</td></tr>
+</table>
+</div></section>
+
+<!-- 2. TRADE MESSAGE TYPES -->
+<section id="messages"><div class="c">
+<h2>2. Trade Message <span class="gold">Types</span></h2>
+<p>All messages are ED25519-signed and relayed via the SOST E2E encrypted protocol. Each message type drives the deal state machine forward.</p>
+
+<table>
+<tr><th>Message Type</th><th>Direction</th><th>Payload</th><th>Effect</th></tr>
+<tr><td><code>trade_offer</code></td><td>Maker &rarr; Network</td><td>pair, side (buy/sell), amount, price, expiry</td><td>Creates deal in <strong>CREATED</strong> state</td></tr>
+<tr><td><code>trade_accept</code></td><td>Taker &rarr; Maker</td><td>offer_id, taker_pubkey, taker_eth_address</td><td>Transitions to <strong>NEGOTIATED</strong></td></tr>
+<tr><td><code>trade_cancel</code></td><td>Either &rarr; Either</td><td>deal_id, reason</td><td>Transitions to <strong>EXPIRED</strong> (if pre-lock)</td></tr>
+<tr><td><code>settlement_notice</code></td><td>Either &rarr; Either</td><td>deal_id, eth_txid, sost_txid, proofs</td><td>Transitions to <strong>SETTLED</strong></td></tr>
+</table>
+</div></section>
+
+<!-- 3. DEAL STATE MACHINE -->
+<section id="states"><div class="c">
+<h2>3. Deal State <span class="gold">Machine</span></h2>
+<p>Every deal progresses through a deterministic state machine. The happy path flows left-to-right; alternative flows handle failures and disputes.</p>
+
+<h3>Happy Path</h3>
+<div class="state-flow">
+<span class="state">CREATED</span> <span class="arrow">&rarr;</span>
+<span class="state">NEGOTIATED</span> <span class="arrow">&rarr;</span>
+<span class="state">AWAITING_ETH_LOCK</span> <span class="arrow">&rarr;</span>
+<span class="state">AWAITING_SOST_LOCK</span> <span class="arrow">&rarr;</span>
+<span class="state">BOTH_LOCKED</span> <span class="arrow">&rarr;</span>
+<span class="state">SETTLING</span> <span class="arrow">&rarr;</span>
+<span class="state">SETTLED</span>
+</div>
+
+<h3>Alternative Flows</h3>
+<div class="state-flow">
+<span class="state">CREATED</span> <span class="arrow">&rarr;</span> <span class="alt">EXPIRED</span> &nbsp;&nbsp;(deal_expiry exceeded, no acceptance)<br>
+<span class="state">NEGOTIATED</span> <span class="arrow">&rarr;</span> <span class="alt">EXPIRED</span> &nbsp;&nbsp;(lock timeout, either party cancels)<br>
+<span class="state">AWAITING_ETH_LOCK</span> <span class="arrow">&rarr;</span> <span class="alt">EXPIRED</span> &nbsp;&nbsp;(ETH lock not confirmed in time)<br>
+<span class="state">AWAITING_SOST_LOCK</span> <span class="arrow">&rarr;</span> <span class="alt">REFUND_PENDING</span> <span class="arrow">&rarr;</span> <span class="alt">REFUNDED</span> &nbsp;&nbsp;(SOST lock failed, ETH refunded)<br>
+<span class="state">BOTH_LOCKED</span> <span class="arrow">&rarr;</span> <span class="alt">DISPUTED</span> &nbsp;&nbsp;(settlement proof mismatch)
+</div>
+
+<table>
+<tr><th>State</th><th>Description</th><th>Timeout</th></tr>
+<tr><td>CREATED</td><td>Offer broadcast, awaiting taker</td><td>3,600 s</td></tr>
+<tr><td>NEGOTIATED</td><td>Taker accepted, exchanging lock addresses</td><td>600 s</td></tr>
+<tr><td>AWAITING_ETH_LOCK</td><td>Waiting for gold token lock on Ethereum (6 confirmations)</td><td>1,800 s</td></tr>
+<tr><td>AWAITING_SOST_LOCK</td><td>ETH confirmed, waiting for SOST escrow lock</td><td>1,200 s</td></tr>
+<tr><td>BOTH_LOCKED</td><td>Both sides locked, ready to settle</td><td>3,600 s</td></tr>
+<tr><td>SETTLING</td><td>Settlement transactions broadcast</td><td>1,800 s</td></tr>
+<tr><td>SETTLED</td><td>Both sides confirmed, deal complete</td><td>&mdash;</td></tr>
+<tr><td style="color:var(--red-bright)">EXPIRED</td><td>Deal timed out at any pre-lock stage</td><td>&mdash;</td></tr>
+<tr><td style="color:var(--red-bright)">REFUND_PENDING</td><td>One side locked, other failed; initiating refund</td><td>7,200 s</td></tr>
+<tr><td style="color:var(--red-bright)">REFUNDED</td><td>Locked funds returned to original party</td><td>&mdash;</td></tr>
+<tr><td style="color:var(--red-bright)">DISPUTED</td><td>Settlement proof mismatch, requires resolution</td><td>&mdash;</td></tr>
+</table>
+</div></section>
+
+<!-- 4. SETTLEMENT FLOW -->
+<section id="settlement"><div class="c">
+<h2>4. Settlement <span class="gold">Flow</span></h2>
+<p>Step-by-step bilateral escrow settlement between maker and taker. All steps are cryptographically verified via ED25519 signatures.</p>
+
+<pre>Step 1: OFFER
+  Maker broadcasts trade_offer (pair, amount, price, expiry)
+  Signed with maker's ED25519 key
+  Deal enters CREATED state
+
+Step 2: ACCEPT
+  Taker sends trade_accept (offer_id, taker_pubkey, taker_eth_address)
+  Signed with taker's ED25519 key
+  Deal enters NEGOTIATED state
+
+Step 3: ETH LOCK
+  Gold-side party locks XAUT/PAXG in Ethereum escrow contract
+  ETH Watcher polls every 15s for confirmation
+  After 6 ETH confirmations: deal enters AWAITING_SOST_LOCK
+
+Step 4: SOST LOCK
+  SOST-side party creates SOST escrow transaction (OUT_ESCROW_LOCK)
+  Transaction confirmed on SOST chain
+  Deal enters BOTH_LOCKED state
+
+Step 5: SETTLEMENT
+  Both parties release escrow to counterparty addresses
+  ETH escrow releases gold tokens to buyer
+  SOST escrow releases SOST to seller
+  Deal enters SETTLING state
+
+Step 6: NOTICE
+  Both parties broadcast settlement_notice with tx proofs
+  ETH Watcher confirms gold token transfer (6 confirmations)
+  SOST node confirms SOST transfer
+  Deal enters SETTLED state (final)</pre>
+
+<div class="warn"><strong>Refund path:</strong> If Step 4 (SOST lock) fails after Step 3 (ETH lock), the deal enters REFUND_PENDING. The ETH escrow contract has a timelock that allows the gold-side party to reclaim tokens after the refund timeout (7,200 s).</div>
+</div></section>
+
+<!-- 5. POSITION PRICING -->
+<section id="pricing"><div class="c">
+<h2>5. Position <span class="gold">Pricing</span></h2>
+<p>Position valuation combines spot gold backing with time-discounted future rewards from PoPC contracts. This provides a fair-value reference for DEX trades.</p>
+
+<h3>Pricing Formula</h3>
+<pre>position_value = gold_backing + time_discounted_rewards - illiquidity_discount
+
+gold_backing     = oz_held * spot_gold_price
+reward_component = annual_rate * remaining_term * gold_backing
+illiquidity      = 3% * gold_backing
+
+Model A: 12%/yr reward rate (self-custody, higher risk/reward)
+Model B: 5%/yr reward rate (escrow, lower risk/reward)
+Illiquidity discount: 3% (compensates for lock-up period)</pre>
+
+<h3>Example: 1 oz XAUT, Model A, 12-month contract, 6 months remaining</h3>
+<pre>gold_backing     = 1 oz * $2,400 = $2,400
+reward_component = 12% * 0.5yr * $2,400 = $144
+illiquidity      = 3% * $2,400 = -$72
+position_value   = $2,400 + $144 - $72 = $2,472</pre>
+</div></section>
+
+
+<!-- ======================================================================== -->
+<!-- PART 2 — PoPC CONTRACTS                                                  -->
+<!-- ======================================================================== -->
+
+<div class="part-divider">
+  <div class="c">
+    <h2 style="color:var(--cyan)">PART 2 &mdash; PoPC Contracts</h2>
+    <p>Proof of Personal Custody &mdash; on-chain gold backing with verifiable reserves</p>
+  </div>
+</div>
+
+<!-- 6. MODEL A vs MODEL B -->
+<section id="models"><div class="c">
+<h2>6. Model A vs <span class="cyan">Model B</span></h2>
+<p>Two custody models serve different risk profiles. Model A rewards self-custody with higher yields; Model B offers simplicity through immutable escrow.</p>
+
+<table>
+<tr><th>Attribute</th><th style="color:var(--gold)">Model A (Self-Custody)</th><th style="color:var(--cyan)">Model B (Escrow)</th></tr>
+<tr><td>Gold Location</td><td>User's own ETH wallet (EOA)</td><td>Immutable EVM escrow contract</td></tr>
+<tr><td>Bond Required</td><td>Yes (20-30% of gold value in SOST)</td><td>No bond required</td></tr>
+<tr><td>Reward Payout</td><td>Periodic from PoPC Pool</td><td>Immediate from PoPC Pool</td></tr>
+<tr><td>Protocol Fee</td><td>3%</td><td>8%</td></tr>
+<tr><td>Audits</td><td>Random, entropy-based</td><td>None (escrow is self-proving)</td></tr>
+<tr><td>Slash Risk</td><td>Yes &mdash; 50% PoPC Pool + 50% Gold Vault</td><td>None</td></tr>
+<tr><td>Reward Floor</td><td>&ge; 1% (min 10 SOST)</td><td>&ge; 0.5% (min 5 SOST)</td></tr>
+<tr><td>Hard Cap</td><td colspan="2" style="text-align:center">1,000 SOST per contract &middot; 1,000 max active contracts</td></tr>
+<tr><td>Durations</td><td>1 / 3 / 6 / 9 / 12 months</td><td>1 / 3 / 6 / 9 / 12 months</td></tr>
+<tr><td>Blacklist</td><td colspan="2" style="text-align:center">Blacklisted after 3 slashes</td></tr>
+</table>
+
+<div class="note"><strong>Escrow contract:</strong> Model B uses an immutable EVM escrow with no admin key, no upgrade proxy, and no withdrawal function until timelock expiry. The contract is self-proving &mdash; no audits are needed because funds are cryptographically locked.</div>
+</div></section>
+
+<!-- 7. REWARD RATES -->
+<section id="rewards"><div class="c">
+<h2>7. Reward <span class="cyan">Rates</span></h2>
+<p>Annualized reward rates scale with lock duration. Longer commitments earn higher yields. All rates are percentages of gold value, paid in SOST from the PoPC Pool.</p>
+
+<table>
+<tr><th>Duration</th><th style="color:var(--gold)">Model A Rate</th><th style="color:var(--cyan)">Model B Rate</th></tr>
+<tr><td>1 month</td><td>1%</td><td>0.4%</td></tr>
+<tr><td>3 months</td><td>4%</td><td>1.5%</td></tr>
+<tr><td>6 months</td><td>9%</td><td>3.5%</td></tr>
+<tr><td>9 months</td><td>14%</td><td>5.5%</td></tr>
+<tr><td>12 months</td><td>20%</td><td>8%</td></tr>
+</table>
+
+<div class="note-gold"><strong>Reward floors:</strong> Model A minimum reward is 1% (at least 10 SOST per payout). Model B minimum reward is 0.5% (at least 5 SOST per payout). These floors ensure small positions still receive meaningful compensation.</div>
+</div></section>
+
+<!-- 8. BOND SIZING -->
+<section id="bonds"><div class="c">
+<h2>8. Bond <span class="cyan">Sizing</span></h2>
+<p>Model A requires a SOST bond proportional to gold value. The bond percentage decreases as the SOST/gold ratio increases, incentivizing larger positions while managing protocol risk.</p>
+
+<table>
+<tr><th>Ratio (bps)</th><th>Bond %</th><th>Description</th></tr>
+<tr><td>&lt; 100 bps</td><td>25%</td><td>Low ratio &mdash; maximum bond requirement</td></tr>
+<tr><td>100 &ndash; 500 bps</td><td>20%</td><td>Standard ratio</td></tr>
+<tr><td>500 &ndash; 1,000 bps</td><td>15%</td><td>Elevated ratio</td></tr>
+<tr><td>1,000 &ndash; 5,000 bps</td><td>12%</td><td>High ratio</td></tr>
+<tr><td>&ge; 5,000 bps</td><td>10%</td><td>Maximum ratio &mdash; minimum bond</td></tr>
+</table>
+
+<p>The ratio is calculated as <code>(sost_value_usd / gold_value_usd) * 10000</code> in basis points. Higher SOST-to-gold ratios indicate greater protocol coverage, allowing reduced bond requirements.</p>
+</div></section>
+
+<!-- 9. ANTI-WHALE TIERS -->
+<section id="antiwhale"><div class="c">
+<h2>9. Anti-Whale <span class="cyan">Tiers</span></h2>
+<p>To prevent concentration risk and ensure broad participation, the protocol applies acceptance limits based on gold position size.</p>
+
+<table>
+<tr><th>Gold Amount (oz)</th><th>Acceptance Rate</th><th>Effect</th></tr>
+<tr><td>0 &ndash; 10 oz</td><td style="color:var(--green)">100%</td><td>Always accepted</td></tr>
+<tr><td>10 &ndash; 50 oz</td><td style="color:var(--gold)">75%</td><td>Reduced acceptance</td></tr>
+<tr><td>50 &ndash; 200 oz</td><td style="color:var(--gold)">50%</td><td>Half acceptance rate</td></tr>
+<tr><td>&gt; 200 oz</td><td style="color:var(--red-bright)">REJECTED</td><td>Position too large &mdash; must split</td></tr>
+</table>
+
+<div class="warn"><strong>Hard limit:</strong> Positions exceeding 200 oz are unconditionally rejected. Large holders must split across multiple contracts (each up to 200 oz). Combined with the 1,000 max active contracts limit, this bounds total protocol exposure.</div>
+</div></section>
+
+<!-- 10. DYNAMIC REWARD ADJUSTMENT -->
+<section id="dynamic"><div class="c">
+<h2>10. Dynamic Reward <span class="cyan">Adjustment</span></h2>
+<p>Rewards adjust dynamically based on total protocol participation to maintain sustainable yield from the PoPC Pool.</p>
+
+<h3 class="cyan">PUR Formula (Pool Utilization Ratio)</h3>
+<pre>PUR = active_contracts / max_contracts
+    = active_contracts / 1000
+
+dynamic_factor = participation_tier_multiplier(PUR)
+effective_rate = base_rate * dynamic_factor</pre>
+
+<h3 class="cyan">Participation Tiers</h3>
+<table>
+<tr><th>Active Contracts</th><th>PUR Range</th><th>Dynamic Factor</th><th>Effect</th></tr>
+<tr><td>0 &ndash; 25</td><td>0 &ndash; 2.5%</td><td style="color:var(--green)">100%</td><td>Full rewards (bootstrap phase)</td></tr>
+<tr><td>26 &ndash; 50</td><td>2.6 &ndash; 5%</td><td style="color:var(--green)">75%</td><td>Slight reduction</td></tr>
+<tr><td>51 &ndash; 100</td><td>5.1 &ndash; 10%</td><td style="color:var(--gold)">50%</td><td>Moderate reduction</td></tr>
+<tr><td>101 &ndash; 200</td><td>10.1 &ndash; 20%</td><td style="color:var(--gold)">30%</td><td>Significant reduction</td></tr>
+<tr><td>201 &ndash; 500</td><td>20.1 &ndash; 50%</td><td>15%</td><td>Heavy reduction</td></tr>
+<tr><td>501 &ndash; 1,000</td><td>50.1 &ndash; 100%</td><td style="color:var(--red-bright)">8%</td><td>Minimum factor (high utilization)</td></tr>
+</table>
+
+<p><strong>Example:</strong> With 150 active contracts (PUR = 15%), a Model A 12-month base rate of 20% becomes: <code>20% * 30% = 6%</code> effective annualized rate.</p>
+</div></section>
+
+<!-- 11. REPUTATION SYSTEM -->
+<section id="reputation"><div class="c">
+<h2>11. Reputation <span class="cyan">System</span></h2>
+<p>Model A custodians build reputation through successful audits. Higher reputation reduces audit frequency, rewarding honest behavior.</p>
+
+<table>
+<tr><th>Stars</th><th>Status</th><th>Audit Probability</th><th>Requirements</th></tr>
+<tr><td style="color:var(--t3)">0</td><td>New</td><td style="color:var(--red-bright)">30%</td><td>Initial state for all custodians</td></tr>
+<tr><td style="color:var(--gold)">1</td><td>Established</td><td>20%</td><td>1 successful audit cycle</td></tr>
+<tr><td style="color:var(--gold)">3</td><td>Trusted</td><td>10%</td><td>3 consecutive successful audits</td></tr>
+<tr><td style="color:var(--green)">5</td><td>Exemplary</td><td style="color:var(--green)">5%</td><td>5 consecutive successful audits</td></tr>
+</table>
+
+<h3 class="cyan">Audit Mechanics</h3>
+<pre>Audit entropy:  SHA256(block_id || commit || checkpoints_root)
+Audit grace:    288 blocks (48 hours)
+Slash penalty:  50% to PoPC Pool + 50% to Gold Vault
+Blacklist:      After 3 slashes (permanent ban from Model A)</pre>
+
+<p>Audit challenges are derived from ConvergenceX entropy (block_id, commit, checkpoints_root), making them unpredictable and tamper-proof. Custodians have a 288-block (48-hour) grace period to respond to an audit challenge before being slashed.</p>
+</div></section>
+
+<!-- 12. GOLD VAULT GOVERNANCE -->
+<section id="governance"><div class="c">
+<h2>12. Gold Vault <span class="cyan">Governance</span></h2>
+<p>Constitutional governance rules for the Gold Vault. These rules are immutable and enforced at consensus level.</p>
+
+<div class="warn"><strong>Activation:</strong> Gold Vault governance rules GV1&ndash;GV4 activate at block 10,000.</div>
+
+<table>
+<tr><th>Rule</th><th>Name</th><th>Description</th></tr>
+<tr><td style="color:var(--gold)">GV1</td><td>Accumulation Only</td><td>Gold Vault funds may only be used to purchase physical gold or tokenized gold (XAUT, PAXG). No other expenditures permitted.</td></tr>
+<tr><td style="color:var(--gold)">GV2</td><td>Transparent Accounting</td><td>Every Gold Vault transaction must include an on-chain memo referencing the gold acquisition (weight, purity, custodian, or token contract address).</td></tr>
+<tr><td style="color:var(--gold)">GV3</td><td>Multi-Signature Requirement</td><td>Gold Vault disbursements require multi-signature authorization. No single key can move Gold Vault funds.</td></tr>
+<tr><td style="color:var(--gold)">GV4</td><td>Quarterly Proof of Reserves</td><td>The Foundation must publish a quarterly proof-of-reserves report linking on-chain Gold Vault balances to verifiable gold holdings (physical receipts or Ethereum token balances).</td></tr>
+</table>
+</div></section>
+
+<!-- 13. CONSTITUTIONAL ADDRESSES -->
+<section id="addresses"><div class="c">
+<h2>13. Constitutional <span class="cyan">Addresses</span></h2>
+<p>Hardcoded protocol addresses receiving 25% each of every block reward. These are immutable and enforced by consensus rules CB4 (output order) and CB6 (PKH validation).</p>
+
+<table>
+<tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
+<tr><td style="color:var(--cyan)">PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block reward</td></tr>
+<tr><td style="color:var(--gold)">Gold Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block reward</td></tr>
+</table>
+
+<p>The remaining 50% goes to the miner who solves the block. The PoPC Pool funds all custody rewards (Model A and Model B). The Gold Vault accumulates funds exclusively for gold acquisition under GV1&ndash;GV4 governance rules.</p>
+
+<h3 class="cyan">Coinbase Split (50/25/25)</h3>
+<pre>q = (subsidy + fees) / 4
+miner     = (subsidy + fees) - 2*q    // 50% + rounding remainder
+gold_vault = q                         // 25% &rarr; sost11a9c6fe1de...
+popc_pool  = q                         // 25% &rarr; sost1d876c5b85...</pre>
+
+<div class="note"><strong>Enforcement:</strong> Any block deviating from the 50/25/25 split or sending gold/popc funds to addresses other than the constitutional addresses is rejected at consensus level. These addresses cannot be changed without a hard fork.</div>
+</div></section>
+
+
+<footer><div class="c">
+<p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
+<p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>
+<p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+</div></footer>
+
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>
