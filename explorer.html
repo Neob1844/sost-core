@@ -334,7 +334,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
         <b style="color:#fb010d">&#9670; What:</b> Profile ceiling raised from H10 to H11. One additional hardening level for finer-grained surplus absorption. Ceiling remains at H11 &mdash; no higher.<br>
         <b style="color:#fb010d">&#9670; Why:</b> avg288 bitsQ performing perfectly (10m 16s average). But the chain maintains a persistent ~10-block lead. H9 averages 6.4 min and H10 only activates in ~8% of blocks. H11 provides the granularity needed to close the gap between expected and actual block count. <span style="color:#DAA520">The equalizer has 40 profiles (E4&ndash;H35) &mdash; only 14 activated so far. Now is the right moment to expand: primary controller stable, safety nets proven, network active. Each new profile brings the system closer to the precision it was engineered to achieve.</span><br>
         <b style="color:#fb010d">&#9670; Safety:</b> System is solid, reliable, and functioning as designed. H11 was always planned (40-profile architecture). Safety nets: <span style="color:#00ff88">lag-adjust 30s</span>, <span style="color:#00ff88">anti-stall 60 min</span>, <span style="color:#00ff88">avg288 bitsQ auto-compensates</span>, <span style="color:#00ff88">slew &plusmn;1/block</span>. If H11 slows blocks too much, bitsQ reduces difficulty &mdash; controllers self-balance.<br>
-        <b style="color:#fb010d">&#9670; No action required by miners.</b> Lag-adjust detects profile changes and restarts search within 30 seconds automatically.
+        <b style="color:#fb010d">&#9670; Node &amp; miner update required before block 5,480.</b> Both binaries must be updated to accept H11 blocks.<br>
+        <div style="margin-top:8px;background:rgba(251,1,13,0.12);border:1px solid rgba(251,1,13,0.3);border-radius:4px;padding:10px 14px;font-size:9px;line-height:2.2;color:#e2e8f0;">
+          <b style="color:#fb010d;font-size:10px;letter-spacing:1px">HOW TO UPDATE:</b><br>
+          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
+          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
+          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
+          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span><br>
+          <span style="color:#94a3b8">Lag-adjust (30s) auto-detects H11. No config change needed &mdash; only binary update.</span>
+        </div>
       </div>
     </div>
   </div>
