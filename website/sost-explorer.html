@@ -455,6 +455,24 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
   <div id="chartExplain_blockprod" class="chart-explain" style="display:none;"></div>
 </div></div>
+<!-- CHART 1B: Block Time Bars — individual block intervals with 10min target line -->
+<div class="diff-bar-wrap" id="chartBlockTimeWrap">
+<div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span class="pi" onclick="toggleChartInfo('blocktimes')" style="font-size:9px;color:var(--text3);letter-spacing:2px;">BLOCK INTERVALS · individual block times <span class="pi-i">ⓘ</span></span>
+    <span style="font-size:11px;"><span id="btAvgLabel" style="color:var(--cyan);font-weight:600;">—</span> <span style="color:var(--text3)">avg</span> <span style="color:var(--text3)">·</span> <span id="btMedianLabel" style="color:var(--purple);font-weight:600;">—</span> <span style="color:var(--text3)">median</span></span>
+  </div>
+  <div style="position:relative;">
+    <canvas id="btChart" style="width:100%;height:160px;cursor:crosshair"></canvas>
+    <div id="btTip" style="display:none;position:absolute;background:rgba(10,10,10,.95);border:1px solid #e63946;border-radius:4px;padding:8px 12px;font-size:9px;color:#e2e8f0;white-space:pre;pointer-events:none;font-family:var(--code);z-index:10;line-height:1.7;box-shadow:0 0 12px rgba(230,57,70,.3);"></div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:6px;font-size:8px;color:var(--text3);">
+    <span>▮ <span style="color:#e63946">block time</span> (red glow = over target)</span>
+    <span>── <span style="color:#fbbf24">10 min target</span></span>
+    <span style="margin-left:auto">hover for detail · click to view block</span>
+  </div>
+  <div id="chartExplain_blocktimes" class="chart-explain" style="display:none;"></div>
+</div></div>
 <!-- CHART 2: Burst & Volatility -->
 <div class="diff-bar-wrap" id="chartBurstWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
@@ -721,6 +739,7 @@ antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mine
     var _chartTexts={
 blockprod:'BLOCK PRODUCTION \u2014 Real vs Expected\n\nCompares actual blockchain progress against the theoretical schedule.\n\nGreen solid line (Real): Actual blocks mined. Each step = new block found.\n\nWhite dashed line (Expected): Blocks that SHOULD have been mined if every block took exactly 10 minutes. Formula: expected = (now - genesis_time) / 600\n\nGreen shaded area: Chain is AHEAD of schedule (mining faster than 10 min).\nRed shaded area: Chain is BEHIND schedule (mining slower than 10 min).\n\nThe "+X ahead" or "-X behind" indicator shows the current Block Lag \u2014 the primary input to the cASERT equalizer (weight 0.40 in the formula).\n\nA healthy chain oscillates slightly around the expected line. Persistent deviation triggers cASERT profile adjustments to correct the drift.',
 burstvol:'BURST & VOLATILITY \u2014 Mining Stability Metrics\n\nTracks two secondary stability indicators over the last 288 blocks (~48h):\n\nBURST (orange line, left axis):\n  % of recent blocks mined in under 5 minutes (half the target).\n  High burst indicates sudden hashrate increases or pool concentration.\n  <10%: Healthy (green) \u2014 normal variance\n  10-25%: Elevated (yellow) \u2014 some fast blocks\n  >25%: High burst (red) \u2014 significant instability\n  Weight in cASERT equalizer: 0.05\n\nVOLATILITY (cyan line, right axis):\n  Standard deviation of block times / 600s target.\n  Measures how unpredictable block timing is.\n  <15%: Stable (green) \u2014 predictable mining\n  15-40%: Moderate (yellow) \u2014 some fluctuation\n  >40%: Unstable (red) \u2014 erratic hashrate\n  Weight in cASERT equalizer: 0.02\n\nOrange triangles on X-axis mark burst blocks (<5 min).\n\ncASERT responds primarily to schedule lag (0.40). Burst (0.05) and volatility (0.02) are secondary fine-tuning signals.',
+blocktimes:'BLOCK INTERVALS \u2014 Individual Block Times\n\nEach red bar represents one block\u2019s mining time (seconds between that block and the previous one).\n\nYellow dashed line: 10-minute target (600 seconds). Blocks above this line took longer than expected. Blocks below were faster.\n\nBright red glow: blocks that exceeded the 10-minute target.\nDimmer bars: blocks mined faster than target.\n\nAvg (cyan): arithmetic mean of all visible block intervals.\nMedian (purple): the middle value \u2014 less affected by extreme outliers.\n\nA healthy distribution has most bars near the yellow line, with natural variance above and below. PoW mining is probabilistic: some blocks take 30 seconds, others 25 minutes \u2014 this is normal.\n\nHover any bar for exact timing. Click to view the block.',
 diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficulty has changed over the last 288 blocks.\n\nPurple line: bitsQ (difficulty) value for each block.\nHigher bitsQ = harder to mine. Lower bitsQ = easier.\n\nDifficulty adjusts every block via cASERT (two coordinated layers):\n\n1) bitsQ primary controller\n   \u2022 Blocks faster than target \u2192 bitsQ goes up (harder)\n   \u2022 Blocks slower than target \u2192 bitsQ goes down (easier)\n   \u2022 V1 (<1450): 48h half-life, 6.25% delta cap\n   \u2022 V2 (\u22651450): 24h half-life, 12.5% delta cap\n   \u2022 V7 avg288 (\u22655175): avg288-based (no half-life), dynamic cap (5,260+): 0%/0.5%/1.5%/2.5%/3.0%\n\n2) cASERT equalizer \u2014 profile on top of bitsQ\n   40 profiles: E4 through H35 (A=Active E4\u2013H10, R=Reserved H11\u2013H35).\n   All scale=2. H13-H35 margin fixed at 100.\n   \u2022 E1\u2013E4 = easing (anti-stall / EBR)\n   \u2022 Slew rate: \u00B11 per block\n   \u2022 Hard ceiling: H10 (block 5,075+)\n   \u2022 V6 calibration (block 5,050): dynamic lag cap H \u2264 lag. Live lag.\n\nPID: U = 0.05\u00B7r + 0.40\u00B7lag + 0.15\u00B7I + 0.05\u00B7burst + 0.02\u00B7V\n\nSafety: lag \u2264 0 \u2192 B0. Lag cap: H \u2264 lag. Anti-stall: 60 min.\n\nDashed line: genesis difficulty baseline.\nFlat line = stable mining. Sharp changes = hashrate fluctuations being\ncompensated by cASERT.'
     };
     var _openChart=null;
@@ -729,7 +748,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
       var el=document.getElementById('chartExplain_'+key);if(!el)return;
       if(_openChart===key){_closeAllCharts();return;}
       _closeAllCharts();
-      var borderColor=key==='blockprod'?'#4CAF50':key==='burstvol'?'#FF9800':'#9C27B0';
+      var borderColor=key==='blockprod'?'#4CAF50':key==='blocktimes'?'#e63946':key==='burstvol'?'#FF9800':'#9C27B0';
       el.textContent=_chartTexts[key]||key;
       el.style.cssText='display:block;background:#0d0d0d;border-left:3px solid '+borderColor+';padding:0 14px;margin-top:6px;font-family:var(--code);font-size:10px;color:#ccc;line-height:1.7;white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;border-radius:0 4px 4px 0;';
       setTimeout(function(){el.style.maxHeight='500px';el.style.padding='10px 14px';},10);
@@ -1918,7 +1937,7 @@ var _nextBitsQ=0;
 var _tipBlockHash='';
 
 function updateEqualizer(info, times, diffs) {
-  try { renderProdChart(info, diffs); renderBurstChart(diffs); } catch(e) { console.error('chart error',e); }
+  try { renderProdChart(info, diffs); renderBlockTimeChart(diffs); renderBurstChart(diffs); } catch(e) { console.error('chart error',e); }
 }
 var GENESIS_TS=1773597600;
 function renderProdChart(info, diffs) {
@@ -1983,6 +2002,135 @@ function renderProdChart(info, diffs) {
       showBlockByHeight(cv._d[idx].h);
     });
   } else {cv._d=d;}
+}
+function renderBlockTimeChart(diffs) {
+  var cv=document.getElementById('btChart'); if(!cv) return;
+  var ctx=cv.getContext('2d'); if(!ctx) return;
+  var dpr=window.devicePixelRatio||1, W=cv.offsetWidth, Hc=cv.offsetHeight;
+  cv.width=W*dpr; cv.height=Hc*dpr; ctx.scale(dpr,dpr);
+  if(!diffs||diffs.length<3) return;
+  var d=diffs.slice().sort(function(a,b){return a.h-b.h;});
+  // Compute intervals
+  var bars=[];
+  for(var i=1;i<d.length;i++){
+    var bt=d[i].t-d[i-1].t;
+    bars.push({h:d[i].h, bt:bt, t:d[i].t, profile:d[i].pi||0});
+  }
+  if(!bars.length) return;
+  // Stats
+  var sum=0, sorted=bars.map(function(b){return b.bt;}).sort(function(a,b){return a-b;});
+  for(var i=0;i<bars.length;i++) sum+=bars[i].bt;
+  var avg=sum/bars.length, median=sorted[Math.floor(sorted.length/2)];
+  var maxBt=Math.min(Math.max.apply(null,sorted), 3600); // cap display at 60min
+  var target=600;
+  // Update labels
+  var avgL=document.getElementById('btAvgLabel');
+  var medL=document.getElementById('btMedianLabel');
+  if(avgL) avgL.textContent=Math.floor(avg/60)+'m '+Math.round(avg%60)+'s';
+  if(medL) medL.textContent=Math.floor(median/60)+'m '+Math.round(median%60)+'s';
+  // Layout
+  var pad={l:36,r:6,t:8,b:18}, cw=W-pad.l-pad.r, ch=Hc-pad.t-pad.b;
+  var barW=Math.max(1, Math.floor(cw/bars.length)-1);
+  var gap=Math.max(0.5, (cw-barW*bars.length)/(bars.length-1||1));
+  var yScale=ch/maxBt;
+  // Background grid
+  ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=0.5;
+  for(var m=0;m<=60;m+=10){
+    var gy=pad.t+ch-(m*60*yScale);
+    if(gy<pad.t||gy>pad.t+ch) continue;
+    ctx.beginPath(); ctx.moveTo(pad.l,gy); ctx.lineTo(pad.l+cw,gy); ctx.stroke();
+  }
+  // Draw bars with glow
+  for(var i=0;i<bars.length;i++){
+    var bt=Math.min(bars[i].bt, maxBt);
+    var barH=bt*yScale;
+    var x=pad.l+i*(barW+gap);
+    var y=pad.t+ch-barH;
+    var overTarget=bars[i].bt>target;
+    // Glow effect
+    ctx.save();
+    if(overTarget){
+      ctx.shadowColor='rgba(230,57,70,.6)';
+      ctx.shadowBlur=8;
+    } else {
+      ctx.shadowColor='rgba(230,57,70,.25)';
+      ctx.shadowBlur=4;
+    }
+    // Bar gradient
+    var grad=ctx.createLinearGradient(x,y,x,pad.t+ch);
+    if(overTarget){
+      grad.addColorStop(0,'rgba(255,50,50,.95)');
+      grad.addColorStop(0.5,'rgba(230,57,70,.7)');
+      grad.addColorStop(1,'rgba(180,30,40,.4)');
+    } else {
+      grad.addColorStop(0,'rgba(230,57,70,.7)');
+      grad.addColorStop(0.5,'rgba(230,57,70,.45)');
+      grad.addColorStop(1,'rgba(180,30,40,.2)');
+    }
+    ctx.fillStyle=grad;
+    ctx.fillRect(x, y, barW, barH);
+    ctx.restore();
+    // Bright top edge
+    ctx.fillStyle=overTarget?'rgba(255,80,90,.9)':'rgba(230,57,70,.6)';
+    ctx.fillRect(x, y, barW, Math.max(1, 1.5));
+  }
+  // 10-minute target line (yellow, prominent)
+  var targetY=pad.t+ch-(target*yScale);
+  ctx.save();
+  ctx.strokeStyle='#fbbf24';
+  ctx.lineWidth=1.5;
+  ctx.shadowColor='rgba(251,191,36,.4)';
+  ctx.shadowBlur=6;
+  ctx.setLineDash([6,3]);
+  ctx.beginPath();
+  ctx.moveTo(pad.l, targetY);
+  ctx.lineTo(pad.l+cw, targetY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Target label
+  ctx.fillStyle='#fbbf24';
+  ctx.font='bold 8px monospace';
+  ctx.textAlign='left';
+  ctx.fillText('10 min', pad.l+cw-28, targetY-4);
+  ctx.restore();
+  // Y axis labels
+  ctx.fillStyle='#444'; ctx.font='8px monospace'; ctx.textAlign='right';
+  for(var m=0;m<=Math.floor(maxBt/600);m++){
+    var sec=m*600;
+    var ly=pad.t+ch-(sec*yScale);
+    if(ly<pad.t-5||ly>pad.t+ch+5) continue;
+    ctx.fillText(m*10+'m', pad.l-4, ly+3);
+  }
+  // X axis labels (block heights at intervals)
+  ctx.fillStyle='#444'; ctx.font='7px monospace'; ctx.textAlign='center';
+  for(var xi=0;xi<=4;xi++){
+    var idx2=Math.floor(xi/4*(bars.length-1));
+    var bx=pad.l+idx2*(barW+gap)+barW/2;
+    ctx.fillText('#'+bars[idx2].h, bx, pad.t+ch+12);
+  }
+  // Tooltip
+  if(!cv._tipBound){cv._tipBound=true;cv._bars=bars;
+    cv.addEventListener('mousemove',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left;
+      var idx=Math.floor((mx-pad.l)/(barW+gap));
+      if(idx<0)idx=0;if(idx>=cv._bars.length)idx=cv._bars.length-1;
+      var b=cv._bars[idx];
+      var min=Math.floor(b.bt/60),sec=Math.round(b.bt%60);
+      var status=b.bt>600?'\u26A0 OVER TARGET (+'+(Math.floor((b.bt-600)/60))+'m '+Math.round((b.bt-600)%60)+'s)':b.bt<300?'\u26A1 FAST (<5min)':'\u2713 ON TARGET';
+      var tip=document.getElementById('btTip');if(!tip)return;
+      tip.textContent='Block #'+b.h+'\nInterval: '+min+'m '+sec+'s'+(b.bt>0?' ('+b.bt+'s)':'')+'\nTarget: 10m 00s (600s)\n'+status;
+      tip.style.display='block';
+      var tx2=mx+12;if(tx2+180>rect.width)tx2=mx-190;
+      tip.style.left=tx2+'px';tip.style.top='4px';
+    });
+    cv.addEventListener('mouseleave',function(){var t=document.getElementById('btTip');if(t)t.style.display='none';});
+    cv.addEventListener('click',function(e){
+      var rect=cv.getBoundingClientRect(),mx=e.clientX-rect.left;
+      var idx=Math.floor((mx-pad.l)/(barW+gap));
+      if(idx<0)idx=0;if(idx>=cv._bars.length)idx=cv._bars.length-1;
+      showBlockByHeight(cv._bars[idx].h);
+    });
+  } else {cv._bars=bars;}
 }
 function renderBurstChart(diffs) {
   var cv=document.getElementById('bvChart'); if(!cv) return;
