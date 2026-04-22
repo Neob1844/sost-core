@@ -325,6 +325,18 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
         &#9888; Limited public alpha &mdash; operator-assisted &mdash; Sepolia testnet with mock tokens &mdash; not yet a public trustless market.
       </div>
     </div>
+    <div style="margin-top:8px;background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.3);border-radius:4px;padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,0.6);animation:v6pulse 1.5s ease infinite"></span>
+        <b style="color:#fb010d;font-size:13px;letter-spacing:3px;">cASERT EQUALIZER &mdash; H11 ACTIVATION AT BLOCK 5,480</b>
+      </div>
+      <div style="font-size:10px;line-height:2;color:#e2e8f0;">
+        <b style="color:#fb010d">&#9670; What:</b> Profile ceiling raised from H10 to H11. One additional hardening level for finer-grained surplus absorption. Ceiling remains at H11 &mdash; no higher.<br>
+        <b style="color:#fb010d">&#9670; Why:</b> avg288 bitsQ performing perfectly (10m 16s average). But the chain maintains a persistent ~10-block lead. H9 averages 6.4 min and H10 only activates in ~8% of blocks. H11 provides the granularity needed to close the gap between expected and actual block count. <span style="color:#DAA520">The equalizer has 40 profiles (E4&ndash;H35) &mdash; only 14 activated so far. Now is the right moment to expand: primary controller stable, safety nets proven, network active. Each new profile brings the system closer to the precision it was engineered to achieve.</span><br>
+        <b style="color:#fb010d">&#9670; Safety:</b> System is solid, reliable, and functioning as designed. H11 was always planned (40-profile architecture). Safety nets: <span style="color:#00ff88">lag-adjust 30s</span>, <span style="color:#00ff88">anti-stall 60 min</span>, <span style="color:#00ff88">avg288 bitsQ auto-compensates</span>, <span style="color:#00ff88">slew &plusmn;1/block</span>. If H11 slows blocks too much, bitsQ reduces difficulty &mdash; controllers self-balance.<br>
+        <b style="color:#fb010d">&#9670; No action required by miners.</b> Lag-adjust detects profile changes and restarts search within 30 seconds automatically.
+      </div>
+    </div>
   </div>
 </div>
 <div class="dashboard" id="dashboard">
