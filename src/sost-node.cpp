@@ -320,6 +320,7 @@ struct Peer {
     bool version_acked;
     bool outbound;
     time_t last_seen;
+    time_t conntime{0};    // timestamp when peer connected
     int ban_score;         // misbehavior score, ban at >= 100
     bool encrypted{false}; // true if P2P encryption established
     std::shared_ptr<std::mutex> write_mu{std::make_shared<std::mutex>()}; // per-fd write serialization
@@ -1140,6 +1141,7 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
          <<",\"connected\":true"
          <<",\"enc_mode\":\""<<(p.encrypted?"encrypted":"plaintext")<<"\""
          <<",\"ban_score\":"<<p.ban_score
+         <<",\"conntime\":"<<p.conntime
          <<"}";
     }
     s<<"]"; return rpc_result(id,s.str());
@@ -4176,7 +4178,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         std::lock_guard<std::mutex> lk(g_peers_mu);
         Peer p; p.fd=fd; p.addr=addr; p.their_height=-1;
         p.version_sent=false; p.version_acked=false;
-        p.outbound=outbound; p.last_seen=time(nullptr); p.ban_score=0;
+        p.outbound=outbound; p.last_seen=time(nullptr); p.conntime=time(nullptr); p.ban_score=0;
         g_peers.push_back(p);
     }
     printf("[P2P] Peer connected: %s (%s)\n",addr.c_str(),outbound?"outbound":"inbound");
