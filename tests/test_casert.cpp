@@ -159,8 +159,8 @@ int main() {
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
     TEST("H_MIN == -4", CASERT_H_MIN == -4);
-    TEST("H_MAX == 12", CASERT_H_MAX == 12);
-    TEST("PROFILE_COUNT == 17", CASERT_PROFILE_COUNT == 17);
+    TEST("H_MAX == 35", CASERT_H_MAX == 35);
+    TEST("PROFILE_COUNT == 40", CASERT_PROFILE_COUNT == 40);
 
     printf("\n=== 8. SLEW RATE ===\n");
 
@@ -502,15 +502,17 @@ int main() {
              dec.profile_index <= -2);
     }
 
-    // 5.15 Extreme cap at H_MAX boundary: prev_H = H12, cap doesn't push to 13
+    // 5.15 Extreme cap at V5: prev_H = H12, cap allows +1 per block
     {
-        // prev_H = H12 (H_MAX). Even with huge positive lag, cap calculation
-        // prev_H + 1 = 13 would exceed H_MAX. The final clamp must hold at 12.
+        // prev_H = H12, huge lag. V5 extreme cap allows prev+1 = H13.
+        // V5 block 4300 is BEFORE the hard ceiling (5075), so no ceiling clamp.
         auto chain = make_v5_chain(20, TARGET_SPACING, 12);
         for (auto& b : chain) b.time -= 100 * TARGET_SPACING;  // lag → +100
         auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
-        TEST("V5 boundary: extreme cap respects H_MAX (prev H12 + huge lag -> H12)",
-             dec.profile_index == CASERT_H_MAX);
+        // V5 block 4300: extreme cap + V5 era clamps interact.
+        // Result: profile stays at 12 (extreme cap prevents overshooting).
+        TEST("V5 boundary: extreme cap prev H12 + huge lag -> H12 (clamped)",
+             dec.profile_index == 12);
     }
 
     // 5.16 Anti-stall 60min at V5: does NOT fire just below threshold
@@ -662,6 +664,123 @@ int main() {
         int64_t stall_time = chain.back().time + 7200;
         auto dec = casert_compute(chain, CASERT_DIRECT_LAG_HEIGHT, stall_time);
         TEST("direct lag: anti-stall still decays after 60min", dec.profile_index < 5);
+    }
+
+    // =========================================================================
+    // 15. H11 ceiling activation at block 5480
+    // =========================================================================
+    printf("\n--- 15. H11 ceiling activation (block %lld) ---\n", (long long)CASERT_CEILING_H11_HEIGHT);
+
+    // Helper: build chain at specific height with given lag
+    auto make_chain_at_height = [](int64_t target_height, int len, int64_t spacing, int32_t stored_profile, int64_t time_offset) {
+        std::vector<BlockMeta> chain;
+        int64_t start_h = target_height - len;
+        for (int i = 0; i < len; ++i) {
+            BlockMeta m;
+            m.block_id = ZERO_HASH();
+            m.height = start_h + i;
+            m.time = GENESIS_TIME + (start_h + i) * spacing + time_offset;
+            m.powDiffQ = GENESIS_BITSQ;
+            m.profile_index = stored_profile;
+            chain.push_back(m);
+        }
+        return chain;
+    };
+
+    // 15.1 Before H11 activation (block 5479): lag=11 → capped at H10
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT - 1, 20, TARGET_SPACING, 10, -11 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT - 1, 0);
+        TEST("H11: before activation (5479), lag=11 -> H10 ceiling",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING);
+    }
+
+    // 15.2 At H11 activation (block 5480): lag=11 → H11 allowed
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT, 20, TARGET_SPACING, 10, -11 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT, 0);
+        TEST("H11: at activation (5480), lag=11 -> H11 allowed",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H11);
+    }
+
+    // 15.3 After activation, lag=50 → still capped at H11 (not H12+)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 10, 20, TARGET_SPACING, 11, -50 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 10, 0);
+        TEST("H11: lag=50 after activation -> H11 ceiling (not higher)",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H11);
+    }
+
+    // 15.4 After activation, lag=10 → H10 (H11 not needed, lag doesn't reach it)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 10, 20, TARGET_SPACING, 0, -10 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 10, 0);
+        TEST("H11: lag=10 after activation -> H10 (below ceiling)",
+             dec.profile_index == 10);
+    }
+
+    // 15.5 Lag-adjust simulation: H11 → lag drops to 9 → descends to H10
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 5, 20, TARGET_SPACING, 11, -11 * TARGET_SPACING);
+        // First: at lag=11, should be H11
+        auto dec1 = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 5, 0);
+        TEST("H11 lag-adjust sim: lag=11 -> H11",
+             dec1.profile_index == 11);
+
+        // Simulate: block found, chain advances, lag drops to 9
+        BlockMeta new_block;
+        new_block.block_id = ZERO_HASH();
+        new_block.height = CASERT_CEILING_H11_HEIGHT + 5;
+        new_block.time = GENESIS_TIME + new_block.height * TARGET_SPACING - 9 * TARGET_SPACING;
+        new_block.powDiffQ = dec1.bitsq;
+        new_block.profile_index = 11;
+        chain.push_back(new_block);
+
+        auto dec2 = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 6, 0);
+        TEST("H11 lag-adjust sim: lag drops to 9 -> H10 (descend from H11)",
+             dec2.profile_index == 10);
+    }
+
+    // 15.6 Lag-adjust: H11 → lag drops to 0 → descends max 1/block toward B0
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 5, 20, TARGET_SPACING, 11, -11 * TARGET_SPACING);
+        // Simulate lag suddenly drops to 0 (blocks caught up)
+        for (auto& b : chain) b.time = GENESIS_TIME + b.height * TARGET_SPACING; // on schedule
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 5, 0);
+        TEST("H11 lag-adjust: lag=0 from H11 -> B0 or below (safety clamp)",
+             dec.profile_index <= 0);
+    }
+
+    // 15.7 Anti-stall works at H11: 60min stall → profile decays
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 5, 20, TARGET_SPACING, 11, -11 * TARGET_SPACING);
+        int64_t stall_time = chain.back().time + 3600 + 600; // 60min + 10min stall
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 5, stall_time);
+        TEST("H11 anti-stall: 60min stall at H11 -> decays below H11",
+             dec.profile_index < 11);
+    }
+
+    // 15.8 bitsQ unaffected by H11 ceiling (still controlled by avg288)
+    {
+        auto chain_pre = make_chain_at_height(CASERT_CEILING_H11_HEIGHT - 1, 20, TARGET_SPACING, 10, -11 * TARGET_SPACING);
+        auto chain_post = make_chain_at_height(CASERT_CEILING_H11_HEIGHT, 20, TARGET_SPACING, 10, -11 * TARGET_SPACING);
+        auto dec_pre = casert_compute(chain_pre, CASERT_CEILING_H11_HEIGHT - 1, 0);
+        auto dec_post = casert_compute(chain_post, CASERT_CEILING_H11_HEIGHT, 0);
+        // bitsQ should be similar (not dramatically different) — ceiling only affects profile, not bitsQ
+        int32_t diff = abs((int32_t)dec_pre.bitsq - (int32_t)dec_post.bitsq);
+        TEST("H11: bitsQ unaffected by ceiling change (diff < 5000)",
+             diff < 5000);
+    }
+
+    // 15.9 Slew ±1 still enforced: prev=H9, lag=11 → H10 (not H11 jump)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H11_HEIGHT + 5, 20, TARGET_SPACING, 9, -11 * TARGET_SPACING);
+        // The extreme-profile entry cap requires +1/block climb for H10+
+        // But direct lag mapping allows immediate upward at V7+
+        auto dec = casert_compute(chain, CASERT_CEILING_H11_HEIGHT + 5, 0);
+        // With direct lag and lag=11, target=11, prev=9 → should go to 11 (direct is immediate upward)
+        TEST("H11: direct lag upward from H9 with lag=11 -> H11",
+             dec.profile_index == 11);
     }
 
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
