@@ -4512,6 +4512,17 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     if (add_misbehavior(fd, addr, 10, "invalid block")) return false;
                 }
             } else {
+                // Block accepted — update peer's known height
+                if (blk_height > 0) {
+                    std::lock_guard<std::mutex> lk_ph(g_peers_mu);
+                    for (auto& p : g_peers) {
+                        if (p.fd == fd && blk_height > p.their_height) {
+                            p.their_height = blk_height;
+                            p.last_seen = time(nullptr);
+                            break;
+                        }
+                    }
+                }
                 if (sync.mode == SyncState::HISTORICAL) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
                     sync.blocks_received++;
