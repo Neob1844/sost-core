@@ -291,6 +291,18 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <style>@keyframes v6pulse{0%,100%{border-left-color:#00ff41;box-shadow:none}50%{border-left-color:#DAA520;box-shadow:inset 0 0 30px rgba(218,165,32,0.04),0 0 10px rgba(0,255,65,0.06)}}</style>
+  <div style="background:rgba(0,255,65,0.06);border-left:3px solid #DAA520;padding:12px 18px;font-family:var(--code);font-size:10px;color:#67e8f9;line-height:1.8;animation:v6pulse 3s ease-in-out infinite;">
+    <b style="color:#DAA520;font-size:13px;letter-spacing:2px;">SOST SOVEREIGN VALUE STACK &mdash; BUILDING IN PROGRESS</b><br><br>
+    <span style="color:#00ff88">SOST is building the foundations of a decentralized, global cooperative value system based on tokenized gold and precious metals under full self-custody by their legitimate owners &mdash; ensuring that at no point is the security of the underlying asset compromised, and that ownership remains 100% sovereign at all times.</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">THREE PILLARS UNDER ACTIVE DEVELOPMENT</span><br><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - E2E Encrypted Coordination</b> &mdash; Signed offers, acceptances, cancellations, and settlement notices. Off-chain, replay-resistant, and cryptographically authenticated. Not general-purpose chat, but private economic coordination.</span><br><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - DEX and Settlement Layer for Tokenized Gold</b> &mdash; Infrastructure for exchanging SOST against XAUT, PAXG, and native precious-metal-backed positions. Peer-to-peer by design, built on a thin-chain / fat-edge architecture. Ethereum serves only as a minimal onboarding and exit rail; SOST remains the sovereign center for registration, trading, and settlement.</span><br><br>
+    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - PoPC (Proof of Personal Custody) Contract Layer</b> &mdash; Timelocked collateral infrastructure for self-custodied and escrow-based gold participation. No admin key, no proxy, no pause, no emergency withdrawal. Constitutional, immutable, and designed to support gold-backed value without requiring discretionary custodianship.</span><br><br>
+    <span style="color:#00ff88;font-style:italic">Strategic direction: encrypted communication, signed coordination, verifiable settlement, self-custodied gold-backed value, peer-to-peer exchange, constitutional contracts, and cooperative monetary logic.</span>
+  </div>
+</div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight" style="cursor:pointer" onclick="showBlockByHeight(H)">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card"><div class="dash-label">AVG BLOCK TIME</div><div class="dash-val cyan" id="dAvgTime">—</div><div class="dash-sub">last 10 blocks</div></div>
@@ -1315,5 +1327,7 @@ window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSpa
   }
 })();
 </script>
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="website/js/retro-sounds.js"></script>
 </body>
 </html>

@@ -301,7 +301,16 @@ function _nesPlayRandom(){
   setTimeout(function(){_nesPlaying=false;if(btn)btn.style.opacity='0.4'},10500);
 }
 function nesToggleMute(){
-  if(_nesPlaying)return;
+  var btn=document.getElementById('nesMuteBtn');
+  if(_nesPlaying){
+    // Currently playing → stop it (mute)
+    _nesStop();
+    _nesMuted=true;
+    if(btn){btn.textContent='\uD83D\uDD07';btn.title='NES muted — click to play';btn.style.opacity='0.4';}
+    return;
+  }
+  // Not playing → play a new random melody
+  _nesMuted=false;
   _nesPlayRandom();
 }
 (function(){
