@@ -2487,51 +2487,75 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <h2 id="sec-svs" class="wp-h">12.5 Sovereign Value Stack</h2>
 <div class="wp-spacer"></div>
-<p class="wp-p">SOST is implementing a cooperative value system based on self-custodied tokenized gold.</p>
+<p class="wp-p">SOST is building a cooperative value system based on self-custodied tokenized gold and precious metals, with a signed position market, private economic coordination, and verifiable settlement. The system is designed around identified positions and contractual rights &mdash; not generic fungible pool tokens.</p>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-1" class="wp-h">12.5.1 E2E Encrypted Coordination Layer</h3>
+<h3 id="sec-svs-1" class="wp-h">12.5.1 E2E Encrypted Coordination Layer (ED25519)</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">Signed trade offers, acceptances, cancellations, and settlement notices flow over an end-to-end encrypted messaging layer purpose-built for economic coordination between counterparties. The protocol is off-chain first, replay-resistant, and produces canonical hashes for every message. This is not general-purpose chat &mdash; it is authenticated intent exchange: private economic coordination between identified participants.</p>
+<p class="wp-p">All trade coordination uses <strong>ED25519 cryptographic signatures</strong> over canonical SHA-256 hashes. Every message &mdash; offer, accept, cancel, settlement notice &mdash; carries a signature, a unique nonce (anti-replay), and an expiry. Messages flow through a <strong>relay node</strong> with persistent deal channels (one channel per deal_id).</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">The E2E layer is purpose-built for economic coordination between counterparties. It is not general-purpose chat. It supports signed trade offers (with asset_type: GOLD, POSITION_FULL, POSITION_REWARD_RIGHT), signed acceptances with deterministic deal_id derivation, cancellations and settlement notices, nonce-based replay rejection, and per-deal private channels with message persistence.</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">&bull; Signed trade offers, acceptances, cancellations, settlement notices</div>
 <div class="wp-bullet">&bull; Off-chain first, replay-resistant, canonical hashes</div>
 <div class="wp-bullet">&bull; Private economic coordination, not general chat</div>
 <div class="wp-bullet">&bull; Authenticated intent exchange between counterparties</div>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-2" class="wp-h">12.5.2 DEX and Settlement Layer for Tokenized Gold</h3>
+<h3 id="sec-svs-2" class="wp-h">12.5.2 SOST Position Market</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">The SOST DEX enables SOST &harr; XAUT/PAXG exchange and native precious-metal positions. Architecture follows a thin-chain / fat-edge model: deal state machines, watchers, and settlement daemons operate off-chain. Ethereum serves as the minimal onboarding/exit rail; SOST is the sovereign center for all registration, trading, and settlement.</p>
+<p class="wp-p">The SOST market is designed as a <strong>signed OTC/RFQ venue</strong> for identified positions and rights, not as a traditional AMM or public token exchange. Architecture follows a thin-chain / fat-edge model: deal state machines, watchers, and settlement daemons operate off-chain. Ethereum serves as the minimal onboarding/exit rail; SOST is the sovereign center for all registration, trading, and settlement.</p>
 <div class="wp-spacer"></div>
-<div class="wp-bullet">&bull; SOST &harr; XAUT/PAXG exchange + native precious-metal positions</div>
-<div class="wp-bullet">&bull; Thin-chain / fat-edge: deal state machines, watchers, settlement daemons off-chain</div>
-<div class="wp-bullet">&bull; Ethereum as minimal onboarding/exit rail; SOST as sovereign center</div>
+<p class="wp-p"><strong>What can be traded:</strong></p>
+<div class="wp-bullet">&bull; <strong>Phase 1 (current):</strong> Model B full position transfer + reward-right split</div>
+<div class="wp-bullet">&bull; <strong>Phase 2:</strong> Model A reward rights + controlled novation</div>
+<div class="wp-bullet">&bull; <strong>Phase 3 (legal review required):</strong> XAUT/PAXG entry/exit rail, broader market</div>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Position Registry:</strong></p>
-<div class="wp-bullet">&bull; Model B (transferable escrow): FULL_POSITION, REWARD_RIGHT, PRINCIPAL_CLAIM</div>
-<div class="wp-bullet">&bull; Model A (reward rights only)</div>
-<div class="wp-bullet">&bull; Bilateral escrow settlement with refund engine and audit log</div>
+<p class="wp-p"><strong>How a trade works:</strong></p>
+<div class="wp-bullet">&bull; Seller creates signed offer (ED25519, canonical hash, nonce, expiry, position_id)</div>
+<div class="wp-bullet">&bull; Buyer responds with signed accept &rarr; system derives deal_id</div>
+<div class="wp-bullet">&bull; Settlement engine verifies ownership, signatures, nonce, expiry, no double-spend</div>
+<div class="wp-bullet">&bull; Executes full position transfer OR reward-right split</div>
+<div class="wp-bullet">&bull; Emits signed settlement_notice &rarr; complete audit trail recorded</div>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-3" class="wp-h">12.5.3 PoPC Contract Infrastructure</h3>
+<p class="wp-p"><strong>Settlement engine:</strong> 11-state deal machine (CREATED through SETTLED/REFUNDED/EXPIRED), Ethereum watcher (6 confirmations), SOST watcher, refund engine with automatic timeout handling, position settlement with transfer and split support, JSONL audit log.</p>
 <div class="wp-spacer"></div>
-<div class="wp-bullet">&bull; Model B: SOSTEscrow.sol &mdash; no admin, no proxy, no pause, immutable</div>
-<div class="wp-bullet">&bull; Model A: self-custody with PoPC proof verification</div>
-<div class="wp-bullet">&bull; Timelocked collateral participation</div>
-<div class="wp-bullet">&bull; Constitutional contract design</div>
+<p class="wp-p"><strong>Position pricing:</strong> gold backing value + time-discounted remaining reward (5% annual Model B, 12% Model A) &minus; 3% illiquidity discount = net value.</p>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-4" class="wp-h">12.5.4 Architecture</h3>
+<h3 id="sec-svs-3" class="wp-h">12.5.3 SOSTEscrow Contract (Model B)</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Deployed on Sepolia:</strong> <a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:var(--cyan-primary)">0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113</a></p>
+<div class="wp-spacer"></div>
+<div class="wp-bullet">&bull; <strong>NO admin key</strong> &mdash; no upgrade proxy, no pause, no emergency withdrawal</div>
+<div class="wp-bullet">&bull; ONLY original depositor can withdraw, ONLY after timelock expiry</div>
+<div class="wp-bullet">&bull; Accepted tokens: XAUT (6 decimals) + PAXG (18 decimals)</div>
+<div class="wp-bullet">&bull; Lock duration: 28 days min, 366 days max. Minimum deposit: 0.001 oz</div>
+<div class="wp-bullet">&bull; <strong>First Model B position:</strong> 0.5 oz XAUT, 28-day lock, position 8afed8fcd27553a7 ACTIVE</div>
+<div class="wp-bullet">&bull; 19 Foundry tests passing (deposit, withdraw, timelock, access control, events)</div>
+<div class="wp-spacer"></div>
+<h3 id="sec-svs-3b" class="wp-h">12.5.4 PoPC Contract Infrastructure</h3>
+<div class="wp-spacer"></div>
+<div class="wp-bullet">&bull; Model B: SOSTEscrow.sol &mdash; immutable escrow, constitutional design</div>
+<div class="wp-bullet">&bull; Model A: self-custody with PoPC proof verification via ConvergenceX entropy</div>
+<div class="wp-bullet">&bull; Timelocked collateral participation with reward schedules</div>
+<div class="wp-bullet">&bull; Position lifecycle: ACTIVE &rarr; MATURED &rarr; REDEEMED (or SLASHED/EXPIRED)</div>
+<div class="wp-spacer"></div>
+<h3 id="sec-svs-4" class="wp-h">12.5.5 Architecture</h3>
 <div class="wp-spacer"></div>
 <div class="wp-table-wrap"><table class="wp-table">
 <tr><td>Repository</td><td>Role</td></tr>
-<tr><td>sost-core</td><td>Chain base, consensus, settlement anchoring</td></tr>
-<tr><td>sost-gold-exchange</td><td>Positions, watchers, deals, settlement, pricing</td></tr>
-<tr><td>sost-comms</td><td>Trade protocol schemas (offer/accept/cancel/notice)</td></tr>
+<tr><td>sost-core</td><td>Chain base, consensus, PoW, cASERT, constitutional addresses</td></tr>
+<tr><td>sost-gold-exchange</td><td>Positions, watchers, deals, settlement, pricing, operator tools</td></tr>
+<tr><td>sost-comms</td><td>Trade protocol + ED25519 signing + relay node + deal channels</td></tr>
 </table></div>
 <div class="wp-spacer"></div>
 <p class="wp-p">ETH is used only for onboarding/exit. SOST handles all registration, trading, and settlement.</p>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-5" class="wp-h">12.5.5 Strategic Direction</h3>
+<h3 id="sec-svs-5" class="wp-h">12.5.6 Alpha Status</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">Encrypted communication, signed coordination, verifiable settlement, self-custodied gold-backed value, peer-to-peer exchange, constitutional contracts, cooperative monetary logic.</p>
+<p class="wp-p">Current phase: <strong>limited alpha</strong> (operator-assisted, Sepolia testnet, mock tokens). Test coverage: <strong>375 tests</strong> (Python 217 + TypeScript 139 + Solidity 19), 0 failures. SOSTEscrow deployed on Sepolia with first on-chain gold deposit (0.55 oz total locked). First Model B position registered and tracked. Full position trade and reward-right trade demonstrated with signed messages. Position lifecycle tracking operational.</p>
+<div class="wp-spacer"></div>
+<h3 id="sec-svs-6" class="wp-h">12.5.7 Strategic Direction</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p">The SOST position market begins as a private, signed market for identified positions and rights &mdash; not a public mass token exchange. <strong>Trade contracts, not pools. Identify positions, not mass tokens. Coordinate privately, settle verifiably.</strong> Any broader public market phase is subject to legal and operational review.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-71" class="wp-h">13. Conclusion</h3>
 <div class="wp-spacer"></div>
@@ -3163,7 +3187,46 @@ SERIALIZATION (consensus-critical fix):
 <hr class="wp-hr">
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>SOST Protocol Whitepaper v4.0 — Normative Specification</strong></p>
-<p class="wp-p">Last updated: March 2026</p>
+<h3 id="sec-88" class="wp-h">Appendix K: Errata v3.8 (Sovereign Value Stack &mdash; Position Market, E2E, Settlement)</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p">Changes from v3.7 to v3.8:</p>
+<div class="wp-spacer"></div>
+<pre class="wp-code">ERRATA v3.8
+
+SOVEREIGN VALUE STACK:
+
+56) Section 12.5: expanded from overview to full operational specification
+57) Section 12.5.1: E2E layer — ED25519 real signatures, relay node, deal channels, 139 TS tests
+58) Section 12.5.2: renamed "DEX" → "SOST Position Market" — OTC/RFQ model, not AMM
+    - Phase 1: Model B full position + reward-right trades
+    - Phase 2: Model A reward rights + controlled novation
+    - Phase 3: broader market (legal review required)
+59) Section 12.5.3: SOSTEscrow deployed on Sepolia with first on-chain gold deposit
+    - Address: 0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113
+    - First Model B position: 0.5 oz XAUT, 28-day lock
+60) Section 12.5.4: PoPC contract infrastructure updated with lifecycle states
+61) Section 12.5.5: Architecture — sost-comms now includes relay + deal channels
+62) Section 12.5.6: Alpha Status added (375 tests, 0 failures)
+63) Section 12.5.7: Strategic Direction — "trade contracts, not pools"
+
+SETTLEMENT ENGINE:
+
+64) Deal state machine: 11 states, full happy path + refund path documented
+65) Settlement daemon, Ethereum watcher, SOST watcher, refund engine specified
+66) Position pricing formula: gold_value + discounted_reward - illiquidity
+
+POSITION MARKET:
+
+67) Position as identified registry object (not fungible token)
+68) Full position trade + reward-right split with signed messages
+69) 213 Python + 139 TypeScript + 19 Solidity tests passing
+
+cASERT:
+
+70) H11 ceiling activation at block 5,480 (16 of 40 profiles active)
+71) Block interval chart added to explorer with avg/median explanation</pre>
+<div class="wp-spacer"></div>
+<p class="wp-p">Last updated: April 2026</p>
 <p class="wp-p" style="color:#888;">Previous versions: v3.7 (deprecated)</p>
 <div class="wp-spacer"></div>
 <h3 class="wp-h">8.4 Post-Quantum Cryptography Roadmap</h3>

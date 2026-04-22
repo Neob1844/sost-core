@@ -2506,48 +2506,143 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 
 ## 12.5 Sovereign Value Stack
 
-SOST is implementing a cooperative value system based on self-custodied tokenized gold.
+SOST is building a cooperative value system based on self-custodied tokenized gold and
+precious metals, with a signed position market, private economic coordination, and
+verifiable settlement. The system is designed around identified positions and contractual
+rights — not generic fungible pool tokens.
 
 ### 12.5.1 E2E Encrypted Coordination Layer
 
-Signed trade offers, acceptances, cancellations, and settlement notices flow over an
-end-to-end encrypted messaging layer purpose-built for economic coordination between
-counterparties. The protocol is off-chain first, replay-resistant, and produces canonical
-hashes for every message. This is not general-purpose chat — it is authenticated intent
-exchange: private economic coordination between identified participants.
+All trade coordination uses ED25519 cryptographic signatures over canonical SHA-256 hashes.
+Every message — offer, accept, cancel, settlement notice — carries a signature, a unique
+nonce (anti-replay), and an expiry. Messages flow through a relay node with persistent
+deal channels (one channel per deal_id).
 
-### 12.5.2 DEX and Settlement Layer for Tokenized Gold
+The E2E layer is purpose-built for economic coordination between counterparties. It is not
+general-purpose chat. It supports:
+  - Signed trade offers (with asset_type: GOLD, POSITION_FULL, POSITION_REWARD_RIGHT)
+  - Signed acceptances (with deterministic deal_id derivation)
+  - Cancellations and settlement notices
+  - Nonce-based replay rejection
+  - Per-deal private channels with message persistence
 
-The Gold DEX enables SOST to XAUT/PAXG exchange and native precious-metal positions.
-Architecture follows a thin-chain / fat-edge model: deal state machines, watchers, and
-settlement daemons operate off-chain. Ethereum serves as the minimal onboarding/exit rail;
-SOST is the sovereign center for all registration, trading, and settlement.
+Current status: operational with real ED25519 signatures, relay node with HTTP API,
+139 TypeScript tests passing.
 
-Position Registry supports two models:
-  - Model B (transferable escrow): FULL_POSITION, REWARD_RIGHT, PRINCIPAL_CLAIM
-  - Model A (reward rights only)
+### 12.5.2 SOST Position Market
 
-Settlement is bilateral escrow with a refund engine and full audit log.
+The SOST market is designed as a signed OTC/RFQ venue for identified positions and rights,
+not as a traditional AMM or public token exchange.
 
-### 12.5.3 PoPC Contract Infrastructure
+What can be traded:
+  Phase 1 (current alpha):
+    - Model B full position transfer (escrow-backed, clean ownership change)
+    - Model B reward-right split (sell future reward, keep gold-backed principal)
+  Phase 2:
+    - Model A reward rights (custody obligation stays with original holder)
+    - Model A controlled novation (with revalidation and operator approval)
+  Phase 3 (requires legal review):
+    - XAUT/PAXG entry/exit rail
+    - Broader market access
 
-  - Model B: SOSTEscrow.sol — no admin, no proxy, no pause, immutable
-  - Model A: self-custody with PoPC proof verification
-  - Timelocked collateral participation
-  - Constitutional contract design: contracts enforce protocol rules, not governance decisions
+How a trade works:
+  1. Seller creates signed offer (ED25519, canonical hash, nonce, expiry, position_id)
+  2. Buyer responds with signed accept
+  3. System derives deal_id = SHA256(offer_id:accept_id)[:16]
+  4. Settlement engine verifies: ownership, position status, signature, nonce, no double-spend
+  5. Executes: full position transfer OR reward-right split
+  6. Emits signed settlement_notice
+  7. Records complete audit trail
 
-### 12.5.4 Architecture
+The market exists because the same position does not have the same value for everyone:
+sellers want immediate liquidity; buyers want discounted future value. This is analogous
+to selling a bond before maturity or separating coupon from principal.
 
-  sost-core          — chain base, consensus, settlement anchoring
-  sost-gold-exchange — positions, watchers, deals, settlement, pricing
-  sost-comms         — trade protocol schemas (offer/accept/cancel/notice)
+### 12.5.3 Settlement Engine
+
+The settlement stack consists of:
+  - Deal state machine (11 states: CREATED through SETTLED/REFUNDED/EXPIRED/DISPUTED)
+  - Ethereum watcher (polls Sepolia/mainnet for escrow deposit events, 6 confirmations)
+  - SOST watcher (polls node RPC for balance/lock events)
+  - Settlement daemon (coordinates state transitions, triggers refunds on expiry)
+  - Refund engine (handles ETH-only, SOST-only, and both-locked timeout cases)
+  - Position settlement (executes transfers and reward splits)
+  - Audit log (JSONL format, complete event trail per deal)
+
+Happy path: CREATED → NEGOTIATED → AWAITING_ETH_LOCK → AWAITING_SOST_LOCK → BOTH_LOCKED → SETTLING → SETTLED
+Refund path: any lock state → EXPIRED or REFUND_PENDING → REFUNDED
+
+Current status: fully tested with 213 Python tests (unit + integration + adversarial),
+19 Solidity tests (Foundry), happy path and refund path demonstrated end-to-end.
+
+### 12.5.4 SOSTEscrow Contract (Model B)
+
+SOSTEscrow.sol is deployed on Ethereum Sepolia testnet:
+  Address: 0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113
+  Mock XAUT: 0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0
+  Mock PAXG: 0x754A7D020D559EDD60848450c563303262cAdec7
+
+Contract properties (constitutional, immutable):
+  - NO admin key
+  - NO upgrade proxy (no UUPS, no transparent proxy, no beacon)
+  - NO pause function
+  - NO emergency withdrawal
+  - ONLY original depositor can withdraw, ONLY after timelock expiry
+  - nonReentrant on deposit() and withdraw()
+  - Accepted tokens: XAUT (6 decimals) and PAXG (18 decimals)
+  - Lock duration: 28 days minimum, 366 days maximum
+  - Minimum deposit: 0.001 oz
+
+First Model B position registered:
+  Position ID: 8afed8fcd27553a7
+  Amount: 0.5 oz XAUT (500,000 units)
+  Duration: 28 days
+  Reward rate: 0.4%
+  Status: ACTIVE
+  ETH deposit TX: 0x4d3a6beff787b8fe24f37bb1e8945f823e2b29244a65c7853f89767dc329a8c6
+
+### 12.5.5 Position Registry and Lifecycle
+
+Every position is an identified registry object with:
+  - position_id (SHA256-derived, 16 hex chars)
+  - owner (SOST address)
+  - contract_type (MODEL_A_CUSTODY or MODEL_B_ESCROW)
+  - backing_type (ETH_TOKENIZED_GOLD, AUTOCUSTODY_GOLD, PHYSICAL_CUSTODY_CERT)
+  - token_symbol (XAUT, PAXG, PHYSICAL)
+  - reference_amount (gold amount in units)
+  - reward schedule and claimed/remaining tracking
+  - status lifecycle: ACTIVE → MATURED → REDEEMED (or SLASHED/EXPIRED)
+  - right_type: FULL_POSITION, REWARD_RIGHT, or PRINCIPAL_CLAIM
+
+Position pricing uses:
+  - Gold backing value at current SOST/gold rate
+  - Time-discounted remaining reward (5% annual for Model B, 12% for Model A)
+  - 3% illiquidity discount
+  - Net value = gold_value + discounted_reward - illiquidity
+
+### 12.5.6 Architecture
+
+  sost-core           — chain base, consensus, PoW, cASERT, constitutional addresses
+  sost-gold-exchange  — positions, watchers, deals, settlement, pricing, operator tools
+  sost-comms          — trade protocol schemas, ED25519 signing, relay node, deal channels
 
 ETH is used only for onboarding/exit. SOST handles all registration, trading, and settlement.
 
-### 12.5.5 Strategic Direction
+### 12.5.7 Alpha Status
 
-Encrypted communication, signed coordination, verifiable settlement, self-custodied
-gold-backed value, peer-to-peer exchange, constitutional contracts, cooperative monetary logic.
+Current phase: limited alpha (operator-assisted, Sepolia testnet, mock tokens).
+Test coverage: 375 tests (Python 217 + TypeScript 139 + Solidity 19), 0 failures.
+SOSTEscrow deployed on Sepolia with first on-chain gold deposit (0.55 oz total locked).
+First Model B position registered and tracked.
+Full position trade and reward-right trade demonstrated with signed messages.
+Position lifecycle tracking operational (maturity ~May 20, 2026).
+
+### 12.5.8 Strategic Direction
+
+The SOST position market begins as a private, signed market for identified positions and
+rights — not a public mass token exchange. Trade contracts, not pools. Identify positions,
+not mass tokens. Coordinate privately, settle verifiably. Any broader public market phase
+is subject to legal and operational review.
 
 ## 13. Conclusion
 
@@ -3604,3 +3699,43 @@ Phase 4 — Mainnet Activation (2028 Q3): sost2 addresses activated on mainnet. 
 Phase 5 — ECDSA Deprecation (2030+): Constitutional hard fork via version signaling (95% threshold, 288-block window) when quantum threat materializes.
 
 Design Principle: The migration is intentionally gradual. Forcing immediate adoption would increase TX size by 16x. Dual signatures allow sustainable pace migration without sacrificing performance.
+
+
+## Appendix K: Errata v3.8 (Sovereign Value Stack — Position Market, E2E, Settlement)
+
+Changes from v3.7 to v3.8:
+
+SOVEREIGN VALUE STACK:
+
+56) Section 12.5: expanded from overview to full operational specification
+57) Section 12.5.1: E2E layer — ED25519 real signatures, relay node, deal channels
+58) Section 12.5.2: renamed "DEX" → "SOST Position Market" — OTC/RFQ model, not AMM
+    - Phase 1: Model B full position + reward-right trades
+    - Phase 2: Model A reward rights + controlled novation
+    - Phase 3: broader market (legal review required)
+59) Section 12.5.3: SOSTEscrow deployed on Sepolia with first on-chain gold deposit
+    - Address: 0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113
+    - First Model B position: 0.5 oz XAUT, 28-day lock, position 8afed8fcd27553a7
+60) Section 12.5.4: PoPC contract infrastructure updated with lifecycle states
+61) Section 12.5.5: Architecture — sost-comms now includes relay + deal channels
+62) Section 12.5.6: Alpha Status added (375 tests, 0 failures)
+63) Section 12.5.7: Strategic Direction — "trade contracts, not pools"
+
+SETTLEMENT ENGINE:
+
+64) Deal state machine: 11 states, full happy path + refund path documented
+65) Settlement daemon, Ethereum watcher, SOST watcher, refund engine specified
+66) Position pricing formula: gold_value + discounted_reward - illiquidity
+
+POSITION MARKET:
+
+67) Position as identified registry object (not fungible token)
+68) Full position trade + reward-right split with signed messages
+69) 213 Python + 139 TypeScript + 19 Solidity tests passing
+
+cASERT:
+
+70) H11 ceiling activation at block 5,480 (16 of 40 profiles active)
+71) Block interval chart added to explorer with avg/median explanation
+
+Last updated: April 2026
