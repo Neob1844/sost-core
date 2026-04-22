@@ -190,9 +190,9 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">Protocol Transparency</div>
+    <div class="hero-label fade-in">Sovereign Gold Custody Infrastructure</div>
     <h1 class="fade-in delay-1">PoPC <span>Contracts</span></h1>
-    <p class="hero-sub fade-in delay-2">Public registry of all Proof of Personal Custody contracts. Model A (autocustody bonds) and Model B (escrow timelocks). All data publicly verifiable on-chain.</p>
+    <p class="hero-sub fade-in delay-2">Complete specification and live registry for Proof of Personal Custody. Model A (autocustody bonds) and Model B (escrow timelocks). All parameters are constitutional and immutable since genesis. Every contract is publicly verifiable on-chain.</p>
   </div>
 </section>
 
@@ -200,24 +200,23 @@
 <section style="padding:0;">
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-      <strong style="color:#fbbf24;">&#9888; PRE-ACTIVATION</strong> &mdash; PoPC contracts shown below are <strong>planned</strong>, not yet active. The system activates after block 5,000. Foundation contracts will be the first to go live. Ethereum escrow addresses are pending final deployment.
+      <strong style="color:#fbbf24;">&#9888; PRE-ACTIVATION</strong> &mdash; PoPC contracts are <strong>fully specified and implemented</strong>, pending final activation after block 10,000. Foundation contracts will be the first to go live. Ethereum escrow contract deployed and verified. Phase IV validation tests: <strong style="color:var(--green-primary)">169/169 passed</strong>.
     </div>
   </div>
 </section>
 
-<!-- SECTION 01: Overview Stats -->
+<!-- SECTION 01: Live Stats -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id"></div>
-      <div class="section-title">Overview <span class="accent">Stats</span></div>
+      <div class="section-id">// 01</div>
+      <div class="section-title">Live <span class="accent">Stats</span></div>
     </div>
-
     <div class="stat-grid">
       <div class="stat-card fade-in delay-1" id="popcCardGold">
-        <div class="stat-label">Total Gold Committed</div>
+        <div class="stat-label">Gold Committed (Foundation)</div>
         <div class="stat-val" style="color:var(--gold)">...</div>
-        <div class="stat-sub">loading</div>
+        <div class="stat-sub">loading from Ethereum RPC</div>
       </div>
       <div class="stat-card fade-in delay-2" id="popcCardActive">
         <div class="stat-label">Active Contracts</div>
@@ -236,125 +235,365 @@
       </div>
     </div>
     <div id="popcLiveStatus" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;"></div>
-
     <div class="chart-grid fade-in delay-3">
-      <div class="chart-donut-wrap">
-        <div class="chart-label">Contracts by Model</div>
-        <div id="popcDonutPlaceholder"></div>
-        <canvas id="popcDonut"></canvas>
-      </div>
-      <div class="chart-bar-wrap">
-        <div class="chart-label">Monthly Rewards Paid</div>
-        <div id="popcBarPlaceholder"></div>
-        <canvas id="popcBarChart"></canvas>
-      </div>
+      <div class="chart-donut-wrap"><div class="chart-label">Contracts by Model</div><div id="popcDonutPlaceholder"></div><canvas id="popcDonut"></canvas></div>
+      <div class="chart-bar-wrap"><div class="chart-label">Monthly Rewards Paid</div><div id="popcBarPlaceholder"></div><canvas id="popcBarChart"></canvas></div>
     </div>
   </div>
 </section>
 
-<!-- SECTION 02: Active Contracts -->
+<!-- SECTION 02: Model A vs Model B -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id"></div>
-      <div class="section-title">Active <span class="accent">Contracts</span></div>
+      <div class="section-id">// 02</div>
+      <div class="section-title">Model A vs <span class="accent">Model B</span></div>
     </div>
-
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-icon green"></div>
-        <span class="spec-label">Active Contract Registry</span>
-        <span class="spec-tag">ON-CHAIN VERIFIED</span>
-      </div>
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Contract Models Comparison</span><span class="spec-tag">CONSTITUTIONAL</span></div>
       <div class="spec-body" style="overflow-x:auto">
         <table class="code-table">
-          <tr>
-            <th>Contract ID</th><th>Model</th><th>Asset</th><th>Amount (oz)</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Address</th>
-          </tr>
-          <tr>
-            <td class="highlight">FOUND-001</td><td>Model A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>May 28, 2026</td><td>Aug 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
-          </tr>
-          <tr>
-            <td class="highlight">FOUND-002</td><td>Model B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>May 28, 2026</td><td>Aug 28, 2026</td><td class="pending">PENDING</td><td style="font-size:10px">TBD (Ethereum mainnet)</td>
-          </tr>
+          <tr><th>Parameter</th><th>Model A &mdash; Self-Custody</th><th>Model B &mdash; Escrow</th></tr>
+          <tr><td class="highlight">Gold location</td><td>User's own Ethereum wallet (EOA)</td><td>SOSTEscrow contract on Ethereum</td></tr>
+          <tr><td class="highlight">Bond requirement</td><td>10&ndash;25% of gold value (by SOST/gold ratio)</td><td>None</td></tr>
+          <tr><td class="highlight">Reward payout</td><td>On successful completion</td><td>Immediate upon registration</td></tr>
+          <tr><td class="highlight">Protocol fee</td><td class="green">3% (POPC_PROTOCOL_FEE_A_BPS = 300)</td><td style="color:var(--cyan-primary)">8% (POPC_PROTOCOL_FEE_B_BPS = 800)</td></tr>
+          <tr><td class="highlight">Audits</td><td>Entropy-based via ConvergenceX (30%&ndash;5% by reputation)</td><td>None (escrow is self-verifying)</td></tr>
+          <tr><td class="highlight">Slash risk</td><td style="color:#fb923c">Yes &mdash; 50% to PoPC Pool / 50% to Gold Vault</td><td class="green">None</td></tr>
+          <tr><td class="highlight">Transferable</td><td>Reward rights only (split_reward_right)</td><td>Full position transferable</td></tr>
+          <tr><td class="highlight">Discount rate (pricing)</td><td>12% annually (higher risk)</td><td>5% annually (lower risk)</td></tr>
+          <tr><td class="highlight">Reward floor</td><td>1% or 10 SOST minimum (POPC_REWARD_FLOOR_A)</td><td>0.5% or 5 SOST minimum (POPC_REWARD_FLOOR_B)</td></tr>
+          <tr><td class="highlight">Hard cap per contract</td><td colspan="2" style="text-align:center">1,000 SOST (POPC_MAX_REWARD_STOCKS = 100,000,000,000 stocks)</td></tr>
+          <tr><td class="highlight">Max active contracts</td><td colspan="2" style="text-align:center">1,000 (POPC_MAX_ACTIVE_CONTRACTS)</td></tr>
+          <tr><td class="highlight">Durations</td><td colspan="2" style="text-align:center">1, 3, 6, 9, 12 months (POPC_DURATIONS)</td></tr>
+          <tr><td class="highlight">Blacklist threshold</td><td colspan="2" style="text-align:center">After 3 slashes</td></tr>
         </table>
       </div>
     </div>
+  </div>
+</section>
 
+<!-- SECTION 03: Reward Rates -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 03</div>
+      <div class="section-title">Reward <span class="accent">Rates</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon green"></div><span class="spec-label">Base Reward Rates by Duration</span><span class="spec-tag">POPC_REWARD_RATES / ESCROW_REWARD_RATES</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>Duration</th><th>Model A (% of bond)</th><th>Model B (% of gold value)</th></tr>
+          <tr><td class="highlight">1 month</td><td class="green">1% (100 bps)</td><td style="color:var(--cyan-primary)">0.4% (40 bps)</td></tr>
+          <tr><td class="highlight">3 months</td><td class="green">4% (400 bps)</td><td style="color:var(--cyan-primary)">1.5% (150 bps)</td></tr>
+          <tr><td class="highlight">6 months</td><td class="green">9% (900 bps)</td><td style="color:var(--cyan-primary)">3.5% (350 bps)</td></tr>
+          <tr><td class="highlight">9 months</td><td class="green">14% (1,400 bps)</td><td style="color:var(--cyan-primary)">5.5% (550 bps)</td></tr>
+          <tr><td class="highlight">12 months</td><td class="green">20% (2,000 bps)</td><td style="color:var(--cyan-primary)">8% (800 bps)</td></tr>
+        </table>
+      </div>
+    </div>
     <div class="notice">
-      Foundation contracts shown first. Community contracts will appear here as participants join.
+      <strong>Model A formula:</strong> <code style="background:var(--bg-card);color:var(--green-primary);padding:2px 6px;border-radius:3px">reward_stocks = (bond_stocks &times; reward_pct_bps) / 10,000</code><br>
+      <strong>Model B formula:</strong> <code style="background:var(--bg-card);color:var(--cyan-primary);padding:2px 6px;border-radius:3px">reward_stocks = (gold_value_stocks &times; reward_pct_bps) / 10,000</code><br>
+      All arithmetic is integer-only. No floating-point in consensus. 1 SOST = 100,000,000 stocks.
     </div>
   </div>
 </section>
 
-<!-- SECTION 03: Completed Contracts -->
+<!-- SECTION 04: Bond Sizing -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id"></div>
-      <div class="section-title">Completed <span class="accent">Contracts</span></div>
+      <div class="section-id">// 04</div>
+      <div class="section-title">Bond <span class="accent">Sizing</span></div>
     </div>
-
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-icon cyan"></div>
-        <span class="spec-label">Completed Contract History</span>
-        <span class="spec-tag">VERIFIED</span>
-      </div>
-      <div class="spec-body">
-        <div class="empty-state">No completed contracts yet.</div>
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Model A Bond Percentage (Constitutional &sect;6.5)</span><span class="spec-tag">compute_bond_pct()</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <p style="color:var(--text-secondary);margin-bottom:12px;line-height:1.8;">Bond percentage is determined by the SOST/gold price ratio. When SOST is cheap relative to gold, bonds are larger to compensate for lower collateral value.</p>
+        <p style="color:var(--text-dim);margin-bottom:16px;font-size:11px;">Formula: <code style="background:var(--bg-card);color:var(--gold);padding:2px 6px;border-radius:3px">ratio_bps = (sost_price_usd / gold_oz_price_usd) &times; 10,000</code></p>
+        <table class="code-table">
+          <tr><th>SOST/Gold Ratio (bps)</th><th>Bond %</th><th>Meaning</th></tr>
+          <tr><td class="highlight">&lt; 100 bps</td><td style="color:#e63946;font-weight:600">25%</td><td>SOST very cheap vs gold &rarr; maximum collateral</td></tr>
+          <tr><td class="highlight">100 &ndash; 500 bps</td><td style="color:#fb923c;font-weight:600">20%</td><td>Low ratio</td></tr>
+          <tr><td class="highlight">500 &ndash; 1,000 bps</td><td style="color:#fbbf24;font-weight:600">15%</td><td>Standard ratio</td></tr>
+          <tr><td class="highlight">1,000 &ndash; 5,000 bps</td><td class="green">12%</td><td>Elevated ratio</td></tr>
+          <tr><td class="highlight">&ge; 5,000 bps</td><td style="color:var(--cyan-primary);font-weight:600">10%</td><td>SOST expensive vs gold &rarr; minimum collateral</td></tr>
+        </table>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SECTION 04: Slashed Contracts -->
+<!-- SECTION 05: Anti-Whale Tiers -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id"></div>
-      <div class="section-title">Slashed <span class="accent">Contracts</span></div>
+      <div class="section-id">// 05</div>
+      <div class="section-title">Anti-Whale <span class="accent">Tiers</span></div>
     </div>
-
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-icon red"></div>
-        <span class="spec-label">Slash Record</span>
-        <span class="spec-tag">AUTOMATIC</span>
-      </div>
-      <div class="spec-body">
-        <div class="empty-state">No slashed contracts.</div>
+      <div class="spec-header"><div class="spec-icon red"></div><span class="spec-label">Gold Amount Reward Multipliers</span><span class="spec-tag">whale_tier_multiplier()</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>Gold Amount</th><th>Milligrams</th><th>Reward Multiplier</th></tr>
+          <tr><td class="highlight">0 &ndash; 10 oz</td><td>0 &ndash; 311,035 mg</td><td class="green">100% (WHALE_MULT_T1 = 10,000)</td></tr>
+          <tr><td class="highlight">10 &ndash; 50 oz</td><td>311,035 &ndash; 1,555,175 mg</td><td style="color:#fbbf24;font-weight:600">75% (WHALE_MULT_T2 = 7,500)</td></tr>
+          <tr><td class="highlight">50 &ndash; 200 oz</td><td>1,555,175 &ndash; 6,220,700 mg</td><td style="color:#fb923c;font-weight:600">50% (WHALE_MULT_T3 = 5,000)</td></tr>
+          <tr><td class="highlight">&gt; 200 oz</td><td>&gt; 6,220,700 mg</td><td style="color:#e63946;font-weight:700">REJECTED &mdash; returns 0</td></tr>
+        </table>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SECTION 05: Contract Verification -->
+<!-- SECTION 06: Dynamic Reward Adjustment -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 06</div>
+      <div class="section-title">Dynamic Reward <span class="accent">Adjustment</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">Pool Utilization Ratio (PUR)</span><span class="spec-tag">compute_pur_bps() &middot; compute_dynamic_factor_bps()</span></div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">Rewards decrease quadratically as the pool becomes more committed. This prevents over-commitment and ensures long-term sustainability.</p>
+        <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:16px 20px;font-size:12px;line-height:2.2;margin-bottom:16px;">
+          <strong style="color:#fbbf24">PUR</strong> <span style="color:var(--text-dim)">=</span> <span style="color:var(--text-secondary)">(committed_rewards_stocks &times; 10,000) / pool_balance_stocks</span><br>
+          <strong style="color:var(--green-primary)">dynamic_factor</strong> <span style="color:var(--text-dim)">=</span> <span style="color:var(--text-secondary)">(10,000 &minus; PUR)<sup>2</sup> / 10,000</span> &nbsp; <span style="color:var(--text-dim)">&mdash; quadratic: (1 &minus; PUR)&sup2;</span><br>
+          <strong style="color:var(--cyan-primary)">applied_reward</strong> <span style="color:var(--text-dim)">=</span> <span style="color:var(--text-secondary)">max(base_rate &times; factor / 10,000, &nbsp;floor_bps)</span>
+        </div>
+        <table class="code-table">
+          <tr><th>PUR Level</th><th>Meaning</th><th>Effect</th></tr>
+          <tr><td class="green">0%</td><td>Pool fully available</td><td>100% of base reward</td></tr>
+          <tr><td style="color:#fbbf24">50%</td><td>Half committed</td><td>25% of base reward</td></tr>
+          <tr><td style="color:#fb923c">80% (PUR_WARNING_BPS)</td><td>Warning threshold</td><td>4% of base reward + accept with warning</td></tr>
+          <tr><td style="color:#e63946">100% (PUR_CLOSED_BPS)</td><td>Pool fully committed</td><td>No new registrations accepted</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header"><div class="spec-icon green"></div><span class="spec-label">Participation Tier Multipliers</span><span class="spec-tag">compute_tier_multiplier()</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <p style="color:var(--text-secondary);margin-bottom:12px;line-height:1.8;">Early participants earn higher rewards. As more contracts are registered, the multiplier decreases.</p>
+        <table class="code-table">
+          <tr><th>Active Contracts</th><th>Multiplier</th><th>Effective Rate</th></tr>
+          <tr><td class="highlight">0 &ndash; 25</td><td class="green">100% (10,000 bps)</td><td>Full base rate</td></tr>
+          <tr><td class="highlight">26 &ndash; 50</td><td style="color:#fbbf24">75% (7,500 bps)</td><td>&frac34; of base rate</td></tr>
+          <tr><td class="highlight">51 &ndash; 100</td><td style="color:#fb923c">50% (5,000 bps)</td><td>&frac12; of base rate</td></tr>
+          <tr><td class="highlight">101 &ndash; 200</td><td style="color:#e63946">30% (3,000 bps)</td><td>Less than &frac13;</td></tr>
+          <tr><td class="highlight">201 &ndash; 500</td><td style="color:var(--text-dim)">15% (1,500 bps)</td><td>Diminishing returns</td></tr>
+          <tr><td class="highlight">501 &ndash; 1,000</td><td style="color:var(--text-muted)">8% (800 bps)</td><td>Near-minimum rate</td></tr>
+          <tr><td class="highlight">&gt; 1,000</td><td style="color:var(--text-muted)">5% (500 bps)</td><td>Fallback minimum</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 07: Reputation & Audits -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 07</div>
+      <div class="section-title">Reputation &amp; <span class="accent">Audits</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">Reputation Star System</span><span class="spec-tag">Model A only</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>Stars</th><th>Status</th><th>Audit Probability</th><th>Max Gold Allowed</th></tr>
+          <tr><td style="color:var(--text-muted)">0 &#9734;</td><td>New (POPC_STARS_NEW)</td><td style="color:#e63946;font-weight:600">30% (300 per mille)</td><td>0.5 oz (15,552 mg)</td></tr>
+          <tr><td style="color:#fbbf24">1 &#9733;</td><td>Established (POPC_STARS_ESTAB)</td><td style="color:#fb923c;font-weight:600">20% (200 per mille)</td><td>1 oz (31,103 mg)</td></tr>
+          <tr><td class="green">3 &#9733;&#9733;&#9733;</td><td>Trusted (POPC_STARS_TRUSTED)</td><td style="color:#fbbf24;font-weight:600">10% (100 per mille)</td><td>3 oz (93,310 mg)</td></tr>
+          <tr><td style="color:var(--cyan-primary)">5 &#9733;&#9733;&#9733;&#9733;&#9733;</td><td>Veteran (POPC_STARS_VETERAN)</td><td class="green">5% (50 per mille)</td><td>10 oz (311,035 mg)</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header"><div class="spec-icon red"></div><span class="spec-label">Entropy-Based Audit Mechanism</span><span class="spec-tag">ConvergenceX Triple</span></div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">Audits are triggered deterministically from block entropy. No oracle, no human decision, no external randomness source.</p>
+        <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:16px 20px;font-size:11px;line-height:2.2;margin-bottom:16px;">
+          <strong style="color:var(--cyan-primary)">audit_seed</strong> = SHA256(<span style="color:var(--text-secondary)">block_id [32] || commit [32] || checkpoints_root [32]</span>)<br>
+          <strong style="color:var(--green-primary)">trigger_hash</strong> = SHA256(<span style="color:var(--text-secondary)">audit_seed [32] || commitment_id [32] || period_index_le16 [2]</span>)<br>
+          <strong style="color:#fbbf24">triggered</strong> = <span style="color:var(--text-secondary)">first_4_bytes_le32(trigger_hash) % 1000 &lt; audit_prob_permille</span>
+        </div>
+        <table class="code-table">
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td class="highlight">Grace period</td><td>288 blocks (~48 hours) &mdash; POPC_AUDIT_GRACE_BLOCKS</td></tr>
+          <tr><td class="highlight">Slash on failure</td><td>50% to PoPC Pool + 50% to Gold Vault</td></tr>
+          <tr><td class="highlight">Blacklist threshold</td><td>3 slashes &rarr; permanently blacklisted</td></tr>
+          <tr><td class="highlight">Entropy source</td><td>ConvergenceX proof triple (block_id, commit, checkpoints_root)</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 08: SOSTEscrow Contract -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 08</div>
+      <div class="section-title">SOSTEscrow <span class="accent">Contract</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Ethereum Escrow Smart Contract (Model B)</span><span class="spec-tag">IMMUTABLE &middot; NO ADMIN KEY</span></div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">The SOSTEscrow contract holds tokenized gold for Model B participants. It is fully immutable with zero admin capabilities.</p>
+        <table class="code-table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td class="highlight">Accepted tokens</td><td><span class="gold">XAUT</span> (0x68749665FF8D2d112Fa859AA293F07A622782F38, 6 decimals) &middot; <span class="gold">PAXG</span> (0x45804880De22913dAFE09f4980848ECE6EcbAf78, 18 decimals)</td></tr>
+          <tr><td class="highlight">Min lock duration</td><td>28 days (MIN_LOCK_DURATION)</td></tr>
+          <tr><td class="highlight">Max lock duration</td><td>366 days (MAX_LOCK_DURATION)</td></tr>
+          <tr><td class="highlight">Min deposit XAUT</td><td>1,000 units = 0.001 oz (XAUT_MIN_AMOUNT)</td></tr>
+          <tr><td class="highlight">Min deposit PAXG</td><td>1e15 units = 0.001 oz (PAXG_MIN_AMOUNT)</td></tr>
+          <tr><td class="highlight">Withdrawal</td><td>ONLY original depositor, ONLY after unlock time</td></tr>
+          <tr><td class="highlight">Reentrancy</td><td>nonReentrant on deposit() and withdraw()</td></tr>
+        </table>
+        <div style="margin-top:16px;background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-radius:6px;padding:14px 18px;font-size:11px;color:var(--text-secondary);line-height:1.8;">
+          <strong style="color:var(--red-primary)">SECURITY GUARANTEES:</strong> No admin key. No upgrade proxy (no UUPS, no transparent proxy, no beacon). No pause function. No emergency withdrawal. No extension or modification of existing deposits. No selective enforcement. Constitutional and immutable.
+        </div>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">Contract Events</span><span class="spec-tag">INDEXED</span></div>
+      <div class="spec-body">
+        <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:16px 20px;font-size:11px;line-height:2;font-family:var(--font-mono);">
+          <span style="color:var(--cyan-primary)">event</span> <strong>GoldDeposited</strong>(<span style="color:var(--text-dim)">uint256 indexed depositId, address indexed depositor, address indexed token, uint256 amount, uint256 unlockTime</span>);<br>
+          <span style="color:var(--cyan-primary)">event</span> <strong>GoldWithdrawn</strong>(<span style="color:var(--text-dim)">uint256 indexed depositId, address indexed depositor, address token, uint256 amount</span>);
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 09: Gold Vault Governance -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 09</div>
+      <div class="section-title">Gold Vault <span class="accent">Governance</span></div>
+    </div>
+    <div class="notice" style="border-left-color:var(--gold);margin-bottom:24px;">
+      <strong>Activation:</strong> Gold Vault governance activates at block <strong>10,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Spending Rules (GV1&ndash;GV4)</span><span class="spec-tag">CONSENSUS-ENFORCED</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>Rule</th><th>Type</th><th>Vote Required</th><th>Condition</th></tr>
+          <tr><td class="highlight">GV1</td><td class="green">Gold Purchase</td><td class="green">No</td><td>TX contains GV_PAYLOAD_GOLD_PURCHASE marker (0x47). Direct gold acquisition for vault backing.</td></tr>
+          <tr><td class="highlight">GV2</td><td style="color:#fbbf24">Small Operational</td><td class="green">No</td><td>&le; 10% of monthly vault balance (GV_MONTHLY_LIMIT_PCT). Within 4,320-block window (GV_MONTHLY_WINDOW ~30 days). Fresh window if expired.</td></tr>
+          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 10,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
+          <tr><td class="highlight">GV4</td><td style="color:#e63946">Rejected</td><td>&mdash;</td><td>Spend doesn't match any rule &rarr; returned to vault automatically.</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">Governance Principles (GV1&ndash;GV4 Constitutional)</span><span class="spec-tag">IMMUTABLE</span></div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="highlight">GV1 &mdash; Accumulation Only</td><td>Gold Vault funds ONLY for physical gold or tokenized gold (XAUT/PAXG)</td></tr>
+          <tr><td class="highlight">GV2 &mdash; Transparent Accounting</td><td>Every TX must include on-chain memo (weight, purity, custodian, or token contract)</td></tr>
+          <tr><td class="highlight">GV3 &mdash; Multi-Signature</td><td>Gold Vault disbursements require multi-sig; no single key</td></tr>
+          <tr><td class="highlight">GV4 &mdash; Quarterly PoR</td><td>Foundation publishes quarterly proof-of-reserves linking balances to gold holdings</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: Constitutional Addresses -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 10</div>
+      <div class="section-title">Constitutional <span class="accent">Addresses</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon red"></div><span class="spec-label">Immutable Coinbase Split (50/25/25)</span><span class="spec-tag">HARDCODED AT GENESIS</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>Recipient</th><th>Share</th><th>Address</th><th>Verify</th></tr>
+          <tr><td class="highlight">Miner</td><td style="color:#fb923c;font-weight:600">50%</td><td style="font-size:10px;word-break:break-all">(block finder address)</td><td>&mdash;</td></tr>
+          <tr><td class="gold">Gold Vault</td><td style="color:var(--gold);font-weight:600">25%</td><td style="font-size:10px;word-break:break-all">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</td><td><a href="sost-explorer.html" style="color:var(--cyan-primary);font-size:10px">Explorer</a></td></tr>
+          <tr><td style="color:var(--cyan-primary)">PoPC Pool</td><td style="color:var(--cyan-primary);font-weight:600">25%</td><td style="font-size:10px;word-break:break-all">sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</td><td><a href="sost-explorer.html" style="color:var(--cyan-primary);font-size:10px">Explorer</a></td></tr>
+        </table>
+        <p style="color:var(--text-dim);margin-top:12px;font-size:11px;line-height:1.8;">This split applies to every block reward AND every transaction fee. Any block that does not include the correct 50/25/25 split to the correct addresses is <strong style="color:var(--red-primary)">invalid and rejected by every node on the network</strong>. The split is hardcoded at genesis and cannot be modified by any mechanism.</p>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Ethereum Foundation Wallet</span><span class="spec-tag">GOLD RESERVE</span></div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="highlight">Address</td><td style="font-size:11px;word-break:break-all"><a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">0xd38955822b88867CD010946F0Ba25680B9DfC7a6</a></td></tr>
+          <tr><td class="highlight">Holds</td><td>XAUT + PAXG tokenized gold (live balance shown in stats above)</td></tr>
+          <tr><td class="highlight">Purpose</td><td>Gold reserve backing for the SOST protocol. Publicly verifiable on Etherscan.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 11: Active Contract Registry -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 11</div>
+      <div class="section-title">Contract <span class="accent">Registry</span></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon green"></div><span class="spec-label">Active Contracts</span><span class="spec-tag">ON-CHAIN VERIFIED</span></div>
+      <div class="spec-body" style="overflow-x:auto">
+        <table class="code-table">
+          <tr><th>ID</th><th>Model</th><th>Asset</th><th>Amount</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>ETH Address</th></tr>
+          <tr><td class="highlight">FOUND-001</td><td>A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">PENDING</td><td style="font-size:10px">pending deployment</td></tr>
+          <tr><td class="highlight">FOUND-002</td><td>B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">PENDING</td><td style="font-size:10px">pending deployment</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">Completed Contracts</span><span class="spec-tag">VERIFIED</span></div>
+      <div class="spec-body"><div class="empty-state">No completed contracts yet.</div></div>
+    </div>
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header"><div class="spec-icon red"></div><span class="spec-label">Slashed Contracts</span><span class="spec-tag">AUTOMATIC</span></div>
+      <div class="spec-body"><div class="empty-state">No slashed contracts.</div></div>
+    </div>
+    <div class="notice">
+      <strong>Activation:</strong> Bond/Escrow lock activation at block <strong>10,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Foundation contracts will be the first to go live. Community contracts will appear here as participants register.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 12: Verification -->
 <section class="section" style="border-bottom:none;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id"></div>
-      <div class="section-title">Contract <span class="accent">Verification</span></div>
+      <div class="section-id">// 12</div>
+      <div class="section-title">Independent <span class="accent">Verification</span></div>
     </div>
-
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header">
-        <div class="spec-icon cyan"></div>
-        <span class="spec-label">Independent Verification</span>
-        <span class="spec-tag">TRUSTLESS</span>
-      </div>
+      <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">How to Verify Any PoPC Contract</span><span class="spec-tag">TRUSTLESS</span></div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">Every PoPC contract is independently verifiable:</p>
         <table class="code-table">
-          <tr><td class="highlight">Model A</td><td>SOST bond locked on SOST chain, gold balance verified via Ethereum RPC</td></tr>
-          <tr><td class="highlight">Model B</td><td>Gold locked in immutable escrow on Ethereum, SOST reward delivered immediately</td></tr>
-          <tr><td class="highlight">Registry</td><td>All contract addresses, transaction hashes, and audit results are published in this registry</td></tr>
+          <tr><td class="highlight">Model A &mdash; Bond</td><td>SOST bond locked on SOST chain (verify via <a href="sost-explorer.html" style="color:var(--cyan-primary)">Explorer</a>). Gold balance verified via Ethereum RPC at the declared EOA wallet.</td></tr>
+          <tr><td class="highlight">Model B &mdash; Escrow</td><td>Gold locked in SOSTEscrow contract on Ethereum (verify via <a href="https://etherscan.io" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a>). SOST reward delivered immediately and verifiable on-chain.</td></tr>
+          <tr><td class="highlight">Audit results</td><td>All audit triggers, results, and slash events are deterministic from block entropy. Replay the audit_seed computation from any full node.</td></tr>
+          <tr><td class="highlight">Registry</td><td>All contract IDs, addresses, transaction hashes, states, and history are published in this registry and verifiable on both chains.</td></tr>
         </table>
       </div>
     </div>
-
     <div class="notice">
-      <strong>Verification tools:</strong> SOST bond status is verifiable via <a href="sost-explorer.html" style="color:var(--cyan-primary)">SOST Explorer</a>. Ethereum escrow and gold balances are verifiable on <a href="https://etherscan.io" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a>. All source data is public and reproducible.
+      <strong>Related documentation:</strong>
+      <a href="sost-popc.html" style="color:var(--cyan-primary)">PoPC Overview</a> &middot;
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a> &middot;
+      <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX &amp; Settlement</a> &middot;
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a> &middot;
+      <a href="sost-gold-reserve.html" style="color:var(--gold)">Metals Reserve</a>
     </div>
   </div>
 </section>
