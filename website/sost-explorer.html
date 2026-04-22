@@ -827,7 +827,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   <!-- ACTIVE NODES SECTION -->
   <div class="section" id="nodesSection">
     <div class="sec-head"><div class="sec-title">// <b>ACTIVE NODES</b></div><div class="sec-meta" id="nodesInfo">refreshing...</div></div>
-    <div id="nodesSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+    <div id="nodesSummary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;">
       <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">CONNECTED</div>
         <div style="font-size:16px;font-weight:600;color:var(--green);" id="nConnected">0</div>
@@ -844,10 +844,19 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">PLAINTEXT</div>
         <div style="font-size:16px;font-weight:600;color:var(--text3);" id="nPlaintext">0</div>
       </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">SEED CANDIDATES</div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);" id="nSeedCandidates">0</div>
+      </div>
     </div>
-    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th>HEIGHT</th><th>DELTA</th><th>TRANSPORT</th><th>STATUS</th></tr></thead>
-    <tbody id="nodesBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
-    <div style="font-size:9px;color:var(--text3);margin-top:8px;line-height:1.6;font-family:var(--code);">
+    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th>HEIGHT</th><th>DELTA</th><th>TRANSPORT</th><th>UPTIME</th><th>STATUS</th><th>RELIABILITY</th></tr></thead>
+    <tbody id="nodesBody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
+    <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.8;font-family:var(--code);">
+      <b style="color:var(--gold)">&#9733; SEED CANDIDATE</b> = reliability &ge;70 + synced + version acked + uptime &gt;24h<br>
+      <b>Reliability score:</b> uptime (0-40pts) + delta accuracy (0-30pts) + handshake (0-15pts) + encrypted (+10) + outbound (+5) &minus; ban penalty<br>
+      <span style="color:var(--green)">&#9632; EXCELLENT (80-100)</span> &middot; <span style="color:var(--cyan)">&#9632; GOOD (60-79)</span> &middot; <span style="color:var(--yellow)">&#9632; FAIR (40-59)</span> &middot; <span style="color:var(--orange)">&#9632; LOW (20-39)</span> &middot; <span style="color:var(--red)">&#9632; POOR (0-19)</span>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;font-family:var(--code);">
       Disclaimer: This view shows peers connected to YOUR node only. It is not a complete picture of the network.
       Node IDs are derived hashes — no IP addresses are exposed. Node count, heights, and encryption status reflect
       this node's local perspective and may differ from the global network state.
@@ -3479,8 +3488,9 @@ refresh();setInterval(refresh,30000);
       var dNodesEl=document.getElementById('dNodes');
       if(dNodesEl) dNodesEl.textContent=nAcked;
       var tbody=document.getElementById('nodesBody');
-      if(!peers.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
+      if(!peers.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
       var html='';
+      var seedCandidates=0;
       for(var i=0;i<peers.length;i++){
         var p=peers[i];
         var delta=p.height>=0?(p.height-tipH):'\u2014';
@@ -3491,7 +3501,6 @@ refresh();setInterval(refresh,30000);
           else deltaClr='var(--yellow)';
         }
         var encClr=p.enc_mode==='encrypted'?'var(--purple)':'var(--text3)';
-        // Status: handshaking if not acked, near-tip (synced) if delta<=3, otherwise tracking
         var statusTxt='handshaking';var statusClr='var(--yellow)';
         if(p.version_acked){
           var isNearTip=(p.height>=0&&tipH>0&&p.height>=(tipH-2));
@@ -3499,18 +3508,63 @@ refresh();setInterval(refresh,30000);
           else{statusTxt='tracking';statusClr='var(--orange)';}
         }
         var dirClr=p.direction==='inbound'?'var(--cyan)':'var(--orange)';
-        // Compute connected duration for relative timestamp
         var connSec=(p.conntime&&p.conntime>0)?(nowSec-p.conntime):0;
+        // Uptime display
+        var uptimeStr='\u2014';
+        if(connSec>0){
+          if(connSec>=86400)uptimeStr=Math.floor(connSec/86400)+'d '+Math.floor((connSec%86400)/3600)+'h';
+          else if(connSec>=3600)uptimeStr=Math.floor(connSec/3600)+'h '+Math.floor((connSec%3600)/60)+'m';
+          else uptimeStr=Math.floor(connSec/60)+'m';
+        }
+        // Reliability score (0-100)
+        var relScore=0;
+        // Uptime: 0-40 points (40 at 7+ days)
+        if(connSec>=604800)relScore+=40;         // 7+ days
+        else if(connSec>=259200)relScore+=30;    // 3+ days
+        else if(connSec>=86400)relScore+=20;     // 1+ day
+        else if(connSec>=3600)relScore+=10;      // 1+ hour
+        // Delta: 0-30 points (30 if delta==0)
+        if(typeof delta==='number'){
+          if(delta===0)relScore+=30;
+          else if(Math.abs(delta)<=2)relScore+=25;
+          else if(Math.abs(delta)<=5)relScore+=15;
+          else relScore+=5;
+        }
+        // Version acked: 0-15 points
+        if(p.version_acked)relScore+=15;
+        // Ban score penalty: -10 per 10 points
+        if(p.ban_score>0)relScore-=Math.min(relScore,Math.floor(p.ban_score/10)*10);
+        // Direction bonus: outbound = +5 (we initiated = more trustworthy)
+        if(p.direction==='outbound')relScore+=5;
+        // Encrypted bonus: +10
+        if(p.enc_mode==='encrypted')relScore+=10;
+        relScore=Math.max(0,Math.min(100,relScore));
+        // Reliability display
+        var relClr='var(--red)';var relLabel='';var relBar='';
+        if(relScore>=80){relClr='var(--green)';relLabel='EXCELLENT';}
+        else if(relScore>=60){relClr='var(--cyan)';relLabel='GOOD';}
+        else if(relScore>=40){relClr='var(--yellow)';relLabel='FAIR';}
+        else if(relScore>=20){relClr='var(--orange)';relLabel='LOW';}
+        else{relClr='var(--red)';relLabel='POOR';}
+        // Seed candidate: score >= 70 + synced + acked + uptime > 1 day
+        var isSeedCandidate=(relScore>=70&&statusTxt==='synced'&&p.version_acked&&connSec>=86400);
+        if(isSeedCandidate)seedCandidates++;
+        // Progress bar
+        var barW=Math.round(relScore/100*40);
+        relBar='<div style="display:inline-block;width:40px;height:4px;background:var(--bg3);border-radius:2px;vertical-align:middle;margin-right:4px;overflow:hidden"><div style="width:'+barW+'px;height:100%;background:'+relClr+';border-radius:2px;box-shadow:0 0 4px '+relClr+'"></div></div>';
         var nid=nodeId(p.addr);
-        html+='<tr>';
-        html+='<td style="font-size:11px;color:var(--cyan);" title="Connected '+relTime(connSec)+'">'+nid+'</td>';
+        html+='<tr'+(isSeedCandidate?' style="background:rgba(245,158,11,.04)"':'')+'>';
+        html+='<td style="font-size:11px;color:var(--cyan);" title="Connected '+relTime(connSec)+'">'+nid+(isSeedCandidate?' <span style="color:var(--gold);font-size:8px" title="Seed candidate: high reliability, synced, 24h+ uptime">\u2605</span>':'')+'</td>';
         html+='<td style="color:'+dirClr+'">'+p.direction+'</td>';
         html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+'</td>';
         html+='<td style="color:'+deltaClr+';font-weight:600;">'+(typeof delta==='number'?(delta>0?'+':'')+delta:delta)+'</td>';
         html+='<td style="color:'+encClr+';">'+p.enc_mode+'</td>';
+        html+='<td style="font-size:10px;color:var(--text2);">'+uptimeStr+'</td>';
         html+='<td style="color:'+statusClr+';">'+statusTxt+(p.ban_score>0?' <span style="color:var(--red);font-size:9px;">[ban:'+p.ban_score+']</span>':'')+'</td>';
+        html+='<td style="font-size:10px;">'+relBar+'<span style="color:'+relClr+';font-weight:600;font-size:9px;">'+relScore+'</span> <span style="color:var(--text3);font-size:8px;">'+relLabel+'</span></td>';
         html+='</tr>';
       }
+      document.getElementById('nSeedCandidates').textContent=seedCandidates;
       tbody.innerHTML=html;
     }catch(e){
       document.getElementById('nodesInfo').textContent='error: '+e.message;
