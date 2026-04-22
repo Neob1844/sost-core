@@ -943,20 +943,24 @@
         var now=Math.floor(Date.now()/1000);
         var expected=Math.floor((now-GENESIS_TS)/600);
         var lag=expected-h;
-        // lag>0 = behind schedule → easing (E1-E4)
-        // lag<0 = ahead of schedule → hardening (H1-H4)
-        // lag==0 or small → B0 (baseline)
-        if(lag>36)return {label:'E4',color:'#a78bfa'};  // 6h+ behind
-        if(lag>18)return {label:'E3',color:'#a78bfa'};  // 3h+ behind
-        if(lag>9)return  {label:'E2',color:'#a78bfa'};  // 1.5h+ behind
-        if(lag>3)return  {label:'E1',color:'#a78bfa'};  // 30min+ behind
-        if(lag>=0)return {label:'B0',color:'#4ade80'};  // on schedule or slightly behind
+        // lag>0 = behind schedule → easing; lag<0 = ahead → hardening
+        // Profile = clamp(ahead, 0, H11) — matches real node logic
+        if(lag>36)return {label:'E4',color:'#a78bfa'};
+        if(lag>18)return {label:'E3',color:'#a78bfa'};
+        if(lag>9)return  {label:'E2',color:'#a78bfa'};
+        if(lag>3)return  {label:'E1',color:'#a78bfa'};
+        if(lag>=0)return {label:'B0',color:'#4ade80'};
         var ahead=-lag;
-        if(ahead<5)return  {label:'B0',color:'#4ade80'}; // 0-4 ahead
-        if(ahead<20)return {label:'H1',color:'#67e8f9'}; // 5-19 ahead
-        if(ahead<50)return {label:'H2',color:'#fbbf24'}; // 20-49 ahead
-        if(ahead<75)return {label:'H3',color:'#fb923c'}; // 50-74 ahead
-        return {label:'H4',color:'#e63946'};              // 75+ ahead
+        if(ahead<=0)return {label:'B0',color:'#4ade80'};
+        // Direct lag mapping: profile = min(ahead, 11)
+        var profile=Math.min(ahead,11);
+        var colors={
+          1:'#67e8f9',2:'#67e8f9',3:'#67e8f9',4:'#67e8f9',
+          5:'#fbbf24',6:'#fbbf24',7:'#fbbf24',
+          8:'#fb923c',9:'#fb923c',
+          10:'#e63946',11:'#e63946'
+        };
+        return {label:'H'+profile, color:colors[profile]||'#e63946'};
       }
       function update(){
         fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getinfo","params":[],"id":1}'})
