@@ -1007,14 +1007,14 @@
               else ago=Math.floor(secAgo/3600)+'h '+Math.floor((secAgo%3600)/60)+'m ago';
             }
             el.innerHTML='<span style="color:#00ff88;font-weight:600">LAST BLOCK: #'+h.toLocaleString()+'</span>'+
-              (ago?' <span style="color:#666;font-size:11px">('+ago+')</span>':'')+
+              (ago?' <span style="color:#fb010d;font-size:11px">('+ago+')</span>':'')+
               ' <span style="color:#333">&middot;</span> '+
               '<span style="color:#e2e8f0">DIFFICULTY: '+bits.toFixed(2)+' bits</span>'+
               ' - <span style="color:'+profileColor+';font-weight:600">'+profileLabel+'</span>'+
               ' <span style="color:#333">&middot;</span> '+
               '<span style="color:#ffd700;font-weight:600">TOTAL SUPPLY: '+Math.floor(sost).toLocaleString('en-US')+' SOST</span>'+
               ' <span style="color:#333">&middot;</span> '+
-              '<span style="color:#999">UTXOs: '+utxos.toLocaleString()+'</span>';
+              '<span style="color:#c084fc;font-weight:600">UTXOs: '+utxos.toLocaleString()+'</span>';
           });
         })
         .catch(function(){
