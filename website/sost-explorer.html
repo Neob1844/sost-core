@@ -349,13 +349,29 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div id="v6Notice" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <style>@keyframes v6pulse{0%,100%{border-left-color:#00ff41;box-shadow:none}50%{border-left-color:#DAA520;box-shadow:inset 0 0 30px rgba(218,165,32,0.04),0 0 10px rgba(0,255,65,0.06)}}</style>
   <div style="background:rgba(0,255,65,0.06);border-left:3px solid #DAA520;padding:12px 18px;font-family:var(--code);font-size:10px;color:#67e8f9;line-height:1.8;animation:v6pulse 3s ease-in-out infinite;">
-    <b style="color:#DAA520;font-size:13px;letter-spacing:2px;">SOST SOVEREIGN VALUE STACK &mdash; BUILDING IN PROGRESS</b><br><br>
-    <span style="color:#00ff88">SOST is building the foundations of a decentralized, global cooperative value system based on tokenized gold and precious metals under full self-custody by their legitimate owners &mdash; ensuring that at no point is the security of the underlying asset compromised, and that ownership remains 100% sovereign at all times.</span><br><br>
-    <span style="color:#DAA520;font-weight:600;font-size:11px;">THREE PILLARS UNDER ACTIVE DEVELOPMENT</span><br><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - E2E Encrypted Coordination</b> &mdash; Signed offers, acceptances, cancellations, and settlement notices. Off-chain, replay-resistant, and cryptographically authenticated. Not general-purpose chat, but private economic coordination. <a href="sost-e2e.html" style="color:#67e8f9;text-decoration:none;font-weight:600;font-size:10px;letter-spacing:1px">[SPEC &rarr;]</a></span><br><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - DEX and Settlement Layer for Tokenized Gold</b> &mdash; Infrastructure for exchanging SOST against XAUT, PAXG, and native precious-metal-backed positions. Peer-to-peer by design, built on a thin-chain / fat-edge architecture. Ethereum serves only as a minimal onboarding and exit rail; SOST remains the sovereign center for registration, trading, and settlement. <a href="sost-gold-dex.html" style="color:#67e8f9;text-decoration:none;font-weight:600;font-size:10px;letter-spacing:1px">[SPEC &rarr;]</a></span><br><br>
-    <span style="color:#00ff88"><b style="color:#DAA520">&#9670; SOST - PoPC (Proof of Personal Custody) Contract Layer</b> &mdash; Timelocked collateral infrastructure for self-custodied and escrow-based gold participation. No admin key, no proxy, no pause, no emergency withdrawal. Constitutional, immutable, and designed to support gold-backed value without requiring discretionary custodianship. <a href="sost-popc-contracts.html" style="color:#67e8f9;text-decoration:none;font-weight:600;font-size:10px;letter-spacing:1px">[SPEC &rarr;]</a></span><br><br>
-    <span style="color:#00ff88;font-style:italic">Strategic direction: encrypted communication, signed coordination, verifiable settlement, self-custodied gold-backed value, peer-to-peer exchange, constitutional contracts, and cooperative monetary logic.</span><br><br>
+    <b style="color:#DAA520;font-size:13px;letter-spacing:2px;">SOST SOVEREIGN VALUE STACK</b><br><br>
+    <span style="color:#00ff88;font-size:11px">SOST lets you hold <b>positions backed by tokenized gold</b>, trade them with <b>signed private messages</b>, and settle automatically &mdash; all without trusting a central authority. Your gold stays in your custody. Your trades are cryptographically signed. The system verifies, registers, and settles everything.</span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">HOW IT WORKS &mdash; SIMPLE</span><br><br>
+    <span style="color:#e2e8f0;font-size:10px;line-height:2">
+      <b style="color:#DAA520">1.</b> You deposit tokenized gold (XAUT/PAXG) into an <b>immutable escrow</b> &mdash; no admin key, no one can touch it except you after the lock period.<br>
+      <b style="color:#DAA520">2.</b> The system registers a <b>native SOST position</b> with its own ID, owner, reward, and expiry date. That position is now a tradeable asset.<br>
+      <b style="color:#DAA520">3.</b> You can <b>sell the entire position</b> to someone else for SOST &mdash; instant liquidity, no need to wait for the lock to expire.<br>
+      <b style="color:#DAA520">4.</b> Or you can <b>sell just the reward right</b> &mdash; keep the principal, monetize the future yield now.<br>
+      <b style="color:#DAA520">5.</b> Trades happen through <b>signed private messages</b> (ED25519) &mdash; offer, accept, cancel, settlement notice. Every message has a hash, a signature, a nonce, and an expiry. No forgery, no replay.<br>
+      <b style="color:#DAA520">6.</b> The settlement engine <b>verifies everything automatically</b>: valid signatures, correct owner, no double-spend, no expired offers. Then it executes the transfer and records it in the audit log.
+    </span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">WHY TRADE POSITIONS?</span><br><br>
+    <span style="color:#e2e8f0;font-size:10px;line-height:2">
+      <b style="color:#00ff88">Sellers</b> get immediate liquidity, exit early, reduce risk, or rotate capital into new opportunities.<br>
+      <b style="color:#67e8f9">Buyers</b> acquire positions at a discount, earn future rewards, or gain gold exposure without setting up the contract themselves.<br>
+      <span style="color:#DAA520;font-style:italic">The market exists because the same position doesn&rsquo;t have the same value for everyone: some prefer money today, others prefer future value.</span>
+    </span><br><br>
+    <span style="color:#DAA520;font-weight:600;font-size:11px;">THREE PILLARS</span><br>
+    <span style="color:#e2e8f0;font-size:10px;line-height:2">
+      <b style="color:#DAA520">&#9670; E2E Encrypted Coordination</b> &mdash; Private signed messages for economic deals. Not chat. <a href="sost-e2e.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a><br>
+      <b style="color:#DAA520">&#9670; SOST DEX</b> &mdash; Trade SOST against gold tokens and native positions. Ethereum is only the entry/exit rail. <a href="sost-gold-dex.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a><br>
+      <b style="color:#DAA520">&#9670; PoPC Contracts</b> &mdash; Timelocked gold custody. No admin, no pause, no emergency withdrawal. Constitutional. <a href="sost-popc-contracts.html" style="color:#67e8f9;text-decoration:none;font-size:9px">[SPEC]</a>
+    </span><br><br>
     <div style="margin-top:4px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:4px;padding:12px 16px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px rgba(0,255,136,0.6);animation:pulse 2s ease infinite"></span>
@@ -374,7 +390,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span style="color:#00ff88;font-weight:600">&#9889; TOTAL GOLD LOCKED</span> &mdash; 0.55 oz XAUT in escrow (2 deposits) <a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:#67e8f9;text-decoration:none;font-size:9px">[view escrow &#8599;]</a><br>
         <span style="color:#00ff88;font-weight:600">&#9889; END-TO-END SETTLEMENT</span> &mdash; offer &rarr; accept &rarr; deal &rarr; ETH lock &rarr; SOST lock &rarr; <b style="color:#00ff88">SETTLED</b> + refund path verified<br>
         <span style="color:#DAA520">&#9889; ED25519 real signatures</span> on all trade messages + relay node with deal channels<br>
-        <span style="color:#DAA520">&#9889; 317 tests passed</span> (Python 183 + TypeScript 115 + Solidity 19) &mdash; <b style="color:#00ff88">0 failed</b>
+        <span style="color:#DAA520">&#9889; 371 tests passed</span> (Python 213 + TypeScript 139 + Solidity 19) &mdash; <b style="color:#00ff88">0 failed</b>
       </div>
       <div style="margin-top:8px;font-size:9px;color:#fb923c;border-top:1px solid rgba(251,147,60,0.15);padding-top:6px;">
         &#9888; Limited public alpha &mdash; operator-assisted &mdash; Sepolia testnet with mock tokens &mdash; not yet a public trustless market.
