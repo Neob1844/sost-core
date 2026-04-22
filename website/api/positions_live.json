@@ -1,0 +1,36 @@
+{
+  "updated_at": "2026-04-22",
+  "mode": "limited-alpha",
+  "positions": [
+    {
+      "id": "8afed8fcd27553a7",
+      "owner_short": "sost1a8eae...f76de",
+      "model": "B",
+      "token": "XAUT",
+      "amount_units": 500000,
+      "amount_oz": 0.5,
+      "status": "ACTIVE",
+      "reward_total": 2000,
+      "reward_remaining": 2000,
+      "start_date": "2026-04-22",
+      "expiry_date": "2026-05-20",
+      "days_remaining": 28,
+      "pct_complete": 0.3,
+      "eth_deposit_id": 1,
+      "eth_tx": "0x4d3a6beff787b8fe24f37bb1e8945f823e2b29244a65c7853f89767dc329a8c6",
+      "escrow": "0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113",
+      "lifecycle_stage": "ACTIVE"
+    }
+  ],
+  "totals": {
+    "active": 1,
+    "gold_locked_oz": 0.55,
+    "reward_outstanding_sost": 2000,
+    "positions_ever": 3
+  },
+  "sepolia": {
+    "escrow": "0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113",
+    "xaut": "0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0",
+    "paxg": "0x754A7D020D559EDD60848450c563303262cAdec7"
+  }
+}

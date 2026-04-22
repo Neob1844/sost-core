@@ -3049,11 +3049,11 @@ function showCXInfo(){
   var c=document.getElementById('detailContent');
   _navStack=[];pushNav('cx','ConvergenceX','');
   var targetSec=600;
-  c.innerHTML='<div class="dtl-head"><b><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> v2.0 Proof-of-Work</b> <span style="font-size:10px;color:var(--text3)">memory-hard CPU-friendly consensus engine</span></div>'+
+  c.innerHTML='<div class="dtl-head"><b><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> Proof-of-Work</b> <span style="font-size:10px;color:var(--text3)">memory-hard CPU-friendly consensus engine</span></div>'+
   '<div style="margin:16px 0;padding:16px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple)">'+
   '<div style="font-size:11px;color:var(--purple);letter-spacing:2px;margin-bottom:10px">SYSTEM ARCHITECTURE</div>'+
   '<div style="font-size:12px;color:var(--text);line-height:1.8">'+
-  'ConvergenceX v2.0 is a <b style="color:var(--cyan)">Proof of Irreversible Convergence</b> algorithm. '+
+  '<span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> is a <b style="color:var(--cyan)">Proof of Irreversible Convergence</b> algorithm. '+
   'Miners must solve a linear system A(x)=b and prove the solution sits in a <b style="color:var(--green)">stable basin</b> — '+
   'meaning small perturbations converge back to the same attractor. This is verified via the <b style="color:var(--orange)">cASERT stability test</b>.<br><br>'+
   '<b style="color:var(--green)">v2.0 improvements:</b><br>'+
@@ -3062,7 +3062,7 @@ function showCXInfo(){
   '&bull; <b style="color:var(--green)">Transcript V2</b> — Segment commitments + sampled round witnesses. Verifier checks challenged rounds via O(1) dataset/scratchpad access. 11-phase verification at ~0.2ms per block.'+
   '</div></div>'+
   '<div class="dtl-grid">'+
-  '<div class="k">ALGORITHM</div><div class="v"><span style="color:var(--purple)">ConvergenceX v2.0</span> // Proof of Irreversible Convergence</div>'+
+  '<div class="k">ALGORITHM</div><div class="v"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> // Proof of Irreversible Convergence</div>'+
   '<div class="k">PROBLEM</div><div class="v">A(x) = M<sup>T</sup>(Mx) + λx = b // n×n SPD system, n='+32+'</div>'+
   '<div class="k">DIMENSION</div><div class="v"><span style="color:var(--cyan)">n = 32</span> // 32×32 matrix per block</div>'+
   '<div class="k">ROUNDS</div><div class="v"><span style="color:var(--green)">100,000</span> gradient iterations per attempt</div>'+
@@ -3115,7 +3115,7 @@ function showCXInfo(){
   '<tr><td style="padding:6px 10px;color:var(--text)">CPU advantage</td><td style="padding:6px 10px"><span style="color:#fb010d">✗</span> None</td><td style="padding:6px 10px"><span style="color:#22c55e">✓</span> L3 cache reuse, sequential access</td></tr>'+
   '</table>'+
   '<div style="font-size:11px;color:var(--text);line-height:1.6;padding-top:8px;border-top:1px solid #1a1a1a">'+
-  'An ASIC for ConvergenceX v2.0 would require: <b>8GB LPDDR5</b> on-package (4GB dataset + 4GB scratchpad), '+
+  'An ASIC for <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> would require: <b>8GB LPDDR5</b> on-package (4GB dataset + 4GB scratchpad), '+
   'a <b>general-purpose ALU</b> for 8 operation types, and full re-fabrication '+
   'for every block. This is economically equivalent to building a CPU — the entire point of the design.</div>'+
   '</div>'+
