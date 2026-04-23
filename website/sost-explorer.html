@@ -356,6 +356,26 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(74,222,128,0.04);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(74,222,128,.5)"></span>
+          <span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:1px">BUG FIXED &mdash; PROFILE DESCENT DURING LONG BLOCKS</span>
+          <span style="color:var(--text3);font-size:8px;">April 23, 2026</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">Why blocks were taking 30&ndash;50+ minutes &mdash; and why it won&rsquo;t happen again</b><br><br>
+        <span style="color:var(--text2)"><b style="color:#fb010d">What happened:</b> After the H11 activation, some blocks took 30 to 50+ minutes. The system was supposed to lower the difficulty profile automatically when no block was found for a long time, but it wasn&rsquo;t doing it.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--cyan)">The bug:</b> The cASERT equalizer was designed to drop the profile by 1 level <b>per block</b> (slew &plusmn;1). But when no block is mined for a long time, there are no new blocks to trigger the descent. The profile was getting <b>stuck</b> at H10/H11 (extremely hard, ~0.3% stability) even though the lag had already dropped and the profile should have been H7 or lower. This created a vicious cycle: the profile was too hard &rarr; no one could mine a block &rarr; no block meant no opportunity to lower the profile &rarr; stuck.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--cyan)">Why it worked before:</b> When the ceiling was H10, the same bug existed but was less visible because H10 has ~1.2% stability (vs 0.3% at H11). Someone would eventually find a block, and the system could lower the profile on the next block. With H11 at 0.3% stability, blocks took so long that the bug became clearly visible.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--green)">The fix:</b> The profile now descends in <b>real time</b>, not just per block. For every 10 minutes without a block, the system allows 1 additional level of descent. If the last block was H11 and 50 minutes pass without a new block, the profile can drop 5 levels to H6. If the lag says H1, and enough time has passed, it goes all the way to H1. No artificial cap. The profile follows the lag in real time, exactly as intended.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--gold)">Result:</b> Miners should no longer experience blocks stuck at 30&ndash;50+ minutes caused by the profile being locked at a level that&rsquo;s too hard. The system now self-corrects in real time. Block times will return to the normal PoW distribution around the 10-minute target.</span><br><br>
+        <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
+          <b style="color:var(--green);letter-spacing:1px">UPDATE NODE &amp; MINER:</b><br>
+          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
+          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
+          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
+          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
+        </div>
+      </div>
       <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(103,232,249,0.03);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="color:var(--cyan);font-size:9px;font-weight:600;letter-spacing:1px">NOTE FOR MINERS</span>

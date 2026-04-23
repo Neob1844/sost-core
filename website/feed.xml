@@ -5,8 +5,16 @@
     <link>https://sostcore.com</link>
     <description>Official protocol updates from SOST — Sovereign Stock Token</description>
     <language>en</language>
-    <lastBuildDate>Wed, 23 Apr 2026 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 23 Apr 2026 12:00:00 +0000</lastBuildDate>
     <atom:link href="https://sostcore.com/feed.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Bug Fixed — Profile Descent During Long Blocks</title>
+      <link>https://sostcore.com/sost-explorer.html</link>
+      <description>The cASERT slew rate was designed to drop 1 level per block, but when no block was mined for a long time, the profile got stuck at H10/H11. Blocks were taking 30-50+ minutes because the system couldn't lower the difficulty without a new block. Fix: profile now descends in real time — 1 level per 10 minutes of stall. No artificial cap. Node and miner update required.</description>
+      <pubDate>Wed, 23 Apr 2026 12:00:00 +0000</pubDate>
+      <guid>https://sostcore.com/updates/slew-descent-fix</guid>
+    </item>
 
     <item>
       <title>cASERT Profile Validation Improvement — Block 5,560</title>
