@@ -990,7 +990,7 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
           consensus-rate control system. It integrates three components:
           (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer (emergency-only) with 40 profiles
-          (16 active A: E4&ndash;H11, 24 reserved R: H12&ndash;H35) that adjust
+          (17 active A: E4&ndash;H12, 23 reserved R: H13&ndash;H35) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
           deep easing (E4) through baseline (B0) to ceiling active (H10). H11&ndash;H35 reserved, margin=115.
@@ -1008,7 +1008,7 @@ I   = leaky integrator(L, rho=<span class="num">253</span>/<span class="num">256
 <span class="cmt">// Control signal (lag-dominant, prevents oscillation)</span>
 U = <span class="num">0.05</span>&middot;r + <span class="num">0.40</span>&middot;L + <span class="num">0.15</span>&middot;I + <span class="num">0.05</span>&middot;(S-M) + <span class="num">0.02</span>&middot;V
 
-H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H11=<span class="num">11</span>)  <span class="cmt">// 16 active profiles (H11 ceiling, block 5480+); emergency-only</span>
+H = clamp(U &gt;&gt; <span class="num">16</span>, E4=<span class="num">-4</span>, H11=<span class="num">11</span>)  <span class="cmt">// 17 active profiles (H12 ceiling (block 5,635+), block 5480+); emergency-only</span>
 
 <span class="cmt">// Safety rules</span>
 <span class="kw">if</span> lag &lt;= <span class="num">0</span> (behind schedule): H = min(H, B0)  <span class="cmt">// never harden when behind</span>
@@ -1090,7 +1090,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 40 profiles (16 active A: E4&ndash;H11, 24 reserved R: H12&ndash;H35). H11 ceiling active (block 5,480+), H35 max reserved, H12&ndash;H35 margin=115. Equalizer is emergency-only.<br>
+            &bull; 40 profiles (17 active A: E4&ndash;H12, 23 reserved R: H13&ndash;H35). H12 ceiling (block 5,635+) active (block 5,480+), H35 max reserved, H13&ndash;H35 margin=115. Equalizer is emergency-only.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
@@ -1105,7 +1105,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>11</code> <span class="comment">// H11 (ceiling active block 5,480+; 16 active A, 24 reserved R; 40 total)</span></td>
+            <td class="val"><code>11</code> <span class="comment">// H11 (ceiling active block 5,480+; 17 active A, 23 reserved R; 40 total)</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>
@@ -1492,7 +1492,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           <tr><td class="key">Halflife</td><td class="val">~2 weeks (fixed)</td><td class="val">~720 blocks (~24h)</td><td class="val" style="color:var(--text-primary);">V5: avg288-based (historical: 24h half-life)</td></tr>
           <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">V5: dynamic cap (0%&ndash;3.0% tiered by deviation)</td></tr>
           <tr><td class="key">Control signals</td><td class="val">1 (time delta)</td><td class="val">1 (timestamp EWMA)</td><td class="val" style="color:var(--green-primary);">5 (rate, lag, integrator, burst, volatility)</td></tr>
-          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">40 profiles (16 active E4&ndash;H11, 24 reserved H12&ndash;H35)</td></tr>
+          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">40 profiles (17 active E4&ndash;H12, 23 reserved H13&ndash;H35)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
           <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 7200s activation, then E1-E4 after 6h)</td></tr>

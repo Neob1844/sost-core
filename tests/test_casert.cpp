@@ -837,6 +837,89 @@ int main() {
              CASERT_PROFILE_FLOOR_HEIGHT == 5560);
     }
 
+    // =========================================================================
+    // 17. H12 ceiling + relief valve (block 5635+)
+    // =========================================================================
+    printf("\n--- 17. H12 ceiling + relief valve (block %lld) ---\n", (long long)CASERT_CEILING_H12_HEIGHT);
+
+    // 17.1 Before H12 activation: lag=12 → H11 ceiling
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT - 1, 20, TARGET_SPACING, 11, -12 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT - 1, 0);
+        TEST("H12: before activation (5634), lag=12 -> H11 ceiling",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H11);
+    }
+
+    // 17.2 At H12 activation: lag=12 → H12
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT, 20, TARGET_SPACING, 11, -12 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT, 0);
+        TEST("H12: at activation (5635), lag=12 -> H12 allowed",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H12);
+    }
+
+    // 17.3 H12 ceiling: lag=50 → still H12 (not higher)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 10, 20, TARGET_SPACING, 12, -50 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 10, 0);
+        TEST("H12: lag=50 -> H12 ceiling (not higher)",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H12);
+    }
+
+    // 17.4 Relief valve: block elapsed > 630s → drops to H1 or lower
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 5, 20, TARGET_SPACING, 12, -12 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 700; // 11m 40s > 10m 30s threshold
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 5, stall_ts);
+        TEST("relief valve: 700s elapsed -> profile <= H1",
+             dec.profile_index <= 1);
+    }
+
+    // 17.5 Relief valve: block elapsed < 630s → no relief
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 5, 20, TARGET_SPACING, 12, -12 * TARGET_SPACING);
+        int64_t normal_ts = chain.back().time + 500; // 8m 20s < 10m 30s
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 5, normal_ts);
+        TEST("relief valve: 500s elapsed -> no relief (normal profile)",
+             dec.profile_index > 1);
+    }
+
+    // 17.6 Relief valve: pre-activation → no relief even with long elapsed
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT - 1, 20, TARGET_SPACING, 11, -12 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 700;
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT - 1, stall_ts);
+        TEST("relief valve: pre-activation (5634), no relief",
+             dec.profile_index > 1);
+    }
+
+    // 17.7 After relief: next block returns to normal lag-based profile
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 5, 20, TARGET_SPACING, 12, -12 * TARGET_SPACING);
+        // Simulate: previous block was mined with relief (H1), now new block at normal time
+        BlockMeta relief_block;
+        relief_block.block_id = ZERO_HASH();
+        relief_block.height = CASERT_CEILING_H12_HEIGHT + 5;
+        relief_block.time = chain.back().time + 700; // mined after relief
+        relief_block.powDiffQ = GENESIS_BITSQ;
+        relief_block.profile_index = 1; // was H1 due to relief
+        chain.push_back(relief_block);
+        // Next block: no stall, should go back to lag-based profile
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 6, 0);
+        TEST("relief: next block returns to lag-based profile (>= H10)",
+             dec.profile_index >= 10);
+    }
+
+    // 17.8 H12 descent with stall fix still works
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 5, 20, TARGET_SPACING, 12, -12 * TARGET_SPACING);
+        // 20 min stall: should allow 2 levels descent (H12 → H10)
+        int64_t stall_ts = chain.back().time + 620; // just under relief threshold
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 5, stall_ts);
+        TEST("H12: 620s stall (under relief) -> descends via slew fix",
+             dec.profile_index <= 11);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }

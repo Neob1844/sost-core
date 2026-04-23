@@ -310,21 +310,24 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     //   - downward: max 1 level per block (smooth descent, no bounce)
     // =========================================================================
     if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
+        // Compute current ceiling based on height
+        int32_t current_ceiling;
+        if (next_height >= CASERT_CEILING_H12_HEIGHT)
+            current_ceiling = CASERT_HARD_PROFILE_CEILING_H12;
+        else if (next_height >= CASERT_CEILING_H11_HEIGHT)
+            current_ceiling = CASERT_HARD_PROFILE_CEILING_H11;
+        else
+            current_ceiling = CASERT_HARD_PROFILE_CEILING;
+
         int32_t target_profile;
         if (lag <= 0) {
             target_profile = 0;
         } else {
-            int32_t current_ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
-                                   ? CASERT_HARD_PROFILE_CEILING_H11
-                                   : CASERT_HARD_PROFILE_CEILING;
             target_profile = std::min<int32_t>(lag, current_ceiling);
         }
 
         int32_t prev_H = 0;
         if (!chain.empty()) {
-            int32_t current_ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
-                                   ? CASERT_HARD_PROFILE_CEILING_H11
-                                   : CASERT_HARD_PROFILE_CEILING;
             prev_H = chain.back().profile_index;
             if (prev_H == INT32_MIN) prev_H = 0;
             prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(current_ceiling, prev_H));
@@ -336,8 +339,6 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         } else {
             // Downward slew: 1 level per block in validation (now_time=0).
             // In mining/getinfo (now_time>0): 1 level per TARGET_SPACING elapsed.
-            // If enough time has passed, descend all the way to target_profile.
-            // Example: prev=H11, target=H1, 100min stall → 10 levels allowed → H1.
             if (now_time > 0 && !chain.empty()) {
                 int64_t elapsed = std::max<int64_t>(0, now_time - chain.back().time);
                 int32_t max_descent = std::max<int32_t>(1, (int32_t)(elapsed / TARGET_SPACING));
@@ -345,6 +346,18 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             } else {
                 // Validation mode: strict ±1 per block
                 H = std::max<int32_t>(target_profile, prev_H - 1);
+            }
+        }
+
+        // Relief valve (block 5635+): if block elapsed > 630s (10m 30s),
+        // drop profile to min(H1, target) for this block only.
+        // The NEXT block recalculates normally from lag.
+        // bitsQ remains the primary difficulty controller.
+        if (next_height >= CASERT_RELIEF_VALVE_HEIGHT && now_time > 0 && !chain.empty()) {
+            int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
+            if (block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD) {
+                int32_t relief_profile = std::min<int32_t>(1, target_profile);
+                if (relief_profile < H) H = relief_profile;
             }
         }
 
@@ -566,11 +579,15 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                     up_slew = CASERT_BURST_UP_SLEW_1;  // ±2 up
                 }
 
-                // Burst ceiling: follows hard ceiling (H10 or H11 depending on height)
+                // Burst ceiling: follows hard ceiling
                 {
-                    int32_t burst_cap = (next_height >= CASERT_CEILING_H11_HEIGHT)
-                                      ? CASERT_BURST_PROFILE_CEILING_H11
-                                      : CASERT_BURST_PROFILE_CEILING;
+                    int32_t burst_cap;
+                    if (next_height >= CASERT_CEILING_H12_HEIGHT)
+                        burst_cap = CASERT_HARD_PROFILE_CEILING_H12;
+                    else if (next_height >= CASERT_CEILING_H11_HEIGHT)
+                        burst_cap = CASERT_BURST_PROFILE_CEILING_H11;
+                    else
+                        burst_cap = CASERT_BURST_PROFILE_CEILING;
                     if (up_slew > 1 && H > burst_cap) {
                         H = burst_cap;
                     }
@@ -678,12 +695,15 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     }
 
     // ---- Hard profile ceiling (progressive activation) ----
-    // Block 5075+: H10 ceiling. Block 5480+: H11 ceiling.
-    // All safety nets (lag-adjust, anti-stall, bitsQ, slew) apply equally.
+    // Block 5075: H10. Block 5480: H11. Block 5635: H12.
     if (next_height >= CASERT_CEILING_HEIGHT) {
-        int32_t ceiling = (next_height >= CASERT_CEILING_H11_HEIGHT)
-                        ? CASERT_HARD_PROFILE_CEILING_H11
-                        : CASERT_HARD_PROFILE_CEILING;
+        int32_t ceiling;
+        if (next_height >= CASERT_CEILING_H12_HEIGHT)
+            ceiling = CASERT_HARD_PROFILE_CEILING_H12;
+        else if (next_height >= CASERT_CEILING_H11_HEIGHT)
+            ceiling = CASERT_HARD_PROFILE_CEILING_H11;
+        else
+            ceiling = CASERT_HARD_PROFILE_CEILING;
         if (H > ceiling) H = ceiling;
     }
 

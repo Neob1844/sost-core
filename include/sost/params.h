@@ -141,17 +141,26 @@ inline constexpr int64_t  CASERT_DIRECT_LAG_HEIGHT       = 5323;
 // ─────────────────────────────────────────────────────────────────────
 // Hard profile ceiling: progressive activation.
 // Block 5075: H10 ceiling (V6 era).
-// Block 5480: H11 ceiling �� equalizer expansion for finer granularity.
+// Block 5480: H11 ceiling.
+// Block 5635: H12 ceiling + relief valve.
 // All safety nets (lag-adjust 30s, anti-stall 60min, bitsQ, slew ±1) apply equally.
 inline constexpr int64_t  CASERT_CEILING_HEIGHT        = 5075;
 inline constexpr int64_t  CASERT_CEILING_H11_HEIGHT    = 5480;
+inline constexpr int64_t  CASERT_CEILING_H12_HEIGHT    = 5635;
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING  = 10;    // H10 (block 5075+)
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H11 = 11; // H11 (block 5480+)
+inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H12 = 12; // H12 (block 5635+)
 
 // Profile floor enforcement: block 5560+ — declared profile must fall within
 // the deterministic range computed by casert_compute (ceiling AND floor).
 // Fixes: H10 → H1 invalid easing bug (block 5525).
 inline constexpr int64_t  CASERT_PROFILE_FLOOR_HEIGHT = 5560;
+
+// Relief valve: block 5635+ — if block elapsed > 630s (10m 30s),
+// profile drops to min(H1, target_profile) for that block only.
+// Next block returns to normal lag-based profile.
+inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT = 5635;
+inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD = 630; // 10 min 30 sec
 
 inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
