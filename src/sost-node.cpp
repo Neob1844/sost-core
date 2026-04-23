@@ -3522,6 +3522,21 @@ static bool process_block(const std::string& block_json) {
                     }
                 }
 
+                // Block 5560+: PROFILE FLOOR ENFORCEMENT
+                // Compute the lowest allowed profile using anti-stall with block timestamp.
+                // This closes the bug where a miner could declare H1 when context required H10.
+                // The floor is the profile that casert_compute produces WITH anti-stall active.
+                if (height >= CASERT_PROFILE_FLOOR_HEIGHT) {
+                    auto floor_dec = casert_compute(meta, height, ts64);
+                    int32_t floor_profile = floor_dec.profile_index;
+                    if (declared_pi < floor_profile) {
+                        printf("[BLOCK] REJECTED: profile_index %d below deterministic floor %d "
+                               "(anti-stall profile at block timestamp, block %lld)\n",
+                               declared_pi, floor_profile, (long long)height);
+                        return false;
+                    }
+                }
+
                 // 4. Store last accepted profile for getinfo reporting
                 g_last_accepted_profile = declared_pi;
 

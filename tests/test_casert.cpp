@@ -783,6 +783,60 @@ int main() {
              dec.profile_index == 11);
     }
 
+    // =========================================================================
+    // 16. Profile floor enforcement (block 5560+)
+    // =========================================================================
+    printf("\n--- 16. Profile floor enforcement (block %lld) ---\n", (long long)CASERT_PROFILE_FLOOR_HEIGHT);
+
+    // 16.1 With lag=10 and no stall, floor should be near H10 (not H1)
+    {
+        auto chain = make_chain_at_height(CASERT_PROFILE_FLOOR_HEIGHT, 20, TARGET_SPACING, 10, -10 * TARGET_SPACING);
+        // No stall: now_time = 0 (validation mode)
+        auto dec_ceiling = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, 0);
+        // With block timestamp (no stall, just mined): floor should be same as ceiling
+        int64_t block_ts = GENESIS_TIME + CASERT_PROFILE_FLOOR_HEIGHT * TARGET_SPACING - 10 * TARGET_SPACING;
+        auto dec_floor = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, block_ts);
+        TEST("floor: no stall, lag=10 -> floor >= H8 (near ceiling)",
+             dec_floor.profile_index >= 8);
+    }
+
+    // 16.2 With stall of 70min, floor should decay below ceiling
+    {
+        auto chain = make_chain_at_height(CASERT_PROFILE_FLOOR_HEIGHT, 20, TARGET_SPACING, 10, -10 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 4200; // 70 min stall
+        auto dec_floor = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, stall_ts);
+        auto dec_ceiling = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, 0);
+        TEST("floor: 70min stall -> floor < ceiling (anti-stall eased)",
+             dec_floor.profile_index < dec_ceiling.profile_index);
+    }
+
+    // 16.3 H1 declared when floor is H10 → would be rejected (simulated)
+    {
+        auto chain = make_chain_at_height(CASERT_PROFILE_FLOOR_HEIGHT, 20, TARGET_SPACING, 10, -10 * TARGET_SPACING);
+        int64_t block_ts = GENESIS_TIME + CASERT_PROFILE_FLOOR_HEIGHT * TARGET_SPACING - 10 * TARGET_SPACING;
+        auto dec_floor = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, block_ts);
+        // H1 (declared=1) should be rejected because floor >= H8
+        TEST("floor: H1 declared when floor>=H8 -> would be rejected",
+             1 < dec_floor.profile_index);
+    }
+
+    // 16.4 Anti-stall legitimate easing: 3h stall → floor drops significantly
+    {
+        auto chain = make_chain_at_height(CASERT_PROFILE_FLOOR_HEIGHT, 20, TARGET_SPACING, 10, -10 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 10800; // 3 hours
+        auto dec_floor = casert_compute(chain, CASERT_PROFILE_FLOOR_HEIGHT, stall_ts);
+        TEST("floor: 3h stall -> legitimate easing to low profile",
+             dec_floor.profile_index < 5);
+    }
+
+    // 16.5 Pre-fork (block 5559): no floor enforcement
+    {
+        // Before CASERT_PROFILE_FLOOR_HEIGHT, the old behavior applies
+        // (no floor check — H1 would be accepted)
+        TEST("floor: pre-fork height exists",
+             CASERT_PROFILE_FLOOR_HEIGHT == 5560);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }

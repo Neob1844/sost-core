@@ -148,6 +148,11 @@ inline constexpr int64_t  CASERT_CEILING_H11_HEIGHT    = 5480;
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING  = 10;    // H10 (block 5075+)
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H11 = 11; // H11 (block 5480+)
 
+// Profile floor enforcement: block 5560+ — declared profile must fall within
+// the deterministic range computed by casert_compute (ceiling AND floor).
+// Fixes: H10 → H1 invalid easing bug (block 5525).
+inline constexpr int64_t  CASERT_PROFILE_FLOOR_HEIGHT = 5560;
+
 inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
 // Burst trigger: tier 1 (moderate)
