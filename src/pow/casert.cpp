@@ -334,19 +334,18 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         if (target_profile >= prev_H) {
             H = target_profile;  // upward: immediate
         } else {
-            // Downward: normally max 1 level per block (slew ±1).
-            // But when called with now_time (mining/getinfo), allow faster descent
-            // proportional to elapsed time since last block. Each TARGET seconds
-            // without a block = 1 additional level of descent allowed.
-            // This fixes the bug where profile stays at H10 for 53 minutes
-            // when the lag has dropped to +2 and target_profile is H2.
-            int32_t max_descent = 1;  // default: 1 per block
+            // Downward slew: 1 level per block in validation (now_time=0).
+            // In mining/getinfo (now_time>0): 1 level per TARGET_SPACING elapsed.
+            // If enough time has passed, descend all the way to target_profile.
+            // Example: prev=H11, target=H1, 100min stall → 10 levels allowed → H1.
             if (now_time > 0 && !chain.empty()) {
                 int64_t elapsed = std::max<int64_t>(0, now_time - chain.back().time);
-                // Allow 1 extra level descent per TARGET seconds of stall
-                max_descent = std::max<int32_t>(1, (int32_t)(elapsed / TARGET_SPACING));
+                int32_t max_descent = std::max<int32_t>(1, (int32_t)(elapsed / TARGET_SPACING));
+                H = std::max<int32_t>(target_profile, prev_H - max_descent);
+            } else {
+                // Validation mode: strict ±1 per block
+                H = std::max<int32_t>(target_profile, prev_H - 1);
             }
-            H = std::max<int32_t>(target_profile, prev_H - max_descent);
         }
 
         // Safety: behind schedule → max B0
