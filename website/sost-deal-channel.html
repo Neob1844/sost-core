@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-deal-channel.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Deal Channels — Encrypted Coordination for Position Trades</title>
+<meta name="description" content="SOST Deal Channels: end-to-end encrypted coordination for position trades. View deal status, message timelines, and settlement results.">
+<meta name="keywords" content="SOST deal channels, encrypted trading, E2E coordination, position trades, settlement, deal inbox">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Deal Channels — Encrypted Coordination for Position Trades">
+<meta property="og:description" content="SOST Deal Channels: end-to-end encrypted coordination for position trades with full audit trails.">
+<meta property="og:url" content="https://sostcore.com/sost-deal-channel.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold: #f59e0b;
+    --gold-dim: rgba(245,158,11,0.2);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(34,211,238,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--cyan-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 .accent { color: var(--cyan-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--gold); }
+  .section-title .cyan { color: var(--cyan-primary); }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--cyan-primary); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 11px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  .status-badge { display: inline-block; font-size: 9px; font-weight: 600; letter-spacing: 1px; padding: 2px 8px; border-radius: 3px; }
+  .status-SETTLED { color: var(--green-primary); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); }
+  .status-ACTIVE { color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); }
+  .status-EXPIRED { color: var(--red-bright); background: rgba(251,1,13,0.1); border: 1px solid rgba(251,1,13,0.25); }
+
+  .deal-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .deal-header { display: flex; align-items: center; padding: 16px 20px; cursor: pointer; gap: 12px; transition: background 0.2s; flex-wrap: wrap; }
+  .deal-header:hover { background: var(--bg-hover); }
+  .deal-chevron { font-size: 12px; color: var(--text-dim); transition: transform 0.2s; }
+  .deal-chevron.open { transform: rotate(90deg); }
+  .deal-id { color: var(--gold); font-weight: 600; font-size: 12px; }
+  .deal-meta { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+  .deal-body { display: none; padding: 20px; border-top: 1px solid var(--border-dim); }
+  .deal-body.open { display: block; }
+
+  .timeline { display: flex; align-items: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 80px; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border-med); background: var(--bg-deep); }
+  .timeline-dot.done { background: var(--green-primary); border-color: var(--green-primary); }
+  .timeline-dot.current { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 8px var(--gold-dim); }
+  .timeline-dot.future { background: var(--bg-deep); border-color: var(--border-dim); }
+  .timeline-label { font-size: 9px; color: var(--text-muted); margin-top: 6px; text-align: center; letter-spacing: 0.5px; }
+  .timeline-line { flex: 1; height: 2px; background: var(--border-dim); min-width: 20px; }
+  .timeline-line.done { background: var(--green-primary); }
+
+  .msg-list { margin: 16px 0; }
+  .msg-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-dim); font-size: 11px; }
+  .msg-item:last-child { border-bottom: none; }
+  .msg-type { font-weight: 600; min-width: 120px; }
+  .msg-type.offer { color: var(--gold); }
+  .msg-type.accept { color: var(--green-primary); }
+  .msg-type.cancel { color: var(--red-bright); }
+  .msg-type.notice { color: var(--cyan-primary); }
+  .msg-time { color: var(--text-dim); font-size: 10px; min-width: 160px; }
+  .msg-content { color: var(--text-muted); font-style: italic; font-size: 10px; }
+
+  .code-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .code-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  @media (max-width: 768px) {
+    .deal-header { flex-direction: column; align-items: flex-start; }
+    .deal-meta { margin-left: 0; }
+  }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--cyan-primary); border-bottom: 1px solid var(--cyan-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-positions.html" style="color:#f59e0b">Positions</a>
+      <a href="sost-position-market.html" style="color:#f59e0b">Position Market</a>
+      <a href="sost-position-desk.html" style="color:#f59e0b">Position Desk</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX</a>
+      <a href="sost-otc-alpha.html" style="color:var(--green-primary)">OTC</a>
+      <a href="sost-deal-channel.html" class="active" style="color:var(--cyan-primary)">Deal Channels</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">&#128241; App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Deal Channels</div>
+    <h1 class="fade-in delay-1"><span class="accent">Deal Channels</span></h1>
+    <p class="hero-sub fade-in delay-2">Encrypted Coordination for Position Trades</p>
+    <div style="margin-top:16px" class="fade-in delay-3">
+      <span class="status-badge" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:var(--cyan-primary);font-size:10px;padding:3px 12px;letter-spacing:2px;">E2E ENCRYPTED</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 01: Active Deals -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01</div>
+      <div class="section-title">Active <span class="cyan">Deals</span></div>
+    </div>
+
+    <div class="notice" style="margin-bottom:24px;">
+      <strong style="color:var(--cyan-primary);">End-to-End Encrypted:</strong> All messages are end-to-end encrypted. The relay cannot read content. Only timestamps, message types, and deal metadata are visible. Content is decrypted only by the participating parties.
+    </div>
+
+    <div id="dealsList" class="fade-in delay-1">
+      <div style="text-align:center;color:var(--text-muted);padding:40px 20px;">Loading deals...</div>
+    </div>
+
+    <div id="channelStatus" style="font-size:11px;color:var(--text-muted);margin-top:12px;"></div>
+  </div>
+</section>
+
+<!-- SECTION 02: Encryption Notice -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02</div>
+      <div class="section-title">Encryption <span class="cyan">Details</span></div>
+    </div>
+
+    <div class="fade-in delay-1" style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:24px;">
+      <table class="code-table">
+        <tr><th>Property</th><th>Detail</th></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Key Exchange</td><td>X25519 Diffie-Hellman</td></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Message Encryption</td><td>XChaCha20-Poly1305</td></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Signing</td><td>ED25519 per message</td></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Relay Knowledge</td><td>Timestamps and metadata only. Content is opaque to the relay.</td></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Forward Secrecy</td><td>Per-session ephemeral keys derived from channel seed</td></tr>
+        <tr><td style="color:var(--cyan-primary);font-weight:600">Audit Trail</td><td>Signed message hashes recorded. Content not stored by relay.</td></tr>
+      </table>
+    </div>
+
+    <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);border-radius:8px;padding:20px;font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:24px;" class="fade-in delay-2">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cyan-primary);animation:pulse 2s ease infinite;"></span>
+        <strong style="color:var(--cyan-primary);letter-spacing:2px;font-size:12px;">PRIVACY GUARANTEE</strong>
+      </div>
+      <p style="margin-bottom:10px;">All messages are end-to-end encrypted. The relay cannot read content.</p>
+      <p style="margin-bottom:10px;">Message types visible on the timeline (offer, accept, cancel, settlement_notice) indicate only the <strong>type</strong> of coordination step. The actual terms, prices, and identities within messages are encrypted and visible only to the two parties in the deal channel.</p>
+      <p style="margin-bottom:0;">For the full E2E protocol specification, see <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-positions.html">Live Positions</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+  </div>
+</footer>
+
+<script>
+var _refreshMs = 30000;
+var _dealData = null;
+
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length <= n ? s : s.substring(0, n) + '...';
+}
+
+function toggleDeal(dealId) {
+  var body = document.getElementById('deal-body-' + dealId);
+  var chevron = document.getElementById('deal-chevron-' + dealId);
+  if (body.classList.contains('open')) {
+    body.classList.remove('open');
+    chevron.classList.remove('open');
+  } else {
+    body.classList.add('open');
+    chevron.classList.add('open');
+  }
+}
+
+function renderDeals(data) {
+  _dealData = data;
+  var container = document.getElementById('dealsList');
+
+  if (!data.deals || data.deals.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px 20px;">No active deal channels.</div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < data.deals.length; i++) {
+    var d = data.deals[i];
+    var statusCls = 'status-badge status-' + d.status;
+
+    html += '<div class="deal-card">';
+    html += '<div class="deal-header" onclick="toggleDeal(\'' + d.deal_id + '\')">';
+    html += '<span class="deal-chevron" id="deal-chevron-' + d.deal_id + '">&#9654;</span>';
+    html += '<span class="deal-id">' + d.deal_id + '</span>';
+    html += '<span class="' + statusCls + '">' + d.status + '</span>';
+    html += '<span style="font-size:10px;color:var(--text-secondary)">' + d.type + '</span>';
+    html += '<span class="deal-meta">' + d.created_at.substring(0, 19).replace('T', ' ') + '</span>';
+    html += '</div>';
+
+    html += '<div class="deal-body" id="deal-body-' + d.deal_id + '">';
+
+    // Status timeline
+    var states = ['CREATED', 'NEGOTIATED', 'BOTH_LOCKED', 'SETTLING', 'SETTLED'];
+    var currentIdx = states.indexOf(d.status);
+    if (currentIdx < 0) currentIdx = states.length - 1;
+    html += '<div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;">STATUS TIMELINE</div>';
+    html += '<div class="timeline">';
+    for (var s = 0; s < states.length; s++) {
+      var dotCls = s < currentIdx ? 'done' : (s === currentIdx ? 'current' : 'future');
+      html += '<div class="timeline-step"><div class="timeline-dot ' + dotCls + '"></div><div class="timeline-label">' + states[s] + '</div></div>';
+      if (s < states.length - 1) html += '<div class="timeline-line ' + (s < currentIdx ? 'done' : '') + '"></div>';
+    }
+    html += '</div>';
+
+    // Messages exchanged (timestamps only, content encrypted)
+    html += '<div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin:20px 0 8px;">MESSAGES (encrypted content — timestamps only)</div>';
+    html += '<div class="msg-list">';
+    html += '<div class="msg-item"><span class="msg-type offer">trade_offer</span><span class="msg-time">' + d.created_at + '</span><span class="msg-content">[encrypted content]</span></div>';
+    if (d.status === 'SETTLED' || d.status === 'BOTH_LOCKED' || d.status === 'SETTLING' || d.status === 'NEGOTIATED') {
+      html += '<div class="msg-item"><span class="msg-type accept">trade_accept</span><span class="msg-time">' + d.created_at + '</span><span class="msg-content">[encrypted content]</span></div>';
+    }
+    if (d.settled_at) {
+      html += '<div class="msg-item"><span class="msg-type notice">settlement_notice</span><span class="msg-time">' + d.settled_at + '</span><span class="msg-content">[encrypted content]</span></div>';
+    }
+    html += '</div>';
+
+    // Deal detail
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;font-size:11px;">';
+    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Maker</span><span style="color:var(--text-secondary)">' + d.maker + '</span></div>';
+    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Taker</span><span style="color:var(--text-secondary)">' + d.taker + '</span></div>';
+    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Position</span><span style="color:var(--gold)">' + d.position_id + '</span></div>';
+    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Price</span><span style="color:var(--gold)">' + d.price_sost + ' SOST</span></div>';
+    html += '</div>';
+
+    // Settlement result
+    if (d.status === 'SETTLED') {
+      html += '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:12px;margin-top:16px;font-size:11px;color:var(--text-secondary);line-height:1.8;">';
+      html += '<strong style="color:var(--green-primary);">Settlement Complete:</strong> Deal settled at ' + d.settled_at + '. Both parties confirmed. Ownership transferred. Audit trail recorded.';
+      html += '</div>';
+    }
+
+    html += '</div>'; // deal-body
+    html += '</div>'; // deal-card
+  }
+  container.innerHTML = html;
+}
+
+function fetchDeals() {
+  var statusEl = document.getElementById('channelStatus');
+  statusEl.textContent = 'Fetching deal channels...';
+  fetch('api/deals_live.json?t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      renderDeals(d);
+      var now = new Date();
+      statusEl.textContent = 'Last updated: ' + now.getUTCHours().toString().padStart(2, '0') + ':' + now.getUTCMinutes().toString().padStart(2, '0') + ' UTC | Channels: ' + (d.deals ? d.deals.length : 0) + ' | Settled: ' + d.totals.settled + ' | Active: ' + d.totals.active;
+    })
+    .catch(function(err) {
+      document.getElementById('channelStatus').textContent = 'Error: ' + err.message;
+    });
+}
+
+fetchDeals();
+setInterval(fetchDeals, _refreshMs);
+
+// Version-based auto-reload
+(function(){
+  var _currentVersion = null;
+  function checkVersion(){
+    fetch('api/explorer_version.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){
+      if (!_currentVersion) { _currentVersion = d.v; return; }
+      if (d.v !== _currentVersion) location.reload();
+    }).catch(function(){});
+  }
+  setInterval(checkVersion, 60000);
+  checkVersion();
+})();
+</script>
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>

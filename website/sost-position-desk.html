@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-position-desk.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Position Desk — Trade, Split & Track Gold-Backed Positions</title>
+<meta name="description" content="SOST Position Desk: trade, split, and track gold-backed positions. View portfolio, create offers, manage deals with ED25519-signed settlement.">
+<meta name="keywords" content="SOST position desk, gold positions, position trading, reward rights, signed offers, settlement">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Position Desk — Trade, Split & Track Gold-Backed Positions">
+<meta property="og:description" content="SOST Position Desk: trade, split, and track gold-backed positions with ED25519-signed settlement.">
+<meta property="og:url" content="https://sostcore.com/sost-position-desk.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold: #f59e0b;
+    --gold-dim: rgba(245,158,11,0.2);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(245,158,11,0.08) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 .accent { color: var(--gold); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--gold); }
+  .section-title .cyan { color: var(--cyan-primary); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 20px; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-card .stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .pos-table-wrap { overflow-x: auto; margin-bottom: 24px; }
+  .pos-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .pos-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); white-space: nowrap; }
+  .pos-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); white-space: nowrap; }
+  .pos-table tr:last-child td { border-bottom: none; }
+  .pos-table tr:hover td { background: var(--bg-hover); }
+  .pos-table .pos-id { color: var(--gold); cursor: pointer; text-decoration: underline; text-decoration-color: rgba(245,158,11,0.3); }
+  .pos-table .pos-id:hover { color: #fbbf24; }
+
+  .status-badge { display: inline-block; font-size: 9px; font-weight: 600; letter-spacing: 1px; padding: 2px 8px; border-radius: 3px; }
+  .status-ACTIVE { color: var(--green-primary); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); }
+  .status-NEARING_EXPIRY { color: #fbbf24; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); }
+  .status-MATURE { color: var(--cyan-primary); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.25); }
+  .status-REDEEMED { color: var(--text-dim); background: rgba(100,116,139,0.1); border: 1px solid rgba(100,116,139,0.25); }
+  .status-SLASHED { color: var(--red-bright); background: rgba(251,1,13,0.1); border: 1px solid rgba(251,1,13,0.25); }
+  .status-COMPLETED { color: var(--text-dim); background: rgba(100,116,139,0.1); border: 1px solid rgba(100,116,139,0.25); }
+  .status-SETTLED { color: var(--green-primary); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); }
+  .status-EXPIRED { color: var(--red-bright); background: rgba(251,1,13,0.1); border: 1px solid rgba(251,1,13,0.25); }
+
+  .progress-bar { width: 80px; height: 6px; background: var(--border-dim); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+  .detail-panel { display: none; background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px; margin-top: 12px; position: relative; }
+  .detail-panel.show { display: block; }
+  .detail-close { position: absolute; top: 12px; right: 16px; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 14px; cursor: pointer; border-radius: 4px; padding: 2px 8px; }
+  .detail-close:hover { color: var(--text-primary); border-color: var(--border-med); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .detail-field { font-size: 11px; }
+  .detail-field .df-label { color: var(--text-muted); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .detail-field .df-val { color: var(--text-secondary); word-break: break-all; }
+
+  .timeline { display: flex; align-items: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .timeline-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 80px; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border-med); background: var(--bg-deep); }
+  .timeline-dot.done { background: var(--green-primary); border-color: var(--green-primary); }
+  .timeline-dot.current { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 8px var(--gold-dim); }
+  .timeline-dot.future { background: var(--bg-deep); border-color: var(--border-dim); }
+  .timeline-label { font-size: 9px; color: var(--text-muted); margin-top: 6px; text-align: center; letter-spacing: 0.5px; }
+  .timeline-line { flex: 1; height: 2px; background: var(--border-dim); min-width: 20px; }
+  .timeline-line.done { background: var(--green-primary); }
+
+  .notice { background: var(--bg-card); border: 1px solid var(--border-dim); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 20px 0; font-size: 11px; color: var(--text-secondary); line-height: 1.8; }
+  .notice strong { color: var(--text-primary); }
+
+  .btn { display: inline-block; padding: 6px 16px; border-radius: 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; cursor: pointer; border: 1px solid; transition: all 0.2s; text-decoration: none; }
+  .btn-gold { color: var(--gold); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .btn-gold:hover { background: rgba(245,158,11,0.15); border-color: var(--gold); }
+  .btn-green { color: var(--green-primary); border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); }
+  .btn-green:hover { background: rgba(74,222,128,0.15); border-color: var(--green-primary); }
+  .btn-cyan { color: var(--cyan-primary); border-color: rgba(34,211,238,0.3); background: rgba(34,211,238,0.08); }
+  .btn-cyan:hover { background: rgba(34,211,238,0.15); border-color: var(--cyan-primary); }
+  .btn-red { color: var(--red-bright); border-color: rgba(251,1,13,0.3); background: rgba(251,1,13,0.08); }
+  .btn-red:hover { background: rgba(251,1,13,0.15); border-color: var(--red-bright); }
+  .btn-sm { padding: 3px 10px; font-size: 10px; }
+
+  .collapsible-header { cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--bg-panel); border: 1px solid var(--border-dim); border-radius: 8px; margin-bottom: 0; transition: all 0.2s; user-select: none; }
+  .collapsible-header:hover { background: var(--bg-hover); }
+  .collapsible-header .chevron { transition: transform 0.2s; font-size: 12px; color: var(--text-dim); }
+  .collapsible-header.open .chevron { transform: rotate(90deg); }
+  .collapsible-header.open { border-radius: 8px 8px 0 0; border-bottom: 1px solid var(--border-dim); }
+  .collapsible-body { display: none; background: var(--bg-card); border: 1px solid var(--border-dim); border-top: none; border-radius: 0 0 8px 8px; padding: 24px; }
+  .collapsible-body.open { display: block; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .form-control { width: 100%; padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-dim); border-radius: 4px; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; outline: none; transition: border-color 0.2s; }
+  .form-control:focus { border-color: var(--gold); }
+  select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .code-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .code-table th { text-align: left; padding: 10px 14px; color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); }
+  .code-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-dim); color: var(--text-secondary); }
+  .code-table tr:last-child td { border-bottom: none; }
+
+  footer { padding: 48px 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  footer a { color: var(--red-dim); text-decoration: none; }
+  footer a:hover { color: var(--red-primary); }
+
+  .fade-in { opacity: 0; transform: translateY(12px); animation: fadeUp 0.6s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  @media (max-width: 768px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--gold); border-bottom: 1px solid var(--gold); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Foundation</a>
+      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-positions.html" style="color:#f59e0b">Positions</a>
+      <a href="sost-position-market.html" style="color:#f59e0b">Position Market</a>
+      <a href="sost-position-desk.html" class="active" style="color:#f59e0b">Position Desk</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX</a>
+      <a href="sost-otc-alpha.html" style="color:var(--green-primary)">OTC</a>
+      <a href="sost-deal-channel.html" style="color:var(--cyan-primary)">Deal Channels</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">&#128241; App</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label fade-in">Position Desk</div>
+    <h1 class="fade-in delay-1">SOST <span class="accent">Position Desk</span></h1>
+    <p class="hero-sub fade-in delay-2">Trade, Split &amp; Track Gold-Backed Positions</p>
+    <div style="margin-top:16px" class="fade-in delay-3">
+      <span class="status-badge" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-size:10px;padding:3px 12px;letter-spacing:2px;">LIMITED ALPHA</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION B: Portfolio Summary -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 01</div>
+      <div class="section-title">Portfolio <span class="accent">Summary</span></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card fade-in delay-1" id="statPositions">
+        <div class="stat-label">Total Positions</div>
+        <div class="stat-val" style="color:var(--green-primary)">...</div>
+        <div class="stat-sub">loading</div>
+      </div>
+      <div class="stat-card fade-in delay-2" id="statGold">
+        <div class="stat-label">Gold Locked</div>
+        <div class="stat-val" style="color:var(--gold)">...</div>
+        <div class="stat-sub">XAUT + PAXG</div>
+      </div>
+      <div class="stat-card fade-in delay-1" id="statReward">
+        <div class="stat-label">Reward Outstanding</div>
+        <div class="stat-val" style="color:var(--cyan-primary)">...</div>
+        <div class="stat-sub">SOST units</div>
+      </div>
+      <div class="stat-card fade-in delay-2" id="statDeals">
+        <div class="stat-label">Active Deals</div>
+        <div class="stat-val" style="color:var(--text-dim);font-size:20px">...</div>
+        <div class="stat-sub">loading</div>
+      </div>
+    </div>
+    <div id="liveStatus" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;"></div>
+  </div>
+</section>
+
+<!-- SECTION C: My Positions Table -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 02</div>
+      <div class="section-title">My <span class="accent">Positions</span></div>
+    </div>
+    <div class="pos-table-wrap fade-in delay-1">
+      <table class="pos-table" id="myPosTable">
+        <thead>
+          <tr>
+            <th>Position ID</th>
+            <th>Model</th>
+            <th>Token</th>
+            <th>Amount (oz)</th>
+            <th>Status</th>
+            <th>Reward</th>
+            <th>Time Left</th>
+            <th>Progress</th>
+            <th>Value Est.</th>
+          </tr>
+        </thead>
+        <tbody id="myPosBody">
+          <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px 20px;">Loading positions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="myPosDetailPanel" class="detail-panel"></div>
+  </div>
+</section>
+
+<!-- SECTION D: Available Positions -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 03</div>
+      <div class="section-title">Available <span class="accent">Positions</span></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:20px;">Positions from other owners available for purchase. Estimated value includes time-discounted reward and illiquidity discount.</p>
+    <div class="pos-table-wrap fade-in delay-1">
+      <table class="pos-table" id="availPosTable">
+        <thead>
+          <tr>
+            <th>Position ID</th>
+            <th>Model</th>
+            <th>Token</th>
+            <th>Amount (oz)</th>
+            <th>Status</th>
+            <th>Reward</th>
+            <th>Time Left</th>
+            <th>Value Est.</th>
+            <th>Discount</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="availPosBody">
+          <tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:40px 20px;">Loading available positions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION E: Create Offer Form -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 04</div>
+      <div class="section-title">Create <span class="accent">Offer</span></div>
+    </div>
+    <div class="fade-in delay-1">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">
+        <span class="chevron">&#9654;</span>
+        <span style="font-size:13px;font-weight:500;color:var(--text-primary);">Create Signed Offer</span>
+        <span style="font-size:10px;color:var(--text-dim);margin-left:auto;letter-spacing:1px;">ED25519 SIGNED</span>
+      </div>
+      <div class="collapsible-body" id="offerFormBody">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Select Position</label>
+            <select class="form-control" id="offerPosition">
+              <option value="">-- Select a position --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Offer Type</label>
+            <select class="form-control" id="offerType">
+              <option value="full_position">Full Position (gold + reward)</option>
+              <option value="reward_right">Reward Right Only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price (SOST)</label>
+            <input type="number" class="form-control" id="offerPrice" placeholder="0.00000000" step="0.00000001" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry</label>
+            <select class="form-control" id="offerExpiry">
+              <option value="3600">1 hour</option>
+              <option value="21600">6 hours</option>
+              <option value="86400">24 hours</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-gold" onclick="createOffer()">Create Signed Offer</button>
+        </div>
+        <div id="offerResult" style="display:none;margin-top:16px;background:var(--bg-deep);border:1px solid var(--border-dim);border-radius:4px;padding:14px;font-size:11px;overflow-x:auto;"></div>
+        <div class="notice" style="margin-top:16px;border-left-color:var(--red-primary);">
+          <strong style="color:var(--red-primary);">Disclaimer:</strong> Offers are signed with ED25519. This is a limited alpha. All operations are operator-assisted. Settlement is not yet trustless.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION F: Active Deals -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 05</div>
+      <div class="section-title">Active <span class="accent">Deals</span></div>
+    </div>
+    <div class="pos-table-wrap fade-in delay-1">
+      <table class="pos-table" id="dealsTable">
+        <thead>
+          <tr>
+            <th>Deal ID</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Counterpart</th>
+            <th>Price (SOST)</th>
+            <th>Created</th>
+            <th>Settled / Expires</th>
+          </tr>
+        </thead>
+        <tbody id="dealsBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px 20px;">Loading deals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Deal Detail (expandable) -->
+    <div id="dealDetailPanel" class="detail-panel"></div>
+  </div>
+</section>
+
+<!-- SECTION H: Alpha Notice -->
+<section class="section" style="border-bottom:none;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// 06</div>
+      <div class="section-title">Alpha <span class="accent">Notice</span></div>
+    </div>
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:20px;font-size:12px;color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in delay-1">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 2s ease infinite;"></span>
+        <strong style="color:var(--gold);letter-spacing:2px;font-size:12px;">LIMITED ALPHA &mdash; OPERATOR-ASSISTED &mdash; NOT A PUBLIC EXCHANGE</strong>
+      </div>
+      <p style="margin-bottom:10px;">The Position Desk is currently in <strong style="color:var(--gold)">limited alpha mode</strong>. All operations are operator-assisted. This is not yet a public trustless market.</p>
+      <p style="margin-bottom:10px;"><strong>Participation:</strong> Restricted to approved participants only. Access is not open to the public at this stage.</p>
+      <p style="margin-bottom:10px;"><strong>Fees:</strong> All applicable fees are visible per trade. Settlement fees, protocol fees, and any operator-assistance charges are disclosed before execution.</p>
+      <p style="margin-bottom:0;"><strong>Scope:</strong> Positions are identified registry objects. Trades are signed and settled with full audit trail. See <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX</a> for full architecture and <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a> for messaging.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-positions.html">Live Positions</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+  </div>
+</footer>
+
+<script>
+/* ── Position Desk Data ── */
+var _posData = null;
+var _dealData = null;
+var _refreshMs = 30000;
+var _expandedPos = null;
+var _expandedDeal = null;
+
+function updateStat(id, val, sub) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.querySelector('.stat-val').textContent = val;
+  if (sub !== undefined) el.querySelector('.stat-sub').textContent = sub;
+}
+
+function statusClass(s) { return 'status-badge status-' + (s || 'ACTIVE'); }
+
+function progressColor(pct) {
+  if (pct >= 0.9) return 'var(--cyan-primary)';
+  if (pct >= 0.5) return 'var(--gold)';
+  return 'var(--green-primary)';
+}
+
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length <= n ? s : s.substring(0, n) + '...';
+}
+
+function estimateValue(pos) {
+  var goldUsd = 2400;
+  var backing = pos.amount_oz * goldUsd;
+  var remaining = pos.days_remaining || 0;
+  var ratePerDay = pos.model === 'A' ? 0.00055 : 0.00022;
+  var reward = ratePerDay * remaining * backing;
+  var illiquidity = 0.03 * backing;
+  return backing + reward - illiquidity;
+}
+
+function renderMyPositions(data) {
+  var tbody = document.getElementById('myPosBody');
+  if (!data.positions || data.positions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions found.</td></tr>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < data.positions.length; i++) {
+    var p = data.positions[i];
+    var pct = Math.round((p.pct_complete || 0) * 100);
+    var val = estimateValue(p);
+    html += '<tr style="cursor:pointer" onclick="toggleMyPosDetail(\'' + p.id + '\')">';
+    html += '<td><span class="pos-id">' + truncate(p.id, 12) + '</span></td>';
+    html += '<td>' + (p.model || '?') + '</td>';
+    html += '<td style="color:var(--gold)">' + (p.token || '?') + '</td>';
+    html += '<td>' + (p.amount_oz != null ? p.amount_oz.toFixed(4) : '?') + '</td>';
+    html += '<td><span class="' + statusClass(p.status) + '">' + (p.status || 'UNKNOWN') + '</span></td>';
+    html += '<td style="color:var(--cyan-primary)">' + (p.reward_remaining != null ? p.reward_remaining.toLocaleString() : '?') + ' SOST</td>';
+    html += '<td>' + (p.days_remaining != null ? p.days_remaining + 'd' : '?') + '</td>';
+    html += '<td><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:' + progressColor(p.pct_complete) + '"></div></div> <span style="font-size:9px;color:var(--text-dim)">' + pct + '%</span></td>';
+    html += '<td style="color:var(--green-primary);font-weight:500">$' + val.toFixed(2) + '</td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function renderAvailablePositions(data) {
+  var tbody = document.getElementById('availPosBody');
+  if (!data.positions || data.positions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions available for purchase.</td></tr>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < data.positions.length; i++) {
+    var p = data.positions[i];
+    var val = estimateValue(p);
+    var discount = Math.round(((val - val * 0.97) / val) * 100);
+    html += '<tr>';
+    html += '<td><span class="pos-id">' + truncate(p.id, 12) + '</span></td>';
+    html += '<td>' + (p.model || '?') + '</td>';
+    html += '<td style="color:var(--gold)">' + (p.token || '?') + '</td>';
+    html += '<td>' + (p.amount_oz != null ? p.amount_oz.toFixed(4) : '?') + '</td>';
+    html += '<td><span class="' + statusClass(p.status) + '">' + (p.status || 'UNKNOWN') + '</span></td>';
+    html += '<td style="color:var(--cyan-primary)">' + (p.reward_remaining != null ? p.reward_remaining.toLocaleString() : '?') + ' SOST</td>';
+    html += '<td>' + (p.days_remaining != null ? p.days_remaining + 'd' : '?') + '</td>';
+    html += '<td style="color:var(--green-primary)">$' + val.toFixed(2) + '</td>';
+    html += '<td style="color:var(--gold)">' + discount + '%</td>';
+    html += '<td><button class="btn btn-green btn-sm" onclick="event.stopPropagation();alert(\'Buy flow not yet available in limited alpha.\')">Buy</button></td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function toggleMyPosDetail(posId) {
+  var panel = document.getElementById('myPosDetailPanel');
+  if (_expandedPos === posId) {
+    panel.classList.remove('show');
+    panel.innerHTML = '';
+    _expandedPos = null;
+    return;
+  }
+  _expandedPos = posId;
+  var pos = null;
+  for (var i = 0; i < _posData.positions.length; i++) {
+    if (_posData.positions[i].id === posId) { pos = _posData.positions[i]; break; }
+  }
+  if (!pos) return;
+
+  var stages = ['ACTIVE', 'NEARING_EXPIRY', 'MATURE', 'REDEEMED'];
+  var currentIdx = stages.indexOf(pos.lifecycle_stage);
+  if (currentIdx < 0) currentIdx = 0;
+  var tlHtml = '<div class="timeline">';
+  for (var s = 0; s < stages.length; s++) {
+    var dotCls = s < currentIdx ? 'done' : (s === currentIdx ? 'current' : 'future');
+    tlHtml += '<div class="timeline-step"><div class="timeline-dot ' + dotCls + '"></div><div class="timeline-label">' + stages[s] + '</div></div>';
+    if (s < stages.length - 1) tlHtml += '<div class="timeline-line ' + (s < currentIdx ? 'done' : '') + '"></div>';
+  }
+  tlHtml += '</div>';
+
+  var fields = [
+    ['Position ID', pos.id],
+    ['Owner', pos.owner_short || 'unknown'],
+    ['Model', pos.model === 'A' ? 'A (Self-Custody)' : 'B (Escrow)'],
+    ['Token', pos.token],
+    ['Amount', (pos.amount_oz != null ? pos.amount_oz.toFixed(4) : '?') + ' oz'],
+    ['Status', pos.status],
+    ['Start Date', pos.start_date || 'N/A'],
+    ['Expiry Date', pos.expiry_date || 'N/A'],
+    ['Days Remaining', pos.days_remaining != null ? pos.days_remaining + ' days' : 'N/A'],
+    ['Lifecycle Stage', pos.lifecycle_stage || 'ACTIVE'],
+    ['ETH Deposit ID', pos.eth_deposit_id != null ? '#' + pos.eth_deposit_id : 'N/A'],
+    ['Escrow Contract', pos.escrow || 'N/A']
+  ];
+  var gHtml = '<div class="detail-grid">';
+  for (var f = 0; f < fields.length; f++) {
+    gHtml += '<div class="detail-field"><div class="df-label">' + fields[f][0] + '</div><div class="df-val">' + fields[f][1] + '</div></div>';
+  }
+  gHtml += '</div>';
+
+  var ethHtml = '';
+  if (pos.eth_tx) {
+    ethHtml = '<div style="margin-top:16px;font-size:11px;"><strong style="color:var(--text-primary)">ETH Escrow TX:</strong> <a href="https://sepolia.etherscan.io/tx/' + pos.eth_tx + '" target="_blank" rel="noopener" style="color:var(--cyan-primary);font-size:10px;word-break:break-all;">' + pos.eth_tx + '</a></div>';
+  }
+
+  var html = '<button class="detail-close" onclick="toggleMyPosDetail(\'' + posId + '\')">&times;</button>';
+  html += '<div style="font-size:11px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Position Detail</div>';
+  html += '<div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--gold);margin-bottom:16px;">Position ' + pos.id + '</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;">LIFECYCLE</div>';
+  html += tlHtml;
+  html += gHtml;
+  html += ethHtml;
+  html += '<div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">';
+  html += '<button class="btn btn-gold btn-sm" onclick="alert(\'Sell flow not yet available in limited alpha.\')">Sell Position</button>';
+  html += '<button class="btn btn-cyan btn-sm" onclick="alert(\'Reward right sale not yet available in limited alpha.\')">Sell Reward Right</button>';
+  html += '<button class="btn btn-green btn-sm" onclick="alert(\'Lifecycle tracking active. Position refreshes every 30s.\')">Track Lifecycle</button>';
+  html += '</div>';
+
+  panel.innerHTML = html;
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderDeals(data) {
+  _dealData = data;
+  var tbody = document.getElementById('dealsBody');
+  if (!data.deals || data.deals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No deals found.</td></tr>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < data.deals.length; i++) {
+    var d = data.deals[i];
+    var statusCls = 'status-badge status-' + d.status;
+    var timeCol = d.settled_at ? d.settled_at.substring(0, 19).replace('T', ' ') : 'pending';
+    html += '<tr style="cursor:pointer" onclick="toggleDealDetail(\'' + d.deal_id + '\')">';
+    html += '<td><span class="pos-id">' + truncate(d.deal_id, 14) + '</span></td>';
+    html += '<td>' + (d.type === 'full_position' ? 'Full' : 'Reward') + '</td>';
+    html += '<td><span class="' + statusCls + '">' + d.status + '</span></td>';
+    html += '<td style="font-size:10px">' + (d.taker || 'N/A') + '</td>';
+    html += '<td style="color:var(--gold)">' + d.price_sost + '</td>';
+    html += '<td style="font-size:10px">' + d.created_at.substring(0, 19).replace('T', ' ') + '</td>';
+    html += '<td style="font-size:10px">' + timeCol + '</td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function toggleDealDetail(dealId) {
+  var panel = document.getElementById('dealDetailPanel');
+  if (_expandedDeal === dealId) {
+    panel.classList.remove('show');
+    panel.innerHTML = '';
+    _expandedDeal = null;
+    return;
+  }
+  _expandedDeal = dealId;
+  var deal = null;
+  for (var i = 0; i < _dealData.deals.length; i++) {
+    if (_dealData.deals[i].deal_id === dealId) { deal = _dealData.deals[i]; break; }
+  }
+  if (!deal) return;
+
+  var states = ['CREATED', 'NEGOTIATED', 'BOTH_LOCKED', 'SETTLING', 'SETTLED'];
+  var currentIdx = states.indexOf(deal.status);
+  if (currentIdx < 0) currentIdx = states.length - 1;
+  var tlHtml = '<div class="timeline">';
+  for (var s = 0; s < states.length; s++) {
+    var dotCls = s < currentIdx ? 'done' : (s === currentIdx ? 'current' : 'future');
+    tlHtml += '<div class="timeline-step"><div class="timeline-dot ' + dotCls + '"></div><div class="timeline-label">' + states[s] + '</div></div>';
+    if (s < states.length - 1) tlHtml += '<div class="timeline-line ' + (s < currentIdx ? 'done' : '') + '"></div>';
+  }
+  tlHtml += '</div>';
+
+  var html = '<button class="detail-close" onclick="toggleDealDetail(\'' + dealId + '\')">&times;</button>';
+  html += '<div style="font-size:11px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Deal Detail</div>';
+  html += '<div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--gold);margin-bottom:16px;">Deal ' + deal.deal_id + '</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;">STATE MACHINE</div>';
+  html += tlHtml;
+  html += '<div class="detail-grid">';
+  html += '<div class="detail-field"><div class="df-label">Deal ID</div><div class="df-val">' + deal.deal_id + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Type</div><div class="df-val">' + deal.type + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Status</div><div class="df-val">' + deal.status + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Maker</div><div class="df-val">' + deal.maker + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Taker</div><div class="df-val">' + deal.taker + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Position ID</div><div class="df-val">' + deal.position_id + '</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Price</div><div class="df-val" style="color:var(--gold)">' + deal.price_sost + ' SOST</div></div>';
+  html += '<div class="detail-field"><div class="df-label">Created</div><div class="df-val">' + deal.created_at + '</div></div>';
+  if (deal.settled_at) {
+    html += '<div class="detail-field"><div class="df-label">Settled</div><div class="df-val" style="color:var(--green-primary)">' + deal.settled_at + '</div></div>';
+  }
+  html += '</div>';
+  html += '<div style="margin-top:16px;font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;">AUDIT TRAIL</div>';
+  html += '<table class="code-table" style="font-size:10px"><tr><th>Event</th><th>Timestamp</th><th>Detail</th></tr>';
+  html += '<tr><td style="color:var(--gold)">offer_created</td><td>' + deal.created_at + '</td><td>Maker signed offer</td></tr>';
+  if (deal.settled_at) {
+    html += '<tr><td style="color:var(--green-primary)">deal_settled</td><td>' + deal.settled_at + '</td><td>Settlement confirmed</td></tr>';
+  }
+  html += '</table>';
+  if (deal.status === 'SETTLED') {
+    html += '<div class="notice" style="margin-top:16px;border-left-color:var(--green-primary);"><strong style="color:var(--green-primary);">Settlement Notice:</strong> This deal has been fully settled. Both parties confirmed. Audit trail complete.</div>';
+  }
+
+  panel.innerHTML = html;
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function populateOfferDropdown(data) {
+  var sel = document.getElementById('offerPosition');
+  sel.innerHTML = '<option value="">-- Select a position --</option>';
+  if (!data.positions) return;
+  for (var i = 0; i < data.positions.length; i++) {
+    var p = data.positions[i];
+    sel.innerHTML += '<option value="' + p.id + '">' + p.id + ' (' + p.token + ' ' + p.amount_oz + ' oz, ' + p.status + ')</option>';
+  }
+}
+
+function createOffer() {
+  var posId = document.getElementById('offerPosition').value;
+  var type = document.getElementById('offerType').value;
+  var price = document.getElementById('offerPrice').value;
+  var expiry = document.getElementById('offerExpiry').value;
+  if (!posId || !price) { alert('Please select a position and set a price.'); return; }
+  var nonce = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  var result = {
+    type: 'trade_offer',
+    position_id: posId,
+    offer_type: type,
+    price_sost: parseFloat(price).toFixed(8),
+    expiry_seconds: parseInt(expiry),
+    nonce: nonce,
+    created_at: new Date().toISOString(),
+    signature: '[ED25519 signature would be generated by wallet]',
+    status: 'PREVIEW - not yet signed'
+  };
+  var el = document.getElementById('offerResult');
+  el.style.display = 'block';
+  el.innerHTML = '<div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;">OFFER PREVIEW (JSON)</div><pre style="margin:0;color:var(--gold);background:transparent;border:none;padding:0;font-size:11px;white-space:pre-wrap">' + JSON.stringify(result, null, 2) + '</pre>';
+}
+
+function toggleCollapsible(header) {
+  header.classList.toggle('open');
+  var body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function fetchAll() {
+  var statusEl = document.getElementById('liveStatus');
+  statusEl.textContent = 'Fetching data...';
+
+  fetch('api/positions_live.json?t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      _posData = d;
+      var t = d.totals;
+      updateStat('statPositions', t.active, t.positions_ever + ' total ever created');
+      updateStat('statGold', t.gold_locked_oz.toFixed(4) + ' oz', 'XAUT + PAXG in escrow');
+      updateStat('statReward', t.reward_outstanding_sost.toLocaleString() + ' SOST', 'from PoPC Pool');
+      renderMyPositions(d);
+      renderAvailablePositions(d);
+      populateOfferDropdown(d);
+    })
+    .catch(function(err) {
+      statusEl.textContent = 'Error loading positions: ' + err.message;
+    });
+
+  fetch('api/deals_live.json?t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      _dealData = d;
+      updateStat('statDeals', d.totals.active, d.totals.settled + ' settled, ' + d.totals.expired + ' expired');
+      renderDeals(d);
+      var now = new Date();
+      statusEl.textContent = 'Last updated: ' + now.getUTCHours().toString().padStart(2, '0') + ':' + now.getUTCMinutes().toString().padStart(2, '0') + ' UTC | Auto-refresh: 30s';
+    })
+    .catch(function(err) {
+      statusEl.textContent = 'Error loading deals: ' + err.message;
+    });
+}
+
+fetchAll();
+setInterval(fetchAll, _refreshMs);
+
+// Version-based auto-reload
+(function(){
+  var _currentVersion = null;
+  function checkVersion(){
+    fetch('api/explorer_version.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){
+      if (!_currentVersion) { _currentVersion = d.v; return; }
+      if (d.v !== _currentVersion) {
+        var panels = document.querySelectorAll('.detail-panel.show');
+        if (panels.length === 0) location.reload();
+      }
+    }).catch(function(){});
+  }
+  setInterval(checkVersion, 60000);
+  checkVersion();
+})();
+</script>
+<script src="sost-search.js"></script>
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+</body>
+</html>
