@@ -9,9 +9,9 @@
     <atom:link href="https://sostcore.com/feed.xml" rel="self" type="application/rss+xml"/>
 
     <item>
-      <title>Consensus Fix — Profile Floor Enforcement at Block 5,560</title>
+      <title>cASERT Profile Validation Improvement — Block 5,560</title>
       <link>https://sostcore.com/sost-explorer.html</link>
-      <description>Block #5525 was accepted with profile H1 when context required H9/H10. The validation checked the ceiling but not the floor. Fix adds a deterministic floor computed from anti-stall rules. From block 5,560, declared profiles below the floor are rejected. Legitimate anti-stall easing remains supported. Node and miner update required. 123 cASERT tests passing.</description>
+      <description>cASERT equalizer now enforces both ceiling and floor for declared profiles. Block #5525 had a lower-than-expected profile due to incomplete validation. From block 5,560, every block profile must fall within the deterministic range. Anti-stall easing remains supported. Node and miner update required. 123 cASERT tests passing.</description>
       <pubDate>Wed, 23 Apr 2026 00:00:00 +0000</pubDate>
       <guid>https://sostcore.com/updates/profile-floor-5560</guid>
     </item>

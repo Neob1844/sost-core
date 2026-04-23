@@ -355,23 +355,20 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,1,13,0.04);">
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,191,36,0.04);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fb010d;box-shadow:0 0 6px rgba(251,1,13,.5);animation:pulse 1.5s ease infinite"></span>
-          <span style="color:#fb010d;font-size:9px;font-weight:700;letter-spacing:1px">CONSENSUS FIX &mdash; NODE &amp; MINER UPDATE REQUIRED</span>
-          <span style="color:var(--text3);font-size:8px;">Block 5,560</span>
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);animation:pulse 1.5s ease infinite"></span>
+          <span style="color:#fbbf24;font-size:9px;font-weight:700;letter-spacing:1px">UPDATE REQUIRED &mdash; BLOCK 5,560</span>
         </div>
-        <b style="color:var(--text);font-size:11px;">Profile Floor Enforcement &mdash; Validation Hardening</b><br>
-        <span style="color:var(--text2)"><b style="color:#fb010d">Issue found:</b> Block #5525 was accepted with profile H1 when the context required H9/H10. The validation was checking the ceiling (declared profile &le; base) but not the floor. A miner with an old binary or incorrect profile calculation could declare a much easier profile than allowed, effectively mining a cheaper block.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--green)">Fix:</b> From block 5,560, the validator computes a <b>deterministic floor</b> using the block timestamp and anti-stall rules. The declared profile must fall within [floor, ceiling]. Legitimate anti-stall easing (60+ minute stalls) remains fully supported. Only invalid profile drops are rejected.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">Technical:</b> <code style="background:var(--bg3);padding:1px 4px;color:var(--red);border-radius:2px">floor = casert_compute(chain, height, block_timestamp)</code> &mdash; includes anti-stall decay. If <code style="background:var(--bg3);padding:1px 4px;color:var(--red);border-radius:2px">declared_pi &lt; floor</code> &rarr; block rejected. 123 cASERT tests passing, 0 failures.</span><br><br>
-        <div style="background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.25);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;margin-top:4px;">
-          <b style="color:#fb010d;letter-spacing:1px">ACTION REQUIRED BEFORE BLOCK 5,560:</b><br>
+        <b style="color:var(--text);font-size:11px;">cASERT Profile Validation Improvement</b><br>
+        <span style="color:var(--text2)">A validation improvement is being deployed at block 5,560. The cASERT equalizer now enforces both a <b>ceiling</b> (maximum profile) and a <b>floor</b> (minimum profile) for each block. This ensures that declared profiles always match the deterministic rules of the system. Anti-stall easing remains fully supported &mdash; only invalid profile values are rejected.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--cyan)">Why:</b> Block #5525 was accepted with a lower-than-expected profile due to incomplete validation. This improvement adds the missing floor check so every block profile falls within the correct range. 123 cASERT tests passing.</span><br><br>
+        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;margin-top:4px;">
+          <b style="color:#fbbf24;letter-spacing:1px">UPDATE NODE &amp; MINER BEFORE BLOCK 5,560:</b><br>
           <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
           <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
           <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span><br>
-          <span style="color:var(--text3)">Nodes running the old binary will reject blocks that trigger the new floor check after block 5,560.</span>
+          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
         </div>
       </div>
       <div style="border-bottom:1px solid var(--border);padding:10px 0;">
