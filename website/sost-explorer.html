@@ -356,53 +356,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(74,222,128,0.04);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(74,222,128,.5)"></span>
-          <span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:1px">BUG FIXED &mdash; PROFILE DESCENT DURING LONG BLOCKS</span>
-          <span style="color:var(--text3);font-size:8px;">April 23, 2026</span>
-        </div>
-        <b style="color:var(--text);font-size:11px;">Why blocks were taking 30&ndash;50+ minutes &mdash; and why it won&rsquo;t happen again</b><br><br>
-        <span style="color:var(--text2)"><b style="color:#fb010d">What happened:</b> After the H11 activation, some blocks took 30 to 50+ minutes. The system was supposed to lower the difficulty profile automatically when no block was found for a long time, but it wasn&rsquo;t doing it.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">The bug:</b> The cASERT equalizer was designed to drop the profile by 1 level <b>per block</b> (slew &plusmn;1). But when no block is mined for a long time, there are no new blocks to trigger the descent. The profile was getting <b>stuck</b> at H10/H11 (extremely hard, ~0.3% stability) even though the lag had already dropped and the profile should have been H7 or lower. This created a vicious cycle: the profile was too hard &rarr; no one could mine a block &rarr; no block meant no opportunity to lower the profile &rarr; stuck.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">Why it worked before:</b> When the ceiling was H10, the same bug existed but was less visible because H10 has ~1.2% stability (vs 0.3% at H11). Someone would eventually find a block, and the system could lower the profile on the next block. With H11 at 0.3% stability, blocks took so long that the bug became clearly visible.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--green)">The fix:</b> The profile now descends in <b>real time</b>, not just per block. For every 10 minutes without a block, the system allows 1 additional level of descent. If the last block was H11 and 50 minutes pass without a new block, the profile can drop 5 levels to H6. If the lag says H1, and enough time has passed, it goes all the way to H1. No artificial cap. The profile follows the lag in real time, exactly as intended.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--gold)">Result:</b> Miners should no longer experience blocks stuck at 30&ndash;50+ minutes caused by the profile being locked at a level that&rsquo;s too hard. The system now self-corrects in real time. Block times will return to the normal PoW distribution around the 10-minute target.</span><br><br>
-        <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
-          <b style="color:var(--green);letter-spacing:1px">UPDATE NODE &amp; MINER:</b><br>
-          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
-          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
-          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
-        </div>
-      </div>
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(103,232,249,0.03);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="color:var(--cyan);font-size:9px;font-weight:600;letter-spacing:1px">NOTE FOR MINERS</span>
-        </div>
-        <b style="color:var(--text);font-size:11px;">Why some blocks are very fast and others very slow</b><br>
-        <span style="color:var(--text2)">This is <b>completely normal</b> in Proof-of-Work mining. SOST block times follow an exponential distribution &mdash; some blocks take 30 seconds, others take 25 minutes. This is not a bug.</span><br><br>
-        <span style="color:var(--text2)">What matters is the <b>average</b>, not individual blocks. The current avg288 is <b style="color:var(--green)">~10 minutes</b> &mdash; exactly on target. The cASERT equalizer (H9&ndash;H11) adjusts the difficulty of the stability test to keep the chain on schedule. Higher profiles (H10, H11) make blocks harder to find, which slows the chain when it runs ahead.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">Example:</b> If you see a 2-minute block followed by a 20-minute block, that&rsquo;s not a problem &mdash; it&rsquo;s math. The avg over 288 blocks (~48h) is what the system targets. A miner with 5% of the hashrate will statistically find ~14 blocks per 48h, but they might get 5 in one hour and then none for 6 hours. Over longer windows, it always averages out.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--gold)">Simulation data:</b> With the current H11 ceiling, the system absorbs the block surplus at +0.19 blocks/hour while maintaining a 9.9 min average. The median is ~6 min, meaning most blocks are actually fast &mdash; occasional slow blocks bring the average up to 10 min. This is the healthiest possible PoW distribution.</span>
-      </div>
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,191,36,0.04);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);animation:pulse 1.5s ease infinite"></span>
-          <span style="color:#fbbf24;font-size:9px;font-weight:700;letter-spacing:1px">UPDATE REQUIRED &mdash; BLOCK 5,560</span>
-        </div>
-        <b style="color:var(--text);font-size:11px;">cASERT Profile Validation Improvement</b><br>
-        <span style="color:var(--text2)">A validation improvement is being deployed at block 5,560. The cASERT equalizer now enforces both a <b>ceiling</b> (maximum profile) and a <b>floor</b> (minimum profile) for each block. This ensures that declared profiles always match the deterministic rules of the system. Anti-stall easing remains fully supported &mdash; only invalid profile values are rejected.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">Why:</b> Block #5525 was accepted with a lower-than-expected profile due to incomplete validation. This improvement adds the missing floor check so every block profile falls within the correct range. 123 cASERT tests passing.</span><br><br>
-        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;margin-top:4px;">
-          <b style="color:#fbbf24;letter-spacing:1px">UPDATE NODE &amp; MINER BEFORE BLOCK 5,560:</b><br>
-          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
-          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
-          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
-        </div>
-      </div>
-      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
+      <div style="padding:10px 0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="color:var(--red);font-size:9px;font-weight:600;letter-spacing:1px">UPCOMING HARD FORK</span>
           <span style="color:var(--text3);font-size:8px;">Block 10,000</span>
