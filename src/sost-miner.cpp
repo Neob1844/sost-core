@@ -621,9 +621,15 @@ static void start_block_monitor(int64_t mining_height) {
                         g_node_profile = node_pi;
                         int32_t mining_pi = g_mining_profile.load();
                         if (node_pi != mining_pi && !g_chain_advanced) {
+                            printf("[LAG-CHECK] Node says H%d, mining H%d → triggering restart\n",
+                                   node_pi, mining_pi);
+                            fflush(stdout);
                             g_lag_changed = true;
                         }
                     }
+                } else {
+                    printf("[LAG-CHECK] RPC getinfo failed (empty response)\n");
+                    fflush(stdout);
                 }
             }
         }
