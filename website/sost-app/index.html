@@ -1630,7 +1630,7 @@ SectionRenderers.dashboard = function(el) {
       <h2>// CONSENSUS</h2>
       <div class="stat-row"><span class="stat-label">POW ALGORITHM</span><span class="stat-value">CONVERGENCEX</span></div>
       <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">CASERT BITQ (Q16.16)</span></div>
-      <div class="stat-row"><span class="stat-label">EQUALIZER</span><span class="stat-value">CASERT EQUALIZER (40 profiles E4–H35)</span></div>
+      <div class="stat-row"><span class="stat-label">EQUALIZER</span><span class="stat-value">CASERT EQUALIZER (43 profiles E7–H35)</span></div>
       <div class="stat-row"><span class="stat-label">COINBASE MATURITY</span><span class="stat-value">1000 BLOCKS</span></div>
       <div class="stat-row"><span class="stat-label">MAX BLOCK SIZE</span><span class="stat-value">1,000,000 BYTES</span></div>
       <div class="stat-row"><span class="stat-label">MAX TX SIZE</span><span class="stat-value">100,000 BYTES</span></div>
@@ -1870,7 +1870,7 @@ function addTooltips() {
   const tips = {
     'DIFFICULTY': 'How hard it is to mine a block. Adjusted every block by cASERT algorithm. Higher = more compute needed.',
     'CONNECTIONS': 'Number of peer nodes connected to this node. More connections = better network health.',
-    'CASERT PROFILE': 'Current equalizer profile for difficulty adjustment. 40 profiles E4-H35 (H10 ceiling, 15 active, 25 reserved). Emergency-only — bitsQ avg288 is the primary controller. H11+ margin=115.',
+    'CASERT PROFILE': 'Current equalizer profile for difficulty adjustment. 43 profiles E7-H35 (H13 ceiling, 21 active, 22 reserved). Emergency-only — bitsQ avg288 is the primary controller. Relief valve: E7 at 605s.',
     'DECAY FACTOR q': 'Feigenbaum exponential decay: q = e^(-1/4). Each epoch, the block reward shrinks by this factor. Ensures smooth emission curve.',
     'EPOCH LENGTH': '131,553 blocks per epoch (~2.5 years). At each epoch boundary, the reward decreases according to the decay factor.',
     'GENESIS REWARD': 'The very first block reward: 7.85100863 SOST. All subsequent rewards decay from this starting point.',
@@ -2133,7 +2133,7 @@ SectionRenderers.documents = function(el) {
     ['ConvergenceX PoW', 'CPU-friendly gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. ASIC-resistant by design.'],
     ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
     ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
-    ['cASERT Difficulty', 'Unified rate control with avg288 bitsQ + equalizer', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap (historical). V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap (historical). Current (block 5175+): avg288 bitsQ compares avg of last 288 block intervals vs 600s target. Dynamic cap (5270+): scales 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. Equalizer: emergency-only, ceiling H10, 40 profiles (15 active E4-H10, 25 reserved H11-H35), H11+ margin=115.'],
+    ['cASERT Difficulty', 'Unified rate control with avg288 bitsQ + equalizer', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap (historical). V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap (historical). Current (block 5175+): avg288 bitsQ compares avg of last 288 block intervals vs 600s target. Dynamic cap (5270+): scales 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. Equalizer: emergency-only, ceiling H13 (block 5,750+), 43 profiles (21 active E7-H13, 22 reserved H14-H35). Relief valve: E7 at 605s. Final calibration complete.'],
     ['Emission Schedule', 'Smooth exponential decay, epoch = 131,553 blocks', 'Genesis reward: 7.85100863 SOST. Decay factor q=e^(-1/4). Epoch length: 131,553 blocks (~2.5 years). Max supply converges to ~4,669,201 SOST. All values in stocks (1 SOST = 100,000,000 stocks).'],
     ['Security Audit', '20 cryptographic and consensus security features', '6 layers of protection: ECDSA secp256k1, LOW-S enforcement, 4-layer block validation, UTXO model, coinbase maturity (1000 blocks), constitutional addresses. RBF + CPFP for fee market. P2SH multisig support.'],
     ['HD Wallet (BIP39)', '12-word seed phrases, PBKDF2-HMAC-SHA512', 'Deterministic key derivation from 12-word mnemonic. Compatible with web wallet. Encrypted wallet storage (AES-256-GCM + scrypt). Address format: sost1 + 40 hex chars.'],

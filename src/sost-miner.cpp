@@ -609,9 +609,9 @@ static void start_block_monitor(int64_t mining_height) {
                     }
                 }
             }
-            // Lag-adjust: every 30s (15 iterations × 2s), check if node profile changed
+            // Lag-adjust: every ~6s (3 iterations × 2s), check if node profile changed
             lag_check_counter++;
-            if (lag_check_counter >= 15) {
+            if (lag_check_counter >= 3) {
                 lag_check_counter = 0;
                 std::string info = rpc_call("getinfo");
                 if (!info.empty()) {
@@ -825,11 +825,11 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         double effective_rate = hashrate * (stab_pct / 100.0);
                         // Profile name for readability in the diagnostic line.
                         static const char* PROF_NAMES[] = {
-                            "E4","E3","E2","E1","B0","H1","H2","H3","H4",
-                            "H5","H6","H7","H8","H9","H10","H11","H12"
+                            "E7","E6","E5","E4","E3","E2","E1","B0","H1","H2","H3","H4",
+                            "H5","H6","H7","H8","H9","H10","H11","H12","H13"
                         };
                         int32_t pi = params.stab_profile_index;
-                        int pn_idx = (pi < -4) ? 0 : (pi > 12) ? 16 : (pi + 4);
+                        int pn_idx = (pi < -7) ? 0 : (pi > 13) ? 20 : (pi + 7);
                         const char* prof_name = PROF_NAMES[pn_idx];
                         printf("\n[MINING] %s bitsQ=%.3f | %.1f att/s | stable=%.1f%% | target_hits=%u | "
                                "eff=%.1f stable/s | threads=%d | elapsed=%.0fs\n",

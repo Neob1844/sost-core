@@ -312,7 +312,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
         // Compute current ceiling based on height
         int32_t current_ceiling;
-        if (next_height >= CASERT_CEILING_H12_HEIGHT)
+        if (next_height >= CASERT_CEILING_H13_HEIGHT)
+            current_ceiling = CASERT_HARD_PROFILE_CEILING_H13;
+        else if (next_height >= CASERT_CEILING_H12_HEIGHT)
             current_ceiling = CASERT_HARD_PROFILE_CEILING_H12;
         else if (next_height >= CASERT_CEILING_H11_HEIGHT)
             current_ceiling = CASERT_HARD_PROFILE_CEILING_H11;
@@ -326,11 +328,14 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             target_profile = std::min<int32_t>(lag, current_ceiling);
         }
 
+        // Effective H_MIN: pre-V8 blocks use legacy -4, V8+ uses -7
+        int32_t effective_h_min = (next_height >= CASERT_CEILING_H13_HEIGHT) ? CASERT_H_MIN : CASERT_H_MIN_LEGACY;
+
         int32_t prev_H = 0;
         if (!chain.empty()) {
             prev_H = chain.back().profile_index;
             if (prev_H == INT32_MIN) prev_H = 0;
-            prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(current_ceiling, prev_H));
+            prev_H = std::max<int32_t>(effective_h_min, std::min<int32_t>(current_ceiling, prev_H));
         }
 
         int32_t H;
@@ -349,13 +354,16 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             }
         }
 
-        // Relief valve (block 5635+): if block elapsed > 630s (10m 30s),
-        // drop profile to min(H1, target) for this block only.
+        // Relief valve: emergency profile drop when block is taking too long.
+        // V8 (block 5750+): elapsed > 605s → drop to E7 (H_MIN = -7).
+        // Legacy (block 5635-5749): elapsed > 630s → drop to min(H1, target).
         // The NEXT block recalculates normally from lag.
         // bitsQ remains the primary difficulty controller.
-        if (next_height >= CASERT_RELIEF_VALVE_HEIGHT && now_time > 0 && !chain.empty()) {
+        if (now_time > 0 && !chain.empty()) {
             int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
-            if (block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD) {
+            if (next_height >= CASERT_RELIEF_VALVE_HEIGHT && block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD) {
+                H = effective_h_min; // E7 = -7
+            } else if (next_height >= CASERT_RELIEF_VALVE_HEIGHT_V1 && block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD_V1) {
                 int32_t relief_profile = std::min<int32_t>(1, target_profile);
                 if (relief_profile < H) H = relief_profile;
             }
@@ -383,7 +391,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 int64_t time_at_b0 = stall - t_act;
                 if (time_at_b0 > CASERT_ANTISTALL_EASING_EXTRA) {
                     int64_t easing_time = time_at_b0 - CASERT_ANTISTALL_EASING_EXTRA;
-                    H = std::max<int32_t>(CASERT_H_MIN, -(int32_t)(easing_time / 1800));
+                    H = std::max<int32_t>(effective_h_min, -(int32_t)(easing_time / 1800));
                 }
             }
         }
@@ -450,7 +458,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
     // Clamp to profile bounds (V7 extends H_MAX from 12 to 32)
     int32_t h_max = (next_height >= CASERT_V6_CALIBRATION_HEIGHT) ? CASERT_H_MAX : CASERT_H_MAX_PRE_CAL;
-    int32_t H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H_raw));
+    int32_t H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(h_max, H_raw));
 
     // Safety rule 1: if chain is behind or on schedule, never harden beyond B0
     // lag > 0 means chain is AHEAD; lag <= 0 means behind or on schedule
@@ -481,7 +489,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 // slew rate — the old V3.1 `prev_H = H` escape hatch is gone.
                 int32_t stored_pi = chain.back().profile_index;
                 if (stored_pi == INT32_MIN) stored_pi = 0; // conservative
-                prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, stored_pi));
+                prev_H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(CASERT_H_MAX, stored_pi));
             } else if (next_height >= CASERT_V3_1_FORK_HEIGHT) {
                 // --- V3.1 (blocks 4110-4169): Use stored profile_index ---
                 // Historical quirk: default was 0, so legit B0 was misread as
@@ -497,7 +505,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 } else {
                     prev_H = H; // historical fallback — see comment above
                 }
-                prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
+                prev_H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(CASERT_H_MAX, prev_H));
             } else {
                 // --- V3 (blocks 4100-4199): Original PID recomputation (has slew rate bug) ---
                 // Kept for backward compatibility with already-mined blocks.
@@ -542,7 +550,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                                  (int64_t)CASERT_K_B * (pS - pM) +
                                  (int64_t)CASERT_K_V * pV;
                     prev_H = (int32_t)(pU >> 16);
-                    prev_H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, prev_H));
+                    prev_H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(CASERT_H_MAX, prev_H));
                     if (prev_lag <= 0) prev_H = std::min<int32_t>(prev_H, 0);
                     if (prev_chain.size() < 10) prev_H = std::min<int32_t>(prev_H, 0);
                 }
@@ -582,7 +590,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 // Burst ceiling: follows hard ceiling
                 {
                     int32_t burst_cap;
-                    if (next_height >= CASERT_CEILING_H12_HEIGHT)
+                    if (next_height >= CASERT_CEILING_H13_HEIGHT)
+                        burst_cap = CASERT_HARD_PROFILE_CEILING_H13;
+                    else if (next_height >= CASERT_CEILING_H12_HEIGHT)
                         burst_cap = CASERT_HARD_PROFILE_CEILING_H12;
                     else if (next_height >= CASERT_CEILING_H11_HEIGHT)
                         burst_cap = CASERT_BURST_PROFILE_CEILING_H11;
@@ -638,7 +648,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 // Emergency Behind Release: stateless cliffs
                 if (lag <= CASERT_EBR_ENTER) {
                     int32_t ebr_floor;
-                    if      (lag <= CASERT_EBR_LEVEL_E4) ebr_floor = CASERT_H_MIN;  // E4
+                    if      (lag <= CASERT_EBR_LEVEL_E4) ebr_floor = CASERT_H_MIN_LEGACY;  // E4
                     else if (lag <= CASERT_EBR_LEVEL_E3) ebr_floor = -3;            // E3
                     else if (lag <= CASERT_EBR_LEVEL_E2) ebr_floor = -2;            // E2
                     else                                 ebr_floor =  0;            // B0
@@ -677,7 +687,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 if (H >= 11 && lag < CASERT_V6_H11_MIN_LAG) H = 10;
             }
 
-            H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(h_max, H));
+            H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(h_max, H));
         } else {
             // --- V2: Original ±1 slew rate with heuristic estimation ---
             int64_t prev_elapsed = chain[chain.size()-2].time - GENESIS_TIME;
@@ -690,15 +700,17 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 else if (ahead >= 5) prev_H_est = 1;
             }
             H = std::max<int32_t>(prev_H_est - 1, std::min<int32_t>(prev_H_est + 1, H));
-            H = std::max<int32_t>(CASERT_H_MIN, std::min<int32_t>(CASERT_H_MAX, H));
+            H = std::max<int32_t>(CASERT_H_MIN_LEGACY, std::min<int32_t>(CASERT_H_MAX, H));
         }
     }
 
     // ---- Hard profile ceiling (progressive activation) ----
-    // Block 5075: H10. Block 5480: H11. Block 5635: H12.
+    // Block 5075: H10. Block 5480: H11. Block 5635: H12. Block 5750: H13.
     if (next_height >= CASERT_CEILING_HEIGHT) {
         int32_t ceiling;
-        if (next_height >= CASERT_CEILING_H12_HEIGHT)
+        if (next_height >= CASERT_CEILING_H13_HEIGHT)
+            ceiling = CASERT_HARD_PROFILE_CEILING_H13;
+        else if (next_height >= CASERT_CEILING_H12_HEIGHT)
             ceiling = CASERT_HARD_PROFILE_CEILING_H12;
         else if (next_height >= CASERT_CEILING_H11_HEIGHT)
             ceiling = CASERT_HARD_PROFILE_CEILING_H11;
@@ -745,7 +757,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             if (time_at_b0 > CASERT_ANTISTALL_EASING_EXTRA) {
                 int64_t easing_time = time_at_b0 - CASERT_ANTISTALL_EASING_EXTRA;
                 int32_t easing_drops = (int32_t)(easing_time / 1800); // 30 min per easing level
-                H = std::max<int32_t>(CASERT_H_MIN, -easing_drops);
+                H = std::max<int32_t>(CASERT_H_MIN_LEGACY, -easing_drops);
             }
         }
     }
@@ -760,19 +772,33 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
 ConsensusParams casert_apply_profile(const ConsensusParams& base,
                                       const CasertDecision& dec,
-                                      int64_t /*height*/)
+                                      int64_t height)
 {
     ConsensusParams out = base;
-    int32_t idx = dec.profile_index - CASERT_H_MIN; // convert to array index
-    if (idx < 0) idx = 0;
-    if (idx >= CASERT_PROFILE_COUNT) idx = CASERT_PROFILE_COUNT - 1;
 
-    const auto& prof = CASERT_PROFILES[idx];
-    out.stab_scale  = prof.scale;
-    out.stab_steps  = prof.steps;
-    out.stab_k      = prof.k;
-    out.stab_margin = prof.margin;
-    out.stab_profile_index = idx + CASERT_H_MIN; // store actual profile index
+    // V8 (block 5750+): use new 43-profile table (E7..H35)
+    // Pre-V8: use legacy 40-profile table (E4..H35)
+    if (height >= CASERT_CEILING_H13_HEIGHT) {
+        int32_t idx = dec.profile_index - CASERT_H_MIN;
+        if (idx < 0) idx = 0;
+        if (idx >= CASERT_PROFILE_COUNT) idx = CASERT_PROFILE_COUNT - 1;
+        const auto& prof = CASERT_PROFILES[idx];
+        out.stab_scale  = prof.scale;
+        out.stab_steps  = prof.steps;
+        out.stab_k      = prof.k;
+        out.stab_margin = prof.margin;
+        out.stab_profile_index = idx + CASERT_H_MIN;
+    } else {
+        int32_t idx = dec.profile_index - CASERT_H_MIN_LEGACY;
+        if (idx < 0) idx = 0;
+        if (idx >= CASERT_PROFILE_COUNT_LEGACY) idx = CASERT_PROFILE_COUNT_LEGACY - 1;
+        const auto& prof = CASERT_PROFILES_LEGACY[idx];
+        out.stab_scale  = prof.scale;
+        out.stab_steps  = prof.steps;
+        out.stab_k      = prof.k;
+        out.stab_margin = prof.margin;
+        out.stab_profile_index = idx + CASERT_H_MIN_LEGACY;
+    }
     return out;
 }
 

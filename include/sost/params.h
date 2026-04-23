@@ -143,24 +143,31 @@ inline constexpr int64_t  CASERT_DIRECT_LAG_HEIGHT       = 5323;
 // Block 5075: H10 ceiling (V6 era).
 // Block 5480: H11 ceiling.
 // Block 5635: H12 ceiling + relief valve.
-// All safety nets (lag-adjust 30s, anti-stall 60min, bitsQ, slew ±1) apply equally.
+// Block 5750: H13 ceiling + equalizer overhaul.
+// All safety nets (lag-adjust ~6s, anti-stall 60min, bitsQ, slew ±1) apply equally.
 inline constexpr int64_t  CASERT_CEILING_HEIGHT        = 5075;
 inline constexpr int64_t  CASERT_CEILING_H11_HEIGHT    = 5480;
 inline constexpr int64_t  CASERT_CEILING_H12_HEIGHT    = 5635;
+inline constexpr int64_t  CASERT_CEILING_H13_HEIGHT    = 5750;
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING  = 10;    // H10 (block 5075+)
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H11 = 11; // H11 (block 5480+)
 inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H12 = 12; // H12 (block 5635+)
+inline constexpr int32_t  CASERT_HARD_PROFILE_CEILING_H13 = 13; // H13 (block 5750+)
 
 // Profile floor enforcement: block 5560+ — declared profile must fall within
 // the deterministic range computed by casert_compute (ceiling AND floor).
 // Fixes: H10 → H1 invalid easing bug (block 5525).
 inline constexpr int64_t  CASERT_PROFILE_FLOOR_HEIGHT = 5560;
 
-// Relief valve: block 5635+ — if block elapsed > 630s (10m 30s),
-// profile drops to min(H1, target_profile) for that block only.
+// Relief valve: block 5750+ — if block elapsed > 605s (10m 5s),
+// profile drops to E7 (H_MIN) for that block only.
 // Next block returns to normal lag-based profile.
-inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT = 5635;
-inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD = 630; // 10 min 30 sec
+// Pre-5750: block 5635+ used 630s threshold and min(H1, target).
+inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT = 5750;
+inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD = 605; // 10 min 5 sec
+// Legacy relief valve (block 5635-5749)
+inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT_V1 = 5635;
+inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD_V1 = 630; // 10 min 30 sec
 
 inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
@@ -265,9 +272,9 @@ inline constexpr int32_t  CASERT_K_B              = 3277;   // 0.05 — burst sc
 inline constexpr int32_t  CASERT_K_V              = 1311;   // 0.02 — volatility (was 0.10)
 
 // Profile index bounds
-inline constexpr int32_t  CASERT_H_MIN            = -4;     // E4 (emergency easing)
+inline constexpr int32_t  CASERT_H_MIN            = -7;     // E7 (emergency easing)
 inline constexpr int32_t  CASERT_H_MAX_PRE_CAL         = 12;     // V6: H12 max (pre-V7)
-inline constexpr int32_t  CASERT_H_MAX            = 35;     // V6-cal: H35 max — all 40 profiles active (E4 through H35)
+inline constexpr int32_t  CASERT_H_MAX            = 35;     // V6-cal: H35 max — all 43 profiles active (E7 through H35)
 inline constexpr int32_t  CASERT_HYSTERESIS        = 0;     // v1: disabled
 
 // dt clamp for r_n calculation
@@ -281,25 +288,68 @@ inline constexpr int64_t  CASERT_ANTISTALL_FLOOR  = 7200;   // minimum 2 hours
 inline constexpr int64_t  CASERT_ANTISTALL_EASING_EXTRA = 21600; // 6h at B0 before easing
 inline constexpr int32_t  CASERT_ANTISTALL_INTEG_DECAY = 240; // I *= 240/256 per 600s
 
-// --- cASERT profile table (37 profiles) ---
-// Each profile: { scale, steps, k, margin }
-// Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 32=H32
-// Active range: E4(-4) to H32(+32).
-// V7 (block 5100): extended from 17 to 37 profiles. H10+ redesigned with
-// alternating k/steps increments and uniform 5-point margin gradient.
-// Dynamic lag cap (H <= lag) replaces fixed H11/H12 reservation.
+// --- cASERT profile struct ---
 struct CasertProfile {
     int32_t scale, steps, k, margin;
 };
 
-inline constexpr CasertProfile CASERT_PROFILES[] = {
+// --- cASERT legacy profile table (40 profiles, pre-V8: blocks < 5750) ---
+// Preserved for consensus compatibility with historical blocks.
+// Index: -4=E4, -3=E3, ..., 0=B0, 1=H1, ..., 35=H35
+inline constexpr int32_t CASERT_H_MIN_LEGACY = -4;
+inline constexpr int32_t CASERT_PROFILE_COUNT_LEGACY = 40;
+inline constexpr CasertProfile CASERT_PROFILES_LEGACY[] = {
     // E4       E3       E2       E1       B0
     {1,2,3,280}, {1,3,3,240}, {1,4,3,225}, {1,4,4,205}, {1,4,4,185},
     // H1       H2       H3       H4       H5
     {1,5,4,170}, {1,5,5,160}, {1,6,5,150}, {1,6,6,145}, {2,5,5,140},
     // H6       H7       H8       H9
     {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120},
-    // H10-H32: scale=2, k and steps alternate +1, margin -5 per level
+    // H10-H35: scale=2, k and steps alternate +1, margin 115
+    {2, 8, 7,115},  // H10
+    {2, 8, 8,115},  // H11
+    {2, 9, 8,115},  // H12
+    {2, 9, 9,115},  // H13
+    {2,10, 9,115},  // H14
+    {2,10,10,115},  // H15
+    {2,11,10,115},  // H16
+    {2,11,11,115},  // H17
+    {2,12,11,115},  // H18
+    {2,12,12,115},  // H19
+    {2,13,12,115},  // H20
+    {2,13,13,115},  // H21
+    {2,14,13,115},  // H22
+    {2,14,14,115},  // H23
+    {2,15,14,115},  // H24
+    {2,15,15,115},  // H25
+    {2,16,15,115},  // H26
+    {2,16,16,115},  // H27
+    {2,17,16,115},  // H28
+    {2,17,17,115},  // H29
+    {2,18,17,115},  // H30
+    {2,18,18,115},  // H31
+    {2,19,18,115},  // H32
+    {2,19,19,115},  // H33
+    {2,20,19,115},  // H34
+    {2,20,20,115},  // H35
+};
+
+// --- cASERT profile table V8 (43 profiles, block 5750+) ---
+// Each profile: { scale, steps, k, margin }
+// Index: -7=E7, -6=E6, ..., 0=B0, 1=H1, ..., 35=H35
+// Active range: E7(-7) to H35(+35).
+// V8 (block 5750): extended from 40 to 43 profiles. E7-E5 prepended,
+// E4-H2 margins revised to 5-point gradient. E7 is deepest easing.
+// Dynamic lag cap (H <= lag) replaces fixed H11/H12 reservation.
+
+inline constexpr CasertProfile CASERT_PROFILES[] = {
+    // E7       E6       E5       E4       E3       E2       E1       B0
+    {1,1,1,200}, {1,2,1,195}, {1,2,2,190}, {1,3,2,185}, {1,3,3,180}, {1,4,3,175}, {1,4,4,170}, {1,4,4,165},
+    // H1       H2       H3       H4       H5
+    {1,5,4,160}, {1,5,5,155}, {1,6,5,150}, {1,6,6,145}, {2,5,5,140},
+    // H6       H7       H8       H9
+    {2,6,5,135}, {2,6,6,130}, {2,7,6,125}, {2,7,7,120},
+    // H10-H35: scale=2, k and steps alternate +1, margin 115
     {2, 8, 7,115},  // H10
     {2, 8, 8,115},  // H11 — margin=115 from block 10,000 (was 110)
     {2, 9, 8,115},  // H12 — margin=115 (was 105)
@@ -327,12 +377,13 @@ inline constexpr CasertProfile CASERT_PROFILES[] = {
     {2,20,19,115},  // H34
     {2,20,20,115},  // H35
 };
-inline constexpr int32_t CASERT_PROFILE_COUNT = 40;
+inline constexpr int32_t CASERT_PROFILE_COUNT = 43;
 // Index offset: profile_index - CASERT_H_MIN = array index
-// profile_index -4 → array[0] (E4)
-// profile_index  0 → array[4] (B0)
-// profile_index  9 → array[13] (H9)
-// profile_index 32 → array[36] (H32) — highest hardening profile
+// profile_index -7 → array[0] (E7)
+// profile_index -4 → array[3] (E4)
+// profile_index  0 → array[7] (B0)
+// profile_index  9 → array[16] (H9)
+// profile_index 35 → array[42] (H35) — highest hardening profile
 
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;
@@ -345,7 +396,7 @@ inline constexpr int32_t CX_CP_M      = 6250;  // 100000/16
 // ConvergenceX baseline stability (B0 profile matches these)
 inline constexpr int32_t CX_STB_SCALE  = 1;
 inline constexpr int32_t CX_STB_K      = 4;
-inline constexpr int32_t CX_STB_MARGIN = 185;     // Must match B0 profile in CASERT_PROFILES
+inline constexpr int32_t CX_STB_MARGIN = 185;     // Genesis B0 margin (pre-V8; V8+ B0=165 via profile table)
 inline constexpr int32_t CX_STB_STEPS  = 4;
 inline constexpr int32_t CX_STB_LR     = 20;   // LR_SHIFT+2
 

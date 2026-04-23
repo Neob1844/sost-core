@@ -937,9 +937,9 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         else if (pi <= 15) stability_pct = 1;
         else stability_pct = 0;
     }
-    // Profile name from index (37 profiles: E4 through H32)
+    // Profile name from index (43 profiles: E7 through H35)
     static const char* PROF_NAMES[] = {
-        "E4","E3","E2","E1","B0",
+        "E7","E6","E5","E4","E3","E2","E1","B0",
         "H1","H2","H3","H4","H5","H6","H7","H8","H9",
         "H10","H11","H12","H13","H14","H15","H16","H17","H18","H19",
         "H20","H21","H22","H23","H24","H25","H26","H27","H28","H29",

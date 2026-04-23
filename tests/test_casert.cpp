@@ -92,23 +92,59 @@ int main() {
 
     printf("\n=== 3. PROFILE TABLE ===\n");
 
+    // 3.1 Legacy profile table (pre-V8, height < 5750)
+    {
+        CasertDecision dec{};
+        ConsensusParams base{}; base.stab_scale=1; base.stab_k=4; base.stab_steps=4; base.stab_margin=180;
+        for (int32_t h = CASERT_H_MIN_LEGACY; h <= CASERT_H_MAX; ++h) {
+            dec.profile_index = h;
+            auto out = casert_apply_profile(base, dec, 5000); // pre-V8 height
+            int32_t ai = h - CASERT_H_MIN_LEGACY;
+            char buf[128];
+            snprintf(buf, sizeof(buf), "legacy H=%d: scale=%d steps=%d k=%d margin=%d", h, out.stab_scale, out.stab_steps, out.stab_k, out.stab_margin);
+            TEST(buf, out.stab_scale == CASERT_PROFILES_LEGACY[ai].scale && out.stab_k == CASERT_PROFILES_LEGACY[ai].k);
+        }
+    }
+    // 3.2 Legacy B0 at pre-V8 height
+    {
+        CasertDecision dec{}; dec.profile_index = 0;
+        ConsensusParams base{};
+        auto out = casert_apply_profile(base, dec, 5000);
+        TEST("legacy B0: scale=1 k=4 steps=4 margin=185", out.stab_scale==1 && out.stab_k==4 && out.stab_steps==4 && out.stab_margin==185);
+    }
+    // 3.3 V8 profile table (block 5750+)
     {
         CasertDecision dec{};
         ConsensusParams base{}; base.stab_scale=1; base.stab_k=4; base.stab_steps=4; base.stab_margin=180;
         for (int32_t h = CASERT_H_MIN; h <= CASERT_H_MAX; ++h) {
             dec.profile_index = h;
-            auto out = casert_apply_profile(base, dec);
-            int32_t ai = h - CASERT_H_MIN; // convert to array index
+            auto out = casert_apply_profile(base, dec, CASERT_CEILING_H13_HEIGHT); // V8 height
+            int32_t ai = h - CASERT_H_MIN;
             char buf[128];
-            snprintf(buf, sizeof(buf), "H=%d: scale=%d steps=%d k=%d margin=%d", h, out.stab_scale, out.stab_steps, out.stab_k, out.stab_margin);
+            snprintf(buf, sizeof(buf), "V8 H=%d: scale=%d steps=%d k=%d margin=%d", h, out.stab_scale, out.stab_steps, out.stab_k, out.stab_margin);
             TEST(buf, out.stab_scale == CASERT_PROFILES[ai].scale && out.stab_k == CASERT_PROFILES[ai].k);
         }
     }
+    // 3.4 V8 B0 at block 5750
     {
         CasertDecision dec{}; dec.profile_index = 0;
         ConsensusParams base{};
-        auto out = casert_apply_profile(base, dec);
-        TEST("B0: scale=1 k=4 steps=4 margin=185", out.stab_scale==1 && out.stab_k==4 && out.stab_steps==4 && out.stab_margin==185);
+        auto out = casert_apply_profile(base, dec, CASERT_CEILING_H13_HEIGHT);
+        TEST("V8 B0: scale=1 k=4 steps=4 margin=165", out.stab_scale==1 && out.stab_k==4 && out.stab_steps==4 && out.stab_margin==165);
+    }
+    // 3.5 V8 E7 profile
+    {
+        CasertDecision dec{}; dec.profile_index = -7;
+        ConsensusParams base{};
+        auto out = casert_apply_profile(base, dec, CASERT_CEILING_H13_HEIGHT);
+        TEST("V8 E7: scale=1 steps=1 k=1 margin=200", out.stab_scale==1 && out.stab_steps==1 && out.stab_k==1 && out.stab_margin==200);
+    }
+    // 3.6 V8 E5 profile
+    {
+        CasertDecision dec{}; dec.profile_index = -5;
+        ConsensusParams base{};
+        auto out = casert_apply_profile(base, dec, CASERT_CEILING_H13_HEIGHT);
+        TEST("V8 E5: scale=1 steps=2 k=2 margin=190", out.stab_scale==1 && out.stab_steps==2 && out.stab_k==2 && out.stab_margin==190);
     }
 
     printf("\n=== 4. ANTI-STALL ===\n");
@@ -158,9 +194,15 @@ int main() {
     TEST("CASERT_V2_FORK_HEIGHT == 1450", CASERT_V2_FORK_HEIGHT == 1450);
     TEST("GENESIS_BITSQ >= Q16_ONE", GENESIS_BITSQ >= Q16_ONE);
     TEST("MIN_BITSQ == Q16_ONE", MIN_BITSQ == Q16_ONE);
-    TEST("H_MIN == -4", CASERT_H_MIN == -4);
+    TEST("H_MIN == -7", CASERT_H_MIN == -7);
+    TEST("H_MIN_LEGACY == -4", CASERT_H_MIN_LEGACY == -4);
     TEST("H_MAX == 35", CASERT_H_MAX == 35);
-    TEST("PROFILE_COUNT == 40", CASERT_PROFILE_COUNT == 40);
+    TEST("PROFILE_COUNT == 43", CASERT_PROFILE_COUNT == 43);
+    TEST("PROFILE_COUNT_LEGACY == 40", CASERT_PROFILE_COUNT_LEGACY == 40);
+    TEST("CEILING_H13_HEIGHT == 5750", CASERT_CEILING_H13_HEIGHT == 5750);
+    TEST("HARD_PROFILE_CEILING_H13 == 13", CASERT_HARD_PROFILE_CEILING_H13 == 13);
+    TEST("RELIEF_VALVE_THRESHOLD == 605", CASERT_RELIEF_VALVE_THRESHOLD == 605);
+    TEST("RELIEF_VALVE_HEIGHT == 5750", CASERT_RELIEF_VALVE_HEIGHT == 5750);
 
     printf("\n=== 8. SLEW RATE ===\n");
 
@@ -347,7 +389,7 @@ int main() {
         for (auto& b : chain) b.time += 26 * TARGET_SPACING;  // lag -> -26
         auto dec = casert_compute(chain, CASERT_V5_FORK_HEIGHT, 0);
         TEST("V5 EBR severe tier: lag<=-25 -> H at E4",
-             dec.profile_index == CASERT_H_MIN);
+             dec.profile_index == CASERT_H_MIN_LEGACY);
     }
 
     // 5.4 Stateless Ahead Guard: deterministic across repeated calls
@@ -918,6 +960,111 @@ int main() {
         auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 5, stall_ts);
         TEST("H12: 620s stall (under relief) -> descends via slew fix",
              dec.profile_index <= 11);
+    }
+
+    // =========================================================================
+    // 18. H13 ceiling activation at block 5750
+    // =========================================================================
+    printf("\n--- 18. H13 ceiling activation (block %lld) ---\n", (long long)CASERT_CEILING_H13_HEIGHT);
+
+    // 18.1 Before H13 activation (block 5749): lag=13 → H12 ceiling
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT - 1, 20, TARGET_SPACING, 12, -13 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT - 1, 0);
+        TEST("H13: before activation (5749), lag=13 -> H12 ceiling",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H12);
+    }
+
+    // 18.2 At H13 activation (block 5750): lag=13 → H13
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT, 20, TARGET_SPACING, 12, -13 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT, 0);
+        TEST("H13: at activation (5750), lag=13 -> H13 allowed",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H13);
+    }
+
+    // 18.3 H13 ceiling: lag=50 → still H13 (not higher)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 10, 20, TARGET_SPACING, 13, -50 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 10, 0);
+        TEST("H13: lag=50 -> H13 ceiling (not higher)",
+             dec.profile_index == CASERT_HARD_PROFILE_CEILING_H13);
+    }
+
+    // 18.4 H13 from H12: prev=H12, lag=13 → H13 (upward immediate)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 12, -13 * TARGET_SPACING);
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 5, 0);
+        TEST("H13: prev=H12, lag=13 -> H13 (upward immediate)",
+             dec.profile_index == 13);
+    }
+
+    // 18.5 Anti-stall at H13: 60min stall → decays below H13
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t stall_time = chain.back().time + 3600 + 600;
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 5, stall_time);
+        TEST("H13 anti-stall: 60min stall -> decays below H13",
+             dec.profile_index < 13);
+    }
+
+    // =========================================================================
+    // 19. V8 Relief valve (block 5750+): drop to E7 at 605s
+    // =========================================================================
+    printf("\n--- 19. V8 relief valve (block %lld, threshold %llds) ---\n",
+           (long long)CASERT_RELIEF_VALVE_HEIGHT, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
+
+    // 19.1 Relief valve V8: elapsed > 605s → drops to E7 (-7)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 700; // 11m 40s > 10m 5s threshold
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 5, stall_ts);
+        TEST("V8 relief valve: 700s elapsed -> E7 (-7)",
+             dec.profile_index == CASERT_H_MIN);
+    }
+
+    // 19.2 No relief at 604s
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t normal_ts = chain.back().time + 604; // just under 605s
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 5, normal_ts);
+        TEST("V8 relief valve: 604s elapsed -> no relief (profile > E7)",
+             dec.profile_index > CASERT_H_MIN);
+    }
+
+    // 19.3 Relief at exactly 606s (just over threshold)
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 606;
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 5, stall_ts);
+        TEST("V8 relief valve: 606s elapsed -> E7",
+             dec.profile_index == CASERT_H_MIN);
+    }
+
+    // 19.4 After relief: next block returns to normal lag-based profile
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H13_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        // Simulate previous block mined with relief (E7)
+        BlockMeta relief_block;
+        relief_block.block_id = ZERO_HASH();
+        relief_block.height = CASERT_CEILING_H13_HEIGHT + 5;
+        relief_block.time = chain.back().time + 700;
+        relief_block.powDiffQ = GENESIS_BITSQ;
+        relief_block.profile_index = CASERT_H_MIN; // was E7 due to relief
+        chain.push_back(relief_block);
+        // Next block: no stall, should go back to lag-based profile
+        auto dec = casert_compute(chain, CASERT_CEILING_H13_HEIGHT + 6, 0);
+        TEST("V8 relief: next block returns to lag-based profile (>= H10)",
+             dec.profile_index >= 10);
+    }
+
+    // 19.5 Legacy relief valve (block 5635-5749): still uses 630s and H1
+    {
+        auto chain = make_chain_at_height(CASERT_CEILING_H12_HEIGHT + 5, 20, TARGET_SPACING, 12, -12 * TARGET_SPACING);
+        int64_t stall_ts = chain.back().time + 700; // > 630s legacy threshold
+        auto dec = casert_compute(chain, CASERT_CEILING_H12_HEIGHT + 5, stall_ts);
+        TEST("legacy relief (5640): 700s -> profile <= H1 (not E7)",
+             dec.profile_index <= 1 && dec.profile_index >= CASERT_H_MIN_LEGACY);
     }
 
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);

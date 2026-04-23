@@ -121,7 +121,7 @@
 <nav>
   <div class="container">
     <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span><a href="sost-dex.html" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);font-weight:900;font-size:14px;color:#000;text-decoration:none;margin-left:12px;box-shadow:0 0 12px rgba(245,158,11,0.4);letter-spacing:-1px" title="SOST DEX — Position Trading Desk">DEX</a>
+      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span><a href="sost-dex.html" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);font-weight:900;font-size:16px;color:#000;text-decoration:none;margin-left:12px;box-shadow:0 0 12px rgba(245,158,11,0.4);letter-spacing:-1px" title="SOST DEX — Position Trading Desk">DEX</a>
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
@@ -143,8 +143,6 @@
       <a href="sost-foundation.html">Foundation</a>
       <a href="sost-foundation-balances.html">Foundation Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
-      <a href="sost-positions.html" style="color:#f59e0b">Positions</a>
-      <a href="sost-position-market.html" style="color:#f59e0b">Position Market</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
       <a href="sost-gold-dex.html" style="color:var(--text-dim)">DEX Spec</a>
@@ -234,7 +232,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does difficulty adjustment work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): since block 5175, bitsQ uses avg288 &mdash; comparing the average of the last 288 block intervals against the 600-second target. This replaced the earlier half-life exponential model (V1: 48h, V2: 24h &mdash; both historical only). Since block 5260, a dynamic cap scales the maximum per-block adjustment by deviation: 0%/0.5%/1.5%/2.5%/3.0%, with a median288 consistency check. bitsQ is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: emergency-only stability controller with a ceiling of H11 (block 5,480+) and 40 profiles total (17 active E4&ndash;H12, 23 reserved H13&ndash;H35). H12+ profiles carry margin=115. If the chain runs too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer hardens ConvergenceX stability requirements. It eases back toward B0 only when the chain is genuinely running slow. If mining stalls for 2+ hours, a zone-based decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission in emergency scenarios.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST uses cASERT, a unified difficulty adjustment system with two components:<br><br><strong>cASERT bitsQ</strong> (primary controller): since block 5175, bitsQ uses avg288 &mdash; comparing the average of the last 288 block intervals against the 600-second target. This replaced the earlier half-life exponential model (V1: 48h, V2: 24h &mdash; both historical only). Since block 5260, a dynamic cap scales the maximum per-block adjustment by deviation: 0%/0.5%/1.5%/2.5%/3.0%, with a median288 consistency check. bitsQ is the primary long-term calibration mechanism.<br><br><strong>cASERT equalizer</strong>: emergency-only stability controller with a ceiling of H13 (block 5,750+) and 43 profiles total (21 active E7&ndash;H13, 22 reserved H14&ndash;H35). H14+ profiles carry margin=100. This completes the cASERT equalizer calibration. If the chain runs too fast relative to the ideal schedule (genesis + height &times; 600s), the equalizer hardens ConvergenceX stability requirements. It eases back toward B0 only when the chain is genuinely running slow. If mining stalls for 2+ hours, a zone-based decay mechanism gradually reduces the level to prevent chain halt. bitsQ corrects speed; the equalizer protects emission in emergency scenarios.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
