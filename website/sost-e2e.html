@@ -381,6 +381,40 @@ Offset  Size   Field         Description
 <div class="note"><strong>Defense in depth:</strong> Rate limiting, peer limits, ban scoring, and encryption together provide layered protection. An attacker must overcome all layers simultaneously, making resource exhaustion attacks impractical against well-connected SOST nodes.</div>
 </div></section>
 
+<section><div class="c">
+<h2>E2E <span style="color:#00ff88">Encryption</span> (Phase XIII+XIV)</h2>
+<p>Deal channels now use <strong>true end-to-end encryption</strong>. The relay is blind transport &mdash; it cannot read message content.</p>
+
+<h3>Cryptographic Stack</h3>
+<table>
+<tr><td><strong>Identity &amp; Signing</strong></td><td>ED25519 (permanent, signs everything)</td></tr>
+<tr><td><strong>Key Agreement</strong></td><td>X25519 (per-deal ephemeral key exchange)</td></tr>
+<tr><td><strong>Key Derivation</strong></td><td>HKDF-SHA256 with directional labels</td></tr>
+<tr><td><strong>Payload Encryption</strong></td><td>ChaCha20-Poly1305 AEAD</td></tr>
+<tr><td><strong>Replay Protection</strong></td><td>Sequence numbers + sliding window + nonce dedup</td></tr>
+</table>
+
+<h3>Prekey Architecture</h3>
+<table>
+<tr><td><strong>Signed Prekey</strong></td><td>X25519, rotated every 7 days, signed by ED25519 identity key</td></tr>
+<tr><td><strong>One-Time Prekeys</strong></td><td>Consumed once per session, replenished in batches of 10</td></tr>
+<tr><td><strong>Async Bootstrap</strong></td><td>Sender initiates encrypted channel while recipient is offline</td></tr>
+<tr><td><strong>Offline Delivery</strong></td><td>Store-and-forward queue, 7-day TTL, delivery receipts</td></tr>
+</table>
+
+<h3>What the Relay Can and Cannot Do</h3>
+<table>
+<tr><td style="color:#00ff88"><strong>CAN</strong></td><td>Store, forward, route encrypted envelopes</td></tr>
+<tr><td style="color:#00ff88"><strong>CAN</strong></td><td>Verify header signatures for routing authentication</td></tr>
+<tr><td style="color:#00ff88"><strong>CAN</strong></td><td>Queue messages for offline recipients</td></tr>
+<tr><td style="color:#fb010d"><strong>CANNOT</strong></td><td>Read message payload content</td></tr>
+<tr><td style="color:#fb010d"><strong>CANNOT</strong></td><td>Fabricate valid encrypted messages</td></tr>
+<tr><td style="color:#fb010d"><strong>CANNOT</strong></td><td>Reuse one-time prekeys without detection</td></tr>
+</table>
+
+<div class="note"><strong>Not yet implemented:</strong> Double ratchet (continuous forward secrecy), post-compromise security, deniability. These are planned for a future phase. Current test coverage: <strong>231 TypeScript tests, 0 failures.</strong></div>
+</div></section>
+
 <footer><div class="c">
 <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--t4)">SOST</p>
 <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a></p>

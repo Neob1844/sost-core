@@ -2489,16 +2489,32 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <p class="wp-p">SOST is building a cooperative value system based on self-custodied tokenized gold and precious metals, with a signed position market, private economic coordination, and verifiable settlement. The system is designed around identified positions and contractual rights &mdash; not generic fungible pool tokens.</p>
 <div class="wp-spacer"></div>
-<h3 id="sec-svs-1" class="wp-h">12.5.1 E2E Encrypted Coordination Layer (ED25519)</h3>
+<h3 id="sec-svs-1" class="wp-h">12.5.1 E2E Encrypted Coordination Layer</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">All trade coordination uses <strong>ED25519 cryptographic signatures</strong> over canonical SHA-256 hashes. Every message &mdash; offer, accept, cancel, settlement notice &mdash; carries a signature, a unique nonce (anti-replay), and an expiry. Messages flow through a <strong>relay node</strong> with persistent deal channels (one channel per deal_id).</p>
+<p class="wp-p">All trade coordination uses <strong>true end-to-end encryption</strong>. The relay is <strong>blind transport</strong> &mdash; it can store, forward, and route messages but <strong>cannot read their content</strong>. Only the two parties of a deal can decrypt the payload.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">The E2E layer is purpose-built for economic coordination between counterparties. It is not general-purpose chat. It supports signed trade offers (with asset_type: GOLD, POSITION_FULL, POSITION_REWARD_RIGHT), signed acceptances with deterministic deal_id derivation, cancellations and settlement notices, nonce-based replay rejection, and per-deal private channels with message persistence.</p>
+<p class="wp-p"><strong>Cryptographic stack:</strong></p>
+<div class="wp-bullet">&bull; <strong>Identity &amp; Signing:</strong> ED25519 (permanent identity, signs everything)</div>
+<div class="wp-bullet">&bull; <strong>Key Agreement:</strong> X25519 (per-deal ephemeral key exchange)</div>
+<div class="wp-bullet">&bull; <strong>Key Derivation:</strong> HKDF-SHA256 (directional send/recv channel keys)</div>
+<div class="wp-bullet">&bull; <strong>Payload Encryption:</strong> ChaCha20-Poly1305 AEAD (authenticated encryption)</div>
+<div class="wp-bullet">&bull; <strong>Replay Protection:</strong> sequence numbers + sliding window + nonce dedup per session</div>
 <div class="wp-spacer"></div>
-<div class="wp-bullet">&bull; Signed trade offers, acceptances, cancellations, settlement notices</div>
-<div class="wp-bullet">&bull; Off-chain first, replay-resistant, canonical hashes</div>
-<div class="wp-bullet">&bull; Private economic coordination, not general chat</div>
-<div class="wp-bullet">&bull; Authenticated intent exchange between counterparties</div>
+<p class="wp-p"><strong>Prekey architecture (offline delivery):</strong></p>
+<div class="wp-bullet">&bull; <strong>Signed Prekey</strong> (X25519): rotated every 7 days, signed by ED25519 identity key</div>
+<div class="wp-bullet">&bull; <strong>One-Time Prekeys</strong> (X25519): consumed once per session, replenished in batches</div>
+<div class="wp-bullet">&bull; <strong>Async session bootstrap:</strong> sender initiates encrypted channel while recipient is offline</div>
+<div class="wp-bullet">&bull; <strong>Store-and-forward:</strong> relay queues encrypted messages (7-day TTL), delivers when recipient returns</div>
+<div class="wp-bullet">&bull; <strong>Delivery receipts:</strong> delivered / acknowledged / processed</div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>What the E2E layer supports:</strong></p>
+<div class="wp-bullet">&bull; Signed + encrypted trade offers (GOLD, POSITION_FULL, POSITION_REWARD_RIGHT)</div>
+<div class="wp-bullet">&bull; Signed + encrypted acceptances with deterministic deal_id derivation</div>
+<div class="wp-bullet">&bull; Encrypted cancellations and settlement notices</div>
+<div class="wp-bullet">&bull; Per-deal private channels with encrypted message persistence</div>
+<div class="wp-bullet">&bull; Header minimization (only routing metadata visible, all economics encrypted)</div>
+<div class="wp-spacer"></div>
+<p class="wp-p" style="color:#888"><em>Not yet implemented: double ratchet, post-compromise security, deniability. Planned for a future phase.</em></p>
 <div class="wp-spacer"></div>
 <h3 id="sec-svs-2" class="wp-h">12.5.2 SOST Position Market</h3>
 <div class="wp-spacer"></div>
@@ -2551,7 +2567,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <h3 id="sec-svs-5" class="wp-h">12.5.6 Alpha Status</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">Current phase: <strong>limited alpha</strong> (operator-assisted, Sepolia testnet, mock tokens). Test coverage: <strong>375 tests</strong> (Python 217 + TypeScript 139 + Solidity 19), 0 failures. SOSTEscrow deployed on Sepolia with first on-chain gold deposit (0.55 oz total locked). First Model B position registered and tracked. Full position trade and reward-right trade demonstrated with signed messages. Position lifecycle tracking operational.</p>
+<p class="wp-p">Current phase: <strong>limited alpha</strong> (operator-assisted, Sepolia testnet, mock tokens). Test coverage: <strong>467 tests</strong> (Python 217 + TypeScript 231 + Solidity 19), 0 failures. SOSTEscrow deployed on Sepolia with first on-chain gold deposit (0.55 oz total locked). First Model B position registered and tracked. Full position trade and reward-right trade demonstrated with signed messages. Position lifecycle tracking operational. <strong>True E2E encryption operational:</strong> X25519 key agreement + ChaCha20-Poly1305 AEAD + blind relay transport. <strong>Prekey architecture with offline delivery:</strong> signed prekeys, one-time prekeys, async session bootstrap, store-and-forward queue. cASERT H11 ceiling active (block 5,480+). Profile floor enforcement (block 5,560+). Profile descent bug fixed.</p>
 <div class="wp-spacer"></div>
 <h3 id="sec-svs-6" class="wp-h">12.5.7 Strategic Direction</h3>
 <div class="wp-spacer"></div>
@@ -3226,8 +3242,45 @@ cASERT:
 70) H11 ceiling activation at block 5,480 (16 of 40 profiles active)
 71) Block interval chart added to explorer with avg/median explanation</pre>
 <div class="wp-spacer"></div>
+<h3 id="sec-89" class="wp-h">Appendix L: Errata v3.9 (E2E Encryption, Prekeys, Offline Delivery, cASERT Fixes)</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p">Changes from v3.8 to v3.9:</p>
+<div class="wp-spacer"></div>
+<pre class="wp-code">ERRATA v3.9
+
+E2E ENCRYPTION (Phase XIII):
+
+72) X25519 key agreement added (separate from ED25519 signing)
+73) ChaCha20-Poly1305 AEAD payload encryption
+74) HKDF-SHA256 directional channel key derivation
+75) Relay converted to blind transport (cannot read content)
+76) Encrypted envelopes with minimal header for routing
+77) Replay guard with sliding window + nonce dedup per session
+78) Rekey mechanism per deal channel
+
+PREKEYS AND OFFLINE DELIVERY (Phase XIV):
+
+79) Signed Prekey (X25519, rotated 7 days, ED25519-signed)
+80) One-Time Prekeys (consumed once, batch replenishment)
+81) Async session bootstrap (sender initiates while recipient offline)
+82) Store-and-forward offline queue (7-day TTL)
+83) Delivery receipts (delivered / acknowledged / processed)
+84) Key lifecycle policy (rotation, replenishment, health evaluation)
+85) Header minimization (economics inside ciphertext only)
+86) Prekey bundles publishable to relay for offline discovery
+
+CASERT FIXES:
+
+87) H11 profile descent bug fixed: slew proportional to stall time
+88) Profile floor enforcement at block 5,560
+89) Block #5525 H1 validation gap closed
+
+TEST COVERAGE:
+
+90) Total: 467 tests (Python 217 + TypeScript 231 + Solidity 19), 0 failures</pre>
+<div class="wp-spacer"></div>
 <p class="wp-p">Last updated: April 2026</p>
-<p class="wp-p" style="color:#888;">Previous versions: v3.7 (deprecated)</p>
+<p class="wp-p" style="color:#888;">Previous versions: v3.8, v3.7 (deprecated)</p>
 <div class="wp-spacer"></div>
 <h3 class="wp-h">8.4 Post-Quantum Cryptography Roadmap</h3>
 <div class="wp-spacer"></div>

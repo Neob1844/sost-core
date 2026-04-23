@@ -2513,21 +2513,42 @@ rights — not generic fungible pool tokens.
 
 ### 12.5.1 E2E Encrypted Coordination Layer
 
-All trade coordination uses ED25519 cryptographic signatures over canonical SHA-256 hashes.
-Every message — offer, accept, cancel, settlement notice — carries a signature, a unique
-nonce (anti-replay), and an expiry. Messages flow through a relay node with persistent
-deal channels (one channel per deal_id).
+All trade coordination uses true end-to-end encryption. The cryptographic stack:
 
-The E2E layer is purpose-built for economic coordination between counterparties. It is not
-general-purpose chat. It supports:
-  - Signed trade offers (with asset_type: GOLD, POSITION_FULL, POSITION_REWARD_RIGHT)
-  - Signed acceptances (with deterministic deal_id derivation)
-  - Cancellations and settlement notices
-  - Nonce-based replay rejection
-  - Per-deal private channels with message persistence
+  Identity & Signing:  ED25519 (permanent identity, signs everything)
+  Key Agreement:       X25519 (per-deal ephemeral key exchange)
+  Key Derivation:      HKDF-SHA256 (labels: "sost-deal-key-a" / "sost-deal-key-b")
+  Payload Encryption:  ChaCha20-Poly1305 AEAD (authenticated encryption)
+  Replay Protection:   sequence numbers + sliding window + nonce dedup per session
 
-Current status: operational with real ED25519 signatures, relay node with HTTP API,
-139 TypeScript tests passing.
+The relay is blind transport — it can store, forward, and route messages but CANNOT
+read their content. Only the two parties of a deal can decrypt the payload.
+
+Prekey architecture (Phase XIV):
+  - Identity Key (ED25519): permanent, signs everything
+  - Signed Prekey (X25519): rotated every 7 days, signed by identity key
+  - One-Time Prekeys (X25519): consumed once per session, replenished in batches
+  - Prekey bundles publishable to relay for offline session establishment
+
+Offline delivery:
+  - Sender can initiate encrypted session while recipient is offline
+  - Relay queues encrypted messages (store-and-forward, 7-day TTL)
+  - Recipient fetches pending messages when back online
+  - Delivery receipts: delivered / acknowledged / processed
+
+The E2E layer supports:
+  - Signed + encrypted trade offers (GOLD, POSITION_FULL, POSITION_REWARD_RIGHT)
+  - Signed + encrypted acceptances with deterministic deal_id derivation
+  - Encrypted cancellations and settlement notices
+  - Nonce-based replay rejection with sliding window
+  - Per-deal private channels with encrypted message persistence
+  - Async session bootstrap via prekey bundles
+  - Header minimization (only routing metadata visible, all economics encrypted)
+
+Not yet implemented: double ratchet, post-compromise security, deniability.
+These are planned for a future phase.
+
+Current status: 231 TypeScript tests passing across 31 test files.
 
 ### 12.5.2 SOST Position Market
 
@@ -2631,11 +2652,15 @@ ETH is used only for onboarding/exit. SOST handles all registration, trading, an
 ### 12.5.7 Alpha Status
 
 Current phase: limited alpha (operator-assisted, Sepolia testnet, mock tokens).
-Test coverage: 375 tests (Python 217 + TypeScript 139 + Solidity 19), 0 failures.
+Test coverage: 467 tests (Python 217 + TypeScript 231 + Solidity 19), 0 failures.
 SOSTEscrow deployed on Sepolia with first on-chain gold deposit (0.55 oz total locked).
 First Model B position registered and tracked.
 Full position trade and reward-right trade demonstrated with signed messages.
 Position lifecycle tracking operational (maturity ~May 20, 2026).
+True E2E encryption operational: X25519 + ChaCha20-Poly1305 + blind relay.
+Prekey architecture with offline delivery: async session bootstrap, store-and-forward.
+cASERT H11 ceiling active (block 5,480+). Profile floor enforcement (block 5,560+).
+Profile descent bug fixed: slew now proportional to stall time.
 
 ### 12.5.8 Strategic Direction
 
@@ -3737,5 +3762,44 @@ cASERT:
 
 70) H11 ceiling activation at block 5,480 (16 of 40 profiles active)
 71) Block interval chart added to explorer with avg/median explanation
+
+Last updated: April 2026
+
+## Appendix L: Errata v3.9 (E2E Encryption, Prekeys, Offline Delivery, cASERT Fixes)
+
+Changes from v3.8 to v3.9:
+
+E2E ENCRYPTION (Phase XIII):
+
+72) X25519 key agreement added (separate from ED25519 signing)
+73) ChaCha20-Poly1305 AEAD payload encryption
+74) HKDF-SHA256 directional channel key derivation
+75) Relay converted to blind transport (cannot read message content)
+76) Encrypted envelopes with minimal header for routing
+77) Replay guard with sliding window + nonce dedup per session
+78) Rekey mechanism per deal channel
+
+PREKEYS AND OFFLINE DELIVERY (Phase XIV):
+
+79) Signed Prekey (X25519, rotated 7 days, ED25519-signed)
+80) One-Time Prekeys (consumed once, batch replenishment)
+81) Async session bootstrap (sender initiates while recipient offline)
+82) Store-and-forward offline queue (7-day TTL)
+83) Delivery receipts (delivered / acknowledged / processed)
+84) Key lifecycle policy (rotation, replenishment, health evaluation)
+85) Header minimization (shortened field names, economics inside ciphertext)
+86) Prekey bundles publishable to relay for offline discovery
+
+CASERT FIXES:
+
+87) H11 profile descent bug fixed: slew now proportional to stall time
+    (1 level per 10 min of stall, no artificial cap)
+88) Profile floor enforcement at block 5,560
+    (declared profile must be within deterministic [floor, ceiling])
+89) Block #5525 H1 validation gap identified and closed
+
+TEST COVERAGE:
+
+90) Total: 467 tests (Python 217 + TypeScript 231 + Solidity 19), 0 failures
 
 Last updated: April 2026
