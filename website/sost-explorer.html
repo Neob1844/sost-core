@@ -356,6 +356,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(103,232,249,0.03);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:var(--cyan);font-size:9px;font-weight:600;letter-spacing:1px">NOTE FOR MINERS</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">Why some blocks are very fast and others very slow</b><br>
+        <span style="color:var(--text2)">This is <b>completely normal</b> in Proof-of-Work mining. SOST block times follow an exponential distribution &mdash; some blocks take 30 seconds, others take 25 minutes. This is not a bug.</span><br><br>
+        <span style="color:var(--text2)">What matters is the <b>average</b>, not individual blocks. The current avg288 is <b style="color:var(--green)">~10 minutes</b> &mdash; exactly on target. The cASERT equalizer (H9&ndash;H11) adjusts the difficulty of the stability test to keep the chain on schedule. Higher profiles (H10, H11) make blocks harder to find, which slows the chain when it runs ahead.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--cyan)">Example:</b> If you see a 2-minute block followed by a 20-minute block, that&rsquo;s not a problem &mdash; it&rsquo;s math. The avg over 288 blocks (~48h) is what the system targets. A miner with 5% of the hashrate will statistically find ~14 blocks per 48h, but they might get 5 in one hour and then none for 6 hours. Over longer windows, it always averages out.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--gold)">Simulation data:</b> With the current H11 ceiling, the system absorbs the block surplus at +0.19 blocks/hour while maintaining a 9.9 min average. The median is ~6 min, meaning most blocks are actually fast &mdash; occasional slow blocks bring the average up to 10 min. This is the healthiest possible PoW distribution.</span>
+      </div>
       <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,191,36,0.04);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);animation:pulse 1.5s ease infinite"></span>
