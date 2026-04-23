@@ -2616,8 +2616,20 @@ Automation roadmap:
   - Auto-Withdraw Daemon: planned (calls withdraw() at maturity automatically)
   - Reward Engine: planned (credits reward SOST to reward_owner at maturity)
 
-Full automation requires SOSTEscrow v2 with dynamic beneficiary.
-Until then, settlement is operator-assisted.
+SOSTEscrowV2 deployed with dynamic beneficiary and settlementOperator:
+  - currentBeneficiary per deposit (initialized to depositor)
+  - settlementOperator (immutable, set at construction) can update beneficiary
+  - settlementOperator CANNOT withdraw funds — only reassign beneficiary
+  - This enables automated full-sale settlement without seller cooperation
+  - Withdraw restricted to currentBeneficiary only
+
+Full automation roadmap:
+  - Settlement operator pattern: operational (Phase XVII)
+  - Beneficiary handoff after full sale: operational
+  - Auto-withdraw daemon: operational
+  - Reward settlement daemon: operational
+  - Reconciliation tools: operational
+  - 550 tests (Python 272 + TypeScript 231 + Solidity 47), 0 failures
 
 ### 12.5.3 Settlement Engine
 
@@ -3841,5 +3853,35 @@ CASERT FIXES:
 TEST COVERAGE:
 
 90) Total: 467 tests (Python 217 + TypeScript 231 + Solidity 19), 0 failures
+
+Last updated: April 2026
+
+## Appendix M: Errata v3.10 (Beneficiary Handoff, Relief Valve, H12)
+
+Changes from v3.9 to v3.10:
+
+BENEFICIARY AUTOMATION (Phase XVI-XVII):
+
+91) principal_owner / reward_owner / eth_beneficiary separation in position schema
+92) SOSTEscrowV2 with settlementOperator for automated beneficiary handoff
+93) Full sale: changes principal + reward + beneficiary. Reward sale: only reward.
+94) settlementOperator can reassign beneficiary but CANNOT withdraw funds
+95) Auto-withdraw daemon: executes withdraw at maturity automatically
+96) Reward settlement daemon: credits reward to reward_owner at maturity
+97) Maturity watcher: ACTIVE → NEARING_MATURITY → MATURED transitions
+98) Beneficiary sync: on-chain update after full position trade
+99) Reconciliation tools: beneficiary, withdraw, reward status checks
+100) Full lifecycle: ACTIVE → MATURED → WITHDRAWN → REWARD_SETTLED → CLOSED
+
+CASERT:
+
+101) H12 ceiling activation at block 5,635 (17 of 40 profiles active)
+102) Relief valve at block 5,635: profile drops to H1 when block > 10m 30s
+103) Profile descent fix: slew proportional to stall time (1 level per 10 min)
+104) Profile floor enforcement at block 5,560
+
+TEST COVERAGE:
+
+105) Total: 550 tests (Python 272 + TypeScript 231 + Solidity 47), 0 failures
 
 Last updated: April 2026
