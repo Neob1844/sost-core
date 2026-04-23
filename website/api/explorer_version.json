@@ -1,1 +1,1 @@
-{"v":"2026-04-23-miner-note","note":"Added miner explanation about block time variance"}
+{"v":"2026-04-23-slew-fix","note":"Profile descent bug fixed — blocks no longer stuck at H10/H11"}
