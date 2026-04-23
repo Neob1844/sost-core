@@ -2579,6 +2579,46 @@ The market exists because the same position does not have the same value for eve
 sellers want immediate liquidity; buyers want discounted future value. This is analogous
 to selling a bond before maturity or separating coupon from principal.
 
+### 12.5.2b Ownership Rules (Constitutional)
+
+Every Model B position has two separate rights:
+
+  1. Right to the Principal (principal_owner)
+     The right to recover the gold locked in the escrow at maturity.
+
+  2. Right to the Reward (reward_owner)
+     The right to receive the SOST reward at maturity.
+     Can be sold separately without affecting the principal.
+
+Constitutional rule:
+  "The right to the principal belongs to the principal_owner.
+   The right to the reward belongs to the reward_owner.
+   The escrow pays to the currentBeneficiary, which must always
+   reflect the principal_owner of the position."
+
+Full position sale:
+  Before: principal_owner=Angel, reward_owner=Angel, eth_beneficiary=Angel
+  After:  principal_owner=Pedro, reward_owner=Pedro, eth_beneficiary=Pedro
+  At maturity: gold → Pedro, reward SOST → Pedro
+
+Reward-right sale only:
+  Before: principal_owner=Angel, reward_owner=Angel, eth_beneficiary=Angel
+  After:  principal_owner=Angel, reward_owner=Pedro, eth_beneficiary=Angel
+  At maturity: gold → Angel, reward SOST → Pedro
+
+Automation roadmap:
+  - Settlement Engine: operational (verifies, executes, updates ownership)
+  - E2E Relay: operational (encrypted coordination, blind transport)
+  - Position Registry: operational (tracks principal_owner, reward_owner)
+  - Maturity Tracker: operational (monitors unlock times)
+  - SOSTEscrow v1: deployed on Sepolia (pays original depositor only)
+  - SOSTEscrow v2: planned (adds currentBeneficiary — pays whoever owns principal)
+  - Auto-Withdraw Daemon: planned (calls withdraw() at maturity automatically)
+  - Reward Engine: planned (credits reward SOST to reward_owner at maturity)
+
+Full automation requires SOSTEscrow v2 with dynamic beneficiary.
+Until then, settlement is operator-assisted.
+
 ### 12.5.3 Settlement Engine
 
 The settlement stack consists of:

@@ -214,6 +214,61 @@ footer a{color:var(--t3);text-decoration:none}
 
 </div></section>
 
+<!-- OWNERSHIP RULES -->
+<section style="border-bottom:none;padding-bottom:0"><div class="c">
+<h2>Ownership <span style="color:var(--t1)">Rules</span></h2>
+
+<div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--red);padding:20px;border-radius:4px;line-height:1.8;font-size:12px;color:var(--t2);margin-bottom:20px">
+<p style="color:var(--t1);font-weight:600;margin-bottom:8px">Constitutional Rule</p>
+<p><em style="color:var(--gold)">The right to the principal belongs to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">principal_owner</code>. The right to the reward belongs to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">reward_owner</code>. The escrow pays to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code>, which must always reflect the principal_owner.</em></p>
+</div>
+
+<p style="color:var(--t2);font-size:13px;line-height:1.8">Every Model B position has <strong>two separate rights</strong>:</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
+<p style="color:var(--gold);font-weight:600;margin-bottom:8px">1. Right to the Principal</p>
+<p style="color:var(--t2);font-size:12px;line-height:1.6">The right to recover the gold locked in the escrow at maturity. Belongs to <code style="background:var(--bg3);padding:1px 4px;color:var(--red);font-size:11px">principal_owner</code>.</p>
+</div>
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
+<p style="color:var(--cyan);font-weight:600;margin-bottom:8px">2. Right to the Reward</p>
+<p style="color:var(--t2);font-size:12px;line-height:1.6">The right to receive the SOST reward at maturity. Belongs to <code style="background:var(--bg3);padding:1px 4px;color:var(--red);font-size:11px">reward_owner</code>. Can be sold separately.</p>
+</div>
+</div>
+
+<h3 style="color:var(--gold);margin:20px 0 12px">Full Position Sale</h3>
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2;margin-bottom:16px">
+<strong style="color:var(--t1)">Before:</strong> principal_owner = Angel &middot; reward_owner = Angel &middot; eth_beneficiary = Angel<br>
+<strong style="color:var(--t1)">After:</strong> principal_owner = <span style="color:var(--green)">Pedro</span> &middot; reward_owner = <span style="color:var(--green)">Pedro</span> &middot; eth_beneficiary = <span style="color:var(--green)">Pedro</span><br>
+<strong style="color:var(--t1)">At maturity:</strong> Escrow returns gold to <span style="color:var(--green)">Pedro</span>. Reward SOST goes to <span style="color:var(--green)">Pedro</span>.
+</div>
+
+<h3 style="color:var(--cyan);margin:20px 0 12px">Reward-Right Sale Only</h3>
+<div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2;margin-bottom:16px">
+<strong style="color:var(--t1)">Before:</strong> principal_owner = Angel &middot; reward_owner = Angel &middot; eth_beneficiary = Angel<br>
+<strong style="color:var(--t1)">After:</strong> principal_owner = Angel &middot; reward_owner = <span style="color:var(--green)">Pedro</span> &middot; eth_beneficiary = Angel<br>
+<strong style="color:var(--t1)">At maturity:</strong> Escrow returns gold to <span style="color:var(--gold)">Angel</span>. Reward SOST goes to <span style="color:var(--green)">Pedro</span>.
+</div>
+
+<h3 style="color:var(--t1);margin:20px 0 12px">Automation Roadmap</h3>
+<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px">
+<tr><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">COMPONENT</th><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">STATUS</th><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">FUNCTION</th></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Settlement Engine</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Verifies signatures, executes transfers, updates ownership</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">E2E Relay</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Encrypted coordination, blind transport, offline delivery</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Position Registry</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Tracks principal_owner, reward_owner, lifecycle</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Maturity Tracker</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Monitors unlock times, detects maturity</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">SOSTEscrow v1</td><td style="color:var(--green)">Deployed (Sepolia)</td><td style="color:var(--t2)">Immutable lock, pays original depositor only</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--gold)">SOSTEscrow v2</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Adds <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code> &mdash; pays whoever owns the principal</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--gold)">Auto-Withdraw Daemon</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Calls withdraw() automatically at maturity</td></tr>
+<tr><td style="padding:7px;color:var(--gold)">Reward Engine</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Automatically credits reward SOST to reward_owner</td></tr>
+</table>
+
+<div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:14px;border-radius:4px;font-size:11px;color:var(--t2);line-height:1.8">
+<strong style="color:var(--gold)">Current status:</strong> The position registry, settlement engine, and E2E relay are fully operational. SOSTEscrow v1 is deployed on Sepolia. Full automation requires SOSTEscrow v2 with dynamic beneficiary &mdash; planned for mainnet deployment. Until then, settlement is operator-assisted.
+</div>
+
+</div></section>
+
 <!-- TABLE OF CONTENTS -->
 <section><div class="c">
 <div class="toc">

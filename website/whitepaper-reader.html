@@ -2536,6 +2536,20 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Position pricing:</strong> gold backing value + time-discounted remaining reward (5% annual Model B, 12% Model A) &minus; 3% illiquidity discount = net value.</p>
 <div class="wp-spacer"></div>
+<h3 id="sec-svs-2b" class="wp-h">12.5.2b Ownership Rules (Constitutional)</h3>
+<div class="wp-spacer"></div>
+<p class="wp-p">Every Model B position has <strong>two separate rights</strong>: the right to the <strong>principal</strong> (recover gold at maturity) and the right to the <strong>reward</strong> (receive SOST at maturity). These can be sold independently.</p>
+<div class="wp-spacer"></div>
+<div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.15);border-left:3px solid var(--red-primary);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--text-secondary);line-height:1.8;margin:12px 0">
+<strong style="color:var(--red-primary)">Constitutional rule:</strong> <em>The right to the principal belongs to the <code>principal_owner</code>. The right to the reward belongs to the <code>reward_owner</code>. The escrow pays to the <code>currentBeneficiary</code>, which must always reflect the principal_owner.</em>
+</div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Full position sale:</strong> Both principal_owner and reward_owner transfer to the buyer. The ETH beneficiary updates to the buyer&rsquo;s address. At maturity: gold &rarr; buyer, reward SOST &rarr; buyer.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Reward-right sale only:</strong> Only reward_owner transfers. Principal stays with original owner. ETH beneficiary unchanged. At maturity: gold &rarr; original owner, reward SOST &rarr; buyer.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>Automation roadmap:</strong> Full automation requires <strong>SOSTEscrow v2</strong> with dynamic <code>currentBeneficiary</code> field, an <strong>auto-withdraw daemon</strong> that calls <code>withdraw()</code> at maturity, and a <strong>reward engine</strong> that credits SOST to the reward_owner. SOSTEscrow v1 (deployed on Sepolia) pays only the original depositor. Until v2 is deployed, settlement is operator-assisted.</p>
+<div class="wp-spacer"></div>
 <h3 id="sec-svs-3" class="wp-h">12.5.3 SOSTEscrow Contract (Model B)</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Deployed on Sepolia:</strong> <a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" rel="noopener" style="color:var(--cyan-primary)">0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113</a></p>
