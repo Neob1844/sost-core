@@ -268,6 +268,7 @@
               <tr><td class="label">Profile</td><td class="highlight" id="sideProfile">—</td></tr>
               <tr><td class="label">Lag</td><td class="value" id="sideLag">—</td></tr>
               <tr><td class="label">Stability</td><td class="value" id="sideStability">—</td></tr>
+              <tr><td class="label">Avg Block</td><td class="value" id="sideAvg">—</td></tr>
               <tr><td class="label">DEX</td><td class="highlight">Alpha</td></tr>
               <tr><td class="label">PoPC</td><td class="value">Block 10,000+</td></tr>
             </table>
@@ -369,17 +370,18 @@ async function updateSidebar(){
       el('sideProfile',r.casert_profile||('H'+r.casert_profile_index));
       el('sideLag',r.casert_lag>0?r.casert_lag+' ahead':r.casert_lag<0?Math.abs(r.casert_lag)+' behind':'on schedule');
       el('sideStability',r.casert_stability_pct+'%');
-      // Count unique miners from last 288 blocks (~48h, same as explorer)
-      var miners=new Set();
+      // Count unique miners + avg block time from last 288 blocks
+      var miners=new Set();var times=[];
       for(var i=r.blocks;i>Math.max(0,r.blocks-288);i--){
         try{
           var hr=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'getblockhash',params:[String(i)],id:2})});
           var hd=await hr.json();if(!hd||!hd.result)continue;
           var br=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'getblock',params:[hd.result],id:3})});
-          var bd=await br.json();if(bd&&bd.result&&bd.result.miner_address)miners.add(bd.result.miner_address);
+          var bd=await br.json();if(bd&&bd.result){if(bd.result.miner_address)miners.add(bd.result.miner_address);if(bd.result.time)times.push(bd.result.time);}
         }catch(e){}
       }
       el('sideMiners',miners.size>0?miners.size:'—');
+      if(times.length>=2){var td=0;for(var t=0;t<times.length-1;t++)td+=times[t]-times[t+1];var avg=Math.round(td/(times.length-1));var m=Math.floor(avg/60),s=avg%60;el('sideAvg',m+'m '+s+'s');}
     }
   }catch(e){}
   setTimeout(updateSidebar,60000);
