@@ -158,6 +158,19 @@ MempoolAcceptResult Mempool::AcceptToMempool(
     size_t tx_size = EstimateTxSerializedSize(tx);
     if (tx_size == 0) tx_size = 1;
 
+    // Dynamic relay fee check (block 10,000+)
+    // Uses mempool pressure to raise the floor when under load
+    int64_t dynamic_floor = GetDynamicRelayFloor(ctx.spend_height);
+    int64_t min_dynamic_fee = (int64_t)tx_size * dynamic_floor;
+    if (fee < min_dynamic_fee) {
+        return MempoolAcceptResult::Fail(
+            MempoolAcceptCode::POLICY_FAIL,
+            "fee " + std::to_string(fee) + " below dynamic relay floor " +
+            std::to_string(min_dynamic_fee) + " (" + std::to_string(dynamic_floor) +
+            " stocks/byte, mempool=" + std::to_string(entries_.size()) + " tx)",
+            txid);
+    }
+
     // Informativo para UI (no para ordenar)
     double fee_rate = (double)fee / (double)tx_size;
 
