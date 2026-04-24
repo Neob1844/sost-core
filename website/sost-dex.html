@@ -441,48 +441,42 @@
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- PoPC Committed Value + Reserve Chart -->
-    <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <!-- Left: PoPC Committed -->
-      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:20px">
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:12px">PoPC COMMITTED VALUE</div>
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px">
-          <span id="popcGoldOz" style="font-size:28px;font-weight:700;color:var(--gold)">—</span>
-          <span style="font-size:12px;color:var(--text-dim)">oz gold locked</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
-          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
-            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">GOLD VALUE</div>
-            <div id="popcGoldUsd" style="color:var(--gold);font-weight:600">—</div>
+    <!-- SOST DEX — Position & Gold Overview Chart -->
+    <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(251,1,13,0.06),transparent 70%);pointer-events:none"></div>
+      <div style="position:relative;z-index:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700">SOST DEX — POSITIONS &amp; GOLD</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Live position data from PoPC escrow on Sepolia</div>
           </div>
-          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+          <div style="display:flex;gap:16px;font-size:10px">
+            <span style="color:var(--red-primary)">● SOST Rewards</span>
+            <span style="color:var(--gold)">● Gold (oz)</span>
+          </div>
+        </div>
+        <canvas id="dexChart" height="220" style="width:100%"></canvas>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px">
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">GOLD LOCKED</div>
+            <div id="chartGoldOz" style="color:var(--gold);font-size:20px;font-weight:700">—</div>
+            <div id="chartGoldUsd" style="color:var(--text-dim);font-size:10px;margin-top:2px">—</div>
+          </div>
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">SOST REWARDS</div>
+            <div id="chartRewards" style="color:var(--red-primary);font-size:20px;font-weight:700;text-shadow:0 0 12px rgba(251,1,13,0.4)">—</div>
+            <div style="color:var(--text-dim);font-size:10px;margin-top:2px">outstanding</div>
+          </div>
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px">
             <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">POSITIONS</div>
-            <div id="popcPositions" style="color:var(--green-primary);font-weight:600">—</div>
+            <div id="chartPositions" style="color:var(--green-primary);font-size:20px;font-weight:700">—</div>
+            <div id="chartPosDetail" style="color:var(--text-dim);font-size:10px;margin-top:2px">—</div>
           </div>
-          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
-            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">REWARDS</div>
-            <div id="popcRewards" style="color:var(--cyan-primary);font-weight:600">—</div>
-          </div>
-          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px">
             <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">ESCROW</div>
-            <div style="color:var(--text-secondary);font-weight:600;font-size:10px"><a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" style="color:var(--cyan-primary);text-decoration:none">Sepolia ↗</a></div>
+            <div style="color:var(--cyan-primary);font-size:13px;font-weight:600;margin-top:4px"><a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" style="color:var(--cyan-primary);text-decoration:none">Sepolia ↗</a></div>
+            <div style="color:var(--text-dim);font-size:10px;margin-top:2px">SOSTEscrow V2</div>
           </div>
-        </div>
-      </div>
-      <!-- Right: Reserve Accumulation -->
-      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px">
-          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px">RESERVE GROWTH</div>
-          <div style="display:flex;gap:8px;font-size:8px">
-            <span style="color:var(--gold)">● Vault</span>
-            <span style="color:var(--cyan-primary)">● Pool</span>
-            <span style="color:var(--green-primary)">● Supply</span>
-          </div>
-        </div>
-        <canvas id="reserveChart" height="150" style="width:100%"></canvas>
-        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:8px;color:var(--text-dim)">
-          <span>Genesis</span>
-          <span id="chartNow">Now</span>
         </div>
       </div>
     </div>
@@ -1376,118 +1370,103 @@ setInterval(fetchAll, _refreshMs);
 <script src="js/crt-effects.js"></script>
 <script src="js/dex-onboarding.js"></script>
 <script>
-// PoPC Committed Value — from positions_live.json
+// SOST DEX Chart — positions + gold with red glow
 (function(){
-  var GOLD_PRICE_USD = 2340; // approximate per oz — update periodically
-  fetch('api/positions_live.json?t=' + Date.now()).then(function(r){return r.json();}).then(function(d){
-    if(!d||!d.totals)return;
-    var oz=d.totals.gold_locked_oz||0;
+  var GOLD_PRICE_USD = 2340;
+  fetch('api/positions_live.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
+    if(!d)return;
     var el=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
-    el('popcGoldOz',oz.toFixed(4));
-    el('popcGoldUsd','~$'+(oz*GOLD_PRICE_USD).toLocaleString(undefined,{maximumFractionDigits:0}));
-    el('popcPositions',d.totals.active+' active / '+d.totals.positions_ever+' total');
-    el('popcRewards',(d.totals.reward_outstanding_sost||0).toLocaleString()+' SOST');
-  }).catch(function(){});
-})();
+    var t=d.totals||{};
+    var oz=t.gold_locked_oz||0;
+    var rewards=t.reward_outstanding_sost||0;
+    var positions=d.positions||[];
 
-// Reserve Accumulation Chart — deterministic from emission formula
-(function(){
-  var canvas = document.getElementById('reserveChart');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var W = canvas.offsetWidth; canvas.width = W * 2; canvas.height = 360;
-  ctx.scale(2, 2); // retina
-  var H = 180;
+    // Update stat cards
+    el('chartGoldOz',oz.toFixed(4)+' oz');
+    el('chartGoldUsd','~$'+(oz*GOLD_PRICE_USD).toLocaleString(undefined,{maximumFractionDigits:0})+' USD');
+    el('chartRewards',rewards.toLocaleString()+' SOST');
+    el('chartPositions',t.active||0);
+    el('chartPosDetail',(t.positions_ever||0)+' total ever');
 
-  // Emission: reward(h) = floor(R0 * q^epoch), epoch = h / 131553
-  // R0 = 785100863 (satoshis), q = 0.7788007831
-  var R0 = 785100863;
-  var q = 0.7788007831;
-  var EPOCH_LEN = 131553;
+    // Draw chart
+    var canvas=document.getElementById('dexChart');
+    if(!canvas||!positions.length)return;
+    var ctx=canvas.getContext('2d');
+    var W=canvas.offsetWidth;canvas.width=W*2;canvas.height=440;
+    ctx.scale(2,2);var H=220;
 
-  // Get current height from RPC
-  fetch('/rpc', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({jsonrpc:'2.0',method:'getinfo',params:[],id:99})
-  }).then(function(r){return r.json();}).then(function(d){
-    if (!d || !d.result) return;
-    var currentH = d.result.blocks;
-    var STEPS = 200;
-    var step = Math.max(1, Math.floor(currentH / STEPS));
-    var data = []; // {h, supply, vault, pool}
-    var supply = 0, vault = 0, pool = 0;
+    // Build bar data per position
+    var maxReward=0,maxGold=0;
+    positions.forEach(function(p){
+      if(p.reward_total>maxReward)maxReward=p.reward_total;
+      if(p.amount_oz>maxGold)maxGold=p.amount_oz;
+    });
+    if(maxReward===0)maxReward=1;if(maxGold===0)maxGold=1;
 
-    for (var h = 0; h <= currentH; h++) {
-      var epoch = Math.floor(h / EPOCH_LEN);
-      var reward = Math.floor(R0 * Math.pow(q, epoch));
-      var goldShare = Math.floor(reward / 4);
-      var popcShare = goldShare;
-      supply += reward;
-      vault += goldShare;
-      pool += popcShare;
+    var barW=Math.min(120,Math.floor((W-60)/(positions.length*2+1)));
+    var gap=Math.floor(barW*0.4);
+    var startX=40;
 
-      if (h % step === 0 || h === currentH) {
-        data.push({h: h, supply: supply / 1e8, vault: vault / 1e8, pool: pool / 1e8});
-      }
-    }
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=0.5;
+    for(var g=0;g<=4;g++){var gy=10+g*(H-30)/4;ctx.beginPath();ctx.moveTo(30,gy);ctx.lineTo(W,gy);ctx.stroke();}
 
-    if (data.length < 2) return;
+    // Y axis labels
+    ctx.font='8px JetBrains Mono';ctx.fillStyle='#64748b';
+    ctx.fillText(maxReward+' SOST',0,15);
+    ctx.fillText('0',0,H-15);
 
-    var maxSupply = data[data.length - 1].supply;
-    var padX = 0, padY = 5;
+    positions.forEach(function(p,i){
+      var x=startX+i*(barW*2+gap*2);
 
-    function x(i) { return padX + (i / (data.length - 1)) * (W - padX * 2); }
-    function y(val) { return padY + (1 - val / maxSupply) * (H - padY * 2); }
+      // SOST Reward bar (RED with glow)
+      var rewardH=Math.max(2,(p.reward_total/maxReward)*(H-40));
+      var ry=H-15-rewardH;
 
-    // Grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 0.5;
-    for (var g = 0; g <= 4; g++) {
-      var gy = padY + g * (H - padY * 2) / 4;
-      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
-    }
+      // Glow
+      ctx.shadowColor='rgba(251,1,13,0.6)';ctx.shadowBlur=16;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      ctx.fillStyle='rgba(251,1,13,0.25)';
+      ctx.fillRect(x,ry,barW,rewardH);
+      ctx.shadowBlur=0;
 
-    // Total Supply (green, filled)
-    ctx.beginPath();
-    ctx.moveTo(x(0), H);
-    for (var i = 0; i < data.length; i++) ctx.lineTo(x(i), y(data[i].supply));
-    ctx.lineTo(x(data.length - 1), H);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(74,222,128,0.08)';
-    ctx.fill();
-    ctx.beginPath();
-    for (var i = 0; i < data.length; i++) { if (i === 0) ctx.moveTo(x(i), y(data[i].supply)); else ctx.lineTo(x(i), y(data[i].supply)); }
-    ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Bar
+      var grad=ctx.createLinearGradient(x,ry,x,ry+rewardH);
+      grad.addColorStop(0,'#ff2d3b');grad.addColorStop(1,'#fb010d');
+      ctx.fillStyle=grad;
+      ctx.fillRect(x,ry,barW,rewardH);
 
-    // Gold Vault (gold, filled)
-    ctx.beginPath();
-    ctx.moveTo(x(0), H);
-    for (var i = 0; i < data.length; i++) ctx.lineTo(x(i), y(data[i].vault));
-    ctx.lineTo(x(data.length - 1), H);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(245,158,11,0.12)';
-    ctx.fill();
-    ctx.beginPath();
-    for (var i = 0; i < data.length; i++) { if (i === 0) ctx.moveTo(x(i), y(data[i].vault)); else ctx.lineTo(x(i), y(data[i].vault)); }
-    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Gold bar (GOLD)
+      var goldH=Math.max(2,(p.amount_oz/maxGold)*(H-40));
+      var gx=x+barW+gap;
+      var gy2=H-15-goldH;
 
-    // PoPC Pool (cyan, line)
-    ctx.beginPath();
-    for (var i = 0; i < data.length; i++) { if (i === 0) ctx.moveTo(x(i), y(data[i].pool)); else ctx.lineTo(x(i), y(data[i].pool)); }
-    ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]); ctx.stroke();
-    ctx.setLineDash([]);
+      ctx.shadowColor='rgba(245,158,11,0.4)';ctx.shadowBlur=10;
+      ctx.fillStyle='rgba(245,158,11,0.2)';
+      ctx.fillRect(gx,gy2,barW,goldH);
+      ctx.shadowBlur=0;
 
-    // Labels
-    ctx.font = '9px JetBrains Mono';
-    ctx.fillStyle = '#4ade80';
-    ctx.fillText(Math.round(data[data.length-1].supply).toLocaleString() + ' SOST', W - 100, y(data[data.length-1].supply) - 4);
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillText(Math.round(data[data.length-1].vault).toLocaleString() + ' SOST', W - 100, y(data[data.length-1].vault) - 4);
-    ctx.fillStyle = '#22d3ee';
-    ctx.fillText(Math.round(data[data.length-1].pool).toLocaleString() + ' SOST', W - 100, y(data[data.length-1].pool) + 12);
+      var ggrad=ctx.createLinearGradient(gx,gy2,gx,gy2+goldH);
+      ggrad.addColorStop(0,'#fbbf24');ggrad.addColorStop(1,'#f59e0b');
+      ctx.fillStyle=ggrad;
+      ctx.fillRect(gx,gy2,barW,goldH);
 
-    // Update now label
-    var nowEl = document.getElementById('chartNow');
-    if (nowEl) nowEl.textContent = 'Block #' + currentH.toLocaleString() + ' (now)';
+      // Labels
+      ctx.font='9px JetBrains Mono';
+      ctx.fillStyle='#fb010d';ctx.textAlign='center';
+      ctx.fillText(p.reward_total+' SOST',x+barW/2,ry-4);
+      ctx.fillStyle='#f59e0b';
+      ctx.fillText(p.amount_oz+' oz',gx+barW/2,gy2-4);
+
+      // Position ID
+      ctx.fillStyle='#64748b';ctx.font='8px JetBrains Mono';
+      ctx.fillText(p.id.substring(0,8)+'...',x+barW+gap/2,H-2);
+
+      // Right type badge
+      ctx.fillStyle=p.right_type==='REWARD_RIGHT'?'#22d3ee':'#4ade80';ctx.font='7px JetBrains Mono';
+      ctx.fillText(p.right_type==='REWARD_RIGHT'?'REWARD':'FULL',x+barW+gap/2,H+8);
+
+      ctx.textAlign='left';
+    });
 
   }).catch(function(){});
 })();
