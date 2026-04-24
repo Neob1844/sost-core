@@ -21,6 +21,20 @@ namespace sost {
 inline constexpr size_t DEFAULT_MEMPOOL_MAX_ENTRIES = 5000;
 inline constexpr size_t MAX_BLOCK_TX_COUNT          = 4096;
 
+// Dynamic fee policy result
+struct DynamicFeeInfo {
+    int64_t relay_floor;       // current effective relay fee (stocks/byte)
+    int64_t base_fee;          // static base (1 stock/byte)
+    int64_t multiplier;        // current multiplier (1x, 2x, 5x, etc.)
+    size_t  mempool_size;      // current tx count
+    std::string pressure_level; // "none", "low", "medium", "high", "extreme"
+    // Fee estimator bands
+    int64_t fee_slow;          // minimum to get relayed
+    int64_t fee_normal;        // good chance in next 2-3 blocks
+    int64_t fee_fast;          // high priority
+    int64_t fee_priority;      // top of mempool
+};
+
 // RBF policy: replacement requires this much additional fee per byte
 inline constexpr int64_t RBF_MIN_FEE_BUMP_PER_BYTE  = 1;
 // RBF policy: max number of original transactions that can be replaced
@@ -123,6 +137,11 @@ public:
 
     void Clear();
     size_t MaxEntries() const { return max_entries_; }
+
+    // Dynamic fee policy (block 10,000+)
+    int64_t GetDynamicRelayFloor(int64_t chain_height) const;
+    DynamicFeeInfo GetFeeInfo(int64_t chain_height) const;
+    size_t CountByAddress(const std::string& address) const;
 
 private:
     size_t max_entries_;

@@ -385,6 +385,45 @@ inline constexpr int32_t CASERT_PROFILE_COUNT = 43;
 // profile_index  9 → array[16] (H9)
 // profile_index 35 → array[42] (H35) — highest hardening profile
 
+// =============================================================================
+// Dynamic Fee Policy (activates at block 10,000)
+// =============================================================================
+// Policy-only (NOT consensus). Affects relay/mempool acceptance, not block validity.
+// Before block 10,000: static MIN_RELAY_FEE_PER_BYTE = 1 stock/byte
+// After block 10,000: dynamic relay floor based on mempool pressure
+
+inline constexpr int64_t  DYNAMIC_FEE_ACTIVATION_HEIGHT   = 10000;
+
+// Base relay fee (same as current)
+inline constexpr int64_t  DYNAMIC_FEE_BASE                = 1;     // stocks/byte (floor)
+
+// Pressure thresholds (mempool entry count)
+inline constexpr size_t   DYNAMIC_FEE_PRESSURE_LOW        = 100;   // >100 tx → 2x
+inline constexpr size_t   DYNAMIC_FEE_PRESSURE_MED        = 500;   // >500 tx → 5x
+inline constexpr size_t   DYNAMIC_FEE_PRESSURE_HIGH       = 2000;  // >2000 tx → 10x
+inline constexpr size_t   DYNAMIC_FEE_PRESSURE_EXTREME    = 4000;  // >4000 tx → 25x
+
+// Multipliers per pressure tier
+inline constexpr int64_t  DYNAMIC_FEE_MULT_LOW            = 2;
+inline constexpr int64_t  DYNAMIC_FEE_MULT_MED            = 5;
+inline constexpr int64_t  DYNAMIC_FEE_MULT_HIGH           = 10;
+inline constexpr int64_t  DYNAMIC_FEE_MULT_EXTREME        = 25;
+
+// Ceiling: never require more than this (policy, not consensus)
+inline constexpr int64_t  DYNAMIC_FEE_CEILING              = 50;   // stocks/byte max
+
+// Anti-spam: max tx from same address in mempool
+inline constexpr size_t   MEMPOOL_MAX_PER_ADDRESS          = 25;
+
+// Anti-spam: rate limit per peer (tx/minute)
+inline constexpr size_t   RELAY_MAX_TX_PER_PEER_PER_MIN    = 30;
+
+// Dust threshold (unchanged, for reference)
+// Already defined in tx_validation.h as DUST_THRESHOLD = 10000
+
+// Fee estimator bands (stocks/byte) — informational for explorer/wallet
+// These are computed dynamically from mempool state, not constants.
+
 // ConvergenceX mainnet baseline (match Python)
 inline constexpr int32_t CX_N         = 32;
 inline constexpr int32_t CX_ROUNDS_M  = 100000;

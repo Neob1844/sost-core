@@ -3,6 +3,7 @@
 // =============================================================================
 
 #include <sost/mempool.h>
+#include <sost/params.h>
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -505,6 +506,54 @@ void Mempool::Clear() {
     entries_.clear();
     fee_rate_index_.clear();
     spent_index_.clear();
+}
+
+// =============================================================================
+// Dynamic Fee Policy (activates at block 10,000)
+// =============================================================================
+
+int64_t Mempool::GetDynamicRelayFloor(int64_t chain_height) const {
+    if (chain_height < DYNAMIC_FEE_ACTIVATION_HEIGHT) {
+        return MIN_RELAY_FEE_PER_BYTE;
+    }
+    size_t sz = entries_.size();
+    int64_t mult = 1;
+    if (sz > DYNAMIC_FEE_PRESSURE_EXTREME)     mult = DYNAMIC_FEE_MULT_EXTREME;
+    else if (sz > DYNAMIC_FEE_PRESSURE_HIGH)   mult = DYNAMIC_FEE_MULT_HIGH;
+    else if (sz > DYNAMIC_FEE_PRESSURE_MED)    mult = DYNAMIC_FEE_MULT_MED;
+    else if (sz > DYNAMIC_FEE_PRESSURE_LOW)    mult = DYNAMIC_FEE_MULT_LOW;
+    int64_t floor = DYNAMIC_FEE_BASE * mult;
+    if (floor > DYNAMIC_FEE_CEILING) floor = DYNAMIC_FEE_CEILING;
+    return floor;
+}
+
+DynamicFeeInfo Mempool::GetFeeInfo(int64_t chain_height) const {
+    DynamicFeeInfo info;
+    info.mempool_size = entries_.size();
+    info.base_fee = DYNAMIC_FEE_BASE;
+    info.relay_floor = GetDynamicRelayFloor(chain_height);
+    info.multiplier = info.relay_floor / std::max<int64_t>(1, info.base_fee);
+    if (info.mempool_size > DYNAMIC_FEE_PRESSURE_EXTREME)      info.pressure_level = "extreme";
+    else if (info.mempool_size > DYNAMIC_FEE_PRESSURE_HIGH)    info.pressure_level = "high";
+    else if (info.mempool_size > DYNAMIC_FEE_PRESSURE_MED)     info.pressure_level = "medium";
+    else if (info.mempool_size > DYNAMIC_FEE_PRESSURE_LOW)     info.pressure_level = "low";
+    else                                                        info.pressure_level = "none";
+    info.fee_slow     = info.relay_floor;
+    info.fee_normal   = info.relay_floor * 2;
+    info.fee_fast     = info.relay_floor * 5;
+    info.fee_priority = std::min<int64_t>(info.relay_floor * 10, DYNAMIC_FEE_CEILING);
+    if (!fee_rate_index_.empty()) {
+        auto it = fee_rate_index_.rbegin();
+        if (it->size > 0) {
+            int64_t top_rate = it->fee / (int64_t)it->size;
+            if (top_rate > info.fee_priority) info.fee_priority = top_rate;
+        }
+    }
+    return info;
+}
+
+size_t Mempool::CountByAddress(const std::string&) const {
+    return 0; // simplified — per-peer rate limit handles spam
 }
 
 } // namespace sost
