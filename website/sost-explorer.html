@@ -893,13 +893,17 @@ const ROLES={
 };
 // cASERT unified profiles (from params.h) — index = H+4 (E4=-4 → idx 0, B0=0 → idx 4)
 const CASERT_PROFILES=[
-  {name:'E4',H:-4,scale:1,steps:2,k:3,margin:280},
-  {name:'E3',H:-3,scale:1,steps:3,k:3,margin:240},
-  {name:'E2',H:-2,scale:1,steps:4,k:3,margin:225},
-  {name:'E1',H:-1,scale:1,steps:4,k:4,margin:205},
-  {name:'B0',H:0,scale:1,steps:4,k:4,margin:185},
-  {name:'H1',H:1,scale:1,steps:5,k:4,margin:170},
-  {name:'H2',H:2,scale:1,steps:5,k:5,margin:160},
+  // V8 final calibration (block 5750): 43 profiles E7-H35, margins recalibrated
+  {name:'E7',H:-7,scale:1,steps:1,k:1,margin:200},
+  {name:'E6',H:-6,scale:1,steps:2,k:1,margin:195},
+  {name:'E5',H:-5,scale:1,steps:2,k:2,margin:190},
+  {name:'E4',H:-4,scale:1,steps:3,k:2,margin:185},
+  {name:'E3',H:-3,scale:1,steps:3,k:3,margin:180},
+  {name:'E2',H:-2,scale:1,steps:4,k:3,margin:175},
+  {name:'E1',H:-1,scale:1,steps:4,k:4,margin:170},
+  {name:'B0',H:0,scale:1,steps:4,k:4,margin:165},
+  {name:'H1',H:1,scale:1,steps:5,k:4,margin:160},
+  {name:'H2',H:2,scale:1,steps:5,k:5,margin:155},
   {name:'H3',H:3,scale:1,steps:6,k:5,margin:150},
   {name:'H4',H:4,scale:1,steps:6,k:6,margin:145},
   {name:'H5',H:5,scale:2,steps:5,k:5,margin:140},
@@ -907,7 +911,7 @@ const CASERT_PROFILES=[
   {name:'H7',H:7,scale:2,steps:6,k:6,margin:130},
   {name:'H8',H:8,scale:2,steps:7,k:6,margin:125},
   {name:'H9',H:9,scale:2,steps:7,k:7,margin:120},
-  // V6 calibration (block 5050): extended profiles H10-H35, k/steps alternate +1
+  // H10-H35: margin=115 uniform
   {name:'H10',H:10,scale:2,steps:8,k:7,margin:115},
   {name:'H11',H:11,scale:2,steps:8,k:8,margin:115},
   {name:'H12',H:12,scale:2,steps:9,k:8,margin:115},
@@ -963,16 +967,19 @@ function getProfileFromLag(lag) {
     else if (behind <= 20) elevel = 1; // E1
     else if (behind <= 50) elevel = 2; // E2
     else if (behind <= 75) elevel = 3; // E3
-    else                   elevel = 4; // E4
-    if (elevel === 0) return CASERT_PROFILES[4]; // B0
-    var eidx = Math.max(0, 4 - elevel); // E1=idx3, E2=idx2, E3=idx1, E4=idx0
+    else if (behind <= 100) elevel = 4; // E4
+    else if (behind <= 130) elevel = 5; // E5
+    else if (behind <= 160) elevel = 6; // E6
+    else                    elevel = 7; // E7
+    if (elevel === 0) return CASERT_PROFILES[7]; // B0 = index 7
+    var eidx = Math.max(0, 7 - elevel); // E1=idx6, E2=idx5, ..., E7=idx0
     return CASERT_PROFILES[eidx];
   }
   // Ahead of schedule → harden (H profiles)
   // Post block 5,320: direct lag mapping — profile = clamp(lag, 0, H10)
   // Estimate profile ≈ lag (capped at H13 ceiling (block 5,750+))
-  var profile_h = Math.min(lag, 32);
-  var idx = Math.min(CASERT_PROFILES.length - 1, 4 + profile_h);
+  var profile_h = Math.min(lag, 35);
+  var idx = Math.min(CASERT_PROFILES.length - 1, 7 + profile_h); // B0=index 7
   return CASERT_PROFILES[idx];
 }
 // Backward compat: old callers used getProfile(signal)
@@ -995,12 +1002,12 @@ function getCasertScale(signal){
   return getProfile(signal).scale;
 }
 function getLevelColor(lv){
-  // Rainbow gradient: E7(-7)=deep blue → B0(0)=green → H35(+35)=deep red
-  // HSL hue: 240 (blue) at E7 → 120 (green) at B0 → 0 (red) at H35
+  // Rainbow gradient: E7(-7)=aubergine/purple → B0(0)=green → H35(+35)=deep red
+  // HSL hue: 285 (aubergine) at E7 → 120 (green) at B0 → 0 (red) at H35
   var minLv=-7,maxLv=35;
   var clamped=Math.max(minLv,Math.min(maxLv,lv));
-  var t=(clamped-minLv)/(maxLv-minLv); // 0=E4, ~0.1=B0, 1=H35
-  var hue=240-(t*240); // 240(blue)→120(green)→0(red)
+  var t=(clamped-minLv)/(maxLv-minLv); // 0=E7, ~0.17=B0, 1=H35
+  var hue=285-(t*285); // 285(aubergine)→120(green)→0(red)
   var sat=85,lit=lv<=0?65:Math.max(45,65-t*25);
   return 'hsl('+Math.round(hue)+','+sat+'%,'+Math.round(lit)+'%)';
 }
