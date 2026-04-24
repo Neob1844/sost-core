@@ -164,6 +164,24 @@ const SOSTSentinel = (function () {
     if (/bad_alloc|memory|ram|crash.*mine/i.test(lower)) {
       return '🔧 Memory issue: Mining needs 8GB+ RAM. Add swap: sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile';
     }
+    if (/explorer.*wrong|explorer.*bug|explorer.*show/i.test(lower)) {
+      return '🔧 Explorer issue: Try hard refresh (Ctrl+Shift+R). If the explorer shows stale data, clear browser cache. Report persistent issues via https://sostcore.com/sost-contact.html';
+    }
+    if (/how.*mine|start.*min|begin.*min|empezar.*min|como.*min/i.test(lower)) {
+      return '⛏ Mining guide: https://sostcore.com/sost-quickstart.html — Need: Linux x86_64, 8GB+ RAM, CPU only. Build from source, sync node, then run miner with --threads N.';
+    }
+    if (/what.*sost|que.*es.*sost/i.test(lower)) {
+      return 'ℹ SOST is a native CPU-only PoW chain with constitutional gold reserve allocation. Website: https://sostcore.com — Explorer: https://sostcore.com/sost-explorer.html';
+    }
+    if (/popc|proof.*custody|model.*[ab]/i.test(lower)) {
+      return 'ℹ PoPC (Proof of Personal Custody): Model A = self-custody bonds, Model B = escrow timelock. Target activation: block 10,000+ (April 2027). Details: https://sostcore.com/sost-popc.html';
+    }
+    if (/passkey|huella|fingerprint|face.*id|biometr/i.test(lower)) {
+      return '🔐 Passkey/biometric auth: The DEX can use your device fingerprint/Face ID/PIN via WebAuthn. Your biometrics never leave your device. Try it: https://sostcore.com/sost-dex.html';
+    }
+    if (/contact|report|bug.*report|donde.*report/i.test(lower)) {
+      return '📬 Report issues: https://sostcore.com/sost-contact.html or post in this Bugs/Feedback room. You can also use the BitcoinTalk thread: https://bitcointalk.org/index.php?topic=5579432';
+    }
     return null;
   }
 

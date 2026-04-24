@@ -194,6 +194,7 @@ nav .container{display:flex;align-items:center;justify-content:space-between;gap
 
 <script src="js/sost-sentinel.js"></script>
 <script src="js/sost-talk.js"></script>
+<script src="js/auth-passkey.js"></script>
 <script>
 // ── Render ──────────────────────────────────────────────────────
 
@@ -272,13 +273,19 @@ function renderInputArea() {
       '<div id="msgError" style="display:none;margin-top:6px;font-size:11px;color:var(--red)"></div>' +
     '</div>';
   } else {
+    var passkeyBtn = '';
+    if (typeof SOSTPasskey !== 'undefined' && SOSTPasskey.isAvailable()) {
+      passkeyBtn = '<button class="auth-btn" onclick="passkeyAuth()" style="background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.4);color:var(--cyan)">&#128274; Login with Passkey</button>';
+    }
     area.innerHTML = '<div class="auth-required">' +
       '<p>Unlock your identity to post messages.</p>' +
-      '<p style="font-size:10px;color:var(--text3);margin-bottom:12px">You can create a DEX identity at <a href="sost-dex.html" style="color:var(--gold);text-decoration:none">SOST DEX</a> or enter a name below.</p>' +
-      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+      '<p style="font-size:10px;color:var(--text3);margin-bottom:12px">Use your device passkey (fingerprint/Face ID), create a DEX identity at <a href="sost-dex.html" style="color:var(--gold);text-decoration:none">SOST DEX</a>, or enter a name below.</p>' +
+      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">' +
+        passkeyBtn +
         '<input type="text" id="talkName" placeholder="Your name" style="padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;width:160px">' +
         '<button class="auth-btn" onclick="quickAuth()">Join Talk</button>' +
       '</div>' +
+      '<p style="font-size:9px;color:var(--text3);margin-top:8px">Passkey uses your device security (fingerprint, Face ID, or PIN). Your biometrics are never sent to any server.</p>' +
     '</div>';
   }
 }
@@ -305,6 +312,45 @@ function quickAuth() {
     badge: 'community'
   });
   renderAll();
+}
+
+async function passkeyAuth() {
+  if (typeof SOSTPasskey === 'undefined' || !SOSTPasskey.isAvailable()) {
+    alert('Passkeys not available in this browser. Use a name instead.');
+    return;
+  }
+  // Check if already registered
+  if (SOSTPasskey.isRegistered()) {
+    var result = await SOSTPasskey.authenticate();
+    if (result.ok) {
+      var creds = SOSTPasskey.getStoredCredentials();
+      var cred = creds.length > 0 ? creds[creds.length - 1] : null;
+      SOSTTalk.setIdentity({
+        id: 'passkey-' + (cred ? cred.userId : Date.now().toString(36)),
+        label: cred ? cred.userName : 'Passkey User',
+        badge: 'verified'
+      });
+      renderAll();
+    } else {
+      alert('Authentication failed: ' + result.error);
+    }
+  } else {
+    // Register new passkey
+    var userId = 'sost-talk-' + Date.now().toString(36);
+    var userName = prompt('Choose a display name for your passkey:');
+    if (!userName || userName.trim().length < 2) return;
+    var reg = await SOSTPasskey.register(userId, userName.trim());
+    if (reg.ok) {
+      SOSTTalk.setIdentity({
+        id: 'passkey-' + userId,
+        label: userName.trim(),
+        badge: 'verified'
+      });
+      renderAll();
+    } else {
+      alert('Passkey registration failed: ' + reg.error);
+    }
+  }
 }
 
 function renderAll() {
