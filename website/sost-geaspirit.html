@@ -86,6 +86,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 .rpt-body{max-height:0;overflow:hidden;transition:max-height .5s ease}
 .rpt-body.open{max-height:5000px}
 @keyframes blink-red{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script src="js/security.js"></script>
 </head>
@@ -103,6 +104,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 .gea-spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #008800;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
 .gea-spl-line.go{animation:geaSplType 2.5s steps(35) forwards;opacity:1}
 @keyframes geaSplType{from{width:0}to{width:100%}}
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script>
 (function(){
@@ -252,7 +254,7 @@ nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12p
 <nav>
   <div class="nav-c">
     <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="border-radius:20%"><span><span style="color:var(--red)">SOST</span> PROTOCOL</span><a href="sost-dex.html" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);font-weight:900;font-size:16px;color:#000;text-decoration:none;margin-left:12px;box-shadow:0 0 12px rgba(245,158,11,0.4);letter-spacing:-1px" title="SOST DEX — Position Trading Desk">DEX</a>
+      <img src="sost-logo.png" alt="SOST" style="border-radius:20%"><span><span style="color:var(--red)">SOST</span> PROTOCOL</span><a href="sost-dex.html" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;font-size:17px;color:#000;text-decoration:none;margin-left:12px;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);letter-spacing:-1px;animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite" title="SOST DEX — Position Trading Desk">DEX</a>
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
@@ -1848,7 +1850,8 @@ function toggleRpt(el){
 <script src="js/retro-sounds.js"></script>
 <script src="js/sost-pwa-install.js"></script>
 <script src="js/crt-effects.js"></script>
-<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(0,255,65,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #003300;border-left:3px solid #00ff41;border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:#00ff41}</style>
+<style>.sost-info-tip{position:relative;cursor:help;border-bottom:1px dotted rgba(0,255,65,.3)}.sost-info-tip::after{content:'\24D8';font-size:9px;vertical-align:super;margin-left:2px;opacity:.4;color:inherit}.sost-info-panel{display:none;position:fixed;z-index:9999;background:#0a0a0a;border:1px solid #003300;border-left:3px solid #00ff41;border-radius:4px;padding:12px 16px;max-width:380px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,.8);pointer-events:none}.sost-info-panel b{color:#00ff41}@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+</style>
 <script>
 (function(){
 var D={
