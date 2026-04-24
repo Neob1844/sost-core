@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SOST DEX — Browser Crypto Tests</title>
+<style>
+:root{--bg:#000;--text:#e2e8f0;--green:#4ade80;--red:#fb010d;--gold:#f59e0b;--dim:#64748b;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;padding:24px;line-height:1.8}
+h1{font-size:20px;margin-bottom:8px;color:var(--gold)}
+h2{font-size:14px;color:var(--gold);margin:20px 0 8px;letter-spacing:1px}
+.pass{color:var(--green)}
+.fail{color:var(--red)}
+.dim{color:var(--dim);font-size:11px}
+#log{white-space:pre-wrap;margin-top:16px}
+button{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:var(--gold);padding:10px 24px;font-family:var(--mono);font-size:13px;cursor:pointer;border-radius:6px;margin:8px 4px}
+button:hover{background:rgba(245,158,11,0.25)}
+.result{margin:4px 0}
+</style>
+</head>
+<body>
+<h1>SOST DEX — Browser Crypto Foundation Tests</h1>
+<p class="dim">Phase A verification. Tests ED25519, X25519, HKDF, ChaCha20-Poly1305, Keystore, and Relay Client in browser.</p>
+<div style="margin:16px 0">
+<button onclick="runAllTests()">RUN ALL TESTS</button>
+<button onclick="document.getElementById('log').textContent=''">CLEAR</button>
+</div>
+<div id="log"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.15/dist/modules/libsodium-wrappers.js"></script>
+<script src="js/browser-crypto.js"></script>
+<script src="js/keystore.js"></script>
+<script src="js/relay-client.js"></script>
+<script src="js/prekey-store-browser.js"></script>
+<script>
+var _pass = 0, _fail = 0;
+
+function log(msg, cls) {
+  var el = document.getElementById('log');
+  var span = document.createElement('div');
+  span.className = 'result ' + (cls || '');
+  span.textContent = msg;
+  el.appendChild(span);
+}
+
+function TEST(name, condition) {
+  if (condition) {
+    _pass++;
+    log('  PASS: ' + name, 'pass');
+  } else {
+    _fail++;
+    log('  FAIL: ' + name, 'fail');
+  }
+}
+
+async function runAllTests() {
+  _pass = 0; _fail = 0;
+  document.getElementById('log').textContent = '';
+  log('Initializing libsodium...');
+
+  try {
+    await SOSTCrypto.ready();
+    log('libsodium ready.\n');
+  } catch (e) {
+    log('FATAL: ' + e.message, 'fail');
+    return;
+  }
+
+  // ── 1. ED25519 ──
+  log('=== 1. ED25519 SIGNING ===');
+  {
+    var kp = SOSTCrypto.generateSigningKeyPair();
+    TEST('generateSigningKeyPair returns publicKey', kp.publicKey && kp.publicKey.length === 64);
+    TEST('generateSigningKeyPair returns privateKey', kp.privateKey && kp.privateKey.length === 128);
+
+    var msg = 'hello SOST DEX';
+    var sig = SOSTCrypto.sign(msg, kp.privateKey);
+    TEST('sign returns 128-char hex signature', sig.length === 128);
+
+    var valid = SOSTCrypto.verify(msg, sig, kp.publicKey);
+    TEST('verify correct signature', valid === true);
+
+    var invalid = SOSTCrypto.verify('tampered', sig, kp.publicKey);
+    TEST('verify rejects tampered message', invalid === false);
+
+    var kp2 = SOSTCrypto.generateSigningKeyPair();
+    var wrongKey = SOSTCrypto.verify(msg, sig, kp2.publicKey);
+    TEST('verify rejects wrong public key', wrongKey === false);
+  }
+
+  // ── 2. X25519 ──
+  log('\n=== 2. X25519 KEY AGREEMENT ===');
+  {
+    var alice = SOSTCrypto.generateEncryptionKeyPair();
+    var bob = SOSTCrypto.generateEncryptionKeyPair();
+    TEST('generateEncryptionKeyPair returns 64-char publicKey', alice.publicKey.length === 64);
+    TEST('generateEncryptionKeyPair returns 64-char privateKey', alice.privateKey.length === 64);
+
+    var sharedA = SOSTCrypto.deriveSharedSecret(alice.privateKey, bob.publicKey);
+    var sharedB = SOSTCrypto.deriveSharedSecret(bob.privateKey, alice.publicKey);
+    TEST('DH shared secret matches (Alice->Bob == Bob->Alice)', sharedA === sharedB);
+    TEST('shared secret is 64 hex chars (32 bytes)', sharedA.length === 64);
+
+    var eve = SOSTCrypto.generateEncryptionKeyPair();
+    var sharedEve = SOSTCrypto.deriveSharedSecret(eve.privateKey, bob.publicKey);
+    TEST('wrong key produces different shared secret', sharedEve !== sharedA);
+  }
+
+  // ── 3. SHA-256 ──
+  log('\n=== 3. SHA-256 ===');
+  {
+    var hash1 = await SOSTCrypto.sha256('SOST');
+    TEST('sha256 produces 64-char hex', hash1.length === 64);
+
+    var hash2 = await SOSTCrypto.sha256('SOST');
+    TEST('sha256 is deterministic', hash1 === hash2);
+
+    var hash3 = await SOSTCrypto.sha256('SOST2');
+    TEST('sha256 different input -> different hash', hash3 !== hash1);
+
+    var hashSync = SOSTCrypto.sha256Sync('SOST');
+    TEST('sha256Sync matches async sha256', hashSync === hash1);
+  }
+
+  // ── 4. HKDF ──
+  log('\n=== 4. HKDF-SHA256 KEY DERIVATION ===');
+  {
+    var ikm = SOSTCrypto.randomBytes(32);
+    var salt = new TextEncoder().encode('test-deal-001');
+    var key1 = SOSTCrypto.hkdfSha256(ikm, salt, 'sost-deal-key-a', 32);
+    var key2 = SOSTCrypto.hkdfSha256(ikm, salt, 'sost-deal-key-b', 32);
+    TEST('HKDF produces 32 bytes', key1.length === 32);
+    TEST('different info labels produce different keys', SOSTCrypto.bytesToHex(key1) !== SOSTCrypto.bytesToHex(key2));
+
+    var key1b = SOSTCrypto.hkdfSha256(ikm, salt, 'sost-deal-key-a', 32);
+    TEST('HKDF is deterministic', SOSTCrypto.bytesToHex(key1) === SOSTCrypto.bytesToHex(key1b));
+  }
+
+  // ── 5. Channel Keys ──
+  log('\n=== 5. CHANNEL KEYS DERIVATION ===');
+  {
+    var aliceEnc = SOSTCrypto.generateEncryptionKeyPair();
+    var bobEnc = SOSTCrypto.generateEncryptionKeyPair();
+    var shared = SOSTCrypto.deriveSharedSecret(aliceEnc.privateKey, bobEnc.publicKey);
+
+    var keysAlice = SOSTCrypto.deriveChannelKeys(shared, 'deal-test-001', true);
+    var keysBob = SOSTCrypto.deriveChannelKeys(shared, 'deal-test-001', false);
+
+    TEST('Alice sendKey == Bob recvKey', keysAlice.sendKey === keysBob.recvKey);
+    TEST('Alice recvKey == Bob sendKey', keysAlice.recvKey === keysBob.sendKey);
+    TEST('sessionId matches', keysAlice.sessionId === keysBob.sessionId);
+    TEST('dealId preserved', keysAlice.dealId === 'deal-test-001');
+  }
+
+  // ── 6. AEAD Encrypt/Decrypt ──
+  log('\n=== 6. ChaCha20-Poly1305 AEAD ===');
+  {
+    var sender = SOSTCrypto.generateSigningKeyPair();
+    var senderEnc = SOSTCrypto.generateEncryptionKeyPair();
+    var receiverEnc = SOSTCrypto.generateEncryptionKeyPair();
+
+    var sharedS = SOSTCrypto.deriveSharedSecret(senderEnc.privateKey, receiverEnc.publicKey);
+    var chKeysS = SOSTCrypto.deriveChannelKeys(sharedS, 'deal-aead-001', true);
+    var chKeysR = SOSTCrypto.deriveChannelKeys(sharedS, 'deal-aead-001', false);
+
+    var plaintext = JSON.stringify({ type: 'trade_offer', amount: '9.7', pair: 'SOST/XAUT' });
+
+    var envelope = SOSTCrypto.encryptMessage(plaintext, chKeysS, 1, sender.privateKey, {
+      deal_id: 'deal-aead-001',
+      sender_id: sender.publicKey,
+      receiver_id: 'receiver-pub-key-placeholder',
+      msg_type: 'trade_offer'
+    });
+
+    TEST('encryptMessage returns envelope with version=1', envelope.version === 1);
+    TEST('envelope has ciphertext (hex)', envelope.ciphertext.length > 0);
+    TEST('envelope has 32-char tag (16 bytes)', envelope.tag.length === 32);
+    TEST('envelope has 24-char nonce (12 bytes)', envelope.nonce.length === 24);
+    TEST('envelope has signature', envelope.signature.length === 128);
+    TEST('envelope has deal_id', envelope.deal_id === 'deal-aead-001');
+
+    // Decrypt
+    var result = SOSTCrypto.decryptMessage(envelope, chKeysR, sender.publicKey);
+    TEST('decryptMessage succeeds', result.plaintext !== null);
+    TEST('decrypted plaintext matches original', result.plaintext === plaintext);
+    TEST('signature verified', result.verified === true);
+
+    // Wrong key rejection
+    var wrongKeys = SOSTCrypto.deriveChannelKeys(SOSTCrypto.deriveSharedSecret(
+      SOSTCrypto.generateEncryptionKeyPair().privateKey,
+      receiverEnc.publicKey
+    ), 'deal-aead-001', false);
+    var badResult = SOSTCrypto.decryptMessage(envelope, wrongKeys, sender.publicKey);
+    TEST('wrong key decryption fails', badResult.plaintext === null || badResult.error);
+
+    // Tampered ciphertext
+    var tampered = Object.assign({}, envelope);
+    tampered.ciphertext = tampered.ciphertext.replace(/^../, 'ff');
+    var tampResult = SOSTCrypto.decryptMessage(tampered, chKeysR, sender.publicKey);
+    TEST('tampered ciphertext decryption fails', tampResult.plaintext === null || tampResult.error);
+  }
+
+  // ── 7. Keystore ──
+  log('\n=== 7. BROWSER KEYSTORE ===');
+  {
+    var id1 = await SOSTKeystore.createIdentity('test-passphrase-123', 'Test Identity');
+    TEST('createIdentity returns id', id1.id && id1.id.length > 0);
+    TEST('createIdentity returns signingPublic', id1.signingPublic.length === 64);
+    TEST('createIdentity returns encryptionPublic', id1.encryptionPublic.length === 64);
+    TEST('auto-unlocked after creation', SOSTKeystore.isUnlocked());
+
+    var identity = SOSTKeystore.getIdentity();
+    TEST('getIdentity returns current', identity.id === id1.id);
+
+    // Lock and verify
+    SOSTKeystore.lock();
+    TEST('lock clears session', !SOSTKeystore.isUnlocked());
+    TEST('getIdentity null when locked', SOSTKeystore.getIdentity() === null);
+
+    // Unlock with correct passphrase
+    var unlocked = await SOSTKeystore.unlock(id1.id, 'test-passphrase-123');
+    TEST('unlock with correct passphrase succeeds', unlocked !== null);
+    TEST('unlocked has correct id', unlocked.id === id1.id);
+
+    // Wrong passphrase
+    SOSTKeystore.lock();
+    var bad = await SOSTKeystore.unlock(id1.id, 'wrong-passphrase');
+    TEST('unlock with wrong passphrase fails', bad === null);
+
+    // Export/Import
+    var exported = await SOSTKeystore.exportEncrypted(id1.id);
+    TEST('exportEncrypted produces JSON string', typeof exported === 'string' && exported.includes('"version":1'));
+
+    // List
+    var list = await SOSTKeystore.listIdentities();
+    TEST('listIdentities includes created identity', list.some(function (i) { return i.id === id1.id; }));
+
+    // Sign with unlocked keystore
+    var unlocked2 = await SOSTKeystore.unlock(id1.id, 'test-passphrase-123');
+    var sk = SOSTKeystore.getSigningKey();
+    var testSig = SOSTCrypto.sign('keystore test', sk);
+    var testVerify = SOSTCrypto.verify('keystore test', testSig, id1.signingPublic);
+    TEST('sign with keystore key and verify', testVerify === true);
+
+    // Cleanup
+    await SOSTKeystore.deleteIdentity(id1.id);
+    var listAfter = await SOSTKeystore.listIdentities();
+    TEST('deleteIdentity removes from store', !listAfter.some(function (i) { return i.id === id1.id; }));
+  }
+
+  // ── 8. Prekey Store ──
+  log('\n=== 8. BROWSER PREKEY STORE ===');
+  {
+    var testIdentity = 'test-prekey-identity-abc123';
+    var testBundle = {
+      identityKey: 'abcd1234',
+      signedPrekey: { publicKey: 'spk001', signature: 'sig001', createdAt: Date.now(), id: 'spk-1' },
+      oneTimePrekeys: [
+        { publicKey: 'otk001', id: 'otk-1', used: false },
+        { publicKey: 'otk002', id: 'otk-2', used: false },
+        { publicKey: 'otk003', id: 'otk-3', used: false }
+      ]
+    };
+
+    await SOSTPrekeyStore.saveBundle(testIdentity, testBundle);
+    var loaded = await SOSTPrekeyStore.getBundle(testIdentity);
+    TEST('saveBundle + getBundle roundtrip', loaded !== null && loaded.identityKey === 'abcd1234');
+
+    var remaining = await SOSTPrekeyStore.getRemainingCount(testIdentity);
+    TEST('getRemainingCount = 3', remaining === 3);
+
+    var consumed = await SOSTPrekeyStore.consumeOneTimePrekey(testIdentity, 'otk-2');
+    TEST('consumeOneTimePrekey returns consumed key', consumed !== null && consumed.id === 'otk-2');
+
+    var remaining2 = await SOSTPrekeyStore.getRemainingCount(testIdentity);
+    TEST('getRemainingCount after consume = 2', remaining2 === 2);
+
+    await SOSTPrekeyStore.savePrivateKeys(testIdentity, { signedPrekeyPrivate: 'priv-spk', oneTimePrivates: { 'otk-1': 'priv1' } });
+    var privKeys = await SOSTPrekeyStore.loadPrivateKeys(testIdentity);
+    TEST('savePrivateKeys + loadPrivateKeys roundtrip', privKeys !== null && privKeys.signedPrekeyPrivate === 'priv-spk');
+  }
+
+  // ── 9. Relay Client (structure only) ──
+  log('\n=== 9. RELAY CLIENT ===');
+  {
+    TEST('SOSTRelay.configure exists', typeof SOSTRelay.configure === 'function');
+    TEST('SOSTRelay.submitEncrypted exists', typeof SOSTRelay.submitEncrypted === 'function');
+    TEST('SOSTRelay.fetchPending exists', typeof SOSTRelay.fetchPending === 'function');
+    TEST('SOSTRelay.ack exists', typeof SOSTRelay.ack === 'function');
+    TEST('SOSTRelay.publishPrekeys exists', typeof SOSTRelay.publishPrekeys === 'function');
+    TEST('SOSTRelay.fetchPrekeys exists', typeof SOSTRelay.fetchPrekeys === 'function');
+    TEST('SOSTRelay.health exists', typeof SOSTRelay.health === 'function');
+    TEST('SOSTRelay.listDeals exists', typeof SOSTRelay.listDeals === 'function');
+    TEST('SOSTRelay.getOffers exists', typeof SOSTRelay.getOffers === 'function');
+    // Note: actual relay calls require a running relay server
+  }
+
+  // ── 10. Full E2E Flow ──
+  log('\n=== 10. FULL E2E FLOW (Alice → Bob) ===');
+  {
+    // Alice creates identity
+    var alice = await SOSTKeystore.createIdentity('alice-pass', 'Alice');
+    var aliceSK = SOSTKeystore.getSigningKey();
+    var aliceEK = SOSTKeystore.getEncryptionKey();
+    SOSTKeystore.lock();
+
+    // Bob creates identity
+    var bob = await SOSTKeystore.createIdentity('bob-pass', 'Bob');
+    var bobEK = SOSTKeystore.getEncryptionKey();
+    SOSTKeystore.lock();
+
+    // Alice unlocks and creates encrypted offer for Bob
+    await SOSTKeystore.unlock(alice.id, 'alice-pass');
+    var aliceSK2 = SOSTKeystore.getSigningKey();
+    var aliceEK2 = SOSTKeystore.getEncryptionKey();
+
+    // DH: Alice's encryption key + Bob's encryption public
+    var sharedAlice = SOSTCrypto.deriveSharedSecret(aliceEK2, bob.encryptionPublic);
+    var chAlice = SOSTCrypto.deriveChannelKeys(sharedAlice, 'deal-e2e-flow', true);
+
+    var offerPayload = JSON.stringify({
+      type: 'trade_offer',
+      position_id: 'POS-2026-0001-XAUT-Alice',
+      price_sost: '9.70000000',
+      asset_type: 'POSITION_FULL'
+    });
+
+    var envelope = SOSTCrypto.encryptMessage(offerPayload, chAlice, 1, aliceSK2, {
+      deal_id: 'deal-e2e-flow',
+      sender_id: alice.signingPublic,
+      receiver_id: bob.signingPublic,
+      msg_type: 'trade_offer'
+    });
+
+    TEST('Alice creates encrypted envelope', envelope.version === 1);
+    TEST('envelope sender matches Alice', envelope.sender_id === alice.signingPublic);
+    SOSTKeystore.lock();
+
+    // Bob unlocks and decrypts
+    await SOSTKeystore.unlock(bob.id, 'bob-pass');
+    var bobEK2 = SOSTKeystore.getEncryptionKey();
+
+    var sharedBob = SOSTCrypto.deriveSharedSecret(bobEK2, alice.encryptionPublic);
+    var chBob = SOSTCrypto.deriveChannelKeys(sharedBob, 'deal-e2e-flow', false);
+
+    var decrypted = SOSTCrypto.decryptMessage(envelope, chBob, alice.signingPublic);
+    TEST('Bob decrypts successfully', decrypted.plaintext !== null);
+    TEST('decrypted content matches original', decrypted.plaintext === offerPayload);
+    TEST('signature verified by Bob', decrypted.verified === true);
+
+    var parsed = JSON.parse(decrypted.plaintext);
+    TEST('parsed offer has correct position_id', parsed.position_id === 'POS-2026-0001-XAUT-Alice');
+    TEST('parsed offer has correct price', parsed.price_sost === '9.70000000');
+
+    // Cleanup
+    SOSTKeystore.lock();
+    await SOSTKeystore.deleteIdentity(alice.id);
+    await SOSTKeystore.deleteIdentity(bob.id);
+  }
+
+  // ── Results ──
+  log('\n=== RESULTS: ' + _pass + ' passed, ' + _fail + ' failed out of ' + (_pass + _fail) + ' ===',
+      _fail > 0 ? 'fail' : 'pass');
+}
+</script>
+</body>
+</html>
