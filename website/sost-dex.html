@@ -120,7 +120,13 @@
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-group { margin-bottom: 14px; }
-  .form-label { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .form-label { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .field-help-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--gold); font-size: 9px; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s; line-height: 1; }
+  .field-help-btn:hover { background: rgba(245,158,11,0.2); border-color: var(--gold); }
+  .field-help { display: none; background: rgba(245,158,11,0.04); border: 1px solid rgba(245,158,11,0.15); border-radius: 6px; padding: 10px 14px; margin-top: 6px; font-size: 11px; line-height: 1.7; color: var(--text-secondary); }
+  .field-help.open { display: block; }
+  .field-help b { color: var(--text-primary); }
+  .field-help code { background: rgba(245,158,11,0.08); color: var(--gold); padding: 1px 5px; border-radius: 3px; font-size: 10px; }
   .form-control { width: 100%; padding: 9px 12px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 4px; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; outline: none; transition: all 0.2s; }
   .form-control:focus { border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.3); outline: none; }
   .form-control[readonly] { color: var(--text-dim); cursor: default; }
@@ -386,6 +392,15 @@
         <div class="step-header">
           <span class="step-num">1</span>
           <span class="step-title">What do you want to do?</span>
+          <span class="field-help-btn" onclick="toggleFieldHelp('help-actions')" style="margin-left:4px">?</span>
+        </div>
+        <div class="field-help" id="help-actions" style="margin-bottom:12px">
+          <b>Choose the type of trade you want to make:</b><br><br>
+          <b>Buy Full Position:</b> You want to buy someone's entire position — you get the principal ownership, the reward rights, and become the gold escrow beneficiary. You pay SOST.<br><br>
+          <b>Sell Full Position:</b> You own a position and want to sell everything — principal, rewards, and escrow beneficiary — in exchange for SOST.<br><br>
+          <b>Sell Reward Right:</b> You keep your position's principal and gold, but sell only the right to receive the SOST mining rewards.<br><br>
+          <b>Buy Reward Right:</b> You want to buy only the reward stream from someone's position, without the gold or principal.<br><br>
+          <b>OTC Request:</b> A custom request — use this for anything that doesn't fit the above categories.
         </div>
         <div class="option-grid" id="actionOptions">
           <div class="option-card" data-action="buy_full" onclick="selectAction(this)">
@@ -418,12 +433,19 @@
           <span class="step-title">Select Position</span>
         </div>
         <div class="form-group">
-          <label class="form-label">Choose existing or type your own Position ID</label>
+          <label class="form-label">Choose existing or type your own Position ID <span class="field-help-btn" onclick="toggleFieldHelp('help-posid')">?</span></label>
           <select class="form-control" id="composerPosition" onchange="selectPosition()" style="margin-bottom:8px;">
             <option value="">-- Select a position --</option>
             <option value="__new__">+ Create New (type ID below)</option>
           </select>
-          <input type="text" class="form-control" id="composerPositionCustom" placeholder="Type or paste a position ID..." oninput="customPositionInput()" style="margin-top:4px;">
+          <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-NeoB" oninput="customPositionInput()" style="margin-top:4px;">
+          <div class="field-help" id="help-posid">
+            <b>What is a Position ID?</b><br>
+            A unique identifier for a gold-backed position in the SOST system. Each position represents a PoPC commitment — gold locked in escrow that generates SOST rewards.<br><br>
+            <b>Where do I find it?</b> If you already have a position, select it from the dropdown. If you're creating a new offer, type the position ID that the seller gave you.<br><br>
+            <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code><br>
+            Format: POS-[year]-[number]-[gold type]-[owner name]
+          </div>
         </div>
       </div>
 
@@ -435,63 +457,117 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Maker SOST Address</label>
-            <input type="text" class="form-control" id="paramMakerSost" placeholder="Your SOST address" oninput="updatePreview()">
+            <label class="form-label">Maker SOST Address <span class="field-help-btn" onclick="toggleFieldHelp('help-sost-addr')">?</span></label>
+            <input type="text" class="form-control" id="paramMakerSost" placeholder="e.g. sost1a3b4c5d6e7f..." oninput="updatePreview()">
+            <div class="field-help" id="help-sost-addr">
+              <b>Your SOST wallet address.</b> This is the address where you receive or send SOST tokens. It starts with <code>sost1</code> followed by 40 hex characters.<br><br>
+              <b>Where do I find it?</b> Open your SOST wallet or run <code>sost-cli getaddress</code> in the terminal.<br><br>
+              <b>Example:</b> <code>sost1a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code>
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Maker ETH Address</label>
-            <input type="text" class="form-control" id="paramMakerEth" placeholder="0x..." oninput="updatePreview()">
+            <label class="form-label">Maker ETH Address <span class="field-help-btn" onclick="toggleFieldHelp('help-eth-addr')">?</span></label>
+            <input type="text" class="form-control" id="paramMakerEth" placeholder="e.g. 0x742d35Cc..." oninput="updatePreview()">
+            <div class="field-help" id="help-eth-addr">
+              <b>Your Ethereum wallet address.</b> This is used for the gold escrow side — it's the address that holds your XAUT/PAXG tokens and interacts with the SOSTEscrow contract.<br><br>
+              <b>Where do I find it?</b> Open MetaMask or your Ethereum wallet and copy your address.<br><br>
+              <b>Example:</b> <code>0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18</code>
+            </div>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Amount SOST</label>
-            <input type="number" class="form-control" id="paramAmountSost" placeholder="0.00000000" step="0.00000001" min="0" oninput="updatePreview()">
+            <label class="form-label">Amount SOST <span class="field-help-btn" onclick="toggleFieldHelp('help-amount-sost')">?</span></label>
+            <input type="number" class="form-control" id="paramAmountSost" placeholder="e.g. 150.00000000" step="0.00000001" min="0" oninput="updatePreview()">
+            <div class="field-help" id="help-amount-sost">
+              <b>How many SOST tokens are involved in this trade.</b><br><br>
+              If you're <b>buying</b> a position: this is how much SOST you're willing to pay.<br>
+              If you're <b>selling</b>: this is the SOST value of the position you're offering.<br><br>
+              <b>Example:</b> <code>150.00000000</code> means 150 SOST tokens. Use up to 8 decimal places.
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Amount Gold (oz)</label>
-            <input type="number" class="form-control" id="paramAmountGold" placeholder="0.0000" step="0.0001" min="0" oninput="updatePreview()">
+            <label class="form-label">Amount Gold (oz) <span class="field-help-btn" onclick="toggleFieldHelp('help-amount-gold')">?</span></label>
+            <input type="number" class="form-control" id="paramAmountGold" placeholder="e.g. 0.0500" step="0.0001" min="0" oninput="updatePreview()">
+            <div class="field-help" id="help-amount-gold">
+              <b>How many troy ounces of gold are locked in this position's escrow.</b><br><br>
+              This is the physical gold backing — the XAUT or PAXG tokens deposited in the SOSTEscrow contract. 1 oz = 1 XAUT = 1 PAXG.<br><br>
+              <b>Example:</b> <code>0.0500</code> means 0.05 troy ounces of gold (about $150 at current prices).
+            </div>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Price (SOST)</label>
-            <input type="number" class="form-control" id="paramPrice" placeholder="0.00000000" step="0.00000001" min="0" oninput="updatePreview()">
+            <label class="form-label">Price (SOST) <span class="field-help-btn" onclick="toggleFieldHelp('help-price')">?</span></label>
+            <input type="number" class="form-control" id="paramPrice" placeholder="e.g. 120.00000000" step="0.00000001" min="0" oninput="updatePreview()">
+            <div class="field-help" id="help-price">
+              <b>The asking or bid price for this trade, in SOST tokens.</b><br><br>
+              If you're <b>selling</b>: this is the minimum SOST you want to receive.<br>
+              If you're <b>buying</b>: this is the maximum SOST you're offering to pay.<br><br>
+              <b>Tip:</b> Check the market tab to see what others are asking. There's no AMM — you negotiate directly.<br><br>
+              <b>Example:</b> <code>120.00000000</code> means you want 120 SOST for this position.
+            </div>
           </div>
           <div class="form-group pro-only" style="display:none">
-            <label class="form-label">Position ID</label>
+            <label class="form-label">Position ID <span class="field-help-btn" onclick="toggleFieldHelp('help-posid-pro')">?</span></label>
             <input type="text" class="form-control" id="paramPosId" placeholder="Auto-filled or type manually" oninput="updatePreview()">
+            <div class="field-help" id="help-posid-pro">
+              <b>Pro mode only.</b> The position ID is auto-filled from Step 2. Only change this if you know the exact ID and need to override.<br><br>
+              <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code>
+            </div>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Offer Expiry</label>
+            <label class="form-label">Offer Expiry <span class="field-help-btn" onclick="toggleFieldHelp('help-expiry')">?</span></label>
             <select class="form-control" id="paramExpiry" onchange="updatePreview()">
               <option value="3600">1 hour</option>
               <option value="21600">6 hours</option>
               <option value="86400" selected>24 hours</option>
             </select>
+            <div class="field-help" id="help-expiry">
+              <b>How long your offer stays valid.</b> After this time, the offer expires automatically and cannot be accepted.<br><br>
+              <b>1 hour:</b> For quick trades when both parties are online.<br>
+              <b>6 hours:</b> Good for same-day trading.<br>
+              <b>24 hours:</b> Default. Gives the other party time to review and respond.
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Asset Type</label>
+            <label class="form-label">Asset Type <span class="field-help-btn" onclick="toggleFieldHelp('help-asset-type')">?</span></label>
             <select class="form-control" id="paramAssetType" onchange="updatePreview()">
               <option value="POSITION_FULL">POSITION_FULL</option>
               <option value="POSITION_REWARD_RIGHT">POSITION_REWARD_RIGHT</option>
               <option value="GOLD">GOLD</option>
             </select>
+            <div class="field-help" id="help-asset-type">
+              <b>What exactly you're trading:</b><br><br>
+              <b>POSITION_FULL:</b> The entire position — principal ownership, reward rights, AND the gold escrow beneficiary. The buyer gets everything.<br><br>
+              <b>POSITION_REWARD_RIGHT:</b> Only the reward rights. The seller keeps the principal and the gold, but the buyer receives the SOST mining rewards from this position.<br><br>
+              <b>GOLD:</b> Direct gold-token trade (XAUT or PAXG) without a PoPC position involved.
+            </div>
           </div>
         </div>
         <div class="form-row pro-only" style="display:none">
           <div class="form-group">
-            <label class="form-label">Pair</label>
+            <label class="form-label">Pair <span class="field-help-btn" onclick="toggleFieldHelp('help-pair')">?</span></label>
             <select class="form-control" id="paramPair" onchange="updatePreview()">
               <option value="SOST/XAUT">SOST/XAUT</option>
               <option value="SOST/PAXG">SOST/PAXG</option>
             </select>
+            <div class="field-help" id="help-pair">
+              <b>Which gold token is involved:</b><br><br>
+              <b>SOST/XAUT:</b> Tether Gold (XAUT) — each token = 1 troy oz of physical gold stored in Swiss vaults.<br>
+              <b>SOST/PAXG:</b> Pax Gold (PAXG) — each token = 1 troy oz of London Good Delivery gold.<br><br>
+              Both are equally valid for PoPC positions.
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Estimated Fee (1%)</label>
+            <label class="form-label">Estimated Fee (1%) <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
             <input type="text" class="form-control" id="paramFee" readonly style="color:var(--gold);">
+            <div class="field-help" id="help-fee">
+              <b>Protocol fee for this trade.</b> Calculated automatically as 1% of the trade value. This fee supports protocol development and is deducted at settlement.<br><br>
+              <b>Example:</b> If the trade is 100 SOST, the fee is 1 SOST.
+            </div>
           </div>
         </div>
       </div>
@@ -725,6 +801,10 @@ function switchTab(tab) {
   var btns = document.querySelectorAll('.tab-btn');
   var map = { mypos: 0, market: 1, deals: 2 };
   if (map[tab] !== undefined) btns[map[tab]].classList.add('active');
+}
+function toggleFieldHelp(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
 }
 
 /* ── Trade Composer ── */
