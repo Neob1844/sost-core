@@ -637,7 +637,7 @@
 <body>
 <nav>
   <div class="container">
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:70px;height:70px;min-width:70px;min-height:70px;max-width:70px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;color:#000;text-decoration:none;line-height:1;margin-right:14px;overflow:hidden;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite" title="SOST DEX"><span style="color:#fb010d;font-size:12px;font-weight:900;letter-spacing:1px">SOST</span><span style="font-size:19px;font-weight:900;letter-spacing:-1px">DEX</span></a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;min-height:90px;max-width:90px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;color:#000;text-decoration:none;line-height:1;margin-right:14px;overflow:hidden;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite" title="SOST DEX"><span style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:2px">SOST</span><span style="font-size:24px;font-weight:900;letter-spacing:-1px">DEX</span></a>
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
@@ -1024,21 +1024,21 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:#67e8f9"></span>
-              E4 DEEP EASING
+              E7 DEEPEST EASING
             </div>
             <div class="mode-params">
-              scale=1 &middot; k=3 &middot; margin=240 &middot; steps=3<br>
-              <em>Maximum easing: widest margin, fewest stability probes. Only after 6h extra at B0.</em>
+              scale=1 &middot; k=1 &middot; margin=200 &middot; steps=1<br>
+              <em>Deepest easing / relief valve target (block 5,750+). Compute=1. Only after relief or extended stall.</em>
             </div>
           </div>
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:#22d3ee"></span>
-              E3&ndash;E1
+              E6&ndash;E1
             </div>
             <div class="mode-params">
-              scale=1 &middot; k=3&ndash;4 &middot; margin=240&ndash;200 &middot; steps=3&ndash;4<br>
-              <em>Easing profiles. Only after 6h extra at B0.</em>
+              scale=1 &middot; k=1&ndash;4 &middot; margin=195&ndash;170 &middot; steps=1&ndash;4<br>
+              <em>Extended easing profiles (E7-E5 added block 5,750). Only after 6h extra at B0.</em>
             </div>
           </div>
           <div class="mode-card">
@@ -1064,27 +1064,27 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--red-primary)"></span>
-              H6&ndash;H9 MAX
+              H6&ndash;H13 HARDENING
             </div>
             <div class="mode-params">
-              scale=2&ndash;3 &middot; k=6&ndash;8 &middot; margin=130&ndash;110 &middot; steps=6&ndash;8<br>
-              <em>Maximum hardening. H13 ceiling active (block 5,750+, scale=2). H14&ndash;H35 reserved (margin=115).</em>
+              scale=2 &middot; k=5&ndash;9 &middot; margin=135&ndash;115 &middot; steps=6&ndash;9<br>
+              <em>Progressive hardening. H13 ceiling active (block 5,750+). H14&ndash;H35 reserved (margin=115). Relief valve: E7 at 605s.</em>
             </div>
           </div>
         </div>
 
         <div class="code-snippet" data-label="ANTI-STALL (mining only)" style="margin-top:16px;">
 <span class="cmt">// Zone-based decay to B0 — mining only</span>
-<span class="cmt">// Activation: always 7,200s (2 hours) — V3.1+</span>
+<span class="cmt">// Activation: 3,600s (1 hour, V5+) — V3.1+</span>
 stall = now - last_block_time
-threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">// always 2 hours</span>
+threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">// 1 hour (V5+)</span>
 
 <span class="kw">if</span> stall &gt;= threshold:
     <span class="cmt">// Zone decay rates (current level determines speed):</span>
     <span class="cmt">// H10&ndash;H7: 600s/level (fast)    — 2400s total</span>
     <span class="cmt">// H6&ndash;H4: 900s/level (medium)   — 2700s total</span>
     <span class="cmt">// H3&ndash;H1: 1200s/level (slow)    — 3600s total</span>
-    <span class="cmt">// Decays to B0. Easing E1&ndash;E4 only after 6h extra at B0.</span>
+    <span class="cmt">// Decays to B0. Easing E1&ndash;E7 only after 6h extra at B0.</span>
     H = zone_decay(H, stall - threshold)
         </div>
 
@@ -1095,14 +1095,14 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
-            &bull; Anti-stall: always 7,200s (V3.1+), zone-based decay to B0 (H10&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E4 only after 6h extra at B0.
+            &bull; Anti-stall: 3,600s (1 hour, V5+), zone-based decay to B0 (H10&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E7 only after 6h extra at B0. Relief valve: E7 at 605s (block 5,750+). Lag-adjust ~6s.
           </p>
         </div>
 
         <table class="code-table" style="margin-top:16px;">
           <tbody><tr>
             <td class="key">CASERT_H_MIN</td>
-            <td class="val"><code>-4</code> <span class="comment">// E4 (deep easing)</span></td>
+            <td class="val"><code>-7</code> <span class="comment">// E7 (deepest easing / relief valve target)</span></td>
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
@@ -1118,7 +1118,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">ANTISTALL_FLOOR</td>
-            <td class="val"><code>7200</code> <span class="comment">// 2 hours minimum before decay</span></td>
+            <td class="val"><code>3600</code> <span class="comment">// 1 hour minimum (V5+) before decay</span></td>
           </tr>
           <tr>
             <td class="key">ANTISTALL_DECAY</td>
@@ -1496,7 +1496,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
           <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">43 profiles (21 active E7&ndash;H13, 22 reserved H14&ndash;H35)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
-          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 7200s activation, then E1-E4 after 6h)</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 3600s activation, then E1-E7 after 6h)</td></tr>
           <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E7&ndash;H13 active (&plusmn;1/block V6+, slew rate limited, emergency-only)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
