@@ -678,11 +678,12 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Estimated Fee (1%) <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
+            <label class="form-label">Protocol Fee (3% A / 8% B) <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
             <input type="text" class="form-control" id="paramFee" readonly style="color:var(--gold);">
             <div class="field-help" id="help-fee">
-              <b>Protocol fee for this trade.</b> Calculated automatically as 1% of the trade value. This fee supports protocol development and is deducted at settlement.<br><br>
-              <b>Example:</b> If the trade is 100 SOST, the fee is 1 SOST.
+              <b>Constitutional protocol fee on the reward.</b> Model A (self-custody): 3% of reward. Model B (escrow): 8% of reward. The fee is deducted automatically at reward settlement and goes to the protocol operational address.<br><br>
+              <b>Example Model A:</b> If the reward is 100 SOST, the fee is 3 SOST (user receives 97).<br>
+              <b>Example Model B:</b> If the reward is 100 SOST, the fee is 8 SOST (user receives 92).
             </div>
           </div>
         </div>
@@ -997,8 +998,13 @@ function selectPosition() {
 
 function updatePreview() {
   var price = parseFloat(document.getElementById('paramPrice').value) || 0;
-  var fee = price * 0.01;
-  document.getElementById('paramFee').value = fee.toFixed(8) + ' SOST';
+  var assetType = document.getElementById('paramAssetType').value;
+  var feeRate = 0.08; // Model B default
+  var feeLabel = '8% (Model B)';
+  // If we could detect Model A, use 3% — for now show both
+  var feeA = price * 0.03;
+  var feeB = price * 0.08;
+  document.getElementById('paramFee').value = 'A: ' + feeA.toFixed(8) + ' / B: ' + feeB.toFixed(8) + ' SOST';
 
   var content = document.getElementById('previewContent');
   if (!_selectedAction) {
