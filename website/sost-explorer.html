@@ -356,20 +356,56 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
+
+      <!-- SOST DEX ALPHA -->
+      <div style="border-bottom:1px solid var(--border);padding:14px 0;background:linear-gradient(135deg,rgba(230,57,70,0.04),rgba(245,158,11,0.06),rgba(74,222,128,0.04),rgba(34,211,238,0.04));">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);box-shadow:0 0 8px rgba(245,158,11,.6);animation:pulse 1.5s ease infinite"></span>
+          <span style="font-size:10px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">SOST DEX &mdash; ALPHA LAUNCH</span>
+        </div>
+        <b style="color:var(--text);font-size:12px;">The unified trading desk for gold-backed positions is live.</b><br><br>
+        <span style="color:var(--text2)">
+        <b style="color:#f59e0b">What is SOST DEX?</b><br>
+        A signed, encrypted, and verifiable position market for gold-backed SOST positions. Not an AMM &mdash; a real OTC desk where identified participants trade positions with full cryptographic proof.<br><br>
+        <b style="color:#4ade80">What you can do:</b><br>
+        &bull; <b>Buy &amp; sell positions</b> &mdash; full positions (principal + rewards + escrow) or reward-only rights<br>
+        &bull; <b>Split ownership</b> &mdash; separate principal_owner, reward_owner, and eth_beneficiary<br>
+        &bull; <b>Track deals</b> &mdash; visual timeline from offer &rarr; accept &rarr; settlement &rarr; complete<br>
+        &bull; <b>Trade Composer</b> &mdash; build offers with 12 editable fields, preview JSON, sign with ED25519<br>
+        &bull; <b>Simple &amp; Pro modes</b> &mdash; beginner-friendly defaults or full control for advanced users<br><br>
+        <b style="color:#22d3ee">How it works:</b><br>
+        &bull; <b>Step 1:</b> Mine SOST &rarr; coinbase splits 50% miner / 25% Gold Vault / 25% PoPC Pool<br>
+        &bull; <b>Step 2:</b> PoPC contract locks gold (XAUT/PAXG) in immutable Ethereum escrow (SOSTEscrow)<br>
+        &bull; <b>Step 3:</b> Position created &mdash; principal + reward rights + eth_beneficiary linked<br>
+        &bull; <b>Step 4:</b> Trade on DEX &mdash; signed &amp; E2E encrypted (X25519 + ChaCha20-Poly1305 + prekeys)<br><br>
+        <b style="color:#c084fc">Settlement stack:</b><br>
+        &bull; SOSTEscrow v2 with settlementOperator for beneficiary handoff (cannot withdraw)<br>
+        &bull; Auto-withdraw daemon + reward settlement engine &mdash; implemented and tested<br>
+        &bull; Blind relay transport with offline delivery via prekey architecture<br>
+        &bull; 743 tests passing (C++ 193 + Python 272 + TypeScript 231 + Solidity 47)<br>
+        </span><br>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+          <a href="sost-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);color:#000;font-weight:800;font-size:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 12px rgba(245,158,11,0.4)">OPEN SOST DEX &rarr;</a>
+          <a href="sost-gold-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">DEX SPEC</a>
+          <a href="sost-e2e.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">E2E PROTOCOL</a>
+        </div>
+      </div>
+
+      <!-- FINAL CALIBRATION -->
       <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,191,36,0.04);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);animation:pulse 1.5s ease infinite"></span>
           <span style="color:#fbbf24;font-size:9px;font-weight:700;letter-spacing:1px">FINAL CALIBRATION &mdash; BLOCK 5,750</span>
         </div>
-        <b style="color:var(--text);font-size:11px;">cASERT Equalizer Final Calibration + SOST DEX Alpha Launch</b><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--cyan)">What changes:</b><br>
-        &bull; <b>H13 ceiling activated</b> &mdash; 21 of 43 profiles now active (E7&ndash;H13). Finer lag absorption.<br>
-        &bull; <b>Extended easing range</b> &mdash; 3 new easing profiles (E7, E6, E5) for smoother difficulty relief.<br>
-        &bull; <b>Relief valve improved</b> &mdash; drops to E7 (easiest profile) after 10m 05s without a block. Previously dropped to H1 after 10m 30s.<br>
-        &bull; <b>Lag-adjust faster</b> &mdash; miners detect profile changes in ~6 seconds instead of 30. Much faster response to lag changes.<br>
-        &bull; <b>Equalizer table recalibrated</b> &mdash; E4 through H2 margins tightened for more precise control.<br>
-        &bull; <b>SOST DEX</b> &mdash; unified trading desk now live in alpha. Buy, sell, split and track gold-backed positions from a single page.</span><br><br>
-        <span style="color:var(--text2)"><b style="color:var(--green)">This completes the cASERT equalizer implementation and calibration.</b> The 43-profile architecture (E7&ndash;H35) is now fully defined. Future profiles (H14&ndash;H35) will be activated as network hashrate grows &mdash; no further structural changes to the equalizer are planned.</span><br><br>
+        <b style="color:var(--text);font-size:11px;">cASERT Equalizer &mdash; Implementation Complete</b><br><br>
+        <span style="color:var(--text2)">
+        &bull; <b>H13 ceiling</b> &mdash; 21 of 43 profiles active (E7&ndash;H13). Finer lag absorption.<br>
+        &bull; <b>3 new easing profiles</b> &mdash; E7, E6, E5 for smoother difficulty relief.<br>
+        &bull; <b>Relief valve E7@605s</b> &mdash; drops to easiest profile after 10m 05s. Was H1@630s.<br>
+        &bull; <b>Lag-adjust ~6s</b> &mdash; miners detect profile changes 5&times; faster.<br>
+        &bull; <b>Margins recalibrated</b> &mdash; E4-H2 tightened, 5-point gradient, H10-H35 unified at 115.<br>
+        </span><br>
+        <span style="color:var(--text2)"><b style="color:var(--green)">This completes the cASERT equalizer.</b> The 43-profile architecture is final. Future profiles (H14&ndash;H35) activate as hashrate grows.</span><br><br>
         <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
           <b style="color:#fbbf24;letter-spacing:1px">UPDATE NODE &amp; MINER BEFORE BLOCK 5,750:</b><br>
           <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>

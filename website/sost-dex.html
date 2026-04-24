@@ -64,7 +64,10 @@
   .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; overflow: hidden; }
   .hero::before { content: ''; position: absolute; top: -100px; left: -100px; right: -100px; bottom: -100px; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245,158,11,0.12) 0%, transparent 60%), radial-gradient(ellipse 40% 30% at 80% 20%, rgba(218,165,32,0.06) 0%, transparent 50%), radial-gradient(ellipse 30% 40% at 10% 30%, rgba(245,158,11,0.04) 0%, transparent 50%); pointer-events: none; }
   @keyframes rainbowShift { 0%{background-position:0% center} 100%{background-position:200% center} }
-  .hero-title { font-family: var(--font-display); font-size: clamp(42px, 7vw, 72px); font-weight: 700; line-height: 1.05; margin-bottom: 16px; letter-spacing: -2px; background: linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 4s linear infinite; }
+  @keyframes glowPulse { 0%,100%{filter:blur(18px) brightness(1)} 50%{filter:blur(28px) brightness(1.3)} }
+  .hero-title { font-family: var(--font-display); font-size: clamp(48px, 8vw, 80px); font-weight: 800; line-height: 1.05; margin-bottom: 16px; letter-spacing: -3px; position: relative; display: inline-block; }
+  .hero-title .dex-text { background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite; position: relative; z-index: 1; }
+  .hero-title::after { content: 'SOST DEX'; position: absolute; top: 0; left: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite, glowPulse 2s ease-in-out infinite; opacity: 0.6; z-index: 0; }
   .hero-subtitle { font-size: 16px; color: var(--text-secondary); max-width: 600px; line-height: 1.8; font-weight: 300; margin-bottom: 36px; }
   .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
   .hero-btn { display: flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; border: 1px solid; transition: all 0.3s; text-decoration: none; text-transform: uppercase; }
@@ -294,7 +297,7 @@
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <section class="hero">
   <div class="container">
-    <div class="hero-title fade-in">SOST DEX</div>
+    <div class="hero-title fade-in"><span class="dex-text">SOST DEX</span></div>
     <p class="hero-subtitle fade-in delay-1">Buy, sell, split and track gold-backed positions through signed, encrypted, and verifiable settlement.</p>
     <div class="hero-actions fade-in delay-2">
       <a href="#trade-composer" class="hero-btn hero-btn-green"><span>&#9650;</span> BUY POSITION</a>
