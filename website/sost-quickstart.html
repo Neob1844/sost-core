@@ -271,7 +271,7 @@
           <div class="req-item">
             <div class="req-icon" style="color:#22d3ee;font-family:monospace;font-size:32px;line-height:1;">&#x2588;</div>
             <div class="req-label">Computer</div>
-            <div class="req-sub">Mining: 8 GB RAM &middot; Node: ~500 MB</div>
+            <div class="req-sub">Mining: 8 GB+ RAM (4GB dataset + 4GB scratchpad) &middot; Node only: ~500 MB</div>
           </div>
           <div class="req-item">
             <div class="req-icon" style="color:#4ade80;font-family:monospace;font-size:32px;line-height:1;">&#x25BA;</div>
@@ -527,7 +527,7 @@
     <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
     <span class="flag">--rpc-user</span> <span class="val">SAME_USERNAME_AS_STEP_4</span> \
     <span class="flag">--rpc-pass</span> <span class="val">SAME_PASSWORD_AS_STEP_4</span> \
-    <span class="flag">--blocks</span> <span class="val">0</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--realtime</span></div>
+    <span class="flag">--blocks</span> <span class="val">999999</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--threads</span> <span class="val">4</span></div>
         <p>Replace:</p>
         <ul style="color:var(--text-secondary);margin:8px 0 16px 20px;line-height:2;">
           <li><span style="color:var(--red-primary)">YOUR_ADDRESS_FROM_STEP_3</span> = the sost1... address you wrote down</li>
@@ -613,7 +613,12 @@
 
       <div class="faq-item">
         <div class="faq-q">Can I use multiple CPU cores?</div>
-        <div class="faq-a">Yes. The miner is single-threaded by design. Run one miner instance per core in separate terminal windows, all using the same address and RPC credentials.</div>
+        <div class="faq-a">Yes. Use <code>--threads N</code> where N is the number of cores you want to use. Example: <code>--threads 4</code> for 4 cores. Each thread searches nonces independently. The miner shows combined hashrate across all threads.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">I get <code>std::bad_alloc</code> when starting the miner</div>
+        <div class="faq-a">Your system has less than 8 GB free RAM. ConvergenceX needs ~8 GB (4 GB dataset + 4 GB scratchpad). Add a swap file before starting the miner:<br><code style="display:block;margin:8px 0;padding:8px 12px;background:#0a0a0a;border-radius:4px;font-size:11px;line-height:1.8">sudo fallocate -l 4G /swapfile<br>sudo chmod 600 /swapfile<br>sudo mkswap /swapfile<br>sudo swapon /swapfile</code>This provides temporary overflow memory during dataset loading. Once loaded, mining runs normally.</div>
       </div>
 
       <div class="faq-item">
