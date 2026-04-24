@@ -390,7 +390,7 @@ body {
   backdrop-filter: blur(4px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 40px 0 60px;
+  padding: 20px 0 40px;
 }
 #menu-overlay.open {
   display: flex;
@@ -401,21 +401,21 @@ body {
   color: var(--pip);
   letter-spacing: 6px;
   text-shadow: 0 0 20px var(--pip-glow);
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .menu-item {
   font-family: var(--font);
-  font-size: 22px;
+  font-size: 17px;
   color: var(--pip-dim);
-  padding: 10px 40px;
+  padding: 7px 24px;
   cursor: pointer;
   transition: all 0.15s;
-  letter-spacing: 2px;
-  width: 360px;
+  letter-spacing: 1.5px;
+  width: 320px;
   max-width: 90vw;
   text-align: left;
   border: 1px solid transparent;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 .menu-item:hover, .menu-item.active {
   color: var(--pip);
@@ -511,8 +511,8 @@ body {
   #content { padding: 10px; }
   .pip-panel { padding: 12px; }
   .pip-panel h2 { font-size: 20px; }
-  .menu-item { font-size: 18px; padding: 8px 20px; width: 280px; }
-  #menu-overlay h2 { font-size: 22px; }
+  .menu-item { font-size: 15px; padding: 6px 16px; width: 260px; }
+  #menu-overlay h2 { font-size: 18px; }
 }
 @media (max-width: 380px) {
   #header .logo { font-size: 14px; }
@@ -1550,6 +1550,9 @@ function renderSection(id) {
   content.style.padding = '';
   content.style.overflow = '';
 
+  // Scroll content to top on section change
+  content.scrollTop = 0;
+
   const renderer = SectionRenderers[id];
   if (renderer) renderer(content);
   setTimeout(addTooltips, 300);
@@ -1641,7 +1644,7 @@ SectionRenderers.dashboard = function(el) {
       <div class="stat-row"><span class="stat-label">COINBASE MATURITY</span><span class="stat-value">1000 BLOCKS</span></div>
       <div class="stat-row"><span class="stat-label">MAX BLOCK SIZE</span><span class="stat-value">1,000,000 BYTES</span></div>
       <div class="stat-row"><span class="stat-label">MAX TX SIZE</span><span class="stat-value">100,000 BYTES</span></div>
-      <div class="stat-row"><span class="stat-label">MIN RELAY FEE</span><span class="stat-value">1 STOCK/BYTE</span></div>
+      <div class="stat-row"><span class="stat-label">MIN RELAY FEE</span><span class="stat-value">1 STOCK/BYTE (dynamic @ blk 10K)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// LATEST BLOCKS</h2>
