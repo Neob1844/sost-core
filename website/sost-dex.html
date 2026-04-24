@@ -335,12 +335,12 @@
     <div class="hero-title fade-in"><span class="dex-text">SOST DEX</span></div>
     <p class="hero-subtitle fade-in delay-1">Buy, sell, split and track gold-backed positions through signed, encrypted, and verifiable settlement.</p>
     <div class="hero-actions fade-in delay-2">
-      <a href="#trade-composer" class="hero-btn hero-btn-green"><span>&#9650;</span> BUY POSITION</a>
-      <a href="#trade-composer" class="hero-btn hero-btn-gold"><span>&#9660;</span> SELL POSITION</a>
-      <a href="#trade-composer" class="hero-btn hero-btn-cyan"><span>&#10697;</span> SELL REWARD RIGHT</a>
-      <a href="#trade-composer" class="hero-btn hero-btn-orange"><span>&#9998;</span> OTC REQUEST</a>
-      <a href="#walletPanel" class="hero-btn" style="border-color:rgba(192,132,252,0.5);color:#c084fc;background:rgba(192,132,252,0.08)"><span>&#128273;</span> CREATE IDENTITY</a>
-      <a href="#walletPanel" class="hero-btn" style="border-color:rgba(100,116,139,0.5);color:var(--text-dim);background:rgba(100,116,139,0.06)"><span>&#128229;</span> IMPORT BACKUP</a>
+      <a href="#trade-composer" class="hero-btn hero-btn-green" onclick="setTimeout(function(){var c=document.querySelector('[data-action=buy_full]');if(c)c.click();},300)"><span>&#9650;</span> BUY POSITION</a>
+      <a href="#trade-composer" class="hero-btn hero-btn-gold" onclick="setTimeout(function(){var c=document.querySelector('[data-action=sell_full]');if(c)c.click();},300)"><span>&#9660;</span> SELL POSITION</a>
+      <a href="#trade-composer" class="hero-btn hero-btn-cyan" onclick="setTimeout(function(){var c=document.querySelector('[data-action=sell_reward]');if(c)c.click();},300)"><span>&#10697;</span> SELL REWARD RIGHT</a>
+      <a href="#trade-composer" class="hero-btn hero-btn-orange" onclick="setTimeout(function(){var c=document.querySelector('[data-action=otc]');if(c)c.click();},300)"><span>&#9998;</span> OTC REQUEST</a>
+      <a href="#walletPanel" class="hero-btn" style="border-color:rgba(192,132,252,0.5);color:#c084fc;background:rgba(192,132,252,0.08)" onclick="setTimeout(function(){if(typeof SOSTDEX!=='undefined')SOSTDEX.createIdentity();},300)"><span>&#128273;</span> CREATE IDENTITY</a>
+      <a href="#walletPanel" class="hero-btn" style="border-color:rgba(100,116,139,0.5);color:var(--text-dim);background:rgba(100,116,139,0.06)" onclick="setTimeout(function(){if(typeof SOSTDEX!=='undefined')SOSTDEX.showImport();},300)"><span>&#128229;</span> IMPORT BACKUP</a>
     </div>
     <div style="margin-top:28px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px 28px;max-width:700px;" class="fade-in delay-3">
       <div style="font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:14px;">HOW IT WORKS</div>
