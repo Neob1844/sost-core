@@ -704,7 +704,7 @@ var D={
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency prevents ASIC parallelism. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',
-'fee':'<b>Dynamic Fees</b> — Fee rate = fee / tx_size in stocks/byte. Minimum relay: 1 stock/byte. Rational arithmetic (no floating point). CLI auto-calculates based on mempool state.',
+'fee':'<b>Dynamic Fees</b> ��� Fee rate = fee / tx_size in stocks/byte. Static minimum: 1 stock/byte. Dynamic relay floor (block 10,000+): scales with mempool pressure (2x/5x/10x/25x multipliers, 50 max). Policy-only anti-spam — does not change consensus. RBF enabled. CLI auto-calculates based on mempool state.',
 'Transcript V2':'<b>Transcript V2</b> — Compact proof system for ConvergenceX verification. 11 phases, 6 challenged segments × 2 rounds = 12 round witnesses per block. Deterministic challenges from commit hash. ~0.2ms verification time.'
 };
 var panel=null;

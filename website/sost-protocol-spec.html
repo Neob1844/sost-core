@@ -365,7 +365,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <p>22 JSON-RPC methods. Auth required by default (Basic Auth). Read-only methods accessible without auth. Write methods (submitblock, sendrawtransaction) require auth. Key methods: getblocktemplate (mining), submitblock (block submission), getinfo, getblock, getbalance, listunspent, sendrawtransaction.</p>
 
 <h3>Mempool</h3>
-<p>Max 5000 entries. Fee-rate ordered with rational arithmetic (__int128, no floats). Acceptance: no coinbase, no duplicates, no double-spends (spent_index_ map), consensus validation (R1-R14, S1-S12), policy validation (size &le; 16KB, inputs &le; 128, outputs &le; 32, fee &ge; 1 stock/byte, dust &ge; 10000 stocks). BuildBlockTemplate selects by fee-rate descending up to 1MB.</p>
+<p>Max 5000 entries. Fee-rate ordered with rational arithmetic (__int128, no floats). Acceptance: no coinbase, no duplicates, no double-spends (spent_index_ map), consensus validation (R1-R14, S1-S12), policy validation (size &le; 16KB, inputs &le; 128, outputs &le; 32, fee &ge; 1 stock/byte, dust &ge; 10000 stocks). <b>Dynamic relay floor (block 10,000+):</b> scales with mempool pressure &mdash; 1x (&lt;100 tx), 2x (100-500), 5x (500-2000), 10x (2000-4000), 25x (4000+), ceiling 50 stocks/byte. Policy-only (not consensus). RBF enabled (full replacement by higher fee). CPFP-aware block template. BuildBlockTemplate selects by fee-rate descending up to 1MB.</p>
 </div></section>
 
 <!-- 8. SYNC -->

@@ -641,7 +641,7 @@
       <div class="spec-body">
         <p class="spec-desc">
           Rational fee-rate ordering (fee/size as integer ratio, no floating point).
-          MIN_RELAY_FEE: 1 stock/byte. Mempool prioritizes by fee-rate.
+          MIN_RELAY_FEE: 1 stock/byte (static). Dynamic relay floor activates at block 10,000 — scales with mempool pressure (2x/5x/10x/25x, ceiling 50 stocks/byte). Policy-only, not consensus. Mempool prioritizes by fee-rate.
         </p>
       </div>
     </div>
@@ -970,7 +970,7 @@ var D={
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata in transaction outputs. 12-byte header + up to 243-byte body. On-chain attestation and proof-of-discovery. Activates at block 5000.',
 'RBF':'<b>Replace-by-Fee</b> — Replace a stuck mempool transaction with a higher-fee version. Opt-in policy.',
 'CPFP':'<b>Child-Pays-for-Parent</b> — A child transaction pays enough fees to make both itself and its stuck parent attractive to miners.',
-'fee rate':'<b>Fee Rate</b> — Fee per byte in stocks/byte. Minimum relay: 1 stock/byte. Integer arithmetic only.',
+'fee rate':'<b>Fee Rate</b> — Fee per byte in stocks/byte. Minimum relay: 1 stock/byte (dynamic after block 10,000 — scales with mempool pressure). Integer arithmetic only.',
 'UTXO':'<b>UTXO</b> — Unspent Transaction Output. Each coin is an unspent output from a previous transaction.',
 'multisig':'<b>Multisig</b> — M-of-N signatures required. Treasury protection via 2-of-3 setup. Max 15 keys.',
 'sost1':'<b>sost1...</b> — Standard P2PKH address (single-signature).',

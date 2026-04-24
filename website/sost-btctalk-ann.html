@@ -293,7 +293,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
   <li><b>ESCROW_LOCK</b> &mdash; time-locked escrow with designated beneficiary. Activating at block 5000.</li>
   <li><b>Capsule Protocol v1</b> &mdash; structured metadata in outputs (12-byte header + 243-byte body). Activating at block 5000.</li>
   <li><b>Coinbase maturity:</b> 1000 blocks (~7 days)</li>
-  <li><b>Max block size:</b> 1 MB &middot; <b>Min relay fee:</b> 1 stock/byte &middot; <b>Dust threshold:</b> 10,000 stocks</li>
+  <li><b>Max block size:</b> 1 MB &middot; <b>Min relay fee:</b> 1 stock/byte (static before block 10,000; dynamic after &mdash; scales with mempool pressure up to 50 stocks/byte) &middot; <b>Dust threshold:</b> 10,000 stocks</li>
   <li><b>Replay protection:</b> genesis hash committed in sighash (chain-specific signatures)</li>
 </ul>
 
