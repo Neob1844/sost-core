@@ -78,7 +78,7 @@ const SOSTDEX = (function () {
     _showAll('.dex-private');
     _hideAll('.dex-public-only');
     // Hide wallet login panel
-    var wp = document.getElementById('walletLoginSection');
+    var wp = document.getElementById('walletPanel');
     if (wp) wp.style.display = 'none';
     // Show identity info
     _updateIdentityBar();

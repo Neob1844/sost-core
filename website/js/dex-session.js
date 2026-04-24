@@ -99,7 +99,7 @@ const SOSTSession = (function () {
   /**
    * Set session timeout duration.
    */
-  function setTimeout(ms) {
+  function setTimeoutDuration(ms) {
     _timeoutMs = ms;
   }
 
@@ -122,7 +122,7 @@ const SOSTSession = (function () {
     lock: lock,
     getState: getState,
     isUnlocked: isUnlocked,
-    setTimeout: setTimeout,
+    setTimeoutDuration: setTimeoutDuration,
     getInfo: getInfo
   };
 })();
