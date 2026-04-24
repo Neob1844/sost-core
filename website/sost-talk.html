@@ -362,15 +362,24 @@ function renderAll() {
 
 // Fetch protocol status for sidebar
 function updateSidebar() {
-  fetch('https://sostcore.com/api/explorer_version.json?t=' + Date.now()).catch(function(){});
-  // Try RPC for block height (won't work from browser usually, but try API)
   var h = document.getElementById('sideHeight');
   var m = document.getElementById('sideMiners');
   var n = document.getElementById('sideNodes');
-  // Use static fallback — real data comes from explorer
-  if (h) h.textContent = '~5,760+';
-  if (m) m.textContent = '~26';
-  if (n) n.textContent = '~9';
+  // Use same /rpc proxy as explorer
+  fetch('/rpc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'getinfo', params: [], id: 1 })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d && d.result) {
+      if (h) h.textContent = '#' + d.result.blocks.toLocaleString();
+      if (n) n.textContent = d.result.connections;
+    }
+  }).catch(function() {
+    if (h) h.textContent = '—';
+  });
+  if (m) m.textContent = '—';
+  setTimeout(updateSidebar, 60000);
 }
 
 // Init
