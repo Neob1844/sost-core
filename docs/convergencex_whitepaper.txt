@@ -1912,19 +1912,19 @@ MODEL A vs MODEL B COMPARISON:
 
 ### 6.9.1 Protocol Fee — Model B
 
-A protocol fee of 10% is collected upfront at commitment creation. Model B has a higher fee
+A protocol fee of 8% is collected upfront at commitment creation. Model B has a higher fee
 because participants bear no slash risk and the protocol developer assumes greater operational
 burden (watcher, immediate payout, escrow monitoring).
 
   base_reward    = gold_value × rate × (duration/12) / sost_price
-  protocol_fee   = base_reward × 0.10
+  protocol_fee   = base_reward × 0.08
   user_reward    = base_reward - protocol_fee
 
 EXAMPLE (12-month, 1 oz XAUT, same assumptions as Section 6.9):
   Base reward (7%):      1.89 SOST
-  Protocol fee (10%):    0.189 SOST
-  User receives:         1.701 SOST immediately
-  Protocol fee address receives: 0.189 SOST
+  Protocol fee (8%):     0.151 SOST
+  User receives:         1.739 SOST immediately
+  Protocol fee address receives: 0.151 SOST
   User effective rate:   6.3% (vs 7% nominal, non-guaranteed)
 
 Same operational rules apply: fee destination auditable, 30-day notice
@@ -2859,7 +2859,7 @@ models retrain periodically, expanding coverage and improving accuracy.
 Access to the Materials Engine requires a SOST escrow deposit — the same mechanism used by
 PoPC Model B. Users deposit SOST into an immutable timelock contract for 1 to 6 months.
 During the escrow period, the user has full access to the engine. At expiry, 100% of the
-deposit is returned. The Foundation charges a protocol fee (5-10%) on the escrow amount.
+deposit is returned. The Foundation charges a protocol fee (3% Model A, 8% Model B) on the reward amount.
 
 This creates organic demand for SOST: researchers, engineers, and materials scientists need
 SOST tokens to access the service. The escrow model ensures tokens are locked during use,
@@ -3383,8 +3383,8 @@ Changes from v3.4 to v3.5:
   62) Section 8.2 updated: "Slash burn" → "Slash recycling".
 
   PROTOCOL FEES:
-  63) Section 6.7.1 added: Model A protocol fee (5% of reward, calculated at creation, disbursed at completion).
-  64) Section 6.9.1 added: Model B protocol fee (10% of reward, deducted from immediate payout).
+  63) Section 6.7.1 added: Model A protocol fee (3% of reward, calculated at creation, disbursed at completion). [corrected from 5%]
+  64) Section 6.9.1 added: Model B protocol fee (8% of reward, deducted from immediate payout). [corrected from 10%]
       Fees fund Foundation operations. 30-day notice for changes.
       Existing contracts locked at creation fee rate.
 
