@@ -441,23 +441,49 @@
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- Reserve Accumulation Chart -->
-    <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px">RESERVE ACCUMULATION</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Gold Vault + PoPC Pool growth since genesis (25% + 25% of every block)</div>
+    <!-- PoPC Committed Value + Reserve Chart -->
+    <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <!-- Left: PoPC Committed -->
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:20px">
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:12px">PoPC COMMITTED VALUE</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px">
+          <span id="popcGoldOz" style="font-size:28px;font-weight:700;color:var(--gold)">—</span>
+          <span style="font-size:12px;color:var(--text-dim)">oz gold locked</span>
         </div>
-        <div style="display:flex;gap:12px;font-size:9px">
-          <span style="color:var(--gold)">● Gold Vault (25%)</span>
-          <span style="color:var(--cyan-primary)">● PoPC Pool (25%)</span>
-          <span style="color:var(--green-primary)">● Total Supply</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">GOLD VALUE</div>
+            <div id="popcGoldUsd" style="color:var(--gold);font-weight:600">—</div>
+          </div>
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">POSITIONS</div>
+            <div id="popcPositions" style="color:var(--green-primary);font-weight:600">—</div>
+          </div>
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">REWARDS</div>
+            <div id="popcRewards" style="color:var(--cyan-primary);font-weight:600">—</div>
+          </div>
+          <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:10px">
+            <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">ESCROW</div>
+            <div style="color:var(--text-secondary);font-weight:600;font-size:10px"><a href="https://sepolia.etherscan.io/address/0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113" target="_blank" style="color:var(--cyan-primary);text-decoration:none">Sepolia ↗</a></div>
+          </div>
         </div>
       </div>
-      <canvas id="reserveChart" height="180" style="width:100%"></canvas>
-      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--text-dim)">
-        <span>Genesis (Mar 15, 2026)</span>
-        <span id="chartNow">Now</span>
+      <!-- Right: Reserve Accumulation -->
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px">
+          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px">RESERVE GROWTH</div>
+          <div style="display:flex;gap:8px;font-size:8px">
+            <span style="color:var(--gold)">● Vault</span>
+            <span style="color:var(--cyan-primary)">● Pool</span>
+            <span style="color:var(--green-primary)">● Supply</span>
+          </div>
+        </div>
+        <canvas id="reserveChart" height="150" style="width:100%"></canvas>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:8px;color:var(--text-dim)">
+          <span>Genesis</span>
+          <span id="chartNow">Now</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1350,6 +1376,20 @@ setInterval(fetchAll, _refreshMs);
 <script src="js/crt-effects.js"></script>
 <script src="js/dex-onboarding.js"></script>
 <script>
+// PoPC Committed Value — from positions_live.json
+(function(){
+  var GOLD_PRICE_USD = 2340; // approximate per oz — update periodically
+  fetch('api/positions_live.json?t=' + Date.now()).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.totals)return;
+    var oz=d.totals.gold_locked_oz||0;
+    var el=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    el('popcGoldOz',oz.toFixed(4));
+    el('popcGoldUsd','~$'+(oz*GOLD_PRICE_USD).toLocaleString(undefined,{maximumFractionDigits:0}));
+    el('popcPositions',d.totals.active+' active / '+d.totals.positions_ever+' total');
+    el('popcRewards',(d.totals.reward_outstanding_sost||0).toLocaleString()+' SOST');
+  }).catch(function(){});
+})();
+
 // Reserve Accumulation Chart — deterministic from emission formula
 (function(){
   var canvas = document.getElementById('reserveChart');
