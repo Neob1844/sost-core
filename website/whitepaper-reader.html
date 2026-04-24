@@ -137,8 +137,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <a href="sost-gold-dex.html">DEX Spec</a>
@@ -258,7 +258,7 @@
 <!-- POST-V6 REVISION BANNER — inserted during V6 hardening sprint -->
 <div id="wpRevisionBanner" style="margin:0 0 24px 0;padding:0;">
   <div style="background:rgba(251,191,36,0.06);border-left:3px solid #fbbf24;padding:14px 18px;font-family:var(--code,monospace);font-size:11px;color:#fbbf24;line-height:1.7;border-radius:2px;">
-    <b>⚠ POST-V6 REVISION IN PROGRESS.</b> This whitepaper is being revised to reflect the V6 coordinated hard fork (block 10,000), which introduces signature-bound Proof of Work, the 5-defense Gold Vault model (purpose restriction + dual destination whitelists + per-spend cap + rate limiting + 95% supermajority), and replaces the original "Foundation Execution Order" framing with a direct developer→protocol custody transition at block 10,000. Activation height was moved from 5,000 to 10,000 to allow proper testnet burn-in. <b>For the canonical current architecture</b>, see <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #89</a> and the <a href="https://github.com/Neob1844/sost-core" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">project repository</a>. Sections of this document referring to "Foundation Execution Order", "75% threshold", "block 5,000 activation", or "multisig/timelock custody" describe the pre-V6 design and are being rewritten. The next whitepaper revision is scheduled before the V6 release candidate.
+    <b>⚠ POST-V6 REVISION IN PROGRESS.</b> This whitepaper is being revised to reflect the V6 coordinated hard fork (block 10,000), which introduces signature-bound Proof of Work, the 5-defense Gold Vault model (purpose restriction + dual destination whitelists + per-spend cap + rate limiting + 95% supermajority), and replaces the original "Protocol Execution Order" framing with a direct developer→protocol custody transition at block 10,000. Activation height was moved from 5,000 to 10,000 to allow proper testnet burn-in. <b>For the canonical current architecture</b>, see <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #89</a> and the <a href="https://github.com/Neob1844/sost-core" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">project repository</a>. Sections of this document referring to "Protocol Execution Order", "75% threshold", "block 5,000 activation", or "multisig/timelock custody" describe the pre-V6 design and are being rewritten. The next whitepaper revision is scheduled before the V6 release candidate.
   </div>
 </div>
 
@@ -1533,7 +1533,7 @@ Activation: protocol-scheduled after block 10,000, subject to network readiness 
 <div class="wp-spacer"></div>
 <h4 id="sec-43" class="wp-h">6.3 <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> Entropy for Audits</h4>
 <div class="wp-spacer"></div>
-<p class="wp-p">No party — not the Foundation, not any server — decides when a user gets audited. The schedule is derived deterministically from ConvergenceX block entropy:</p>
+<p class="wp-p">No party — not the protocol, not any server — decides when a user gets audited. The schedule is derived deterministically from ConvergenceX block entropy:</p>
 <pre class="wp-code">AUDIT SEED (per block):
   seed = SHA256(block_id || commit || checkpoints_root)
 
@@ -1589,7 +1589,7 @@ VERIFICATION (script, no humans):
 8. On failure: bond slashed automatically
 
 In Model A, the gold NEVER leaves the user&#x27;s wallet.
-Your gold never leaves your wallet. Only the posted SOST bond is at risk. The Foundation has no access
+Your gold never leaves your wallet. Only the posted SOST bond is at risk. The protocol has no access
 to, custody of, or control over the user&#x27;s gold tokens.
 
 Trust required: MEDIUM (keeps gold in own wallet, only SOST bond at risk)</pre>
@@ -1895,7 +1895,7 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <pre class="wp-code-inline">   (non-custodial, deployed on EVM).</pre>
 <div class="wp-bullet">2. The escrow contract has NO admin key, NO upgrade proxy, NO pause</div>
 <pre class="wp-code-inline">   function. During the term, it cannot transfer deposited gold tokens</pre>
-<pre class="wp-code-inline">   to any third party — including the Foundation.</pre>
+<pre class="wp-code-inline">   to any third party — including the protocol.</pre>
 <div class="wp-bullet">3. User receives SOST immediately from PoPC Pool:</div>
 <pre class="wp-code-inline">   SOST_reward = gold_value × APR × (duration/12) / sost_price</pre>
 <pre class="wp-code-inline">   The SOST reward is delivered to the user&#x27;s wallet at deposit time.</pre>
@@ -1925,10 +1925,10 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
     the user must create a new contract at current terms.</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">FOUNDATION ROLE IN MODEL B:</p>
-<div class="wp-bullet">The Foundation does NOT custody, control, or access escrowed gold.</div>
-<div class="wp-bullet">The Foundation operates the watcher that detects deposits and</div>
+<div class="wp-bullet">The protocol does NOT custody, control, or access escrowed gold.</div>
+<div class="wp-bullet">The protocol operates the watcher that detects deposits and</div>
 <pre class="wp-code-inline">    triggers immediate SOST payout from PoPC Pool to the depositor.</pre>
-<div class="wp-bullet">Escrowed gold tokens are NOT Foundation assets. They are recorded</div>
+<div class="wp-bullet">Escrowed gold tokens are NOT protocol assets. They are recorded</div>
 <pre class="wp-code-inline">    as off-balance-sheet commitments for transparency purposes only.</pre>
 <div class="wp-bullet">The SOST distribution is an incentive for participation in the PoPC</div>
 <pre class="wp-code-inline">    program and does not constitute interest, yield, lending return, or</pre>
@@ -1953,7 +1953,7 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <pre class="wp-code-inline">    directly from the PoPC Pool, routing the protocol fee to the protocol fee</pre>
 <pre class="wp-code-inline">    wallet in the same atomic transaction. The watcher is a convenience for</pre>
 <pre class="wp-code-inline">    instant payouts; the autonomous claim is the trustless fallback that</pre>
-<pre class="wp-code-inline">    guarantees delivery regardless of Foundation liveness.</pre>
+<pre class="wp-code-inline">    guarantees delivery regardless of protocol liveness.</pre>
 <div class="wp-bullet">IDEMPOTENCY: one claim per depositId; duplicate claims revert.</div>
 <pre class="wp-code-inline">    All claims are recorded on-chain and included in the public audit</pre>
 <pre class="wp-code-inline">    record. Any discrepancy is a constitutional violation.</pre>
@@ -2602,7 +2602,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <h3 id="sec-72" class="wp-h">Legal Disclaimer</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">This document is for informational purposes only. SOST is not an investment product. Participation in PoPC is entirely voluntary and does not constitute a financial instrument or security. The Gold Reserve does not represent a claim on gold by SOST holders. Past simulations do not predict future performance. The Foundation makes no representations about the future price, utility, or availability of SOST. Nothing herein constitutes an offer, solicitation, or promise of returns; PoPC reward-rate parameters may be modified at the operational layer and may be paused for security without affecting consensus. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.</p>
+<p class="wp-p">This document is for informational purposes only. SOST is not an investment product. Participation in PoPC is entirely voluntary and does not constitute a financial instrument or security. The Gold Reserve does not represent a claim on gold by SOST holders. Past simulations do not predict future performance. The protocol makes no representations about the future price, utility, or availability of SOST. Nothing herein constitutes an offer, solicitation, or promise of returns; PoPC reward-rate parameters may be modified at the operational layer and may be paused for security without affecting consensus. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Operational Limits &amp; Pauses:</strong> PoPC reward-rate parameters are non-guaranteed and may be subject to operational per-epoch budgets, per-wallet caps, and temporary pauses if the PoPC Pool is underfunded or risk controls trigger. The protocol does not create debt or unfunded obligations: no new contracts may be opened unless the reward can be reserved at inception. Any pauses affect only new contract openings and do not alter consensus rules or existing matured withdrawal rights. Nothing herein constitutes a promise of returns or an entitlement to rewards under all conditions.</p>
 <div class="wp-spacer"></div>
@@ -2716,10 +2716,10 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <p class="wp-p">(a) The underlying machine learning models demonstrate verified accuracy against independent test datasets with published benchmarks.</p>
 <p class="wp-p">(b) The prediction pipeline produces no systematic errors that could mislead users into pursuing dangerous or impossible synthesis paths.</p>
 <p class="wp-p">(c) The escrow integration passes independent security audit with zero critical vulnerabilities.</p>
-<p class="wp-p">(d) The system&rsquo;s computational requirements are sustainable within the Foundation&rsquo;s operational budget.</p>
+<p class="wp-p">(d) The system&rsquo;s computational requirements are sustainable within the protocol&rsquo;s operational budget.</p>
 <p class="wp-p">(e) The technology does not introduce any attack vector against the SOST blockchain or its users.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">The Foundation commits to full transparency: if the project does not meet these criteria, it will be discontinued or restructured rather than deployed in an unsafe or misleading state. No timeline is guaranteed. The Materials Engine is a vision, not a promise.</p>
+<p class="wp-p">The protocol commits to full transparency: if the project does not meet these criteria, it will be discontinued or restructured rather than deployed in an unsafe or misleading state. No timeline is guaranteed. The Materials Engine is a vision, not a promise.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>This project does not affect the SOST blockchain, its consensus rules, emission schedule, or any constitutional parameter. It is an independent application-layer service that can be added or removed without any protocol change.</strong></p>
 <div class="wp-spacer"></div>
@@ -3077,11 +3077,11 @@ RESERVE MODEL:
 
 45) Emergency Catastrophe dual gate added (G9, C15, Appendix G)
     Reserve movements require both: ≥75% miner signaling in a 24-hour
-    window (W=144 blocks, YES≥108) AND Foundation Execution Order.
+    window (W=144 blocks, YES≥108) AND Protocol Execution Order.
     Only two actions: E1 (ROTATE) and E2 (LIQUIDATE→BUY→REDISTRIBUTE).
 
 46) Default 50/50 XAUt/PAXG split (G7, C14)
-    Foundation may adjust split operationally for future purchases only.
+    Protocol may adjust split operationally for future purchases only.
     Previously purchased assets not rebalanced except under emergency.
 
 47) Staging assets: USDC + USDT (G6)
@@ -3136,7 +3136,7 @@ SERIALIZATION (consensus-critical fix):
 
 59) Appendix G added (Emergency Authorization &amp; Execution Order)
     Normative specification of EmergencyProposal, PoW signaling,
-    Foundation Execution Order, Ethereum contract verification,
+    Protocol Execution Order, Ethereum contract verification,
     and mandatory audit trail.</pre>
 <h3 id="sec-86" class="wp-h">Appendix I: Errata v3.5 (Security, Fees &amp; Slash Reform)</h3>
 <div class="wp-spacer"></div>

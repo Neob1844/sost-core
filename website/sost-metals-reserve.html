@@ -197,8 +197,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
@@ -307,8 +307,8 @@
           <tr><td class="gold">G5</td><td class="value">Purchases executed in batches following rule-based TWAP policy, not discretionary timing.</td></tr>
           <tr><td class="gold">G6</td><td class="value">Reserve limited to allowlisted tokens (XAUt/PAXG). USDC/USDT only as staging (&le;72h).</td></tr>
           <tr><td class="gold">G7</td><td class="value">Default 50/50 XAUt/PAXG. Adjustable for future purchases only, disclosed in batch reports.</td></tr>
-          <tr><td class="gold">G8</td><td class="value">Foundation may redirect future purchases from threatened issuer without consensus.</td></tr>
-          <tr><td class="gold">G9</td><td class="value">Emergency Catastrophe dual gate: &ge;75% miner signaling + Foundation Execution Order.</td></tr>
+          <tr><td class="gold">G8</td><td class="value">Protocol may redirect future purchases from threatened issuer without consensus.</td></tr>
+          <tr><td class="gold">G9</td><td class="value">Emergency Catastrophe dual gate: &ge;75% miner signaling + Protocol Execution Order.</td></tr>
           <tr><td class="gold">G10</td><td class="value">Both vault addresses, all batch reports, and all transaction proofs MUST be publicly published.</td></tr>
         </table>
       </div>
@@ -427,7 +427,7 @@ Type:  limit orders with explicit slippage tolerance
     </div>
 
     <div class="notice fade-in delay-2">
-      <strong>Allowlist criteria:</strong> An asset may be added only if it satisfies (1) verifiable custody/audits, (2) sufficient liquidity, and (3) acceptable issuer risk and public documentation. The Foundation may redirect future purchases from a threatened issuer without consensus; previously purchased assets remain sealed.
+      <strong>Allowlist criteria:</strong> An asset may be added only if it satisfies (1) verifiable custody/audits, (2) sufficient liquidity, and (3) acceptable issuer risk and public documentation. The protocol may redirect future purchases from a threatened issuer without consensus; previously purchased assets remain sealed.
     </div>
   </div>
 </section>
@@ -502,9 +502,9 @@ Type:  limit orders with explicit slippage tolerance
         <table class="code-table">
           <tr><th>Layer</th><th>Trust Level</th><th>Mechanism</th></tr>
           <tr><td class="label">Coinbase allocation</td><td class="green">Trustless</td><td class="value">Consensus-enforced (hardcoded validation rules)</td></tr>
-          <tr><td class="label">SOST&rarr;gold conversion</td><td class="value">Auditable</td><td class="value">Foundation-executed, public batch records</td></tr>
+          <tr><td class="label">SOST&rarr;gold conversion</td><td class="value">Auditable</td><td class="value">Protocol-executed, public batch records</td></tr>
           <tr><td class="label">Heritage Reserve custody</td><td class="value">Verifiable</td><td class="value">Ethereum mainnet, public addresses</td></tr>
-          <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;75% miner signal + Foundation order</td></tr>
+          <tr><td class="label">Reserve movement</td><td class="highlight">Dual gate only</td><td class="value">&ge;75% miner signal + Protocol order</td></tr>
           <tr><td class="label">Cross-chain bridge</td><td class="green">None required</td><td class="value">No bridge, no wSOST, no smart contract dependency</td></tr>
         </table>
       </div>

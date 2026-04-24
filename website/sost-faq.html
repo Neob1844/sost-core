@@ -141,8 +141,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
@@ -169,7 +169,7 @@
   <div class="container">
     <div class="hero-label fade-in">Frequently Asked Questions</div>
     <h1 class="fade-in delay-1">Common <span>Questions.</span><br>Direct <span>Answers.</span></h1>
-    <p class="hero-sub fade-in delay-2">Everything you need to know about SOST Protocol — mining, tokenomics, the gold reserve, PoPC, and the Foundation. Click any question to expand.</p>
+    <p class="hero-sub fade-in delay-2">Everything you need to know about SOST Protocol — mining, tokenomics, the gold reserve, PoPC, and the protocol. Click any question to expand.</p>
   </div>
 </section>
 
@@ -258,17 +258,17 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does the gold reserve work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Gold Funding Vault</strong> by consensus. The Foundation periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Gold Funding Vault</strong> by consensus. The protocol periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Can anyone access or move the gold reserve?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Heritage Reserve is sealed by default. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Foundation Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Not under normal operation.</strong> The Heritage Reserve is sealed by default. Moving previously purchased reserve assets requires <strong>Emergency Catastrophe</strong> dual-gate authorization: &ge;75% miner signaling (108 out of 144 blocks) AND a Protocol Execution Order. Neither party can act alone. Only two actions are permitted: E1 (rotate to other allowlisted metals) or E2 (liquidate-buy-redistribute).</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>When do gold purchases begin?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">No earlier than <strong>8 months after public launch</strong> (February 2027, per rule G4 — public launch June 16, 2026), subject to sufficient SOST market liquidity. Gold purchases require converting accumulated SOST from the Gold Funding Vault into XAUT/PAXG. This requires SOST to have sufficient market liquidity for execution. If liquidity conditions are not met by Q2 2027, purchases will begin as soon as conditions allow. The vault continues accumulating SOST regardless.<br><br>First purchases target a 50/50 split between XAUt and PAXG. A rotation proposal between allowlisted metals (E1) can also be submitted following the same dual-gate process: &ge;75% miner signaling + Foundation Execution Order.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">No earlier than <strong>8 months after public launch</strong> (February 2027, per rule G4 — public launch June 16, 2026), subject to sufficient SOST market liquidity. Gold purchases require converting accumulated SOST from the Gold Funding Vault into XAUT/PAXG. This requires SOST to have sufficient market liquidity for execution. If liquidity conditions are not met by Q2 2027, purchases will begin as soon as conditions allow. The vault continues accumulating SOST regardless.<br><br>First purchases target a 50/50 split between XAUt and PAXG. A rotation proposal between allowlisted metals (E1) can also be submitted following the same dual-gate process: &ge;75% miner signaling + Protocol Execution Order.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -288,12 +288,12 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is PoPC?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol. The PoPC Pool funding mechanism launched at genesis (March 15, 2026) &mdash; 25% of every block reward accumulates in the pool. The custody contracts themselves (Model A + B) have a target activation of block 10,000+ (April 2027). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the Foundation, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></a>) to support the protocol and endow it with perpetual added value.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">Proof of Personal Custody is a voluntary time-bound commitment protocol. The PoPC Pool funding mechanism launched at genesis (March 15, 2026) &mdash; 25% of every block reward accumulates in the pool. The custody contracts themselves (Model A + B) have a target activation of block 10,000+ (April 2027). Participants prove custody of precious metals (XAUT/PAXG) and are rewarded from the PoPC Pool. It is <strong>not</strong> tokenization, not staking, and not yield farming. There are two models: <strong>Model A</strong> (self-custody bonds — you keep gold in your wallet, lock a SOST bond) and <strong>Model B</strong> (timelocked escrow — deposit gold into immutable escrow, receive SOST immediately).<br><br>Any user, including the protocol, can make direct donations to the Perpetual Vault (Gold Funding Vault: <a href="sost-explorer.html?search=sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" style="color:#4ade80;text-decoration:underline;cursor:pointer;"><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></a>) to support the protocol and endow it with perpetual added value.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>When does PoPC launch?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">Target activation: <strong>April 2027</strong> (Phase 2). By that time, the PoPC Pool will have accumulated approximately 103,160 SOST from coinbase allocations. The escrow contract will be published and verified on explorer. Independent audit planned before activation.<br><br><div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.8;"><strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div></div></div>
+      <div class="faq-a"><div class="faq-a-inner">Target activation: <strong>April 2027</strong> (Phase 2). By that time, the PoPC Pool will have accumulated approximately 103,160 SOST from coinbase allocations. The escrow contract will be published and verified on explorer. Independent audit planned before activation.<br><br><div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:12px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.8;"><strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The protocol reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div></div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -313,12 +313,12 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">GOVERNANCE</div>
-      <h2 class="section-title">Foundation &amp; <span class="accent">Governance</span></h2>
+      <h2 class="section-title">Protocol <span class="accent">Governance</span></h2>
     </div>
 
     <div class="faq-item fade-in delay-1">
-      <div class="faq-q"><h3>Can the Foundation change the rules?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> No entity — including the Foundation — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. The Foundation can only execute a narrow set of operational actions (gold conversion, purchase pauses, PoPC management) under constitutional constraints and public attestation.</div></div>
+      <div class="faq-q"><h3>Can the protocol change the rules?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> No entity — including the protocol — can modify consensus rules after genesis. SOST has no DAO, no voting token, and no multisig with authority over consensus or monetary parameters. The protocol can only execute a narrow set of operational actions (gold conversion, purchase pauses, PoPC management) under constitutional constraints and public attestation.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -328,7 +328,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>Is SOST an investment product?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> SOST is a protocol. It is not an investment product, security, or financial instrument. The Foundation makes no representations about future price, utility, or availability. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>No.</strong> SOST is a protocol. It is not an investment product, security, or financial instrument. The protocol makes no representations about future price, utility, or availability. Participants should seek independent legal and financial advice before participating in any cryptocurrency system.</div></div>
     </div>
   </div>
 </section>

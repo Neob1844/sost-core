@@ -658,8 +658,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
@@ -781,7 +781,7 @@
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          No party &mdash; not the Foundation, not any server &mdash; decides when a user
+          No party &mdash; not the protocol, not any server &mdash; decides when a user
           gets audited. The schedule is derived deterministically from the ConvergenceX
           entropy triple: <code>(block_id, commit, checkpoints_root)</code>.
         </p>
@@ -845,7 +845,7 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
       <div class="spec-body">
         <p class="spec-desc">
           The gold <strong>never leaves</strong> the user&rsquo;s wallet. Only the SOST bond is at risk.
-          The Foundation has no access to, custody of, or control over the user&rsquo;s gold tokens.
+          The protocol has no access to, custody of, or control over the user&rsquo;s gold tokens.
         </p>
 
         <div class="code-snippet" data-label="FLOW">
@@ -931,7 +931,7 @@ contract = <span class="str">immutable</span>        <span class="cmt">// no pro
 functions: <span class="fn">deposit</span>(token, amount, unlockTime) + <span class="fn">withdraw</span>(depositId)
 withdraw  = ONLY by original depositor
 withdraw  <span class="kw">reverts if</span> block.timestamp &lt; unlockTime
-Foundation <span class="kw">CANNOT</span> access escrowed gold
+Protocol <span class="kw">CANNOT</span> access escrowed gold
 
 <span class="cmt">// SOST reward delivered IMMEDIATELY at deposit</span>
 SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="num">12</span>) / sost_price
@@ -1054,7 +1054,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         <p class="spec-desc">
           &bull; XAUT or PAXG tokens in an Ethereum wallet<br>
           &bull; A SOST wallet address to receive rewards<br>
-          &bull; Access to the escrow contract on Ethereum (address provided by SOST Foundation)
+          &bull; Access to the escrow contract on Ethereum (address provided by SOST Governance)
         </p>
 
         <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 1: Deposit Gold into Escrow</p>
@@ -1063,7 +1063,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
           &bull; The contract has <strong>no admin key, no upgrade proxy, no pause function</strong><br>
           &bull; Call <code>deposit(token, amount, unlockTime)</code><br>
           &bull; Your gold is locked until the unlock time (1-12 months from now)<br>
-          &bull; Only YOU can withdraw after the lock expires &mdash; the Foundation cannot access it
+          &bull; Only YOU can withdraw after the lock expires &mdash; the protocol cannot access it
         </p>
 
         <p class="spec-desc" style="font-weight:600;color:var(--green-primary);margin-top:16px">Step 2: Register on SOST</p>
@@ -1251,7 +1251,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
           <tr><td class="key">Explorer &amp; wallet integration</td><td class="val">Public interfaces correctly reflect all PoPC states (pending, active, completed, slashed).</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:12px;font-size:11px;color:var(--text-dim);">
-          <strong>Activation note:</strong> PoPC activation is protocol-scheduled but condition-dependent. The Foundation will announce activation with sufficient advance notice once all conditions are verified.
+          <strong>Activation note:</strong> PoPC activation is protocol-scheduled but condition-dependent. The protocol will announce activation with sufficient advance notice once all conditions are verified.
         </p>
       </div>
     </div>
@@ -1347,7 +1347,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
     </div>
 
     <div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-left:3px solid var(--red-primary);padding:14px 16px;border-radius:4px;margin:20px 0;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-<strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The Foundation reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
+<strong style="color:var(--text-primary);">Timeline Flexibility Notice:</strong> The protocol reserves the right to accelerate or delay any committed timeline if it determines that the protocol can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.
 </div>
 
   </div>

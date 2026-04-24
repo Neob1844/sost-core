@@ -96,8 +96,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <a href="sost-gold-dex.html">DEX Spec</a>
@@ -175,7 +175,7 @@
 
 <p>Every SOST block automatically allocates 25% of the coinbase reward to a Gold Funding Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
 
-<p>The Gold Funding Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Foundation Execution Order.</p>
+<p>The Gold Funding Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Protocol Execution Order.</p>
 
 <p>The remaining 25% flows to a PoPC Pool powering Proof of Personal Custody &mdash; a mechanism that rewards holders who self-custody gold and prove it. PoPC operates in two models:</p>
 
@@ -233,7 +233,7 @@
 
 <p>The emission formula: reward(height) = floor(R0 &times; q<sup>epoch</sup>), where epoch = height / 131,553. All arithmetic uses __int128 floor-division. The maximum supply is a mathematical consequence of the geometric series &mdash; not a tracked variable.</p>
 
-<p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Funding Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The Foundation operates exclusively from protocol fees charged on PoPC contracts (3% on Model A, 8% on Model B) &mdash; never from minted coins.</p>
+<p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Funding Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. The protocol operates exclusively from protocol fees charged on PoPC contracts (3% on Model A, 8% on Model B) &mdash; never from minted coins.</p>
 
 <p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split applies to fees: 50% to the miner, 25% to the Gold Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic model as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
 

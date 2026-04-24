@@ -658,8 +658,8 @@
       <a href="sost-getting-started.html">Getting Started</a>
       <a href="sost-quickstart.html">Quick Start</a>
       <a href="sost-community.html">Community</a>
-      <a href="sost-foundation.html">Foundation</a>
-      <a href="sost-foundation-balances.html">Foundation Balances</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
@@ -883,7 +883,7 @@ max_slippage = <span class="num">0.5%&ndash;1.0%</span>       <span class="cmt">
       <div class="spec-body">
         <p class="spec-desc">
           Reserve movements require <strong>both</strong> gates to pass &mdash; neither alone
-          is sufficient. This prevents unilateral Foundation action and ensures miner
+          is sufficient. This prevents unilateral protocol action and ensures miner
           consensus backs any reserve operation.
         </p>
 
@@ -893,8 +893,8 @@ window    = <span class="num">144</span> blocks           <span class="cmt">// ~
 threshold = <span class="num">60%</span>                  <span class="cmt">// qualified majority (3/5)</span>
 required  = ceil(<span class="num">0.60</span> &times; <span class="num">144</span>) = <span class="num">87</span> blocks <span class="kw">YES</span>
 
-<span class="cmt">// Gate 2: Foundation Execution Order (Ethereum)</span>
-signature = Foundation key ECDSA
+<span class="cmt">// Gate 2: Protocol Execution Order (Ethereum)</span>
+signature = Protocol key ECDSA
 nonce     = sequential           <span class="cmt">// replay protection</span>
 expiry    = block.timestamp deadline
 
@@ -990,7 +990,7 @@ expiry    = block.timestamp deadline
           <tr><td class="key">G6</td><td class="val">Allowlisted assets only: XAUt, PAXG; USDC/USDT staging &le;72h</td></tr>
           <tr><td class="key">G7</td><td class="val">Default 50/50 split; adjustable for future purchases only</td></tr>
           <tr><td class="key">G8</td><td class="val">Issuer risk: redirect future purchases without consensus</td></tr>
-          <tr><td class="key">G9</td><td class="val">Emergency dual-gate: &ge;60% miner signaling + Foundation Execution Order</td></tr>
+          <tr><td class="key">G9</td><td class="val">Emergency dual-gate: &ge;60% miner signaling + Protocol Execution Order</td></tr>
           <tr><td class="key">G10</td><td class="val">All vaults, batches, and proofs publicly published</td></tr>
         </table>
       </div>
