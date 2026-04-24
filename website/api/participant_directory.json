@@ -1,0 +1,10 @@
+[
+  {
+    "label": "NeoB (Operator)",
+    "signingPublic": "",
+    "encryptionPublic": "",
+    "sostAddress": "",
+    "role": "operator",
+    "note": "Alpha operator — keys published after identity creation"
+  }
+]
