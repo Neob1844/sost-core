@@ -262,7 +262,10 @@
           <div class="spec-body">
             <table class="code-table">
               <tr><td class="label">Block</td><td class="value" id="sideHeight">—</td></tr>
+              <tr><td class="label">Miners</td><td class="value" id="sideMiners">—</td></tr>
               <tr><td class="label">Nodes</td><td class="value" id="sideNodes">—</td></tr>
+              <tr><td class="label">Difficulty</td><td class="value" id="sideDiff">—</td></tr>
+              <tr><td class="label">Equalizer</td><td class="highlight" id="sideProfile">—</td></tr>
               <tr><td class="label">DEX</td><td class="highlight">Alpha</td></tr>
               <tr><td class="label">PoPC</td><td class="value">Block 10,000+</td></tr>
             </table>
@@ -350,7 +353,7 @@ function sendMessage(){var i=document.getElementById('msgInput');var e=document.
 function quickAuth(){var n=document.getElementById('talkName');if(!n||!n.value.trim()||n.value.trim().length<2)return;SOSTTalk.setIdentity({id:'talk-'+Date.now().toString(36),label:n.value.trim(),badge:'community'});renderAll();}
 async function passkeyAuth(){if(typeof SOSTPasskey==='undefined'||!SOSTPasskey.isAvailable()){alert('Passkeys not available.');return;}if(SOSTPasskey.isRegistered()){var r=await SOSTPasskey.authenticate();if(r.ok){var c=SOSTPasskey.getStoredCredentials();var cr=c.length?c[c.length-1]:null;SOSTTalk.setIdentity({id:'pk-'+(cr?cr.userId:Date.now().toString(36)),label:cr?cr.userName:'Passkey User',badge:'verified'});renderAll();}else{alert('Auth failed: '+r.error);}}else{var u='sost-talk-'+Date.now().toString(36);var nm=prompt('Display name for passkey:');if(!nm||nm.trim().length<2)return;var rg=await SOSTPasskey.register(u,nm.trim());if(rg.ok){SOSTTalk.setIdentity({id:'pk-'+u,label:nm.trim(),badge:'verified'});renderAll();}else{alert('Registration failed: '+rg.error);}}}
 function renderAll(){renderRoomTabs();renderFilters();renderInputArea();renderMessages();}
-function updateSidebar(){fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'getinfo',params:[],id:1})}).then(function(r){return r.json();}).then(function(d){if(d&&d.result){var h=document.getElementById('sideHeight');var n=document.getElementById('sideNodes');if(h)h.textContent='#'+d.result.blocks.toLocaleString();if(n)n.textContent=d.result.connections;}}).catch(function(){});setTimeout(updateSidebar,60000);}
+function updateSidebar(){fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'getinfo',params:[],id:1})}).then(function(r){return r.json();}).then(function(d){if(d&&d.result){var r=d.result;var h=document.getElementById('sideHeight');var n=document.getElementById('sideNodes');var df=document.getElementById('sideDiff');var pr=document.getElementById('sideProfile');var mn=document.getElementById('sideMiners');if(h)h.textContent='#'+r.blocks.toLocaleString();if(n)n.textContent=r.connections;if(df)df.textContent=(r.difficulty/65536).toFixed(3)+' bits';if(pr)pr.textContent=r.casert_profile||('H'+r.casert_profile_index);if(mn)mn.textContent='~'+r.connections;}}).catch(function(){});setTimeout(updateSidebar,60000);}
 SOSTTalk.init();SOSTTalk.onUpdate(renderAll);renderAll();updateSidebar();
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&document.activeElement&&document.activeElement.id==='msgInput'){e.preventDefault();sendMessage();}});
 </script>
