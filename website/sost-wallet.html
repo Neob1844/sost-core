@@ -2224,7 +2224,7 @@ function updatePopcActivation(height) {
     badge.style.background = 'rgba(251,191,36,0.1)';
     badge.style.border = '1px solid rgba(251,191,36,0.3)';
     badge.style.color = '#fbbf24';
-    badge.textContent = '⏳ PoPC activates at block 5,000 (~' + daysLeft + ' days) — Currently #' + height;
+    badge.textContent = '⏳ PoPC activates at block 10,000 (~' + daysLeft + ' days) — Currently #' + height;
     if (form) form.style.opacity = '0.5';
     if (btn) btn.disabled = true;
   }
@@ -2235,7 +2235,7 @@ window.registerPopc = function() {
   if (!ethAddr.startsWith('0x') || ethAddr.length !== 42) {
     return showError('popcResult', 'Invalid Ethereum address. Must be 0x + 40 hex characters.');
   }
-  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 5,000. Your registration data is saved locally.');
+  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 10,000. Your registration data is saved locally.');
   // Save to localStorage for when PoPC goes live
   const reg = { ethAddr, xaut: parseFloat(document.getElementById('popcXaut').value)||0,
                 paxg: parseFloat(document.getElementById('popcPaxg').value)||0,
@@ -2289,7 +2289,7 @@ window.updateCapsuleUI = function() {
     textArea.maxLength = max;
     counter.textContent = '0 / ' + max;
     textArea.placeholder = capsuleBlockHeight < 5000
-      ? 'Capsule activates at block 5,000. Currently at #' + capsuleBlockHeight + '.'
+      ? 'Capsule activates at block 10,000. Currently at #' + capsuleBlockHeight + '.'
       : 'Enter your ' + type.replace(/_/g, ' ') + ' content here...';
   }
 };
@@ -2327,7 +2327,7 @@ function updateCapsuleActivation(height) {
     badge.style.background = 'rgba(251,191,36,0.1)';
     badge.style.border = '1px solid rgba(251,191,36,0.3)';
     badge.style.color = 'var(--yellow-primary,#fbbf24)';
-    badge.textContent = '⏳ Activates at block 5,000 (~' + daysLeft + ' days) — Currently #' + height;
+    badge.textContent = '⏳ Activates at block 10,000 (~' + daysLeft + ' days) — Currently #' + height;
     if (select) select.disabled = true;
     if (textArea) textArea.disabled = true;
     if (group) { group.style.opacity = '0.5'; group.style.cursor = 'not-allowed'; }

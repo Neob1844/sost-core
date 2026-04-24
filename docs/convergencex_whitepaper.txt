@@ -3404,8 +3404,8 @@ Changes from v3.4 to v3.5:
   
   cASERT MODIFICATIONS:
   70) cASERT rewritten: 43 discrete profiles E7(-7) through H35(+35),
-      each with unique {scale, steps, k, margin}. CASERT_H_MIN=-4,
-      CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest active).
+      each with unique {scale, steps, k, margin}. CASERT_H_MIN=-7,
+      CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest reserved).
   71) Anti-stall: zone-based decay targeting B0. H10-H7: 600s/level,
       H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
       at B0 (1800s/level).

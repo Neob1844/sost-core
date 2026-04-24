@@ -1749,7 +1749,7 @@ ON-CHAIN FINALIZATION (no oracle, no daily updates):
     - Contract stores bond_sost and commitment parameters.
     - Contract does NOT store live prices.
     - Contract does NOT support price updates.
-    - No Foundation action required after finalization.
+    - No protocol action required after finalization.
 
 PRICE VOLATILITY DURING CONTRACT:
 
@@ -1918,13 +1918,13 @@ NEW contracts. Existing contracts retain the fee rate locked at creation.
 <div class="wp-bullet">Functions: deposit(token, amount, unlockTime) + withdraw(depositId)</div>
 <div class="wp-bullet">withdraw() callable ONLY by original depositor</div>
 <div class="wp-bullet">withdraw() reverts if block.timestamp &lt; unlockTime</div>
-<div class="wp-bullet">No Foundation key, no multisig, no emergency withdrawal</div>
+<div class="wp-bullet">No admin key, no multisig, no emergency withdrawal</div>
 <div class="wp-bullet">Source code: published and verified on explorer. Independent audit planned before mainnet activation of Model B.</div>
 <div class="wp-bullet">NO EXTENSION: the escrow term is immutable once created. There is no
     renew(), extend(), or modify() function. To commit again after maturity,
     the user must create a new contract at current terms.</div>
 <div class="wp-spacer"></div>
-<p class="wp-p">FOUNDATION ROLE IN MODEL B:</p>
+<p class="wp-p">PROTOCOL ROLE IN MODEL B:</p>
 <div class="wp-bullet">The protocol does NOT custody, control, or access escrowed gold.</div>
 <div class="wp-bullet">The protocol operates the watcher that detects deposits and</div>
 <pre class="wp-code-inline">    triggers immediate SOST payout from PoPC Pool to the depositor.</pre>
