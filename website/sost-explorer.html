@@ -585,21 +585,59 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <!-- ════════════════════════════════════════════════════════════ -->
       <!-- UPCOMING — Block 10,000                                     -->
       <!-- ════════════════════════════════════════════════════════════ -->
-      <div style="padding:10px 0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="color:var(--red);font-size:9px;font-weight:600;letter-spacing:1px">UPCOMING</span>
-          <span style="color:var(--text3);font-size:8px;">Block 10,000</span>
+      <div style="border-bottom:1px solid var(--border);padding:12px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(251,1,13,.4)"></span>
+          <span style="color:var(--red);font-size:10px;font-weight:700;letter-spacing:1.5px">UPCOMING &mdash; BLOCK 10,000</span>
         </div>
-        <b style="color:var(--text);font-size:11px;">VT Activation &mdash; Governance, PoPC, Signature-Bound PoW</b><br>
+        <b style="color:var(--text);font-size:12px;">VT Activation &mdash; Governance, PoPC, Dynamic Fees, Signature-Bound PoW</b><br><br>
+
         <span style="color:var(--text2)">
-        &bull; Gold Vault 5-defense governance<br>
-        &bull; Signature-bound PoW (anti-pool)<br>
-        &bull; PoPC operational launch<br>
-        &bull; Model B escrow on mainnet<br>
-        &bull; Further DEX browser integration and private-deal UX improvements<br>
-        <span style="color:var(--text3);font-size:9px">Some browser and UX features may begin earlier in partial form. They should be understood as ongoing implementation work, not as hard-fork deliverables for block 5,750.</span>
-        <a href="sost-popc-contracts.html" style="color:var(--cyan);text-decoration:none;font-size:9px">[details]</a>
+        <b style="color:#f59e0b">Gold Vault Governance (5-defense model):</b><br>
+        &bull; Purpose restriction &mdash; vault funds can only be used for gold purchases<br>
+        &bull; Dual destination whitelists &mdash; only approved addresses<br>
+        &bull; Per-spend cap &mdash; limits per transaction<br>
+        &bull; Rate limiting &mdash; prevents rapid drain<br>
+        &bull; 95% supermajority miner vote for large/non-standard spends<br><br>
+
+        <b style="color:#4ade80">PoPC Operational Launch:</b><br>
+        &bull; <b>Model A</b> &mdash; self-custody bonds with epoch-based audits. Protocol fee: 3%. Bond returned on success. Auto-slash after 7-day grace period.<br>
+        &bull; <b>Model B</b> &mdash; immutable Ethereum escrow (SOSTEscrow V2). Protocol fee: 8%. Gold returned at maturity. Deployed on Sepolia, mainnet pending audit.<br>
+        &bull; Position lifecycle fully automated: ACTIVE &rarr; MATURED &rarr; WITHDRAWN &rarr; REWARD_SETTLED &rarr; CLOSED<br>
+        &bull; Reward payout engine with dry-run/live mode, confirmation tracking, and reconciliation<br><br>
+
+        <b style="color:#22d3ee">Dynamic Fee Policy (anti-spam):</b><br>
+        &bull; <b>Activates automatically at block 10,000</b> &mdash; already implemented in the code<br>
+        &bull; Before block 10,000: static fee of 1 stock/byte (no change)<br>
+        &bull; After block 10,000: relay floor scales with mempool pressure:<br>
         </span>
+        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.15);border-radius:4px;padding:8px 12px;margin:6px 0;font-size:9px;line-height:2;color:var(--text2)">
+          <span style="color:var(--text3)">Mempool &lt;100 tx</span> &rarr; <span style="color:var(--green)">1 stock/byte</span> (normal)<br>
+          <span style="color:var(--text3)">Mempool 100&ndash;500 tx</span> &rarr; <span style="color:var(--cyan)">2 stocks/byte</span> (low pressure)<br>
+          <span style="color:var(--text3)">Mempool 500&ndash;2,000 tx</span> &rarr; <span style="color:#fbbf24">5 stocks/byte</span> (medium)<br>
+          <span style="color:var(--text3)">Mempool 2,000&ndash;4,000 tx</span> &rarr; <span style="color:#f59e0b">10 stocks/byte</span> (high)<br>
+          <span style="color:var(--text3)">Mempool &gt;4,000 tx</span> &rarr; <span style="color:var(--red)">25 stocks/byte</span> (extreme)<br>
+          <span style="color:var(--text3)">Ceiling</span> &rarr; <span style="color:var(--red)">50 stocks/byte max</span> (never higher)
+        </div>
+        <span style="color:var(--text2)">
+        &bull; <b>Policy only, not consensus</b> &mdash; blocks with low-fee tx remain valid. Nodes reject relaying cheap tx when under pressure, but don&rsquo;t invalidate blocks.<br>
+        &bull; Compatible with existing RBF (Replace-By-Fee) &mdash; users can bump fees if relay floor rises<br>
+        &bull; Fee estimator bands: slow / normal / fast / priority &mdash; based on real mempool state<br>
+        &bull; Anti-spam: max 25 tx per address in mempool, max 30 tx/min per peer<br><br>
+
+        <b style="color:#c084fc">Signature-Bound PoW (anti-pool):</b><br>
+        &bull; Block header cryptographically bound to miner&rsquo;s signing key<br>
+        &bull; Prevents pool operators from stealing work<br>
+        &bull; Miners prove they own the coinbase address<br><br>
+
+        <b style="color:var(--text3)">Additional:</b><br>
+        &bull; Further DEX browser integration and private-deal UX improvements<br>
+        &bull; Browser wallet, passkey/biometric auth, AI copilot refinements<br>
+        &bull; SOST Talk community features expansion<br>
+        </span>
+        <span style="color:var(--text3);font-size:9px">Dynamic fee policy code is already deployed. It will activate automatically when the chain reaches block 10,000. No node update will be required at that point &mdash; the code is already in place.</span>
+        <a href="sost-popc-contracts.html" style="color:var(--cyan);text-decoration:none;font-size:9px;margin-left:4px">[PoPC details]</a>
+        <a href="sost-technology.html" style="color:var(--cyan);text-decoration:none;font-size:9px;margin-left:4px">[Technology]</a>
       </div>
 
       <!-- ════════════════════════════════════════════════════════════ -->
