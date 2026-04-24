@@ -140,6 +140,17 @@
   .preview-line .pv-val { color: var(--gold); }
   .preview-line .pv-unchanged { color: var(--text-dim); font-style: italic; }
 
+  /* Wallet & AI buttons */
+  .btn-wallet { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid rgba(245,158,11,0.4); color: var(--gold); background: rgba(245,158,11,0.1); transition: all 0.2s; letter-spacing: 0.5px; }
+  .btn-wallet:hover { background: rgba(245,158,11,0.2); border-color: var(--gold); }
+  .btn-wallet-secondary { background: rgba(255,255,255,0.03); border-color: var(--border-dim); color: var(--text-dim); }
+  .btn-wallet-secondary:hover { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+  .dex-wallet-box { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 10px; padding: 16px 20px; }
+  .ai-review { background: var(--bg-deep); border: 1px solid var(--border-dim); border-radius: 8px; padding: 16px; }
+  .ai-review-row { display: flex; gap: 12px; padding: 3px 0; font-size: 11px; }
+  .ai-label { color: var(--text-muted); min-width: 80px; letter-spacing: 0.5px; }
+  .ai-value { color: var(--text-primary); }
+
   .btn-create { display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; border: 1px solid rgba(245,158,11,0.5); color: #fff; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(218,165,32,0.15) 100%); box-shadow: 0 0 24px rgba(245,158,11,0.2), inset 0 0 24px rgba(245,158,11,0.06); transition: all 0.3s; text-transform: uppercase; margin-top: 16px; }
   .btn-create:hover { background: linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(218,165,32,0.25) 100%); box-shadow: 0 0 36px rgba(245,158,11,0.3), inset 0 0 36px rgba(245,158,11,0.1); border-color: var(--gold); transform: translateY(-1px); }
 
@@ -255,6 +266,22 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script src="js/security.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.15/dist/modules/libsodium-wrappers.js"></script>
+<script src="js/browser-crypto.js"></script>
+<script src="js/keystore.js"></script>
+<script src="js/relay-client.js"></script>
+<script src="js/prekey-store-browser.js"></script>
+<script src="js/recipient-directory.js"></script>
+<script src="js/private-inbox.js"></script>
+<script src="js/dex-session.js"></script>
+<script src="js/dex-trade-engine.js"></script>
+<script src="js/auth-passkey.js"></script>
+<script src="js/dex-intent-parser.js"></script>
+<script src="js/dex-ai-assistant.js"></script>
+<script src="js/dex-ai-explainer.js"></script>
+<script src="js/dex-ai-validator.js"></script>
+<script src="js/dex-ai-compare.js"></script>
+<script src="js/dex-ai-lifecycle.js"></script>
 </head>
 <body>
 <nav>
@@ -326,7 +353,53 @@
       <span class="hero-badge" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">LIMITED ALPHA</span>
       <span class="hero-badge" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:var(--gold);">OPERATOR-ASSISTED</span>
       <span class="hero-badge" style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);color:var(--cyan-primary);">SIGNED &amp; ENCRYPTED</span>
-      <span class="hero-badge" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);color:var(--green-primary);">550 TESTS PASSING</span>
+      <span class="hero-badge" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);color:var(--green-primary);">743 TESTS PASSING</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- BLOCK A2 — WALLET + AI ASSISTANT + INBOX (Phase D integration)        -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section class="section" style="padding:20px 0;border-bottom:1px solid var(--border-dim);">
+  <div class="container">
+    <!-- DEX Status Bar -->
+    <div id="dexStatusBar" style="margin-bottom:12px;padding:6px 0;border-bottom:1px solid var(--border-dim);"></div>
+
+    <!-- Identity Bar (shown when unlocked) -->
+    <div id="identityBar" class="dex-private" style="display:none"></div>
+
+    <!-- Wallet Panel (shown when locked) -->
+    <div id="walletPanel" id="walletLoginSection" class="dex-public" style="margin-bottom:16px;"></div>
+
+    <!-- AI Assistant Input (shown when unlocked) -->
+    <div class="dex-private" style="display:none;margin-bottom:16px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:10px;color:var(--gold);letter-spacing:1.5px;font-weight:600">AI FORM ASSISTANT</span>
+          <span style="font-size:8px;color:var(--text-dim);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:3px;padding:1px 5px">FILLS FORMS ONLY</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-dim);margin-bottom:10px">Describe what you want to do. The assistant prepares the form — you review and authorize every action.</p>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="aiInput" class="form-control" placeholder='e.g. "Sell my full XAUT position for 9.7 SOST, expire in 6 hours"' style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')SOSTDEX.processAIInput()">
+          <button class="btn-wallet" onclick="SOSTDEX.processAIInput()" style="white-space:nowrap">Fill Form</button>
+        </div>
+        <div id="aiReviewPanel" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Private Inbox (shown when unlocked) -->
+    <div class="dex-private" style="display:none;margin-bottom:16px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:10px;color:var(--cyan-primary);letter-spacing:1.5px;font-weight:600">PRIVATE INBOX</span>
+          <span id="inboxBadge" style="display:none;font-size:9px;background:var(--red-primary);color:#fff;border-radius:10px;padding:1px 6px;font-weight:700">0</span>
+          <span style="font-size:8px;color:var(--text-dim);background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:3px;padding:1px 5px">E2E ENCRYPTED</span>
+        </div>
+        <div id="inboxMessages" style="max-height:200px;overflow-y:auto">
+          <div style="color:var(--text-dim);font-size:11px;padding:8px 0">No pending messages. New messages appear here when counterparts send encrypted offers.</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1252,5 +1325,6 @@ setInterval(fetchAll, _refreshMs);
 <script src="js/retro-sounds.js"></script>
 <script src="js/sost-pwa-install.js"></script>
 <script src="js/crt-effects.js"></script>
+<script src="js/dex-onboarding.js"></script>
 </body>
 </html>
