@@ -360,41 +360,103 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
 
-      <!-- SOST DEX ALPHA -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- SOST DEX — ALPHA LAUNCH (full announcement)               -->
+      <!-- ════════════════════════════════════════════════════════════ -->
       <div style="border-bottom:1px solid var(--border);padding:14px 0;background:linear-gradient(135deg,rgba(230,57,70,0.04),rgba(245,158,11,0.06),rgba(74,222,128,0.04),rgba(34,211,238,0.04));">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);box-shadow:0 0 8px rgba(245,158,11,.6);animation:pulse 1.5s ease infinite"></span>
           <span style="font-size:10px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">SOST DEX &mdash; ALPHA LAUNCH</span>
         </div>
         <b style="color:var(--text);font-size:12px;">The unified trading desk for gold-backed positions is live.</b><br><br>
+
+        <!-- What is SOST DEX -->
         <span style="color:var(--text2)">
         <b style="color:#f59e0b">What is SOST DEX?</b><br>
-        A signed, encrypted, and verifiable position market for gold-backed SOST positions. Not an AMM &mdash; a real OTC desk where identified participants trade positions with full cryptographic proof.<br><br>
+        A signed, encrypted, and verifiable position market for gold-backed SOST positions. Not a classic AMM or a generic token-swap UI. It is a real desk for identified positions, reward rights, and settlement flows built around SOST, PoPC, and tokenized gold.<br><br>
+        The core idea is simple: <b style="color:var(--text)">PoPC creates the position. The SOST DEX trades the position. The settlement layer updates rights across SOST and Ethereum.</b><br><br>
+
+        <!-- What you can do -->
         <b style="color:#4ade80">What you can do:</b><br>
-        &bull; <b>Buy &amp; sell positions</b> &mdash; full positions (principal + rewards + escrow) or reward-only rights<br>
+        &bull; <b>Buy &amp; sell positions</b> &mdash; trade full positions (principal + rewards + escrow linkage) or reward-only rights<br>
         &bull; <b>Split ownership</b> &mdash; separate principal_owner, reward_owner, and eth_beneficiary<br>
-        &bull; <b>Track deals</b> &mdash; visual timeline from offer &rarr; accept &rarr; settlement &rarr; complete<br>
-        &bull; <b>Trade Composer</b> &mdash; build offers with 12 editable fields, preview JSON, sign with ED25519<br>
-        &bull; <b>Simple &amp; Pro modes</b> &mdash; beginner-friendly defaults or full control for advanced users<br><br>
+        &bull; <b>Track deals</b> &mdash; visual timeline from offer &rarr; accept &rarr; settlement &rarr; maturity &rarr; withdraw &rarr; reward settlement<br>
+        &bull; <b>Trade Composer</b> &mdash; build offers with editable parameters, preview JSON, sign with ED25519<br>
+        &bull; <b>Simple &amp; Pro modes</b> &mdash; beginner-friendly defaults or full control for advanced users<br>
+        &bull; <b>OTC flow</b> &mdash; request assisted trades while the market remains in limited alpha<br><br>
+
+        <!-- How it works -->
         <b style="color:#22d3ee">How it works:</b><br>
         &bull; <b>Step 1:</b> Mine SOST &rarr; coinbase splits 50% miner / 25% Gold Vault / 25% PoPC Pool<br>
         &bull; <b>Step 2:</b> PoPC contract locks gold (XAUT/PAXG) in immutable Ethereum escrow (SOSTEscrow)<br>
-        &bull; <b>Step 3:</b> Position created &mdash; principal + reward rights + eth_beneficiary linked<br>
-        &bull; <b>Step 4:</b> Trade on DEX &mdash; signed &amp; E2E encrypted (X25519 + ChaCha20-Poly1305 + prekeys)<br><br>
-        <b style="color:#c084fc">Settlement stack:</b><br>
+        &bull; <b>Step 3:</b> A native SOST position is created &mdash; with principal, reward rights, lifecycle state, and beneficiary linkage<br>
+        &bull; <b>Step 4:</b> The position can be traded &mdash; full position or reward-only right &mdash; through signed and encrypted deal flow<br>
+        &bull; <b>Step 5:</b> Settlement updates ownership and beneficiary state, then maturity/withdraw/reward logic closes the lifecycle<br><br>
+
+        <!-- Ownership model -->
+        <b style="color:#c084fc">Ownership model:</b><br>
+        Each Model B position can separate three distinct rights:<br>
+        &bull; <b>principal_owner</b> &mdash; who owns the principal<br>
+        &bull; <b>reward_owner</b> &mdash; who receives the SOST reward<br>
+        &bull; <b>eth_beneficiary</b> &mdash; who receives the principal from Ethereum escrow<br><br>
+        This makes two different trade types possible:<br>
+        &bull; <b>Full Position Sale</b> &mdash; principal, reward, and beneficiary all move to the buyer<br>
+        &bull; <b>Reward-Only Sale</b> &mdash; seller keeps the principal, buyer receives only the reward right<br>
+        <span style="color:var(--text3);font-size:9px">That is what makes the SOST market different from a generic token swap. It trades identified contracts and rights, not just fungible pool assets.</span><br><br>
+
+        <!-- Settlement stack -->
+        <b style="color:#e63946">Settlement stack:</b><br>
         &bull; SOSTEscrow v2 with settlementOperator for beneficiary handoff (cannot withdraw)<br>
         &bull; Auto-withdraw daemon + reward settlement engine &mdash; implemented and tested<br>
         &bull; Blind relay transport with offline delivery via prekey architecture<br>
-        &bull; 743 tests passing (C++ 193 + Python 272 + TypeScript 231 + Solidity 47)<br>
+        &bull; Ownership split between principal_owner / reward_owner / eth_beneficiary fully modeled<br>
+        &bull; <b>743 tests passing</b> (C++ 193 + Python 272 + TypeScript 231 + Solidity 47)<br><br>
+
+        <!-- Current status -->
+        <b style="color:#fbbf24">Current status:</b><br>
+        The DEX is live in <b>limited alpha</b>. The market structure, trading desk, position model, settlement model, and encrypted coordination stack exist. Operations remain operator-assisted where required. This is not yet a fully open public trustless market.<br>
+        <span style="color:var(--text3);font-size:9px">The architecture is real, the desk is real, and the alpha is real &mdash; but broader rollout depends on live proof, production hardening, and staged activation.</span><br><br>
+
+        <!-- Already implemented -->
+        <b style="color:#4ade80">Already implemented:</b><br>
+        <span style="font-size:9px">Position registry &bull; Position valuation &bull; Full position transfer &bull; Reward-right split &bull; Beneficiary handoff &bull; Maturity tracking &bull; Auto-withdraw flow &bull; Reward settlement flow &bull; Reconciliation tooling &bull; Encrypted deal-channel architecture</span><br><br>
+
+        <!-- Next expansion -->
+        <b style="color:#818cf8">Next expansion &mdash; browser-native private DEX:</b><br>
+        &bull; Browser wallet layer &mdash; local encrypted keystore, browser signing<br>
+        &bull; Browser E2E deal flow &mdash; offers, accepts, cancels signed and encrypted in the web UI<br>
+        &bull; Private inbox / deal channel &mdash; real encrypted inbox for deal flow<br>
+        &bull; Passkeys / device authentication &mdash; modern login and strong-auth<br>
+        &bull; AI-assisted trade composition &mdash; natural-language form filling, warnings, lifecycle guidance<br>
+        <span style="color:var(--text3);font-size:9px">Browser and UX upgrades are part of active implementation. The mandatory priority for block 5,750 is consensus stability and network-wide upgrade consistency.</span><br><br>
+
+        <!-- Security model -->
+        <b style="color:var(--red)">DEX security model:</b><br>
+        &bull; The user keeps control of private keys<br>
+        &bull; The relay transports encrypted envelopes but cannot read content<br>
+        &bull; The AI assistant may help fill forms, explain actions, compare options, and warn about mistakes<br>
+        &bull; <b>The AI assistant does not sign, does not send, and does not execute settlement</b><br>
+        &bull; Sensitive actions require explicit user confirmation<br>
         </span><br>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
-          <a href="sost-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);color:#000;font-weight:800;font-size:10px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 12px rgba(245,158,11,0.4)">OPEN SOST DEX &rarr;</a>
+
+        <!-- Why this matters -->
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:6px;padding:10px 14px;margin:8px 0;line-height:1.8;">
+          <b style="color:var(--text);font-size:10px">Why this matters:</b><br>
+          <span style="color:var(--text2);font-size:10px">SOST combines four layers into one system: <b>CPU-PoW</b> (real miner-secured network), <b>reserve logic</b> (Gold Vault + PoPC Pool structure), <b>gold-linked positions</b> (native tradeable contractual objects), and <b>signed/encrypted settlement</b> (private, verifiable transfer of rights). That is the thesis.</span>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+          <a href="sost-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:6px;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);background-size:200% auto;color:#000;font-weight:800;font-size:11px;text-decoration:none;letter-spacing:1px;box-shadow:0 0 16px rgba(245,158,11,0.4);animation:dexBtnRainbow 3s linear infinite">OPEN SOST DEX &rarr;</a>
           <a href="sost-gold-dex.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">DEX SPEC</a>
           <a href="sost-e2e.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">E2E PROTOCOL</a>
+          <a href="sost-popc-contracts.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">POPC CONTRACTS</a>
         </div>
       </div>
 
-      <!-- FINAL CALIBRATION -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- FINAL CALIBRATION — BLOCK 5,750                            -->
+      <!-- ════════════════════════════════════════════════════════════ -->
       <div style="border-bottom:1px solid var(--border);padding:10px 0;background:rgba(251,191,36,0.04);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.5);animation:pulse 1.5s ease infinite"></span>
@@ -409,21 +471,44 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         &bull; <b>Margins recalibrated</b> &mdash; E4-H2 tightened, 5-point gradient, H10-H35 unified at 115.<br>
         </span><br>
         <span style="color:var(--text2)"><b style="color:var(--green)">This completes the cASERT equalizer.</b> The 43-profile architecture is final. Future profiles (H14&ndash;H35) activate as hashrate grows.</span><br><br>
+        <span style="color:var(--text2)"><b style="color:var(--text3)">Practical meaning:</b> stalls resolve faster, lag absorption is finer, miners receive profile updates much sooner, difficulty relief is smoother and more granular.</span><br><br>
         <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
           <b style="color:#fbbf24;letter-spacing:1px">UPDATE NODE &amp; MINER BEFORE BLOCK 5,750:</b><br>
           <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
           <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
           <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
+          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span><br>
+          <span style="color:var(--text3)">Recommendation: upgrade before block 5,750 to stay aligned with the final calibration parameters.</span>
         </div>
       </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- UPCOMING — Block 10,000                                     -->
+      <!-- ════════════════════════════════════════════════════════════ -->
       <div style="padding:10px 0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="color:var(--red);font-size:9px;font-weight:600;letter-spacing:1px">UPCOMING</span>
           <span style="color:var(--text3);font-size:8px;">Block 10,000</span>
         </div>
         <b style="color:var(--text);font-size:11px;">VT Activation &mdash; Governance, PoPC, Signature-Bound PoW</b><br>
-        <span style="color:var(--text2)">Gold Vault 5-defense governance, signature-bound PoW (anti-pool), PoPC operational launch, Model B escrow on mainnet. <a href="sost-popc-contracts.html" style="color:var(--cyan);text-decoration:none">[details]</a></span>
+        <span style="color:var(--text2)">
+        &bull; Gold Vault 5-defense governance<br>
+        &bull; Signature-bound PoW (anti-pool)<br>
+        &bull; PoPC operational launch<br>
+        &bull; Model B escrow on mainnet<br>
+        &bull; Further DEX browser integration and private-deal UX improvements<br>
+        <span style="color:var(--text3);font-size:9px">Some browser and UX features may begin earlier in partial form. They should be understood as ongoing implementation work, not as hard-fork deliverables for block 5,750.</span>
+        <a href="sost-popc-contracts.html" style="color:var(--cyan);text-decoration:none;font-size:9px">[details]</a>
+        </span>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- BOTTOM LINE                                                 -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div style="border-top:1px solid var(--border);padding:10px 0;margin-top:4px;">
+        <span style="color:var(--text3);font-size:9px;line-height:1.8">
+        <b style="color:var(--text2)">Bottom line:</b> The network calibration is reaching its final form. The market architecture exists. The DEX alpha is live. The settlement stack is real. The private browser layer is the next expansion path. <b style="color:var(--gold)">SOST is moving from protocol design to operational infrastructure.</b>
+        </span>
       </div>
     </div>
   </div>
