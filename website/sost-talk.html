@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-talk.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Talk — Community Discussion</title>
+<meta name="description" content="SOST Talk: moderated community space for miners, traders, developers and participants. Discuss, report bugs, share feedback.">
+<meta name="robots" content="index, follow">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--bg2:#050505;--bg3:#0a0a0a;--border:#1a1a1a;--border2:#2a2a2a;--red:#fb010d;--green:#4ade80;--gold:#f59e0b;--cyan:#22d3ee;--purple:#c084fc;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--mono:'JetBrains Mono',monospace;--display:'Space Grotesk',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;line-height:1.7}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+/* Hero */
+.hero{padding:60px 0 40px;border-bottom:1px solid var(--border);text-align:center}
+.hero h1{font-family:var(--display);font-size:clamp(32px,6vw,52px);font-weight:700;letter-spacing:-1px;margin-bottom:12px}
+.hero h1 span{color:var(--gold)}
+.hero-sub{font-size:14px;color:var(--text2);max-width:600px;margin:0 auto 20px;line-height:1.8}
+
+/* Anti-fraud banner */
+.fraud-banner{background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.2);border-radius:6px;padding:10px 16px;font-size:10px;color:var(--text2);line-height:1.8;max-width:800px;margin:0 auto 20px;text-align:left}
+.fraud-banner b{color:var(--red)}
+
+/* Badges */
+.badge{display:inline-block;font-size:8px;padding:2px 6px;border-radius:3px;font-weight:700;letter-spacing:0.5px;vertical-align:middle}
+.badge-founder{background:rgba(251,1,13,0.15);color:var(--red);border:1px solid rgba(251,1,13,0.3)}
+.badge-official{background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3)}
+.badge-miner{background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.3)}
+.badge-community{background:rgba(100,116,139,0.15);color:var(--text3);border:1px solid rgba(100,116,139,0.3)}
+.badge-bot{background:rgba(34,211,238,0.15);color:var(--cyan);border:1px solid rgba(34,211,238,0.3)}
+
+/* Layout */
+.talk-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;margin-top:20px}
+@media(max-width:768px){.talk-layout{grid-template-columns:1fr}}
+
+/* Room tabs */
+.room-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.room-tab{padding:6px 14px;border-radius:4px;font-size:11px;font-weight:500;color:var(--text3);background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;letter-spacing:0.5px}
+.room-tab:hover{color:var(--text);border-color:var(--border2)}
+.room-tab.active{color:var(--gold);border-color:var(--gold);background:rgba(245,158,11,0.06)}
+.room-count{font-size:9px;color:var(--text3);margin-left:4px}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-btn{font-size:9px;padding:3px 8px;border-radius:3px;color:var(--text3);background:none;border:1px solid var(--border);cursor:pointer;letter-spacing:0.5px}
+.filter-btn:hover{color:var(--text2)}
+.filter-btn.active{color:var(--cyan);border-color:var(--cyan)}
+
+/* Messages */
+.msg-list{min-height:300px}
+.msg{padding:12px 0;border-bottom:1px solid var(--border)}
+.msg-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.msg-user{font-size:11px;font-weight:600;color:var(--text)}
+.msg-time{font-size:9px;color:var(--text3)}
+.msg-text{font-size:12px;color:var(--text2);line-height:1.8;word-break:break-word}
+.msg-bot{background:rgba(34,211,238,0.03);border-left:2px solid var(--cyan);padding-left:10px;margin-left:0}
+.msg-flagged{opacity:0.5;border-left:2px solid var(--red);padding-left:10px}
+.msg-actions{margin-top:4px;display:flex;gap:8px}
+.msg-action{font-size:9px;color:var(--text3);cursor:pointer;border:none;background:none;padding:0;font-family:inherit}
+.msg-action:hover{color:var(--text2)}
+
+/* Input */
+.msg-input-area{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:16px}
+.msg-input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;resize:none;min-height:60px}
+.msg-input:focus{border-color:var(--gold);box-shadow:0 0 8px rgba(245,158,11,0.2)}
+.msg-input-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:8px}
+.msg-send{padding:8px 20px;border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(245,158,11,0.4);color:var(--gold);background:rgba(245,158,11,0.1);letter-spacing:1px;transition:all 0.2s}
+.msg-send:hover{background:rgba(245,158,11,0.2)}
+.msg-rules{font-size:9px;color:var(--text3)}
+
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.sidebar-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.sidebar-title{font-size:10px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px;font-weight:600}
+.sidebar-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.sidebar-label{color:var(--text3)}
+.sidebar-val{color:var(--text);font-weight:500}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:12px}
+
+/* Auth required */
+.auth-required{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;margin-top:16px}
+.auth-required p{font-size:12px;color:var(--text2);margin-bottom:12px}
+.auth-btn{padding:10px 24px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(245,158,11,0.4);color:var(--gold);background:rgba(245,158,11,0.1);letter-spacing:1px}
+
+/* Nav minimal */
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:10px 0}
+nav .container{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.nav-brand{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);letter-spacing:2px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.nav-links{display:flex;gap:8px;flex-wrap:wrap}
+.nav-links a{color:var(--text3);text-decoration:none;font-size:10px;padding:4px 8px;border-radius:3px;transition:all 0.2s}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}
+@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+</style>
+<script src="js/security.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="sost-logo.png" alt="SOST" style="height:40px;border-radius:20%"><span style="color:var(--red)">SOST</span> TALK</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-dex.html">DEX</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-talk.html" style="color:var(--gold)">Talk</a>
+      <a href="sost-contact.html">Contact</a>
+      <a href="https://bitcointalk.org/index.php?topic=5579432" target="_blank">BitcoinTalk</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <h1>SOST <span>Talk</span></h1>
+    <p class="hero-sub">Moderated community space for miners, traders, developers and participants. Discuss the protocol, report bugs, share feedback.</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
+      <span class="badge badge-official">MODERATED</span>
+      <span class="badge badge-bot">SOST SENTINEL</span>
+      <span class="badge badge-miner">IDENTITY REQUIRED</span>
+    </div>
+    <div class="fraud-banner">
+      <b>⚠ ANTI-FRAUD NOTICE:</b> Admins will never ask you to send funds. Only trust <b>sostcore.com</b> and <b>sostprotocol.com</b>. Report suspicious behavior. The bot moderates spam, scams and abuse — <b>not criticism</b>.
+    </div>
+  </div>
+</section>
+
+<section style="padding:20px 0 60px">
+  <div class="container">
+    <div class="talk-layout">
+      <!-- Main feed -->
+      <div>
+        <!-- Room tabs -->
+        <div class="room-tabs" id="roomTabs"></div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar" id="filterBar"></div>
+
+        <!-- Message input (auth required) -->
+        <div id="msgInputArea"></div>
+
+        <!-- Message feed -->
+        <div class="msg-list" id="msgList">
+          <div class="empty-state">Loading messages...</div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-title">PROTOCOL STATUS</div>
+          <div class="sidebar-row"><span class="sidebar-label">Block</span><span class="sidebar-val" id="sideHeight">—</span></div>
+          <div class="sidebar-row"><span class="sidebar-label">Miners</span><span class="sidebar-val" id="sideMiners">—</span></div>
+          <div class="sidebar-row"><span class="sidebar-label">Nodes</span><span class="sidebar-val" id="sideNodes">—</span></div>
+          <div class="sidebar-row"><span class="sidebar-label">DEX</span><span class="sidebar-val" style="color:var(--gold)">Alpha</span></div>
+          <div class="sidebar-row"><span class="sidebar-label">PoPC</span><span class="sidebar-val" style="color:var(--text3)">Block 10,000+</span></div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-title">COMMUNITY RULES</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.8">
+            ✓ Criticism and debate welcome<br>
+            ✓ Bug reports valued<br>
+            ✓ Questions encouraged<br>
+            ✗ No spam or flooding<br>
+            ✗ No scams or phishing<br>
+            ✗ No impersonation<br>
+            ✗ No malicious links
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-title">LINKS</div>
+          <div style="font-size:10px;line-height:2">
+            <a href="sost-explorer.html" style="color:var(--cyan);text-decoration:none">Explorer</a><br>
+            <a href="sost-dex.html" style="color:var(--gold);text-decoration:none">SOST DEX</a><br>
+            <a href="sost-contact.html" style="color:var(--text2);text-decoration:none">Contact</a><br>
+            <a href="https://bitcointalk.org/index.php?topic=5579432" target="_blank" style="color:var(--text2);text-decoration:none">BitcoinTalk Thread</a><br>
+            <a href="https://github.com/Neob1844/sost-core" target="_blank" style="color:var(--text2);text-decoration:none">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:30px 0;text-align:center;font-size:10px;color:var(--text3);border-top:1px solid var(--border)">
+  <p>SOST Talk — Moderated by <span style="color:var(--cyan)">SOST Sentinel</span> · <a href="index.html" style="color:var(--text3);text-decoration:none">SOST Protocol</a></p>
+</footer>
+
+<script src="js/sost-sentinel.js"></script>
+<script src="js/sost-talk.js"></script>
+<script>
+// ── Render ──────────────────────────────────────────────────────
+
+function renderRoomTabs() {
+  var tabs = document.getElementById('roomTabs');
+  var counts = SOSTTalk.getCounts();
+  var html = '';
+  SOSTTalk.getRooms().forEach(function (room) {
+    var active = room === SOSTTalk.getCurrentRoom() ? ' active' : '';
+    html += '<div class="room-tab' + active + '" onclick="SOSTTalk.setRoom(\'' + room + '\')">' +
+      SOSTTalk.getRoomLabel(room) +
+      '<span class="room-count">(' + (counts[room] || 0) + ')</span></div>';
+  });
+  tabs.innerHTML = html;
+}
+
+function renderFilters() {
+  var bar = document.getElementById('filterBar');
+  var filters = [
+    { id: 'all', label: 'All' },
+    { id: 'mine', label: 'Mine' },
+    { id: 'official', label: 'Official' },
+    { id: 'flagged', label: 'Flagged' }
+  ];
+  var html = '';
+  filters.forEach(function (f) {
+    html += '<button class="filter-btn" onclick="SOSTTalk.setFilter(\'' + f.id + '\')">' + f.label + '</button>';
+  });
+  bar.innerHTML = html;
+}
+
+function renderMessages() {
+  var list = document.getElementById('msgList');
+  var messages = SOSTTalk.getMessages();
+  if (messages.length === 0) {
+    list.innerHTML = '<div class="empty-state">No messages in this room yet. Be the first to post!</div>';
+    return;
+  }
+  var html = '';
+  messages.forEach(function (m) {
+    var cls = m.isBot ? ' msg-bot' : '';
+    if (m.flags && m.flags.length > 0 && !m.isBot) cls += ' msg-flagged';
+    var badgeCls = m.badge === 'founder' ? 'badge-founder' :
+                   m.badge === 'official' ? 'badge-official' :
+                   m.badge === 'miner' ? 'badge-miner' :
+                   m.isBot ? 'badge-bot' : 'badge-community';
+    var time = new Date(m.timestamp).toLocaleString();
+    html += '<div class="msg' + cls + '">';
+    html += '<div class="msg-header">';
+    html += '<span class="msg-user">' + m.userName + '</span>';
+    html += '<span class="badge ' + badgeCls + '">' + (m.badge || 'community').toUpperCase() + '</span>';
+    html += '<span class="msg-time">' + time + '</span>';
+    html += '</div>';
+    html += '<div class="msg-text">' + m.text + '</div>';
+    if (!m.isBot) {
+      html += '<div class="msg-actions">';
+      html += '<button class="msg-action" onclick="SOSTTalk.report(\'' + m.id + '\')">report</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderInputArea() {
+  var area = document.getElementById('msgInputArea');
+  if (SOSTTalk.isAuthenticated()) {
+    var identity = SOSTTalk.getIdentity();
+    area.innerHTML = '<div class="msg-input-area">' +
+      '<div style="font-size:10px;color:var(--text3);margin-bottom:6px">Posting as: <b style="color:var(--text)">' + (identity.label || identity.id) + '</b></div>' +
+      '<textarea class="msg-input" id="msgInput" placeholder="Share your thoughts, report a bug, ask a question..." maxlength="1000"></textarea>' +
+      '<div class="msg-input-footer">' +
+        '<span class="msg-rules">Max 1000 chars · Rate limited · Moderated by Sentinel</span>' +
+        '<button class="msg-send" onclick="sendMessage()">SEND</button>' +
+      '</div>' +
+      '<div id="msgError" style="display:none;margin-top:6px;font-size:11px;color:var(--red)"></div>' +
+    '</div>';
+  } else {
+    area.innerHTML = '<div class="auth-required">' +
+      '<p>Unlock your identity to post messages.</p>' +
+      '<p style="font-size:10px;color:var(--text3);margin-bottom:12px">You can create a DEX identity at <a href="sost-dex.html" style="color:var(--gold);text-decoration:none">SOST DEX</a> or enter a name below.</p>' +
+      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+        '<input type="text" id="talkName" placeholder="Your name" style="padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;width:160px">' +
+        '<button class="auth-btn" onclick="quickAuth()">Join Talk</button>' +
+      '</div>' +
+    '</div>';
+  }
+}
+
+function sendMessage() {
+  var input = document.getElementById('msgInput');
+  var error = document.getElementById('msgError');
+  if (!input || !input.value.trim()) return;
+  var result = SOSTTalk.post(input.value.trim());
+  if (result.ok) {
+    input.value = '';
+    if (error) error.style.display = 'none';
+  } else {
+    if (error) { error.textContent = result.error; error.style.display = ''; }
+  }
+}
+
+function quickAuth() {
+  var name = document.getElementById('talkName');
+  if (!name || !name.value.trim() || name.value.trim().length < 2) return;
+  SOSTTalk.setIdentity({
+    id: 'talk-' + Date.now().toString(36),
+    label: name.value.trim(),
+    badge: 'community'
+  });
+  renderAll();
+}
+
+function renderAll() {
+  renderRoomTabs();
+  renderFilters();
+  renderInputArea();
+  renderMessages();
+}
+
+// Fetch protocol status for sidebar
+function updateSidebar() {
+  fetch('https://sostcore.com/api/explorer_version.json?t=' + Date.now()).catch(function(){});
+  // Try RPC for block height (won't work from browser usually, but try API)
+  var h = document.getElementById('sideHeight');
+  var m = document.getElementById('sideMiners');
+  var n = document.getElementById('sideNodes');
+  // Use static fallback — real data comes from explorer
+  if (h) h.textContent = '~5,760+';
+  if (m) m.textContent = '~26';
+  if (n) n.textContent = '~9';
+}
+
+// Init
+SOSTTalk.init();
+SOSTTalk.onUpdate(renderAll);
+renderAll();
+updateSidebar();
+
+// Handle enter key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey && document.activeElement && document.activeElement.id === 'msgInput') {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+
+<script src="js/sost-pwa-install.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "welcome001",
+    "text": "Welcome to SOST Talk. This is a moderated community space. The bot protects against spam, scams and noise — not criticism. Be respectful, report issues, and help make the protocol stronger.",
+    "room": "general",
+    "userId": "sentinel",
+    "userName": "SOST Sentinel",
+    "badge": "official",
+    "timestamp": 1777000000000,
+    "flags": [],
+    "reported": false,
+    "hidden": false,
+    "isBot": true
+  }
+]
