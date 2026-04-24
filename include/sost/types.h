@@ -48,9 +48,15 @@ struct CasertDecision {
 };
 
 inline const char* casert_profile_name(int32_t idx) {
-    static const char* names[] = {"E4","E3","E2","E1","B0","H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12"};
-    int32_t ai = idx + 4; // offset by -CASERT_H_MIN (4)
-    if (ai < 0 || ai >= 17) return "?";
+    static const char* names[] = {
+        "E7","E6","E5","E4","E3","E2","E1","B0",
+        "H1","H2","H3","H4","H5","H6","H7","H8","H9",
+        "H10","H11","H12","H13","H14","H15","H16","H17","H18","H19",
+        "H20","H21","H22","H23","H24","H25","H26","H27","H28","H29",
+        "H30","H31","H32","H33","H34","H35"
+    };
+    int32_t ai = idx + 7; // offset by -CASERT_H_MIN (7)
+    if (ai < 0 || ai >= 43) return "?";
     return names[ai];
 }
 // BlockMeta: profile_index uses INT32_MIN as "missing" sentinel. Legit B0 is 0.
