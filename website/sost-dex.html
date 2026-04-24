@@ -434,9 +434,9 @@
         <div class="stat-sub">earliest expiry</div>
       </div>
       <div class="stat-card" id="statFee">
-        <div class="stat-label">Protocol Fee</div>
-        <div class="stat-val" style="color:var(--gold);font-size:14px">3% / 8%</div>
-        <div class="stat-sub">Model A / Model B</div>
+        <div class="stat-label">Trading Fee</div>
+        <div class="stat-val" style="color:var(--green-primary);font-size:18px">0%</div>
+        <div class="stat-sub">free trading · PoPC fee 3%A/8%B on rewards</div>
       </div>
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
@@ -678,12 +678,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Protocol Fee (3% A / 8% B) <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
-            <input type="text" class="form-control" id="paramFee" readonly style="color:var(--gold);">
+            <label class="form-label">Trading Fee <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
+            <input type="text" class="form-control" id="paramFee" readonly style="color:var(--green-primary);" value="0% — no trading fee">
             <div class="field-help" id="help-fee">
-              <b>Constitutional protocol fee on the reward.</b> Model A (self-custody): 3% of reward. Model B (escrow): 8% of reward. The fee is deducted automatically at reward settlement and goes to the protocol operational address.<br><br>
-              <b>Example Model A:</b> If the reward is 100 SOST, the fee is 3 SOST (user receives 97).<br>
-              <b>Example Model B:</b> If the reward is 100 SOST, the fee is 8 SOST (user receives 92).
+              <b>No trading fee.</b> Buying and selling positions on the SOST DEX is free. There is no maker/taker fee for trades.<br><br>
+              <b>Protocol fees (separate, not on trades):</b> 3% Model A / 8% Model B — these apply only to the PoPC reward when the position matures, not to the trade itself.
             </div>
           </div>
         </div>
@@ -997,14 +996,8 @@ function selectPosition() {
 }
 
 function updatePreview() {
-  var price = parseFloat(document.getElementById('paramPrice').value) || 0;
-  var assetType = document.getElementById('paramAssetType').value;
-  var feeRate = 0.08; // Model B default
-  var feeLabel = '8% (Model B)';
-  // If we could detect Model A, use 3% — for now show both
-  var feeA = price * 0.03;
-  var feeB = price * 0.08;
-  document.getElementById('paramFee').value = 'A: ' + feeA.toFixed(8) + ' / B: ' + feeB.toFixed(8) + ' SOST';
+  // No trading fee — field shows static "0%"
+  // Protocol fees (3% A / 8% B) apply to reward settlement, not to trades
 
   var content = document.getElementById('previewContent');
   if (!_selectedAction) {
