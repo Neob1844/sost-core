@@ -640,18 +640,20 @@ const SECTIONS = [
   { id: 'dashboard',  label: 'DASHBOARD',        icon: '[1]' },
   { id: 'wallet',     label: 'WALLET',            icon: '[2]' },
   { id: 'explorer',   label: 'EXPLORER',          icon: '[3]' },
-  { id: 'popc',       label: 'POPC',              icon: '[4]' },
-  { id: 'otc',        label: 'OTC',               icon: '[5]' },
-  { id: 'security',   label: 'SECURITY',          icon: '[6]' },
-  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[7]' },
-  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[8]' },
-  { id: 'documents',  label: 'DOCUMENTS',         icon: '[9]' },
-  { id: 'markets',    label: 'MARKETS',           icon: '[A]' },
-  { id: 'tokenomics', label: 'TOKENOMICS',        icon: '[B]' },
-  { id: 'roadmap',    label: 'ROADMAP',           icon: '[C]' },
-  { id: 'foundation', label: 'FOUNDATION',        icon: '[D]' },
-  { id: 'faq',        label: 'FAQ',               icon: '[E]' },
-  { id: 'settings',   label: 'SETTINGS',          icon: '[F]' },
+  { id: 'dex',        label: 'SOST DEX',           icon: '[4]' },
+  { id: 'popc',       label: 'POPC',              icon: '[5]' },
+  { id: 'e2e',        label: 'E2E PROTOCOL',      icon: '[6]' },
+  { id: 'otc',        label: 'OTC',               icon: '[7]' },
+  { id: 'security',   label: 'SECURITY',          icon: '[8]' },
+  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[9]' },
+  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[A]' },
+  { id: 'documents',  label: 'DOCUMENTS',         icon: '[B]' },
+  { id: 'markets',    label: 'MARKETS',           icon: '[C]' },
+  { id: 'tokenomics', label: 'TOKENOMICS',        icon: '[D]' },
+  { id: 'roadmap',    label: 'ROADMAP',           icon: '[E]' },
+  { id: 'foundation', label: 'FOUNDATION',        icon: '[F]' },
+  { id: 'faq',        label: 'FAQ',               icon: '[G]' },
+  { id: 'settings',   label: 'SETTINGS',          icon: '[H]' },
   { id: 'about',      label: 'ABOUT',             icon: '[0]' }
 ];
 
@@ -1558,7 +1560,9 @@ function renderSection(id) {
     materials: '/sost-materials-engine.html',
     documents: '/sost-whitepaper.html',
     markets: '/sost-markets.html',
+    dex: '/sost-dex.html',
     popc: '/sost-popc.html',
+    e2e: '/sost-e2e.html',
     otc: '/sost-otc.html',
     tokenomics: '/sost-tokenomics.html',
     roadmap: '/sost-roadmap.html',
@@ -2215,6 +2219,54 @@ SectionRenderers.markets = function(el) {
 // Proof of Personal Custody — cooperative gold-backed reward system.
 // Activates at block 5,000. This section explains the system in app-format
 // and links out to the full web pages for actual operation.
+// ── SOST DEX ──────────────────────────────────────────────────
+SectionRenderers.dex = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// SOST DEX — POSITION TRADING DESK</h2>
+      <p style="color:var(--pip);font-weight:700">ALPHA LAUNCH</p>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:13px">Unified signed market for gold-backed positions. Not an AMM — a real OTC desk where identified participants trade with full cryptographic proof. Buy, sell, split and track positions through signed, encrypted, and verifiable settlement.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge ok">ALPHA</span></span></div>
+      <div class="stat-row"><span class="stat-label">TESTS PASSING</span><span class="stat-value" style="color:var(--pip)">743 (C++ 193 + PY 272 + TS 231 + SOL 47)</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// WHAT YOU CAN DO</h2>
+      <div class="stat-row"><span class="stat-label">BUY & SELL</span><span class="stat-value">Full positions (principal + rewards + escrow)</span></div>
+      <div class="stat-row"><span class="stat-label">SPLIT OWNERSHIP</span><span class="stat-value">Separate principal_owner / reward_owner / eth_beneficiary</span></div>
+      <div class="stat-row"><span class="stat-label">REWARD-ONLY</span><span class="stat-value">Trade just the reward rights, keep principal</span></div>
+      <div class="stat-row"><span class="stat-label">DEAL TRACKER</span><span class="stat-value">Visual timeline: offer → accept → settle → complete</span></div>
+      <div class="stat-row"><span class="stat-label">TRADE COMPOSER</span><span class="stat-value">12 editable fields, JSON preview, ED25519 signing</span></div>
+      <div class="stat-row"><span class="stat-label">SIMPLE / PRO</span><span class="stat-value">Beginner defaults or full control for advanced users</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// HOW IT WORKS</h2>
+      <div class="stat-row"><span class="stat-label">STEP 1</span><span class="stat-value">Mine SOST → 50% miner / 25% Gold Vault / 25% PoPC</span></div>
+      <div class="stat-row"><span class="stat-label">STEP 2</span><span class="stat-value">PoPC locks gold (XAUT/PAXG) in Ethereum escrow</span></div>
+      <div class="stat-row"><span class="stat-label">STEP 3</span><span class="stat-value">Position created → principal + reward + beneficiary</span></div>
+      <div class="stat-row"><span class="stat-label">STEP 4</span><span class="stat-value">Trade on DEX → signed & E2E encrypted messages</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// SETTLEMENT STACK</h2>
+      <div class="stat-row"><span class="stat-label">ESCROW</span><span class="stat-value">SOSTEscrow V2 — settlementOperator + immutable lock</span></div>
+      <div class="stat-row"><span class="stat-label">AUTO-WITHDRAW</span><span class="stat-value"><span class="stat-badge ok">IMPLEMENTED</span></span></div>
+      <div class="stat-row"><span class="stat-label">REWARD ENGINE</span><span class="stat-value"><span class="stat-badge ok">IMPLEMENTED</span></span></div>
+      <div class="stat-row"><span class="stat-label">BENEFICIARY SYNC</span><span class="stat-value"><span class="stat-badge ok">OPERATIONAL</span></span></div>
+      <div class="stat-row"><span class="stat-label">RECONCILIATION</span><span class="stat-value"><span class="stat-badge ok">OPERATIONAL</span></span></div>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:11px">settlementOperator can update beneficiary for position transfers but cannot withdraw funds. Only the current beneficiary can withdraw after the lock period. No admin key on deposits.</p>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-dex.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN SOST DEX</button>
+      <br>
+      <button onclick="window.open('https://sostcore.com/sost-gold-dex.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">DEX SPEC ↗</button>
+      <button onclick="window.open('https://sostcore.com/sost-popc-contracts.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">POPC CONTRACTS ↗</button>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── PoPC ──────────────────────────────────────────────────────
 SectionRenderers.popc = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
@@ -2254,11 +2306,12 @@ SectionRenderers.popc = function(el) {
       <div class="stat-row"><span class="stat-label">VETERAN (5 ★)</span><span class="stat-value">10 oz max · 5% audit prob</span></div>
     </div>
     <div class="pip-panel">
-      <h2>// MODEL B (FUTURE)</h2>
-      <p>Immutable Ethereum escrow variant. Deposit gold into an audited smart contract; reward paid immediately; withdraw 100% at expiry. Zero slash risk.</p>
-      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge warn">ROADMAP Q3 2026</span></span></div>
-      <div class="stat-row"><span class="stat-label">BLOCKER</span><span class="stat-value">Ethereum smart contract + audit</span></div>
-      <div class="stat-row"><span class="stat-label">EST. WORK</span><span class="stat-value">16-22 weeks from green-light</span></div>
+      <h2>// MODEL B — ESCROW</h2>
+      <p>Immutable Ethereum escrow variant. Deposit gold into SOSTEscrow smart contract; reward paid from PoPC pool; withdraw 100% at expiry. Zero slash risk.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge ok">IMPLEMENTED</span></span></div>
+      <div class="stat-row"><span class="stat-label">ESCROW V1</span><span class="stat-value">Deployed on Sepolia (immutable)</span></div>
+      <div class="stat-row"><span class="stat-label">ESCROW V2</span><span class="stat-value">Implemented — dynamic beneficiary + settlementOperator</span></div>
+      <div class="stat-row"><span class="stat-label">PENDING</span><span class="stat-value">External audit + mainnet deployment</span></div>
     </div>
     <div class="pip-panel" style="text-align:center;padding:20px">
       <button onclick="window.open('https://sostcore.com/sost-popc-quickstart.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN QUICK START GUIDE</button>
@@ -2266,6 +2319,51 @@ SectionRenderers.popc = function(el) {
       <button onclick="window.open('https://sostcore.com/sost-popc.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">FULL SPEC ↗</button>
       <br>
       <span style="color:var(--pip-dim);font-size:10px">Operating PoPC requires a running sost-node + cli<br>The app shows info; the website is where you act.</span>
+    </div>
+  `;
+  AudioEngine.ambient_scan();
+};
+
+// ── E2E PROTOCOL ──────────────────────────────────────────────
+SectionRenderers.e2e = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML = `
+    <div class="pip-panel">
+      <h2>// E2E ENCRYPTED PROTOCOL</h2>
+      <p style="color:var(--pip);font-weight:700">OPERATIONAL — 231 TESTS PASSING</p>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:13px">End-to-end encrypted coordination layer for SOST position trading. All DEX messages are signed, encrypted, and transported through blind relays. Nobody — not even the relay operator — can read the contents.</p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge ok">OPERATIONAL</span></span></div>
+      <div class="stat-row"><span class="stat-label">TESTS</span><span class="stat-value">231 TypeScript tests passing</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// CRYPTOGRAPHY STACK</h2>
+      <div class="stat-row"><span class="stat-label">SIGNATURES</span><span class="stat-value">ED25519 — identity + message authentication</span></div>
+      <div class="stat-row"><span class="stat-label">KEY AGREEMENT</span><span class="stat-value">X25519 — Diffie-Hellman key exchange</span></div>
+      <div class="stat-row"><span class="stat-label">ENCRYPTION</span><span class="stat-value">ChaCha20-Poly1305 — AEAD cipher</span></div>
+      <div class="stat-row"><span class="stat-label">KEY DERIVATION</span><span class="stat-value">HKDF-SHA256 — from shared secret</span></div>
+      <div class="stat-row"><span class="stat-label">PREKEYS</span><span class="stat-value">Signed prekeys + one-time prekeys for offline delivery</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// HOW IT WORKS</h2>
+      <div class="stat-row"><span class="stat-label">1. IDENTITY</span><span class="stat-value">Each participant has an ED25519 keypair</span></div>
+      <div class="stat-row"><span class="stat-label">2. KEY EXCHANGE</span><span class="stat-value">X25519 agreement derives shared secret</span></div>
+      <div class="stat-row"><span class="stat-label">3. ENCRYPT</span><span class="stat-value">Message sealed with ChaCha20-Poly1305</span></div>
+      <div class="stat-row"><span class="stat-label">4. BLIND RELAY</span><span class="stat-value">Relay transports ciphertext — cannot read it</span></div>
+      <div class="stat-row"><span class="stat-label">5. OFFLINE</span><span class="stat-value">Prekey bundles enable delivery when offline</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// ARCHITECTURE</h2>
+      <div class="stat-row"><span class="stat-label">TRANSPORT</span><span class="stat-value">Blind relay — zero knowledge of content</span></div>
+      <div class="stat-row"><span class="stat-label">STORE</span><span class="stat-value">Encrypted store for offline queue</span></div>
+      <div class="stat-row"><span class="stat-label">SESSIONS</span><span class="stat-value">Async handshake + session bootstrap</span></div>
+      <div class="stat-row"><span class="stat-label">FORWARD SECRECY</span><span class="stat-value">Per-session keys via HKDF</span></div>
+      <p style="margin-top:8px;color:var(--pip-dim);font-size:11px">Planned: Double ratchet (continuous forward secrecy), post-compromise security, deniability. These features will bring the protocol closer to Signal-level guarantees.</p>
+    </div>
+    <div class="pip-panel" style="text-align:center;padding:20px">
+      <button onclick="window.open('https://sostcore.com/sost-e2e.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► E2E PROTOCOL SPEC</button>
+      <br>
+      <button onclick="window.open('https://sostcore.com/sost-dex.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">SOST DEX ↗</button>
     </div>
   `;
   AudioEngine.ambient_scan();
