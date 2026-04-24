@@ -439,6 +439,45 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         &bull; Sensitive actions require explicit user confirmation<br>
         </span><br>
 
+        <!-- Try it now -->
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.2);border-radius:6px;padding:12px 14px;margin:8px 0;line-height:1.8;">
+          <b style="color:var(--green);font-size:11px;letter-spacing:1px">&#9889; TRY THE DEX &mdash; STEP BY STEP</b><br><br>
+          <span style="color:var(--text2);font-size:10px">
+          The DEX now includes a <b>browser wallet</b>, an <b>AI form assistant</b>, and an <b>E2E encrypted inbox</b>. Here is how to try it:<br><br>
+
+          <b style="color:#67e8f9">Step 1 &mdash; Verify browser crypto works</b><br>
+          Open <a href="dex-crypto-test.html" style="color:var(--cyan);text-decoration:none" target="_blank">dex-crypto-test.html</a> and click <b>RUN ALL TESTS</b>.<br>
+          You should see 60+ green tests (ED25519 signing, X25519 key agreement, ChaCha20-Poly1305 encryption, keystore, full E2E flow).<br><br>
+
+          <b style="color:#67e8f9">Step 2 &mdash; Open the DEX</b><br>
+          Open <a href="sost-dex.html" style="color:var(--cyan);text-decoration:none" target="_blank">sost-dex.html</a>.<br>
+          Below the hero section you will see a <b>Wallet panel</b> with options to <b>Create Identity</b> or <b>Import Backup</b>.<br><br>
+
+          <b style="color:#67e8f9">Step 3 &mdash; Create your DEX identity</b><br>
+          Click <b>Create Identity</b>. Enter a name and choose a passphrase you will remember.<br>
+          This generates an ED25519 signing key + X25519 encryption key <b>locally in your browser</b>.<br>
+          No server registration. No account. Your keys stay on your device.<br><br>
+
+          <b style="color:#67e8f9">Step 4 &mdash; Unlock and explore</b><br>
+          Once created, the wallet unlocks automatically. You will now see:<br>
+          &bull; <b>Identity bar</b> &mdash; shows your ID + public key + Lock/Export buttons<br>
+          &bull; <b>AI Form Assistant</b> &mdash; type what you want to do in plain language<br>
+          &bull; <b>Private Inbox</b> &mdash; encrypted messages from counterparts appear here<br><br>
+
+          <b style="color:#67e8f9">Step 5 &mdash; Try the AI assistant</b><br>
+          In the AI input box, type something like:<br>
+          <code style="background:#111720;padding:2px 6px;border-radius:3px;color:var(--gold);font-size:10px">"Sell my full XAUT position for 9.7 SOST, expire in 6 hours"</code><br>
+          The assistant will parse your intent, show what it understood, flag any risks, and let you fill the Trade Composer automatically.<br>
+          <b>The AI only fills forms &mdash; it does not sign, send, or execute anything.</b><br><br>
+
+          <b style="color:#f59e0b">Important:</b><br>
+          &bull; This DEX identity is <b>separate</b> from your SOST mining wallet<br>
+          &bull; If you clear your browser data, you lose the identity &mdash; use <b>Export</b> to back up<br>
+          &bull; The wallet auto-locks after 5 minutes of inactivity<br>
+          &bull; Some downstream settlement steps remain operator-assisted in limited alpha
+          </span>
+        </div>
+
         <!-- Why this matters -->
         <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:6px;padding:10px 14px;margin:8px 0;line-height:1.8;">
           <b style="color:var(--text);font-size:10px">Why this matters:</b><br>
