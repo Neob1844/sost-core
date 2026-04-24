@@ -354,11 +354,37 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div style="background:var(--bg2);border:1px solid var(--border);padding:0;">
     <style>@keyframes newsGlow{0%,100%{border-left-color:var(--red);box-shadow:none}50%{border-left-color:var(--orange);box-shadow:inset 0 0 15px rgba(251,191,36,0.03)}}</style>
     <div id="newsHeader" onclick="document.getElementById('newsBody').style.display=document.getElementById('newsBody').style.display==='none'?'block':'none';document.getElementById('newsToggle').textContent=document.getElementById('newsBody').style.display==='none'?'\u25BC':'\u25B2';" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;border-left:3px solid var(--red);animation:newsGlow 3s ease-in-out infinite;">
-      <span style="font-size:10px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--red)">PROTOCOL UPDATES</b> <span style="color:var(--text3);font-size:9px;margin-left:4px">&middot;</span> <span style="color:var(--orange);font-size:9px;font-weight:600;letter-spacing:1px">FINAL CALIBRATION — BLOCK 5,750</span> <span style="color:var(--text3);font-size:9px;margin-left:8px"><a href="feed.xml" style="color:var(--orange);text-decoration:none;font-size:8px;letter-spacing:1px" title="RSS Feed">RSS &#9741;</a></span></span>
+      <span style="font-size:10px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--red)">PROTOCOL UPDATES</b> <span style="color:var(--text3);font-size:9px;margin-left:4px">&middot;</span> <span style="color:#fb010d;font-size:9px;font-weight:600;letter-spacing:1px">⚠ UPDATE NODE — DISPLAY BUG FIXED</span> <span style="color:var(--text3);font-size:9px;margin-left:8px"><a href="feed.xml" style="color:var(--orange);text-decoration:none;font-size:8px;letter-spacing:1px" title="RSS Feed">RSS &#9741;</a></span></span>
       <span style="display:flex;align-items:center;gap:8px"><span style="color:var(--cyan);font-size:8px;letter-spacing:1px;animation:pulse 2s ease infinite">&#9654; click to expand</span><span id="newsToggle" style="color:var(--text3);font-size:12px">&#9660;</span></span>
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
+
+      <!-- URGENT: NODE UPDATE -->
+      <div style="border-bottom:1px solid var(--border);padding:12px 0;background:rgba(251,1,13,0.06);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,.6);animation:pulse 1s ease infinite"></span>
+          <span style="color:#fb010d;font-size:10px;font-weight:800;letter-spacing:2px">URGENT — UPDATE YOUR NODE &amp; MINER</span>
+        </div>
+        <b style="color:var(--text);font-size:11px;">A display bug has been fixed that caused profile names to show as "?" for H13 and E5-E7 profiles.</b><br><br>
+        <span style="color:var(--text2)">
+        <b style="color:var(--cyan)">What happened:</b><br>
+        The profile name lookup table in <code>types.h</code> only covered 17 profiles (E4&ndash;H12). After the block 5,750 final calibration extended the system to 43 profiles (E7&ndash;H35), any profile outside the old range (H13, E5, E6, E7) displayed as <b>"?"</b> in the explorer and RPC responses. The underlying consensus logic was correct &mdash; only the display name was affected.<br><br>
+        <b style="color:var(--cyan)">What you need to do:</b><br>
+        </span>
+        <div style="background:rgba(251,1,13,0.04);border:1px solid rgba(251,1,13,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
+          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
+          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
+          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
+          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
+        </div>
+        <br>
+        <span style="color:var(--text3);font-size:9px">
+        This update also includes the full V8 final calibration: H13 ceiling, E7 relief valve at 605s, 43 profiles, lag-adjust ~6s, and recalibrated margins. If you haven't updated since before block 5,750, this is critical.<br>
+        <b style="color:var(--green)">193 cASERT tests passing. Consensus unaffected &mdash; display fix only.</b>
+        </span>
+      </div>
+
 
       <!-- ════════════════════════════════════════════════════════════ -->
       <!-- SOST DEX — ALPHA LAUNCH (full announcement)               -->
