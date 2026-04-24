@@ -455,7 +455,7 @@
             <span style="color:var(--gold)">● Gold (oz)</span>
           </div>
         </div>
-        <canvas id="dexChart" height="220" style="width:100%"></canvas>
+        <canvas id="dexChart" height="240" style="width:100%"></canvas>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px">
           <div style="background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px">
             <div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">GOLD LOCKED</div>
@@ -1392,8 +1392,8 @@ setInterval(fetchAll, _refreshMs);
     var canvas=document.getElementById('dexChart');
     if(!canvas||!positions.length)return;
     var ctx=canvas.getContext('2d');
-    var W=canvas.offsetWidth;canvas.width=W*2;canvas.height=440;
-    ctx.scale(2,2);var H=220;
+    var W=canvas.offsetWidth;canvas.width=W*2;canvas.height=480;
+    ctx.scale(2,2);var H=240;
 
     // Build bar data per position
     var maxReward=0,maxGold=0;
@@ -1461,9 +1461,15 @@ setInterval(fetchAll, _refreshMs);
       ctx.fillStyle='#64748b';ctx.font='8px JetBrains Mono';
       ctx.fillText(p.id.substring(0,8)+'...',x+barW+gap/2,H-2);
 
-      // Right type badge
-      ctx.fillStyle=p.right_type==='REWARD_RIGHT'?'#22d3ee':'#4ade80';ctx.font='7px JetBrains Mono';
-      ctx.fillText(p.right_type==='REWARD_RIGHT'?'REWARD':'FULL',x+barW+gap/2,H+8);
+      // Model + Right type badge
+      var modelLabel='Model '+(p.model||'B');
+      var typeLabel=p.right_type==='REWARD_RIGHT'?'REWARD ONLY':'FULL POS';
+      ctx.fillStyle=p.model==='A'?'#f59e0b':'#4ade80';ctx.font='7px JetBrains Mono';
+      ctx.fillText(modelLabel+' · '+typeLabel,x+barW+gap/2,H+8);
+      // Fee indicator
+      var feeLabel=p.model==='A'?'fee 3%':'fee 8%';
+      ctx.fillStyle='#475569';ctx.font='7px JetBrains Mono';
+      ctx.fillText(feeLabel,x+barW+gap/2,H+17);
 
       ctx.textAlign='left';
     });
