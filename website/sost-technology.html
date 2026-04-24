@@ -991,7 +991,7 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
           (21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E7) through baseline (B0) to ceiling active (H13). H14&ndash;H35 reserved, margin=100.
+          deep easing (E7) through baseline (B0) to ceiling active (H13). H14&ndash;H35 reserved, margin=115.
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -1044,7 +1044,7 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
               B0 BASELINE
             </div>
             <div class="mode-params">
-              scale=1 &middot; k=4 &middot; margin=185 &middot; steps=4<br>
+              scale=1 &middot; k=4 &middot; margin=165 &middot; steps=4<br>
               <em>Default operating profile. Balanced stability test.</em>
             </div>
           </div>
@@ -1065,7 +1065,7 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
             </div>
             <div class="mode-params">
               scale=2&ndash;3 &middot; k=6&ndash;8 &middot; margin=130&ndash;110 &middot; steps=6&ndash;8<br>
-              <em>Maximum hardening. H13 ceiling active (block 5,750+, scale=2). H14&ndash;H35 reserved (margin=100).</em>
+              <em>Maximum hardening. H13 ceiling active (block 5,750+, scale=2). H14&ndash;H35 reserved (margin=115).</em>
             </div>
           </div>
         </div>
@@ -1088,7 +1088,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">/
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 43 profiles (21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35). H13 ceiling (block 5,750+), H35 max reserved, H14&ndash;H35 margin=100. Equalizer is emergency-only. Final calibration complete.<br>
+            &bull; 43 profiles (21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35). H13 ceiling (block 5,750+), H35 max reserved, H14&ndash;H35 margin=115. Equalizer is emergency-only. Final calibration complete.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>

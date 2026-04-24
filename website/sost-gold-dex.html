@@ -151,7 +151,7 @@ footer a{color:var(--t3);text-decoration:none}
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:20px;border-radius:4px;line-height:2;font-size:13px;color:var(--t2)">
 <p style="color:var(--t1);font-weight:600;margin-bottom:12px">SOST lets you hold positions backed by tokenized gold, trade them with signed private messages, and settle automatically.</p>
 
-<p><strong style="color:var(--gold)">1.</strong> You deposit tokenized gold (XAUT or PAXG) into an <strong>immutable escrow contract</strong> on Ethereum. No admin key &mdash; nobody can touch your gold except you, after the lock period.</p>
+<p><strong style="color:var(--gold)">1.</strong> You deposit tokenized gold (XAUT or PAXG) into an <strong>immutable escrow contract</strong> on Ethereum. No admin key on deposits &mdash; the immutable settlementOperator can update beneficiary for position transfers, but cannot withdraw funds. Only the current beneficiary can withdraw after the lock period.</p>
 
 <p><strong style="color:var(--gold)">2.</strong> The system registers a <strong>native SOST position</strong> with its own ID, owner, reward schedule, and expiry date. That position is now a tradeable asset inside the SOST ecosystem.</p>
 
@@ -159,7 +159,7 @@ footer a{color:var(--t3);text-decoration:none}
 
 <p><strong style="color:var(--gold)">4.</strong> Or you can <strong>sell just the reward right</strong> &mdash; keep the gold-backed principal, monetize only the future yield.</p>
 
-<p><strong style="color:var(--gold)">5.</strong> Trades happen through <strong>signed private messages</strong> (ED25519 cryptographic signatures). Every message &mdash; offer, accept, cancel, settlement notice &mdash; has a hash, a signature, a nonce, and an expiry. No forgery. No replay. No middleman.</p>
+<p><strong style="color:var(--gold)">5.</strong> Trades happen through <strong>signed and end-to-end encrypted messages</strong> (ED25519 signatures + X25519 key agreement + ChaCha20-Poly1305 AEAD). Every message &mdash; offer, accept, cancel, settlement notice &mdash; has a hash, a signature, a nonce, and an expiry. No forgery. No replay. No middleman.</p>
 
 <p><strong style="color:var(--gold)">6.</strong> The settlement engine <strong>verifies everything automatically</strong>: valid signatures, correct owner, no double-spend, no expired offers. Then it executes the transfer and records the complete audit trail.</p>
 </div>
@@ -256,13 +256,13 @@ footer a{color:var(--t3);text-decoration:none}
 <tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Position Registry</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Tracks principal_owner, reward_owner, lifecycle</td></tr>
 <tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Maturity Tracker</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Monitors unlock times, detects maturity</td></tr>
 <tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">SOSTEscrow v1</td><td style="color:var(--green)">Deployed (Sepolia)</td><td style="color:var(--t2)">Immutable lock, pays original depositor only</td></tr>
-<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--gold)">SOSTEscrow v2</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Adds <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code> &mdash; pays whoever owns the principal</td></tr>
-<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--gold)">Auto-Withdraw Daemon</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Calls withdraw() automatically at maturity</td></tr>
-<tr><td style="padding:7px;color:var(--gold)">Reward Engine</td><td style="color:var(--yellow)">Planned</td><td style="color:var(--t2)">Automatically credits reward SOST to reward_owner</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">SOSTEscrow v2</td><td style="color:#4ade80">Implemented</td><td style="color:var(--t2)">Adds <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code> &mdash; pays whoever owns the principal</td></tr>
+<tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Auto-Withdraw Daemon</td><td style="color:#4ade80">Implemented</td><td style="color:var(--t2)">Calls withdraw() automatically at maturity</td></tr>
+<tr><td style="padding:7px;color:var(--t1)">Reward Engine</td><td style="color:#4ade80">Implemented</td><td style="color:var(--t2)">Automatically credits reward SOST to reward_owner</td></tr>
 </table>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:14px;border-radius:4px;font-size:11px;color:var(--t2);line-height:1.8">
-<strong style="color:var(--gold)">Current status:</strong> The position registry, settlement engine, and E2E relay are fully operational. SOSTEscrow v1 is deployed on Sepolia. Full automation requires SOSTEscrow v2 with dynamic beneficiary &mdash; planned for mainnet deployment. Until then, settlement is operator-assisted.
+<strong style="color:var(--gold)">Current status:</strong> SOSTEscrow v1 deployed on Sepolia. SOSTEscrow v2 (dynamic beneficiary + settlementOperator) implemented and tested. Auto-withdraw daemon and reward settlement engine implemented. Limited alpha remains operator-assisted while live proof and external audit are completed.
 </div>
 
 </div></section>

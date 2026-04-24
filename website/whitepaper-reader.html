@@ -562,8 +562,8 @@
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Mainnet profiles: E7(-7) through H35(+35), 43 total</pre>
 <pre class="wp-code-inline">  B0 (baseline): scale=1, k=4, steps=4, margin=165</pre>
-<pre class="wp-code-inline">  H35 (maximum): scale=2, k=20, steps=20, margin=100</pre>
-<pre class="wp-code-inline">  E4 (easing):   scale=1, k=3, steps=2, margin=280</pre>
+<pre class="wp-code-inline">  H35 (maximum): scale=2, k=20, steps=20, margin=115</pre>
+<pre class="wp-code-inline">  E7 (deepest):  scale=1, k=1, steps=1, margin=200</pre>
 <div class="wp-spacer"></div>
 <p class="wp-p">Examples:</p>
 <div class="wp-spacer"></div>
@@ -1066,7 +1066,7 @@ PROPERTIES:
 <p class="wp-p">MedianTimePast MTP = 1,771,697,922</p>
 <p class="wp-p">powDiffQ = 350,629 → powDiffQ / 65,536 ≈ 5.35 bits</p>
 <p class="wp-p">cASERT equalizer selected stability parameters:</p>
-<p class="wp-p">scale=1, k=4, margin=185, steps=4, stab_shift=20</p>
+<p class="wp-p">scale=1, k=4, margin=165, steps=4, stab_shift=20</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14.2 Timestamp Rules (MTP + Future Drift)</p>
 <div class="wp-spacer"></div>
@@ -2467,7 +2467,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
 <tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, per-block, avg288-based (block 5,175+), dynamic cap (5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Median288 reality check. Legacy half-life preserved for pre-5175 blocks</td></tr>
-<tr><td>cASERT Equalizer</td><td>40 consensus-critical profiles E4(-4) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases (E1–E4) when behind schedule for 6+ hours at B0. All profiles use scale=2. H35 {scale=2, k=20, steps=20, margin=115} as the maximum.</td></tr>
+<tr><td>cASERT Equalizer</td><td>43 consensus-critical profiles E7(-7) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases (E1–E7) when behind schedule for 6+ hours at B0. All profiles use scale=2. H35 {scale=2, k=20, steps=20, margin=115} as the maximum.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2757,9 +2757,9 @@ DIFFICULTY PARAMETERS:
   MAX_FUTURE_DRIFT             = 600
 
 cASERT EQUALIZER PARAMETERS:
-  CASERT_H_MIN                 = -4    // E4 (emergency easing)
+  CASERT_H_MIN                 = -7    // E7 (emergency easing)
   CASERT_H_MAX                 = 35    // H35 (maximum hardening)
-  CASERT_PROFILE_COUNT         = 40    // E4 through H35
+  CASERT_PROFILE_COUNT         = 43    // E7 through H35
   CASERT_V2_FORK_HEIGHT        = 1,450 // 24h halflife + 12.5% cap (historical, replaced by avg288 at 5,175)
   CASERT_V3_FORK_HEIGHT        = 4,100 // slew rate ±3 (V3); returned to ±1 at V6
   CASERT_V6_FORK_HEIGHT        = 5,000 // slew rate ±1, H10/H11 scale=2. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 43 profiles E7–H35, anti-stall 60 min. Block 5,323: asymmetric descent hotfix (down max 1/block).
@@ -2768,7 +2768,7 @@ cASERT EQUALIZER PARAMETERS:
   CASERT_V6_SLEW_RATE          = 1     // max ±1 profile level per block (V6)
   CASERT_V3_LAG_FLOOR_DIV      = 8     // lag floor = lag / 8
   // PID gains: OBSOLETE (block 5,320+). Replaced by direct lag mapping: profile = clamp(lag, 0, H10).
-  // 43 profiles with variable scale(1-2), k(1-20), steps(1-20), margin(100-320)
+  // 43 profiles with variable scale(1-2), k(1-20), steps(1-20), margin(115-200)
   // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
   CASERT_DECAY_STEP            = 50    // blocks per additional level beyond L5
   FIXED_K                      = 4
