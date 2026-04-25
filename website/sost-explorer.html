@@ -1248,11 +1248,13 @@ async function rpc(m,p){
   var hdrs={'Content-Type':'application/json'};
   if(RPC_USER&&RPC_PASS)hdrs['Authorization']='Basic '+btoa(RPC_USER+':'+RPC_PASS);
   for(var a=0;a<3;a++){try{
-    var r=await fetch(RPC,{method:'POST',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});
+    var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},8000);
+    var r=await fetch(RPC,{method:'POST',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal});
+    clearTimeout(tid);
     if(r.status===401)throw new Error('Authentication failed (401) — check RPC username and password');
     if(!r.ok)throw new Error('HTTP '+r.status+' '+r.statusText);
     var d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
-  }catch(e){if(a===2)throw e;await new Promise(function(r){setTimeout(r,200*(a+1));});}}
+  }catch(e){if(a===2)throw e;await new Promise(function(r){setTimeout(r,300*(a+1));});}}
 }
 function connectRPC(){RPC=document.getElementById('rpcUrl').value.trim().replace(/\/+$/,'');RPC_USER=document.getElementById('rpcUser').value.trim();RPC_PASS=document.getElementById('rpcPass').value.trim();off=0;prevH=0;var authCards=document.querySelectorAll('.auth-only');for(var i=0;i<authCards.length;i++)authCards[i].style.display=(RPC_USER&&RPC_PASS)?'':'none';refresh();}
 function fT(ts){var d=Date.now()/1000-ts;if(d<60)return Math.floor(d)+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h '+Math.floor((d%3600)/60)+'m ago';return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
@@ -1360,7 +1362,7 @@ async function updateDashboard(info){
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}
+  try{var times=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var fetchDepth=Math.max(AVG_WINDOW,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){try{var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}catch(be){continue;}}
     _diffHistory=diffs.reverse();drawSparkline();
     // Update unique miners card from freshly fetched data
     document.getElementById('dMiners').textContent=minerSet.size;
