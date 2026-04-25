@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SOST Useful Compute Trial · Block 7,000 → 8,000</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Voluntary 1,000-block trial where SOST miners contribute compute to Materials Engine and GeaSpirit research.">
+<style>
+:root{
+  --bg:#060606;--bg2:#0a0a0a;--bg3:#0f0f0f;--bg4:#161616;
+  --border:#1a1a1a;--border2:#252525;--border-h:#333;
+  --text:#c8c8c8;--text2:#777;--text3:#444;
+  --red:#fb010d;--red2:#ff4d5a;--red-dim:rgba(251,1,13,.15);
+  --green:#4ade80;--green-dim:rgba(74,222,128,.12);
+  --cyan:#67e8f9;--yellow:#fbbf24;--purple:#c084fc;--orange:#fb923c;
+  --blue:#60a5fa;--gold:#f59e0b;
+  --code:'Fira Code',monospace;
+  --sans:'Space Grotesk',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:var(--code);font-size:13px;line-height:1.7}
+a{color:var(--gold);text-decoration:none;transition:color .15s}
+a:hover{color:var(--yellow);text-shadow:0 0 6px rgba(245,158,11,.4)}
+.wrap{max-width:920px;margin:0 auto;padding:32px 24px 80px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0 28px;border-bottom:1px solid var(--border);margin-bottom:32px}
+header.top .logo{font-weight:700;font-size:18px;color:var(--red);letter-spacing:2px}
+header.top .nav a{color:var(--text2);font-size:11px;letter-spacing:1.5px;margin-left:18px}
+header.top .nav a:hover{color:var(--text)}
+h1{font-family:var(--sans);font-size:30px;font-weight:600;letter-spacing:1px;margin-bottom:6px;color:var(--text)}
+h2{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:2px;margin:36px 0 14px;text-transform:uppercase}
+h3{font-size:12px;color:var(--cyan);font-weight:600;letter-spacing:1.5px;margin:22px 0 8px;text-transform:uppercase}
+p{margin-bottom:14px;color:var(--text2)}
+ul{margin:6px 0 14px 20px}
+li{margin:4px 0;color:var(--text2)}
+b,strong{color:var(--text)}
+.subtitle{color:var(--gold);font-size:11px;letter-spacing:3px;margin-bottom:24px;font-weight:600}
+.banner{background:linear-gradient(135deg,rgba(245,158,11,0.06),rgba(245,158,11,0.02));border:1px solid rgba(245,158,11,0.25);border-left:3px solid var(--gold);border-radius:6px;padding:18px 22px;margin-bottom:32px}
+.banner .label{font-size:9px;color:var(--gold);letter-spacing:2px;font-weight:700;margin-bottom:6px;display:block}
+.banner .body{color:var(--text);font-size:13px}
+.callout{background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);border-radius:4px;padding:10px 14px;margin:14px 0;font-size:11.5px;color:var(--text2)}
+.callout b{color:var(--cyan)}
+.tbl{width:100%;border-collapse:collapse;margin:12px 0 22px;font-size:12px}
+.tbl th{text-align:left;color:var(--text3);font-size:10px;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border2);padding:8px 10px;text-transform:uppercase}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl td.right{text-align:right;color:var(--gold);font-weight:600}
+.tbl tr:hover td{background:rgba(255,255,255,0.02)}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:14px 16px;color:var(--text);font-size:11.5px;overflow-x:auto;margin:10px 0 18px;line-height:1.6}
+code{color:var(--cyan)}
+pre code{color:var(--text)}
+.box-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:14px 0 22px}
+.box{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:14px 16px}
+.box .k{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.box .v{font-size:14px;color:var(--text);font-weight:600}
+.box .v .gold{color:var(--gold)}
+.box .v .green{color:var(--green)}
+.box .v .cyan{color:var(--cyan)}
+.box .desc{font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(245,158,11,.6);margin-right:6px;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:5px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:var(--gold);font-weight:700;font-size:11px;letter-spacing:2px;margin-right:10px;margin-top:6px;text-transform:uppercase}
+.cta:hover{background:rgba(245,158,11,0.18);text-shadow:none}
+.cta.cyan{background:rgba(34,211,238,0.06);border-color:rgba(34,211,238,0.35);color:var(--cyan)}
+.cta.cyan:hover{background:rgba(34,211,238,0.12)}
+.cta.muted{background:rgba(255,255,255,0.03);border-color:var(--border);color:var(--text2)}
+.cta.muted:hover{color:var(--text)}
+.footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);text-align:center;letter-spacing:1px}
+hr.sep{border:0;border-top:1px solid var(--border);margin:32px 0}
+.endpoint{font-family:var(--code);font-size:11px;color:var(--cyan);background:rgba(34,211,238,0.06);padding:2px 6px;border-radius:3px;border:1px solid rgba(34,211,238,0.15)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="logo">SOST</div>
+  <div class="nav">
+    <a href="sost-explorer.html">EXPLORER</a>
+    <a href="sost-materials-engine.html">MATERIALS</a>
+    <a href="sost-geaspirit.html">GEASPIRIT</a>
+    <a href="https://github.com/Neob1844/sost-core">GITHUB</a>
+  </div>
+</header>
+
+<div class="subtitle"><span class="dot"></span>USEFUL COMPUTE TRIAL · BLOCK 7,000 → 8,000</div>
+<h1>Convert mining energy into scientific knowledge.</h1>
+
+<div class="banner">
+  <span class="label">VOLUNTARY · BLOCK 7,000 → 8,000 · POST-TRIAL BONUS</span>
+  <div class="body">
+    From block 7,000 to block 8,000, SOST runs a voluntary trial where
+    miners may also contribute compute to validated scientific workloads.
+    Participating miners who satisfy the eligibility threshold can receive
+    an extra <b style="color:var(--gold)">3.92550430 SOST</b> per mined
+    block, paid by transaction batch after block 8,000.
+  </div>
+</div>
+
+<h2>Why this matters</h2>
+
+<div class="box-grid">
+  <div class="box">
+    <div class="k">Materials Engine</div>
+    <div class="v"><span class="green">77,296</span> materials processed</div>
+    <div class="desc">Validated discoveries: FeMgO₂ (PGM-free catalyst, ~60,000× cheaper than platinum) and Dy₃S₃N (1.39 eV direct band gap photovoltaic).</div>
+  </div>
+  <div class="box">
+    <div class="k">GeaSpirit</div>
+    <div class="v"><span class="cyan">6 zones</span> · 4 continents</div>
+    <div class="desc">Kalgoorlie gold AUC 0.922, Salar de Atacama lithium AUC 0.891 — automated mineral exploration trained on free public data.</div>
+  </div>
+  <div class="box">
+    <div class="k">Trial Layer</div>
+    <div class="v"><span class="gold">50 / 40 / 10</span></div>
+    <div class="desc">50 % SOST mining (unchanged), 40 % Materials Engine, 10 % GeaSpirit research. No consensus changes.</div>
+  </div>
+</div>
+
+<h2>Reward model</h2>
+
+<table class="tbl">
+  <tr><th>Item</th><th class="right">SOST</th></tr>
+  <tr><td>Normal coinbase miner reward (every miner, paid live)</td>          <td class="right">3.92550433</td></tr>
+  <tr><td>Extra — Gold Vault allocation (post-trial)</td>                     <td class="right">+1.96275215</td></tr>
+  <tr><td>Extra — PoPC Pool allocation (post-trial)</td>                      <td class="right">+1.96275215</td></tr>
+  <tr><td><b>Total extra per eligible mined block</b></td>                    <td class="right"><b>+3.92550430</b></td></tr>
+  <tr><td>Effective full block allocation for eligible miners</td>            <td class="right">7.85100863</td></tr>
+</table>
+
+<div class="callout">
+  <b>Important:</b> the extra is paid <b>after block 8,000</b> by a normal
+  wallet TX batch. It is <b>not</b> automatic per block. Miners who do not
+  participate keep mining normally and receive the standard 3.92550433
+  SOST reward — nothing changes for them.
+</div>
+
+<h2>Eligibility</h2>
+
+<p>A miner address enters the bonus pool only if <b>all</b> the following hold:</p>
+
+<ul>
+  <li>The address mined at least one block during <b>[7000, 8000)</b>.</li>
+  <li>The address ran the Useful Compute Worker.</li>
+  <li>The address has at least <b style="color:var(--gold)">100 verified tasks</b> in the public ranking.</li>
+  <li>The dispute ratio is under <b style="color:var(--gold)">10 %</b>
+      (<code>disputed / submitted &lt; 0.10</code>).</li>
+</ul>
+
+<div class="callout">
+  <b>How verification works:</b> each task is dispatched to <b>two distinct
+  miners</b>. A task is only counted as <em>verified</em> when both miners
+  return matching deterministic result hashes. A single miner returning
+  fake hashes cannot inflate their score — the second miner won't match.
+</div>
+
+<h2>Quick start for miners</h2>
+
+<p>You need Python 3.6 or newer and <code>git</code>. No <code>pip install</code> required — the worker is self-contained.</p>
+
+<pre><code># 1. Clone sost-core
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+
+# 2. Smoke test (one tick) against the public server
+python3 scripts/useful_compute_worker.py \
+    --server https://sostcore.com/api/useful-compute \
+    --miner-address sost1YOURADDRESS \
+    --once
+
+# 3. Run continuously alongside your miner
+python3 scripts/useful_compute_worker.py \
+    --server https://sostcore.com/api/useful-compute \
+    --miner-address sost1YOURADDRESS \
+    --mode trial \
+    --poll-interval 30
+</code></pre>
+
+<p>Replace <code>sost1YOURADDRESS</code> with the SOST address you want
+credited (typically the same address that receives your mining rewards).
+The worker uses <b>only your public address</b>: never your private key,
+wallet file, or any signed message.</p>
+
+<h2>Public endpoints</h2>
+
+<table class="tbl">
+  <tr><th>Endpoint</th><th>Use</th></tr>
+  <tr><td><span class="endpoint">/health</span></td>           <td>Liveness check</td></tr>
+  <tr><td><span class="endpoint">/get_tasks</span></td>        <td>POST · request a batch of tasks</td></tr>
+  <tr><td><span class="endpoint">/submit_result</span></td>    <td>POST · submit a computed result hash</td></tr>
+  <tr><td><span class="endpoint">/check_eligible</span></td>   <td>GET / POST · current eligibility for an address</td></tr>
+  <tr><td><span class="endpoint">/ranking</span></td>          <td>GET · public ranking of all participants</td></tr>
+  <tr><td><span class="endpoint">/stats</span></td>            <td>GET · aggregate trial stats</td></tr>
+</table>
+
+<p>All endpoints are mounted under
+<span class="endpoint">https://sostcore.com/api/useful-compute/</span>.
+Anyone can read the ranking and stats — no authentication needed.</p>
+
+<h2>Honesty notes</h2>
+
+<ul>
+  <li>This is an experimental trial. Materials Engine and GeaSpirit results are based on ML/heuristics with selective DFT validation; nothing here constitutes experimental confirmation.</li>
+  <li>The 10 % GeaSpirit allocation runs as a parallel team-validated layer for this trial. Miner-side GeaSpirit task generation is in development.</li>
+  <li>Post-trial bonus payouts are reviewed manually before any TX is signed. The script that builds the manifest never holds private keys.</li>
+  <li>Future trials may expand the task catalogue, the verification policy, or the reward formula. This is the first iteration.</li>
+</ul>
+
+<hr class="sep">
+
+<a class="cta" href="../docs/miner-useful-compute-trial.md">MINER GUIDE</a>
+<a class="cta cyan" href="https://sostcore.com/api/useful-compute/health">HEALTH</a>
+<a class="cta cyan" href="https://sostcore.com/api/useful-compute/ranking">RANKING</a>
+<a class="cta muted" href="sost-explorer.html">EXPLORER</a>
+
+<div class="footer">SOST — Sovereign Stock Token · Useful Compute Trial · Block 7,000 → 8,000</div>
+
+</div>
+</body>
+</html>
