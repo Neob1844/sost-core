@@ -333,7 +333,7 @@
 <section class="hero">
   <div class="container">
     <div class="hero-title fade-in"><span class="dex-text">SOST DEX</span></div>
-    <p class="hero-subtitle fade-in delay-1">Buy, sell, split and track gold-backed positions through signed, encrypted, and verifiable settlement.</p>
+    <p class="hero-subtitle fade-in delay-1">Buy, sell, split and track gold-backed positions through signed, encrypted, and verifiable settlement. AI-assisted trade composition. Passkey &amp; biometric device authentication.</p>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-green" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=buy_full]');if(c)c.click();},500)"><span>&#9650;</span> BUY POSITION</a>
       <a href="javascript:void(0)" class="hero-btn hero-btn-gold" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=sell_full]');if(c)c.click();},500)"><span>&#9660;</span> SELL POSITION</a>
@@ -374,6 +374,56 @@
 
     <!-- Wallet Panel (shown when locked) -->
     <div id="walletPanel" class="dex-public" style="margin-bottom:16px;"></div>
+
+    <!-- How the DEX works — desplegable -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleFieldHelp('help-dex-overview')">
+        <span style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;font-weight:600">HOW DOES THIS WORK?</span>
+        <span class="field-help-btn">?</span>
+      </div>
+      <div class="field-help" id="help-dex-overview">
+        <b style="font-size:12px">SOST DEX — Complete Guide</b><br><br>
+
+        <b style="color:var(--cyan-primary)">&#128274; Identity &amp; Wallet</b><br>
+        The DEX uses a <b>local browser wallet</b> — your cryptographic identity (ED25519 signing + X25519 encryption keys) is created and stored in your browser using IndexedDB, encrypted with Argon2id from a passphrase you choose.<br>
+        &bull; <b>Create Identity</b> — generates a new keypair locally. No server registration.<br>
+        &bull; <b>Import Backup</b> — restore a previously exported encrypted identity JSON.<br>
+        &bull; <b>Export</b> — save your identity as encrypted backup (always do this!).<br>
+        &bull; <b>Lock/Unlock</b> — session auto-locks after 5 min inactivity.<br>
+        &bull; Your keys <b>never leave your browser</b>. The relay cannot read your deals.<br><br>
+
+        <b style="color:var(--green-primary)">&#128275; Passkey / Biometric Authentication</b><br>
+        If your device supports WebAuthn, you can use <b>fingerprint, Face ID, or secure device PIN</b> for faster and safer access.<br>
+        &bull; <b>Register Passkey</b> — one-time setup on your device.<br>
+        &bull; <b>Login with Passkey</b> — unlock your session with biometrics instead of typing passphrase.<br>
+        &bull; <b>Re-authenticate</b> — sensitive actions (sign offer, accept deal, export) ask for biometric confirmation.<br>
+        &bull; Your biometrics <b>never leave your device</b> — the DEX only receives yes/no from your secure enclave.<br>
+        &bull; Passkey is optional — passphrase-only mode always works.<br><br>
+
+        <b style="color:var(--gold)">&#129302; AI Form Assistant</b><br>
+        The AI helps you fill the Trade Composer by understanding what you want to do in plain language.<br>
+        &bull; Type something like: <code>"Sell my full XAUT position for 9.7 SOST, expire in 6 hours"</code><br>
+        &bull; The AI parses your intent and fills the form fields automatically.<br>
+        &bull; It shows "What the assistant understood" — action, position, price, expiry, what changes.<br>
+        &bull; It flags risks: suspicious price, wrong position, expiry too short, missing fields.<br>
+        &bull; It compares options: full sale vs reward-only, sell now vs hold to maturity.<br>
+        &bull; It explains lifecycle: maturity progress, withdraw status, reward remaining.<br>
+        &bull; <b>The AI does NOT sign, send, or execute anything.</b> You always review and authorize.<br><br>
+
+        <b style="color:var(--red-primary)">&#128233; Private Encrypted Inbox</b><br>
+        When your wallet is unlocked, you can receive encrypted messages from counterparts.<br>
+        &bull; Messages are fetched from the blind relay and decrypted <b>locally in your browser</b>.<br>
+        &bull; The relay transports encrypted envelopes but <b>cannot read the content</b>.<br>
+        &bull; You see: offers, acceptances, cancellations, settlement notices.<br>
+        &bull; Delivery tracking: sent → delivered → acknowledged → processed.<br><br>
+
+        <b style="color:var(--text-primary)">&#128200; Public vs Private Mode</b><br>
+        &bull; <b>Public</b> — anyone can see market summary, positions, stats. No login needed.<br>
+        &bull; <b>Private</b> — unlock your wallet to access: AI assistant, encrypted inbox, trade composer (sign+encrypt+send), deal channels, OTC.<br><br>
+
+        <span style="color:var(--text-dim);font-size:10px">Note: device biometrics (passkey) belong to the browser/user authentication layer. P2P node encryption (X25519 + ChaCha20 between nodes) is a separate machine-to-machine layer.</span>
+      </div>
+    </div>
 
     <!-- AI Assistant Input (shown when unlocked) -->
     <div class="dex-private" style="display:none;margin-bottom:16px;">
