@@ -500,6 +500,24 @@
         <span style="position:absolute;left:2px;bottom:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.3s" id="proModeSlider"></span>
       </label>
       <span style="font-size:9px;color:var(--text-dim);letter-spacing:1px">PRO</span>
+      <span class="field-help-btn" onclick="toggleFieldHelp('help-simple-pro')" style="margin-left:4px">?</span>
+    </div>
+    <div class="field-help" id="help-simple-pro" style="margin-bottom:12px">
+      <b>Simple Mode vs Pro Mode</b><br><br>
+      <b style="color:var(--green-primary)">Simple Mode</b> — for regular users. Shows only the essential fields with safe defaults. Best for quick trades.<br><br>
+      <b style="color:var(--gold)">Pro Mode</b> — for advanced users who want full control. Shows all technical fields.<br><br>
+      <b>What Pro adds:</b><br>
+      &bull; <b>Position ID</b> — manually type a position ID instead of selecting from dropdown<br>
+      &bull; <b>Pair selector</b> — choose between SOST/XAUT or SOST/PAXG (Simple defaults to SOST/XAUT)<br>
+      &bull; <b>Trading fee display</b> — shows the fee calculation (currently 0% — no trading fee)<br>
+      &bull; <b>JSON Preview</b> — see the raw signed offer JSON before sending. In Simple you only see the human-readable outcome preview<br><br>
+      <b>Both modes include:</b><br>
+      &bull; Action selection (buy/sell/reward/OTC)<br>
+      &bull; Position selection<br>
+      &bull; Maker addresses (SOST + ETH)<br>
+      &bull; Amount, price, expiry, asset type<br>
+      &bull; Outcome preview + Create Signed Offer<br><br>
+      <span style="color:var(--text-dim);font-size:10px">Tip: start with Simple. Switch to Pro only if you need to see the raw JSON or override defaults.</span>
     </div>
 
     <div class="composer fade-in delay-1">

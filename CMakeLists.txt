@@ -41,6 +41,7 @@ add_library(sost-core STATIC
     src/block.cpp src/merkle.cpp
     # Phase 6: mempool
     src/mempool.cpp
+    src/spam_guard.cpp
     src/address.cpp
     src/wallet.cpp
     # Phase 5.5: block validation

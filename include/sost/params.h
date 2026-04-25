@@ -409,13 +409,51 @@ inline constexpr int64_t  DYNAMIC_FEE_MULT_MED            = 5;
 inline constexpr int64_t  DYNAMIC_FEE_MULT_HIGH           = 10;
 inline constexpr int64_t  DYNAMIC_FEE_MULT_EXTREME        = 25;
 
-// Ceiling: never require more than this (policy, not consensus)
-inline constexpr int64_t  DYNAMIC_FEE_CEILING              = 50;   // stocks/byte max
+// Ceiling: normal max (overridden by emergency levels)
+inline constexpr int64_t  DYNAMIC_FEE_CEILING              = 50;   // stocks/byte (GREEN-RED)
 
-// Anti-spam: max tx from same address in mempool
+// Emergency escalation ceilings (automatic, no manual activation)
+inline constexpr int64_t  DYNAMIC_FEE_EMERGENCY_250X       = 250;  // BLACK level 1
+inline constexpr int64_t  DYNAMIC_FEE_EMERGENCY_1000X      = 1000; // BLACK level 2 (after 5 min)
+inline constexpr int64_t  DYNAMIC_FEE_EMERGENCY_5000X      = 5000; // BLACK level 3 (after 15 min)
+
+// Pressure score thresholds for spam shield levels
+inline constexpr int32_t  SPAM_LEVEL_GREEN                 = 0;    // pressure < 20
+inline constexpr int32_t  SPAM_LEVEL_YELLOW                = 20;   // pressure 20-39
+inline constexpr int32_t  SPAM_LEVEL_ORANGE                = 40;   // pressure 40-59
+inline constexpr int32_t  SPAM_LEVEL_RED                   = 60;   // pressure 60-79
+inline constexpr int32_t  SPAM_LEVEL_BLACK                 = 80;   // pressure >= 80
+
+// Relay floor multipliers per level
+inline constexpr int64_t  SPAM_MULT_GREEN                  = 1;
+inline constexpr int64_t  SPAM_MULT_YELLOW                 = 3;
+inline constexpr int64_t  SPAM_MULT_ORANGE                 = 10;
+inline constexpr int64_t  SPAM_MULT_RED                    = 50;
+inline constexpr int64_t  SPAM_MULT_BLACK                  = 250;  // initial, escalates
+
+// Per-level admission limits
+inline constexpr size_t   SPAM_PEER_LIMIT_GREEN            = 30;   // tx/peer/min
+inline constexpr size_t   SPAM_PEER_LIMIT_YELLOW           = 20;
+inline constexpr size_t   SPAM_PEER_LIMIT_ORANGE           = 12;
+inline constexpr size_t   SPAM_PEER_LIMIT_RED              = 6;
+inline constexpr size_t   SPAM_PEER_LIMIT_BLACK            = 3;
+
+inline constexpr size_t   SPAM_ADDR_LIMIT_GREEN            = 25;   // tx/address in mempool
+inline constexpr size_t   SPAM_ADDR_LIMIT_YELLOW           = 15;
+inline constexpr size_t   SPAM_ADDR_LIMIT_ORANGE           = 10;
+inline constexpr size_t   SPAM_ADDR_LIMIT_RED              = 5;
+inline constexpr size_t   SPAM_ADDR_LIMIT_BLACK            = 2;
+
+// Hysteresis: fast to harden, slow to relax
+inline constexpr int32_t  SPAM_ESCALATION_TICKS            = 2;    // consecutive ticks to escalate
+inline constexpr int64_t  SPAM_RELAXATION_SECONDS          = 600;  // 10 min stable below threshold to relax
+inline constexpr int64_t  SPAM_BLACK_ESCALATE_5MIN         = 300;  // seconds before 250x → 1000x
+inline constexpr int64_t  SPAM_BLACK_ESCALATE_15MIN        = 900;  // seconds before 1000x → 5000x
+
+// Anti-spam: max tx from same address in mempool (default, overridden by level)
 inline constexpr size_t   MEMPOOL_MAX_PER_ADDRESS          = 25;
 
-// Anti-spam: rate limit per peer (tx/minute)
+// Anti-spam: rate limit per peer (tx/minute, default, overridden by level)
 inline constexpr size_t   RELAY_MAX_TX_PER_PEER_PER_MIN    = 30;
 
 // Dust threshold (unchanged, for reference)
