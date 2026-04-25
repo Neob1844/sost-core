@@ -3709,14 +3709,17 @@ Canonical score remains 22.8/40 (57%).
 
 GeaSpirit — Mineral Intelligence Platform
 Canonical Objective: "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
-Canonical Score: 22.8/40 (57%), frozen methodology v4.
-  - MINERAL 4.0/10, DEPTH 4.1/10, COORDINATES 7.0/10, CERTAINTY 7.7/10
-Validated at 3 zones: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).
+Canonical Score: 25.1/40 (63%), Phase 48 (gravity fusion validated).
+  - MINERAL 4.0/10, DEPTH 6.0/10, COORDINATES 7.0/10, CERTAINTY 8.1/10
+Validated at 6 zones on 4 continents:
+  Chuquicamata (0.882 AUC porphyry Cu), Kalgoorlie (0.922 AUC orogenic Au with gravity),
+  Tennant Creek (0.841 AUC IOCG), Mt Isa (0.781 AUC SEDEX Cu-Pb-Zn),
+  Zambia (0.760 AUC sediment Cu), Peru (0.850 AUC porphyry Cu).
 Multi-source fusion confirmed at all zones. Architecture: type-aware + zone-aware + baseline-aware.
-GEE operationalized (terrain infrastructure at 4 zones). Depth remains primary bottleneck (blocked geophysical data).
-11+ zones tracked. Validated commodities: porphyry Cu, orogenic Au, sediment Cu, epithermal Au-Ag.
-Case studies: Pebble Alaska (20/40, completed — 10/10 tools, 497 frontier targets, no EMIT at 59.9N)
-  and Rosia Montana (queued — epithermal Au-Ag, EMIT coverage available at 46N).
+GEE operationalized. Gravity + magnetics integrated. 53+ phases completed.
+Validated commodities: porphyry Cu, orogenic Au, IOCG, SEDEX Cu-Pb-Zn, sediment Cu, lithium (0.891), graphite.
+Remote-first architecture validated: works anywhere on the planet with satellite data alone.
+Cost: $0 (all satellite data free, runs on CPU).
 
 RESTRICTED — Implementation Details:
   Model architecture, feature engineering algorithms, training data, hyperparameters,
@@ -3725,9 +3728,12 @@ RESTRICTED — Implementation Details:
 
 Materials Discovery Engine — Autonomous Materials Intelligence
 76,193 materials corpus. Predicts formation energy and band gap from crystal structure.
-19 campaign profiles. Functional intersection discovery for water/lithium/membrane.
-Phase XV: 35,589 screened, 11,339 multi-function candidates identified.
+29 campaign profiles across 16 industrial domains. 50+ validated candidates.
+CGCNN (formation energy MAE ~0.15 eV/atom) + ALIGNN-Lite (band gap MAE 0.34 eV, R² 0.707).
+CHGNet pre-DFT structural validation (17 candidates in 40s, 64h CPU saved).
+Autonomous discovery pipeline: SEED → GENERATE → FILTER → LIFT → GNN → SCORE → VALIDATE → HANDOFF.
 Full validation bridge with prediction-observation-reconciliation lifecycle.
+Cost: $0/month (CPU-only, no cloud required).
 
 RESTRICTED — Implementation Details:
   Neural network architecture, model weights, training methodology,

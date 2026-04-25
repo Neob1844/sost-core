@@ -2017,12 +2017,13 @@ SectionRenderers.geaspirit = function(el) {
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// GEASPIRIT PLATFORM</h2>
-      <p>Satellite-based mineral prospectivity mapping.</p>
-      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">23.7 / 40</span></p>
-      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 12 COMPLETE</span></div>
-      <div class="stat-row"><span class="stat-label">AOIs GLOBAL</span><span class="stat-value">10 (5 supervised + 3 heuristic + 1 demo + 1 failed)</span></div>
-      <div class="stat-row"><span class="stat-label">TARGETS EXPORTED</span><span class="stat-value">162 coordinates</span></div>
-      <div class="stat-row"><span class="stat-label">OZMIN DEPOSITS</span><span class="stat-value">16,225 (CC-BY 4.0)</span></div>
+      <p>Multi-commodity mineral intelligence platform. Satellite + geophysics + ML.</p>
+      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">25.1 / 40 (63%)</span></p>
+      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 53+ COMPLETE</span></div>
+      <div class="stat-row"><span class="stat-label">VALIDATED ZONES</span><span class="stat-value">6 zones on 4 continents</span></div>
+      <div class="stat-row"><span class="stat-label">COMMODITIES</span><span class="stat-value">7 (Cu, Au, IOCG, Pb-Zn, Li, graphite+)</span></div>
+      <div class="stat-row"><span class="stat-label">BEST AUC</span><span class="stat-value">0.922 (Kalgoorlie S2+gravity)</span></div>
+      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0 (free satellite data, CPU)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// CAPABILITIES</h2>
@@ -2086,10 +2087,12 @@ SectionRenderers.materials = function(el) {
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// MATERIALS ENGINE v3.2.0</h2>
-      <p>Computational materials discovery platform.</p>
+      <p>Autonomous computational materials discovery. GNN predictions from crystal structure.</p>
       <div class="stat-row"><span class="stat-label">MATERIALS IN DB</span><span class="stat-value stat-ok">76,193</span></div>
-      <div class="stat-row"><span class="stat-label">API ENDPOINTS</span><span class="stat-value">70+</span></div>
-      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">9 (270+ common names)</span></div>
+      <div class="stat-row"><span class="stat-label">CAMPAIGNS</span><span class="stat-value">29 profiles · 16 industrial domains</span></div>
+      <div class="stat-row"><span class="stat-label">CANDIDATES</span><span class="stat-value">50+ validated</span></div>
+      <div class="stat-row"><span class="stat-label">MODELS</span><span class="stat-value">CGCNN + ALIGNN-Lite + CHGNet</span></div>
+      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0/month (CPU-only)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// FEATURES</h2>
@@ -2779,8 +2782,8 @@ SectionRenderers.about = function(el) {
     <div class="pip-panel">
       <h2>// ECOSYSTEM</h2>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 28 test suites.</div></div>
-      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">GEASPIRIT <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">MINERAL INTELLIGENCE</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Autonomous mineral prospectivity platform. Canonical Score 22.8/40 (57%). Validated at 3 zones across 3 continents: Chuquicamata (0.882 AUC), Kalgoorlie (0.879), Zambia (0.760).</div></div>
-      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. Crystal structure → property prediction. 19 campaign profiles including water/lithium/membrane. Zero cost on CPU.</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">GEASPIRIT <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">MINERAL INTELLIGENCE</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Autonomous mineral prospectivity platform. Canonical Score 25.1/40 (63%). Validated at 6 zones across 4 continents. Best AUC: 0.922 (Kalgoorlie S2+gravity). 7 commodities. 53+ phases. Cost: $0.</div></div>
+      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. CGCNN + ALIGNN-Lite + CHGNet. 29 campaign profiles, 16 industrial domains, 50+ validated candidates. $0/month on CPU.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">BLOCK EXPLORER <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">WEB-BASED</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Real-time blockchain explorer. Block details, transactions, mining status, address balances, difficulty history. Connects directly to the SOST node via RPC.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">WEB WALLET <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">HD + MULTISIG</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Browser-based SOST wallet. Send, receive, manage UTXOs. HD wallet with BIP39 seed phrases (12 words). P2SH multisig support. Encrypted local storage.</div></div>
     </div>
