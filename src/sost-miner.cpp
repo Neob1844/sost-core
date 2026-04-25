@@ -588,6 +588,16 @@ static std::atomic<bool> g_block_found{false};
 static std::atomic<uint64_t> g_total_attempts{0};  // global attempt counter for hashrate
 static std::mutex g_submit_mu;  // protects block submission
 
+// Profile label: E7..E1, B0, H1..H13 (E-profiles are stored as negative indices)
+static const char* profile_label(int32_t pi) {
+    static const char* PROF_NAMES[] = {
+        "E7","E6","E5","E4","E3","E2","E1","B0","H1","H2","H3","H4",
+        "H5","H6","H7","H8","H9","H10","H11","H12","H13"
+    };
+    int idx = (pi < -7) ? 0 : (pi > 13) ? 20 : (pi + 7);
+    return PROF_NAMES[idx];
+}
+
 static void start_block_monitor(int64_t mining_height) {
     g_chain_advanced = false;
     g_lag_changed = false;
@@ -638,8 +648,8 @@ static void start_block_monitor(int64_t mining_height) {
                         g_node_profile = node_pi;
                         int32_t mining_pi = g_mining_profile.load();
                         if (node_pi != mining_pi && !g_chain_advanced) {
-                            printf("[LAG-CHECK] Node says H%d, mining H%d → triggering restart\n",
-                                   node_pi, mining_pi);
+                            printf("[LAG-CHECK] Node says %s, mining %s → triggering restart\n",
+                                   profile_label(node_pi), profile_label(mining_pi));
                             fflush(stdout);
                             g_lag_changed = true;
                         }
@@ -692,8 +702,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if (pp != std::string::npos) {
                 int32_t node_pi = (int32_t)atoll(info2.c_str() + pp + 23);
                 if (node_pi != cdec.profile_index) {
-                    printf("[MINING] Local profile=%d, node says %d — using node profile\n",
-                           cdec.profile_index, node_pi);
+                    printf("[MINING] Local profile=%s, node says %s — using node profile\n",
+                           profile_label(cdec.profile_index), profile_label(node_pi));
                     cdec.profile_index = node_pi;
                 }
             }
@@ -863,8 +873,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                 if (ppc != std::string::npos) {
                                     int32_t new_pi = (int32_t)atoll(pi_check.c_str() + ppc + 23);
                                     if (new_pi != params.stab_profile_index) {
-                                        printf("\n[ANTI-STALL] Profile changed: %d → %d — restarting with easier profile\n",
-                                               params.stab_profile_index, new_pi);
+                                        printf("\n[ANTI-STALL] Profile changed: %s → %s — restarting with easier profile\n",
+                                               profile_label(params.stab_profile_index), profile_label(new_pi));
                                         fflush(stdout);
                                         g_chain_advanced = true; // triggers clean restart
                                         return;
@@ -969,8 +979,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         if (g_lag_changed) {
             int32_t old_pi = g_mining_profile.load();
             int32_t new_pi = g_node_profile.load();
-            printf("\n[LAG-ADJUST] Profile changed: H%d -> H%d. Restarting search.\n",
-                   old_pi, new_pi);
+            printf("\n[LAG-ADJUST] Profile changed: %s -> %s. Restarting search.\n",
+                   profile_label(old_pi), profile_label(new_pi));
             fflush(stdout);
             stop_block_monitor();
             g_lag_changed = false;
@@ -1057,8 +1067,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if (g_lag_changed) {
                 int32_t old_pi = g_mining_profile.load();
                 int32_t new_pi = g_node_profile.load();
-                printf("\n[LAG-ADJUST] Profile changed: H%d -> H%d. Restarting search.\n",
-                       old_pi, new_pi);
+                printf("\n[LAG-ADJUST] Profile changed: %s -> %s. Restarting search.\n",
+                       profile_label(old_pi), profile_label(new_pi));
                 fflush(stdout);
                 stop_block_monitor();
                 g_lag_changed = false;
