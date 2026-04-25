@@ -403,6 +403,36 @@
           <div style="color:var(--text-dim);font-size:11px;padding:8px 0">No pending messages. New messages appear here when counterparts send encrypted offers.</div>
         </div>
       </div>
+    <!-- Browser Wallet Security -->
+    <div style="margin-top:16px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:16px 20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:10px;color:var(--cyan-primary);letter-spacing:1.5px;font-weight:600">&#128274; BROWSER WALLET SECURITY</span>
+        <span class="field-help-btn" onclick="toggleFieldHelp('help-wallet-security')">?</span>
+      </div>
+      <div class="field-help" id="help-wallet-security">
+        <b>How your identity is protected</b><br><br>
+        <b style="color:var(--cyan-primary)">Local Keystore</b><br>
+        Your signing keys (ED25519) and encryption keys (X25519) are stored <b>only in your browser</b> using IndexedDB, encrypted with Argon2id from your passphrase. No server ever sees your private keys.<br><br>
+        <b style="color:var(--cyan-primary)">Passkey / Device Authentication</b><br>
+        If your device supports WebAuthn, you can use <b>fingerprint, Face ID, or secure PIN</b> to log in and confirm sensitive actions. Your biometrics <b>never leave your device</b> — the DEX only receives a yes/no from your device's secure enclave.<br><br>
+        <b style="color:var(--cyan-primary)">What requires strong authentication:</b><br>
+        &bull; Signing an offer<br>
+        &bull; Accepting a deal<br>
+        &bull; Sending an OTC request<br>
+        &bull; Exporting your identity backup<br>
+        &bull; Unlocking after session timeout<br><br>
+        <b style="color:var(--cyan-primary)">Important:</b><br>
+        &bull; Passkey ≠ wallet seed — they protect different things<br>
+        &bull; If you clear browser data, export your backup first<br>
+        &bull; Session auto-locks after 5 minutes of inactivity<br>
+        &bull; P2P node encryption (X25519 + ChaCha20) is a <b>separate layer</b> — that's machine-to-machine, not user-to-browser<br><br>
+        <span style="color:var(--text-dim);font-size:10px">Device biometrics belong to the browser/user authentication layer, not the node-to-node P2P transport protocol.</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);line-height:1.7">
+        Keys stored locally &middot; Argon2id encryption &middot; Passkey/biometric optional &middot; Session auto-lock 5 min &middot; <a href="javascript:void(0)" onclick="toggleFieldHelp('help-wallet-security')" style="color:var(--cyan-primary);text-decoration:none">Learn more</a>
+      </div>
+    </div>
+
     </div>
   </div>
 </section>
