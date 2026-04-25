@@ -595,9 +595,8 @@ static void start_block_monitor(int64_t mining_height) {
     if (g_monitor_running || g_rpc_url.empty()) return;
     g_monitor_running = true;
     std::thread([]{
-        int lag_check_counter = 0;
         while (g_monitor_running) {
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             if (!g_monitor_running) break;
             std::string resp = rpc_call("getblockcount");
             if (!resp.empty()) {
@@ -609,10 +608,24 @@ static void start_block_monitor(int64_t mining_height) {
                     }
                 }
             }
-            // Lag-adjust: every ~6s (3 iterations × 2s), check if node profile changed
-            lag_check_counter++;
-            if (lag_check_counter >= 3) {
-                lag_check_counter = 0;
+            // Local relief valve prediction: if we know the last block time and
+            // current elapsed exceeds the threshold, switch to E7 immediately
+            // without waiting for the next RPC round-trip. This eliminates the
+            // latency disadvantage for miners far from the network core.
+            if (!g_chain.empty() && !g_chain_advanced) {
+                int64_t now_s = (int64_t)std::time(nullptr);
+                int64_t elapsed = now_s - g_chain.back().time;
+                int32_t mining_pi = g_mining_profile.load();
+                if (elapsed > CASERT_RELIEF_VALVE_THRESHOLD && mining_pi > CASERT_H_MIN) {
+                    printf("[RELIEF-PREDICT] Elapsed %llds > %llds — pre-switching to E7\n",
+                           (long long)elapsed, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
+                    fflush(stdout);
+                    g_node_profile = CASERT_H_MIN;
+                    g_lag_changed = true;
+                }
+            }
+            // Profile check every 1s — fast reaction to profile transitions
+            {
                 std::string info = rpc_call("getinfo");
                 if (!info.empty()) {
                     auto pp = info.find("\"casert_profile_index\":");
