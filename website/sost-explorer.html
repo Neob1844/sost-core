@@ -471,6 +471,74 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
+        <b style="color:var(--green)">Live Useful Compute status</b><br><br>
+        The Useful Compute task server is already <b style="color:var(--green)">live and publicly reachable</b>:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 10px;font-size:10.5px;color:var(--cyan);font-family:var(--code);overflow-x:auto">
+          https://sostcore.com/api/useful-compute/
+        </div>
+        Health check:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 10px;font-size:10.5px;color:var(--cyan);font-family:var(--code);overflow-x:auto">
+          https://sostcore.com/api/useful-compute/health
+        </div>
+        The public endpoint is now returning <b>real curated tasks</b> from the Materials Engine trial queue. Miners can already test the worker before block 7,000.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">How the system works</b><br><br>
+        The trial architecture is simple:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:12px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.95;color:var(--text2);font-family:var(--code)">
+          <b style="color:var(--text)">SOST Miner</b> &darr; continues mining normally<br>
+          <br>
+          <b style="color:var(--gold)">Useful Compute Worker</b> &darr; requests tasks from sostcore.com<br>
+          <br>
+          <b style="color:var(--green)">Task Server on VPS</b> &darr; distributes curated Materials Engine / GeaSpirit tasks<br>
+          <br>
+          <b style="color:var(--text)">Miners</b> &darr; compute deterministic results and submit them back<br>
+          <br>
+          <b style="color:var(--green)">Task Server</b> &darr; verifies results using <b>N=2 cross-worker verification</b><br>
+          <br>
+          <b style="color:var(--gold)">Reward Distributor</b> &darr; after block 8,000, calculates eligible post-trial bonus rewards
+        </div>
+        Miners do not choose arbitrary work. The task server distributes curated tasks selected by Materials Engine and GeaSpirit according to the trial objectives.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--green)">Examples of real tasks currently being served</b><br><br>
+        The live task server is already distributing real mission-aligned tasks such as:
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.95;color:var(--text2);font-family:var(--code)">
+          <span style="color:var(--cyan)">LiAlH4</span>      &rarr; hydrogen_storage<br>
+          <span style="color:var(--cyan)">Li4SiO4</span>     &rarr; CO&#8322; capture<br>
+          <span style="color:var(--cyan)">Mo2C</span>        &rarr; hydrogen_storage<br>
+          <span style="color:var(--cyan)">MgO</span>         &rarr; CO&#8322; capture<br>
+          <span style="color:var(--cyan)">Cu2ZnSnSe4</span>  &rarr; photovoltaic absorber
+        </div>
+        These are not random hashes. They are useful-compute tasks connected to industrial research objectives: hydrogen storage, CO&#8322; capture, catalysis, photovoltaics, lithium extraction, desalination and mineral-resource intelligence.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Curated task queues</b><br><br>
+        The task server uses curated trial queues:
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.95;color:var(--text2);font-family:var(--code)">
+          Materials Engine queue: <b style="color:var(--gold)">5,000</b> tasks<br>
+          GeaSpirit queue:        <b style="color:var(--gold)">46</b> lightweight validation tasks<br>
+          <span style="color:var(--text3)">────────────────────────────────────</span><br>
+          Total:                  <b style="color:var(--gold)">5,046</b> trial tasks
+        </div>
+        Materials Engine tasks are filtered to avoid wasting computation on irrelevant or poor candidates. The system prioritises:
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; low-cost materials<br>
+          &mdash; abundant elements<br>
+          &mdash; PGM-free catalyst candidates<br>
+          &mdash; photovoltaic absorbers<br>
+          &mdash; lithium-related materials<br>
+          &mdash; hydrogen-related materials<br>
+          &mdash; desalination materials<br>
+          &mdash; CO&#8322; capture candidates
+        </div>
+        GeaSpirit tasks are <b>lightweight validation tasks</b>. Miners are not asked to download satellite rasters or heavy geospatial datasets. Instead, GeaSpirit tasks focus on validating selected hypotheses, zones and feature combinations.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
         <b style="color:var(--gold)">Miner participation</b><br><br>
         Participation is voluntary. To participate a miner must:<br>
         <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
@@ -554,6 +622,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           &nbsp;&nbsp;--batch-size 3 \\<br>
           &nbsp;&nbsp;--poll-interval 30
         </div>
+        For a one-time smoke test before running continuously:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          python3 scripts/useful_compute_worker.py \\<br>
+          &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
+          &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--mode trial \\<br>
+          &nbsp;&nbsp;--batch-size 3 \\<br>
+          &nbsp;&nbsp;--once
+        </div>
         Replace <code style="color:var(--gold);background:rgba(245,158,11,0.06);padding:1px 5px;border-radius:3px">YOUR_SOST_ADDRESS</code> with the public SOST address where you receive mining rewards.<br><br>
         <b style="color:var(--red)">Do not use a private key. Do not paste wallet secrets.</b> Only the public address is required.<br><br>
 
@@ -568,7 +645,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--cyan);font-family:var(--code);overflow-x:auto">
           https://sostcore.com/api/useful-compute/health
         </div>
-        The worker automatically requests tasks, computes deterministic results, and submits them back to the task server.<br><br>
+        The endpoint is <b style="color:var(--green)">live</b>. The worker automatically requests tasks, computes deterministic results, and submits them back to the task server.<br><br>
+        Example live task categories include:
+        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; hydrogen_storage<br>
+          &mdash; CO&#8322; capture<br>
+          &mdash; photovoltaic_absorber<br>
+          &mdash; pgm_free_catalyst<br>
+          &mdash; lithium_extraction<br>
+          &mdash; desalination_membrane
+        </div><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
