@@ -370,102 +370,242 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         </div>
 
         <span style="color:var(--text2);line-height:2">
-        Materials Engine has processed <b style="color:var(--text)">77,296 materials</b> and is already producing real, validated results.<br><br>
+        SOST will run a voluntary 1,000-block Useful Compute Trial from <b style="color:var(--gold)">block 7,000 to block 8,000</b>.<br><br>
 
-        Two examples:<br><br>
-
-        <b style="color:var(--green)">1) FeMgO&#8322; &mdash; Novel low-cost catalyst (DFT validated)</b><br>
-        &bull; Iron&ndash;magnesium oxide with ferrimagnetic ground state<br>
-        &bull; Fully converged DFT calculation confirms structural stability<br>
-        &bull; Metallic character with strong magnetic moment (5.96 &mu;B)<br>
-        &bull; Potential replacement for platinum-group metals (Pt/Pd/Rh) in catalytic systems<br>
-        &bull; Estimated cost: <b style="color:var(--gold)">~$0.5&ndash;2/kg</b> vs ~$30,000/kg for platinum<br><br>
-        Originally classified for a different application, the system identified it, and DFT validation revealed its true catalytic potential.<br>
-        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(74,222,128,0.04);border-left:2px solid var(--green);font-size:9.5px;line-height:1.75;color:var(--text2)">
-          <span style="color:var(--green);font-size:8.5px;letter-spacing:1.5px;font-weight:700">IN PLAIN WORDS &middot;</span>
-          Most car catalytic converters and industrial chemistry rely on platinum, palladium and rhodium &mdash; rare metals costing about $30,000 per kilo. FeMgO&#8322; is made of iron and magnesium, abundant elements that cost less than $2 per kilo. The simulation shows it could do similar catalytic work. If real-world lab tests confirm the prediction, it would make this kind of catalyst <b style="color:var(--gold)">up to 60,000 times cheaper</b>.
-        </div>
-
-        <b style="color:var(--green)">2) Dy&#8323;S&#8323;N &mdash; Direct band gap photovoltaic semiconductor</b><br>
-        &bull; Direct band gap: <b style="color:var(--gold)">1.39 eV</b> (very close to the Shockley&ndash;Queisser optimum ~1.34 eV)<br>
-        &bull; Strong absorption (&alpha; &asymp; 6,253 cm&#8315;&#185;)<br>
-        &bull; Theoretical efficiency limit ~32.5%<br>
-        &bull; No toxic elements (unlike CdTe-based materials)<br>
-        &bull; Estimated cost significantly lower than common PV materials<br><br>
-        Additional materials in the same family (La&#8323;S&#8323;N, Sm&#8323;S&#8323;N) show similar behavior.<br>
-        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(74,222,128,0.04);border-left:2px solid var(--green);font-size:9.5px;line-height:1.75;color:var(--text2)">
-          <span style="color:var(--green);font-size:8.5px;letter-spacing:1.5px;font-weight:700">IN PLAIN WORDS &middot;</span>
-          Solar cells convert sunlight into electricity best when the material absorbs light at a specific energy level &mdash; about <b>1.34 eV</b>, the theoretical optimum. Dy&#8323;S&#8323;N sits at <b>1.39 eV</b>, almost perfect. It absorbs sunlight strongly and contains <b>no toxic elements</b>, unlike many current solar materials such as cadmium telluride. Could enable <b style="color:var(--gold)">safer and more efficient solar panels</b>.
-        </div>
-
-        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
-
-        <b style="color:var(--cyan)">Pipeline capability:</b><br>
-        &bull; 77,296 materials analyzed<br>
-        &bull; Full autonomous pipeline operational<br>
-        &bull; Corpus &rarr; reject &rarr; score &rarr; ranking &rarr; ML queue &rarr; DFT candidates in ~25 seconds<br>
-        &bull; 6 active industrial missions: PGM-free catalysts, photovoltaics, hydrogen, lithium extraction, desalination, CO&#8322; capture<br><br>
-
-        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
-
-        GeaSpirit has validated mineral exploration models across <b style="color:var(--text)">6 zones on 4 continents</b>, producing two breakthrough results:<br>
-        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);font-size:9.5px;line-height:1.75;color:var(--text2)">
-          <span style="color:var(--cyan);font-size:8.5px;letter-spacing:1.5px;font-weight:700">WHAT IS AUC? &middot;</span>
-          AUC (Area Under the Curve) is a score from <b>0.5 to 1.0</b> that measures how well a prediction model separates two groups &mdash; for example, gold-bearing zones from barren ones. <b>0.5</b> means random guessing (coin flip), <b>1.0</b> means perfect prediction. Above <b>0.80</b> is considered very good, and above <b>0.90</b> is excellent.
-        </div>
-
-        <b style="color:var(--green)">3) Kalgoorlie, Australia &mdash; Orogenic gold prediction (AUC 0.922)</b><br>
-        &bull; 205 labeled gold deposits used for training and validation<br>
-        &bull; Satellite-only baseline: 0.879 AUC<br>
-        &bull; With gravity fusion (Bouguer + isostatic residual): <b style="color:var(--gold)">0.922 AUC</b><br>
-        &bull; First system to fuse open satellite data with public gravimetric surveys for automated mineral prediction<br>
-        &bull; Built on a diverse fusion of free and open public data sources<br>
-        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);font-size:9.5px;line-height:1.75;color:var(--text2)">
-          <span style="color:var(--cyan);font-size:8.5px;letter-spacing:1.5px;font-weight:700">IN PLAIN WORDS &middot;</span>
-          Mining companies traditionally drill thousands of holes blindly hoping to hit gold. GeaSpirit reads <b>free satellite images plus public gravity surveys</b> and predicts where gold is likely to be hidden. An AUC of <b style="color:var(--gold)">0.922</b> means the model ranks gold-bearing locations correctly about <b>92% of the time</b> &mdash; far better than random, and competitive with experienced geologists at <b>essentially zero data cost</b>.
-        </div>
-
-        <b style="color:var(--green)">4) Salar de Atacama, Chile &mdash; Lithium brine prediction (AUC 0.891)</b><br>
-        &bull; 27 labeled salares across the Atacama region<br>
-        &bull; First non-metallic commodity validated by the system<br>
-        &bull; Key discovery: <b style="color:var(--gold)">terrain features outperform spectral analysis</b> for evaporite/salar detection<br>
-        &bull; Direct connection to Materials Engine lithium-selective campaigns<br>
-        &bull; GeaSpirit finds where the lithium is. Materials Engine finds what to build with it.<br>
-        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);font-size:9.5px;line-height:1.75;color:var(--text2)">
-          <span style="color:var(--cyan);font-size:8.5px;letter-spacing:1.5px;font-weight:700">IN PLAIN WORDS &middot;</span>
-          Most lithium for electric-vehicle batteries comes from brine pools trapped in <b>salt flats</b>. Finding new ones is slow and expensive. The system discovered that the <b>shape of the terrain</b> &mdash; slope, elevation, drainage &mdash; is a stronger signal than the colour of the salt seen from satellite. An AUC of <b style="color:var(--gold)">0.891</b> means it identifies lithium-rich salt flats correctly about <b>89% of the time</b>, dramatically speeding up exploration.
-        </div>
-
-        Additional validated zones: Chuquicamata (porphyry Cu, 0.882), Tennant Creek (IOCG, 0.841), Mt Isa (SEDEX, 0.781), Zambia Copperbelt (sediment-hosted Cu, 0.763).<br><br>
-
-        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
-
-        At block 7,000, SOST will activate a <b style="color:var(--gold)">1,000-block Useful Compute Trial</b>.<br><br>
-
-        For the first time, part of the network&rsquo;s computational power will be directed toward real scientific workloads:<br><br>
-
-        &bull; <b style="color:#4ade80">Materials discovery (40%)</b><br>
-        &bull; <b style="color:#22d3ee">Mineral exploration research via GeaSpirit (10%)</b><br><br>
-
-        The remaining 50% continues securing the blockchain. Difficulty auto-adjusts &mdash; block times stay at ~10 minutes.<br><br>
-
-        <b style="color:var(--text)">Reward:</b><br>
-        Participating miners who run the Useful Compute Worker receive the full block allocation:<br>
-        &bull; 3.9255 SOST (miner reward)<br>
-        &bull; + 1.9627 SOST (Gold Vault allocation)<br>
-        &bull; + 1.9627 SOST (PoPC Pool allocation)<br>
-        &bull; = <b style="color:var(--gold)">7.8510 SOST per block</b><br><br>
-
-        Non-participating miners can still mine normally with the standard 3.9255 SOST reward.<br><br>
+        This is an experimental mainnet trial.<br><br>
 
         The objective is simple:<br><br>
 
-        <b style="color:var(--text)">To transform computation into knowledge,<br>
-        and knowledge into long-term economic value.</b><br><br>
+        <b style="color:var(--text)">To transform part of the network&rsquo;s computation into useful scientific work &mdash; and potentially into long-term value for the SOST protocol.</b><br><br>
 
-        If successful, future governance may allocate part of that value to strengthen the permanent <b style="color:var(--gold)">SOST Gold Reserve</b>.<br><br>
+        During the trial, participating miners may run a Useful Compute Worker in parallel with their normal SOST miner.<br><br>
 
-        <span style="color:var(--text3);font-size:9px">This trial is cooperative and experimental. Materials Engine results are ML/heuristic-based with DFT validation for top candidates. GeaSpirit predictions are probabilistic. Neither constitutes experimental confirmation. Participation details will be published before block 7,000.</span>
+        &bull; The blockchain continues normally.<br>
+        &bull; Consensus is not changed.<br>
+        &bull; Mining remains normal.<br>
+        &bull; No private keys are required.<br>
+        &bull; Participation is voluntary.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">What is being tested?</b><br><br>
+        The trial tests whether SOST miners can voluntarily contribute part of their available computation to two research systems:<br><br>
+        <b>1.</b> <b style="color:var(--green)">Materials Engine</b> &mdash; computational materials discovery<br>
+        <b>2.</b> <b style="color:var(--cyan)">GeaSpirit</b> &mdash; mineral exploration intelligence<br><br>
+
+        Expected experimental allocation:<br>
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          <span style="color:var(--gold);font-weight:600">50&#37;</span> &mdash; normal SOST mining<br>
+          <span style="color:var(--green);font-weight:600">40&#37;</span> &mdash; Materials Engine useful-compute tasks<br>
+          <span style="color:var(--cyan);font-weight:600">10&#37;</span> &mdash; GeaSpirit / mineral exploration research layer
+        </div>
+        Miners do not stop mining. They continue mining SOST normally and run an additional worker beside the miner.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--green)">Materials Engine &mdash; current results</b><br><br>
+        Materials Engine has already processed <b style="color:var(--text)">77,296 materials</b> and is producing validated results.<br><br>
+
+        <b style="color:var(--green)">1) FeMgO&#8322; &mdash; Novel low-cost catalyst, DFT validated</b><br>
+        &bull; Iron&ndash;magnesium oxide with ferrimagnetic ground state<br>
+        &bull; Fully converged DFT calculation confirms structural stability<br>
+        &bull; Metallic character with strong magnetic moment: <b style="color:var(--gold)">5.96 &mu;B</b><br>
+        &bull; Potential replacement for platinum-group metals in catalytic systems<br>
+        &bull; Estimated cost: <b style="color:var(--gold)">~$0.5&ndash;2/kg</b> vs platinum at roughly ~$30,000/kg<br><br>
+        Originally classified for another application, the system identified it and DFT validation revealed its catalytic potential.<br><br>
+
+        <b style="color:var(--green)">2) Dy&#8323;S&#8323;N &mdash; Direct band gap photovoltaic semiconductor</b><br>
+        &bull; Direct band gap: <b style="color:var(--gold)">1.39 eV</b><br>
+        &bull; Very close to the Shockley&ndash;Queisser optimum of ~1.34 eV<br>
+        &bull; Strong absorption: &alpha; &asymp; 6,253 cm&#8315;&#185;<br>
+        &bull; Theoretical SQ efficiency limit: ~32.5&#37;<br>
+        &bull; No toxic elements such as Cd or Pb<br>
+        &bull; Additional related candidates: La&#8323;S&#8323;N, Sm&#8323;S&#8323;N<br><br>
+
+        Materials Engine currently supports <b style="color:var(--text)">6 industrial missions</b>:
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; PGM-free catalysts<br>
+          &mdash; Photovoltaics<br>
+          &mdash; Hydrogen / water splitting<br>
+          &mdash; Lithium extraction<br>
+          &mdash; Desalination<br>
+          &mdash; CO&#8322; capture
+        </div>
+        Autonomous pipeline:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--cyan);font-family:var(--code)">
+          corpus &rarr; reject &rarr; score &rarr; rank &rarr; ML queue &rarr; DFT candidates
+        </div>
+        in approximately <b style="color:var(--gold)">25 seconds</b>.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">GeaSpirit &mdash; current results</b><br><br>
+        GeaSpirit has validated mineral exploration models across <b style="color:var(--text)">multiple zones and commodities</b>.<br>
+        <div style="margin:8px 0 14px 0;padding:9px 12px;background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);font-size:9.5px;line-height:1.75;color:var(--text2)">
+          <span style="color:var(--cyan);font-size:8.5px;letter-spacing:1.5px;font-weight:700">WHAT IS AUC? &middot;</span>
+          AUC (Area Under the Curve) is a score from <b>0.5 to 1.0</b> that measures how well a model separates two groups &mdash; for example, gold-bearing zones from barren ones. <b>0.5</b> means random guessing, <b>1.0</b> means perfect. Above <b>0.80</b> is very good; above <b>0.90</b> is excellent.
+        </div>
+
+        <b style="color:var(--green)">3) Kalgoorlie, Australia &mdash; Orogenic gold prediction</b><br>
+        &bull; AUC: <b style="color:var(--gold)">0.922</b><br>
+        &bull; 205 labeled gold deposits<br>
+        &bull; Satellite-only baseline: ~0.879 AUC<br>
+        &bull; Gravity fusion improved performance to ~0.922 AUC<br>
+        &bull; Built on free satellite data and public gravimetric surveys<br><br>
+
+        <b style="color:var(--green)">4) Salar de Atacama, Chile &mdash; Lithium brine prediction</b><br>
+        &bull; AUC: <b style="color:var(--gold)">0.891</b><br>
+        &bull; 27 labeled salars<br>
+        &bull; First validated non-metallic commodity target<br>
+        &bull; Key finding: <b style="color:var(--gold)">terrain and geomorphology outperformed pure spectral signals</b> for salar/evaporite detection<br>
+        &bull; Direct connection to Materials Engine lithium-selective campaigns<br><br>
+
+        Additional validated zones:
+        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          Chuquicamata &mdash; Porphyry Cu &mdash; AUC ~0.882<br>
+          Tennant Creek &mdash; IOCG Cu-Au-Fe &mdash; AUC ~0.841<br>
+          Mt Isa &mdash; SEDEX Cu-Pb-Zn &mdash; AUC ~0.781<br>
+          Zambia Copperbelt &mdash; Sediment-hosted Cu &mdash; AUC ~0.763
+        </div>
+        <i style="color:var(--text3)">GeaSpirit finds where strategic resources may be. Materials Engine investigates what useful materials can be built with them.</i><br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Miner participation</b><br><br>
+        Participation is voluntary. To participate a miner must:<br>
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          1. Keep mining SOST normally.<br>
+          2. Run the Useful Compute Worker in parallel.<br>
+          3. Use the same SOST address used for mining rewards.<br>
+          4. Submit useful-compute results to the public task server.<br>
+          5. Reach the eligibility threshold during the trial.
+        </div>
+        The Useful Compute Worker does <b style="color:var(--red)">NOT</b>:
+        <div style="background:rgba(251,1,13,0.04);border:1px solid rgba(251,1,13,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; ask for private keys<br>
+          &mdash; access wallet files<br>
+          &mdash; spend coins<br>
+          &mdash; change mining behavior<br>
+          &mdash; modify consensus
+        </div>
+        It only uses the miner&rsquo;s public SOST address to record useful-compute contributions.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Eligibility</b><br><br>
+        To qualify for post-trial bonus rewards, a miner must:
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; mine at least one block between block 7,000 and block 8,000<br>
+          &mdash; run the Useful Compute Worker<br>
+          &mdash; submit valid useful-compute results<br>
+          &mdash; reach at least <b style="color:var(--gold)">100 verified tasks</b><br>
+          &mdash; maintain an acceptable dispute ratio (&lt; 10&#37;)
+        </div>
+        The task server uses cross-worker verification:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          Same task &rarr; sent to 2 different workers<br>
+          Matching deterministic result hashes &rarr; <span style="color:var(--green)">verified</span><br>
+          Different hashes &rarr; <span style="color:var(--red)">disputed</span><br>
+          Only verified work counts toward eligibility
+        </div>
+        This prevents miners from simply claiming they contributed computation.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Reward model</b><br><br>
+        Normal SOST mining reward remains unchanged. During the trial, eligible participating miners may receive the full effective block allocation for blocks they mine.<br><br>
+
+        Normal miner reward:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:11px;color:var(--text);font-family:var(--code)">
+          <b style="color:var(--gold)">3.92550433 SOST</b>
+        </div>
+        Post-trial extra reward for eligible mined blocks:
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          +<b style="color:var(--gold)">1.96275215</b> SOST &mdash; Gold Vault allocation<br>
+          +<b style="color:var(--gold)">1.96275215</b> SOST &mdash; PoPC Pool allocation<br>
+          = <b style="color:var(--gold)">+3.92550430</b> SOST extra
+        </div>
+        Full effective allocation for an eligible participating miner:
+        <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:11px;color:var(--green);font-family:var(--code);font-weight:600">
+          7.85100863 SOST per eligible mined block
+        </div>
+        Non-participating miners can still mine normally and receive the standard miner reward.<br><br>
+        Rewards are <b>not</b> paid automatically per block during the trial. They will be calculated after block 8,000 and paid by normal SOST transactions using a post-trial payout manifest.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">How to participate</b><br><br>
+        Update your SOST repo:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          git clone https://github.com/Neob1844/sost-core.git<br>
+          cd sost-core
+        </div>
+        If you already have it:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          cd sost-core<br>
+          git pull origin main
+        </div>
+        Run the Useful Compute Worker:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          python3 scripts/useful_compute_worker.py \\<br>
+          &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
+          &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--mode trial \\<br>
+          &nbsp;&nbsp;--batch-size 3 \\<br>
+          &nbsp;&nbsp;--poll-interval 30
+        </div>
+        Replace <code style="color:var(--gold);background:rgba(245,158,11,0.06);padding:1px 5px;border-radius:3px">YOUR_SOST_ADDRESS</code> with the public SOST address where you receive mining rewards.<br><br>
+        <b style="color:var(--red)">Do not use a private key. Do not paste wallet secrets.</b> Only the public address is required.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">Useful Compute API</b><br><br>
+        Public task endpoint:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--cyan);font-family:var(--code);overflow-x:auto">
+          https://sostcore.com/api/useful-compute/
+        </div>
+        Health check:
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--cyan);font-family:var(--code);overflow-x:auto">
+          https://sostcore.com/api/useful-compute/health
+        </div>
+        The worker automatically requests tasks, computes deterministic results, and submits them back to the task server.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Transparency</b><br><br>
+        During the trial, the task server tracks:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; miner address<br>
+          &mdash; submitted tasks<br>
+          &mdash; verified tasks<br>
+          &mdash; disputed tasks<br>
+          &mdash; weighted contribution score<br>
+          &mdash; eligibility status
+        </div>
+        After block 8,000 a payout manifest will be generated showing:
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; which miners mined blocks during the trial<br>
+          &mdash; which miners submitted verified useful-compute work<br>
+          &mdash; which blocks are eligible for extra reward<br>
+          &mdash; total post-trial reward per miner
+        </div>
+        The reward distributor supports <b>dry-run mode</b> before any transaction is sent.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--text3)">Important notes</b><br><br>
+        This is an experimental trial. It is not a guarantee of future rewards, future commercial value, or future discoveries.<br><br>
+        The purpose is to test whether a Proof-of-Work blockchain can direct part of its voluntary computational capacity toward useful scientific research.<br><br>
+        If the Useful Compute layer produces commercially valuable discoveries in the future, SOST governance may consider allocating part of that value to strengthen the permanent <b style="color:var(--gold)">SOST Gold Reserve</b>.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--text)">Core idea</b><br><br>
+        SOST is not only a blockchain.<br><br>
+        <b style="color:var(--gold)">It is a cooperative system designed to convert computation into knowledge, and knowledge into long-term value.</b><br><br>
+        Useful Compute Trial starts at <b style="color:var(--gold)">block 7,000</b>.<br><br>
+
+        <span style="color:var(--text3);font-size:9px">This trial is cooperative and experimental. Materials Engine results are ML/heuristic-based with DFT validation for top candidates. GeaSpirit predictions are probabilistic. Neither constitutes experimental confirmation. Participation details and the public worker are available at the links below before block 7,000.</span>
         </span>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
