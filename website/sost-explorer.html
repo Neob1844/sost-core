@@ -354,72 +354,85 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div style="background:var(--bg2);border:1px solid var(--border);padding:0;">
     <style>@keyframes newsGlow{0%,100%{border-left-color:var(--red);box-shadow:none}50%{border-left-color:var(--orange);box-shadow:inset 0 0 15px rgba(251,191,36,0.03)}}</style>
     <div id="newsHeader" onclick="document.getElementById('newsBody').style.display=document.getElementById('newsBody').style.display==='none'?'block':'none';document.getElementById('newsToggle').textContent=document.getElementById('newsBody').style.display==='none'?'\u25BC':'\u25B2';" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;border-left:3px solid var(--red);animation:newsGlow 3s ease-in-out infinite;">
-      <span style="font-size:10px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--red)">PROTOCOL UPDATES</b> <span style="color:var(--text3);font-size:9px;margin-left:4px">&middot;</span> <span style="color:#fb010d;font-size:9px;font-weight:600;letter-spacing:1px">⚠ UPDATE NODE — DISPLAY BUG FIXED</span> <span style="color:var(--text3);font-size:9px;margin-left:8px"><a href="feed.xml" style="color:var(--orange);text-decoration:none;font-size:8px;letter-spacing:1px" title="RSS Feed">RSS &#9741;</a></span></span>
+      <span style="font-size:10px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--gold)">USEFUL COMPUTE TRIAL</b> <span style="color:var(--text3);font-size:9px;margin-left:4px">&middot;</span> <span style="color:#fbbf24;font-size:9px;font-weight:600;letter-spacing:1px">BLOCK 6,000 &mdash; 7,000</span> <span style="color:var(--text3);font-size:9px;margin-left:8px"><a href="feed.xml" style="color:var(--orange);text-decoration:none;font-size:8px;letter-spacing:1px" title="RSS Feed">RSS &#9741;</a></span></span>
       <span style="display:flex;align-items:center;gap:8px"><span style="color:var(--cyan);font-size:8px;letter-spacing:1px;animation:pulse 2s ease infinite">&#9654; click to expand</span><span id="newsToggle" style="color:var(--text3);font-size:12px">&#9660;</span></span>
     </div>
     <div id="newsBody" style="display:none;padding:0 16px 14px;font-size:10px;line-height:1.8;color:var(--text2);">
       <!-- NEWS ITEMS — newest first -->
 
-      <!-- SOST TALK LAUNCH -->
-      <div style="border-bottom:1px solid var(--border);padding:14px 0;background:rgba(245,158,11,0.04);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- USEFUL COMPUTE TRIAL — BLOCK 6,000 TO 7,000               -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div style="border-bottom:1px solid var(--border);padding:16px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
           <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(245,158,11,.5);animation:pulse 1.5s ease infinite"></span>
-          <span style="color:var(--gold);font-size:10px;font-weight:800;letter-spacing:2px">NEW &mdash; SOST TALK</span>
+          <span style="color:var(--gold);font-size:11px;font-weight:800;letter-spacing:2px">USEFUL COMPUTE TRIAL &mdash; BLOCK 6,000 &rarr; 7,000</span>
         </div>
-        <b style="color:var(--text);font-size:12px;">Community discussion is now live on the website.</b><br><br>
-        <span style="color:var(--text2)">
-        <b style="color:var(--gold)">SOST Talk</b> is a moderated community space for miners, traders, developers and participants. Four rooms: <b>General</b>, <b>Miners</b>, <b>DEX / PoPC</b>, and <b>Bugs / Feedback</b>.<br><br>
-        <b style="color:var(--cyan)">Features:</b><br>
-        &bull; <b>SOST Sentinel</b> &mdash; moderation bot that blocks spam, scams, phishing and impersonation. Does NOT censor criticism or legitimate feedback.<br>
-        &bull; <b>Passkey / biometric login</b> &mdash; use fingerprint, Face ID, or device PIN to authenticate. Your biometrics never leave your device.<br>
-        &bull; <b>Auto-responses</b> &mdash; the bot provides instant help for common issues (sync problems, wallet, DEX, mining, memory errors).<br>
-        &bull; <b>Identity required</b> &mdash; post with a passkey (verified badge) or quick name entry. Reduces spam and increases quality.<br>
-        &bull; <b>Report button</b> &mdash; flag suspicious messages for review.<br>
-        &bull; <b>Live sidebar</b> &mdash; block height, miners, nodes, DEX and PoPC status alongside the feed.<br><br>
-        <b style="color:var(--green)">Rules are simple:</b> criticism welcome, questions encouraged, bug reports valued. No spam, no scams, no phishing, no impersonation.<br><br>
-        <span style="color:var(--text3);font-size:9px">Admins will never ask you to send funds. Only trust sostcore.com and sostprotocol.com.</span>
-        </span><br>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
-          <a href="sost-talk.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:6px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:var(--gold);font-weight:800;font-size:11px;text-decoration:none;letter-spacing:1px">OPEN SOST TALK &rarr;</a>
-          <a href="sost-contact.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">CONTACT</a>
+
+        <span style="color:var(--text2);line-height:2">
+        Materials Engine has processed <b style="color:var(--text)">77,296 materials</b> and is already producing real, validated results.<br><br>
+
+        Two examples:<br><br>
+
+        <b style="color:var(--green)">1) FeMgO&#8322; &mdash; Novel low-cost catalyst (DFT validated)</b><br>
+        &bull; Iron&ndash;magnesium oxide with ferrimagnetic ground state<br>
+        &bull; Fully converged DFT calculation confirms structural stability<br>
+        &bull; Metallic character with strong magnetic moment (5.96 &mu;B)<br>
+        &bull; Potential replacement for platinum-group metals (Pt/Pd/Rh) in catalytic systems<br>
+        &bull; Estimated cost: <b style="color:var(--gold)">~$0.5&ndash;2/kg</b> vs ~$30,000/kg for platinum<br><br>
+        Originally classified for a different application, the system identified it, and DFT validation revealed its true catalytic potential.<br><br>
+
+        <b style="color:var(--green)">2) Dy&#8323;S&#8323;N &mdash; Direct band gap photovoltaic semiconductor</b><br>
+        &bull; Direct band gap: <b style="color:var(--gold)">1.39 eV</b> (very close to the Shockley&ndash;Queisser optimum ~1.34 eV)<br>
+        &bull; Strong absorption (&alpha; &asymp; 6,253 cm&#8315;&#185;)<br>
+        &bull; Theoretical efficiency limit ~32.5%<br>
+        &bull; No toxic elements (unlike CdTe-based materials)<br>
+        &bull; Estimated cost significantly lower than common PV materials<br><br>
+        Additional materials in the same family (La&#8323;S&#8323;N, Sm&#8323;S&#8323;N) show similar behavior.<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--cyan)">Pipeline capability:</b><br>
+        &bull; 77,296 materials analyzed<br>
+        &bull; Full autonomous pipeline operational<br>
+        &bull; Corpus &rarr; reject &rarr; score &rarr; ranking &rarr; ML queue &rarr; DFT candidates in ~25 seconds<br>
+        &bull; 6 active industrial missions: PGM-free catalysts, photovoltaics, hydrogen, lithium extraction, desalination, CO&#8322; capture<br><br>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        At block 6,000, SOST will activate a <b style="color:var(--gold)">1,000-block Useful Compute Trial</b>.<br><br>
+
+        For the first time, part of the network&rsquo;s computational power will be directed toward real scientific workloads:<br><br>
+
+        &bull; <b style="color:#4ade80">Materials discovery (40%)</b><br>
+        &bull; <b style="color:#22d3ee">Mineral exploration research via GeaSpirit (10%)</b><br><br>
+
+        The objective is simple:<br><br>
+
+        <b style="color:var(--text)">To transform computation into knowledge,<br>
+        and knowledge into long-term economic value.</b><br><br>
+
+        If successful, future governance may allocate part of that value to strengthen the permanent <b style="color:var(--gold)">SOST Gold Reserve</b>.<br><br>
+
+        <span style="color:var(--text3);font-size:9px">This trial is cooperative and experimental. Materials Engine results are ML/heuristic-based with DFT validation for top candidates. GeaSpirit predictions are probabilistic. Neither constitutes experimental confirmation. Participation details will be published before block 6,000.</span>
+        </span>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <a href="sost-materials-engine.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:6px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:var(--green);font-weight:700;font-size:10px;text-decoration:none;letter-spacing:1px">MATERIALS ENGINE</a>
+          <a href="sost-geaspirit.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:6px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.3);color:var(--cyan);font-weight:700;font-size:10px;text-decoration:none;letter-spacing:1px">GEASPIRIT</a>
+          <a href="https://bitcointalk.org/index.php?topic=5579432" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text2);font-weight:600;font-size:10px;text-decoration:none;letter-spacing:1px">BITCOINTALK</a>
         </div>
       </div>
 
-      <!-- URGENT: NODE UPDATE -->
-      <div style="border-bottom:1px solid var(--border);padding:12px 0;background:rgba(251,1,13,0.06);">
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- SOST DEX — ALPHA (collapsed)                               -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div style="border-bottom:1px solid var(--border);padding:10px 0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,.6);animation:pulse 1s ease infinite"></span>
-          <span style="color:#fb010d;font-size:10px;font-weight:800;letter-spacing:2px">URGENT — UPDATE YOUR NODE &amp; MINER</span>
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold)"></span>
+          <span style="color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1px">SOST DEX &mdash; ALPHA LIVE</span>
         </div>
-        <b style="color:var(--text);font-size:11px;">A display bug has been fixed that caused profile names to show as "?" for H13 and E5-E7 profiles.</b><br><br>
-        <span style="color:var(--text2)">
-        <b style="color:var(--cyan)">What happened:</b><br>
-        The profile name lookup table in <code>types.h</code> only covered 17 profiles (E4&ndash;H12). After the block 5,750 final calibration extended the system to 43 profiles (E7&ndash;H35), any profile outside the old range (H13, E5, E6, E7) displayed as <b>"?"</b> in the explorer and RPC responses. The underlying consensus logic was correct &mdash; only the display name was affected.<br><br>
-        <b style="color:var(--cyan)">What you need to do:</b><br>
-        </span>
-        <div style="background:rgba(251,1,13,0.04);border:1px solid rgba(251,1,13,0.2);border-radius:4px;padding:8px 12px;font-size:9px;line-height:2;">
-          <span style="color:#67e8f9">1.</span> <span style="color:#00ff88">cd sost-core &amp;&amp; git pull origin main</span><br>
-          <span style="color:#67e8f9">2.</span> <span style="color:#00ff88">cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</span><br>
-          <span style="color:#67e8f9">3.</span> <span style="color:#00ff88">sudo systemctl restart sost-node</span><br>
-          <span style="color:#67e8f9">4.</span> <span style="color:#00ff88">restart miner with same arguments</span>
-        </div>
-        <br>
-        <span style="color:var(--text3);font-size:9px">
-        This update also includes the full V8 final calibration: H13 ceiling, E7 relief valve at 605s, 43 profiles, lag-adjust ~6s, and recalibrated margins. If you haven't updated since before block 5,750, this is critical.<br>
-        <b style="color:var(--green)">193 cASERT tests passing. Consensus unaffected &mdash; display fix only.</b>
-        </span>
-      </div>
-
-
-      <!-- ════════════════════════════════════════════════════════════ -->
-      <!-- SOST DEX — ALPHA LAUNCH (full announcement)               -->
-      <!-- ════════════════════════════════════════════════════════════ -->
-      <div style="border-bottom:1px solid var(--border);padding:14px 0;background:linear-gradient(135deg,rgba(230,57,70,0.04),rgba(245,158,11,0.06),rgba(74,222,128,0.04),rgba(34,211,238,0.04));">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee);box-shadow:0 0 8px rgba(245,158,11,.6);animation:pulse 1.5s ease infinite"></span>
-          <span style="font-size:10px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">SOST DEX &mdash; ALPHA LAUNCH</span>
-        </div>
-        <b style="color:var(--text);font-size:12px;">The unified trading desk for gold-backed positions is live.</b><br><br>
+        <span style="color:var(--text2);font-size:10px">The unified trading desk for gold-backed positions is live. ED25519 signing, X25519 encryption, AI copilot, passkey auth.</span><br>
 
         <!-- What is SOST DEX -->
         <span style="color:var(--text2)">
