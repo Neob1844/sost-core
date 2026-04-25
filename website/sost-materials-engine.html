@@ -1739,6 +1739,22 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key" style="color:var(--green-primary)">Phase 35</td><td><b>First DFT validation completed.</b> Top candidate converged: ferrimagnetic oxide, stable phase confirmed. Reclassified from photovoltaic to functional catalyst/electrode. Full pipeline validated end-to-end.</td><td style="color:var(--green-primary)">Complete</td></tr>
           <tr style="opacity:0.6"><td class="key">Phase 36+</td><td>DOS/band structure analysis, FM vs AFM comparison, convex hull verification, next candidate DFT queue</td><td>In progress</td></tr>
         </table>
+
+        <div style="margin-top:20px;border-top:1px solid var(--border-dim);padding-top:16px">
+          <div style="font-size:11px;color:var(--red-primary);letter-spacing:1.5px;font-weight:700;margin-bottom:12px">EXPANSION ROADMAP</div>
+          <table class="code-table" style="font-size:12px">
+            <tr><th style="width:200px">Initiative</th><th>Description</th><th style="width:90px">Status</th></tr>
+            <tr><td class="key">Database expansion</td><td>76K &rarr; 500K+ materials. Add Materials Project, OQMD, NOMAD, Materials Cloud, Open Catalyst Project APIs</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">PGM Replacement Engine</td><td>Find cheap alternatives to Pt/Pd/Rh/Ir/Ru. Target families: perovskites, spinels, Fe&ndash;N&ndash;C, sulfides, nitrides, carbides, phosphides</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">Multi-property GNN</td><td>Expand from 2 to 12+ predicted properties: stability, conductivity, magnetism, toxicity, cost, abundance, catalytic activity, corrosion resistance</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">MLIP validation layer</td><td>CHGNet/M3GNet/MACE relaxation before DFT. Pyramid: chemical filter &rarr; GNN &rarr; MLIP &rarr; DFT (only top 0.1%)</td><td style="color:var(--cyan-primary)">Partially implemented (CHGNet)</td></tr>
+            <tr><td class="key">Structure generator v2</td><td>Perovskite templates, 2D slicing, high-entropy alloys, single-atom catalysts, vacancy defects, controlled doping</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">Mission profiles</td><td>8 targeted campaigns: Pt-free H&#x2082; catalyst, cheap OER, Li capture, desalination membrane, rare-free PV, corrosion alloys, thermal storage, CO&#x2082; capture</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">Abundance &amp; cost scoring</td><td>Penalize rare/toxic/expensive elements. Promote Fe, Ni, Mn, Co, Cu, Ti, Mo, Al, C, N, S</td><td style="color:var(--gold)">Planned</td></tr>
+            <tr><td class="key">Uncertainty quantification</td><td>Ensemble + MC dropout. Uncertain &rarr; validation queue, not claimed discovery</td><td style="color:var(--gold)">Planned</td></tr>
+          </table>
+          <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7"><b>Goal:</b> evolve from materials generator to economic-functional discovery system &mdash; finding materials that are cheap, abundant, stable, and useful. All computation at $0 or near-zero using free-tier cloud, CPU local, and future SOST Proof-of-Useful-Computation network.</p>
+        </div>
       </div>
     </div>
   </div>

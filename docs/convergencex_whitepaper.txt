@@ -3734,6 +3734,10 @@ CHGNet pre-DFT structural validation (17 candidates in 40s, 64h CPU saved).
 Autonomous discovery pipeline: SEED → GENERATE → FILTER → LIFT → GNN → SCORE → VALIDATE → HANDOFF.
 Full validation bridge with prediction-observation-reconciliation lifecycle.
 Cost: $0/month (CPU-only, no cloud required).
+Expansion roadmap: database 76K → 500K+ (Materials Project, OQMD, NOMAD),
+PGM replacement engine (Pt/Pd/Rh alternatives), multi-property GNN (12+ properties),
+MLIP validation layer (CHGNet/M3GNet/MACE), 8 mission profiles
+(Pt-free H2 catalyst, cheap OER, Li capture, desalination, rare-free PV, corrosion alloys).
 
 RESTRICTED — Implementation Details:
   Neural network architecture, model weights, training methodology,
