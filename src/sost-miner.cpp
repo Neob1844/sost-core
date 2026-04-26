@@ -675,8 +675,14 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
     uint32_t bits_q = casert_next_bitsq(g_chain, h);
-    // When mining with RPC, always use the node's difficulty (authoritative)
-    // Local cASERT calculation can diverge if g_chain has pad entries from REJECTED recovery
+    ConsensusParams params = get_consensus_params(prof, h);
+    auto cdec = casert_compute(g_chain, h, std::time(nullptr));
+
+    // Single RPC roundtrip — pull next_difficulty AND casert_profile_index
+    // from the same getinfo response. Previously we made two separate calls
+    // here, which added an extra ~6-8s on every mine_one_block restart and
+    // caused high-latency miners to consistently arrive late at the new
+    // profile (e.g. forks on E7 relief-valve switch).
     if (!g_rpc_url.empty()) {
         std::string info = rpc_call("getinfo");
         if (!info.empty()) {
@@ -689,18 +695,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     bits_q = node_diff;
                 }
             }
-        }
-    }
-    ConsensusParams params = get_consensus_params(prof, h);
-    auto cdec = casert_compute(g_chain, h, std::time(nullptr));
-    // When mining with RPC, use the node's profile_index (authoritative)
-    // Local casert_compute can diverge if g_chain has pad entries
-    if (!g_rpc_url.empty()) {
-        std::string info2 = rpc_call("getinfo");
-        if (!info2.empty()) {
-            auto pp = info2.find("\"casert_profile_index\":");
+            auto pp = info.find("\"casert_profile_index\":");
             if (pp != std::string::npos) {
-                int32_t node_pi = (int32_t)atoll(info2.c_str() + pp + 23);
+                int32_t node_pi = (int32_t)atoll(info.c_str() + pp + 23);
                 if (node_pi != cdec.profile_index) {
                     printf("[MINING] Local profile=%s, node says %s — using node profile\n",
                            profile_label(cdec.profile_index), profile_label(node_pi));
