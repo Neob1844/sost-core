@@ -2664,9 +2664,12 @@ static bool write_exact(int fd, const void* buf, size_t len) {
         ssize_t n=write(fd,p+sent,len-sent);
         if(n<0){
             if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
-                // Socket buffer full — wait up to 30s for space
+                // Socket buffer full — wait up to 5s for space.
+                // Lowered from 30s to match SO_SNDTIMEO. Kept threads alive
+                // far too long under load (hung browsers / dropped clients
+                // accumulated 1500+ rpc handler threads in 14h of uptime).
                 fd_set wfds; FD_ZERO(&wfds); FD_SET(fd,&wfds);
-                struct timeval tv={30,0};
+                struct timeval tv={5,0};
                 if(select(fd+1,nullptr,&wfds,nullptr,&tv)<=0) return false;
                 continue;
             }
