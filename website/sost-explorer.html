@@ -348,6 +348,30 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- DEVELOPER DISCLAIMER — permanent, always visible, never collapsed -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:linear-gradient(135deg,rgba(251,1,13,0.08),rgba(251,1,13,0.03));border:2px solid var(--red);border-radius:4px;padding:14px 18px;font-size:10.5px;line-height:1.85;color:var(--text);">
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(251,1,13,.7);margin-top:6px;flex-shrink:0;animation:pulse 1.8s ease infinite"></span>
+      <div>
+        <span style="color:var(--red);font-weight:800;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Developer Disclaimer:</span>
+        <span style="color:var(--text);text-transform:uppercase;letter-spacing:0.4px">
+          ALL NODES AND MINERS MUST UNDERSTAND THAT THIS PROJECT IS BEING BUILT WITH A LOT OF WORK, BUT THAT DOES NOT GUARANTEE THAT IT WILL SUCCEED OR HAVE FUTURE VALUE. RIGHT NOW, YOU ARE MINING WITH VERY LOW ENERGY COST, USING ONLY CPU AND 8&nbsp;GB&nbsp;RAM, BUT THE SUCCESS OF THE PROJECT DEPENDS ON THREE CRUCIAL FACTORS, NONE OF WHICH IS GUARANTEED:
+          <b style="color:var(--gold)">FIRST,</b> THAT IT COMPLIES WITH ALL APPLICABLE CRYPTO AND POSSIBLY FINANCIAL REGULATIONS IN THE COUNTRIES WHERE IT MAY OPERATE, WHICH IS COMPLEX;
+          <b style="color:var(--gold)">SECOND,</b> THAT THE CRYPTO COMMUNITY ACCEPTS AND SUPPORTS THE PROJECT;
+          AND <b style="color:var(--gold)">THIRD,</b> THAT ONE OR MORE CEXS DECIDE TO LIST THE PROJECT ON THEIR EXCHANGES.
+          IN ADDITION, WE ARE OPERATING A NATIVE AND EXPERIMENTAL PROOF-OF-WORK SYSTEM, DISTINCT FROM OTHER POW DESIGNS, WHICH HAS BEEN DEPLOYED DIRECTLY ON MAINNET.
+          ALTHOUGH IT HAS HUNDREDS OF TESTS BEHIND IT, IT HAS NOT BEEN AUDITED BY ANY INDEPENDENT OR REPUTABLE FIRM IN THE SECTOR; THEREFORE, WE ARE WALKING AN UNKNOWN PATH TOGETHER.
+          WITHOUT THESE FACTORS, THE TOKEN MAY HAVE NO VALUE.
+          <b style="color:var(--red);text-shadow:0 0 4px rgba(251,1,13,0.5)">THIS MUST BE CLEAR TO EVERYONE, SO THAT NO FALSE EXPECTATIONS ARE CREATED.</b>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- V6 chain-stability fork at block 5,000 + VT governance fork at block 10,000 -->
 <!-- PROTOCOL UPDATES — collapsible news section, replaces old banner -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
@@ -372,19 +396,44 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span style="color:var(--text2);line-height:2">
         SOST will run a voluntary 1,000-block Useful Compute Trial from <b style="color:var(--gold)">block 7,000 to block 8,000</b>.<br><br>
 
+        From the beginning, SOST Protocol has been described as a cooperative global project: a network designed not only to secure a blockchain, but to generate inherent and added value through useful scientific tools, while building a long-term reserve-of-value model linked to gold. This vision is supported by SOST&rsquo;s own native work system, <b style="color:var(--gold)">ConvergenceX</b>, a distinct Proof-of-Work design different from Bitcoin&rsquo;s SHA-256, Monero&rsquo;s RandomX, Litecoin/Dogecoin&rsquo;s Scrypt, or Ethereum&rsquo;s former Ethash. The Useful Compute Trial is a first practical step in extending that cooperative model toward scientific computation.<br><br>
+
         This is an experimental mainnet trial.<br><br>
 
         The objective is simple:<br><br>
 
         <b style="color:var(--text)">To transform part of the network&rsquo;s computation into useful scientific work &mdash; and potentially into long-term value for the SOST protocol.</b><br><br>
 
-        During the trial, participating miners may run a Useful Compute Worker in parallel with their normal SOST miner.<br><br>
+        During the trial, participating miners may run the <b style="color:#4ade80">Light Useful Compute Worker</b> in parallel with their normal SOST miner. Advanced participants may also test <b style="color:var(--orange)">Heavy Worker</b> mode when verified heavy workloads are available.<br><br>
 
         &bull; The blockchain continues normally.<br>
         &bull; Consensus is not changed.<br>
         &bull; Mining remains normal.<br>
         &bull; No private keys are required.<br>
         &bull; Participation is voluntary.<br><br>
+
+        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-left:3px solid var(--gold);border-radius:4px;padding:12px 16px;margin:8px 0 14px;font-size:10.5px;line-height:1.85;color:var(--text2)">
+          <b style="color:var(--gold);letter-spacing:1px">REWARD SUMMARY</b><br><br>
+          Normal mining reward remains unchanged.<br><br>
+          Eligible Light Worker miners may receive an additional <b style="color:var(--gold)">+1.96275215 SOST</b> per eligible mined block after the trial.<br><br>
+          Heavy Worker participants may compete for a separate capped Heavy Compute Pool of <b style="color:var(--gold)">1,962.75215000 SOST</b>, distributed by verified Heavy points if valid Heavy work is completed.<br><br>
+          All trial rewards are calculated after block <b style="color:var(--gold)">8,000</b> using a public payout manifest.
+        </div>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">No manual registration required</b><br><br>
+        Miners do not need to send a private message, fill a form, or request approval.<br><br>
+        Participation works like this:
+        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          1. Keep your SOST miner running normally.<br>
+          2. Open a second terminal.<br>
+          3. Run the Useful Compute Worker with your public SOST mining reward address.<br>
+          4. The task server automatically records your contribution by address.<br>
+          5. If you meet the trial rules, you enter the post-trial reward calculation.
+        </div>
+        <b style="color:var(--text)">Running the worker is the registration.</b><br><br>
+        Use the same public SOST address where you receive mining rewards. <b style="color:var(--red)">Do not use private keys, seed phrases, wallet files, or passwords.</b><br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -400,6 +449,40 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           <span style="color:var(--cyan);font-weight:600">10&#37;</span> &mdash; GeaSpirit / mineral exploration research layer
         </div>
         Miners do not stop mining. They continue mining SOST normally and run an additional worker beside the miner.<br><br>
+
+        <div style="background:rgba(34,211,238,0.04);border-left:2px solid var(--cyan);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2)">
+          <span style="color:var(--cyan);font-size:8.5px;letter-spacing:1.5px;font-weight:700">IMPORTANT CLARIFICATION &middot;</span>
+          The 50/40/10 split is a strategic/conceptual target, <b>not a forced CPU throttle</b>.
+          The current <b style="color:#4ade80">Light Worker</b> is lightweight and is not expected to materially reduce mining hashrate. A separate <b style="color:var(--orange)">Heavy Worker</b> mode is available for participants who want to dedicate real CPU/GPU capacity to deeper useful-compute tasks in exchange for points-based rewards.
+        </div>
+
+        <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
+
+        <b style="color:var(--gold)">Two participation modes</b><br><br>
+        Light Worker is available now for testing and counts officially from block <b style="color:var(--gold)">7,000</b>. Heavy Worker is also available from the same trial window; heavy task availability may be expanded progressively as verified workloads come online.<br><br>
+
+        <b style="color:#4ade80">A) Light Worker</b> &mdash; default mode, designed for normal miners:
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 8px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; lightweight<br>
+          &mdash; minimal CPU usage<br>
+          &mdash; runs beside the SOST miner<br>
+          &mdash; does not require private keys<br>
+          &mdash; does not access the wallet<br>
+          &mdash; not expected to materially reduce hashrate
+        </div>
+        Light tasks include formula parsing, reject checks, abundance/cost scoring, PGM-free checks, mission scoring, lightweight Materials Engine validation, lightweight GeaSpirit validation.<br><br>
+        Light rewards are <b>linked to mining</b>: a miner must (1) mine at least one block during 7,000 &rarr; 8,000 and (2) submit enough verified Light tasks.<br><br>
+
+        <b style="color:var(--orange)">B) Heavy Worker</b> &mdash; optional and advanced:
+        <div style="background:rgba(251,146,60,0.04);border:1px solid rgba(251,146,60,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 8px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; optional, explicit opt-in<br>
+          &mdash; may use real CPU/GPU<br>
+          &mdash; does not require private keys<br>
+          &mdash; does not require wallet access<br>
+          &mdash; does not require the participant to mine a block
+        </div>
+        Heavy tasks may include heavier candidate consensus scoring, structural pre-checks, MLIP preparation, DFT input preparation, material family scans, GeaSpirit hypothesis batches, GeaSpirit depth-proxy batches.<br><br>
+        Heavy rewards are <b>not fixed SOST per task</b>. Heavy tasks generate verified <b>points</b>. After block 8,000 the capped Heavy Compute Pool may be distributed proportionally to verified Heavy points, if verified Heavy work was actually completed during the trial.<br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -422,14 +505,24 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         &bull; No toxic elements such as Cd or Pb<br>
         &bull; Additional related candidates: La&#8323;S&#8323;N, Sm&#8323;S&#8323;N<br><br>
 
-        Materials Engine currently supports <b style="color:var(--text)">6 industrial missions</b>:
+        Materials Engine currently supports industrial missions including:
         <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
           &mdash; PGM-free catalysts<br>
           &mdash; Photovoltaics<br>
           &mdash; Hydrogen / water splitting<br>
           &mdash; Lithium extraction<br>
           &mdash; Desalination<br>
-          &mdash; CO&#8322; capture
+          &mdash; CO&#8322; capture<br>
+          &mdash; Sodium-ion batteries<br>
+          &mdash; Potassium-ion batteries<br>
+          &mdash; Solid-state electrolytes<br>
+          &mdash; Marine corrosion-resistant materials<br>
+          &mdash; GeaDeep pressure/corrosion materials<br>
+          &mdash; Heavy metal capture<br>
+          &mdash; Rare-earth-free magnets<br>
+          &mdash; Cheap thermoelectrics<br>
+          &mdash; Low-cost ceramics<br>
+          &mdash; Ammonia catalysts
         </div>
         Autonomous pipeline:
         <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--cyan);font-family:var(--code)">
@@ -467,7 +560,36 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           Mt Isa &mdash; SEDEX Cu-Pb-Zn &mdash; AUC ~0.781<br>
           Zambia Copperbelt &mdash; Sediment-hosted Cu &mdash; AUC ~0.763
         </div>
-        <i style="color:var(--text3)">GeaSpirit finds where strategic resources may be. Materials Engine investigates what useful materials can be built with them.</i><br><br>
+
+        GeaSpirit trial tasks may also cover expanded zones and hypotheses, such as:
+        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 8px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; Iberian Pyrite Belt<br>
+          &mdash; Nevada Gold<br>
+          &mdash; Arizona Porphyry Copper<br>
+          &mdash; Peru Copper Belt<br>
+          &mdash; Pilbara Iron / Lithium<br>
+          &mdash; Congo Copperbelt<br>
+          &mdash; Arabian Shield<br>
+          &mdash; Greenland Rare Earths<br>
+          &mdash; Finland / Scandinavia Battery Metals<br>
+          &mdash; Morocco / Anti-Atlas Base Metals
+        </div>
+        Hypothesis families include:
+        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; DEM + gravity<br>
+          &mdash; DEM + hydrology<br>
+          &mdash; Sentinel + thermal<br>
+          &mdash; geology + terrain<br>
+          &mdash; gravity-only<br>
+          &mdash; terrain-only<br>
+          &mdash; spectral vs terrain<br>
+          &mdash; commodity-specific signatures<br>
+          &mdash; depth-proxy scoring<br>
+          &mdash; canonical objective scoring
+        </div>
+
+        <b style="color:var(--text)">GeaSpirit finds where strategic resources may be.<br>
+        Materials Engine investigates what useful materials can be built with them.</b><br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -493,13 +615,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           <br>
           <b style="color:var(--green)">Task Server on VPS</b> &darr; distributes curated Materials Engine / GeaSpirit tasks<br>
           <br>
-          <b style="color:var(--text)">Miners</b> &darr; compute deterministic results and submit them back<br>
+          <b style="color:var(--text)">Participants</b> &darr; compute deterministic results and submit them back<br>
           <br>
-          <b style="color:var(--green)">Task Server</b> &darr; verifies results using <b>N=2 cross-worker verification</b><br>
+          <b style="color:var(--green)">Task Server</b> &darr; verifies results using <b>cross-worker verification</b><br>
           <br>
-          <b style="color:var(--gold)">Reward Distributor</b> &darr; after block 8,000, calculates eligible post-trial bonus rewards
+          <b style="color:var(--cyan)">Feedback Loop</b> &darr; summarises results and helps generate new task batches<br>
+          <br>
+          <b style="color:var(--gold)">Reward Distributor</b> &darr; after block 8,000, calculates eligible post-trial rewards
         </div>
-        Miners do not choose arbitrary work. The task server distributes curated tasks selected by Materials Engine and GeaSpirit according to the trial objectives.<br><br>
+        Participants do not choose arbitrary work. The task server distributes curated tasks selected by Materials Engine and GeaSpirit according to the trial objectives. If a queue runs low, new task batches can be generated and reloaded.<br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -517,12 +641,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
         <b style="color:var(--gold)">Curated task queues</b><br><br>
-        The task server uses curated trial queues:
+        The task server uses curated trial queues, separated into Light and Heavy classes:
         <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.95;color:var(--text2);font-family:var(--code)">
-          Materials Engine queue: <b style="color:var(--gold)">5,000</b> tasks<br>
-          GeaSpirit queue:        <b style="color:var(--gold)">46</b> lightweight validation tasks<br>
-          <span style="color:var(--text3)">────────────────────────────────────</span><br>
-          Total:                  <b style="color:var(--gold)">5,046</b> trial tasks
+          Light Materials Engine tasks &nbsp;&nbsp;&mdash; <b style="color:#4ade80">50,000</b><br>
+          Light GeaSpirit tasks         &nbsp;&nbsp;&mdash; <b style="color:#4ade80">46</b><br>
+          Heavy Materials Engine tasks  &nbsp;&nbsp;&mdash; <b style="color:var(--orange)">~4,933</b><br>
+          Heavy GeaSpirit tasks         &nbsp;&nbsp;&mdash; <b style="color:var(--orange)">500</b><br>
+          <span style="color:var(--text3)">──────────────────────────────────</span><br>
+          Total trial tasks loaded:     &nbsp;&nbsp;<b style="color:var(--gold)">~55,479</b>
         </div>
         Materials Engine tasks are filtered to avoid wasting computation on irrelevant or poor candidates. The system prioritises:
         <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
@@ -533,9 +659,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           &mdash; lithium-related materials<br>
           &mdash; hydrogen-related materials<br>
           &mdash; desalination materials<br>
-          &mdash; CO&#8322; capture candidates
+          &mdash; CO&#8322; capture candidates<br>
+          &mdash; battery materials<br>
+          &mdash; corrosion-resistant materials<br>
+          &mdash; GeaDeep structural materials<br>
+          &mdash; rare-earth-free alternatives
         </div>
-        GeaSpirit tasks are <b>lightweight validation tasks</b>. Miners are not asked to download satellite rasters or heavy geospatial datasets. Instead, GeaSpirit tasks focus on validating selected hypotheses, zones and feature combinations.<br><br>
+        GeaSpirit tasks are designed to be lightweight for miners. Miners are not asked to download satellite rasters or heavy geospatial datasets. Instead, GeaSpirit tasks focus on validating selected hypotheses, zones and feature combinations. The goal is to keep enough useful work available throughout the 1,000-block trial.<br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -561,13 +691,23 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
         <b style="color:var(--gold)">Eligibility</b><br><br>
-        To qualify for post-trial bonus rewards, a miner must:
-        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+
+        <b style="color:#4ade80">Light Worker eligibility</b> &mdash; to qualify for the Light post-trial bonus, a miner must:
+        <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 10px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
           &mdash; mine at least one block between block 7,000 and block 8,000<br>
-          &mdash; run the Useful Compute Worker<br>
+          &mdash; run the Light Useful Compute Worker<br>
           &mdash; submit valid useful-compute results<br>
-          &mdash; reach at least <b style="color:var(--gold)">100 verified tasks</b><br>
+          &mdash; reach at least <b style="color:var(--gold)">100 verified Light tasks</b><br>
           &mdash; maintain an acceptable dispute ratio (&lt; 10&#37;)
+        </div>
+
+        <b style="color:var(--orange)">Heavy Worker eligibility</b> &mdash; task-based, does <b>not</b> require mining a block:
+        <div style="background:rgba(251,146,60,0.04);border:1px solid rgba(251,146,60,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          &mdash; explicitly run Heavy Worker mode<br>
+          &mdash; submit verified Heavy tasks<br>
+          &mdash; accumulate verified Heavy points (min <b style="color:var(--gold)">10 verified tasks</b>)<br>
+          &mdash; maintain an acceptable dispute ratio (&lt; 10&#37;)<br>
+          &mdash; avoid duplicate, failed or disputed submissions
         </div>
         The task server uses cross-worker verification:
         <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
@@ -716,7 +856,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           &mdash; photovoltaic_absorber<br>
           &mdash; pgm_free_catalyst<br>
           &mdash; lithium_extraction<br>
-          &mdash; desalination_membrane
+          &mdash; desalination_membrane<br>
+          &mdash; geaspirit_light_validation<br>
+          &mdash; geaspirit_hypothesis_batch
         </div><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
