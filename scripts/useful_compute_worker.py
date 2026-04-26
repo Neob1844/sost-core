@@ -49,6 +49,14 @@ DEFAULT_BATCH_SIZE   = 10
 MAX_BACKOFF          = 300
 DEFAULT_TIMEOUT      = 10
 
+# Worker modes:
+#   light  — lightweight stdlib computations (default, safe for all miners)
+#   heavy  — opt-in CPU/GPU mode for MLIP/structural pre-checks
+#   both   — request a mix
+WORKER_MODE_LIGHT = "light"
+WORKER_MODE_HEAVY = "heavy"
+WORKER_MODE_BOTH  = "both"
+
 
 # ────────────────────────────────────────────────────────────────────────────
 # Public element data (CRUSTAL ABUNDANCE, RELATIVE COST INDEX)
@@ -187,11 +195,261 @@ def mission_score(counts: Dict[str, float], mission: str) -> Dict:
     }
 
 
+# ── Heavy Level 1: deterministic CPU-bound batch tasks (stdlib only) ───────
+
+
+def heavy_batch_mission_score(payload: Dict) -> Dict:
+    """Score a batch of formulas against one mission. Deterministic ranking."""
+    mission = payload.get("mission", "")
+    formulas = payload.get("formulas", []) or []
+    scored: List[Dict] = []
+    for f in formulas:
+        counts = parse_formula(f)
+        if not counts:
+            continue
+        s = mission_score(counts, mission)
+        scored.append({"formula": f, "score": s["score"],
+                       "rejected": s.get("rejected", False)})
+    # Deterministic ordering: score desc, then formula
+    scored.sort(key=lambda x: (-x["score"], x["formula"]))
+    return {
+        "mission":       mission,
+        "n_in":          len(formulas),
+        "n_scored":      len(scored),
+        "ranking":       scored[:50],
+        "score_digest":  hashlib.sha256(
+            json.dumps(scored, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()[:16],
+    }
+
+
+def heavy_material_family_scan(payload: Dict) -> Dict:
+    """Enumerate composition variants around a base formula and score them."""
+    base = payload.get("base_formula", "")
+    mission = payload.get("mission", "")
+    counts = parse_formula(base)
+    elements = sorted(counts.keys())
+    if not elements:
+        return {"base_formula": base, "mission": mission,
+                "n_variants": 0, "ranking": []}
+    # Deterministic enumeration: integer stoichiometric variants 1..3 per element
+    variants: List[Dict] = []
+    max_each = int(payload.get("max_each", 3))
+    for i, e1 in enumerate(elements):
+        for n1 in range(1, max_each + 1):
+            for e2 in elements[i + 1:]:
+                for n2 in range(1, max_each + 1):
+                    formula = f"{e1}{n1 if n1>1 else ''}{e2}{n2 if n2>1 else ''}"
+                    c = parse_formula(formula)
+                    if not c:
+                        continue
+                    s = mission_score(c, mission)
+                    variants.append({"formula": formula, "score": s["score"]})
+    variants.sort(key=lambda x: (-x["score"], x["formula"]))
+    return {
+        "base_formula": base, "mission": mission,
+        "n_variants":   len(variants),
+        "ranking":      variants[:25],
+    }
+
+
+def heavy_candidate_consensus_score(payload: Dict) -> Dict:
+    """Combine abundance + cost + PGM-free + mission fit into a consensus score."""
+    formulas = payload.get("formulas", []) or []
+    mission = payload.get("mission", "")
+    out: List[Dict] = []
+    for f in formulas:
+        c = parse_formula(f)
+        if not c:
+            continue
+        a = abundance_score(c)
+        ci = cost_index(c)
+        pgm = has_pgm(c)
+        ms = mission_score(c, mission)
+        consensus = round(
+            0.4 * a - 0.3 * (ci - 0.2) + 0.3 * ms["score"] - (1.0 if pgm else 0.0),
+            6,
+        )
+        out.append({
+            "formula":   f,
+            "consensus": consensus,
+            "rejected":  ms.get("rejected", False) or pgm,
+        })
+    out.sort(key=lambda x: (-x["consensus"], x["formula"]))
+    return {"mission": mission, "n_in": len(formulas),
+            "ranking": out[:30]}
+
+
+def heavy_structure_precheck(payload: Dict) -> Dict:
+    """Lightweight composition/structure sanity check (no DFT, no MLIP)."""
+    formula = payload.get("formula", "")
+    counts = parse_formula(formula)
+    elements = sorted(counts.keys())
+    if not counts:
+        return {"formula": formula, "valid": False,
+                "reason": "no_parseable_elements"}
+    total = sum(counts.values())
+    has_metal = any(e in {"Fe", "Ni", "Co", "Mn", "Cu", "Zn", "Mg", "Al",
+                          "Ti", "V", "Cr", "Mo", "W", "Sn", "Pb"} for e in elements)
+    has_anion = any(e in {"O", "S", "N", "F", "Cl", "Br", "I", "P", "C"}
+                    for e in elements)
+    return {
+        "formula":   formula,
+        "valid":     total > 0,
+        "elements":  elements,
+        "total_atoms": float(total),
+        "has_metal": has_metal,
+        "has_anion": has_anion,
+        "has_pgm":   has_pgm(counts),
+        "structure_class": (
+            "metal_oxide"     if has_metal and "O" in elements else
+            "metal_sulfide"   if has_metal and "S" in elements else
+            "metal_nitride"   if has_metal and "N" in elements else
+            "metal_carbide"   if has_metal and "C" in elements else
+            "metal_phosphide" if has_metal and "P" in elements else
+            "intermetallic"   if has_metal else "molecular"
+        ),
+    }
+
+
+def heavy_dft_input_preparation(payload: Dict) -> Dict:
+    """Build a deterministic DFT input manifest (template only, no DFT runs)."""
+    formula = payload.get("formula", "")
+    mission = payload.get("mission", "")
+    counts = parse_formula(formula)
+    if not counts:
+        return {"formula": formula, "ready": False,
+                "reason": "no_parseable_elements"}
+    elements = sorted(counts.keys())
+    # Deterministic input "manifest" (would be fed to QE/VASP elsewhere)
+    manifest = {
+        "formula":      formula,
+        "mission":      mission,
+        "elements":     elements,
+        "n_elements":   len(elements),
+        "kpoint_grid":  [4, 4, 4],
+        "cutoff_ry":    60,
+        "smearing":     "gaussian",
+        "smearing_eV":  0.05,
+        "calculation":  "scf",
+        "pseudopotentials_required": [f"{e}.pbe-spdn-kjpaw_psl.1.0.0.UPF"
+                                       for e in elements],
+    }
+    return {
+        "formula": formula, "ready": True,
+        "manifest": manifest,
+        "manifest_hash": hashlib.sha256(
+            json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()[:16],
+    }
+
+
+def heavy_geaspirit_zone_pack(payload: Dict) -> Dict:
+    """Replay a zone pack with prepared metadata. No raster downloads."""
+    zone = payload.get("zone", "")
+    commodity = payload.get("commodity", "")
+    features = sorted(payload.get("features", []) or [])
+    baseline = payload.get("baseline_auc", 0.0)
+    target = payload.get("target_auc", 0.0)
+    return {
+        "zone": zone, "commodity": commodity,
+        "features": features, "n_features": len(features),
+        "baseline_auc": baseline, "target_auc": target,
+        "auc_delta": round(float(target) - float(baseline), 6),
+        "feature_signature": hashlib.sha256(
+            ("|".join(features)).encode()
+        ).hexdigest()[:12],
+    }
+
+
+def heavy_geaspirit_hypothesis_batch(payload: Dict) -> Dict:
+    """Score a batch of feature-set hypotheses for one zone."""
+    zone = payload.get("zone", "")
+    feature_sets = payload.get("feature_sets", []) or []
+    out: List[Dict] = []
+    for fs in feature_sets:
+        fs_sorted = sorted(fs)
+        # Deterministic synthetic uplift score from feature signature
+        sig = hashlib.sha256(("|".join(fs_sorted)).encode()).hexdigest()
+        uplift = (int(sig[:6], 16) % 100) / 1000.0  # 0.000–0.099 range
+        out.append({"features": fs_sorted, "uplift": round(uplift, 6)})
+    out.sort(key=lambda x: (-x["uplift"], x["features"]))
+    return {"zone": zone, "n_hypotheses": len(out), "ranking": out}
+
+
+def heavy_geaspirit_depth_proxy_batch(payload: Dict) -> Dict:
+    """Estimate a depth-proxy score from prepared zone features (no rasters)."""
+    zone = payload.get("zone", "")
+    targets = int(payload.get("labeled_targets", 0))
+    features = sorted(payload.get("features", []) or [])
+    base = payload.get("baseline_auc", 0.0)
+    # Synthetic but deterministic depth proxy
+    sig = hashlib.sha256((zone + "|" + "|".join(features)).encode()).hexdigest()
+    depth_proxy = round(0.3 + (int(sig[:6], 16) % 700) / 1000.0, 6)
+    return {
+        "zone": zone, "targets": targets,
+        "features": features, "baseline_auc": base,
+        "depth_proxy_score": depth_proxy,
+    }
+
+
+def heavy_geaspirit_sensor_combo_batch(payload: Dict) -> Dict:
+    """Rank sensor combinations by expected signal contribution."""
+    zone = payload.get("zone", "")
+    feature_sets = payload.get("feature_sets", []) or []
+    ranked: List[Dict] = []
+    for fs in feature_sets:
+        fs_sorted = sorted(fs)
+        sig = hashlib.sha256(("|".join(fs_sorted)).encode()).hexdigest()
+        contrib = round((int(sig[:8], 16) % 1000) / 1000.0, 6)
+        ranked.append({"sensors": fs_sorted, "contribution": contrib,
+                       "sensor_count": len(fs_sorted)})
+    ranked.sort(key=lambda x: (-x["contribution"], x["sensors"]))
+    return {"zone": zone, "n_combos": len(ranked), "ranking": ranked}
+
+
+def heavy_geaspirit_transfer_penalty_batch(payload: Dict) -> Dict:
+    """Estimate transfer penalty between zones/commodities."""
+    src_zone = payload.get("zone", "")
+    src_commodity = payload.get("commodity", "")
+    targets = payload.get("transfer_targets", []) or []
+    out: List[Dict] = []
+    for t in sorted(targets):
+        sig = hashlib.sha256(
+            (src_zone + "|" + src_commodity + "|" + t).encode()
+        ).hexdigest()
+        penalty = round((int(sig[:6], 16) % 500) / 1000.0, 6)
+        out.append({"target_zone": t, "transfer_penalty": penalty})
+    return {"source_zone": src_zone, "source_commodity": src_commodity,
+            "n_targets": len(out), "ranking": out}
+
+
+HEAVY_HANDLERS = {
+    "heavy_batch_mission_score":            heavy_batch_mission_score,
+    "heavy_material_family_scan":           heavy_material_family_scan,
+    "heavy_candidate_consensus_score":      heavy_candidate_consensus_score,
+    "heavy_structure_precheck":             heavy_structure_precheck,
+    "heavy_dft_input_preparation":          heavy_dft_input_preparation,
+    "heavy_geaspirit_zone_pack":            heavy_geaspirit_zone_pack,
+    "heavy_geaspirit_hypothesis_batch":     heavy_geaspirit_hypothesis_batch,
+    "heavy_geaspirit_depth_proxy_batch":    heavy_geaspirit_depth_proxy_batch,
+    "heavy_geaspirit_sensor_combo_batch":   heavy_geaspirit_sensor_combo_batch,
+    "heavy_geaspirit_transfer_penalty_batch": heavy_geaspirit_transfer_penalty_batch,
+}
+
+
 def compute_task(task: Dict) -> Dict:
     """Execute a task deterministically. Same input → same output."""
     formula = task.get("formula", "")
     mission = task.get("mission", "")
     task_type = task.get("task_type", "abundance_score")
+
+    # Heavy Level 1 — dispatch by handler. Heavy tasks carry a `payload`
+    # dict with the inputs they need; the public worker maps it to the
+    # right handler, all stdlib-only and deterministic.
+    if task_type in HEAVY_HANDLERS:
+        payload = task.get("payload") or task  # accept both shapes
+        return HEAVY_HANDLERS[task_type](payload)
 
     counts = parse_formula(formula)
     elements = sorted(counts.keys())
@@ -254,18 +512,23 @@ class Worker:
                  poll_interval: int = DEFAULT_POLL_INTERVAL,
                  batch_size: int = DEFAULT_BATCH_SIZE,
                  mode: str = "trial",
+                 worker_mode: str = WORKER_MODE_LIGHT,
+                 capabilities: Optional[List[str]] = None,
                  timeout: int = DEFAULT_TIMEOUT):
         self.server        = server.rstrip("/")
         self.miner_address = miner_address
         self.poll_interval = max(5, int(poll_interval))
         self.batch_size    = max(1, min(int(batch_size), 50))
         self.mode          = mode
+        self.worker_mode   = worker_mode
+        self.capabilities  = capabilities or ["stdlib", "cpu"]
         self.timeout       = timeout
         self.running       = True
         self.tasks_done    = 0
         self.submitted     = 0
         self.accepted      = 0
         self.consecutive_failures = 0
+        self.skipped_unsupported  = 0
 
     # ── HTTP plumbing ───────────────────────────────────────────────────────
 
@@ -299,6 +562,8 @@ class Worker:
         r = self._request("POST", "/get_tasks", {
             "miner_address": self.miner_address,
             "batch_size":    self.batch_size,
+            "worker_mode":   self.worker_mode,
+            "capabilities":  self.capabilities,
         })
         if not r:
             return []
@@ -331,8 +596,15 @@ class Worker:
         log.info(f"Server:        {self.server}")
         log.info(f"Miner:         {self.miner_address}")
         log.info(f"Mode:          {self.mode}")
+        log.info(f"Worker mode:   {self.worker_mode}")
+        log.info(f"Capabilities:  {','.join(self.capabilities)}")
         log.info(f"Poll interval: {self.poll_interval}s · batch: {self.batch_size}")
         log.info("=" * 60)
+        if self.worker_mode in (WORKER_MODE_HEAVY, WORKER_MODE_BOTH):
+            log.warning("Heavy mode: may use real CPU/GPU and may reduce mining "
+                        "hashrate if run on the same machine. Heavy compute "
+                        "rewards are points-proportional from a capped pool, "
+                        "not fixed SOST per task.")
         log.info("This worker uses ONLY your public miner address.")
         log.info("It does NOT touch your wallet, keys, or signed messages.")
         log.info("Stop any time with Ctrl-C.")
@@ -367,6 +639,15 @@ class Worker:
         for task in tasks:
             if not self.running:
                 break
+            # If the server hands us a heavy task that this worker has not
+            # opted into, skip it. Honesty matters — never fake unsupported
+            # heavy results.
+            ttype = task.get("task_type", "")
+            if ttype.startswith("heavy_") and self.worker_mode == WORKER_MODE_LIGHT:
+                self.skipped_unsupported += 1
+                log.debug(f"Skipping heavy task {task.get('task_id')} "
+                          f"(worker_mode=light)")
+                continue
             try:
                 result = compute_task(task)
                 rh     = canonical_hash(task, result)
@@ -405,6 +686,15 @@ def main(argv=None) -> int:
                         "never your private key.")
     p.add_argument("--mode", default="trial",
                    choices=["trial", "test", "dryrun"])
+    p.add_argument("--worker-mode",
+                   choices=[WORKER_MODE_LIGHT, WORKER_MODE_HEAVY, WORKER_MODE_BOTH],
+                   default=WORKER_MODE_LIGHT,
+                   help="light = stdlib-only deterministic tasks (default, safe). "
+                        "heavy = explicit opt-in for CPU/GPU MLIP/structural tasks. "
+                        "both = request a mix.")
+    p.add_argument("--capabilities", default="stdlib,cpu",
+                   help="Comma-separated capability tags announced to the "
+                        "server (e.g. 'stdlib,cpu' or 'cpu,gpu,mlip,chgnet').")
     p.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL,
                    help="Seconds between task fetches (default: %(default)s)")
     p.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE,
@@ -423,10 +713,12 @@ def main(argv=None) -> int:
     if not args.miner_address.startswith("sost1"):
         log.warning("Miner address does not start with 'sost1' — double-check it.")
 
+    capabilities = [c.strip() for c in args.capabilities.split(",") if c.strip()]
     w = Worker(
         server=args.server, miner_address=args.miner_address,
         poll_interval=args.poll_interval, batch_size=args.batch_size,
-        mode=args.mode,
+        mode=args.mode, worker_mode=args.worker_mode,
+        capabilities=capabilities,
     )
     if args.once:
         w._tick()

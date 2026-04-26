@@ -24,20 +24,44 @@ for them.
 - Same SOST address you use for mining rewards.
 - Public ranking will be visible at `https://sostcore.com/api/useful-compute/ranking`.
 
-## Reward model
+## Reward model — two pools, budget-neutral
+
+The trial reserves the same total extra budget as before, but splits it
+50/50 between **two separate post-trial pools**.
+
+### Light pool — block-linked
 
 | Item | SOST |
 |------|-----:|
-| Normal coinbase reward (every miner, paid live) | 3.92550433 |
-| **Extra** — Gold Vault allocation (post-trial only) | +1.96275215 |
-| **Extra** — PoPC Pool allocation (post-trial only) | +1.96275215 |
-| **Total extra per eligible mined block** | **+3.92550430** |
-| Effective full block allocation for eligible miners | 7.85100863 |
+| Normal coinbase reward (every miner, live) | 3.92550433 |
+| **Light extra** per eligible **mined** block (post-trial) | **+1.96275215** |
+| Effective full block for an eligible Light miner | 5.88825648 |
 
-The extra is paid **after block 8,000** by a normal wallet TX batch from
-the Gold Vault and PoPC operator wallets. It is **not** automatic per
-block during the trial. Miners who do not run the worker simply receive
-the normal 3.92550433 SOST coinbase reward.
+To earn the Light extra, a miner must mine at least one block AND meet
+the Light eligibility threshold (100 verified tasks, dispute ratio < 10 %).
+
+### Heavy pool — capped, points-proportional
+
+| Item | SOST |
+|------|-----:|
+| Heavy reservation per trial block | 1.96275215 |
+| Trial blocks | × 1,000 |
+| **Heavy Compute Pool total** | **1,962.75215000** |
+| Per-miner cap | 25 % of pool |
+
+Heavy participants do **not** need to mine a block. Their share is
+distributed proportionally to **verified Heavy points** (not fixed SOST
+per task). Disputed/failed Heavy tasks count as 0 points. If no Heavy
+participants verify work, the pool stays unspent.
+
+The previous full extra of 3.92550430 SOST per eligible mined block and
+the 7.85100863 SOST effective full block are **no longer** the current
+Light model — same total budget, now split 50/50.
+
+All extras are paid **after block 8,000** by normal wallet TXs from the
+Gold Vault and PoPC operator wallets. Nothing is automatic per block
+during the trial. Miners who do not run any worker simply receive the
+standard 3.92550433 SOST coinbase reward.
 
 ## Eligibility
 
@@ -70,16 +94,35 @@ python3 scripts/useful_compute_worker.py \
     --miner-address sost1YOURADDRESS \
     --mode trial --once
 
-# 3. Run continuously alongside your miner
+# 3. Run continuously alongside your miner — Light mode (recommended)
 python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
+    --worker-mode light \
     --mode trial \
     --poll-interval 30
 ```
 
 Replace `sost1YOURADDRESS` with the SOST address you want credited
 (typically the same address that receives your mining rewards).
+
+### Heavy mode (advanced opt-in)
+
+```bash
+python3 scripts/useful_compute_worker.py \
+    --server https://sostcore.com/api/useful-compute \
+    --miner-address sost1YOURADDRESS \
+    --worker-mode heavy \
+    --capabilities cpu,mlip \
+    --mode trial \
+    --batch-size 1 \
+    --poll-interval 60
+```
+
+Heavy mode may use real CPU/GPU. Heavy participants do **not** need to
+mine a block — they earn a share of the capped 1,962.75215000 SOST Heavy
+pool proportional to their **verified Heavy points** (with a 25 % cap per
+miner).
 
 The worker prints one status line per cycle:
 

@@ -580,25 +580,53 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
-        <b style="color:var(--gold)">Reward model</b><br><br>
-        Normal SOST mining reward remains unchanged. During the trial, eligible participating miners may receive the full effective block allocation for blocks they mine.<br><br>
+        <b style="color:var(--gold)">Reward model — two pools, budget-neutral</b><br><br>
+        Normal SOST mining reward remains unchanged. The trial introduces two
+        separate, capped post-trial reward pools — one for Light Worker
+        participants and one for Heavy Worker participants. Total extra budget
+        per trial block is the same as the previously-announced extra; it is
+        now split 50/50 between the two pools.<br><br>
 
-        Normal miner reward:
+        Normal miner reward (live coinbase, every miner):
         <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin:6px 0 12px;font-size:11px;color:var(--text);font-family:var(--code)">
           <b style="color:var(--gold)">3.92550433 SOST</b>
         </div>
-        Post-trial extra reward for eligible mined blocks:
-        <div style="background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
-          +<b style="color:var(--gold)">1.96275215</b> SOST &mdash; Gold Vault allocation<br>
-          +<b style="color:var(--gold)">1.96275215</b> SOST &mdash; PoPC Pool allocation<br>
-          = <b style="color:var(--gold)">+3.92550430</b> SOST extra
+
+        <b style="color:#4ade80">Light Worker pool</b> &mdash; block-linked extra:
+        <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          +<b style="color:#4ade80">1.96275215</b> SOST per eligible <b>mined</b> block<br>
+          <span style="color:var(--text3)">────────────────────────────────────</span><br>
+          Effective full block (live + post-trial Light extra):<br>
+          <b style="color:var(--green)">5.88825648 SOST</b> per eligible mined block
         </div>
-        Full effective allocation for an eligible participating miner:
-        <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:11px;color:var(--green);font-family:var(--code);font-weight:600">
-          7.85100863 SOST per eligible mined block
+        Eligible Light miners must (1) mine at least one block during the
+        trial, (2) reach 100 verified Light tasks and (3) maintain a clean
+        dispute ratio.<br><br>
+
+        <b style="color:var(--orange)">Heavy Worker pool</b> &mdash; capped, points-proportional:
+        <div style="background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.2);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          <b style="color:var(--orange)">1.96275215</b> SOST per trial block reserved<br>
+          &times; 1,000 trial blocks<br>
+          <span style="color:var(--text3)">────────────────────────────────────</span><br>
+          Total Heavy Compute Pool: <b style="color:var(--orange)">1,962.75215000 SOST</b><br>
+          Distributed proportionally to <b>verified Heavy points</b>.<br>
+          Per-miner cap: <b style="color:var(--orange)">25%</b> of pool (anti-concentration).
         </div>
-        Non-participating miners can still mine normally and receive the standard miner reward.<br><br>
-        Rewards are <b>not</b> paid automatically per block during the trial. They will be calculated after block 8,000 and paid by normal SOST transactions using a post-trial payout manifest.<br><br>
+        Heavy participants do <b>not</b> need to mine a block. Their share of
+        the pool is determined by verified Heavy points (not fixed SOST per
+        task). Disputed/failed Heavy tasks count as zero points. If no Heavy
+        participants verify work, the Heavy pool stays unspent.<br><br>
+
+        Non-participating miners can still mine normally and receive the
+        standard 3.92550433 SOST coinbase reward.<br><br>
+        Rewards are <b>not</b> paid automatically per block during the trial.
+        They will be calculated after block 8,000 and paid by normal SOST
+        transactions using a post-trial payout manifest.<br><br>
+
+        <span style="color:var(--text3);font-size:9px">The previous full
+        figure of 7.85100863 SOST per eligible block is no longer the current
+        Light Worker model. The total extra budget is the same (3.92550430
+        SOST per trial block), now split 50/50 between Light and Heavy.</span><br><br>
 
         <span style="color:var(--text3)">&mdash;&mdash;&mdash;</span><br><br>
 
@@ -613,20 +641,46 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           cd sost-core<br>
           git pull origin main
         </div>
-        Run the Useful Compute Worker:
+        <b style="color:var(--green)">Light mode</b> (recommended for all miners &mdash; lightweight, no measurable hashrate impact):
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
           python3 scripts/useful_compute_worker.py \\<br>
           &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
           &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--worker-mode <span style="color:var(--green)">light</span> \\<br>
           &nbsp;&nbsp;--mode trial \\<br>
           &nbsp;&nbsp;--batch-size 3 \\<br>
           &nbsp;&nbsp;--poll-interval 30
         </div>
+
+        <b style="color:var(--orange)">Heavy mode</b> (advanced opt-in &mdash; uses real CPU/GPU; Heavy points participate in the capped pool):
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          python3 scripts/useful_compute_worker.py \\<br>
+          &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
+          &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--worker-mode <span style="color:var(--orange)">heavy</span> \\<br>
+          &nbsp;&nbsp;--capabilities cpu,mlip \\<br>
+          &nbsp;&nbsp;--mode trial \\<br>
+          &nbsp;&nbsp;--batch-size 1 \\<br>
+          &nbsp;&nbsp;--poll-interval 60
+        </div>
+
+        <b style="color:var(--cyan)">Both modes</b> (request a mix &mdash; advanced):
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
+          python3 scripts/useful_compute_worker.py \\<br>
+          &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
+          &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--worker-mode <span style="color:var(--cyan)">both</span> \\<br>
+          &nbsp;&nbsp;--mode trial \\<br>
+          &nbsp;&nbsp;--batch-size 3 \\<br>
+          &nbsp;&nbsp;--poll-interval 30
+        </div>
+
         For a one-time smoke test before running continuously:
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10.5px;color:var(--text);font-family:var(--code);overflow-x:auto">
           python3 scripts/useful_compute_worker.py \\<br>
           &nbsp;&nbsp;--server https://sostcore.com/api/useful-compute \\<br>
           &nbsp;&nbsp;--miner-address <span style="color:var(--gold)">YOUR_SOST_ADDRESS</span> \\<br>
+          &nbsp;&nbsp;--worker-mode light \\<br>
           &nbsp;&nbsp;--mode trial \\<br>
           &nbsp;&nbsp;--batch-size 3 \\<br>
           &nbsp;&nbsp;--once
