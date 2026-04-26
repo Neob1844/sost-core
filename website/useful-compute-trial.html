@@ -115,22 +115,42 @@ hr.sep{border:0;border-top:1px solid var(--border);margin:32px 0}
   </div>
 </div>
 
-<h2>Reward model</h2>
+<h2>Reward model — two pools, budget-neutral</h2>
 
+<p>The trial introduces two separate post-trial pools — Light and Heavy —
+splitting the same extra budget 50/50.</p>
+
+<h3 style="color:#4ade80">Light pool — block-linked</h3>
 <table class="tbl">
   <tr><th>Item</th><th class="right">SOST</th></tr>
-  <tr><td>Normal coinbase miner reward (every miner, paid live)</td>          <td class="right">3.92550433</td></tr>
-  <tr><td>Extra — Gold Vault allocation (post-trial)</td>                     <td class="right">+1.96275215</td></tr>
-  <tr><td>Extra — PoPC Pool allocation (post-trial)</td>                      <td class="right">+1.96275215</td></tr>
-  <tr><td><b>Total extra per eligible mined block</b></td>                    <td class="right"><b>+3.92550430</b></td></tr>
-  <tr><td>Effective full block allocation for eligible miners</td>            <td class="right">7.85100863</td></tr>
+  <tr><td>Normal coinbase reward (every miner, live)</td>                <td class="right">3.92550433</td></tr>
+  <tr><td><b>Light extra</b> per eligible mined block (post-trial)</td>  <td class="right"><b>+1.96275215</b></td></tr>
+  <tr><td><b>Effective full block</b> for an eligible Light miner</td>   <td class="right"><b>5.88825648</b></td></tr>
+</table>
+
+<h3 style="color:var(--orange)">Heavy pool — capped, points-proportional</h3>
+<table class="tbl">
+  <tr><th>Item</th><th class="right">SOST</th></tr>
+  <tr><td>Heavy reservation per trial block</td>                         <td class="right">1.96275215</td></tr>
+  <tr><td>Trial blocks</td>                                              <td class="right">× 1,000</td></tr>
+  <tr><td><b>Heavy Compute Pool total</b></td>                           <td class="right"><b>1,962.75215000</b></td></tr>
+  <tr><td>Per-miner cap (anti-concentration)</td>                        <td class="right">25 %</td></tr>
+  <tr><td>Min verified Heavy tasks for eligibility</td>                  <td class="right">10</td></tr>
 </table>
 
 <div class="callout">
-  <b>Important:</b> the extra is paid <b>after block 8,000</b> by a normal
-  wallet TX batch. It is <b>not</b> automatic per block. Miners who do not
-  participate keep mining normally and receive the standard 3.92550433
-  SOST reward — nothing changes for them.
+  <b>Important:</b> the Light extra and the Heavy share are paid <b>after
+  block 8,000</b> by normal wallet TXs. Nothing is automatic per block.
+  Miners who do not participate keep mining normally and receive the
+  standard 3.92550433 SOST coinbase reward.
+</div>
+
+<div class="callout">
+  <b>Heavy is points-proportional, not fixed SOST per task.</b> Heavy
+  tasks generate <code>1–8</code> points each according to difficulty.
+  After block 8,000, the capped 1,962.75215000 SOST pool is distributed
+  proportionally to verified Heavy points, subject to the 25 % per-miner
+  cap. Disputed or failed Heavy tasks count as 0 points.
 </div>
 
 <h2>Eligibility</h2>
@@ -164,20 +184,39 @@ cd sost-core
 python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
+    --worker-mode light \
     --once
+</code></pre>
 
-# 3. Run continuously alongside your miner
-python3 scripts/useful_compute_worker.py \
+<h3 style="color:#4ade80">Light mode (recommended for all miners)</h3>
+<pre><code>python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
+    --worker-mode light \
     --mode trial \
+    --batch-size 3 \
     --poll-interval 30
+</code></pre>
+
+<h3 style="color:var(--orange)">Heavy mode (advanced opt-in)</h3>
+<pre><code>python3 scripts/useful_compute_worker.py \
+    --server https://sostcore.com/api/useful-compute \
+    --miner-address sost1YOURADDRESS \
+    --worker-mode heavy \
+    --capabilities cpu,mlip \
+    --mode trial \
+    --batch-size 1 \
+    --poll-interval 60
 </code></pre>
 
 <p>Replace <code>sost1YOURADDRESS</code> with the SOST address you want
 credited (typically the same address that receives your mining rewards).
 The worker uses <b>only your public address</b>: never your private key,
 wallet file, or any signed message.</p>
+
+<p><b style="color:var(--orange)">Heavy mode may use real CPU/GPU</b> and
+may reduce mining hashrate if run on the same machine. Heavy rewards are
+points-proportional from a capped pool, not fixed SOST per task.</p>
 
 <h2>Public endpoints</h2>
 

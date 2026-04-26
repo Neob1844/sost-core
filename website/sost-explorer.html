@@ -610,12 +610,21 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
           <span style="color:var(--text3)">────────────────────────────────────</span><br>
           Total Heavy Compute Pool: <b style="color:var(--orange)">1,962.75215000 SOST</b><br>
           Distributed proportionally to <b>verified Heavy points</b>.<br>
-          Per-miner cap: <b style="color:var(--orange)">25%</b> of pool (anti-concentration).
+          Per-miner cap: <b style="color:var(--orange)">25%</b> of pool (anti-concentration).<br>
+          Min verified Heavy tasks for eligibility: <b>10</b>.
         </div>
         Heavy participants do <b>not</b> need to mine a block. Their share of
         the pool is determined by verified Heavy points (not fixed SOST per
         task). Disputed/failed Heavy tasks count as zero points. If no Heavy
         participants verify work, the Heavy pool stays unspent.<br><br>
+
+        <b style="color:var(--orange)">Heavy Level 1 task types</b> (deterministic,
+        CPU-bound, stdlib-only, available from block 7,000):
+        <div style="background:rgba(251,146,60,0.04);border:1px solid rgba(251,146,60,0.15);border-radius:4px;padding:10px 14px;margin:6px 0 12px;font-size:10px;line-height:1.85;color:var(--text2);font-family:var(--code)">
+          <b style="color:var(--orange)">Materials</b> &mdash; heavy_batch_mission_score (2 pts), heavy_candidate_consensus_score (2), heavy_material_family_scan (3), heavy_structure_precheck (1), heavy_dft_input_preparation (3)<br>
+          <b style="color:var(--orange)">GeaSpirit</b> &mdash; heavy_geaspirit_zone_pack (3), heavy_geaspirit_hypothesis_batch (4), heavy_geaspirit_depth_proxy_batch (5), heavy_geaspirit_sensor_combo_batch (3), heavy_geaspirit_transfer_penalty_batch (4)<br>
+          <span style="color:var(--text3)">Future Level 2+ task types (numpy/pymatgen, MLIP/CHGNet) may activate progressively as worker capability support lands.</span>
+        </div><br>
 
         Non-participating miners can still mine normally and receive the
         standard 3.92550433 SOST coinbase reward.<br><br>
