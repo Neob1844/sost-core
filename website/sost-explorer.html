@@ -742,6 +742,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff;border:2px solid #fb010d;box-shadow:0 0 14px rgba(251,1,13,.4),inset 0 0 6px rgba(251,1,13,.18);position:relative" title="Consensus-relevant average. cASERT bitsQ adjusts based on this 288-block window."><div style="position:absolute;top:-8px;right:8px;background:#fb010d;color:#fff;font-size:8px;font-weight:800;letter-spacing:1.5px;padding:2px 6px;border-radius:3px;box-shadow:0 0 6px rgba(251,1,13,.6)">CONSENSUS</div><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div></div>
   <div class="dash-card" id="avgTime600Card" onclick="toggleDashPanel('avgtime')" style="color:#fbbf24" title="Long-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fbbf24">LONG AVG &middot; 600</div><div class="dash-val" id="dAvgTime600" style="color:#fbbf24">&mdash;</div><div class="dash-sub" id="dAvgTime600Sub" style="color:#fbbf24">last 600 blocks &middot; visual</div></div>
   <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div></div>
+  <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
@@ -1545,6 +1546,38 @@ async function updateDashboard(info){
     }
     _applyLongAvgPulse('avgTime600Card','dAvgTime600','dAvgTime600Sub',times600,'#fbbf24',600);
     _applyLongAvgPulse('avgTime1000Card','dAvgTime1000','dAvgTime1000Sub',times1000,'#fb010d',AVG_WINDOW_LONG);
+    // Genesis-to-now average (all-time, O(1) computation). Not consensus.
+    function _applyDirectAvgPulse(cardId,valId,subId,avgSec,baseTextColor,subText){
+      var c=document.getElementById(cardId);var v=document.getElementById(valId);var s=document.getElementById(subId);
+      if(!c||!v||!s)return;
+      if(!isFinite(avgSec)||avgSec<=0){
+        v.textContent='—';s.textContent=subText+' · loading';
+        c.style.animation='';v.style.color=baseTextColor;return;
+      }
+      var mm=Math.floor(avgSec/60),ss=Math.floor(avgSec%60);
+      v.textContent=(mm>0?mm+'m '+ss+'s':ss+'s');
+      s.textContent=subText;
+      c.style.animation='';v.style.color=baseTextColor;
+      var d2=Math.abs(avgSec-600);var inR=(avgSec>=540&&avgSec<=660);
+      var rr,gg,bb;
+      if(avgSec>=570&&avgSec<=630){rr=0;gg=255;bb=136;}
+      else if(avgSec>=540&&avgSec<=660){rr=255;gg=221;bb=0;}
+      else if(avgSec<540){rr=255;gg=136;bb=0;}
+      else{rr=255;gg=68;bb=68;}
+      if(inR){
+        var rt=Math.max(0,1-(d2/60));
+        var lo=0.03+rt*0.12;var hi=0.10+rt*0.45;var sp=3.5-rt*2.3;
+        c.style.setProperty('--ap-r',rr);c.style.setProperty('--ap-g',gg);c.style.setProperty('--ap-b',bb);
+        c.style.setProperty('--ap-lo',lo.toFixed(2));c.style.setProperty('--ap-hi',hi.toFixed(2));
+        c.style.animation='avgPulse '+sp.toFixed(1)+'s ease-in-out infinite';
+      } else {
+        c.style.setProperty('--ap-r',rr);c.style.setProperty('--ap-g',gg);c.style.setProperty('--ap-b',bb);
+        c.style.setProperty('--ap-lo','0.03');c.style.setProperty('--ap-hi','0.10');
+        c.style.animation='avgPulse 3.5s ease-in-out infinite';
+      }
+    }
+    var _avgGenesis=(times.length>0&&info.blocks>0)?((times[0]-GENESIS_TS)/info.blocks):0;
+    _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks · visual');
     var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;
     // Store cASERT profile from RPC (Phase 5A fix)
