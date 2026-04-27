@@ -15,7 +15,6 @@
 #include "sost/pow/convergencex.h"
 #include "sost/pow/casert.h"
 #include "sost/pow/scratchpad.h"
-#include "sost/pow/scratchpad_cache.h"
 #include "sost/sostcompact.h"
 #include "sost/serialize.h"
 #include "sost/emission.h"
@@ -36,7 +35,6 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include <memory>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -713,21 +711,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     g_node_profile = cdec.profile_index;
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
-
-    // Scratchpad lookup. See include/sost/pow/scratchpad_cache.h for the
-    // single-caller assumption. Cache hit on every call inside an epoch
-    // (~131 553 blocks); cache miss only on first call and at epoch
-    // boundaries.
-    std::shared_ptr<std::vector<uint8_t>> scratch_owner = scratch_cache_get(skey);
-    if (!scratch_owner) {
-        auto t0 = std::chrono::steady_clock::now();
-        scratch_owner = std::make_shared<std::vector<uint8_t>>(
-            build_scratchpad(skey, params.cx_scratch_mb));
-        auto t1 = std::chrono::steady_clock::now();
-        int64_t took_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-        scratch_cache_put(skey, scratch_owner, params.cx_scratch_mb, took_ms);
-    }
-    const auto& scratch = *scratch_owner;
+    auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
     Bytes32 bk = compute_block_key(g_tip_hash);
 
     int64_t ts;
