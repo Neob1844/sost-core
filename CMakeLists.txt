@@ -26,6 +26,7 @@ add_library(sost-core STATIC
     # Phase 0: consensus base
     src/crypto.cpp src/subsidy.cpp src/emission.cpp src/pow/casert.cpp
     src/sostcompact.cpp src/pow/convergencex.cpp src/pow/scratchpad.cpp
+    src/pow/scratchpad_cache.cpp
     
     # Phase 1: transaction serialization
     src/transaction.cpp
@@ -131,6 +132,10 @@ add_test(NAME bond-lock COMMAND test-bond-lock)
 add_executable(test-casert tests/test_casert.cpp)
 target_link_libraries(test-casert PRIVATE sost-core)
 add_test(NAME casert COMMAND test-casert)
+
+add_executable(test-scratchpad-cache tests/test_scratchpad_cache.cpp)
+target_link_libraries(test-scratchpad-cache PRIVATE sost-core)
+add_test(NAME scratchpad-cache COMMAND test-scratchpad-cache)
 
 add_executable(test-checkpoints tests/test_checkpoints.cpp)
 target_link_libraries(test-checkpoints PRIVATE sost-core)
