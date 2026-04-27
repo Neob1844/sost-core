@@ -1,10 +1,45 @@
-# SOST Useful Compute Trial — Miner Participation
+# SOST Useful Compute — Miner Participation (TESTING ONLY)
+
+> ## ⚠️ Trial scope update — 2026-04-27
+>
+> **All Useful Compute rewards are postponed.**
+>
+> After internal audit and empirical analysis, **no SOST will be
+> distributed for Useful Compute activity at this stage**. This applies
+> to both Light and Heavy worker modes. The infrastructure remains live
+> as a **public dry-run / testing environment only**.
+>
+> Concretely:
+>
+> - **Light worker = testing only.** Submitted Light results appear in
+>   public stats but are **not paid**. There is no Light reward window
+>   tied to blocks `[7000, 8000)`.
+> - **Heavy worker = testing only.** Heavy infrastructure remains
+>   available for those who want to validate worker behaviour, but no
+>   SOST is paid for any Heavy task this trial.
+> - **No payout manifest** will be generated for current testing
+>   activity. Submitted results are not eligible for retroactive
+>   inclusion in any future rewarded phase.
+>
+> **Future rewarded windows will be announced individually.** Each will
+> ship with its own task definitions, eligibility rules, activation
+> window and audit process, with public advance notice. SOST will not
+> reward weak, symbolic or artificial CPU work, and will not retroactively
+> compensate testing-phase activity. Each future heavy family — and any
+> future light reward window — must be announced before its window opens.
+>
+> Funds originally earmarked for the trial reward pool remain in the
+> Gold Vault / PoPC pool structure aligned with the protocol's stated
+> purpose. Nothing is being spent, redirected or distributed prematurely.
+
+---
 
 ## What this is
 
-From **block 7,000 to block 8,000**, SOST runs a 1,000-block voluntary
-trial where part of the network's computational power is directed toward
-real scientific workloads (Materials Engine and GeaSpirit research).
+The SOST Useful Compute infrastructure is a voluntary computation layer
+where part of the network's CPU is directed toward real scientific
+workloads (Materials Engine and GeaSpirit research). Right now it is
+running as a **public dry-run / testing system**.
 
 You participate by running a small extra program — the **Useful Compute
 Worker** — alongside your normal SOST miner. It uses *only your public
@@ -17,71 +52,40 @@ for them.
 
 ## Quick rules
 
-- Trial blocks: **7,000 → 8,000** (inclusive start, exclusive end).
 - Voluntary opt-in. No penalty for not participating.
-- No consensus changes. No coinbase changes.
+- No fork. No consensus change. No coinbase change. No mining change.
 - No private keys required, ever.
 - Same SOST address you use for mining rewards.
-- Public ranking will be visible at `https://sostcore.com/api/useful-compute/ranking`.
+- Public ranking visible at `https://sostcore.com/api/useful-compute/ranking`.
+- **All Useful Compute rewards are postponed.** Both Light and Heavy
+  modes are currently testing only.
+- Submitted results during this phase are **not eligible** for any
+  retroactive reward.
 
-## Reward model — two pools, budget-neutral
+## Reward model — postponed (testing only)
 
-The trial reserves the same total extra budget as before, but splits it
-50/50 between **two separate post-trial pools**.
+There is **no active Useful Compute reward window** at this stage. The
+infrastructure is intentionally running for public verification of the
+task server, the worker, the N=2 cross-verification path, and the
+public audit endpoints — without any SOST paid out.
 
-### Light pool — block-linked
+When the rewarded phase becomes ready, a separate public announcement
+will publish: final task definitions, eligibility rules, reward formula,
+worker version, activation window, and audit process. Until that
+announcement, treat this guide as a description of the testing
+infrastructure, not as a description of any active reward path.
 
-| Item | SOST |
-|------|-----:|
-| Normal coinbase reward (every miner, live) | 3.92550433 |
-| **Light extra** per eligible **mined** block (post-trial) | **+1.96275215** |
-| Effective full block for an eligible Light miner | 5.88825648 |
+What does NOT change in the meantime:
 
-To earn the Light extra, a miner must mine at least one block AND meet
-the Light eligibility threshold (100 verified tasks, dispute ratio < 10 %).
+- Normal SOST mining and the standard 3.92550433 SOST coinbase reward
+  per block remain unchanged for every miner.
+- Funds in the Gold Vault and PoPC pool stay where they are, aligned
+  with the protocol's original purpose. Nothing is spent prematurely.
 
-### Heavy pool — capped, points-proportional
+## Quick start — testing the worker
 
-| Item | SOST |
-|------|-----:|
-| Heavy reservation per trial block | 1.96275215 |
-| Trial blocks | × 1,000 |
-| **Heavy Compute Pool total** | **1,962.75215000** |
-| Per-miner cap | 25 % of pool |
-
-Heavy participants do **not** need to mine a block. Their share is
-distributed proportionally to **verified Heavy points** (not fixed SOST
-per task). Disputed/failed Heavy tasks count as 0 points. If no Heavy
-participants verify work, the pool stays unspent.
-
-The previous full extra of 3.92550430 SOST per eligible mined block and
-the 7.85100863 SOST effective full block are **no longer** the current
-Light model — same total budget, now split 50/50.
-
-All extras are paid **after block 8,000** by normal wallet TXs from the
-Gold Vault and PoPC operator wallets. Nothing is automatic per block
-during the trial. Miners who do not run any worker simply receive the
-standard 3.92550433 SOST coinbase reward.
-
-## Eligibility
-
-A miner address is eligible for the post-trial bonus only if **all**:
-
-1. The address mined at least one block during `[7000, 8000)`.
-2. The address ran the Useful Compute Worker.
-3. The address has at least **100 verified tasks** in the public ranking.
-4. The address has a dispute ratio under **10 %**
-   (`disputed / submitted < 0.10`).
-
-A "verified" task is one where **two distinct miners** computed the same
-task and submitted matching result hashes. This cross-worker check is
-the trial's anti-cheat: a single miner returning fake hashes cannot
-inflate their own score because no one will match them.
-
-## Quick start
-
-You need Python 3.6+ and `git`. No pip install required — the worker is
-self-contained.
+You need Python 3.6+ and `git`. No `pip install` required — the worker
+is self-contained, stdlib-only.
 
 ```bash
 # 1. Get the public worker
@@ -94,7 +98,7 @@ python3 scripts/useful_compute_worker.py \
     --miner-address sost1YOURADDRESS \
     --mode trial --once
 
-# 3. Run continuously alongside your miner — Light mode (recommended)
+# 3. Run continuously alongside your miner — Light mode
 python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
@@ -103,26 +107,26 @@ python3 scripts/useful_compute_worker.py \
     --poll-interval 30
 ```
 
-Replace `sost1YOURADDRESS` with the SOST address you want credited
+Replace `sost1YOURADDRESS` with the SOST address you want associated
 (typically the same address that receives your mining rewards).
 
-### Heavy mode (advanced opt-in)
+Heavy mode is also available for those who want to test the Heavy
+dispatch path:
 
 ```bash
 python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
     --worker-mode heavy \
-    --capabilities cpu,mlip \
     --mode trial \
-    --batch-size 1 \
     --poll-interval 60
 ```
 
-Heavy mode may use real CPU/GPU. Heavy participants do **not** need to
-mine a block — they earn a share of the capped 1,962.75215000 SOST Heavy
-pool proportional to their **verified Heavy points** (with a 25 % cap per
-miner).
+If you previously saw `--capabilities cpu,mlip` in earlier examples,
+note that `--capabilities` REPLACES the default rather than adding to
+it. Heavy tasks today require `stdlib,cpu`. Either omit
+`--capabilities` entirely (recommended) or pass `--capabilities
+stdlib,cpu` explicitly to receive heavy tasks.
 
 The worker prints one status line per cycle:
 
@@ -130,11 +134,14 @@ The worker prints one status line per cycle:
 local_done=42 submitted=42 accepted=42 verified=12 disputed=0 score=18.0 eligible=False
 ```
 
-- `verified` increases only after a *second* miner submits the same hash
-  for the same task.
-- `disputed` increases if your hash disagrees with another miner's hash.
-- `eligible=True` once you cross 100 verified tasks with a clean dispute
-  ratio.
+These counters are visible in the public ranking but are not
+reward-eligible at this stage. They are useful to verify that:
+
+- The worker is connecting to the public server.
+- Tasks are being received and processed.
+- Submissions are accepted and persisted.
+- N=2 cross-verification is working when a second miner processes the
+  same task.
 
 ## Run as a background service (Linux)
 
@@ -142,7 +149,7 @@ Create `/etc/systemd/system/sost-useful-compute.service`:
 
 ```
 [Unit]
-Description=SOST Useful Compute Worker
+Description=SOST Useful Compute Worker (testing)
 After=network-online.target
 
 [Service]
@@ -151,6 +158,7 @@ WorkingDirectory=/path/to/sost-core
 ExecStart=/usr/bin/python3 scripts/useful_compute_worker.py \
     --server https://sostcore.com/api/useful-compute \
     --miner-address sost1YOURADDRESS \
+    --worker-mode light \
     --mode trial \
     --poll-interval 30
 Restart=on-failure
@@ -168,9 +176,9 @@ sudo systemctl enable --now sost-useful-compute
 journalctl -u sost-useful-compute -f
 ```
 
-## Checking your progress
+## Inspecting the system
 
-Anyone can check eligibility status of any address:
+Anyone can check the public state of any address:
 
 ```bash
 curl -s "https://sostcore.com/api/useful-compute/check_eligible?address=sost1YOUR..."
@@ -191,18 +199,26 @@ Returns JSON:
 }
 ```
 
-Public ranking and global stats:
+The `eligible` flag here reflects the threshold logic of the underlying
+infrastructure (≥100 verified tasks, dispute ratio under 10%). It does
+**not** mean any SOST is being paid — at this stage no rewards are
+active. The flag is a future-facing field that will become meaningful
+once a rewarded phase is announced.
+
+Public endpoints (read-only, no authentication):
 
 ```
+https://sostcore.com/api/useful-compute/health
+https://sostcore.com/api/useful-compute/queue_stats
 https://sostcore.com/api/useful-compute/ranking
-https://sostcore.com/api/useful-compute/stats
+https://sostcore.com/api/useful-compute/audit_export
 ```
 
 ## What the worker actually computes
 
-Every task names a chemical formula and a research mission (catalysts,
-photovoltaics, lithium extraction, hydrogen storage, CO₂ capture,
-desalination). The worker:
+Every Light task names a chemical formula and a research mission
+(catalysts, photovoltaics, lithium extraction, hydrogen storage, CO₂
+capture, desalination). The worker:
 
 1. Parses the formula into elements + counts.
 2. Looks up the elements' crustal abundance and relative cost (public
@@ -219,8 +235,9 @@ worker version, which is what makes cross-worker N=2 verification work.
 **Is this mining a different coin?** No. You keep mining SOST normally.
 The worker is a separate, voluntary contribution layer.
 
-**Will it slow my miner down?** It does light arithmetic. The default
-poll interval is 30 seconds and the worker idles 99 % of the time.
+**Will it slow my miner down?** Light mode does small arithmetic. The
+default poll interval is 30 seconds and the worker idles 99% of the
+time.
 
 **Do I need to register?** No. The first time the worker contacts the
 server, your address is added automatically.
@@ -232,16 +249,25 @@ won't increase your verified-task count more than running a single one
 **Can I cheat by sending fake hashes?** No. Each task is dispatched to
 two miners. If your hash doesn't match the other miner's, the task is
 marked `DISPUTED`, counted against your dispute ratio, and excluded
-from your verified count. Above 10 % disputes you lose eligibility.
+from your verified count.
 
 **What happens to my private key?** Nothing. The worker never reads it,
 never asks for it, and never writes it. Only your public address travels
 over the wire.
 
-**When do I get the extra reward?** After block 8,000 the team takes a
-public ranking snapshot, runs the post-trial reward distributor in
-dry-run mode, publishes the manifest for review, and then signs the
-batch TXs offline from the Gold Vault and PoPC wallets.
+**Will I get paid for this testing activity?** No. All Useful Compute
+rewards are postponed. Submitted results during this phase are not
+eligible for any retroactive reward. The future rewarded phase will be
+announced separately with its own rules and activation window.
+
+**Why is everything postponed?** SOST will not reward weak, symbolic
+or artificial CPU work. The current Heavy task design produces per-task
+runtimes too short to count as real heavy compute, and activating Light
+rewards alone would be inconsistent with that decision. Real Heavy
+tasks (DFT-grade, expanded formula pools, real per-task runtime,
+scientifically actionable output) need to be designed and validated
+properly before any SOST is paid for them. Each future reward family
+will be announced separately before its window opens.
 
 ## Stopping
 
@@ -251,12 +277,11 @@ Press `Ctrl-C` or:
 sudo systemctl stop sost-useful-compute
 ```
 
-Already-submitted tasks remain on your record. Stopping does not erase
-verified contributions.
+Already-submitted entries remain on your record. Stopping does not
+erase verified contributions in the public stats.
 
 ## Files
 
 - `scripts/useful_compute_worker.py` — public worker (this is what you run)
 - This document — `docs/miner-useful-compute-trial.md`
-- Trial banner in the explorer with the validated scientific
-  achievements that motivated the trial.
+- cASERT calibration decision (no consensus fork) — `docs/casert_calibration_decision.md`
