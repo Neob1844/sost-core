@@ -1026,6 +1026,45 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         return true;
                     } else {
                         printf("  -> node REJECTED block\n");
+                        // Race-loss recovery: re-query node for current tip + height
+                        // so the next mine_one_block iteration restarts on the new
+                        // tip rather than retrying with a stale parent for minutes
+                        // until the background monitor catches up.
+                        std::string info = rpc_call("getinfo");
+                        std::string best = rpc_call("getbestblockhash");
+                        if (!info.empty()) {
+                            auto bp = info.find("\"blocks\":");
+                            int64_t node_h = (bp != std::string::npos) ? atoll(info.c_str() + bp + 9) : -1;
+                            auto rp = best.find("\"result\":\"");
+                            if (rp != std::string::npos) {
+                                std::string tip_hex = best.substr(rp + 10, 64);
+                                if (tip_hex.size() == 64) {
+                                    Bytes32 new_tip{};
+                                    for (int i2 = 0; i2 < 32; ++i2) {
+                                        unsigned int by;
+                                        sscanf(tip_hex.c_str() + i2*2, "%02x", &by);
+                                        new_tip[i2] = (uint8_t)by;
+                                    }
+                                    if (new_tip != g_tip_hash) {
+                                        g_tip_hash = new_tip;
+                                        printf("  -> Tip moved to %s — race lost, advancing.\n",
+                                               tip_hex.substr(0, 16).c_str());
+                                    }
+                                }
+                            }
+                            uint32_t node_diff = bits_q;
+                            auto dp = info.find("\"next_difficulty\":");
+                            if (dp != std::string::npos)
+                                node_diff = (uint32_t)atoll(info.c_str() + dp + 18);
+                            while (node_h >= 0 && (int64_t)g_chain.size() - 1 < node_h) {
+                                BlockMeta pad{};
+                                pad.height = (int64_t)g_chain.size();
+                                pad.time = (int64_t)time(nullptr);
+                                pad.powDiffQ = node_diff;
+                                pad.profile_index = 0;
+                                g_chain.push_back(pad);
+                            }
+                        }
                         return false;
                     }
                 }
