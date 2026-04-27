@@ -1,1 +1,1 @@
-{"v":"2026-04-27-v29","note":"Explorer: avg600 (yellow) + avg1000 (red) informational long-avg cards added next to avg288. Same pulse effect, fixed text colors. Non-consensus visual metrics; avg288 remains the consensus-relevant average. cASERT consensus unchanged."}
+{"v":"2026-04-27-v30","note":"Explorer: AVG BLOCK TIME (288) card highlighted with red border + CONSENSUS badge to distinguish from informational LONG AVG 600/1000 cards. cASERT consensus unchanged."}
