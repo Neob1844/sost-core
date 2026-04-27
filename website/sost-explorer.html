@@ -4192,6 +4192,10 @@ async function loadLatestTxs(){
 }
 async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
+// Force refresh on tab visibility / window focus — browsers throttle setInterval
+// in background tabs, so without this the data goes stale after a few minutes idle.
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')refresh();});
+window.addEventListener('focus',function(){refresh();});
 
 // Version-based auto-reload: checks api/explorer_version.json every 60s.
 // When version changes (after git push), reloads page automatically.
