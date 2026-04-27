@@ -1450,13 +1450,18 @@ async function updateDashboard(info){
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW_LONG,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){try{var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);if(h>info.blocks-600)times600.push(b.time);if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address)minerSet.add(b.miner_address);}catch(be){continue;}}
-    _diffHistory=diffs.reverse();drawSparkline();
-    // Update unique miners card from freshly fetched data
+  try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW_LONG,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){try{var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);if(h>info.blocks-600)times600.push(b.time);if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);}catch(be){continue;}}
+    // Charts and per-288 widgets only see the most-recent AVG_WINDOW entries.
+    // The full diffs[] (up to AVG_WINDOW_LONG) is only used for the avg600 /
+    // avg1000 informational cards above. Slice ensures BURST/VOLATILITY,
+    // BLOCK INTERVALS and DIFF HISTORY charts keep showing 288 blocks (~48h)
+    // matching their headers.
+    _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
+    // Update unique miners card from freshly fetched data (288-window only)
     document.getElementById('dMiners').textContent=minerSet.size;
     document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
-    // Update mining distribution card with top-3 share
-    var _distMiners={};for(var di2=0;di2<diffs.length;di2++){var dm=diffs[di2].miner;if(dm){if(!_distMiners[dm])_distMiners[dm]=0;_distMiners[dm]++;}}
+    // Update mining distribution card with top-3 share (288-window only)
+    var _distMiners={};var _distEnd=Math.min(diffs.length,AVG_WINDOW);for(var di2=0;di2<_distEnd;di2++){var dm=diffs[di2].miner;if(dm){if(!_distMiners[dm])_distMiners[dm]=0;_distMiners[dm]++;}}
     var _distSorted=Object.keys(_distMiners).sort(function(a,b){return _distMiners[b]-_distMiners[a];});
     var _distTotal=0;for(var di3=0;di3<_distSorted.length;di3++)_distTotal+=_distMiners[_distSorted[di3]];
     var _distTop3=0;for(var di4=0;di4<Math.min(3,_distSorted.length);di4++)_distTop3+=_distMiners[_distSorted[di4]];
@@ -2311,7 +2316,11 @@ var _nextBitsQ=0;
 var _tipBlockHash='';
 
 function updateEqualizer(info, times, diffs) {
-  try { renderProdChart(info, diffs); renderBlockTimeChart(diffs); renderBurstChart(diffs); } catch(e) { console.error('chart error',e); }
+  // Charts (BURST/VOL, BLOCK INTERVALS, DIFF HISTORY) keep showing the most
+  // recent 288 blocks to match their "(~48h)" headers. The full diffs[] (up
+  // to 1000) is used only by the LONG AVG · 600 / 1000 cards above.
+  var diffs288 = (diffs && diffs.length > 288) ? diffs.slice(0, 288) : diffs;
+  try { renderProdChart(info, diffs288); renderBlockTimeChart(diffs288); renderBurstChart(diffs288); } catch(e) { console.error('chart error',e); }
 }
 var GENESIS_TS=1773597600;
 function renderProdChart(info, diffs) {
