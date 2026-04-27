@@ -1751,13 +1751,13 @@ SectionRenderers.dashboard = function(el) {
         }
       } catch(e) { connectedNodes = 'N/A'; }
 
-      // Count unique miners from last 20 blocks
+      // Count unique miners from last 288 blocks (~48h) — matches explorer
       let uniqueMiners = 'N/A';
       try {
         let minerAddrs = new Set();
         const tipHash = await rpcCall('getblockhash', [parseInt(height)]);
         let bHash = tipHash;
-        for (let i = 0; i < 20 && bHash; i++) {
+        for (let i = 0; i < 288 && bHash; i++) {
           const blk = await rpcCall('getblock', [bHash]);
           if (blk && blk.miner_address) minerAddrs.add(blk.miner_address);
           bHash = blk ? blk.previousblockhash : null;
@@ -1812,7 +1812,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
-        <div class="stat-row"><span class="stat-label">ACTIVE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 20 blocks)</span></span></div>
+        <div class="stat-row"><span class="stat-label">ACTIVE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 288 blocks)</span></span></div>
         <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>

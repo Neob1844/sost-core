@@ -1,5 +1,5 @@
-// SOST — Sovereign Stock Token — Service Worker v77
-const CACHE_NAME = 'sost-app-v77';
+// SOST — Sovereign Stock Token — Service Worker v78
+const CACHE_NAME = 'sost-app-v78';
 const STATIC_ASSETS = [
   './',
   './index.html',
