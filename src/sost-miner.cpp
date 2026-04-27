@@ -15,6 +15,8 @@
 #include "sost/pow/convergencex.h"
 #include "sost/pow/casert.h"
 #include "sost/pow/scratchpad.h"
+#include "sost/pow/scratchpad_cache.h"
+#include "sost/pow/relief_predict.h"
 #include "sost/sostcompact.h"
 #include "sost/serialize.h"
 #include "sost/emission.h"
@@ -35,6 +37,7 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <memory>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -606,7 +609,11 @@ static void start_block_monitor(int64_t mining_height) {
     g_monitor_running = true;
     std::thread([]{
         int lag_check_counter = 0;
-        bool relief_predicted = false;
+        // RELIEF-PREDICT one-shot per height lives in a global atomic
+        // (sost::relief_predict_*), not in this thread, so it survives the
+        // stop/start cycle of the monitor and is keyed by mining height.
+        // When a new block arrives, g_monitor_height changes and the next
+        // call to check_and_mark() returns true again for the new height.
         while (g_monitor_running) {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             if (!g_monitor_running) break;
@@ -621,19 +628,22 @@ static void start_block_monitor(int64_t mining_height) {
                 }
             }
             // Local relief valve prediction: uses LOCAL time only (no RPC).
-            // When elapsed > 605s, switch to E7 immediately.
-            if (!relief_predicted && !g_chain.empty() && !g_chain_advanced) {
+            // When elapsed > 605s, switch to E7 immediately. Fires at most
+            // once per mining height (see relief_predict_check_and_mark).
+            if (!g_chain.empty() && !g_chain_advanced) {
                 int64_t now_s = (int64_t)std::time(nullptr);
                 int64_t elapsed = now_s - g_chain.back().time;
                 int32_t mining_pi = g_mining_profile.load();
                 if (elapsed > CASERT_RELIEF_VALVE_THRESHOLD && mining_pi > CASERT_H_MIN) {
-                    printf("[RELIEF-PREDICT] Elapsed %llds > %llds — pre-switching to E7\n",
-                           (long long)elapsed, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
-                    fflush(stdout);
-                    g_node_profile = CASERT_H_MIN;
-                    g_lag_changed = true;
-                    relief_predicted = true;  // don't repeat — wait for restart
-                    continue;  // skip RPC getinfo this cycle
+                    int64_t cur_h = g_monitor_height.load();
+                    if (relief_predict_check_and_mark(cur_h)) {
+                        printf("[RELIEF-PREDICT] Elapsed %llds > %llds — pre-switching to E7\n",
+                               (long long)elapsed, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
+                        fflush(stdout);
+                        g_node_profile = CASERT_H_MIN;
+                        g_lag_changed = true;
+                        continue;  // skip RPC getinfo this cycle
+                    }
                 }
             }
             // Profile check every ~6s (3 × 2s) — same as original frequency
@@ -711,7 +721,21 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     g_node_profile = cdec.profile_index;
 
     Bytes32 skey = epoch_scratch_key(epoch, &g_chain);
-    auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
+
+    // Scratchpad lookup. See include/sost/pow/scratchpad_cache.h for the
+    // single-caller assumption. Cache hit on every call inside an epoch
+    // (~131 553 blocks); cache miss only on first call and at epoch
+    // boundaries.
+    std::shared_ptr<std::vector<uint8_t>> scratch_owner = scratch_cache_get(skey);
+    if (!scratch_owner) {
+        auto t0 = std::chrono::steady_clock::now();
+        scratch_owner = std::make_shared<std::vector<uint8_t>>(
+            build_scratchpad(skey, params.cx_scratch_mb));
+        auto t1 = std::chrono::steady_clock::now();
+        int64_t took_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+        scratch_cache_put(skey, scratch_owner, params.cx_scratch_mb, took_ms);
+    }
+    const auto& scratch = *scratch_owner;
     Bytes32 bk = compute_block_key(g_tip_hash);
 
     int64_t ts;
