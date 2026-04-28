@@ -1107,7 +1107,29 @@ async function updateDashboard(info){
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW_LONG,50);for(var h=info.blocks;h>Math.max(0,info.blocks-fetchDepth);h--){try{var hash=await rpc('getblockhash',[String(h)]);var b=await rpc('getblock',[hash]);if(h>info.blocks-AVG_WINDOW)times.push(b.time);if(h>info.blocks-600)times600.push(b.time);if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);}catch(be){continue;}}
+  try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW_LONG,50);
+    // v36 — parallel block fetch in chunks of 50. Cuts initial load from ~5min
+    // to a few seconds. Order is preserved by processing chunk results in the
+    // same descending sequence used by _diffHistory.slice(0,AVG_WINDOW).reverse().
+    var _heights=[];for(var _h=info.blocks;_h>Math.max(0,info.blocks-fetchDepth);_h--)_heights.push(_h);
+    var CHUNK=50;
+    for(var _ci=0;_ci<_heights.length;_ci+=CHUNK){
+      var _chunk=_heights.slice(_ci,_ci+CHUNK);
+      var _blocks=await Promise.all(_chunk.map(function(_hh){
+        return rpc('getblockhash',[String(_hh)])
+          .then(function(_hash){return rpc('getblock',[_hash]);})
+          .catch(function(){return null;});
+      }));
+      for(var _bi=0;_bi<_chunk.length;_bi++){
+        var b=_blocks[_bi];var h=_chunk[_bi];
+        if(!b)continue;
+        if(h>info.blocks-AVG_WINDOW)times.push(b.time);
+        if(h>info.blocks-600)times600.push(b.time);
+        if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);
+        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});
+        if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);
+      }
+    }
     // Charts and per-288 widgets only see the most-recent AVG_WINDOW entries.
     // The full diffs[] (up to AVG_WINDOW_LONG) is only used for the avg600 /
     // avg1000 informational cards above. Slice ensures BURST/VOLATILITY,
