@@ -3070,6 +3070,30 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // From TIMESTAMP_MTP_FORK_HEIGHT onwards, enforce ValidatePostForkTimestamp
+    // which combines MTP(11) and minimum-spacing rules. Pre-fork blocks keep
+    // the old behaviour. See include/sost/params.h and
+    // docs/timestamp_mtp_fork_6400.md.
+    if (height >= TIMESTAMP_MTP_FORK_HEIGHT && !g_blocks.empty()) {
+        std::vector<BlockMeta> meta_for_mtp;
+        meta_for_mtp.reserve(g_blocks.size());
+        for (const auto& b : g_blocks) {
+            BlockMeta bm; bm.block_id = b.block_id; bm.height = b.height;
+            bm.time = b.timestamp; bm.powDiffQ = b.bits_q;
+            bm.profile_index = b.profile_index;
+            meta_for_mtp.push_back(bm);
+        }
+        std::string mtp_err;
+        if (!ValidatePostForkTimestamp(ts64, g_blocks.back().timestamp,
+                                       meta_for_mtp, &mtp_err)) {
+            printf("[BLOCK] REJECTED: %s (ts=%lld, prev=%lld, height=%lld, fork=%lld)\n",
+                   mtp_err.c_str(),
+                   (long long)ts64, (long long)g_blocks.back().timestamp,
+                   (long long)height, (long long)TIMESTAMP_MTP_FORK_HEIGHT);
+            return false;
+        }
+    }
+
     // Difficulty must match cASERT bitsQ
     std::vector<BlockMeta> chain_meta;
     chain_meta.reserve(g_blocks.size());

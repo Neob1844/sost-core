@@ -738,9 +738,39 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     const auto& scratch = *scratch_owner;
     Bytes32 bk = compute_block_key(g_tip_hash);
 
+    // Minimum valid timestamp for the candidate block.
+    //   Pre-fork: prev.time + 1  (the only existing rule)
+    //   Post-fork (h >= TIMESTAMP_MTP_FORK_HEIGHT):
+    //     max(prev.time + TIMESTAMP_MIN_DELTA_SECONDS, MTP(11) + 1)
+    // Computed once at the start of mine_one_block and reused by all worker
+    // threads so they don't re-derive it per attempt.
+    int64_t min_valid_ts = g_chain.empty() ? 0 : (g_chain.back().time + 1);
+    if (h >= TIMESTAMP_MTP_FORK_HEIGHT && !g_chain.empty()) {
+        // MTP(11) + 1
+        const int nn = (int)g_chain.size();
+        const int tt = (nn < TIMESTAMP_MTP_WINDOW) ? nn : TIMESTAMP_MTP_WINDOW;
+        int64_t mb[TIMESTAMP_MTP_WINDOW];
+        for (int i = 0; i < tt; ++i) mb[i] = g_chain[(size_t)(nn - tt + i)].time;
+        for (int i = 1; i < tt; ++i) {
+            int64_t key = mb[i]; int j = i - 1;
+            while (j >= 0 && mb[j] > key) { mb[j+1] = mb[j]; --j; }
+            mb[j+1] = key;
+        }
+        int64_t mtp_plus_1 = mb[tt / 2] + 1;
+        // prev.time + min delta
+        int64_t prev_plus_min = g_chain.back().time + TIMESTAMP_MIN_DELTA_SECONDS;
+        // Take the larger of the two
+        int64_t post_fork_min = (mtp_plus_1 > prev_plus_min) ? mtp_plus_1 : prev_plus_min;
+        if (post_fork_min > min_valid_ts) min_valid_ts = post_fork_min;
+    }
+
     int64_t ts;
     if (sim_time) ts = g_chain.back().time + TARGET_SPACING;
-    else ts = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    else {
+        int64_t now_ts = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        ts = (now_ts > min_valid_ts) ? now_ts : min_valid_ts;
+    }
 
     int64_t subsidy = sost_subsidy_stocks(h);
 
@@ -845,9 +875,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 for (uint32_t n = (uint32_t)tid; ; n += (uint32_t)g_num_threads) {
                     if (g_block_found || g_chain_advanced || g_lag_changed) return;
 
-                    // Thread-local timestamp
+                    // Thread-local timestamp. Clamp to min_valid_ts so post-
+                    // TIMESTAMP_MTP_FORK_HEIGHT we never produce a candidate
+                    // that fails MTP just because the local wall clock is
+                    // slightly behind the chain.
                     int64_t my_ts = std::chrono::duration_cast<std::chrono::seconds>(
                         std::chrono::system_clock::now().time_since_epoch()).count();
+                    if (my_ts < min_valid_ts) my_ts = min_valid_ts;
                     uint8_t my_hc72[72];
                     build_hc72(my_hc72, g_tip_hash, mrkl, (uint32_t)my_ts, bits_q);
 
@@ -1172,8 +1206,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     auto now_check = std::chrono::steady_clock::now();
                     auto since_update = std::chrono::duration_cast<std::chrono::seconds>(now_check - ts_last_update).count();
                     if (since_update >= 30) {
-                        ts = std::chrono::duration_cast<std::chrono::seconds>(
+                        int64_t now_wall = std::chrono::duration_cast<std::chrono::seconds>(
                             std::chrono::system_clock::now().time_since_epoch()).count();
+                        ts = (now_wall > min_valid_ts) ? now_wall : min_valid_ts;
                         build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);
                         ts_last_update = now_check;
                     }
@@ -1387,8 +1422,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if (sim_time) {
                 ts++;
             } else {
-                ts = std::chrono::duration_cast<std::chrono::seconds>(
+                int64_t now_wall = std::chrono::duration_cast<std::chrono::seconds>(
                     std::chrono::system_clock::now().time_since_epoch()).count();
+                ts = (now_wall > min_valid_ts) ? now_wall : min_valid_ts;
                 ts_last_update = std::chrono::steady_clock::now();
             }
             build_hc72(hc72, g_tip_hash, mrkl, (uint32_t)ts, bits_q);

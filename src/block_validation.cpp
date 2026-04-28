@@ -253,6 +253,42 @@ bool ValidateBlockHeaderContextWithMTP(
     return true;
 }
 
+// Combined post-fork timestamp policy (block 6400+):
+//   (a) ts > MedianTimePast(last TIMESTAMP_MTP_WINDOW blocks)
+//   (b) ts >= prev_ts + TIMESTAMP_MIN_DELTA_SECONDS
+bool ValidatePostForkTimestamp(
+    int64_t ts,
+    int64_t prev_ts,
+    const std::vector<BlockMeta>& chain_meta,
+    std::string* err)
+{
+    // (a) MTP
+    if (chain_meta.empty()) {
+        if (err) *err = "ValidatePostForkTimestamp: missing chain_meta";
+        return false;
+    }
+    const int n = (int)chain_meta.size();
+    const int take = (n < TIMESTAMP_MTP_WINDOW) ? n : TIMESTAMP_MTP_WINDOW;
+    int64_t buf[TIMESTAMP_MTP_WINDOW];
+    for (int i = 0; i < take; ++i) buf[i] = chain_meta[(size_t)(n - take + i)].time;
+    for (int i = 1; i < take; ++i) {
+        int64_t key = buf[i]; int j = i - 1;
+        while (j >= 0 && buf[j] > key) { buf[j+1] = buf[j]; --j; }
+        buf[j+1] = key;
+    }
+    const int64_t mtp = buf[take / 2];
+    if (ts <= mtp) {
+        if (err) *err = "ValidatePostForkTimestamp: ts<=MTP";
+        return false;
+    }
+    // (b) minimum spacing vs. parent
+    if (ts < prev_ts + TIMESTAMP_MIN_DELTA_SECONDS) {
+        if (err) *err = "ValidatePostForkTimestamp: ts < prev_ts + min_delta";
+        return false;
+    }
+    return true;
+}
+
 // ==========================================================================
 // L3: ValidateBlockTransactionsConsensus
 // ==========================================================================

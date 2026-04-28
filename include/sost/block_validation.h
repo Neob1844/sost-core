@@ -20,10 +20,12 @@
 #include <sost/block.h>
 #include <sost/tx_validation.h>
 #include <sost/utxo_set.h>
+#include <sost/types.h>    // BlockMeta
 #include <sost/params.h>   // GENESIS_BITSQ lives here (single source of truth)
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace sost {
 
@@ -65,6 +67,31 @@ bool ValidateBlockHeaderContext(
     const BlockHeader* prev,
     int64_t current_time,
     uint32_t expected_bits_q,
+    std::string* err = nullptr);
+
+// L2b — Same as L2 but additionally enforces Median Time Past over the
+// last TIMESTAMP_MTP_WINDOW (=11) blocks. Used post-TIMESTAMP_MTP_FORK_HEIGHT.
+// Pre-fork code must call ValidateBlockHeaderContext directly so the old
+// permissive policy is preserved for historical blocks.
+bool ValidateBlockHeaderContextWithMTP(
+    const BlockHeader& header,
+    const BlockHeader* prev,
+    const std::vector<BlockMeta>& chain_meta,
+    int64_t current_time,
+    uint32_t expected_bits_q,
+    std::string* err = nullptr);
+
+// L2c — Post-fork timestamp policy enforced from TIMESTAMP_MTP_FORK_HEIGHT.
+// Combines two rules:
+//   (a) ts > MedianTimePast(last TIMESTAMP_MTP_WINDOW blocks)
+//   (b) ts >= prev_ts + TIMESTAMP_MIN_DELTA_SECONDS
+// Returns false if either rule fails. The future-drift rule is enforced
+// separately by the existing accept path; this function focuses on the
+// two added constraints.
+bool ValidatePostForkTimestamp(
+    int64_t ts,
+    int64_t prev_ts,
+    const std::vector<BlockMeta>& chain_meta,
     std::string* err = nullptr);
 
 // ---------------------------------------------------------------------------

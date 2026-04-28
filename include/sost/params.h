@@ -169,6 +169,23 @@ inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD = 605; // 10 min 5 sec
 inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT_V1 = 5635;
 inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD_V1 = 630; // 10 min 30 sec
 
+// Timestamp policy hardening — coordinated experimental fork at height
+// TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
+// satisfy BOTH:
+//   1) ts > MedianTimePast(last TIMESTAMP_MTP_WINDOW blocks)
+//   2) ts >= prev.timestamp + TIMESTAMP_MIN_DELTA_SECONDS
+// Pre-fork blocks remain valid under the old rule (ts > prev.ts and
+// ts <= now + MAX_FUTURE_BLOCK_TIME). MTP alone does NOT prevent
+// `prev.ts + 1` from being accepted when prev.ts > MTP, which is the
+// normal case; the additional minimum-delta rule eliminates the
+// artificial 1-second deltas observed in blocks 6200-6310.
+//
+// See docs/timestamp_mtp_fork_6400.md and
+// docs/fast_block_investigation_6200_6310.md for context.
+inline constexpr int64_t  TIMESTAMP_MTP_FORK_HEIGHT  = 6400;
+inline constexpr int32_t  TIMESTAMP_MTP_WINDOW       = 11;
+inline constexpr int64_t  TIMESTAMP_MIN_DELTA_SECONDS = 60;
+
 inline constexpr int64_t  CASERT_BURST_HEIGHT          = 999999; // NOT ACTIVE — pending validation
 
 // Burst trigger: tier 1 (moderate)

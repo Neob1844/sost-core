@@ -142,6 +142,10 @@ add_executable(test-relief-predict tests/test_relief_predict.cpp)
 target_link_libraries(test-relief-predict PRIVATE sost-core)
 add_test(NAME relief-predict COMMAND test-relief-predict)
 
+add_executable(test-mtp-fork tests/test_mtp_fork.cpp)
+target_link_libraries(test-mtp-fork PRIVATE sost-core)
+add_test(NAME mtp-fork COMMAND test-mtp-fork)
+
 add_executable(test-checkpoints tests/test_checkpoints.cpp)
 target_link_libraries(test-checkpoints PRIVATE sost-core)
 add_test(NAME checkpoints COMMAND test-checkpoints)
