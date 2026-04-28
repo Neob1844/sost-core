@@ -748,7 +748,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
-  <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')"><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub">hashes/sec</div></div>
+  <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="Bitcoin-style network hashrate (2^bits/blocktime). Effective attempts/sec shown as secondary, profile-adjusted for ConvergenceX filter."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
@@ -1602,7 +1602,40 @@ async function updateDashboard(info){
     var _avgGenesis=(times.length>0&&info.blocks>0)?((times[0]-GENESIS_TS)/info.blocks):0;
     _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks · visual');
     _renderLag('dAvgTimeGenesisLag',_avgGenesis,info.blocks);
-    var hashrate=info.difficulty/avg;if(hashrate>=1e6)document.getElementById('dHashrate').textContent=(hashrate/1e6).toFixed(1)+'M';else if(hashrate>=1e3)document.getElementById('dHashrate').textContent=(hashrate/1e3).toFixed(1)+'K';else document.getElementById('dHashrate').textContent=Math.floor(hashrate);
+    // Dual hashrate display (SOST has profile-dependent stability filter,
+    // so a single number is misleading; we show both).
+    //
+    // Primary (Bitcoin-style, profile-independent):
+    //   hashrate = 2^bits_real / avg_block_time
+    //   bits_real = bitsQ / 65536  (Q16.16 fixed-point)
+    //   This is the standard PoW hashrate, comparable across chains.
+    //
+    // Secondary (effective attempts/sec, profile-dependent):
+    //   eff = 2^bits_real / (filter_pct/100) / avg_block_time
+    //   filter from getinfo's casert_stability_pct.
+    //   Reflects the actual ConvergenceX attempts the network performs
+    //   under the current profile (varies ~20x between H11 and E7).
+    //
+    // The previous bug used bitsQ_raw/avg which is dimensionally
+    // meaningless (bitsQ is a cuasi-target, not a hash count).
+    var _bitsReal=(info.difficulty||0)/65536;
+    var _expHashes=Math.pow(2,_bitsReal);
+    var _primaryHashrate=avg>0?_expHashes/avg:0;
+    var _filterPct=(info.casert_stability_pct&&info.casert_stability_pct>0)?info.casert_stability_pct:0;
+    var _effectiveAtt=(_filterPct>0&&avg>0)?(_expHashes/(_filterPct/100))/avg:0;
+    var hashrate=_primaryHashrate;
+    function _fmtRate(v){
+        if(v>=1e6)return (v/1e6).toFixed(1)+'M';
+        if(v>=1e3)return (v/1e3).toFixed(1)+'K';
+        return Math.floor(v);
+    }
+    document.getElementById('dHashrate').textContent=_fmtRate(hashrate);
+    var _hsub=document.getElementById('dHashrateSub');
+    if(_hsub){
+        _hsub.textContent=_effectiveAtt>0
+            ?'H/s · eff '+_fmtRate(_effectiveAtt)+' att/s'
+            :'H/s (Bitcoin-style)';
+    }
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;
     // Store cASERT profile from RPC (Phase 5A fix)
     if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
@@ -2235,10 +2268,21 @@ function renderDashPanel(key,body,title,silent){
       // Compute average block time and network hashrate estimate
       var avgBtMiner=600;
       if(blockList.length>=2){var tSpan=blockList[blockList.length-1].t-blockList[0].t;if(tSpan>0)avgBtMiner=tSpan/(blockList.length-1);}
-      // Network hashrate estimate: difficulty / avg_block_time
+      // Network hashrate — dual display (see header card comment).
+      //   Primary: 2^bits_real / avg_block_time  (Bitcoin-style, stable)
+      //   Secondary: 2^bits_real / (filter/100) / avg_block_time  (eff att/s)
       var netDiff=_diffHistory&&_diffHistory.length>0?_diffHistory[_diffHistory.length-1].d:765730;
-      var netHashrate=netDiff/avgBtMiner;
-      html+='<span style="color:var(--text3)">Est. network hashrate:</span> <span style="color:var(--orange);font-weight:600">'+(netHashrate>=1000?(netHashrate/1000).toFixed(1)+'K':Math.round(netHashrate))+'</span> <span style="color:var(--text3)">h/s (avg block '+Math.round(avgBtMiner)+'s)</span><br>';
+      var _netBitsReal=netDiff/65536;
+      var _netExpHashes=Math.pow(2,_netBitsReal);
+      var netHashrate=avgBtMiner>0?_netExpHashes/avgBtMiner:0;
+      var _netFilterPct=(typeof _rpcStabilityPct==='number'&&_rpcStabilityPct>0)?_rpcStabilityPct:0;
+      var _netEffectiveAtt=(_netFilterPct>0&&avgBtMiner>0)?(_netExpHashes/(_netFilterPct/100))/avgBtMiner:0;
+      function _fmtNetRate(v){return v>=1000?(v/1000).toFixed(1)+'K':Math.round(v);}
+      html+='<span style="color:var(--text3)">Est. network hashrate:</span> <span style="color:var(--orange);font-weight:600">'+_fmtNetRate(netHashrate)+'</span> <span style="color:var(--text3)">h/s (Bitcoin-style, avg block '+Math.round(avgBtMiner)+'s)</span>';
+      if(_netEffectiveAtt>0){
+        html+=' &middot; <span style="color:var(--text3)">eff:</span> <span style="color:var(--orange);font-weight:600">'+_fmtNetRate(_netEffectiveAtt)+'</span> <span style="color:var(--text3)">att/s (profile-adjusted, filter '+_netFilterPct+'%)</span>';
+      }
+      html+='<br>';
       html+='<div style="margin-top:10px"><table style="width:100%;font-size:11px;border-collapse:collapse">';
       html+='<tr style="color:var(--text3);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px">Miner Address</th><th style="text-align:right;padding:4px">Blocks</th><th style="text-align:right;padding:4px">Raw Share</th><th style="text-align:right;padding:4px">Est. Hashrate</th><th style="text-align:right;padding:4px">Simul. Share</th><th style="text-align:right;padding:4px">Solo</th><th style="text-align:right;padding:4px">Latest</th></tr>';
       var sorted=addrs.sort(function(a,b){return miners[b].count-miners[a].count;});
