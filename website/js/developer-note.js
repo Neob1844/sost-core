@@ -15,10 +15,14 @@
 
   var DEV_NOTE_HTML = [
     '<div class="sost-devnote-strip" role="region" aria-label="Developer Note">',
-    '  <button type="button" class="sost-devnote-toggle" aria-expanded="false">',
+    '  <button type="button" class="sost-devnote-toggle" aria-expanded="false" title="Click to expand the full Developer Note">',
     '    <span class="sost-devnote-tag">Developer Note</span>',
     '    <span class="sost-devnote-summary">SOST is an experimental native Proof-of-Work project in pre-market testing &mdash; success, value, listings and adoption are not guaranteed.</span>',
-    '    <span class="sost-devnote-chevron" aria-hidden="true">&#9662;</span>',
+    '    <span class="sost-devnote-cta" aria-hidden="true">',
+    '      <span class="sost-devnote-cta-label" data-when="closed">Click to read more</span>',
+    '      <span class="sost-devnote-cta-label" data-when="open" hidden>Hide</span>',
+    '      <span class="sost-devnote-chevron">&#9662;</span>',
+    '    </span>',
     '  </button>',
     '  <div class="sost-devnote-body" hidden>',
     '    <p>SOST is being built with a lot of work, but that does not guarantee success, future value, liquidity, exchange listings, or community adoption.</p>',
@@ -62,8 +66,20 @@
     '  text-transform:uppercase;flex:0 0 auto;',
     '}',
     '.sost-devnote-summary{flex:1 1 auto;color:#cfcfcf}',
-    '.sost-devnote-chevron{flex:0 0 auto;color:#fb010d;transition:transform .15s ease}',
+    '.sost-devnote-cta{',
+    '  flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;',
+    '  padding:3px 9px;border:1px solid #fb010d;border-radius:3px;',
+    '  background:rgba(251,1,13,.08);color:#fb010d;',
+    '  font-weight:700;letter-spacing:.6px;font-size:10.5px;',
+    '  text-transform:uppercase;',
+    '  transition:background .15s ease;',
+    '}',
+    '.sost-devnote-toggle:hover .sost-devnote-cta{background:rgba(251,1,13,.18)}',
+    '.sost-devnote-cta-label{display:inline-block}',
+    '.sost-devnote-chevron{display:inline-block;transition:transform .15s ease}',
     '.sost-devnote-toggle[aria-expanded="true"] .sost-devnote-chevron{transform:rotate(180deg)}',
+    '@keyframes sost-devnote-pulse{0%,100%{box-shadow:0 0 0 0 rgba(251,1,13,.45)}50%{box-shadow:0 0 0 4px rgba(251,1,13,0)}}',
+    '.sost-devnote-toggle[aria-expanded="false"] .sost-devnote-cta{animation:sost-devnote-pulse 2.4s ease-in-out infinite}',
     '.sost-devnote-body{',
     '  padding:10px 18px 16px;',
     '  border-top:1px dashed rgba(251,1,13,.35);',
@@ -75,8 +91,9 @@
     '.sost-devnote-body li{margin:.25em 0}',
     '.sost-devnote-sig{color:#fb010d;font-weight:700;margin-top:.8em !important}',
     '@media (max-width:600px){',
-    '  .sost-devnote-toggle{font-size:11px;padding:7px 10px;gap:8px}',
-    '  .sost-devnote-summary{font-size:11px}',
+    '  .sost-devnote-toggle{font-size:11px;padding:7px 10px;gap:8px;flex-wrap:wrap}',
+    '  .sost-devnote-summary{font-size:11px;flex-basis:100%;order:3}',
+    '  .sost-devnote-cta{font-size:10px;padding:2px 7px}',
     '  .sost-devnote-body{font-size:12px;padding:10px 12px 14px}',
     '}'
   ].join('\n');
@@ -100,11 +117,22 @@
 
     var btn = node.querySelector('.sost-devnote-toggle');
     var body = node.querySelector('.sost-devnote-body');
+    var labelClosed = node.querySelector('.sost-devnote-cta-label[data-when="closed"]');
+    var labelOpen = node.querySelector('.sost-devnote-cta-label[data-when="open"]');
     btn.addEventListener('click', function () {
       var open = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-      if (open) { body.setAttribute('hidden', ''); }
-      else { body.removeAttribute('hidden'); }
+      var nowOpen = !open;
+      btn.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
+      btn.setAttribute('title', nowOpen ? 'Click to hide the Developer Note' : 'Click to expand the full Developer Note');
+      if (nowOpen) {
+        body.removeAttribute('hidden');
+        if (labelClosed) labelClosed.setAttribute('hidden', '');
+        if (labelOpen) labelOpen.removeAttribute('hidden');
+      } else {
+        body.setAttribute('hidden', '');
+        if (labelOpen) labelOpen.setAttribute('hidden', '');
+        if (labelClosed) labelClosed.removeAttribute('hidden');
+      }
     });
   }
 
