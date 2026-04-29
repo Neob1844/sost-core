@@ -78,7 +78,7 @@
 
   /* ---- canonical nav (M9 standardisation) ---- */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
-  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .nav-logo { font-family: var(--font-display, 'Space Grotesk', sans-serif); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
   .nav-logo .brand-sost { color: var(--red-primary); }
   .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -95,13 +95,13 @@
 <body>
 <nav>
   <div class="container">
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;min-height:90px;max-width:90px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;color:#000;text-decoration:none;line-height:1;margin-right:14px;overflow:hidden;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite" title="SOST DEX"><span style="color:#fb010d;font-size:16px;font-weight:900;letter-spacing:2px;text-shadow:0 0 6px rgba(251,1,13,0.6)">SOST</span><span style="font-size:26px;font-weight:900;letter-spacing:-1px;text-shadow:0 0 4px rgba(0,0,0,0.5)">DEX</span></a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;min-height:90px;max-width:90px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;color:#000;text-decoration:none;line-height:1;margin-right:14px;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden" title="SOST DEX"><span style="color:#fb010d;font-size:16px;font-weight:900;letter-spacing:2px;text-shadow:0 0 6px rgba(251,1,13,0.6)">SOST</span><span style="font-size:26px;font-weight:900;letter-spacing:-1px;text-shadow:0 0 4px rgba(0,0,0,0.5)">DEX</span></a>
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
-      <a href="index.html">Home</a>
+            <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
@@ -124,7 +124,9 @@
       <a href="sost-foundation.html">Governance</a>
       <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
       <a href="sost-gold-dex.html">DEX Spec</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
@@ -136,7 +138,7 @@
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC</a>
       <a href="sost-wallet.html">Wallet</a>
-      <a href="sost-app/" style="color:var(--cyan-primary)">&#128241; App</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
