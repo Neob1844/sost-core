@@ -4181,7 +4181,34 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <link rel="stylesheet" href="css/crt-effects.css">
 <script src="js/retro-sounds.js"></script>
+<script src="js/sost-music.js"></script>
 <script src="js/sost-pwa-install.js"></script>
 <script src="js/crt-effects.js"></script>
+<script>
+// Wire the chiptune button: first click starts a melody (Web Audio
+// requires a user gesture); subsequent clicks toggle mute. The
+// emoji updates so the user can see the state.
+(function(){
+  var btn = document.getElementById('nesMuteBtn');
+  if (!btn) return;
+  var started = false;
+  btn.onclick = function(){
+    if (!started) {
+      started = true;
+      try { if (window.nesIsMuted && window.nesIsMuted()) window.nesToggleMute(); } catch(e){}
+      try { if (window.playRandomMelody) window.playRandomMelody(); } catch(e){}
+      btn.title = 'NES chiptune playing — click to mute';
+      btn.style.opacity = '1';
+      return;
+    }
+    try { if (window.nesToggleMute) window.nesToggleMute(); } catch(e){}
+    var muted = false;
+    try { muted = window.nesIsMuted ? window.nesIsMuted() : false; } catch(e){}
+    btn.title = muted ? 'NES chiptune muted — click to unmute' : 'NES chiptune playing — click to mute';
+    btn.style.opacity = muted ? '0.5' : '1';
+    btn.innerHTML = muted ? '\u{1F507}' : '\u{1F3AE}';
+  };
+})();
+</script>
 </body>
 </html>

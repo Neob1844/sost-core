@@ -506,6 +506,14 @@ window.SOSTMusic = {
 window.playRandomMelody = playRandomMelody;
 window.playMelodyByIndex = playMelodyByIndex;
 window.stopMelody = stopMelody;
+// Backward-compat aliases (legacy NES chiptune engine API). Pages
+// across the site still call these legacy names from inline onclick
+// handlers; keeping the aliases avoids a 47-page sweep every rename.
+window.nesToggleMute = toggleMute;
+window.nesPlay = playRandomMelody;
+window.nesPlayRandom = playRandomMelody;
+window.nesStop = stopMelody;
+window.nesIsMuted = isMuted;
 window.toggleMute = toggleMute;
 window.isMuted = isMuted;
 
