@@ -282,7 +282,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.7.0 &middot; Phase 3 Milestones M1–M9</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.8.0 &middot; Phase 3 Milestones M1–M10</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -299,7 +299,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">548 / 548 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; public help center · network OFF by default</span>
+      <span class="val">649 / 649 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -592,6 +592,37 @@
         </ul>
       </div>
     </div>
+
+    <!-- M10 (Outcome Learning + Operator Command Center + Miner Support Triage) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M10 &mdash; Outcome Learning + Operator Command Center + Miner Support Triage</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The closed feedback loop. <strong>Deterministic, rule-based, internal-only — no neural model, no
+          network, no autopublish.</strong> The engine now records what actually happened to a candidate after
+          it left review (DFT result, GeaSpirit verdict, public-wording correction, miner outcome, provider
+          contradiction), turns each event into a clamped boost/penalty adjustment, and remembers the pattern
+          for future ranking. The operator command center reads the same signal and recommends P0/P1/P2/P3
+          actions; the miner support triage classifies free-form miner text into a structured case and drafts
+          a conservative reply that <em>always</em> passes through the public claim guard before being marked
+          as low-risk. The public claim guard + contradiction resolver remain the only paths to public output.
+        </p>
+        <ul class="spec-list">
+          <li><strong>M10-1 &mdash; Outcome Learning Core:</strong> typed <code>OutcomeEvent</code> log (28 outcome types across materials / GeaSpirit / useful compute / SOST / DEX / provider), deterministic <code>derive(event)</code> mapping to <code>LearningAdjustment</code> + <code>PatternLesson</code> rows, hard caps <code>MAX_BOOST=0.30</code> / <code>MAX_PENALTY=0.40</code> / <code>MAX_NET_DELTA=0.50</code>, pattern-memory upsert with +0.02 confidence bump per repeat (capped at 1.0), and a Markdown report under <code>reports/ai_engine/learning/</code></li>
+          <li><strong>M10-2 &mdash; Operator Command Center:</strong> read-only priority recommender that surfaces P0 (public-claim emergencies, GeaSpirit overclaim/depth guards), P1 (repeated miner issues, provider overclaims, stuck review packs), P2 (memory hygiene), P3 (periodic refreshes); work-queue snapshot; per-page dashboard text; Markdown report bundle under <code>reports/ai_engine/operator/&lt;ts&gt;/</code> (<code>index.md</code>, <code>actions.md</code>, <code>state.md</code>, <code>dashboard.txt</code>)</li>
+          <li><strong>M10-3 &mdash; Miner Support Triage + Reply Drafts:</strong> regex-based classifier across 12 categories (install / build / sync / rejected_block / orphan / stale_parent / no_peers / threads / useful_compute / wallet_safety / dex / unknown), per-case Markdown log under <code>reports/ai_engine/support_cases/&lt;ts&gt;/</code>, conservative community-reply drafter (<code>wallet_safety</code> replies are <strong>never</strong> auto-safe — they always require human ack), release-notice drafter, and help-refresh suggester that proposes Q/A items the operator can review (the suggester itself never publishes)</li>
+          <li>unified CLI: <code>scripts/sost_ai_ops.py</code> with subcommands <code>status</code>, <code>next-actions</code>, <code>risks</code>, <code>review-packs</code>, <code>learning</code>, <code>providers</code>, <code>miner-support</code>, <code>public-help-suggestions</code>, <code>full-report</code></li>
+          <li>safety invariants: <code>is_safe_for_export()</code> blocks targets <code>{false_positive_risk, guard, task_design, provider_reliability}</code> from leaving the engine as such; every adjustment passes through <code>clamp_adjustment()</code> before insertion; the loop is replayable, auditable and deterministic by construction</li>
+          <li>defaults: pure Python stdlib, no torch / sklearn / numpy, no remote calls, no public publication; M10 outputs feed only the internal review pipeline that already gates everything public via <a href="sost-help.html">M9</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -767,12 +798,12 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>548 / 548 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9)</td></tr>
+        <tr><td>Tests passing</td><td>649 / 649 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
         <tr><td>Paid model calls per run (default)</td><td><span class="pill green">0</span> &mdash; paid is OFF by default</td></tr>
-        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 19 internal tables</td></tr>
+        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 28 internal tables (9 added in M10: outcome_events, learning_adjustments, m10_pattern_memory, learning_reports, operator_actions, operator_reports, support_cases, reply_drafts, help_refresh_suggestions)</td></tr>
         <tr><td>Public outputs</td><td><span class="pill red">none autonomous</span> &mdash; human review required</td></tr>
         <tr><td>Source license</td><td>private repo &mdash; outputs only released after audit</td></tr>
       </tbody>
