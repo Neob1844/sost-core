@@ -392,15 +392,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       before slower or remote miners.<br><br>
 
       From block 6550, SOST replaces the single-step cliff with a staged cascade:<br>
-      &bull; elapsed &lt; 570s: normal cASERT profile<br>
-      &bull; elapsed &ge; 570s: drops <b>3 profile levels</b><br>
-      &bull; every <b>30s</b> after that: another <b>3 profile levels</b><br>
+      &bull; elapsed &lt; 540s: normal cASERT profile<br>
+      &bull; elapsed &ge; 540s: drops <b>3 profile levels</b><br>
+      &bull; every <b>60s</b> after that: another <b>3 profile levels</b><br>
       &bull; floor: E7<br><br>
 
-      <span style="color:var(--text3)">Example from H12: &lt;570s H12 &middot; 570-599s H9 &middot; 600-629s H6 &middot; 630-659s H3 &middot; 660-689s B0 &middot; 690-719s E3 &middot; 720-749s E6 &middot; 750s+ E7</span><br><br>
+      <span style="color:var(--text3)">Example from H12: &lt;540s H12 &middot; 540-599s H9 &middot; 600-659s H6 &middot; 660-719s H3 &middot; 720-779s B0 &middot; 780-839s E3 &middot; 840-899s E6 &middot; 900s+ E7</span><br><br>
 
-      Future-timestamp drift is also tightened from <b>+600s to +30s</b> after block 6550, so
-      miners cannot pre-mine future relief windows with far-future timestamps.<br><br>
+      Future-timestamp drift is also tightened from <b>+600s to +60s</b> after block 6550 (matching
+      the cascade step), so miners cannot pre-mine future relief windows with far-future
+      timestamps.<br><br>
 
       <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b><br><br>
 

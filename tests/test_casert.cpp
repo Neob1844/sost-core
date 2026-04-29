@@ -1085,44 +1085,52 @@ int main() {
              dec_legacy.profile_index == CASERT_H_MIN);
 
         auto chain2 = make_chain_at_height(CASERT_STAGED_RELIEF_HEIGHT, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
-        // Just one step into staged relief: elapsed = 575 s → drop 3 from H13 = H10
-        int64_t mid_ts = chain2.back().time + 575;
+        // Just into staged relief: elapsed = 545 s → drop 3 from H13 = H10
+        int64_t mid_ts = chain2.back().time + 545;
         auto dec_staged = casert_compute(chain2, CASERT_STAGED_RELIEF_HEIGHT, mid_ts);
-        TEST("V9 staged: at activation height, 575s elapsed → H10 (one step from H13)",
+        TEST("V9 staged: at activation height, 545s elapsed → H10 (one step from H13)",
              dec_staged.profile_index == 10);
     }
 
-    // 20.2 No drop before 570 s
+    // 20.2 No drop before 540 s
     {
         auto chain = make_chain_at_height(CASERT_STAGED_RELIEF_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
-        int64_t before = chain.back().time + 569;
+        int64_t before = chain.back().time + 539;
         auto dec = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, before);
-        TEST("V9 staged: 569s elapsed → no drop (profile_index >= 13 base)",
+        TEST("V9 staged: 539s elapsed → no drop (profile_index >= 13 base)",
              dec.profile_index >= 13);
     }
 
     // 20.3 Schedule when the chain enters relief from a heavily-lagging
     //      H13 base (time_offset = -13 * TARGET_SPACING). The staged
-    //      cascade drops 3 levels per 30 s from the *dynamic* raw cASERT
+    //      cascade drops 3 levels per 60 s from the *dynamic* raw cASERT
     //      base, which itself eases by ~1 as wall-clock elapsed grows
-    //      past schedule. The expected profiles below are what
-    //      casert_compute actually returns end-to-end (post-clamp,
-    //      post-anti-stall, post-staged), captured against the live
-    //      implementation so the design is locked.
+    //      past schedule. The expected profiles below are the integer
+    //      result of casert_compute end-to-end with the new
+    //      START=540 / STEP=60 calibration. Verified against the live
+    //      implementation.
+    //
+    // Per-window drop schedule (drop = 3*((elapsed-540)/60 + 1)):
+    //   540-599: drop 3
+    //   600-659: drop 6
+    //   660-719: drop 9
+    //   720-779: drop 12
+    //   780-839: drop 15
+    //   840+   : drop 18+ (floor at E7)
     {
         auto chain = make_chain_at_height(CASERT_STAGED_RELIEF_HEIGHT + 5, 20, TARGET_SPACING, 13, -13 * TARGET_SPACING);
         int64_t base_t = chain.back().time;
 
         struct { int64_t off; int32_t want; const char* desc; } cases[] = {
-            { 569, 13, "569s → H13 (no staged drop yet)" },
-            { 570, 10, "570s → H10 (drop 3 from raw H13)" },
+            { 539, 13, "539s → H13 (no staged drop yet)" },
+            { 540, 10, "540s → H10 (drop 3 from raw H13)" },
             { 600,  6, "600s → H6  (drop 6, raw eased to H12)" },
-            { 630,  3, "630s → H3  (drop 9)"  },
-            { 660,  0, "660s → B0  (drop 12)" },
-            { 690, -3, "690s → E3  (drop 15)" },
-            { 720, -6, "720s → E6  (drop 18)" },
-            { 750, -7, "750s → E7  (floored)" },
-            { 900, -7, "900s → E7  (still floored)" },
+            { 660,  3, "660s → H3  (drop 9)"  },
+            { 720,  0, "720s → B0  (drop 12)" },
+            { 780, -3, "780s → E3  (drop 15)" },
+            { 840, -6, "840s → E6  (drop 18)" },
+            { 900, -7, "900s → E7  (floored)" },
+            {1500, -7, "1500s → E7 (still floored)" },
         };
         for (const auto& c : cases) {
             auto dec = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + c.off);
@@ -1134,20 +1142,20 @@ int main() {
 
     // 20.4 Same schedule from a moderate-lag H10 base
     //      (time_offset = -10 * TARGET_SPACING). Confirms the cascade
-    //      reaches the E7 floor by ~720 s when starting from H10.
+    //      reaches the E7 floor by ~840 s when starting from H10.
     {
         auto chain = make_chain_at_height(CASERT_STAGED_RELIEF_HEIGHT + 5, 20, TARGET_SPACING, 10, -10 * TARGET_SPACING);
         int64_t base_t = chain.back().time;
         // Boundary checks: pre-relief stays at base, post-floor stays at E7,
-        // and the floor is reached before 720 s elapsed.
-        auto pre = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 569);
-        TEST("V9 staged H10 base: 569s → still at base profile (>=10 - lag drift)",
+        // and the floor is reached before 840 s elapsed.
+        auto pre = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 539);
+        TEST("V9 staged H10 base: 539s → still at base profile (>=9 - lag drift)",
              pre.profile_index >= 9);
-        auto first = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 570);
-        TEST("V9 staged H10 base: 570s → first drop applied (profile <= base-3)",
+        auto first = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 540);
+        TEST("V9 staged H10 base: 540s → first drop applied (profile <= base-3)",
              first.profile_index <= pre.profile_index - 3);
-        auto floor = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 720);
-        TEST("V9 staged H10 base: 720s → reached E7 floor",
+        auto floor = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 840);
+        TEST("V9 staged H10 base: 840s → reached E7 floor",
              floor.profile_index == CASERT_H_MIN);
         auto far = casert_compute(chain, CASERT_STAGED_RELIEF_HEIGHT + 5, base_t + 1800);
         TEST("V9 staged H10 base: 1800s → still at E7 floor",
