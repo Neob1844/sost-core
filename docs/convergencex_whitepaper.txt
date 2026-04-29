@@ -2734,9 +2734,9 @@ rights — not a public mass token exchange. Trade contracts, not pools. Identif
 not mass tokens. Coordinate privately, settle verifiably. Any broader public market phase
 is subject to legal and operational review.
 
-### 12.5.9 SOST Knowledge Fusion Engine
+### 12.5.9 SOST AI Engine
 
-The SOST Knowledge Fusion Engine is an internal autonomous research and validation
+The SOST AI Engine is an internal autonomous research and validation
 system that supports decisions across Materials Engine, GeaSpirit, SOST protocol
 wording, and Useful Compute task design. It is intentionally off-chain, off-consensus
 and off-DEX: it does not modify the SOST chain, does not run inside the DEX page,
@@ -2847,7 +2847,7 @@ The engine:
   - never makes a network call by default
   - never treats model-only consensus as verified evidence
 
-Public-facing description: sost-knowledge-engine.html (web).
+Public-facing description: sost-ai-engine.html (web).
 
 ## 13. Conclusion
 

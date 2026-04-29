@@ -650,7 +650,7 @@ const SECTIONS = [
   { id: 'security',   label: 'SECURITY',          icon: '[8]' },
   { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[9]' },
   { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[A]' },
-  { id: 'knowledge',  label: 'KNOWLEDGE ENGINE',  icon: '[K]' },
+  { id: 'knowledge',  label: 'AI ENGINE',  icon: '[K]' },
   { id: 'documents',  label: 'DOCUMENTS',         icon: '[B]' },
   { id: 'markets',    label: 'MARKETS',           icon: '[C]' },
   { id: 'tokenomics', label: 'TOKENOMICS',        icon: '[D]' },
@@ -1565,7 +1565,7 @@ function renderSection(id) {
     security: '/sost-security.html',
     geaspirit: '/sost-geaspirit.html',
     materials: '/sost-materials-engine.html',
-    knowledge: '/sost-knowledge-engine.html',
+    knowledge: '/sost-ai-engine.html',
     documents: '/sost-whitepaper.html',
     markets: '/sost-markets.html',
     dex: '/sost-dex.html',
@@ -2138,13 +2138,13 @@ SectionRenderers.materials = function(el) {
   AudioEngine.ambient_beep();
 };
 
-// ── KNOWLEDGE ENGINE ───────────────────────────────────────────
+// ── AI ENGINE ───────────────────────────────────────────
 SectionRenderers.knowledge = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
   el.innerHTML = `
     <div class="pip-panel">
-      <h2>// SOST KNOWLEDGE FUSION ENGINE</h2>
+      <h2>// SOST AI ENGINE</h2>
       <p>Internal autonomous research and validation system. Generates hypotheses, validates against local evidence, detects contradictions, scores utility — across Materials Engine, GeaSpirit, SOST and Useful Compute.</p>
       <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 3 · M1+M2+M3+M4</span></div>
       <div class="stat-row"><span class="stat-label">TESTS</span><span class="stat-value stat-ok">325 / 325 passing</span></div>
