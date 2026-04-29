@@ -701,7 +701,7 @@ var D={
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
 'checkpoints':'<b>Checkpoints</b> — Hardcoded block hashes at known heights. The node rejects any chain that disagrees with these checkpoints. MAX_REORG_DEPTH = 500 blocks (~3.5 days) limits how far back a reorganization can go.',
 'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall always 7200s. V4 (4200+): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V6 (5000+): slew &plusmn;1, H10/H11 scale=2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5260+): 0%/0.5%/1.5%/2.5%/3.0% by deviation, median288 check. Equalizer: emergency-only, ceiling H13 (block 5750+), 43 profiles (21 active E7-H13, 22 reserved H14-H35), H14+ margin=115. Final calibration complete.',
-'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency prevents ASIC parallelism. Node verification: ~500MB, ~0.2ms.',
+'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency and tight memory coupling raise the cost of a competitive ASIC port; no claim is made that one is impossible. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',
 'fee':'<b>Dynamic Fees</b> ��� Fee rate = fee / tx_size in stocks/byte. Static minimum: 1 stock/byte. Dynamic relay floor (block 10,000+): scales with mempool pressure (2x/5x/10x/25x multipliers, 50 max). Policy-only anti-spam — does not change consensus. RBF enabled. CLI auto-calculates based on mempool state.',
@@ -748,5 +748,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else init();
 })();
 </script>
+<script src="js/developer-note.js" defer></script>
 </body>
 </html>

@@ -1896,7 +1896,7 @@ function addTooltips() {
     'MINER': '50% of every block reward goes to the miner who found the block.',
     'GOLD VAULT': '25% of every block reward goes to the Gold Vault — a constitutional treasury address hardcoded in the protocol.',
     // Consensus section
-    'POW ALGORITHM': 'ConvergenceX: CPU-friendly proof-of-work using gradient descent on a random 32×32 matrix. Requires ~8GB RAM for mining. ASIC-resistant by design.',
+    'POW ALGORITHM': 'ConvergenceX: CPU-friendly, memory-hard proof-of-work using gradient descent on a random 32×32 matrix. Requires ~8GB RAM for mining. Reference miner is CPU-oriented; protocol does not enforce CPU-only at consensus level.',
     'CASERT (Q16.16)': 'Per-block difficulty adjustment in Q16.16 fixed-point format. Current (block 5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. 40 equalizer profiles (E4-H35, H10 ceiling).',
     'MAX BLOCK SIZE': '1,000,000 bytes (1MB). Maximum size of a serialized block including all transactions.',
     'MAX TX SIZE': '100,000 bytes consensus limit, 16,000 bytes policy limit. Prevents oversized transactions.',
@@ -2094,7 +2094,7 @@ SectionRenderers.materials = function(el) {
       <div class="stat-row"><span class="stat-label">CAMPAIGNS</span><span class="stat-value">29 profiles · 16 industrial domains</span></div>
       <div class="stat-row"><span class="stat-label">CANDIDATES</span><span class="stat-value">50+ validated</span></div>
       <div class="stat-row"><span class="stat-label">MODELS</span><span class="stat-value">CGCNN + ALIGNN-Lite + CHGNet</span></div>
-      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0/month (CPU-only)</span></div>
+      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0/month (CPU workload)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// FEATURES</h2>
@@ -2213,8 +2213,8 @@ SectionRenderers.documents = function(el) {
   el.style.overflow = 'auto';
 
   const docs = [
-    ['SOST Whitepaper', 'Core protocol design, economic model, constitutional split 50/25/25', 'SOST is a CPU-friendly, gold-backed cryptocurrency. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. UTXO-based transaction model with secp256k1 ECDSA signatures. ConvergenceX proof-of-work requires ~8GB RAM, ASIC-resistant. Max supply: 4,669,201 SOST. Smooth exponential emission decay.'],
-    ['ConvergenceX PoW', 'CPU-friendly gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. ASIC-resistant by design.'],
+    ['SOST Whitepaper', 'Core protocol design, economic model, constitutional split 50/25/25', 'SOST is a CPU-friendly, memory-hard, gold-backed cryptocurrency. Every block allocates 50% to miner, 25% to Gold Vault, 25% to PoPC Pool — hardcoded and immutable. UTXO-based transaction model with secp256k1 ECDSA signatures. ConvergenceX proof-of-work requires ~8GB RAM. Reference miner is CPU-oriented; protocol does not enforce CPU-only at consensus. Max supply: 4,669,201 SOST. Smooth exponential emission decay.'],
+    ['ConvergenceX PoW', 'CPU-friendly, memory-hard gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. Memory-hard, CPU-friendly design — no public claim that GPU/ASIC ports are impossible.'],
     ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
     ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
     ['cASERT Difficulty', 'Unified rate control with avg288 bitsQ + equalizer', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap (historical). V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap (historical). Current (block 5175+): avg288 bitsQ compares avg of last 288 block intervals vs 600s target. Dynamic cap (5270+): scales 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. Equalizer: emergency-only, ceiling H13 (block 5,750+), 43 profiles (21 active E7-H13, 22 reserved H14-H35). Relief valve: E7 at 605s. Final calibration complete.'],
@@ -3356,5 +3356,6 @@ document.addEventListener('click', function _appMelody() {
   document.removeEventListener('click', _appMelody);
 }, {once: true});
 </script>
+<script src="../js/developer-note.js" defer></script>
 </body>
 </html>
