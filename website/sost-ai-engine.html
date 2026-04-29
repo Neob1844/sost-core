@@ -274,7 +274,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.4.0 &middot; Phase 3 Milestones M1–M4</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.7.0 &middot; Phase 3 Milestones M1–M9</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -291,7 +291,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">388 / 388 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; network OFF by default</span>
+      <span class="val">548 / 548 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; public help center · network OFF by default</span>
     </div>
   </div>
 </section>
@@ -497,6 +497,93 @@
         </ul>
       </div>
     </div>
+
+    <!-- M7 (provider wiring, minimal slice) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M7 &mdash; Local / free AI provider wiring (paid disabled in M7)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          M7 wires the policy gate and judge plumbing for local + free AI providers (Ollama
+          local, OpenRouter / HuggingFace free models). Paid AI is <strong>hard-disabled</strong>
+          in M7 &mdash; even when a caller passes <code>--allow-paid</code>, the policy coerces
+          <code>max_paid_calls</code> to 0 and reports <code>paid_judge</code> as disabled. The
+          provider answer judge runs every reply against the canonical contradictions and the
+          public-claim guard, scores overclaim and hallucination, and embeds the canonical
+          correction in the corrected_answer.
+        </p>
+        <ul class="spec-list">
+          <li><code>provider_policy</code>: explicit defaults all-OFF; <code>allow_paid=True</code> coerced to False</li>
+          <li><code>free_ai_model_registry</code>: Ollama prefix allowlist (qwen/llama/mistral/phi/gemma/deepseek/codellama), OpenRouter only <code>:free</code> suffix, HuggingFace small free-inference list</li>
+          <li><code>provider_answer_judge</code>: deterministic JudgeReport scoring overclaim/hallucination, with corrected_answer that appends the canonical truth</li>
+          <li><code>live_research_session</code>: validators-only by default; every provider recorded as <em>used=False</em> with a skipped_reason</li>
+          <li>Ollama provider: refuses any non-loopback URL via <code>compare_exchange</code>-style check; <code>is_available()</code> never raises</li>
+          <li>token presence reported as boolean only &mdash; values never read or stored; no <code>password</code> field anywhere</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M8 (Ask Engine — internal cross-project prompt interface) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M8 &mdash; Internal SOST AI Ask Engine</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          A small CLI-driven interface that lets the operator type a free-form prompt and have
+          the AI engine search/reason over local knowledge of Materials Engine, GeaSpirit,
+          SOST, Useful Compute and DEX, then return a cautious internal-only answer.
+          <strong>Never publishes</strong> &mdash; even when the prompt explicitly asks to
+          publish, the answer composer routes to needs_human_review.
+        </p>
+        <ul class="spec-list">
+          <li><code>prompt_router</code>: 12 intent buckets (explain / search / compare / validate / generate_hypotheses / public_wording_review / useful_compute_task_design / dft_priority / geaspirit_public_safety / dex_safety / mining_help / create_report)</li>
+          <li><code>project_selector</code>: keyword-based routing across materials / geaspirit / sost / useful_compute / dex / mining</li>
+          <li><code>answer_composer</code>: always runs <code>contradiction_resolver</code> + <code>public_claim_guard</code>; embeds canonical corrections; downgrades publishability on blocking findings</li>
+          <li><code>internal_citation</code>: lightweight registry for local-file references with inline <code>[n]</code> markers and a markdown bibliography</li>
+          <li>output saved to <code>reports/ai_engine/ask/&lt;ts&gt;_&lt;slug&gt;/</code> with answer.md, evidence.json, files_consulted.txt, risk_report.md, manifest.json</li>
+          <li>defaults: <code>internal_only</code>, network off, paid false, no automatic publication, no website write</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M9 (Public Help Center + Approved Knowledge Export) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <div class="spec-name">M9 &mdash; Public Help Center + Approved Knowledge Export</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The public-safe layer. <strong>Private AI thinks. Human reviews. Public site explains
+          only approved safe knowledge.</strong> The public website (<a href="sost-help.html">sost-help.html</a>
+          and <a href="sost-miner-troubleshooter.html">sost-miner-troubleshooter.html</a>)
+          consumes only static JSON exported from a human-reviewed pipeline. The public site
+          never calls the private engine, never queries Ollama / OpenRouter / HuggingFace /
+          paid AI, and never uploads a log.
+        </p>
+        <ul class="spec-list">
+          <li><code>approved_knowledge_exporter</code>: combines approved publication-queue items with 12 default safe FAQ templates; writes <code>reports/ai_engine/approved_public_help/&lt;ts&gt;/</code> with index, markdown, troubleshooter rules, faq, safety + source manifests, README and sha256 checksums</li>
+          <li><code>public_help_guard</code>: exit-gate guard hard-blocking <em>guaranteed profit</em>, <em>passive income</em>, <em>Useful Compute rewards are active</em>, <em>avg1000 consensus</em>, <em>confirmed/guaranteed mineral</em>, <em>DFT-validated</em>, <em>fully trustless DEX</em>, any send/paste/share private key or seed phrase, the personal-email leak token, and the AI attribution leak token</li>
+          <li><code>miner_troubleshooting_knowledge</code>: 11 deterministic log-pattern rules (rejected-block, profile-mismatch, no-peers, connection-refused, bootstrap-chain, http-zero, too-many-threads, cmake/libsecp/libssl-missing, etc.) consumed by the local-only browser troubleshooter</li>
+          <li>public website: <a href="sost-help.html">/sost-help.html</a> with client-side search and noscript fallback, <a href="sost-miner-troubleshooter.html">/sost-miner-troubleshooter.html</a> with paste-a-log analysis that runs entirely in the browser</li>
+          <li>import helper <code>scripts/import_public_help_pack.py</code>: validates the pack, refuses on missing safety_manifest / checksums / banned phrases, copies the JSON into <code>website/data/</code>; never auto-runs git-add / commit / push</li>
+          <li>defaults: no live AI on the public site, no chatbot, no log upload, no autopilot deploy</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -672,7 +759,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>388 / 388 (M1 + M2 + M3 + M4 + M5)</td></tr>
+        <tr><td>Tests passing</td><td>548 / 548 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
