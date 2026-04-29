@@ -3066,12 +3066,12 @@ static bool process_block(const std::string& block_json) {
     }
     int64_t now_ts=(int64_t)time(nullptr);
     // Future-drift cap. Tightened from MAX_FUTURE_DRIFT (600 s) to
-    // MAX_FUTURE_DRIFT_STAGED (60 s) at the staged-relief activation
+    // MAX_FUTURE_DRIFT_STAGED (30 s) at the staged-relief activation
     // height — without this tightening a miner could set the
     // candidate timestamp 600 s in the future and pre-mine the
-    // staged-relief stages that timestamp implies. The 60 s value
-    // matches the staged step window so no single drop can be
-    // anticipated by a future-timestamp.
+    // staged-relief stages that timestamp implies. The 30 s value
+    // matches CASERT_STAGED_STEP_SECONDS so no more than one cascade
+    // step can be anticipated by a future-timestamp.
     int64_t future_drift = (height >= CASERT_STAGED_RELIEF_HEIGHT)
                             ? MAX_FUTURE_DRIFT_STAGED
                             : MAX_FUTURE_DRIFT;

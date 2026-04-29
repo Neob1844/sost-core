@@ -564,9 +564,13 @@ inline constexpr int64_t MAX_FUTURE_DRIFT = 600;
 // Tightened future-drift window applied at heights >= CASERT_STAGED_RELIEF_HEIGHT.
 // Without this tightening, a miner could pre-mine downstream staged-relief
 // profiles by setting the candidate timestamp 600 seconds in the future, then
-// only releasing the block once real time caught up. 60 seconds matches the
-// staged-relief step window so an attacker cannot anticipate even a single
-// drop.
-inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
+// only releasing the block once real time caught up.
+//
+// Calibration: 30 s matches the staged-relief step interval
+// (CASERT_STAGED_STEP_SECONDS), so the maximum amount a miner can anticipate
+// by setting a future timestamp is one cascade step — never two. A drift
+// equal to the step locks anticipation to the next-step boundary while
+// tolerating the small clock skew typical of well-configured Linux hosts.
+inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 30;
 
 } // namespace sost
