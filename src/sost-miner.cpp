@@ -642,21 +642,34 @@ static void start_block_monitor(int64_t mining_height) {
                 }
             }
             // Local relief valve prediction: uses LOCAL time only (no RPC).
-            // When elapsed > 605s, switch to E7 immediately. Fires at most
-            // once per mining height (see relief_predict_check_and_mark).
+            // Pre-V9 (height < CASERT_STAGED_RELIEF_HEIGHT): when elapsed
+            // > 605 s, switch to E7 immediately. Fires at most once per
+            // mining height (see relief_predict_check_and_mark).
+            //
+            // V9 staged relief (height >= CASERT_STAGED_RELIEF_HEIGHT):
+            // RELIEF-PREDICT is DISABLED. The staged cascade is computed
+            // deterministically by the node every block, and the miner
+            // picks up each step via the (now ~2 s) LAG-CHECK polling.
+            // Pre-switching straight to E7 here would force the miner
+            // to mine at E7 difficulty while the node's deterministic
+            // floor only allows the current staged step (e.g. H7/H4/H1
+            // at the early windows), causing the node to REJECT the
+            // miner's relief blocks.
             if (!g_chain.empty() && !g_chain_advanced) {
-                int64_t now_s = (int64_t)std::time(nullptr);
-                int64_t elapsed = now_s - g_chain.back().time;
-                int32_t mining_pi = g_mining_profile.load();
-                if (elapsed > CASERT_RELIEF_VALVE_THRESHOLD && mining_pi > CASERT_H_MIN) {
-                    int64_t cur_h = g_monitor_height.load();
-                    if (relief_predict_check_and_mark(cur_h)) {
-                        printf("[RELIEF-PREDICT] Elapsed %llds > %llds — pre-switching to E7\n",
-                               (long long)elapsed, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
-                        fflush(stdout);
-                        g_node_profile = CASERT_H_MIN;
-                        g_lag_changed = true;
-                        continue;  // skip RPC getinfo this cycle
+                int64_t cur_h = g_monitor_height.load();
+                if (cur_h < CASERT_STAGED_RELIEF_HEIGHT) {
+                    int64_t now_s = (int64_t)std::time(nullptr);
+                    int64_t elapsed = now_s - g_chain.back().time;
+                    int32_t mining_pi = g_mining_profile.load();
+                    if (elapsed > CASERT_RELIEF_VALVE_THRESHOLD && mining_pi > CASERT_H_MIN) {
+                        if (relief_predict_check_and_mark(cur_h)) {
+                            printf("[RELIEF-PREDICT] Elapsed %llds > %llds — pre-switching to E7\n",
+                                   (long long)elapsed, (long long)CASERT_RELIEF_VALVE_THRESHOLD);
+                            fflush(stdout);
+                            g_node_profile = CASERT_H_MIN;
+                            g_lag_changed = true;
+                            continue;  // skip RPC getinfo this cycle
+                        }
                     }
                 }
             }

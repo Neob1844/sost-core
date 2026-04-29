@@ -3550,8 +3550,19 @@ static bool process_block(const std::string& block_json) {
                     return false;
                 }
                 // V3.1 SECURITY: enforce lag floor as minimum profile
-                // Miners cannot declare a profile below the lag floor
-                if (height >= CASERT_V3_1_FORK_HEIGHT && base_dec.lag > 10) {
+                // Miners cannot declare a profile below the lag floor.
+                //
+                // V9 staged relief: this check is SUPERSEDED at heights
+                // >= CASERT_STAGED_RELIEF_HEIGHT by the deterministic
+                // floor below (line 3567+) which uses casert_compute
+                // including the staged drop. The V3.1 lag/8 formula is
+                // unaware of staged relief and would reject legitimate
+                // staged blocks once the cascade pushes declared_pi
+                // below lag/8 (e.g. base H13 at 660 s elapsed → B0,
+                // which is < lag/8=1 when lag is 13).
+                if (height >= CASERT_V3_1_FORK_HEIGHT
+                    && height < CASERT_STAGED_RELIEF_HEIGHT
+                    && base_dec.lag > 10) {
                     int32_t min_profile = std::min<int32_t>(base_dec.lag / CASERT_V3_LAG_FLOOR_DIV, CASERT_H_MAX);
                     if (declared_pi < min_profile) {
                         printf("[BLOCK] REJECTED: profile_index %d below lag floor %d (lag=%d, minimum enforcement)\n",
