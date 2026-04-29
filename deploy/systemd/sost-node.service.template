@@ -1,0 +1,18 @@
+[Unit]
+Description=SOST Node
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/sost/build
+EnvironmentFile=/etc/sost/rpc.env
+ExecStart=/opt/sost/build/sost-node --genesis genesis_block.json --chain chain.json --rpc-user ${RPC_USER} --rpc-pass ${RPC_PASS} --profile mainnet
+Restart=always
+LimitNOFILE=65536
+RestartSec=5
+StandardOutput=append:/var/log/sost-node.log
+StandardError=append:/var/log/sost-node.log
+
+[Install]
+WantedBy=multi-user.target
