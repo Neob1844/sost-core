@@ -3065,8 +3065,19 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
     int64_t now_ts=(int64_t)time(nullptr);
-    if(ts64 > now_ts + MAX_FUTURE_DRIFT){
-        printf("[BLOCK] REJECTED: timestamp too far in future\n");
+    // Future-drift cap. Tightened from MAX_FUTURE_DRIFT (600 s) to
+    // MAX_FUTURE_DRIFT_STAGED (60 s) at the staged-relief activation
+    // height — without this tightening a miner could set the
+    // candidate timestamp 600 s in the future and pre-mine the
+    // staged-relief stages that timestamp implies. The 60 s value
+    // matches the staged step window so no single drop can be
+    // anticipated by a future-timestamp.
+    int64_t future_drift = (height >= CASERT_STAGED_RELIEF_HEIGHT)
+                            ? MAX_FUTURE_DRIFT_STAGED
+                            : MAX_FUTURE_DRIFT;
+    if(ts64 > now_ts + future_drift){
+        printf("[BLOCK] REJECTED: timestamp too far in future (drift cap=%lld)\n",
+               (long long)future_drift);
         return false;
     }
 

@@ -169,6 +169,40 @@ inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD = 605; // 10 min 5 sec
 inline constexpr int64_t  CASERT_RELIEF_VALVE_HEIGHT_V1 = 5635;
 inline constexpr int64_t  CASERT_RELIEF_VALVE_THRESHOLD_V1 = 630; // 10 min 30 sec
 
+// Staged relief valve — coordinated fork at height
+// CASERT_STAGED_RELIEF_HEIGHT. Replaces the single-step H10/H11→E7
+// cliff with a gradual cascade so the relief block is decided by
+// hashrate over a 2–3 minute window rather than by who reacts
+// fastest to the announcement instant.
+//
+// Rule (height >= CASERT_STAGED_RELIEF_HEIGHT):
+//
+//     elapsed = candidate.timestamp - prev.timestamp
+//     if elapsed < CASERT_STAGED_RELIEF_START:
+//         no relief
+//     else:
+//         steps   = ((elapsed - START) / STEP_SECONDS) + 1
+//         drop    = steps * DROP_PER_STEP
+//         eff_H   = max(base_H - drop, CASERT_H_MIN)
+//
+// Schedule for a base of H10 (most common):
+//   570s→H7   600s→H4   630s→H1   660s→E2   690s→E5   720s→E7
+//
+// Schedule for a base of H13 (worst-case stall):
+//   570s→H10  600s→H7   630s→H4   660s→H1   690s→E2   720s→E5  750s→E7
+//
+// Activation comes paired with a tightened future-timestamp drift
+// (MAX_FUTURE_DRIFT_STAGED) — without that, the dominant could
+// pre-mine future relief stages by setting the candidate timestamp
+// in the future. Both rules MUST activate on the same block.
+//
+// See docs/staged_relief_fork_6550.md for context and the
+// Monte Carlo fairness analysis.
+inline constexpr int64_t  CASERT_STAGED_RELIEF_HEIGHT     = 6550;
+inline constexpr int64_t  CASERT_STAGED_RELIEF_START      = 570;  // elapsed seconds
+inline constexpr int64_t  CASERT_STAGED_STEP_SECONDS      = 30;
+inline constexpr int32_t  CASERT_STAGED_DROP_PER_STEP     = 3;
+
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
 // satisfy BOTH:
@@ -526,5 +560,13 @@ constexpr const char* ADDR_POPC_POOL     = "sost1d876c5b8580ca8d2818ab0fed393df9
 // Timestamp rules
 inline constexpr int32_t MTP_WINDOW       = 11;
 inline constexpr int64_t MAX_FUTURE_DRIFT = 600;
+
+// Tightened future-drift window applied at heights >= CASERT_STAGED_RELIEF_HEIGHT.
+// Without this tightening, a miner could pre-mine downstream staged-relief
+// profiles by setting the candidate timestamp 600 seconds in the future, then
+// only releasing the block once real time caught up. 60 seconds matches the
+// staged-relief step window so an attacker cannot anticipate even a single
+// drop.
+inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 
 } // namespace sost

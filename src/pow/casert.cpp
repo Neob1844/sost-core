@@ -355,13 +355,36 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         }
 
         // Relief valve: emergency profile drop when block is taking too long.
-        // V8 (block 5750+): elapsed > 605s → drop to E7 (H_MIN = -7).
-        // Legacy (block 5635-5749): elapsed > 630s → drop to min(H1, target).
-        // The NEXT block recalculates normally from lag.
-        // bitsQ remains the primary difficulty controller.
+        //
+        // V9 (block CASERT_STAGED_RELIEF_HEIGHT+):
+        //     staged cascade — elapsed >= 570 s drops 3 profiles every 30 s
+        //     down to E7. Replaces the single-step cliff with a 2–3 minute
+        //     window where every miner has a meaningful chance of finding
+        //     the relief block in proportion to its hashrate.
+        // V8 (blocks CASERT_RELIEF_VALVE_HEIGHT .. CASERT_STAGED_RELIEF_HEIGHT-1):
+        //     single-step — elapsed > 605 s → drop directly to E7.
+        // Legacy (blocks CASERT_RELIEF_VALVE_HEIGHT_V1 .. CASERT_RELIEF_VALVE_HEIGHT-1):
+        //     elapsed > 630 s → drop to min(H1, target).
+        //
+        // The NEXT block recalculates normally from lag. bitsQ remains
+        // the primary difficulty controller.
+        // Capture the raw cASERT base profile before any easing
+        // adjustments (lag clamp, anti-stall, relief valves). The V9
+        // staged-relief cascade is applied against this raw base so
+        // its drops are relative to "what cASERT thought the next
+        // profile should be", not against an already-clamped value.
+        int32_t raw_base_H = H;
+
+        // Legacy relief valves (V8 single-step and earlier). Run BEFORE
+        // the lag-<=0 clamp because the V8 single-step sets H = E7
+        // directly, which is already <= 0 and survives the clamp.
         if (now_time > 0 && !chain.empty()) {
             int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
-            if (next_height >= CASERT_RELIEF_VALVE_HEIGHT && block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD) {
+            if (next_height >= CASERT_STAGED_RELIEF_HEIGHT) {
+                // V9 staged relief is applied at the very bottom of
+                // this function, after every other modifier. See the
+                // block at the end.
+            } else if (next_height >= CASERT_RELIEF_VALVE_HEIGHT && block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD) {
                 H = effective_h_min; // E7 = -7
             } else if (next_height >= CASERT_RELIEF_VALVE_HEIGHT_V1 && block_elapsed > CASERT_RELIEF_VALVE_THRESHOLD_V1) {
                 int32_t relief_profile = std::min<int32_t>(1, target_profile);
@@ -393,6 +416,34 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                     int64_t easing_time = time_at_b0 - CASERT_ANTISTALL_EASING_EXTRA;
                     H = std::max<int32_t>(effective_h_min, -(int32_t)(easing_time / 1800));
                 }
+            }
+        }
+
+        // V9 staged relief (block CASERT_STAGED_RELIEF_HEIGHT+).
+        //
+        // Computed against ``raw_base_H`` (the pre-clamp profile),
+        // not against the post-clamp H, so the schedule is always
+        // relative to the cASERT base — the H10/H11/H12/H13 the
+        // equalizer chose for this block.
+        //
+        //     elapsed = candidate.timestamp - prev.timestamp
+        //     if elapsed < 570:    no change
+        //     else:                drop = 3 * ((elapsed-570)/30 + 1)
+        //                          eff_H = max(raw_base_H - drop, E7)
+        //
+        // ``min(staged, H)`` ensures staged only ever eases — if the
+        // lag clamp or anti-stall already pushed H below the staged
+        // value, the more permissive value wins.
+        if (next_height >= CASERT_STAGED_RELIEF_HEIGHT
+            && now_time > 0 && !chain.empty()) {
+            int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
+            if (block_elapsed >= CASERT_STAGED_RELIEF_START) {
+                int64_t past = block_elapsed - CASERT_STAGED_RELIEF_START;
+                int32_t steps = (int32_t)(past / CASERT_STAGED_STEP_SECONDS) + 1;
+                int32_t drop = steps * CASERT_STAGED_DROP_PER_STEP;
+                int32_t staged = raw_base_H - drop;
+                if (staged < effective_h_min) staged = effective_h_min;
+                if (staged < H) H = staged;
             }
         }
 
