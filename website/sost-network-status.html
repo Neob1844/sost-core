@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-network-status.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Network Status — height, hashrate, miners, nodes</title>
+<meta name="description" content="Current SOST network state: chain height, average block time, estimated hashrate, unique miners, visible nodes, mempool, Gold Vault balance.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Network Status">
+<meta property="og:description" content="Live SOST network state: height, hashrate, miners, nodes, vaults.">
+<meta property="og:url" content="https://sostcore.com/sost-network-status.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;
+    --red-primary:#fb010d;--red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;--font-display:'Space Grotesk',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:48px 0 28px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.05) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(26px,4vw,34px);font-weight:700;line-height:1.15;color:var(--text-primary);margin-bottom:12px;letter-spacing:-.5px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:680px;line-height:1.7;font-weight:300}
+  section{padding:32px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  h2.section-title{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.4px;margin-bottom:16px}
+  p{color:var(--text-secondary);margin:.5em 0}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .stat{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:18px 18px}
+  .stat .lab{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+  .stat .val{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)}
+  .stat .sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+  .stat.accent{border-color:var(--red-primary);background:var(--red-subtle)}
+  .stat.accent .val{color:var(--red-primary)}
+  .stat.green .val{color:var(--green-primary)}
+  .stat.cyan .val{color:var(--cyan-primary)}
+  .cta{display:inline-flex;align-items:center;gap:10px;padding:11px 20px;background:var(--red-primary);color:#fff;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:background .15s}
+  .cta:hover{background:var(--red-glow);text-decoration:none}
+  .cta-secondary{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;background:transparent;color:var(--text-primary);border:1px solid var(--border-bright,#3a3a3a);border-radius:6px;font-size:12px;font-weight:500;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:border-color .15s;margin-left:10px}
+  .cta-secondary:hover{border-color:var(--red-primary);text-decoration:none}
+  .note{margin:14px 0;padding:12px 16px;border-left:3px solid var(--yellow-primary);background:var(--yellow-dim);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--text-secondary)}
+  .note b{color:var(--yellow-primary)}
+  .live-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}
+  .live-status{font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text-muted);margin-right:6px;vertical-align:middle}
+  .live-dot.on{background:var(--green-primary);box-shadow:0 0 6px var(--green-dim)}
+  .live-dot.off{background:var(--red-primary)}
+  footer{padding:32px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html">Mine</a>
+      <a href="sost-network-status.html" class="cur">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">NETWORK STATUS</div>
+    <h1>SOST <span>network</span> state</h1>
+    <p class="hero-sub">A simple summary of the live network: height, average block time, estimated hashrate, unique miners, visible nodes, vault balances. The full chain explorer with per-block detail and search lives at <a href="sost-explorer.html">sost-explorer.html</a>.</p>
+    <div class="live-wrap">
+      <span class="live-status"><span class="live-dot" id="live-dot"></span><span id="live-label">connecting&hellip;</span></span>
+      <a class="cta" href="sost-explorer.html">Open full explorer &rarr;</a>
+      <a class="cta-secondary" href="sost-mine.html">Start mining</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">CHAIN</div>
+    <h2 class="section-title">Block production</h2>
+    <div class="grid">
+      <div class="stat accent"><div class="lab">Block height</div><div class="val" id="s-height">&mdash;</div><div class="sub" id="s-height-sub">tip of the chain</div></div>
+      <div class="stat"><div class="lab">Avg block time (last 288)</div><div class="val" id="s-avg288">&mdash;</div><div class="sub">~48&nbsp;h window &middot; target 600&nbsp;s</div></div>
+      <div class="stat"><div class="lab">Avg block time (last 1000)</div><div class="val" id="s-avg1000">&mdash;</div><div class="sub">~7&nbsp;d window</div></div>
+      <div class="stat"><div class="lab">Genesis avg</div><div class="val" id="s-avgGen">&mdash;</div><div class="sub">since block 0</div></div>
+      <div class="stat green"><div class="lab">Estimated hashrate</div><div class="val" id="s-hashrate">&mdash;</div><div class="sub">network total H/s</div></div>
+      <div class="stat"><div class="lab">Mempool</div><div class="val" id="s-mempool">&mdash;</div><div class="sub">pending tx count</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">PARTICIPANTS</div>
+    <h2 class="section-title">Miners and nodes</h2>
+    <div class="grid">
+      <div class="stat cyan"><div class="lab">Unique miners (last 288)</div><div class="val" id="s-miners">&mdash;</div><div class="sub">distinct payout addresses</div></div>
+      <div class="stat cyan"><div class="lab">Visible nodes</div><div class="val" id="s-nodes">&mdash;</div><div class="sub">seed-visible peers</div></div>
+    </div>
+    <p class="note" style="margin-top:14px"><b>Solo-miner-first.</b> SOST does not run an official pool. Independent miners and node operators are exactly what the trial needs &mdash; see <a href="sost-why-no-pools.html">Why no pools</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">CONSTITUTIONAL POOLS</div>
+    <h2 class="section-title">Reserve balances</h2>
+    <div class="grid">
+      <div class="stat"><div class="lab">Gold Vault</div><div class="val" id="s-vault">&mdash;</div><div class="sub">25% of every block reward</div></div>
+      <div class="stat"><div class="lab">PoPC Pool</div><div class="val" id="s-popc">&mdash;</div><div class="sub">25% of every block reward</div></div>
+      <div class="stat"><div class="lab">Total supply emitted</div><div class="val" id="s-supply">&mdash;</div><div class="sub">SOST mined since genesis</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">PRE-MARKET</div>
+    <h2 class="section-title">Status disclosures</h2>
+    <p>SOST is in pre-market testing. The chain is live, blocks are produced near the 10-minute target, and miners are independent. None of that means SOST has reached market value, that it will be listed on any exchange, or that a market will exist. Read the Developer Note at the top of this page (or any page on the site) for the full statement.</p>
+    <p>Live block-by-block detail and address search: <a href="sost-explorer.html">open the explorer</a>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">SOST Protocol &middot; Native PoW &middot; Solo-miner-first &middot; Pre-market testing</div>
+</footer>
+
+<script>
+// Best-effort live snapshot. We try the same RPC endpoint the explorer
+// uses (/rpc), without auth, since this page is read-only. If the
+// endpoint requires auth or is unreachable, the page degrades to a
+// "open the explorer for live data" message and the static layout.
+(function(){
+  var dot = document.getElementById('live-dot');
+  var lab = document.getElementById('live-label');
+  function setStatus(state, text){
+    dot.className = 'live-dot ' + state;
+    lab.textContent = text;
+  }
+  function fmtN(x){ if (x == null || isNaN(x)) return '—'; if (x >= 1e6) return (x/1e6).toFixed(2) + 'M'; if (x >= 1e3) return (x/1e3).toFixed(2) + 'k'; return x.toString(); }
+  function fmtH(s){ if (s == null) return '—'; if (s < 90) return Math.round(s) + ' s'; var m = s / 60; return m.toFixed(0) + 'm ' + ('0' + Math.round((m - Math.floor(m)) * 60)).slice(-2) + 's'; }
+  function fmtSOST(s){ if (s == null) return '—'; return Number(s).toFixed(2) + ' SOST'; }
+  async function rpc(method, params){
+    var r = await fetch('/rpc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: method, params: params || [] })
+    });
+    if (!r.ok) throw new Error('rpc ' + method + ' status ' + r.status);
+    var j = await r.json();
+    if (j.error) throw new Error(j.error.message || 'rpc error');
+    return j.result;
+  }
+  async function refresh(){
+    setStatus('', 'connecting…');
+    try {
+      var info = await rpc('getinfo', []);
+      var h = info.blocks != null ? info.blocks : info.height;
+      document.getElementById('s-height').textContent = h != null ? '#' + h : '—';
+      document.getElementById('s-mempool').textContent = info.mempool_size != null ? info.mempool_size : (info.mempool || 0);
+      document.getElementById('s-vault').textContent = fmtSOST(info.gold_vault_balance);
+      document.getElementById('s-popc').textContent = fmtSOST(info.popc_pool_balance);
+      document.getElementById('s-supply').textContent = fmtSOST(info.total_supply);
+      setStatus('on', 'live');
+    } catch (e) {
+      setStatus('off', 'live data unavailable — open the explorer');
+      document.getElementById('s-height-sub').textContent = '(open explorer for live state)';
+    }
+  }
+  refresh();
+  setInterval(refresh, 30000);
+})();
+</script>
+<script src="js/sost-music.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-mining-calculator.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Mining Calculator — Solo PoW probability and variance</title>
+<meta name="description" content="Solo-mining probability calculator for SOST. Inputs your hashrate and the network hashrate; outputs expected blocks, P(at least one), and variance.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Mining Calculator">
+<meta property="og:description" content="Solo-mining probability and variance calculator. No profit promise.">
+<meta property="og:url" content="https://sostcore.com/sost-mining-calculator.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;--font-display:'Space Grotesk',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:960px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:56px 0 36px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:240px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.05) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(26px,4vw,36px);font-weight:700;line-height:1.15;color:var(--text-primary);margin-bottom:14px;letter-spacing:-.5px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:680px;line-height:1.7;font-weight:300}
+  section{padding:36px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  h2.section-title{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text-primary);letter-spacing:-.4px;margin-bottom:16px}
+  p{color:var(--text-secondary);margin:.6em 0}
+  ul{margin:.4em 0 .4em 1.4em;color:var(--text-secondary)}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .field input,.field select{background:var(--bg-panel);border:1px solid var(--border-med);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .15s}
+  .field input:focus,.field select:focus{border-color:var(--red-primary)}
+  .field .hint{font-size:11px;color:var(--text-muted)}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px}
+  .result{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px}
+  .result .lab{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+  .result .val{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--text-primary)}
+  .result .sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+  .result.accent{border-color:var(--red-primary);background:var(--red-subtle)}
+  .result.accent .val{color:var(--red-primary)}
+  .warn-note{margin:18px 0;padding:14px 18px;border-left:3px solid var(--yellow-primary);background:var(--yellow-dim);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--text-secondary)}
+  .warn-note b{color:var(--yellow-primary)}
+  .danger-note{margin:14px 0;padding:14px 18px;border-left:3px solid var(--red-primary);background:var(--red-subtle);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--text-secondary)}
+  .danger-note b{color:var(--red-primary)}
+  details{margin:14px 0;border:1px solid var(--border-dim);border-radius:6px;background:var(--bg-card)}
+  details summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--text-primary)}
+  details > div{padding:14px 18px;border-top:1px solid var(--border-dim)}
+  .formula{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:12px 16px;font-size:12.5px;color:#cfe7ff;margin:12px 0}
+  footer{padding:32px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html" class="cur">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">SOLO MINING &middot; PROBABILITY &amp; VARIANCE</div>
+    <h1>Mining <span>calculator</span></h1>
+    <p class="hero-sub">Type your hashrate and the network hashrate. The page tells you how many blocks to expect, how likely it is you find at least one, and how wide the variance band is. No profit estimate. No fiat conversion. Solo mining is high variance and SOST is in pre-market testing.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">INPUTS</div>
+    <h2 class="section-title">Tell us your setup</h2>
+    <div class="grid-form">
+      <div class="field">
+        <label for="my-hr">Your hashrate (H/s)</label>
+        <input id="my-hr" type="number" min="0" step="1" value="100">
+        <div class="hint">From your miner log: the <code>att/s</code> column.</div>
+      </div>
+      <div class="field">
+        <label for="net-hr">Network hashrate (H/s)</label>
+        <input id="net-hr" type="number" min="0" step="1" value="479">
+        <div class="hint">Pulled from the explorer EST. HASHRATE field.</div>
+      </div>
+      <div class="field">
+        <label for="period">Time period</label>
+        <select id="period">
+          <option value="1">1 hour</option>
+          <option value="6">6 hours</option>
+          <option value="24" selected>24 hours</option>
+          <option value="168">7 days</option>
+          <option value="720">30 days</option>
+        </select>
+        <div class="hint">Window for the calculation.</div>
+      </div>
+      <div class="field">
+        <label for="reward">Block reward (SOST)</label>
+        <input id="reward" type="number" min="0" step="0.0001" value="7.851">
+        <div class="hint">Miner share = 50% of subsidy + fees. Current ~7.85.</div>
+      </div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="result"><div class="lab">Your share</div><div class="val" id="r-share">&mdash;</div><div class="sub">of total network hashrate</div></div>
+      <div class="result"><div class="lab">Expected blocks</div><div class="val" id="r-exp">&mdash;</div><div class="sub" id="r-exp-sub">in window</div></div>
+      <div class="result accent"><div class="lab">P(at least one)</div><div class="val" id="r-prob">&mdash;</div><div class="sub">probability of finding ≥ 1 block</div></div>
+      <div class="result"><div class="lab">Expected SOST</div><div class="val" id="r-sost">&mdash;</div><div class="sub">mean reward in window</div></div>
+      <div class="result"><div class="lab">Variance band</div><div class="val" id="r-var">&mdash;</div><div class="sub">5th &ndash; 95th percentile of blocks</div></div>
+      <div class="result"><div class="lab">Median wait to first block</div><div class="val" id="r-wait">&mdash;</div><div class="sub">50% of solo miners wait this long or less</div></div>
+    </div>
+
+    <div class="warn-note"><b>Variance is real.</b> "Expected" means <i>average over many such windows</i>. In any single window your actual count of blocks can be 0 even when the expected value is well above 1. That is mathematically normal solo-mining behaviour.</div>
+
+    <div class="danger-note"><b>No profit promise.</b> SOST is in pre-market testing. There is no exchange listing, no market price, no liquidity. The "Expected SOST" number is in SOST units, not money. Do not assume any future fiat value.</div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">DETAILS</div>
+    <h2 class="section-title">How the numbers are computed</h2>
+
+    <details open>
+      <summary>The math (Poisson process)</summary>
+      <div>
+        <p>Block discovery in a PoW network is a Poisson process: every nonce is an independent trial, and over a fixed time window the number of blocks any single miner finds follows a Poisson distribution with mean &lambda; equal to the miner's expected count.</p>
+        <div class="formula">
+share        = my_hashrate / network_hashrate<br>
+blocks_in_window = (window_seconds / 600) &times; share<br>
+&lambda;            = blocks_in_window<br>
+P(&ge;1 block)  = 1 − e<sup>−&lambda;</sup><br>
+P(0 blocks)  = e<sup>−&lambda;</sup>
+        </div>
+        <p>Variance: for Poisson, both mean and variance equal &lambda;. The 5th-95th percentile band uses the standard chi-squared / Poisson quantile approximation that is accurate for any &lambda;.</p>
+        <p>Median wait to first block uses the exponential time-between-events: median = ln(2) / rate, where rate = share &times; (1 / 600&nbsp;s).</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Where the network hashrate number comes from</summary>
+      <div>
+        <p>The default network hashrate (479&nbsp;H/s) is a snapshot from the explorer. It changes block by block. For a current value, open the <a href="sost-explorer.html">explorer</a> and copy the EST. HASHRATE field, or the <a href="sost-network-status.html">network status</a> page.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Why "expected SOST" is not "mining income"</summary>
+      <div>
+        <ul>
+          <li>SOST has no exchange listing &mdash; the unit has no market price.</li>
+          <li>The block reward decays smoothly over time (Feigenbaum-derived schedule), so the figure here is current, not future.</li>
+          <li>Pre-market testing carries the risk that the project never reaches market value at all (see Developer Note at the top of any page).</li>
+          <li>Solo mining variance can stretch days. Don't budget on the mean.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">NEXT</div>
+    <h2 class="section-title">Now what</h2>
+    <ul>
+      <li><a href="sost-mine.html">Mine SOST in 10 minutes</a> &mdash; install + run.</li>
+      <li><a href="sost-why-no-pools.html">Why no pools</a> &mdash; the solo-miner-first thesis.</li>
+      <li><a href="sost-network-status.html">Network status</a> &mdash; live numbers.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="container">SOST Protocol &middot; Solo-miner-first &middot; Pre-market testing &middot; No profit promise</div>
+</footer>
+
+<script>
+(function(){
+  function fmt(x, dp){ if (!isFinite(x)) return '—'; if (Math.abs(x) >= 100) return x.toFixed(0); return x.toFixed(dp == null ? 2 : dp); }
+  function fmtH(s){ if (s < 90) return Math.round(s) + ' s'; if (s < 5400) return (s/60).toFixed(1) + ' min'; if (s < 86400*2) return (s/3600).toFixed(1) + ' h'; return (s/86400).toFixed(1) + ' d'; }
+  function pctL(p){ if (p < 0.01) return (p*100).toFixed(3) + ' %'; if (p < 0.1) return (p*100).toFixed(2) + ' %'; return (p*100).toFixed(1) + ' %'; }
+  // Poisson cumulative <= k:
+  function poissonCDF(lambda, k){
+    var s = 0, term = Math.exp(-lambda);
+    for (var i = 0; i <= k; i++){ s += term; term *= lambda / (i+1); }
+    return s;
+  }
+  function poissonQuantile(lambda, q){
+    var k = 0, c = poissonCDF(lambda, 0);
+    while (c < q && k < 1e7){ k++; c = poissonCDF(lambda, k); }
+    return k;
+  }
+  function compute(){
+    var my = parseFloat(document.getElementById('my-hr').value) || 0;
+    var net = parseFloat(document.getElementById('net-hr').value) || 0;
+    var hours = parseFloat(document.getElementById('period').value) || 0;
+    var reward = parseFloat(document.getElementById('reward').value) || 0;
+
+    var share = (net > 0) ? (my / net) : 0;
+    var window_s = hours * 3600;
+    var blocks_in_window = (window_s / 600);
+    var lambda = blocks_in_window * share;
+    var pAtLeastOne = 1 - Math.exp(-lambda);
+    var expSost = lambda * reward;
+    var p5  = poissonQuantile(lambda, 0.05);
+    var p95 = poissonQuantile(lambda, 0.95);
+    // median wait to first block (s)
+    var ratePerSec = (lambda > 0 && window_s > 0) ? (lambda / window_s) : 0;
+    var medianWait = (ratePerSec > 0) ? (Math.LN2 / ratePerSec) : Infinity;
+
+    document.getElementById('r-share').textContent = pctL(share);
+    document.getElementById('r-exp').textContent   = fmt(lambda, 2);
+    document.getElementById('r-exp-sub').textContent = 'in ' + (hours < 24 ? hours + ' h' : (hours/24).toFixed(0) + ' d');
+    document.getElementById('r-prob').textContent  = pctL(pAtLeastOne);
+    document.getElementById('r-sost').textContent  = fmt(expSost, 4) + ' SOST';
+    document.getElementById('r-var').textContent   = p5 + ' – ' + p95;
+    document.getElementById('r-wait').textContent  = isFinite(medianWait) ? fmtH(medianWait) : '∞';
+  }
+  ['my-hr','net-hr','period','reward'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', compute);
+    el.addEventListener('change', compute);
+  });
+  compute();
+})();
+</script>
+<script src="js/sost-music.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>

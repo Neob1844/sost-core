@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-why-no-pools.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why no pools — SOST is solo-miner-first</title>
+<meta name="description" content="Most PoW chains become pool-dominated early. SOST is experimenting with a solo-miner-first model to preserve decentralization.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Why no pools — SOST is solo-miner-first">
+<meta property="og:description" content="Solo-miner-first PoW: tradeoffs, philosophy, what to expect.">
+<meta property="og:url" content="https://sostcore.com/sost-why-no-pools.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;
+    --red-primary:#fb010d;--red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;--font-display:'Space Grotesk',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:880px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:64px 0 40px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:280px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.06) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.15;color:var(--text-primary);margin-bottom:18px;letter-spacing:-1px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:15px;color:var(--text-secondary);max-width:640px;line-height:1.8;font-weight:300}
+  section{padding:44px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  .section-title{font-family:var(--font-display);font-size:clamp(20px,3vw,26px);font-weight:600;color:var(--text-primary);letter-spacing:-.4px;margin-bottom:18px}
+  p{color:var(--text-secondary);margin:.8em 0}
+  ul{margin:.6em 0 .6em 1.4em;color:var(--text-secondary)}
+  li{margin:.35em 0}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:18px 20px;margin:16px 0}
+  .card h3{font-family:var(--font-display);font-size:16px;color:var(--text-primary);font-weight:600;margin-bottom:8px}
+  .pull{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--text-primary);border-left:3px solid var(--red-primary);padding-left:18px;margin:24px 0;line-height:1.5}
+  footer{padding:36px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html" class="cur">Why No Pools</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">SOLO-MINER-FIRST</div>
+    <h1>Why <span>SOST</span> doesn't have pools.</h1>
+    <p class="hero-sub">Most PoW chains become pool-dominated within weeks of launch. SOST is experimenting with a different default: keep block discovery close to individual operators while the network is small enough that it still matters.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">THE THESIS</div>
+    <h2 class="section-title">Solo first, decide later.</h2>
+    <p>Pools are a powerful coordination mechanism. They smooth out variance for individual miners and make participation easier for people with small hashrate. They are also, historically, the single biggest source of centralization in proof-of-work networks. Two or three pools controlling 60-80% of block production is the norm, not the exception.</p>
+    <p>SOST's choice during pre-market testing is to <b>not run an official pool and not ship pool-friendly tooling</b>. That is a deliberate experiment, not a permanent rule.</p>
+    <div class="pull">Decentralization is easier to keep than to recover.</div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">WHAT IT MEANS FOR YOU</div>
+    <h2 class="section-title">The honest tradeoff</h2>
+
+    <div class="card">
+      <h3>The good</h3>
+      <ul>
+        <li>You mine to <b>your own address</b>. No custodian, no payout schedule, no operator that can disappear with your share.</li>
+        <li>No pool fees.</li>
+        <li>Your block is your block &mdash; coinbase tx pays directly to you the moment a node accepts it.</li>
+        <li>Network security is not concentrated in 2 or 3 operators that you have to trust.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>The cost</h3>
+      <ul>
+        <li><b>High variance.</b> Solo mining is binary. Most blocks you don't win. Then you win one. Over a long enough window the expectation matches your share &mdash; but the window can be days, not minutes. Run the numbers on the <a href="sost-mining-calculator.html">calculator</a>.</li>
+        <li><b>Steady income is not on offer.</b> If you need predictable mining revenue today, SOST is not for you. There is no exchange listing, no market price, and pre-market participation is voluntary stress-testing, not employment.</li>
+        <li><b>You run your own node.</b> You sync, you keep the binary up to date, you watch the logs. That is the price of mining without an intermediary.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">WHO IS THIS FOR</div>
+    <h2 class="section-title">If you fit one of these, SOST is interesting</h2>
+    <ul>
+      <li>You run a Linux box (server, workstation, NAS) and have spare CPU cycles.</li>
+      <li>You believe early PoW networks should test how far they can go without pools.</li>
+      <li>You are comfortable with the terminal and reading logs.</li>
+      <li>You don't expect this to pay rent.</li>
+      <li>You want to mine to your own keys, not to a pool's.</li>
+    </ul>
+    <p>If you need stable yield, low variance and a UI that hides the chain &mdash; SOST is not where you start.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">PRE-MARKET</div>
+    <h2 class="section-title">Status today</h2>
+    <p>SOST is in pre-market testing. The chain is live, blocks are being produced near the 10-minute target, miners are independent and explorer / RPC / wallet stacks all work. <b>None of this means SOST will reach market value.</b> See the <a href="javascript:void(0)" onclick="document.querySelector('.sost-devnote-toggle')?.click()">Developer Note</a> at the top of any page for the full disclaimer.</p>
+    <p>Live state: <a href="sost-network-status.html">network status</a> &middot; <a href="sost-explorer.html">explorer</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">FUTURE</div>
+    <h2 class="section-title">What might change</h2>
+    <p>Solo-miner-first is a stance for the trial window, not a forever rule. After block 10,000 the data on distribution, propagation and fork rate will inform whether the network needs additional measures &mdash; for example latency-bound PoW, miner-address-bound challenge, or non-outsourceable mining (today these are research notes, not commitments). Any consensus change of that scale would only graduate to a real fork after public spec, tests, audit and coordinated activation.</p>
+    <p>If the network proves it can sustain decentralised solo mining, this stance keeps. If it doesn't, the design space is on the record and the community can decide.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    SOST Protocol &middot; Solo-miner-first &middot; Pre-market testing &middot; <a href="sost-mine.html">Start mining</a>
+  </div>
+</footer>
+
+<script src="js/sost-music.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-mine.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mine SOST in 10 Minutes — Solo CPU Mining Guide</title>
+<meta name="description" content="Step-by-step guide to start mining SOST on a single CPU machine in about 10 minutes. Native PoW, solo-miner-first, pre-market testing.">
+<meta name="keywords" content="mine SOST, SOST mining, CPU mining, solo mining, ConvergenceX, install SOST, build SOST">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mine SOST in 10 Minutes">
+<meta property="og:description" content="Step-by-step guide to start mining SOST on a single CPU machine. Solo-miner-first, pre-market testing, no pool required.">
+<meta property="og:url" content="https://sostcore.com/sost-mine.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mine SOST in 10 Minutes">
+<meta name="twitter:description" content="Solo CPU mining guide for SOST Protocol.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#8b1a22;
+    --red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--cyan-dim:#22d3ee33;
+    --yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;
+    --font-display:'Space Grotesk',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--border-med) var(--bg-deep)}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none;transition:color .2s}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:64px 0 48px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:300px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.06) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(30px,5vw,46px);font-weight:700;line-height:1.1;color:var(--text-primary);margin-bottom:18px;letter-spacing:-1px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:15px;color:var(--text-secondary);max-width:700px;line-height:1.8;font-weight:300}
+  .protocol-badge{margin-top:28px;display:inline-flex;align-items:center;gap:12px;padding:9px 18px;border:1px solid var(--border-med);border-radius:6px;background:var(--bg-card);font-size:11px;flex-wrap:wrap}
+  .protocol-badge .tag{color:var(--green-primary);font-weight:600}
+  .protocol-badge .sep{color:var(--text-muted)}
+  .protocol-badge .val{color:var(--text-secondary)}
+  section{padding:48px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  .section-title{font-family:var(--font-display);font-size:clamp(22px,3vw,28px);font-weight:600;color:var(--text-primary);letter-spacing:-.5px;margin-bottom:24px}
+  .section-title .accent{color:var(--red-primary)}
+  p{color:var(--text-secondary);margin:.6em 0}
+  ul{margin:.6em 0 .6em 1.4em;color:var(--text-secondary)}
+  li{margin:.25em 0}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  pre,code{font-family:var(--font-mono)}
+  .code{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:14px 18px;font-size:12.5px;line-height:1.7;color:#cfe7ff;overflow-x:auto;white-space:pre;margin:14px 0;position:relative}
+  .code .c{color:var(--text-dim)}
+  .code .v{color:var(--green-primary)}
+  .code .k{color:var(--red-primary)}
+  .step{display:flex;gap:18px;align-items:flex-start;margin:18px 0;padding:16px 18px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px}
+  .step-num{flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--red-subtle);border:1px solid var(--red-primary);color:var(--red-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .step-body{flex:1 1 auto}
+  .step-body h3{font-family:var(--font-display);font-size:16px;color:var(--text-primary);margin-bottom:6px;font-weight:600}
+  .note{margin:18px 0;padding:14px 18px;border-left:3px solid var(--yellow-primary);background:var(--yellow-dim);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-secondary)}
+  .note b{color:var(--yellow-primary)}
+  .ok-note{margin:18px 0;padding:14px 18px;border-left:3px solid var(--green-primary);background:var(--green-dim);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-secondary)}
+  .ok-note b{color:var(--green-primary)}
+  .warn-note{margin:18px 0;padding:14px 18px;border-left:3px solid var(--red-primary);background:var(--red-subtle);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-secondary)}
+  .warn-note b{color:var(--red-primary)}
+  table.spec{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0}
+  table.spec td{padding:10px 14px;border-bottom:1px solid var(--border-dim);color:var(--text-secondary)}
+  table.spec td:first-child{color:var(--text-dim);width:30%;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+  table.spec tr:last-child td{border-bottom:none}
+  details{margin:14px 0;border:1px solid var(--border-dim);border-radius:6px;background:var(--bg-card)}
+  details summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--text-primary)}
+  details[open] summary{border-bottom:1px solid var(--border-dim)}
+  details > div{padding:14px 18px}
+  footer{padding:40px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html" class="cur">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-getting-started.html">Full Guide</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">MINE SOST &middot; v0.8 &middot; SOLO-MINER-FIRST</div>
+    <h1>Mine <span>SOST</span> in 10 minutes.</h1>
+    <p class="hero-sub">A native PoW chain. CPU-friendly, memory-hard. No pool required, no pool offered &mdash; SOST is experimenting with a solo-miner-first model. Pre-market testing only.</p>
+    <div class="protocol-badge">
+      <span class="tag">NATIVE POW</span>
+      <span class="sep">&middot;</span>
+      <span class="val">CPU mining &middot; ~8&nbsp;GB RAM &middot; 10-min target block time</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">REQUIREMENTS</div>
+    <h2 class="section-title">What you need</h2>
+    <table class="spec">
+      <tr><td>OS</td><td>Ubuntu 22.04 or 24.04 (other Debian-family distros likely work)</td></tr>
+      <tr><td>RAM</td><td>8&nbsp;GB recommended for mining (4&nbsp;GB dataset + 4&nbsp;GB scratchpad per worker thread is shared)</td></tr>
+      <tr><td>Disk</td><td>20&nbsp;GB recommended</td></tr>
+      <tr><td>Network</td><td>stable internet connection &mdash; the node syncs and connects to peers over P2P (port 19333)</td></tr>
+      <tr><td>Skill</td><td>basic terminal: <code>cd</code>, copy/paste, run a command</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">FAST PATH</div>
+    <h2 class="section-title">One-line install <span class="accent">(safe)</span></h2>
+    <p>The recommended path: <b>download, inspect, then run</b>.</p>
+    <div class="code"><span class="c"># 1. download</span>
+curl -fsSL https://sostcore.com/install-sost.sh -o install-sost.sh
+
+<span class="c"># 2. inspect (always good practice for any pipe-to-bash script)</span>
+less install-sost.sh
+
+<span class="c"># 3. run</span>
+bash install-sost.sh</div>
+
+    <p>The quick version is also available, but inspect-first is always safer:</p>
+    <div class="code">curl -fsSL https://sostcore.com/install-sost.sh | bash</div>
+
+    <div class="ok-note"><b>What the script does:</b> verifies you are on Ubuntu/Debian, installs build dependencies (<code>build-essential</code>, <code>cmake</code>, <code>git</code>, <code>libssl-dev</code>, <code>libsecp256k1-dev</code>), clones (or pulls) <a href="https://github.com/Neob1844/sost-core">github.com/Neob1844/sost-core</a> into <code>~/sost-core</code>, and builds the binaries. It then prints the next manual steps.</div>
+
+    <div class="warn-note"><b>What the script never does:</b> ask for, read or write any private key, seed phrase or wallet file. It does not start the node, the miner, or anything else automatically. You stay in control.</div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">MANUAL PATH</div>
+    <h2 class="section-title">Build from source <span class="accent">(no script)</span></h2>
+    <p>Same result as the script, just typed by hand.</p>
+    <div class="code">sudo apt update
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . -j$(nproc)</div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">FIRST RUN</div>
+    <h2 class="section-title">Wallet, node, miner</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Create a wallet and a mining address</h3>
+        <p>Pick a passphrase you will remember. The wallet file is stored locally; it never leaves your machine.</p>
+        <div class="code">cd ~/sost-core/build
+./sost-cli newwallet
+./sost-cli getnewaddress "mining"
+<span class="c"># &rarr; sost1...   (copy this, you will paste it into the miner)</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Pick RPC credentials</h3>
+        <p>The node and the miner talk to each other over local RPC with HTTP Basic Auth. Choose any user/pass &mdash; both processes need to know them.</p>
+        <div class="code">export SOST_RPC_USER="changeme"
+export SOST_RPC_PASS="changemenow"</div>
+        <div class="note"><b>Tip:</b> these are <i>local-only</i> credentials &mdash; the RPC binds to <code>127.0.0.1</code> by default, never to the public internet. They protect against other local users on the same box, not against the wider network. Use any reasonable password.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Start the node (terminal A)</h3>
+        <div class="code">cd ~/sost-core/build
+./sost-node \
+  --rpc-user "$SOST_RPC_USER" \
+  --rpc-pass "$SOST_RPC_PASS"</div>
+        <p>You should see lines like <code>Chain loaded: NNNN blocks</code> and the node connecting to peers. Leave this terminal open. To run as a service later, create a systemd unit (sample under <code>docs/systemd/</code> in the repo).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Start the miner (terminal B)</h3>
+        <p>Replace <code>sost1YOURADDRESS</code> with the address you copied in step&nbsp;1.</p>
+        <div class="code">cd ~/sost-core/build
+./sost-miner \
+  --address sost1YOURADDRESS \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user "$SOST_RPC_USER" \
+  --rpc-pass "$SOST_RPC_PASS" \
+  --blocks 999999 \
+  --profile mainnet \
+  --threads 16</div>
+        <div class="note"><b>Threads:</b> try <code>--threads 16</code> first. ConvergenceX is memory-bandwidth bound &mdash; throwing 64 threads at it on most boxes <i>does not</i> mine faster, and on some hardware actually slows down. If 16 looks unstable on your machine, drop to 8 and try again.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>Verify you are mining</h3>
+        <p>Three checks:</p>
+        <ul>
+          <li><b>Miner log</b> &mdash; you should see <code>[MINING] H... bitsQ=...</code> lines and a periodic effective stable/s rate.</li>
+          <li><b>Height</b> &mdash; ask the node what block you are on:
+            <div class="code">curl -s -u "$SOST_RPC_USER:$SOST_RPC_PASS" \
+  -d '{"method":"getblockcount","params":[],"id":1}' \
+  http://127.0.0.1:18232</div>
+          </li>
+          <li><b>Explorer</b> &mdash; check the public network state at
+            <a href="sost-explorer.html">sost-explorer.html</a> and your miner share at
+            <a href="sost-network-status.html">sost-network-status.html</a>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">EXPECTATIONS</div>
+    <h2 class="section-title">What solo mining feels like</h2>
+    <p>SOST is currently solo-miner-first &mdash; there is no official pool. That has consequences you should know up front:</p>
+    <ul>
+      <li><b>High variance.</b> You can mine for hours and find nothing, then hit two blocks in 20 minutes. That is mathematically expected, not a bug. See the <a href="sost-mining-calculator.html">calculator</a> for the numbers on your hashrate.</li>
+      <li><b>No guaranteed earnings.</b> SOST is in pre-market testing &mdash; there is no exchange listing, no market price, no liquidity. The protocol may not reach market value at all.</li>
+      <li><b>Block reward today: ~7.85 SOST.</b> 50% to miner, 25% to Gold Vault, 25% to PoPC Pool. Hardcoded, immutable.</li>
+      <li><b>The reference miner is CPU-oriented.</b> The protocol does not enforce CPU-only at consensus level &mdash; ConvergenceX is memory-hard and CPU-friendly by design, but no public claim is made that GPU/ASIC ports are impossible.</li>
+    </ul>
+    <p>For more context on the lack of pools, read <a href="sost-why-no-pools.html">Why no pools</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">TROUBLESHOOTING</div>
+    <h2 class="section-title">When things look wrong</h2>
+
+    <details>
+      <summary>Node has 0 peers / not syncing</summary>
+      <div>
+        <p>Check P2P connectivity. The node listens on <code>:19333</code>. Allow outbound connections in your firewall. If you are behind NAT, you do not need to forward 19333 to mine, but you need outbound TCP.</p>
+        <div class="code">curl -s -u "$SOST_RPC_USER:$SOST_RPC_PASS" \
+  -d '{"method":"getpeerinfo","params":[],"id":1}' \
+  http://127.0.0.1:18232 | head -c 600</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Miner says "rejected block" or "Race-loss recovery"</summary>
+      <div>
+        <p>Normal in solo mining. It means the network found a block before yours arrived &mdash; your block referenced a now-stale parent and gets dropped. The miner will automatically pull the new tip and continue. No data lost, just one round of work.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Segfault or instability with many threads</summary>
+      <div>
+        <p>Drop to 16, then 8 threads. ConvergenceX is bandwidth-bound; very wide thread counts (64+) on machines with lots of cores can stress the monitor path. The block-monitor race in v0.7 was fixed in v0.8 (commit <code>6680319</code>) &mdash; make sure you are on v0.8 or later:</p>
+        <div class="code">./sost-miner --help | head -1
+<span class="c"># &rarr; "SOST Miner v0.8 (multi-threaded)"</span></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Long pause before first block</summary>
+      <div>
+        <p>Solo mining variance. The expected time to your first block is <code>1 / miner_share</code> blocks &times; 10&nbsp;min. With ~5% network share that is on the order of 200 minutes; you will sometimes wait 3-4&times; that just from variance. The <a href="sost-mining-calculator.html">calculator</a> shows the probabilities for your hashrate.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>How do I update?</summary>
+      <div>
+        <div class="code">cd ~/sost-core
+git pull origin main
+cd build
+cmake --build . -j$(nproc)
+<span class="c"># then restart the node and the miner</span></div>
+        <p>Or simply re-run <code>install-sost.sh</code> &mdash; it is idempotent.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>How do I stop safely?</summary>
+      <div>
+        <p>In each terminal: <code>Ctrl-C</code>. The node flushes its state to disk before exiting. The miner aborts its current attempt; nothing is lost &mdash; it just doesn't finish that nonce sweep.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">NEXT</div>
+    <h2 class="section-title">Where to go next</h2>
+    <ul>
+      <li><a href="sost-network-status.html">Network status</a> &mdash; height, hashrate, unique miners, pool balances.</li>
+      <li><a href="sost-mining-calculator.html">Mining calculator</a> &mdash; probability and variance for your hashrate.</li>
+      <li><a href="sost-why-no-pools.html">Why no pools</a> &mdash; the solo-miner-first thesis and its tradeoffs.</li>
+      <li><a href="sost-getting-started.html">Full setup guide</a> &mdash; deeper technical walkthrough including HD wallet, RBF, transactions.</li>
+      <li><a href="sost-explorer.html">Explorer</a> &mdash; live blocks, addresses, search.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    SOST Protocol &middot; Native PoW &middot; Solo-miner-first &middot; Pre-market testing &middot; <a href="sost-license.html">MIT</a>
+  </div>
+</footer>
+
+<script src="js/sost-music.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>
