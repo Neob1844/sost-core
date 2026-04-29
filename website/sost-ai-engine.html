@@ -291,7 +291,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">325 / 325 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; network OFF by default</span>
+      <span class="val">388 / 388 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -435,6 +435,34 @@
           <li>element-risk detection: PGM cost, toxicity, rare-earth supply, cheap-only</li>
           <li>application-aware validation pathway (band structure only for PV/photonic, elastic only for structural)</li>
           <li>recommended actions: <em>promote_to_dft_queue</em>, <em>promote_to_chgnet</em>, <em>literature_review</em>, <em>keep_internal</em>, <em>reject_false_positive</em>, <em>future_heavy_task_candidate</em>, ...</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M5 — Free Knowledge Connectors &amp; Source Reliability</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Connects the engine to <strong>official / free public APIs</strong> (arXiv, OpenAlex, Crossref,
+          PubChem, JARVIS, Materials Project, USGS) and to optional <strong>local / free</strong>
+          AI providers (Ollama, OpenRouter, HuggingFace) &mdash; with cache, rate-limit, domain
+          allowlist, citation tracking and source reliability scoring. Truth hierarchy: local
+          validators &gt; local data &gt; official DB &gt; peer-reviewed metadata &gt; preprints &gt; local LLM &gt;
+          free hosted &gt; paid judge (last and opt-in).
+        </p>
+        <ul class="spec-list">
+          <li>HTTP layer: urllib only, explicit domain allowlist, never logs token values</li>
+          <li>per-source rate limits + sha256-keyed cache (default 7 days, USGS 30 days)</li>
+          <li>9 canonical contradictions hard-locked: rewards-active vs postponed, avg1000 consensus mismatch, cASERT 6210 cancelled, DFT-validated overclaim, mineral / depth guarantees, "trustless" overclaim, no-risk wording, guaranteed price/payout</li>
+          <li>research session: claim &rarr; validators &rarr; local knowledge &rarr; sources &rarr; synthesis &rarr; contradiction resolution &rarr; internal answer with provenance</li>
+          <li>model-answer validator: scores overclaim / hallucination, emits a corrected answer that embeds the canonical truth</li>
+          <li>defaults: network OFF, paid OFF, free-AI OFF, local-model OFF</li>
         </ul>
       </div>
     </div>
@@ -613,7 +641,8 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>325 / 325 (M1 + M2 + M3 + M4)</td></tr>
+        <tr><td>Tests passing</td><td>388 / 388 (M1 + M2 + M3 + M4 + M5)</td></tr>
+        <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
         <tr><td>Paid model calls per run (default)</td><td><span class="pill green">0</span> &mdash; paid is OFF by default</td></tr>
@@ -641,23 +670,6 @@
     <div class="section-header">
       <div class="section-id">// 08 — NEXT</div>
       <h2 class="section-title">What's <span class="accent">deferred</span></h2>
-    </div>
-
-    <div class="spec-block">
-      <div class="spec-header">
-        <div class="spec-header-left">
-          <div class="spec-icon cyan"></div>
-          <div class="spec-name">M5 — Real local model wiring</div>
-        </div>
-        <span class="spec-tag">DEFERRED</span>
-      </div>
-      <div class="spec-body">
-        <p class="spec-desc">
-          Wire the existing Ollama / OpenRouter / HuggingFace council-member stubs to real HTTP calls
-          under <code>--network official-free</code>, with cache and rate limits. No paid models.
-          Council still applies validator-veto.
-        </p>
-      </div>
     </div>
 
     <div class="spec-block">
