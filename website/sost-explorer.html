@@ -373,24 +373,54 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- MANDATORY MTP TIMESTAMP-VALIDATION FORK — activates at block 6400 -->
+<!-- MANDATORY STAGED RELIEF VALVE FORK — activates at block 6550 -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(251,1,13,0.08);border:2px solid #fb010d;border-left:6px solid #fb010d;padding:14px 18px;box-shadow:0 0 18px rgba(251,1,13,.25);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,.7);animation:pulse 2s ease infinite"></span>
-      <span style="color:#fb010d;font-size:11px;font-weight:800;letter-spacing:2px">// MANDATORY UPDATE &mdash; MTP TIMESTAMP-VALIDATION FORK AT BLOCK 6400</span>
+      <span style="color:#fb010d;font-size:11px;font-weight:800;letter-spacing:2px">// MANDATORY UPDATE &mdash; STAGED RELIEF VALVE AT BLOCK 6550</span>
     </div>
     <div style="color:var(--text2);font-size:11px;line-height:1.7">
-      All node and miner operators must update before block <b style="color:#fb010d">6400</b>.
-      A coordinated experimental hard fork activates two timestamp rules:
-      (1) <b>Median Time Past</b> validation over the last 11 blocks, and
-      (2) a minimum <b>60-second spacing</b> between consecutive block timestamps.
-      Pre-fork blocks remain valid; from height 6400, blocks failing either rule will be rejected.<br><br>
-      <b style="color:var(--gold)">No supply change. No reward change. No PoW change. No cASERT change.</b><br>
-      Reason: eliminate the artificial 1-second header deltas observed in blocks 6200-6310 (see <code>docs/fast_block_investigation_6200_6310.md</code>).<br><br>
+      All node and miner operators must update before block <b style="color:#fb010d">6550</b>
+      (~12&nbsp;hours from this post, assuming the network stays near the 10-min target).
+      Required: <code>main</code> at commit <code style="color:var(--cyan)">8a1f63e</code> or later.<br><br>
+
+      <b style="color:var(--text)">What changes.</b>
+      The current relief valve jumps directly from H10/H11/H12/H13 to E7 after a long block.
+      That single-step jump keeps the chain moving, but it can turn relief blocks into a
+      reaction-speed race &mdash; miners with lower latency or faster restart can reach E7
+      before slower or remote miners.<br><br>
+
+      From block 6550, SOST replaces the single-step cliff with a staged cascade:<br>
+      &bull; elapsed &lt; 570s: normal cASERT profile<br>
+      &bull; elapsed &ge; 570s: drops <b>3 profile levels</b><br>
+      &bull; every <b>30s</b> after that: another <b>3 profile levels</b><br>
+      &bull; floor: E7<br><br>
+
+      <span style="color:var(--text3)">Example from H12: &lt;570s H12 &middot; 570-599s H9 &middot; 600-629s H6 &middot; 630-659s H3 &middot; 660-689s B0 &middot; 690-719s E3 &middot; 720-749s E6 &middot; 750s+ E7</span><br><br>
+
+      Future-timestamp drift is also tightened from <b>+600s to +30s</b> after block 6550, so
+      miners cannot pre-mine future relief windows with far-future timestamps.<br><br>
+
+      <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b><br><br>
+
+      <b style="color:var(--text)">Why.</b> Recent live data showed the old relief valve can be unfair to slower or
+      remote miners. The chain stays valid, but the abrupt cliff is replaced to make relief
+      blocks proportional to hashrate instead of reaction timing. If staged relief does not
+      behave as expected, a coordinated revert will be announced.<br><br>
+
       <b style="color:var(--text)">Update:</b>
-      <code style="display:block;background:var(--bg);padding:8px 12px;margin-top:6px;font-size:10px;color:var(--cyan);overflow-x:auto;">cd ~/SOST/sostcore/sost-core &amp;&amp; git pull origin main &amp;&amp; cd build &amp;&amp; make -j$(nproc) sost-node sost-miner<br># then restart your node and miner</code>
-      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Old nodes/miners may become incompatible after activation. See <code>docs/timestamp_mtp_fork_6400.md</code> for details.</span>
+      <code style="display:block;background:var(--bg);padding:8px 12px;margin-top:6px;font-size:10px;color:var(--cyan);overflow-x:auto;">cd ~/SOST/sostcore/sost-core &amp;&amp; git pull --ff-only origin main<br>cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build . --target sost-node sost-miner -j$(nproc)<br># then restart your sost-node and sost-miner</code>
+      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">If <code>git pull --ff-only</code> fails because of local commits or divergent history, save your local changes first and use <code>git fetch origin &amp;&amp; git reset --hard origin/main</code>.</span><br>
+
+      <b style="color:var(--text)">Clock requirement.</b> The +30s drift is tight; make sure your host clock is close to UTC
+      (<code>sudo timedatectl set-ntp true &amp;&amp; timedatectl status</code>). Otherwise valid blocks may be
+      rejected for being too far in the future.<br><br>
+
+      <b style="color:var(--text)">Verification:</b>
+      <code style="display:block;background:var(--bg);padding:6px 12px;margin-top:4px;font-size:10px;color:var(--cyan);overflow-x:auto;">git rev-parse --short HEAD     # &rarr; 8a1f63e (or later)<br>./build/sost-miner --help | head -1
+                                # &rarr; SOST Miner v0.9 (multi-threaded)</code>
+      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Nodes or miners that remain on older code may fall out of consensus after activation. See <code>docs/staged_relief_fork_6550.md</code> for the full design and Monte Carlo fairness analysis.</span>
     </div>
   </div>
 </div>
