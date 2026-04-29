@@ -1,7 +1,7 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
 // MIT License. See LICENSE file.
 //
-// sost-miner.cpp — SOST Block Miner v0.5
+// sost-miner.cpp — SOST Block Miner v0.8
 //
 // Miner ConvergenceX with:
 //   - Real coinbase tx
@@ -579,6 +579,8 @@ static bool load_chain(const std::string& path) {
 static std::atomic<bool> g_chain_advanced{false};
 static std::atomic<int64_t> g_monitor_height{0};
 static std::atomic<bool> g_monitor_running{false};
+static std::thread g_monitor_thread;
+static std::mutex g_monitor_lifecycle_mu;
 
 // Lag-adjust: detect profile changes during mining and restart search
 static std::atomic<bool> g_lag_changed{false};
@@ -605,9 +607,17 @@ static void start_block_monitor(int64_t mining_height) {
     g_chain_advanced = false;
     g_lag_changed = false;
     g_monitor_height = mining_height;
-    if (g_monitor_running || g_rpc_url.empty()) return;
-    g_monitor_running = true;
-    std::thread([]{
+    if (g_rpc_url.empty()) return;
+    // Singleton guard: only the caller that flips false→true launches the
+    // thread. Previously the read-then-write of g_monitor_running was a
+    // TOCTOU race — two callers could both see false and both detach a
+    // monitor thread, which produced duplicate [LAG-CHECK] lines and a
+    // data race on g_chain.
+    std::lock_guard<std::mutex> lk(g_monitor_lifecycle_mu);
+    bool expected = false;
+    if (!g_monitor_running.compare_exchange_strong(expected, true)) return;
+    if (g_monitor_thread.joinable()) g_monitor_thread.join();
+    g_monitor_thread = std::thread([]{
         int lag_check_counter = 0;
         // RELIEF-PREDICT one-shot per height lives in a global atomic
         // (sost::relief_predict_*), not in this thread, so it survives the
@@ -670,11 +680,21 @@ static void start_block_monitor(int64_t mining_height) {
                 }
             }
         }
-    }).detach();
+    });
 }
 
+// Synchronous stop: clears the running flag AND joins the monitor thread
+// before returning. This guarantees no monitor body code is executing
+// when the caller proceeds to mutate g_chain (push_back, padding, etc.).
+// Previously stop_block_monitor() only set the flag and the detached
+// thread continued to read g_chain.back() concurrently with the main
+// thread's push_back — a data race that could segfault when the vector
+// reallocated. The lifecycle mutex serialises stop against start so a
+// stop in flight cannot race a new start_block_monitor().
 static void stop_block_monitor() {
+    std::lock_guard<std::mutex> lk(g_monitor_lifecycle_mu);
     g_monitor_running = false;
+    if (g_monitor_thread.joinable()) g_monitor_thread.join();
 }
 
 // =============================================================================
@@ -1471,7 +1491,7 @@ int main(int argc, char** argv) {
             if (g_num_threads > 64) g_num_threads = 64;
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.7 (multi-threaded)\n");
+            printf("SOST Miner v0.8 (multi-threaded)\n");
             printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
@@ -1502,7 +1522,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("=== SOST Miner v0.7 (multi-threaded, FULL submitblock) ===\n");
+    printf("=== SOST Miner v0.8 (multi-threaded, FULL submitblock) ===\n");
     if (g_num_threads > 1) printf("Threads: %d (parallel nonce search)\n", g_num_threads);
     printf("Miner address: %s\n", g_miner_address.c_str());
     printf("Profile: %s | Blocks: %d%s\n\n",
