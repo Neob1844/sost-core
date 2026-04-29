@@ -466,6 +466,37 @@
         </ul>
       </div>
     </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <div class="spec-name">M6 — Autonomous Research Daemon &amp; Human Review Pipeline</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The engine now runs as an <strong>internal autonomous research daemon</strong>: it observes
+          local Materials Engine, GeaSpirit, SOST and Useful Compute artefacts in read-only mode,
+          plans its own bounded tasks, executes safe local work, learns from outcomes via
+          rule-based memory, and produces <strong>reviewable archives</strong> for human approval.
+          Critically, it <strong>never publishes</strong>: every public claim must pass an explicit
+          human review and approval step before being exported &mdash; and the exporter writes only
+          to <code>reports/ai_engine/approved_exports/</code>, never to the public website.
+        </p>
+        <ul class="spec-list">
+          <li>SelfTask schema with 28 task types covering all four projects</li>
+          <li>read-only adapters for Materials Engine, GeaSpirit, SOST and Useful Compute (no writes, no DFT, no GIS)</li>
+          <li>bounded planner with 24h dedup window, per-project + total caps, network/paid gates</li>
+          <li>review pack: <code>summary.md</code>, <code>publication_candidates.md</code>, <code>do_not_publish.md</code>, <code>manifest.json</code>, <code>checksums.sha256</code>, plus a <code>.tar.gz</code> archive</li>
+          <li>publication queue with strict approval gate: <em>do_not_publish</em> drafts cannot be approved</li>
+          <li>rule-based research memory (no neural reranker): boosts validated families, demotes rejected patterns, blocks risky wording</li>
+          <li>manual scripts only &mdash; <strong>no systemd, no cron</strong></li>
+          <li>defaults: daemon OFF, network OFF, paid OFF, free-AI OFF, local-model OFF, public publication FORBIDDEN</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -675,15 +706,17 @@
     <div class="spec-block">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon green"></div>
-          <div class="spec-name">M6 — Outcome-driven boosts</div>
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M7 &mdash; Live AI provider wiring (Ollama / free hosted / paid judge)</div>
         </div>
         <span class="spec-tag">DEFERRED</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Feed real outcomes (DFT confirmed, GeaSpirit false-positive, human accepted/rejected) into
-          the learning loop so the next campaign re-ranks family-level priors.
+          M5 already ships the provider interfaces. M7 will wire real HTTP calls under explicit
+          flags (<code>--allow-local-model</code>, <code>--allow-free-ai</code>,
+          <code>--allow-paid</code>) with cache, rate limits and budget logging. No automatic
+          paid AI usage. No passwords &mdash; only API keys via env vars.
         </p>
       </div>
     </div>
