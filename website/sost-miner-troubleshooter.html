@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-miner-troubleshooter.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Miner Troubleshooter — local log analyzer, no upload</title>
+<meta name="description" content="Paste your SOST miner log and analyse it locally in your browser. No upload, no server call. Deterministic rule set, public source.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Miner Troubleshooter — local-only log analyzer">
+<meta property="og:description" content="Paste, analyse, fix. No upload.">
+<meta property="og:url" content="https://sostcore.com/sost-miner-troubleshooter.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;--font-display:'Space Grotesk',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:56px 0 36px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:240px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.05) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.15;color:var(--text-primary);margin-bottom:14px;letter-spacing:-.5px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:720px;line-height:1.7;font-weight:300}
+  section{padding:36px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  h2.section-title{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text-primary);letter-spacing:-.4px;margin-bottom:16px}
+  p{color:var(--text-secondary);margin:.6em 0}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  textarea{width:100%;min-height:240px;background:var(--bg-panel);border:1px solid var(--border-med);border-radius:6px;padding:14px;color:var(--text-primary);font-family:var(--font-mono);font-size:12.5px;line-height:1.6;outline:none;resize:vertical}
+  textarea:focus{border-color:var(--red-primary)}
+  .row-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{background:var(--red-primary);color:#fff;border:1px solid var(--red-primary);border-radius:6px;padding:10px 22px;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;font-family:var(--font-mono)}
+  button:hover{filter:brightness(1.1)}
+  button.secondary{background:transparent;color:var(--text-primary);border-color:var(--border-bright)}
+  button.secondary:hover{border-color:var(--red-primary)}
+  .trouble-results{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+  .trouble-card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:16px 18px;border-left-width:4px}
+  .trouble-card.sev-info{border-left-color:var(--cyan-primary)}
+  .trouble-card.sev-warning{border-left-color:var(--yellow-primary)}
+  .trouble-card.sev-critical{border-left-color:var(--red-primary)}
+  .trouble-card header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .trouble-card .sev{font-size:10px;letter-spacing:1.4px;padding:2px 8px;border-radius:3px;background:var(--bg-panel);color:var(--text-secondary)}
+  .trouble-card.sev-warning .sev{background:rgba(234,179,8,.15);color:var(--yellow-primary)}
+  .trouble-card.sev-critical .sev{background:var(--red-subtle);color:var(--red-primary)}
+  .trouble-card h3{font-family:var(--font-display);font-size:15px;color:var(--text-primary);font-weight:600;margin:0}
+  .trouble-explanation{color:var(--text-secondary);margin:.4em 0}
+  .trouble-actions{margin:.4em 0 0 1.4em;color:var(--text-secondary)}
+  .trouble-actions code{color:var(--cyan-primary);font-size:12px}
+  .trouble-match{font-size:11.5px;color:var(--text-muted);margin-top:8px}
+  .trouble-match code{background:var(--bg-panel);padding:2px 6px;border-radius:3px;color:var(--text-secondary)}
+  .trouble-empty{color:var(--text-muted);font-style:italic}
+  .safety-list{margin:.5em 0 0 1.4em;color:var(--yellow-primary);font-size:13px}
+  .safety-list li{margin:.3em 0}
+  .safety-banner{background:var(--yellow-dim);border-left:3px solid var(--yellow-primary);border-radius:0 6px 6px 0;padding:14px 18px;margin:14px 0;font-size:13px;color:var(--text-secondary)}
+  .safety-banner b{color:var(--yellow-primary)}
+  footer{padding:32px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html">Mine</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html" class="cur">Troubleshooter</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">MINER LOG TROUBLESHOOTER &middot; LOCAL ANALYSIS</div>
+    <h1>Paste your <span>miner log</span></h1>
+    <p class="hero-sub">Analysis runs <b>locally in your browser</b>. No log is uploaded, no server is contacted. The page loads a small static rule set and matches it against the lines you paste. Source is in the public repo.</p>
+    <div class="safety-banner">
+      <b>Before pasting:</b> remove RPC usernames, RPC passwords, IP addresses you don't want public, and any other sensitive context. The rules below match generic patterns; they do not need credentials. Never paste a private key, recovery words or wallet password into any tool.
+    </div>
+    <div id="trouble-safety-notes"></div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">INPUT</div>
+    <h2 class="section-title">Your log lines</h2>
+    <textarea id="trouble-input" placeholder="Paste your sost-miner output here. Example lines that match rules:
+[MINING] -> node REJECTED block
+[MINING] New block detected! Aborting mining of 6471
+[LAG-CHECK] Node says E7, mining H10 → triggering restart
+Threads: 64 (parallel nonce search)
+peer count: 0
+connection refused
+HTTP 000 — failed to connect"></textarea>
+    <div class="row-buttons">
+      <button id="trouble-analyze">Analyse locally</button>
+      <button id="trouble-clear" class="secondary">Clear</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">FINDINGS</div>
+    <h2 class="section-title">Likely issues</h2>
+    <div id="trouble-results" class="trouble-results">
+      <p class="trouble-empty">Paste a log section above and click <b>Analyse locally</b>. Results appear here in your browser.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">RULES &amp; SOURCE</div>
+    <h2 class="section-title">What this page knows</h2>
+    <p>The rule set is a small JSON file the page fetches once on load: <a href="data/miner_troubleshooting.json">data/miner_troubleshooting.json</a>. Each rule has a list of regex patterns plus a short explanation, a list of remediation actions, and a severity. Add a rule by editing that file in the public repo and submitting a pull request; do not edit the page in production.</p>
+    <p>Need broader help? See the <a href="sost-help.html">Help Center</a> or the <a href="sost-mine.html">Mining Guide</a>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    SOST Protocol &middot; Local-only troubleshooter &middot; No upload &middot;
+    <a href="sost-help.html">Help Center</a> &middot;
+    <a href="sost-mine.html">Mine</a>
+  </div>
+</footer>
+
+<script src="js/sost-music.js"></script>
+<script src="assets/js/sost-miner-troubleshooter.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>

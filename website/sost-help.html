@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-help.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Help Center — Mining, Nodes, Useful Compute, DEX, AI Engine</title>
+<meta name="description" content="Safe answers about SOST mining, nodes, Useful Compute, PoPC, DEX, AI Engine. Public, static, no chatbot, no upload.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Help Center">
+<meta property="og:description" content="Safe answers about SOST mining, nodes, Useful Compute, PoPC, DEX, AI Engine.">
+<meta property="og:url" content="https://sostcore.com/sost-help.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-glow:#fb010d33;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;--green-dim:#22c55e44;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;--yellow-dim:rgba(234,179,8,.15);
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono','IBM Plex Mono',monospace;--font-display:'Space Grotesk',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav .brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav .brand .accent{color:var(--red-primary)}
+  nav .links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+  nav .links a{color:var(--text-secondary);text-decoration:none}
+  nav .links a:hover{color:var(--text-primary)}
+  nav .links a.cur{color:var(--red-primary)}
+  .hero{padding:56px 0 36px;border-bottom:1px solid var(--border-dim);position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:240px;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(251,1,13,.05) 0%,transparent 70%);pointer-events:none}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero-label::before{content:'// ';color:var(--text-muted)}
+  .hero h1{font-family:var(--font-display);font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.15;color:var(--text-primary);margin-bottom:14px;letter-spacing:-.5px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:720px;line-height:1.7;font-weight:300}
+  section{padding:36px 0;border-bottom:1px solid var(--border-dim)}
+  .section-id{font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px}
+  h2.section-title{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text-primary);letter-spacing:-.4px;margin-bottom:18px}
+  p{color:var(--text-secondary);margin:.6em 0}
+  a{color:var(--cyan-primary);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .search-bar{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin:18px 0}
+  .search-bar input,.search-bar select{background:var(--bg-panel);border:1px solid var(--border-med);border-radius:5px;padding:11px 14px;color:var(--text-primary);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .15s}
+  .search-bar input:focus,.search-bar select:focus{border-color:var(--red-primary)}
+  .help-results{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+  .help-card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:16px 18px}
+  .help-card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .help-cat{font-size:10px;color:var(--cyan-primary);letter-spacing:1.2px;text-transform:uppercase;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);border-radius:3px;padding:2px 8px}
+  .help-card h3{font-family:var(--font-display);font-size:15px;color:var(--text-primary);font-weight:600;margin:0}
+  .help-short{color:var(--text-secondary);margin:.3em 0 .5em}
+  details{margin-top:8px}
+  details summary{cursor:pointer;color:var(--cyan-primary);font-size:12px}
+  .help-detail{color:var(--text-secondary);margin-top:8px}
+  .help-warnings{margin:8px 0 0 1.2em;color:var(--yellow-primary);font-size:12.5px}
+  .help-warnings li{margin:.2em 0}
+  .help-sources{font-size:11px;color:var(--text-muted);margin-top:8px}
+  .help-empty{color:var(--text-muted);font-style:italic}
+  .safety-banner{background:var(--yellow-dim);border-left:3px solid var(--yellow-primary);border-radius:0 6px 6px 0;padding:14px 18px;margin:18px 0;font-size:13px;color:var(--text-secondary)}
+  .safety-banner b{color:var(--yellow-primary)}
+  .safety-banner ul{margin:.5em 0 0 1.2em}
+  .safety-banner li{margin:.25em 0}
+  .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .cta{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;background:transparent;color:var(--text-primary);border:1px solid var(--border-bright);border-radius:6px;font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:border-color .15s}
+  .cta:hover{border-color:var(--red-primary);text-decoration:none}
+  .cta-primary{background:var(--red-primary);color:#fff;border-color:var(--red-primary)}
+  .static-fallback{display:none;color:var(--text-secondary)}
+  .static-fallback h3{font-family:var(--font-display);font-size:14px;color:var(--text-primary);margin-top:14px;margin-bottom:6px}
+  noscript .static-fallback,.no-js-fallback{display:block}
+  footer{padding:32px 0;color:var(--text-muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">SOST <span class="accent">//</span> Protocol</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="sost-mine.html">Mine</a>
+      <a href="sost-help.html" class="cur">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-label">HELP CENTER &middot; STATIC &middot; NO CHATBOT</div>
+    <h1>SOST <span>Help</span> Center</h1>
+    <p class="hero-sub">Safe answers about mining, nodes, Useful Compute, PoPC, the DEX, and the SOST AI Engine. Static content reviewed by a human before publication. No live AI on this page. Nothing leaves your browser.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <div class="section-id">SAFETY FIRST</div>
+    <div class="safety-banner">
+      <b>Read this once before anything else:</b>
+      <ul>
+        <li>SOST will never ask for a private key, recovery words or wallet password.</li>
+        <li>Useful Compute rewards are <b>postponed</b>. Infrastructure is live for testing only.</li>
+        <li>Solo mining has high variance. Expect long gaps with no blocks.</li>
+        <li>SOST is in <b>pre-market testing</b>. There is no exchange listing and no guaranteed value.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">SEARCH</div>
+    <h2 class="section-title">Find an answer</h2>
+    <div class="search-bar">
+      <input type="search" id="help-search" placeholder="Search the public help center (e.g. 'orphan block', 'threads', 'useful compute')&hellip;" autocomplete="off">
+      <select id="help-category" aria-label="Filter by category">
+        <option value="">All categories</option>
+        <option value="mining_start">Start Mining</option>
+        <option value="mining_troubleshooting">Mining Troubleshooting</option>
+        <option value="solo_mining_variance">Solo Mining Variance</option>
+        <option value="no_pools">Why No Pools</option>
+        <option value="node_sync">Node Sync</option>
+        <option value="casert_explainer">cASERT &amp; Network</option>
+        <option value="useful_compute_status">Useful Compute</option>
+        <option value="dex_safety">DEX Safety</option>
+        <option value="popc_explainer">PoPC</option>
+        <option value="ai_engine_explainer">AI Engine</option>
+        <option value="materials_engine_public">Materials Engine</option>
+        <option value="geaspirit_public_methodology">GeaSpirit</option>
+        <option value="wallet_safety">Wallet Safety</option>
+      </select>
+    </div>
+    <div id="help-results" class="help-results"></div>
+
+    <noscript>
+      <div class="static-fallback no-js-fallback">
+        <h3>JavaScript is disabled — static fallback</h3>
+        <p>Search and category filtering require JavaScript. Use the section links below for the most-asked topics, or open the static index at <a href="data/public_help_index.json">data/public_help_index.json</a>.</p>
+        <ul>
+          <li><a href="sost-mine.html">Mine SOST in 10 minutes</a></li>
+          <li><a href="sost-miner-troubleshooter.html">Miner log troubleshooter (local-only)</a></li>
+          <li><a href="sost-mining-calculator.html">Solo-mining calculator</a></li>
+          <li><a href="sost-why-no-pools.html">Why no pools</a></li>
+          <li><a href="sost-network-status.html">Network status</a></li>
+          <li><a href="sost-explorer.html">Explorer</a></li>
+        </ul>
+      </div>
+    </noscript>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">SHORTCUTS</div>
+    <h2 class="section-title">Common entry points</h2>
+    <div class="cta-row">
+      <a class="cta cta-primary" href="sost-mine.html">Mine in 10 minutes</a>
+      <a class="cta" href="sost-miner-troubleshooter.html">Troubleshoot a log</a>
+      <a class="cta" href="sost-mining-calculator.html">Mining calculator</a>
+      <a class="cta" href="sost-network-status.html">Network status</a>
+      <a class="cta" href="sost-why-no-pools.html">Why no pools</a>
+      <a class="cta" href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-id">HOW THIS PAGE WORKS</div>
+    <h2 class="section-title">Static, reviewed, no chatbot</h2>
+    <p>The answers on this page come from a human-reviewed export of the SOST AI Engine. The engine itself is internal and is not reachable from this page. Search runs locally in your browser against <code>data/public_help_index.json</code>; no query is sent to a server. The page works on any modern browser with JavaScript; without it you still see the static fallback above.</p>
+    <p>Every answer carries a <code>last_reviewed</code> date and is filtered by a public-claim guard before it is allowed to land here. If you spot wording that looks like overclaim, please report it on the BitcoinTalk thread.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    SOST Protocol &middot; Public help center &middot; Static, reviewed, local search &middot;
+    <a href="sost-explorer.html">Explorer</a> &middot;
+    <a href="sost-mine.html">Mine</a>
+  </div>
+</footer>
+
+<script src="js/sost-music.js"></script>
+<script src="assets/js/sost-help-search.js"></script>
+<script src="js/developer-note.js" defer></script>
+</body>
+</html>

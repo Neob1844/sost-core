@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "rejected-block",
+      "patterns": [
+        "node REJECTED block",
+        "-> node REJECTED"
+      ],
+      "title": "Node rejected the block you submitted",
+      "explanation": "The node refused the block your miner just submitted. Most common causes are race-loss (another miner found a block first and your candidate pointed at a stale parent), an outdated miner version that does not match current consensus rules, or a mismatch between the node profile and the profile your miner was using.",
+      "actions": [
+        "git pull origin main && rebuild sost-miner",
+        "Compare ./sost-miner --help banner to the latest release version",
+        "Run getblockcount on your node and the public explorer; if they differ, your node is desynced",
+        "Restart the miner after rebuilding so the new binary takes effect"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    },
+    {
+      "id": "new-block-detected",
+      "patterns": [
+        "New block detected! Aborting mining"
+      ],
+      "title": "Network found a block before you did",
+      "explanation": "This is normal. Another miner on the network produced a valid block at the height you were mining, so your miner aborts the current attempt and starts on top of the new tip. No action is required.",
+      "actions": [
+        "No action required — the miner restarts on the new tip automatically"
+      ],
+      "safety_note": "",
+      "severity": "info"
+    },
+    {
+      "id": "profile-mismatch",
+      "patterns": [
+        "Local profile=[A-Z]\\d+, node says [A-Z]\\d+",
+        "\\[LAG-CHECK\\] Node says \\w+, mining \\w+ → triggering restart"
+      ],
+      "title": "Miner is following the node's difficulty profile",
+      "explanation": "Your miner detected that the node has switched to a different cASERT profile (for example H10 → E7 on the relief valve) and is restarting the search at the new profile. This is expected behaviour.",
+      "actions": [
+        "If you see this happen many times in quick succession, your miner may be on an older version with slower polling — re-pull and rebuild"
+      ],
+      "safety_note": "",
+      "severity": "info"
+    },
+    {
+      "id": "no-peers",
+      "patterns": [
+        "\\b0 peers\\b",
+        "no peers",
+        "peer count: 0"
+      ],
+      "title": "Your node has no peers",
+      "explanation": "Without peers your node cannot receive or relay blocks. Check your firewall (the SOST P2P port must allow outbound TCP), your seed configuration, and that the seed host is reachable from your machine.",
+      "actions": [
+        "Verify outbound TCP is allowed for the SOST P2P port",
+        "Check the seed list in your node config and ping the seed hosts",
+        "Look in the node log for connection errors ('connection refused', 'timeout')"
+      ],
+      "safety_note": "",
+      "severity": "critical"
+    },
+    {
+      "id": "connection-refused",
+      "patterns": [
+        "connection refused",
+        "Connection refused"
+      ],
+      "title": "A service refused the connection",
+      "explanation": "Either the service the miner/node is trying to reach is not running, the port is wrong, or a firewall is blocking the connection.",
+      "actions": [
+        "Confirm the target service (sost-node) is running with: systemctl status sost-node",
+        "Check the RPC port matches between miner --rpc and the node config",
+        "If the service is local, check it is listening on 127.0.0.1:18232 with: ss -tnlp | grep 18232"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    },
+    {
+      "id": "bootstrap-chain",
+      "patterns": [
+        "bootstrap-chain\\.json",
+        "bootstrap chain"
+      ],
+      "title": "Bootstrap chain reference",
+      "explanation": "The bootstrap chain is an optional initial sync helper. Use it only if you are syncing from scratch and your node would otherwise take a long time to catch up. Verify the URL responds with HTTP 200 and that the JSON parses before feeding it to the node.",
+      "actions": [
+        "curl -sI <bootstrap-url> | head -1   # expect HTTP 200",
+        "curl -s <bootstrap-url> | python3 -m json.tool | head  # confirm valid JSON",
+        "Only use bootstrap when starting a fresh node; an already-synced node does not need it"
+      ],
+      "safety_note": "",
+      "severity": "info"
+    },
+    {
+      "id": "http-zero",
+      "patterns": [
+        "\\bHTTP 000\\b",
+        "\\bHTTP_000\\b",
+        "http_code=0"
+      ],
+      "title": "HTTP 000 means the connection failed entirely",
+      "explanation": "HTTP 000 is curl's way of saying it could not establish a connection at all — DNS failure, network unreachable, or the server refused the connection. It is not a 404.",
+      "actions": [
+        "Check basic connectivity: ping the host, then curl with -v to see where it fails",
+        "If you are behind a proxy or VPN, confirm it allows outbound HTTPS to the SOST endpoints",
+        "Try a different network if available"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    },
+    {
+      "id": "too-many-threads",
+      "patterns": [
+        "--threads\\s+(?:6[4-9]|[7-9]\\d|\\d{3,})\\b",
+        "Threads:\\s+(?:6[4-9]|[7-9]\\d|\\d{3,})\\b",
+        "Starting (?:6[4-9]|[7-9]\\d|\\d{3,}) threads"
+      ],
+      "title": "64+ threads is rarely the optimal setting",
+      "explanation": "ConvergenceX is memory-bandwidth bound on most consumer and even server hardware. Past a certain thread count, extra threads compete for the same memory bus and actually reduce useful attempts per second. Try 16 or 32 first and compare the att/s figure in the log; pick the thread count that gives the highest sustained att/s.",
+      "actions": [
+        "Restart the miner with --threads 16 and watch the att/s in the log",
+        "If 16 looks under-used, try --threads 32",
+        "Compare the eff stable/s number across runs, not the raw att/s"
+      ],
+      "safety_note": "",
+      "severity": "info"
+    },
+    {
+      "id": "cmake-missing",
+      "patterns": [
+        "cmake: command not found",
+        "cmake:\\s*not found"
+      ],
+      "title": "cmake is not installed",
+      "explanation": "The build system needs cmake to configure the project. On Ubuntu/Debian you can install it from apt.",
+      "actions": [
+        "sudo apt update && sudo apt install -y cmake",
+        "Verify: cmake --version"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    },
+    {
+      "id": "libsecp256k1-missing",
+      "patterns": [
+        "libsecp256k1.*not found",
+        "Could NOT find libsecp256k1",
+        "secp256k1\\.h.*No such file"
+      ],
+      "title": "libsecp256k1 development headers are missing",
+      "explanation": "The build needs the libsecp256k1 development package (headers + library).",
+      "actions": [
+        "sudo apt install -y libsecp256k1-dev",
+        "Then re-run cmake and the build"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    },
+    {
+      "id": "libssl-missing",
+      "patterns": [
+        "libssl.*not found",
+        "openssl/.*\\.h.*No such file",
+        "Could NOT find OpenSSL"
+      ],
+      "title": "OpenSSL development headers are missing",
+      "explanation": "The build needs OpenSSL headers (libssl-dev on Debian/Ubuntu).",
+      "actions": [
+        "sudo apt install -y libssl-dev pkg-config",
+        "Re-run cmake from a clean build dir"
+      ],
+      "safety_note": "",
+      "severity": "warning"
+    }
+  ],
+  "safety_notes": [
+    "Analysis runs locally in your browser. No log is uploaded.",
+    "Remove private paths or personal data before sharing logs publicly.",
+    "Never paste a private key, seed phrase or wallet password into any tool."
+  ]
+}
