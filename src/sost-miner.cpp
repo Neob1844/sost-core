@@ -1,7 +1,11 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
 // MIT License. See LICENSE file.
 //
-// sost-miner.cpp — SOST Block Miner v0.8
+// sost-miner.cpp — SOST Block Miner v0.9
+//   v0.8: TOCTOU fix in start_block_monitor; monitor thread joined
+//         before mutating g_chain.
+//   v0.9: LAG-CHECK polling tightened from ~6 s to ~2 s so remote
+//         miners react three times faster to profile changes.
 //
 // Miner ConvergenceX with:
 //   - Real coinbase tx
@@ -656,9 +660,14 @@ static void start_block_monitor(int64_t mining_height) {
                     }
                 }
             }
-            // Profile check every ~6s (3 × 2s) — same as original frequency
+            // Profile check every ~2s (1 × 2s sleep). v0.9: tightened
+            // from ~6s to ~2s so miners react three times faster to a
+            // node-side profile change. The RPC load is one extra
+            // getinfo per second per miner, which the node easily
+            // handles. Reduces the reaction-race advantage that
+            // colocated low-latency miners had over remote ones.
             lag_check_counter++;
-            if (lag_check_counter >= 3) {
+            if (lag_check_counter >= 1) {
                 lag_check_counter = 0;
                 std::string info = rpc_call("getinfo");
                 if (!info.empty()) {
@@ -1491,7 +1500,7 @@ int main(int argc, char** argv) {
             if (g_num_threads > 64) g_num_threads = 64;
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            printf("SOST Miner v0.8 (multi-threaded)\n");
+            printf("SOST Miner v0.9 (multi-threaded)\n");
             printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
@@ -1522,7 +1531,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("=== SOST Miner v0.8 (multi-threaded, FULL submitblock) ===\n");
+    printf("=== SOST Miner v0.9 (multi-threaded, FULL submitblock) ===\n");
     if (g_num_threads > 1) printf("Threads: %d (parallel nonce search)\n", g_num_threads);
     printf("Miner address: %s\n", g_miner_address.c_str());
     printf("Profile: %s | Blocks: %d%s\n\n",
