@@ -447,6 +447,73 @@ position_value   = $2,400 + $144 - $72 = $2,472</pre>
 </div></section>
 
 
+<!-- 5.5 AI COPILOT LAYER -->
+<section id="ai-copilot"><div class="c">
+<h2>5.5 AI Copilot <span class="gold">Layer</span></h2>
+<p>The DEX ships with a browser-side AI Copilot stack that helps the user compose trades, understand
+positions and avoid common mistakes. The copilot is <strong>advisory only</strong> &mdash; it never signs
+transactions, never moves funds and never updates ownership state. Sensitive actions still require
+the user's session unlock and (when configured) a passkey re-authentication.</p>
+
+<h3>Module Inventory</h3>
+<table>
+<tr><th>Module</th><th>File</th><th>Role</th></tr>
+<tr><td>Intent Parser</td><td><code>js/dex-intent-parser.js</code></td><td>Parses natural language (EN + ES) into structured trade intents (pair, side, amount, price, expiry).</td></tr>
+<tr><td>AI Form Assistant</td><td><code>js/dex-ai-assistant.js</code></td><td>Fills the Trade Composer / OTC form from a parsed intent and renders an explicit "what the assistant understood" review layer before any submission.</td></tr>
+<tr><td>Deal Explainer</td><td><code>js/dex-ai-explainer.js</code></td><td>Explains what a trade does in plain language &mdash; what changes in SOST, what changes in Ethereum, what stays the same; full sale vs reward-only comparison.</td></tr>
+<tr><td>Risk Guardian</td><td><code>js/dex-ai-validator.js</code></td><td>Validates intents and detects problems before the user confirms. Warnings are classified <code>INFO</code>, <code>WARNING</code> or <code>BLOCKING</code>. <strong>BLOCKING</strong> warnings prevent the form from being submitted.</td></tr>
+<tr><td>Compare Helper</td><td><code>js/dex-ai-compare.js</code></td><td>Compares trade alternatives: full sale vs reward-only, sell now vs hold to maturity.</td></tr>
+<tr><td>Lifecycle Guide</td><td><code>js/dex-ai-lifecycle.js</code></td><td>Explains position lifecycle state and available actions (maturity, withdraw, reward settlement, beneficiary status).</td></tr>
+<tr><td>Trade Engine</td><td><code>js/dex-trade-engine.js</code></td><td>Builds offers from form data, signs with ED25519, encrypts with ChaCha20-Poly1305 via channel keys, submits to the blind relay.</td></tr>
+<tr><td>Session Manager</td><td><code>js/dex-session.js</code></td><td>Manages unlock / lock / timeout. Bridges the keystore with the DEX UI and relay.</td></tr>
+<tr><td>Onboarding Glue</td><td><code>js/dex-onboarding.js</code></td><td>Connects all Phase A+B+C modules to the DEX page UI &mdash; public/private mode, wallet panel, AI assistant box, inbox, error/empty states.</td></tr>
+</table>
+
+<h3>Risk Guardian &mdash; Severity Ladder</h3>
+<table>
+<tr><th>Severity</th><th>Effect</th><th>Examples</th></tr>
+<tr><td><code>INFO</code></td><td>Shown but does not block submission.</td><td>Position has &lt; 5 days to maturity; offer expires soon.</td></tr>
+<tr><td><code>WARNING</code></td><td>Shown prominently; user must acknowledge.</td><td>Price deviates significantly from fair-value reference; reward-right sale leaves principal exposed to maturity.</td></tr>
+<tr><td><code>BLOCKING</code></td><td>Submission is disabled until the user fixes the issue.</td><td>Owner mismatch; signature invalid; expired offer; reused nonce; reward already sold; trying to publish a guarantee-style claim.</td></tr>
+</table>
+
+<h3>Authentication Surface</h3>
+<pre>Browser keystore: IndexedDB + Argon2id passphrase encryption
+Signing:          ED25519, generated and stored locally
+Encryption:       X25519 key agreement + ChaCha20-Poly1305 AEAD
+Strong auth:      WebAuthn passkey for sensitive actions
+Auto-lock:        5 min idle timeout
+Re-auth gate:     sign offer, accept deal, export identity</pre>
+
+<h3>Hard Guarantees</h3>
+<table>
+<tr><th>Guarantee</th><th>Scope</th></tr>
+<tr><td>The AI Copilot never signs a transaction on its own.</td><td>All signatures originate from a user-initiated unlock + (optional) passkey re-auth.</td></tr>
+<tr><td>The AI Copilot never moves funds.</td><td>Funds are locked in the SOSTEscrow contract and on the SOST chain via standard <code>OUT_ESCROW_LOCK</code> transactions.</td></tr>
+<tr><td>The AI Copilot never updates the <code>currentBeneficiary</code>.</td><td>Beneficiary updates are performed by the <code>settlementOperator</code> based on a valid signed settlement, not by the browser AI.</td></tr>
+<tr><td>Private keys never leave the device.</td><td>Keys live in IndexedDB encrypted with Argon2id. WebAuthn returns yes/no signals only.</td></tr>
+<tr><td>The relay never sees plaintext deals.</td><td>Trade messages are end-to-end encrypted before reaching the relay; the relay performs blind transport.</td></tr>
+<tr><td>BLOCKING warnings cannot be bypassed silently.</td><td>The Risk Guardian disables the submit path when a BLOCKING flag is raised; the user must address the cause.</td></tr>
+</table>
+
+<h3>What the AI Copilot does NOT do</h3>
+<pre>- It does not trade autonomously.
+- It does not create or fund liquidity pools.
+- It does not guarantee price, liquidity, or settlement timing.
+- It does not call paid third-party AI models.
+- It does not call external network services from the trade flow.
+- It does not bypass the Risk Guardian on BLOCKING flags.
+- It does not relax public-claim wording (no "trustless" promotion
+  while alpha is operator-assisted).</pre>
+
+<p style="color:var(--t2);font-size:13px;margin-top:14px">
+This module set is the operational AI layer of the DEX. The off-chain
+<a href="sost-knowledge-engine.html" style="color:var(--gold);text-decoration:none">SOST Knowledge Fusion Engine</a>
+is a <em>separate</em> internal research system; it does not run inside the DEX page and does not have access to keys, beneficiaries or signed messages.
+</p>
+</div></section>
+
+
 <!-- ======================================================================== -->
 <!-- PART 2 — PoPC CONTRACTS                                                  -->
 <!-- ======================================================================== -->

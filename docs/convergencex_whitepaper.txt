@@ -2734,6 +2734,121 @@ rights — not a public mass token exchange. Trade contracts, not pools. Identif
 not mass tokens. Coordinate privately, settle verifiably. Any broader public market phase
 is subject to legal and operational review.
 
+### 12.5.9 SOST Knowledge Fusion Engine
+
+The SOST Knowledge Fusion Engine is an internal autonomous research and validation
+system that supports decisions across Materials Engine, GeaSpirit, SOST protocol
+wording, and Useful Compute task design. It is intentionally off-chain, off-consensus
+and off-DEX: it does not modify the SOST chain, does not run inside the DEX page,
+does not sign transactions and does not have access to wallet keys, beneficiary
+state, or signed deal messages.
+
+CORE PRINCIPLE.
+
+No conclusion is accepted because a model said it. Every claim is classified by
+evidence level — local_code_verified, local_data_verified, local_doc_supported,
+multi_source_supported, external_official_supported, model_consensus_only,
+speculative, contradicted, insufficient_evidence, or do_not_publish. Public outputs
+are internal-only by default and require explicit human review before being
+promoted into public copy.
+
+PIPELINE.
+
+  mass local hypothesis generation (10s to 100,000 candidates, offline)
+    -> deduplication by stable hash + project-specific pair keys
+    -> local-evidence search across docs/, reports/, outputs/
+    -> multi-validator pass with strictest-verdict merging
+    -> deterministic weighted ranking (configurable weights)
+    -> top-N retention per campaign template
+    -> AI Council review of top-K only (validator-veto, not majority vote)
+    -> structured applicability profile
+       (utility, false-positive risk, validation pathway, publishability)
+    -> report + dashboard + append-only persistence
+    -> human review before any public claim or DFT promotion
+
+MILESTONES (PHASE 3).
+
+  M1 — Evidence Core & Public Claim Guard:
+    Ten-level evidence classification, claim extractor, public-claim guard
+    with safer-rewrite suggestions, eight seeded eval cases derived from
+    real past mistakes (UC rewards postponed, avg288 vs avg1000,
+    gold-redemption wording, GeaSpirit mineral-guarantee, DFT-validated
+    overclaim, etc.).
+
+  M2 — Validators (Materials, GeaSpirit, SOST):
+    Read-only validators that cross-check claims against the actual local
+    corpus. Unified ValidatorResult carries verdict, evidence_level,
+    confidence, publishability, evidence_items, missing_evidence, risks
+    and next_steps. Orchestrator merges multiple validators with the
+    strictest verdict winning.
+
+  M3 — Hypothesis Factory + AI Council + Learning Loop:
+    Mass local hypothesis generation across binary, ternary, quaternary
+    and doped compositions (materials), AOI x commodity (GeaSpirit), and
+    risky-wording / Heavy-task-design ideas (SOST / UC). Deterministic
+    ranking. AI Council with validator-veto (not majority vote). Eight
+    canonical campaign templates. Append-only outcome-driven rule-based
+    learning loop. Static HTML dashboard generator.
+
+  M4 — Applicability & Utility Engine:
+    Each hypothesis is enriched with a structured ApplicabilityProfile
+    answering: what it could be useful for, why theoretically, what
+    evidence is missing, what false-positive risks exist, what the next
+    validation step is, and whether it is publishable. Materials family
+    classifier (oxide / sulfide / nitride / phosphide / carbide / silicide /
+    halide / metallic), element-risk detection (PGM, toxic, rare-earth,
+    cheap-only) and application-aware validation pathways.
+
+AI COUNCIL.
+
+The Council is not a majority vote. It is a panel with three always-on members:
+
+  - ValidatorMember         (wraps M2 validators; veto power)
+  - LocalKnowledgeMember    (greps the local corpus)
+  - MockAIMember            (deterministic offline stand-in)
+
+Plus four optional members that self-skip when network is disabled or paid
+models are not enabled:
+
+  - OllamaMember            (local LLM, network-off by default)
+  - OpenRouterMember        (free-tier hosted LLM, network-off by default)
+  - HuggingFaceMember       (free-tier inference, network-off by default)
+  - PaidJudgeInterface      (paid-off by default; --allow-paid required)
+
+Validator "contradicted" verdicts are a hard veto regardless of any other
+opinions.
+
+PROVIDER BUDGET.
+
+Four canonical modes:
+
+  tiny       max  100 hypotheses,   0 provider calls,   0 paid calls
+  normal     max 1,000 hypotheses,  20 provider calls   (network must be
+                                    explicitly enabled)
+  deep       max 100,000 hypotheses, 100 provider calls (network must be
+                                    explicitly enabled)
+  paid_judge paid calls require both --network and --allow-paid plus a
+             configured paid token
+
+The default for any campaign is network OFF, paid OFF.
+
+HARD GUARANTEES.
+
+The engine:
+
+  - never publishes autonomous conclusions to the public web
+  - never activates Useful Compute rewards
+  - never modifies SOST consensus, miner code or node code
+  - never writes to Useful Compute queues
+  - never signs transactions or moves funds
+  - never reads wallet files or private keys
+  - never scrapes websites or bypasses rate limits
+  - never calls paid models without an explicit operator flag
+  - never makes a network call by default
+  - never treats model-only consensus as verified evidence
+
+Public-facing description: sost-knowledge-engine.html (web).
+
 ## 13. Conclusion
 
 SOST is built on three ideas that individually exist, but have never been combined:
