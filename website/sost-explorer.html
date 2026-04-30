@@ -373,55 +373,50 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- MANDATORY STAGED RELIEF VALVE FORK — activates at block 6550 -->
+<!-- MANDATORY STAGED RELIEF GRANULARITY FORK — activates at block 6700 -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:rgba(251,1,13,0.08);border:2px solid #fb010d;border-left:6px solid #fb010d;padding:14px 18px;box-shadow:0 0 18px rgba(251,1,13,.25);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,.7);animation:pulse 2s ease infinite"></span>
-      <span style="color:#fb010d;font-size:11px;font-weight:800;letter-spacing:2px">// MANDATORY UPDATE &mdash; STAGED RELIEF VALVE AT BLOCK 6550</span>
+      <span style="color:#fb010d;font-size:11px;font-weight:800;letter-spacing:2px">// MANDATORY UPDATE &mdash; STAGED RELIEF GRANULARITY FORK AT BLOCK 6700</span>
     </div>
     <div style="color:var(--text2);font-size:11px;line-height:1.7">
-      All node and miner operators must update before block <b style="color:#fb010d">6550</b>
-      (~12&nbsp;hours from this post, assuming the network stays near the 10-min target).
-      Required: <code>main</code> at commit <code style="color:var(--cyan)">8a1f63e</code> or later.<br><br>
+      All node and miner operators must update before block <b style="color:#fb010d">6700</b>.<br><br>
 
-      <b style="color:var(--text)">What changes.</b>
-      The current relief valve jumps directly from H10/H11/H12/H13 to E7 after a long block.
-      That single-step jump keeps the chain moving, but it can turn relief blocks into a
-      reaction-speed race &mdash; miners with lower latency or faster restart can reach E7
-      before slower or remote miners.<br><br>
+      Since day one this protocol has been described as experimental, and calibration has been part of the design from the start. We have asked operators for patience while ConvergenceX learned to self-tune; we believe <b>this is the last calibration</b>. Apologies for asking for one more update.<br><br>
 
-      From block 6550, SOST replaces the single-step cliff with a staged cascade:<br>
-      &bull; elapsed &lt; 540s: normal cASERT profile<br>
-      &bull; elapsed &ge; 540s: drops <b>3 profile levels</b><br>
-      &bull; every <b>60s</b> after that: another <b>3 profile levels</b><br>
-      &bull; floor: E7<br><br>
+      The chain currently produces blocks within a few percent of the 10-minute target, and the <code>cASERT bitsQ</code> controller continues to absorb any drift automatically. The single remaining sharpness is the <b style="color:var(--text)">granularity of the staged relief cascade</b>: today it drops three profile levels at a time. The original ConvergenceX design intended a finer cascade &mdash; one level per minute &mdash; so the relief lands on the exact difficulty the network needs, instead of overshooting and forcing the bitsQ controller to push back the other way.<br><br>
 
-      <span style="color:var(--text3)">Example from H12: &lt;540s H12 &middot; 540-599s H9 &middot; 600-659s H6 &middot; 660-719s H3 &middot; 720-779s B0 &middot; 780-839s E3 &middot; 840-899s E6 &middot; 900s+ E7</span><br><br>
+      <b style="color:var(--text)">What changes at block 6700.</b>
+      The staged relief switches from <code>drop 3 every 60 s starting at 540 s</code> to <code>drop 1 every 60 s starting at 600 s</code>. Floor stays at <code>E7</code>. Anti-stall, lag clamp, future-timestamp drift and bitsQ are all unchanged.<br><br>
 
-      Future-timestamp drift is also tightened from <b>+600s to +60s</b> after block 6550 (matching
-      the cascade step), so miners cannot pre-mine future relief windows with far-future
-      timestamps.<br><br>
+      <span style="color:var(--text3)">Schedule from a base of H10:<br>
+      &middot; 600s &rarr; H9 &middot; 660s &rarr; H8 &middot; 720s &rarr; H7 &middot; 780s &rarr; H6 &middot; 840s &rarr; H5<br>
+      &middot; 900s &rarr; H4 &middot; 960s &rarr; H3 &middot; 1020s &rarr; H2 &middot; 1080s &rarr; H1 &middot; 1140s &rarr; B0<br>
+      &middot; 1200s &rarr; E1 &middot; 1260s &rarr; E2 &middot; 1320s &rarr; E3 &middot; 1380s &rarr; E4 &middot; 1440s &rarr; E5 &middot; 1500s &rarr; E6 &middot; 1560s+ &rarr; E7 (floor)</span><br><br>
 
-      <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b><br><br>
+      <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b> The fork only refines how the relief cascade descends; it does not change who is allowed to mine, how much they earn, or how blocks are validated.<br><br>
 
-      <b style="color:var(--text)">Why.</b> Recent live data showed the old relief valve can be unfair to slower or
-      remote miners. The chain stays valid, but the abrupt cliff is replaced to make relief
-      blocks proportional to hashrate instead of reaction timing. If staged relief does not
-      behave as expected, a coordinated revert will be announced.<br><br>
+      <b style="color:var(--text)">Why.</b>
+      With the current grain, every relief step over-relaxes by two levels relative to what the chain actually needs at that moment, and the bitsQ controller then re-tightens on the next block &mdash; producing the small oscillation visible in recent live data. Reducing the step from 3 to 1 lets each profile decision match the actual lag, and the bitsQ continues to converge to the 10-minute target without external intervention.<br><br>
 
-      <b style="color:var(--text)">Update:</b>
+      Any deviation from the average mining target will be corrected by <code>cASERT bitsQ</code>, so the chain self-regulates and converges to 10 minutes. <b style="color:var(--text)">That is ConvergenceX.</b><br><br>
+
+      If everything goes as expected, the network will be considered ready for full operation. If not, we will be very close &mdash; and the iterative trial-and-correction has been, in itself, the proof that the design works. <b style="color:var(--text)">The numbers do not lie.</b> Any auditor can verify them directly from the chain.<br><br>
+
+      The behaviour still needs to be tested under much higher hashrate, but the rules are the same.<br><br>
+
+      <b style="color:var(--text)">Update.</b>
       <code style="display:block;background:var(--bg);padding:8px 12px;margin-top:6px;font-size:10px;color:var(--cyan);overflow-x:auto;">cd ~/SOST/sostcore/sost-core &amp;&amp; git pull --ff-only origin main<br>cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build . --target sost-node sost-miner -j$(nproc)<br># then restart your sost-node and sost-miner</code>
       <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">If <code>git pull --ff-only</code> fails because of local commits or divergent history, save your local changes first and use <code>git fetch origin &amp;&amp; git reset --hard origin/main</code>.</span><br>
 
-      <b style="color:var(--text)">Clock requirement.</b> The +30s drift is tight; make sure your host clock is close to UTC
-      (<code>sudo timedatectl set-ntp true &amp;&amp; timedatectl status</code>). Otherwise valid blocks may be
-      rejected for being too far in the future.<br><br>
+      <b style="color:var(--text)">Clock requirement.</b>
+      The <code>+60 s</code> future-drift cap from the 6550 fork is unchanged. Make sure NTP is active (<code>sudo timedatectl set-ntp true &amp;&amp; timedatectl status</code>); otherwise valid blocks may be rejected as too far in the future.<br><br>
 
       <b style="color:var(--text)">Verification:</b>
-      <code style="display:block;background:var(--bg);padding:6px 12px;margin-top:4px;font-size:10px;color:var(--cyan);overflow-x:auto;">git rev-parse --short HEAD     # &rarr; 8a1f63e (or later)<br>./build/sost-miner --help | head -1
+      <code style="display:block;background:var(--bg);padding:6px 12px;margin-top:4px;font-size:10px;color:var(--cyan);overflow-x:auto;">git rev-parse --short HEAD     # &rarr; calibration commit (or later)<br>./build/sost-miner --help | head -1
                                 # &rarr; SOST Miner v0.9 (multi-threaded)</code>
-      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Nodes or miners that remain on older code may fall out of consensus after activation. See <code>docs/staged_relief_fork_6550.md</code> for the full design and Monte Carlo fairness analysis.</span>
+      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Nodes or miners that remain on older code may fall out of consensus after activation. Coordinated revert window will be announced if the new schedule does not behave as expected, but with the bitsQ controller intact this is considered very unlikely.</span>
     </div>
   </div>
 </div>
@@ -2074,8 +2069,10 @@ function renderDashPanel(key,body,title,silent){
       var totalBlocks=0;for(var i=0;i<sorted.length;i++)totalBlocks+=miners[sorted[i]].blocks;
       var top3share=0;for(var i=0;i<Math.min(3,sorted.length);i++)top3share+=miners[sorted[i]].blocks;
       var top10share=0;for(var i=0;i<Math.min(10,sorted.length);i++)top10share+=miners[sorted[i]].blocks;
-      document.getElementById('dDistribution').textContent=sorted.length;
-      document.getElementById('dDistributionSub').textContent='top 3: '+(totalBlocks?(top3share/totalBlocks*100).toFixed(1):'0')+'%';
+      // NOTE: the card values (dDistribution / dDistributionSub) are
+      // owned by updateDashboard(); we deliberately do NOT touch them
+      // from the panel IIFE. Otherwise two competing windows write to
+      // the same DOM node every refresh tick and the value flickers.
       var html='<div style="line-height:2;font-size:12px">';
       html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">last '+lookback+' blocks</span><br>';
       html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--green);font-weight:600">'+sorted.length+'</span><br>';
