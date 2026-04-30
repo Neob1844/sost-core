@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.17.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.18.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,166 / 1,166 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; network OFF by default</span>
+      <span class="val">1,188 / 1,188 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -990,6 +990,78 @@
         </ul>
       </div>
     </div>
+
+    <!-- M18 (Project Registry + Capability Gates) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M18 &mdash; Project Registry + Capability Gates (multi-repo orchestration)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the multi-repo gap reported on M17 / unified-lab launch: the readonly adapters
+          used to hard-code the project root to <code>materials-engine-private/</code>, so the AI
+          engine never actually saw the sibling GeaSpirit / SOST core / GeaDeep / Materials
+          Discovery repos. M18 ships a stdlib JSON registry that declares every repo the engine
+          may read, plus five canonical capability gates with strict deny-by-default semantics.
+          <strong>The engine still cannot publish, run DFT, touch consensus or call the network
+          unless the registry explicitly allows it &mdash; and the shipped registry never does.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>Registry file:</strong>
+              <code>src/multi_ai_review/project_registry.json</code> declares six projects:
+              <code>materials</code> (~/SOST/materials-engine-private, the only project with
+              <code>can_write_repo: true</code>), <code>geaspirit</code> (~/SOST/geaspirit,
+              read-only sibling), <code>geadeep</code> (~/SOST/geadeep-energy-private,
+              read-only sibling), <code>sost</code> (~/SOST/sostcore/sost-core, read-only;
+              consensus surface),  <code>materials_discovery</code>
+              (~/SOST/materials-engine-discovery, read-only archive),
+              <code>useful_compute</code> (lives inside materials-engine-private; read-only).
+              Schema tag <code>sost_ai_project_registry@v1</code>.</li>
+          <li><strong>Loader (stdlib only):</strong>
+              <code>project_registry.py</code> with lazy + thread-safe cache.
+              Resolution order: explicit path argument &gt;
+              <code>SOST_AI_PROJECT_REGISTRY</code> env var &gt; the JSON next to the loader.
+              A missing file, invalid JSON, wrong schema or unknown project all yield an empty
+              registry &mdash; deny-by-default still applies.</li>
+          <li><strong>Five canonical gates as pure functions:</strong>
+              <code>can_run_dft(project)</code>,
+              <code>can_publish(project)</code>,
+              <code>can_touch_consensus(project)</code>,
+              <code>can_use_network(project)</code>,
+              <code>can_write_repo(project)</code>. Plus
+              <code>gate_summary(project)</code> for status responses. Every action that
+              touches one of these axes consults the gate before running.</li>
+          <li><strong>Deny-by-default semantics:</strong> unknown project &rarr; all gates
+              <code>False</code>. Project present but flag absent &rarr; <code>False</code>
+              (the registry-wide defaults are themselves all <code>False</code>). Only an
+              explicit <code>"can_X": true</code> in a project block flips a gate. Belt+braces
+              in the test suite asserts that the shipped JSON never grants
+              <code>can_touch_consensus</code>, <code>can_publish</code> or
+              <code>can_run_dft</code> for any project.</li>
+          <li><strong>Adapter integration (back-compat preserving):</strong> each
+              <code>adapters/*_readonly.py</code> keeps the historical
+              <code>parents[3]</code> as an explicit <code>_FALLBACK_ROOT</code> and adds a
+              <code>_repo_root()</code> helper that consults the registry first. The
+              module-level <code>_REPO_ROOT</code> alias is preserved so existing callers keep
+              working. The live unified-lab daemon picks up the new resolution on next process
+              restart without disruption mid-loop.</li>
+          <li><strong>Concrete effect on the unified lab:</strong> GeaSpirit adapter now reads
+              from <code>~/SOST/geaspirit</code> (the real sibling repo, not the materials
+              repo). SOST adapter now reads from <code>~/SOST/sostcore/sost-core</code>.
+              Useful Compute remains read-only inside materials-engine-private. Materials is
+              the only project that can be written to from the AI engine.</li>
+          <li>safety invariants: no project grants consensus / publish / DFT in the shipped
+              registry; the canonical write directories declared by
+              <code>console_security.ALLOWED_WRITE_SUBDIRS</code> still apply on top of the
+              gates; the daemon still runs with <code>--network off</code>.
+              <strong>22 new tests; 1,188 / 1,188 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1165,7 +1237,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,166 / 1,166 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,188 / 1,188 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
