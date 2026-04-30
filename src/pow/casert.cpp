@@ -295,7 +295,18 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     // waiting for anti-stall. Mining and validation agree because the validator passes
     // block_timestamp as now_time, which is the time the miner set when building the block.
     int64_t lag_time = chain.back().time;
-    if (next_height >= CASERT_V6_CALIBRATION_HEIGHT && now_time > 0 && now_time > lag_time) {
+    // V6 calibration through V9 promoted lag_time to now_time so `lag`
+    // would shrink within a single block as wall-clock advanced. That
+    // produced the "off-by-one" extra drop visible in V9 live data
+    // (e.g. block 6579 declared E1 where staged-only would have given
+    // B0). V10 disables the promotion at heights >= CASERT_GRANULAR_-
+    // RELIEF_HEIGHT: lag is computed strictly from chain.back().time.
+    // The granular cascade (drop 1 per 60 s) is fine enough on its
+    // own, and validation becomes deterministic w.r.t. block.timestamp
+    // instead of wall-clock arithmetic.
+    if (next_height >= CASERT_V6_CALIBRATION_HEIGHT
+        && next_height < CASERT_GRANULAR_RELIEF_HEIGHT
+        && now_time > 0 && now_time > lag_time) {
         lag_time = now_time;
     }
     int64_t elapsed = lag_time - GENESIS_TIME;
@@ -436,11 +447,29 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // value, the more permissive value wins.
         if (next_height >= CASERT_STAGED_RELIEF_HEIGHT
             && now_time > 0 && !chain.empty()) {
+            // V10 (height >= CASERT_GRANULAR_RELIEF_HEIGHT): drop 1
+            //                                                 per 60 s
+            //                                                 from 600 s.
+            // V9 (CASERT_STAGED_RELIEF_HEIGHT .. -1):           drop 3
+            //                                                 per 60 s
+            //                                                 from 540 s.
+            int64_t start;
+            int64_t step;
+            int32_t per_step;
+            if (next_height >= CASERT_GRANULAR_RELIEF_HEIGHT) {
+                start    = CASERT_GRANULAR_RELIEF_START;
+                step     = CASERT_GRANULAR_STEP_SECONDS;
+                per_step = CASERT_GRANULAR_DROP_PER_STEP;
+            } else {
+                start    = CASERT_STAGED_RELIEF_START;
+                step     = CASERT_STAGED_STEP_SECONDS;
+                per_step = CASERT_STAGED_DROP_PER_STEP;
+            }
             int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
-            if (block_elapsed >= CASERT_STAGED_RELIEF_START) {
-                int64_t past = block_elapsed - CASERT_STAGED_RELIEF_START;
-                int32_t steps = (int32_t)(past / CASERT_STAGED_STEP_SECONDS) + 1;
-                int32_t drop = steps * CASERT_STAGED_DROP_PER_STEP;
+            if (block_elapsed >= start) {
+                int64_t past = block_elapsed - start;
+                int32_t steps = (int32_t)(past / step) + 1;
+                int32_t drop = steps * per_step;
                 int32_t staged = raw_base_H - drop;
                 if (staged < effective_h_min) staged = effective_h_min;
                 if (staged < H) H = staged;

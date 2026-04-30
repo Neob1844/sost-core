@@ -2777,20 +2777,30 @@ async function loadBlocks(){
         if(n===0)return 'B0';
         return 'H'+n;
       }
-      // Constants must mirror include/sost/params.h CASERT_STAGED_*
-      // and CASERT_H_MIN. If those change consensus-side, update here.
+      // Constants must mirror include/sost/params.h CASERT_STAGED_* and
+      // CASERT_GRANULAR_* (V10 fork at 6700) and CASERT_H_MIN. If any
+      // of those change consensus-side, update here.
       var STAGED_HEIGHT=6550, STAGED_START=540, STAGED_STEP=60;
       var STAGED_DROP_PER_STEP=3, STAGED_FLOOR=-7;
+      var GRANULAR_HEIGHT=6700, GRANULAR_START=600, GRANULAR_STEP=60;
+      var GRANULAR_DROP_PER_STEP=1;
       var _baseN=_profToInt(_base), _effN=_profToInt(_eff);
       var _stagedN=null;
       var _elapsed=null;
       if(b.height>=STAGED_HEIGHT){
         if(i<rows.length-1) _elapsed=b.time-rows[i+1].time;
         else if(extraOlder) _elapsed=b.time-extraOlder.time;
-        if(_baseN!==null && _elapsed!==null && _elapsed>=STAGED_START){
-          var past=_elapsed-STAGED_START;
-          var steps=Math.floor(past/STAGED_STEP)+1;
-          var drop=steps*STAGED_DROP_PER_STEP;
+        // Pick V9 or V10 schedule depending on the block's height.
+        var _start, _step, _per;
+        if(b.height>=GRANULAR_HEIGHT){
+          _start=GRANULAR_START; _step=GRANULAR_STEP; _per=GRANULAR_DROP_PER_STEP;
+        } else {
+          _start=STAGED_START; _step=STAGED_STEP; _per=STAGED_DROP_PER_STEP;
+        }
+        if(_baseN!==null && _elapsed!==null && _elapsed>=_start){
+          var past=_elapsed-_start;
+          var steps=Math.floor(past/_step)+1;
+          var drop=steps*_per;
           _stagedN=Math.max(_baseN-drop, STAGED_FLOOR);
         }
       }

@@ -1171,6 +1171,121 @@ int main() {
              dec.profile_index == CASERT_H_MIN);
     }
 
+    // 21. V10 granular relief (block CASERT_GRANULAR_RELIEF_HEIGHT+)
+    //     elapsed >= 600 s → drop 1 profile per 60 s, floor at E7.
+    //     Lag-advance disabled for these heights.
+    printf("\n--- 21. V10 granular relief (block %lld, start %llds, %d every %llds) ---\n",
+           (long long)CASERT_GRANULAR_RELIEF_HEIGHT,
+           (long long)CASERT_GRANULAR_RELIEF_START,
+           (int)CASERT_GRANULAR_DROP_PER_STEP,
+           (long long)CASERT_GRANULAR_STEP_SECONDS);
+
+    // 21.1 Activation: at exactly CASERT_GRANULAR_RELIEF_HEIGHT, the
+    //      V10 schedule applies; below that height, V9 still applies.
+    {
+        // V9 sample at fork-1 with elapsed 540 s should drop ~3 from base.
+        auto v9 = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT - 1, 20,
+                                         TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t v9_t = v9.back().time + 540;
+        auto v9_dec = casert_compute(v9, CASERT_GRANULAR_RELIEF_HEIGHT - 1, v9_t);
+        TEST("V10 activation: pre-fork still uses V9 (540s -> drop 3)",
+             v9_dec.profile_index <= 10);
+
+        // V10 at the activation block: 540 s is BELOW the new start
+        // (600 s) so no relief should apply yet.
+        auto v10 = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT, 20,
+                                          TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t v10_early = v10.back().time + 540;
+        auto v10_early_dec = casert_compute(v10, CASERT_GRANULAR_RELIEF_HEIGHT, v10_early);
+        TEST("V10 activation: 540s elapsed -> no V10 relief (start is 600s)",
+             v10_early_dec.profile_index >= 13);
+    }
+
+    // 21.2 No drop before 600 s
+    {
+        auto chain = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT + 5, 20,
+                                            TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t before = chain.back().time + 599;
+        auto dec = casert_compute(chain, CASERT_GRANULAR_RELIEF_HEIGHT + 5, before);
+        TEST("V10 granular: 599s elapsed -> no drop (still at base)",
+             dec.profile_index >= 13);
+    }
+
+    // 21.3 Granular schedule from a heavily-lagging H13 base.
+    //   600-659: drop 1
+    //   660-719: drop 2
+    //   720-779: drop 3
+    //   ...
+    //   1200-1259: drop 11 (= -1 = E1 from base 10) but base is H13 so E2
+    //   ...
+    //   1560+   : drop >=17, floored to E7
+    {
+        auto chain = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT + 5, 20,
+                                            TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        int64_t base_t = chain.back().time;
+
+        // The casert raw_base_H is recomputed from lag for each block;
+        // with -13*TARGET_SPACING offset and lag-advance disabled at
+        // V10, raw_base stays at H13 for the sample. So the V10 staged
+        // path sets eff = max(13 - drop, -7), which is also the
+        // declared profile in the absence of any anti-stall.
+        struct { int64_t off; int32_t want; const char* desc; } cases[] = {
+            { 599, 13, "599s -> H13 (no V10 relief yet)" },
+            { 600, 12, "600s -> H12 (drop 1)"           },
+            { 660, 11, "660s -> H11 (drop 2)"           },
+            { 720, 10, "720s -> H10 (drop 3)"           },
+            { 780,  9, "780s -> H9  (drop 4)"           },
+            { 900,  7, "900s -> H7  (drop 6)"           },
+            {1080,  4, "1080s -> H4  (drop 9)"          },
+            {1200,  2, "1200s -> H2  (drop 11)"         },
+            {1380, -1, "1380s -> E1  (drop 14)"         },
+            {1500, -3, "1500s -> E3  (drop 16)"         },
+            {1560, -4, "1560s -> E4  (drop 17)"         },
+            {1620, -5, "1620s -> E5  (drop 18)"         },
+            {1740, -7, "1740s -> E7  (drop 20, floored)" },
+            {3600, -7, "3600s -> E7  (still floored)"    },
+        };
+        for (const auto& c : cases) {
+            auto dec = casert_compute(chain, CASERT_GRANULAR_RELIEF_HEIGHT + 5,
+                                        base_t + c.off);
+            char msg[160];
+            snprintf(msg, sizeof(msg), "V10 granular H13 base: %s", c.desc);
+            TEST(msg, dec.profile_index == c.want);
+        }
+    }
+
+    // 21.4 Floor never goes below E7
+    {
+        auto chain = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT + 5, 20,
+                                            TARGET_SPACING, 11, -11 * TARGET_SPACING);
+        int64_t very_late = chain.back().time + 3600;
+        auto dec = casert_compute(chain, CASERT_GRANULAR_RELIEF_HEIGHT + 5, very_late);
+        TEST("V10 granular: 3600s elapsed never goes below E7",
+             dec.profile_index == CASERT_H_MIN);
+    }
+
+    // 21.5 Lag-advance disabled at V10. With now_time advancing by
+    //      multiple TARGET_SPACING units (here: ~1200 s past last
+    //      block), V9 would shrink lag by 2 and lower the base profile
+    //      by up to 2 levels at validation. V10 keeps lag computed
+    //      strictly from chain.back().time, so the base does not move
+    //      between recompute (now_time=0) and validation (now_time=ts).
+    {
+        auto chain = make_chain_at_height(CASERT_GRANULAR_RELIEF_HEIGHT + 5, 20,
+                                            TARGET_SPACING, 13, -13 * TARGET_SPACING);
+        // Recompute base with now_time = 0 (no relief, no lag advance).
+        auto base = casert_compute(chain, CASERT_GRANULAR_RELIEF_HEIGHT + 5, 0);
+        // Compute live with a far-future now_time but elapsed below the
+        // 600 s threshold so the staged path does NOT apply. Under V9
+        // this would change the answer (lag-advance shrinks lag); under
+        // V10 it must NOT.
+        int64_t under_threshold = chain.back().time + 599;
+        auto live = casert_compute(chain, CASERT_GRANULAR_RELIEF_HEIGHT + 5,
+                                     under_threshold);
+        TEST("V10 lag-advance disabled: pre-relief profile matches base recompute",
+             live.profile_index == base.profile_index);
+    }
+
     printf("\n=== Results: %d passed, %d failed out of %d ===\n\n", g_pass, g_fail, g_pass+g_fail);
     return g_fail > 0 ? 1 : 0;
 }

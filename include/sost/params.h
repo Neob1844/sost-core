@@ -211,6 +211,51 @@ inline constexpr int64_t  CASERT_STAGED_RELIEF_START      = 540;  // elapsed sec
 inline constexpr int64_t  CASERT_STAGED_STEP_SECONDS      = 60;
 inline constexpr int32_t  CASERT_STAGED_DROP_PER_STEP     = 3;
 
+// V10 — granular relief cascade fork at CASERT_GRANULAR_RELIEF_HEIGHT.
+// Refines the V9 staged relief: drop ONE profile level every 60 s
+// instead of three, and start the cascade at 600 s instead of 540 s.
+// Floor stays at E7. The bitsQ controller continues to absorb any
+// drift to the 10-minute target, so the chain self-regulates and the
+// cascade only intervenes when wall-clock has clearly exceeded the
+// schedule.
+//
+// Rationale (live data, blocks 6553-6595, 40 samples):
+//   - Mean interval post-V9 ≈ 624 s vs target 600 s.
+//   - With drop=3 the chain over-relaxes by two profile levels on each
+//     relief step; the bitsQ controller then re-tightens on the next
+//     block, producing a small visible oscillation.
+//   - Reducing the step from 3 to 1 lets each relief decision match
+//     the actual lag, and the bitsQ controller continues to converge
+//     without external intervention.
+//
+// Schedule (post-V10) for a base of H10:
+//    600 → H9   660 → H8   720 → H7   780 → H6   840 → H5
+//    900 → H4   960 → H3  1020 → H2  1080 → H1  1140 → B0
+//   1200 → E1  1260 → E2  1320 → E3  1380 → E4  1440 → E5
+//   1500 → E6  1560+ → E7 (floor)
+//
+// V10 also disables the V6-calibration lag-advance (see
+// src/pow/casert.cpp, the line that promotes ``lag_time = now_time``).
+// Reason: the lag-advance was useful while the cascade was coarse
+// because it nudged ``lag`` down within the same block to make the
+// schedule self-correct. With drop=1 the cascade is fine-grained
+// enough on its own, and the lag-advance was the remaining source of
+// the "off-by-one" extra drop the explorer surfaced (e.g. block 6579
+// declared E1 instead of B0). Disabling it makes the schedule
+// deterministic at validation time: declared profile = base - drop
+// exactly, no hidden lag-time arithmetic.
+//
+// Future-drift cap stays at MAX_FUTURE_DRIFT_STAGED = 60 s. The cap is
+// already aligned with the cascade STEP, so a future-timestamp attack
+// can at best steal one profile step (= 1 level under V10, vs. 3 under
+// V9). Tightening to +30 s would not improve the attack surface
+// further while increasing the risk of valid blocks being rejected on
+// hosts with NTP drift in the 5-15 s range.
+inline constexpr int64_t  CASERT_GRANULAR_RELIEF_HEIGHT    = 6700;
+inline constexpr int64_t  CASERT_GRANULAR_RELIEF_START     = 600;  // elapsed seconds
+inline constexpr int64_t  CASERT_GRANULAR_STEP_SECONDS     = 60;
+inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
+
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
 // satisfy BOTH:
