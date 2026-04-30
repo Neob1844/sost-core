@@ -357,7 +357,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // Relief valve: emergency profile drop when block is taking too long.
         //
         // V9 (block CASERT_STAGED_RELIEF_HEIGHT+):
-        //     staged cascade — elapsed >= 570 s drops 3 profiles every 30 s
+        //     staged cascade — elapsed >= 540 s drops 3 profiles every 60 s
         //     down to E7. Replaces the single-step cliff with a 2–3 minute
         //     window where every miner has a meaningful chance of finding
         //     the relief block in proportion to its hashrate.
@@ -427,8 +427,8 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // equalizer chose for this block.
         //
         //     elapsed = candidate.timestamp - prev.timestamp
-        //     if elapsed < 570:    no change
-        //     else:                drop = 3 * ((elapsed-570)/30 + 1)
+        //     if elapsed < 540:    no change
+        //     else:                drop = 3 * ((elapsed-540)/60 + 1)
         //                          eff_H = max(raw_base_H - drop, E7)
         //
         // ``min(staged, H)`` ensures staged only ever eases — if the

@@ -3,6 +3,7 @@
 // v2.0: Persistent dataset cache + per-block program generation
 #include "sost/pow/convergencex.h"
 #include "sost/pow/scratchpad.h"
+#include <cstdio>
 #include <cstring>
 #include <algorithm>
 #include <map>
@@ -43,6 +44,11 @@ uint64_t compute_single_dataset_value(const Bytes32& prev_hash, uint64_t index) 
 void CXDataset::generate(const Bytes32& block_prev_hash) {
     seed_hash = block_prev_hash;
     memory.resize(512ULL * 1024 * 1024); // 4GB as uint64_t
+    // Companion line to scratchpad_cache's [PRECOMP] log: makes the
+    // ConvergenceX 8 GB total (4 GB dataset + 4 GB scratchpad)
+    // explicit in operator-facing logs so a reader sees both pieces.
+    std::printf("[DATASET]  regenerated  prev=%s  size=4096 MB (uint64_t x 512M)\n",
+                hex(block_prev_hash).substr(0, 16).c_str());
     // Bulk generation: identical to compute_single_dataset_value for each index
     uint64_t seed = compute_dataset_seed(block_prev_hash);
     for (size_t i = 0; i < memory.size(); i++) {

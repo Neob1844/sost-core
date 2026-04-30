@@ -2708,7 +2708,25 @@ async function loadBlocks(){
       var iv='\u2014';if(i<rows.length-1){var d=b.time-rows[i+1].time;iv=d<60?d+'s':Math.floor(d/60)+'m '+d%60+'s';}
       else if(extraOlder&&b.height>0){var d2=b.time-extraOlder.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}
       var tr=document.createElement('tr');if(b.height===H&&off===0&&i===0)tr.className='new-row';
-      var blockProfileLabel=b.casert_mode?('<span style="color:'+getLevelColor(getCasertLevel(computeBlockLag(b.height,b.time)))+';font-weight:600">'+b.casert_mode+'</span>'):getLevelLabel(computeBlockLag(b.height,b.time));
+      // Profile column. The node exposes both `casert_mode` (the
+      // profile the miner committed to the block — what was actually
+      // mined) and `casert_base` (the raw cASERT decision before the
+      // V9 staged-relief cascade). When they differ, the relief is
+      // active and we show "base → eff" so an operator can see how
+      // much the cascade is easing per block.
+      var _eff=b.casert_mode||'';
+      var _base=b.casert_base||'';
+      var _profColor=getLevelColor(getCasertLevel(computeBlockLag(b.height,b.time)));
+      var blockProfileLabel;
+      if(_eff && _base && _base!==_eff){
+        blockProfileLabel='<span style="color:var(--text3);font-weight:500" title="Raw cASERT base profile (pre-staged-relief)">'+_base+'</span>'
+                        +'<span style="color:var(--text3);font-size:9px;margin:0 3px">→</span>'
+                        +'<span style="color:'+_profColor+';font-weight:600" title="Effective profile after V9 staged-relief cascade (committed to block)">'+_eff+'</span>';
+      } else if(_eff){
+        blockProfileLabel='<span style="color:'+_profColor+';font-weight:600">'+_eff+'</span>';
+      } else {
+        blockProfileLabel=getLevelLabel(computeBlockLag(b.height,b.time));
+      }
       var minerAddr=b.miner_address||'';
       var minerShort=minerAddr?'<span class="td-link" onclick="showAddress(\''+minerAddr+'\')" style="color:var(--orange);font-size:10px" title="'+minerAddr+'">'+minerAddr.substr(0,10)+'\u2026'+minerAddr.substr(-4)+'</span>':'';
       tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
