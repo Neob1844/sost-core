@@ -1,0 +1,190 @@
+================================================================
+ConvergenceX — SOST native proof-of-work specification (plain text)
+================================================================
+
+Status:        Live on SOST mainnet
+Repository:    https://github.com/Neob1844/sost-core
+Author:        NeoB
+Last update:   block 6,700 (V10 granular relief cascade)
+Companion:     https://sostcore.com/casert-spec.html
+PDF:           https://sostcore.com/convergencex_whitepaper.pdf
+
+----------------------------------------------------------------
+1. Memory-hard PoW
+----------------------------------------------------------------
+
+ConvergenceX is the native PoW used by SOST. It is memory-hard
+by construction:
+
+  - 4 GB pre-built dataset (deterministic, derived from the chain
+    height epoch) +
+  - 4 GB scratchpad (per-thread, allocated for each search burst).
+
+A miner that does not have 8 GB of RAM available for the search
+cannot mine. There is no GPU advantage in the reference miner;
+the protocol does not enforce CPU-only at consensus level —
+the memory hardness does that on its own.
+
+Stability is enforced through the cASERT equalizer (43 profiles,
+E7 to H35) and the bitsQ controller. ConvergenceX is the work
+function; cASERT decides which profile that work is run against.
+
+----------------------------------------------------------------
+2. Block target
+----------------------------------------------------------------
+
+  TARGET_SPACING       = 600 s (10 min)
+  EPOCH_LENGTH         = 131,553 blocks
+  Difficulty mode      = bitsQ Q16.16, per-block
+                          (V5 avg288-based since block 5,175,
+                           dynamic cap since block 5,260,
+                           median removed since block 5,270)
+
+The chain self-converges toward the 600-second target. Any
+deviation gets pulled back by bitsQ; the equalizer profile and
+the relief valve handle the asymmetry of slow vs fast blocks.
+
+----------------------------------------------------------------
+3. cASERT profiles
+----------------------------------------------------------------
+
+  Range            E7 (-7) ... B0 (0) ... H13 (+13) ... H35 (+35)
+  Active range     E7 ... H13                       (block 5,750+)
+  Reserved range   H14 ... H35                       (margin = 115)
+  Floor            E7  (CASERT_H_MIN)
+  Ceiling          H13 (block 5,750+); previously H10/H11/H12
+  Easing           E1..E7 only after 6+ hours at B0
+  Slew             ±1 profile level per block (V6 calibration)
+  Anti-stall       60 minutes — emergency-only zone-based decay
+                   targeting B0
+  Lag cap          H ≤ lag (V6, block 5,050+)
+  Lag floor        profile ≥ lag/8
+
+----------------------------------------------------------------
+4. Relief valve — V8 / V9 / V10 cascade
+----------------------------------------------------------------
+
+The relief valve is the single rule that handles a slow block.
+It has been refined three times. Each fork is forward-only.
+
+  V8 single E7 cliff   (block 5,750+)
+    rule:        if elapsed > 605 s, profile snaps to E7
+    notes:       removes the H10/H11 dead-zone created when a
+                 block goes long; turned into a reaction-speed
+                 race because the cliff was binary
+    floor:       E7
+
+  V9 staged cascade    (block 6,550+)
+    rule:        drop 3 profile levels every 60 s, starting at
+                 540 s elapsed
+    floor:       E7
+    drift cap:   MAX_FUTURE_DRIFT_STAGED = 60 s
+    motivation:  smooths the cliff, eliminates the H10/H11→E7
+                 reaction race; some bimodal oscillation remained
+                 because each step over-relaxed by two profile
+                 levels relative to what bitsQ wanted
+
+  V10 granular cascade (block 6,700+)        ← currently active
+    rule:        drop 1 profile level every 60 s, starting at
+                 600 s elapsed
+    floor:       E7
+    drift cap:   MAX_FUTURE_DRIFT_STAGED = 60 s (unchanged)
+    extra:       lag-advance is DISABLED at V10. Lag is computed
+                 strictly from chain.back().time so validation is
+                 deterministic w.r.t. block.timestamp. The granular
+                 cascade is fine-grained enough on its own; the
+                 lag-advance produced an extra "off-by-one" drop
+                 (visible in V9 live data, e.g. block 6,579
+                 declared E1 where staged-only would have given B0).
+    motivation:  finer steps mean each relief decision matches the
+                 actual lag, and bitsQ converges to 10 min without
+                 overshooting. Combines with bitsQ instead of fighting
+                 it.
+
+  Effective profile  (V10):
+      eff(elapsed, base) = max(base − floor((elapsed − 600) / 60) − 1, E7)
+                            for elapsed ≥ 600 s
+
+  Time-to-E7 (worst case, single block):
+      base H10 → 1,560 s (26.0 min)
+      base H11 → 1,620 s (27.0 min)
+      base H13 → 1,740 s (29.0 min)
+      All comfortably below the 60-minute anti-stall threshold.
+
+  No supply change. No reward change. No GPU ban. No pool ban.
+  Hashrate-proportional competition preserved (live Monte Carlo:
+  every miner within 0.4% of its hashrate share over 5,000 blocks).
+
+----------------------------------------------------------------
+5. Anti-stall
+----------------------------------------------------------------
+
+  Activation       3,600 s (60 min) since V3.1
+  Decay zones      H13–H7  : 600 s/level   (10 min)
+                   H6–H4   : 900 s/level   (15 min)
+                   H3–H1   : 1,200 s/level (20 min)
+                   B0      : natural destination
+  Easing region    E1..E7 only after 6 additional hours at B0
+                   (1,800 s/level)
+
+Anti-stall is the last-resort safety net. The relief valve is
+the day-to-day mechanism.
+
+----------------------------------------------------------------
+6. cASERT fork timeline
+----------------------------------------------------------------
+
+  V1 (genesis)          48h half-life, 6.25% delta cap, ±1 slew
+  V2 (block 1,450)      24h half-life, 12.5% delta cap
+  V3 (block 4,100)      slew rate ±1 → ±3, lag floor lag/8
+  V3.1 (block 4,110)    stored profile_index from BlockMeta;
+                        anti-stall always 7,200 s
+  V4 (block 4,200)      Ahead Guard — 1.56%/block when ≥16 blocks
+                        ahead (H8+); hysteresis enter ≥16, exit ≤8
+  V6 (block 5,000)      slew ±3 → ±1; H10–H35 scale=2
+  V6 calibration        block 5,050: dynamic lag cap H ≤ lag,
+                        live lag from wall clock
+  V7 avg288 (5,175)     bitsQ avg288-based; half-life off (kept
+                        for historical blocks)
+  V7 dyncap (5,270)     0% dead band ±15 s, 0%/0.5%/1.5%/2.5%/3.0%
+                        max scaling; median removed (5,270);
+                        block 5,323 hotfix
+  V8 cliff (5,750)      single relief cliff to E7 at 605 s; H13
+                        ceiling
+  V9 staged (6,550)     staged cascade drop 3/60 s from 540 s;
+                        MAX_FUTURE_DRIFT_STAGED = 60 s
+  V10 granular (6,700)  granular cascade drop 1/60 s from 600 s;
+                        lag-advance disabled
+
+All forks are forward-only (no regenesis). Nodes enforce fork
+rules based on block height.
+
+----------------------------------------------------------------
+7. Operator update — V10 deployment
+----------------------------------------------------------------
+
+    cd ~/SOST/sostcore/sost-core
+    git pull --ff-only origin main
+    cd build
+    cmake .. -DCMAKE_BUILD_TYPE=Release
+    cmake --build . --target sost-node sost-miner -j$(nproc)
+    # then restart sost-node and sost-miner
+
+NTP must be active (the +60 s drift cap is unchanged).
+
+----------------------------------------------------------------
+8. What does NOT change at V10
+----------------------------------------------------------------
+
+  • Block reward, halving schedule, supply curve.
+  • Wallet behaviour, address format, signature scheme.
+  • Mempool, RBF, fee policy.
+  • ConvergenceX PoW (4 GB dataset + 4 GB scratchpad).
+  • AI Engine / GeaSpirit / Materials Engine.
+  • Useful Compute remains paused for design (no rewards, no queue).
+  • BurstCap, anti-stall floor (60 min), profile ceiling table.
+
+================================================================
+End of ConvergenceX specification — plain text snapshot.
+For the full HTML version see https://sostcore.com/casert-spec.html.
+================================================================

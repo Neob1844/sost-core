@@ -230,10 +230,13 @@
 
 <nav>
   <div class="container">
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;min-height:90px;max-width:90px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;color:#000;text-decoration:none;line-height:1;margin-right:14px;box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden" title="SOST DEX"><span style="color:#fb010d;font-size:16px;font-weight:900;letter-spacing:2px;text-shadow:0 0 6px rgba(251,1,13,0.6)">SOST</span><span style="font-size:26px;font-weight:900;letter-spacing:-1px;text-shadow:0 0 4px rgba(0,0,0,0.5)">DEX</span></a>
     <a href="index.html" class="nav-logo">
-      <img src="sost-logo.png" alt="SOST" style="height:110px;border-radius:20%;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+      <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(34,211,238,.45));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946 0%,#f59e0b 22%,#4ade80 48%,#22d3ee 72%,#c084fc 100%);background-size:220% 220%;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 5s linear infinite;overflow:hidden;flex:0 0 auto;" title="PoPC DEX"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:32px;font-weight:900;letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="index.html">Home</a>
@@ -282,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.16.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.17.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -299,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,152 / 1,152 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; network OFF by default</span>
+      <span class="val">1,166 / 1,166 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -934,6 +937,59 @@
         </ul>
       </div>
     </div>
+
+    <!-- M17 (Materials General Answerer) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M17 &mdash; Materials General Answerer (practical recommendations)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the answer-quality bug reported on M16: the console used to fall through to
+          <em>"General internal answer &mdash; see project context above."</em> for practical
+          materials questions like <em>"que material es el mejor para hacer nanopart&iacute;culas
+          f&aacute;cilmente?"</em>. M17 routes those prompts through a structured answerer that
+          returns a real ranked recommendation with mechanism, advantages, risks and first
+          validation step per option. Pure stdlib, no network, no paid AI, no DFT claim.
+        </p>
+        <ul class="spec-list">
+          <li><strong>Topic library:</strong> four practical-recommendation topics ship in M17 &mdash;
+              nanoparticles, membranes, catalysts and abundant-element photovoltaics. Each topic
+              carries title, summary lines, an option table (label, formula, ease, advantages,
+              risks, first validation step) and a by-objective recommendation block.</li>
+          <li><strong>Practical-cue gate:</strong> the answerer only fires when the prompt contains
+              a recommendation cue (best / mejor / easiest / cheapest / recommend / which / how
+              to / qu&eacute; material). Bare keyword prompts still go through the standard flow,
+              so the engine does not over-trigger.</li>
+          <li><strong>Project gate:</strong> materials-only in M17. GeaSpirit, useful_compute and
+              other projects keep their existing flow until their own answerers land.</li>
+          <li><strong>Canonical nanoparticle answer:</strong> Au (citrate / Turkevich, plasmonic,
+              expensive), SiO&#x2082; (St&ouml;ber / sol-gel, cheap, scalable), Fe&#x2083;O&#x2084;
+              (coprecipitation, magnetic), TiO&#x2082; (sol-gel, photocatalytic), Ag (Tollens /
+              NaBH4, antimicrobial with aggregation+toxicity caveats). By objective: Au for
+              demonstration / SiO&#x2082; cheap-versatile / Fe&#x2083;O&#x2084; magnetic /
+              TiO&#x2082; photocatalysis / Ag antimicrobial.</li>
+          <li><strong>Evidence stamp:</strong> every answer states
+              <code>evidence_source: general_scientific_reasoning</code>,
+              <code>confidence: medium</code>, <code>publishability: internal_only</code> and
+              <em>no local DFT / CHGNet / lab artifact was consulted &mdash; this is a practical
+              recommendation, not a validation</em>. The engine never claims DFT validation
+              without an actual artifact.</li>
+          <li><strong>Wire-in:</strong> <code>answer_composer.compose()</code> consults the
+              answerer before falling back to the legacy "see project context above" line. If
+              the answerer matches, its body replaces the placeholder and its next_actions are
+              merged into the result envelope.</li>
+          <li>safety invariants: no network call, no paid AI, no auto-publication, internal_only
+              by default, no DFT validation claim. Every recommendation is offered as a starting
+              point for a validation dossier or literature review &mdash; not as an answer to be
+              published.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1109,7 +1165,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,152 / 1,152 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,166 / 1,166 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
