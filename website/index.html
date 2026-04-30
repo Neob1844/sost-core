@@ -174,6 +174,31 @@
   .nav-logo .brand-sost {
     color: var(--red-primary);
   }
+  /* Collapsible nav (M-toggle): default open. Operator can hide the
+     logos + DEX + nav-links to reclaim vertical space. */
+  .nav-toggle {
+    background: transparent;
+    border: 1px solid var(--border-med);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: all .2s;
+  }
+  .nav-toggle:hover { color: var(--text-primary); border-color: var(--red-primary); }
+  body.nav-collapsed nav { padding: 4px 0; }
+  body.nav-collapsed nav .nav-logo,
+  body.nav-collapsed nav a[href="casert-spec.html"],
+  body.nav-collapsed nav a[href="sost-dex.html"],
+  body.nav-collapsed nav .nav-links,
+  body.nav-collapsed nav .nav-hamburger {
+    display: none !important;
+  }
+  body.nav-collapsed nav .container { justify-content: flex-end; }
   .nav-links {
     display: flex;
     gap: 4px;
@@ -645,6 +670,33 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script src="js/security.js"></script>
+<script>
+/* Top-nav toggle. Default open. State kept in sessionStorage so it
+   survives in-tab navigation. Inline + early so it runs before the
+   first paint (no flash). */
+(function () {
+  try {
+    if (sessionStorage.getItem('sost_nav_collapsed') === '1') {
+      document.documentElement.classList.add('pre-nav-collapsed');
+    }
+  } catch (e) {}
+})();
+document.addEventListener('DOMContentLoaded', function () {
+  var collapsed = false;
+  try { collapsed = sessionStorage.getItem('sost_nav_collapsed') === '1'; } catch (e) {}
+  if (collapsed) document.body.classList.add('nav-collapsed');
+  var btn = document.getElementById('navToggleBtn');
+  if (btn) btn.textContent = collapsed ? '▼ SHOW NAV' : '▲ HIDE NAV';
+});
+function toggleNav() {
+  var collapsed = !document.body.classList.contains('nav-collapsed');
+  document.body.classList.toggle('nav-collapsed', collapsed);
+  var btn = document.getElementById('navToggleBtn');
+  if (btn) btn.textContent = collapsed ? '▼ SHOW NAV' : '▲ HIDE NAV';
+  try { sessionStorage.setItem('sost_nav_collapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+</script>
+<style>html.pre-nav-collapsed body.nav-collapsed nav { padding: 4px 0; }</style>
 </head>
 <body>
 <!-- SPLASH — Red Matrix Rain -->
@@ -822,6 +874,7 @@
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(34,211,238,.45));image-rendering:-webkit-optimize-contrast">
     </a>
     <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC DEX"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:32px;font-weight:900;letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">DEX</span></a>
+    <button class="nav-toggle" id="navToggleBtn" type="button" onclick="toggleNav()" title="Hide / show the top navigation">▲ HIDE NAV</button>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="index.html" class="active">Home</a>
@@ -854,7 +907,7 @@
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="casert-spec.html">cASERT</a>
-      <a href="sost-explorer.html">Explorer</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
       <a href="sost-help.html">Help</a>
       <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
       <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
