@@ -247,7 +247,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <tr><td>H13</td><td>13</td><td>2</td><td>9</td><td>9</td><td>115</td><td>Ceiling active (block 5,750+)</td></tr>
 <tr style="color:var(--t3)"><td>H14&ndash;H35</td><td>14&ndash;35</td><td>2</td><td>10&ndash;20</td><td>9&ndash;20</td><td>115</td><td>Reserved (R); H35 max reserved</td></tr>
 </table>
-<p style="font-size:11px;color:var(--t3);margin-top:8px;">43 profiles (21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35). CASERT_H_MIN=-7 (E7), H13 ceiling (block 5,750+), H35 max reserved. H14&ndash;H35 margin=115. Equalizer is emergency-only. Easing profiles E1&ndash;E7 only activate after 6+ hours at B0. Relief valve: E7 at 605s. This completes the cASERT equalizer calibration. <em>Source: params.h:131-138</em></p>
+<p style="font-size:11px;color:var(--t3);margin-top:8px;">43 profiles (21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35). CASERT_H_MIN=-7 (E7), H13 ceiling (block 5,750+), H35 max reserved. H14&ndash;H35 margin=115. Equalizer is emergency-only. Easing profiles E1&ndash;E7 only activate after 6+ hours at B0. Relief valve: V8 single E7 cliff at 605&nbsp;s (block 5,750+) &rarr; V9 staged drop 3/60&nbsp;s from 540&nbsp;s (block 6,550+) &rarr; V10 granular drop 1/60&nbsp;s from 600&nbsp;s (block 6,700+). Floor stays at E7. <em>Source: params.h:131-138, params.h:209-256</em></p>
 
 <h3>Anti-Stall</h3>
 <p>Mining-only (now_time &gt; 0). If stalled &gt; 7,200s (always 2 hours, V3.1+), zone-based decay to B0: H10&ndash;H7 at 600s/level, H6&ndash;H4 at 900s/level, H3&ndash;H1 at 1200s/level. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. <em>Source: casert.cpp:204-215</em></p>

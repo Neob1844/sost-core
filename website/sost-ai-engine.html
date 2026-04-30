@@ -282,7 +282,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.10.0 &middot; Phase 3 Milestones M1–M12</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.14.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -299,7 +299,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">904 / 904 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; network OFF by default</span>
+      <span class="val">1,051 / 1,051 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -683,6 +683,120 @@
         </ul>
       </div>
     </div>
+
+    <!-- M13 (Autonomous Discovery Theorist) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon"></div>
+          <div class="spec-name">M13 &mdash; Autonomous Discovery Theorist + Theory Graph</div>
+        </div>
+        <span class="spec-tag">DEFERRED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Planned Phase&nbsp;3 milestone. The discovery theorist will turn the M11 dossier graph + M12
+          campaign outcomes into typed scientific theories, with explicit pre-conditions, observable
+          predictions, refutation paths, and a typed theory-graph that links theories to dossiers and
+          to one another. <strong>Not yet shipped.</strong> The M14 console exposes the
+          <code>discover</code> action but currently returns a safe <em>unavailable</em> envelope so
+          callers can already wire the route end-to-end while the engine is being designed.
+        </p>
+        <ul class="spec-list">
+          <li>theory dataclass: id, statement, scope, pre-conditions, predictions, refutation_paths,
+              evidence-links, confidence_class, publishability (always <code>internal_only</code>
+              by default)</li>
+          <li>theory-graph SQLite tables (<code>theories</code>, <code>theory_links</code>,
+              <code>theory_evidence</code>) with deterministic IDs and stable hashes for reproducible
+              snapshots</li>
+          <li>local-only theory generator: deterministic, stdlib-only, no LLM by default; AI Council
+              optional in a future milestone for free-only / paid-locked operation</li>
+          <li>operator integration: theory dossiers under
+              <code>reports/ai_engine/discovery_dossiers/&lt;id&gt;/</code> and a Markdown summary
+              for the operator command center</li>
+          <li>safety invariants: same as M11/M12 &mdash; nothing publishes automatically, no
+              network, no paid AI; theories never override an existing M11 dossier verdict</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M14 (Private Operator Console) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M14 &mdash; SOST AI Engine Private Console</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Localhost-only web console for operating the M1&ndash;M12 capabilities of the engine
+          through prompts, quick actions, evidence panels and risk flags. <strong>Not exposed on
+          sostcore.com. Never publishes anything. Never runs heavy compute. No paid AI.</strong>
+          Started with <code>python3 scripts/sost_ai_console.py</code>, prints a one-shot URL with
+          an ephemeral token, scrubs the token from the address bar after first paint, and keeps
+          it in a JS closure for the lifetime of the page.
+        </p>
+        <ul class="spec-list">
+          <li><strong>M14-1 &mdash; Backend + Access Control:</strong> stdlib-only
+              <code>ThreadingHTTPServer</code> bound to <code>127.0.0.1</code> by default;
+              <code>0.0.0.0</code> rejected unless both <code>--unsafe-bind-all</code> and
+              <code>--i-understand-this-exposes-the-private-console</code> are passed;
+              <code>secrets.token_urlsafe(32)</code> session token, never persisted; constant-time
+              <code>hmac.compare_digest</code> bearer match; positive read/write allowlists; no
+              shell helper exists in the codebase; <strong>50 tests</strong></li>
+          <li><strong>M14-2 &mdash; Private UI:</strong> vanilla HTML/CSS/JS, no CDN, no external
+              fonts/scripts/styles, no cookies, no <code>localStorage</code>, no <code>eval()</code>,
+              no <code>Function()</code>; CSP <code>default-src&nbsp;'self'</code>; CSS dark
+              command-center aesthetic with cyan/green/gold accents; sidebar with 14 sections;
+              chat panel with project + mode selectors, safety badges (NETWORK OFF, PAID LOCKED,
+              PUBLICATION LOCKED, LOCALHOST ONLY), 24+ canned quick prompts, evidence drawer with
+              colour-coded publishability, miner-log triage screen, reports browser, settings panel;
+              token never written to any DOM node; <strong>22 tests</strong></li>
+          <li><strong>M14-3 &mdash; Action Integration:</strong> 10 actions wired to existing
+              modules &mdash; <code>ask</code>/<code>ideate</code> via <code>ask_engine.ask</code>;
+              <code>validate</code>/<code>public_wording_review</code> via
+              <code>public_claim_guard.scan_text</code>; <code>create_dossier</code> via M11
+              materials/geaspirit/useful-compute planners + <code>insert_dossier</code> +
+              <code>dossier_renderer.render</code>; <code>create_campaign</code> via
+              <code>campaign_renderer.build_and_render</code> (<code>execution_allowed=False</code>
+              unconditionally); <code>triage_miner_log</code> via <code>miner_support_triage</code>;
+              <code>draft_reply</code> via <code>community_reply_drafter</code>;
+              <code>next_actions</code> via <code>operator_command_center</code>;
+              <code>discover</code> returns a safe-unavailable envelope until M13 lands; legacy
+              <code>do_not_publish</code> publishability mapped onto canonical <code>blocked</code>;
+              <strong>48 tests</strong></li>
+          <li><strong>M14-4 &mdash; Chat History + Exports:</strong> SQLite-backed
+              <code>console_sessions</code> + <code>console_messages</code> +
+              <code>console_actions</code> tables (idempotent migrations on top of the engine's
+              existing persistence layer); <code>console_conversation</code> high-level API
+              (<code>new_chat</code> / <code>rename_chat</code> / <code>append_user</code> /
+              <code>append_assistant</code> / <code>list_chats</code> / <code>load_chat</code>);
+              <code>console_export</code> writes
+              <code>reports/ai_engine/console_exports/&lt;UTC&gt;_&lt;sid8&gt;/</code> with
+              <code>conversation.md</code>, <code>manifest.json</code> (schema
+              <code>sost_ai_console_export@v1</code>), and <code>checksums.sha256</code>; clearing
+              local history requires the literal confirmation
+              <code>"YES_DELETE_LOCAL_HISTORY"</code>; <strong>16 tests</strong></li>
+          <li><strong>M14-5 &mdash; Operator Guide + Smoke:</strong> live HTTP smoke tests on a
+              random port and per-test fresh SQLite db: token gate works, paid + publication
+              remain locked, <code>"Useful Compute rewards active"</code> never returns
+              <code>public_safe</code>, miner-rejected-block log triages correctly, dossier
+              creation writes a folder under
+              <code>reports/ai_engine/validation_dossiers/...</code>, no
+              <code>website/</code> writes occur during a typical action flow,
+              <code>discover</code> returns the M13 unavailable envelope; comprehensive operator
+              guide in <code>docs/multi_ai_console_operator_guide.md</code>;
+              <strong>11 tests</strong></li>
+          <li>safety invariants: localhost only by default, ephemeral token, no permanent passwords,
+              no <code>eval()</code> / <code>Function()</code> / inline scripts / inline event
+              attributes, paid + publication + heavy execution all locked, only allowlisted
+              directories are readable / writable, OPTIONS preflights rejected (no CORS surface),
+              and SSH tunnel is the documented remote-access pattern (no public port)</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -858,12 +972,12 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>904 / 904 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12)</td></tr>
+        <tr><td>Tests passing</td><td>1,051 / 1,051 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
         <tr><td>Paid model calls per run (default)</td><td><span class="pill green">0</span> &mdash; paid is OFF by default</td></tr>
-        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 35 internal tables (9 added in M10 for the outcome learning loop, 3 added in M11 for the dossier factory: validation_dossiers, validation_experiments, dossier_index, 4 added in M12 for the campaign orchestrator: validation_campaigns, campaign_dossiers, campaign_approvals, campaign_index)</td></tr>
+        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 38 internal tables (9 added in M10 for the outcome learning loop, 3 added in M11 for the dossier factory: validation_dossiers, validation_experiments, dossier_index, 4 added in M12 for the campaign orchestrator: validation_campaigns, campaign_dossiers, campaign_approvals, campaign_index, 3 added in M14 for the private console: console_sessions, console_messages, console_actions)</td></tr>
         <tr><td>Public outputs</td><td><span class="pill red">none autonomous</span> &mdash; human review required</td></tr>
         <tr><td>Source license</td><td>private repo &mdash; outputs only released after audit</td></tr>
       </tbody>
