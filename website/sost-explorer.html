@@ -2687,7 +2687,7 @@ function updateMiningPanel(elapsed){
     }
   }
 }
-async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
+async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');return true;}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';return false;}}
 async function loadBlocks(){
   var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="8" class="ld">loading blocks</td></tr>';
   try{
@@ -3292,15 +3292,18 @@ async function loadMempool(){
       return;
     }
 
-    // Fetch tx details
+    // Fetch tx details in parallel — was a serial loop of up to 50
+    // RPC calls which stalled the dashboard when the node was busy.
+    var _mids=txids.slice(0, 50);
+    var _details=await Promise.all(_mids.map(function(_id){
+      return rpc('getrawtransaction',[_id,'true']).catch(function(){return null;});
+    }));
     var txs=[];
-    for(var mi=0;mi<Math.min(txids.length,50);mi++){
-      try{
-        var tx=await rpc('getrawtransaction',[txids[mi],'true']);
-        var fee=typeof tx.fee==='number'?tx.fee:0;
-        var rate=tx.size>0?Math.floor(fee/tx.size):0;
-        txs.push({txid:tx.txid,size:tx.size,fee:fee,rate:rate});
-      }catch(e){}
+    for(var mi=0;mi<_details.length;mi++){
+      var tx=_details[mi];if(!tx)continue;
+      var fee=typeof tx.fee==='number'?tx.fee:0;
+      var rate=tx.size>0?Math.floor(fee/tx.size):0;
+      txs.push({txid:tx.txid,size:tx.size,fee:fee,rate:rate});
     }
     txs.sort(function(a,b){return b.rate-a.rate;});
 
@@ -3621,23 +3624,41 @@ function renderTxTable(){
 async function loadLatestTxs(){
   try{
     _allTxRows=[];
-    // Phase 1: collect RECENT (last 30 blocks) — coinbase + any transfers
+    // Phase 1: collect RECENT (last 30 blocks) — coinbase + any transfers.
+    // All RPC calls in this phase are issued in parallel batches with
+    // Promise.all so the page does not stall for 60+ sequential
+    // round-trips when the node is under contention. Failed requests
+    // are tolerated and skipped per-block.
     var rows=[];
-    for(var h=H;h>=Math.max(0,H-30);h--){
-      try{
-        var hash=await rpc('getblockhash',[String(h)]);
-        var b=await rpc('getblock',[hash]);
-        rows.push({txid:b.txids?b.txids[0]:'cb_'+h,height:h,type:'COINBASE',inputs:0,outputs:3,amount:fS(b.subsidy)+' SOST',fee:'\u2014'});
-        if(b.txids&&b.txids.length>1){
-          for(var t=1;t<b.txids.length;t++){
-            try{
-              var tx=await rpc('gettransaction',[b.txids[t]]);
-              var tot=0;for(var v=0;v<(tx.vout||[]).length;v++){var a=tx.vout[v].amount;tot+=(typeof a==='number'?a:parseFloat(a));}
-              rows.push({txid:b.txids[t],height:h,type:'TRANSFER',inputs:(tx.vin||[]).length,outputs:(tx.vout||[]).length,amount:tot.toFixed(4)+' SOST',fee:tx.fee?fS(tx.fee)+' SOST':'\u2014'});
-            }catch(e2){rows.push({txid:b.txids[t],height:h,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});}
-          }
+    var _heights=[];for(var _h=H;_h>=Math.max(0,H-30);_h--)_heights.push(_h);
+    var _hashes=await Promise.all(_heights.map(function(_hh){
+      return rpc('getblockhash',[String(_hh)]).catch(function(){return null;});
+    }));
+    var _blocks=await Promise.all(_hashes.map(function(_hh){
+      return _hh ? rpc('getblock',[_hh]).catch(function(){return null;}) : Promise.resolve(null);
+    }));
+    var _nonCb=[];
+    for(var _i=0;_i<_blocks.length;_i++){
+      var _b=_blocks[_i];if(!_b)continue;
+      var _hh=_heights[_i];
+      rows.push({txid:_b.txids?_b.txids[0]:'cb_'+_hh,height:_hh,type:'COINBASE',inputs:0,outputs:3,amount:fS(_b.subsidy)+' SOST',fee:'\u2014'});
+      if(_b.txids&&_b.txids.length>1){
+        for(var _t=1;_t<_b.txids.length;_t++)_nonCb.push({txid:_b.txids[_t],height:_hh});
+      }
+    }
+    if(_nonCb.length>0){
+      var _txs=await Promise.all(_nonCb.map(function(_e){
+        return rpc('gettransaction',[_e.txid]).catch(function(){return null;});
+      }));
+      for(var _j=0;_j<_nonCb.length;_j++){
+        var _e=_nonCb[_j], _tx=_txs[_j];
+        if(_tx){
+          var _tot=0;for(var _v=0;_v<(_tx.vout||[]).length;_v++){var _a=_tx.vout[_v].amount;_tot+=(typeof _a==='number'?_a:parseFloat(_a));}
+          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_tot.toFixed(4)+' SOST',fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014'});
+        } else {
+          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});
         }
-      }catch(e){}
+      }
     }
     // Phase 2: fetch ALL transfers from the chain via dedicated RPC (fast, server-side scan)
     try{
@@ -3673,7 +3694,7 @@ async function loadLatestTxs(){
     renderTxTable();
   }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
 }
-async function refresh(){if(_loading)return;_loading=true;try{await loadStats();await loadBlocks();await loadLatestTxs();await loadMempool();}finally{_loading=false;}}
+async function refresh(){if(_loading)return;_loading=true;try{var _ok=await loadStats();if(!_ok){_loading=false;return;}await Promise.all([loadBlocks(),loadLatestTxs(),loadMempool()]);}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
 // Force refresh on tab visibility / window focus — browsers throttle setInterval
 // in background tabs, so without this the data goes stale after a few minutes idle.
