@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.18.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.19.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,188 / 1,188 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; network OFF by default</span>
+      <span class="val">1,214 / 1,214 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1062,6 +1062,76 @@
         </ul>
       </div>
     </div>
+
+    <!-- M19 (Outcome Ledger + Autonomous Scoreboard + Heartbeat) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M19 &mdash; Outcome Ledger + Autonomous Scoreboard + Project Heartbeat</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the observability gap reported on the unified-lab launch: the daemon was running
+          but its trail was not measurable. M19 adds three small layers that make autonomy
+          <strong>verifiable</strong> &mdash; without granting it any new permissions. Every task
+          the engine plans, dispatches or refuses leaves a row; every cycle leaves a heartbeat;
+          the scoreboard rolls both up into a Markdown + JSON dashboard.
+        </p>
+        <ul class="spec-list">
+          <li><strong>Task-level outcome ledger:</strong>
+              <code>outcome_ledger.py</code> with the seven canonical statuses
+              (<code>planned</code> / <code>executed</code> / <code>skipped</code> /
+              <code>failed</code> / <code>useful</code> / <code>wrong</code> /
+              <code>repeated</code>). Stores project, task_type, subject, summary, gate_blocked
+              flag + reason, input/output hashes, saved_path. Helpers:
+              <code>record</code>, <code>list_outcomes</code>, <code>counts_by_status</code>,
+              <code>positive_negative_ratio</code>, <code>gate_block_rate</code>,
+              <code>already_seen(input_hash)</code> for repeat detection.
+              Distinct from M10's subject-level outcome events &mdash; both layers coexist.</li>
+          <li><strong>Per-cycle project heartbeat:</strong>
+              <code>project_heartbeat.py</code> records one row per project per daemon cycle:
+              tasks_generated, tasks_useful, tasks_failed, gate_blocks, routes_read,
+              memory_updates, free-form notes. Operators can answer "is materials still
+              learning, or just looping?" at a glance.</li>
+          <li><strong>Autonomous scoreboard:</strong>
+              <code>autonomous_scoreboard.py</code> rolls the ledger + last heartbeat + the
+              eight registry gates per project up into a payload tagged
+              <code>sost_ai_autonomous_scoreboard@v1</code>. Renders both
+              <code>autonomous_scoreboard.md</code> and
+              <code>autonomous_scoreboard.json</code> under
+              <code>reports/ai_engine/operator/</code> (already on the M14 write allowlist —
+              no allowlist change needed).</li>
+          <li><strong>Three new capability gates (deny-by-default):</strong>
+              <code>can_execute_heavy_task</code> (DFT/CHGNet/GIS),
+              <code>can_create_public_draft</code> (public-facing artifact prep), and
+              <code>can_update_memory</code> (write into the AI engine's learning memory).
+              Every project denies all three by default;
+              <strong>only <code>materials</code> grants <code>can_update_memory</code></strong>
+              (its own memory). The full canonical list is now eight gates wide.</li>
+          <li><strong>Belt+braces invariants (asserted by the test suite):</strong>
+              no project grants <code>can_execute_heavy_task</code>;
+              no project grants <code>can_create_public_draft</code>;
+              only <code>materials</code> grants <code>can_update_memory</code>;
+              unknown project denies all eight gates;
+              the M18 invariants on the original five gates remain unchanged.</li>
+          <li><strong>CLI:</strong>
+              <code>scripts/multi_ai_scoreboard.py</code> renders the dashboard
+              (<code>--db</code> / <code>--out-dir</code> / <code>--since-hours</code> /
+              <code>--json</code>). Live smoke against an empty ledger returns the canonical
+              schema tag, six projects, eight gates per project, and zeroed totals across the
+              seven statuses.</li>
+          <li>safety invariants: M19 ships <strong>no permission grants</strong> beyond
+              <code>can_update_memory=true</code> for materials. Still no auto-DFT, no
+              auto-publication, no auto-commits, no consensus surface. The unified-lab
+              daemon picks up the new tables on next process restart; no mid-loop
+              disruption.
+              <strong>26 new tests; 1,214 / 1,214 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1237,7 +1307,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,188 / 1,188 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,214 / 1,214 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
