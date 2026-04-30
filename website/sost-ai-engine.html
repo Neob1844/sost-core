@@ -282,7 +282,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.14.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.16.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -299,7 +299,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,051 / 1,051 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; network OFF by default</span>
+      <span class="val">1,152 / 1,152 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -797,6 +797,143 @@
         </ul>
       </div>
     </div>
+
+    <!-- M15 (Console Persistence + Operator Workflow) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M15 &mdash; Console Persistence + Operator Workflow</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Turns the M14 console into a daily cockpit: every action is now persisted in SQLite,
+          conversations can be reloaded and exported, the action surface covers review-pack /
+          outcome / daemon / operator-status / learning-report / dossier-list / campaign-list,
+          and a strict report browser lets the operator read internal artifacts without ever
+          leaving the safe allowlist. <strong>All security locks remain in place.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>M15-1 &mdash; SQLite Chat Persistence:</strong> the routes layer auto-writes
+              a turn-pair into <code>console_messages</code> + <code>console_actions</code> on
+              every persistable action; the in-memory ring stays as a lightweight audit cache.
+              <code>ConsoleState.current_session_id</code> is filled lazily on the first action.
+              New endpoints <code>GET /api/history</code>, <code>GET /api/history/load</code>,
+              <code>POST /api/history/{new,rename,clear}</code> with explicit
+              <code>confirm="CLEAR_CONSOLE_HISTORY"</code> guard. The session token NEVER appears
+              in any persisted row. (14 tests)</li>
+          <li><strong>M15-2 &mdash; Full Safe Action Wiring:</strong> review_pack &rarr;
+              <code>project_observer.snapshot_all + review_pack.build_review_pack</code>;
+              outcome_record &rarr; <code>OutcomeEvent + outcome_ingestor.ingest</code>;
+              daemon_once &rarr; <code>autonomous_daemon.run_once</code> with
+              <code>dry_run=True</code> always, <code>allow_paid=False</code>, console-side hard
+              caps <code>max_tasks &le; 25</code> / <code>max_runtime &le; 300 s</code>;
+              operator_status &rarr; full <code>operator_command_center.collect</code>;
+              operator_risks &rarr; P0/P1 filter; learning_report &rarr;
+              <code>learning_report.generate</code>; validation_dossiers / validation_campaigns
+              &rarr; their respective M11/M12 indexes. (14 tests)</li>
+          <li><strong>M15-3 &mdash; Report Browser 2.0:</strong> stdlib report browser with
+              positive read allowlist. <code>resolve_safe(rel)</code> rejects absolute paths,
+              parent-traversal, ".." inside any segment, and symlinks that escape
+              <code>reports/ai_engine/</code>. New routes <code>GET /api/reports/{tree,view,
+              search}</code> &mdash; HTML files are tagged <code>html_escaped</code>, never
+              rendered as live HTML. Search is case-insensitive, capped at 200 hits and 64 KB
+              per file. (15 tests)</li>
+          <li><strong>M15-4 &mdash; UI Workflow Polish:</strong> sidebar CHATS list backed by
+              <code>/api/history</code>; + NEW button; EXPORT button (copies the exact CLI
+              command to the clipboard &mdash; the export script writes to disk, not the JS);
+              CLEAR button with a confirmation modal; creativity selector (conservative /
+              speculative / wild / fantastic / red_team) sent on every prompt; per-mode
+              placeholder hints; run-status spinner on the Send button. No new external
+              dependencies; <code>eval()</code> / <code>Function()</code> / external scripts
+              still absent. (17 tests)</li>
+          <li><strong>M15-5 &mdash; Provider Status Panel:</strong>
+              <code>GET /api/providers/status</code> returns booleans only:
+              <code>ollama_available</code> (via <code>shutil.which</code>, never executed),
+              <code>paid_locked: true</code>, <code>publication_locked: true</code>,
+              <code>network_enabled: false</code> by default, plus six
+              <code>*_token_present</code> booleans (OPENROUTER / HUGGINGFACE / ANTHROPIC /
+              OPENAI / GROQ / TOGETHER) &mdash; only <code>bool(env_var)</code>, never the
+              value itself. The status reader makes no network call. (7 tests)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M16 (Speculative Discovery Lab) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">M16 &mdash; Speculative Discovery Lab + Real Ideation Engine</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The console no longer answers <em>"Generate 20 membrane ideas"</em> with generic
+          policy text. M16 turns the SOST AI Engine into an internal speculative scientist:
+          it invents structured hypotheses with mechanism, falsifier and validation path; it
+          separates plausible from speculative-but-testable from wild from fantastic; and it
+          self-criticizes every idea. <strong>Everything stays internal_only.</strong> Nothing
+          publishes, nothing executes DFT/CHGNet/GIS, nothing uses paid AI.
+        </p>
+        <ul class="spec-list">
+          <li><strong>Idea schema:</strong> <code>Idea</code> dataclass with stable 16-char id
+              (sha256 of <code>project|domain|title</code>), five score fields clamped to
+              [0,1] (novelty / plausibility / utility / falsifiability / absurdity), seven
+              evidence levels (locally_supported / plausible / speculative_but_testable /
+              wild_but_testable / fantastic_unvalidated / non_testable_now / rejected),
+              publishability defaulting to internal_only, and a <code>priority()</code> rule
+              that drops to P3 for any non-testable idea regardless of score.</li>
+          <li><strong>Five creativity dials:</strong> conservative / speculative (default) /
+              wild / fantastic / red_team. The dial drives both the generator's score priors
+              and the evidence-level distribution; conservative caps absurdity, fantastic
+              admits non-testable, red_team is the self-critic.</li>
+          <li><strong>Six domain generators:</strong> materials/membrane (6 family x 8 target
+              combinatorics with 7 stock failure modes), materials/catalyst (6 family x 7
+              reaction), materials/photovoltaic (5 family x 5 risk), materials/ion_separation
+              (8 ion targets), geaspirit/theory (8 cross-layer theories with public-safety
+              risks), useful_compute/heavy_task (7 task kinds with fake-heavy guards). Each
+              uses a sha256-derived RNG so the same prompt reproduces the same set.</li>
+          <li><strong>Self-critic / red-team:</strong> per-idea <code>Critique</code> with
+              strongest_for / strongest_against / easiest_falsifier / most_likely_failure /
+              promotes_if / kills_if. Every idea has a falsifier; ideas with
+              <code>falsifiability_score &lt; 0.3</code> cannot rank above low priority.</li>
+          <li><strong>Learning integration:</strong> the scorer reads M10
+              <code>learning_adjustments</code> and lowers patterns previously rejected,
+              flagging them <code>known_weak_pattern</code>. Wild / fantastic creativity may
+              still revisit weak patterns but they are clearly labelled.</li>
+          <li><strong>Output folder:</strong> every batch writes
+              <code>reports/ai_engine/ideas/&lt;UTC&gt;_&lt;slug&gt;/</code> with
+              <code>ideas.md</code>, <code>ideas.jsonl</code>, <code>ranking.csv</code>,
+              <code>falsifiers.md</code>, <code>validation_paths.md</code>,
+              <code>risk_report.md</code>, <code>manifest.json</code> (schema
+              <code>sost_ai_ideas@v1</code>), and <code>checksums.sha256</code> covering the
+              other files. <code>idea_index</code> SQLite table for fast filtered queries.</li>
+          <li><strong>DFT priority fix:</strong> the canonical "What candidates deserve DFT?"
+              prompt now returns either a <strong>ranked candidate table</strong> built from
+              M11 dossiers + M12 campaigns, or an explicit "no concrete candidate" message
+              that points at the standalone scripts. <strong>Never claims DFT validation when
+              no DFT artifact exists.</strong></li>
+          <li><strong>Console wiring:</strong> the <code>ideate</code> action returns the
+              numbered idea list (mechanism / why-might-work / why-might-fail / first-test /
+              falsifier / next step per idea). The <code>discover</code> action uses the
+              same engine with <code>creativity="fantastic"</code> by default; the M13
+              typed-theory-graph deferral is surfaced as a warning, not a refusal. (38 tests)</li>
+          <li><strong>CLI:</strong> <code>scripts/multi_ai_generate_ideas.py</code> mirrors
+              the engine for offline use: <code>--project</code>, <code>--domain</code>,
+              <code>--count</code>, <code>--creativity</code>, <code>--prompt</code>,
+              <code>--json</code>, <code>--no-render</code>, <code>--no-persist</code>.</li>
+          <li>safety invariants: every idea is <code>internal_only</code> by default;
+              fantastic / non_testable_now ideas keep that publishability; the renderer
+              honours the M14 write allowlist; the engine never calls the network and never
+              spawns a subprocess; all randomness is deterministic from the prompt + count
+              + creativity tuple.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -972,12 +1109,12 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,051 / 1,051 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,152 / 1,152 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
         <tr><td>Paid model calls per run (default)</td><td><span class="pill green">0</span> &mdash; paid is OFF by default</td></tr>
-        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 38 internal tables (9 added in M10 for the outcome learning loop, 3 added in M11 for the dossier factory: validation_dossiers, validation_experiments, dossier_index, 4 added in M12 for the campaign orchestrator: validation_campaigns, campaign_dossiers, campaign_approvals, campaign_index, 3 added in M14 for the private console: console_sessions, console_messages, console_actions)</td></tr>
+        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 39 internal tables (9 added in M10 for the outcome learning loop, 3 added in M11 for the dossier factory: validation_dossiers, validation_experiments, dossier_index, 4 added in M12 for the campaign orchestrator: validation_campaigns, campaign_dossiers, campaign_approvals, campaign_index, 3 added in M14 for the private console: console_sessions, console_messages, console_actions, 1 added in M16 for the speculative discovery lab: idea_index)</td></tr>
         <tr><td>Public outputs</td><td><span class="pill red">none autonomous</span> &mdash; human review required</td></tr>
         <tr><td>Source license</td><td>private repo &mdash; outputs only released after audit</td></tr>
       </tbody>
