@@ -1024,14 +1024,30 @@ async function rpc(m,p){
   p=p||[];
   var hdrs={'Content-Type':'application/json'};
   if(RPC_USER&&RPC_PASS)hdrs['Authorization']='Basic '+btoa(RPC_USER+':'+RPC_PASS);
+  // Per-attempt timeout: 15s. The chain RPC is normally <100ms, but
+  // when the node is busy (e.g. serving a miner over the same RPC),
+  // bursts of 10+ parallel reads from this page can occasionally take
+  // a few seconds. 15s avoids the AbortController firing on healthy
+  // nodes; loadBlocks() also paralellises requests so the wall-clock
+  // budget stays small.
+  var TIMEOUT_MS=15000;
   for(var a=0;a<3;a++){try{
-    var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},8000);
+    var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},TIMEOUT_MS);
     var r=await fetch(RPC,{method:'POST',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal});
     clearTimeout(tid);
     if(r.status===401)throw new Error('Authentication failed (401) — check RPC username and password');
     if(!r.ok)throw new Error('HTTP '+r.status+' '+r.statusText);
     var d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
-  }catch(e){if(a===2)throw e;await new Promise(function(r){setTimeout(r,300*(a+1));});}}
+  }catch(e){
+    var msg=String((e&&e.message)||e);
+    if(msg.indexOf('aborted')!==-1||(e&&e.name==='AbortError')){
+      // Replace the cryptic browser default ("signal is aborted without
+      // reason") with something an operator can act on.
+      e=new Error('RPC timeout: '+m+' ('+(TIMEOUT_MS/1000)+'s, attempt '+(a+1)+'/3)');
+    }
+    if(a===2)throw e;
+    await new Promise(function(r){setTimeout(r,300*(a+1));});
+  }}
 }
 function connectRPC(){RPC=document.getElementById('rpcUrl').value.trim().replace(/\/+$/,'');RPC_USER=document.getElementById('rpcUser').value.trim();RPC_PASS=document.getElementById('rpcPass').value.trim();off=0;prevH=0;var authCards=document.querySelectorAll('.auth-only');for(var i=0;i<authCards.length;i++)authCards[i].style.display=(RPC_USER&&RPC_PASS)?'':'none';refresh();}
 function fT(ts){var d=Date.now()/1000-ts;if(d<60)return Math.floor(d)+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h '+Math.floor((d%3600)/60)+'m ago';return new Date(ts*1000).toISOString().slice(0,16).replace('T',' ');}
@@ -2674,12 +2690,23 @@ function updateMiningPanel(elapsed){
 async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';}}
 async function loadBlocks(){
   var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="8" class="ld">loading blocks</td></tr>';
-  try{var s=H-off,e=Math.max(s-PS+1,0),rows=[];
-    for(var h=s;h>=e;h--){var hash=await rpc('getblockhash',[String(h)]);rows.push(await rpc('getblock',[hash]));}
+  try{
+    var s=H-off,e=Math.max(s-PS+1,0);
+    // Build the height list, plus one extra older height so we can show
+    // the interval for the OLDEST block in the page without a second
+    // serial round-trip after rendering.
+    var heights=[];for(var h=s;h>=e;h--)heights.push(h);
+    var includeExtra=(e>0);if(includeExtra)heights.push(e-1);
+    // Phase 1: all getblockhash calls in parallel.
+    var hashes=await Promise.all(heights.map(function(hh){return rpc('getblockhash',[String(hh)]);}));
+    // Phase 2: all getblock calls in parallel.
+    var blocks=await Promise.all(hashes.map(function(hh){return rpc('getblock',[hh]);}));
+    var rows=includeExtra?blocks.slice(0,blocks.length-1):blocks;
+    var extraOlder=includeExtra?blocks[blocks.length-1]:null;
     document.getElementById('blockRange').textContent='['+e+'..'+s+'] of '+H;tb.innerHTML='';
     for(var i=0;i<rows.length;i++){var b=rows[i];var txC=b.tx_count||b.num_tx||1;
       var iv='\u2014';if(i<rows.length-1){var d=b.time-rows[i+1].time;iv=d<60?d+'s':Math.floor(d/60)+'m '+d%60+'s';}
-      else if(b.height>0){try{var ph=await rpc('getblockhash',[String(b.height-1)]);var pb=await rpc('getblock',[ph]);var d2=b.time-pb.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}catch(ex){}}
+      else if(extraOlder&&b.height>0){var d2=b.time-extraOlder.time;iv=d2<60?d2+'s':Math.floor(d2/60)+'m '+d2%60+'s';}
       var tr=document.createElement('tr');if(b.height===H&&off===0&&i===0)tr.className='new-row';
       var blockProfileLabel=b.casert_mode?('<span style="color:'+getLevelColor(getCasertLevel(computeBlockLag(b.height,b.time)))+';font-weight:600">'+b.casert_mode+'</span>'):getLevelLabel(computeBlockLag(b.height,b.time));
       var minerAddr=b.miner_address||'';
