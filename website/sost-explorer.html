@@ -2687,7 +2687,49 @@ function updateMiningPanel(elapsed){
     }
   }
 }
-async function loadStats(){try{var i=await rpc('getinfo');if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);document.getElementById('offBanner').classList.remove('show');return true;}catch(e){document.getElementById('offBanner').classList.add('show');document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';return false;}}
+async function loadStats(){
+  try{
+    var i=await rpc('getinfo');
+    if(i.blocks>prevH&&prevH>0)showNewBlockToast(i.blocks);
+    prevH=H;H=i.blocks;renderStats(i);await updateDashboard(i);drawEmissionChart(H);
+    document.getElementById('offBanner').classList.remove('show');
+    return true;
+  }catch(e){
+    // getinfo is the heaviest read on the public RPC — it aggregates
+    // mempool, peers, cASERT, fee estimates, etc. When the node is
+    // busy serving the miner, it can take >10 s and nginx returns
+    // 504 Gateway Timeout. Rather than parking the page on the
+    // 'offline' banner, fall back to two cheap RPCs (getblockcount +
+    // getrawmempool) and render a degraded view so the operator can
+    // still see the latest height and mempool size while the node
+    // recovers.
+    try{
+      var blocks=await rpc('getblockcount');
+      var mempool=await rpc('getrawmempool').catch(function(){return [];});
+      var stub={
+        blocks: blocks,
+        difficulty: 0,
+        connections: 0,
+        mempool_size: Array.isArray(mempool)?mempool.length:0,
+        utxo_count: 0,
+        version: '?',
+        balance: '?'
+      };
+      if(blocks>prevH&&prevH>0)showNewBlockToast(blocks);
+      prevH=H;H=blocks;renderStats(stub);await updateDashboard(stub);drawEmissionChart(H);
+      document.getElementById('offBanner').classList.remove('show');
+      var deg=document.getElementById('statsCode');
+      if(deg){
+        deg.innerHTML+='\n<span class="s-comment">// degraded: getinfo timed out (504) \u2014 showing height + mempool only</span>';
+      }
+      return true;
+    }catch(e2){
+      document.getElementById('offBanner').classList.add('show');
+      document.getElementById('statsCode').innerHTML='<span class="s-comment">// \u25B2 cannot connect to '+RPC+'</span>';
+      return false;
+    }
+  }
+}
 async function loadBlocks(){
   var tb=document.getElementById('blocksBody');if(!tb.children.length||tb.querySelector('.ld'))tb.innerHTML='<tr><td colspan="8" class="ld">loading blocks</td></tr>';
   try{
