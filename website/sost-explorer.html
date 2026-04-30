@@ -390,10 +390,29 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <b style="color:var(--text)">What changes at block 6700.</b>
       The staged relief switches from <code>drop 3 every 60 s starting at 540 s</code> to <code>drop 1 every 60 s starting at 600 s</code>. Floor stays at <code>E7</code>. Anti-stall, lag clamp, future-timestamp drift and bitsQ are all unchanged.<br><br>
 
-      <span style="color:var(--text3)">Schedule from a base of H10:<br>
-      &middot; 600s &rarr; H9 &middot; 660s &rarr; H8 &middot; 720s &rarr; H7 &middot; 780s &rarr; H6 &middot; 840s &rarr; H5<br>
-      &middot; 900s &rarr; H4 &middot; 960s &rarr; H3 &middot; 1020s &rarr; H2 &middot; 1080s &rarr; H1 &middot; 1140s &rarr; B0<br>
-      &middot; 1200s &rarr; E1 &middot; 1260s &rarr; E2 &middot; 1320s &rarr; E3 &middot; 1380s &rarr; E4 &middot; 1440s &rarr; E5 &middot; 1500s &rarr; E6 &middot; 1560s+ &rarr; E7 (floor)</span><br><br>
+      <span style="color:var(--text3)">The formula is base-agnostic. <code>raw_base_H</code> (the cASERT lag-driven decision before clamps) lives in <b style="color:var(--text2)">[B0, H13]</b> &mdash; never negative, because <code>target_profile</code> is clamped at B0 when <code>lag &le; 0</code> (chain ahead of schedule). The cascade then maps that base to <b style="color:var(--text2)">[E7, H13]</b>. Effective profile per base:<br>
+      <code style="color:var(--text2)">&nbsp;&nbsp;eff(elapsed, base) = max(base &minus; floor((elapsed&minus;600)/60) &minus; 1, E7)</code>&nbsp;&nbsp;for <code>elapsed &ge; 600 s</code>.<br><br>
+      Realistic bases (chain currently sees H9-H10; H11-H13 only on severe lag events):</span>
+      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
+        <tr style="background:rgba(255,255,255,.04);color:var(--text)">
+          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">elapsed</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">drop</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H10 base</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H11 base</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H12 base</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H13 base</th>
+        </tr>
+        <tr><td style="padding:2px 8px">&lt; 600 s</td><td style="text-align:right;padding:2px 8px">0</td><td style="text-align:right;padding:2px 8px">H10</td><td style="text-align:right;padding:2px 8px">H11</td><td style="text-align:right;padding:2px 8px">H12</td><td style="text-align:right;padding:2px 8px">H13</td></tr>
+        <tr><td style="padding:2px 8px">600 s</td><td style="text-align:right;padding:2px 8px">1</td><td style="text-align:right;padding:2px 8px">H9</td><td style="text-align:right;padding:2px 8px">H10</td><td style="text-align:right;padding:2px 8px">H11</td><td style="text-align:right;padding:2px 8px">H12</td></tr>
+        <tr><td style="padding:2px 8px">720 s</td><td style="text-align:right;padding:2px 8px">3</td><td style="text-align:right;padding:2px 8px">H7</td><td style="text-align:right;padding:2px 8px">H8</td><td style="text-align:right;padding:2px 8px">H9</td><td style="text-align:right;padding:2px 8px">H10</td></tr>
+        <tr><td style="padding:2px 8px">900 s</td><td style="text-align:right;padding:2px 8px">6</td><td style="text-align:right;padding:2px 8px">H4</td><td style="text-align:right;padding:2px 8px">H5</td><td style="text-align:right;padding:2px 8px">H6</td><td style="text-align:right;padding:2px 8px">H7</td></tr>
+        <tr><td style="padding:2px 8px">1140 s</td><td style="text-align:right;padding:2px 8px">10</td><td style="text-align:right;padding:2px 8px">B0</td><td style="text-align:right;padding:2px 8px">H1</td><td style="text-align:right;padding:2px 8px">H2</td><td style="text-align:right;padding:2px 8px">H3</td></tr>
+        <tr><td style="padding:2px 8px">1320 s</td><td style="text-align:right;padding:2px 8px">13</td><td style="text-align:right;padding:2px 8px">E3</td><td style="text-align:right;padding:2px 8px">E2</td><td style="text-align:right;padding:2px 8px">E1</td><td style="text-align:right;padding:2px 8px">B0</td></tr>
+        <tr><td style="padding:2px 8px">1500 s</td><td style="text-align:right;padding:2px 8px">16</td><td style="text-align:right;padding:2px 8px">E6</td><td style="text-align:right;padding:2px 8px">E5</td><td style="text-align:right;padding:2px 8px">E4</td><td style="text-align:right;padding:2px 8px">E3</td></tr>
+        <tr style="color:var(--text);background:rgba(74,222,128,0.05)"><td style="padding:2px 8px">1560 s</td><td style="text-align:right;padding:2px 8px">17</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E6</td><td style="text-align:right;padding:2px 8px">E5</td><td style="text-align:right;padding:2px 8px">E4</td></tr>
+        <tr style="color:var(--text);background:rgba(74,222,128,0.05)"><td style="padding:2px 8px">1740 s+</td><td style="text-align:right;padding:2px 8px">20+</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td></tr>
+      </table>
+      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">&#9632; = E7 floor (<code>CASERT_H_MIN</code>). H13 reaches the floor at 1740 s (29 min), still well below the anti-stall floor of 3600 s (60 min). For lower bases (B0, H1-H9), the same formula applies; e.g. raw_base_H = B0 reaches E7 at 1020 s. Profile floor and anti-stall remain the second safety net.</span><br><br>
 
       <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b> The fork only refines how the relief cascade descends; it does not change who is allowed to mine, how much they earn, or how blocks are validated.<br><br>
 

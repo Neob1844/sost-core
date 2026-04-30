@@ -96,38 +96,82 @@ below `CASERT_STAGED_RELIEF_HEIGHT` — historical compatibility.
 
 ### Schedule
 
-Effective profile vs elapsed for a base of H10:
+The cascade formula is **base-agnostic**:
 
 ```
-elapsed (s)   eff profile
- < 600        H10 (no relief)
-   600        H9   (drop 1)
-   660        H8   (drop 2)
-   720        H7   (drop 3)
-   780        H6   (drop 4)
-   840        H5   (drop 5)
-   900        H4   (drop 6)
-   960        H3   (drop 7)
-  1020        H2   (drop 8)
-  1080        H1   (drop 9)
-  1140        B0   (drop 10)
-  1200        E1   (drop 11)
-  1260        E2   (drop 12)
-  1320        E3   (drop 13)
-  1380        E4   (drop 14)
-  1440        E5   (drop 15)
-  1500        E6   (drop 16)
-  1560+       E7   (floor)
+eff(elapsed, base) = max(base − floor((elapsed − 600) / 60) − 1, E7)
+                                                     for elapsed ≥ 600 s
 ```
+
+`base` here is the **`raw_base_H`** captured by `casert_compute` BEFORE
+any clamps (V8 single-step relief, lag-clamp, anti-stall, V9 staged).
+That value is bounded:
+
+```
+raw_base_H ∈ [B0, H13]    (i.e. [0, +13])
+```
+
+It is **never negative** because `target_profile` is clamped to B0
+when `lag ≤ 0` (chain ahead of schedule — see `casert.cpp:326`). The
+upper bound is the active height-tier ceiling
+(`CASERT_HARD_PROFILE_CEILING_H13` for height ≥ 5750).
+
+The cascade then maps `raw_base_H` into `[E7, H13]` for the declared
+profile.
+
+#### Effective profile per base — full table
+
+| elapsed (s) | drop | base = B0 | H1  | H5  | H9  | **H10** | H11 | H12 | H13 |
+|------------:|-----:|----------:|----:|----:|----:|--------:|----:|----:|----:|
+| < 600       |   0  | B0        | H1  | H5  | H9  | **H10** | H11 | H12 | H13 |
+| 600         |   1  | E1        | B0  | H4  | H8  | **H9**  | H10 | H11 | H12 |
+| 660         |   2  | E2        | E1  | H3  | H7  | **H8**  | H9  | H10 | H11 |
+| 720         |   3  | E3        | E2  | H2  | H6  | **H7**  | H8  | H9  | H10 |
+| 780         |   4  | E4        | E3  | H1  | H5  | **H6**  | H7  | H8  | H9  |
+| 840         |   5  | E5        | E4  | B0  | H4  | **H5**  | H6  | H7  | H8  |
+| 900         |   6  | E6        | E5  | E1  | H3  | **H4**  | H5  | H6  | H7  |
+| 960         |   7  | E7 ▣      | E6  | E2  | H2  | **H3**  | H4  | H5  | H6  |
+| 1020        |   8  | E7 ▣      | E7 ▣| E3  | H1  | **H2**  | H3  | H4  | H5  |
+| 1080        |   9  | E7 ▣      | E7 ▣| E4  | B0  | **H1**  | H2  | H3  | H4  |
+| 1140        |  10  | E7 ▣      | E7 ▣| E5  | E1  | **B0**  | H1  | H2  | H3  |
+| 1200        |  11  | E7 ▣      | E7 ▣| E6  | E2  | **E1**  | B0  | H1  | H2  |
+| 1260        |  12  | E7 ▣      | E7 ▣| E7 ▣| E3  | **E2**  | E1  | B0  | H1  |
+| 1320        |  13  | E7 ▣      | E7 ▣| E7 ▣| E4  | **E3**  | E2  | E1  | B0  |
+| 1380        |  14  | E7 ▣      | E7 ▣| E7 ▣| E5  | **E4**  | E3  | E2  | E1  |
+| 1440        |  15  | E7 ▣      | E7 ▣| E7 ▣| E6  | **E5**  | E4  | E3  | E2  |
+| 1500        |  16  | E7 ▣      | E7 ▣| E7 ▣| E7 ▣| **E6**  | E5  | E4  | E3  |
+| 1560        |  17  | E7 ▣      | E7 ▣| E7 ▣| E7 ▣| **E7 ▣**| E6  | E5  | E4  |
+| 1620        |  18  | E7 ▣      | E7 ▣| E7 ▣| E7 ▣| **E7 ▣**| E7 ▣| E6  | E5  |
+| 1680        |  19  | E7 ▣      | E7 ▣| E7 ▣| E7 ▣| **E7 ▣**| E7 ▣| E7 ▣| E6  |
+| 1740+       |  20+ | E7 ▣      | E7 ▣| E7 ▣| E7 ▣| **E7 ▣**| E7 ▣| E7 ▣| E7 ▣|
+
+▣ = at the E7 floor (`CASERT_H_MIN`). H10 is highlighted because it
+is the most common base on the live chain (recent data showed
+raw_base_H ≈ H9–H10 across 40 post-V9 blocks).
+
+**Time-to-E7 by base** (the worst case the chain has to absorb at a
+single block before anti-stall kicks in at 3600 s = 60 min):
+
+| base   | elapsed at E7 | minutes |
+|-------:|--------------:|--------:|
+| B0     | 1020 s        | 17.0 m  |
+| H1     | 1080 s        | 18.0 m  |
+| H5     | 1500 s        | 25.0 m  |
+| H9     | 1500 s        | 25.0 m  |
+| **H10**| **1560 s**    | **26.0 m** |
+| H11    | 1620 s        | 27.0 m  |
+| H12    | 1680 s        | 28.0 m  |
+| H13    | 1740 s        | 29.0 m  |
+
+All well below the 60 min anti-stall threshold.
 
 For comparison, the V9 schedule (drop 3 from 540 s) reaches E7 at
-840 s; V10 reaches it at 1560 s. The relief is gentler and
-combines with bitsQ instead of overshooting it.
+840 s for H10 (14 min); V10 reaches it at 1560 s (26 min). The relief
+is gentler and combines with bitsQ instead of overshooting it.
 
 ## Monte Carlo fairness comparison
 
-`scripts/relief_valve_simulator.py` (in
-`materials-engine-private`) compares the three schemes against
+`scripts/relief_valve_simulator.py` (in this repo) compares the three schemes against
 the live miner profile (1 dominant @ 195 attempts/s, 1 medium
 @ 90, 1 remote @ 36, 2 small @ 22 / 12).
 
