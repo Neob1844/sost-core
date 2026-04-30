@@ -282,7 +282,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.8.0 &middot; Phase 3 Milestones M1–M10</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.10.0 &middot; Phase 3 Milestones M1–M12</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -299,7 +299,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">649 / 649 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; network OFF by default</span>
+      <span class="val">904 / 904 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -623,6 +623,66 @@
         </ul>
       </div>
     </div>
+
+    <!-- M11 (Scientific Validation Planner + Dossier Factory) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M11 &mdash; Scientific Validation Planner + Dossier Factory</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          From "this candidate is interesting" to "this is the concrete next step, this is the
+          experiment, this is what would confirm or kill it". <strong>Internal-only, deterministic,
+          human-approved.</strong> A hypothesis becomes a structured dossier with current evidence,
+          missing evidence, recommended path (literature / CHGNet / DFT input / GeaSpirit layer
+          review / Useful Compute task design), draft experiments, deterministic pass/fail criteria,
+          coarse compute-cost class, P0&ndash;P4 priority and publishability tag (internal_only by
+          default). The AI may design validation work; it never executes heavy jobs and never
+          publishes scientific claims.
+        </p>
+        <ul class="spec-list">
+          <li><strong>M11-1 &mdash; Validation Dossier Core:</strong> <code>ValidationDossier</code> dataclass + 3 SQLite tables (<code>validation_dossiers</code>, <code>validation_experiments</code>, <code>dossier_index</code>), validation-plan router, <code>ExperimentSpec</code> dataclass with <code>execution_allowed=False</code> by default, deterministic pass/fail criteria, coarse cost-class estimator, priority + publishability policy, and the dossier renderer that writes <code>dossier.md</code>, <code>dossier.json</code>, <code>experiment_plan.json</code>, <code>go_no_go.md</code>, <code>commands_draft.sh</code> (mode 0644, every line <code>#</code>-commented), <code>README.md</code>, <code>checksums.sha256</code></li>
+          <li><strong>M11-2 &mdash; Materials Validation Planner:</strong> CHGNet / DFT plan builders (relaxation / static / band-structure / elastic-constants), Materials Go/No-Go (toxic / radioactive elements without strategic_value=high force HOLD; PGM catalysts always flag cost-of-deployment risk; literature + CHGNet support required for DFT GO unless P0/P1 promotion), per-experiment templates that NEVER invent energies, gaps or stability conclusions</li>
+          <li><strong>M11-3 &mdash; GeaSpirit Validation Planner:</strong> layer-gap analyzer (geology, lithology, magnetics, gravity, AEM, EMIT, drilling, geochemistry, false-positive filters, spatial block validation), publication-safety reviewer (depth claims based on satellite alone are BLOCKED; depth confirmation requires magnetics / gravity / AEM / drilling + human approval), single-sensor anomaly without geology = NO-GO</li>
+          <li><strong>M11-4 &mdash; Useful Compute Heavy Task Designer:</strong> <code>HeavyTaskSpec</code> with input/output schema, deterministic requirements, verification method, runtime target, dependency requirements, hardware requirements, and risk lists; conservative go/no-go (fake CPU burn / busy-wait / loop-forever &rarr; REJECT; too-light tasks &rarr; REJECT; paid / proprietary deps &rarr; REJECT; DFT-class without pinned version + pseudopotentials + tolerances + container &rarr; HOLD <code>needs_reproducibility_solution</code>); benchmark + verification plans as DRAFT-ONLY; <strong>strongest verdict the AI can issue is <code>ready_for_benchmark</code></strong> &mdash; the rewarded phase remains gated by a separate human decision</li>
+          <li><strong>M11-5 &mdash; Dossier Index + Operator Integration:</strong> denormalised <code>dossier_index</code> for fast filtered queries, substring search by subject + project + type, Markdown operator summary grouped by project / priority / publishability, integration into <code>sost_ai_ops.py validation-dossiers</code> and into the <code>full-report</code> bundle</li>
+          <li>safety invariants: dossiers default to <code>internal_only</code>; <code>commands_draft.sh</code> is non-executable by construction; Materials candidates and GeaSpirit AOIs always default to <code>internal_only</code>; Useful Compute campaigns always default to <code>human_review_required</code>; public exposure routes through the existing <a href="sost-help.html">M9</a> export pipeline + human approval</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M12 (Validation Campaign Orchestrator) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">M12 &mdash; Validation Campaign Orchestrator</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          From individual dossiers to organised campaigns. <strong>Internal-only, deterministic,
+          human-approved.</strong> M11 decides what might be valid; M12 decides what to validate
+          first. A typed batch of dossiers is selected by a per-type policy, ranked, and packaged
+          into a draft-only execution pack (campaign.md, manifest.json, selected_dossiers.jsonl,
+          budget.md, risk_report.md, manual_execution_plan.md, do_not_run_automatically.md, README,
+          checksums) that the operator reviews before any compute or publication.
+        </p>
+        <ul class="spec-list">
+          <li><strong>M12-1 &mdash; Campaign Core:</strong> <code>ValidationCampaign</code> dataclass + 4 SQLite tables (<code>validation_campaigns</code>, <code>campaign_dossiers</code>, <code>campaign_approvals</code>, <code>campaign_index</code>), 12 campaign types (literature / CHGNet / DFT input / DFT relaxation draft / GeaSpirit layer review / GeaSpirit public safety / Useful Compute heavy benchmark design / Useful Compute reproducibility / Useful Compute fake-heavy rejection / Useful Compute schema design / public-wording safety / miner support improvement), status transitions ONLY through <code>record_approval(...)</code> (<code>draft &rarr; ready_for_human_review &rarr; approved_for_manual_execution &rarr; completed</code>), <code>execution_allowed=False</code> default that the system never flips, deterministic per-type selector + family/application diversification + coarse budget estimator</li>
+          <li><strong>M12-2 &mdash; Materials Validation Campaigns:</strong> M10 outcome bias re-rank (per-family boost / penalty pulled from <code>learning_adjustments</code>), CHGNet excludes red-flag candidates, DFT-class campaigns require literature + CHGNet support OR an explicit P0/P1 promotion, family-aware diversification (at most two same-family candidates before falling back), per-pack extras: <code>selected_materials.csv</code>, <code>selected_materials.jsonl</code>, <code>go_no_go.md</code></li>
+          <li><strong>M12-3 &mdash; GeaSpirit Validation Campaigns:</strong> AOI-aware re-rank (richer layer inventory first for layer-review; blocked claims first for public-safety), aggregator that turns per-AOI verdicts into a campaign-level <code>go / hold / block_public</code>, per-pack extras: <code>selected_aoi_claims.jsonl</code>, <code>layer_gap_matrix.csv</code>, <code>public_safety_matrix.md</code>, <code>go_no_go.md</code></li>
+          <li><strong>M12-4 &mdash; Useful Compute Heavy Campaigns:</strong> readiness-based bucketing (ready_for_benchmark / needs_reproducibility / fake_heavy / needs_schema_design), strongest verdict is "go to internal benchmark" &mdash; <strong>never "go to rewarded phase"</strong>, per-pack extras: <code>selected_heavy_tasks.jsonl</code>, <code>benchmark_matrix.csv</code>, <code>reproducibility_matrix.md</code>, <code>input_output_schema_needs.md</code>, <code>go_no_go.md</code></li>
+          <li><strong>M12-5 &mdash; Campaign Operator Integration:</strong> <code>campaign_index</code> rebuild + filtered queries, substring search by title + type + project, Markdown operator summary, <code>sost_ai_ops.py validation-campaigns</code> and <code>campaign-next-actions</code> subcommands, automatic inclusion in the <code>full-report</code> bundle</li>
+          <li>safety invariants: AI does NOT generate Useful Compute task queues, NOT modify task_server / worker, NOT activate rewards, NOT run CHGNet / DFT, NOT download rasters, NOT run GIS pipelines; <code>manual_execution_plan.md</code> is mode 0644 with every line shell-commented (<code>sh manual_execution_plan.md</code> is a no-op); <code>do_not_run_automatically.md</code> ships in every pack as an explicit reminder</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -798,12 +858,12 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>649 / 649 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10)</td></tr>
+        <tr><td>Tests passing</td><td>904 / 904 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
         <tr><td>Paid model calls per run (default)</td><td><span class="pill green">0</span> &mdash; paid is OFF by default</td></tr>
-        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 28 internal tables (9 added in M10: outcome_events, learning_adjustments, m10_pattern_memory, learning_reports, operator_actions, operator_reports, support_cases, reply_drafts, help_refresh_suggestions)</td></tr>
+        <tr><td>Persistence</td><td>SQLite, idempotent migrations, 35 internal tables (9 added in M10 for the outcome learning loop, 3 added in M11 for the dossier factory: validation_dossiers, validation_experiments, dossier_index, 4 added in M12 for the campaign orchestrator: validation_campaigns, campaign_dossiers, campaign_approvals, campaign_index)</td></tr>
         <tr><td>Public outputs</td><td><span class="pill red">none autonomous</span> &mdash; human review required</td></tr>
         <tr><td>Source license</td><td>private repo &mdash; outputs only released after audit</td></tr>
       </tbody>
