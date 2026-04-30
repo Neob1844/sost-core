@@ -426,18 +426,18 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       The behaviour still needs to be tested under much higher hashrate, but the rules are the same.<br><br>
 
       <b style="color:var(--text)">Monte Carlo fairness — 5 000 blocks per scheme, seed = 42.</b>
-      Compares V8 (single cliff at 605 s), V9 (drop 3 every 60 s from 540 s) and V10 (drop 1 every 60 s from 600 s) against a five-miner mix sized to the live chain (1 dominant 192 c, 1 medium 64 c, 1 remote 12 c WSL, 1 small 8 c, 1 small 4 c remote). Reproducible with <code>scripts/relief_valve_simulator.py --schemes current,staged,granular --n-blocks 5000 --seed 42</code>.<br>
+      Compares V8 (single cliff at 605 s), V9 (drop 3 every 60 s from 540 s) and V10 (drop 1 every 60 s from 600 s) against a five-miner mix sized to the live chain (five anonymised miner profiles spanning the typical hashrate spread). Reproducible with <code>scripts/relief_valve_simulator.py --schemes current,staged,granular --n-blocks 5000 --seed 42</code>.<br>
       <table style="border-collapse:collapse;font-size:10px;margin-top:8px;color:var(--text2);width:100%;max-width:760px">
         <tr style="background:rgba(255,255,255,.04);color:var(--text)">
           <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border-dim)">scheme</th>
           <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">avg blk</th>
           <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">stdev</th>
           <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">n_E7-class</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">dominant</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">vostokzyf</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">neob</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">small_8c</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">small_4c</th>
+          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_A</th>
+          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_B</th>
+          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_C</th>
+          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_D</th>
+          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_E</th>
         </tr>
         <tr><td style="padding:3px 8px">V8 cliff</td><td style="text-align:right;padding:3px 8px">400.4 s</td><td style="text-align:right;padding:3px 8px">242.8</td><td style="text-align:right;padding:3px 8px">1811</td><td style="text-align:right;padding:3px 8px">55.0&thinsp;%</td><td style="text-align:right;padding:3px 8px">25.2&thinsp;%</td><td style="text-align:right;padding:3px 8px">9.5&thinsp;%</td><td style="text-align:right;padding:3px 8px">6.8&thinsp;%</td><td style="text-align:right;padding:3px 8px">3.5&thinsp;%</td></tr>
         <tr><td style="padding:3px 8px">V9 staged</td><td style="text-align:right;padding:3px 8px">416.7 s</td><td style="text-align:right;padding:3px 8px">260.7</td><td style="text-align:right;padding:3px 8px">1896</td><td style="text-align:right;padding:3px 8px">54.9&thinsp;%</td><td style="text-align:right;padding:3px 8px">25.1&thinsp;%</td><td style="text-align:right;padding:3px 8px">10.2&thinsp;%</td><td style="text-align:right;padding:3px 8px">6.6&thinsp;%</td><td style="text-align:right;padding:3px 8px">3.2&thinsp;%</td></tr>

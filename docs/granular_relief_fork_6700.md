@@ -172,12 +172,12 @@ is gentler and combines with bitsQ instead of overshooting it.
 ## Monte Carlo fairness comparison
 
 `scripts/relief_valve_simulator.py` (in this repo) compares the three schemes against
-the live miner profile (1 dominant @ 195 attempts/s, 1 medium
+the live miner profile (1 miner_A @ 195 attempts/s, 1 medium
 @ 90, 1 remote @ 36, 2 small @ 22 / 12).
 
 5000 blocks per scheme, seed = 42:
 
-| scheme   | avg blk | stdev | n_E7-or-easier | dominant (all) | vostokzyf | neob | small_8c | small_4c |
+| scheme   | avg blk | stdev | n_E7-or-easier | miner_A (all) | miner_B | miner_C | miner_D | miner_E |
 |----------|---------|-------|----------------|---------------|-----------|------|----------|----------|
 | V8 cliff | 399.4 s | 244.6 | 1813           | 55.7 %        | 25.2 %    | 9.6 %| 6.4 %    | 3.1 %    |
 | V9 staged| 418.7 s | 259.0 | 1924           | 55.2 %        | 25.0 %    | 9.3 %| 6.9 %    | 3.6 %    |

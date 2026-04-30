@@ -133,7 +133,7 @@ def difficulty_continuous(elapsed_s: float) -> float:
 #   effective_H = max(base_H - drop, E7)
 #
 # No grace/cap (rejected: cap is unenforceable in consensus without a
-# commit-reveal seed; without one the dominant simply pre-mines with
+# commit-reveal seed; without one the miner_A simply pre-mines with
 # future timestamps). The fairness comes from removing the H10→E7
 # cliff, not from forcing a synchronised restart.
 
@@ -369,23 +369,23 @@ def run_scheme(
 # ---------------------------------------------------------------- presets
 
 PRESET_MINERS: List[MinerProfile] = [
-    MinerProfile(name="dominant_192c",
+    MinerProfile(name="miner_A",
                  hashrate=195.0,
                  rpc_latency=0.001,        # colocated with node
                  lag_check_period=0.5),    # aggressive polling
-    MinerProfile(name="vostokzyf_64c",
+    MinerProfile(name="miner_B",
                  hashrate=90.0,
                  rpc_latency=0.030,
                  lag_check_period=2.0),
-    MinerProfile(name="neob_12c_wsl",
+    MinerProfile(name="miner_C",
                  hashrate=36.0,
                  rpc_latency=0.180,         # Murcia → Frankfurt over SSH
                  lag_check_period=2.0),
-    MinerProfile(name="small_8c_home",
+    MinerProfile(name="miner_D",
                  hashrate=22.0,
                  rpc_latency=0.090,
                  lag_check_period=2.0),
-    MinerProfile(name="small_4c_remote",
+    MinerProfile(name="miner_E",
                  hashrate=12.0,
                  rpc_latency=0.220,
                  lag_check_period=2.0),
