@@ -1843,7 +1843,99 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
 
   const rawTx = bytesToHex(concatBytes(...parts));
   console.log('[TX] Raw SOST TX:', rawTx.substring(0, 80) + '... (' + rawTx.length/2 + ' bytes)');
-  return rawTx;
+  return { rawTx, selected };
+}
+
+// ============================================================
+// buildAndSignCancellationTx — RBF replacement for a pending TX.
+// Spends the SAME inputs as the original TX back to `returnAddr`
+// with a HIGHER absolute fee. The chain enforces full RBF
+// (mempool.cpp: rbf_enabled_=true, RBF_MIN_FEE_BUMP_PER_BYTE=1)
+// so a strictly higher-fee TX over the same inputs replaces the
+// original.
+// inputs: array of { txid, vout, amount, type }
+// returnAddr: address that receives all input value minus newFeeStocks
+// newFeeStocks: absolute fee for the replacement TX (must satisfy
+//               newFee > originalFee AND newFee/size > originalFee/size
+//               AND newFee >= originalFee + size*RBF_MIN_FEE_BUMP_PER_BYTE)
+// ============================================================
+async function buildAndSignCancellationTx(inputs, returnAddr, newFeeStocks) {
+  if (!Array.isArray(inputs) || inputs.length === 0) {
+    throw new Error('No inputs to cancel');
+  }
+  const total = inputs.reduce((s, u) => s + Number(u.amount || 0), 0);
+  if (total <= 0) throw new Error('Cancelled TX has zero input value');
+  if (newFeeStocks <= 0) throw new Error('Replacement fee must be positive');
+  if (total <= newFeeStocks) {
+    throw new Error('Replacement fee exceeds total input value');
+  }
+  const returnAmount = total - newFeeStocks;
+  const txOutputs = [{ address: returnAddr, amount: returnAmount, type: 0x00 }];
+
+  const privKeyBytes = hexToBytes(wallet.privKey);
+  const pubKeyBytes  = hexToBytes(wallet.pubKey);
+  const genesisBytes = hexToBytes(GENESIS_HASH);
+
+  // hashPrevouts (same shape as buildAndSignTx)
+  const hpParts = [];
+  for (const u of inputs) {
+    hpParts.push(hexToBytes(u.txid));
+    hpParts.push(writeU32LE(u.vout));
+  }
+  const hashPrevouts = doubleSha256(concatBytes(...hpParts));
+
+  // hashOutputs (single output, payload_len=0 in sighash — matches existing
+  // buildAndSignTx behaviour; the Capsule sighash inconsistency is tracked
+  // in docs/todo_followup.md).
+  const hoParts = [];
+  for (const out of txOutputs) {
+    hoParts.push(writeU64LE(out.amount));
+    hoParts.push(new Uint8Array([out.type]));
+    hoParts.push(addressToPKH(out.address));
+    hoParts.push(new Uint8Array([0x00]));
+  }
+  const hashOutputs = doubleSha256(concatBytes(...hoParts));
+
+  const signatures = [];
+  for (let i = 0; i < inputs.length; i++) {
+    const u = inputs[i];
+    const spentType = u.output_type || u.type || 0x00;
+    const preimage = concatBytes(
+      writeU32LE(1),
+      new Uint8Array([0x00]),
+      hashPrevouts,
+      hexToBytes(u.txid),
+      writeU32LE(u.vout),
+      writeU64LE(Number(u.amount)),
+      new Uint8Array([spentType]),
+      hashOutputs,
+      genesisBytes
+    );
+    const hash = doubleSha256(preimage);
+    const sig  = secp.sign(hash, wallet.privKey, { lowS: true });
+    signatures.push(sig.toCompactRawBytes());
+  }
+
+  const parts = [];
+  parts.push(writeU32LE(1));
+  parts.push(new Uint8Array([0x00]));
+  parts.push(encodeVarInt(inputs.length));
+  for (let i = 0; i < inputs.length; i++) {
+    const u = inputs[i];
+    parts.push(hexToBytes(u.txid));
+    parts.push(writeU32LE(u.vout));
+    parts.push(signatures[i]);
+    parts.push(pubKeyBytes);
+  }
+  parts.push(encodeVarInt(txOutputs.length));
+  for (const out of txOutputs) {
+    parts.push(writeU64LE(out.amount));
+    parts.push(new Uint8Array([out.type]));
+    parts.push(addressToPKH(out.address));
+    parts.push(new Uint8Array([0x00, 0x00]));   // payload_len = 0
+  }
+  const rawTx = bytesToHex(concatBytes(...parts));
+  return { rawTx, returnAmount, txSize: rawTx.length / 2 };
 }
 
 // ==================== UI FUNCTIONS ====================
@@ -2462,10 +2554,13 @@ window.sendTransaction = async function() {
       return;
     }
 
-    const rawTx = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address);
+    const built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address);
+    const rawTx = built.rawTx;
+    const selectedUtxos = built.selected;
+    const txSize = rawTx.length / 2;
 
     // Broadcast
-    console.log('[TX] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + rawTx.length/2 + ' bytes)');
+    console.log('[TX] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
     const result = await rpcCall('sendrawtransaction', [rawTx]);
     const txid = result.txid || result || 'unknown';
     const feeSOST = formatSost(feeStocks);
@@ -2495,11 +2590,21 @@ window.sendTransaction = async function() {
       </div>
     `);
 
-    // Save to TX history (localStorage)
+    // Save to TX history (localStorage). The `inputs`, `feeStocks` and
+    // `txSize` fields are required to build a Cancel/RBF replacement
+    // later — we keep the original UTXOs so the wallet can re-sign a
+    // replacement TX over the same inputs.
     saveTxToHistory({
       txid, from: wallet.address, to: toAddr, toLabel: abEntry?.label || '',
       amount: amtSOST, fee: feeSOST, change: changeSOST,
-      timestamp: new Date().toISOString(), status: 'pending'
+      timestamp: new Date().toISOString(), status: 'pending',
+      inputs: selectedUtxos.map(u => ({
+        txid: u.txid, vout: u.vout,
+        amount: u.amount, type: u.output_type || u.type || 0x00,
+      })),
+      feeStocks: feeStocks,
+      amountStocks: amountStocks,
+      txSize: txSize,
     });
     renderTxHistory();
 
@@ -2831,9 +2936,38 @@ function renderTxHistory() {
     const counterparty = isSent
       ? (tx.to ? tx.to.substring(0, 16) + '...' : '?')
       : (tx.from ? tx.from.substring(0, 16) + '...' : 'coinbase/transfer');
-    const statusColor = tx.status === 'confirmed' ? 'var(--green-primary,#4ade80)' : tx.status === 'expired' ? 'var(--text-dim,#888)' : 'var(--yellow-primary,#fbbf24)';
-    const statusText = tx.status === 'confirmed' ? 'Confirmed' : tx.status === 'expired' ? 'Expired' : 'Pending';
+    let statusColor, statusText;
+    if (tx.status === 'confirmed') {
+      statusColor = 'var(--green-primary,#4ade80)';
+      statusText  = 'Confirmed';
+    } else if (tx.status === 'expired') {
+      statusColor = 'var(--text-dim,#888)';
+      statusText  = 'Expired';
+    } else if (tx.status === 'replaced') {
+      statusColor = 'var(--text-dim,#888)';
+      statusText  = 'Replaced (RBF)';
+    } else if (tx.status === 'cancelling') {
+      statusColor = 'var(--cyan-primary,#67e8f9)';
+      statusText  = 'Cancelling…';
+    } else {
+      statusColor = 'var(--yellow-primary,#fbbf24)';
+      statusText  = 'Pending';
+    }
     const date = tx.timestamp ? new Date(tx.timestamp).toLocaleString() : '';
+
+    // Cancel button — only for our own pending sent TXs that still
+    // have the saved input metadata (older TXs from before this
+    // feature shipped won't have `inputs`, so we skip the button).
+    const canCancel = isSent
+      && tx.status === 'pending'
+      && Array.isArray(tx.inputs) && tx.inputs.length > 0
+      && wallet && !wallet.watchOnly;
+    const cancelBtn = canCancel
+      ? `<button class="btn btn-small" style="margin-left:8px;font-size:10px;padding:2px 8px;border-color:var(--red-primary);color:var(--red-primary)" onclick="window.cancelTx('${tx.txid}')" title="Replace this pending transaction with a higher-fee replacement that returns the funds to your wallet (RBF)">Cancel</button>`
+      : '';
+    const replacedNote = tx.replacedBy
+      ? `<br><span style="color:var(--text-dim);font-size:9px">→ <a href="${explorerUrl}?search=${tx.replacedBy}" target="_blank" style="color:var(--cyan-primary);text-decoration:none">${tx.replacedBy.substring(0,12)}...</a></span>`
+      : '';
 
     html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div>
@@ -2841,11 +2975,13 @@ function renderTxHistory() {
         <a href="${explorerUrl}?search=${tx.txid}" target="_blank" style="color:var(--cyan-primary,#67e8f9);text-decoration:none;cursor:pointer;font-family:monospace">${shortTxid}</a>
         <span style="color:var(--text-dim);margin-left:6px;font-size:10px">${dirLabel}</span>
         <span style="color:var(--text-dim);margin-left:6px">${isSent ? '→' : '←'} ${counterparty}</span>
+        ${tx.cancellation ? '<span style="color:var(--cyan-primary);margin-left:6px;font-size:10px">[CANCEL]</span>' : ''}
       </div>
       <div style="text-align:right">
         <span style="color:${arrowColor};font-weight:600">${isSent ? '-' : '+'}${tx.amount || '?'} SOST</span>
-        <br><span style="color:${statusColor};font-size:10px">${statusText}</span>
+        <br><span style="color:${statusColor};font-size:10px">${statusText}</span>${cancelBtn}
         <span style="color:var(--text-dim);font-size:10px;margin-left:4px">${date}</span>
+        ${replacedNote}
       </div>
     </div>`;
   }
@@ -2904,6 +3040,148 @@ async function checkPendingTxExpiry() {
 
 // Check pending TXs every 30 seconds (piggyback on node status interval)
 setInterval(checkPendingTxExpiry, 30000);
+
+// ==================== CANCEL / RBF ====================
+//
+// SOST mempool is full-RBF (rbf_enabled_=true). The chain accepts a
+// replacement TX iff:
+//   - it conflicts (shares ≥1 input) with at most RBF_MAX_REPLACEMENTS
+//     (=100) existing TXs;
+//   - new fee-rate is strictly higher than each replaced TX's fee-rate;
+//   - new absolute fee >= old_total_fee + size * RBF_MIN_FEE_BUMP_PER_BYTE
+//     (=1 stock/byte).
+// The cancellation builds a replacement that spends the original
+// inputs back to the user's own address with a comfortably bumped fee.
+window.cancelTx = async function(originalTxid) {
+  if (!wallet || wallet.watchOnly) {
+    alert('Watch-only wallet cannot cancel transactions. Import the private key first.');
+    return;
+  }
+  const history = loadTxHistory();
+  const orig = history.find(t => t.txid === originalTxid);
+  if (!orig) { alert('TX not found in history.'); return; }
+  if (orig.status !== 'pending') {
+    alert('Only pending transactions can be cancelled. This TX is "' + orig.status + '".');
+    return;
+  }
+  if (!Array.isArray(orig.inputs) || orig.inputs.length === 0) {
+    alert('This TX was sent before the Cancel feature shipped (no saved inputs). Cannot rebuild a replacement.');
+    return;
+  }
+
+  // Confirm it's still in the mempool (otherwise either confirmed or
+  // dropped — replacement would either fail or accidentally re-broadcast
+  // a confirmed payment as a new TX).
+  let mempool = [];
+  try {
+    mempool = await rpcCall('getrawmempool');
+  } catch (e) {
+    if (!confirm('Could not query mempool (RPC error: ' + e.message + ').\n\n' +
+                 'Continue anyway? If the original TX is already confirmed, ' +
+                 'the cancellation will be rejected by the node.')) return;
+  }
+  if (Array.isArray(mempool) && mempool.length > 0 && !mempool.includes(originalTxid)) {
+    alert('TX is no longer in the mempool — it has either confirmed or been dropped. Cancellation is not possible.');
+    return;
+  }
+
+  const totalIn = orig.inputs.reduce((s, u) => s + Number(u.amount || 0), 0);
+  const origFee = Number(orig.feeStocks || 0);
+  const origSize = Number(orig.txSize || 250);
+  // Replacement is smaller (1 output instead of usually 2). Estimate
+  // conservatively as same size; the chain will accept any TX whose
+  // absolute fee >= origFee + size * 1 stock/byte AND fee-rate strictly
+  // higher than original. We bump by 2 stocks/byte for headroom.
+  const RBF_BUMP_PER_BYTE = 2;     // 2× the chain minimum (=1)
+  const newFee = origFee + origSize * RBF_BUMP_PER_BYTE;
+  if (totalIn <= newFee) {
+    alert('Cannot cancel: replacement fee (' + formatSost(newFee) +
+          ' SOST) >= total input value (' + formatSost(totalIn) + ' SOST). ' +
+          'The original fee was already too close to the input total.');
+    return;
+  }
+  const returnAmount = totalIn - newFee;
+
+  const msg =
+    'Cancel pending transaction?\n\n' +
+    '  Original TXID:   ' + originalTxid + '\n' +
+    '  Original fee:    ' + formatSost(origFee) + ' SOST\n' +
+    '  Replacement fee: ' + formatSost(newFee) + ' SOST  (+' +
+        formatSost(newFee - origFee) + ')\n' +
+    '  Refund to self:  ' + formatSost(returnAmount) + ' SOST\n' +
+    '  → ' + wallet.address + '\n\n' +
+    'The replacement spends the same inputs back to your wallet, paying ' +
+    'a higher fee. If the original TX has already been mined, the ' +
+    'replacement will be rejected by the node.\n\n' +
+    'Continue?';
+  if (!confirm(msg)) return;
+
+  // Mark cancelling immediately so the user sees feedback even if the
+  // RPC takes a few seconds.
+  orig.status = 'cancelling';
+  localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
+  renderTxHistory();
+
+  let built;
+  try {
+    built = await buildAndSignCancellationTx(orig.inputs, wallet.address, newFee);
+  } catch (e) {
+    orig.status = 'pending';   // revert
+    localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
+    renderTxHistory();
+    alert('Failed to build replacement TX: ' + e.message);
+    return;
+  }
+
+  let result;
+  try {
+    result = await rpcCall('sendrawtransaction', [built.rawTx]);
+  } catch (e) {
+    orig.status = 'pending';   // revert — broadcast failed
+    localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(history));
+    renderTxHistory();
+    alert('Cancellation broadcast failed: ' + e.message + '\n\n' +
+          'The original transaction is still pending. You can try again ' +
+          'with a higher fee.');
+    return;
+  }
+
+  const newTxid = (result && result.txid) || result || 'unknown';
+
+  // Mark original replaced + add cancellation entry.
+  orig.status = 'replaced';
+  orig.replacedBy = newTxid;
+  saveTxToHistory({
+    txid: newTxid,
+    from: wallet.address,
+    to: wallet.address,
+    toLabel: 'self (cancellation)',
+    amount: formatSost(returnAmount),
+    fee: formatSost(newFee),
+    change: '0',
+    timestamp: new Date().toISOString(),
+    status: 'pending',
+    cancellation: true,
+    replacesTxid: originalTxid,
+    inputs: orig.inputs,
+    feeStocks: newFee,
+    amountStocks: returnAmount,
+    txSize: built.txSize,
+  });
+  // saveTxToHistory dedups by txid and writes; we still need to persist
+  // the mutation we made on `orig` (its txid is unchanged, so the dedup
+  // path returned without writing).
+  const updated = loadTxHistory().map(t =>
+    t.txid === originalTxid ? orig : t
+  );
+  localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(updated));
+  renderTxHistory();
+
+  alert('Cancellation broadcast.\n\n' +
+        '  New TXID: ' + newTxid + '\n' +
+        '  Refund:   ' + formatSost(returnAmount) + ' SOST → your wallet\n\n' +
+        'Once confirmed, the original TX is permanently replaced.');
+};
 
 // ==================== ADDRESS BOOK ====================
 
@@ -3437,7 +3715,7 @@ var D={
 'P2PKH':'<b>P2PKH</b> \u2014 Pay-to-Public-Key-Hash. Standard SOST transaction: prove ownership with public key + signature.',
 'LOW-S':'<b>LOW-S</b> \u2014 Signature normalization preventing malleability. Only one valid signature format per transaction.',
 'secp256k1':'<b>secp256k1</b> \u2014 The elliptic curve used for all SOST signatures. Same as Bitcoin.',
-'RBF':'<b>Replace-by-Fee</b> \u2014 Replace a stuck transaction with a higher-fee version.',
+'RBF':'<b>Replace-by-Fee</b> \u2014 Replace a pending transaction with a higher-fee replacement that spends the same inputs. SOST is full-RBF: every pending TX can be replaced. The wallet exposes this through the <b>Cancel</b> button next to each pending sent TX in the history; the cancellation refunds the original amount back to your own address (minus the bumped fee).',
 'scrypt':'<b>scrypt</b> \u2014 Memory-hard key derivation for CLI wallet. Harder to crack than PBKDF2.'
 };
 var panel=null;
