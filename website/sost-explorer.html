@@ -770,7 +770,7 @@ profile:'cASERT PROFILE \u2014 Current stability test profile selected by the eq
 stability:'STABILITY \u2014 Percentage of recent nonce attempts that passed the ConvergenceX stability basin test. ~100% at B0 is normal. Lower rates occur at harder profiles (H3+) where the perturbation test is more demanding. The metric is committed to the block hash via commit V3 format.',
 psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calculated from difficulty target. Example: 3.63e-4 means each attempt has a 0.0363% chance \u2014 like rolling a die with ~2,758 faces. Determines E[n] = 1/P(solve).',
 thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThresholds calculated from the AVERAGE nonce of the last 288 blocks (~48h).\nThe average = 100%. Each threshold is a percentage of that average.\n\n  25% \u2014 quarter of average effort (lucky early find)\n  50% \u2014 half the average effort\n  75% \u2014 three quarters of typical effort\n  90% \u2014 approaching full average\n  95% \u2014 nearly at the average nonce count\n 100% \u2014 E[288] average \u2014 most blocks found around here\n\nPassing 100% means the block is taking longer than usual.\nThis is normal variance \u2014 some blocks take 2-3x average.\nThe checkmark \u2713 appears when the miner PASSES a threshold.\n\nUnlike theoretical probability, these reflect ACTUAL chain\nconditions: difficulty changes, hashrate, real variance.',
-exptime:'EXPECTED TIME \u2014 Estimated time until block found, based on E[nonce] / attempts_per_second. Shows two values: theoretical (from E[n]) and adjusted (from E[288] real data). If countdown reaches zero, it RECALCULATES using conditional probability.',
+exptime:'EXPECTED TIME \u2014 Estimated time until block found. Shows two values: target (the protocol design block time of 600 s = 10 min) and avg288 (empirical, from the last 288 blocks at the current nonce-per-second rate). If the avg288 countdown reaches zero, it RECALCULATES from the same empirical baseline.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
 antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 3600 seconds (60 min).\n\nV6 immediate first drop: profile drops by 1 immediately when threshold is reached.\n\nDecay zones toward B0:\nH13-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E7 only after 6 additional hours at B0.\n\nRelief valve: V8 single E7 cliff at 605 s (5,750+); V9 staged drop 3/60 s from 540 s (6,550+); V10 granular drop 1/60 s from 600 s (6,700+). Floor stays at E7.\nLag-adjust ~2 s (miner v0.9+; block 5,750+). Anti-stall serves as a last-resort safety net.\n\nH13 ceiling active (block 5,750+). H14-H35 reserved.\nbitsQ avg288-based (block 5,175+) with dynamic cap (block 5,260+).\n\nEnsures the chain NEVER permanently stalls.'
     };
@@ -2620,25 +2620,29 @@ function updateMiningPanel(elapsed){
     s+='<span style="'+threshColor(p95,estNonce)+';transition:color .5s,text-shadow .5s">95% \u2192 ~'+fComma(p95)+(estNonce>=p95?' \u2713':'')+'</span>';
     pt.innerHTML=s;
   }
-  // 3C: Expected block time as countdown (using E[288] adjusted)
+  // 3C: Expected block time as countdown (using E[288] adjusted).
+  // "target" replaces the old "theo" figure (enTheo/attPerSec) which
+  // mixed total-hashes-to-difficulty with the winning-thread nonce
+  // rate, producing a multi-hour number with no physical meaning.
+  // The honest theoretical value is the protocol design target = 600s.
   var expTimeSec=enAdj/attPerSec;
-  var theoTimeSec=enTheo/attPerSec;
+  var targetTimeSec=600;
   var remaining=Math.max(0,expTimeSec-elapsed);
   var et=document.getElementById('miningExpTime');
   if(et){
     if(remaining>0){
       var rM=Math.floor(remaining/60),rS=Math.floor(remaining%60);
-      var tRM=Math.floor(Math.max(0,theoTimeSec-elapsed)/60),tRS=Math.floor(Math.max(0,theoTimeSec-elapsed)%60);
-      et.innerHTML='Expected: <span style="color:#fff">~'+tRM+'m '+('0'+tRS).slice(-2)+'s</span> <span style="color:var(--text3)">(theo)</span> \u00B7 <span style="color:#ffd700">~'+rM+'m '+('0'+rS).slice(-2)+'s</span> <span style="color:var(--text3)">(avg288)</span>';
+      var tRM=Math.floor(Math.max(0,targetTimeSec-elapsed)/60),tRS=Math.floor(Math.max(0,targetTimeSec-elapsed)%60);
+      et.innerHTML='Expected: <span style="color:#fff">~'+tRM+'m '+('0'+tRS).slice(-2)+'s</span> <span style="color:var(--text3)">(target)</span> \u00B7 <span style="color:#ffd700">~'+rM+'m '+('0'+rS).slice(-2)+'s</span> <span style="color:var(--text3)">(avg288)</span>';
     }else{
       // Recalculate based on remaining probability
       var triedFraction=1-Math.pow(1-probPerAttempt,estNonce);
       var remainingProb=1-triedFraction;
       if(remainingProb>0.01){
-        var newExpNonce=Math.round(1/probPerAttempt);
-        var newExpSec=newExpNonce/attPerSec;
+        // Use the empirical avg288 nonce, not the bogus enTheo/attPerSec.
+        var newExpSec=enAdj/attPerSec;
         var nM=Math.floor(newExpSec/60),nS=Math.floor(newExpSec%60);
-        et.innerHTML='Expected in: <span style="color:#fbbf24;font-weight:600">~'+nM+'m '+('0'+nS).slice(-2)+'s</span> <span style="font-size:8px;color:var(--text3)">(recalculated)</span>';
+        et.innerHTML='Expected in: <span style="color:#fbbf24;font-weight:600">~'+nM+'m '+('0'+nS).slice(-2)+'s</span> <span style="font-size:8px;color:var(--text3)">(recalculated · avg288)</span>';
       }else{
         et.innerHTML='<span style="color:#fb923c">significantly delayed — variance</span>';
       }
