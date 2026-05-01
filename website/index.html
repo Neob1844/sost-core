@@ -670,33 +670,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script src="js/security.js"></script>
-<script>
-/* Top-nav toggle. Default open. State kept in sessionStorage so it
-   survives in-tab navigation. Inline + early so it runs before the
-   first paint (no flash). */
-(function () {
-  try {
-    if (sessionStorage.getItem('sost_nav_collapsed') === '1') {
-      document.documentElement.classList.add('pre-nav-collapsed');
-    }
-  } catch (e) {}
-})();
-document.addEventListener('DOMContentLoaded', function () {
-  var collapsed = false;
-  try { collapsed = sessionStorage.getItem('sost_nav_collapsed') === '1'; } catch (e) {}
-  if (collapsed) document.body.classList.add('nav-collapsed');
-  var btn = document.getElementById('navToggleBtn');
-  if (btn) btn.textContent = collapsed ? '▼ SHOW NAV' : '▲ HIDE NAV';
-});
-function toggleNav() {
-  var collapsed = !document.body.classList.contains('nav-collapsed');
-  document.body.classList.toggle('nav-collapsed', collapsed);
-  var btn = document.getElementById('navToggleBtn');
-  if (btn) btn.textContent = collapsed ? '▼ SHOW NAV' : '▲ HIDE NAV';
-  try { sessionStorage.setItem('sost_nav_collapsed', collapsed ? '1' : '0'); } catch (e) {}
-}
-</script>
-<style>html.pre-nav-collapsed body.nav-collapsed nav { padding: 4px 0; }</style>
+<script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
 <!-- SPLASH — Red Matrix Rain -->
