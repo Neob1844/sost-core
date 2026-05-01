@@ -463,6 +463,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <code style="display:block;background:var(--bg);padding:6px 12px;margin-top:4px;font-size:10px;color:var(--cyan);overflow-x:auto;">git rev-parse --short HEAD     # &rarr; calibration commit (or later)<br>./build/sost-miner --help | head -1
                                 # &rarr; SOST Miner v0.9 (multi-threaded)</code>
       <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Nodes or miners that remain on older code may fall out of consensus after activation. Coordinated revert window will be announced if the new schedule does not behave as expected, but with the bitsQ controller intact this is considered very unlikely.</span>
+
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
+        <span style="color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
+        <span style="display:block;font-size:11px;color:var(--text2);margin-top:4px;line-height:1.7">If you notice the explorer reloading itself from time to time, that is by design: new tools and updates are being incorporated continuously, and the page picks them up automatically so you always see the latest version. No action needed on your side &mdash; your session, RPC connection and miner address are preserved across reloads.</span>
+      </div>
     </div>
   </div>
 </div>
