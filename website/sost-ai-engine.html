@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.22.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.24.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,302 / 1,302 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; research frontier map &middot; strategic 40/30/20/10 allocator &middot; weekly canonical roadmap &middot; anti-obsession guard &middot; network OFF by default</span>
+      <span class="val">1,354 / 1,354 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; research frontier map &middot; strategic 40/30/20/10 allocator &middot; weekly canonical roadmap &middot; anti-obsession guard &middot; localhost ops dashboard &middot; background lab autopilot &middot; useful-compute task classifier &middot; private task staging queue &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1370,6 +1370,144 @@
         </ul>
       </div>
     </div>
+
+    <!-- M23 (Private AI Ops Dashboard + Background Lab Autopilot) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">M23 &mdash; Private AI Ops Dashboard + Background Lab Autopilot (localhost cabin + token gate)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the "cabin" gap. M14 is a chat-style console; M23 gives operators a
+          read-only operations dashboard at <code>http://127.0.0.1:8766</code> plus a
+          background autopilot that runs M21 mission cycles + M22 frontier cycles on a
+          configurable interval. <strong>Localhost only. Token-gated. No public surface.
+          No new execution permissions.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>Token surface (separate from M14):</strong>
+              <code>ai_ops_token.py</code>. <code>issue(ttl_seconds=4h)</code> returns the
+              cleartext exactly once; on disk only the SHA-256 over a per-issue salt is
+              persisted. <code>verify()</code> uses constant-time
+              <code>hmac.compare_digest</code> plus an expiry check. <code>revoke()</code>
+              unlinks the record. <code>status()</code> returns metadata without the
+              cleartext.</li>
+          <li><strong>Read-only state aggregator:</strong>
+              <code>ai_ops_state.py</code> pulls from M19 (outcome ledger + heartbeats),
+              M20 (experiment plans), M21 (canonical memory), M22 (frontier map) and the
+              registry gate set. <code>full_state()</code> is the one-shot snapshot the
+              dashboard's <code>/api/ops/state</code> endpoint serves.</li>
+          <li><strong>Dashboard server:</strong>
+              <code>ai_ops_dashboard_server.py</code> &mdash; stdlib
+              <code>ThreadingHTTPServer</code>, refuses non-local bind with
+              <code>PermissionError</code> (remote access via SSH tunnel only). Single HTML
+              page (CSP <code>default-src 'self'</code>, no CDN, no cookies, no
+              <code>localStorage</code>), one JS file at <code>/static/ops.js</code>, four
+              JSON endpoints under <code>/api/ops/*</code> &mdash; all
+              <code>/api/*</code> require Bearer token.</li>
+          <li><strong>Background autopilot:</strong>
+              <code>ai_ops_autopilot.py</code>. <code>tick()</code> runs one M21 mission
+              cycle plus one M22 frontier cycle for every project that holds the full
+              pipeline gate set; disallowed projects produce a <code>TickResult</code>
+              with <code>ok=false</code> and a clear "missing required gates" error.
+              <code>loop()</code> refuses <code>interval_seconds &lt; 30</code>.
+              Best-effort: never raises mid-loop. Persists outcome ledger + heartbeats;
+              writes canonical memory only when <code>can_update_memory</code> permits
+              (materials only).</li>
+          <li><strong>Three CLI scripts:</strong>
+              <code>scripts/sost_ai_generate_token.py</code> issues a fresh token and
+              prints the dashboard URL once on stdout;
+              <code>scripts/sost_ai_ops_dashboard.py</code> starts the HTTP server
+              (refuses non-local hosts);
+              <code>scripts/sost_ai_autopilot.py</code> ticks once or loops indefinitely
+              with operator-tunable creativity / count / interval.</li>
+          <li>safety invariants: localhost only by construction; token never appears on
+              disk; the autopilot grants no new permissions; if a gate denies a step the
+              project is skipped for that tick; all <code>/api/*</code> endpoints are
+              read-only; no DFT, no publish, no consensus, no commit.
+              <strong>23 new tests; 1,325 / 1,325 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M24 (Useful Compute Task Intelligence Layer) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">M24 &mdash; Useful Compute Task Intelligence Layer (private classifier + spec generator + staging queue)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the "what counts as a heavy task?" gap reported on the Useful Compute
+          live trial. The public API and worker stay as a dry-run infrastructure; M24
+          ships a <em>private</em> lab where the AI engine classifies, spec-generates and
+          stages heavy-task candidates. <strong>Public publishing and reward activation
+          remain hard-locked behind gates that no project grants in the shipped registry</strong>
+          &mdash; the operator's CTO verdict.
+        </p>
+        <ul class="spec-list">
+          <li><strong>Heavy-task classifier:</strong>
+              <code>heavy_task_classifier.py</code> with the five canonical accept axes
+              the operator promised: <code>is_useful</code> (no busy-wait / fake-heavy),
+              <code>is_deterministic</code> (declared + no race / unseeded random hint),
+              <code>is_auditable</code> (declared + no not-auditable hint),
+              <code>is_heavy_enough</code> (runtime &ge; 60 s AND memory &ge; 256 MB), and
+              <code>is_safe_to_verify</code> (no "verifier rerun required" /
+              "no replay possible" hint). Eight curated keyword vocabularies. A task that
+              fails ANY axis is rejected with the offending axis listed.</li>
+          <li><strong>Spec generator:</strong>
+              <code>heavy_task_spec_generator.py</code>. <code>TaskSpec</code> + per-project
+              schema templates (materials / geaspirit / useful_compute), pinned-deps
+              declaration, fixed-seed policy, replay = ~10 % of original runtime, explicit
+              fake-heavy baseline ("busy-wait must NOT match the output within
+              tolerances"). Reward class always starts at <code>no_reward</code>;
+              visibility is <code>internal_only</code> when DFT / raw-geospatial / wallet /
+              consensus keywords match, otherwise <code>human_review_required</code>.</li>
+          <li><strong>Private staging queue:</strong>
+              <code>useful_compute_private_queue.py</code> + SQLite
+              <code>useful_compute_private_queue</code> table. <code>stage()</code> refuses
+              when <code>can_stage_private_useful_compute_task</code> is denied — only the
+              <code>useful_compute</code> project holds that gate.
+              <code>attempt_publish()</code> and <code>attempt_enable_rewards()</code> are
+              the documented entry points for future operator-only workflows but
+              <strong>always return <code>{ok: false, reason: "denied"}</code></strong>
+              because every project denies the corresponding gate.</li>
+          <li><strong>Orchestrator + seed templates:</strong>
+              <code>useful_compute_task_intelligence.py</code> orchestrates classify -&gt;
+              spec -&gt; (optional stage). <code>seed_candidates(project)</code> exposes
+              operator-blessed seed examples per project (5 materials, 5 geaspirit, 3
+              useful_compute) — every seed is engineered to pass the classifier so
+              operators have a known-good baseline.</li>
+          <li><strong>Four new capability gates (deny-by-default):</strong>
+              <code>can_design_useful_compute_task</code> (true: materials, geaspirit,
+              useful_compute), <code>can_stage_private_useful_compute_task</code>
+              (<strong>true: useful_compute ONLY</strong>),
+              <code>can_publish_useful_compute_task</code> (false EVERYWHERE),
+              <code>can_enable_useful_compute_rewards</code> (false EVERYWHERE).
+              Canonical gate set is now <strong>twenty-one wide</strong>. Belt+braces
+              tests assert publish + reward gates remain false for every project.</li>
+          <li><strong>CLI:</strong>
+              <code>scripts/multi_ai_useful_compute_task_lab.py</code> with
+              <code>--seeds</code> (operator-blessed templates), <code>--title</code> +
+              <code>--description</code> (ad-hoc candidate), <code>--stage</code>
+              (private staging when the gate permits) and <code>--json</code> for the
+              full pipeline payload.</li>
+          <li><strong>Operator (CTO) verdict surfaced in code:</strong>
+              public Useful Compute API stays as dry-run infrastructure; heavy
+              reward-bearing tasks stay private until the AI knows to classify, validate
+              and audit them; rewards stay OFF until M24+ pronounces a task family ready;
+              publishing stays OFF until a separate human-approval workflow lands.
+              <strong>29 new tests; 1,354 / 1,354 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1545,7 +1683,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,302 / 1,302 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,354 / 1,354 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
