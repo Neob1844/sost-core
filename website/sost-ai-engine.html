@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.19.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.20.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,214 / 1,214 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; network OFF by default</span>
+      <span class="val">1,239 / 1,239 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1132,6 +1132,85 @@
         </ul>
       </div>
     </div>
+
+    <!-- M20 (Experiment Planner + Replay Sandbox) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">M20 &mdash; Experiment Planner + Replay Sandbox (counterfactual rule evaluation)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the "method" gap: the engine could ideate (M16), recommend (M17), and run
+          autonomously (M19), but it could not <em>ask itself</em> whether its proposed rules
+          would have actually worked on past data. M20 ships the scientific-method layer:
+          <strong>hypothesis &rarr; plan &rarr; counterfactual replay against M10 history
+          &rarr; GO / MAYBE / NO-GO &rarr; memory</strong>. No new execution permissions —
+          the engine still cannot run anything, only plan and simulate.
+        </p>
+        <ul class="spec-list">
+          <li><strong>Baseline registry (auto-derived from M10):</strong>
+              <code>baseline_registry.py</code> reads M10's <code>outcome_events</code> table
+              and classifies each row as positive (e.g. <code>dft_success</code>,
+              <code>chgnet_stable</code>, <code>literature_supported</code>,
+              <code>human_promoted</code>, <code>provider_useful_answer</code>...) or
+              negative (<code>dft_failure</code>, <code>chgnet_red_flag</code>,
+              <code>human_rejected</code>, <code>provider_overclaim_confirmed</code>...).
+              Optional <code>baseline_overrides.json</code> next to the engine wins on
+              conflict. Baselines dedupe per (project, subject) — twelve "FeS2 promoted"
+              events count as one positive signal, not twelve.</li>
+          <li><strong>Experiment planner:</strong>
+              <code>experiment_planner.py</code> + <code>experiment_plans</code> SQLite table.
+              <code>plan(hypothesis, project)</code> picks project-aware step lists:
+              photovoltaic-flagged materials hypotheses get a <em>band_gap_estimate (DFT
+              input draft only — never run)</em> step; generic materials get the
+              membrane/catalyst step list; geaspirit gets layer-gap + false-positive +
+              publication-safety; useful_compute gets schema design + fake-heavy +
+              reproducibility. Stable plan_id (sha256-derived) so the same hypothesis at the
+              same time produces the same id.</li>
+          <li><strong>Replay sandbox &mdash; counterfactual evaluator:</strong>
+              <code>replay_sandbox.py</code>. A Rule is a callable
+              <code>(subject, context) -&gt; bool</code>. <code>replay()</code> applies the
+              rule to the historical positives and negatives and returns precision, recall,
+              accuracy, F1 plus the TP/FP/TN/FN counters and a verdict.
+              Decision matrix: precision &le; 0.30 OR recall &le; 0.20 &rarr; NO-GO;
+              precision &ge; 0.65 AND recall &ge; 0.50 &rarr; GO; otherwise MAYBE.</li>
+          <li><strong>Operator's golden rule:</strong>
+              <em>"if there is no historical signal, there is no certainty."</em>
+              The sandbox enforces a strict ceiling:
+              <code>historical_count &lt; min_historical</code> (default 20) means the
+              <strong>strongest possible verdict is MAYBE — never GO</strong>, regardless of
+              how clean precision and recall look. The system stays honest about its own
+              confidence.</li>
+          <li><strong>Renderer:</strong> writes
+              <code>reports/ai_engine/experiments/&lt;UTC&gt;_&lt;slug&gt;/</code> with
+              <code>plan.md</code>, <code>plan.json</code>, <code>replay_result.json</code>,
+              <code>decision.md</code> (GO/MAYBE/NO-GO + reason) and
+              <code>checksums.sha256</code>. Honours the M14 write allowlist; new entry
+              <code>reports/ai_engine/experiments</code> added.</li>
+          <li><strong>Three new capability gates (deny-by-default):</strong>
+              <code>can_plan_experiment</code> and <code>can_replay_experiment</code> are
+              <code>true</code> for materials / geaspirit / useful_compute (the projects
+              that produce hypotheses); <code>false</code> for sost / geadeep /
+              materials_discovery. <code>can_execute_experiment</code> is
+              <strong><code>false</code> for every project</strong> and asserted by the
+              test suite. The canonical gate set is now eleven wide.</li>
+          <li><strong>CLIs:</strong>
+              <code>scripts/multi_ai_plan_experiment.py</code> turns a hypothesis into a
+              plan + on-disk folder; <code>scripts/multi_ai_replay_experiment.py</code>
+              counterfactually evaluates a keyword-based rule against M10 history and
+              prints the verdict. Both refuse to run on projects that lack the gate.</li>
+          <li>safety invariants: M20 ships <strong>no execution surface</strong>; no
+              auto-DFT, no auto-publication, no auto-commits, no consensus surface, no new
+              network capability. Belt+braces tests assert <code>can_execute_experiment</code>
+              is denied for every registered project.
+              <strong>25 new tests; 1,239 / 1,239 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1307,7 +1386,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,214 / 1,214 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,239 / 1,239 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
