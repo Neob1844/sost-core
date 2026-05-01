@@ -1560,40 +1560,28 @@ function updateChainSync(){
     cdEl.innerHTML='\u23F1 behind schedule \u00B7 profile B0';
   } else if(cdEl){cdEl.style.display='none';}
 
-  // Relief-valve cascade hint. Tells the operator which V8/V9/V10 rule
-  // is active at this height and (when the current block search has
-  // exceeded the start threshold) when the NEXT cascade step lowers
-  // the profile by another notch. Pure read-only display: the rule
-  // itself lives in src/pow/casert.cpp. floor stays at E7.
+  // Relief-valve cascade hint. The active chain runs the V10 granular
+  // rule (block 6,700+): drop 1 profile level every 60 s once the
+  // current block search has exceeded 600 s; floor stays at E7. Older
+  // V8 / V9 regimes are historical and not surfaced here. Pure
+  // read-only display — the rule itself lives in src/pow/casert.cpp.
   var cascadeEl=document.getElementById('csLagCascade');
   if(cascadeEl){
     var nextH=actual+1;  // height being mined
-    var rule=null;
-    if(nextH>=6700){
-      rule={label:'V10 granular',drop:1,stepSec:60,startSec:600,floor:'E7',colour:'#22d3ee'};
-    } else if(nextH>=6550){
-      rule={label:'V9 staged',drop:3,stepSec:60,startSec:540,floor:'E7',colour:'#a78bfa'};
-    } else if(nextH>=5750){
-      rule={label:'V8 cliff',drop:'all',stepSec:0,startSec:605,floor:'E7',colour:'#f59e0b'};
-    }
-    if(!rule){
+    if(nextH<6700){
       cascadeEl.style.display='none';
     } else {
       cascadeEl.style.display='block';
-      var dropTxt=(rule.drop==='all')?'snap to floor':('−'+rule.drop+' / '+rule.stepSec+'s');
-      var head='<span style="color:'+rule.colour+';letter-spacing:.4px">'+rule.label+'</span> cascade · '+dropTxt+' after '+rule.startSec+'s · floor '+rule.floor;
+      var head='<span style="color:#22d3ee;letter-spacing:.4px">V10 granular</span> cascade · −1 / 60s after 600s · floor E7';
       var dyn='';
-      if(rule.drop!=='all' && rule.stepSec>0 && timeSinceTip>=rule.startSec){
-        var sinceStart=timeSinceTip-rule.startSec;
-        var stepsTaken=Math.floor(sinceStart/rule.stepSec)+1;  // +1 because the first drop fires AT startSec
-        var nextStepAt=rule.startSec+stepsTaken*rule.stepSec;
+      if(timeSinceTip>=600){
+        var sinceStart=timeSinceTip-600;
+        var stepsTaken=Math.floor(sinceStart/60)+1;  // first drop fires AT 600s
+        var nextStepAt=600+stepsTaken*60;
         var secsToNext=Math.max(0,Math.ceil(nextStepAt-timeSinceTip));
-        var dropsNow=stepsTaken*rule.drop;
-        dyn=' · <span style="color:#fbbf24">drop '+dropsNow+' lvl, next in '+secsToNext+'s</span>';
-      } else if(rule.drop==='all' && timeSinceTip>=rule.startSec){
-        dyn=' · <span style="color:#fb010d">at floor</span>';
-      } else if(rule.stepSec>0){
-        var armSecs=Math.max(0,Math.ceil(rule.startSec-timeSinceTip));
+        dyn=' · <span style="color:#fbbf24">drop '+stepsTaken+' lvl, next in '+secsToNext+'s</span>';
+      } else {
+        var armSecs=Math.max(0,Math.ceil(600-timeSinceTip));
         dyn=' · <span style="color:var(--text3)">arms in '+armSecs+'s</span>';
       }
       cascadeEl.innerHTML=head+dyn;
