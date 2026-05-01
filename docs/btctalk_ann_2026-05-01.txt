@@ -1,0 +1,732 @@
+[center][img]https://sostcore.com/sost-logo.png[/img]
+[center][img]https://sostcore.com/convergencex-logo.png[/img]
+
+[size=18pt][b]SOST — Sovereign Stock Token[/b][/size]
+[size=11pt]Native Proof-of-Work chain with protocol-level gold reserve allocation. Native chain. No bridges. No smart contracts on the SOST base layer. No governance tokens.[/size]
+
+[b][size=9pt][color=red]DEVELOPER NOTE:[/color][/b] ALL NODES AND MINERS MUST UNDERSTAND THAT THIS PROJECT IS BEING BUILT WITH A LOT OF WORK, BUT THAT DOES NOT GUARANTEE THAT IT WILL SUCCEED OR HAVE FUTURE VALUE. RIGHT NOW, YOU ARE MINING WITH VERY LOW ENERGY COST, USING ONLY CPU AND 8 GB RAM, BUT THE SUCCESS OF THE PROJECT DEPENDS ON THREE CRUCIAL FACTORS, NONE OF WHICH IS GUARANTEED: FIRST, THAT IT COMPLIES WITH ALL APPLICABLE CRYPTO AND POSSIBLY FINANCIAL REGULATIONS IN THE COUNTRIES WHERE IT MAY OPERATE, WHICH IS COMPLEX; SECOND, THAT THE CRYPTO COMMUNITY ACCEPTS AND SUPPORTS THE PROJECT; AND THIRD, THAT ONE OR MORE CEXs DECIDE TO LIST THE PROJECT ON THEIR EXCHANGES. IN ADDITION, WE ARE OPERATING A NATIVE AND EXPERIMENTAL PROOF-OF-WORK SYSTEM, DISTINCT FROM OTHER POW DESIGNS, WHICH HAS BEEN DEPLOYED DIRECTLY ON MAINNET. ALTHOUGH IT HAS HUNDREDS OF TESTS BEHIND IT, IT HAS NOT BEEN AUDITED BY ANY INDEPENDENT OR REPUTABLE FIRM IN THE SECTOR; THEREFORE, WE ARE WALKING AN UNKNOWN PATH TOGETHER. WITHOUT THESE FACTORS, THE TOKEN MAY HAVE NO VALUE. THIS MUST BE CLEAR TO EVERYONE, SO THAT NO FALSE EXPECTATIONS ARE CREATED.[/size]
+
+[b]Genesis Block: March 15, 2026 — 18:00:00 UTC[/b]
+[b][color=red]Public announcement: April 05, 2026 — Decision to advance the originally planned launch date[/color][/b]
+[/center]
+
+[hr]
+
+[b][color=green]✓ MAINNET LIVE — Explorer: [url=https://sostcore.com/sost-explorer.html]SOST Explorer[/url][/color][/b]
+
+[i]Last updated: May 01, 2026 — [b][color=red]SOST AI Engine reaches v0.25.0 with the M25 Human Command Center + Approval Ritual layer (1,402 / 1,402 tests green). Mandatory V10 granular-relief calibration activates at block 6700 (drop 1 every 60 s from 600 s, floor E7) — no supply, reward, wallet, GPU-ban or pool-ban change. Useful Compute infrastructure remains dry-run; rewards postponed. SOST DEX alpha live.[/color][/b][/i]
+
+[hr]
+
+[size=14pt][b][color=#DAA520]⚡ PRE-MARKET STATUS ⚡[/color][/b][/size]
+
+SOST is currently in [b]PRE-MARKET phase[/b].
+
+[list]
+[li]There is [b]NO active market[/b] yet.[/li]
+[li]There is [b]NO exchange listing[/b] yet.[/li]
+[li]There is [b]NO guaranteed price[/b].[/li]
+[li]Current value references are internal PoPC testing references only. They do [b]NOT[/b] represent market price, liquidity, or future valuation.[/li]
+[/list]
+
+SOST is actively inviting miners, node operators, independent reviewers and adversarial testers to help validate consensus stability, mining behavior, Useful Compute dry-run infrastructure, wallet flows, P2P networking and DEX alpha components.
+
+[b]Planned public launch phase and exchange outreach: from June 16, 2026, subject to testing progress and stability.[/b]
+
+Until then, SOST should be considered an [b]experimental system in live testing[/b].
+
+[i]"SOST does not simulate a market — it prepares for one."[/i]
+
+[hr]
+
+[size=16pt][b][color=#DAA520]SOST Useful Compute — Infrastructure Live, Rewards Postponed[/color][/b][/size]
+
+SOST Useful Compute infrastructure is now implemented and operational, but the rewarded phase is postponed.
+
+Miners and community members may already run the Useful Compute worker to test the infrastructure, verify task assignment, submit results and inspect the public audit endpoints.
+
+However, [b]no Useful Compute rewards will be paid at this stage[/b].
+
+Current worker activity is [b]testing only[/b].
+
+The final reward-bearing task protocol will be announced later, after the compute tasks are properly defined, tested, documented and reviewed.
+
+[hr]
+
+[size=12pt][b]Current Status[/b][/size]
+
+The Useful Compute backend is live and includes:
+
+[list]
+[li]Public task server[/li]
+[li]Task queues[/li]
+[li]Worker submission system[/li]
+[li]Ranking endpoint[/li]
+[li]Verification and dispute tracking[/li]
+[li]Public audit export[/li]
+[li]Automatic queue replenishment[/li]
+[li]Automatic database backups[/li]
+[li]Automatic scientific reports[/li]
+[li]Automatic public snapshots[/li]
+[/list]
+
+The public API is available here:
+
+[code]
+https://sostcore.com/api/useful-compute/
+[/code]
+
+Health check:
+
+[code]
+https://sostcore.com/api/useful-compute/health
+[/code]
+
+Public audit:
+
+[code]
+https://sostcore.com/api/useful-compute/audit_export
+[/code]
+
+Ranking:
+
+[code]
+https://sostcore.com/api/useful-compute/ranking
+[/code]
+
+Queue status:
+
+[code]
+https://sostcore.com/api/useful-compute/queue_stats
+[/code]
+
+[hr]
+
+[size=12pt][b]What Miners Can Do Now[/b][/size]
+
+Miners may test the worker now.
+
+This helps verify:
+
+[list]
+[li]worker connection[/li]
+[li]task assignment[/li]
+[li]result submission[/li]
+[li]ranking updates[/li]
+[li]audit export visibility[/li]
+[li]server health[/li]
+[/list]
+
+But this is only a public infrastructure test / dry run.
+
+[b]Current worker activity is not eligible for rewards.[/b]
+
+There will be no payout manifest for current testing activity.
+
+[hr]
+
+[size=12pt][b]How To Test The Worker[/b][/size]
+
+Update or clone the repo:
+
+[code]
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+git pull
+chmod +x scripts/useful_compute_worker.py
+[/code]
+
+Run Light mode:
+
+[code]
+python3 scripts/useful_compute_worker.py \
+  --server https://sostcore.com/api/useful-compute \
+  --miner-address YOUR_SOST_ADDRESS \
+  --worker-mode light
+[/code]
+
+Run Heavy mode only for testing the heavy path:
+
+[code]
+python3 scripts/useful_compute_worker.py \
+  --server https://sostcore.com/api/useful-compute \
+  --miner-address YOUR_SOST_ADDRESS \
+  --worker-mode heavy
+[/code]
+
+Run both:
+
+[code]
+python3 scripts/useful_compute_worker.py \
+  --server https://sostcore.com/api/useful-compute \
+  --miner-address YOUR_SOST_ADDRESS \
+  --worker-mode both
+[/code]
+
+Use only your public SOST address.
+
+Never paste a private key, seed phrase, wallet file or password.
+
+[hr]
+
+[size=12pt][b]Why Rewards Are Postponed[/b][/size]
+
+The original idea was to run a 1,000-block rewarded Useful Compute Trial around blocks 7,000 → 8,000.
+
+After internal testing, I decided not to activate rewards yet.
+
+Reason: SOST should not reward weak, symbolic or artificial CPU work.
+
+The goal is not to burn CPU.
+
+The goal is to produce useful scientific and protocol-level output.
+
+The final task layer must be reorganized around genuinely useful, demanding and well-defined workloads.
+
+For Materials Engine, future reward-bearing workloads may include:
+
+[list]
+[li]large-scale deterministic materials screening[/li]
+[li]candidate prioritization for later DFT[/li]
+[li]formula ranking[/li]
+[li]substitution and dopant exploration[/li]
+[li]PGM-free replacement analysis[/li]
+[li]photovoltaic / catalyst / membrane candidate filtering[/li]
+[/list]
+
+For GeaSpirit, future workloads may include:
+
+[list]
+[li]deterministic mineral-target scoring[/li]
+[li]zone and commodity ranking[/li]
+[li]false-positive filtering[/li]
+[li]geospatial feature analysis[/li]
+[li]future heavier raster-based processing when the worker environment is ready[/li]
+[/list]
+
+[hr]
+
+[size=12pt][b]Future Heavy Tasks[/b][/size]
+
+Future reward-bearing Heavy tasks will be introduced gradually, one by one or in clearly defined batches.
+
+Each future Heavy task family must be:
+
+[list]
+[li]scientifically useful[/li]
+[li]well defined[/li]
+[li]deterministic[/li]
+[li]auditable[/li]
+[li]heavy enough to justify rewards[/li]
+[li]announced in advance[/li]
+[/list]
+
+Examples of future Heavy task categories may include:
+
+[code]
+- DFT-related preparation
+- candidate selection for future DFT runs
+- large-scale deterministic materials screening
+- advanced dopant and substitution analysis
+- high-value Materials Engine workloads
+- future GeaSpirit workloads when the worker environment is ready
+[/code]
+
+These tasks will not be activated suddenly.
+
+They will be documented, tested and announced before any reward window begins.
+
+[hr]
+
+[size=12pt][b]How Useful Compute Works[/b][/size]
+
+The architecture is separate from normal mining:
+
+[code]
+SOST Miner
+↓
+continues mining normally
+
+Useful Compute Worker
+↓
+requests tasks from sostcore.com
+
+Task Server
+↓
+distributes curated Materials Engine / GeaSpirit tasks
+
+Participants
+↓
+compute deterministic results and submit them back
+
+Task Server
+↓
+records, verifies and audits results
+
+Public Audit Layer
+↓
+ranking, queue state, verification events and reports
+[/code]
+
+There is:
+
+[list]
+[li]No fork[/li]
+[li]No consensus change[/li]
+[li]No change to block rewards[/li]
+[li]No wallet access[/li]
+[li]No private key access[/li]
+[li]No seed phrase access[/li]
+[/list]
+
+The worker only needs a public SOST address.
+
+[hr]
+
+[size=12pt][b]What Happens To The SOST Allocated For This Idea?[/b][/size]
+
+No SOST is being paid out for the current testing phase.
+
+The SOST that would have been used for the postponed trial remains in the existing Gold Vault / PoPC pool structure.
+
+Those funds remain aligned with the initial protocol purpose:
+
+[list]
+[li]Gold reserve accumulation[/li]
+[li]PoPC — Proof of Personal Custody reward mechanisms[/li]
+[li]Future protocol-level utility only after proper testing and public notice[/li]
+[/list]
+
+Nothing is being spent, redirected or distributed prematurely.
+
+[hr]
+
+[size=12pt][b]Summary[/b][/size]
+
+Useful Compute is not cancelled.
+
+The infrastructure is live and can be tested today.
+
+The rewarded phase is postponed.
+
+Light Worker and Heavy Worker are both testing-only for now.
+
+Future rewards will be announced later with final task definitions, eligibility rules, activation window and audit process.
+
+[hr]
+
+[size=16pt][b][color=#22d3ee]SOST AI Engine — Private Autonomous Lab (v0.25.0)[/color][/b][/size]
+
+The SOST AI Engine is a private, gate-locked autonomous research system that runs entirely inside the SOST repos. It is not a chatbot. It is a cabin: console, daemon, memory, mission engine, scientist swarm, frontier map, ops dashboard and approval ritual — all stdlib-only Python, SQLite-backed, with the network OFF by default.
+
+[b]Current version:[/b] v0.25.0 — Phase 3 Milestones M1–M12 + M14–M25 (M13 deferred). [b]1,402 / 1,402 tests green.[/b]
+
+[b]The shape of the system[/b]
+
+[code]
+SOST AI Engine        = brain + private cabin
+Materials Engine      = computational materials lab (77,296-material corpus)
+GeaSpirit / GeaDeep   = mineral intelligence + energy systems
+Useful Compute        = future distributed work-sharing layer
+[/code]
+
+[b]What it does today[/b]
+
+[list]
+[li][b]Private operator console (M14):[/b] localhost-only, token-gated chat surface.[/li]
+[li][b]Persistence + workflow (M15):[/b] sessions, history and tasks survive restarts.[/li]
+[li][b]Speculative ideation (M16):[/b] generates real hypotheses, not template fills.[/li]
+[li][b]Practical answerer (M17):[/b] turns technical knowledge into operator answers.[/li]
+[li][b]Multi-repo project registry + deny-by-default capability gates (M18):[/b] every action consults a gate; unknown projects resolve to NO; <code>can_run_dft</code>, <code>can_publish</code>, <code>can_touch_consensus</code> and <code>can_use_network</code> are FALSE everywhere in the shipped registry.[/li]
+[li][b]Outcome ledger + autonomous scoreboard (M19):[/b] every task is recorded as planned / executed / skipped / failed / useful / wrong / repeated. Measures whether the AI is producing value or just noise.[/li]
+[li][b]Experiment planner + replay sandbox (M20):[/b] hypotheses become pass/fail plans with counterfactual GO / MAYBE / NO-GO. With thin history, the planner can never return GO.[/li]
+[li][b]Canonical mission engine + 6-role AI scientist swarm (M21):[/b] Discoverer, Skeptic, Engineer, Economist, Validator, Historian. Contradictions become opportunities, not noise.[/li]
+[li][b]Research frontier map + strategic 40 / 30 / 20 / 10 allocator + anti-obsession guard (M22):[/b] groups ideas into families (phosphides, nitrides, sulfides, ceramics, PGM-free catalysts, PV absorbers, deep-sea systems, geospatial proxies …), detects gaps, allocates attention, blocks obsessive single-material loops.[/li]
+[li][b]Localhost ops dashboard + background lab autopilot (M23):[/b] read-only view at <code>127.0.0.1:8766</code>, separate token surface from M14, autopilot ticks M21 + M22 cycles on a configurable interval.[/li]
+[li][b]Useful Compute task intelligence layer (M24):[/b] classifies candidate Heavy tasks across 5 axes (useful, deterministic, auditable, heavy_enough, safe_to_verify), generates private specs, stages them in a private queue. Public publishing and reward activation stay locked OFF.[/li]
+[li][b]Human Command Center + Approval Ritual (M25):[/b] daily brief, approval inbox, executive summary, decision history and operator feedback loop.[/li]
+[/list]
+
+[b][color=red]Golden rule:[/color] the AI may ask for permission. The AI cannot grant permission to itself.[/b]
+
+Every approve / reject CLI requires an explicit non-empty <code>--operator</code> argument. The engine has no operator identity. Even after operator approval the per-project <code>can_execute_approval</code> gate remains FALSE — automated execution of any approved row is a separate, deliberate human action.
+
+[b]What it cannot do[/b]
+
+[list]
+[li]Cannot run DFT.[/li]
+[li]Cannot publish to the website or any public surface.[/li]
+[li]Cannot touch consensus.[/li]
+[li]Cannot use the network by default.[/li]
+[li]Cannot activate Useful Compute rewards.[/li]
+[li]Cannot approve its own decisions.[/li]
+[/list]
+
+[b]How it ties into the rest of the stack[/b]
+
+[list]
+[li][b]Materials Engine:[/b] the AI proposes campaigns, ranks candidates, generates hypotheses, prepares DFT input drafts, scores false-positive risk and explores PGM-free / photovoltaic / catalyst / membrane families. It does not run DFT itself.[/li]
+[li][b]GeaSpirit / GeaDeep:[/b] the AI evaluates marine-pressure and corrosion systems, scores SAR / DEM / InSAR proxies, separates hypothesis from real proof, and refuses claims like "subsurface detected" without independent validation.[/li]
+[li][b]Useful Compute:[/b] the AI designs candidate Heavy Tasks, classifies whether they are reward-worthy, simulates the queue and proposes which families could one day enter rewards. It cannot activate rewards or publish reward-bearing tasks. The public Useful Compute API remains dry-run.[/li]
+[/list]
+
+[b]Status board[/b]
+
+[code]
+Console                       ✅
+Memory + workflow             ✅
+Ideation                      ✅
+Validators                    ✅
+Autonomous daemon             ✅
+Project registry              ✅
+Capability gates              ✅
+Outcome ledger                ✅
+Experiment planner            ✅
+Replay sandbox                ✅
+Canonical missions            ✅
+6-role AI scientist swarm     ✅
+Frontier map + allocator      ✅
+Anti-obsession guard          ✅
+Ops dashboard                 ✅ (localhost only)
+Background autopilot          ✅
+Heavy-task classifier         ✅
+Approval inbox + daily brief  ✅
+Executive summary             ✅
+Operator feedback loop        ✅
+DFT execution                 ❌ never
+Public publishing             ❌ never
+Consensus surface             ❌ never
+Reward activation             ❌ never (Useful Compute stays dry-run)
+Self-approval                 ❌ blocked by design
+[/code]
+
+Full AI Engine page: [url=https://sostcore.com/sost-ai-engine.html]https://sostcore.com/sost-ai-engine.html[/url]
+
+[hr]
+
+[size=14pt][b]External Testing Invitation[/b][/size]
+
+SOST is not a fork and not a parameter-tweaked clone of an existing PoW chain. It is a completely new native Proof-of-Work protocol built around its own original consensus stack, including [b]ConvergenceX[/b], custom difficulty behavior, bootstrap/sync path, P2P rules, economic design, DEX alpha components and useful-compute infrastructure.
+
+Independent security researchers, external reviewers, miners, node operators and adversarial testers are invited to stress the system.
+
+Areas to test include:
+
+[list]
+[li]Bootstrap chain import behavior[/li]
+[li]Historical and live sync behavior[/li]
+[li]P2P plaintext and encrypted transport[/li]
+[li]ConvergenceX transcript / proof verification paths[/li]
+[li]Consensus stability under adversarial conditions[/li]
+[li]Fork / reorg handling[/li]
+[li]Difficulty adjustment behavior[/li]
+[li]Mempool and transaction propagation[/li]
+[li]Wallet / node interoperability[/li]
+[li]Unexpected crash or desync scenarios[/li]
+[li]SOST DEX alpha deal flow and encrypted inbox[/li]
+[li]PoPC contract flows[/li]
+[li]Useful Compute dry-run infrastructure: worker behavior, verification, ranking and public audit logic[/li]
+[/list]
+
+SOST is experimental and has not been audited by any external security firm. If there is a weakness, I want it found now. If there is a bug, I want it reported now. Constructive criticism, hostile testing, reproducible bug reports and detailed logs are welcome.
+
+[hr]
+
+[size=14pt][b][color=red]⚠ IMPORTANT DISCLAIMER — READ BEFORE PARTICIPATING ⚠[/color][/b][/size]
+
+SOST is [b]experimental software[/b]. It is a completely new proof-of-work protocol written from scratch in C++17. SOST is [b]NOT a fork[/b] of Bitcoin, Litecoin, Monero, Ethereum, RandomX, Ethash, Equihash, CryptoNight, Scrypt, X11 or any other existing cryptocurrency or mining algorithm.
+
+The codebase — consensus rules, PoW algorithm, cASERT difficulty adjustment, transaction validation, UTXO model, P2P networking and wallet — has been designed and implemented independently.
+
+[list]
+[li]The codebase has [b]NOT been audited by any external security firm[/b].[/li]
+[li]The protocol has [b]NOT been stress-tested by a large number of independent miners[/b].[/li]
+[li]Undiscovered vulnerabilities may exist.[/li]
+[li]The early public announcement enabled community participation sooner, but also means less real-world testing than originally planned.[/li]
+[li]Every participant is solely responsible for their own decisions.[/li]
+[li]Mining, holding and interacting with experimental cryptocurrency software carry risks including software bugs, consensus failures, network attacks, hardware failure and market volatility.[/li]
+[li]SOST is [b]not financial advice[/b], [b]not a security[/b], and [b]not a promise of future value[/b].[/li]
+[/list]
+
+The developer assumes no liability for any losses resulting from use of the software.
+
+[hr]
+
+[size=14pt][b]Quick Specs[/b][/size]
+
+[table]
+[tr][td][b]Parameter[/b][/td][td][b]Value[/b][/td][/tr]
+[tr][td]Algorithm[/td][td]ConvergenceX v2.0 — memory-hard, CPU-friendly[/td][/tr]
+[tr][td]Block time[/td][td]600s / 10 min[/td][/tr]
+[tr][td]Max supply[/td][td]4,669,201 SOST[/td][/tr]
+[tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788[/td][/tr]
+[tr][td]Coinbase split[/td][td]50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified rate control, avg288 + median288, 43 profiles, H13 ceiling, E7 relief valve[/td][/tr]
+[tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point[/td][/tr]
+[tr][td]P2P transport[/td][td]X25519 + ChaCha20-Poly1305 AEAD + HKDF-SHA256, modes off/on/required[/td][/tr]
+[tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
+[tr][td]AI Engine[/td][td]v0.25.0 — private, localhost-only, gate-locked, 1,402 tests green[/td][/tr]
+[tr][td]Premine[/td][td]NONE[/td][/tr]
+[tr][td]ICO / IEO[/td][td]NONE[/td][/tr]
+[tr][td]Dev tax[/td][td]NONE[/td][/tr]
+[tr][td]Source[/td][td][url=https://github.com/Neob1844/sost-core]GitHub[/url][/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]ConvergenceX v2.0 — Technical Summary[/b][/size]
+
+ConvergenceX is not a simple hash lottery. Each mining attempt requires solving a 32×32 linear system through 100,000 sequential rounds of integer-only gradient descent, then proving the solution sits in a stable basin of attraction.
+
+[list]
+[li][b]Memory-hard:[/b] 4 GB dataset + 4 GB scratchpad = ~8 GB total mining memory. Node validation ~500 MB.[/li]
+[li][b]Per-block program:[/b] 256-operation program changes every block.[/li]
+[li][b]Difficulty:[/b] avg288 + median288 controller plus ConvergenceX equalizer profiles.[/li]
+[li][b]Integer-only consensus:[/b] zero floating-point operations, Q16.16 fixed-point difficulty encoding.[/li]
+[/list]
+
+Difficulty adjustment summary:
+
+[table]
+[tr][td][b]Feature[/b][/td][td][b]Bitcoin[/b][/td][td][b]Monero[/b][/td][td][b]SOST[/b][/td][/tr]
+[tr][td]Adjustment frequency[/td][td]~2 weeks[/td][td]Every block[/td][td]Every block[/td][/tr]
+[tr][td]Controller[/td][td]Bulk retarget[/td][td]EWMA[/td][td]avg288 + median288 + equalizer profiles[/td][/tr]
+[tr][td]Profiles[/td][td]None[/td][td]None[/td][td]43 profiles[/td][/tr]
+[tr][td]Anti-stall / relief[/td][td]None[/td][td]None[/td][td]Zone-based decay + E7 relief valve + V10 granular cascade at block 6700[/td][/tr]
+[tr][td]Math type[/td][td]Floating-point/reference implementation dependent[/td][td]Integer[/td][td]Q16.16 fixed-point, zero float[/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]cASERT Calibration Status — V10 Granular Relief at Block 6700[/b][/size]
+
+A mandatory calibration of the staged-relief cascade activates at [b]block 6700[/b]. The change refines [b]how[/b] the relief descends; it does not change [b]who[/b] is allowed to mine, [b]how much[/b] they earn, or [b]how[/b] blocks are validated.
+
+[code]
+V9 (current):  drop 3 levels every 60 s, starting at 540 s, floor E7
+V10 (≥ 6700):  drop 1 level every 60 s, starting at 600 s, floor E7
+[/code]
+
+[b]No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.[/b]
+
+Anti-stall, lag clamp, future-timestamp drift cap (+60 s) and bitsQ are all unchanged. Monte Carlo fairness simulation (5,000 blocks per scheme, seed 42, 5-miner mix sized to the live chain) shows every miner stays within ±0.6 % of its hashrate share — on par with V9 — while the count of E7-class blocks drops ~22 % (1,475 vs 1,896 / 1,811), so each block lands at a healthier intermediate profile (H6 / H4 / H1 / B0 / E1) and the bitsQ controller no longer needs to push back the other way.
+
+Update before block 6700:
+
+[code]
+cd ~/SOST/sostcore/sost-core && git pull --ff-only origin main
+cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
+  cmake --build . --target sost-node sost-miner -j$(nproc)
+# then restart your sost-node and sost-miner
+[/code]
+
+Make sure NTP is active ([code]sudo timedatectl set-ntp true[/code]) — the +60 s future-drift cap from the 6550 fork is unchanged.
+
+Full design: [code]docs/granular_relief_fork_6700.md[/code].
+
+[hr]
+
+[size=14pt][b]Core Economic Design[/b][/size]
+
+Every SOST block automatically allocates:
+
+[code]
+50% → miner
+25% → Gold Funding Vault
+25% → PoPC Pool
+[/code]
+
+This is a consensus rule. A block with the wrong split is invalid.
+
+The Gold Vault is designed to accumulate protocol-level gold reserves over time. The PoPC Pool powers Proof of Personal Custody, a future mechanism intended to reward holders who self-custody gold and prove it.
+
+SOST is [b]not pegged to gold[/b]. Holders have no redemption right against the reserve. There is no stablecoin mechanic, no oracle dependency for consensus and no algorithmic peg.
+
+[size=12pt][b]PoPC Status[/b][/size]
+
+PoPC is implemented and documented, but [b]NOT yet active on mainnet[/b]. Activation is planned only after technical and network conditions are met, including:
+
+[list]
+[li]Block height ≥ 10,000[/li]
+[li]Sustained network stability[/li]
+[li]Sufficient independent node/miner participation[/li]
+[li]PoPC contract validation[/li]
+[li]Explorer and wallet readiness[/li]
+[/list]
+
+[hr]
+
+[size=14pt][b]SOST DEX — Alpha Live[/b][/size]
+
+SOST integrates a signed, encrypted and verifiable position trading desk for tokenized gold and native SOST-side rights. This is [b]not[/b] a classic AMM and [b]not[/b] a generic token-swap interface.
+
+Current alpha stack:
+
+[list]
+[li]Browser wallet[/li]
+[li]AI copilot[/li]
+[li]E2E encrypted deal flow[/li]
+[li]Private inbox[/li]
+[li]Position trading desk[/li]
+[li]Operator-assisted gates for sensitive execution during alpha[/li]
+[/list]
+
+DEX access:
+
+[list]
+[li][url=https://sostcore.com/sost-dex.html]https://sostcore.com/sost-dex.html[/url][/li]
+[li][url=https://sostprotocol.com/sost-dex.html]https://sostprotocol.com/sost-dex.html[/url][/li]
+[/list]
+
+Gold reserve wallet:
+
+[url=https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6]Etherscan — Gold Reserve Wallet[/url]
+
+[hr]
+
+[size=14pt][b]Fair Launch[/b][/size]
+
+[list]
+[li][b]Genesis:[/b] March 15, 2026, 18:00:00 UTC[/li]
+[li][b]No premine.[/b][/li]
+[li][b]No ICO / IEO.[/b][/li]
+[li][b]No dev tax.[/b][/li]
+[li][b]Source code public from genesis.[/b][/li]
+[li][b]Founder mining disclosure:[/b] the founder mined solo during the early post-genesis phase for live consensus and infrastructure testing. All blocks are publicly visible on the explorer. The founder had no algorithmic advantage — the same binary and same rules applied.[/li]
+[/list]
+
+[hr]
+
+[size=14pt][b]Tokenomics[/b][/size]
+
+[list]
+[li]Epoch 0 reward: [b]7.85100863 SOST[/b] per block[/li]
+[li]Decay factor: q = e^(-1/4) ≈ 0.7788 per epoch[/li]
+[li]Epoch length: 131,553 blocks (~2.5 years)[/li]
+[li]Hard cap: [b]4,669,201 SOST[/b][/li]
+[li]~50% to miners, ~25% to Gold Vault, ~25% to PoPC Pool — every block[/li]
+[li]No inflation mechanism. No minting function. No governance override.[/li]
+[/list]
+
+[hr]
+
+[size=14pt][b]How to Mine[/b][/size]
+
+[b]Requirements:[/b] Linux x86_64, 8 GB RAM minimum, CPU-only.
+
+[code]
+git clone https://github.com/Neob1844/sost-core.git
+cd sost-core && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+cp ../genesis_block.json .
+
+# Direct P2P sync
+./sost-node --genesis genesis_block.json \
+  --connect seed.sostcore.com:19333 \
+  --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+  --profile mainnet --p2p-enc off
+
+# Bootstrap fast-start
+curl -o chain.json https://sostcore.com/bootstrap-chain.json
+
+./sost-node --genesis genesis_block.json --chain chain.json \
+  --connect seed.sostcore.com:19333 \
+  --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+  --profile mainnet --p2p-enc off
+
+# Verify height
+curl -s --user YOUR_USER:YOUR_PASS \
+  -d '{"method":"getblockcount","params":[],"id":1}' \
+  http://127.0.0.1:18232
+
+# Run miner after node is synced
+./sost-miner --address YOUR_SOST_ADDRESS \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+  --blocks 999999 --profile mainnet
+[/code]
+
+Wallet:
+
+[url=https://sostcore.com/sost-wallet.html]https://sostcore.com/sost-wallet.html[/url]
+
+[hr]
+
+[size=14pt][b]Ecosystem[/b][/size]
+
+[b]GeaSpirit — Multi-Commodity Mineral Intelligence Platform[/b]
+
+GeaSpirit is a remote sensing and exploration intelligence platform for metallic and non-metallic mineral systems. Validated commodity types include Porphyry Cu, Orogenic Au, IOCG, SEDEX Cu-Pb-Zn, Sediment-hosted Cu and Lithium brines/salares.
+
+[i]Goal: know what lies beneath the Earth's surface before the first drill ever turns.[/i]
+
+[b]Materials Discovery Engine[/b]
+
+Computational materials discovery platform with a 77,296-material corpus and missions including PGM-free catalysts, photovoltaics, hydrogen, lithium extraction, desalination, CO2 capture, sodium-ion batteries, solid-state electrolytes, corrosion-resistant materials, heavy metal capture, rare-earth-free magnets, thermoelectrics, ceramics and ammonia catalysts.
+
+[i]Goal: design the materials the world needs tomorrow — entirely on a computer, before they ever exist in a lab.[/i]
+
+[b]SOST AI Engine[/b]
+
+Private autonomous research lab orchestrating Materials Engine, GeaSpirit and Useful Compute through a unified mission engine, scientist swarm and approval ritual. Localhost only. Gate-locked. See the dedicated section above.
+
+[hr]
+
+[size=14pt][b]Roadmap Snapshot[/b][/size]
+
+[table]
+[tr][td][b]Milestone[/b][/td][td][b]Status[/b][/td][/tr]
+[tr][td]Genesis + fair launch[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]Public announcement + community mining[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]Dynamic checkpoint system[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]Historical P2P sync hardening[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]Encrypted P2P transport validation[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]cASERT calibration — H13, E7 relief, 43 profiles[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]cASERT empirical review — no consensus fork needed (April 27)[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]V10 granular relief calibration at block 6700[/td][td][color=orange]MANDATORY UPDATE — activates at block 6700[/color][/td][/tr]
+[tr][td]SOSTEscrow V2 on Sepolia[/td][td][color=green]DONE[/color][/td][/tr]
+[tr][td]SOST DEX alpha[/td][td][color=green]LIVE ALPHA[/color][/td][/tr]
+[tr][td]SOST AI Engine v0.25.0 — M14 → M25 (1,402 tests green)[/td][td][color=green]DONE — private autonomous lab[/color][/td][/tr]
+[tr][td]Useful Compute infrastructure — task server, worker, ranking, audit export[/td][td][color=green]LIVE DRY-RUN / TESTING ONLY[/color][/td][/tr]
+[tr][td]Useful Compute rewards[/td][td][color=orange]POSTPONED — future task families to be announced individually[/color][/td][/tr]
+[tr][td]Useful Compute Heavy task layer[/td][td][color=orange]RESEARCH / TASK DESIGN IN PROGRESS — driven by AI Engine M24[/color][/td][/tr]
+[tr][td]Gold Vault governance rules[/td][td]PLANNED — Block 10,000[/td][/tr]
+[tr][td]PoPC operational activation[/td][td]PLANNED — Block 10,000+ and condition-dependent[/td][/tr]
+[tr][td]Public launch phase / exchange outreach[/td][td]Planned from June 16, 2026, subject to stability[/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]Links[/b][/size]
+
+[list]
+[li][b]Website:[/b] [url=https://sostcore.com]https://sostcore.com[/url] | [url=https://sostprotocol.com]https://sostprotocol.com[/url][/li]
+[li][b]Explorer:[/b] [url=https://sostcore.com/sost-explorer.html]https://sostcore.com/sost-explorer.html[/url][/li]
+[li][b]AI Engine page:[/b] [url=https://sostcore.com/sost-ai-engine.html]https://sostcore.com/sost-ai-engine.html[/url][/li]
+[li][b]Materials Engine page:[/b] [url=https://sostcore.com/sost-materials-engine.html]https://sostcore.com/sost-materials-engine.html[/url][/li]
+[li][b]GeaSpirit page:[/b] [url=https://sostcore.com/sost-geaspirit.html]https://sostcore.com/sost-geaspirit.html[/url][/li]
+[li][b]Useful Compute API:[/b] [url=https://sostcore.com/api/useful-compute/health]https://sostcore.com/api/useful-compute/health[/url][/li]
+[li][b]GitHub:[/b] [url=https://github.com/Neob1844/sost-core]https://github.com/Neob1844/sost-core[/url][/li]
+[li][b]Wallet:[/b] [url=https://sostcore.com/sost-wallet.html]https://sostcore.com/sost-wallet.html[/url][/li]
+[li][b]DEX:[/b] [url=https://sostcore.com/sost-dex.html]https://sostcore.com/sost-dex.html[/url][/li]
+[li][b]Contact:[/b] [url=https://sostcore.com/sost-contact.html]https://sostcore.com/sost-contact.html[/url][/li]
+[/list]
+
+[hr]
+
+[size=10pt][b]LEGAL DISCLAIMER[/b][/size]
+
+SOST is experimental, unaudited software. It is a completely new proof-of-work protocol — not a fork of Bitcoin, Litecoin, Monero, RandomX, Ethash, Equihash, CryptoNight, X11, Scrypt, or any other existing cryptocurrency or algorithm. ConvergenceX, cASERT, the Useful Compute infrastructure, the SOST AI Engine and the constitutional economic model are original designs that have not been independently verified by any third-party security auditing firm.
+
+This software is provided "AS IS" without warranty of any kind. The developer (NeoB) makes no representations or warranties regarding security, reliability or fitness for purpose. Undiscovered vulnerabilities, bugs or design flaws may exist that could result in loss of funds, consensus failures or other adverse outcomes.
+
+[b]Every participant is solely and entirely responsible for their own participation decisions and for understanding the risks involved.[/b]
+
+The gold reserve mechanism is not a redemption right, not a price guarantee and not a stability mechanism. SOST is not a security, not a stablecoin and not financial advice.
+
+Useful Compute rewards are currently postponed. The existing worker and task server are available for public dry-run testing only. Current Light or Heavy worker activity is not reward-eligible and no payout manifest will be generated for current testing activity. Future reward-bearing tasks, if activated, will be announced in advance with final task definitions, eligibility rules, verification rules and activation windows.
+
+The SOST AI Engine is a private operator-only research surface running entirely on localhost. It does not expose a public API, does not publish to the website, does not touch consensus, does not run DFT, does not activate rewards and cannot approve its own decisions. Any externally visible artefact attributed to the AI Engine is the result of an explicit operator-approved cycle.
+
+By participating in the SOST network — mining, holding, transacting, voluntarily testing Useful Compute workers or interacting with the AI Engine — you accept these terms and acknowledge full personal responsibility for any outcomes.
