@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.21.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.22.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,272 / 1,272 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; network OFF by default</span>
+      <span class="val">1,302 / 1,302 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; research frontier map &middot; strategic 40/30/20/10 allocator &middot; weekly canonical roadmap &middot; anti-obsession guard &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1291,6 +1291,85 @@
         </ul>
       </div>
     </div>
+
+    <!-- M22 (Research Frontier Map + Strategic Autonomy) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M22 &mdash; Research Frontier Map + Strategic Autonomy (40/30/20/10 attention split + weekly roadmap)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the "agenda" gap. M21 gave the engine voices and a compass; M22 gives it
+          a <em>map and a calendar</em>. Every recent hypothesis is grouped into a research
+          frontier, gaps in coverage are surfaced, the next cycle's attention is split
+          across explore / exploit / falsify / review, and a weekly roadmap is rendered
+          alongside an anti-obsession watchdog. <strong>No new execution permissions; the
+          system still cannot run anything autonomously.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>Frontier map:</strong>
+              <code>frontier_map.py</code> reads M21 mission_hypotheses + M19
+              outcome_ledger + canonical_objectives. Coarse family detection via ordered
+              substring rules (LDH / kesterite / antimony chalcogenide / oxysulfide /
+              single-atom / PGM / phosphide / nitride / sulfide / layered oxide / ceramic).
+              Each <code>Frontier</code> carries hypothesis count, average swarm + alignment
+              scores, three representative subjects, positive/negative outcome counts and a
+              status label (<code>active</code> / <code>thin</code> / <code>stagnant</code>
+              / <code>contested</code>).</li>
+          <li><strong>Research-gap detector:</strong>
+              <code>research_gap_detector.py</code> surfaces five canonical gap kinds:
+              <code>many_ideas_no_evidence</code> (many hypotheses, zero positives),
+              <code>evidence_no_exploration</code> (positives but no recent extension),
+              <code>recurring_contradictions</code> (same swarm contradiction string seen
+              ≥&nbsp;3 cycles), <code>promising_no_validation</code> (high alignment + swarm
+              but no experiment plan attached), <code>objective_uncovered</code> (canonical
+              objective with zero matched hypotheses).</li>
+          <li><strong>Strategic allocator (40 / 30 / 20 / 10):</strong>
+              <code>strategic_allocator.py</code> proposes the next cycle's attention
+              split &mdash; <strong>40 % exploit</strong> (active frontiers with the highest
+              combined score), <strong>30 % explore</strong> (uncovered objectives + thin
+              frontiers), <strong>20 % falsify</strong> (high-promise hypotheses without a
+              plan), <strong>10 % review</strong> (stagnant / contested frontiers + recurring
+              contradictions). Each item carries weight, target, detail and rationale.</li>
+          <li><strong>Anti-obsession guard:</strong>
+              <code>anti_obsession_guard.py</code> watches the family distribution of the
+              last 30 mission_hypotheses. If any one family covers more than 40 % of the
+              window (and the sample is at least 10), it raises an
+              <code>ObsessionFlag</code> with an explicit "diversify with creativity=wild
+              or seed prompts from a different family" suggestion. Saves the engine from
+              getting locked onto a pretty chemistry just because keywords keep matching.</li>
+          <li><strong>Canonical weekly roadmap:</strong>
+              <code>canonical_roadmap.py</code> combines all four pieces into one
+              operator-facing plan: <em>try this week</em> (exploit + falsify),
+              <em>explore this week</em>, <em>archive / discard</em> (contested + thin
+              frontiers with low scores), <em>wait — needs more data</em> (review items),
+              plus an anti-obsession notes block. <strong>Internal-only; the roadmap is
+              advisory and does not authorise execution.</strong></li>
+          <li><strong>Three new capability gates (deny-by-default):</strong>
+              <code>can_build_frontier_map</code>, <code>can_allocate_research_attention</code>,
+              <code>can_write_roadmap</code> &mdash; <code>true</code> for materials,
+              geaspirit, useful_compute; <code>false</code> for sost, geadeep,
+              materials_discovery. The canonical gate set is now <strong>seventeen wide</strong>
+              (5 + 3 + 3 + 3 + 3). The hard locks (run_dft / publish / touch_consensus /
+              execute_*) remain false everywhere.</li>
+          <li><strong>CLI:</strong>
+              <code>scripts/multi_ai_frontier_cycle.py</code> runs the pipeline end to end
+              and renders <code>reports/ai_engine/frontier/&lt;UTC&gt;_&lt;slug&gt;/</code>
+              with the six canonical files: <code>frontier_map.json</code>,
+              <code>frontier_map.md</code>, <code>research_gaps.md</code>,
+              <code>strategic_allocation.json</code>, <code>weekly_roadmap.md</code>,
+              <code>anti_obsession_report.md</code>.</li>
+          <li>safety invariants: M22 grants no new execution surface; no auto-DFT, no
+              auto-publication, no auto-commits, no consensus surface, no new network
+              capability. The live unified-lab daemon keeps running unchanged.
+              <strong>30 new tests; 1,302 / 1,302 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1466,7 +1545,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,272 / 1,272 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,302 / 1,302 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
