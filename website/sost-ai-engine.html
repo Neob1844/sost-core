@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.20.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.21.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,239 / 1,239 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; network OFF by default</span>
+      <span class="val">1,272 / 1,272 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1211,6 +1211,86 @@
         </ul>
       </div>
     </div>
+
+    <!-- M21 (Canonical Mission Engine + AI Scientist Swarm) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <div class="spec-name">M21 &mdash; Canonical Mission Engine + AI Scientist Swarm (six roles + contradiction-to-discovery)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the "criterion" gap: the engine could ideate, plan, replay and score, but it
+          had no <em>explicit compass</em>. M21 codifies the project objectives, runs every
+          hypothesis through a six-role scientist swarm, mines contradictions for refinement
+          opportunities, and persists the canonical memory of the cycle. The system stops
+          being "the AI that proposes things" and starts being <strong>"the AI that asks
+          itself if its proposals would have worked"</strong> — guided by an operator-defined
+          mission. <strong>No new execution permissions.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>Canonical objectives:</strong>
+              <code>canonical_objectives.py</code> codifies eight materials objectives
+              (defensible_discovery, cost_abundance_stability, reduce_false_positives_pre_dft,
+              catalysts_no_pgm, non_toxic_pv, hydrogen_proton_membranes, water_desalination,
+              industrial_robust), six geaspirit objectives (real_world_systems,
+              deep_sea_environment, cost_near_concrete, proxy_vs_proof, multi_layer_evidence,
+              public_safety_review), two geadeep objectives (deep_sea_energy,
+              manufacturability_at_scale) and two useful_compute objectives (determinism,
+              reproducibility). Each objective carries align_keywords + kill_criteria +
+              proxies as data.</li>
+          <li><strong>Mission alignment scorer:</strong>
+              <code>mission_alignment.py</code> scores a hypothesis against the canonical
+              objectives for its project. Per-objective score in [0, 1], aggregate weighted
+              score, fired-kill-criteria flag, matched-objective count. Refuses to run when
+              <code>can_rank_mission_alignment</code> is denied.</li>
+          <li><strong>Six-role AI scientist swarm:</strong>
+              <code>ai_scientist_swarm.py</code> runs six pure-function roles on every
+              hypothesis &mdash; Discoverer (bold expansion), Skeptic (kill-criteria + weak
+              proxies), Engineer (fabricable / lab_only / unknown), Economist (cheap /
+              moderate / expensive via Pt/Pd/Rh/In/Ga/Cd/Te keywords), Validator (cheapest
+              test menu, project-aware), Historian (consults outcome_ledger for
+              revisit_failed / consistent_with_history / contested_history). Mean of the six
+              role scores becomes the swarm score.</li>
+          <li><strong>Contradiction-to-Discovery loop:</strong>
+              <code>critique_loop.py</code> turns disagreements between roles into structured
+              opportunities: "is there a doping/sibling that resolves the contradiction?
+              does the candidate serve another application better? is the contradiction a
+              false positive in the predictor? does the candidate deserve a plan or an
+              archive?". Archive policy: low swarm_score (&lt; 0.25), or revisit_failed +
+              weak discoverer, or kill-criterion-fired + score &lt; 0.4 forces archive.</li>
+          <li><strong>Canonical memory:</strong>
+              <code>canonical_memory.py</code> persists per-cycle summaries
+              (<code>mission_cycles</code> table) and per-hypothesis records
+              (<code>mission_hypotheses</code> table). Gated by <code>can_update_memory</code>
+              from M19 — only <code>materials</code> writes here.</li>
+          <li><strong>Three new capability gates (deny-by-default):</strong>
+              <code>can_generate_hypothesis</code>, <code>can_critique_hypothesis</code>,
+              <code>can_rank_mission_alignment</code> &mdash; <code>true</code> for materials,
+              geaspirit, useful_compute; <code>false</code> for sost, geadeep,
+              materials_discovery. Canonical gate set is now <strong>fourteen wide</strong>
+              (5 from M18 + 3 from M19 + 3 from M20 + 3 from M21).</li>
+          <li><strong>CLI:</strong>
+              <code>scripts/multi_ai_mission_cycle.py</code> runs the full pipeline end to
+              end: read objectives -&gt; M16 generate N hypotheses -&gt; swarm + critique
+              loop -&gt; mission_alignment -&gt; top-K -&gt; M20 plan + replay -&gt; render
+              <code>reports/ai_engine/mission_cycle/&lt;UTC&gt;_&lt;slug&gt;/</code> with
+              <code>cycle_manifest.json</code>, <code>hypotheses.jsonl</code>,
+              <code>top_picks.md</code>, <code>contradictions.md</code>,
+              <code>next_best_actions.md</code>; per-hypothesis row in the M19 outcome ledger
+              + one heartbeat row.</li>
+          <li>safety invariants: M21 grants no execution surface; no auto-DFT, no
+              auto-publication, no auto-commits, no consensus surface, no new network
+              capability. <code>can_update_memory</code> remains true only for materials.
+              The live unified-lab daemon keeps running unchanged — M21 modules are ready
+              but not yet wired into its hot path.
+              <strong>33 new tests; 1,272 / 1,272 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1386,7 +1466,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,239 / 1,239 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,272 / 1,272 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
