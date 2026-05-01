@@ -285,7 +285,7 @@
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">AI ENGINE &middot; v0.24.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24 (M13 deferred)</div>
+    <div class="hero-label fade-in">AI ENGINE &middot; v0.25.0 &middot; Phase 3 Milestones M1&ndash;M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24 + M25 (M13 deferred)</div>
     <h1 class="fade-in delay-1">
       <span class="accent-cyan">SOST</span> <span class="accent-red">AI</span><br>
       Engine
@@ -302,7 +302,7 @@
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">INTERNAL RESEARCH</span>
       <span class="sep">|</span>
-      <span class="val">1,354 / 1,354 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; research frontier map &middot; strategic 40/30/20/10 allocator &middot; weekly canonical roadmap &middot; anti-obsession guard &middot; localhost ops dashboard &middot; background lab autopilot &middot; useful-compute task classifier &middot; private task staging queue &middot; network OFF by default</span>
+      <span class="val">1,402 / 1,402 tests &middot; 100,000 hypotheses offline &middot; 0 paid calls &middot; 8 official-free source connectors &middot; outcome learning loop &middot; operator command center &middot; miner support triage &middot; scientific validation dossiers &middot; validation campaigns &middot; private operator console &middot; SQLite chat persistence &middot; speculative discovery lab &middot; practical scientific recommendations &middot; multi-repo project registry &middot; deny-by-default capability gates &middot; task-level outcome ledger &middot; per-cycle project heartbeat &middot; autonomous scoreboard &middot; experiment planner &middot; replay sandbox &middot; counterfactual GO/MAYBE/NO-GO &middot; canonical mission objectives &middot; six-role AI scientist swarm &middot; contradiction-to-discovery loop &middot; research frontier map &middot; strategic 40/30/20/10 allocator &middot; weekly canonical roadmap &middot; anti-obsession guard &middot; localhost ops dashboard &middot; background lab autopilot &middot; useful-compute task classifier &middot; private task staging queue &middot; daily brief generator &middot; operator approval inbox &middot; executive summary &middot; operator feedback loop &middot; network OFF by default</span>
     </div>
   </div>
 </section>
@@ -1508,6 +1508,92 @@
         </ul>
       </div>
     </div>
+
+    <!-- M25 (Human Command Center + Approval Ritual) -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">M25 &mdash; Human Command Center + Approval Ritual (daily brief, approval inbox, executive summary, operator feedback loop)</div>
+        </div>
+        <span class="spec-tag immutable">SHIPPED</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Closes the loop between the autonomous engine and the human operator. The AI
+          may *propose* concrete decisions (campaigns, dossiers, false-positive archives,
+          frontier promotions, useful-compute staging requests, DFT input prep);
+          the operator approves or rejects them. <strong>Golden rule: the AI may
+          ask for permission. The AI cannot grant permission to itself.</strong>
+        </p>
+        <ul class="spec-list">
+          <li><strong>Approval request schema:</strong>
+              <code>approval_request.py</code>. <code>ApprovalRequest</code> dataclass
+              with deterministic <code>request_id</code> (SHA-256 over project / kind /
+              subject / timestamp). Eight canonical kinds:
+              <code>approve_campaign</code>, <code>reject_hypothesis</code>,
+              <code>convert_to_dossier</code>, <code>stage_useful_compute</code>,
+              <code>prepare_dft_input</code>, <code>archive_false_positive</code>,
+              <code>promote_frontier_family</code>, <code>demote_frontier_family</code>.
+              Lifecycle <code>pending → approved | rejected | withdrawn</code>.
+              <code>create()</code> gated by <code>can_create_approval_request</code>;
+              <code>approve()</code> and <code>reject()</code> require a non-empty
+              <code>operator</code> argument — the engine cannot generate one
+              from inside an automated tick.</li>
+          <li><strong>Operator inbox:</strong>
+              <code>operator_inbox.py</code>. Aggregates pending approvals across
+              projects, sorts by kind priority (false-positive archive ≫ approve
+              campaign), and renders a markdown table for the CLI plus
+              <code>sost_ai_operator_inbox@v1</code> JSON for the dashboard.</li>
+          <li><strong>Daily brief:</strong>
+              <code>daily_brief.py</code>. Five-section UTC report — what the engine
+              <em>did</em> (recent ledger rows), <em>learned</em> (recent canonical
+              mission cycles), <em>found</em> (top frontier families + research gaps),
+              <em>blocked</em> (capability-gate denials in window), and <em>recommends</em>
+              (open approval requests). Saved under
+              <code>reports/ai_engine/daily_brief/&lt;UTC&gt;/</code> as
+              <code>brief.json</code> + <code>brief.md</code>. Default 24h lookback.</li>
+          <li><strong>Operator feedback loop:</strong>
+              <code>operator_feedback.py</code>. On <code>approve</code> →
+              records a <code>useful</code> task outcome in M19's ledger plus a positive
+              <code>hypothesis_learning_event</code>. On <code>reject</code> → records
+              a <code>wrong</code> outcome plus a negative learning event so the
+              M21 swarm down-weights the pattern. Idempotent per <code>request_id</code>.
+              Gated by <code>can_apply_operator_feedback</code> — only
+              <code>materials</code> holds that gate.</li>
+          <li><strong>Executive summary:</strong>
+              <code>executive_summary.py</code>. Top-3-per-section operator view per
+              project: <strong>opportunities</strong> (frontier families ranked by
+              swarm × count + outcome bias), <strong>risks</strong> (research gaps +
+              gate-block density + negative-signal pressure),
+              <strong>next actions</strong> (oldest pending approvals).</li>
+          <li><strong>Dashboard endpoints (M23 surface, extended):</strong>
+              <code>/api/ops/approvals</code>, <code>/api/ops/daily-brief</code>,
+              <code>/api/ops/executive-summary</code>,
+              <code>/api/ops/decision-history</code>. All localhost-only and
+              token-gated; payloads are read-only.</li>
+          <li><strong>Four CLI scripts:</strong>
+              <code>scripts/sost_ai_daily_brief.py</code>,
+              <code>scripts/sost_ai_operator_inbox.py</code>,
+              <code>scripts/sost_ai_approve_request.py</code>,
+              <code>scripts/sost_ai_reject_request.py</code>. Approve/reject scripts
+              require <code>--operator</code>; both refuse to run with an empty
+              operator name. Optional <code>--apply-feedback</code> flag pipes the
+              decision into the M19 ledger.</li>
+          <li><strong>Three new gates, deny-by-default:</strong>
+              <code>can_create_approval_request</code> (true for materials, geaspirit,
+              useful_compute), <code>can_apply_operator_feedback</code> (true only for
+              materials), <code>can_execute_approval</code>
+              (<strong>false everywhere</strong> — even a human approval does not
+              unlock automated execution; the engine still refuses to run side-effects
+              from an approval row by itself).</li>
+          <li>safety invariants: no DFT execution, no public publishing, no consensus
+              surface, no rewards, no self-approval, no new network capability. The
+              dashboard remains localhost-only.
+              <strong>48 new tests; 1,402 / 1,402 total green.</strong></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1683,7 +1769,7 @@
 
     <table class="spec-table">
       <tbody>
-        <tr><td>Tests passing</td><td>1,354 / 1,354 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24; M13 deferred)</td></tr>
+        <tr><td>Tests passing</td><td>1,402 / 1,402 (M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + M10 + M11 + M12 + M14 + M15 + M16 + M17 + M18 + M19 + M20 + M21 + M22 + M23 + M24 + M25; M13 deferred)</td></tr>
         <tr><td>Free public source connectors</td><td>8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, Materials Project, USGS, generic-official)</td></tr>
         <tr><td>Hypothesis generation capacity</td><td>≥ 100,000 candidates offline, in seconds</td></tr>
         <tr><td>Network calls per run (default)</td><td><span class="pill green">0</span> &mdash; network is OFF by default</td></tr>
