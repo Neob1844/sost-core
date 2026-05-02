@@ -44,6 +44,7 @@
 #include "sost/popc_tx_builder.h"
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
+#include "sost/lottery.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -971,6 +972,243 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
      <<",\"mempool_size\":"<<g_mempool.Size()
      <<",\"utxo_count\":"<<g_utxo_set.Size()<<"}";
     return rpc_result(id,s.str());
+}
+
+// V11 Phase 2 (C11) — getlotterystate RPC.
+//
+// Returns the lottery / coinbase shape directive for the NEXT block to be
+// mined (height_next = g_chain_height + 1). The miner consumes this via
+// fetch_lottery_state() to decide which coinbase builder to invoke
+// (build_coinbase_tx, build_phase2_update_coinbase_tx,
+// build_phase2_payout_coinbase_tx). Validator and miner MUST agree on
+// every field — both go through the same lottery helpers.
+//
+// Field semantics (matches docs/V11_PHASE2_RELEASE_NOTES.md / V11_SPEC §3.7):
+//   - height_next            : next block height to mine.
+//   - phase2_height          : V11_PHASE2_HEIGHT (params.h).
+//   - phase2_active          : height_next >= phase2_height.
+//   - lottery_triggered      : sost::lottery::is_lottery_block(height_next, phase2_height).
+//   - pending_lottery_before : chain-state pending value from the last
+//                              StoredBlock's pending_lottery_after (0 if
+//                              chain empty or pre-Phase 2).
+//   - current_lottery_amount : phase2_coinbase_split(subsidy + fees).lottery_share
+//                              (0 if !lottery_triggered).
+//   - coinbase_shape         : "NORMAL" | "UPDATE_EMPTY" | "PAYOUT".
+//   - miner_amount, gold_amount, popc_amount, lottery_payout : actual
+//                              output[0/1/...] amounts the miner must build.
+//   - lottery_winner_pkh     : 40-char hex pkh on PAYOUT, "" otherwise.
+//   - eligible_count, winner_index : eligibility set diagnostics.
+//   - previous_5_block_winners : up to 5 hex pkh entries from H-1 to H-5
+//                              (cooldown diagnostic).
+//   - expected_pending_after : pending_after invariant value the validator
+//                              will check against the next block.
+//
+// total_fees: this RPC has NO mempool snapshot of its own; the next-block
+// fee total cannot be predicted authoritatively before the miner picks
+// the txs. We expose subsidy and the lottery-share computation against
+// `subsidy + 0` (no fees) so the miner can derive the lottery_share for
+// validation cross-check; the miner re-computes the actual amounts using
+// (subsidy + fees) from getblocktemplate. The shape decision and winner
+// selection do NOT depend on fees.
+static std::string handle_getlotterystate(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+
+    const int64_t height_next  = g_chain_height + 1;
+    const int64_t phase2_h     = sost::V11_PHASE2_HEIGHT;
+    const bool    phase2_active = (height_next >= phase2_h) && (phase2_h != INT64_MAX);
+
+    int64_t pending_before = 0;
+    Bytes32 prev_block_hash{};
+    if (!g_blocks.empty()) {
+        const auto& tip = g_blocks.back();
+        pending_before = tip.pending_lottery_after;
+        prev_block_hash = tip.block_id;
+    }
+
+    const int64_t subsidy = sost_subsidy_stocks(height_next);
+    // Lottery share is computed off (subsidy + fees) at miner time; for
+    // the RPC we expose the subsidy-only floor so the miner can validate.
+    const int64_t total_reward_no_fees = subsidy;
+    const auto    split_no_fees = sost::lottery::phase2_coinbase_split(total_reward_no_fees);
+
+    const bool lottery_triggered =
+        phase2_active && sost::lottery::is_lottery_block(height_next, phase2_h);
+
+    const int64_t current_lottery_amount =
+        lottery_triggered ? split_no_fees.lottery_share : 0;
+
+    // ---- Eligibility scan + winner pick (only if triggered) ------------
+    int64_t eligible_count = 0;
+    int64_t winner_index   = -1;
+    PubKeyHash winner_pkh{};
+    bool eligibility_empty = true;
+
+    if (lottery_triggered) {
+        // Project g_blocks into LotteryMinedBlockView. The lottery
+        // helper expects every entry to have height < height_next.
+        std::vector<sost::lottery::LotteryMinedBlockView> history;
+        history.reserve(g_blocks.size());
+        for (const auto& b : g_blocks) {
+            // Coinbase output[0] holds the miner pkh on every block
+            // we've stored. Skip entries whose tx_hexes is empty (should
+            // not happen in production but be defensive).
+            if (b.tx_hexes.empty()) continue;
+            // Deserialize coinbase to extract miner pkh.
+            std::vector<Byte> raw;
+            raw.reserve(b.tx_hexes[0].size() / 2);
+            // simple hex decode
+            auto hx = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+                if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+                return -1;
+            };
+            const std::string& hexstr = b.tx_hexes[0];
+            bool ok = true;
+            for (size_t i = 0; i + 1 < hexstr.size(); i += 2) {
+                int hi = hx(hexstr[i]); int lo = hx(hexstr[i+1]);
+                if (hi < 0 || lo < 0) { ok = false; break; }
+                raw.push_back((Byte)((hi << 4) | lo));
+            }
+            if (!ok || raw.empty()) continue;
+            Transaction cb;
+            std::string derr;
+            if (!Transaction::Deserialize(raw, cb, &derr)) continue;
+            if (cb.outputs.empty()) continue;
+            sost::lottery::LotteryMinedBlockView v;
+            v.height     = b.height;
+            v.miner_pkh  = cb.outputs[0].pubkey_hash;
+            v.block_hash = b.block_id;
+            history.push_back(v);
+        }
+
+        // current_miner_pkh is unused by the C7.1 rule; pass zero pkh.
+        PubKeyHash zero_pkh{};
+        auto eligible = sost::lottery::compute_lottery_eligibility_set(
+            history, height_next, zero_pkh,
+            sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+        eligible_count = (int64_t)eligible.size();
+        eligibility_empty = eligible.empty();
+
+        if (!eligible.empty()) {
+            winner_index = sost::lottery::select_lottery_winner_index(
+                eligible, prev_block_hash, height_next);
+            if (winner_index >= 0 && winner_index < (int64_t)eligible.size()) {
+                winner_pkh = eligible[(size_t)winner_index].pkh;
+            }
+        }
+    }
+
+    // ---- Coinbase shape decision -------------------------------------
+    const char* shape = "NORMAL";
+    int64_t miner_amount   = 0;
+    int64_t gold_amount    = 0;
+    int64_t popc_amount    = 0;
+    int64_t lottery_payout = 0;
+    int64_t expected_pending_after = pending_before;
+
+    if (!lottery_triggered) {
+        // Pre-Phase2 OR Phase2 non-triggered → NORMAL 50/25/25.
+        // Use the standard emission split with subsidy only (fees are
+        // miner-time). Miner computes final amounts including fees.
+        auto std_split = coinbase_split(subsidy);
+        miner_amount = std_split.miner;
+        gold_amount  = std_split.gold_vault;
+        popc_amount  = std_split.popc_pool;
+    } else if (eligibility_empty) {
+        shape        = "UPDATE_EMPTY";
+        miner_amount = subsidy - split_no_fees.lottery_share; // = miner_share
+        gold_amount  = 0;
+        popc_amount  = 0;
+        lottery_payout = 0;
+        expected_pending_after = pending_before + split_no_fees.lottery_share;
+    } else {
+        shape        = "PAYOUT";
+        miner_amount = subsidy - split_no_fees.lottery_share;
+        gold_amount  = 0;
+        popc_amount  = 0;
+        lottery_payout = split_no_fees.lottery_share + pending_before;
+        expected_pending_after = 0;
+    }
+
+    // ---- Previous 5 winners list (cooldown diagnostic) ---------------
+    std::ostringstream prev_arr;
+    prev_arr << "[";
+    bool first = true;
+    for (int back = 1; back <= 5; ++back) {
+        const int64_t h = height_next - back;
+        if (h < 0) break;
+        // find StoredBlock with this height (active chain only)
+        const StoredBlock* found = nullptr;
+        for (auto it = g_blocks.rbegin(); it != g_blocks.rend(); ++it) {
+            if (it->height == h) { found = &*it; break; }
+            if (it->height < h) break;
+        }
+        if (!found) continue;
+        // Extract miner pkh from coinbase
+        PubKeyHash pkh{};
+        if (!found->tx_hexes.empty()) {
+            std::vector<Byte> raw;
+            const std::string& hs = found->tx_hexes[0];
+            auto hx = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+                if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+                return -1;
+            };
+            bool ok = true;
+            raw.reserve(hs.size()/2);
+            for (size_t i = 0; i + 1 < hs.size(); i += 2) {
+                int hi = hx(hs[i]); int lo = hx(hs[i+1]);
+                if (hi < 0 || lo < 0) { ok = false; break; }
+                raw.push_back((Byte)((hi << 4) | lo));
+            }
+            if (ok) {
+                Transaction cb;
+                std::string derr;
+                if (Transaction::Deserialize(raw, cb, &derr) && !cb.outputs.empty()) {
+                    pkh = cb.outputs[0].pubkey_hash;
+                }
+            }
+        }
+        if (!first) prev_arr << ",";
+        first = false;
+        prev_arr << "\"" << to_hex(pkh.data(), pkh.size()) << "\"";
+    }
+    prev_arr << "]";
+
+    // ---- Emit JSON ---------------------------------------------------
+    auto pkh_hex = [](const PubKeyHash& p) -> std::string {
+        return to_hex(p.data(), p.size());
+    };
+    std::string winner_hex;
+    if (std::string(shape) == "PAYOUT") {
+        winner_hex = pkh_hex(winner_pkh);
+    } else {
+        winner_hex = ""; // empty means "n/a"
+    }
+
+    std::ostringstream s;
+    s << "{"
+      << "\"height_next\":" << height_next
+      << ",\"phase2_height\":" << phase2_h
+      << ",\"phase2_active\":" << (phase2_active ? "true" : "false")
+      << ",\"lottery_triggered\":" << (lottery_triggered ? "true" : "false")
+      << ",\"pending_lottery_before\":" << pending_before
+      << ",\"current_lottery_amount\":" << current_lottery_amount
+      << ",\"coinbase_shape\":\"" << shape << "\""
+      << ",\"miner_amount\":" << miner_amount
+      << ",\"gold_amount\":" << gold_amount
+      << ",\"popc_amount\":" << popc_amount
+      << ",\"lottery_payout\":" << lottery_payout
+      << ",\"lottery_winner_pkh\":\"" << winner_hex << "\""
+      << ",\"eligible_count\":" << eligible_count
+      << ",\"winner_index\":" << winner_index
+      << ",\"previous_5_block_winners\":" << prev_arr.str()
+      << ",\"expected_pending_after\":" << expected_pending_after
+      << ",\"subsidy\":" << subsidy
+      << "}";
+    return rpc_result(id, s.str());
 }
 
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
@@ -2552,6 +2790,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getblockhash",handle_getblockhash},
     {"getblock",handle_getblock},
     {"getinfo",handle_getinfo},
+    {"getlotterystate",handle_getlotterystate},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},
@@ -5089,6 +5328,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
 
     static const std::set<std::string> kReadOnly = {
         "getinfo",
+        "getlotterystate",
         "getblockcount",
         "getblockhash",
         "getblock",

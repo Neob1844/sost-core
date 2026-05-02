@@ -31,6 +31,7 @@
 #include "sost/address.h"
 #include "sost/wallet.h"     // V11 Phase 2 — wallet key loading for SbPoW
 #include "sost/sbpow.h"      // V11 Phase 2 — Schnorr signing helpers
+#include "sost/lottery.h"    // V11 Phase 2 (C11) — phase2_coinbase_split helper
 
 #include <fstream>
 #include <cstdio>
@@ -472,6 +473,96 @@ static BlockTemplateResult fetch_block_template() {
     }
     result.count = (int)result.tx_raws.size();
     return result;
+}
+
+// =============================================================================
+// V11 Phase 2 (C11) — fetch lottery state from sost-node via getlotterystate.
+// =============================================================================
+//
+// Mirrors the JSON returned by handle_getlotterystate in sost-node.cpp.
+// `ok` is true iff the RPC succeeded AND every required field parsed.
+// On failure (RPC down, malformed JSON, missing field) the caller MUST
+// abort the block candidate — building a NORMAL coinbase on a triggered
+// Phase-2 block produces a CB11_LOTTERY_SHAPE rejection.
+struct LotteryStateRpc {
+    bool        ok{false};
+    std::string error;
+
+    int64_t     height_next{0};
+    int64_t     phase2_height{INT64_MAX};
+    bool        phase2_active{false};
+    bool        lottery_triggered{false};
+    int64_t     pending_lottery_before{0};
+    int64_t     current_lottery_amount{0};
+    std::string coinbase_shape;            // "NORMAL" | "UPDATE_EMPTY" | "PAYOUT"
+    int64_t     miner_amount{0};
+    int64_t     gold_amount{0};
+    int64_t     popc_amount{0};
+    int64_t     lottery_payout{0};
+    std::string lottery_winner_pkh_hex;    // 40-char hex on PAYOUT, "" otherwise
+    int64_t     eligible_count{0};
+    int64_t     winner_index{-1};
+    int64_t     expected_pending_after{0};
+    int64_t     subsidy{0};
+};
+
+// jbool helper: pulls a "key":true/false JSON pair.
+static bool jbool(const std::string& j, const std::string& k, bool def = false) {
+    std::string n = "\"" + k + "\"";
+    auto p = j.find(n);
+    if (p == std::string::npos) return def;
+    p = j.find(':', p + n.size());
+    if (p == std::string::npos) return def;
+    p++;
+    while (p < j.size() && (j[p] == ' ' || j[p] == '\t')) p++;
+    if (p + 4 <= j.size() && j.compare(p, 4, "true") == 0)  return true;
+    if (p + 5 <= j.size() && j.compare(p, 5, "false") == 0) return false;
+    return def;
+}
+
+static LotteryStateRpc fetch_lottery_state(int64_t /*expected_h*/) {
+    LotteryStateRpc r;
+    if (g_rpc_url.empty()) {
+        r.error = "rpc-url empty (miner running without --rpc)";
+        return r;
+    }
+    std::string raw_resp = rpc_call("getlotterystate");
+    if (raw_resp.empty()) {
+        r.error = "rpc connection failed or empty response";
+        return r;
+    }
+    if (raw_resp.find("\"error\"") != std::string::npos &&
+        raw_resp.find("\"result\"") == std::string::npos) {
+        r.error = "rpc returned error: " + raw_resp;
+        return r;
+    }
+    // parse fields directly off the result JSON (jstr/jint don't care about
+    // the wrapping envelope as long as keys are unique).
+    r.height_next            = jint(raw_resp, "height_next");
+    r.phase2_height          = jint(raw_resp, "phase2_height");
+    r.phase2_active          = jbool(raw_resp, "phase2_active");
+    r.lottery_triggered      = jbool(raw_resp, "lottery_triggered");
+    r.pending_lottery_before = jint(raw_resp, "pending_lottery_before");
+    r.current_lottery_amount = jint(raw_resp, "current_lottery_amount");
+    r.coinbase_shape         = jstr(raw_resp, "coinbase_shape");
+    r.miner_amount           = jint(raw_resp, "miner_amount");
+    r.gold_amount            = jint(raw_resp, "gold_amount");
+    r.popc_amount            = jint(raw_resp, "popc_amount");
+    r.lottery_payout         = jint(raw_resp, "lottery_payout");
+    r.lottery_winner_pkh_hex = jstr(raw_resp, "lottery_winner_pkh");
+    r.eligible_count         = jint(raw_resp, "eligible_count");
+    r.winner_index           = jint(raw_resp, "winner_index");
+    r.expected_pending_after = jint(raw_resp, "expected_pending_after");
+    r.subsidy                = jint(raw_resp, "subsidy");
+
+    if (r.coinbase_shape != "NORMAL" &&
+        r.coinbase_shape != "UPDATE_EMPTY" &&
+        r.coinbase_shape != "PAYOUT") {
+        r.error = "missing or invalid coinbase_shape in response";
+        return r;
+    }
+    r.ok = true;
+    return r;
 }
 
 // =============================================================================
@@ -926,22 +1017,84 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         }
     }
 
-    // Coinbase = subsidy + fees, split 50/25/25.
+    // Coinbase = subsidy + fees, dispatched by V11 Phase 2 RPC state.
     //
-    // V11 Phase 2 (C8) — V11_PHASE2_HEIGHT is now 10000 (set by C10).
-    // FOLLOW-UP COMMIT REQUIRED before the chain reaches height 10000:
-    // when sost::lottery::is_lottery_block(h, V11_PHASE2_HEIGHT) returns
-    // true, this builder MUST be replaced with build_phase2_payout_coinbase_tx
-    // (when the eligibility set is non-empty) or
-    // build_phase2_update_coinbase_tx (when empty). That requires an RPC
-    // path to fetch the eligibility set and pending_lottery_amount from
-    // the node. Until the wiring lands, miners running this binary at
-    // height >= 10000 will produce 50/25/25 coinbases on triggered
-    // blocks and the validator will reject them with CB11_LOTTERY_SHAPE.
-    // See docs/V11_PHASE2_RELEASE_NOTES.md "Operational notes" section.
+    // V11 Phase 2 (C11) — fetch the lottery shape directive from the node.
+    //   "NORMAL"        → 3-output 50/25/25 (MINER/GOLD/POPC) — pre-Phase 2
+    //                     OR Phase 2 non-triggered.
+    //   "UPDATE_EMPTY"  → 1-output coinbase (MINER only); the lottery
+    //                     share is withheld in chain-state pending.
+    //   "PAYOUT"        → 2-output coinbase (MINER + LOTTERY); the LOTTERY
+    //                     output amount is lottery_share + pending_before
+    //                     and the pkh is the deterministic winner picked
+    //                     by the node.
+    //
+    // The RPC reports its own lottery_share computed against subsidy only.
+    // Fees are miner-time, so we re-derive the (subsidy+fees) lottery share
+    // here and pass that into the Phase 2 builders.
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
-    Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
+    Transaction coinbase_tx;
+
+    LotteryStateRpc ls = fetch_lottery_state(h);
+    if (!ls.ok) {
+        printf("[MINER] fetch_lottery_state failed: %s; aborting block candidate.\n",
+               ls.error.c_str());
+        return false;
+    }
+    if (ls.height_next != h) {
+        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; "
+               "aborting block candidate.\n",
+               (long long)ls.height_next, (long long)h);
+        return false;
+    }
+
+    if (ls.coinbase_shape == "NORMAL") {
+        coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
+    } else if (ls.coinbase_shape == "UPDATE_EMPTY") {
+        // Phase 2 triggered + empty eligibility → withhold lottery share
+        // in chain-state pending; emit ONLY a MINER output.
+        const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
+        const int64_t miner_share = p2split.miner_share;
+        coinbase_tx = build_phase2_update_coinbase_tx(h, miner_share, g_miner_pkh);
+        printf("[MINER] Phase 2 UPDATE_EMPTY: miner_share=%lld, lottery_share=%lld "
+               "→ pending (no winner this block)\n",
+               (long long)miner_share, (long long)p2split.lottery_share);
+    } else if (ls.coinbase_shape == "PAYOUT") {
+        // Phase 2 triggered + non-empty → emit MINER + LOTTERY outputs.
+        const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
+        const int64_t miner_share = p2split.miner_share;
+        const int64_t lottery_amount =
+            p2split.lottery_share + ls.pending_lottery_before;
+
+        // Decode winner pkh from RPC hex.
+        if (ls.lottery_winner_pkh_hex.size() != 40) {
+            printf("[MINER] Phase 2 PAYOUT: lottery_winner_pkh wrong length (%zu); "
+                   "aborting block candidate.\n",
+                   ls.lottery_winner_pkh_hex.size());
+            return false;
+        }
+        std::vector<uint8_t> winner_raw;
+        if (!hex_to_raw(ls.lottery_winner_pkh_hex, winner_raw) || winner_raw.size() != 20) {
+            printf("[MINER] Phase 2 PAYOUT: lottery_winner_pkh hex decode failed; "
+                   "aborting block candidate.\n");
+            return false;
+        }
+        PubKeyHash winner_pkh{};
+        std::copy(winner_raw.begin(), winner_raw.end(), winner_pkh.begin());
+
+        coinbase_tx = build_phase2_payout_coinbase_tx(
+            h, miner_share, lottery_amount, g_miner_pkh, winner_pkh);
+        printf("[MINER] Phase 2 PAYOUT: miner_share=%lld, lottery_payout=%lld "
+               "(share=%lld + pending=%lld), winner=%s\n",
+               (long long)miner_share, (long long)lottery_amount,
+               (long long)p2split.lottery_share, (long long)ls.pending_lottery_before,
+               ls.lottery_winner_pkh_hex.substr(0, 16).c_str());
+    } else {
+        printf("[MINER] Phase 2 unknown coinbase_shape '%s'; aborting block candidate.\n",
+               ls.coinbase_shape.c_str());
+        return false;
+    }
 
     std::vector<Transaction> block_txs;
     block_txs.push_back(coinbase_tx);
@@ -1737,6 +1890,36 @@ int main(int argc, char** argv) {
             load_chain(chain_path);
             printf("Continuing from height %lld, tip=%s\n\n",
                    (long long)(g_chain.size()-1), hex(g_tip_hash).substr(0,16).c_str());
+        }
+    }
+
+    // V11 Phase 2 (C11) — wallet-backed mining key required at activation.
+    //
+    // Determine the next block height the miner will produce. If we have
+    // an RPC connection, ask the node (authoritative); otherwise infer
+    // from the local chain. If that next height is at or past
+    // V11_PHASE2_HEIGHT, refuse to start without --wallet + --mining-key-label.
+    // SbPoW v2 headers REQUIRE a Schnorr signature from the wallet key on
+    // every Phase 2 block; an --address-only invocation cannot produce
+    // a valid header and would burn CPU cycles on rejected blocks.
+    {
+        int64_t next_height_check = (int64_t)g_chain.size(); // height of next block
+        if (!g_rpc_url.empty()) {
+            std::string info = rpc_call("getinfo");
+            if (!info.empty()) {
+                int64_t live_blocks = jint(info, "blocks");
+                if (live_blocks > 0) next_height_check = live_blocks + 1;
+            }
+        }
+        if (next_height_check >= sost::V11_PHASE2_HEIGHT &&
+            sost::V11_PHASE2_HEIGHT != INT64_MAX &&
+            !g_signing_key_loaded) {
+            fprintf(stderr,
+                "[MINER] FATAL: Phase 2 active at height >= V11_PHASE2_HEIGHT "
+                "(=%lld) — wallet-backed mining key required. "
+                "Use --wallet PATH --mining-key-label LABEL.\n",
+                (long long)sost::V11_PHASE2_HEIGHT);
+            return 1;
         }
     }
 

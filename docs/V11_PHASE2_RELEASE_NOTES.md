@@ -59,18 +59,58 @@ sudo systemctl restart sost-miner
 (Adjust paths to match the local deployment.)
 
 ## Operational notes for the miner production loop
-The current `sost-miner.cpp::build_coinbase_tx` call site does NOT
-yet wire the eligibility-set RPC. Before block 10,000 lands a
-follow-up commit must:
-- Add an RPC endpoint that returns the lex-sorted eligibility set
-  for a given height (computed via
-  `compute_lottery_eligibility_set` against chain history).
-- Wire the miner's mining loop to:
-  - call `is_lottery_block(h, V11_PHASE2_HEIGHT)`
-  - if triggered, fetch eligibility set + select winner
-  - dispatch to `build_phase2_payout_coinbase_tx` (PAYOUT) or
-    `build_phase2_update_coinbase_tx` (UPDATE)
-- Tracked under task: pre-activation miner integration.
+
+### C11 — production miner wiring (DONE, activation height unchanged)
+C11 wires the miner production loop to the new node RPC
+`getlotterystate`. The mining loop now dispatches between three
+coinbase builders based on the RPC's `coinbase_shape` field:
+
+| coinbase_shape | builder                              | output count |
+|----------------|--------------------------------------|--------------|
+| `NORMAL`       | `build_coinbase_tx` (50/25/25)       | 3 (MINER+GOLD+POPC) |
+| `UPDATE_EMPTY` | `build_phase2_update_coinbase_tx`    | 1 (MINER only) |
+| `PAYOUT`       | `build_phase2_payout_coinbase_tx`    | 2 (MINER + LOTTERY) |
+
+If the RPC fetch fails (timeout, connection refused, missing field),
+the miner aborts the block candidate and waits for the next loop
+tick. This prevents an unmodified miner from emitting an invalid
+coinbase due to a transient node outage.
+
+Miner invocation:
+- Pre-Phase 2 (legacy address-only):
+  ```
+  sost-miner --address sost1<your40hex> --rpc 127.0.0.1:18232
+  ```
+- Post-Phase 2 (wallet-backed SbPoW signing key required):
+  ```
+  sost-miner --wallet wallet.json --mining-key-label miner1 \
+             --rpc 127.0.0.1:18232
+  ```
+- The miner refuses to start if the chain is at or past
+  `V11_PHASE2_HEIGHT` and the user did NOT supply
+  `--wallet` + `--mining-key-label`.
+
+### Activation height — UNCHANGED at 10,000
+C11 was scoped to ALSO consider lowering `V11_PHASE2_HEIGHT` from
+10,000 to 7,050 (50 blocks past the Phase 1 cASERT V11 fork at
+7,000). That change is NOT in this commit. C3 wired the wallet-key
+flags and the validator-side SbPoW gate, but the miner-side does
+not yet emit a v2 BlockHeader (the fields `version`, miner pubkey
+and miner signature are not plumbed through to `submitblock`).
+Activating Phase 2 today would force every block submission to be
+rejected by the validator's SbPoW gate. The activation height stays
+at 10,000 until the v2-header miner emission lands.
+
+### What unblocks moving activation to 7,050 (or any height)
+- Miner emits `version: 2` in the submitblock JSON.
+- Miner attaches the Schnorr signature of
+  `build_sbpow_message(prev, height, commit, nonce, extra_nonce, pkh)`
+  signed with the wallet key.
+- Node parses `pubkey` / `signature` fields from `submitblock` and
+  passes them to `ValidateSbPoW` (currently passes zero bytes).
+- After those land: re-run TAREA 8 verification matrix. If green,
+  drop activation to a height with >= 200 blocks of margin from the
+  current live tip and >= 50 blocks past `CASERT_V11_HEIGHT`.
 
 ## Test posture
 - ON build: 12 / 12 targeted Phase 2 tests PASS + 38 / 42 full ctest

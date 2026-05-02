@@ -268,6 +268,17 @@ add_executable(test-coinbase-phase2 tests/test_coinbase_phase2.cpp)
 target_link_libraries(test-coinbase-phase2 PRIVATE sost-core)
 add_test(NAME coinbase-phase2 COMMAND test-coinbase-phase2)
 
+# V11 Phase 2 — miner ↔ validator integration (C11).
+# Always built. Exercises the full handshake: build coinbase the way the
+# production miner would (NORMAL / UPDATE_EMPTY / PAYOUT) and feed it to
+# ValidateCoinbaseConsensus with the matching Phase2CoinbaseContext.
+# Boundary heights probed against phase2_height = 7050 (proposed C11
+# activation) — fixture passes a synthetic phase2_height so the file
+# stays valid regardless of the params.h activation value.
+add_executable(test-phase2-miner-integration tests/test_phase2_miner_integration.cpp)
+target_link_libraries(test-phase2-miner-integration PRIVATE sost-core)
+add_test(NAME phase2-miner-integration COMMAND test-phase2-miner-integration)
+
 # V11 Phase 2 — Schnorr-only test binaries. Gated behind
 # SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
 # verify_sbpow_signature, which require the libsecp256k1 schnorrsig
