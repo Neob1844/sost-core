@@ -4546,28 +4546,46 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
 <script src="js/sost-pwa-install.js"></script>
 <script src="js/crt-effects.js"></script>
 <script>
-// Wire the chiptune button: first click starts a melody (Web Audio
-// requires a user gesture); subsequent clicks toggle mute. The
-// emoji updates so the user can see the state.
+// Wire the chiptune button. Each click plays a fresh random melody
+// (Web Audio requires a user gesture, so the click itself unlocks
+// the audio context). Errors are logged to the browser console so
+// the user can diagnose why music doesn't play if a browser blocks
+// AudioContext or the JS bundle failed to load.
+//
+// Fallback chain:
+//   1. window.playRandomMelody  — sost-music.js (60 procedural melodies)
+//   2. _nesPlayRandom           — retro-sounds.js (200 NES chiptunes)
+//   3. console.warn + visual error indicator on the button
 (function(){
   var btn = document.getElementById('nesMuteBtn');
-  if (!btn) return;
-  var started = false;
+  if (!btn) {
+    console.warn('[chiptune] #nesMuteBtn not found in DOM');
+    return;
+  }
   btn.onclick = function(){
-    if (!started) {
-      started = true;
-      try { if (window.nesIsMuted && window.nesIsMuted()) window.nesToggleMute(); } catch(e){}
-      try { if (window.playRandomMelody) window.playRandomMelody(); } catch(e){}
-      btn.title = 'NES chiptune playing — click to mute';
+    try {
+      if (typeof window.playRandomMelody === 'function') {
+        // Unmute first if a previous session left the music engine muted.
+        try {
+          if (window.nesIsMuted && window.nesIsMuted()) window.nesToggleMute();
+        } catch(e) {}
+        window.playRandomMelody();
+      } else if (typeof window._nesPlayRandom === 'function') {
+        window._nesPlayRandom();
+      } else {
+        console.warn('[chiptune] no melody engine loaded — js/sost-music.js or js/retro-sounds.js may have failed');
+        btn.title = 'Chiptune engine not loaded — check browser console';
+        btn.style.borderColor = '#fb010d';
+        return;
+      }
+      btn.title = 'NES chiptune playing — click for next melody';
       btn.style.opacity = '1';
-      return;
+      btn.innerHTML = '\u{1F3AE}';
+    } catch (e) {
+      console.error('[chiptune] play failed:', e);
+      btn.title = 'Chiptune error — check browser console';
+      btn.style.borderColor = '#fb010d';
     }
-    try { if (window.nesToggleMute) window.nesToggleMute(); } catch(e){}
-    var muted = false;
-    try { muted = window.nesIsMuted ? window.nesIsMuted() : false; } catch(e){}
-    btn.title = muted ? 'NES chiptune muted — click to unmute' : 'NES chiptune playing — click to mute';
-    btn.style.opacity = muted ? '0.5' : '1';
-    btn.innerHTML = muted ? '\u{1F507}' : '\u{1F3AE}';
   };
 })();
 </script>

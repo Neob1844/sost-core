@@ -73,6 +73,17 @@
       "body.nav-collapsed nav .container {",
       "  justify-content: flex-end !important;",
       "}",
+      /* Explorer-style nav: <nav><div style=...> with no .container class.
+         Hide the entire flex layout so HIDE NAV reclaims the SOST logo,
+         the EXPLORER label, and the right-side header-link group too.
+         The toggle button itself is appended directly to <nav> as a
+         sibling of this inner div, so it stays visible. Pages that use
+         <nav><div class="container"> (homepage + 45 section pages)
+         are unaffected because the :not(.container) qualifier excludes
+         them — their button lives inside .container and is preserved. */
+      "body.nav-collapsed nav > div:not(.container) {",
+      "  display: none !important;",
+      "}",
       "html.pre-nav-collapsed body.nav-collapsed nav { padding: 4px 0 !important; }",
     ].join("\n");
     (document.head || document.documentElement).appendChild(style);
