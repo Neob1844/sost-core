@@ -509,7 +509,7 @@ elapsed = 3000 s   →  drop 42  (reaches E7 floor from H35)</pre>
         Each block header will carry a public key and a signature over the PoW commitment. A block will be valid only if (i) the signature verifies against that key and (ii) the coinbase miner output pays the address derived from that key. Post-hoc coinbase relabeling becomes impossible — identity is bound <b>before</b> the hash is committed.<br><br>
 
         <b style="color:var(--text)">D · Fair-share lottery with jackpot rollover.</b>
-        On triggered blocks, 50% of the protocol-side allocation (Gold Vault + PoPC Pool budget) is redistributed to one eligible miner via deterministic lottery.<br><br>
+        On triggered blocks, the <b>full protocol-side allocation</b> — the 25% Gold Vault share <i>and</i> the 25% PoPC Pool share, together <b>50% of the block reward</b> — is redirected to one eligible miner via deterministic lottery. The PoW miner always keeps the other 50% (subsidy + all transaction fees); the lottery never touches the miner's share.<br><br>
 
         <span style="color:var(--text)">Frequency schedule (from Phase 2 activation height):</span>
         <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">First 5,000 blocks after Phase 2 activation:  2 of every 3 blocks

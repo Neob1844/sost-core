@@ -415,6 +415,89 @@ static void test_invariant_holds_payout() {
 }
 
 // ---------------------------------------------------------------------------
+// §7 — Subsidy=8 worked example from the design discussion
+// ---------------------------------------------------------------------------
+//
+// Owner-confirmed economics: on triggered blocks the FULL protocol-side
+// allocation (Gold Vault 25 % + PoPC Pool 25 %, together 50 % of the
+// block reward) is redirected to lottery / pending. The PoW miner's 50 %
+// share is never touched. With subsidy = 8 stocks (and zero fees, for
+// arithmetic clarity):
+//
+//   Non-triggered:   miner = 4, gold = 2, popc = 2.
+//   UPDATE empty:    miner = 4, pending += 4.
+//   PAYOUT pending=4: miner = 4, lottery = 4 + 4 = 8, pending → 0.
+//
+// These are exactly the numbers from the design conversation.
+
+static void test_subsidy_8_non_triggered() {
+    printf("\n== §7: subsidy=8 non-triggered (4 / 2 / 2 split) ==\n");
+    const int64_t total = 8;
+    Transaction tx = make_legacy_coinbase(50, total, 0);
+    auto r = ValidateCoinbaseConsensus(tx, 50, total, 0,
+                                       g_gold_vault_pkh, g_popc_pool_pkh,
+                                       /*phase2_ctx=*/nullptr);
+    TEST("non-triggered subsidy=8 passes", r.ok);
+    TEST("miner = 4",  tx.outputs[0].amount == 4);
+    TEST("gold  = 2",  tx.outputs[1].amount == 2);
+    TEST("popc  = 2",  tx.outputs[2].amount == 2);
+    TEST("sum   = 8 = subsidy + fees",
+         tx.outputs[0].amount + tx.outputs[1].amount + tx.outputs[2].amount == total);
+}
+
+static void test_subsidy_8_update() {
+    printf("\n== §7b: subsidy=8 UPDATE (miner=4, pending +=4) ==\n");
+    const int64_t total = 8;
+    Transaction tx = make_update_coinbase(150, total, 0);
+    auto ctx = mk_ctx_update(/*pending_before=*/0, total);
+    auto r = ValidateCoinbaseConsensus(tx, 150, total, 0,
+                                       g_gold_vault_pkh, g_popc_pool_pkh,
+                                       &ctx);
+    TEST("subsidy=8 UPDATE passes", r.ok);
+    TEST("miner = 4 (only output)", tx.outputs[0].amount == 4);
+    TEST("expected_pending_after = 4 (was 0, +lottery_share)",
+         ctx.expected_pending_after == 4);
+    // Invariant: 4 + (4 - 0) == 8
+    TEST("sum(outputs) + Δpending == 8",
+         tx.outputs[0].amount + (ctx.expected_pending_after - ctx.pending_before) == total);
+}
+
+static void test_subsidy_8_payout_with_pending() {
+    printf("\n== §7c: subsidy=8 PAYOUT with pending_before=4 (lottery=8) ==\n");
+    const int64_t total = 8;
+    const int64_t pending_before = 4;
+    Transaction tx = make_payout_coinbase(160, total, 0, pending_before);
+    auto ctx = mk_ctx_payout(pending_before, total, g_winner_pkh);
+    auto r = ValidateCoinbaseConsensus(tx, 160, total, 0,
+                                       g_gold_vault_pkh, g_popc_pool_pkh,
+                                       &ctx);
+    TEST("subsidy=8 PAYOUT (pending=4) passes", r.ok);
+    TEST("miner = 4", tx.outputs[0].amount == 4);
+    TEST("lottery = 4 + 4 = 8 (current_share + pending_before)",
+         tx.outputs[1].amount == 8);
+    TEST("expected_pending_after = 0", ctx.expected_pending_after == 0);
+    // Invariant: (4 + 8) + (0 - 4) == 8
+    TEST("sum(outputs) + Δpending == 8",
+         (tx.outputs[0].amount + tx.outputs[1].amount)
+         + (ctx.expected_pending_after - ctx.pending_before) == total);
+}
+
+static void test_subsidy_8_payout_no_pending() {
+    printf("\n== §7d: subsidy=8 PAYOUT with pending_before=0 (lottery=4) ==\n");
+    const int64_t total = 8;
+    Transaction tx = make_payout_coinbase(150, total, 0, /*pending_before=*/0);
+    auto ctx = mk_ctx_payout(0, total, g_winner_pkh);
+    auto r = ValidateCoinbaseConsensus(tx, 150, total, 0,
+                                       g_gold_vault_pkh, g_popc_pool_pkh,
+                                       &ctx);
+    TEST("subsidy=8 PAYOUT (pending=0) passes", r.ok);
+    TEST("miner = 4",   tx.outputs[0].amount == 4);
+    TEST("lottery = 4", tx.outputs[1].amount == 4);
+    TEST("PoW miner keeps full 50 % regardless of trigger",
+         tx.outputs[0].amount == total / 2);
+}
+
+// ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
 
@@ -444,6 +527,11 @@ int main() {
 
     test_invariant_holds_update();
     test_invariant_holds_payout();
+
+    test_subsidy_8_non_triggered();
+    test_subsidy_8_update();
+    test_subsidy_8_payout_with_pending();
+    test_subsidy_8_payout_no_pending();
 
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
