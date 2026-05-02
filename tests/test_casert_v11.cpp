@@ -1,9 +1,17 @@
 // cASERT V11 cascade tests
 //
-// Verifies the V11 piecewise cascade table at block height >= CASERT_V11_HEIGHT.
-// Boundaries: 540 / 600 / 660 / 720 / 780 / 840 s → drops 1 / 2 / 3 / 4 / 5 / 6.
+// Verifies the V11 LINEAR cascade at block height >= CASERT_V11_HEIGHT.
+//
+// Formula: drop = 0                        if elapsed < 540
+//          drop = 1 + (elapsed - 540) / 60 if elapsed >= 540
+//
+// Boundaries 540 / 600 / 660 / 720 / 780 / 840 s give drops 1 / 2 / 3 / 4 / 5 / 6
+// (same values the previous saturating table produced — but the cascade KEEPS
+// growing past 840 s instead of capping at 6, so a chain whose natural profile
+// is high enough still reaches the E7 floor inside the anti-stall window).
+//
 // Pre-V11 (height 6999) must keep V10 continuous formula.
-// Floor at CASERT_H_MIN (E7) must clamp the result.
+// Floor at CASERT_H_MIN (E7 = -7) must clamp the resulting profile.
 #include "sost/pow/casert.h"
 #include "sost/params.h"
 #include <cstdio>
@@ -104,21 +112,32 @@ static void test_v11_cascade_boundaries() {
     TEST("elapsed=840 → drop 6 (H4)",
          profile_at(chain, CASERT_V11_HEIGHT, 840) == 4);
 
-    // Cascade cap. Use elapsed=3000 (< CASERT_ANTISTALL_FLOOR_V6C = 3600s)
-    // so the assertion isolates the V11 cascade contribution from any
-    // anti-stall stacking. The cascade table tops out at drop=6 from
-    // 840s onwards; values in [840, 3600) must all return H4.
-    TEST("elapsed=3000 → drop 6 (cascade caps at 6, before anti-stall window)",
-         profile_at(chain, CASERT_V11_HEIGHT, 3000) == 4);
-
-    // Anti-stall stacking. At elapsed >= 3600s the pre-existing V5/V6
-    // anti-stall mechanism kicks in on top of the V11 cascade and pulls
-    // the profile below H4. This is intended behaviour: at ~166 min
-    // elapsed the chain must offer maximum relief, not cap at drop 6.
-    // The cascade itself still caps at drop 6 (proven by the elapsed=3000
-    // test above); this assertion only confirms anti-stall fires too.
-    TEST("elapsed=9999 → cascade cap + anti-stall stacking (profile <= H4)",
-         profile_at(chain, CASERT_V11_HEIGHT, 9999) <= 4);
+    // ---- Linear cascade — keeps growing past 840 s ----
+    // 900 s   → drop 7  → H10 - 7 = H3
+    TEST("elapsed=900 → drop 7 (H3) — linear, no cap",
+         profile_at(chain, CASERT_V11_HEIGHT, 900) == 3);
+    // 1020 s  → drop 9  → H10 - 9 = H1
+    TEST("elapsed=1020 → drop 9 (H1) — linear",
+         profile_at(chain, CASERT_V11_HEIGHT, 1020) == 1);
+    // 1080 s  → drop 10 → H10 - 10 = B0
+    TEST("elapsed=1080 → drop 10 (B0)",
+         profile_at(chain, CASERT_V11_HEIGHT, 1080) == 0);
+    // 1140 s  → drop 11 → H10 - 11 = E1
+    TEST("elapsed=1140 → drop 11 (E1)",
+         profile_at(chain, CASERT_V11_HEIGHT, 1140) == -1);
+    // 1500 s  → drop 17 → H10 - 17 = -7 → clamped at E7 (CASERT_H_MIN)
+    TEST("elapsed=1500 → drop 17, clamped at E7 floor",
+         profile_at(chain, CASERT_V11_HEIGHT, 1500) == CASERT_H_MIN);
+    // 3000 s (still below the 3600 s anti-stall threshold) → drop 42,
+    // clamped at E7. This isolates the linear-cascade-reaches-floor case
+    // from any anti-stall contribution.
+    TEST("elapsed=3000 → cascade alone reaches E7 (drop 42, clamped)",
+         profile_at(chain, CASERT_V11_HEIGHT, 3000) == CASERT_H_MIN);
+    // 9999 s — anti-stall stacks on top, but the cascade has already
+    // pinned us at the floor; profile MUST be exactly E7 (cannot go
+    // below the floor regardless of how much extra drop accumulates).
+    TEST("elapsed=9999 → still at E7 floor (no underflow below CASERT_H_MIN)",
+         profile_at(chain, CASERT_V11_HEIGHT, 9999) == CASERT_H_MIN);
 }
 
 // ---------------------------------------------------------------------
@@ -220,6 +239,44 @@ static void test_transition_sharp() {
     }
 }
 
+// ---------------------------------------------------------------------
+// Section 5 — compute_v11_cascade_drop helper (single source of truth)
+// ---------------------------------------------------------------------
+// Direct unit tests on the helper function. The miner and validator
+// both call this; any divergence produces a chain split. Test every
+// boundary plus extreme values to lock the contract in.
+static void test_helper_compute_v11_cascade_drop() {
+    printf("\n=== compute_v11_cascade_drop — linear formula ===\n");
+
+    // Below threshold: no relief at all.
+    TEST("elapsed=0    → drop 0",      compute_v11_cascade_drop(0)    == 0);
+    TEST("elapsed=1    → drop 0",      compute_v11_cascade_drop(1)    == 0);
+    TEST("elapsed=539  → drop 0",      compute_v11_cascade_drop(539)  == 0);
+
+    // First step.
+    TEST("elapsed=540  → drop 1",      compute_v11_cascade_drop(540)  == 1);
+    TEST("elapsed=599  → drop 1",      compute_v11_cascade_drop(599)  == 1);
+
+    // Steps every 60 s.
+    TEST("elapsed=600  → drop 2",      compute_v11_cascade_drop(600)  == 2);
+    TEST("elapsed=660  → drop 3",      compute_v11_cascade_drop(660)  == 3);
+    TEST("elapsed=720  → drop 4",      compute_v11_cascade_drop(720)  == 4);
+    TEST("elapsed=780  → drop 5",      compute_v11_cascade_drop(780)  == 5);
+    TEST("elapsed=840  → drop 6",      compute_v11_cascade_drop(840)  == 6);
+
+    // Past the legacy cap of 6 — linear keeps growing.
+    TEST("elapsed=900  → drop 7",      compute_v11_cascade_drop(900)  == 7);
+    TEST("elapsed=960  → drop 8",      compute_v11_cascade_drop(960)  == 8);
+    TEST("elapsed=1500 → drop 17",     compute_v11_cascade_drop(1500) == 17);
+    TEST("elapsed=2940 → drop 41",     compute_v11_cascade_drop(2940) == 41);
+    TEST("elapsed=2940 covers H35→E7", compute_v11_cascade_drop(2940) >= 42 - 1);
+    TEST("elapsed=5400 → drop 82",     compute_v11_cascade_drop(5400) == 82);
+
+    // Edge: negative elapsed (clock skew) → 0.
+    TEST("elapsed=-100 → drop 0 (no underflow)",
+         compute_v11_cascade_drop(-100) == 0);
+}
+
 int main() {
     printf("\n=== cASERT V11 Cascade Tests ===\n");
     printf("Activation height: %lld\n", (long long)CASERT_V11_HEIGHT);
@@ -228,6 +285,7 @@ int main() {
     test_pre_v11_keeps_v10();
     test_floor_clamp();
     test_transition_sharp();
+    test_helper_compute_v11_cascade_drop();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

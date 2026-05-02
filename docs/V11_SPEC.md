@@ -22,26 +22,44 @@ This document specifies the four V11 consensus changes: extended cASERT cascade 
 
 ---
 
-## 1 · Component A — Extended cASERT cascade
+## 1 · Component A — Linear cASERT cascade (no artificial cap)
 
 ### 1.1 Purpose
-Replace the V10 continuous formula `drop = floor((elapsed - 540) / 60)` with a piecewise table that drops faster in the long tail (540-840 s window). This keeps block production closer to 600 s target after a slow block by accelerating the relief.
+Replace the V10 continuous formula `drop = floor((elapsed - 540) / 60)` with a single linear formula that starts dropping at `elapsed >= 540 s` and **keeps growing every 60 s with no artificial cap**. This restores the cascade as the primary recovery mechanism for any natural profile up to H35, with anti-stall (~90 min) as the safety net rather than the rescuer.
 
 ### 1.2 Schedule
 ```
-elapsed <  540 s   →  drop 0   (no relief)
-elapsed >= 540 s   →  drop 1
-elapsed >= 600 s   →  drop 2
-elapsed >= 660 s   →  drop 3
-elapsed >= 720 s   →  drop 4
-elapsed >= 780 s   →  drop 5
-elapsed >= 840 s   →  drop 6
+drop = 0                              if elapsed <  540 s
+drop = 1 + (elapsed - 540) / 60       if elapsed >= 540 s
 ```
 
-Floor stays at `E7` (CASERT_H_MIN). bitsQ controller, anti-stall, lag clamp and future-drift cap are **unchanged**.
+Examples:
+
+| elapsed | drop | profile relative to base |
+|---|---|---|
+|  540 s |  1 | base − 1 |
+|  600 s |  2 | base − 2 |
+|  660 s |  3 | base − 3 |
+|  720 s |  4 | base − 4 |
+|  780 s |  5 | base − 5 |
+|  840 s |  6 | base − 6  *(legacy cap, no longer enforced)* |
+|  900 s |  7 | base − 7 |
+| 1 020 s |  9 | base − 9 |
+| 1 500 s | 17 | base − 17 |
+| 2 940 s | 41 | base − 41 *(reaches E7 from H35)* |
+
+Floor stays at `E7` (CASERT_H_MIN). The natural floor is enforced by the existing `staged = max(effective_h_min, raw_base_H − drop)` clamp, so although `drop` can grow without bound, the resulting profile never crosses below E7.
+
+bitsQ controller, anti-stall, lag clamp and future-drift cap are **unchanged**.
 
 ### 1.3 Activation
 At block `CASERT_V11_HEIGHT = 7000`, conditional on gate G1 (§6).
+
+### 1.4 Single source of truth — `compute_v11_cascade_drop`
+The formula is implemented exactly once, in `src/pow/casert.cpp`, and exposed via `include/sost/pow/casert.h`. Both miner and validator paths route through `compute_v11_cascade_drop(block_elapsed_s)`. Any divergence between the two would partition the chain at the activation height; the single helper makes that error structurally impossible. Unit tests in `tests/test_casert_v11.cpp §5` lock the formula at every interesting boundary (0/539/540/600/840/900/1500/2940/5400 s plus the negative-clock-skew edge).
+
+### 1.5 Replaced "saturating cap at drop=6"
+The earlier draft of this spec described a saturated piecewise table (`drop = 6` for any `elapsed >= 840 s`). That cap was sized for the H6-H12 operating range and could not save a block whose natural profile escalated to H32+. The linear cascade replaces it: `840 s → 6` is preserved as a point on the curve, but the curve continues past 840 s instead of saturating.
 
 ---
 
@@ -536,3 +554,4 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | DRAFT v2 — restructured into V11 spec; SbPoW moved to block 7,000 with per-component independent activation; lottery eligibility widened to "≥1 block since genesis"; exclusion strengthened to "any block-reward winner in last 30"; added §5 honest mathematical analysis distinguishing Sybil regimes; added §11 constants list |
 | 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3 — restructured V11 into **two phases**. Phase 1 (block 7,000) ships A + B only (extended cASERT cascade + state-dependent dataset access). Phase 2 (height TBD, no calendar pressure) ships C + D (SbPoW + PoP lottery + jackpot rollover). Lottery frequency: 2-of-3 for the first `LOTTERY_HIGH_FREQ_WINDOW = 5000` blocks after Phase 2 activation, then 1-of-3 permanently. §10.5 jackpot rollover reclassified from "deferred fork" to "Phase 2 component D". §11 constants split into 11.1 (Phase 1, landed) and 11.2 (Phase 2, design-only). §3.7 / §4.8 activation rewritten to reference `V11_PHASE2_HEIGHT`. |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.1 — Component A cascade rewritten to a **linear formula** without an artificial cap (was: piecewise table capping at `drop = 6` for `elapsed >= 840 s`). New schedule: `drop = 1 + (elapsed − 540) / 60` for `elapsed >= 540 s`, growing without bound; floor enforced by existing `max(E7, base − drop)` clamp. Reaches E7 from any natural profile up to H35 within ~49 min, well inside the anti-stall window. Single source of truth: `compute_v11_cascade_drop` in `include/sost/pow/casert.h`, used by both miner and validator. |

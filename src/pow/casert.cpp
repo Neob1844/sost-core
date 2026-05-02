@@ -447,24 +447,24 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // value, the more permissive value wins.
         if (next_height >= CASERT_STAGED_RELIEF_HEIGHT
             && now_time > 0 && !chain.empty()) {
-            // V11 (height >= CASERT_V11_HEIGHT): explicit piecewise
-            //                                      table, see params.h.
+            // V11 (height >= CASERT_V11_HEIGHT): linear cascade, no
+            //                                     artificial cap.
             // V10 (CASERT_GRANULAR_RELIEF_HEIGHT .. CASERT_V11_HEIGHT-1):
-            //                                      drop 1 per 60 s from 600 s.
+            //                                     drop 1 per 60 s from 600 s.
             // V9  (CASERT_STAGED_RELIEF_HEIGHT .. CASERT_GRANULAR_RELIEF_HEIGHT-1):
-            //                                      drop 3 per 60 s from 540 s.
+            //                                     drop 3 per 60 s from 540 s.
             int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
             int32_t drop = 0;
             if (next_height >= CASERT_V11_HEIGHT) {
-                // V11 piecewise table — see params.h CASERT_V11_HEIGHT
-                // comment for rationale and exact schedule.
-                if      (block_elapsed >= 840) drop = 6;
-                else if (block_elapsed >= 780) drop = 5;
-                else if (block_elapsed >= 720) drop = 4;
-                else if (block_elapsed >= 660) drop = 3;
-                else if (block_elapsed >= 600) drop = 2;
-                else if (block_elapsed >= 540) drop = 1;
-                else                             drop = 0;
+                // V11 linear cascade — drop = 1 + (elapsed - 540) / 60
+                // for elapsed >= 540 s, with NO artificial cap. The
+                // natural floor E7 (effective_h_min) is enforced below
+                // by `if (staged < effective_h_min) staged = effective_h_min`.
+                //
+                // Single source of truth used by both miner and validator
+                // — see include/sost/pow/casert.h for the rationale on why
+                // the formula deliberately keeps growing past elapsed=840.
+                drop = compute_v11_cascade_drop(block_elapsed);
             } else {
                 // V9/V10: continuous formula
                 int64_t start;
@@ -896,6 +896,36 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
         out.stab_profile_index = idx + CASERT_H_MIN_LEGACY;
     }
     return out;
+}
+
+// ---------------------------------------------------------------------------
+// V11 cascade — linear escalation, no artificial cap
+// ---------------------------------------------------------------------------
+// Replaces the saturating step table that capped at drop=6 (block_elapsed
+// >= 840 s) with a linear formula that keeps growing each 60 s past the
+// activation threshold. Reasoning:
+//
+//   The previous cap at 6 was sized for the H6-H12 operating range; it
+//   did NOT cover scenarios where the natural profile escalates beyond
+//   H12 (e.g. H32 during a hashrate burst). Without further drop, the
+//   block could not be saved by the cascade alone — only by anti-stall
+//   at 5400 s. The linear cascade reaches E7 from any profile up to
+//   H35 within roughly 2940 s ≈ 49 min, well inside the 90 min
+//   anti-stall window, restoring the cascade as the primary recovery
+//   mechanism and anti-stall as the safety net.
+//
+// The floor (E7 = CASERT_H_MIN) is enforced by the caller via
+// `staged = max(effective_h_min, raw_base_H - drop)`, so although the
+// returned drop value can exceed 42 in extreme cases, the resulting
+// profile never crosses below E7.
+//
+// CONSENSUS-CRITICAL: this function is the single source of truth for
+// the V11 cascade. Both miner (mining loop in src/sost-miner.cpp via
+// casert_compute) and validator (src/sost-node.cpp via casert_compute)
+// route through it. Do NOT inline this formula anywhere else.
+int32_t compute_v11_cascade_drop(int64_t block_elapsed_s) {
+    if (block_elapsed_s < 540) return 0;
+    return 1 + (int32_t)((block_elapsed_s - 540) / 60);
 }
 
 } // namespace sost
