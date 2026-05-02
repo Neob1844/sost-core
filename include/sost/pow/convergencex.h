@@ -122,6 +122,13 @@ std::vector<Bytes32> build_merkle_path(const std::vector<Bytes32>& leaf_hashes, 
 // Checks: checkpoints, segments, commit binding, challenge derivation,
 // round witnesses (dataset/scratch/program recomputed O(1)), stability basin.
 // Cost: ~10-20ms. No full dataset/scratchpad needed.
+//
+// `height` carries the same V11 activation semantics as
+// `convergencex_attempt`: the dataset index in Phase 8 is recomputed
+// from `state_before` post-V11 (`>= CASERT_V11_HEIGHT`) and from the
+// round counter pre-V11. Miner and validator MUST agree on this gate
+// or honest post-V11 blocks will be rejected. Default 0 keeps
+// pre-V11 behaviour for legacy callers (tests, tools).
 bool verify_cx_proof(
     const uint8_t* header_core, // 72 bytes
     uint32_t nonce, uint32_t extra_nonce,
@@ -134,6 +141,7 @@ bool verify_cx_proof(
     const std::vector<Bytes32>& checkpoint_leaves,
     const std::vector<SegmentProof>& segment_proofs,
     const std::vector<RoundWitness>& round_witnesses,
-    const ConsensusParams& params);
+    const ConsensusParams& params,
+    int64_t height = 0);
 
 } // namespace sost

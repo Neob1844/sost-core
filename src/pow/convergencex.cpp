@@ -584,7 +584,8 @@ bool verify_cx_proof(
     const std::vector<Bytes32>& checkpoint_leaves,
     const std::vector<SegmentProof>& segment_proofs,
     const std::vector<RoundWitness>& round_witnesses,
-    const ConsensusParams& params)
+    const ConsensusParams& params,
+    int64_t height)
 {
     setbuf(stdout, NULL); // Disable buffering so all printf output appears immediately
     int32_t n = params.cx_n;
@@ -722,11 +723,25 @@ bool verify_cx_proof(
                 }
             }
 
-            // Verify dataset value
-            uint64_t exp_ds = compute_single_dataset_value(prev_hash, (uint64_t)r % dataset_size);
+            // Verify dataset value.
+            // Index rule MUST mirror miner + witness generation: post-V11
+            // (height >= CASERT_V11_HEIGHT) the index is derived from the
+            // SHA-256 state of the previous round (state_before bytes 8..11).
+            // Pre-V11 it falls back to the round counter. Any drift between
+            // miner and validator here causes honest blocks to be rejected
+            // — see convergencex_attempt() and generate_transcript_witnesses().
+            uint64_t ds_idx;
+            if (height >= CASERT_V11_HEIGHT) {
+                uint64_t st_lo = read_u32_le(rw.state_before.data() + 8);
+                ds_idx = st_lo % (uint64_t)dataset_size;
+            } else {
+                ds_idx = (uint64_t)r % (uint64_t)dataset_size;
+            }
+            uint64_t exp_ds = compute_single_dataset_value(prev_hash, ds_idx);
             if (rw.dataset_value != exp_ds) {
-                if(params.verbose) printf("[CX-VERIFY] Phase 8 FAILED: dataset_value mismatch at round %u (got %llu expected %llu, idx=%llu)\n",
-                        r, (unsigned long long)rw.dataset_value, (unsigned long long)exp_ds, (unsigned long long)((uint64_t)r % dataset_size));
+                if(params.verbose) printf("[CX-VERIFY] Phase 8 FAILED: dataset_value mismatch at round %u (got %llu expected %llu, idx=%llu, height=%lld)\n",
+                        r, (unsigned long long)rw.dataset_value, (unsigned long long)exp_ds,
+                        (unsigned long long)ds_idx, (long long)height);
                 return false;
             }
 

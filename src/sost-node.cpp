@@ -3653,7 +3653,8 @@ static bool process_block(const std::string& block_json) {
                         commit32, croot32, sroot, fstate,
                         x_bytes_raw.data(), x_bytes_raw.size(),
                         stb, checkpoint_leaves_vec,
-                        seg_proofs_vec, round_witnesses_vec, cx_params)) {
+                        seg_proofs_vec, round_witnesses_vec, cx_params,
+                        height)) {
                     printf("[BLOCK] REJECTED: CX Transcript V2 verification failed\n");
                     return false;
                 }

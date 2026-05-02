@@ -13,6 +13,8 @@
 #include "sost/pow/convergencex.h"
 #include "sost/pow/scratchpad.h"
 #include "sost/params.h"
+#include "sost/emission.h"      // get_consensus_params
+#include "sost/sostcompact.h"   // pow_meets_target
 #include <cstdio>
 #include <cstring>
 
@@ -138,6 +140,86 @@ static void test_header_sensitivity() {
          !(a.commit == b.commit));
 }
 
+// ---------------------------------------------------------------------
+// Test 6 — Full miner→witnesses→verifier roundtrip at the V11 boundary
+//
+// This is the regression test for the bug where verify_cx_proof()
+// hard-coded the V10 dataset index (`r % size`) while the miner and
+// generate_transcript_witnesses() honoured the V11 state-derived index.
+// Without this test an honest post-V11 block would be silently rejected
+// by every node — a chain split at activation.
+//
+// The test uses Profile::DEV (low difficulty, short rounds) so a
+// winning attempt is found in milliseconds. We then run the verifier
+// at three height contexts and assert the exact expected outcome:
+//
+//   1. Pre-V11 attempt + verifier(h=6999)   → MUST pass.
+//   2. Post-V11 attempt + verifier(h=7000)  → MUST pass.   ← the fix
+//   3. Post-V11 attempt + verifier(h=0/V10) → MUST fail.   ← the bug
+// ---------------------------------------------------------------------
+static bool mine_and_verify_at_height(int64_t mine_h, int64_t verify_h,
+                                      const char* label, bool expect_valid) {
+    ACTIVE_PROFILE = Profile::DEV;
+    ConsensusParams params = get_consensus_params(Profile::DEV, 0);
+
+    // Deterministic header. Vary one byte by mine_h so different heights
+    // get distinct seeds and we don't reuse cached datasets across tests.
+    Bytes32 prev{}; prev.fill(0); prev[0] = (uint8_t)(mine_h & 0xFF);
+    Bytes32 merkle{}; merkle.fill(0x11);
+    uint8_t hc72[72];
+    std::memcpy(hc72, prev.data(), 32);
+    std::memcpy(hc72 + 32, merkle.data(), 32);
+    write_u32_le(hc72 + 64, (uint32_t)GENESIS_TIME);
+    write_u32_le(hc72 + 68, GENESIS_BITSQ);
+
+    Bytes32 bk = compute_block_key(prev);
+    Bytes32 skey = epoch_scratch_key(0, nullptr);
+    auto scratch = build_scratchpad(skey, params.cx_scratch_mb);
+
+    CXAttemptResult res{};
+    uint32_t found_nonce = 0;
+    bool found = false;
+    for (uint32_t nonce = 0; nonce < 200000; ++nonce) {
+        res = convergencex_attempt(scratch.data(), scratch.size(), bk,
+                                   nonce, /*extra*/0, params, hc72,
+                                   /*epoch*/0, mine_h);
+        if (res.is_stable && pow_meets_target(res.commit, GENESIS_BITSQ)) {
+            found_nonce = nonce; found = true; break;
+        }
+    }
+    if (!found) {
+        printf("  *** SKIP: %s (no winning nonce in 200k tries — DEV profile changed?)\n",
+               label);
+        return false;
+    }
+
+    generate_transcript_witnesses(res, scratch.data(), scratch.size(), bk,
+                                  found_nonce, /*extra*/0, params, hc72,
+                                  /*epoch*/0, mine_h);
+
+    bool valid = verify_cx_proof(
+        hc72, found_nonce, /*extra*/0,
+        res.commit, res.checkpoints_root, res.segments_root, res.final_state,
+        res.x_bytes.data(), res.x_bytes.size(), res.stability_metric,
+        res.checkpoint_leaves, res.segment_proofs, res.round_witnesses,
+        params, verify_h);
+
+    return valid == expect_valid;
+}
+
+static void test_v11_roundtrip() {
+    printf("\n=== V11 miner→witnesses→verifier roundtrip ===\n");
+    TEST("pre-V11 honest block (mine h=6999, verify h=6999) passes",
+         mine_and_verify_at_height(CASERT_V11_HEIGHT - 1, CASERT_V11_HEIGHT - 1,
+                                   "pre-V11 roundtrip", /*expect_valid=*/true));
+    TEST("post-V11 honest block (mine h=7000, verify h=7000) passes  [FIX]",
+         mine_and_verify_at_height(CASERT_V11_HEIGHT, CASERT_V11_HEIGHT,
+                                   "post-V11 roundtrip", /*expect_valid=*/true));
+    TEST("post-V11 block verified with V10 rule (h=0) MUST be rejected  [BUG REGRESSION]",
+         mine_and_verify_at_height(CASERT_V11_HEIGHT, /*verify_h=*/0,
+                                   "post-V11 mined / V10 verifier", /*expect_valid=*/false));
+}
+
 int main() {
     printf("\n=== ConvergenceX V11 State-Dataset Tests ===\n");
     printf("Activation height: %lld\n", (long long)CASERT_V11_HEIGHT);
@@ -147,6 +229,7 @@ int main() {
     test_v11_branch_diverges_from_v10();
     test_nonce_sensitivity();
     test_header_sensitivity();
+    test_v11_roundtrip();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
