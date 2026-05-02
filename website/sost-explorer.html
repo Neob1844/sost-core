@@ -406,90 +406,95 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- MANDATORY STAGED RELIEF GRANULARITY FORK — activates at block 6700 -->
+<!-- NETWORK STATUS + PoPC REWARD OUTLOOK -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:rgba(251,1,13,0.08);border:2px solid #fb010d;border-left:6px solid #fb010d;padding:14px 18px;box-shadow:0 0 18px rgba(251,1,13,.25);">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fb010d;box-shadow:0 0 8px rgba(251,1,13,.7);animation:pulse 2s ease infinite"></span>
-      <span style="color:#fb010d;font-size:11px;font-weight:800;letter-spacing:2px">// MANDATORY UPDATE &mdash; STAGED RELIEF GRANULARITY FORK AT BLOCK 6700</span>
+  <div style="background:linear-gradient(135deg,rgba(74,222,128,0.06),rgba(34,211,238,0.04));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 18px rgba(74,222,128,.25);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7);animation:pulse 2s ease infinite"></span>
+      <span style="color:#4ade80;font-size:11px;font-weight:800;letter-spacing:2px">// NETWORK STATUS &mdash; PROTOCOL HEALTHY, REWARDS COMING TO HOLDERS VIA PoPC</span>
     </div>
     <div style="color:var(--text2);font-size:11px;line-height:1.7">
-      All node and miner operators must update before block <b style="color:#fb010d">6700</b>.<br><br>
 
-      Since day one this protocol has been described as experimental, and calibration has been part of the design from the start. We have asked operators for patience while ConvergenceX learned to self-tune; we believe <b>this is the last calibration</b>. Apologies for asking for one more update.<br><br>
+      <b style="color:var(--text)">Diagnostic (last 40 blocks).</b>
+      Top address holds <b style="color:var(--text)">92.5 %</b> of recent blocks, and concentration has been rising across windows
+      (<b style="color:var(--text)">43 % &rarr; 75 % &rarr; 92.5 %</b>). The protocol is behaving exactly as designed:
+      <b style="color:var(--text)">mean block time on target (598 s)</b>, V10 cascade rule
+      <b style="color:var(--text)">100 % compliant</b>, bitsQ stable at <code>1.188.551 / 18.136 bits</code>.
+      The network is currently dominated by one operator at <b style="color:var(--text)">hashrate level</b>
+      &mdash; not by protocol exploit. cASERT, the granular relief cascade and the lag controller
+      are all working inside their design envelope. The fix here is <b style="color:var(--text)">more honest miners</b>,
+      not a protocol change.<br><br>
 
-      The chain currently produces blocks within a few percent of the 10-minute target, and the <code>cASERT bitsQ</code> controller continues to absorb any drift automatically. The single remaining sharpness is the <b style="color:var(--text)">granularity of the staged relief cascade</b>: today it drops three profile levels at a time. The original ConvergenceX design intended a finer cascade &mdash; one level per minute &mdash; so the relief lands on the exact difficulty the network needs, instead of overshooting and forcing the bitsQ controller to push back the other way.<br><br>
+      <b style="color:#4ade80">The opportunity for everyone else is on the holder side.</b>
+      The <b style="color:var(--gold)">PoPC Pool</b> already accumulates <b style="color:var(--gold)">25 %</b> of every block
+      reward. Once <b style="color:var(--text)">PoPC activates (planned block &ge; 10,000)</b>, holders who lock SOST and
+      either custody real gold (<b>Model A</b>) or escrow on Ethereum (<b>Model B</b>) will earn rewards on
+      a published, on-chain rate schedule. Smaller miners and holders can position now &mdash; the early-tier
+      multiplier rewards the first 25 active contracts at the <b style="color:var(--text)">full rate</b>.<br><br>
 
-      <b style="color:var(--text)">What changes at block 6700.</b>
-      The staged relief switches from <code>drop 3 every 60 s starting at 540 s</code> to <code>drop 1 every 60 s starting at 600 s</code>. Floor stays at <code>E7</code>. Anti-stall, lag clamp, future-timestamp drift and bitsQ are all unchanged.<br><br>
-
-      <span style="color:var(--text3)">The formula is base-agnostic. <code>raw_base_H</code> (the cASERT lag-driven decision before clamps) lives in <b style="color:var(--text2)">[B0, H13]</b> &mdash; never negative, because <code>target_profile</code> is clamped at B0 when <code>lag &le; 0</code> (chain ahead of schedule). The cascade then maps that base to <b style="color:var(--text2)">[E7, H13]</b>. Effective profile per base:<br>
-      <code style="color:var(--text2)">&nbsp;&nbsp;eff(elapsed, base) = max(base &minus; floor((elapsed&minus;600)/60) &minus; 1, E7)</code>&nbsp;&nbsp;for <code>elapsed &ge; 600 s</code>.<br><br>
-      Realistic bases (chain currently sees H9-H10; H11-H13 only on severe lag events):</span>
+      <b style="color:var(--text)">Model A &mdash; Bonded Custody (real metal + SOST bond, audited via ConvergenceX entropy).</b>
+      Reward rates from <code>include/sost/popc.h</code> &middot; <code>POPC_REWARD_RATES</code>:
       <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
         <tr style="background:rgba(255,255,255,.04);color:var(--text)">
-          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">elapsed</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">drop</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H10 base</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H11 base</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H12 base</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">H13 base</th>
+          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Duration</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Base reward</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Net to user (after 5&thinsp;% fee)</th>
         </tr>
-        <tr><td style="padding:2px 8px">&lt; 600 s</td><td style="text-align:right;padding:2px 8px">0</td><td style="text-align:right;padding:2px 8px">H10</td><td style="text-align:right;padding:2px 8px">H11</td><td style="text-align:right;padding:2px 8px">H12</td><td style="text-align:right;padding:2px 8px">H13</td></tr>
-        <tr><td style="padding:2px 8px">600 s</td><td style="text-align:right;padding:2px 8px">1</td><td style="text-align:right;padding:2px 8px">H9</td><td style="text-align:right;padding:2px 8px">H10</td><td style="text-align:right;padding:2px 8px">H11</td><td style="text-align:right;padding:2px 8px">H12</td></tr>
-        <tr><td style="padding:2px 8px">720 s</td><td style="text-align:right;padding:2px 8px">3</td><td style="text-align:right;padding:2px 8px">H7</td><td style="text-align:right;padding:2px 8px">H8</td><td style="text-align:right;padding:2px 8px">H9</td><td style="text-align:right;padding:2px 8px">H10</td></tr>
-        <tr><td style="padding:2px 8px">900 s</td><td style="text-align:right;padding:2px 8px">6</td><td style="text-align:right;padding:2px 8px">H4</td><td style="text-align:right;padding:2px 8px">H5</td><td style="text-align:right;padding:2px 8px">H6</td><td style="text-align:right;padding:2px 8px">H7</td></tr>
-        <tr><td style="padding:2px 8px">1140 s</td><td style="text-align:right;padding:2px 8px">10</td><td style="text-align:right;padding:2px 8px">B0</td><td style="text-align:right;padding:2px 8px">H1</td><td style="text-align:right;padding:2px 8px">H2</td><td style="text-align:right;padding:2px 8px">H3</td></tr>
-        <tr><td style="padding:2px 8px">1320 s</td><td style="text-align:right;padding:2px 8px">13</td><td style="text-align:right;padding:2px 8px">E3</td><td style="text-align:right;padding:2px 8px">E2</td><td style="text-align:right;padding:2px 8px">E1</td><td style="text-align:right;padding:2px 8px">B0</td></tr>
-        <tr><td style="padding:2px 8px">1500 s</td><td style="text-align:right;padding:2px 8px">16</td><td style="text-align:right;padding:2px 8px">E6</td><td style="text-align:right;padding:2px 8px">E5</td><td style="text-align:right;padding:2px 8px">E4</td><td style="text-align:right;padding:2px 8px">E3</td></tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.05)"><td style="padding:2px 8px">1560 s</td><td style="text-align:right;padding:2px 8px">17</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E6</td><td style="text-align:right;padding:2px 8px">E5</td><td style="text-align:right;padding:2px 8px">E4</td></tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.05)"><td style="padding:2px 8px">1740 s+</td><td style="text-align:right;padding:2px 8px">20+</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td><td style="text-align:right;padding:2px 8px">E7 &#9632;</td></tr>
+        <tr><td style="padding:2px 8px">1 month</td><td style="text-align:right;padding:2px 8px">1.0 %</td><td style="text-align:right;padding:2px 8px">0.95 %</td></tr>
+        <tr><td style="padding:2px 8px">3 months</td><td style="text-align:right;padding:2px 8px">4.0 %</td><td style="text-align:right;padding:2px 8px">3.80 %</td></tr>
+        <tr><td style="padding:2px 8px">6 months</td><td style="text-align:right;padding:2px 8px">9.0 %</td><td style="text-align:right;padding:2px 8px">8.55 %</td></tr>
+        <tr><td style="padding:2px 8px">9 months</td><td style="text-align:right;padding:2px 8px">14.0 %</td><td style="text-align:right;padding:2px 8px">13.30 %</td></tr>
+        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>12 months</b></td><td style="text-align:right;padding:3px 8px"><b>20.0 %</b></td><td style="text-align:right;padding:3px 8px"><b>19.00 %</b></td></tr>
       </table>
-      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">&#9632; = E7 floor (<code>CASERT_H_MIN</code>). H13 reaches the floor at 1740 s (29 min), still well below the anti-stall floor of 3600 s (60 min). For lower bases (B0, H1-H9), the same formula applies; e.g. raw_base_H = B0 reaches E7 at 1020 s. Profile floor and anti-stall remain the second safety net.</span><br><br>
+      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Min reward per contract: <b style="color:var(--text2)">10 SOST</b>. Max reward per contract: <b style="color:var(--text2)">1,000 SOST</b>. Reputation tiers cap maximum gold size: <b>0.5 oz / 1 oz / 3 oz / 10 oz</b> (New / Established / Trusted / Veteran). Random custody audits derived from ConvergenceX block entropy &mdash; no trusted oracles.</span><br>
 
-      <b style="color:var(--gold)">No supply change. No reward change. No wallet action. No GPU ban. No pool ban. Hashrate-proportional competition preserved.</b> The fork only refines how the relief cascade descends; it does not change who is allowed to mine, how much they earn, or how blocks are validated.<br><br>
-
-      <b style="color:var(--text)">Why.</b>
-      With the current grain, every relief step over-relaxes by two levels relative to what the chain actually needs at that moment, and the bitsQ controller then re-tightens on the next block &mdash; producing the small oscillation visible in recent live data. Reducing the step from 3 to 1 lets each profile decision match the actual lag, and the bitsQ continues to converge to the 10-minute target without external intervention.<br><br>
-
-      Any deviation from the average mining target will be corrected by <code>cASERT bitsQ</code>, so the chain self-regulates and converges to 10 minutes. <b style="color:var(--text)">That is ConvergenceX.</b><br><br>
-
-      If everything goes as expected, the network will be considered ready for full operation. If not, we will be very close &mdash; and the iterative trial-and-correction has been, in itself, the proof that the design works. <b style="color:var(--text)">The numbers do not lie.</b> Any auditor can verify them directly from the chain.<br><br>
-
-      The behaviour still needs to be tested under much higher hashrate, but the rules are the same.<br><br>
-
-      <b style="color:var(--text)">Monte Carlo fairness — 5 000 blocks per scheme, seed = 42.</b>
-      Compares V8 (single cliff at 605 s), V9 (drop 3 every 60 s from 540 s) and V10 (drop 1 every 60 s from 600 s) against a five-miner mix sized to the live chain (five anonymised miner profiles spanning the typical hashrate spread). Reproducible with <code>scripts/relief_valve_simulator.py --schemes current,staged,granular --n-blocks 5000 --seed 42</code>.<br>
-      <table style="border-collapse:collapse;font-size:10px;margin-top:8px;color:var(--text2);width:100%;max-width:760px">
+      <b style="color:var(--text)">Model B &mdash; Escrow (zero-custody-risk, half rates).</b>
+      Reward rates from <code>ESCROW_REWARD_RATES</code>:
+      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
         <tr style="background:rgba(255,255,255,.04);color:var(--text)">
-          <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border-dim)">scheme</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">avg blk</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">stdev</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">n_E7-class</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_A</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_B</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_C</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_D</th>
-          <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--border-dim)">miner_E</th>
+          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Duration</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Base reward</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Net to user (after 5&thinsp;% fee)</th>
         </tr>
-        <tr><td style="padding:3px 8px">V8 cliff</td><td style="text-align:right;padding:3px 8px">400.4 s</td><td style="text-align:right;padding:3px 8px">242.8</td><td style="text-align:right;padding:3px 8px">1811</td><td style="text-align:right;padding:3px 8px">55.0&thinsp;%</td><td style="text-align:right;padding:3px 8px">25.2&thinsp;%</td><td style="text-align:right;padding:3px 8px">9.5&thinsp;%</td><td style="text-align:right;padding:3px 8px">6.8&thinsp;%</td><td style="text-align:right;padding:3px 8px">3.5&thinsp;%</td></tr>
-        <tr><td style="padding:3px 8px">V9 staged</td><td style="text-align:right;padding:3px 8px">416.7 s</td><td style="text-align:right;padding:3px 8px">260.7</td><td style="text-align:right;padding:3px 8px">1896</td><td style="text-align:right;padding:3px 8px">54.9&thinsp;%</td><td style="text-align:right;padding:3px 8px">25.1&thinsp;%</td><td style="text-align:right;padding:3px 8px">10.2&thinsp;%</td><td style="text-align:right;padding:3px 8px">6.6&thinsp;%</td><td style="text-align:right;padding:3px 8px">3.2&thinsp;%</td></tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.06)"><td style="padding:3px 8px"><b>V10 granular</b></td><td style="text-align:right;padding:3px 8px"><b>499.2 s</b></td><td style="text-align:right;padding:3px 8px"><b>368.1</b></td><td style="text-align:right;padding:3px 8px"><b>1475</b></td><td style="text-align:right;padding:3px 8px"><b>55.5&thinsp;%</b></td><td style="text-align:right;padding:3px 8px"><b>25.1&thinsp;%</b></td><td style="text-align:right;padding:3px 8px"><b>9.6&thinsp;%</b></td><td style="text-align:right;padding:3px 8px"><b>6.5&thinsp;%</b></td><td style="text-align:right;padding:3px 8px"><b>3.3&thinsp;%</b></td></tr>
-        <tr style="color:var(--text3);font-style:italic"><td style="padding:3px 8px">hashrate share (fair baseline)</td><td colspan="3" style="padding:3px 8px"></td><td style="text-align:right;padding:3px 8px">54.9&thinsp;%</td><td style="text-align:right;padding:3px 8px">25.4&thinsp;%</td><td style="text-align:right;padding:3px 8px">10.1&thinsp;%</td><td style="text-align:right;padding:3px 8px">6.2&thinsp;%</td><td style="text-align:right;padding:3px 8px">3.4&thinsp;%</td></tr>
+        <tr><td style="padding:2px 8px">1 month</td><td style="text-align:right;padding:2px 8px">0.4 %</td><td style="text-align:right;padding:2px 8px">0.38 %</td></tr>
+        <tr><td style="padding:2px 8px">3 months</td><td style="text-align:right;padding:2px 8px">1.5 %</td><td style="text-align:right;padding:2px 8px">1.43 %</td></tr>
+        <tr><td style="padding:2px 8px">6 months</td><td style="text-align:right;padding:2px 8px">3.5 %</td><td style="text-align:right;padding:2px 8px">3.33 %</td></tr>
+        <tr><td style="padding:2px 8px">9 months</td><td style="text-align:right;padding:2px 8px">5.5 %</td><td style="text-align:right;padding:2px 8px">5.23 %</td></tr>
+        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>12 months</b></td><td style="text-align:right;padding:3px 8px"><b>8.0 %</b></td><td style="text-align:right;padding:3px 8px"><b>7.60 %</b></td></tr>
       </table>
-      <span style="display:block;font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6">Read the V10 row: every miner is within <b style="color:var(--text)">&plusmn;0.6&thinsp;%</b> of its hashrate share, on par with V9. The decisive metric is <b style="color:var(--text)">n_E7-class</b>: V10 produces only <b style="color:var(--text)">1475</b> blocks at relief difficulty (vs 1811 / 1896 under V8 / V9), a <b style="color:var(--text)">~22&thinsp;%</b> reduction. Each block that does NOT need to descend all the way to E7 lands at an intermediate profile (H6 / H4 / H1 / B0 / E1) where bitsQ feedback is healthier and competition is more proportional. The avg block time and stdev are simulator-relative; on the live chain bitsQ continues to converge to the 10-minute target. Full design and analysis: <code>docs/granular_relief_fork_6700.md</code>.</span><br><br>
+      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Min reward per contract: <b style="color:var(--text2)">5 SOST</b>. Max reward per contract: <b style="color:var(--text2)">1,000 SOST</b>. Same durations as Model A; rates are deliberately halved because there is no real-custody risk &mdash; gold is escrowed on Ethereum mainnet (<code>SOSTEscrow V2</code> on Sepolia today, mainnet on activation).</span><br>
 
-      <b style="color:var(--text)">Update.</b>
-      <code style="display:block;background:var(--bg);padding:8px 12px;margin-top:6px;font-size:10px;color:var(--cyan);overflow-x:auto;">cd ~/SOST/sostcore/sost-core &amp;&amp; git pull --ff-only origin main<br>cd build &amp;&amp; cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build . --target sost-node sost-miner -j$(nproc)<br># then restart your sost-node and sost-miner</code>
-      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">If <code>git pull --ff-only</code> fails because of local commits or divergent history, save your local changes first and use <code>git fetch origin &amp;&amp; git reset --hard origin/main</code>.</span><br>
+      <b style="color:var(--text)">Dynamic participation tiers.</b>
+      The first contracts get the highest rates &mdash; the protocol tapers smoothly to prevent pool depletion as
+      adoption scales. Multiplier from <code>POPC_TIER_MULTIPLIERS</code>:
+      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
+        <tr style="background:rgba(255,255,255,.04);color:var(--text)">
+          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Active contracts</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Multiplier</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Effective Model A 12-mo (net)</th>
+          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Effective Model B 12-mo (net)</th>
+        </tr>
+        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>1 &ndash; 25</b></td><td style="text-align:right;padding:3px 8px"><b>100 %</b></td><td style="text-align:right;padding:3px 8px"><b>up to 19.00 %</b></td><td style="text-align:right;padding:3px 8px"><b>up to 7.60 %</b></td></tr>
+        <tr><td style="padding:2px 8px">26 &ndash; 50</td><td style="text-align:right;padding:2px 8px">75 %</td><td style="text-align:right;padding:2px 8px">14.25 %</td><td style="text-align:right;padding:2px 8px">5.70 %</td></tr>
+        <tr><td style="padding:2px 8px">51 &ndash; 100</td><td style="text-align:right;padding:2px 8px">50 %</td><td style="text-align:right;padding:2px 8px">9.50 %</td><td style="text-align:right;padding:2px 8px">3.80 %</td></tr>
+        <tr><td style="padding:2px 8px">101 &ndash; 200</td><td style="text-align:right;padding:2px 8px">30 %</td><td style="text-align:right;padding:2px 8px">5.70 %</td><td style="text-align:right;padding:2px 8px">2.28 %</td></tr>
+        <tr><td style="padding:2px 8px">201 &ndash; 500</td><td style="text-align:right;padding:2px 8px">15 %</td><td style="text-align:right;padding:2px 8px">2.85 %</td><td style="text-align:right;padding:2px 8px">1.14 %</td></tr>
+        <tr><td style="padding:2px 8px">501 &ndash; 1,000 (cap)</td><td style="text-align:right;padding:2px 8px">8 %</td><td style="text-align:right;padding:2px 8px">1.52 %</td><td style="text-align:right;padding:2px 8px">0.61 %</td></tr>
+      </table>
+      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Hard caps: <b style="color:var(--text2)">1,000 SOST per contract</b> and <b style="color:var(--text2)">1,000 active contracts</b> system-wide. Slash distribution if a participant fails an audit: 50 % to PoPC Pool (refills future rewards), 50 % to Gold Vault.</span><br>
 
-      <b style="color:var(--text)">Clock requirement.</b>
-      The <code>+60 s</code> future-drift cap from the 6550 fork is unchanged. Make sure NTP is active (<code>sudo timedatectl set-ntp true &amp;&amp; timedatectl status</code>); otherwise valid blocks may be rejected as too far in the future.<br><br>
+      <b style="color:var(--text)">Activation status.</b>
+      PoPC is implemented and documented (<code>src/popc.cpp</code>, <code>src/popc_model_b.cpp</code>,
+      <code>contracts/SOSTEscrow.sol</code>, <code>docs/POPC_MODEL_A_SPECIFICATION.md</code>) but
+      <b style="color:var(--text)">NOT yet active on mainnet</b>. Activation requires block height &ge; 10,000,
+      sustained network stability, sufficient independent participation, and explorer / wallet readiness.
+      Until then the PoPC Pool simply accumulates &mdash; current balance is visible on this dashboard
+      under <code>POPC POOL BALANCE</code>.<br><br>
 
-      <b style="color:var(--text)">Verification:</b>
-      <code style="display:block;background:var(--bg);padding:6px 12px;margin-top:4px;font-size:10px;color:var(--cyan);overflow-x:auto;">git rev-parse --short HEAD     # &rarr; calibration commit (or later)<br>./build/sost-miner --help | head -1
-                                # &rarr; SOST Miner v0.9 (multi-threaded)</code>
-      <span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">Nodes or miners that remain on older code may fall out of consensus after activation. Coordinated revert window will be announced if the new schedule does not behave as expected, but with the bitsQ controller intact this is considered very unlikely.</span>
+      <span style="color:var(--text3);font-size:10px">Bottom line for miners watching the concentration: hashrate dominance does not block PoPC participation.
+      Anyone holding SOST can claim a Model A or Model B contract on activation and lock in the full early-tier rate.
+      The PoPC Pool is funded by every block, including the dominant miner&rsquo;s &mdash; so 25 % of their reward
+      already feeds the future yield of every other holder.</span>
 
       <div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
         <span style="color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
