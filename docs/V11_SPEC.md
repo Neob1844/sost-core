@@ -1,10 +1,24 @@
 # V11 — Technical Specification
 
-**Status**: DRAFT v2 · author: SOST consensus working group
-**Target activation**: block **7,000** (per-component, conditional on testnet + Monte Carlo simulation gates)
-**Phase B (block 10,000+)**: lottery-frequency change from 2-of-3 → 1-of-3, paired with PoPC Model A + B operational activation and dynamic fees (whitepaper-scheduled, separate doc).
+**Status**: DRAFT v3 · author: SOST consensus working group
 
-This document specifies the four V11 consensus changes: extended cASERT cascade (A), state-dependent dataset access (B), SbPoW signature-bound proof (C), and Proof-of-Participation lottery (D). It is a design document, not implementation. Code lands only after the per-component simulation gates listed in §6 are passed.
+**Phase split (current decision)**:
+
+| Phase | Components | Activation height | Status |
+|---|---|---|---|
+| **Phase 1** | A (extended cASERT cascade) + B (state-dependent dataset access) | **block 7,000** | code complete, tests written, awaiting compilation gate |
+| **Phase 2** | C (SbPoW signature-bound proof) + D (PoP lottery + jackpot rollover) | **TBD** — when implementation passes verification, simulation, testnet and adversarial gates | NOT YET IMPLEMENTED · skeleton scaffold checked in for future work |
+
+**No calendar pressure on Phase 2.** The chain will not run unfinished consensus code to meet a fixed block height. Phase 2 ships when ready.
+
+**Phase 2 lottery frequency schedule** (when activated at height `H_PHASE2`):
+
+```
+First 5,000 blocks after Phase 2 activation:  2 of every 3 blocks  (high-freq bootstrap)
+After H_PHASE2 + 5000, permanently:           1 of every 3 blocks  (steady state)
+```
+
+This document specifies the four V11 consensus changes: extended cASERT cascade (A), state-dependent dataset access (B), SbPoW signature-bound proof (C), and Proof-of-Participation lottery (D). Components A and B are designed for block 7,000. Components C and D are designed but deferred to a Phase 2 activation height to be announced when the implementation is verified.
 
 ---
 
@@ -113,7 +127,7 @@ Failure of any of (1)-(4) → block rejected.
 This is a deliberate scope: SbPoW addresses pool centralization risk, not hashrate centralization. The lottery (§4) addresses redistribution.
 
 ### 3.7 Activation
-At block `V11_SBPOW_HEIGHT = 7000`, conditional on gate G3 (§6). Independent from A, B, D.
+**Deferred to Phase 2**. Original target was block 7,000 alongside A/B/D, but SbPoW requires non-trivial integration (header v2 serialization, wallet keystore access, libsecp256k1 Schnorr verification, cross-node validation) that cannot be safely shipped in the same activation window as A/B. Phase 2 activation height (`V11_PHASE2_HEIGHT`, shared with component D) is **TBD** — set when the implementation passes gates G3.1, G3.2 and G3.3 (§6). All `V11_SBPOW_HEIGHT` references in §3.2/§3.3/§3.5 of this document refer to that same `V11_PHASE2_HEIGHT` value.
 
 ---
 
@@ -121,32 +135,36 @@ At block `V11_SBPOW_HEIGHT = 7000`, conditional on gate G3 (§6). Independent fr
 
 ### 4.1 Phasing schedule
 
-| Phase | Heights | Trigger rule | Source of lottery prize |
-|---|---|---|---|
-| **Phase A — bootstrap** | 7,000 ≤ h < 10,000 | 2 of every 3 blocks | 50% of block subsidy (= 25% Gold Vault + 25% PoPC Pool) redirected to lottery winner |
-| **Phase B — steady state** | h ≥ 10,000 | 1 of every 3 blocks | same prize composition |
+The lottery activates at `V11_PHASE2_HEIGHT` (TBD — see §4.8). From that height:
 
-Phase B is paired with PoPC Model A + B operational activation and dynamic-fee policy (whitepaper-scheduled — separate spec).
+| Window | Heights | Trigger rule | Source of lottery prize |
+|---|---|---|---|
+| **Bootstrap (first 5,000 blocks)** | `[V11_PHASE2_HEIGHT, V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW)` | 2 of every 3 blocks | 50% of block subsidy (= 25% Gold Vault + 25% PoPC Pool) redirected to lottery winner |
+| **Steady state (permanent)** | `>= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW` | 1 of every 3 blocks | same prize composition |
+
+The 5,000-block bootstrap window is intentional: high-frequency redistribution at activation drives small-miner participation while the network adjusts. After the bootstrap, the rate stabilises at 1-of-3 forever.
 
 ### 4.2 Trigger function
 
+Let `H` = `V11_PHASE2_HEIGHT` and `W` = `LOTTERY_HIGH_FREQ_WINDOW = 5000`.
+
 ```
 triggered(h) =
-    if 7000 ≤ h < 10000:  (h - 7000) % 3 != 2     # 2-of-3
-    if h ≥ 10000:          (h - 10000) % 3 == 0   # 1-of-3
-    else:                   false
+    if H <= h < H + W:   (h - H) % 3 != 2        # 2-of-3 bootstrap
+    if h >= H + W:        (h - (H + W)) % 3 == 0 # 1-of-3 steady state
+    else:                 false
 ```
 
-Phase A pattern (L = lottery, N = normal):
+Bootstrap pattern (L = lottery, N = normal), starting at `H`:
 ```
-height: 7000 7001 7002 7003 7004 7005 …
-state:  L    L    N    L    L    N    …
+offset:  0    1    2    3    4    5    …
+state:   L    L    N    L    L    N    …
 ```
 
-Phase B pattern:
+Steady-state pattern (after `H + 5000`):
 ```
-height: 10000 10001 10002 10003 10004 …
-state:  L     N     N     L     N     …
+offset:  0    1    2    3    4    5    …
+state:   L    N    N    L    N    N    …
 ```
 
 ### 4.3 Eligibility set
@@ -219,7 +237,7 @@ Failure of any of (1)-(4) → block rejected.
 | Network reorg after lottery payout | Standard reorg handling: the alternate chain's lottery selection is recomputed from its own prev block. Coinbase maturity (1,000 blocks) protects against the winner spending an orphaned prize. |
 
 ### 4.8 Activation
-At block 7,000 (phase A) with frequency change at 10,000 (phase B), conditional on gate G4 (§6). Independent from A, B, C.
+**Deferred to Phase 2**. Original target was block 7,000, but the lottery requires non-trivial integration (chain-state variable for `pending_lottery_amount`, eligibility-set scan, coinbase shape change, reorg-safe undo data) that cannot be safely shipped alongside Phase 1 (A/B). Phase 2 activation height (`V11_PHASE2_HEIGHT`) is **TBD** — set when the implementation passes gates G4.1 through G4.4 (§6). The 5,000-block 2-of-3 bootstrap window starts from that height; 1-of-3 steady state from `V11_PHASE2_HEIGHT + 5000`.
 
 ---
 
@@ -384,37 +402,31 @@ The following are intentionally NOT part of V11:
 
 ---
 
-## 10.5 · Future enhancement (deferred): jackpot rollover
+## 10.5 · Jackpot rollover — IN PHASE 2
 
-This section documents an idea that is **NOT part of V11**. It is recorded here so reviewers see the design space and so the future implementation has a starting point.
+**Decision update (DRAFT v3)**: jackpot rollover is part of Phase 2 (component D). The earlier "fallback to Gold Vault / PoPC Pool" rule has been replaced by the rollover mechanism described in §4.5 and §4.7. This section is retained as design rationale for reviewers.
 
-### Motivation
-§4.7 specifies that when the eligibility set `E(h)` is empty on a triggered block, the lottery amount falls back to the normal `25 / 25` Gold Vault / PoPC Pool split. An alternative is to **roll the unpaid lottery amount over** to the next triggered block where `E(h)` is non-empty, accumulating into a pending jackpot.
-
-### Why not in V11
-1. **Empirically rare in current conditions.** With 6,850+ blocks of history and ≥ 12 distinct addresses that have mined at least one block since genesis, `E(h) = ∅` requires every one of those addresses to have won a block reward in the last 30 blocks. Realistic frequency: < 1 per 10,000 blocks. Solving an event that almost never fires is poor scope discipline for V11.
-2. **Reorg-safe state tracking is non-trivial.** A `pending_lottery_amount` becomes part of the consensus state and must serialize, validate cross-node, and rebobinarse on reorg. This is 1-2 sprints of work, not hours.
-3. **V11 already promises four consensus changes (A/B/C/D)**. Adding a fifth raises per-component gate failure risk and pushes total scope past the safe deployment window.
-
-### Sketch of the design (for the future fork that activates this)
+### Mechanism (final spec — see §4 for normative text)
 - New chain-state variable: `pending_lottery_amount` (stocks).
-- Initialized to 0 at genesis (or at the activation height for the rollover fork).
-- Update rule on each block at `height >= LOTTERY_HEIGHT`:
-  - If trigger function says lottery and `E(h) ≠ ∅` → winner gets `lottery_share(h) + pending`; `pending := 0`.
-  - If trigger function says lottery and `E(h) = ∅` → `pending += lottery_share(h)`; coinbase has 3 normal outputs (Gold Vault and PoPC Pool get 0 for that block, the protocol-side allocation goes to `pending`); no lottery winner output.
-  - If trigger function says NO lottery for this block → `pending` unchanged; coinbase has the standard 3 outputs (`50 / 25 / 25`).
-- Validation: every full node recomputes `pending` from genesis (or last trusted checkpoint) and rejects blocks whose coinbase shape disagrees.
-- Reorg: the rebobinado of `pending` follows the same rebobinado as UTXO state — when a block is undone, its effect on `pending` is reversed.
-- Cap: **none** by default. The user-floor for catastrophic edge cases (e.g. 1,000 blocks of empty `E`) can be a separate constant.
+- Initialized to 0 at the activation height `V11_PHASE2_HEIGHT`.
+- Update rule on each block at `height >= V11_PHASE2_HEIGHT`:
+  - If `triggered(h)` is true and `E(h) ≠ ∅` → winner gets `lottery_share(h) + pending`; `pending := 0`.
+  - If `triggered(h)` is true and `E(h) = ∅` → `pending += lottery_share(h)`; coinbase has 3 outputs with Gold Vault and PoPC Pool getting 0 for that block; no lottery winner output. The protocol-side allocation accumulates in the pending counter.
+  - If `triggered(h)` is false → `pending` unchanged; coinbase has the standard 3 outputs (`50 / 25 / 25`).
+- Validation: every full node recomputes `pending` from `V11_PHASE2_HEIGHT` (the consensus state initialised to 0 at fork activation, then updated block by block).
+- Reorg: undo data per block records `pending_before_block`. On reorg, `pending` is restored to the pre-block value. This is the same model as UTXO undo data.
+- Cap: **none**. The jackpot grows until a non-empty eligibility set clears it.
 
-### Activation criteria (proposed for the future fork)
-The rollover fork should target **block 10,000** (the natural package with PoPC Model A + B operational activation, dynamic fees, and the lottery-frequency change to 1-of-3) **only if** the V11 production data shows:
+### Why kept in V11 Phase 2 (not deferred indefinitely)
+- The fallback to Gold Vault / PoPC Pool was workable but messages "the lottery silently does nothing" to small miners — a bad UX signal.
+- Rollover protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small participants.
+- The reorg-safe state-tracking work is non-trivial but is part of the Phase 2 implementation budget anyway (the lottery itself needs chain state for eligibility caching). Adding `pending` to that same undo-data mechanism is incremental, not a separate sprint.
 
-```
-fallback_to_vault_popc_count(per 1000 blocks) > 1
-```
-
-If the V11 fallback rule fires more than once per thousand blocks for any sustained window, the rollover fork becomes justified. Otherwise the V11 rule (fallback) is sufficient and the rollover stays deferred indefinitely.
+### Implementation gate
+Pass criteria for shipping rollover (subset of D's gates):
+- G4.1c: unit test — empty `E(h)` on triggered block produces no winner output, increments `pending`, and the next triggered block with non-empty `E(h)` pays `share + pending`.
+- G4.3b: multi-node testnet — simulated 100-block stretch with all miners in 30-block cooldown produces correct `pending` accumulation across all nodes.
+- G4.4b: adversarial — block claiming `pending` payout when previous chain state had 0 pending must be rejected by all nodes.
 
 ### Constants the rollover fork would add
 ```cpp
@@ -430,16 +442,18 @@ These constants are NOT added to `params.h` for V11. They land at the same time 
 
 ## 11 · Constants required by V11 implementation
 
-The following constants must be added to `include/sost/params.h` **at the time the corresponding component lands** (not before — adding placeholders without logic generates noise and risks shipping a binary with constants that nothing uses).
+Constants are added to `include/sost/params.h` **at the time the corresponding component lands** (not before — adding placeholders without logic generates noise and risks shipping a binary with constants that nothing uses).
 
-### Component A — extended cascade
+### 11.1 — Phase 1 constants (block 7,000) · LANDED
+
+#### Component A — extended cascade
 ```cpp
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 // Drop table is hardcoded inline in src/pow/casert.cpp at the V11 branch
 // (no separate table constants; the if/else if chain matches §1.2 exactly).
 ```
 
-### Component B — state-dependent dataset access
+#### Component B — state-dependent dataset access
 ```cpp
 // Reuses CASERT_V11_HEIGHT — same activation height, no new constant.
 // The state-derived index uses bytes 8..11 of the SHA-256 state of the
@@ -447,30 +461,43 @@ inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 // the consensus rule and must be the same in mining and validation.
 ```
 
-### Component C — SbPoW
+### 11.2 — Phase 2 constants (TBD) · NOT YET LANDED
+
+These constants are listed for design review only. They are **not** added to `params.h` until the corresponding Phase 2 implementation is verified, simulated, testnet-tested and adversarially audited. Activation height `V11_PHASE2_HEIGHT` is announced at that time.
+
+#### Component C — SbPoW
 ```cpp
-inline constexpr int64_t  V11_SBPOW_HEIGHT                 = 7000;  // same height
+inline constexpr int64_t  V11_PHASE2_HEIGHT               = /* TBD */;  // shared by C and D
 // Header v2 adds 33-byte miner_pubkey + 64-byte miner_signature.
 // Signature scheme: BIP-340 Schnorr.
 // Seed binding tag: "SEED2" (vs pre-fork "SEED").
 // Sig message tag: "SOST/POW-SIG/v11".
 ```
 
-### Component D — lottery
+#### Component D — lottery
 ```cpp
-inline constexpr int64_t  POP_LOTTERY_HEIGHT_PHASE_A       = 7000;
-inline constexpr int64_t  POP_LOTTERY_HEIGHT_PHASE_B       = 10000;
+// Reuses V11_PHASE2_HEIGHT — same activation height as SbPoW.
+inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW         = 5000;
 inline constexpr int32_t  LOTTERY_REWARD_EXCLUSION_WINDOW  = 30;
-// Phase A trigger:  (h - 7000) % 3 != 2     → 2-of-3
-// Phase B trigger:  (h - 10000) % 3 == 0    → 1-of-3
+// Trigger schedule (with H = V11_PHASE2_HEIGHT, W = LOTTERY_HIGH_FREQ_WINDOW):
+//   For h in [H, H+W):       triggered  ⟺  (h - H) % 3 != 2     → 2-of-3 (bootstrap)
+//   For h >= H + W:          triggered  ⟺  (h - H) % 3 == 0     → 1-of-3 (steady state)
 // Selection seed tag: "SOST/POP-LOTTERY/v11"
 // Eligibility set:    addrs with at least 1 block in [0, h-1]
-//                     minus any block-reward winner in [h-W, h-1]
+//                     minus any block-reward winner in [h-W30, h-1]   (W30 = LOTTERY_REWARD_EXCLUSION_WINDOW)
 //                     minus the miner of block h itself
 // Winner pick:        deterministic (lex sort + uint64 mod)
 ```
 
-These constants are documented here so reviewers can audit values against the banner copy and the spec text. The actual code addition happens in the implementation commit, in the same patch as the logic that uses them.
+#### Jackpot rollover (part of D)
+```cpp
+// pending_lottery_amount is part of chain state — not a constant.
+// Initialized to 0 at V11_PHASE2_HEIGHT.
+// Reorg-safe via per-block undo data (records pending_before_block).
+// Cap: none. See §10.5 for the full rule.
+```
+
+These constants are documented here so reviewers can audit values against the banner copy and the spec text. The Phase 2 constants land in the implementation commit, in the same patch as the logic that uses them.
 
 ---
 
@@ -481,3 +508,4 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | DRAFT v1 — initial Phase 2 spec (SbPoW + lottery for block 10,000) |
 | 2026-05-02 | SOST consensus working group | DRAFT v2 — restructured into V11 spec; SbPoW moved to block 7,000 with per-component independent activation; lottery eligibility widened to "≥1 block since genesis"; exclusion strengthened to "any block-reward winner in last 30"; added §5 honest mathematical analysis distinguishing Sybil regimes; added §11 constants list |
 | 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
+| 2026-05-02 | SOST consensus working group | DRAFT v3 — restructured V11 into **two phases**. Phase 1 (block 7,000) ships A + B only (extended cASERT cascade + state-dependent dataset access). Phase 2 (height TBD, no calendar pressure) ships C + D (SbPoW + PoP lottery + jackpot rollover). Lottery frequency: 2-of-3 for the first `LOTTERY_HIGH_FREQ_WINDOW = 5000` blocks after Phase 2 activation, then 1-of-3 permanently. §10.5 jackpot rollover reclassified from "deferred fork" to "Phase 2 component D". §11 constants split into 11.1 (Phase 1, landed) and 11.2 (Phase 2, design-only). §3.7 / §4.8 activation rewritten to reference `V11_PHASE2_HEIGHT`. |
