@@ -5,9 +5,9 @@
 //   sost::lottery::select_lottery_winner_index
 //   sost::lottery::is_recent_reward_winner
 //
-// Pure functions; no Schnorr dependency; built unconditionally. Phase 2
-// dormancy (V11_PHASE2_HEIGHT == INT64_MAX) is re-verified in §9 — this
-// commit does NOT affect that gate.
+// Pure functions; no Schnorr dependency; built unconditionally. The
+// production V11_PHASE2_HEIGHT (= 10000) is re-checked in §9; the
+// INT64_MAX sentinel (test-only) is exercised with a literal value.
 //
 // The synthetic-10k-blocks benchmark in §11 reports the wall-clock time
 // of one compute_lottery_eligibility_set call, against the C9 G4.5
@@ -350,15 +350,25 @@ static void test_sybil_neutrality() {
          whale_wins > 4500 && minnow_wins > 4500);
 }
 
-static void test_phase2_dormant_unaffected() {
-    printf("\n=== 9) is_lottery_block at INT64_MAX still false ===\n");
-    // C6 must not have changed the dormancy of is_lottery_block.
-    TEST("is_lottery_block(7000, V11_PHASE2_HEIGHT) → false",
+static void test_phase2_activation_height() {
+    printf("\n=== 9) Phase 2 activation height pinned at 10000 ===\n");
+    // Pre-activation: every height < 10000 returns false.
+    TEST("is_lottery_block(7000, V11_PHASE2_HEIGHT) → false (pre-activation)",
          !is_lottery_block(7000, V11_PHASE2_HEIGHT));
-    TEST("is_lottery_block(1'000'000, V11_PHASE2_HEIGHT) → false",
-         !is_lottery_block(1000000, V11_PHASE2_HEIGHT));
-    TEST("V11_PHASE2_HEIGHT == INT64_MAX (sentinel preserved)",
-         V11_PHASE2_HEIGHT == INT64_MAX);
+    TEST("is_lottery_block(9999, V11_PHASE2_HEIGHT) → false (last pre block)",
+         !is_lottery_block(9999, V11_PHASE2_HEIGHT));
+    // Post-activation: schedule fires per the documented rule.
+    //   10000 % 3 == 1 → bootstrap triggers.
+    //   10002 % 3 == 0 → bootstrap rule returns false.
+    TEST("is_lottery_block(10000, V11_PHASE2_HEIGHT) → true (activation block)",
+         is_lottery_block(10000, V11_PHASE2_HEIGHT));
+    TEST("is_lottery_block(10002, V11_PHASE2_HEIGHT) → false (bootstrap %3==0)",
+         !is_lottery_block(10002, V11_PHASE2_HEIGHT));
+    // INT64_MAX sentinel still exists as test-only value.
+    TEST("INT64_MAX sentinel still returns false",
+         !is_lottery_block(1000000, INT64_MAX));
+    TEST("V11_PHASE2_HEIGHT == 10000 (set by C10)",
+         V11_PHASE2_HEIGHT == 10000);
 }
 
 static void test_current_miner_NOT_excluded_outside_window() {
@@ -440,7 +450,7 @@ int main() {
     test_deterministic_lex_sort();
     test_winner_selection_determinism_and_sensitivity();
     test_sybil_neutrality();
-    test_phase2_dormant_unaffected();
+    test_phase2_activation_height();
     test_current_miner_NOT_excluded_outside_window();
     test_benchmark_10k_blocks();
 

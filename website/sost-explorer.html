@@ -407,7 +407,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- V11 HARD FORK BANNER — Phase 1 (block 7000) + Phase 2 (deferred) -->
+<!-- V11 HARD FORK BANNER — Phase 1 (block 7000) + Phase 2 (block 10000) -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(255,200,87,0.06));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 24px rgba(74,222,128,.4);">
 
@@ -420,7 +420,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         PHASE 1 · BLOCK 7,000 · CASCADE + DATASET HARDENING
       </span>
       <span style="display:block;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
-        PHASE 2 · LATER · LOTTERY + SbPoW (WHEN VERIFIED AND TESTED)
+        PHASE 2 · BLOCK 10,000 · LOTTERY + SbPoW · MINERS MUST UPDATE BEFORE 10,000
       </span>
     </div>
 
@@ -491,17 +491,17 @@ elapsed = 3000 s   →  drop 42  (reaches E7 floor from H35)</pre>
         <b style="color:var(--text)">B · State-dependent dataset access.</b>
         The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round&rsquo;s SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
 
-        <span style="color:var(--text3);font-style:italic">V11 Phase 1 does not change RAM requirements. The Memory-Lock per-instance proposal is under study for a future fork (no earlier than block 10,000), not part of V11.</span>
+        <span style="color:var(--text3);font-style:italic">V11 Phase 1 does not change RAM requirements. The Memory-Lock per-instance proposal is under study for a future fork (no earlier than block 12,000), not part of V11.</span>
       </div>
     </div>
 
     <!-- ============== PHASE 2 BOX ============== -->
     <div style="background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(74,222,128,0.04));border:1px dashed var(--cyan);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(34,211,238,.15)">
       <div style="color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ PHASE 2 — LATER / TBD
+        ◆ PHASE 2 — ACTIVATES AT BLOCK 10,000
       </div>
       <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        <b style="color:#fb010d">Phase 2 does NOT activate at block 7,000.</b> Two consensus changes are deferred to a later activation height. Phase 2 ships only when its implementation passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, reorg testing and chain-safety review. <b>No calendar pressure.</b>
+        <b style="color:#4ade80">Phase 2 activates at block 10,000</b> — separated from Phase 1 (block 7,000) by ~3,000 blocks (~3 weeks at the 600-second target) so the two hard forks remain independently observable. C9 Monte Carlo + accounting + reorg + determinism gates all PASS. <b style="color:#fb010d">Miners MUST update node + miner binaries before block 10,000</b> — pre-Phase-2 binaries produce 50/25/25 coinbase on triggered blocks and the validator rejects them with CB11_LOTTERY_SHAPE.
       </div>
 
       <div style="color:var(--text2);font-size:11px;line-height:1.7">
@@ -521,7 +521,7 @@ After that, permanently:                       1 of every 3 blocks</pre>
 
         Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
 
-        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after preliminary Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. The earlier draft also auto-excluded the current block winner; that auto-exclusion was dropped in C7.1 — a miner who finds the current block can still participate if they did not also win in the previous 5 blocks. Final Phase 2 activation remains TBD.</span><br><br>
+        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. The earlier draft also auto-excluded the current block winner; that auto-exclusion was dropped in C7.1 — a miner who finds the current block can still participate if they did not also win in the previous 5 blocks. Cap=5 confirmed by C9 formal Monte Carlo (docs/V11_PHASE2_MONTE_CARLO.md). Phase 2 activation height set to block 10,000 by C10. Caveat: the lottery improves redistribution but is NOT Sybil-proof — pre-legitimated sybil sets defeat eligibility-based defences regardless of cap.</span><br><br>
 
         <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
 
@@ -545,7 +545,7 @@ After that, permanently:                       1 of every 3 blocks</pre>
     <div style="background:rgba(255,200,87,0.05);border-left:3px solid var(--gold);padding:9px 14px;border-radius:3px;margin-bottom:14px">
       <span style="color:var(--gold);font-size:10.5px;font-weight:700;letter-spacing:1px">CONDITIONAL ACTIVATION</span>
       <div style="color:var(--text2);font-size:10.5px;line-height:1.65;margin-top:3px">
-        Phase 1 components (A, B) activate at block 7,000 if each passes its safety gate. Phase 2 components (C, D) ship only when their implementation passes the same gates. Components that fail their gate are deferred. <b>The chain will not run unfinished code to meet a calendar.</b>
+        Phase 1 components (A, B) activate at block 7,000. Phase 2 components (C, D) activate at block 10,000 — set after every C2-C9 gate (verification, simulation, testnet, adversarial, formal Monte Carlo) was cleared. <b>The chain runs verified code only.</b>
       </div>
     </div>
 

@@ -16,9 +16,11 @@
 //   - sign_sbpow_commitment / verify_sbpow_signature return false.
 //   - is_well_formed_compressed_pubkey degrades to a prefix-only check
 //     (still rejects 0x00 / 0x04 / arbitrary bytes; no curve test).
-//   - validate_sbpow_for_block stays correct because at the production
-//     gate (V11_PHASE2_HEIGHT == INT64_MAX) it never reaches Schnorr
-//     verify; the version check still fires and rejects premature v2.
+//   - validate_sbpow_for_block stays correct: pre-activation it never
+//     reaches Schnorr verify (legacy v1 headers); the version check
+//     still fires and rejects premature v2 blocks. Post-activation
+//     (height >= V11_PHASE2_HEIGHT = 10000) it MUST be built with the
+//     full BIP-340 path; OFF builds are TEST-ONLY and not deployable.
 //   - Schnorr-only test binaries are NOT built (CMake gates them).
 // When SOST_HAVE_SCHNORRSIG is defined the full BIP-340 path is live.
 #include "sost/sbpow.h"
@@ -222,10 +224,12 @@ bool sign_sbpow_commitment(
     return true;
 #else
     (void)privkey; (void)message;
-    // Build was configured without SOST_HAVE_SCHNORRSIG. Production paths
-    // never reach here while V11_PHASE2_HEIGHT == INT64_MAX. If you hit
-    // this in a non-test context, the build is misconfigured for the
-    // active code path — rebuild with -DSOST_ENABLE_PHASE2_SBPOW=ON.
+    // Build was configured without SOST_HAVE_SCHNORRSIG. Production
+    // builds MUST enable SOST_ENABLE_PHASE2_SBPOW before block 10000.
+    // Pre-activation (height < 10000) miners never reach this path
+    // because the v1 header is selected by version-gating logic; this
+    // assertion only protects against a misbuilt deployment that still
+    // produces v2 headers.
     out_signature.fill(0);
     return false;
 #endif
@@ -262,8 +266,8 @@ bool verify_sbpow_signature(
     (void)pubkey; (void)message; (void)signature;
     // Without SOST_HAVE_SCHNORRSIG, verify always returns false.
     // validate_sbpow_for_block guarantees this is only called on the
-    // Phase 2 active path; with V11_PHASE2_HEIGHT == INT64_MAX in
-    // production that path is unreachable.
+    // Phase 2 active path. Production builds MUST be compiled with
+    // SOST_ENABLE_PHASE2_SBPOW=ON before block 10000 (V11_PHASE2_HEIGHT).
     return false;
 #endif
 }
@@ -372,11 +376,10 @@ bool is_well_formed_compressed_pubkey(const MinerPubkey& pubkey) {
     }
 #endif
     // Without SOST_HAVE_SCHNORRSIG, the curve-membership check is
-    // skipped. validate_sbpow_for_block is unreachable in production
-    // under that build (V11_PHASE2_HEIGHT == INT64_MAX never crosses
-    // into phase2_active), so the degraded prefix-only check has no
-    // production effect. Adversarial tests for off-curve points run
-    // only with -DSOST_ENABLE_PHASE2_SBPOW=ON.
+    // skipped. The Phase 2 active path is unreachable in OFF builds,
+    // so the degraded prefix-only check has no effect on production
+    // chains compiled with SOST_ENABLE_PHASE2_SBPOW=ON. Adversarial
+    // tests for off-curve points run only with -DSOST_ENABLE_PHASE2_SBPOW=ON.
     return true;
 }
 
@@ -392,9 +395,9 @@ ValidationResult validate_sbpow_for_block(
 
     // ---- Step 1 — version gate (always) ------------------------------------
     // Pre-Phase 2 must be v1; Phase 2 must be v2. Anything else is a hard
-    // reject. This is the rule that matters in production while
-    // V11_PHASE2_HEIGHT == INT64_MAX: a premature v2 block is rejected
-    // here even though the signature path below is unreachable.
+    // reject. Pre-activation (height < V11_PHASE2_HEIGHT = 10000) a
+    // premature v2 block is rejected here even though the signature
+    // path below is skipped on the legacy v1 branch.
     if (!phase2_active) {
         if (in.header_version != 1) {
             set_err("SbPoW: pre-Phase 2 height " +

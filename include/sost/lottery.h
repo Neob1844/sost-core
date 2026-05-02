@@ -5,7 +5,7 @@
 //              implementation (header-only inline). All other entry
 //              points still SKELETON / abort-on-call (eligibility,
 //              winner picking, rollover state, reorg) until C6+.
-// Activation: V11_PHASE2_HEIGHT (params.h) — currently INT64_MAX.
+// Activation: V11_PHASE2_HEIGHT (params.h) — block 10000 (set by C10).
 //
 // Lottery frequency schedule (height-only, no chain state needed):
 //   With H = V11_PHASE2_HEIGHT and W = LOTTERY_HIGH_FREQ_WINDOW = 5000,
@@ -68,7 +68,7 @@ inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 
 // and are NOT linked into the production library yet.
 //
 // Rules:
-//   1) phase2_height == INT64_MAX        →  return false (sentinel: Phase 2 dormant)
+//   1) phase2_height == INT64_MAX        →  return false (test-only sentinel for dormancy)
 //   2) height < phase2_height            →  return false (pre-Phase 2 block)
 //   3) offset = height - phase2_height
 //      if offset < LOTTERY_HIGH_FREQ_WINDOW:
@@ -76,9 +76,11 @@ inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 
 //      else:
 //          return (height % 3) == 0     (1-of-3 permanent, after bootstrap)
 //
-// Production guarantee: while V11_PHASE2_HEIGHT == INT64_MAX in
-// params.h, this function returns false for every real chain height.
-// Tests pass a finite phase2_height to exercise the active path.
+// Production: V11_PHASE2_HEIGHT == 10000 (params.h, set by C10).
+// This function returns false for every chain height < 10000 and the
+// schedule above for height >= 10000. Tests may pass alternate finite
+// phase2_height values (or the INT64_MAX sentinel) to exercise specific
+// boundary cases.
 //
 // CONSENSUS-CRITICAL: the schedule MUST be height-anchored, NOT
 // offset-anchored, so a reorg across V11_PHASE2_HEIGHT does not

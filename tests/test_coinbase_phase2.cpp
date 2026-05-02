@@ -11,10 +11,11 @@
 //   - Negative cases: wrong shape, wrong amount, wrong winner,
 //     broken emission invariant.
 //
-// Phase 2 stays dormant in production via V11_PHASE2_HEIGHT = INT64_MAX
-// (params.h). These tests inject a finite phase2_height into the
-// Phase2CoinbaseContext to exercise the active path; no consensus
-// behaviour change for any real chain block.
+// Phase 2 activates in production at V11_PHASE2_HEIGHT = 10000
+// (params.h, set by C10). These tests inject a synthetic small
+// phase2_height (= 100) into the Phase2CoinbaseContext to keep the
+// fixture compact — the validator's behaviour is identical at the
+// real activation height; §1 also pins the production constant.
 //
 // No Schnorr dependency; built unconditionally.
 
@@ -146,13 +147,79 @@ static Phase2CoinbaseContext mk_ctx_payout(int64_t pending_before,
 }
 
 // ---------------------------------------------------------------------------
-// §1 — Phase 2 dormant in production
+// §1 — Phase 2 production activation height pinned
 // ---------------------------------------------------------------------------
 
-static void test_phase2_height_is_int64_max() {
-    printf("\n== §1: V11_PHASE2_HEIGHT == INT64_MAX in params.h ==\n");
-    TEST("Phase 2 stays dormant",
-         V11_PHASE2_HEIGHT == INT64_MAX);
+static void test_phase2_height_pinned() {
+    printf("\n== §1: V11_PHASE2_HEIGHT == 10000 in params.h (C10) ==\n");
+    TEST("Phase 2 activates at block 10000",
+         V11_PHASE2_HEIGHT == 10000);
+}
+
+// ---------------------------------------------------------------------------
+// §1b — Activation-boundary coinbase shape against V11_PHASE2_HEIGHT
+//
+// Verify the validator routes correctly across the production boundary:
+//   height=9999  → pre-Phase-2 path (3-output coinbase OK; Phase-2 ctx
+//                  is provided but ignored because height < phase2_height).
+//   height=10000 → Phase-2 path; with a non-empty eligibility set we
+//                  expect a PAYOUT shape (2 outputs MINER + LOTTERY).
+//   The 10000%3 == 1 case is a triggered bootstrap block; if the
+//   validator received UPDATE/PAYOUT with the right amounts it MUST pass.
+// ---------------------------------------------------------------------------
+
+static void test_activation_boundary_with_real_height() {
+    printf("\n== §1b: activation boundary at V11_PHASE2_HEIGHT (= 10000) ==\n");
+    const int64_t H = V11_PHASE2_HEIGHT;
+    TEST("V11_PHASE2_HEIGHT used as fixture phase2_height", H == 10000);
+
+    // Pre-activation height (9999) — pre-Phase-2 path. The fixture passes
+    // a triggered Phase2CoinbaseContext; the validator must NOT route to
+    // the lottery shape because height < phase2_height.
+    {
+        const int64_t subsidy = 800000000;
+        const int64_t fees    = 0;
+        Transaction cb = make_legacy_coinbase(/*height*/9999, subsidy, fees);
+        auto ctx = mk_ctx_update(/*pending_before*/0, subsidy + fees, /*phase2*/H);
+        // Even with ctx.triggered == true, height < phase2_height, so the
+        // legacy 3-output 50/25/25 shape MUST validate.
+        auto r = ValidateCoinbaseConsensus(cb, /*height*/9999, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh,
+                                           &ctx);
+        TEST("height=9999 + legacy 50/25/25 + Phase2 ctx → OK",
+             r.ok);
+    }
+
+    // Activation height (10000) — Phase-2 path. PAYOUT shape with
+    // eligibility-set winner, pending_before == 0.
+    {
+        const int64_t subsidy = 800000000;
+        const int64_t fees    = 0;
+        Transaction cb = make_payout_coinbase(/*height*/10000, subsidy, fees,
+                                              /*pending_before*/0);
+        auto ctx = mk_ctx_payout(/*pending_before*/0, subsidy + fees,
+                                 g_winner_pkh, /*phase2*/H);
+        auto r = ValidateCoinbaseConsensus(cb, /*height*/10000, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh,
+                                           &ctx);
+        TEST("height=10000 + PAYOUT shape + ctx.paid_out → OK",
+             r.ok);
+    }
+
+    // Activation height (10000) — Phase-2 path. UPDATE shape (empty
+    // eligibility set), full lottery share rolls into pending.
+    {
+        const int64_t subsidy = 800000000;
+        const int64_t fees    = 0;
+        Transaction cb = make_update_coinbase(/*height*/10000, subsidy, fees);
+        auto ctx = mk_ctx_update(/*pending_before*/0, subsidy + fees,
+                                 /*phase2*/H);
+        auto r = ValidateCoinbaseConsensus(cb, /*height*/10000, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh,
+                                           &ctx);
+        TEST("height=10000 + UPDATE shape + ctx.triggered/!paid_out → OK",
+             r.ok);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -505,7 +572,8 @@ int main() {
     printf("== test_coinbase_phase2 (C8) — V11 Phase 2 coinbase shape ==\n");
     init_pkhs();
 
-    test_phase2_height_is_int64_max();
+    test_phase2_height_pinned();
+    test_activation_boundary_with_real_height();
     test_split_basic();
 
     test_legacy_path_no_context();

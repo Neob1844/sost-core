@@ -14,9 +14,9 @@
 //
 // CONSENSUS-CRITICAL: the C6 helpers are pure functions over a chain
 // view. They do NOT touch coinbase, rewards, UTXO, chain state, or
-// validation paths. Phase 2 stays dormant via V11_PHASE2_HEIGHT =
-// INT64_MAX in params.h; the only callers of the new helpers today
-// are tests/test_lottery_eligibility.cpp.
+// validation paths. Phase 2 activates at V11_PHASE2_HEIGHT = 10000
+// (params.h); pre-activation chain heights take the dormant branch
+// because is_lottery_block returns false for every height < 10000.
 #include "sost/lottery.h"
 
 #include "sost/crypto.h"      // sha256()

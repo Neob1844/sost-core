@@ -284,22 +284,27 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
 // V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
-// Sentinel value INT64_MAX = "never" — Phase 2 is dormant until the
-// implementation passes every gate listed in docs/V11_PHASE2_DESIGN.md
-// §6 and the owner issues an explicit GO. Reasoning for keeping the
-// sentinel here (vs in sbpow.h):
-//   - Consensus activation heights belong with the other height
-//     constants (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT, ...).
-//   - Phase 2 components C and D BOTH gate on this same height; a
-//     single source of truth avoids skew.
-inline constexpr int64_t  V11_PHASE2_HEIGHT                = INT64_MAX;
+// Final activation height set by C10 (height-decision gate) to block 10000.
+// Reasoning (see docs/V11_PHASE2_RELEASE_NOTES.md):
+//   - Phase 1 (cASERT cascade + state-dependent dataset) activates at
+//     CASERT_V11_HEIGHT = 7000. Activating Phase 2 at the same height
+//     would mix two consensus changes simultaneously; spacing them
+//     keeps each fork independently observable in production.
+//   - ~3000-block margin (~3 weeks at the 600-second target) gives
+//     miners time to update node + miner binaries and gives the team
+//     time to wire the eligibility-fetcher RPC into the production
+//     miner loop before Phase 2 lights up.
+//   - C9 Monte Carlo + accounting + reorg + determinism PASS
+//     (docs/V11_PHASE2_MONTE_CARLO.md).
+// Single source of truth: Phase 2 components C (SbPoW) and D (lottery)
+// BOTH gate on this height. Other height-bearing constants
+// (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT) live in this same file
+// for the same reason — keeps consensus heights in one place.
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = 10000;
 
 // V11 Phase 2 — PoP lottery (component D) consensus constants.
 //
-// All values gate on V11_PHASE2_HEIGHT above. While that height is
-// INT64_MAX, the lottery code paths are unreachable on real chain
-// heights — these constants exist only to make the implementation
-// testable and the schedule reproducible.
+// All values gate on V11_PHASE2_HEIGHT above (block 10000).
 //
 // Frequency schedule (used by sost::lottery::is_lottery_block):
 //   For h in [V11_PHASE2_HEIGHT, V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW):
@@ -317,9 +322,8 @@ inline constexpr int64_t  V11_PHASE2_HEIGHT                = INT64_MAX;
 //     ~0 % rollover rate and a smaller sybil-incentive delta.
 //   - cap=0 (no exclusion) gives the dominant ~3.3 % baseline but
 //     the smallest sybil-incentive delta of all variants.
-// Final value is confirmed by C9 (formal Monte Carlo + fairness
-// review) before V11_PHASE2_HEIGHT is set to a finite value. The
-// recent-winner cap is NOT a sybil defense — eligibility-based
+// Final value confirmed by C9 (formal Monte Carlo + fairness
+// review). The recent-winner cap is NOT a sybil defense — eligibility-based
 // rules collapse against ~100 sybil pre-legitimated addresses
 // regardless of the window. Real sybil defense waits for
 // Memory-Lock per-instance (post block 12 000 study) and any

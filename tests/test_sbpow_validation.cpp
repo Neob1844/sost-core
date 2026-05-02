@@ -1,9 +1,9 @@
 // V11 Phase 2 — SbPoW validation tests (Commit 4 scope).
 //
 // Exercises sost::sbpow::validate_sbpow_for_block() — the height-gated
-// SbPoW consensus check. Tests inject a finite phase2_height (e.g.
-// 100) so the active branch is reached without flipping the production
-// V11_PHASE2_HEIGHT (which stays at INT64_MAX).
+// SbPoW consensus check. Tests inject a synthetic small phase2_height
+// (e.g. 100) so the active branch is reached on test heights well
+// below the production activation (V11_PHASE2_HEIGHT = 10000).
 //
 // Coverage (14 cases):
 //    1. pre-Phase 2 v1 accepted

@@ -135,12 +135,13 @@ struct StoredBlock {
     int32_t profile_index{INT32_MIN};
     // V11 Phase 2 — jackpot rollover state AFTER this block was applied
     // (C8). Persisted in chain.json so any tip can resume without
-    // replaying lottery transitions from V11_PHASE2_HEIGHT. Default 0
-    // covers (a) pre-Phase-2 chains where Phase 2 never activates, and
-    // (b) backward-compat with chain.json files written by binaries
-    // that pre-date C8 (the load_chain parser treats a missing field
-    // as 0). While V11_PHASE2_HEIGHT == INT64_MAX in params.h, every
-    // real block carries 0 here — Phase 2 is dormant.
+    // replaying lottery transitions from V11_PHASE2_HEIGHT (= 10000,
+    // set by C10). Default 0 covers (a) pre-activation blocks
+    // (height < 10000), and (b) backward-compat with chain.json files
+    // written by binaries that pre-date C8 (the load_chain parser
+    // treats a missing field as 0). Pre-activation blocks all carry
+    // 0 here; from height 10000 onwards triggered blocks may carry a
+    // non-zero rollover amount.
     int64_t pending_lottery_after{0};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
@@ -3689,19 +3690,17 @@ static bool process_block(const std::string& block_json) {
     }
 
     // ---------------------------------------------------------------------
-    // V11 Phase 2 — SbPoW consensus gate (height-gated, dormant on mainnet)
+    // V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 10000)
     // ---------------------------------------------------------------------
-    // V11_PHASE2_HEIGHT is the sentinel INT64_MAX while Phase 2 is
-    // disabled, so the signature-checking branch is unreachable on real
-    // chain heights. The gate still enforces the version check:
-    //   - pre-Phase 2 (any current height < INT64_MAX): require version == 1.
-    //   - Phase 2 (when activated): require version == 2 + valid sig +
+    // V11_PHASE2_HEIGHT == 10000 (params.h, set by C10). The gate
+    // enforces both the version check and the signature path:
+    //   - pre-Phase 2 (height < 10000): require version == 1.
+    //   - Phase 2 (height >= 10000): require version == 2 + valid sig +
     //     matching coinbase miner-output pkh.
     // The header version field defaults to 1 if absent from the RPC
     // payload, so legacy block submissions (no "version" key) keep
-    // working unchanged. A malicious caller that explicitly puts
-    // version=2 in the payload gets rejected here, which is exactly the
-    // protection we want until Phase 2 ships.
+    // working unchanged on pre-activation heights. From block 10000
+    // onwards a v1 header (or a v2 with bad signature) is rejected.
     {
         uint32_t hdr_version = (uint32_t)jint(block_json, "version");
         if (hdr_version == 0) hdr_version = 1;  // legacy default
@@ -4948,10 +4947,10 @@ static bool load_chain(const std::string& path) {
         // missing in chain.json files written by pre-C8 binaries. We
         // explicitly check for the key so a missing field keeps the
         // StoredBlock default of 0 rather than picking up jint's
-        // sentinel error value. While V11_PHASE2_HEIGHT == INT64_MAX
-        // every real block carries 0 here; the parser still has to
-        // accept the field for forward-compat with finite-phase2 test
-        // chain.json files.
+        // sentinel error value. With V11_PHASE2_HEIGHT = 10000 every
+        // pre-activation block carries 0 here; from height 10000
+        // onwards triggered blocks may carry a non-zero rolled-over
+        // jackpot.
         if (bj.find("\"pending_lottery_after\"") != std::string::npos) {
             sb.pending_lottery_after = jint(bj,"pending_lottery_after");
         } // else keeps 0 default

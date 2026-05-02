@@ -1,8 +1,8 @@
 # V11 Phase 2 — Formal Monte Carlo + Activation Readiness (C9)
 
-Status: **C9 review complete.** `V11_PHASE2_HEIGHT` remains
-`INT64_MAX` in `include/sost/params.h` (Phase 2 dormant). This
-document collects the Monte Carlo evidence used to decide the C5/C6/C7
+Status: **C9 review complete · C10 set the activation height.**
+`V11_PHASE2_HEIGHT = 10000` in `include/sost/params.h`. This document
+collects the Monte Carlo evidence used to confirm the C5/C6/C7
 parameter set is safe to ship as-is, and to record what the lottery
 does and does NOT defend against.
 
@@ -286,8 +286,9 @@ There is no value in `{10, 30}` over `5` on either axis. Cap=5 stays.
 
 ## 11. Activation readiness verdict
 
-**`READY_FOR_HEIGHT_DECISION = YES`**, with the following honest
-caveats recorded in this doc and visible to any reviewer:
+**`READY_FOR_ACTIVATION = YES`** (C10 set `V11_PHASE2_HEIGHT = 10000`),
+with the following honest caveats recorded in this doc and visible to
+any reviewer:
 
 1. The lottery improves miner retention against trivial concentration
    (no-sybil regime: 17% → 0% dom lottery share) and adds a real
@@ -306,8 +307,11 @@ caveats recorded in this doc and visible to any reviewer:
    `project_useful_compute_trial.md` already notes that any rewarded
    B+D phase requires a future redesign. The lottery as shipped is
    the C-side mechanism only.
-5. Activation height itself is NOT being set in this commit. C10 is
-   the parameter-decision commit.
+5. **Activation height set by C10 to block 10,000.** Phase 1 (cASERT
+   cascade + state-dependent dataset) activates at block 7,000;
+   Phase 2 follows ~3,000 blocks (~3 weeks) later. See
+   `docs/V11_PHASE2_RELEASE_NOTES.md` for the operational notes
+   (miner update path, eligibility-set RPC follow-up commit).
 
 ## Appendix A — How to reproduce
 
@@ -328,31 +332,35 @@ python3 tools/lottery_montecarlo.py --determinism
 Seed defaults to 42. Two runs with the same flags produce
 bit-identical output.
 
-## Appendix B — Test matrix (final pre-activation)
+## Appendix B — Test matrix (post-C10, with V11_PHASE2_HEIGHT = 10000)
 
 ON-mode build (`cmake -DSOST_ENABLE_PHASE2_SBPOW=ON`):
 
 ```
-9/9 lottery-frequency      PASS
-    lottery-eligibility    PASS
-    lottery-rollover       PASS
-    coinbase-phase2        PASS
-    casert-v11             PASS
-    convergencex-v11       PASS
-    transcript-v2          PASS
-    sbpow-header-v2        PASS
-    miner-key-selection    PASS
-ctest total: 37/42 (5 pre-existing failures — see KNOWN_TEST_FAILURES.md)
+12/12 targeted Phase 2 tests PASS
+     lottery-frequency      PASS  (boundary tests added at 9999/10000/14999/15000)
+     lottery-eligibility    PASS  (activation-height pin updated)
+     lottery-rollover       PASS  (V11_PHASE2_HEIGHT == 10000 assertion)
+     coinbase-phase2        PASS  (real-height boundary §1b added)
+     casert-v11             PASS
+     convergencex-v11       PASS
+     transcript-v2          PASS
+     sbpow-header-v2        PASS
+     miner-key-selection    PASS
+     sbpow-signing          PASS
+     sbpow-validation       PASS
+     sbpow-adversarial      PASS
+ctest total: 38/42 (4 pre-existing failures — see KNOWN_TEST_FAILURES.md)
 ```
 
 OFF-mode build (`cmake -DSOST_ENABLE_PHASE2_SBPOW=OFF`):
 
 ```
-9/9 targeted Phase 2 tests PASS
+9/9 targeted non-Schnorr Phase 2 tests PASS
     sbpow-signing / sbpow-validation / sbpow-adversarial: NOT BUILT (expected)
-ctest total: 34/39 (same 5 pre-existing failures)
+ctest total: 34/39 (same 4 pre-existing failures + checkpoints)
 ```
 
-Pre-existing failures (not introduced by C9, not introduced by V11
-Phase 2): `bond-lock`, `popc`, `escrow`, `dynamic-rewards`,
+Pre-existing failures (not introduced by C9 or C10, not introduced by
+V11 Phase 2): `bond-lock`, `popc`, `escrow`, `dynamic-rewards`,
 `checkpoints` — see `docs/KNOWN_TEST_FAILURES.md`.

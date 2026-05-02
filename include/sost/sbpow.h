@@ -17,10 +17,11 @@
 //   docs/V11_PHASE2_DESIGN.md §1.4 / §1.5 for the full rationale and the
 //   exact message layout.
 //
-// Phase 2 is gated behind G3.1 (verification), G3.2 (simulation),
-// G3.3 (testnet) and G3.4 (adversarial) before any production height
-// is set. With V11_PHASE2_HEIGHT = INT64_MAX, none of these functions
-// are reached on real chain heights — only by C3 unit tests.
+// Phase 2 has cleared C2 (verification), C3 (header serialization),
+// C4 (validator + adversarial), and C9 (Monte Carlo + accounting).
+// Activation height set by C10 to V11_PHASE2_HEIGHT = 10000. Below
+// that height these functions are unreached on real chain blocks
+// (legacy v1 headers); from height 10000 onwards they are mandatory.
 #pragma once
 
 #include "sost/types.h"
@@ -213,11 +214,14 @@ MinerKeyResolution resolve_miner_key(
 // pipeline. It is height-gated by an injectable `phase2_height`
 // parameter so:
 //
-//   - Production callers pass `params.h::V11_PHASE2_HEIGHT` (sentinel
-//     INT64_MAX). The signature-checking branch is therefore unreachable
-//     on real chain heights, but the version gate (v1 pre-Phase 2 / v2
-//     Phase 2) still fires and rejects premature v2 blocks.
-//   - Tests pass a finite phase2_height to exercise the active path.
+//   - Production callers pass `params.h::V11_PHASE2_HEIGHT` (= 10000).
+//     For block heights < 10000 the signature-checking branch is
+//     skipped (legacy v1 headers); from height 10000 onwards every
+//     v2 header MUST carry a verifying miner_pubkey + miner_signature.
+//     Premature v2 blocks (height < 10000 with header_version == 2)
+//     are rejected with VERSION_MISMATCH.
+//   - Tests pass a finite phase2_height to exercise the active path
+//     before the chain reaches the production activation height.
 //
 // Order of checks (matches docs/V11_SPEC.md §3.5 and
 // docs/V11_PHASE2_DESIGN.md §1.6):
@@ -268,9 +272,9 @@ struct ValidationInputs {
     // Coinbase binding: pkh paid by the miner-subsidy coinbase output.
     PubKeyHash         coinbase_miner_pkh{};
 
-    // Activation gate. Production = V11_PHASE2_HEIGHT (= INT64_MAX while
-    // Phase 2 is dormant). Tests inject a finite value to exercise the
-    // signature-checking path.
+    // Activation gate. Production = V11_PHASE2_HEIGHT (= 10000, set by
+    // C10 in params.h). Tests may inject an alternate value (including
+    // the INT64_MAX sentinel) to exercise dormancy or boundary cases.
     int64_t            phase2_height{INT64_MAX};
 };
 

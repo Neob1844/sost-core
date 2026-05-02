@@ -84,12 +84,12 @@ static std::string g_rpc_pass = "";
 static std::string g_miner_address = "";
 static PubKeyHash  g_miner_pkh{};
 
-// V11 Phase 2 — wallet-backed signing key (dormant while
-// V11_PHASE2_HEIGHT == INT64_MAX). When --wallet + --mining-key-label
-// are passed, the wallet is loaded into g_wallet and the resolved
-// key's pubkey/pkh are cached here. The privkey lives only inside
-// g_wallet; callers (signing helpers) read it on demand and the
-// process zeroes its in-memory copy via secure_memzero on shutdown.
+// V11 Phase 2 — wallet-backed signing key (mandatory at height >=
+// V11_PHASE2_HEIGHT = 10000). When --wallet + --mining-key-label are
+// passed, the wallet is loaded into g_wallet and the resolved key's
+// pubkey/pkh are cached here. The privkey lives only inside g_wallet;
+// callers (signing helpers) read it on demand and the process zeroes
+// its in-memory copy via secure_memzero on shutdown.
 static std::string g_wallet_path = "";
 static std::string g_mining_key_label = "";
 static Wallet      g_wallet;
@@ -216,9 +216,11 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
 // `miner_share` MUST equal sost::lottery::phase2_coinbase_split(
 // subsidy + fees).miner_share so the validator's CB12 check passes.
 //
-// Phase 2 is dormant while V11_PHASE2_HEIGHT == INT64_MAX in params.h —
-// the production mining loop never reaches this builder. It is exposed
-// for tests and for the future Phase-2-active miner path.
+// Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10).
+// Production miners MUST wire this builder into the mining loop before
+// the chain reaches height 10000 (see follow-up commit: eligibility-set
+// RPC + winner selection at the call site in mine_loop). It is currently
+// exposed for tests and for that future wiring.
 static Transaction build_phase2_update_coinbase_tx(int64_t height,
                                                    int64_t miner_share,
                                                    const PubKeyHash& miner_pkh) {
@@ -242,9 +244,10 @@ static Transaction build_phase2_update_coinbase_tx(int64_t height,
 // per-block share plus any rolled-over jackpot from prior empty
 // triggered blocks. No GOLD/POPC outputs are emitted.
 //
-// Phase 2 is dormant while V11_PHASE2_HEIGHT == INT64_MAX in params.h —
-// the production mining loop never reaches this builder. It is exposed
-// for tests and for the future Phase-2-active miner path.
+// Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10).
+// Production miners MUST wire this builder into the mining loop before
+// the chain reaches height 10000 (see follow-up commit). Currently
+// exposed for tests and for that future wiring.
 static Transaction build_phase2_payout_coinbase_tx(int64_t height,
                                                    int64_t miner_share,
                                                    int64_t lottery_payout,
@@ -925,16 +928,17 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
     // Coinbase = subsidy + fees, split 50/25/25.
     //
-    // V11 Phase 2 (C8) — when V11_PHASE2_HEIGHT becomes finite AND the
-    // current height triggers the lottery (sost::lottery::is_lottery_block),
-    // this builder MUST be replaced with build_phase2_payout_coinbase_tx
+    // V11 Phase 2 (C8) — V11_PHASE2_HEIGHT is now 10000 (set by C10).
+    // FOLLOW-UP COMMIT REQUIRED before the chain reaches height 10000:
+    // when sost::lottery::is_lottery_block(h, V11_PHASE2_HEIGHT) returns
+    // true, this builder MUST be replaced with build_phase2_payout_coinbase_tx
     // (when the eligibility set is non-empty) or
     // build_phase2_update_coinbase_tx (when empty). That requires an RPC
     // path to fetch the eligibility set and pending_lottery_amount from
-    // the node — wired in a future commit. While V11_PHASE2_HEIGHT ==
-    // INT64_MAX in params.h, sost::lottery::is_lottery_block returns false
-    // for every height, so the existing 50/25/25 path is the only one
-    // production ever hits.
+    // the node. Until the wiring lands, miners running this binary at
+    // height >= 10000 will produce 50/25/25 coinbases on triggered
+    // blocks and the validator will reject them with CB11_LOTTERY_SHAPE.
+    // See docs/V11_PHASE2_RELEASE_NOTES.md "Operational notes" section.
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
     Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
@@ -1638,11 +1642,13 @@ int main(int argc, char** argv) {
     //                                            (Phase 2 path; --address must MATCH
     //                                            the address derived from the key)
     //
-    // V11_PHASE2_HEIGHT is INT64_MAX (sentinel = "never") so phase2_required
-    // is `false` in production and the resolver always accepts an
-    // --address-only invocation. The signing-key path is exercised by the
-    // unit tests in tests/test_miner_key_selection.cpp (which pass
-    // phase2_required=true to verify the strict path).
+    // V11_PHASE2_HEIGHT is 10000 (set by C10). Until the chain reaches
+    // 10000, phase2_required stays `false` at startup and the resolver
+    // accepts an --address-only invocation. From height 10000 onwards
+    // the per-block strict path requires a wallet-backed signing key —
+    // miners that did not configure --wallet + --mining-key-label
+    // before activation will fail to produce valid v2 headers.
+    // The signing-key path is exercised by tests/test_miner_key_selection.cpp.
     if (!g_wallet_path.empty() || !g_mining_key_label.empty()) {
         if (g_wallet_path.empty()) {
             fprintf(stderr, "ERROR: --mining-key-label requires --wallet <path>.\n");
@@ -1659,9 +1665,9 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        // Phase 2 is dormant in production (V11_PHASE2_HEIGHT == INT64_MAX),
-        // so we resolve with phase2_required=false. The resolver will still
-        // enforce label-found and address-match rules.
+        // Initial resolution uses phase2_required=false; the per-block
+        // mining loop updates the flag once it knows the height. The
+        // resolver still enforces label-found and address-match rules.
         bool phase2_required = false;  // updated per-block in the mining loop
         sbpow::MinerKeyResolution res = sbpow::resolve_miner_key(
             g_wallet, g_mining_key_label, g_miner_address, phase2_required);
