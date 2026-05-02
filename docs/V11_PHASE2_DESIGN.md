@@ -298,6 +298,63 @@ G4.5: bench/test — eligibility_set_at(h) must complete in < 50 ms on a
 
 If the benchmark fails, **Commit 6.5** introduces an incremental index `miner_first_seen: PubKeyHash → int64_t` updated on connect/disconnect with the same cache invalidation rules. This branch is conditional and not part of the initial commit budget.
 
+### 5.4 Preliminary lottery eligibility simulation
+
+> **Status: PRELIMINARY analysis. NOT a final decision. The current design defaults and the public banner v82 wording remain unchanged until C9 (formal Monte Carlo + fairness review) confirms or revises the rule.**
+
+A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool only — NOT consensus code, NOT wired into CMake) was executed across 256 scenarios (4 hashrate values × 4 honest-miner counts × 4 sybil counts × 4 exclusion windows, 10 000 blocks each) to inform the eventual C9 decision on the `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` parameter.
+
+#### Variants evaluated
+
+| label | window | description |
+|---|---|---|
+| `cap_30` | 30 | original Phase 2 design (30-block recent-winner exclusion) |
+| `cap_10` | 10 | shorter cooldown |
+| `cap_5`  | 5  | minimal cooldown |
+| `no_cap` | 0  | only the current-block winner is excluded |
+
+#### Headline numbers (current network shape: 70-85 % dom, 5-10 honest)
+
+| window | dom no sybils | dom + 10 sybils | dom + 100 sybils | honest median | rollover rate |
+|---|---|---|---|---|---|
+| `cap_30` | **0.0 %** | 77.7 % | 96.8 % | 15.10 % | **12.1 %** |
+| `cap_10` | **0.0 %** | 66.4 % | 94.7 % | 15.03 % | 0.5 % |
+| `cap_5`  | **0.0 %** | 62.8 % | 94.1 % | 15.01 % | **0.0 %** |
+| `no_cap` | 3.3 %     | 59.3 % | 93.3 % | 14.40 % | **0.0 %** |
+
+#### Findings (preliminary, subject to C9 refinement)
+
+- **`cap_30` appears dominated by `cap_5` in the preliminary model.** It produces the same 0 % dominant lottery share in the no-sybil case as `cap_5`, but adds a 12.1 % rollover rate (one in eight scheduled lottery slots emptying) and scales the sybil incentive higher (Δ_10 ≈ +78 pp under `cap_30` vs +63 pp under `cap_5`).
+- **`cap_5` is the provisional preferred candidate among positive caps.** Same 0 % no-sybil dominant share as the larger caps, zero rollovers, smallest sybil incentive among positive caps.
+- **`no_cap` minimizes sybil incentive globally** (Δ_10 ≈ +56 pp) at the cost of giving the dominant a baseline ~3.3 % lottery share when they play honestly with one address. This is the simplest and most defensive option if the design assumes a sophisticated dominant.
+- **No eligibility window protects against a 100-sybil attack.** Across all variants (0 / 5 / 10 / 30) the dominant captures 93-97 % of the lottery once they pre-legitimate ~100 sybil addresses (a roughly 24 h investment at 70 % hashrate, with no real opportunity cost since the block-reward keeps flowing). The eligibility rule is therefore not a sybil defense — that role belongs to Memory-Lock per-instance (planned post block 12 000) and any future stake-locked eligibility once a SOST market exists.
+- **Honest-miner median lottery share is essentially flat across all windows** (14.40 %–15.10 %). The "cap protects honest miners" framing is not supported by the data; the effective protection on honest miners comes from the bootstrap 2-of-3 frequency window, not the recent-winner cooldown.
+- **Final rule deferred to C9** (Monte Carlo simulation + fairness review). Until then, no design constants change, no banner text changes, and Phase 2 stays gated by `V11_PHASE2_HEIGHT = INT64_MAX`.
+
+#### Implementation implication for C5 / C6
+
+Because the rule may move from the originally-published `30` to one of `0 / 5 / 10` after C9, the eligibility logic implemented in Commits 5 and 6 must keep the window **parameterizable via a single named constant** (`LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`). Constants and call sites:
+
+```cpp
+inline constexpr int32_t LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 30;  // default — DO NOT change yet
+// All eligibility-set computations and reorg-undo logic MUST read this
+// constant rather than hard-coding 30. C9 may revise the default once
+// the formal simulation reports land.
+```
+
+#### Banner / public messaging
+
+Banner v82 (already deployed on `origin/main`) describes the lottery with `cap = 30`. **No banner change happens as a result of this preliminary simulation.** A banner update accompanies the C9 decision, not this draft note.
+
+#### Reproducing the run
+
+The script lives at `tools/lottery_montecarlo.py` and is **explicitly marked "analysis tool only; not consensus code"**. It is NOT compiled into any binary, NOT linked into the test suite, and NOT subject to consensus invariants. C9 will replace or augment it with a more rigorous fairness simulator written by the consensus working group.
+
+```
+$ python3 tools/lottery_montecarlo.py --seed 42
+   ... 256 scenarios in ~9 s ...
+```
+
 ---
 
 ## 6 · `V11_PHASE2_HEIGHT` — activation criteria
