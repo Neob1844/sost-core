@@ -1,11 +1,13 @@
 // sbpow.h — V11 Phase 2 component C: Signature-bound Proof of Work
 //
 // Spec: docs/V11_SPEC.md §3 + docs/V11_PHASE2_DESIGN.md §1
-// Status (C3 — miner integration):
+// Status (C4 — validator + adversarial tests):
 //   IMPLEMENTED:  build_sbpow_message, derive_compressed_pubkey_from_privkey,
 //                 sign_sbpow_commitment, verify_sbpow_signature,
-//                 derive_pkh_from_pubkey, secure_memzero.
-//   STILL STUB:   derive_seed_v11, validate (consensus validator — C4 territory).
+//                 derive_pkh_from_pubkey, secure_memzero,
+//                 resolve_miner_key, validate_sbpow_for_block,
+//                 is_well_formed_compressed_pubkey.
+//   STILL STUB:   derive_seed_v11 (PoW inner-loop seed binding — follow-up).
 //
 // IMPORTANT (no circularity):
 //   The Schnorr signature signs the SbPoW *message* derived from the
@@ -204,28 +206,99 @@ MinerKeyResolution resolve_miner_key(
     bool                  phase2_required);
 
 // ===========================================================================
-// C4 territory — still aborting stubs (do NOT call from C3 code paths)
+// Consensus validator (C4)
+// ===========================================================================
+//
+// validate_sbpow_for_block() is the SbPoW side of the block validation
+// pipeline. It is height-gated by an injectable `phase2_height`
+// parameter so:
+//
+//   - Production callers pass `params.h::V11_PHASE2_HEIGHT` (sentinel
+//     INT64_MAX). The signature-checking branch is therefore unreachable
+//     on real chain heights, but the version gate (v1 pre-Phase 2 / v2
+//     Phase 2) still fires and rejects premature v2 blocks.
+//   - Tests pass a finite phase2_height to exercise the active path.
+//
+// Order of checks (matches docs/V11_SPEC.md §3.5 and
+// docs/V11_PHASE2_DESIGN.md §1.6):
+//
+//   pre-Phase 2 (height < phase2_height):
+//     1. header_version MUST be 1                    → else VERSION_MISMATCH.
+//     2. signature/pubkey are NOT examined            → returns SBPOW_NOT_REQUIRED.
+//
+//   Phase 2 (height >= phase2_height):
+//     1. header_version MUST be 2                    → else VERSION_MISMATCH.
+//     2. miner_pubkey MUST be a well-formed compressed
+//        secp256k1 point                              → else MALFORMED_PUBKEY.
+//     3. miner_signature MUST verify under miner_pubkey
+//        for the recomputed sbpow_message             → else SIGNATURE_INVALID.
+//     4. derive_pkh_from_pubkey(miner_pubkey) MUST
+//        equal coinbase_miner_pkh                     → else COINBASE_MISMATCH.
+//
+// Anti-circularity reminder: the signed message includes the PoW commit
+// but does NOT include the v2 block_id. Changing the signature changes
+// the block_id (the signature lives inside the hashed bytes) but does
+// NOT change the signed message — see test_sbpow_adversarial.cpp for
+// the explicit lock-in.
+
+enum class ValidationResult {
+    OK,                   // Phase 2 path: every check passed
+    SBPOW_NOT_REQUIRED,   // pre-Phase 2 path: v1 header accepted, no sig check
+    VERSION_MISMATCH,     // header.version disagrees with the height/Phase gate
+    MALFORMED_PUBKEY,     // 33-byte buffer is not a valid compressed point
+    SIGNATURE_INVALID,    // BIP-340 Schnorr verification failed
+    COINBASE_MISMATCH,    // pkh(miner_pubkey) != coinbase miner output pkh
+};
+
+const char* to_string(ValidationResult r);
+
+struct ValidationInputs {
+    // Header core
+    uint32_t           header_version{1};   // 1 or 2 (anything else → VERSION_MISMATCH)
+    Bytes32            prev_hash{};
+    int64_t            height{0};
+    Bytes32            commit{};
+    uint32_t           nonce{0};
+    uint32_t           extra_nonce{0};
+
+    // V2 fields (read only when phase2_active is true)
+    MinerPubkey        miner_pubkey{};
+    MinerSignature     miner_signature{};
+
+    // Coinbase binding: pkh paid by the miner-subsidy coinbase output.
+    PubKeyHash         coinbase_miner_pkh{};
+
+    // Activation gate. Production = V11_PHASE2_HEIGHT (= INT64_MAX while
+    // Phase 2 is dormant). Tests inject a finite value to exercise the
+    // signature-checking path.
+    int64_t            phase2_height{INT64_MAX};
+};
+
+// Run the height-gated SbPoW validation. Optionally fills `error_msg`
+// with a human-readable description on failure. Production callers
+// MUST treat anything other than OK / SBPOW_NOT_REQUIRED as a hard
+// reject of the block.
+ValidationResult validate_sbpow_for_block(
+    const ValidationInputs& in,
+    std::string*            error_msg = nullptr);
+
+// Convenience: standalone parse-only check that the bytes form a valid
+// 33-byte compressed secp256k1 point (prefix 0x02/0x03, on curve).
+// Used internally by validate_sbpow_for_block; exposed for adversarial
+// tests.
+bool is_well_formed_compressed_pubkey(const MinerPubkey& pubkey);
+
+// ===========================================================================
+// Follow-up territory — still aborting stubs
 // ===========================================================================
 
-// PoW seed binding (`seed_v11` with miner_pubkey mixed in).
-// PHASE 2 — NOT IMPLEMENTED in C3.
+// PoW seed binding (`seed_v11` with miner_pubkey mixed in). Implementing
+// this requires parallel changes inside src/pow/convergencex.cpp and is
+// kept as a follow-up commit (not part of C4).
 Bytes32 derive_seed_v11(
     const uint8_t* header_core, size_t header_core_len,
     const Bytes32& block_key,
     uint32_t nonce, uint32_t extra_nonce,
     const MinerPubkey& miner_pubkey);
-
-// Consensus validator entry point (C4).
-// PHASE 2 — NOT IMPLEMENTED in C3.
-struct ValidationContext {
-    int64_t              height;
-    Bytes32              commit;
-    Bytes32              expected_seed;
-    Bytes32              provided_seed;
-    std::vector<uint8_t> miner_subsidy_address;
-    std::vector<uint8_t> miner_pubkey_address;
-};
-
-bool validate(const HeaderV2Ext& ext, const ValidationContext& ctx);
 
 } // namespace sost::sbpow

@@ -428,4 +428,44 @@ bool DisconnectBlock(
     return true;
 }
 
+// ==========================================================================
+// V11 Phase 2 — SbPoW consensus gate (height-gated, dormant on mainnet)
+// ==========================================================================
+//
+// Thin wrapper around sost::sbpow::validate_sbpow_for_block(). Lives
+// in block_validation.cpp so block-validator callers don't need to
+// include sbpow.h directly. With V11_PHASE2_HEIGHT = INT64_MAX the
+// signature path is unreachable on real heights — only the version
+// gate (v1 pre-Phase 2 / v2 Phase 2) fires, which is exactly what we
+// want: premature v2 blocks get rejected, real v1 blocks pass through.
+bool ValidateSbPoW(
+    uint32_t                              header_version,
+    const Bytes32&                        prev_hash,
+    int64_t                               height,
+    const Bytes32&                        commit,
+    uint32_t                              nonce,
+    uint32_t                              extra_nonce,
+    const sost::sbpow::MinerPubkey&       miner_pubkey,
+    const sost::sbpow::MinerSignature&    miner_signature,
+    const PubKeyHash&                     coinbase_miner_pkh,
+    int64_t                               phase2_height,
+    std::string*                          err)
+{
+    sost::sbpow::ValidationInputs in;
+    in.header_version       = header_version;
+    in.prev_hash            = prev_hash;
+    in.height               = height;
+    in.commit               = commit;
+    in.nonce                = nonce;
+    in.extra_nonce          = extra_nonce;
+    in.miner_pubkey         = miner_pubkey;
+    in.miner_signature      = miner_signature;
+    in.coinbase_miner_pkh   = coinbase_miner_pkh;
+    in.phase2_height        = phase2_height;
+
+    auto r = sost::sbpow::validate_sbpow_for_block(in, err);
+    return r == sost::sbpow::ValidationResult::OK ||
+           r == sost::sbpow::ValidationResult::SBPOW_NOT_REQUIRED;
+}
+
 } // namespace sost

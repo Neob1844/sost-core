@@ -301,18 +301,112 @@ MinerKeyResolution resolve_miner_key(
 }
 
 // ============================================================================
-// Still aborting (C4 territory) — DO NOT call from C3 code paths
+// Consensus validator (C4) — height-gated SbPoW check
 // ============================================================================
 
-namespace {
-[[noreturn]] void phase2_c4_not_implemented(const char* fn) {
-    std::fprintf(stderr,
-        "FATAL: sost::sbpow::%s called before V11 Phase 2 C4 implementation. "
-        "This is consensus validator territory — wire the real code before "
-        "activating V11_PHASE2_HEIGHT.\n", fn);
-    std::abort();
+const char* to_string(ValidationResult r) {
+    switch (r) {
+        case ValidationResult::OK:                  return "OK";
+        case ValidationResult::SBPOW_NOT_REQUIRED:  return "SBPOW_NOT_REQUIRED";
+        case ValidationResult::VERSION_MISMATCH:    return "VERSION_MISMATCH";
+        case ValidationResult::MALFORMED_PUBKEY:    return "MALFORMED_PUBKEY";
+        case ValidationResult::SIGNATURE_INVALID:   return "SIGNATURE_INVALID";
+        case ValidationResult::COINBASE_MISMATCH:   return "COINBASE_MISMATCH";
+    }
+    return "UNKNOWN";
 }
-} // namespace
+
+bool is_well_formed_compressed_pubkey(const MinerPubkey& pubkey) {
+    // BIP-340 / SEC1 prefix check first — cheap rejection.
+    const uint8_t prefix = pubkey[0];
+    if (prefix != 0x02 && prefix != 0x03) return false;
+
+    // Curve membership check via libsecp256k1.
+    secp256k1_context* ctx = GetSchnorrCtx();
+    secp256k1_pubkey full;
+    if (!secp256k1_ec_pubkey_parse(ctx, &full, pubkey.data(), pubkey.size())) {
+        return false;
+    }
+    return true;
+}
+
+ValidationResult validate_sbpow_for_block(
+    const ValidationInputs& in,
+    std::string*            error_msg)
+{
+    auto set_err = [&](const std::string& s) {
+        if (error_msg) *error_msg = s;
+    };
+
+    const bool phase2_active = (in.height >= in.phase2_height);
+
+    // ---- Step 1 — version gate (always) ------------------------------------
+    // Pre-Phase 2 must be v1; Phase 2 must be v2. Anything else is a hard
+    // reject. This is the rule that matters in production while
+    // V11_PHASE2_HEIGHT == INT64_MAX: a premature v2 block is rejected
+    // here even though the signature path below is unreachable.
+    if (!phase2_active) {
+        if (in.header_version != 1) {
+            set_err("SbPoW: pre-Phase 2 height " +
+                    std::to_string((long long)in.height) +
+                    " requires header.version == 1, got " +
+                    std::to_string((unsigned)in.header_version));
+            return ValidationResult::VERSION_MISMATCH;
+        }
+        // Pre-Phase 2 short-circuit: NO signature/pubkey/coinbase checks.
+        return ValidationResult::SBPOW_NOT_REQUIRED;
+    }
+
+    if (in.header_version != 2) {
+        set_err("SbPoW: Phase 2 height " +
+                std::to_string((long long)in.height) +
+                " requires header.version == 2, got " +
+                std::to_string((unsigned)in.header_version));
+        return ValidationResult::VERSION_MISMATCH;
+    }
+
+    // ---- Step 2 — pubkey well-formedness ----------------------------------
+    if (!is_well_formed_compressed_pubkey(in.miner_pubkey)) {
+        char hexbuf[5];
+        std::snprintf(hexbuf, sizeof(hexbuf), "0x%02x", (unsigned)in.miner_pubkey[0]);
+        set_err("SbPoW: miner_pubkey is not a valid compressed secp256k1 point "
+                "(prefix " + std::string(hexbuf) + ", or not on curve)");
+        return ValidationResult::MALFORMED_PUBKEY;
+    }
+
+    // ---- Step 3 — signature ----------------------------------------------
+    // Recompute the message ourselves; never trust a caller-supplied
+    // message field. Binds prev_hash, height, commit, nonce, extra_nonce
+    // and pubkey (see build_sbpow_message comment block above).
+    const Bytes32 expected_msg = build_sbpow_message(
+        in.prev_hash, in.height, in.commit,
+        in.nonce, in.extra_nonce, in.miner_pubkey);
+
+    if (!verify_sbpow_signature(in.miner_pubkey, expected_msg, in.miner_signature)) {
+        set_err("SbPoW: BIP-340 Schnorr signature verification failed for "
+                "the recomputed message at height " +
+                std::to_string((long long)in.height));
+        return ValidationResult::SIGNATURE_INVALID;
+    }
+
+    // ---- Step 4 — coinbase miner-output binding ---------------------------
+    const PubKeyHash derived_pkh = derive_pkh_from_pubkey(in.miner_pubkey);
+    if (derived_pkh != in.coinbase_miner_pkh) {
+        set_err("SbPoW: coinbase miner-output pkh does not match "
+                "PubKeyHash derived from miner_pubkey (derived = " +
+                HexStr(derived_pkh.data(), derived_pkh.size()) +
+                ", coinbase = " +
+                HexStr(in.coinbase_miner_pkh.data(),
+                       in.coinbase_miner_pkh.size()) + ")");
+        return ValidationResult::COINBASE_MISMATCH;
+    }
+
+    return ValidationResult::OK;
+}
+
+// ============================================================================
+// Still aborting — follow-up territory (NOT part of C4)
+// ============================================================================
 
 Bytes32 derive_seed_v11(
     const uint8_t* /*header_core*/, size_t /*header_core_len*/,
@@ -320,11 +414,11 @@ Bytes32 derive_seed_v11(
     uint32_t /*nonce*/, uint32_t /*extra_nonce*/,
     const MinerPubkey& /*miner_pubkey*/)
 {
-    phase2_c4_not_implemented("derive_seed_v11");
-}
-
-bool validate(const HeaderV2Ext& /*ext*/, const ValidationContext& /*ctx*/) {
-    phase2_c4_not_implemented("validate");
+    std::fprintf(stderr,
+        "FATAL: sost::sbpow::derive_seed_v11 called before its follow-up "
+        "implementation lands. PoW seed binding requires parallel changes "
+        "inside src/pow/convergencex.cpp and is gated separately from C4.\n");
+    std::abort();
 }
 
 } // namespace sost::sbpow

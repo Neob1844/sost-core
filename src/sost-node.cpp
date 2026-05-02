@@ -3679,6 +3679,51 @@ static bool process_block(const std::string& block_json) {
         }
     }
 
+    // ---------------------------------------------------------------------
+    // V11 Phase 2 — SbPoW consensus gate (height-gated, dormant on mainnet)
+    // ---------------------------------------------------------------------
+    // V11_PHASE2_HEIGHT is the sentinel INT64_MAX while Phase 2 is
+    // disabled, so the signature-checking branch is unreachable on real
+    // chain heights. The gate still enforces the version check:
+    //   - pre-Phase 2 (any current height < INT64_MAX): require version == 1.
+    //   - Phase 2 (when activated): require version == 2 + valid sig +
+    //     matching coinbase miner-output pkh.
+    // The header version field defaults to 1 if absent from the RPC
+    // payload, so legacy block submissions (no "version" key) keep
+    // working unchanged. A malicious caller that explicitly puts
+    // version=2 in the payload gets rejected here, which is exactly the
+    // protection we want until Phase 2 ships.
+    {
+        uint32_t hdr_version = (uint32_t)jint(block_json, "version");
+        if (hdr_version == 0) hdr_version = 1;  // legacy default
+
+        // Pre-Phase 2: miner doesn't send pubkey/signature; leave zeros.
+        // The version gate rejects v2 before pubkey/signature are
+        // examined. Phase 2 plumbing of these fields through RPC will
+        // land alongside the activation commit.
+        sost::sbpow::MinerPubkey    sbpow_pubkey{};
+        sost::sbpow::MinerSignature sbpow_signature{};
+
+        if (txs[0].outputs.empty()) {
+            printf("[BLOCK] REJECTED: coinbase has no outputs (SbPoW gate)\n");
+            return false;
+        }
+        const PubKeyHash& cb_miner_pkh = txs[0].outputs[0].pubkey_hash;
+
+        std::string sb_err;
+        if (!sost::ValidateSbPoW(
+                hdr_version,
+                prev32, height, commit32,
+                nonce, extra,
+                sbpow_pubkey, sbpow_signature,
+                cb_miner_pkh,
+                V11_PHASE2_HEIGHT,
+                &sb_err)) {
+            printf("[BLOCK] REJECTED: %s\n", sb_err.c_str());
+            return false;
+        }
+    }
+
     // Checkpoint validation: if this height has a checkpoint, block_id must match
     for(size_t ci=0; ci<g_num_checkpoints; ++ci){
         if(g_checkpoints[ci].height == height){

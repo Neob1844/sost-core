@@ -21,6 +21,42 @@ endif()
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 
+# =============================================================================
+# V11 Phase 2 (SbPoW) — libsecp256k1 schnorrsig build gate
+# =============================================================================
+# Phase 2 SbPoW REQUIRES the BIP-340 Schnorr module of libsecp256k1.
+# Fail at configure time with a clear diagnostic if either the header or
+# the verify symbol is missing, instead of producing a binary that would
+# abort at runtime when the validator first runs.
+#
+# No fallback to ECDSA. The whole point of SbPoW is BIP-340 Schnorr —
+# silently downgrading would break consensus invariants.
+include(CheckIncludeFiles)
+include(CheckSymbolExists)
+
+# Check the schnorrsig header alongside secp256k1.h, since the former
+# depends on type declarations from the latter and won't compile alone.
+check_include_files("secp256k1.h;secp256k1_schnorrsig.h"
+    SOST_HAVE_SCHNORRSIG_HEADER)
+if(NOT SOST_HAVE_SCHNORRSIG_HEADER)
+    message(FATAL_ERROR
+        "SbPoW requires libsecp256k1 with schnorrsig module enabled "
+        "(missing header: secp256k1_schnorrsig.h). Rebuild libsecp256k1 "
+        "with --enable-module-schnorrsig or upgrade the system package.")
+endif()
+
+set(CMAKE_REQUIRED_LIBRARIES secp256k1)
+check_symbol_exists(secp256k1_schnorrsig_verify
+    "secp256k1.h;secp256k1_schnorrsig.h"
+    SOST_HAVE_SCHNORRSIG_VERIFY)
+unset(CMAKE_REQUIRED_LIBRARIES)
+if(NOT SOST_HAVE_SCHNORRSIG_VERIFY)
+    message(FATAL_ERROR
+        "SbPoW requires libsecp256k1 with schnorrsig module enabled "
+        "(missing symbol: secp256k1_schnorrsig_verify). Rebuild "
+        "libsecp256k1 with --enable-module-schnorrsig.")
+endif()
+
 # Core library — Phase 0 (consensus base) + Phase 1-6
 add_library(sost-core STATIC
     # Phase 0: consensus base
@@ -160,6 +196,16 @@ add_test(NAME sbpow-signing COMMAND test-sbpow-signing)
 add_executable(test-miner-key-selection tests/test_miner_key_selection.cpp)
 target_link_libraries(test-miner-key-selection PRIVATE sost-core)
 add_test(NAME miner-key-selection COMMAND test-miner-key-selection)
+
+# V11 Phase 2 — component C (SbPoW): height-gated validation (consensus side)
+add_executable(test-sbpow-validation tests/test_sbpow_validation.cpp)
+target_link_libraries(test-sbpow-validation PRIVATE sost-core)
+add_test(NAME sbpow-validation COMMAND test-sbpow-validation)
+
+# V11 Phase 2 — component C (SbPoW): adversarial test suite
+add_executable(test-sbpow-adversarial tests/test_sbpow_adversarial.cpp)
+target_link_libraries(test-sbpow-adversarial PRIVATE sost-core)
+add_test(NAME sbpow-adversarial COMMAND test-sbpow-adversarial)
 
 # V11 Phase 1 — component B (state-dependent dataset access)
 add_executable(test-convergencex-v11 tests/test_convergencex_v11.cpp)
