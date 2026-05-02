@@ -406,60 +406,91 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- V11 HARD FORK BANNER — block 7000 (corrected) -->
+<!-- V11 HARD FORK BANNER — Phase 1 (block 7000) + Phase 2 (deferred) -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
   <div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(255,200,87,0.06));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 24px rgba(74,222,128,.4);">
 
     <!-- SLOGAN ROJO PULSE -->
     <div style="text-align:center;margin-bottom:14px;padding:10px 14px;background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.55);border-radius:4px;animation:pulse 1.8s ease infinite;box-shadow:0 0 14px rgba(251,1,13,.35)">
-      <span style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(251,1,13,0.6)">
-        ⚡ NEW REWARD SYSTEMS FROM BLOCK 7,000 ⚡
+      <span style="display:block;color:#fb010d;font-size:15px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(251,1,13,0.6);margin-bottom:4px">
+        ⚡ V11 HARD FORK — TWO PHASES ⚡
+      </span>
+      <span style="display:block;color:#ffc857;font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:2px">
+        PHASE 1 · BLOCK 7,000 · CASCADE + DATASET HARDENING
+      </span>
+      <span style="display:block;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
+        PHASE 2 · LATER · LOTTERY + SbPoW (WHEN VERIFIED AND TESTED)
       </span>
     </div>
 
-    <!-- HEADER -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 12px rgba(74,222,128,.95);animation:pulse 2s ease infinite"></span>
-      <span style="color:#4ade80;font-size:13px;font-weight:800;letter-spacing:2px">// V11 HARD FORK · BLOCK 7,000 · REWARD ENGINE GOES LIVE</span>
-    </div>
-
-    <!-- THE REWARDS — central box, golden border -->
+    <!-- ============== PHASE 1 BOX ============== -->
     <div style="background:linear-gradient(135deg,rgba(255,200,87,0.14),rgba(74,222,128,0.06));border:1px solid var(--gold);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(255,200,87,.18)">
       <div style="color:var(--gold);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ FAIR-SHARE LOTTERY · 2 OF EVERY 3 BLOCKS (UNTIL BLOCK 10,000) · 1 OF EVERY 3 THEREAFTER
+        ◆ PHASE 1 — ACTIVATES AT BLOCK 7,000
       </div>
-      <div style="color:var(--text);font-size:12.5px;line-height:1.75">
-        Starting at block 7,000, eligible blocks redistribute <b style="color:var(--gold)">50% of their protocol-side allocation</b> (Gold Vault + PoPC Pool budget) to one eligible miner via deterministic lottery. From block 10,000 onwards, lottery frequency reduces to <b>1 of every 3 blocks</b> (alongside PoPC Model A + B operational activation and dynamic fees, already scheduled in the whitepaper).<br><br>
-        Every address that has produced at least <b>1 block since genesis</b> enters the lottery pool automatically &mdash; no registration, no operator, no pool fee. <b style="color:#4ade80">The PoW block winner always keeps the full 50% miner share.</b> The lottery only redistributes what would otherwise have gone to Gold Vault and PoPC Pool on triggered blocks.
+      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
+        Two consensus changes ship at block 7,000. Both passed unit tests, regression tests and chain-safety review.
+      </div>
+
+      <div style="color:var(--text2);font-size:11px;line-height:1.7">
+        <b style="color:var(--text)">A · Extended cASERT cascade.</b>
+        Replaces the V10 single-step relief with a 6-step piecewise table:
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed &gt;= 540 s   →  drop 1 profile
+elapsed &gt;= 600 s   →  drop 2 profiles
+elapsed &gt;= 660 s   →  drop 3 profiles
+elapsed &gt;= 720 s   →  drop 4 profiles
+elapsed &gt;= 780 s   →  drop 5 profiles
+elapsed &gt;= 840 s   →  drop 6 profiles</pre>
+        Recovers the empirically validated V9-era behaviour where blocks consistently landed near the 600 s target. Floor preserved as in V10. bitsQ, anti-stall and lag clamp unchanged.<br><br>
+
+        <b style="color:var(--text)">B · State-dependent dataset access.</b>
+        The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round&rsquo;s SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
+
+        <span style="color:var(--text3);font-style:italic">V11 Phase 1 does not change RAM requirements. The Memory-Lock per-instance proposal is under study for a future fork (no earlier than block 10,000), not part of V11.</span>
       </div>
     </div>
 
-    <!-- TECHNICAL COMPONENTS -->
-    <div style="color:var(--text2);font-size:11px;line-height:1.7;margin-bottom:12px">
-      <b style="color:var(--text)">A · Extended cASERT cascade.</b>
-      Replaces the V10 continuous formula with a piecewise table. Drops 1 → 2 → 3 → 4 → 5 → 6 profiles at elapsed thresholds 540 / 600 / 660 / 720 / 780 / 840 s. Floor preserved as in V10. bitsQ, anti-stall and lag clamp unchanged.<br><br>
+    <!-- ============== PHASE 2 BOX ============== -->
+    <div style="background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(74,222,128,0.04));border:1px dashed var(--cyan);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(34,211,238,.15)">
+      <div style="color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
+        ◆ PHASE 2 — ACTIVATES WHEN CODE IS VERIFIED AND TESTED
+      </div>
+      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
+        Two consensus changes are deferred to a later activation height. Phase 2 ships only when its implementation passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, and chain-safety review. <b>No calendar pressure.</b>
+      </div>
 
-      <b style="color:var(--text)">B · State-dependent dataset access.</b>
-      The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round&rsquo;s SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
+      <div style="color:var(--text2);font-size:11px;line-height:1.7">
+        <b style="color:var(--text)">C · SbPoW — signature-bound proof.</b>
+        Each block header will carry a public key and a signature over the PoW commitment. A block will be valid only if (i) the signature verifies against that key and (ii) the coinbase miner output pays the address derived from that key. Post-hoc coinbase relabeling becomes impossible — identity is bound <b>before</b> the hash is committed.<br><br>
 
-      <span style="color:var(--text3);font-style:italic">V11 does not change RAM requirements. The Memory-Lock per-instance proposal is under study for a future fork (no earlier than block 10,000), not part of V11.</span><br><br>
+        <b style="color:var(--text)">D · Fair-share lottery with jackpot rollover.</b>
+        On triggered blocks, 50% of the protocol-side allocation (Gold Vault + PoPC Pool budget) is redistributed to one eligible miner via deterministic lottery.<br><br>
 
-      <b style="color:var(--text)">C · SbPoW &mdash; signature-bound proof.</b>
-      Each block header carries a public key and a signature over the PoW commitment. A block is valid only if (i) the signature verifies against that key and (ii) the coinbase miner output pays the address derived from that key. Post-hoc coinbase relabeling becomes impossible &mdash; identity is bound <b>before</b> the hash is committed.<br><br>
+        <span style="color:var(--text)">Frequency schedule (from Phase 2 activation height):</span>
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">First 5,000 blocks after Phase 2 activation:  2 of every 3 blocks
+After that, permanently:                       1 of every 3 blocks</pre>
 
-      <b style="color:var(--text)">D · Lottery exclusions.</b>
-      The miner who won the current block cannot enter that block&rsquo;s lottery. Any address that has won a <b>block reward</b> in the last 30 blocks cannot enter the lottery either. Selection seed is derived from the previous block hash; the result is reproducible by every node. If the eligibility set is empty, the redistribution falls back to the normal 25/25 Gold Vault / PoPC Pool split.
+        <b style="color:var(--text)">Eligibility</b>: any address that has produced at least 1 block since genesis enters the lottery pool automatically. No registration, no operator, no fee.<br><br>
+
+        <b style="color:var(--text)">Exclusions</b>:<br>
+        &middot; The miner who won the current block cannot enter that block&rsquo;s lottery<br>
+        &middot; Any address that has won a block reward in the last 30 blocks cannot enter the lottery either<br><br>
+
+        Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
+
+        <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.
+      </div>
     </div>
 
     <!-- INVARIANTS PRESERVED -->
     <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border-dim);padding:10px 14px;border-radius:3px;margin-bottom:14px">
-      <span style="color:var(--text);font-size:11px;font-weight:800;letter-spacing:1.5px">INVARIANTS PRESERVED</span>
+      <span style="color:var(--text);font-size:11px;font-weight:800;letter-spacing:1.5px">INVARIANTS PRESERVED ACROSS BOTH PHASES</span>
       <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-top:4px">
         · PoW block winner keeps full <b>50% miner share</b><br>
-        · Total emission schedule unchanged &mdash; no supply change<br>
+        · Total emission schedule unchanged — no supply change<br>
         · <b>8 GB RAM minimum</b> for CPU mining unchanged<br>
         · Block time target 600 s, coinbase maturity 1,000 blocks, bitsQ controller all unchanged<br>
-        · Pre-fork blocks (height &lt; 7,000) follow V10 rules exactly &mdash; no retroactive change
+        · Pre-fork blocks (height &lt; 7,000) follow V10 rules exactly — no retroactive change
       </div>
     </div>
 
@@ -467,14 +498,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="background:rgba(255,200,87,0.05);border-left:3px solid var(--gold);padding:9px 14px;border-radius:3px;margin-bottom:14px">
       <span style="color:var(--gold);font-size:10.5px;font-weight:700;letter-spacing:1px">CONDITIONAL ACTIVATION</span>
       <div style="color:var(--text2);font-size:10.5px;line-height:1.65;margin-top:3px">
-        V11 components activate <b>independently</b> at block 7,000 if each passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, and chain-safety review. If a specific component fails its gate, that component is deferred to block 8,000 or later &mdash; the components that pass will activate as scheduled. The fork is <b>not</b> bundled atomically.
+        Phase 1 components (A, B) activate at block 7,000 if each passes its safety gate. Phase 2 components (C, D) ship only when their implementation passes the same gates. Components that fail their gate are deferred. <b>The chain will not run unfinished code to meet a calendar.</b>
       </div>
     </div>
 
-    <!-- HEADS-UP — auto-reload (retained) -->
+    <!-- HEADS-UP — auto-reload -->
     <div style="padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
       <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
-      <span style="display:block;font-size:11px;color:var(--text2);margin-top:4px;line-height:1.7">The explorer auto-refreshes every 60&thinsp;s when a new version is deployed. Your session, RPC connection and miner address are preserved across reloads.</span>
+      <span style="display:block;font-size:11px;color:var(--text2);line-height:1.7">The explorer auto-refreshes every 60 s when a new version is deployed. Your session, RPC connection and miner address are preserved across reloads.</span>
     </div>
 
   </div>
