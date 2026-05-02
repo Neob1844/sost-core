@@ -48,8 +48,8 @@ MineResult mine_block(
 
         auto res = convergencex_attempt(
             scratch.data(), scratch.size(), bk,
-            nonce, extra_nonce,   
-            params, hc.data(), epoch);
+            nonce, extra_nonce,
+            params, hc.data(), epoch, h);
 
         if (res.is_stable && pow_meets_target(res.commit, powDiffQ)) {
 

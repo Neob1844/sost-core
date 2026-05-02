@@ -216,7 +216,8 @@ int main(int argc, char** argv) {
         auto res = convergencex_attempt(
             scratch.data(), scratch.size(),
             bk, nonce, extra_nonce,
-            params, hc72, epoch
+            params, hc72, epoch,
+            /*height=*/0   // genesis block — pre-V11 path
         );
 
         if (res.is_stable && pow_meets_target(res.commit, bitsq)) {

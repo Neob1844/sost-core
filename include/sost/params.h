@@ -256,6 +256,33 @@ inline constexpr int64_t  CASERT_GRANULAR_RELIEF_START     = 600;  // elapsed se
 inline constexpr int64_t  CASERT_GRANULAR_STEP_SECONDS     = 60;
 inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 
+// V11 — extended cascade fork at CASERT_V11_HEIGHT.
+// Replaces V10's "drop 1 per 60s starting at 600s" with an explicit
+// piecewise-constant table that drops faster in the long tail. The
+// floor stays at E7 (CASERT_H_MIN). bitsQ, anti-stall, future-drift
+// cap and the lag controller are all unchanged.
+//
+// Schedule (post-V11):
+//   elapsed <  540 s   →  drop 0   (no relief)
+//   elapsed >= 540 s   →  drop 1
+//   elapsed >= 600 s   →  drop 2
+//   elapsed >= 660 s   →  drop 3
+//   elapsed >= 720 s   →  drop 4
+//   elapsed >= 780 s   →  drop 5
+//   elapsed >= 840 s   →  drop 6
+//
+// Rationale: V10 drops one level per 60 s starting at 600 s, which
+// keeps difficulty high for several minutes when the chain is slow.
+// V11 starts dropping earlier (540 s instead of 600 s) and uses a
+// table that slightly accelerates in the 600-840 s window so the
+// chain recovers schedule faster after a slow block. Floor still at
+// E7, so no risk of bypassing the absolute difficulty bound.
+//
+// Activation paired with V11 ConvergenceX state-dependent dataset
+// access (see src/pow/convergencex.cpp). Both rules must activate
+// on the same block since both touch consensus.
+inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
+
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
 // satisfy BOTH:

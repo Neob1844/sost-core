@@ -447,29 +447,45 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // value, the more permissive value wins.
         if (next_height >= CASERT_STAGED_RELIEF_HEIGHT
             && now_time > 0 && !chain.empty()) {
-            // V10 (height >= CASERT_GRANULAR_RELIEF_HEIGHT): drop 1
-            //                                                 per 60 s
-            //                                                 from 600 s.
-            // V9 (CASERT_STAGED_RELIEF_HEIGHT .. -1):           drop 3
-            //                                                 per 60 s
-            //                                                 from 540 s.
-            int64_t start;
-            int64_t step;
-            int32_t per_step;
-            if (next_height >= CASERT_GRANULAR_RELIEF_HEIGHT) {
-                start    = CASERT_GRANULAR_RELIEF_START;
-                step     = CASERT_GRANULAR_STEP_SECONDS;
-                per_step = CASERT_GRANULAR_DROP_PER_STEP;
-            } else {
-                start    = CASERT_STAGED_RELIEF_START;
-                step     = CASERT_STAGED_STEP_SECONDS;
-                per_step = CASERT_STAGED_DROP_PER_STEP;
-            }
+            // V11 (height >= CASERT_V11_HEIGHT): explicit piecewise
+            //                                      table, see params.h.
+            // V10 (CASERT_GRANULAR_RELIEF_HEIGHT .. CASERT_V11_HEIGHT-1):
+            //                                      drop 1 per 60 s from 600 s.
+            // V9  (CASERT_STAGED_RELIEF_HEIGHT .. CASERT_GRANULAR_RELIEF_HEIGHT-1):
+            //                                      drop 3 per 60 s from 540 s.
             int64_t block_elapsed = std::max<int64_t>(0, now_time - chain.back().time);
-            if (block_elapsed >= start) {
-                int64_t past = block_elapsed - start;
-                int32_t steps = (int32_t)(past / step) + 1;
-                int32_t drop = steps * per_step;
+            int32_t drop = 0;
+            if (next_height >= CASERT_V11_HEIGHT) {
+                // V11 piecewise table — see params.h CASERT_V11_HEIGHT
+                // comment for rationale and exact schedule.
+                if      (block_elapsed >= 840) drop = 6;
+                else if (block_elapsed >= 780) drop = 5;
+                else if (block_elapsed >= 720) drop = 4;
+                else if (block_elapsed >= 660) drop = 3;
+                else if (block_elapsed >= 600) drop = 2;
+                else if (block_elapsed >= 540) drop = 1;
+                else                             drop = 0;
+            } else {
+                // V9/V10: continuous formula
+                int64_t start;
+                int64_t step;
+                int32_t per_step;
+                if (next_height >= CASERT_GRANULAR_RELIEF_HEIGHT) {
+                    start    = CASERT_GRANULAR_RELIEF_START;
+                    step     = CASERT_GRANULAR_STEP_SECONDS;
+                    per_step = CASERT_GRANULAR_DROP_PER_STEP;
+                } else {
+                    start    = CASERT_STAGED_RELIEF_START;
+                    step     = CASERT_STAGED_STEP_SECONDS;
+                    per_step = CASERT_STAGED_DROP_PER_STEP;
+                }
+                if (block_elapsed >= start) {
+                    int64_t past = block_elapsed - start;
+                    int32_t steps = (int32_t)(past / step) + 1;
+                    drop = steps * per_step;
+                }
+            }
+            if (drop > 0) {
                 int32_t staged = raw_base_H - drop;
                 if (staged < effective_h_min) staged = effective_h_min;
                 if (staged < H) H = staged;

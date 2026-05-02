@@ -929,7 +929,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
                     auto res = convergencex_attempt(
                         scratch.data(), scratch.size(), bk,
-                        n, my_extra, params, my_hc72, epoch);
+                        n, my_extra, params, my_hc72, epoch, h);
 
                     my_total++;
                     g_total_attempts.fetch_add(1, std::memory_order_relaxed);
@@ -1093,9 +1093,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 // Re-run convergencex_attempt to get full result for witness generation
                 auto res2 = convergencex_attempt(
                     scratch.data(), scratch.size(), bk,
-                    tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch);
+                    tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch, h);
                 generate_transcript_witnesses(res2, scratch.data(), scratch.size(),
-                    bk, tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch);
+                    bk, tr.win_nonce, tr.win_extra, params, tr.win_hc72, epoch, h);
                 printf("  %zu segment proofs, %zu round witnesses\n",
                        res2.segment_proofs.size(), res2.round_witnesses.size());
                 fflush(stdout);
@@ -1260,7 +1260,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             auto res = convergencex_attempt(
                 scratch.data(), scratch.size(), bk,
                 nonce, extra_nonce,
-                params, hc72, epoch);
+                params, hc72, epoch, h);
 
             diag_total++;
             if (res.is_stable) diag_stable++;
@@ -1283,7 +1283,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 // Generate Transcript V2 witnesses (replays challenged rounds)
                 printf("  Generating Transcript V2 witnesses...\n");
                 generate_transcript_witnesses(res, scratch.data(), scratch.size(),
-                    bk, nonce, extra_nonce, params, hc72, epoch);
+                    bk, nonce, extra_nonce, params, hc72, epoch, h);
                 printf("  %zu segment proofs, %zu round witnesses\n",
                        res.segment_proofs.size(), res.round_witnesses.size());
 
