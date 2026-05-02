@@ -100,7 +100,7 @@ CXAttemptResult convergencex_attempt(
     const uint8_t* scratch, size_t scratch_len,
     const Bytes32& block_key, uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params, const uint8_t* header_core,
-    int32_t epoch, int64_t height);
+    int32_t epoch, int64_t height = 0);
 
 // Generate Transcript V2 witnesses for a winning block.
 // Replays challenged rounds to build segment_proofs + round_witnesses.
@@ -113,7 +113,7 @@ void generate_transcript_witnesses(
     uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params,
     const uint8_t* header_core,
-    int32_t epoch, int64_t height);
+    int32_t epoch, int64_t height = 0);
 
 // Build merkle path for a leaf at given index in a tree of leaf_hashes.
 std::vector<Bytes32> build_merkle_path(const std::vector<Bytes32>& leaf_hashes, uint32_t index);
