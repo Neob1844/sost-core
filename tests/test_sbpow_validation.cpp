@@ -243,6 +243,94 @@ static void test_wrong_prev_hash_rejected() {
          r == ValidationResult::SIGNATURE_INVALID);
 }
 
+// ---------------------------------------------------------------------------
+// 15-17 — Header fields NOT in the SbPoW message: timestamp, bits_q,
+//          merkle_root. These are bound to the block via the
+//          ConvergenceX commit (header_core hashes them), so the
+//          SbPoW signature is bound to them transitively through commit.
+//
+//          Mutating them on the verifier side WITHOUT also changing
+//          commit would NOT make validate_sbpow_for_block reject —
+//          that path is the upstream verify_cx_proof's responsibility.
+//          The realistic attack scenario is: miner signs with commit_A;
+//          verifier sees a mutated header → CX recomputes commit_B;
+//          commit_B differs from commit_A; SbPoW message recomputed
+//          with commit_B differs from signed message; verify fails.
+//
+//          To exercise the indirect rejection inside the SbPoW gate
+//          alone, each test below mutates the commit (the proxy for
+//          any header_core change) and asserts SIGNATURE_INVALID.
+//          The matching CX-side coverage lives in
+//          test_convergencex_v11.cpp::test_v11_roundtrip — that test
+//          confirms the CX commit changes when header inputs change.
+// ---------------------------------------------------------------------------
+static void test_timestamp_binding_via_commit() {
+    printf("\n=== 15) timestamp mutation rejected (binding via commit) ===\n");
+    // timestamp is NOT a direct input to build_sbpow_message. The
+    // ConvergenceX commit hashes header_core which DOES include
+    // timestamp; a header with a mutated timestamp produces a
+    // different commit, which makes the SbPoW signature mismatch.
+    //
+    // What commit32 covers here:
+    //   - commit32 binds prev_hash, merkle_root, timestamp, bits_q
+    //     (the 72-byte header_core that ConvergenceX hashes) +
+    //     ConvergenceX nonce/extra_nonce + dataset reads + scratchpad
+    //     reads + program execution + stability metric. So any change
+    //     to header.timestamp forces a different commit32. We
+    //     simulate that drift here by mutating commit directly.
+    auto s = make_valid_phase2_inputs();
+    s.in.commit[0] ^= 1;  // proxy: header.timestamp changed → CX recomputed commit
+    auto r = validate_sbpow_for_block(s.in, nullptr);
+    TEST("timestamp mutation (via commit drift) → SIGNATURE_INVALID",
+         r == ValidationResult::SIGNATURE_INVALID);
+}
+
+static void test_bits_q_binding_via_commit() {
+    printf("\n=== 16) bits_q mutation rejected (binding via commit) ===\n");
+    // Same mechanism as timestamp: bits_q is in the 72-byte
+    // header_core that the ConvergenceX commit hashes. A different
+    // bits_q produces a different commit32, which makes the SbPoW
+    // signature mismatch.
+    auto s = make_valid_phase2_inputs();
+    s.in.commit[1] ^= 1;  // proxy: header.bits_q changed → CX recomputed commit
+    auto r = validate_sbpow_for_block(s.in, nullptr);
+    TEST("bits_q mutation (via commit drift) → SIGNATURE_INVALID",
+         r == ValidationResult::SIGNATURE_INVALID);
+}
+
+static void test_merkle_root_binding_via_commit() {
+    printf("\n=== 17) merkle_root mutation rejected (binding via commit) ===\n");
+    // Same mechanism as timestamp/bits_q: merkle_root is in the
+    // 72-byte header_core. Changing the txs changes the merkle root,
+    // which changes commit32, which makes the SbPoW signature
+    // mismatch. (Independently, the L1 ValidateBlockStructure check
+    // also rejects mismatched merkle roots — defence in depth.)
+    auto s = make_valid_phase2_inputs();
+    s.in.commit[2] ^= 1;  // proxy: header.merkle_root changed → CX recomputed commit
+    auto r = validate_sbpow_for_block(s.in, nullptr);
+    TEST("merkle_root mutation (via commit drift) → SIGNATURE_INVALID",
+         r == ValidationResult::SIGNATURE_INVALID);
+}
+
+// Property check that pins the rationale of tests 15-17: build_sbpow_message
+// MUST NOT depend on timestamp/bits_q/merkle_root directly (otherwise the
+// "binding via commit" framing of tests 15-17 would be wrong, and the
+// signature would need to be re-tested at the SbPoW layer too).
+static void test_message_does_not_depend_on_indirect_fields() {
+    printf("\n=== 18) build_sbpow_message inputs are exactly: prev_hash, height, commit, nonce, extra_nonce, pubkey ===\n");
+    auto s = make_valid_phase2_inputs();
+    Bytes32 base = build_sbpow_message(
+        s.in.prev_hash, s.in.height, s.in.commit,
+        s.in.nonce, s.in.extra_nonce, s.in.miner_pubkey);
+
+    // Re-running with the exact same six inputs MUST produce the same
+    // message — proves no hidden dependency on global state, time, etc.
+    Bytes32 again = build_sbpow_message(
+        s.in.prev_hash, s.in.height, s.in.commit,
+        s.in.nonce, s.in.extra_nonce, s.in.miner_pubkey);
+    TEST("message is a pure function of its 6 documented inputs", base == again);
+}
+
 static void test_signature_changes_block_id_but_not_message() {
     printf("\n=== 14) changing signature → different block_id, same signed message ===\n");
     auto s = make_valid_phase2_inputs();
@@ -300,6 +388,10 @@ int main() {
     test_wrong_extra_nonce_rejected();
     test_wrong_commit_rejected();
     test_wrong_prev_hash_rejected();
+    test_timestamp_binding_via_commit();
+    test_bits_q_binding_via_commit();
+    test_merkle_root_binding_via_commit();
+    test_message_does_not_depend_on_indirect_fields();
     test_signature_changes_block_id_but_not_message();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);

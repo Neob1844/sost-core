@@ -3704,6 +3704,17 @@ static bool process_block(const std::string& block_json) {
         sost::sbpow::MinerPubkey    sbpow_pubkey{};
         sost::sbpow::MinerSignature sbpow_signature{};
 
+        // Defensive guard — even though L1 ValidateBlockStructure
+        // (called earlier in the accept path) rejects empty txs and
+        // coinbase[0] mismatches, the SbPoW hook is consensus-adjacent
+        // and must NEVER dereference txs[0]/outputs[0] without a local
+        // size check. A pathologically-crafted RPC payload that bypassed
+        // L1 (e.g. via a future bug in the JSON parser) would otherwise
+        // cause a process crash here. Bail clean instead.
+        if (txs.empty()) {
+            printf("[BLOCK] REJECTED: empty txs (SbPoW gate)\n");
+            return false;
+        }
         if (txs[0].outputs.empty()) {
             printf("[BLOCK] REJECTED: coinbase has no outputs (SbPoW gate)\n");
             return false;

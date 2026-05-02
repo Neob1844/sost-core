@@ -22,39 +22,67 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 
 # =============================================================================
-# V11 Phase 2 (SbPoW) — libsecp256k1 schnorrsig build gate
+# V11 Phase 2 (SbPoW) — libsecp256k1 schnorrsig build gate (CONDITIONAL)
 # =============================================================================
-# Phase 2 SbPoW REQUIRES the BIP-340 Schnorr module of libsecp256k1.
-# Fail at configure time with a clear diagnostic if either the header or
-# the verify symbol is missing, instead of producing a binary that would
-# abort at runtime when the validator first runs.
+# Phase 2 SbPoW uses the BIP-340 Schnorr module of libsecp256k1. The
+# module is only required when the operator opts in to the Phase 2
+# code paths via:
 #
-# No fallback to ECDSA. The whole point of SbPoW is BIP-340 Schnorr —
-# silently downgrading would break consensus invariants.
-include(CheckIncludeFiles)
-include(CheckSymbolExists)
+#     cmake .. -DSOST_ENABLE_PHASE2_SBPOW=ON
+#
+# Default is OFF: a normal pre-Phase-2 build does NOT need the
+# schnorrsig module. With SOST_ENABLE_PHASE2_SBPOW=OFF:
+#   - configure does NOT probe for secp256k1_schnorrsig.h.
+#   - sost-core compiles sbpow.cpp with Schnorr-dependent code stubbed
+#     out via the SOST_HAVE_SCHNORRSIG macro (signing/verification
+#     return false; non-Schnorr helpers like build_sbpow_message,
+#     derive_pkh_from_pubkey, secure_memzero stay live).
+#   - The three Schnorr-only test binaries (test-sbpow-signing,
+#     test-sbpow-validation, test-sbpow-adversarial) are NOT built or
+#     registered with CTest.
+#   - The remaining V11-Phase-2 tests that don't need Schnorr
+#     (test-sbpow-header-v2, test-miner-key-selection) are built
+#     unconditionally.
+#
+# With SOST_ENABLE_PHASE2_SBPOW=ON the configure asserts the schnorrsig
+# header AND the verify symbol; missing either fails configure with a
+# clear FATAL_ERROR. No silent ECDSA fallback under any circumstances.
+option(SOST_ENABLE_PHASE2_SBPOW
+    "Build Phase 2 SbPoW Schnorr tests/tools (requires libsecp256k1 with schnorrsig module)"
+    OFF)
 
-# Check the schnorrsig header alongside secp256k1.h, since the former
-# depends on type declarations from the latter and won't compile alone.
-check_include_files("secp256k1.h;secp256k1_schnorrsig.h"
-    SOST_HAVE_SCHNORRSIG_HEADER)
-if(NOT SOST_HAVE_SCHNORRSIG_HEADER)
-    message(FATAL_ERROR
-        "SbPoW requires libsecp256k1 with schnorrsig module enabled "
-        "(missing header: secp256k1_schnorrsig.h). Rebuild libsecp256k1 "
-        "with --enable-module-schnorrsig or upgrade the system package.")
-endif()
+if(SOST_ENABLE_PHASE2_SBPOW)
+    include(CheckIncludeFiles)
+    include(CheckSymbolExists)
 
-set(CMAKE_REQUIRED_LIBRARIES secp256k1)
-check_symbol_exists(secp256k1_schnorrsig_verify
-    "secp256k1.h;secp256k1_schnorrsig.h"
-    SOST_HAVE_SCHNORRSIG_VERIFY)
-unset(CMAKE_REQUIRED_LIBRARIES)
-if(NOT SOST_HAVE_SCHNORRSIG_VERIFY)
-    message(FATAL_ERROR
-        "SbPoW requires libsecp256k1 with schnorrsig module enabled "
-        "(missing symbol: secp256k1_schnorrsig_verify). Rebuild "
-        "libsecp256k1 with --enable-module-schnorrsig.")
+    # Check the schnorrsig header alongside secp256k1.h, since the former
+    # depends on type declarations from the latter and won't compile alone.
+    check_include_files("secp256k1.h;secp256k1_schnorrsig.h"
+        SOST_HAVE_SCHNORRSIG_HEADER)
+    if(NOT SOST_HAVE_SCHNORRSIG_HEADER)
+        message(FATAL_ERROR
+            "SbPoW requires libsecp256k1 with schnorrsig module enabled "
+            "(missing header: secp256k1_schnorrsig.h). Rebuild libsecp256k1 "
+            "with --enable-module-schnorrsig, upgrade the system package, "
+            "or build with -DSOST_ENABLE_PHASE2_SBPOW=OFF (default).")
+    endif()
+
+    set(CMAKE_REQUIRED_LIBRARIES secp256k1)
+    check_symbol_exists(secp256k1_schnorrsig_verify
+        "secp256k1.h;secp256k1_schnorrsig.h"
+        SOST_HAVE_SCHNORRSIG_VERIFY)
+    unset(CMAKE_REQUIRED_LIBRARIES)
+    if(NOT SOST_HAVE_SCHNORRSIG_VERIFY)
+        message(FATAL_ERROR
+            "SbPoW requires libsecp256k1 with schnorrsig module enabled "
+            "(missing symbol: secp256k1_schnorrsig_verify). Rebuild "
+            "libsecp256k1 with --enable-module-schnorrsig, or build "
+            "with -DSOST_ENABLE_PHASE2_SBPOW=OFF (default).")
+    endif()
+    message(STATUS "V11 Phase 2 SbPoW: ENABLED (Schnorr tests will be built)")
+else()
+    message(STATUS "V11 Phase 2 SbPoW: DISABLED "
+                   "(use -DSOST_ENABLE_PHASE2_SBPOW=ON to build Schnorr tests)")
 endif()
 
 # Core library — Phase 0 (consensus base) + Phase 1-6
@@ -107,6 +135,12 @@ add_library(sost-core STATIC
 
 target_include_directories(sost-core PUBLIC include)
 target_link_libraries(sost-core PUBLIC OpenSSL::Crypto Threads::Threads secp256k1)
+
+# Phase 2 SbPoW build flag — propagated to sbpow.cpp via #ifdef.
+# When OFF (default), sbpow.cpp's Schnorr-dependent code is stubbed.
+if(SOST_ENABLE_PHASE2_SBPOW)
+    target_compile_definitions(sost-core PUBLIC SOST_HAVE_SCHNORRSIG=1)
+endif()
 
 # Binaries — DISABLED until node/miner/wallet updated to new Block API
 # add_executable(sost-node src/main_node.cpp)
@@ -187,25 +221,33 @@ add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
 add_test(NAME sbpow-header-v2 COMMAND test-sbpow-header-v2)
 
-# V11 Phase 2 — component C (SbPoW): Schnorr signing + message construction
-add_executable(test-sbpow-signing tests/test_sbpow_signing.cpp)
-target_link_libraries(test-sbpow-signing PRIVATE sost-core)
-add_test(NAME sbpow-signing COMMAND test-sbpow-signing)
-
 # V11 Phase 2 — component C (SbPoW): miner key selection (CLI flag resolver)
+# Always built — does not need the Schnorr module (uses Wallet only).
 add_executable(test-miner-key-selection tests/test_miner_key_selection.cpp)
 target_link_libraries(test-miner-key-selection PRIVATE sost-core)
 add_test(NAME miner-key-selection COMMAND test-miner-key-selection)
 
-# V11 Phase 2 — component C (SbPoW): height-gated validation (consensus side)
-add_executable(test-sbpow-validation tests/test_sbpow_validation.cpp)
-target_link_libraries(test-sbpow-validation PRIVATE sost-core)
-add_test(NAME sbpow-validation COMMAND test-sbpow-validation)
+# V11 Phase 2 — Schnorr-only test binaries. Gated behind
+# SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
+# verify_sbpow_signature, which require the libsecp256k1 schnorrsig
+# module. With the option OFF (default) these tests are NOT built and
+# NOT registered with CTest.
+if(SOST_ENABLE_PHASE2_SBPOW)
+    # Schnorr signing + message construction
+    add_executable(test-sbpow-signing tests/test_sbpow_signing.cpp)
+    target_link_libraries(test-sbpow-signing PRIVATE sost-core)
+    add_test(NAME sbpow-signing COMMAND test-sbpow-signing)
 
-# V11 Phase 2 — component C (SbPoW): adversarial test suite
-add_executable(test-sbpow-adversarial tests/test_sbpow_adversarial.cpp)
-target_link_libraries(test-sbpow-adversarial PRIVATE sost-core)
-add_test(NAME sbpow-adversarial COMMAND test-sbpow-adversarial)
+    # Height-gated consensus-side validation
+    add_executable(test-sbpow-validation tests/test_sbpow_validation.cpp)
+    target_link_libraries(test-sbpow-validation PRIVATE sost-core)
+    add_test(NAME sbpow-validation COMMAND test-sbpow-validation)
+
+    # Adversarial test suite
+    add_executable(test-sbpow-adversarial tests/test_sbpow_adversarial.cpp)
+    target_link_libraries(test-sbpow-adversarial PRIVATE sost-core)
+    add_test(NAME sbpow-adversarial COMMAND test-sbpow-adversarial)
+endif()
 
 # V11 Phase 1 — component B (state-dependent dataset access)
 add_executable(test-convergencex-v11 tests/test_convergencex_v11.cpp)

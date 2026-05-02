@@ -1,13 +1,26 @@
 // sbpow.cpp — V11 Phase 2 component C: Signature-bound Proof of Work
 //
 // Spec: docs/V11_SPEC.md §3 + docs/V11_PHASE2_DESIGN.md §1
-// Status (C3): real BIP-340 Schnorr signing/verification + message construction
-// + privkey→pubkey derivation + secure_memzero. Validator (validate) and PoW
-// seed binding (derive_seed_v11) remain aborting stubs — they are C4 work.
+// Status (C4.1): real BIP-340 Schnorr signing/verification + message
+// construction + privkey→pubkey derivation + secure_memzero +
+// height-gated validate_sbpow_for_block. PoW seed binding
+// (derive_seed_v11) remains an aborting stub — it is a follow-up.
 //
-// Schnorr context is private to this translation unit and never shared with
-// the existing tx-signer ECDSA context (src/tx_signer.cpp) — by design, so
-// changes here cannot regress transaction signing.
+// Schnorr context is private to this translation unit and never shared
+// with the existing tx-signer ECDSA context (src/tx_signer.cpp) — by
+// design, so changes here cannot regress transaction signing.
+//
+// Build-time gating: the Schnorr-dependent code below is wrapped in
+// #ifdef SOST_HAVE_SCHNORRSIG. When the macro is undefined (default
+// build with -DSOST_ENABLE_PHASE2_SBPOW=OFF):
+//   - sign_sbpow_commitment / verify_sbpow_signature return false.
+//   - is_well_formed_compressed_pubkey degrades to a prefix-only check
+//     (still rejects 0x00 / 0x04 / arbitrary bytes; no curve test).
+//   - validate_sbpow_for_block stays correct because at the production
+//     gate (V11_PHASE2_HEIGHT == INT64_MAX) it never reaches Schnorr
+//     verify; the version check still fires and rejects premature v2.
+//   - Schnorr-only test binaries are NOT built (CMake gates them).
+// When SOST_HAVE_SCHNORRSIG is defined the full BIP-340 path is live.
 #include "sost/sbpow.h"
 
 #include "sost/crypto.h"      // sha256()
@@ -18,7 +31,10 @@
 #include <openssl/crypto.h>   // OPENSSL_cleanse
 #include <openssl/rand.h>     // RAND_bytes
 #include <secp256k1.h>
-#include <secp256k1_schnorrsig.h>
+
+#ifdef SOST_HAVE_SCHNORRSIG
+#  include <secp256k1_schnorrsig.h>
+#endif
 
 #include <cstdio>
 #include <cstdlib>
@@ -29,6 +45,8 @@ namespace sost::sbpow {
 // ============================================================================
 // Schnorr context — separate from the tx-signer ECDSA context
 // ============================================================================
+
+#ifdef SOST_HAVE_SCHNORRSIG
 
 namespace {
 
@@ -63,6 +81,8 @@ secp256k1_context* GetSchnorrCtx() {
 }
 
 } // namespace
+
+#endif  // SOST_HAVE_SCHNORRSIG
 
 // ============================================================================
 // Message construction
@@ -163,6 +183,7 @@ bool sign_sbpow_commitment(
     const Bytes32&         message,
     MinerSignature&        out_signature)
 {
+#ifdef SOST_HAVE_SCHNORRSIG
     secp256k1_context* ctx = GetSchnorrCtx();
 
     // Build the keypair from privkey. Failure modes: privkey == 0 or >= n.
@@ -199,6 +220,15 @@ bool sign_sbpow_commitment(
         return false;
     }
     return true;
+#else
+    (void)privkey; (void)message;
+    // Build was configured without SOST_HAVE_SCHNORRSIG. Production paths
+    // never reach here while V11_PHASE2_HEIGHT == INT64_MAX. If you hit
+    // this in a non-test context, the build is misconfigured for the
+    // active code path — rebuild with -DSOST_ENABLE_PHASE2_SBPOW=ON.
+    out_signature.fill(0);
+    return false;
+#endif
 }
 
 bool verify_sbpow_signature(
@@ -206,6 +236,7 @@ bool verify_sbpow_signature(
     const Bytes32&         message,
     const MinerSignature&  signature)
 {
+#ifdef SOST_HAVE_SCHNORRSIG
     secp256k1_context* ctx = GetSchnorrCtx();
 
     // BIP-340 uses 32-byte x-only pubkeys. Convert from the 33-byte
@@ -227,6 +258,14 @@ bool verify_sbpow_signature(
         message.size(),
         &xonly_pk);
     return rc == 1;
+#else
+    (void)pubkey; (void)message; (void)signature;
+    // Without SOST_HAVE_SCHNORRSIG, verify always returns false.
+    // validate_sbpow_for_block guarantees this is only called on the
+    // Phase 2 active path; with V11_PHASE2_HEIGHT == INT64_MAX in
+    // production that path is unreachable.
+    return false;
+#endif
 }
 
 // ============================================================================
@@ -321,12 +360,23 @@ bool is_well_formed_compressed_pubkey(const MinerPubkey& pubkey) {
     const uint8_t prefix = pubkey[0];
     if (prefix != 0x02 && prefix != 0x03) return false;
 
-    // Curve membership check via libsecp256k1.
+#ifdef SOST_HAVE_SCHNORRSIG
+    // Curve membership check via libsecp256k1 (requires the Schnorr
+    // context, which is only initialised when SOST_HAVE_SCHNORRSIG is
+    // defined). This catches "valid prefix, off-curve x-coordinate"
+    // attacks.
     secp256k1_context* ctx = GetSchnorrCtx();
     secp256k1_pubkey full;
     if (!secp256k1_ec_pubkey_parse(ctx, &full, pubkey.data(), pubkey.size())) {
         return false;
     }
+#endif
+    // Without SOST_HAVE_SCHNORRSIG, the curve-membership check is
+    // skipped. validate_sbpow_for_block is unreachable in production
+    // under that build (V11_PHASE2_HEIGHT == INT64_MAX never crosses
+    // into phase2_active), so the degraded prefix-only check has no
+    // production effect. Adversarial tests for off-curve points run
+    // only with -DSOST_ENABLE_PHASE2_SBPOW=ON.
     return true;
 }
 
