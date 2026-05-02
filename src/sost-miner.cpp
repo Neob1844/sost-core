@@ -166,12 +166,10 @@ static std::string rpc_auth_header() {
 // =============================================================================
 // Coinbase transaction builder
 // =============================================================================
-static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split,
-                                     const PubKeyHash& miner_pkh) {
-    Transaction tx;
-    tx.version = 1;
-    tx.tx_type = TX_TYPE_COINBASE;
-
+//
+// Helper for the common 1-input header — every coinbase shape (pre-Phase-2,
+// Phase-2 UPDATE, Phase-2 PAYOUT) uses the same input encoding.
+static void fill_coinbase_input(Transaction& tx, int64_t height) {
     TxInput cin;
     cin.prev_txid.fill(0);
     cin.prev_index = 0xFFFFFFFF;
@@ -180,6 +178,15 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
     for (int i = 0; i < 8; ++i)
         cin.signature[i] = (uint8_t)((height >> (i * 8)) & 0xFF);
     tx.inputs.push_back(cin);
+}
+
+static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split,
+                                     const PubKeyHash& miner_pkh) {
+    (void)total_reward;  // kept for API symmetry with Phase-2 builders below
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
 
     TxOutput out_miner;
     out_miner.amount = split.miner;
@@ -198,6 +205,67 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
     out_popc.type = OUT_COINBASE_POPC;
     address_decode(ADDR_POPC_POOL, out_popc.pubkey_hash);
     tx.outputs.push_back(out_popc);
+
+    return tx;
+}
+
+// V11 Phase 2 (C8) — coinbase builder for triggered+empty (UPDATE).
+// Produces a 1-output coinbase: MINER only. The lottery share is
+// withheld in chain-state pending; no GOLD/POPC outputs are emitted.
+//
+// `miner_share` MUST equal sost::lottery::phase2_coinbase_split(
+// subsidy + fees).miner_share so the validator's CB12 check passes.
+//
+// Phase 2 is dormant while V11_PHASE2_HEIGHT == INT64_MAX in params.h —
+// the production mining loop never reaches this builder. It is exposed
+// for tests and for the future Phase-2-active miner path.
+static Transaction build_phase2_update_coinbase_tx(int64_t height,
+                                                   int64_t miner_share,
+                                                   const PubKeyHash& miner_pkh) {
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
+
+    TxOutput out_miner;
+    out_miner.amount = miner_share;
+    out_miner.type = OUT_COINBASE_MINER;
+    out_miner.pubkey_hash = miner_pkh;
+    tx.outputs.push_back(out_miner);
+
+    return tx;
+}
+
+// V11 Phase 2 (C8) — coinbase builder for triggered+non-empty (PAYOUT).
+// Produces a 2-output coinbase: MINER + OUT_COINBASE_LOTTERY. The
+// lottery output amount equals lottery_share + pending_before — the
+// per-block share plus any rolled-over jackpot from prior empty
+// triggered blocks. No GOLD/POPC outputs are emitted.
+//
+// Phase 2 is dormant while V11_PHASE2_HEIGHT == INT64_MAX in params.h —
+// the production mining loop never reaches this builder. It is exposed
+// for tests and for the future Phase-2-active miner path.
+static Transaction build_phase2_payout_coinbase_tx(int64_t height,
+                                                   int64_t miner_share,
+                                                   int64_t lottery_payout,
+                                                   const PubKeyHash& miner_pkh,
+                                                   const PubKeyHash& winner_pkh) {
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
+
+    TxOutput out_miner;
+    out_miner.amount = miner_share;
+    out_miner.type = OUT_COINBASE_MINER;
+    out_miner.pubkey_hash = miner_pkh;
+    tx.outputs.push_back(out_miner);
+
+    TxOutput out_lottery;
+    out_lottery.amount = lottery_payout;
+    out_lottery.type = OUT_COINBASE_LOTTERY;
+    out_lottery.pubkey_hash = winner_pkh;
+    tx.outputs.push_back(out_lottery);
 
     return tx;
 }
@@ -855,7 +923,18 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         }
     }
 
-    // Coinbase = subsidy + fees, split 50/25/25
+    // Coinbase = subsidy + fees, split 50/25/25.
+    //
+    // V11 Phase 2 (C8) — when V11_PHASE2_HEIGHT becomes finite AND the
+    // current height triggers the lottery (sost::lottery::is_lottery_block),
+    // this builder MUST be replaced with build_phase2_payout_coinbase_tx
+    // (when the eligibility set is non-empty) or
+    // build_phase2_update_coinbase_tx (when empty). That requires an RPC
+    // path to fetch the eligibility set and pending_lottery_amount from
+    // the node — wired in a future commit. While V11_PHASE2_HEIGHT ==
+    // INT64_MAX in params.h, sost::lottery::is_lottery_block returns false
+    // for every height, so the existing 50/25/25 path is the only one
+    // production ever hits.
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
     Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);

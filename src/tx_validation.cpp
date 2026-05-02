@@ -8,8 +8,10 @@
 
 #include "sost/tx_validation.h"
 #include "sost/capsule.h"
+#include "sost/lottery.h"   // V11 Phase 2 (C8) — phase2_coinbase_split
 
 #include <algorithm>
+#include <climits>
 #include <cstring>
 #include <set>
 #include <sstream>
@@ -501,7 +503,7 @@ TxValidationResult ValidateTransactionPolicy(
 }
 
 // =============================================================================
-// ValidateCoinbaseConsensus (CB1-CB10)
+// ValidateCoinbaseConsensus (CB1-CB10 + V11 Phase 2 CB11-CB14)
 // =============================================================================
 
 TxValidationResult ValidateCoinbaseConsensus(
@@ -510,8 +512,14 @@ TxValidationResult ValidateCoinbaseConsensus(
     int64_t subsidy,
     int64_t total_fees,
     const PubKeyHash& gold_vault_pkh,
-    const PubKeyHash& popc_pool_pkh)
+    const PubKeyHash& popc_pool_pkh,
+    const Phase2CoinbaseContext* phase2_ctx)
 {
+    // -------------------------------------------------------------------------
+    // Common header checks (apply to every coinbase, every height) — CB1, CB2,
+    // CB3, CB9. These predate V11 Phase 2 and are not affected by it.
+    // -------------------------------------------------------------------------
+
     if (tx.tx_type != TX_TYPE_COINBASE) {
         return TxValidationResult::Fail(TxValCode::CB1_MISSING_COINBASE,
             "CB1: tx_type must be COINBASE (0x01)");
@@ -556,6 +564,218 @@ TxValidationResult ValidateCoinbaseConsensus(
         return TxValidationResult::Fail(TxValCode::CB9_CB_PUBKEY_NONZERO,
             "CB9: coinbase input pubkey must be all zeros");
     }
+
+    // -------------------------------------------------------------------------
+    // V11 Phase 2 (C8) — height-gated branch.
+    //
+    // The Phase 2 coinbase shape only kicks in when ALL of the following
+    // hold:
+    //   1. Caller provided a Phase2CoinbaseContext (non-null).
+    //   2. The context's phase2_height is finite (!= INT64_MAX). In
+    //      production today this is INT64_MAX (params.h), so the Phase 2
+    //      path is unreachable from any real chain block.
+    //   3. The current block's height is at or above phase2_height.
+    //   4. The block is a triggered lottery block (caller computes via
+    //      sost::lottery::is_lottery_block).
+    //
+    // Non-triggered Phase-2 blocks fall through to the pre-Phase-2 path
+    // below — same 3-output MINER/GOLD/POPC shape with 50/25/25 split,
+    // because the chain-state pending value is unchanged on those
+    // blocks (the consensus emission invariant degrades to the standard
+    // sum(outputs) == subsidy + fees rule).
+    // -------------------------------------------------------------------------
+
+    const bool phase2_triggered =
+        phase2_ctx
+        && phase2_ctx->phase2_height != INT64_MAX
+        && height >= phase2_ctx->phase2_height
+        && phase2_ctx->triggered;
+
+    if (phase2_triggered) {
+        const int64_t total_reward = subsidy + total_fees;
+        const auto split = sost::lottery::phase2_coinbase_split(total_reward);
+        const int64_t expected_miner   = split.miner_share;
+        const int64_t expected_lottery = split.lottery_share;
+
+        if (phase2_ctx->paid_out) {
+            // -------- PAYOUT — 2 outputs (MINER + LOTTERY) --------
+
+            if (tx.outputs.size() != 2) {
+                return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+                    "CB11: Phase 2 PAYOUT coinbase must have exactly 2 outputs, got " +
+                    std::to_string(tx.outputs.size()));
+            }
+
+            // CB4 (Phase 2 PAYOUT): output[0]=MINER, output[1]=LOTTERY
+            if (tx.outputs[0].type != OUT_COINBASE_MINER) {
+                return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+                    "CB4: PAYOUT output[0] must be OUT_COINBASE_MINER (0x01)", -1, 0);
+            }
+            if (tx.outputs[1].type != OUT_COINBASE_LOTTERY) {
+                return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+                    "CB4: PAYOUT output[1] must be OUT_COINBASE_LOTTERY (0x04)", -1, 1);
+            }
+
+            // CB12: amounts (PAYOUT). The lottery output amount MUST be
+            // exactly lottery_share + pending_before — no miner discretion.
+            const int64_t expected_lottery_payout =
+                expected_lottery + phase2_ctx->pending_before;
+            if (tx.outputs[0].amount != expected_miner) {
+                return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+                    "CB12: PAYOUT miner amount " + std::to_string(tx.outputs[0].amount) +
+                    " != expected " + std::to_string(expected_miner), -1, 0);
+            }
+            if (tx.outputs[1].amount != expected_lottery_payout) {
+                return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+                    "CB12: PAYOUT lottery amount " + std::to_string(tx.outputs[1].amount) +
+                    " != expected lottery_share + pending_before = " +
+                    std::to_string(expected_lottery_payout) +
+                    " (lottery_share=" + std::to_string(expected_lottery) +
+                    ", pending_before=" + std::to_string(phase2_ctx->pending_before) + ")",
+                    -1, 1);
+            }
+
+            // Cross-check against caller-supplied context (defence in
+            // depth — caller and validator agree on the same number).
+            if (phase2_ctx->lottery_payout != expected_lottery_payout) {
+                return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+                    "CB12: PAYOUT context lottery_payout " +
+                    std::to_string(phase2_ctx->lottery_payout) +
+                    " != lottery_share + pending_before " +
+                    std::to_string(expected_lottery_payout));
+            }
+
+            // CB13: lottery output address MUST equal the deterministic
+            // winner picked by the caller (select_lottery_winner_index).
+            if (tx.outputs[1].pubkey_hash != phase2_ctx->expected_winner_pkh) {
+                return TxValidationResult::Fail(TxValCode::CB13_LOTTERY_WINNER,
+                    "CB13: PAYOUT OUT_COINBASE_LOTTERY pubkey_hash does not match "
+                    "deterministic winner expected by chain context", -1, 1);
+            }
+
+            // CB10 (Phase 2): empty payload on both outputs.
+            for (size_t i = 0; i < tx.outputs.size(); ++i) {
+                if (!tx.outputs[i].payload.empty()) {
+                    return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
+                        "CB10: coinbase output[" + std::to_string(i) +
+                        "] must have empty payload", -1, (int32_t)i);
+                }
+            }
+
+            // R5/R6 on the two PAYOUT outputs. lottery_share + pending_before
+            // is always > 0 on a triggered block at non-zero subsidy/fee
+            // levels (lottery_share = total_reward/2 > 0 for any realistic
+            // SOST mining height).
+            for (size_t i = 0; i < tx.outputs.size(); ++i) {
+                if (tx.outputs[i].amount <= 0) {
+                    return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
+                        "R5: PAYOUT output[" + std::to_string(i) + "] amount <= 0",
+                        -1, (int32_t)i);
+                }
+                if (tx.outputs[i].amount > SUPPLY_MAX_STOCKS) {
+                    return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
+                        "R6: PAYOUT output[" + std::to_string(i) +
+                        "] amount exceeds supply max", -1, (int32_t)i);
+                }
+            }
+
+            // CB14: emission invariant cross-check —
+            //   sum(outputs) + (pending_after - pending_before) == subsidy + fees
+            //
+            // PAYOUT case:
+            //   sum   = miner_share + (lottery_share + pending_before)
+            //         = total_reward + pending_before
+            //   Δpending = expected_pending_after - pending_before
+            //            = 0 - pending_before = -pending_before
+            //   sum + Δpending = total_reward = subsidy + fees ✓
+            //
+            // expected_pending_after on PAYOUT MUST be 0.
+            if (phase2_ctx->expected_pending_after != 0) {
+                return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+                    "CB14: PAYOUT expected_pending_after must be 0, got " +
+                    std::to_string(phase2_ctx->expected_pending_after));
+            }
+            const int64_t sum_outputs =
+                tx.outputs[0].amount + tx.outputs[1].amount;
+            const int64_t delta_pending =
+                phase2_ctx->expected_pending_after - phase2_ctx->pending_before;
+            if (sum_outputs + delta_pending != total_reward) {
+                return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+                    "CB14: emission invariant broken on PAYOUT: "
+                    "sum(outputs)=" + std::to_string(sum_outputs) +
+                    " + Δpending=" + std::to_string(delta_pending) +
+                    " != subsidy+fees=" + std::to_string(total_reward));
+            }
+            return TxValidationResult::Ok();
+        }
+
+        // -------- UPDATE — 1 output (MINER only) --------
+        // Triggered + empty eligibility set: the lottery share is
+        // withheld in chain-state pending, and the coinbase emits
+        // ONLY a miner output. GOLD and POPC outputs are OMITTED.
+
+        if (tx.outputs.size() != 1) {
+            return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+                "CB11: Phase 2 UPDATE coinbase must have exactly 1 output, got " +
+                std::to_string(tx.outputs.size()));
+        }
+
+        if (tx.outputs[0].type != OUT_COINBASE_MINER) {
+            return TxValidationResult::Fail(TxValCode::CB4_CB_OUTPUT_ORDER,
+                "CB4: UPDATE output[0] must be OUT_COINBASE_MINER (0x01)", -1, 0);
+        }
+        if (tx.outputs[0].amount != expected_miner) {
+            return TxValidationResult::Fail(TxValCode::CB12_LOTTERY_AMOUNT,
+                "CB12: UPDATE miner amount " + std::to_string(tx.outputs[0].amount) +
+                " != expected " + std::to_string(expected_miner), -1, 0);
+        }
+        if (!tx.outputs[0].payload.empty()) {
+            return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
+                "CB10: coinbase output[0] must have empty payload", -1, 0);
+        }
+        if (tx.outputs[0].amount <= 0) {
+            return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
+                "R5: UPDATE output[0] amount <= 0", -1, 0);
+        }
+        if (tx.outputs[0].amount > SUPPLY_MAX_STOCKS) {
+            return TxValidationResult::Fail(TxValCode::R6_AMOUNT_OVERFLOW,
+                "R6: UPDATE output[0] amount exceeds supply max", -1, 0);
+        }
+
+        // CB14: emission invariant — UPDATE case.
+        //   sum   = miner_share
+        //   Δpending = (pending_before + lottery_share) - pending_before
+        //            = +lottery_share
+        //   sum + Δpending = miner_share + lottery_share = total_reward ✓
+        const int64_t expected_pending_after =
+            phase2_ctx->pending_before + expected_lottery;
+        if (phase2_ctx->expected_pending_after != expected_pending_after) {
+            return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+                "CB14: UPDATE expected_pending_after " +
+                std::to_string(phase2_ctx->expected_pending_after) +
+                " != pending_before + lottery_share = " +
+                std::to_string(expected_pending_after));
+        }
+        const int64_t sum_outputs_u = tx.outputs[0].amount;
+        const int64_t delta_pending_u =
+            phase2_ctx->expected_pending_after - phase2_ctx->pending_before;
+        if (sum_outputs_u + delta_pending_u != total_reward) {
+            return TxValidationResult::Fail(TxValCode::CB14_LOTTERY_INVARIANT,
+                "CB14: emission invariant broken on UPDATE: "
+                "sum(outputs)=" + std::to_string(sum_outputs_u) +
+                " + Δpending=" + std::to_string(delta_pending_u) +
+                " != subsidy+fees=" + std::to_string(total_reward));
+        }
+        return TxValidationResult::Ok();
+    }
+
+    // -------------------------------------------------------------------------
+    // PRE-PHASE-2 PATH (and Phase 2 non-triggered blocks).
+    //
+    // Identical to the original CB1-CB10 logic: 3 outputs MINER/GOLD/POPC
+    // with the canonical 50/25/25 split. Phase 2 non-triggered blocks
+    // satisfy the same invariant trivially (Δpending == 0).
+    // -------------------------------------------------------------------------
 
     // CB7: exactly 3 outputs
     if (tx.outputs.size() != 3) {

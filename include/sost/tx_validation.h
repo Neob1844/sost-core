@@ -119,6 +119,15 @@ enum class TxValCode : int {
     CB9_CB_PUBKEY_NONZERO  = 309,
     CB10_CB_PAYLOAD        = 310,
 
+    // V11 Phase 2 — lottery coinbase (CB11-CB14). Only reachable on
+    // blocks at heights >= V11_PHASE2_HEIGHT, which stays at INT64_MAX
+    // until Phase 2 activates. See ValidateCoinbaseConsensus +
+    // Phase2CoinbaseContext for usage.
+    CB11_LOTTERY_SHAPE         = 311,  // wrong output count for trigger kind
+    CB12_LOTTERY_AMOUNT        = 312,  // miner or lottery output amount mismatch
+    CB13_LOTTERY_WINNER        = 313,  // OUT_COINBASE_LOTTERY pkh != expected winner
+    CB14_LOTTERY_INVARIANT     = 314,  // sum(outputs) + Δpending != subsidy + fees
+
     // Policy (not consensus-critical)
     P_TX_TOO_LARGE         = 401,
     P_TOO_MANY_INPUTS      = 402,
@@ -193,12 +202,69 @@ TxValidationResult ValidateTransactionPolicy(
 // subsidy = block subsidy at this height (caller computes via sost_subsidy_stocks)
 // total_fees = sum of fees from all standard transactions in the block
 // gold_vault_pkh, popc_pool_pkh = constitutional addresses
+//
+// V11 Phase 2 (C8) — when `phase2_ctx` is non-null AND
+// `height >= phase2_ctx->phase2_height`, the validator switches to the
+// lottery coinbase shape (see Phase2CoinbaseContext below). All current
+// callers may continue to pass nullptr; while V11_PHASE2_HEIGHT ==
+// INT64_MAX in params.h, the Phase 2 path is unreachable from any real
+// chain block. Tests inject a finite phase2_height through this
+// context to exercise the active path.
+struct Phase2CoinbaseContext;
 TxValidationResult ValidateCoinbaseConsensus(
     const Transaction& tx,
     int64_t height,
     int64_t subsidy,
     int64_t total_fees,
     const PubKeyHash& gold_vault_pkh,
-    const PubKeyHash& popc_pool_pkh);
+    const PubKeyHash& popc_pool_pkh,
+    const Phase2CoinbaseContext* phase2_ctx = nullptr);
+
+// V11 Phase 2 — context for height-gated lottery coinbase validation.
+//
+// The block validator (caller of ValidateCoinbaseConsensus) is the
+// authoritative source for these fields:
+//   - phase2_height        : V11_PHASE2_HEIGHT from params.h (or a
+//                            finite test value).
+//   - pending_before       : chain-state `pending_lottery_amount`
+//                            immediately BEFORE this block — typically
+//                            read from the previous StoredBlock's
+//                            `pending_lottery_after` (0 at the
+//                            activation boundary).
+//   - triggered            : sost::lottery::is_lottery_block(height,
+//                            phase2_height).
+//   - paid_out             : on triggered blocks, true iff the
+//                            eligibility set is non-empty (caller
+//                            computed via compute_lottery_eligibility_set).
+//                            Ignored on non-triggered blocks.
+//   - lottery_payout       : 0 on UPDATE; lottery_share + pending_before
+//                            on PAYOUT. Validator checks this against
+//                            the actual coinbase OUT_COINBASE_LOTTERY
+//                            output amount.
+//   - expected_winner_pkh  : on PAYOUT, the address picked by
+//                            select_lottery_winner_index; the
+//                            OUT_COINBASE_LOTTERY pubkey_hash MUST
+//                            equal this exactly. Zero pkh on UPDATE
+//                            (ignored).
+//   - expected_pending_after : value of `pending_lottery_amount` after
+//                            this block. The validator does NOT update
+//                            chain state itself — this field is for
+//                            invariant cross-checking only.
+//
+// CONSENSUS-CRITICAL: validator and miner MUST derive these fields
+// from the same chain history and the same lottery API helpers
+// (sost::lottery::compute_lottery_eligibility_set,
+// select_lottery_winner_index, apply_lottery_block). Any divergence
+// between miner and validator on any of these fields is a consensus
+// fault.
+struct Phase2CoinbaseContext {
+    int64_t      phase2_height{INT64_MAX};
+    int64_t      pending_before{0};
+    bool         triggered{false};
+    bool         paid_out{false};
+    int64_t      lottery_payout{0};
+    PubKeyHash   expected_winner_pkh{};
+    int64_t      expected_pending_after{0};
+};
 
 } // namespace sost

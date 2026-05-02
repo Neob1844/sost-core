@@ -260,15 +260,18 @@ std::optional<PubKeyHash> pick_winner(const Bytes32& prev_block_hash,
 //
 //   UPDATE   on is_lottery_block(h) && eligible.empty():
 //              pending_after = pending_before + lottery_amount.
-//              NO payout this block. Caller emits 0 to vault and popc
-//              outputs in the coinbase (C8).
+//              NO payout this block. Coinbase shape (C8): a SINGLE
+//              MINER output of `miner_share = total_reward -
+//              lottery_amount`. The GOLD and POPC outputs are OMITTED
+//              entirely on triggered blocks (not zero-amount outputs).
 //
 //   PAYOUT   on is_lottery_block(h) && !eligible.empty():
 //              winner_index = select_lottery_winner_index(...).
 //              lottery_payout = pending_before + lottery_amount.
 //              pending_after = 0.
-//              Caller writes the payout into the lottery coinbase
-//              output (C8).
+//              Coinbase shape (C8): TWO outputs — MINER of
+//              `miner_share` and OUT_COINBASE_LOTTERY of
+//              `lottery_payout`. GOLD and POPC are OMITTED.
 //
 // Persistent integration with chain state (StoredBlock fields,
 // BlockUndo extension, chain.json serialization with backward-compat
@@ -356,5 +359,40 @@ void apply_block(RolloverState& state,
 // Reorg helper — restore pending using the saved undo value.
 // PHASE 2 — NOT IMPLEMENTED.
 void undo_block(RolloverState& state, uint64_t pending_before_block);
+
+// ---------------------------------------------------------------------------
+// V11 Phase 2 — coinbase split helper (C8, real, pure header-only).
+// ---------------------------------------------------------------------------
+//
+// 50% miner / 50% lottery split of total_reward (= subsidy + fees).
+// Mirrors emission::coinbase_split (50/25/25) in spirit and rounding
+// convention: the lottery side takes total_reward / 2 (floor), the
+// miner takes the remainder. With odd reward, the miner receives the
+// extra stock — same direction as the existing CoinbaseSplit which
+// gives the miner total - 2*(total/4).
+//
+// Used on triggered Phase-2 blocks only:
+//   - UPDATE  (triggered + empty eligibility): the lottery half is
+//             added to chain-state pending; the coinbase emits ONE
+//             output (MINER of `miner_share`). GOLD and POPC outputs
+//             are OMITTED entirely on triggered blocks — a coinbase
+//             with zero-amount GOLD/POPC outputs is invalid (CB R5).
+//   - PAYOUT  (triggered + non-empty): the coinbase emits TWO outputs
+//             (MINER of `miner_share`, plus OUT_COINBASE_LOTTERY of
+//             `lottery_share + pending_before`). GOLD and POPC are
+//             OMITTED.
+//
+// CONSENSUS-CRITICAL: identical division on miner and validator. Both
+// sides MUST go through this single helper.
+struct Phase2CoinbaseSplit {
+    int64_t miner_share;     // total_reward - lottery_share
+    int64_t lottery_share;   // total_reward / 2 (floor)
+    int64_t total_reward;    // input echoed for callers that want it back
+};
+
+inline Phase2CoinbaseSplit phase2_coinbase_split(int64_t total_reward) {
+    const int64_t half = total_reward / 2;
+    return Phase2CoinbaseSplit{ total_reward - half, half, total_reward };
+}
 
 } // namespace sost::lottery

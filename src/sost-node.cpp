@@ -133,6 +133,15 @@ struct StoredBlock {
     // Persisted so every BlockMeta rebuilt from g_blocks carries the real
     // value — legit B0 (0) is distinguishable from missing (INT32_MIN).
     int32_t profile_index{INT32_MIN};
+    // V11 Phase 2 — jackpot rollover state AFTER this block was applied
+    // (C8). Persisted in chain.json so any tip can resume without
+    // replaying lottery transitions from V11_PHASE2_HEIGHT. Default 0
+    // covers (a) pre-Phase-2 chains where Phase 2 never activates, and
+    // (b) backward-compat with chain.json files written by binaries
+    // that pre-date C8 (the load_chain parser treats a missing field
+    // as 0). While V11_PHASE2_HEIGHT == INT64_MAX in params.h, every
+    // real block carries 0 here — Phase 2 is dormant.
+    int64_t pending_lottery_after{0};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
     // This avoids re-serializing complex nested proof structures.
@@ -4935,6 +4944,17 @@ static bool load_chain(const std::string& path) {
         if (bj.find("\"profile_index\"") != std::string::npos) {
             sb.profile_index = (int32_t)jint(bj,"profile_index");
         } // else keeps INT32_MIN default
+        // V11 Phase 2 (C8) — pending_lottery_after. Optional field,
+        // missing in chain.json files written by pre-C8 binaries. We
+        // explicitly check for the key so a missing field keeps the
+        // StoredBlock default of 0 rather than picking up jint's
+        // sentinel error value. While V11_PHASE2_HEIGHT == INT64_MAX
+        // every real block carries 0 here; the parser still has to
+        // accept the field for forward-compat with finite-phase2 test
+        // chain.json files.
+        if (bj.find("\"pending_lottery_after\"") != std::string::npos) {
+            sb.pending_lottery_after = jint(bj,"pending_lottery_after");
+        } // else keeps 0 default
         sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
         // Parse transactions if present (v0.3.2+)
@@ -5360,6 +5380,15 @@ static bool save_chain_internal(const std::string& path) {
                   << ",\"stab_margin\":" << b.stab_margin
                   << ",\"stab_steps\":" << b.stab_steps;
                 if (b.stab_lr_shift > 0) f << ",\"stab_lr_shift\":" << b.stab_lr_shift;
+            }
+            // V11 Phase 2 (C8) — emit pending_lottery_after only when
+            // non-zero. Pre-Phase-2 blocks (and Phase-2 IDLE/UPDATE
+            // blocks where the running pending happens to be 0) skip
+            // the field, matching the load-side default and keeping
+            // chain.json byte-identical for any chain that has not yet
+            // crossed V11_PHASE2_HEIGHT.
+            if (b.pending_lottery_after > 0) {
+                f << ",\"pending_lottery_after\":" << b.pending_lottery_after;
             }
             if (!b.tx_hexes.empty()) {
                 f << ",\"transactions\":[";

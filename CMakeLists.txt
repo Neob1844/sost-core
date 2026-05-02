@@ -257,6 +257,17 @@ add_executable(test-lottery-rollover tests/test_lottery_rollover.cpp)
 target_link_libraries(test-lottery-rollover PRIVATE sost-core)
 add_test(NAME lottery-rollover COMMAND test-lottery-rollover)
 
+# V11 Phase 2 — coinbase shape + lottery accounting (C8).
+# Always built. Exercises ValidateCoinbaseConsensus with the new
+# Phase2CoinbaseContext: pre-Phase-2 / non-triggered (3 outputs),
+# UPDATE (1 output, lottery share withheld in chain-state pending),
+# PAYOUT (2 outputs, MINER + OUT_COINBASE_LOTTERY). Phase 2 stays
+# dormant in production (V11_PHASE2_HEIGHT == INT64_MAX); tests
+# inject a finite phase2_height to exercise the active path.
+add_executable(test-coinbase-phase2 tests/test_coinbase_phase2.cpp)
+target_link_libraries(test-coinbase-phase2 PRIVATE sost-core)
+add_test(NAME coinbase-phase2 COMMAND test-coinbase-phase2)
+
 # V11 Phase 2 — Schnorr-only test binaries. Gated behind
 # SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
 # verify_sbpow_signature, which require the libsecp256k1 schnorrsig
