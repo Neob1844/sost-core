@@ -472,15 +472,20 @@ make -j$(nproc)</pre>
       </div>
 
       <div style="color:var(--text2);font-size:11px;line-height:1.7">
-        <b style="color:var(--text)">A · Extended cASERT cascade.</b>
-        Replaces the V10 single-step relief with a 6-step piecewise table:
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed &gt;= 540 s   →  drop 1 profile
-elapsed &gt;= 600 s   →  drop 2 profiles
-elapsed &gt;= 660 s   →  drop 3 profiles
-elapsed &gt;= 720 s   →  drop 4 profiles
-elapsed &gt;= 780 s   →  drop 5 profiles
-elapsed &gt;= 840 s   →  drop 6 profiles</pre>
-        Recovers the empirically validated V9-era behaviour where blocks consistently landed near the 600 s target. Floor preserved as in V10. bitsQ, anti-stall and lag clamp unchanged.<br><br>
+        <b style="color:var(--text)">A · Extended cASERT linear cascade.</b>
+        V11 replaces the V10 single-step relief with a <b>linear</b> relief curve — no artificial cap, the cascade keeps escalating each 60 s until the natural E7 floor is reached:
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed &lt;  540 s   →  drop 0
+elapsed &gt;= 540 s   →  drop = 1 + floor((elapsed - 540) / 60)</pre>
+        Examples:
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed = 540 s    →  drop 1
+elapsed = 600 s    →  drop 2
+elapsed = 660 s    →  drop 3
+elapsed = 720 s    →  drop 4
+elapsed = 780 s    →  drop 5
+elapsed = 840 s    →  drop 6
+elapsed = 900 s    →  drop 7
+elapsed = 3000 s   →  drop 42  (reaches E7 floor from H35)</pre>
+        The <b>E7 floor</b> is preserved by the existing clamp; although the formula keeps growing, the resulting profile never crosses below E7. bitsQ, anti-stall and lag clamp unchanged.<br><br>
 
         <b style="color:var(--text)">B · State-dependent dataset access.</b>
         The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round&rsquo;s SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
@@ -492,10 +497,10 @@ elapsed &gt;= 840 s   →  drop 6 profiles</pre>
     <!-- ============== PHASE 2 BOX ============== -->
     <div style="background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(74,222,128,0.04));border:1px dashed var(--cyan);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(34,211,238,.15)">
       <div style="color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ PHASE 2 — ACTIVATES WHEN CODE IS VERIFIED AND TESTED
+        ◆ PHASE 2 — LATER / TBD
       </div>
       <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        Two consensus changes are deferred to a later activation height. Phase 2 ships only when its implementation passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, and chain-safety review. <b>No calendar pressure.</b>
+        <b style="color:#fb010d">Phase 2 does NOT activate at block 7,000.</b> Two consensus changes are deferred to a later activation height. Phase 2 ships only when its implementation passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, reorg testing and chain-safety review. <b>No calendar pressure.</b>
       </div>
 
       <div style="color:var(--text2);font-size:11px;line-height:1.7">
@@ -513,9 +518,11 @@ After that, permanently:                       1 of every 3 blocks</pre>
 
         <b style="color:var(--text)">Exclusions</b>:<br>
         &middot; The miner who won the current block cannot enter that block&rsquo;s lottery<br>
-        &middot; Any address that has won a block reward in the last 30 blocks cannot enter the lottery either<br><br>
+        &middot; Any address that has won a block reward in the last <b>5</b> blocks (a <b>5-block cooldown</b>) cannot enter the lottery either<br><br>
 
         Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
+
+        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after preliminary Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. Final Phase 2 activation remains TBD.</span><br><br>
 
         <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
 
