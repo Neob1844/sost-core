@@ -2,7 +2,7 @@
 // =============================================================================
 // SOST — Phase 5: Block Header
 //
-// SOST Block Header (96 bytes):
+// V1 — Block Header (96 bytes, pre-V11 Phase 2):
 //   version         : uint32_t  LE (4)   — protocol version (1 for v1)
 //   prev_block_hash : Hash256       (32)  — SHA256² of previous block header
 //   merkle_root     : Hash256       (32)  — merkle root of transaction IDs
@@ -13,7 +13,21 @@
 //                                ─────
 //                                 96 bytes
 //
-// Block hash = SHA256(SHA256(header_bytes))
+// V2 — Block Header (193 bytes, V11 Phase 2 = SbPoW signature-bound PoW):
+//   ... 96 v1 bytes above ...
+//   miner_pubkey    : (33)                — secp256k1 compressed pubkey
+//   miner_signature : (64)                — BIP-340 Schnorr over sig_message
+//                                ─────
+//                                193 bytes
+//
+// Block hash = SHA256(SHA256(serialized_header))
+//   v1 hash: SHA256² of 96 bytes  (UNCHANGED from pre-V11 logic)
+//   v2 hash: SHA256² of 193 bytes (includes pubkey + signature)
+//
+// IMPORTANT (SbPoW): the Schnorr signature signs the ConvergenceX `commit`,
+// NOT the block_id. block_id of a v2 header includes the signature inside
+// the hashed bytes — signing block_id would be circular. See sig_message
+// definition in docs/V11_PHASE2_DESIGN.md §1.4.
 //
 // Key differences from Bitcoin (80-byte header):
 //   - timestamp:  int64 (future-proof, 2038-safe)
@@ -21,11 +35,13 @@
 //   - nonce:      uint64 (ConvergenceX needs larger search space)
 //   - height:     explicit in header (simplifies SPV, checkpoint validation)
 //
-// Genesis block: prev_block_hash = 0x00*32, height = 0
+// Genesis block: prev_block_hash = 0x00*32, height = 0, version = 1
 // =============================================================================
 
 #include <sost/transaction.h>
 #include <sost/merkle.h>
+#include <array>
+#include <cstdint>
 
 namespace sost {
 
@@ -33,8 +49,23 @@ namespace sost {
 // Constants
 // ---------------------------------------------------------------------------
 
-inline constexpr uint32_t BLOCK_HEADER_VERSION = 1;
-inline constexpr size_t   BLOCK_HEADER_SIZE    = 96;  // bytes
+// Default protocol version for new blocks at pre-Phase 2 heights.
+inline constexpr uint32_t BLOCK_HEADER_VERSION    = 1;
+inline constexpr uint32_t BLOCK_HEADER_VERSION_V1 = 1;
+inline constexpr uint32_t BLOCK_HEADER_VERSION_V2 = 2;
+
+// Serialized sizes. BLOCK_HEADER_SIZE is the v1 size for backward compat
+// with existing callers (tests/test_merkle_block.cpp uses Serialize() which
+// returns a fixed std::array<Byte, BLOCK_HEADER_SIZE>).
+inline constexpr size_t   BLOCK_HEADER_SIZE       = 96;
+inline constexpr size_t   BLOCK_HEADER_SIZE_V1    = 96;
+inline constexpr size_t   BLOCK_HEADER_SIZE_V2    = 193;
+
+// SbPoW v2 extension fields.
+inline constexpr size_t   SBPOW_PUBKEY_SIZE       = 33;   // secp256k1 compressed
+inline constexpr size_t   SBPOW_SIGNATURE_SIZE    = 64;   // BIP-340 Schnorr
+inline constexpr size_t   SBPOW_HEADER_EXT_SIZE   =
+    SBPOW_PUBKEY_SIZE + SBPOW_SIGNATURE_SIZE;             // 97 bytes
 
 // ---------------------------------------------------------------------------
 // BlockHeader
@@ -49,21 +80,52 @@ struct BlockHeader {
     uint64_t nonce{0};                // ConvergenceX nonce
     int64_t  height{0};               // explicit block height
 
+    // V11 Phase 2 — SbPoW v2 extension (used iff version == 2).
+    // For v1 headers these are zero-filled and ignored by serialization.
+    std::array<uint8_t, SBPOW_PUBKEY_SIZE>     miner_pubkey{};
+    std::array<uint8_t, SBPOW_SIGNATURE_SIZE>  miner_signature{};
+
     // -----------------------------------------------------------------------
     // Serialization (for hashing and wire protocol)
     // -----------------------------------------------------------------------
 
-    /// Serialize header to exactly 96 bytes.
+    /// Append the wire-format serialization of this header to `out`.
+    /// Version-aware:
+    ///   version == 1 → writes 96 bytes (legacy v1 layout).
+    ///   version == 2 → writes 193 bytes (96 v1 bytes + 97-byte SbPoW ext).
+    /// Any other version is a programming error and the call is a no-op
+    /// (the standalone Serialize* helpers will then surface the error).
     void SerializeTo(std::vector<Byte>& out) const;
 
-    /// Serialize header to a fixed 96-byte array.
+    /// V1-only convenience returning the fixed 96-byte array.
+    /// Aborts if version != 1 — kept for backward compat with existing
+    /// callers that use a v1 header. New code should prefer SerializeBytes().
     std::array<Byte, BLOCK_HEADER_SIZE> Serialize() const;
 
-    /// Deserialize from buffer at given offset.
-    /// Returns false if not enough bytes.
+    /// Version-aware general-purpose byte serializer.
+    /// Returns 96 bytes for v1 and 193 bytes for v2; empty vector for an
+    /// unknown version (the v2 tests assert this rejection).
+    std::vector<Byte> SerializeBytes() const;
+
+    /// Streaming deserialize from `data` starting at `offset`.
+    /// Reads the version field first, then 96 or 193 bytes accordingly.
+    /// Used by Block::DeserializeFrom which expects more bytes after the
+    /// header (tx_count + transactions). Returns false on:
+    ///   - insufficient bytes for version field,
+    ///   - unknown version,
+    ///   - insufficient bytes for the chosen version's body.
     static bool DeserializeFrom(
         const std::vector<Byte>& data,
         size_t& offset,
+        BlockHeader& out,
+        std::string* err = nullptr);
+
+    /// Strict standalone deserialize: `buffer.size()` MUST equal exactly
+    /// 96 (and version field must be 1) or exactly 193 (and version
+    /// must be 2). Any size or version mismatch fails.
+    /// Used by tests that hold a single-header buffer.
+    static bool DeserializeStandalone(
+        const std::vector<Byte>& buffer,
         BlockHeader& out,
         std::string* err = nullptr);
 
@@ -72,6 +134,11 @@ struct BlockHeader {
     // -----------------------------------------------------------------------
 
     /// Compute SHA256(SHA256(serialized_header)).
+    /// V1 hashes 96 bytes; v2 hashes 193 bytes (signature included).
+    /// IMPORTANT: SbPoW signature signs the ConvergenceX commit, NOT the
+    /// block_id, because block_id of a v2 header already includes the
+    /// signature inside the hashed bytes — signing block_id would be
+    /// circular. See docs/V11_PHASE2_DESIGN.md §1.4.
     Hash256 ComputeBlockHash() const;
 
     /// Hex string of block hash.

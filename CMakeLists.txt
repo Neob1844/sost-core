@@ -139,6 +139,11 @@ add_executable(test-casert-v11 tests/test_casert_v11.cpp)
 target_link_libraries(test-casert-v11 PRIVATE sost-core)
 add_test(NAME casert-v11 COMMAND test-casert-v11)
 
+# V11 Phase 2 — component C (SbPoW): structural header v2 serialization
+add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
+target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
+add_test(NAME sbpow-header-v2 COMMAND test-sbpow-header-v2)
+
 # V11 Phase 1 — component B (state-dependent dataset access)
 add_executable(test-convergencex-v11 tests/test_convergencex_v11.cpp)
 target_link_libraries(test-convergencex-v11 PRIVATE sost-core)
