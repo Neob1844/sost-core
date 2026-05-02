@@ -268,8 +268,12 @@ static void test_helper_compute_v11_cascade_drop() {
     TEST("elapsed=900  → drop 7",      compute_v11_cascade_drop(900)  == 7);
     TEST("elapsed=960  → drop 8",      compute_v11_cascade_drop(960)  == 8);
     TEST("elapsed=1500 → drop 17",     compute_v11_cascade_drop(1500) == 17);
-    TEST("elapsed=2940 → drop 41",     compute_v11_cascade_drop(2940) == 41);
-    TEST("elapsed=2940 covers H35→E7", compute_v11_cascade_drop(2940) >= 42 - 1);
+    // 41 drops from H35 reaches E6, not E7.
+    // 42 drops needed for H35 → E7 (3000s elapsed).
+    TEST("elapsed=2940 → drop 41 (H35 → E6, one above floor)",
+         compute_v11_cascade_drop(2940) == 41);
+    TEST("elapsed=3000 → drop 42 (H35 → E7, worst-case reaches floor)",
+         compute_v11_cascade_drop(3000) == 42);
     TEST("elapsed=5400 → drop 82",     compute_v11_cascade_drop(5400) == 82);
 
     // Edge: negative elapsed (clock skew) → 0.
