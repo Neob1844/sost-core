@@ -60,9 +60,27 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     const PubKeyHash&                         current_miner_pkh,
     int64_t                                   exclusion_window)
 {
+    // -----------------------------------------------------------------------
+    // C7.1 rule (revised from C6): the current block's winner is NO LONGER
+    // auto-excluded from their own block's lottery. The only exclusion is
+    // the recent-winner cooldown applied over the PREVIOUS `exclusion_window`
+    // blocks (heights [height - exclusion_window, height - 1]).
+    //
+    // Rationale: the C6 rule penalised a miner for finding the current
+    // block — even if they had been silent for a long time. Under the
+    // C7.1 rule, "if you didn't win any of the previous N blocks, you
+    // participate" is simpler, less punitive, and equivalent in the
+    // common case where a winning miner who keeps winning is naturally
+    // excluded by the previous-N-blocks cooldown.
+    //
+    // The `current_miner_pkh` parameter is retained for source-level
+    // compatibility with C6/C7 callers and tests; it is no longer
+    // consumed by this function. A future API revision may drop it.
+    // -----------------------------------------------------------------------
+    (void)current_miner_pkh;
+
     // Step 1: aggregate per-pkh stats over the chain view. Only blocks
-    // strictly before `height` count (the current block is supplied via
-    // current_miner_pkh and is excluded by rule 2 below).
+    // strictly before `height` count.
     //
     // std::map keyed by PubKeyHash gives a deterministic lex-sorted
     // iteration as a side-effect of std::array<uint8_t, 20>'s
@@ -88,7 +106,7 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // Step 2: build the recent-winner exclusion set in O(window) by
     // walking the same view once more and pulling out blocks whose
     // height falls into [height - exclusion_window, height - 1].
-    // Stored as a sorted-by-pkh std::set for deterministic membership.
+    // The current block (height == input.height) is NOT in this window.
     std::map<PubKeyHash, char> recent_winners;
     if (exclusion_window > 0) {
         const int64_t window_lo = height - exclusion_window;
@@ -101,13 +119,14 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
 
     // Step 3: filter and project. std::map iteration is in lex order
     // of the key, which is exactly the sort order we want.
+    //
+    // C7.1: current_miner_pkh is NOT auto-excluded here. They are
+    // excluded iff they appear in `recent_winners` (i.e. won a block
+    // in the previous `exclusion_window` heights).
     std::vector<LotteryEligibilityEntry> out;
     out.reserve(agg.size());
     for (const auto& kv : agg) {
         const auto& pkh = kv.first;
-        // Rule 2: current block's miner is excluded.
-        if (pkh == current_miner_pkh) continue;
-        // Rule 3: recent reward winners are excluded.
         if (exclusion_window > 0 && recent_winners.count(pkh)) continue;
         out.push_back(kv.second);
     }

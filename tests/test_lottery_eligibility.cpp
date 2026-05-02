@@ -73,20 +73,30 @@ static void test_empty_history() {
 }
 
 static void test_one_miner_is_current() {
-    printf("\n=== 2) One historical miner = current miner → excluded ===\n");
+    printf("\n=== 2) Sole historical miner = current miner, last win OUTSIDE window → eligible (C7.1) ===\n");
     auto A = mk_pkh(0xAA);
+    // A's last historical win is at height 60. Current height is 100,
+    // cap=5 window covers [95, 99]. A is NOT in the window, so under
+    // the C7.1 rule (no auto-exclusion of current miner) A IS eligible.
+    // (The C6 rule would have excluded A as current miner; C7.1 dropped
+    // that.)
     std::vector<LotteryMinedBlockView> blocks{
         mk_block(50, A), mk_block(60, A),
     };
     auto eligible = compute_lottery_eligibility_set(blocks, /*height=*/100, A);
-    TEST("only historical miner is current miner → eligible.empty()",
-         eligible.empty());
+    TEST("sole historical miner = current, no recent win → eligible (size 1)",
+         eligible.size() == 1);
+    TEST("eligible[0].pkh == A",
+         !eligible.empty() && eligible[0].pkh == A);
 }
 
 static void test_two_miners_one_current() {
-    printf("\n=== 3) Two historical, current = A → only B eligible ===\n");
+    printf("\n=== 3) Two historical, current = A, neither in window → BOTH eligible (C7.1) ===\n");
     auto A = mk_pkh(0xAA);
     auto B = mk_pkh(0xBB);
+    // A's last win = 40, B's last win = 50; current = 100, cap=5 → window [95, 99].
+    // Neither in the window. Under C7.1, A is NOT auto-excluded as the
+    // current miner — both A and B are eligible.
     std::vector<LotteryMinedBlockView> blocks{
         mk_block(20, A),
         mk_block(30, B),
@@ -94,14 +104,79 @@ static void test_two_miners_one_current() {
         mk_block(50, B),
     };
     auto eligible = compute_lottery_eligibility_set(blocks, /*height=*/100, A);
-    TEST("eligible has exactly one entry (B)", eligible.size() == 1);
-    TEST("eligible[0].pkh == B", !eligible.empty() && eligible[0].pkh == B);
+    TEST("eligible has exactly two entries (A and B)", eligible.size() == 2);
+    // The lex sort makes A precede B (mk_pkh(0xAA) < mk_pkh(0xBB) by
+    // raw byte compare on the first byte).
+    TEST("eligible[0].pkh == A (lex sorted)",
+         eligible.size() == 2 && eligible[0].pkh == A);
+    TEST("eligible[1].pkh == B",
+         eligible.size() == 2 && eligible[1].pkh == B);
+    TEST("blocks_mined for A == 2",
+         eligible.size() == 2 && eligible[0].blocks_mined == 2);
     TEST("blocks_mined for B == 2",
-         !eligible.empty() && eligible[0].blocks_mined == 2);
-    TEST("first_mined_height for B == 30",
-         !eligible.empty() && eligible[0].first_mined_height == 30);
+         eligible.size() == 2 && eligible[1].blocks_mined == 2);
+    TEST("last_mined_height for A == 40",
+         eligible.size() == 2 && eligible[0].last_mined_height == 40);
     TEST("last_mined_height for B == 50",
-         !eligible.empty() && eligible[0].last_mined_height == 50);
+         eligible.size() == 2 && eligible[1].last_mined_height == 50);
+}
+
+// ---------------------------------------------------------------------------
+// 3b — C7.1 explicit cases (A / B / C from spec)
+// ---------------------------------------------------------------------------
+static void test_c71_case_a_alice_h_minus_20() {
+    printf("\n=== 3b-A) C7.1 case A: Alice last won at H-20 → eligible ===\n");
+    // Spec case A: Alice won at H-20, current = Alice, cap=5.
+    // Window [H-5, H-1] does NOT contain H-20 → Alice eligible.
+    auto Alice = mk_pkh(0xA0);
+    const int64_t H = 200;
+    std::vector<LotteryMinedBlockView> blocks{
+        mk_block(H - 20, Alice),
+    };
+    auto eligible = compute_lottery_eligibility_set(blocks, H, Alice, /*window=*/5);
+    TEST("Alice (last win H-20, current miner) → eligible (size 1)",
+         eligible.size() == 1);
+    TEST("eligible[0].pkh == Alice",
+         !eligible.empty() && eligible[0].pkh == Alice);
+}
+
+static void test_c71_case_b_alice_h_minus_3() {
+    printf("\n=== 3b-B) C7.1 case B: Alice won at H-3 → excluded by recent-winner (NOT by current miner) ===\n");
+    // Spec case B: Alice won at H-3 AND is current miner. Window
+    // [H-5, H-1] contains H-3 → Alice excluded by rule 2. The C7.1
+    // distinction: she is excluded by 'recent winner', NOT by 'current
+    // miner'. Adding any other miner with no recent wins to the
+    // history demonstrates that other addresses still pass.
+    auto Alice = mk_pkh(0xA0);
+    auto Bob   = mk_pkh(0xB0);
+    const int64_t H = 200;
+    std::vector<LotteryMinedBlockView> blocks{
+        mk_block(H - 50, Bob),
+        mk_block(H - 3,  Alice),    // Alice in [H-5, H-1] → excluded
+    };
+    auto eligible = compute_lottery_eligibility_set(blocks, H, Alice, /*window=*/5);
+    TEST("Alice excluded by recent-winner rule (H-3 in [H-5, H-1])",
+         eligible.size() == 1 && eligible[0].pkh == Bob);
+    TEST("is_recent_reward_winner(Alice, H, 5) confirms exclusion path",
+         is_recent_reward_winner(blocks, Alice, H, 5));
+}
+
+static void test_c71_case_c_alice_h_minus_6() {
+    printf("\n=== 3b-C) C7.1 case C: Alice won at H-6 → eligible (just outside window) ===\n");
+    // Spec case C: Alice won at H-6 AND is current miner. Window
+    // [H-5, H-1] does NOT contain H-6 → Alice eligible.
+    auto Alice = mk_pkh(0xA0);
+    const int64_t H = 200;
+    std::vector<LotteryMinedBlockView> blocks{
+        mk_block(H - 6, Alice),
+    };
+    auto eligible = compute_lottery_eligibility_set(blocks, H, Alice, /*window=*/5);
+    TEST("Alice (last win H-6, current miner) → eligible (size 1)",
+         eligible.size() == 1);
+    TEST("eligible[0].pkh == Alice (just outside cooldown window)",
+         !eligible.empty() && eligible[0].pkh == Alice);
+    TEST("is_recent_reward_winner(Alice, H, 5) → false (H-6 outside)",
+         !is_recent_reward_winner(blocks, Alice, H, 5));
 }
 
 static void test_recent_winner_exclusion_cap5() {
@@ -286,25 +361,31 @@ static void test_phase2_dormant_unaffected() {
          V11_PHASE2_HEIGHT == INT64_MAX);
 }
 
-static void test_current_miner_always_excluded() {
-    printf("\n=== 10) Current miner always excluded — even if last won outside window ===\n");
+static void test_current_miner_NOT_excluded_outside_window() {
+    printf("\n=== 10) C7.1: current miner is NO LONGER auto-excluded (was true under C6) ===\n");
     auto A = mk_pkh(0xA0);
     auto B = mk_pkh(0xB0);
     // A won block 50; current height is 100; cap=5 window covers [95, 99].
-    // A's last win is outside the window — but A IS the current miner.
-    // Rule 2 (current miner exclusion) takes precedence over rule 3.
+    // A's last win (50) is OUTSIDE the window. Under C6 the rule was
+    // "current miner is always excluded" → A would be filtered out.
+    // Under C7.1 the rule is "excluded only if won in the previous N
+    // blocks" → A is eligible because A is not in [95, 99].
     std::vector<LotteryMinedBlockView> blocks{
         mk_block(50, A),
         mk_block(80, B),
     };
     auto eligible = compute_lottery_eligibility_set(
         blocks, /*height=*/100, /*current_miner=*/A, /*window=*/5);
-    TEST("eligible has exactly 1 entry (B)", eligible.size() == 1);
-    TEST("eligible[0] is B (A excluded as current miner)",
-         !eligible.empty() && eligible[0].pkh == B);
+    TEST("eligible has 2 entries (both A and B — A not auto-excluded)",
+         eligible.size() == 2);
+    // Lex sort: A (0xA0) < B (0xB0).
+    TEST("eligible[0] is A (current miner included under C7.1)",
+         eligible.size() == 2 && eligible[0].pkh == A);
+    TEST("eligible[1] is B",
+         eligible.size() == 2 && eligible[1].pkh == B);
 
     // Sanity: A is NOT a recent reward winner under cap=5 (50 < 95).
-    TEST("is_recent_reward_winner(A, h=100, w=5) → false",
+    TEST("is_recent_reward_winner(A, h=100, w=5) → false (50 outside [95,99])",
          !is_recent_reward_winner(blocks, A, 100, 5));
 }
 
@@ -347,17 +428,20 @@ static void test_benchmark_10k_blocks() {
 }
 
 int main() {
-    printf("=== test_lottery_eligibility (V11 Phase 2 C6) ===\n");
+    printf("=== test_lottery_eligibility (V11 Phase 2 C7.1) ===\n");
     test_empty_history();
     test_one_miner_is_current();
     test_two_miners_one_current();
+    test_c71_case_a_alice_h_minus_20();
+    test_c71_case_b_alice_h_minus_3();
+    test_c71_case_c_alice_h_minus_6();
     test_recent_winner_exclusion_cap5();
     test_duplicate_miner_history();
     test_deterministic_lex_sort();
     test_winner_selection_determinism_and_sensitivity();
     test_sybil_neutrality();
     test_phase2_dormant_unaffected();
-    test_current_miner_always_excluded();
+    test_current_miner_NOT_excluded_outside_window();
     test_benchmark_10k_blocks();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);

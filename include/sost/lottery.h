@@ -17,11 +17,12 @@
 // reorg across the activation boundary cannot shift the trigger
 // pattern. See is_lottery_block below.
 //
-// Eligibility (C6+):
+// Eligibility (C7.1 rule, simplified from the C6 draft):
 //   addrs with at least 1 block in [0, h-1]
 //     minus any block-reward winner in
-//       [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1]   (= 5 default)
-//     minus the miner of block h itself.
+//       [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1]   (= 5 default).
+// (The current block's winner is NO longer auto-excluded; they pass
+// iff they were not also a winner in the cooldown window above.)
 //
 // RNG domain tag (C6+):
 //   "SOST_LOTTERY_V11" — defined as LOTTERY_RNG_DOMAIN below; consumed
@@ -166,18 +167,25 @@ struct LotteryEligibilityResult {
 //   height               — the block whose lottery we're computing.
 //                          (NOT yet in `blocks`.)
 //   current_miner_pkh    — the pkh of the miner who won block `height`
-//                          itself; ALWAYS excluded from this lottery.
+//                          itself. RETAINED for API compatibility with
+//                          C6/C7 callers but NO LONGER used by this
+//                          function (see C7.1 rule below).
 //   exclusion_window     — how many recent blocks count for the
 //                          recent-winner exclusion. Defaults to
 //                          LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW
 //                          (= 5 in the C5 default).
 //
-// Eligibility rule:
+// Eligibility rule (C7.1, revised from C6):
 //   1. Address has won >= 1 block before `height`.
-//   2. Address is NOT current_miner_pkh.
-//   3. Address has NOT won a block in
-//        [height - exclusion_window, height - 1].
-//      (When exclusion_window == 0, only rule 2 applies on top of 1.)
+//   2. Address has NOT won a block in
+//        [height - exclusion_window, height - 1]   (the previous N blocks).
+//      (When exclusion_window == 0, only rule 1 applies.)
+//
+// The current block winner CAN enter the lottery iff their address
+// passes rule 2 (i.e. they did not also win any of the previous
+// `exclusion_window` blocks). Under the C5 default of 5, a winning
+// miner whose previous win was at H-6 or earlier IS eligible; one
+// whose previous win was at H-1..H-5 is excluded by rule 2.
 //
 // Output:
 //   Vector of entries sorted lex by raw pkh bytes (stable across

@@ -175,9 +175,10 @@ For a block at height `h`, the eligibility set `E(h)` is computed deterministica
 E(h) = { addr |
     addr won the miner subsidy of at least 1 block in [0, h-1]
     AND  addr did not win a block reward (miner subsidy OR lottery prize)
-         in [h - LOTTERY_REWARD_EXCLUSION_WINDOW, h-1]
-    AND  addr is not the miner of block h itself }
+         in [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1] }
 ```
+
+**C7.1 revision (was a 3-clause rule; now 2 clauses):** the third clause `AND addr is not the miner of block h itself` has been removed. The current block's winner CAN now enter the lottery iff their address passes the recent-winner cooldown — i.e. they did not also win any of the previous `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks. Rationale: the prior C6 rule penalised a miner for finding the current block even after a long silence; under C7.1 the rule is simpler ("if you didn't win in the previous N blocks, you participate") and a miner who keeps winning is naturally excluded by the cooldown.
 
 Constants:
 - `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5` blocks (C5 default — provisional, **C9 confirmation pending**). Was `30` in earlier drafts; revised after the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4 showed `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta among evaluated variants while honest-miner median lottery share was essentially flat across all windows.
@@ -483,10 +484,12 @@ inline constexpr int32_t  LOTTERY_REWARD_EXCLUSION_WINDOW  = 30;
 // Trigger schedule (with H = V11_PHASE2_HEIGHT, W = LOTTERY_HIGH_FREQ_WINDOW):
 //   For h in [H, H+W):       triggered  ⟺  (h - H) % 3 != 2     → 2-of-3 (bootstrap)
 //   For h >= H + W:          triggered  ⟺  (h - H) % 3 == 0     → 1-of-3 (steady state)
-// Selection seed tag: "SOST/POP-LOTTERY/v11"
+// Selection seed tag: "SOST_LOTTERY_V11"
 // Eligibility set:    addrs with at least 1 block in [0, h-1]
-//                     minus any block-reward winner in [h-W30, h-1]   (W30 = LOTTERY_REWARD_EXCLUSION_WINDOW)
-//                     minus the miner of block h itself
+//                     minus any block-reward winner in
+//                       [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1].
+// (C7.1: the miner of block h itself is NO LONGER auto-excluded —
+//  they pass iff they were not also a winner in the cooldown window.)
 // Winner pick:        deterministic (lex sort + uint64 mod)
 ```
 
@@ -511,3 +514,4 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3 — restructured V11 into **two phases**. Phase 1 (block 7,000) ships A + B only (extended cASERT cascade + state-dependent dataset access). Phase 2 (height TBD, no calendar pressure) ships C + D (SbPoW + PoP lottery + jackpot rollover). Lottery frequency: 2-of-3 for the first `LOTTERY_HIGH_FREQ_WINDOW = 5000` blocks after Phase 2 activation, then 1-of-3 permanently. §10.5 jackpot rollover reclassified from "deferred fork" to "Phase 2 component D". §11 constants split into 11.1 (Phase 1, landed) and 11.2 (Phase 2, design-only). §3.7 / §4.8 activation rewritten to reference `V11_PHASE2_HEIGHT`. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3.2 — recent-winner exclusion window provisional default revised from 30 to **5** blocks (`LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`) following the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4. `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta in the realistic network shape; `cap_5` zeros out the dominant's no-sybil lottery share with ~0 % rollover rate and a smaller sybil-incentive delta. **Final value pending C9 confirmation.** §4.3, §5.2, §5.3 prose updated to reference the constant rather than a hard-coded 30. Public banner updated to v83 with matching wording. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (which remains `INT64_MAX`). |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.3 — eligibility rule simplified (C7.1). The third clause "addr is not the miner of block h itself" has been **removed** from §4.3. Under the C7.1 rule, the current block winner CAN enter their own block's lottery iff they did not also win any of the previous `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` (= 5) blocks. Rationale: the prior auto-exclusion penalised a miner for finding the current block even after a long silence; the simpler "if you didn't win in the previous N blocks, you participate" rule is more permissive in benign cases and equivalent in the common case (a miner who keeps winning is naturally excluded by the cooldown). `compute_lottery_eligibility_set()` no longer consumes its `current_miner_pkh` parameter (kept for API source-compat). Public banner updated to v85. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (still `INT64_MAX`). |
