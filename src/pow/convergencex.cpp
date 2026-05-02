@@ -283,7 +283,7 @@ CXAttemptResult convergencex_attempt(
     const uint8_t* scratch, size_t scratch_len,
     const Bytes32& block_key, uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params, const uint8_t* header_core,
-    int32_t epoch)
+    int32_t epoch, int64_t height)
 {
     CXAttemptResult res{}; res.is_stable = false; res.stability_metric = 0;
     int32_t n = params.cx_n;
@@ -363,8 +363,21 @@ CXAttemptResult convergencex_attempt(
         int32_t m2 = mix_from_scratch(scratch, scratch_len, idx2);
         int32_t m3 = mix_from_scratch(scratch, scratch_len, idx3);
 
+        // V11 (height >= CASERT_V11_HEIGHT): the dataset index is
+        // derived from the current `state` (SHA-256 of previous round
+        // output), making consecutive dataset reads unpredictable from
+        // outside the round. Pre-V11: the index is `r % dataset_size`,
+        // a strictly increasing pattern that the CPU prefetcher can
+        // anticipate. The state-dependent variant closes that gap.
+        size_t v11_ds_idx;
+        if (height >= CASERT_V11_HEIGHT) {
+            uint64_t st_lo = read_u32_le(state.data() + 8);
+            v11_ds_idx = (size_t)(st_lo % dataset_size);
+        } else {
+            v11_ds_idx = (size_t)r % dataset_size;
+        }
         uint64_t prog_state = program.execute(
-            g_cx_dataset.memory[(size_t)r % dataset_size], (size_t)r);
+            g_cx_dataset.memory[v11_ds_idx], (size_t)r);
         m0 ^= (int32_t)(prog_state & 0xFFFFFFFF);
         m1 ^= (int32_t)(prog_state >> 32);
 
@@ -821,7 +834,7 @@ void generate_transcript_witnesses(
     uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params,
     const uint8_t* header_core,
-    int32_t epoch)
+    int32_t epoch, int64_t height)
 {
     int32_t n = params.cx_n;
     int32_t rounds = params.cx_rounds;
@@ -914,7 +927,17 @@ void generate_transcript_witnesses(
         int32_t m2 = mix_from_scratch(scratch, scratch_len, idx2);
         int32_t m3 = mix_from_scratch(scratch, scratch_len, idx3);
 
-        uint64_t ds_val = g_cx_dataset.memory[(size_t)r % dataset_size];
+        // V11 — see corresponding branch in convergencex_attempt.
+        // Witness generation MUST mirror the attempt code or the
+        // verifier and miner produce different commits.
+        size_t v11_ds_idx;
+        if (height >= CASERT_V11_HEIGHT) {
+            uint64_t st_lo = read_u32_le(state.data() + 8);
+            v11_ds_idx = (size_t)(st_lo % dataset_size);
+        } else {
+            v11_ds_idx = (size_t)r % dataset_size;
+        }
+        uint64_t ds_val = g_cx_dataset.memory[v11_ds_idx];
         uint64_t prog_out = program.execute(ds_val, (size_t)r);
 
         // Capture BEFORE program mixing (raw scratch values)

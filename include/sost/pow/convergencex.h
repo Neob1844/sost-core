@@ -90,16 +90,22 @@ Bytes32 merkle_root_16(const std::vector<Bytes32>& leaves);
 Bytes32 compute_block_key(const Bytes32& prev_hash);
 Bytes32 compute_block_id(const uint8_t* full_header, size_t hdr_len, const Bytes32& commit);
 
-// Full attempt
+// Full attempt.
+// `height` is the height of the block being mined / validated. It
+// must match between miner and validator so consensus rules at that
+// height (e.g. V11 state-dependent dataset access from
+// CASERT_V11_HEIGHT onwards) produce the same hash. Use 0 for
+// genesis; pre-V11 heights ignore the new branch and behave as before.
 CXAttemptResult convergencex_attempt(
     const uint8_t* scratch, size_t scratch_len,
     const Bytes32& block_key, uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params, const uint8_t* header_core,
-    int32_t epoch);
+    int32_t epoch, int64_t height = 0);
 
 // Generate Transcript V2 witnesses for a winning block.
 // Replays challenged rounds to build segment_proofs + round_witnesses.
-// Called ONCE per winning block (not per attempt).
+// Called ONCE per winning block (not per attempt). `height` carries
+// the same V11 activation semantics as convergencex_attempt.
 void generate_transcript_witnesses(
     CXAttemptResult& res,
     const uint8_t* scratch, size_t scratch_len,
@@ -107,7 +113,7 @@ void generate_transcript_witnesses(
     uint32_t nonce, uint32_t extra_nonce,
     const ConsensusParams& params,
     const uint8_t* header_core,
-    int32_t epoch);
+    int32_t epoch, int64_t height = 0);
 
 // Build merkle path for a leaf at given index in a tree of leaf_hashes.
 std::vector<Bytes32> build_merkle_path(const std::vector<Bytes32>& leaf_hashes, uint32_t index);
