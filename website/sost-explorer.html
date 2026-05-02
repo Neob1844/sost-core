@@ -423,6 +423,45 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </span>
     </div>
 
+    <!-- ============== READY · UPDATE BEFORE BLOCK 7,000 ============== -->
+    <div style="background:linear-gradient(135deg,rgba(74,222,128,0.18),rgba(74,222,128,0.04));border:2px solid #4ade80;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 18px rgba(74,222,128,.35)">
+      <div style="color:#4ade80;font-size:13px;font-weight:900;letter-spacing:2px;margin-bottom:8px;text-shadow:0 0 6px rgba(74,222,128,.5)">
+        ✅ PHASE 1 READY FOR ACTIVATION — MINERS, UPDATE NOW
+      </div>
+
+      <div style="color:var(--text);font-size:11.5px;line-height:1.75;margin-bottom:10px">
+        Phase 1 code is committed to <code>origin/main</code> and verified:
+      </div>
+
+      <div style="color:var(--text2);font-size:10.5px;line-height:1.85;margin-bottom:12px;padding-left:10px;border-left:2px solid rgba(74,222,128,.45)">
+        · <b style="color:#4ade80">37 / 37</b> V11 unit tests passing (<code>test-casert-v11</code> 29/29 + <code>test-convergencex-v11</code> 8/8)<br>
+        · Build verified on Linux x86_64 (VPS and WSL environments)<br>
+        · <b>Zero regressions</b> in the pre-existing test suite
+      </div>
+
+      <div style="color:#ffc857;font-size:11.5px;font-weight:700;line-height:1.7;margin-bottom:8px">
+        Activation: block 7,000 (~20 h from this update).
+      </div>
+
+      <div style="color:var(--text);font-size:11.5px;line-height:1.75;margin-bottom:6px">
+        <b>Update both your node AND your miner binaries before block 7,000:</b>
+      </div>
+
+      <pre style="background:rgba(0,0,0,.55);padding:10px 12px;border-radius:3px;font-size:11px;color:#a7f3d0;line-height:1.6;overflow-x:auto;margin:0 0 10px 0">cd &lt;your sost-core directory&gt;
+git pull origin main
+mkdir -p build-v11 &amp;&amp; cd build-v11
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)</pre>
+
+      <div style="color:var(--text2);font-size:10.5px;line-height:1.7;margin-bottom:6px">
+        If your node and miner run on separate machines (e.g. node on VPS, miner on local), <b style="color:#ffc857">update both</b>. The node validates against V11 rules; the miner produces blocks under V11 rules. Updating only one will cause your own blocks to be rejected by your own node after block 7,000.
+      </div>
+
+      <div style="color:var(--text2);font-size:10.5px;line-height:1.7">
+        If you do not update before block 7,000, your node will reject post-V11 blocks (V11 cascade rules differ from V10).
+      </div>
+    </div>
+
     <!-- ============== PHASE 1 BOX ============== -->
     <div style="background:linear-gradient(135deg,rgba(255,200,87,0.14),rgba(74,222,128,0.06));border:1px solid var(--gold);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(255,200,87,.18)">
       <div style="color:var(--gold);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
