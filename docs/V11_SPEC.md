@@ -384,6 +384,50 @@ The following are intentionally NOT part of V11:
 
 ---
 
+## 10.5 · Future enhancement (deferred): jackpot rollover
+
+This section documents an idea that is **NOT part of V11**. It is recorded here so reviewers see the design space and so the future implementation has a starting point.
+
+### Motivation
+§4.7 specifies that when the eligibility set `E(h)` is empty on a triggered block, the lottery amount falls back to the normal `25 / 25` Gold Vault / PoPC Pool split. An alternative is to **roll the unpaid lottery amount over** to the next triggered block where `E(h)` is non-empty, accumulating into a pending jackpot.
+
+### Why not in V11
+1. **Empirically rare in current conditions.** With 6,850+ blocks of history and ≥ 12 distinct addresses that have mined at least one block since genesis, `E(h) = ∅` requires every one of those addresses to have won a block reward in the last 30 blocks. Realistic frequency: < 1 per 10,000 blocks. Solving an event that almost never fires is poor scope discipline for V11.
+2. **Reorg-safe state tracking is non-trivial.** A `pending_lottery_amount` becomes part of the consensus state and must serialize, validate cross-node, and rebobinarse on reorg. This is 1-2 sprints of work, not hours.
+3. **V11 already promises four consensus changes (A/B/C/D)**. Adding a fifth raises per-component gate failure risk and pushes total scope past the safe deployment window.
+
+### Sketch of the design (for the future fork that activates this)
+- New chain-state variable: `pending_lottery_amount` (stocks).
+- Initialized to 0 at genesis (or at the activation height for the rollover fork).
+- Update rule on each block at `height >= LOTTERY_HEIGHT`:
+  - If trigger function says lottery and `E(h) ≠ ∅` → winner gets `lottery_share(h) + pending`; `pending := 0`.
+  - If trigger function says lottery and `E(h) = ∅` → `pending += lottery_share(h)`; coinbase has 3 normal outputs (Gold Vault and PoPC Pool get 0 for that block, the protocol-side allocation goes to `pending`); no lottery winner output.
+  - If trigger function says NO lottery for this block → `pending` unchanged; coinbase has the standard 3 outputs (`50 / 25 / 25`).
+- Validation: every full node recomputes `pending` from genesis (or last trusted checkpoint) and rejects blocks whose coinbase shape disagrees.
+- Reorg: the rebobinado of `pending` follows the same rebobinado as UTXO state — when a block is undone, its effect on `pending` is reversed.
+- Cap: **none** by default. The user-floor for catastrophic edge cases (e.g. 1,000 blocks of empty `E`) can be a separate constant.
+
+### Activation criteria (proposed for the future fork)
+The rollover fork should target **block 10,000** (the natural package with PoPC Model A + B operational activation, dynamic fees, and the lottery-frequency change to 1-of-3) **only if** the V11 production data shows:
+
+```
+fallback_to_vault_popc_count(per 1000 blocks) > 1
+```
+
+If the V11 fallback rule fires more than once per thousand blocks for any sustained window, the rollover fork becomes justified. Otherwise the V11 rule (fallback) is sufficient and the rollover stays deferred indefinitely.
+
+### Constants the rollover fork would add
+```cpp
+inline constexpr int64_t  POP_LOTTERY_ROLLOVER_HEIGHT  = 10000;  // tentative
+// pending_lottery_amount is part of chain state — not a constant.
+// Serialization belongs in the block header or the chain undo data;
+// final placement TBD when the rollover spec is opened.
+```
+
+These constants are NOT added to `params.h` for V11. They land at the same time as the rollover implementation, in a dedicated commit.
+
+---
+
 ## 11 · Constants required by V11 implementation
 
 The following constants must be added to `include/sost/params.h` **at the time the corresponding component lands** (not before — adding placeholders without logic generates noise and risks shipping a binary with constants that nothing uses).
@@ -436,3 +480,4 @@ These constants are documented here so reviewers can audit values against the ba
 |---|---|---|
 | 2026-05-02 | SOST consensus working group | DRAFT v1 — initial Phase 2 spec (SbPoW + lottery for block 10,000) |
 | 2026-05-02 | SOST consensus working group | DRAFT v2 — restructured into V11 spec; SbPoW moved to block 7,000 with per-component independent activation; lottery eligibility widened to "≥1 block since genesis"; exclusion strengthened to "any block-reward winner in last 30"; added §5 honest mathematical analysis distinguishing Sybil regimes; added §11 constants list |
+| 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
