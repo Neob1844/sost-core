@@ -406,101 +406,73 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- NETWORK STATUS + PoPC REWARD OUTLOOK -->
+<!-- V11 HARD FORK BANNER — block 7000 -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(74,222,128,0.06),rgba(34,211,238,0.04));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 18px rgba(74,222,128,.25);">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.7);animation:pulse 2s ease infinite"></span>
-      <span style="color:#4ade80;font-size:11px;font-weight:800;letter-spacing:2px">// NETWORK STATUS &mdash; PROTOCOL HEALTHY, REWARDS COMING TO HOLDERS VIA PoPC</span>
+  <div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(255,200,87,0.06));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 24px rgba(74,222,128,.4);">
+
+    <!-- SLOGAN ROJO PULSE -->
+    <div style="text-align:center;margin-bottom:14px;padding:10px 14px;background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.55);border-radius:4px;animation:pulse 1.8s ease infinite;box-shadow:0 0 14px rgba(251,1,13,.35)">
+      <span style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(251,1,13,0.6)">
+        ⚡ NUEVOS SISTEMAS DE RECOMPENSAS DESDE EL BLOQUE 7,000 ⚡
+      </span>
     </div>
-    <div style="color:var(--text2);font-size:11px;line-height:1.7">
 
-      <b style="color:var(--text)">Diagnostic (last 40 blocks).</b>
-      Top address holds <b style="color:var(--text)">92.5 %</b> of recent blocks, and concentration has been rising across windows
-      (<b style="color:var(--text)">43 % &rarr; 75 % &rarr; 92.5 %</b>). The protocol is behaving exactly as designed:
-      <b style="color:var(--text)">mean block time on target (598 s)</b>, V10 cascade rule
-      <b style="color:var(--text)">100 % compliant</b>, bitsQ stable at <code>1.188.551 / 18.136 bits</code>.
-      The network is currently dominated by one operator at <b style="color:var(--text)">hashrate level</b>
-      &mdash; not by protocol exploit. cASERT, the granular relief cascade and the lag controller
-      are all working inside their design envelope. The fix here is <b style="color:var(--text)">more miners</b>,
-      not a protocol change.<br><br>
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 12px rgba(74,222,128,.95);animation:pulse 2s ease infinite"></span>
+      <span style="color:#4ade80;font-size:13px;font-weight:800;letter-spacing:2px">// V11 HARD FORK · BLOCK 7,000 · REWARD ENGINE GOES LIVE</span>
+    </div>
 
-      <b style="color:#4ade80">The opportunity for everyone else is on the holder side.</b>
-      The <b style="color:var(--gold)">PoPC Pool</b> already accumulates <b style="color:var(--gold)">25 %</b> of every block
-      reward. Once <b style="color:var(--text)">PoPC activates (planned block &ge; 10,000)</b>, holders who lock SOST and
-      either custody real gold (<b>Model A</b>) or escrow on Ethereum (<b>Model B</b>) will earn rewards on
-      a published, on-chain rate schedule. Smaller miners and holders can position now &mdash; the early-tier
-      multiplier rewards the first 25 active contracts at the <b style="color:var(--text)">full rate</b>.<br><br>
-
-      <b style="color:var(--text)">Model A &mdash; Bonded Custody (real metal + SOST bond, audited via ConvergenceX entropy).</b>
-      Reward rates from <code>include/sost/popc.h</code> &middot; <code>POPC_REWARD_RATES</code>:
-      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
-        <tr style="background:rgba(255,255,255,.04);color:var(--text)">
-          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Duration</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Base reward</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Net to user (after 5&thinsp;% fee)</th>
-        </tr>
-        <tr><td style="padding:2px 8px">1 month</td><td style="text-align:right;padding:2px 8px">1.0 %</td><td style="text-align:right;padding:2px 8px">0.95 %</td></tr>
-        <tr><td style="padding:2px 8px">3 months</td><td style="text-align:right;padding:2px 8px">4.0 %</td><td style="text-align:right;padding:2px 8px">3.80 %</td></tr>
-        <tr><td style="padding:2px 8px">6 months</td><td style="text-align:right;padding:2px 8px">9.0 %</td><td style="text-align:right;padding:2px 8px">8.55 %</td></tr>
-        <tr><td style="padding:2px 8px">9 months</td><td style="text-align:right;padding:2px 8px">14.0 %</td><td style="text-align:right;padding:2px 8px">13.30 %</td></tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>12 months</b></td><td style="text-align:right;padding:3px 8px"><b>20.0 %</b></td><td style="text-align:right;padding:3px 8px"><b>19.00 %</b></td></tr>
-      </table>
-      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Min reward per contract: <b style="color:var(--text2)">10 SOST</b>. Max reward per contract: <b style="color:var(--text2)">1,000 SOST</b>. Reputation tiers cap maximum gold size: <b>0.5 oz / 1 oz / 3 oz / 10 oz</b> (New / Established / Trusted / Veteran). Random custody audits derived from ConvergenceX block entropy &mdash; no trusted oracles.</span><br>
-
-      <b style="color:var(--text)">Model B &mdash; Escrow (zero-custody-risk, half rates).</b>
-      Reward rates from <code>ESCROW_REWARD_RATES</code>:
-      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
-        <tr style="background:rgba(255,255,255,.04);color:var(--text)">
-          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Duration</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Base reward</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Net to user (after 5&thinsp;% fee)</th>
-        </tr>
-        <tr><td style="padding:2px 8px">1 month</td><td style="text-align:right;padding:2px 8px">0.4 %</td><td style="text-align:right;padding:2px 8px">0.38 %</td></tr>
-        <tr><td style="padding:2px 8px">3 months</td><td style="text-align:right;padding:2px 8px">1.5 %</td><td style="text-align:right;padding:2px 8px">1.43 %</td></tr>
-        <tr><td style="padding:2px 8px">6 months</td><td style="text-align:right;padding:2px 8px">3.5 %</td><td style="text-align:right;padding:2px 8px">3.33 %</td></tr>
-        <tr><td style="padding:2px 8px">9 months</td><td style="text-align:right;padding:2px 8px">5.5 %</td><td style="text-align:right;padding:2px 8px">5.23 %</td></tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>12 months</b></td><td style="text-align:right;padding:3px 8px"><b>8.0 %</b></td><td style="text-align:right;padding:3px 8px"><b>7.60 %</b></td></tr>
-      </table>
-      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Min reward per contract: <b style="color:var(--text2)">5 SOST</b>. Max reward per contract: <b style="color:var(--text2)">1,000 SOST</b>. Same durations as Model A; rates are deliberately halved because there is no real-custody risk &mdash; gold is escrowed on Ethereum mainnet (<code>SOSTEscrow V2</code> on Sepolia today, mainnet on activation).</span><br>
-
-      <b style="color:var(--text)">Dynamic participation tiers.</b>
-      The first contracts get the highest rates &mdash; the protocol tapers smoothly to prevent pool depletion as
-      adoption scales. Multiplier from <code>POPC_TIER_MULTIPLIERS</code>:
-      <table style="border-collapse:collapse;font-size:10px;margin-top:6px;color:var(--text2);width:100%;max-width:760px">
-        <tr style="background:rgba(255,255,255,.04);color:var(--text)">
-          <th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Active contracts</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Multiplier</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Effective Model A 12-mo (net)</th>
-          <th style="text-align:right;padding:3px 8px;border-bottom:1px solid var(--border-dim)">Effective Model B 12-mo (net)</th>
-        </tr>
-        <tr style="color:var(--text);background:rgba(74,222,128,0.07)"><td style="padding:3px 8px"><b>1 &ndash; 25</b></td><td style="text-align:right;padding:3px 8px"><b>100 %</b></td><td style="text-align:right;padding:3px 8px"><b>up to 19.00 %</b></td><td style="text-align:right;padding:3px 8px"><b>up to 7.60 %</b></td></tr>
-        <tr><td style="padding:2px 8px">26 &ndash; 50</td><td style="text-align:right;padding:2px 8px">75 %</td><td style="text-align:right;padding:2px 8px">14.25 %</td><td style="text-align:right;padding:2px 8px">5.70 %</td></tr>
-        <tr><td style="padding:2px 8px">51 &ndash; 100</td><td style="text-align:right;padding:2px 8px">50 %</td><td style="text-align:right;padding:2px 8px">9.50 %</td><td style="text-align:right;padding:2px 8px">3.80 %</td></tr>
-        <tr><td style="padding:2px 8px">101 &ndash; 200</td><td style="text-align:right;padding:2px 8px">30 %</td><td style="text-align:right;padding:2px 8px">5.70 %</td><td style="text-align:right;padding:2px 8px">2.28 %</td></tr>
-        <tr><td style="padding:2px 8px">201 &ndash; 500</td><td style="text-align:right;padding:2px 8px">15 %</td><td style="text-align:right;padding:2px 8px">2.85 %</td><td style="text-align:right;padding:2px 8px">1.14 %</td></tr>
-        <tr><td style="padding:2px 8px">501 &ndash; 1,000 (cap)</td><td style="text-align:right;padding:2px 8px">8 %</td><td style="text-align:right;padding:2px 8px">1.52 %</td><td style="text-align:right;padding:2px 8px">0.61 %</td></tr>
-      </table>
-      <span style="display:block;font-size:10px;color:var(--text3);margin-top:4px;line-height:1.6">Hard caps: <b style="color:var(--text2)">1,000 SOST per contract</b> and <b style="color:var(--text2)">1,000 active contracts</b> system-wide. Slash distribution if a participant fails an audit: 50 % to PoPC Pool (refills future rewards), 50 % to Gold Vault.</span><br>
-
-      <b style="color:var(--text)">Activation status.</b>
-      PoPC is implemented and documented (<code>src/popc.cpp</code>, <code>src/popc_model_b.cpp</code>,
-      <code>contracts/SOSTEscrow.sol</code>, <code>docs/POPC_MODEL_A_SPECIFICATION.md</code>) but
-      <b style="color:var(--text)">NOT yet active on mainnet</b>. Activation requires block height &ge; 10,000,
-      sustained network stability, sufficient independent participation, and explorer / wallet readiness.
-      Until then the PoPC Pool simply accumulates &mdash; current balance is visible on this dashboard
-      under <code>POPC POOL BALANCE</code>.<br><br>
-
-      <span style="color:var(--text3);font-size:10px">Bottom line for miners watching the concentration: hashrate dominance does not block PoPC participation.
-      Anyone holding SOST can claim a Model A or Model B contract on activation and lock in the full early-tier rate.
-      The PoPC Pool is funded by every block, including the dominant miner&rsquo;s &mdash; so 25 % of their reward
-      already feeds the future yield of every other holder.</span>
-
-      <div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
-        <span style="color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
-        <span style="display:block;font-size:11px;color:var(--text2);margin-top:4px;line-height:1.7">If you notice the explorer reloading itself from time to time, that is by design: new tools and updates are being incorporated continuously, and the page picks them up automatically so you always see the latest version. No action needed on your side &mdash; your session, RPC connection and miner address are preserved across reloads.</span>
+    <!-- THE REWARDS — central box, golden border -->
+    <div style="background:linear-gradient(135deg,rgba(255,200,87,0.14),rgba(74,222,128,0.06));border:1px solid var(--gold);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(255,200,87,.18)">
+      <div style="color:var(--gold);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">◆ FAIR-SHARE LOTTERY · 2 OF EVERY 3 BLOCKS</div>
+      <div style="color:var(--text);font-size:13px;line-height:1.75">
+        Starting at block 7,000, <b>2 out of every 3 blocks</b> redistribute <b style="color:var(--gold)">50&thinsp;% of their protocol-side allocation</b> (Gold Vault + PoPC Pool budget) to one eligible miner via deterministic lottery. Every miner that has produced a block in the last 30 blocks enters the pool automatically &mdash; no registration, no operator, no pool fee.<br><br>
+        <b style="color:#4ade80">The PoW block winner always keeps the full 50&thinsp;% miner share.</b> The lottery only redistributes what would otherwise have gone to Gold Vault and PoPC Pool on triggered blocks.
       </div>
     </div>
+
+    <!-- TECHNICAL COMPONENTS — condensed -->
+    <div style="color:var(--text2);font-size:11px;line-height:1.7;margin-bottom:12px">
+      <b style="color:var(--text)">A · Extended cASERT cascade.</b>
+      Replaces the V10 continuous formula with a piecewise table. Drops 1 → 2 → 3 → 4 → 5 → 6 profiles at elapsed thresholds 540 / 600 / 660 / 720 / 780 / 840 s. Floor stays at <code>E7</code>. bitsQ, anti-stall and lag clamp unchanged.<br><br>
+
+      <b style="color:var(--text)">B · State-dependent dataset access.</b>
+      The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round's SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
+
+      <b style="color:var(--text)">C · SbPoW — signature-bound proof.</b>
+      Each block header carries a public key and a signature over the PoW commitment. A block is valid only if (i) the signature verifies against that key and (ii) the coinbase miner output pays the address derived from that key. Post-hoc coinbase relabeling becomes impossible — identity is bound <b>before</b> the hash is committed.<br><br>
+
+      <b style="color:var(--text)">D · Lottery exclusions.</b>
+      The miner who won the current block cannot enter that block's lottery. Any address that won a lottery in the last 30 blocks cannot enter again. Selection seed is derived from the previous block hash; the result is reproducible by every node. If the eligibility set is empty, the redistribution falls back to the normal 25/25 Gold Vault / PoPC Pool split.
+    </div>
+
+    <!-- INVARIANTS PRESERVED -->
+    <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border-dim);padding:10px 14px;border-radius:3px;margin-bottom:14px">
+      <span style="color:var(--text);font-size:11px;font-weight:800;letter-spacing:1.5px">INVARIANTS PRESERVED</span>
+      <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-top:4px">
+        · PoW block winner keeps full <b>50&thinsp;% miner share</b><br>
+        · Total emission schedule unchanged — no supply change<br>
+        · <b>8 GB RAM minimum</b> for CPU mining unchanged<br>
+        · Block time target 600 s, coinbase maturity 1,000 blocks, bitsQ controller all unchanged<br>
+        · Pre-fork blocks (height &lt; 7,000) follow V10 rules exactly — no retroactive change
+      </div>
+    </div>
+
+    <!-- ACTIVATION GUARDRAIL -->
+    <div style="background:rgba(255,200,87,0.05);border-left:3px solid var(--gold);padding:9px 14px;border-radius:3px;margin-bottom:14px">
+      <span style="color:var(--gold);font-size:10.5px;font-weight:700;letter-spacing:1px">CONDITIONAL ACTIVATION</span>
+      <div style="color:var(--text2);font-size:10.5px;line-height:1.65;margin-top:3px">
+        V11 activates at block 7,000 <b>only if</b> the implementation passes unit tests, regression tests, deterministic simulation, fairness Monte Carlo, and chain-safety review. If any gate fails, activation is deferred to a later height. The fork will not be forced to meet the calendar.
+      </div>
+    </div>
+
+    <!-- HEADS-UP — auto-reload (retained) -->
+    <div style="padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
+      <span style="color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
+      <span style="display:block;font-size:11px;color:var(--text2);margin-top:4px;line-height:1.7">The explorer auto-refreshes every 60&thinsp;s when a new version is deployed. Your session, RPC connection and miner address are preserved across reloads.</span>
+    </div>
+
   </div>
 </div>
 <div class="dashboard" id="dashboard">
