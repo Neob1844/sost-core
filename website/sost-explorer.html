@@ -517,7 +517,9 @@ After that, permanently:                       1 of every 3 blocks</pre>
 
         Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
 
-        <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.
+        <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
+
+        <span style="color:var(--text3);font-style:italic">Clarification: a &ldquo;triggered block&rdquo; is a block where the lottery is scheduled by the frequency rules above (2 of every 3 blocks until 5,000 blocks after Phase 2 activation, 1 of every 3 blocks thereafter). Non-triggered blocks follow the normal 50/25/25 reward split and never carry lottery payouts, even if a pending jackpot exists. The jackpot waits for the next scheduled lottery block.</span>
       </div>
     </div>
 

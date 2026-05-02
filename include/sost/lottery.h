@@ -23,6 +23,38 @@
 // block with a non-empty eligibility set pays `share + pending`.
 #pragma once
 
+/*
+ * ============================================================
+ * pending_lottery_amount lifecycle  (Phase 2 invariant — DO NOT BREAK)
+ * ============================================================
+ *
+ * State variable: pending_lottery_amount (uint64_t, satoshis)
+ * Persistence:    chain state, with undo data for reorg safety
+ *
+ *   UPDATE   on is_lottery_block(h) && eligibility_set(h).empty():
+ *              pending_lottery_amount += gold_vault_reward(h) + popc_pool_reward(h)
+ *              vault & popc outputs = 0 in this block's coinbase
+ *
+ *   PAYOUT   on is_lottery_block(h) && !eligibility_set(h).empty():
+ *              winner_payout = lottery_share(h) + pending_lottery_amount
+ *              pending_lottery_amount = 0
+ *              vault & popc outputs = 0 in this block's coinbase
+ *
+ *   IDLE     on !is_lottery_block(h):
+ *              pending_lottery_amount unchanged
+ *              coinbase: 3 outputs, normal 50/25/25 split
+ *              lottery state NEITHER read nor written
+ *
+ * Implication: a non-triggered block NEVER pays out the jackpot, even
+ * if pending_lottery_amount > 0. Phase 2 implementation must respect
+ * this invariant — violating it changes consensus rules.
+ *
+ * Reorg behaviour: when a triggered block is disconnected, the previous
+ * value of pending_lottery_amount must be restored from undo data.
+ * Disconnecting a non-triggered block is a no-op for this variable.
+ * ============================================================
+ */
+
 #include "sost/types.h"
 #include "sost/tx_signer.h"   // PubKeyHash
 #include <cstdint>

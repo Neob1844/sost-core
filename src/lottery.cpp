@@ -9,6 +9,18 @@
 #include <cstdio>
 #include <cstdlib>
 
+/*
+ * Lottery module — Phase 2 (skeleton)
+ *
+ * IMPORTANT: read the lifecycle invariant in include/sost/lottery.h
+ * BEFORE implementing any of the functions below. The invariant
+ * describes when pending_lottery_amount is updated, paid out, or
+ * left idle — violating it changes consensus rules.
+ *
+ * Phase 2 is NOT yet active in consensus. V11_PHASE2_HEIGHT remains
+ * INT32_MAX (or equivalent sentinel) until Phase 2 ships.
+ */
+
 namespace sost::lottery {
 
 namespace {

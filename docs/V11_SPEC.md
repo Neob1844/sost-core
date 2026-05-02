@@ -440,6 +440,33 @@ These constants are NOT added to `params.h` for V11. They land at the same time 
 
 ---
 
+## 10.6 · Invariant — `pending_lottery_amount` lifecycle
+
+This section names the three discrete lifecycle states of the jackpot rollover variable, so any Phase 2 implementer can reference them by name in code, tests and review comments. The behaviour is the same as §10.5 — only the naming is new.
+
+`pending_lottery_amount` is a `uint64` chain-state variable that tracks SOST owed to future lottery winners when a triggered block has an empty eligibility set.
+
+- **UPDATE** — on `is_lottery_block(h) == true` AND `compute_eligibility_set(h).empty()`:
+  - `pending_lottery_amount += lottery_share_of_block` where `lottery_share_of_block = gold_vault_reward(h) + popc_pool_reward(h)` for that block's subsidy.
+  - Coinbase: 3 outputs. Miner gets 50%; Gold Vault and PoPC Pool outputs receive 0; lottery slot empty.
+
+- **PAYOUT** — on `is_lottery_block(h) == true` AND `!compute_eligibility_set(h).empty()`:
+  - Winner receives `lottery_share_of_block + pending_lottery_amount`.
+  - `pending_lottery_amount := 0`.
+  - Coinbase: 4 outputs. Miner 50%; lottery winner gets the payout; Gold Vault and PoPC Pool outputs receive 0.
+
+- **IDLE** — on `is_lottery_block(h) == false`:
+  - `pending_lottery_amount` is **NEITHER read nor written**.
+  - Coinbase: 3 outputs, normal `50 / 25 / 25` split.
+
+**Implication for implementation**: a non-triggered block must never carry a lottery payout, even if `pending_lottery_amount > 0`. The jackpot is preserved across non-triggered blocks unchanged and waits for the next triggered block.
+
+**Reorg safety**: `pending_lottery_amount` MUST be persisted in undo data so reorgs restore the value correctly. Disconnecting an UPDATE or PAYOUT block restores the saved `pending_before_block`. Disconnecting an IDLE block is a no-op for this variable. See §10.5 *Mechanism · Reorg* and the testnet gates G4.1c / G4.3b / G4.4b.
+
+The same invariant is mirrored verbatim in `include/sost/lottery.h` (top-of-file comment) and pointed at from `src/lottery.cpp`, so any contributor reads it before touching consensus code.
+
+---
+
 ## 11 · Constants required by V11 implementation
 
 Constants are added to `include/sost/params.h` **at the time the corresponding component lands** (not before — adding placeholders without logic generates noise and risks shipping a binary with constants that nothing uses).

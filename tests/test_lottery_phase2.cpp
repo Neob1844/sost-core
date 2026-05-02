@@ -23,6 +23,26 @@ static int g_pass = 0, g_fail = 0;
 int main() {
     printf("=== test_lottery_phase2 (PHASE 2 SKELETON) ===\n");
 
+    // CRITICAL INVARIANT TESTS (TODO PHASE 2):
+    //
+    // 1. Non-triggered block with pending_lottery_amount > 0:
+    //    coinbase MUST be 3 outputs (normal split), NOT 4.
+    //    pending_lottery_amount MUST remain unchanged.
+    //    Test passes when: assert(coinbase.outputs.size() == 3 &&
+    //                             pending_after == pending_before)
+    //
+    // 2. Triggered block with empty eligibility set:
+    //    pending_lottery_amount += lottery_share.
+    //    No payout this block. Vault and popc outputs = 0.
+    //
+    // 3. Reorg disconnect of triggered block:
+    //    pending_lottery_amount restored to pre-block value.
+    //    Reorg disconnect of non-triggered block:
+    //    pending_lottery_amount unchanged.
+    //
+    // The full lifecycle invariant (UPDATE / PAYOUT / IDLE) lives in
+    // include/sost/lottery.h. Read it before wiring real assertions.
+
     // ---- §4.2 trigger schedule -----------------------------------
     printf("[trigger]\n");
     // (1) bootstrap window: 2-of-3 for first 5,000 blocks after H
