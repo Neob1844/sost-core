@@ -516,13 +516,11 @@ After that, permanently:                       1 of every 3 blocks</pre>
 
         <b style="color:var(--text)">Eligibility</b>: any address that has produced at least 1 block since genesis enters the lottery pool automatically. No registration, no operator, no fee.<br><br>
 
-        <b style="color:var(--text)">Exclusions</b>:<br>
-        &middot; The miner who won the current block cannot enter that block&rsquo;s lottery<br>
-        &middot; Any address that has won a block reward in the last <b>5</b> blocks (a <b>5-block cooldown</b>) cannot enter the lottery either<br><br>
+        <b style="color:var(--text)">Exclusion (single rule)</b>: an address is excluded from the lottery iff it won a block reward in the previous <b>5</b> blocks (the <b>5-block cooldown</b>). The current block itself does NOT count for cooldown — the miner who finds the current block may enter that block&rsquo;s lottery, provided that address did not also win any of the previous 5 blocks.<br><br>
 
         Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
 
-        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after preliminary Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. Final Phase 2 activation remains TBD.</span><br><br>
+        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after preliminary Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. An earlier draft also auto-excluded the current block winner; that auto-exclusion was dropped — a miner who finds the current block can still participate if they did not also win in the previous 5 blocks. Final Phase 2 activation remains TBD.</span><br><br>
 
         <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
 
