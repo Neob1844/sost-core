@@ -249,6 +249,14 @@ add_executable(test-lottery-eligibility tests/test_lottery_eligibility.cpp)
 target_link_libraries(test-lottery-eligibility PRIVATE sost-core)
 add_test(NAME lottery-eligibility COMMAND test-lottery-eligibility)
 
+# V11 Phase 2 — component D (Lottery): rollover state machinery.
+# Always built — pure functions, no Schnorr, no chain state writes
+# (StoredBlock / BlockUndo persistence is C8). Verifies IDLE / UPDATE
+# / PAYOUT transitions, undo symmetry, and overflow protection.
+add_executable(test-lottery-rollover tests/test_lottery_rollover.cpp)
+target_link_libraries(test-lottery-rollover PRIVATE sost-core)
+add_test(NAME lottery-rollover COMMAND test-lottery-rollover)
+
 # V11 Phase 2 — Schnorr-only test binaries. Gated behind
 # SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
 # verify_sbpow_signature, which require the libsecp256k1 schnorrsig

@@ -25,7 +25,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 #include <map>
+#include <string>
 
 namespace sost::lottery {
 
@@ -147,6 +149,109 @@ int64_t select_lottery_winner_index(
     const uint64_t roll = read_u64_le(seed.data());
     const uint64_t n    = (uint64_t)eligible.size();
     return (int64_t)(roll % n);
+}
+
+// ============================================================================
+// C7 — rollover state machinery (real, pure)
+// ============================================================================
+//
+// apply_lottery_block / undo_lottery_block are pure functions over
+// LotteryApplyInput / LotteryApplyResult. They do NOT touch StoredBlock,
+// BlockUndo, chain.json, coinbase, rewards, or any UTXO state. Wiring
+// the result into persistent chain state lands in C8 alongside the
+// coinbase shape change.
+
+LotteryApplyResult apply_lottery_block(const LotteryApplyInput& in) {
+    LotteryApplyResult r;
+    r.pending_before = in.pending_before;
+    r.lottery_amount = in.lottery_amount;
+
+    // ---- Validation: defensive, no aborts ----
+    if (in.pending_before < 0) {
+        r.ok = false;
+        r.error = "apply_lottery_block: pending_before < 0 ("
+                + std::to_string((long long)in.pending_before) + ")";
+        return r;
+    }
+    if (in.lottery_amount < 0) {
+        r.ok = false;
+        r.error = "apply_lottery_block: lottery_amount < 0 ("
+                + std::to_string((long long)in.lottery_amount) + ")";
+        return r;
+    }
+
+    // ---- IDLE — non-triggered block ----
+    // Critical invariant: a non-triggered block NEVER pays out the
+    // jackpot, even if pending_before > 0. Pending stays as-is.
+    if (!is_lottery_block(in.height, in.phase2_height)) {
+        r.triggered     = false;
+        r.paid_out      = false;
+        r.pending_after = in.pending_before;
+        // winner_pkh / winner_index already zero / -1 by default.
+        return r;
+    }
+
+    r.triggered = true;
+
+    // ---- Overflow guard for pending_before + lottery_amount ----
+    // Both operands are >= 0 (validated above). Use the standard signed
+    // overflow test: a + b overflows iff a > INT64_MAX - b.
+    if (in.lottery_amount > 0
+        && in.pending_before > std::numeric_limits<int64_t>::max() - in.lottery_amount) {
+        r.ok = false;
+        r.error = "apply_lottery_block: pending_before + lottery_amount "
+                  "would overflow int64_t (pending_before="
+                + std::to_string((long long)in.pending_before)
+                + ", lottery_amount="
+                + std::to_string((long long)in.lottery_amount) + ")";
+        // Leave pending_after at 0 — caller treats !ok as a hard reject.
+        return r;
+    }
+
+    // ---- UPDATE — triggered, eligibility set empty ----
+    if (in.eligible.empty()) {
+        r.paid_out      = false;
+        r.pending_after = in.pending_before + in.lottery_amount;
+        // winner_pkh / winner_index stay as default zero / -1.
+        return r;
+    }
+
+    // ---- PAYOUT — triggered, eligibility set non-empty ----
+    const int64_t idx = select_lottery_winner_index(
+        in.eligible, in.prev_block_hash, in.height);
+
+    // select_lottery_winner_index returns -1 only on empty input; we
+    // already filtered that. Defence in depth:
+    if (idx < 0 || (size_t)idx >= in.eligible.size()) {
+        r.ok = false;
+        r.error = "apply_lottery_block: select_lottery_winner_index returned "
+                "invalid index " + std::to_string((long long)idx)
+                + " for eligible.size()=" + std::to_string(in.eligible.size());
+        return r;
+    }
+
+    r.paid_out       = true;
+    r.winner_index   = idx;
+    r.winner_pkh     = in.eligible[(size_t)idx].pkh;
+    // Total payout is the historical pending plus the current block's share.
+    r.lottery_payout = in.pending_before + in.lottery_amount;
+    // After paying out, pending resets to zero.
+    r.pending_after  = 0;
+    return r;
+}
+
+int64_t undo_lottery_block(const LotteryApplyResult& applied) {
+    // Symmetric inverse of apply_lottery_block: the saved
+    // pending_before is the value the caller restores to its
+    // `pending_lottery_amount` storage on reorg.
+    //
+    // Note: this works correctly for ALL three branches —
+    //   IDLE     pending_after == pending_before  (no-op restore)
+    //   UPDATE   pending_after == pending_before + lottery_amount
+    //                            -> restore to pending_before
+    //   PAYOUT   pending_after == 0
+    //                            -> restore to pending_before
+    return applied.pending_before;
 }
 
 // ============================================================================

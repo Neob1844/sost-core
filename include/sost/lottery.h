@@ -232,6 +232,90 @@ std::optional<PubKeyHash> pick_winner(const Bytes32& prev_block_hash,
                                    int64_t height,
                                    const std::vector<PubKeyHash>& eligibility_sorted);
 
+// ---------------------------------------------------------------------------
+// V11 Phase 2 — rollover state machinery (C7, real, pure).
+// ---------------------------------------------------------------------------
+//
+// These structs and functions implement the per-block transition for
+// the jackpot rollover variable `pending_lottery_amount`. They are
+// pure: no chain state, no I/O, no persistence — the inputs are passed
+// in by value and the result carries every field a caller needs to
+// (a) apply the transition, (b) undo it on reorg, and (c) recompute
+// it deterministically.
+//
+// Invariant (mirrors include/sost/lottery.h top-of-file comment and
+// docs/V11_SPEC.md §10.6):
+//
+//   IDLE     on !is_lottery_block(h):
+//              pending_after = pending_before. NO payout. NO mutation.
+//              NEVER pays out the jackpot, even if pending_before > 0.
+//
+//   UPDATE   on is_lottery_block(h) && eligible.empty():
+//              pending_after = pending_before + lottery_amount.
+//              NO payout this block. Caller emits 0 to vault and popc
+//              outputs in the coinbase (C8).
+//
+//   PAYOUT   on is_lottery_block(h) && !eligible.empty():
+//              winner_index = select_lottery_winner_index(...).
+//              lottery_payout = pending_before + lottery_amount.
+//              pending_after = 0.
+//              Caller writes the payout into the lottery coinbase
+//              output (C8).
+//
+// Persistent integration with chain state (StoredBlock fields,
+// BlockUndo extension, chain.json serialization with backward-compat
+// defaults) is intentionally deferred to C8, where it lands together
+// with the coinbase shape change. The C7 pure functions are usable
+// from any in-memory caller (tests, future C8 wiring, future
+// validator).
+
+struct LotteryApplyInput {
+    int64_t                                     height;
+    int64_t                                     phase2_height;
+    int64_t                                     pending_before;
+    int64_t                                     lottery_amount;
+    PubKeyHash                                  current_miner_pkh;
+    Bytes32                                     prev_block_hash;
+    std::vector<LotteryEligibilityEntry>        eligible;
+};
+
+struct LotteryApplyResult {
+    bool        triggered{false};        // is_lottery_block(h) result
+    bool        paid_out{false};         // true iff a winner was chosen
+    bool        ok{true};                // false on input validation failure
+    int64_t     pending_before{0};       // copied from input for undo
+    int64_t     pending_after{0};        // post-block pending value
+    int64_t     lottery_amount{0};       // copied from input
+    int64_t     lottery_payout{0};       // 0 on IDLE/UPDATE; pending+amount on PAYOUT
+    int64_t     winner_index{-1};        // -1 on IDLE/UPDATE; valid on PAYOUT
+    PubKeyHash  winner_pkh{};            // zero pkh on IDLE/UPDATE
+    std::string error;                   // populated when !ok
+};
+
+// Apply the rollover state transition for one block.
+//
+// Validation:
+//   - in.pending_before  >= 0
+//   - in.lottery_amount  >= 0
+//   - pending_before + lottery_amount must not overflow int64_t
+//
+// On any of the above failing, the result has ok=false and `error`
+// describes the violation. State fields (pending_before, lottery_amount,
+// winner_pkh) are copied from the input where applicable so the caller
+// can log them for diagnostics.
+LotteryApplyResult apply_lottery_block(const LotteryApplyInput& in);
+
+// Undo helper for reorg paths.
+//
+// Returns the pre-block pending value, derived purely from the saved
+// LotteryApplyResult. The caller restores chain state by writing this
+// value back to its `pending_lottery_amount` storage. Symmetric with
+// apply_lottery_block: apply(...).pending_before == undo_lottery_block(...).
+//
+// Pure — does NOT touch chain state itself; does NOT recompute from
+// history.
+int64_t undo_lottery_block(const LotteryApplyResult& applied);
+
 // Jackpot rollover state. Lives in chain state (initialised to 0 at
 // V11_PHASE2_HEIGHT, advanced block-by-block, restored from undo data
 // on reorg). Cap: none.
