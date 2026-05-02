@@ -93,28 +93,65 @@ Miner invocation:
 ### Activation height — UNCHANGED at 10,000
 C11 was scoped to ALSO consider lowering `V11_PHASE2_HEIGHT` from
 10,000 to 7,050 (50 blocks past the Phase 1 cASERT V11 fork at
-7,000). That change is NOT in this commit. C3 wired the wallet-key
-flags and the validator-side SbPoW gate, but the miner-side does
-not yet emit a v2 BlockHeader (the fields `version`, miner pubkey
-and miner signature are not plumbed through to `submitblock`).
-Activating Phase 2 today would force every block submission to be
-rejected by the validator's SbPoW gate. The activation height stays
-at 10,000 until the v2-header miner emission lands.
+7,000). That change is NOT in this commit, and remains NOT in
+C12. The activation height stays at 10,000 until the owner
+explicitly green-lights a lower target (after re-verifying the
+chain-tip distance and run-out room remaining at decision time).
 
-### What unblocks moving activation to 7,050 (or any height)
-- Miner emits `version: 2` in the submitblock JSON.
-- Miner attaches the Schnorr signature of
-  `build_sbpow_message(prev, height, commit, nonce, extra_nonce, pkh)`
-  signed with the wallet key.
-- Node parses `pubkey` / `signature` fields from `submitblock` and
-  passes them to `ValidateSbPoW` (currently passes zero bytes).
-- After those land: re-run TAREA 8 verification matrix. If green,
-  drop activation to a height with >= 200 blocks of margin from the
-  current live tip and >= 50 blocks past `CASERT_V11_HEIGHT`.
+### Pre-Phase 2 mining (legacy, address-only)
+```
+sost-miner --address sost1<...> --rpc 127.0.0.1:18232
+```
 
-## Test posture
-- ON build: 12 / 12 targeted Phase 2 tests PASS + 38 / 42 full ctest
-- OFF build: 9 / 9 targeted PASS + 34 / 39 full ctest
+### Post-Phase 2 mining (wallet-backed, SbPoW required)
+```
+sost-miner --wallet /path/to/wallet.json \
+           --mining-key-label miner1 \
+           --rpc 127.0.0.1:18232
+```
+
+### Update commands (unchanged)
+```
+git pull
+cmake --build build-v11
+sudo systemctl restart sost-node
+sudo systemctl restart sost-miner
+```
+
+### C12 — miner SbPoW transport (RESOLVED)
+C12 closes the C11 blocker. The production miner now:
+- Emits `version: 2` in the submitblock JSON for every candidate
+  at `height >= V11_PHASE2_HEIGHT`.
+- Computes the Schnorr signature of
+  `sbpow::build_sbpow_message(prev, height, commit, nonce,
+   extra_nonce, miner_pubkey)` with the wallet-key privkey and
+  attaches both `miner_pubkey` (66 hex / 33 bytes) and
+  `miner_signature` (128 hex / 64 bytes) to the submitblock JSON.
+- Aborts the candidate before mining (with the `[MINER] FATAL:
+  Phase 2 active …` message) when the chain is at or past Phase 2
+  and `--wallet` / `--mining-key-label` were not supplied.
+
+The node-side parser reads `version` / `miner_pubkey` /
+`miner_signature` from the submitblock JSON, validates lengths
+(33 / 64 bytes) and hex-only character set, rejects malformed or
+missing fields with consensus-clean error messages, and feeds the
+parsed bytes into `ValidateSbPoW` (no more zero placeholders).
+v2 headers contribute their `version + pubkey + signature` to the
+block_id input bytes, so any tampered field changes the block_id.
+
+### What still gates activation (post-C12)
+- Owner GO on the activation-height drop. A C13 commit, when the
+  owner approves, will lower `V11_PHASE2_HEIGHT` from 10,000 to a
+  margin-respecting target (typically 7,050 = `CASERT_V11_HEIGHT`
+  + 50). C12 deliberately does NOT touch the constant.
+- Live RPC sanity check at deploy time — operators with active
+  miners must have wallet keys provisioned before the chain
+  reaches the (lower) activation height.
+
+## Test posture (C12)
+- ON build: 14 / 14 targeted Phase 2 tests PASS (incl. new
+  `phase2-sbpow-submit` integration test) + 40 / 44 full ctest
+- OFF build: 10 / 10 targeted PASS + 35 / 40 full ctest
 - Pre-existing failures (not introduced by V11): bond-lock, popc,
   escrow, dynamic-rewards, checkpoints — see
   docs/KNOWN_TEST_FAILURES.md

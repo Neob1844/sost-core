@@ -756,20 +756,40 @@ static void build_hc72(uint8_t out[72],
     write_u32_le(out + 68, bits);
 }
 
+// V11 Phase 2 (C12) — when version >= 2, append the SbPoW extension
+// (version word + miner_pubkey + miner_signature) to the legacy
+// 122-byte header. Pre-Phase 2 callers pass version=1 (the default)
+// and get the legacy bytes — block_id of all v1 blocks is unchanged.
 static std::vector<uint8_t> build_full_header_bytes(
     const uint8_t hc72[72],
     const Bytes32& checkpoints_root,
     uint32_t nonce_u32,
-    uint32_t extra_u32)
+    uint32_t extra_u32,
+    uint32_t version = 1,
+    const sost::sbpow::MinerPubkey*    miner_pubkey    = nullptr,
+    const sost::sbpow::MinerSignature* miner_signature = nullptr)
 {
     std::vector<uint8_t> buf;
-    buf.reserve(10 + 4 + 72 + 32 + 4 + 4);
+    buf.reserve(10 + 4 + 72 + 32 + 4 + 4 + (version >= 2 ? (4 + 33 + 64) : 0));
     append_magic(buf);
     append(buf, "HDR2", 4);
     append(buf, hc72, 72);
     append(buf, checkpoints_root);
     append_u32_le(buf, nonce_u32);
     append_u32_le(buf, extra_u32);
+    if (version >= 2) {
+        append_u32_le(buf, version);
+        if (miner_pubkey) {
+            buf.insert(buf.end(), miner_pubkey->begin(), miner_pubkey->end());
+        } else {
+            buf.insert(buf.end(), 33, (uint8_t)0);
+        }
+        if (miner_signature) {
+            buf.insert(buf.end(), miner_signature->begin(), miner_signature->end());
+        } else {
+            buf.insert(buf.end(), 64, (uint8_t)0);
+        }
+    }
     return buf;
 }
 
@@ -3512,9 +3532,73 @@ static bool process_block(const std::string& block_json) {
     Bytes32 commit32 = from_hex(commit_hex);
     Bytes32 croot32  = from_hex(croot_hex);
 
+    // V11 Phase 2 (C12) — parse the optional v2 SbPoW fields off the
+    // submitblock JSON. Wire format:
+    //   "version"          : int (1 or 2; defaults to 1 if absent for
+    //                        back-compat with legacy submitters).
+    //   "miner_pubkey"     : 66 hex chars  (33-byte secp256k1 compressed)
+    //   "miner_signature"  : 128 hex chars (64-byte BIP-340 Schnorr).
+    // Both fields are required when version >= 2 and ignored when v1.
+    // Reject paths (consensus-clean — never crash the node):
+    //   - non-hex character          → reject
+    //   - wrong byte length          → reject
+    //   - v2 missing pubkey/signature → reject
+    // The parsed bytes feed both the block_id recompute below (v2 hash
+    // includes the SbPoW extension) and ValidateSbPoW further down.
+    uint32_t hdr_version = (uint32_t)jint(block_json, "version");
+    if (hdr_version == 0) hdr_version = 1;  // legacy default
+    sost::sbpow::MinerPubkey    sbpow_pubkey{};
+    sost::sbpow::MinerSignature sbpow_signature{};
+    if (hdr_version >= 2) {
+        std::string mpk_hex = jstr(block_json, "miner_pubkey");
+        std::string msg_hex = jstr(block_json, "miner_signature");
+        if (mpk_hex.empty()) {
+            printf("[BLOCK] REJECTED: submitblock: v2 header missing miner_pubkey\n");
+            return false;
+        }
+        if (msg_hex.empty()) {
+            printf("[BLOCK] REJECTED: submitblock: v2 header missing miner_signature\n");
+            return false;
+        }
+        auto is_hex_only = [](const std::string& s) -> bool {
+            for (char c : s) {
+                if (!((c >= '0' && c <= '9') ||
+                      (c >= 'a' && c <= 'f') ||
+                      (c >= 'A' && c <= 'F'))) return false;
+            }
+            return true;
+        };
+        auto hex_to_bytes = [](const std::string& h, uint8_t* out, size_t out_len) {
+            auto hx = [](char c) -> uint8_t {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+                if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+                return 0;
+            };
+            for (size_t i = 0; i < out_len; ++i)
+                out[i] = (uint8_t)((hx(h[i*2]) << 4) | hx(h[i*2 + 1]));
+        };
+        if (mpk_hex.size() != 66 || !is_hex_only(mpk_hex)) {
+            printf("[BLOCK] REJECTED: submitblock: malformed miner_pubkey "
+                   "(expected 33 bytes hex, got %zu chars)\n", mpk_hex.size());
+            return false;
+        }
+        if (msg_hex.size() != 128 || !is_hex_only(msg_hex)) {
+            printf("[BLOCK] REJECTED: submitblock: malformed miner_signature "
+                   "(expected 64 bytes hex, got %zu chars)\n", msg_hex.size());
+            return false;
+        }
+        hex_to_bytes(mpk_hex, sbpow_pubkey.data(),    sbpow_pubkey.size());
+        hex_to_bytes(msg_hex, sbpow_signature.data(), sbpow_signature.size());
+    }
+
     uint8_t hc72[72];
     build_hc72(hc72, prev32, mrkl32, (uint32_t)ts64, bits_q);
-    auto full_hdr = build_full_header_bytes(hc72, croot32, nonce, extra);
+    auto full_hdr = build_full_header_bytes(
+        hc72, croot32, nonce, extra,
+        hdr_version,
+        hdr_version >= 2 ? &sbpow_pubkey    : nullptr,
+        hdr_version >= 2 ? &sbpow_signature : nullptr);
     Bytes32 computed_bid = compute_block_id(full_hdr.data(), full_hdr.size(), commit32);
 
     Bytes32 provided_bid = from_hex(bid);
@@ -3936,21 +4020,14 @@ static bool process_block(const std::string& block_json) {
     //   - pre-Phase 2 (height < 10000): require version == 1.
     //   - Phase 2 (height >= 10000): require version == 2 + valid sig +
     //     matching coinbase miner-output pkh.
-    // The header version field defaults to 1 if absent from the RPC
-    // payload, so legacy block submissions (no "version" key) keep
-    // working unchanged on pre-activation heights. From block 10000
-    // onwards a v1 header (or a v2 with bad signature) is rejected.
+    //
+    // Wire transport (C12): the submitblock JSON carries
+    //   "version"          (int; defaults to 1 if missing)
+    //   "miner_pubkey"     (66-hex string for v2; 33 raw bytes)
+    //   "miner_signature"  (128-hex string for v2; 64 raw bytes)
+    // Parsing happened above (block_id rebuild needs the bytes too);
+    // the fields are reused here for the consensus check.
     {
-        uint32_t hdr_version = (uint32_t)jint(block_json, "version");
-        if (hdr_version == 0) hdr_version = 1;  // legacy default
-
-        // Pre-Phase 2: miner doesn't send pubkey/signature; leave zeros.
-        // The version gate rejects v2 before pubkey/signature are
-        // examined. Phase 2 plumbing of these fields through RPC will
-        // land alongside the activation commit.
-        sost::sbpow::MinerPubkey    sbpow_pubkey{};
-        sost::sbpow::MinerSignature sbpow_signature{};
-
         // Defensive guard — even though L1 ValidateBlockStructure
         // (called earlier in the accept path) rejects empty txs and
         // coinbase[0] mismatches, the SbPoW hook is consensus-adjacent

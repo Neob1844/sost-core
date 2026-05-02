@@ -73,6 +73,15 @@ struct MinedBlock {
     std::vector<Bytes32> checkpoint_leaves;
     std::vector<SegmentProof> segment_proofs;
     std::vector<RoundWitness> round_witnesses;
+
+    // V11 Phase 2 — SbPoW v2 header fields. version == 1 leaves
+    // miner_pubkey/miner_signature zero-filled and skips RPC plumbing.
+    // version == 2 carries the wallet-key pubkey and Schnorr signature
+    // over the SbPoW message; both are propagated to the node via the
+    // submitblock RPC payload.
+    uint32_t header_version{1};
+    sost::sbpow::MinerPubkey    miner_pubkey{};
+    sost::sbpow::MinerSignature miner_signature{};
 };
 static std::vector<MinedBlock> g_mined_blocks;
 
@@ -102,20 +111,54 @@ static std::string g_signing_address = "";
 // =============================================================================
 // Full header builder (same as genesis.cpp / node.cpp)
 // =============================================================================
+//
+// V1 layout (122 bytes — unchanged from pre-V11):
+//   magic(10) || "HDR2"(4) || hc72(72) || checkpoints_root(32)
+//                || nonce(4 LE) || extra_nonce(4 LE)
+//
+// V2 layout (V11 Phase 2, 223 bytes total — appends SbPoW fields):
+//   ... 122 v1 bytes above ...
+//   version(4 LE)             = 2
+//   miner_pubkey(33)          — secp256k1 compressed
+//   miner_signature(64)       — BIP-340 Schnorr over the SbPoW message
+//
+// The SbPoW message itself is computed from
+// (prev, height, commit, nonce, extra_nonce, miner_pubkey) — see
+// sost::sbpow::build_sbpow_message. The signature does NOT cover the
+// block_id (that would be circular: the signature is part of the
+// hashed bytes). Tampering with any signed field produces a different
+// signature → different bytes → different block_id, so consensus
+// catches the mismatch via SbPoW verification + block_id recompute.
 static std::vector<uint8_t> build_full_header_bytes(
     const uint8_t hc72[72],
     const Bytes32& checkpoints_root,
     uint32_t nonce_u32,
-    uint32_t extra_u32)
+    uint32_t extra_u32,
+    uint32_t version = 1,
+    const sost::sbpow::MinerPubkey*    miner_pubkey    = nullptr,
+    const sost::sbpow::MinerSignature* miner_signature = nullptr)
 {
     std::vector<uint8_t> buf;
-    buf.reserve(10 + 4 + 72 + 32 + 4 + 4);
+    buf.reserve(10 + 4 + 72 + 32 + 4 + 4 + (version >= 2 ? (4 + 33 + 64) : 0));
     append_magic(buf);
     append(buf, "HDR2", 4);
     append(buf, hc72, 72);
     append(buf, checkpoints_root);
     append_u32_le(buf, nonce_u32);
     append_u32_le(buf, extra_u32);
+    if (version >= 2) {
+        append_u32_le(buf, version);
+        if (miner_pubkey) {
+            buf.insert(buf.end(), miner_pubkey->begin(), miner_pubkey->end());
+        } else {
+            buf.insert(buf.end(), 33, (uint8_t)0);
+        }
+        if (miner_signature) {
+            buf.insert(buf.end(), miner_signature->begin(), miner_signature->end());
+        } else {
+            buf.insert(buf.end(), 64, (uint8_t)0);
+        }
+    }
     return buf;
 }
 
@@ -583,7 +626,12 @@ static int rpc_submit_block_full(
         port = atoi(g_rpc_url.substr(colon + 1).c_str());
     }
 
-    // Build block JSON for node (must match node parser)
+    // Build block JSON for node (must match node parser).
+    // V11 Phase 2 (C12): the "version" field gates SbPoW transport.
+    //   version == 1 → legacy: omit miner_pubkey / miner_signature.
+    //   version == 2 → emit miner_pubkey (66 hex = 33 bytes) and
+    //                  miner_signature (128 hex = 64 bytes); the node
+    //                  parses these into ValidateSbPoW.
     std::string bj = "{\"block_id\":\"" + hex(mb.block_id)
         + "\",\"prev_hash\":\"" + hex(mb.prev_hash)
         + "\",\"merkle_root\":\"" + hex(mb.merkle_root)
@@ -592,6 +640,7 @@ static int rpc_submit_block_full(
         + "\",\"height\":" + std::to_string(mb.height)
         + ",\"timestamp\":" + std::to_string(mb.timestamp)
         + ",\"bits_q\":" + std::to_string(mb.bits_q)
+        + ",\"version\":" + std::to_string(mb.header_version)
         + ",\"nonce\":" + std::to_string(mb.nonce)
         + ",\"extra_nonce\":" + std::to_string(mb.extra_nonce)
         + ",\"subsidy\":" + std::to_string(mb.subsidy)
@@ -659,6 +708,16 @@ static int rpc_submit_block_full(
             + "}";
     }
     bj += "]";
+
+    // V11 Phase 2 (C12) — SbPoW transport. Only emitted for v2 headers.
+    // Pre-Phase 2 blocks omit these fields entirely; the node parser
+    // defaults header_version to 1 when "version" is missing or 1.
+    if (mb.header_version >= 2) {
+        bj += ",\"miner_pubkey\":\""
+            + to_hex_str(mb.miner_pubkey.data(), mb.miner_pubkey.size()) + "\"";
+        bj += ",\"miner_signature\":\""
+            + to_hex_str(mb.miner_signature.data(), mb.miner_signature.size()) + "\"";
+    }
 
     bj += ",\"transactions\":[";
     for(size_t i=0;i<tx_hexes_including_coinbase.size();++i){
@@ -1240,12 +1299,67 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
                         auto t1 = std::chrono::steady_clock::now();
                         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-                        auto full_hdr = build_full_header_bytes(my_hc72, res.checkpoints_root, n, my_extra);
+
+                        // V11 Phase 2 (C12) — at heights >= V11_PHASE2_HEIGHT,
+                        // build a v2 SbPoW-signed header. Pre-Phase 2 keeps
+                        // the legacy v1 layout.
+                        uint32_t hdr_version = 1;
+                        sost::sbpow::MinerPubkey    sig_pubkey{};
+                        sost::sbpow::MinerSignature sig_signature{};
+                        if (h >= sost::V11_PHASE2_HEIGHT &&
+                            sost::V11_PHASE2_HEIGHT != INT64_MAX) {
+                            // Gating already enforced at startup, but defence
+                            // in depth: if we somehow reached a Phase 2 height
+                            // without a signing key, give up cleanly rather
+                            // than emit an unsigned v2 header (rejected by node).
+                            if (!g_signing_key_loaded) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet-backed mining key required. "
+                                    "Use --wallet PATH --mining-key-label LABEL.\n",
+                                    (long long)h);
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            const sost::WalletKey* wk =
+                                g_wallet.find_key_by_label(g_mining_key_label);
+                            if (!wk) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n",
+                                    (long long)h, g_mining_key_label.c_str());
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
+                            sost::sbpow::MinerPrivkey priv{};
+                            std::memcpy(priv.data(), wk->privkey.data(), 32);
+                            Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
+                                g_tip_hash, h, res.commit, n, my_extra, sig_pubkey);
+                            bool signed_ok = sost::sbpow::sign_sbpow_commitment(
+                                priv, sbpow_msg, sig_signature);
+                            sost::sbpow::secure_memzero(priv.data(), priv.size());
+                            if (!signed_ok) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 SbPoW signing failed at height %lld.\n",
+                                    (long long)h);
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            hdr_version = 2;
+                        }
+
+                        auto full_hdr = build_full_header_bytes(
+                            my_hc72, res.checkpoints_root, n, my_extra,
+                            hdr_version,
+                            hdr_version >= 2 ? &sig_pubkey    : nullptr,
+                            hdr_version >= 2 ? &sig_signature : nullptr);
                         Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
 
-                        printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu (thread %d)\n",
+                        printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu (thread %d) v%u\n",
                                (long long)h, hex(block_id).substr(0, 16).c_str(),
-                               n, my_extra, (long long)elapsed, block_txs.size(), tid);
+                               n, my_extra, (long long)elapsed, block_txs.size(), tid, hdr_version);
                         printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                                (long long)subsidy, (long long)total_fees,
                                (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
@@ -1283,6 +1397,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         tr.mb.miner_reward = split.miner;
                         tr.mb.gold_vault_reward = split.gold_vault;
                         tr.mb.popc_pool_reward = split.popc_pool;
+                        tr.mb.header_version    = hdr_version;
+                        tr.mb.miner_pubkey      = sig_pubkey;
+                        tr.mb.miner_signature   = sig_signature;
                         return;
                     }
                 }
@@ -1522,12 +1639,58 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 auto t1 = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
-                auto full_hdr = build_full_header_bytes(hc72, res.checkpoints_root, nonce, extra_nonce);
+                // V11 Phase 2 (C12) — at heights >= V11_PHASE2_HEIGHT,
+                // build a v2 SbPoW-signed header. Pre-Phase 2 keeps the
+                // legacy v1 layout (no signing).
+                uint32_t hdr_version = 1;
+                sost::sbpow::MinerPubkey    sig_pubkey{};
+                sost::sbpow::MinerSignature sig_signature{};
+                if (h >= sost::V11_PHASE2_HEIGHT &&
+                    sost::V11_PHASE2_HEIGHT != INT64_MAX) {
+                    if (!g_signing_key_loaded) {
+                        printf(
+                            "[MINER] FATAL: Phase 2 active at height %lld — wallet-backed mining key required. "
+                            "Use --wallet PATH --mining-key-label LABEL.\n",
+                            (long long)h);
+                        fflush(stdout);
+                        return false;
+                    }
+                    const sost::WalletKey* wk =
+                        g_wallet.find_key_by_label(g_mining_key_label);
+                    if (!wk) {
+                        printf(
+                            "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n",
+                            (long long)h, g_mining_key_label.c_str());
+                        fflush(stdout);
+                        return false;
+                    }
+                    std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
+                    sost::sbpow::MinerPrivkey priv{};
+                    std::memcpy(priv.data(), wk->privkey.data(), 32);
+                    Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
+                        g_tip_hash, h, res.commit, nonce, extra_nonce, sig_pubkey);
+                    bool signed_ok = sost::sbpow::sign_sbpow_commitment(
+                        priv, sbpow_msg, sig_signature);
+                    sost::sbpow::secure_memzero(priv.data(), priv.size());
+                    if (!signed_ok) {
+                        printf("[MINER] FATAL: Phase 2 SbPoW signing failed at height %lld.\n",
+                               (long long)h);
+                        fflush(stdout);
+                        return false;
+                    }
+                    hdr_version = 2;
+                }
+
+                auto full_hdr = build_full_header_bytes(
+                    hc72, res.checkpoints_root, nonce, extra_nonce,
+                    hdr_version,
+                    hdr_version >= 2 ? &sig_pubkey    : nullptr,
+                    hdr_version >= 2 ? &sig_signature : nullptr);
                 Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
 
-                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu\n",
+                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu v%u\n",
                        (long long)h, hex(block_id).substr(0, 16).c_str(),
-                       nonce, extra_nonce, (long long)elapsed, block_txs.size());
+                       nonce, extra_nonce, (long long)elapsed, block_txs.size(), hdr_version);
                 printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                        (long long)subsidy, (long long)total_fees,
                        (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
@@ -1564,6 +1727,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.miner_reward = split.miner;
                 mb.gold_vault_reward = split.gold_vault;
                 mb.popc_pool_reward = split.popc_pool;
+                mb.header_version  = hdr_version;
+                mb.miner_pubkey    = sig_pubkey;
+                mb.miner_signature = sig_signature;
 
                 // Submit to node FIRST — only advance local chain if accepted
                 bool node_accepted = false;

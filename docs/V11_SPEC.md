@@ -92,6 +92,16 @@ The block header at `height >= V11_SBPOW_HEIGHT` carries two extra fields:
 
 Total header growth: 97 bytes. Pre-fork blocks keep the original header serialization; nodes negotiate format by height.
 
+**RPC transport (submitblock).** The miner submits the v2 fields to the node as additional JSON keys on the existing `submitblock` payload:
+
+| key                | type   | meaning                                                  |
+|--------------------|--------|----------------------------------------------------------|
+| `version`          | int    | header version (1 or 2; defaults to 1 if absent)         |
+| `miner_pubkey`     | string | 66-hex-char (33-byte) compressed secp256k1 pubkey (v2)  |
+| `miner_signature`  | string | 128-hex-char (64-byte) BIP-340 Schnorr signature (v2)   |
+
+The `version`/pubkey/signature triple feeds both the block_id recompute (so v2 hashes the SbPoW extension) and the consensus `ValidateSbPoW` check. Pre-Phase-2 v1 submissions omit pubkey/signature and the parser defaults `version` to 1 — so legacy block submitters keep working unchanged at heights below `V11_PHASE2_HEIGHT`.
+
 ### 3.3 PoW seed binding
 Pre-V11 ConvergenceX seed:
 ```

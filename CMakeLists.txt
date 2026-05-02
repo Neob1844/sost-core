@@ -299,6 +299,15 @@ if(SOST_ENABLE_PHASE2_SBPOW)
     add_executable(test-sbpow-adversarial tests/test_sbpow_adversarial.cpp)
     target_link_libraries(test-sbpow-adversarial PRIVATE sost-core)
     add_test(NAME sbpow-adversarial COMMAND test-sbpow-adversarial)
+
+    # V11 Phase 2 (C12) — miner submit-path integration. Exercises the
+    # encode → decode → ValidateSbPoW handshake that wires the signed
+    # v2 header from the production miner through the submitblock RPC
+    # to the node-side validator. Requires SOST_ENABLE_PHASE2_SBPOW
+    # because Schnorr signing is invoked directly.
+    add_executable(test-sbpow-submit-integration tests/test_sbpow_submit_integration.cpp)
+    target_link_libraries(test-sbpow-submit-integration PRIVATE sost-core)
+    add_test(NAME phase2-sbpow-submit COMMAND test-sbpow-submit-integration)
 endif()
 
 # V11 Phase 1 — component B (state-dependent dataset access)
