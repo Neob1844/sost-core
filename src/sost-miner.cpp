@@ -29,6 +29,8 @@
 #include "sost/transaction.h"
 #include "sost/merkle.h"
 #include "sost/address.h"
+#include "sost/wallet.h"     // V11 Phase 2 — wallet key loading for SbPoW
+#include "sost/sbpow.h"      // V11 Phase 2 — Schnorr signing helpers
 
 #include <fstream>
 #include <cstdio>
@@ -78,9 +80,23 @@ static std::string g_rpc_url = "";
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
 
-// Miner payout address
+// Miner payout address (legacy --address path, pre-V11 Phase 2)
 static std::string g_miner_address = "";
 static PubKeyHash  g_miner_pkh{};
+
+// V11 Phase 2 — wallet-backed signing key (dormant while
+// V11_PHASE2_HEIGHT == INT64_MAX). When --wallet + --mining-key-label
+// are passed, the wallet is loaded into g_wallet and the resolved
+// key's pubkey/pkh are cached here. The privkey lives only inside
+// g_wallet; callers (signing helpers) read it on demand and the
+// process zeroes its in-memory copy via secure_memzero on shutdown.
+static std::string g_wallet_path = "";
+static std::string g_mining_key_label = "";
+static Wallet      g_wallet;
+static bool        g_signing_key_loaded = false;
+static PubKey      g_signing_pubkey{};
+static PubKeyHash  g_signing_pkh{};
+static std::string g_signing_address = "";
 
 // =============================================================================
 // Full header builder (same as genesis.cpp / node.cpp)
@@ -1502,6 +1518,8 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--rpc-user") && i + 1 < argc) g_rpc_user = argv[++i];
         else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) g_rpc_pass = argv[++i];
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
+        else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
+        else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
@@ -1514,7 +1532,10 @@ int main(int argc, char** argv) {
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
             printf("SOST Miner v0.9 (multi-threaded)\n");
-            printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
+            printf("  --address <sost1..> REQUIRED (pre-V11 Phase 2): your wallet address to receive mining rewards\n");
+            printf("  --wallet <path>    V11 Phase 2: wallet.json path holding the SbPoW signing key\n");
+            printf("  --mining-key-label <label>  V11 Phase 2: which WalletKey label to use for signing\n");
+            printf("                     (--address optional; if set, must match the key's address)\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
             printf("  --genesis <path>   Genesis JSON\n");
@@ -1529,10 +1550,70 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Validate --address (REQUIRED)
+    // ----- V11 Phase 2 — wallet-backed signing key resolution -----
+    //
+    // Three valid combinations:
+    //   1. --address only                       (legacy pre-Phase 2 path, unchanged)
+    //   2. --wallet + --mining-key-label        (Phase 2 path; --address optional)
+    //   3. --wallet + --mining-key-label + --address
+    //                                            (Phase 2 path; --address must MATCH
+    //                                            the address derived from the key)
+    //
+    // V11_PHASE2_HEIGHT is INT64_MAX (sentinel = "never") so phase2_required
+    // is `false` in production and the resolver always accepts an
+    // --address-only invocation. The signing-key path is exercised by the
+    // unit tests in tests/test_miner_key_selection.cpp (which pass
+    // phase2_required=true to verify the strict path).
+    if (!g_wallet_path.empty() || !g_mining_key_label.empty()) {
+        if (g_wallet_path.empty()) {
+            fprintf(stderr, "ERROR: --mining-key-label requires --wallet <path>.\n");
+            return 1;
+        }
+        if (g_mining_key_label.empty()) {
+            fprintf(stderr, "ERROR: --wallet requires --mining-key-label <label>.\n");
+            return 1;
+        }
+        std::string werr;
+        if (!g_wallet.load(g_wallet_path, &werr)) {
+            fprintf(stderr, "ERROR: failed to load wallet '%s': %s\n",
+                    g_wallet_path.c_str(), werr.c_str());
+            return 1;
+        }
+
+        // Phase 2 is dormant in production (V11_PHASE2_HEIGHT == INT64_MAX),
+        // so we resolve with phase2_required=false. The resolver will still
+        // enforce label-found and address-match rules.
+        bool phase2_required = false;  // updated per-block in the mining loop
+        sbpow::MinerKeyResolution res = sbpow::resolve_miner_key(
+            g_wallet, g_mining_key_label, g_miner_address, phase2_required);
+        if (res.status == sbpow::MinerKeyResolution::Status::ERROR) {
+            fprintf(stderr, "ERROR: %s\n", res.error.c_str());
+            return 1;
+        }
+        if (res.status == sbpow::MinerKeyResolution::Status::OK_SIGNING_KEY) {
+            g_signing_key_loaded = true;
+            g_signing_pubkey     = res.pubkey;
+            g_signing_pkh        = res.pkh;
+            g_signing_address    = res.address;
+
+            // Override the legacy --address with the address derived from
+            // the wallet key. From here on the coinbase pays the
+            // wallet-key address — required by SbPoW once it activates.
+            g_miner_address = res.address;
+            g_miner_pkh     = res.pkh;
+        }
+        // OK_PRE_PHASE2_LEGACY would fall through to the --address checks
+        // below (this branch is unreachable here because we entered the
+        // block iff at least one wallet flag was given).
+    }
+
+    // Validate --address (REQUIRED at all heights — it's the legacy
+    // miner-payout address; for Phase 2 paths it has already been
+    // overridden above to match the wallet key).
     if (g_miner_address.empty()) {
         fprintf(stderr, "ERROR: --address required. Use your wallet address to receive mining rewards.\n");
         fprintf(stderr, "  Example: --address sost1your40hexcharaddresshere1234567890ab\n");
+        fprintf(stderr, "  Or pass --wallet + --mining-key-label for V11 Phase 2 SbPoW signing.\n");
         return 1;
     }
     if (!address_valid(g_miner_address)) {
@@ -1546,7 +1627,13 @@ int main(int argc, char** argv) {
 
     printf("=== SOST Miner v0.9 (multi-threaded, FULL submitblock) ===\n");
     if (g_num_threads > 1) printf("Threads: %d (parallel nonce search)\n", g_num_threads);
-    printf("Miner address: %s\n", g_miner_address.c_str());
+    if (g_signing_key_loaded) {
+        printf("SbPoW signing key: label='%s' (loaded from %s)\n",
+               g_mining_key_label.c_str(), g_wallet_path.c_str());
+    }
+    printf("Miner address: %s%s\n",
+           g_miner_address.c_str(),
+           g_signing_key_loaded ? " (derived from wallet key)" : "");
     printf("Profile: %s | Blocks: %d%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
            num_blocks,

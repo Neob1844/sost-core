@@ -81,6 +81,14 @@ const WalletKey* Wallet::find_key_by_pkh(const PubKeyHash& pkh) const {
     return find_key(addr);
 }
 
+const WalletKey* Wallet::find_key_by_label(const std::string& label) const {
+    if (label.empty()) return nullptr;
+    for (const auto& k : keys_) {
+        if (k.label == label) return &k;
+    }
+    return nullptr;
+}
+
 std::string Wallet::default_address() const {
     if (keys_.empty()) return "";
     return keys_[0].address;

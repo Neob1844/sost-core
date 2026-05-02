@@ -58,6 +58,13 @@ add_library(sost-core STATIC
     src/popc.cpp
     src/popc_tx_builder.cpp
     src/popc_model_b.cpp
+
+    # V11 Phase 2 — SbPoW (Schnorr-bound PoW). Real implementation as of
+    # Commit 3 (signing + key derivation + secure_memzero). Consensus
+    # validation in src/sbpow.cpp::validate() still aborts and is wired
+    # into block_validation in Commit 4. lottery.cpp stays out of the
+    # library until Commit 5.
+    src/sbpow.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -143,6 +150,16 @@ add_test(NAME casert-v11 COMMAND test-casert-v11)
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
 add_test(NAME sbpow-header-v2 COMMAND test-sbpow-header-v2)
+
+# V11 Phase 2 — component C (SbPoW): Schnorr signing + message construction
+add_executable(test-sbpow-signing tests/test_sbpow_signing.cpp)
+target_link_libraries(test-sbpow-signing PRIVATE sost-core)
+add_test(NAME sbpow-signing COMMAND test-sbpow-signing)
+
+# V11 Phase 2 — component C (SbPoW): miner key selection (CLI flag resolver)
+add_executable(test-miner-key-selection tests/test_miner_key_selection.cpp)
+target_link_libraries(test-miner-key-selection PRIVATE sost-core)
+add_test(NAME miner-key-selection COMMAND test-miner-key-selection)
 
 # V11 Phase 1 — component B (state-dependent dataset access)
 add_executable(test-convergencex-v11 tests/test_convergencex_v11.cpp)

@@ -283,6 +283,19 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 // on the same block since both touch consensus.
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
+// V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
+// Sentinel value INT64_MAX = "never" — Phase 2 is dormant until the
+// implementation passes every gate listed in docs/V11_PHASE2_DESIGN.md
+// §6 and the owner issues an explicit GO. Reasoning for keeping the
+// sentinel here (vs in sbpow.h):
+//   - Consensus activation heights belong with the other height
+//     constants (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT, ...).
+//   - Phase 2 components C and D BOTH gate on this same height; a
+//     single source of truth avoids skew.
+// Commit 5 (lottery frequency function + constants) extends this block
+// with LOTTERY_HIGH_FREQ_WINDOW etc. Until then, only this sentinel.
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = INT64_MAX;
+
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
 // satisfy BOTH:
