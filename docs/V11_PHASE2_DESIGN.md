@@ -284,7 +284,7 @@ Cache invalidation rule: every `connect_block`, `disconnect_block`, or `try_reor
 
 `PubKeyHash` (20-byte `std::array<uint8_t, 20>`) sorted **lexicographically** by raw byte order. This matches the natural `operator<` of `std::array<uint8_t, 20>` and is byte-identical on x86 and ARM. No locale-dependent comparator, no string conversions.
 
-The 30-block reward exclusion window is computed by walking `g_blocks[h-30 .. h-1]` and collecting their miner pubkey hashes — straight scan, no extra index.
+The recent-winner reward exclusion window is computed by walking `g_blocks[h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW .. h-1]` and collecting their miner pubkey hashes — straight scan, no extra index. The window length is set in `include/sost/params.h` (default `5` as of C5; see §5.4 for the simulation evidence).
 
 ### 5.3 Benchmark gate (G4.5 — new)
 
@@ -300,9 +300,9 @@ If the benchmark fails, **Commit 6.5** introduces an incremental index `miner_fi
 
 ### 5.4 Preliminary lottery eligibility simulation
 
-> **Status: PRELIMINARY analysis. NOT a final decision. The current design defaults and the public banner v82 wording remain unchanged until C9 (formal Monte Carlo + fairness review) confirms or revises the rule.**
+> **Status: PRELIMINARY analysis informed the C5 default; FINAL confirmation deferred to C9 (formal Monte Carlo + fairness review). C5 (commit pending) sets `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5` in `include/sost/params.h` and updates the public banner to v83 with the new wording. C9 may revise the default once the formal simulation reports land — Phase 2 stays gated by `V11_PHASE2_HEIGHT = INT64_MAX` until that decision.**
 
-A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool only — NOT consensus code, NOT wired into CMake) was executed across 256 scenarios (4 hashrate values × 4 honest-miner counts × 4 sybil counts × 4 exclusion windows, 10 000 blocks each) to inform the eventual C9 decision on the `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` parameter.
+A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool only — NOT consensus code, NOT wired into CMake) was executed across 256 scenarios (4 hashrate values × 4 honest-miner counts × 4 sybil counts × 4 exclusion windows, 10 000 blocks each) to inform the C5 default of `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`.
 
 #### Variants evaluated
 
@@ -329,22 +329,22 @@ A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool 
 - **`no_cap` minimizes sybil incentive globally** (Δ_10 ≈ +56 pp) at the cost of giving the dominant a baseline ~3.3 % lottery share when they play honestly with one address. This is the simplest and most defensive option if the design assumes a sophisticated dominant.
 - **No eligibility window protects against a 100-sybil attack.** Across all variants (0 / 5 / 10 / 30) the dominant captures 93-97 % of the lottery once they pre-legitimate ~100 sybil addresses (a roughly 24 h investment at 70 % hashrate, with no real opportunity cost since the block-reward keeps flowing). The eligibility rule is therefore not a sybil defense — that role belongs to Memory-Lock per-instance (planned post block 12 000) and any future stake-locked eligibility once a SOST market exists.
 - **Honest-miner median lottery share is essentially flat across all windows** (14.40 %–15.10 %). The "cap protects honest miners" framing is not supported by the data; the effective protection on honest miners comes from the bootstrap 2-of-3 frequency window, not the recent-winner cooldown.
-- **Final rule deferred to C9** (Monte Carlo simulation + fairness review). Until then, no design constants change, no banner text changes, and Phase 2 stays gated by `V11_PHASE2_HEIGHT = INT64_MAX`.
+- **C5 default set to `cap_5`** based on the above. **C9 may confirm or revise.** Phase 2 stays gated by `V11_PHASE2_HEIGHT = INT64_MAX`; no real chain height is affected until activation.
 
-#### Implementation implication for C5 / C6
+#### Implementation implication — C5 default + post-C9 flexibility
 
-Because the rule may move from the originally-published `30` to one of `0 / 5 / 10` after C9, the eligibility logic implemented in Commits 5 and 6 must keep the window **parameterizable via a single named constant** (`LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`). Constants and call sites:
+Because C9 may revise the C5 default after the formal fairness review, the eligibility logic implemented in C5/C6 reads the window from a single named constant. Constants and call sites:
 
 ```cpp
-inline constexpr int32_t LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 30;  // default — DO NOT change yet
+inline constexpr int32_t LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5;  // C5 default
 // All eligibility-set computations and reorg-undo logic MUST read this
-// constant rather than hard-coding 30. C9 may revise the default once
-// the formal simulation reports land.
+// constant rather than hard-coding 5. C9 may revise once the formal
+// simulation reports land.
 ```
 
 #### Banner / public messaging
 
-Banner v82 (already deployed on `origin/main`) describes the lottery with `cap = 30`. **No banner change happens as a result of this preliminary simulation.** A banner update accompanies the C9 decision, not this draft note.
+C5 ships banner **v83** (`website/sost-explorer.html` + `website/api/explorer_version.json`) with the cooldown wording revised from "last 30 blocks" to "last 5 blocks", and an explicit note that the change followed the preliminary Monte Carlo. The banner reaffirms that Phase 2 activation remains TBD and that V11_PHASE2_HEIGHT is unchanged. Banner v82 (the rollover-clarification update on the parallel `banner-v82-rollover-clarification` branch) is orthogonal and merges separately.
 
 #### Reproducing the run
 

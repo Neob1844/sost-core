@@ -1,29 +1,45 @@
 // lottery.h — V11 Phase 2 component D: Proof-of-Participation lottery
 //
 // Spec: docs/V11_SPEC.md §4 + §10.5 (jackpot rollover)
-// Status: SKELETON — types declared, functions not implemented.
-// Activation: V11_PHASE2_HEIGHT (TBD, see params.h once Phase 2 lands).
+// Status (C5): is_lottery_block — pure frequency function. Real
+//              implementation (header-only inline). All other entry
+//              points still SKELETON / abort-on-call (eligibility,
+//              winner picking, rollover state, reorg) until C6+.
+// Activation: V11_PHASE2_HEIGHT (params.h) — currently INT64_MAX.
 //
-// Lottery frequency schedule, with H = V11_PHASE2_HEIGHT and
-// W = LOTTERY_HIGH_FREQ_WINDOW = 5000:
-//   For h in [H, H+W):   triggered  ⟺  (h - H) % 3 != 2  → 2-of-3
-//   For h >= H + W:      triggered  ⟺  (h - H) % 3 == 0  → 1-of-3
+// Lottery frequency schedule (height-only, no chain state needed):
+//   With H = V11_PHASE2_HEIGHT and W = LOTTERY_HIGH_FREQ_WINDOW = 5000,
+//   For h in [H, H + W):   triggered  ⟺  (height % 3) != 0  (2-of-3 bootstrap)
+//   For h >= H + W:        triggered  ⟺  (height % 3) == 0  (1-of-3 permanent)
 //
-// Eligibility:
+// CRITICAL: the rule uses `height % 3`, NOT `(height - H) % 3`. The
+// schedule is anchored to absolute block height so a hypothetical
+// reorg across the activation boundary cannot shift the trigger
+// pattern. See is_lottery_block below.
+//
+// Eligibility (C6+):
 //   addrs with at least 1 block in [0, h-1]
-//     minus any block-reward winner in [h - LOTTERY_REWARD_EXCLUSION_WINDOW, h-1]
+//     minus any block-reward winner in
+//       [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1]   (= 5 default)
 //     minus the miner of block h itself.
 //
-// Coinbase shape on a triggered block:
-//   50% miner / 50% lottery winner (vs normal 50 / 25 / 25).
+// RNG domain tag (C6+):
+//   "SOST_LOTTERY_V11" — defined as LOTTERY_RNG_DOMAIN below; consumed
+//   by the deterministic winner-picking helper. Treated as raw bytes,
+//   no trailing NUL.
+//
+// Coinbase shape on a triggered block (C8):
+//   50 % miner / 50 % lottery winner (vs normal 50 / 25 / 25).
 //
 // Jackpot rollover (§10.5): if the eligibility set is empty on a
-// triggered block, the would-be 50% lottery share accumulates into a
-// chain-state variable `pending_lottery_amount`. The next triggered
-// block with a non-empty eligibility set pays `share + pending`.
+// triggered block, the would-be 50 % lottery share accumulates into
+// the chain-state variable `pending_lottery_amount`. The next
+// triggered block with a non-empty eligibility set pays
+// `share + pending`. Implementation lands in C7-C8.
 #pragma once
 
 #include "sost/types.h"
+#include "sost/params.h"      // V11_PHASE2_HEIGHT, LOTTERY_HIGH_FREQ_WINDOW
 #include "sost/tx_signer.h"   // PubKeyHash
 #include <cstdint>
 #include <optional>
@@ -31,11 +47,64 @@
 
 namespace sost::lottery {
 
-// Trigger result for a given height. The schedule is purely a function
-// of height once V11_PHASE2_HEIGHT and LOTTERY_HIGH_FREQ_WINDOW are
-// fixed; eligibility and rollover state live elsewhere.
+// ---------------------------------------------------------------------------
+// Domain-separation tag for the deterministic lottery RNG.
+// Consumed by pick_winner (C6+) as:
+//   sha256(LOTTERY_RNG_DOMAIN || prev_block_hash || height_le)
+// Treated as raw bytes; the trailing NUL is NOT included. Length helper
+// is exposed for callers that prefer std::string_view-style access.
+// ---------------------------------------------------------------------------
+inline constexpr char    LOTTERY_RNG_DOMAIN[]    = "SOST_LOTTERY_V11";
+inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 1;
+
+// ---------------------------------------------------------------------------
+// V11 Phase 2 — height-only lottery trigger rule (C5, real, pure).
 //
-// PHASE 2 — NOT IMPLEMENTED.
+// Implementation is `inline` so this stays a header-only function and
+// does NOT require src/lottery.cpp to be linked into sost-core. The
+// remaining lottery functions (eligibility_set, pick_winner, apply_block,
+// etc.) keep their abort-on-call stubs in src/lottery.cpp until C6+
+// and are NOT linked into the production library yet.
+//
+// Rules:
+//   1) phase2_height == INT64_MAX        →  return false (sentinel: Phase 2 dormant)
+//   2) height < phase2_height            →  return false (pre-Phase 2 block)
+//   3) offset = height - phase2_height
+//      if offset < LOTTERY_HIGH_FREQ_WINDOW:
+//          return (height % 3) != 0     (2-of-3 bootstrap, first 5000 blocks)
+//      else:
+//          return (height % 3) == 0     (1-of-3 permanent, after bootstrap)
+//
+// Production guarantee: while V11_PHASE2_HEIGHT == INT64_MAX in
+// params.h, this function returns false for every real chain height.
+// Tests pass a finite phase2_height to exercise the active path.
+//
+// CONSENSUS-CRITICAL: the schedule MUST be height-anchored, NOT
+// offset-anchored, so a reorg across V11_PHASE2_HEIGHT does not
+// shift the lottery cadence. Both miner and validator MUST go through
+// this single helper.
+//
+// Phase 2 — REAL implementation. This is the only lottery function
+// that does NOT abort.
+inline bool is_lottery_block(int64_t height, int64_t phase2_height) {
+    if (phase2_height == INT64_MAX) return false;
+    if (height < phase2_height)     return false;
+
+    const int64_t offset = height - phase2_height;
+    if (offset < LOTTERY_HIGH_FREQ_WINDOW) {
+        // Bootstrap: 2 of every 3 blocks.
+        return (height % 3) != 0;
+    }
+    // Steady state: 1 of every 3 blocks, permanently.
+    return (height % 3) == 0;
+}
+
+// ---------------------------------------------------------------------------
+// Trigger result for a given height. Older 3-arg API kept aborting in
+// the skeleton for backward-compat with tests written under the
+// previous draft. Prefer is_lottery_block above.
+//
+// PHASE 2 — NOT IMPLEMENTED (still abort-on-call until C6+).
 bool is_triggered(int64_t height,
                   int64_t v11_phase2_height,
                   int64_t high_freq_window);

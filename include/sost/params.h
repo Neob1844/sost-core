@@ -292,9 +292,40 @@ inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 //     constants (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT, ...).
 //   - Phase 2 components C and D BOTH gate on this same height; a
 //     single source of truth avoids skew.
-// Commit 5 (lottery frequency function + constants) extends this block
-// with LOTTERY_HIGH_FREQ_WINDOW etc. Until then, only this sentinel.
 inline constexpr int64_t  V11_PHASE2_HEIGHT                = INT64_MAX;
+
+// V11 Phase 2 — PoP lottery (component D) consensus constants.
+//
+// All values gate on V11_PHASE2_HEIGHT above. While that height is
+// INT64_MAX, the lottery code paths are unreachable on real chain
+// heights — these constants exist only to make the implementation
+// testable and the schedule reproducible.
+//
+// Frequency schedule (used by sost::lottery::is_lottery_block):
+//   For h in [V11_PHASE2_HEIGHT, V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW):
+//       lottery triggered  ⟺  (height % 3) != 0   (2-of-3 bootstrap)
+//   For h >= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW:
+//       lottery triggered  ⟺  (height % 3) == 0   (1-of-3 permanent)
+//
+// Recent-winner exclusion: an address that won a block-reward in the
+// last LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW blocks is excluded from
+// the eligibility set on a triggered block. The default of 5 was
+// chosen by the C0187fe Monte Carlo as a provisional value:
+//   - cap=30 (the previous draft) had ~12 % rollover rate and the
+//     largest sybil-incentive delta in the realistic network shape.
+//   - cap=5 zeros out the dominant's no-sybil lottery share with
+//     ~0 % rollover rate and a smaller sybil-incentive delta.
+//   - cap=0 (no exclusion) gives the dominant ~3.3 % baseline but
+//     the smallest sybil-incentive delta of all variants.
+// Final value is confirmed by C9 (formal Monte Carlo + fairness
+// review) before V11_PHASE2_HEIGHT is set to a finite value. The
+// recent-winner cap is NOT a sybil defense — eligibility-based
+// rules collapse against ~100 sybil pre-legitimated addresses
+// regardless of the window. Real sybil defense waits for
+// Memory-Lock per-instance (post block 12 000 study) and any
+// future stake-locked eligibility once a SOST market exists.
+inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 5000;
+inline constexpr int32_t  LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW  = 5;
 
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must

@@ -227,6 +227,13 @@ add_executable(test-miner-key-selection tests/test_miner_key_selection.cpp)
 target_link_libraries(test-miner-key-selection PRIVATE sost-core)
 add_test(NAME miner-key-selection COMMAND test-miner-key-selection)
 
+# V11 Phase 2 — component D (Lottery): height-only frequency rule.
+# Always built — pure function, no Schnorr, no chain state, no consensus
+# behaviour change. Verifies the dormant-by-INT64_MAX guarantee.
+add_executable(test-lottery-frequency tests/test_lottery_frequency.cpp)
+target_link_libraries(test-lottery-frequency PRIVATE sost-core)
+add_test(NAME lottery-frequency COMMAND test-lottery-frequency)
+
 # V11 Phase 2 — Schnorr-only test binaries. Gated behind
 # SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
 # verify_sbpow_signature, which require the libsecp256k1 schnorrsig

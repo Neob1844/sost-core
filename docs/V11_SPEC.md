@@ -180,9 +180,9 @@ E(h) = { addr |
 ```
 
 Constants:
-- `LOTTERY_REWARD_EXCLUSION_WINDOW = 30` blocks. Tunable post-Monte Carlo.
+- `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5` blocks (C5 default — provisional, **C9 confirmation pending**). Was `30` in earlier drafts; revised after the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4 showed `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta among evaluated variants while honest-miner median lottery share was essentially flat across all windows.
 - Eligibility floor: "ever mined at least one block since genesis" — opens the pool wide and removes the prior 30-block-mining-history requirement.
-- Exclusion: ANY block-reward winner (miner subsidy OR lottery prize) in the last 30 blocks. Stronger than excluding only past lottery winners.
+- Exclusion: ANY block-reward winner (miner subsidy OR lottery prize) in the last `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks. Stronger than excluding only past lottery winners.
 
 ### 4.4 Winner selection
 
@@ -253,7 +253,7 @@ This section is **honest** about the redistribution mechanic. The lottery is not
 
 ### 5.2 Regime 1 — Dominant uses 1-3 addresses (current behaviour)
 
-The address(es) the dominant uses to mine blocks are mostly excluded by the 30-block reward window (they keep winning). Result:
+The address(es) the dominant uses to mine blocks are mostly excluded by the `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` reward window (W = 5 in the C5 default; C9 may revise). They keep winning blocks at hashrate-proportional rate, so they sit in cooldown for most of the window. Result:
 
 ```
 Dominant addresses in E(h):     ≈ 0  (all in cooldown)
@@ -273,13 +273,14 @@ Drop of ~35 percentage points. Strong redistribution.
 
 ### 5.3 Regime 2 — Dominant uses N_dom > W addresses, rotated
 
-The dominant generates many addresses and rotates per block. After the first 30 blocks, the addresses that won blocks in last 30 are `min(N_dom, 30)` excluded. The rest are eligible.
+The dominant generates many addresses and rotates per block. After the first `W = LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks, the addresses that won blocks in the last `W` are `min(N_dom, α·W)` excluded. The rest are eligible. (Pre-C5 drafts hard-coded `W = 30`; C5 lowered the default to `5` based on the preliminary Monte Carlo — the `α·W` figures below scale accordingly.)
 
 ```
-Dominant addresses in E(h):     ≈  max(0, N_dom - α·W)     # ones not in cooldown
-                                ≈  N_dom - 21              # if α=0.70, W=30
-Eligibility set size:           ≈  (N_dom - α·W) + S
-Dominant lottery share:         ≈  (N_dom - α·W) / [(N_dom - α·W) + S]
+Dominant addresses in E(h):     ≈  max(0, N_dom − α·W)     # ones not in cooldown
+                                ≈  N_dom − 3.5             # if α = 0.70, W = 5
+                                                            # (vs N_dom − 21 in the W = 30 draft)
+Eligibility set size:           ≈  (N_dom − α·W) + S
+Dominant lottery share:         ≈  (N_dom − α·W) / [(N_dom − α·W) + S]
 ```
 
 Numerical example: `N_dom = 100`, `α = 0.70`, `S = 8`:
@@ -425,7 +426,7 @@ The following are intentionally NOT part of V11:
 ### Implementation gate
 Pass criteria for shipping rollover (subset of D's gates):
 - G4.1c: unit test — empty `E(h)` on triggered block produces no winner output, increments `pending`, and the next triggered block with non-empty `E(h)` pays `share + pending`.
-- G4.3b: multi-node testnet — simulated 100-block stretch with all miners in 30-block cooldown produces correct `pending` accumulation across all nodes.
+- G4.3b: multi-node testnet — simulated 100-block stretch with all miners in `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`-block cooldown produces correct `pending` accumulation across all nodes.
 - G4.4b: adversarial — block claiming `pending` payout when previous chain state had 0 pending must be rejected by all nodes.
 
 ### Constants the rollover fork would add
@@ -509,3 +510,4 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | DRAFT v2 — restructured into V11 spec; SbPoW moved to block 7,000 with per-component independent activation; lottery eligibility widened to "≥1 block since genesis"; exclusion strengthened to "any block-reward winner in last 30"; added §5 honest mathematical analysis distinguishing Sybil regimes; added §11 constants list |
 | 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3 — restructured V11 into **two phases**. Phase 1 (block 7,000) ships A + B only (extended cASERT cascade + state-dependent dataset access). Phase 2 (height TBD, no calendar pressure) ships C + D (SbPoW + PoP lottery + jackpot rollover). Lottery frequency: 2-of-3 for the first `LOTTERY_HIGH_FREQ_WINDOW = 5000` blocks after Phase 2 activation, then 1-of-3 permanently. §10.5 jackpot rollover reclassified from "deferred fork" to "Phase 2 component D". §11 constants split into 11.1 (Phase 1, landed) and 11.2 (Phase 2, design-only). §3.7 / §4.8 activation rewritten to reference `V11_PHASE2_HEIGHT`. |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.2 — recent-winner exclusion window provisional default revised from 30 to **5** blocks (`LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`) following the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4. `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta in the realistic network shape; `cap_5` zeros out the dominant's no-sybil lottery share with ~0 % rollover rate and a smaller sybil-incentive delta. **Final value pending C9 confirmation.** §4.3, §5.2, §5.3 prose updated to reference the constant rather than a hard-coded 30. Public banner updated to v83 with matching wording. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (which remains `INT64_MAX`). |
