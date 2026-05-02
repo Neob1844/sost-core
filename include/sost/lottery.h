@@ -104,38 +104,130 @@ inline bool is_lottery_block(int64_t height, int64_t phase2_height) {
 // the skeleton for backward-compat with tests written under the
 // previous draft. Prefer is_lottery_block above.
 //
-// PHASE 2 — NOT IMPLEMENTED (still abort-on-call until C6+).
+// PHASE 2 — NOT IMPLEMENTED (still abort-on-call; superseded by
+// is_lottery_block above).
 bool is_triggered(int64_t height,
                   int64_t v11_phase2_height,
                   int64_t high_freq_window);
 
-// Eligibility set for height h. Implemented as deterministic scan over
-// chain history (or, in production, a maintained index). Returns the
-// set of candidate winner addresses sorted lexicographically — the
-// caller can then index into this vector with the deterministic RNG.
+// ---------------------------------------------------------------------------
+// V11 Phase 2 — eligibility set + deterministic winner selection (C6, real).
+// ---------------------------------------------------------------------------
 //
-// `recent_block_winners` carries miner addresses for heights
-// [h - exclusion_window, h-1]. `current_block_miner` is the miner of h
-// itself, also excluded.
-//
-// PHASE 2 — NOT IMPLEMENTED.
-std::vector<PubKeyHash> eligibility_set(
-    int64_t height,
-    const std::vector<PubKeyHash>& addrs_with_block_since_genesis,
-    const std::vector<PubKeyHash>& recent_block_winners,
-    const PubKeyHash& current_block_miner,
-    int32_t exclusion_window);
+// Lightweight view of a mined block carrying ONLY the fields the
+// lottery cares about. Deliberately decoupled from sost::StoredBlock
+// (which lives in src/sost-node.cpp and carries many fields irrelevant
+// to lottery) so this header has zero dependency on the node-runtime
+// types. Callers (validator, miner, tests) project StoredBlock or
+// any other in-memory representation into this view before calling
+// the lottery API.
+struct LotteryMinedBlockView {
+    int64_t    height{0};
+    PubKeyHash miner_pkh{};
+    Bytes32    block_hash{};
+};
 
-// Deterministic winner selection. Seed is derived as
-//   sha256("SOST/POP-LOTTERY/v11" || prev_block_hash || height).
-// The 64-bit reduction `seed_u64 % |E(h)|` selects the index into the
-// lex-sorted eligibility set.
+// One entry in the lottery eligibility set.
+//   pkh                  — the candidate winner address (sorted by raw
+//                          lex order across the result vector).
+//   first_mined_height   — earliest block height where this pkh won
+//                          the block reward.
+//   last_mined_height    — most recent block height where this pkh won.
+//   blocks_mined         — total count of block-reward wins by this
+//                          pkh in the chain history. Carried for
+//                          analytics ONLY; lottery selection is
+//                          uniform per pkh, NOT weighted by this
+//                          count (see select_lottery_winner_index).
+struct LotteryEligibilityEntry {
+    PubKeyHash pkh{};
+    int64_t    first_mined_height{0};
+    int64_t    last_mined_height{0};
+    int64_t    blocks_mined{0};
+};
+
+// Result type — provided for future C7/C8 callers that want to carry
+// metadata alongside the entries. compute_lottery_eligibility_set
+// itself returns just the entries vector.
+struct LotteryEligibilityResult {
+    std::vector<LotteryEligibilityEntry> eligible;
+    int64_t                              height{0};
+    int64_t                              exclusion_window{0};
+};
+
+// Compute the eligibility set for the lottery at `height`.
 //
-// Returns std::nullopt iff E(h) is empty (caller then applies rollover
-// per §10.5 by adding the would-be share to pending_lottery_amount and
-// emitting only the miner subsidy output).
+// Inputs:
+//   blocks               — full chain history of mined-block views, all
+//                          with `height < height_of_interest`. Order
+//                          NOT required (we re-derive). Duplicates
+//                          (same pkh winning multiple blocks) collapse
+//                          to one entry whose `blocks_mined` counts
+//                          all wins.
+//   height               — the block whose lottery we're computing.
+//                          (NOT yet in `blocks`.)
+//   current_miner_pkh    — the pkh of the miner who won block `height`
+//                          itself; ALWAYS excluded from this lottery.
+//   exclusion_window     — how many recent blocks count for the
+//                          recent-winner exclusion. Defaults to
+//                          LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW
+//                          (= 5 in the C5 default).
 //
-// PHASE 2 — NOT IMPLEMENTED.
+// Eligibility rule:
+//   1. Address has won >= 1 block before `height`.
+//   2. Address is NOT current_miner_pkh.
+//   3. Address has NOT won a block in
+//        [height - exclusion_window, height - 1].
+//      (When exclusion_window == 0, only rule 2 applies on top of 1.)
+//
+// Output:
+//   Vector of entries sorted lex by raw pkh bytes (stable across
+//   x86 / ARM and across runs for the same input).
+//
+// Empty vector means no winner this block (rollover semantics live
+// at the caller — C7).
+std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    int64_t                                   height,
+    const PubKeyHash&                         current_miner_pkh,
+    int64_t                                   exclusion_window =
+        LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+
+// Select the winning index into a lex-sorted eligibility vector.
+//
+// Determinism contract:
+//   seed   = sha256(LOTTERY_RNG_DOMAIN || prev_block_hash || height_le)
+//   roll   = read_u64_le(seed.data())
+//   index  = roll % eligible.size()
+//
+// height is encoded as 8 bytes little-endian via append_u64_le; the
+// SHA-256 implementation is the same `sha256()` used everywhere else
+// in the repo (single-pass, NOT SHA-256d). Same inputs => bit-identical
+// output on x86 and ARM.
+//
+// Returns -1 iff `eligible` is empty (rollover branch handled by
+// caller). Otherwise returns an index in [0, eligible.size()).
+int64_t select_lottery_winner_index(
+    const std::vector<LotteryEligibilityEntry>& eligible,
+    const Bytes32&                              prev_block_hash,
+    int64_t                                     height);
+
+// Helper: did `pkh` win a block-reward in any of
+//   [height - exclusion_window, height - 1]
+// for the given chain view? Used internally by
+// compute_lottery_eligibility_set and exposed for test assertions.
+//
+// Returns false if exclusion_window == 0 (only the current-miner
+// exclusion applies in that mode).
+bool is_recent_reward_winner(
+    const std::vector<LotteryMinedBlockView>& blocks,
+    const PubKeyHash&                         pkh,
+    int64_t                                   height,
+    int64_t                                   exclusion_window);
+
+// ---------------------------------------------------------------------------
+// Pre-C6 placeholder pick_winner kept aborting for any caller that
+// references it. New code should use select_lottery_winner_index above.
+// PHASE 2 — NOT IMPLEMENTED (superseded).
 std::optional<PubKeyHash> pick_winner(const Bytes32& prev_block_hash,
                                    int64_t height,
                                    const std::vector<PubKeyHash>& eligibility_sorted);

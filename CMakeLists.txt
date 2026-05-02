@@ -126,9 +126,16 @@ add_library(sost-core STATIC
     # V11 Phase 2 — SbPoW (Schnorr-bound PoW). Real implementation as of
     # Commit 3 (signing + key derivation + secure_memzero). Consensus
     # validation in src/sbpow.cpp::validate() still aborts and is wired
-    # into block_validation in Commit 4. lottery.cpp stays out of the
-    # library until Commit 5.
+    # into block_validation in Commit 4.
     src/sbpow.cpp
+
+    # V11 Phase 2 — PoP lottery (component D). Real eligibility + winner
+    # selection helpers as of Commit 6. The remaining lottery functions
+    # (apply_block / undo_block — rollover state machinery) stay
+    # abort-on-call until C7. Phase 2 stays dormant via
+    # V11_PHASE2_HEIGHT == INT64_MAX in params.h; nothing in this file
+    # is reached on real chain heights yet.
+    src/lottery.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -233,6 +240,14 @@ add_test(NAME miner-key-selection COMMAND test-miner-key-selection)
 add_executable(test-lottery-frequency tests/test_lottery_frequency.cpp)
 target_link_libraries(test-lottery-frequency PRIVATE sost-core)
 add_test(NAME lottery-frequency COMMAND test-lottery-frequency)
+
+# V11 Phase 2 — component D (Lottery): eligibility set + winner pick.
+# Always built — pure functions over a chain view, no Schnorr, no
+# consensus behaviour change. Includes a synthetic-10k-blocks
+# benchmark (target < 50 ms) per the C9 G4.5 gate.
+add_executable(test-lottery-eligibility tests/test_lottery_eligibility.cpp)
+target_link_libraries(test-lottery-eligibility PRIVATE sost-core)
+add_test(NAME lottery-eligibility COMMAND test-lottery-eligibility)
 
 # V11 Phase 2 — Schnorr-only test binaries. Gated behind
 # SOST_ENABLE_PHASE2_SBPOW because they call sign_sbpow_commitment /
