@@ -138,7 +138,7 @@ struct StoredBlock {
     // (C8). Persisted in chain.json so any tip can resume without
     // replaying lottery transitions from V11_PHASE2_HEIGHT (= 10000,
     // set by C10). Default 0 covers (a) pre-activation blocks
-    // (height < 10000), and (b) backward-compat with chain.json files
+    // (height < 7100), and (b) backward-compat with chain.json files
     // written by binaries that pre-date C8 (the load_chain parser
     // treats a missing field as 0). Pre-activation blocks all carry
     // 0 here; from height 10000 onwards triggered blocks may carry a
@@ -4118,12 +4118,12 @@ static bool process_block(const std::string& block_json) {
     }
 
     // ---------------------------------------------------------------------
-    // V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 10000)
+    // V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 7100)
     // ---------------------------------------------------------------------
-    // V11_PHASE2_HEIGHT == 10000 (params.h, set by C10). The gate
+    // V11_PHASE2_HEIGHT == 7100 (params.h, set by C10). The gate
     // enforces both the version check and the signature path:
-    //   - pre-Phase 2 (height < 10000): require version == 1.
-    //   - Phase 2 (height >= 10000): require version == 2 + valid sig +
+    //   - pre-Phase 2 (height < 7100): require version == 1.
+    //   - Phase 2 (height >= 7100): require version == 2 + valid sig +
     //     matching coinbase miner-output pkh.
     //
     // Wire transport (C12): the submitblock JSON carries

@@ -1303,6 +1303,12 @@ async function renderDTDPanel(body,title,silent){
     summary+=cell('pending jackpot',pending===null?'n/a':dtdSost8(pending)+' SOST','#fbbf24');
     summary+=cell('unique miners',rows.filter(function(r){return r.minedBlocks>0;}).length,'var(--orange)');
     summary+=cell('known non-zero balances',nonZero||'n/a','var(--green)');
+    var phase2Start=7100,bootstrapEnd=phase2Start+5000;
+    var bootstrapLeft=Math.max(0,bootstrapEnd-height);
+    var bootstrapLabel=(height<phase2Start)?'starts at #'+phase2Start:(bootstrapLeft>0?(bootstrapLeft+' blocks left'):'complete');
+    var permanentLabel=(bootstrapLeft>0)?('inactive until #'+bootstrapEnd):'active';
+    summary+=cell('reward blocks · 2 of 3',bootstrapLabel,bootstrapLeft>0?'var(--cyan)':'var(--text3)');
+    summary+=cell('reward blocks · 1 of 3',permanentLabel,bootstrapLeft>0?'var(--text3)':'var(--green)');
     summary+='</div><div id="dtdTableHost"></div>';
     body.innerHTML=summary;
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
