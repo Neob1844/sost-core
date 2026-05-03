@@ -1,6 +1,6 @@
 # V11 — Technical Specification
 
-**Status**: DRAFT v3.7 · author: SOST consensus working group
+**Status**: DRAFT v3.8 · author: SOST consensus working group
 
 **Phase split (current decision)**:
 
@@ -42,6 +42,53 @@ Floor stays at `E7` (CASERT_H_MIN). bitsQ controller, anti-stall, lag clamp and 
 
 ### 1.3 Activation
 At block `CASERT_V11_HEIGHT = 7000`, conditional on gate G1 (§6).
+
+---
+
+## 1.5 · Slingshot — single-shot bitsQ relief
+
+### 1.5.1 Purpose
+Phase 1 (§1) addresses the **profile** side of recovery — when a block runs slow, the cASERT cascade lowers the equalizer profile so the next block is easier to solve. But the **bitsQ** controller still tracks the avg288 of the last 288 intervals, which is slow-moving. After a single 30+ minute block the chain remains schedule-behind and bitsQ has barely moved, so the **next** block is still mined against full difficulty even though the chain just visibly stalled.
+
+Slingshot adds a **one-shot bitsQ drop of 12.5 %** for the block that immediately follows a slow block. It is the bitsQ-side counterpart to the cASERT cascade: cascade drops the profile, Slingshot drops the difficulty — together they buy the chain a meaningful chance to recover schedule on the very next block.
+
+### 1.5.2 Rule
+For a candidate block at `next_height` with chain history `chain` (tip = `chain.back()`):
+
+```
+if next_height >= V11_SLINGSHOT_HEIGHT (= 7000) and chain.size() >= 2:
+    prev_elapsed = chain.back().time - chain[size-2].time
+    bitsQ_avg288 = (existing avg288-derived value, after MIN/MAX clamp)
+    if prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS (1800):
+        relieved   = bitsQ_avg288 * (10000 - SLINGSHOT_DROP_BPS) / 10000
+                   = bitsQ_avg288 * 8750 / 10000   # 12.5 % off
+        bitsQ_for_block = max(MIN_BITSQ, relieved)
+    else:
+        bitsQ_for_block = bitsQ_avg288
+else:                       # pre-fork or chain too small
+    bitsQ_for_block = bitsQ_avg288   # unchanged
+```
+
+Comparison is **strict `>`**: `prev_elapsed == 1800` does not trigger.
+
+### 1.5.3 Worked example
+- Chain tip at height 7,003, `prev_elapsed = 2400 s` (40 min)
+- Normal avg288 says `bitsQ_avg288 = 1,000,000`
+- Slingshot fires: `bitsQ = 1,000,000 * 8750 / 10000 = 875,000`
+- Block 7,004 is mined against the relieved difficulty
+- Block 7,004 takes 580 s (back to normal)
+- For block 7,005: `prev_elapsed = 580` → Slingshot **does not** fire; bitsQ comes purely from avg288 (which now incorporates the recent recovery)
+
+### 1.5.4 Safety constraints (consensus invariants)
+1. **Single-shot per block**: only the block immediately following a slow block is relieved. The next block recomputes avg288 fresh; if its own previous block is fast, no relief is applied.
+2. **No cumulative effect**: the drop never compounds. Even three consecutive slow blocks each receive an independent 12.5 % drop, **always computed against the current avg288 result, not against the previously-relieved bitsQ**.
+3. **Floor preserved**: `relieved` is clamped to `MIN_BITSQ` after the multiplication, so Slingshot can never push difficulty below the absolute floor.
+4. **Idempotent across miner and validator**: both sides route through `casert_next_bitsq` (single source of truth in `src/pow/casert.cpp`). No duplicated logic anywhere.
+5. **Pre-fork unchanged**: at `next_height < V11_SLINGSHOT_HEIGHT` the avg288 path runs to completion and returns without any Slingshot post-processing — bit-for-bit identical to pre-Phase-3 behaviour.
+6. **Short-chain guard**: when `chain.size() < 2` the rule is skipped (we cannot compute `prev_elapsed`); for genesis-adjacent heights the V6++ branch itself requires `chain.size() >= 10`, so Slingshot never reaches a chain too small to produce a meaningful avg288.
+
+### 1.5.5 Activation
+At block `V11_SLINGSHOT_HEIGHT = 7000`, paired with Phase 1 components A and B. No independent gate — Slingshot is part of the Phase 1 hard fork.
 
 ---
 
@@ -546,3 +593,4 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | **DRAFT v3.5 — Phase 2 activation height set to block 10,000** (C10). `V11_PHASE2_HEIGHT` changed from `INT64_MAX` to `10000` in `include/sost/params.h`. Rationale: Phase 1 (cASERT cascade + state-dependent dataset) activates at block 7,000; spacing Phase 2 by ~3,000 blocks (~3 weeks at the 600-second target) keeps the two hard forks observable independently in production and gives miners a full update window. C9 Monte Carlo + accounting + reorg + determinism gates all PASS (`docs/V11_PHASE2_MONTE_CARLO.md`). §3.7 / §4.8 activation paragraphs rewritten; §10.5 + §11.2 constants table updated; the in-code `INT64_MAX` sentinel is retained as a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal. The lottery's bootstrap window is blocks 10,000–14,999 (2-of-3); permanent steady state begins at block 15,000 (1-of-3). Caveat retained: the lottery improves redistribution but is NOT Sybil-proof (cap=5 chosen by C9 Monte Carlo; ~100 sybil pre-legitimated addresses defeat eligibility-based defences regardless of cap). On triggered blocks the full protocol-side allocation (50% of block reward) is redirected to the lottery winner; the PoW miner's 50% share is never touched. **Operational note**: production miners MUST update node + miner binaries before block 10,000 — see `docs/V11_PHASE2_RELEASE_NOTES.md`. The `sost-miner.cpp` mining loop still needs an eligibility-set RPC wired to `build_phase2_payout_coinbase_tx` / `build_phase2_update_coinbase_tx`; that wiring is a blocking follow-up commit before the chain reaches block 10,000. Public banner bumped to v92 with the activation announcement. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3.6 — C11 wired the production miner loop to the `getlotterystate` RPC (NORMAL / UPDATE_EMPTY / PAYOUT coinbase shape dispatch). C12 wired the SbPoW signed v2 header through the miner submitblock JSON path (version, miner_pubkey, miner_signature) and the node-side parser. Activation height stays at 10,000 in this entry. |
 | 2026-05-02 | SOST consensus working group | **DRAFT v3.7 — Phase 2 activation height reduced to block 7,100** (C13). `V11_PHASE2_HEIGHT` changed from `10000` to `7100` in `include/sost/params.h` after Phase 1 (block 7,000) shipped on the live chain and the C11/C12 miner update path was confirmed deployable. Rationale: Phase 1 + Phase 2 are separated by 100 blocks (~16-17h at the 600-second target) — enough to observe Phase 1 in production, propagate binaries across the miner pool and ANN the activation, while keeping the deployment window tight enough for a single operational shift. The Phase 2 lottery bootstrap window is now blocks 7,100–12,099 (2-of-3); permanent steady state begins at block 12,100 (first triggered permanent block: 12,102, since 12,100%3==1, 12,101%3==2, 12,102%3==0). All boundary tests (test_lottery_frequency, test_lottery_eligibility, test_lottery_rollover, test_coinbase_phase2) updated for the new heights. §3.7 / §4.8 activation paragraphs rewritten; §11.2 constants table updated. **Operational note (still in force)**: MINERS MUST UPDATE node + miner binaries before block 7,100. Old miners will produce invalid coinbase on triggered Phase 2 blocks (CB11_LOTTERY_SHAPE) AND missing SbPoW signature (rejected by ValidateSbPoW). Public banner bumped to v94 with the final activation announcement. |
+| 2026-05-02 | SOST consensus working group | **DRAFT v3.8 — Slingshot single-shot bitsQ relief (Phase 3) added to Phase 1 hard fork** (§1.5). New constants in `include/sost/params.h`: `V11_SLINGSHOT_HEIGHT = 7000`, `SLINGSHOT_THRESHOLD_SECONDS = 1800` (30 min), `SLINGSHOT_DROP_BPS = 1250` (12.5 %). Implementation lives in the V6++ branch of `casert_next_bitsq()` in `src/pow/casert.cpp` — the same single-source-of-truth function called by both miner and validator, so post-Slingshot bitsQ is identical on both sides by construction. Rule: at `next_height >= V11_SLINGSHOT_HEIGHT`, if the previous block's elapsed time exceeded 1800 s (strict `>`), the just-computed avg288-derived bitsQ is multiplied by `(10000 - 1250) / 10000 = 0.875` and re-clamped to `MIN_BITSQ`. Single-shot semantics: the relief applies to one block only; the next block recomputes avg288 fresh and only re-applies the relief if its own previous block also exceeded the threshold. **No ratcheting**: each drop is computed against the current avg288 result, never against a previously-relieved value, so three consecutive slow blocks produce three independent 12.5 % drops, never `0.875³ ≈ 67 %`. Activates alongside Phase 1 components A and B at block 7,000 (no independent gate — Slingshot is part of the Phase 1 hard fork). New test binary `test-slingshot` (registered in `CMakeLists.txt` next to `test-casert-v11`) covers: pre-fork unchanged · 1799 / 1800 / 1801 boundary · drop math at 5 seed values · `MIN_BITSQ` floor clamp · single-shot reset · no-ratcheting (verified across 3-block sequence using shifted-height twin chains so `prev_bitsq` matches and the avg288 path is identical) · genesis edge cases (size 0 and size 1) · 10× determinism. All 26 assertions PASS in both `-DSOST_ENABLE_PHASE2_SBPOW=ON` and `OFF` builds; `casert`, `casert-v11`, `convergencex-v11`, `coinbase-phase2`, `sbpow-*` all PASS with no regressions. Pre-existing failures (`bond-lock`, `checkpoints`, `popc`, `escrow`, `dynamic-rewards`) reproduce identically before and after the change — confirmed unaffected. Public banner stays at v100 (Slingshot announcement). |

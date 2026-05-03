@@ -149,6 +149,31 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
 
         int64_t result = (int64_t)prev_bitsq + delta;
         result = std::max<int64_t>((int64_t)MIN_BITSQ, std::min<int64_t>((int64_t)MAX_BITSQ, result));
+
+        // V11 Phase 3 — Slingshot single-shot bitsQ relief
+        // Spec: include/sost/params.h V11_SLINGSHOT_HEIGHT.
+        // If the previous block elapsed more than SLINGSHOT_THRESHOLD_SECONDS,
+        // reduce the just-computed bitsQ by SLINGSHOT_DROP_BPS basis points
+        // for THIS block only. Self-resetting: the next block recomputes
+        // avg288 fresh and only re-applies the relief if its own previous
+        // block also exceeded the threshold.
+        //
+        // CONSENSUS-CRITICAL: the comparison is `prev_elapsed > threshold`
+        // (strict >) — prev_elapsed == 1800 does NOT trigger. The drop is
+        // applied AFTER the avg288/MAX clamp and is then re-clamped to the
+        // MIN_BITSQ floor only (we never want to push the difficulty above
+        // the just-computed value, only below it). Both miner and validator
+        // route through this single function so post-Slingshot bitsQ is
+        // identical on both sides.
+        if (next_height >= V11_SLINGSHOT_HEIGHT && chain.size() >= 2) {
+            int64_t prev_elapsed = chain.back().time - chain[chain.size() - 2].time;
+            if (prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS) {
+                int64_t relieved = (result * (10000 - (int64_t)SLINGSHOT_DROP_BPS)) / 10000;
+                if (relieved < (int64_t)MIN_BITSQ) relieved = (int64_t)MIN_BITSQ;
+                result = relieved;
+            }
+        }
+
         return (uint32_t)result;
     }
 

@@ -302,6 +302,17 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 // on the same block since both touch consensus.
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
+// V11 Phase 3 — Slingshot single-shot bitsQ relief
+// Activates alongside Phase 1 at block 7000. If the previous block's
+// elapsed time exceeded SLINGSHOT_THRESHOLD_SECONDS, the current
+// block's bitsQ (after the normal avg288 calculation) is reduced by
+// SLINGSHOT_DROP_BPS basis points (1250 = 12.5%). The relief is
+// single-shot: the next block where prev <= threshold returns to the
+// avg288-derived value without any carry-over.
+inline constexpr int64_t  V11_SLINGSHOT_HEIGHT          = 7000;
+inline constexpr int64_t  SLINGSHOT_THRESHOLD_SECONDS   = 1800;   // 30 min
+inline constexpr int32_t  SLINGSHOT_DROP_BPS            = 1250;   // 12.5%
+
 // V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
 // Phase 1 activates at 7000; Phase 2 at 7100 — 100-block (~16-17h)
 // deployment window between hard forks. C11+C12 wired the miner
