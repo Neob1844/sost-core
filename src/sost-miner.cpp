@@ -29,6 +29,9 @@
 #include "sost/transaction.h"
 #include "sost/merkle.h"
 #include "sost/address.h"
+#include "sost/wallet.h"     // V11 Phase 2 — wallet key loading for SbPoW
+#include "sost/sbpow.h"      // V11 Phase 2 — Schnorr signing helpers
+#include "sost/lottery.h"    // V11 Phase 2 (C11) — phase2_coinbase_split helper
 
 #include <fstream>
 #include <cstdio>
@@ -70,6 +73,15 @@ struct MinedBlock {
     std::vector<Bytes32> checkpoint_leaves;
     std::vector<SegmentProof> segment_proofs;
     std::vector<RoundWitness> round_witnesses;
+
+    // V11 Phase 2 — SbPoW v2 header fields. version == 1 leaves
+    // miner_pubkey/miner_signature zero-filled and skips RPC plumbing.
+    // version == 2 carries the wallet-key pubkey and Schnorr signature
+    // over the SbPoW message; both are propagated to the node via the
+    // submitblock RPC payload.
+    uint32_t header_version{1};
+    sost::sbpow::MinerPubkey    miner_pubkey{};
+    sost::sbpow::MinerSignature miner_signature{};
 };
 static std::vector<MinedBlock> g_mined_blocks;
 
@@ -78,27 +90,75 @@ static std::string g_rpc_url = "";
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
 
-// Miner payout address
+// Miner payout address (legacy --address path, pre-V11 Phase 2)
 static std::string g_miner_address = "";
 static PubKeyHash  g_miner_pkh{};
+
+// V11 Phase 2 — wallet-backed signing key (mandatory at height >=
+// V11_PHASE2_HEIGHT = 7100). When --wallet + --mining-key-label are
+// passed, the wallet is loaded into g_wallet and the resolved key's
+// pubkey/pkh are cached here. The privkey lives only inside g_wallet;
+// callers (signing helpers) read it on demand and the process zeroes
+// its in-memory copy via secure_memzero on shutdown.
+static std::string g_wallet_path = "";
+static std::string g_mining_key_label = "";
+static Wallet      g_wallet;
+static bool        g_signing_key_loaded = false;
+static PubKey      g_signing_pubkey{};
+static PubKeyHash  g_signing_pkh{};
+static std::string g_signing_address = "";
 
 // =============================================================================
 // Full header builder (same as genesis.cpp / node.cpp)
 // =============================================================================
+//
+// V1 layout (122 bytes — unchanged from pre-V11):
+//   magic(10) || "HDR2"(4) || hc72(72) || checkpoints_root(32)
+//                || nonce(4 LE) || extra_nonce(4 LE)
+//
+// V2 layout (V11 Phase 2, 223 bytes total — appends SbPoW fields):
+//   ... 122 v1 bytes above ...
+//   version(4 LE)             = 2
+//   miner_pubkey(33)          — secp256k1 compressed
+//   miner_signature(64)       — BIP-340 Schnorr over the SbPoW message
+//
+// The SbPoW message itself is computed from
+// (prev, height, commit, nonce, extra_nonce, miner_pubkey) — see
+// sost::sbpow::build_sbpow_message. The signature does NOT cover the
+// block_id (that would be circular: the signature is part of the
+// hashed bytes). Tampering with any signed field produces a different
+// signature → different bytes → different block_id, so consensus
+// catches the mismatch via SbPoW verification + block_id recompute.
 static std::vector<uint8_t> build_full_header_bytes(
     const uint8_t hc72[72],
     const Bytes32& checkpoints_root,
     uint32_t nonce_u32,
-    uint32_t extra_u32)
+    uint32_t extra_u32,
+    uint32_t version = 1,
+    const sost::sbpow::MinerPubkey*    miner_pubkey    = nullptr,
+    const sost::sbpow::MinerSignature* miner_signature = nullptr)
 {
     std::vector<uint8_t> buf;
-    buf.reserve(10 + 4 + 72 + 32 + 4 + 4);
+    buf.reserve(10 + 4 + 72 + 32 + 4 + 4 + (version >= 2 ? (4 + 33 + 64) : 0));
     append_magic(buf);
     append(buf, "HDR2", 4);
     append(buf, hc72, 72);
     append(buf, checkpoints_root);
     append_u32_le(buf, nonce_u32);
     append_u32_le(buf, extra_u32);
+    if (version >= 2) {
+        append_u32_le(buf, version);
+        if (miner_pubkey) {
+            buf.insert(buf.end(), miner_pubkey->begin(), miner_pubkey->end());
+        } else {
+            buf.insert(buf.end(), 33, (uint8_t)0);
+        }
+        if (miner_signature) {
+            buf.insert(buf.end(), miner_signature->begin(), miner_signature->end());
+        } else {
+            buf.insert(buf.end(), 64, (uint8_t)0);
+        }
+    }
     return buf;
 }
 
@@ -150,12 +210,10 @@ static std::string rpc_auth_header() {
 // =============================================================================
 // Coinbase transaction builder
 // =============================================================================
-static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split,
-                                     const PubKeyHash& miner_pkh) {
-    Transaction tx;
-    tx.version = 1;
-    tx.tx_type = TX_TYPE_COINBASE;
-
+//
+// Helper for the common 1-input header — every coinbase shape (pre-Phase-2,
+// Phase-2 UPDATE, Phase-2 PAYOUT) uses the same input encoding.
+static void fill_coinbase_input(Transaction& tx, int64_t height) {
     TxInput cin;
     cin.prev_txid.fill(0);
     cin.prev_index = 0xFFFFFFFF;
@@ -164,6 +222,15 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
     for (int i = 0; i < 8; ++i)
         cin.signature[i] = (uint8_t)((height >> (i * 8)) & 0xFF);
     tx.inputs.push_back(cin);
+}
+
+static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const CoinbaseSplit& split,
+                                     const PubKeyHash& miner_pkh) {
+    (void)total_reward;  // kept for API symmetry with Phase-2 builders below
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
 
     TxOutput out_miner;
     out_miner.amount = split.miner;
@@ -182,6 +249,70 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
     out_popc.type = OUT_COINBASE_POPC;
     address_decode(ADDR_POPC_POOL, out_popc.pubkey_hash);
     tx.outputs.push_back(out_popc);
+
+    return tx;
+}
+
+// V11 Phase 2 (C8) — coinbase builder for triggered+empty (UPDATE).
+// Produces a 1-output coinbase: MINER only. The lottery share is
+// withheld in chain-state pending; no GOLD/POPC outputs are emitted.
+//
+// `miner_share` MUST equal sost::lottery::phase2_coinbase_split(
+// subsidy + fees).miner_share so the validator's CB12 check passes.
+//
+// Phase 2 activates at V11_PHASE2_HEIGHT = 7100 (params.h, set by C13).
+// Production miners MUST wire this builder into the mining loop before
+// the chain reaches height 7100 (see follow-up commit: eligibility-set
+// RPC + winner selection at the call site in mine_loop). It is currently
+// exposed for tests and for that future wiring.
+static Transaction build_phase2_update_coinbase_tx(int64_t height,
+                                                   int64_t miner_share,
+                                                   const PubKeyHash& miner_pkh) {
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
+
+    TxOutput out_miner;
+    out_miner.amount = miner_share;
+    out_miner.type = OUT_COINBASE_MINER;
+    out_miner.pubkey_hash = miner_pkh;
+    tx.outputs.push_back(out_miner);
+
+    return tx;
+}
+
+// V11 Phase 2 (C8) — coinbase builder for triggered+non-empty (PAYOUT).
+// Produces a 2-output coinbase: MINER + OUT_COINBASE_LOTTERY. The
+// lottery output amount equals lottery_share + pending_before — the
+// per-block share plus any rolled-over jackpot from prior empty
+// triggered blocks. No GOLD/POPC outputs are emitted.
+//
+// Phase 2 activates at V11_PHASE2_HEIGHT = 7100 (params.h, set by C13).
+// Production miners MUST wire this builder into the mining loop before
+// the chain reaches height 7100 (see follow-up commit). Currently
+// exposed for tests and for that future wiring.
+static Transaction build_phase2_payout_coinbase_tx(int64_t height,
+                                                   int64_t miner_share,
+                                                   int64_t lottery_payout,
+                                                   const PubKeyHash& miner_pkh,
+                                                   const PubKeyHash& winner_pkh) {
+    Transaction tx;
+    tx.version = 1;
+    tx.tx_type = TX_TYPE_COINBASE;
+    fill_coinbase_input(tx, height);
+
+    TxOutput out_miner;
+    out_miner.amount = miner_share;
+    out_miner.type = OUT_COINBASE_MINER;
+    out_miner.pubkey_hash = miner_pkh;
+    tx.outputs.push_back(out_miner);
+
+    TxOutput out_lottery;
+    out_lottery.amount = lottery_payout;
+    out_lottery.type = OUT_COINBASE_LOTTERY;
+    out_lottery.pubkey_hash = winner_pkh;
+    tx.outputs.push_back(out_lottery);
 
     return tx;
 }
@@ -388,6 +519,96 @@ static BlockTemplateResult fetch_block_template() {
 }
 
 // =============================================================================
+// V11 Phase 2 (C11) — fetch lottery state from sost-node via getlotterystate.
+// =============================================================================
+//
+// Mirrors the JSON returned by handle_getlotterystate in sost-node.cpp.
+// `ok` is true iff the RPC succeeded AND every required field parsed.
+// On failure (RPC down, malformed JSON, missing field) the caller MUST
+// abort the block candidate — building a NORMAL coinbase on a triggered
+// Phase-2 block produces a CB11_LOTTERY_SHAPE rejection.
+struct LotteryStateRpc {
+    bool        ok{false};
+    std::string error;
+
+    int64_t     height_next{0};
+    int64_t     phase2_height{INT64_MAX};
+    bool        phase2_active{false};
+    bool        lottery_triggered{false};
+    int64_t     pending_lottery_before{0};
+    int64_t     current_lottery_amount{0};
+    std::string coinbase_shape;            // "NORMAL" | "UPDATE_EMPTY" | "PAYOUT"
+    int64_t     miner_amount{0};
+    int64_t     gold_amount{0};
+    int64_t     popc_amount{0};
+    int64_t     lottery_payout{0};
+    std::string lottery_winner_pkh_hex;    // 40-char hex on PAYOUT, "" otherwise
+    int64_t     eligible_count{0};
+    int64_t     winner_index{-1};
+    int64_t     expected_pending_after{0};
+    int64_t     subsidy{0};
+};
+
+// jbool helper: pulls a "key":true/false JSON pair.
+static bool jbool(const std::string& j, const std::string& k, bool def = false) {
+    std::string n = "\"" + k + "\"";
+    auto p = j.find(n);
+    if (p == std::string::npos) return def;
+    p = j.find(':', p + n.size());
+    if (p == std::string::npos) return def;
+    p++;
+    while (p < j.size() && (j[p] == ' ' || j[p] == '\t')) p++;
+    if (p + 4 <= j.size() && j.compare(p, 4, "true") == 0)  return true;
+    if (p + 5 <= j.size() && j.compare(p, 5, "false") == 0) return false;
+    return def;
+}
+
+static LotteryStateRpc fetch_lottery_state(int64_t /*expected_h*/) {
+    LotteryStateRpc r;
+    if (g_rpc_url.empty()) {
+        r.error = "rpc-url empty (miner running without --rpc)";
+        return r;
+    }
+    std::string raw_resp = rpc_call("getlotterystate");
+    if (raw_resp.empty()) {
+        r.error = "rpc connection failed or empty response";
+        return r;
+    }
+    if (raw_resp.find("\"error\"") != std::string::npos &&
+        raw_resp.find("\"result\"") == std::string::npos) {
+        r.error = "rpc returned error: " + raw_resp;
+        return r;
+    }
+    // parse fields directly off the result JSON (jstr/jint don't care about
+    // the wrapping envelope as long as keys are unique).
+    r.height_next            = jint(raw_resp, "height_next");
+    r.phase2_height          = jint(raw_resp, "phase2_height");
+    r.phase2_active          = jbool(raw_resp, "phase2_active");
+    r.lottery_triggered      = jbool(raw_resp, "lottery_triggered");
+    r.pending_lottery_before = jint(raw_resp, "pending_lottery_before");
+    r.current_lottery_amount = jint(raw_resp, "current_lottery_amount");
+    r.coinbase_shape         = jstr(raw_resp, "coinbase_shape");
+    r.miner_amount           = jint(raw_resp, "miner_amount");
+    r.gold_amount            = jint(raw_resp, "gold_amount");
+    r.popc_amount            = jint(raw_resp, "popc_amount");
+    r.lottery_payout         = jint(raw_resp, "lottery_payout");
+    r.lottery_winner_pkh_hex = jstr(raw_resp, "lottery_winner_pkh");
+    r.eligible_count         = jint(raw_resp, "eligible_count");
+    r.winner_index           = jint(raw_resp, "winner_index");
+    r.expected_pending_after = jint(raw_resp, "expected_pending_after");
+    r.subsidy                = jint(raw_resp, "subsidy");
+
+    if (r.coinbase_shape != "NORMAL" &&
+        r.coinbase_shape != "UPDATE_EMPTY" &&
+        r.coinbase_shape != "PAYOUT") {
+        r.error = "missing or invalid coinbase_shape in response";
+        return r;
+    }
+    r.ok = true;
+    return r;
+}
+
+// =============================================================================
 // RPC: submit FULL block to node
 // =============================================================================
 // Return values: 1 = accepted, 0 = rejected by node, -1 = connection failed
@@ -405,7 +626,12 @@ static int rpc_submit_block_full(
         port = atoi(g_rpc_url.substr(colon + 1).c_str());
     }
 
-    // Build block JSON for node (must match node parser)
+    // Build block JSON for node (must match node parser).
+    // V11 Phase 2 (C12): the "version" field gates SbPoW transport.
+    //   version == 1 → legacy: omit miner_pubkey / miner_signature.
+    //   version == 2 → emit miner_pubkey (66 hex = 33 bytes) and
+    //                  miner_signature (128 hex = 64 bytes); the node
+    //                  parses these into ValidateSbPoW.
     std::string bj = "{\"block_id\":\"" + hex(mb.block_id)
         + "\",\"prev_hash\":\"" + hex(mb.prev_hash)
         + "\",\"merkle_root\":\"" + hex(mb.merkle_root)
@@ -414,6 +640,7 @@ static int rpc_submit_block_full(
         + "\",\"height\":" + std::to_string(mb.height)
         + ",\"timestamp\":" + std::to_string(mb.timestamp)
         + ",\"bits_q\":" + std::to_string(mb.bits_q)
+        + ",\"version\":" + std::to_string(mb.header_version)
         + ",\"nonce\":" + std::to_string(mb.nonce)
         + ",\"extra_nonce\":" + std::to_string(mb.extra_nonce)
         + ",\"subsidy\":" + std::to_string(mb.subsidy)
@@ -481,6 +708,16 @@ static int rpc_submit_block_full(
             + "}";
     }
     bj += "]";
+
+    // V11 Phase 2 (C12) — SbPoW transport. Only emitted for v2 headers.
+    // Pre-Phase 2 blocks omit these fields entirely; the node parser
+    // defaults header_version to 1 when "version" is missing or 1.
+    if (mb.header_version >= 2) {
+        bj += ",\"miner_pubkey\":\""
+            + to_hex_str(mb.miner_pubkey.data(), mb.miner_pubkey.size()) + "\"";
+        bj += ",\"miner_signature\":\""
+            + to_hex_str(mb.miner_signature.data(), mb.miner_signature.size()) + "\"";
+    }
 
     bj += ",\"transactions\":[";
     for(size_t i=0;i<tx_hexes_including_coinbase.size();++i){
@@ -839,10 +1076,84 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         }
     }
 
-    // Coinbase = subsidy + fees, split 50/25/25
+    // Coinbase = subsidy + fees, dispatched by V11 Phase 2 RPC state.
+    //
+    // V11 Phase 2 (C11) — fetch the lottery shape directive from the node.
+    //   "NORMAL"        → 3-output 50/25/25 (MINER/GOLD/POPC) — pre-Phase 2
+    //                     OR Phase 2 non-triggered.
+    //   "UPDATE_EMPTY"  → 1-output coinbase (MINER only); the lottery
+    //                     share is withheld in chain-state pending.
+    //   "PAYOUT"        → 2-output coinbase (MINER + LOTTERY); the LOTTERY
+    //                     output amount is lottery_share + pending_before
+    //                     and the pkh is the deterministic winner picked
+    //                     by the node.
+    //
+    // The RPC reports its own lottery_share computed against subsidy only.
+    // Fees are miner-time, so we re-derive the (subsidy+fees) lottery share
+    // here and pass that into the Phase 2 builders.
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
-    Transaction coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
+    Transaction coinbase_tx;
+
+    LotteryStateRpc ls = fetch_lottery_state(h);
+    if (!ls.ok) {
+        printf("[MINER] fetch_lottery_state failed: %s; aborting block candidate.\n",
+               ls.error.c_str());
+        return false;
+    }
+    if (ls.height_next != h) {
+        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; "
+               "aborting block candidate.\n",
+               (long long)ls.height_next, (long long)h);
+        return false;
+    }
+
+    if (ls.coinbase_shape == "NORMAL") {
+        coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
+    } else if (ls.coinbase_shape == "UPDATE_EMPTY") {
+        // Phase 2 triggered + empty eligibility → withhold lottery share
+        // in chain-state pending; emit ONLY a MINER output.
+        const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
+        const int64_t miner_share = p2split.miner_share;
+        coinbase_tx = build_phase2_update_coinbase_tx(h, miner_share, g_miner_pkh);
+        printf("[MINER] Phase 2 UPDATE_EMPTY: miner_share=%lld, lottery_share=%lld "
+               "→ pending (no winner this block)\n",
+               (long long)miner_share, (long long)p2split.lottery_share);
+    } else if (ls.coinbase_shape == "PAYOUT") {
+        // Phase 2 triggered + non-empty → emit MINER + LOTTERY outputs.
+        const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
+        const int64_t miner_share = p2split.miner_share;
+        const int64_t lottery_amount =
+            p2split.lottery_share + ls.pending_lottery_before;
+
+        // Decode winner pkh from RPC hex.
+        if (ls.lottery_winner_pkh_hex.size() != 40) {
+            printf("[MINER] Phase 2 PAYOUT: lottery_winner_pkh wrong length (%zu); "
+                   "aborting block candidate.\n",
+                   ls.lottery_winner_pkh_hex.size());
+            return false;
+        }
+        std::vector<uint8_t> winner_raw;
+        if (!hex_to_raw(ls.lottery_winner_pkh_hex, winner_raw) || winner_raw.size() != 20) {
+            printf("[MINER] Phase 2 PAYOUT: lottery_winner_pkh hex decode failed; "
+                   "aborting block candidate.\n");
+            return false;
+        }
+        PubKeyHash winner_pkh{};
+        std::copy(winner_raw.begin(), winner_raw.end(), winner_pkh.begin());
+
+        coinbase_tx = build_phase2_payout_coinbase_tx(
+            h, miner_share, lottery_amount, g_miner_pkh, winner_pkh);
+        printf("[MINER] Phase 2 PAYOUT: miner_share=%lld, lottery_payout=%lld "
+               "(share=%lld + pending=%lld), winner=%s\n",
+               (long long)miner_share, (long long)lottery_amount,
+               (long long)p2split.lottery_share, (long long)ls.pending_lottery_before,
+               ls.lottery_winner_pkh_hex.substr(0, 16).c_str());
+    } else {
+        printf("[MINER] Phase 2 unknown coinbase_shape '%s'; aborting block candidate.\n",
+               ls.coinbase_shape.c_str());
+        return false;
+    }
 
     std::vector<Transaction> block_txs;
     block_txs.push_back(coinbase_tx);
@@ -988,12 +1299,67 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
                         auto t1 = std::chrono::steady_clock::now();
                         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-                        auto full_hdr = build_full_header_bytes(my_hc72, res.checkpoints_root, n, my_extra);
+
+                        // V11 Phase 2 (C12) — at heights >= V11_PHASE2_HEIGHT,
+                        // build a v2 SbPoW-signed header. Pre-Phase 2 keeps
+                        // the legacy v1 layout.
+                        uint32_t hdr_version = 1;
+                        sost::sbpow::MinerPubkey    sig_pubkey{};
+                        sost::sbpow::MinerSignature sig_signature{};
+                        if (h >= sost::V11_PHASE2_HEIGHT &&
+                            sost::V11_PHASE2_HEIGHT != INT64_MAX) {
+                            // Gating already enforced at startup, but defence
+                            // in depth: if we somehow reached a Phase 2 height
+                            // without a signing key, give up cleanly rather
+                            // than emit an unsigned v2 header (rejected by node).
+                            if (!g_signing_key_loaded) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet-backed mining key required. "
+                                    "Use --wallet PATH --mining-key-label LABEL.\n",
+                                    (long long)h);
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            const sost::WalletKey* wk =
+                                g_wallet.find_key_by_label(g_mining_key_label);
+                            if (!wk) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n",
+                                    (long long)h, g_mining_key_label.c_str());
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
+                            sost::sbpow::MinerPrivkey priv{};
+                            std::memcpy(priv.data(), wk->privkey.data(), 32);
+                            Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
+                                g_tip_hash, h, res.commit, n, my_extra, sig_pubkey);
+                            bool signed_ok = sost::sbpow::sign_sbpow_commitment(
+                                priv, sbpow_msg, sig_signature);
+                            sost::sbpow::secure_memzero(priv.data(), priv.size());
+                            if (!signed_ok) {
+                                printf(
+                                    "[MINER] FATAL: Phase 2 SbPoW signing failed at height %lld.\n",
+                                    (long long)h);
+                                fflush(stdout);
+                                g_chain_advanced = true;
+                                return;
+                            }
+                            hdr_version = 2;
+                        }
+
+                        auto full_hdr = build_full_header_bytes(
+                            my_hc72, res.checkpoints_root, n, my_extra,
+                            hdr_version,
+                            hdr_version >= 2 ? &sig_pubkey    : nullptr,
+                            hdr_version >= 2 ? &sig_signature : nullptr);
                         Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
 
-                        printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu (thread %d)\n",
+                        printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu (thread %d) v%u\n",
                                (long long)h, hex(block_id).substr(0, 16).c_str(),
-                               n, my_extra, (long long)elapsed, block_txs.size(), tid);
+                               n, my_extra, (long long)elapsed, block_txs.size(), tid, hdr_version);
                         printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                                (long long)subsidy, (long long)total_fees,
                                (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
@@ -1031,6 +1397,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         tr.mb.miner_reward = split.miner;
                         tr.mb.gold_vault_reward = split.gold_vault;
                         tr.mb.popc_pool_reward = split.popc_pool;
+                        tr.mb.header_version    = hdr_version;
+                        tr.mb.miner_pubkey      = sig_pubkey;
+                        tr.mb.miner_signature   = sig_signature;
                         return;
                     }
                 }
@@ -1270,12 +1639,58 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 auto t1 = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
-                auto full_hdr = build_full_header_bytes(hc72, res.checkpoints_root, nonce, extra_nonce);
+                // V11 Phase 2 (C12) — at heights >= V11_PHASE2_HEIGHT,
+                // build a v2 SbPoW-signed header. Pre-Phase 2 keeps the
+                // legacy v1 layout (no signing).
+                uint32_t hdr_version = 1;
+                sost::sbpow::MinerPubkey    sig_pubkey{};
+                sost::sbpow::MinerSignature sig_signature{};
+                if (h >= sost::V11_PHASE2_HEIGHT &&
+                    sost::V11_PHASE2_HEIGHT != INT64_MAX) {
+                    if (!g_signing_key_loaded) {
+                        printf(
+                            "[MINER] FATAL: Phase 2 active at height %lld — wallet-backed mining key required. "
+                            "Use --wallet PATH --mining-key-label LABEL.\n",
+                            (long long)h);
+                        fflush(stdout);
+                        return false;
+                    }
+                    const sost::WalletKey* wk =
+                        g_wallet.find_key_by_label(g_mining_key_label);
+                    if (!wk) {
+                        printf(
+                            "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n",
+                            (long long)h, g_mining_key_label.c_str());
+                        fflush(stdout);
+                        return false;
+                    }
+                    std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
+                    sost::sbpow::MinerPrivkey priv{};
+                    std::memcpy(priv.data(), wk->privkey.data(), 32);
+                    Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
+                        g_tip_hash, h, res.commit, nonce, extra_nonce, sig_pubkey);
+                    bool signed_ok = sost::sbpow::sign_sbpow_commitment(
+                        priv, sbpow_msg, sig_signature);
+                    sost::sbpow::secure_memzero(priv.data(), priv.size());
+                    if (!signed_ok) {
+                        printf("[MINER] FATAL: Phase 2 SbPoW signing failed at height %lld.\n",
+                               (long long)h);
+                        fflush(stdout);
+                        return false;
+                    }
+                    hdr_version = 2;
+                }
+
+                auto full_hdr = build_full_header_bytes(
+                    hc72, res.checkpoints_root, nonce, extra_nonce,
+                    hdr_version,
+                    hdr_version >= 2 ? &sig_pubkey    : nullptr,
+                    hdr_version >= 2 ? &sig_signature : nullptr);
                 Bytes32 block_id = compute_block_id(full_hdr.data(), full_hdr.size(), res.commit);
 
-                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu\n",
+                printf("\r[BLOCK %lld] %s nonce=%u extra=%u %lldms txs=%zu v%u\n",
                        (long long)h, hex(block_id).substr(0, 16).c_str(),
-                       nonce, extra_nonce, (long long)elapsed, block_txs.size());
+                       nonce, extra_nonce, (long long)elapsed, block_txs.size(), hdr_version);
                 printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                        (long long)subsidy, (long long)total_fees,
                        (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
@@ -1312,6 +1727,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.miner_reward = split.miner;
                 mb.gold_vault_reward = split.gold_vault;
                 mb.popc_pool_reward = split.popc_pool;
+                mb.header_version  = hdr_version;
+                mb.miner_pubkey    = sig_pubkey;
+                mb.miner_signature = sig_signature;
 
                 // Submit to node FIRST — only advance local chain if accepted
                 bool node_accepted = false;
@@ -1502,6 +1920,8 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--rpc-user") && i + 1 < argc) g_rpc_user = argv[++i];
         else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) g_rpc_pass = argv[++i];
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
+        else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
+        else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
@@ -1514,7 +1934,10 @@ int main(int argc, char** argv) {
         }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
             printf("SOST Miner v0.9 (multi-threaded)\n");
-            printf("  --address <sost1..> REQUIRED: your wallet address to receive mining rewards\n");
+            printf("  --address <sost1..> REQUIRED (pre-V11 Phase 2): your wallet address to receive mining rewards\n");
+            printf("  --wallet <path>    V11 Phase 2: wallet.json path holding the SbPoW signing key\n");
+            printf("  --mining-key-label <label>  V11 Phase 2: which WalletKey label to use for signing\n");
+            printf("                     (--address optional; if set, must match the key's address)\n");
             printf("  --blocks <n>       Blocks to mine (default: 5)\n");
             printf("  --max-nonce <n>    Max nonce per extra_nonce cycle (default: unlimited)\n");
             printf("  --genesis <path>   Genesis JSON\n");
@@ -1529,10 +1952,72 @@ int main(int argc, char** argv) {
         }
     }
 
-    // Validate --address (REQUIRED)
+    // ----- V11 Phase 2 — wallet-backed signing key resolution -----
+    //
+    // Three valid combinations:
+    //   1. --address only                       (legacy pre-Phase 2 path, unchanged)
+    //   2. --wallet + --mining-key-label        (Phase 2 path; --address optional)
+    //   3. --wallet + --mining-key-label + --address
+    //                                            (Phase 2 path; --address must MATCH
+    //                                            the address derived from the key)
+    //
+    // V11_PHASE2_HEIGHT is 7100 (set by C13). Until the chain reaches
+    // 7100, phase2_required stays `false` at startup and the resolver
+    // accepts an --address-only invocation. From height 7100 onwards
+    // the per-block strict path requires a wallet-backed signing key —
+    // miners that did not configure --wallet + --mining-key-label
+    // before activation will fail to produce valid v2 headers.
+    // The signing-key path is exercised by tests/test_miner_key_selection.cpp.
+    if (!g_wallet_path.empty() || !g_mining_key_label.empty()) {
+        if (g_wallet_path.empty()) {
+            fprintf(stderr, "ERROR: --mining-key-label requires --wallet <path>.\n");
+            return 1;
+        }
+        if (g_mining_key_label.empty()) {
+            fprintf(stderr, "ERROR: --wallet requires --mining-key-label <label>.\n");
+            return 1;
+        }
+        std::string werr;
+        if (!g_wallet.load(g_wallet_path, &werr)) {
+            fprintf(stderr, "ERROR: failed to load wallet '%s': %s\n",
+                    g_wallet_path.c_str(), werr.c_str());
+            return 1;
+        }
+
+        // Initial resolution uses phase2_required=false; the per-block
+        // mining loop updates the flag once it knows the height. The
+        // resolver still enforces label-found and address-match rules.
+        bool phase2_required = false;  // updated per-block in the mining loop
+        sbpow::MinerKeyResolution res = sbpow::resolve_miner_key(
+            g_wallet, g_mining_key_label, g_miner_address, phase2_required);
+        if (res.status == sbpow::MinerKeyResolution::Status::ERROR) {
+            fprintf(stderr, "ERROR: %s\n", res.error.c_str());
+            return 1;
+        }
+        if (res.status == sbpow::MinerKeyResolution::Status::OK_SIGNING_KEY) {
+            g_signing_key_loaded = true;
+            g_signing_pubkey     = res.pubkey;
+            g_signing_pkh        = res.pkh;
+            g_signing_address    = res.address;
+
+            // Override the legacy --address with the address derived from
+            // the wallet key. From here on the coinbase pays the
+            // wallet-key address — required by SbPoW once it activates.
+            g_miner_address = res.address;
+            g_miner_pkh     = res.pkh;
+        }
+        // OK_PRE_PHASE2_LEGACY would fall through to the --address checks
+        // below (this branch is unreachable here because we entered the
+        // block iff at least one wallet flag was given).
+    }
+
+    // Validate --address (REQUIRED at all heights — it's the legacy
+    // miner-payout address; for Phase 2 paths it has already been
+    // overridden above to match the wallet key).
     if (g_miner_address.empty()) {
         fprintf(stderr, "ERROR: --address required. Use your wallet address to receive mining rewards.\n");
         fprintf(stderr, "  Example: --address sost1your40hexcharaddresshere1234567890ab\n");
+        fprintf(stderr, "  Or pass --wallet + --mining-key-label for V11 Phase 2 SbPoW signing.\n");
         return 1;
     }
     if (!address_valid(g_miner_address)) {
@@ -1546,7 +2031,13 @@ int main(int argc, char** argv) {
 
     printf("=== SOST Miner v0.9 (multi-threaded, FULL submitblock) ===\n");
     if (g_num_threads > 1) printf("Threads: %d (parallel nonce search)\n", g_num_threads);
-    printf("Miner address: %s\n", g_miner_address.c_str());
+    if (g_signing_key_loaded) {
+        printf("SbPoW signing key: label='%s' (loaded from %s)\n",
+               g_mining_key_label.c_str(), g_wallet_path.c_str());
+    }
+    printf("Miner address: %s%s\n",
+           g_miner_address.c_str(),
+           g_signing_key_loaded ? " (derived from wallet key)" : "");
     printf("Profile: %s | Blocks: %d%s\n\n",
            prof == Profile::MAINNET ? "mainnet" : (prof == Profile::TESTNET ? "testnet" : "dev"),
            num_blocks,
@@ -1565,6 +2056,36 @@ int main(int argc, char** argv) {
             load_chain(chain_path);
             printf("Continuing from height %lld, tip=%s\n\n",
                    (long long)(g_chain.size()-1), hex(g_tip_hash).substr(0,16).c_str());
+        }
+    }
+
+    // V11 Phase 2 (C11) — wallet-backed mining key required at activation.
+    //
+    // Determine the next block height the miner will produce. If we have
+    // an RPC connection, ask the node (authoritative); otherwise infer
+    // from the local chain. If that next height is at or past
+    // V11_PHASE2_HEIGHT, refuse to start without --wallet + --mining-key-label.
+    // SbPoW v2 headers REQUIRE a Schnorr signature from the wallet key on
+    // every Phase 2 block; an --address-only invocation cannot produce
+    // a valid header and would burn CPU cycles on rejected blocks.
+    {
+        int64_t next_height_check = (int64_t)g_chain.size(); // height of next block
+        if (!g_rpc_url.empty()) {
+            std::string info = rpc_call("getinfo");
+            if (!info.empty()) {
+                int64_t live_blocks = jint(info, "blocks");
+                if (live_blocks > 0) next_height_check = live_blocks + 1;
+            }
+        }
+        if (next_height_check >= sost::V11_PHASE2_HEIGHT &&
+            sost::V11_PHASE2_HEIGHT != INT64_MAX &&
+            !g_signing_key_loaded) {
+            fprintf(stderr,
+                "[MINER] FATAL: Phase 2 active at height >= V11_PHASE2_HEIGHT "
+                "(=%lld) — wallet-backed mining key required. "
+                "Use --wallet PATH --mining-key-label LABEL.\n",
+                (long long)sost::V11_PHASE2_HEIGHT);
+            return 1;
         }
     }
 

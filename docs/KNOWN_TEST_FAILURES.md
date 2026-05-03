@@ -13,6 +13,7 @@ to be addressed on a dedicated branch after V11 Phase 1 activation.
 | popc              | 4        | Expected 2200 bps for 12 months, got 2000            |
 | escrow            | 1        | Same POPC reward-rate constant mismatch              |
 | dynamic-rewards   | 1        | Same POPC reward-rate constant mismatch              |
+| checkpoints       | 1        | `test_no_assumevalid_anchor` asserts empty anchor    |
 
 ## Root causes (working hypothesis, not yet investigated for the fix)
 
@@ -29,6 +30,15 @@ to be addressed on a dedicated branch after V11 Phase 1 activation.
   This is documented in the `POPC_REWARD_RATES` comment in popc.h and in
   the whitepaper, so the tests are stale, not the code. Pre-existing on
   `main`.
+
+- **checkpoints**: `test_no_assumevalid_anchor` asserts that
+  `ASSUMEVALID_BLOCK_HASH` is empty (no production assumevalid anchor).
+  In production, `include/sost/checkpoints.h` ships a real anchor at
+  block 3554 (commit `5b28683` on `main`, which predates v11-phase2)
+  for fast-sync. The test is stale relative to a pre-V11 production
+  decision. `git diff main..v11-phase2 -- include/sost/checkpoints.h
+  src/checkpoints.cpp tests/test_checkpoints.cpp` is empty. C9 verified
+  identical failure mode on `main`. Fix scope: dedicated branch.
 
 ## V11 Phase 1 verdict
 

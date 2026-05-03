@@ -22,6 +22,7 @@
 #include <sost/utxo_set.h>
 #include <sost/types.h>    // BlockMeta
 #include <sost/params.h>   // GENESIS_BITSQ lives here (single source of truth)
+#include <sost/sbpow.h>    // V11 Phase 2 — MinerPubkey / MinerSignature aliases
 
 #include <cstdint>
 #include <string>
@@ -142,5 +143,37 @@ bool DisconnectBlock(
 // Subsidy hook (implementation may call your real schedule)
 // ---------------------------------------------------------------------------
 int64_t GetBlockSubsidy(int64_t height);
+
+// ---------------------------------------------------------------------------
+// V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 7100)
+// ---------------------------------------------------------------------------
+//
+// Thin wrapper around sost::sbpow::validate_sbpow_for_block() that
+// belongs to the block-validation public surface. With
+// V11_PHASE2_HEIGHT = 7100 (set by C13), pre-activation blocks must
+// carry header_version == 1 (legacy v1 header) and post-activation
+// blocks must carry a verifying v2 header (miner_pubkey + Schnorr
+// signature over the PoW commitment + height).
+//
+// The caller passes the relevant header/coinbase fields plus
+// `phase2_height` (production callers MUST pass V11_PHASE2_HEIGHT
+// from params.h). For pre-Phase 2 blocks the signature/pubkey
+// arguments are ignored and may be left zero-filled.
+//
+// Returns true iff the block is acceptable from the SbPoW point of
+// view. On rejection, optionally fills `err` with a human-readable
+// reason.
+bool ValidateSbPoW(
+    uint32_t                              header_version,
+    const Bytes32&                        prev_hash,
+    int64_t                               height,
+    const Bytes32&                        commit,
+    uint32_t                              nonce,
+    uint32_t                              extra_nonce,
+    const sost::sbpow::MinerPubkey&       miner_pubkey,
+    const sost::sbpow::MinerSignature&    miner_signature,
+    const PubKeyHash&                     coinbase_miner_pkh,
+    int64_t                               phase2_height,
+    std::string*                          err = nullptr);
 
 } // namespace sost

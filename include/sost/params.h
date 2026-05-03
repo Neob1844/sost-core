@@ -283,6 +283,55 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 // on the same block since both touch consensus.
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
+// V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
+// Phase 1 activates at 7000; Phase 2 at 7100 — 100-block (~16-17h)
+// deployment window between hard forks. C11+C12 wired the miner
+// production loop; C13 commits the live activation height.
+// Reasoning (see docs/V11_PHASE2_RELEASE_NOTES.md):
+//   - Phase 1 (cASERT cascade + state-dependent dataset) activates at
+//     CASERT_V11_HEIGHT = 7000. Activating Phase 2 at the same height
+//     would mix two consensus changes simultaneously; spacing them
+//     keeps each fork independently observable in production.
+//   - 100-block margin (~16-17h at the 600-second target) gives miners
+//     time to update node + miner binaries after Phase 1 lights up and
+//     before Phase 2 hard-fork rules begin to apply.
+//   - C9 Monte Carlo + accounting + reorg + determinism PASS
+//     (docs/V11_PHASE2_MONTE_CARLO.md).
+// Single source of truth: Phase 2 components C (SbPoW) and D (lottery)
+// BOTH gate on this height. Other height-bearing constants
+// (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT) live in this same file
+// for the same reason — keeps consensus heights in one place.
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
+
+// V11 Phase 2 — PoP lottery (component D) consensus constants.
+//
+// All values gate on V11_PHASE2_HEIGHT above (block 7100).
+//
+// Frequency schedule (used by sost::lottery::is_lottery_block):
+//   For h in [V11_PHASE2_HEIGHT, V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW):
+//       lottery triggered  ⟺  (height % 3) != 0   (2-of-3 bootstrap)
+//   For h >= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW:
+//       lottery triggered  ⟺  (height % 3) == 0   (1-of-3 permanent)
+//
+// Recent-winner exclusion: an address that won a block-reward in the
+// last LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW blocks is excluded from
+// the eligibility set on a triggered block. The default of 5 was
+// chosen by the C0187fe Monte Carlo as a provisional value:
+//   - cap=30 (the previous draft) had ~12 % rollover rate and the
+//     largest sybil-incentive delta in the realistic network shape.
+//   - cap=5 zeros out the dominant's no-sybil lottery share with
+//     ~0 % rollover rate and a smaller sybil-incentive delta.
+//   - cap=0 (no exclusion) gives the dominant ~3.3 % baseline but
+//     the smallest sybil-incentive delta of all variants.
+// Final value confirmed by C9 (formal Monte Carlo + fairness
+// review). The recent-winner cap is NOT a sybil defense — eligibility-based
+// rules collapse against ~100 sybil pre-legitimated addresses
+// regardless of the window. Real sybil defense waits for
+// Memory-Lock per-instance (post block 12 000 study) and any
+// future stake-locked eligibility once a SOST market exists.
+inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 5000;
+inline constexpr int32_t  LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW  = 5;
+
 // Timestamp policy hardening — coordinated experimental fork at height
 // TIMESTAMP_MTP_FORK_HEIGHT. From this height onwards, block timestamps must
 // satisfy BOTH:

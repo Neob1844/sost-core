@@ -49,6 +49,10 @@ public:
     bool has_address(const std::string& addr) const;
     const WalletKey* find_key(const std::string& addr) const;
     const WalletKey* find_key_by_pkh(const PubKeyHash& pkh) const;
+    // V11 Phase 2 — look up a WalletKey by user-assigned label. Returns the
+    // first match (labels are NOT guaranteed unique; users typically only
+    // label one key per role: e.g. "mining"). Returns nullptr if not found.
+    const WalletKey* find_key_by_label(const std::string& label) const;
     std::string default_address() const;
     const std::vector<WalletKey>& keys() const { return keys_; }
 

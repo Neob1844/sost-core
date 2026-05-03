@@ -640,8 +640,14 @@ static bool B15_block_multi_tx() {
 
 // B16: Deserialize zero tx_count → error
 static bool B16_deserialize_zero_txs() {
-    // 96 bytes header + compact_size 0
+    // 96 bytes header + compact_size 0.
+    // V11 Phase 2 introduces explicit version validation in
+    // BlockHeader::DeserializeFrom — a header with version=0 is rejected
+    // before the tx_count check fires. Set version=1 in the fixture so
+    // the header parses cleanly and the test reaches its real assertion
+    // (Block::DeserializeFrom must reject tx_count == 0).
     std::vector<Byte> buf(97, 0x00);
+    buf[0] = 0x01;   // LE32(version=1) — valid v1 header
     buf[96] = 0x00;  // tx_count = 0
 
     Block blk;

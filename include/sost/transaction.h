@@ -28,6 +28,12 @@ constexpr uint8_t OUT_TRANSFER      = 0x00;
 constexpr uint8_t OUT_COINBASE_MINER= 0x01;
 constexpr uint8_t OUT_COINBASE_GOLD = 0x02;
 constexpr uint8_t OUT_COINBASE_POPC = 0x03;
+// V11 Phase 2 — lottery winner output, only emitted on triggered+non-empty
+// (PAYOUT) coinbase blocks at heights >= V11_PHASE2_HEIGHT. The amount
+// equals lottery_share + pending_lottery_before (jackpot rollover §10.5).
+// Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10);
+// this output type appears on triggered chain blocks from height 10000.
+constexpr uint8_t OUT_COINBASE_LOTTERY = 0x04;
 
 // Reserved (inactive in v1, activation by height in consensus validation)
 constexpr uint8_t OUT_BOND_LOCK     = 0x10;

@@ -36,6 +36,18 @@ struct UndoEntry {
 struct BlockUndo {
     int64_t height{0};
     std::vector<UndoEntry> spent_utxos;   // UTXOs consumed by this block
+
+    // V11 Phase 2 — jackpot rollover undo (C8). Holds the value of
+    // chain-state `pending_lottery_amount` immediately before this
+    // block was connected, so a reorg that disconnects the block
+    // restores chain state byte-for-byte. Pre-Phase-2 blocks always
+    // carry 0 here. Cleared/restored together with `spent_utxos` on
+    // DisconnectBlock.
+    //
+    // Stored as int64_t (signed) for symmetry with
+    // sost::lottery::LotteryApplyResult::pending_before; the value is
+    // always >= 0 in practice.
+    int64_t pending_lottery_before{0};
 };
 
 // =============================================================================

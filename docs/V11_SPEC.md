@@ -1,15 +1,15 @@
 # V11 — Technical Specification
 
-**Status**: DRAFT v3 · author: SOST consensus working group
+**Status**: DRAFT v3.7 · author: SOST consensus working group
 
 **Phase split (current decision)**:
 
 | Phase | Components | Activation height | Status |
 |---|---|---|---|
 | **Phase 1** | A (extended cASERT cascade) + B (state-dependent dataset access) | **block 7,000** | code complete, tests written, awaiting compilation gate |
-| **Phase 2** | C (SbPoW signature-bound proof) + D (PoP lottery + jackpot rollover) | **TBD** — when implementation passes verification, simulation, testnet and adversarial gates | NOT YET IMPLEMENTED · skeleton scaffold checked in for future work |
+| **Phase 2** | C (SbPoW signature-bound proof) + D (PoP lottery + jackpot rollover) | **block 7,100** (set by C13) | implementation complete · all C2-C9 gates PASS · C11/C12 wired the production miner · C13 finalised the activation height |
 
-**No calendar pressure on Phase 2.** The chain will not run unfinished consensus code to meet a fixed block height. Phase 2 ships when ready.
+**Activation rationale.** Phase 2 ships at block 7,100 — separated from Phase 1 (block 7,000) by 100 blocks (~16-17h at the 600-second target). The spacing avoids overlapping two consensus changes at the same height while still keeping the deployment window tight enough for a single operational shift. Phase 1 lights up first; the team observes its behaviour, propagates Phase 2 binaries, and ANNs before Phase 2 fires.
 
 **Phase 2 lottery frequency schedule** (when activated at height `H_PHASE2`):
 
@@ -18,51 +18,30 @@ First 5,000 blocks after Phase 2 activation:  2 of every 3 blocks  (high-freq bo
 After H_PHASE2 + 5000, permanently:           1 of every 3 blocks  (steady state)
 ```
 
-This document specifies the four V11 consensus changes: extended cASERT cascade (A), state-dependent dataset access (B), SbPoW signature-bound proof (C), and Proof-of-Participation lottery (D). Components A and B are designed for block 7,000. Components C and D are designed but deferred to a Phase 2 activation height to be announced when the implementation is verified.
+This document specifies the four V11 consensus changes: extended cASERT cascade (A), state-dependent dataset access (B), SbPoW signature-bound proof (C), and Proof-of-Participation lottery (D). Components A and B activate at block 7,000 (Phase 1). Components C and D activate at block 7,100 (Phase 2, set by C13).
 
 ---
 
-## 1 · Component A — Linear cASERT cascade (no artificial cap)
+## 1 · Component A — Extended cASERT cascade
 
 ### 1.1 Purpose
-Replace the V10 continuous formula `drop = floor((elapsed - 540) / 60)` with a single linear formula that starts dropping at `elapsed >= 540 s` and **keeps growing every 60 s with no artificial cap**. This restores the cascade as the primary recovery mechanism for any natural profile up to H35, with anti-stall (~90 min) as the safety net rather than the rescuer.
+Replace the V10 continuous formula `drop = floor((elapsed - 540) / 60)` with a piecewise table that drops faster in the long tail (540-840 s window). This keeps block production closer to 600 s target after a slow block by accelerating the relief.
 
 ### 1.2 Schedule
 ```
-drop = 0                              if elapsed <  540 s
-drop = 1 + (elapsed - 540) / 60       if elapsed >= 540 s
+elapsed <  540 s   →  drop 0   (no relief)
+elapsed >= 540 s   →  drop 1
+elapsed >= 600 s   →  drop 2
+elapsed >= 660 s   →  drop 3
+elapsed >= 720 s   →  drop 4
+elapsed >= 780 s   →  drop 5
+elapsed >= 840 s   →  drop 6
 ```
 
-Examples:
-
-| elapsed | drop | profile relative to base |
-|---|---|---|
-|  540 s |  1 | base − 1 |
-|  600 s |  2 | base − 2 |
-|  660 s |  3 | base − 3 |
-|  720 s |  4 | base − 4 |
-|  780 s |  5 | base − 5 |
-|  840 s |  6 | base − 6  *(legacy cap, no longer enforced)* |
-|  900 s |  7 | base − 7 |
-| 1 020 s |  9 | base − 9 |
-| 1 500 s | 17 | base − 17 |
-| 2 940 s | 41 | base − 41 *(H35 → E6, one above floor)* |
-| 3 000 s | 42 | base − 42 *(H35 → E7, worst-case reaches floor)* |
-
-Floor stays at `E7` (CASERT_H_MIN). The natural floor is enforced by the existing `staged = max(effective_h_min, raw_base_H − drop)` clamp, so although `drop` can grow without bound, the resulting profile never crosses below E7.
-
-**Worst-case math**: H35 → E7 requires `35 + 7 = 42` drops, reached at `540 + 41·60 = 3000 s = 50 min`, well inside the ~90 min anti-stall window. (An earlier draft of this section claimed 41 drops covered H35 → E7; that was off by one — 41 drops only reaches E6.)
-
-bitsQ controller, anti-stall, lag clamp and future-drift cap are **unchanged**.
+Floor stays at `E7` (CASERT_H_MIN). bitsQ controller, anti-stall, lag clamp and future-drift cap are **unchanged**.
 
 ### 1.3 Activation
 At block `CASERT_V11_HEIGHT = 7000`, conditional on gate G1 (§6).
-
-### 1.4 Single source of truth — `compute_v11_cascade_drop`
-The formula is implemented exactly once, in `src/pow/casert.cpp`, and exposed via `include/sost/pow/casert.h`. Both miner and validator paths route through `compute_v11_cascade_drop(block_elapsed_s)`. Any divergence between the two would partition the chain at the activation height; the single helper makes that error structurally impossible. Unit tests in `tests/test_casert_v11.cpp §5` lock the formula at every interesting boundary (0/539/540/600/840/900/1500/2940/3000/5400 s plus the negative-clock-skew edge), and explicitly distinguish drop=41 (H35 → E6) from drop=42 (H35 → E7).
-
-### 1.5 Replaced "saturating cap at drop=6"
-The earlier draft of this spec described a saturated piecewise table (`drop = 6` for any `elapsed >= 840 s`). That cap was sized for the H6-H12 operating range and could not save a block whose natural profile escalated to H32+. The linear cascade replaces it: `840 s → 6` is preserved as a point on the curve, but the curve continues past 840 s instead of saturating.
 
 ---
 
@@ -94,18 +73,6 @@ At block `CASERT_V11_HEIGHT = 7000`, conditional on gate G2 (§6). Gates G1 and 
 
 ---
 
-> ## ⚠️  Boundary marker — end of Phase 1, start of Phase 2
->
-> Sections **§1 (Component A)** and **§2 (Component B)** above describe **Phase 1**, which activates at `CASERT_V11_HEIGHT = 7000`.
->
-> Sections **§3 (Component C — SbPoW)** and **§4 (Component D — Lottery)** below describe **Phase 2**, which activates at a separate height `V11_PHASE2_HEIGHT`. **`V11_PHASE2_HEIGHT` is currently `INT64_MAX` (sentinel — effectively disabled).** It is explicitly **NOT** equal to 7000, and is **NOT** scheduled for any specific height yet. Phase 2 ships only when the activation criteria in §6 are met and the owner sets a finite value.
->
-> Anything below in §3-§4 (lottery, SbPoW, jackpot rollover, signature-bound proof, fair-share frequency, eligibility set, coinbase shape change for triggered blocks) belongs to Phase 2 and **must not be activated by, or interpreted as activating at, block 7000**.
->
-> If a future commit changes `V11_PHASE2_HEIGHT` from `INT64_MAX` to a finite value, that commit MUST update this note and §6 simultaneously.
-
----
-
 ## 3 · Component C — SbPoW (Signature-bound Proof of Work)
 
 ### 3.1 Purpose
@@ -124,6 +91,16 @@ The block header at `height >= V11_SBPOW_HEIGHT` carries two extra fields:
 ```
 
 Total header growth: 97 bytes. Pre-fork blocks keep the original header serialization; nodes negotiate format by height.
+
+**RPC transport (submitblock).** The miner submits the v2 fields to the node as additional JSON keys on the existing `submitblock` payload:
+
+| key                | type   | meaning                                                  |
+|--------------------|--------|----------------------------------------------------------|
+| `version`          | int    | header version (1 or 2; defaults to 1 if absent)         |
+| `miner_pubkey`     | string | 66-hex-char (33-byte) compressed secp256k1 pubkey (v2)  |
+| `miner_signature`  | string | 128-hex-char (64-byte) BIP-340 Schnorr signature (v2)   |
+
+The `version`/pubkey/signature triple feeds both the block_id recompute (so v2 hashes the SbPoW extension) and the consensus `ValidateSbPoW` check. Pre-Phase-2 v1 submissions omit pubkey/signature and the parser defaults `version` to 1 — so legacy block submitters keep working unchanged at heights below `V11_PHASE2_HEIGHT`.
 
 ### 3.3 PoW seed binding
 Pre-V11 ConvergenceX seed:
@@ -160,7 +137,7 @@ Failure of any of (1)-(4) → block rejected.
 This is a deliberate scope: SbPoW addresses pool centralization risk, not hashrate centralization. The lottery (§4) addresses redistribution.
 
 ### 3.7 Activation
-**Deferred to Phase 2**. Original target was block 7,000 alongside A/B/D, but SbPoW requires non-trivial integration (header v2 serialization, wallet keystore access, libsecp256k1 Schnorr verification, cross-node validation) that cannot be safely shipped in the same activation window as A/B. Phase 2 activation height (`V11_PHASE2_HEIGHT`, shared with component D) is **TBD** — set when the implementation passes gates G3.1, G3.2 and G3.3 (§6). All `V11_SBPOW_HEIGHT` references in §3.2/§3.3/§3.5 of this document refer to that same `V11_PHASE2_HEIGHT` value.
+**Phase 2 — block 7,100** (set by C13). SbPoW requires non-trivial integration (header v2 serialization, wallet keystore access, libsecp256k1 Schnorr verification, cross-node validation) that was deliberately scheduled separately from Phase 1 (block 7,000) so the two forks could be observed independently in production. The 100-block window (~16-17h at the 600-second target) gives operators time to update binaries between the two activation heights. Phase 2 activation height `V11_PHASE2_HEIGHT = 7100` is shared with component D (lottery). All `V11_SBPOW_HEIGHT` references in §3.2/§3.3/§3.5 of this document refer to that same `V11_PHASE2_HEIGHT` value. Gates G3.1, G3.2, G3.3 + G4.1–G4.5 (§6) all PASS as of C9.
 
 ---
 
@@ -168,7 +145,7 @@ This is a deliberate scope: SbPoW addresses pool centralization risk, not hashra
 
 ### 4.1 Phasing schedule
 
-The lottery activates at `V11_PHASE2_HEIGHT` (TBD — see §4.8). From that height:
+The lottery activates at `V11_PHASE2_HEIGHT = 7100` (see §4.8). From that height:
 
 | Window | Heights | Trigger rule | Source of lottery prize |
 |---|---|---|---|
@@ -208,14 +185,15 @@ For a block at height `h`, the eligibility set `E(h)` is computed deterministica
 E(h) = { addr |
     addr won the miner subsidy of at least 1 block in [0, h-1]
     AND  addr did not win a block reward (miner subsidy OR lottery prize)
-         in [h - LOTTERY_REWARD_EXCLUSION_WINDOW, h-1]
-    AND  addr is not the miner of block h itself }
+         in [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1] }
 ```
 
+**C7.1 revision (was a 3-clause rule; now 2 clauses):** the third clause `AND addr is not the miner of block h itself` has been removed. The current block's winner CAN now enter the lottery iff their address passes the recent-winner cooldown — i.e. they did not also win any of the previous `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks. Rationale: the prior C6 rule penalised a miner for finding the current block even after a long silence; under C7.1 the rule is simpler ("if you didn't win in the previous N blocks, you participate") and a miner who keeps winning is naturally excluded by the cooldown.
+
 Constants:
-- `LOTTERY_REWARD_EXCLUSION_WINDOW = 30` blocks. Tunable post-Monte Carlo.
+- `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5` blocks (C5 default — provisional, **C9 confirmation pending**). Was `30` in earlier drafts; revised after the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4 showed `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta among evaluated variants while honest-miner median lottery share was essentially flat across all windows.
 - Eligibility floor: "ever mined at least one block since genesis" — opens the pool wide and removes the prior 30-block-mining-history requirement.
-- Exclusion: ANY block-reward winner (miner subsidy OR lottery prize) in the last 30 blocks. Stronger than excluding only past lottery winners.
+- Exclusion: ANY block-reward winner (miner subsidy OR lottery prize) in the last `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks. Stronger than excluding only past lottery winners.
 
 ### 4.4 Winner selection
 
@@ -230,47 +208,62 @@ winner_addr  = sorted_E[winner_idx]
 
 Selection seed comes from `prev_block.hash`, not the current block — so the miner of block `h` cannot grind the seed to favour their own addresses.
 
-### 4.5 Coinbase construction
+### 4.5 Coinbase construction (revised in C8 — variable output count)
 
-Lottery-triggered block:
-```
-output[0]  =  miner subsidy            (50% of subsidy + fees)  → block miner
-output[1]  =  Gold Vault budget        (0)
-output[2]  =  PoPC Pool budget         (0)
-output[3]  =  lottery prize            (50% of subsidy)         → winner_addr
-```
+Phase 2 redirects the **entire 50% protocol-side allocation** (Gold Vault + PoPC Pool) to the lottery on triggered blocks. The PoW miner always keeps the other 50% (subsidy + all transaction fees). On triggered blocks the GOLD and POPC outputs are **omitted entirely** — emitting them with zero amounts would violate the existing CB R5 rule (`amount > 0`) and waste chain-state bytes for no semantic gain. Output count therefore varies by trigger kind:
 
-Normal (not triggered) block:
+Normal (not triggered) block — 3 outputs, unchanged from Phase 1:
 ```
 output[0]  =  miner subsidy            (50% of subsidy + fees)  → block miner
 output[1]  =  Gold Vault budget        (25%)                    → Gold Vault
 output[2]  =  PoPC Pool budget         (25%)                    → PoPC Pool
 ```
 
-Fees stay with the block miner (output[0]) on every block. Lottery is on subsidy only — emission semantics match the whitepaper.
+Triggered + non-empty eligibility (PAYOUT) — 2 outputs:
+```
+output[0]  =  miner subsidy            (50% of subsidy + fees)              → block miner
+output[1]  =  lottery prize            (lottery_share + pending_before)     → winner_addr
+                                       where lottery_share = 50% of subsidy + fees
+```
+
+Triggered + empty eligibility (UPDATE) — 1 output:
+```
+output[0]  =  miner subsidy            (50% of subsidy + fees)  → block miner
+                                       (chain-state pending_lottery_amount += lottery_share)
+```
+
+Fees stay with the block miner (`output[0]`) on every block, triggered or not.
 
 ### 4.6 Validation rules
 
-A block at `height >= 7000` is valid iff:
-1. The trigger function (§4.2) for `h` matches the coinbase shape (3 outputs vs 4 outputs).
-2. If triggered: `output[3].address == winner_addr` derived per §4.4 from the chain's prefix at `h-1`.
-3. If not triggered: `output[1].address == GoldVault` and `output[2].address == PoPCPool`.
-4. Miner subsidy `output[0]` always = 50% of `subsidy(h)` + tx fees.
+A coinbase at `height >= V11_PHASE2_HEIGHT` is valid iff exactly one of the three shapes above matches the trigger kind:
 
-Failure of any of (1)-(4) → block rejected.
+1. Non-triggered → 3 outputs MINER/GOLD/POPC with the canonical 25/25 split, vault PKHs match the constitutional addresses (CB6 unchanged).
+2. Triggered + non-empty `E(h)` → 2 outputs. `output[1].type == OUT_COINBASE_LOTTERY` (0x04). `output[1].amount == lottery_share + pending_before` exactly (no miner discretion). `output[1].pubkey_hash == winner_addr` derived per §4.4 from the chain's prefix at `h-1`.
+3. Triggered + empty `E(h)` → 1 output (MINER only). The chain-state variable `pending_lottery_amount` advances by `lottery_share`.
+4. Miner subsidy `output[0]` always = 50% of `subsidy(h) + total_fees`.
+5. **Emission invariant** (height-gated, Phase 2):
+   ```
+   sum(coinbase_outputs) + (pending_after - pending_before) == subsidy + fees
+   ```
+   This holds trivially for non-triggered blocks (`Δpending == 0`), holds on UPDATE because the withheld `lottery_share` is recorded in chain state instead of an output, and holds on PAYOUT because the lottery output equals `lottery_share + pending_before` and `pending_after == 0`.
+
+Failure of any rule → block rejected (consensus codes CB11_LOTTERY_SHAPE, CB12_LOTTERY_AMOUNT, CB13_LOTTERY_WINNER, CB14_LOTTERY_INVARIANT, plus the unchanged CB1-CB10 for the common header).
+
+Pre-`V11_PHASE2_HEIGHT` blocks fall through to the legacy CB1-CB10 path with no behaviour change. With `V11_PHASE2_HEIGHT == 7100` (params.h, set by C13), the Phase 2 path is unreachable for chain heights below 7,100 and active from height 7,100 onwards.
 
 ### 4.7 Edge cases
 
 | Case | Rule |
 |---|---|
-| `E(h) = ∅` (no eligible address) | Triggered block falls back to **normal** split (output[1] Gold Vault, output[2] PoPC Pool). The lottery silently does nothing. |
-| `\|E(h)\| = 1` | The single eligible address auto-wins. |
+| `E(h) = ∅` (no eligible address) | UPDATE shape — coinbase has 1 output (MINER only). `pending_lottery_amount += lottery_share`. The next triggered block with non-empty `E(h)` pays `lottery_share + pending_before` to its winner and resets `pending_lottery_amount` to 0 (§10.5 / §10.6). |
+| `\|E(h)\| = 1` | The single eligible address auto-wins (PAYOUT shape, 2 outputs). |
 | Tie (deterministic seed produces collision) | Impossible by construction — `winner_idx` is a single integer. The lex-sort of `E(h)` removes any address-ordering ambiguity. |
-| Miner of block `h` is in `E(h)` | Excluded by §4.3. They cannot win their own block's lottery. |
-| Network reorg after lottery payout | Standard reorg handling: the alternate chain's lottery selection is recomputed from its own prev block. Coinbase maturity (1,000 blocks) protects against the winner spending an orphaned prize. |
+| Miner of block `h` is in `E(h)` | Allowed since C7.1. The current block's miner is no longer auto-excluded; they pass §4.3 iff they did not also win any of the previous `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks. |
+| Network reorg after lottery payout | Standard reorg handling: the alternate chain's lottery selection is recomputed from its own prev block. `pending_lottery_amount` is restored from `BlockUndo::pending_lottery_before` (in-memory undo data per disconnected block). Coinbase maturity (1,000 blocks) protects against the winner spending an orphaned prize. |
 
 ### 4.8 Activation
-**Deferred to Phase 2**. Original target was block 7,000, but the lottery requires non-trivial integration (chain-state variable for `pending_lottery_amount`, eligibility-set scan, coinbase shape change, reorg-safe undo data) that cannot be safely shipped alongside Phase 1 (A/B). Phase 2 activation height (`V11_PHASE2_HEIGHT`) is **TBD** — set when the implementation passes gates G4.1 through G4.4 (§6). The 5,000-block 2-of-3 bootstrap window starts from that height; 1-of-3 steady state from `V11_PHASE2_HEIGHT + 5000`.
+**Phase 2 — block 7,100** (set by C13). The lottery activates at `V11_PHASE2_HEIGHT = 7100`, separated from Phase 1 (block 7,000) by 100 blocks (~16-17h at the 600-second target). The 5,000-block 2-of-3 bootstrap window covers blocks 7,100 to 12,099; 1-of-3 steady state begins at block 12,100 (first triggered permanent block: 12,102). Gates G4.1 through G4.5 (§6) all PASS as of C9 (formal Monte Carlo + accounting + reorg-safe undo).
 
 ---
 
@@ -286,7 +279,7 @@ This section is **honest** about the redistribution mechanic. The lottery is not
 
 ### 5.2 Regime 1 — Dominant uses 1-3 addresses (current behaviour)
 
-The address(es) the dominant uses to mine blocks are mostly excluded by the 30-block reward window (they keep winning). Result:
+The address(es) the dominant uses to mine blocks are mostly excluded by the `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` reward window (W = 5 in the C5 default; C9 may revise). They keep winning blocks at hashrate-proportional rate, so they sit in cooldown for most of the window. Result:
 
 ```
 Dominant addresses in E(h):     ≈ 0  (all in cooldown)
@@ -306,13 +299,14 @@ Drop of ~35 percentage points. Strong redistribution.
 
 ### 5.3 Regime 2 — Dominant uses N_dom > W addresses, rotated
 
-The dominant generates many addresses and rotates per block. After the first 30 blocks, the addresses that won blocks in last 30 are `min(N_dom, 30)` excluded. The rest are eligible.
+The dominant generates many addresses and rotates per block. After the first `W = LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` blocks, the addresses that won blocks in the last `W` are `min(N_dom, α·W)` excluded. The rest are eligible. (Pre-C5 drafts hard-coded `W = 30`; C5 lowered the default to `5` based on the preliminary Monte Carlo — the `α·W` figures below scale accordingly.)
 
 ```
-Dominant addresses in E(h):     ≈  max(0, N_dom - α·W)     # ones not in cooldown
-                                ≈  N_dom - 21              # if α=0.70, W=30
-Eligibility set size:           ≈  (N_dom - α·W) + S
-Dominant lottery share:         ≈  (N_dom - α·W) / [(N_dom - α·W) + S]
+Dominant addresses in E(h):     ≈  max(0, N_dom − α·W)     # ones not in cooldown
+                                ≈  N_dom − 3.5             # if α = 0.70, W = 5
+                                                            # (vs N_dom − 21 in the W = 30 draft)
+Eligibility set size:           ≈  (N_dom − α·W) + S
+Dominant lottery share:         ≈  (N_dom − α·W) / [(N_dom − α·W) + S]
 ```
 
 Numerical example: `N_dom = 100`, `α = 0.70`, `S = 8`:
@@ -418,8 +412,8 @@ Attempt to mine V11 blocks with: wrong `miner_pubkey`, valid `miner_pubkey` but 
 
 1. **Address derivation for `miner_pubkey`**: P2WPKH (witness v0) or P2TR (Taproot)? SOST currently uses bech32 with witness v0. Confirm before implementation.
 2. **Schnorr vs ECDSA**: BIP-340 Schnorr preferred. Confirm wallet support.
-3. **`LOTTERY_REWARD_EXCLUSION_WINDOW = 30`**: pending Monte Carlo tuning. Candidates: 15 / 30 / 50 / 100.
-4. **`LOTTERY_FALLBACK`**: when `E(h) = ∅`, route the prize to the normal split. Spec confirms this in §4.7.
+3. **`LOTTERY_REWARD_EXCLUSION_WINDOW`**: revised C5 default = 5 (was 30). Pending C9 Monte Carlo confirmation. Candidates considered: 5 / 15 / 30 / 50 / 100.
+4. ~~**`LOTTERY_FALLBACK`**: when `E(h) = ∅`, route the prize to the normal split.~~ **RESOLVED in C7/C8**: empty eligibility no longer falls back to Gold/PoPC. The lottery share accumulates in chain-state `pending_lottery_amount` and is paid out on the next triggered block with non-empty `E(h)`. See §4.5, §4.7, §10.5 / §10.6 for the normative spec.
 5. **Component A↔D dependency**: extended cascade affects block timing distribution, which affects how often dominant accumulates exclusion-window state. Should be considered together in simulation but activation is still independent at the consensus level.
 
 ---
@@ -442,10 +436,10 @@ The following are intentionally NOT part of V11:
 ### Mechanism (final spec — see §4 for normative text)
 - New chain-state variable: `pending_lottery_amount` (stocks).
 - Initialized to 0 at the activation height `V11_PHASE2_HEIGHT`.
-- Update rule on each block at `height >= V11_PHASE2_HEIGHT`:
-  - If `triggered(h)` is true and `E(h) ≠ ∅` → winner gets `lottery_share(h) + pending`; `pending := 0`.
-  - If `triggered(h)` is true and `E(h) = ∅` → `pending += lottery_share(h)`; coinbase has 3 outputs with Gold Vault and PoPC Pool getting 0 for that block; no lottery winner output. The protocol-side allocation accumulates in the pending counter.
-  - If `triggered(h)` is false → `pending` unchanged; coinbase has the standard 3 outputs (`50 / 25 / 25`).
+- Update rule on each block at `height >= V11_PHASE2_HEIGHT` (revised in C8 — variable output count, see §4.5):
+  - If `triggered(h)` is true and `E(h) ≠ ∅` (PAYOUT) → winner gets `lottery_share(h) + pending`; `pending := 0`. Coinbase has **2 outputs**: MINER + OUT_COINBASE_LOTTERY.
+  - If `triggered(h)` is true and `E(h) = ∅` (UPDATE) → `pending += lottery_share(h)`; no lottery winner output. Coinbase has **1 output** (MINER only). GOLD and POPC outputs are omitted entirely — emitting them with zero amounts would violate CB R5. The protocol-side allocation accumulates in the pending counter.
+  - If `triggered(h)` is false (IDLE) → `pending` unchanged; coinbase has the standard **3 outputs** (`50 / 25 / 25`).
 - Validation: every full node recomputes `pending` from `V11_PHASE2_HEIGHT` (the consensus state initialised to 0 at fork activation, then updated block by block).
 - Reorg: undo data per block records `pending_before_block`. On reorg, `pending` is restored to the pre-block value. This is the same model as UTXO undo data.
 - Cap: **none**. The jackpot grows until a non-empty eligibility set clears it.
@@ -458,45 +452,20 @@ The following are intentionally NOT part of V11:
 ### Implementation gate
 Pass criteria for shipping rollover (subset of D's gates):
 - G4.1c: unit test — empty `E(h)` on triggered block produces no winner output, increments `pending`, and the next triggered block with non-empty `E(h)` pays `share + pending`.
-- G4.3b: multi-node testnet — simulated 100-block stretch with all miners in 30-block cooldown produces correct `pending` accumulation across all nodes.
+- G4.3b: multi-node testnet — simulated 100-block stretch with all miners in `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`-block cooldown produces correct `pending` accumulation across all nodes.
 - G4.4b: adversarial — block claiming `pending` payout when previous chain state had 0 pending must be rejected by all nodes.
 
-### Constants the rollover fork would add
+### Constants used by the rollover implementation
 ```cpp
-inline constexpr int64_t  POP_LOTTERY_ROLLOVER_HEIGHT  = 10000;  // tentative
+// Rollover activates with the rest of Phase 2.
+inline constexpr int64_t  V11_PHASE2_HEIGHT  = 7100;  // params.h, set by C13
 // pending_lottery_amount is part of chain state — not a constant.
-// Serialization belongs in the block header or the chain undo data;
-// final placement TBD when the rollover spec is opened.
+// Persisted on each StoredBlock as `pending_lottery_after`
+// (chain.json with backward-compat default 0). BlockUndo carries the
+// pre-block value as `pending_lottery_before` for reorg-safe undo.
 ```
 
-These constants are NOT added to `params.h` for V11. They land at the same time as the rollover implementation, in a dedicated commit.
-
----
-
-## 10.6 · Invariant — `pending_lottery_amount` lifecycle
-
-This section names the three discrete lifecycle states of the jackpot rollover variable, so any Phase 2 implementer can reference them by name in code, tests and review comments. The behaviour is the same as §10.5 — only the naming is new.
-
-`pending_lottery_amount` is a `uint64` chain-state variable that tracks SOST owed to future lottery winners when a triggered block has an empty eligibility set.
-
-- **UPDATE** — on `is_lottery_block(h) == true` AND `compute_eligibility_set(h).empty()`:
-  - `pending_lottery_amount += lottery_share_of_block` where `lottery_share_of_block = gold_vault_reward(h) + popc_pool_reward(h)` for that block's subsidy.
-  - Coinbase: 3 outputs. Miner gets 50%; Gold Vault and PoPC Pool outputs receive 0; lottery slot empty.
-
-- **PAYOUT** — on `is_lottery_block(h) == true` AND `!compute_eligibility_set(h).empty()`:
-  - Winner receives `lottery_share_of_block + pending_lottery_amount`.
-  - `pending_lottery_amount := 0`.
-  - Coinbase: 4 outputs. Miner 50%; lottery winner gets the payout; Gold Vault and PoPC Pool outputs receive 0.
-
-- **IDLE** — on `is_lottery_block(h) == false`:
-  - `pending_lottery_amount` is **NEITHER read nor written**.
-  - Coinbase: 3 outputs, normal `50 / 25 / 25` split.
-
-**Implication for implementation**: a non-triggered block must never carry a lottery payout, even if `pending_lottery_amount > 0`. The jackpot is preserved across non-triggered blocks unchanged and waits for the next triggered block.
-
-**Reorg safety**: `pending_lottery_amount` MUST be persisted in undo data so reorgs restore the value correctly. Disconnecting an UPDATE or PAYOUT block restores the saved `pending_before_block`. Disconnecting an IDLE block is a no-op for this variable. See §10.5 *Mechanism · Reorg* and the testnet gates G4.1c / G4.3b / G4.4b.
-
-The same invariant is mirrored verbatim in `include/sost/lottery.h` (top-of-file comment) and pointed at from `src/lottery.cpp`, so any contributor reads it before touching consensus code.
+These constants are part of `params.h`. C10 set `V11_PHASE2_HEIGHT = 10000`; C13 reduced it to `7100` after Phase 1 shipped on the live chain.
 
 ---
 
@@ -521,13 +490,13 @@ inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 // the consensus rule and must be the same in mining and validation.
 ```
 
-### 11.2 — Phase 2 constants (TBD) · NOT YET LANDED
+### 11.2 — Phase 2 constants (block 7,100) · LANDED
 
-These constants are listed for design review only. They are **not** added to `params.h` until the corresponding Phase 2 implementation is verified, simulated, testnet-tested and adversarially audited. Activation height `V11_PHASE2_HEIGHT` is announced at that time.
+These constants are in `params.h`. C10 set `V11_PHASE2_HEIGHT = 10000` after C2-C9 cleared their gates; C13 reduced it to `7100` after Phase 1 (block 7,000) shipped on the live chain.
 
 #### Component C — SbPoW
 ```cpp
-inline constexpr int64_t  V11_PHASE2_HEIGHT               = /* TBD */;  // shared by C and D
+inline constexpr int64_t  V11_PHASE2_HEIGHT               = 7100;  // shared by C and D
 // Header v2 adds 33-byte miner_pubkey + 64-byte miner_signature.
 // Signature scheme: BIP-340 Schnorr.
 // Seed binding tag: "SEED2" (vs pre-fork "SEED").
@@ -542,10 +511,12 @@ inline constexpr int32_t  LOTTERY_REWARD_EXCLUSION_WINDOW  = 30;
 // Trigger schedule (with H = V11_PHASE2_HEIGHT, W = LOTTERY_HIGH_FREQ_WINDOW):
 //   For h in [H, H+W):       triggered  ⟺  (h - H) % 3 != 2     → 2-of-3 (bootstrap)
 //   For h >= H + W:          triggered  ⟺  (h - H) % 3 == 0     → 1-of-3 (steady state)
-// Selection seed tag: "SOST/POP-LOTTERY/v11"
+// Selection seed tag: "SOST_LOTTERY_V11"
 // Eligibility set:    addrs with at least 1 block in [0, h-1]
-//                     minus any block-reward winner in [h-W30, h-1]   (W30 = LOTTERY_REWARD_EXCLUSION_WINDOW)
-//                     minus the miner of block h itself
+//                     minus any block-reward winner in
+//                       [h - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, h-1].
+// (C7.1: the miner of block h itself is NO LONGER auto-excluded —
+//  they pass iff they were not also a winner in the cooldown window.)
 // Winner pick:        deterministic (lex sort + uint64 mod)
 ```
 
@@ -569,5 +540,9 @@ These constants are documented here so reviewers can audit values against the ba
 | 2026-05-02 | SOST consensus working group | DRAFT v2 — restructured into V11 spec; SbPoW moved to block 7,000 with per-component independent activation; lottery eligibility widened to "≥1 block since genesis"; exclusion strengthened to "any block-reward winner in last 30"; added §5 honest mathematical analysis distinguishing Sybil regimes; added §11 constants list |
 | 2026-05-02 | SOST consensus working group | DRAFT v2.1 — added §10.5 documenting jackpot rollover as a deferred future enhancement (NOT part of V11). Activation criteria proposed for block 10,000 conditional on V11 production data showing > 1 fallback per 1,000 blocks. |
 | 2026-05-02 | SOST consensus working group | DRAFT v3 — restructured V11 into **two phases**. Phase 1 (block 7,000) ships A + B only (extended cASERT cascade + state-dependent dataset access). Phase 2 (height TBD, no calendar pressure) ships C + D (SbPoW + PoP lottery + jackpot rollover). Lottery frequency: 2-of-3 for the first `LOTTERY_HIGH_FREQ_WINDOW = 5000` blocks after Phase 2 activation, then 1-of-3 permanently. §10.5 jackpot rollover reclassified from "deferred fork" to "Phase 2 component D". §11 constants split into 11.1 (Phase 1, landed) and 11.2 (Phase 2, design-only). §3.7 / §4.8 activation rewritten to reference `V11_PHASE2_HEIGHT`. |
-| 2026-05-02 | SOST consensus working group | DRAFT v3.1 — Component A cascade rewritten to a **linear formula** without an artificial cap (was: piecewise table capping at `drop = 6` for `elapsed >= 840 s`). New schedule: `drop = 1 + (elapsed − 540) / 60` for `elapsed >= 540 s`, growing without bound; floor enforced by existing `max(E7, base − drop)` clamp. Reaches E7 from any natural profile up to H35 within ~49 min, well inside the anti-stall window. Single source of truth: `compute_v11_cascade_drop` in `include/sost/pow/casert.h`, used by both miner and validator. |
-| 2026-05-02 | SOST consensus working group | DRAFT v3.1.1 — doc fix: H35 → E7 worst case is **42 drops at 3000 s**, not 41 drops at 2940 s (off-by-one in the previous draft — 41 drops only reaches E6). §1.2 cascade table now lists both 2940 s (drop = 41, H35 → E6) and 3000 s (drop = 42, H35 → E7). Test `tests/test_casert_v11.cpp §5` updated to assert both. Added an explicit Phase 1 / Phase 2 boundary marker between §2 and §3 — Phase 2 components (SbPoW + lottery + jackpot rollover) do NOT activate at block 7000; their activation height is `V11_PHASE2_HEIGHT = INT64_MAX` (sentinel, effectively disabled). No code changes — cascade formula unchanged. |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.2 — recent-winner exclusion window provisional default revised from 30 to **5** blocks (`LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`) following the preliminary Monte Carlo in `docs/V11_PHASE2_DESIGN.md` §5.4. `cap_30` had ~12 % rollover rate and the largest sybil-incentive delta in the realistic network shape; `cap_5` zeros out the dominant's no-sybil lottery share with ~0 % rollover rate and a smaller sybil-incentive delta. **Final value pending C9 confirmation.** §4.3, §5.2, §5.3 prose updated to reference the constant rather than a hard-coded 30. Public banner updated to v83 with matching wording. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (which remains `INT64_MAX`). |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.3 — eligibility rule simplified (C7.1). The third clause "addr is not the miner of block h itself" has been **removed** from §4.3. Under the C7.1 rule, the current block winner CAN enter their own block's lottery iff they did not also win any of the previous `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` (= 5) blocks. Rationale: the prior auto-exclusion penalised a miner for finding the current block even after a long silence; the simpler "if you didn't win in the previous N blocks, you participate" rule is more permissive in benign cases and equivalent in the common case (a miner who keeps winning is naturally excluded by the cooldown). `compute_lottery_eligibility_set()` no longer consumes its `current_miner_pkh` parameter (kept for API source-compat). Public banner updated to v85. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (still `INT64_MAX`). |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.4 — coinbase shape + persisted lottery state landed in C8. §4.5 / §4.6 / §4.7 / §10.5 rewritten to match the implemented variable-output-count shape (3 / 1 / 2 outputs for non-triggered / UPDATE / PAYOUT) — the earlier "3 outputs with Gold and PoPC = 0" wording was inconsistent with the existing CB R5 rule (`amount > 0` for every coinbase output). On triggered blocks the **full** protocol-side allocation (Gold Vault 25% + PoPC Pool 25%, together 50% of the block reward) is redirected to lottery / pending — the PoW miner's 50% share is never touched. Open question §9.4 (`LOTTERY_FALLBACK`) marked as RESOLVED. New consensus error codes CB11_LOTTERY_SHAPE / CB12_LOTTERY_AMOUNT / CB13_LOTTERY_WINNER / CB14_LOTTERY_INVARIANT. New StoredBlock field `pending_lottery_after` (persisted in chain.json with backward-compat default 0) and BlockUndo field `pending_lottery_before` (in-memory undo). Public banner updated to v88 (v11-phase2 branch) — phrasing changed from "50% of the protocol-side allocation" to "the full protocol-side allocation … 50% of the block reward" to remove ambiguity. No consensus behaviour change for any height < `V11_PHASE2_HEIGHT` (still `INT64_MAX`). |
+| 2026-05-02 | SOST consensus working group | **DRAFT v3.5 — Phase 2 activation height set to block 10,000** (C10). `V11_PHASE2_HEIGHT` changed from `INT64_MAX` to `10000` in `include/sost/params.h`. Rationale: Phase 1 (cASERT cascade + state-dependent dataset) activates at block 7,000; spacing Phase 2 by ~3,000 blocks (~3 weeks at the 600-second target) keeps the two hard forks observable independently in production and gives miners a full update window. C9 Monte Carlo + accounting + reorg + determinism gates all PASS (`docs/V11_PHASE2_MONTE_CARLO.md`). §3.7 / §4.8 activation paragraphs rewritten; §10.5 + §11.2 constants table updated; the in-code `INT64_MAX` sentinel is retained as a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal. The lottery's bootstrap window is blocks 10,000–14,999 (2-of-3); permanent steady state begins at block 15,000 (1-of-3). Caveat retained: the lottery improves redistribution but is NOT Sybil-proof (cap=5 chosen by C9 Monte Carlo; ~100 sybil pre-legitimated addresses defeat eligibility-based defences regardless of cap). On triggered blocks the full protocol-side allocation (50% of block reward) is redirected to the lottery winner; the PoW miner's 50% share is never touched. **Operational note**: production miners MUST update node + miner binaries before block 10,000 — see `docs/V11_PHASE2_RELEASE_NOTES.md`. The `sost-miner.cpp` mining loop still needs an eligibility-set RPC wired to `build_phase2_payout_coinbase_tx` / `build_phase2_update_coinbase_tx`; that wiring is a blocking follow-up commit before the chain reaches block 10,000. Public banner bumped to v92 with the activation announcement. |
+| 2026-05-02 | SOST consensus working group | DRAFT v3.6 — C11 wired the production miner loop to the `getlotterystate` RPC (NORMAL / UPDATE_EMPTY / PAYOUT coinbase shape dispatch). C12 wired the SbPoW signed v2 header through the miner submitblock JSON path (version, miner_pubkey, miner_signature) and the node-side parser. Activation height stays at 10,000 in this entry. |
+| 2026-05-02 | SOST consensus working group | **DRAFT v3.7 — Phase 2 activation height reduced to block 7,100** (C13). `V11_PHASE2_HEIGHT` changed from `10000` to `7100` in `include/sost/params.h` after Phase 1 (block 7,000) shipped on the live chain and the C11/C12 miner update path was confirmed deployable. Rationale: Phase 1 + Phase 2 are separated by 100 blocks (~16-17h at the 600-second target) — enough to observe Phase 1 in production, propagate binaries across the miner pool and ANN the activation, while keeping the deployment window tight enough for a single operational shift. The Phase 2 lottery bootstrap window is now blocks 7,100–12,099 (2-of-3); permanent steady state begins at block 12,100 (first triggered permanent block: 12,102, since 12,100%3==1, 12,101%3==2, 12,102%3==0). All boundary tests (test_lottery_frequency, test_lottery_eligibility, test_lottery_rollover, test_coinbase_phase2) updated for the new heights. §3.7 / §4.8 activation paragraphs rewritten; §11.2 constants table updated. **Operational note (still in force)**: MINERS MUST UPDATE node + miner binaries before block 7,100. Old miners will produce invalid coinbase on triggered Phase 2 blocks (CB11_LOTTERY_SHAPE) AND missing SbPoW signature (rejected by ValidateSbPoW). Public banner bumped to v94 with the final activation announcement. |
