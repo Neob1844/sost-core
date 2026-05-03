@@ -423,7 +423,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         PHASE 2 · BLOCK 7,100 · LOTTERY + SbPoW · MINERS MUST UPDATE BEFORE 7,100
       </span>
       <span style="display:block;color:#c084fc;font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
-        PHASE 3 · TBD · TAILGUARD EMERGENCY bitsQ ANTI-STALL · DESIGN STAGE
+        PHASE 3 · BLOCK 7,000 · SLINGSHOT — SINGLE-SHOT bitsQ RELIEF · SHIPS WITH PHASE 1
       </span>
     </div>
 
@@ -532,41 +532,71 @@ After that, permanently:                       1 of every 3 blocks</pre>
       </div>
     </div>
 
-    <!-- ============== PHASE 3 — TAILGUARD ============== -->
-    <div style="background:linear-gradient(135deg,rgba(168,85,247,0.10),rgba(34,211,238,0.04));border:1px dashed #a855f7;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(168,85,247,.18)">
-      <div style="color:#c084fc;font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ PHASE 3 — TAILGUARD EMERGENCY RELIEF · ACTIVATION HEIGHT TBD
+    <!-- ============== EMERGENCY ANNOUNCEMENT — RESTART NOW ============== -->
+    <style>
+    @keyframes restartFlash {
+      0%, 100% { box-shadow: 0 0 18px rgba(251,1,13,0.55), 0 0 36px rgba(251,1,13,0.30); border-color: rgba(251,1,13,0.95); background-color: rgba(251,1,13,0.18); }
+      50%      { box-shadow: 0 0 32px rgba(251,1,13,1.00), 0 0 64px rgba(251,1,13,0.60); border-color: rgba(255,255,255,0.95); background-color: rgba(251,1,13,0.34); }
+    }
+    .restart-now-banner { animation: restartFlash 1.4s ease-in-out infinite; }
+    </style>
+    <div class="restart-now-banner" style="border:3px solid #fb010d;border-radius:6px;padding:18px 22px;margin-bottom:14px;text-align:center">
+      <div style="color:#ffffff;font-size:22px;font-weight:900;letter-spacing:3px;text-shadow:0 0 12px rgba(251,1,13,0.95),0 0 24px rgba(251,1,13,0.60);line-height:1.2;margin-bottom:8px">
+        ⚠ MINERS &amp; NODE OPERATORS — RESTART NOW ⚠
+      </div>
+      <div style="color:#ffe4e6;font-size:13.5px;font-weight:800;letter-spacing:1.5px;line-height:1.5;margin-bottom:8px;text-shadow:0 0 6px rgba(0,0,0,.6)">
+        V11 Phase 1 ships <b style="color:#ffd700">PHASE 3 SLINGSHOT</b> together at block 7,000.<br>
+        Pull <code>origin/main</code>, rebuild, restart node + miner before block 7,000.
+      </div>
+      <pre style="background:rgba(0,0,0,0.65);color:#ffd700;font-size:11.5px;font-weight:700;padding:10px 14px;border-radius:4px;margin:8px auto 6px;display:inline-block;text-align:left;letter-spacing:0.3px">cd &lt;your sost-core directory&gt;
+git pull origin main
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+make -j$(nproc)
+sudo systemctl restart sost-node    # node operators
+pkill -9 sost-miner &amp;&amp; ./sost-miner ...   # miners</pre>
+      <div style="color:#ffe4e6;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:6px;text-shadow:0 0 6px rgba(0,0,0,.6)">
+        Old binaries will produce invalid blocks after 7,000 — both Phase 1 (cascade + dataset) AND Phase 3 (Slingshot bitsQ relief) are consensus-critical.
+      </div>
+    </div>
+
+    <!-- ============== PHASE 3 — SLINGSHOT ============== -->
+    <div style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(34,211,238,0.04));border:2px solid #c084fc;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(168,85,247,.25)">
+      <div style="color:#c084fc;font-size:13px;font-weight:900;letter-spacing:1.8px;margin-bottom:8px">
+        ◆ PHASE 3 — SLINGSHOT · ACTIVATES AT BLOCK 7,000 (with Phase 1)
       </div>
       <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        <b style="color:#c084fc">E · TailGuard — emergency bitsQ anti-stall.</b>
-        Backup layer for rare extreme block tails. The V11 cascade (component A) lowers the ConvergenceX profile until the <code>E7</code> floor is reached — that solves normal slow-block cases. But if the network has already reached <code>E7</code> and a single block remains overdue for an extreme amount of time, profile relief has no further room to move. TailGuard addresses that tail-risk case by applying a small, capped bitsQ relief to the current block <i>after</i> the normal avg288 difficulty calculation. It does NOT replace cASERT, the cascade, normal block production, or any other rule — it only activates when a single block is abnormally delayed.
+        <b style="color:#c084fc">E · Slingshot — single-shot bitsQ relief after a slow block.</b>
+        After any block that takes longer than <b>30 minutes</b>, the very next block enters with bitsQ already reduced by <b>12.5 %</b>. The relief is one-shot (this block only) and self-resetting (the block after returns to normal avg288-derived bitsQ). Slingshot does NOT replace cASERT, the V11 cascade, the lottery, SbPoW, or any other rule. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the <code>E7</code> floor.
       </div>
 
-      <div style="color:var(--text2);font-size:11px;line-height:1.7">
-        <b style="color:var(--text)">Two-layer rule (proposed, height-gated by V11_TAILGUARD_HEIGHT):</b>
+      <div style="color:var(--text2);font-size:11.5px;line-height:1.75">
+        <b style="color:var(--text)">Rule (height-gated by V11_SLINGSHOT_HEIGHT = 7,000):</b>
 
-        <pre style="background:rgba(0,0,0,.35);padding:9px 11px;border-radius:3px;font-size:10.5px;color:#d8b4fe;margin:8px 0;line-height:1.55;overflow-x:auto"><b>Layer 1 — EarlyArm (fast, transient)</b>
-  if  prev_block_elapsed   &gt; 60 min
-  AND current_block_elapsed &gt; 10 min
-  then bitsQ -= 1 % (this block only, self-reset on next block)
+        <pre style="background:rgba(0,0,0,.45);padding:10px 12px;border-radius:3px;font-size:11.5px;color:#d8b4fe;margin:8px 0;line-height:1.55;overflow-x:auto"><b>For block N at height &gt;= 7,000:</b>
+  prev_elapsed = chain.tip.timestamp - chain[tip-1].timestamp
+  bitsQ_avg288 = (normal avg288 difficulty calculation)
 
-<b>Layer 2 — Continuous (deep, escalating)</b>
-  if  current_block_elapsed &gt;= 90 min
-  then bitsQ -= 2 % per 30 min over 90 min, capped at 12 %</pre>
+  if prev_elapsed &gt; <b style="color:#fb010d">30 minutes</b> (1,800 s):
+      bitsQ_block_N = bitsQ_avg288 * (10000 - <b style="color:#fb010d">1250</b>) / 10000
+                    = bitsQ_avg288 * 0.875
+  else:
+      bitsQ_block_N = bitsQ_avg288   (no override)</pre>
 
-        <b style="color:var(--text)">Why two layers.</b> EarlyArm reacts <i>fast</i> to a network where the previous block was already abnormally slow — at minute 10 of the next block, not minute 90. Continuous catches deep stalls when EarlyArm relief was insufficient. Both are independent and self-resetting per block. The maximum drop is the <i>larger</i> of the two layers, not the sum.<br><br>
+        <b style="color:var(--text)">Example.</b> Block 6,989 took 129 min — under Slingshot, block 6,990 would have entered with bitsQ already 12.5 % lower (instead of the actual −0.29 % avg288 adjustment), making the next nonce 12.5 % easier. If block 6,990 then mined fast (which it did), block 6,991 returns to normal avg288-derived bitsQ. <b>The relief is for ONE block only.</b><br><br>
 
-        <b style="color:var(--text)">Why this matters.</b> On 2026-05-03, block 6,989 took 129 min 35 s to mine — purely Poisson variance amplified by a coordinated update window with no consensus fault. With TailGuard active, the relief would have started at minute 10 (EarlyArm armed by no prior block of equal severity), then escalated through Continuous at minute 90, recovering bitsQ proportionally and shortening the tail. The current rules can leave bitsQ static for hours when avg288 is in the deadband and the cascade is already at <code>E7</code>.<br><br>
+        <b style="color:var(--text)">Safety.</b>
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin:6px 0 8px 0;line-height:1.55;overflow-x:auto">· height-gated by V11_SLINGSHOT_HEIGHT = 7,000; pre-fork blocks unchanged
+· bitsQ_avg288 still calculated first; Slingshot only adjusts the result
+· uses elapsed = candidate.timestamp − prev.timestamp, bounded by MTP rules
+· NO cumulative effect: bitsQ resets to avg288 on every block where prev ≤ 30 min
+· NO ratcheting: a sequence of slow blocks each gets one-shot relief, but
+  the relief is recomputed against avg288 every block, never against
+  the previously-relieved value
+· profile cascade, lottery, SbPoW, coinbase logic untouched
+· consensus-critical: miners producing wrong bitsQ after 7,000 are rejected</pre>
 
-        <b style="color:var(--text)">Safety constraints.</b>
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10px;color:var(--text2);margin:6px 0 8px 0;line-height:1.55;overflow-x:auto">- height-gated; pre-activation blocks unchanged
-- avg288 difficulty rule still runs first; TailGuard only applies after
-- elapsed = candidate.timestamp - prev.timestamp, bounded by MTP rules
-- no cumulative effect across blocks; every block recalculates fresh
-- absolute cap 12 % per block + MIN_BITSQ floor still respected
-- profile cascade, lottery, SbPoW, coinbase logic untouched</pre>
-
-        <span style="color:var(--text3);font-style:italic">TailGuard is a backup mechanism, not a normal operating mode. It only fires under abnormal conditions (extreme tails). Normal cASERT + V11 cascade + Phase 2 lottery / SbPoW are completely unchanged. Activation height set after implementation passes the same test gates V11 Phase 1 + Phase 2 cleared (C9-style Monte Carlo, accounting invariant, reorg, determinism). For now: design only, code lands as a follow-up commit before activation.</span>
+        <span style="color:var(--text3);font-style:italic">Slingshot is a backup mechanism, not a normal operating mode. It only fires under abnormal conditions (a previous block taking &gt; 30 min). The 30-minute trigger is conservative: typical block intervals fluctuate around the 600-second target, and reaching 30 minutes on a single block is itself a tail event (~5 σ at network nominal hashrate). When it does fire, the 12.5 % drop matches the historical V2 maximum cap and is large enough to make a meaningful difference on the next block without destabilising the chain.</span>
       </div>
     </div>
 
