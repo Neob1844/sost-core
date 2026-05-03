@@ -1,1 +1,1 @@
-{"v":"2026-05-04-v112","note":"DTD card now shows Token Distribution, DTD, live eligible count, and click-to-scan hint with polished styling."}
+{"v":"2026-05-04-v113","note":"DTD card shows a neutral placeholder until the user clicks to scan and compute the live eligible-address count."}
