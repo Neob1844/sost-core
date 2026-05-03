@@ -2,17 +2,23 @@
 //
 // Spec (see include/sost/params.h):
 //   For a block at next_height >= V11_SLINGSHOT_HEIGHT (= 7000):
-//       prev_elapsed = chain.back().time - chain[size-2].time
-//       if prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS (1800):
+//       prev_elapsed    = chain.back().time - chain[size-2].time
+//       current_elapsed = now_time - chain.back().time
+//       if prev_elapsed    > SLINGSHOT_THRESHOLD_SECONDS (1800)
+//          AND
+//          current_elapsed > TARGET_SPACING               (600):
 //           bitsQ = avg288_bitsQ * (10000 - SLINGSHOT_DROP_BPS) / 10000
 //           bitsQ = max(MIN_BITSQ, bitsQ)
 //       else:
 //           bitsQ = avg288_bitsQ  (unchanged)
 //
+//   Strict greater-than on BOTH gates. If now_time <= 0, Slingshot is
+//   suppressed (safe default — see casert_next_bitsq comment).
+//
 // Properties verified:
 //   1. Pre-fork unchanged: at height < V11_SLINGSHOT_HEIGHT, slow prev
 //      block does NOT trigger any Slingshot relief.
-//   2. Boundary: prev_elapsed == 1799 / 1800 / 1801 — only > 1800 fires.
+//   2. Boundary on prev_elapsed: 1799 / 1800 / 1801 — only > 1800 fires.
 //   3. Drop math: post = pre * 8750 / 10000 across multiple values.
 //   4. MIN_BITSQ floor: clamp engages when result would be below floor.
 //   5. Single-shot: a slow block N causes drop on block N+1, but block
@@ -23,6 +29,15 @@
 //      (before reaching the Slingshot branch); we exercise size==1 path.
 //   8. Determinism: identical inputs produce identical outputs across
 //      repeated calls.
+//   9. (V2 hotfix) Second gate on current_elapsed:
+//      - 599  → no drop (gate fails)
+//      - 600  → no drop (strict >)
+//      - 601  → drop applied
+//      - free-relief prevention: prev=7800s + current=60s → no drop
+//      - both gates open + slow current: drop applied
+//      - only-current gate (prev<=1800): no drop
+//      - now_time<=0: no drop (safe default)
+//      - determinism (10 runs).
 
 #include "sost/pow/casert.h"
 #include "sost/params.h"
@@ -72,6 +87,15 @@ static std::vector<BlockMeta> build_chain(int64_t last_height,
     return chain;
 }
 
+// V2 helper — produce a `now_time` that opens the second gate by a fixed
+// margin (default current_elapsed = 1200 s, well above the 600 s
+// threshold). Most existing tests want gate 2 satisfied so they can
+// exercise gate 1 in isolation; this lets them keep their original intent.
+static int64_t nt_open(const std::vector<BlockMeta>& chain,
+                       int64_t current_elapsed = 1200) {
+    return chain.back().time + current_elapsed;
+}
+
 // Apply the Slingshot factor to a baseline bitsQ value (rounding identical
 // to the implementation: integer truncation, then MIN_BITSQ floor clamp).
 static uint32_t apply_slingshot(uint32_t base) {
@@ -96,8 +120,8 @@ static void test_pre_fork_unchanged() {
     // — that gives the exact avg288 result with no Slingshot ever applied.
     auto chain_norm = build_chain(pre_tip, TARGET_SPACING, 800000);
 
-    uint32_t b_slow = casert_next_bitsq(chain_slow, pre_tip + 1);
-    uint32_t b_norm = casert_next_bitsq(chain_norm, pre_tip + 1);
+    uint32_t b_slow = casert_next_bitsq(chain_slow, pre_tip + 1, nt_open(chain_slow));
+    uint32_t b_norm = casert_next_bitsq(chain_norm, pre_tip + 1, nt_open(chain_norm));
 
     // The two values may differ slightly due to avg288 incorporating the
     // last interval, but neither should have been multiplied by 0.875.
@@ -115,7 +139,8 @@ static void test_pre_fork_unchanged() {
     // shape, just with Slingshot active (height = 7000): if Slingshot
     // were running pre-fork it would multiply b_slow by 0.875.
     auto chain_slow_post = build_chain(V11_SLINGSHOT_HEIGHT, 3600, 800000);
-    uint32_t b_post = casert_next_bitsq(chain_slow_post, V11_SLINGSHOT_HEIGHT + 1);
+    uint32_t b_post = casert_next_bitsq(chain_slow_post, V11_SLINGSHOT_HEIGHT + 1,
+                                        nt_open(chain_slow_post));
     // After Slingshot, b_post should be lower than b_slow_pre by ~12.5%.
     // We don't compare b_slow vs b_post directly because the avg288 includes
     // different historical heights, but the *ratio* between Slingshot-active
@@ -127,9 +152,10 @@ static void test_pre_fork_unchanged() {
 // ---------------------------------------------------------------------
 // 2. Threshold boundary: prev_elapsed = 1799 / 1800 / 1801
 // Spec: drop fires only when prev_elapsed > 1800 (strict >).
+// (Gate 2 held open via nt_open so we isolate gate 1.)
 // ---------------------------------------------------------------------
 static void test_threshold_boundary() {
-    printf("\n=== 2. Threshold boundary (strict > 1800 s) ===\n");
+    printf("\n=== 2. Threshold boundary (strict > 1800 s on prev_elapsed) ===\n");
 
     // Place the tip at height V11_SLINGSHOT_HEIGHT so next_height = V11+1
     // is comfortably in the post-fork range (>= V11_SLINGSHOT_HEIGHT).
@@ -137,43 +163,32 @@ static void test_threshold_boundary() {
 
     // Reference (no slow): last interval = TARGET_SPACING (600 s)
     auto chain_ref = build_chain(tip, TARGET_SPACING, 800000);
-    uint32_t b_ref = casert_next_bitsq(chain_ref, tip + 1);
+    uint32_t b_ref = casert_next_bitsq(chain_ref, tip + 1, nt_open(chain_ref));
+    (void)b_ref;
 
     // 1799: < threshold → no drop
     {
         auto c = build_chain(tip, 1799, 800000);
-        uint32_t b = casert_next_bitsq(c, tip + 1);
+        uint32_t b = casert_next_bitsq(c, tip + 1, nt_open(c));
         // The avg288 at 1799 may differ slightly from the 600 baseline because
         // the last interval pushed the average up. But the result should NOT
         // be the Slingshot-multiplied value.
         TEST("prev_elapsed=1799 → no Slingshot drop applied",
              b != apply_slingshot(b) || b == MIN_BITSQ);
-        // Stronger: build the same chain at pre-fork (no Slingshot ever) and
-        // confirm the post-fork value matches it exactly.
-        auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 1799, 800000);
-        uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1);
-        // Heights differ slightly, but the avg288 calculation depends on
-        // intervals not heights. We compare via a height-matched shadow run:
-        // call once at tip+1 (post-fork) and verify equality with the same
-        // chain at tip+1 minus the Slingshot multiplier.
-        (void)b_pre;
-        // Functional invariant: at 1799 the post-fork result equals the
-        // pre-fork result of the same shape (modulo dynamic-cap height gates,
-        // both heights are >= 5270 so no difference).
     }
 
     // 1800: == threshold → no drop (strict >)
     {
         auto c = build_chain(tip, 1800, 800000);
-        uint32_t b = casert_next_bitsq(c, tip + 1);
+        uint32_t b = casert_next_bitsq(c, tip + 1, nt_open(c));
         TEST("prev_elapsed=1800 → no Slingshot drop (threshold is strict >)",
              b != apply_slingshot(b) || b == MIN_BITSQ);
     }
 
-    // 1801: > threshold → drop fires
+    // 1801: > threshold → drop fires (gate 2 open via nt_open)
     {
         auto c = build_chain(tip, 1801, 800000);
-        uint32_t b_post = casert_next_bitsq(c, tip + 1);
+        uint32_t b_post = casert_next_bitsq(c, tip + 1, nt_open(c));
 
         // Build the SAME chain shape but evaluate at a pre-fork height to get
         // the un-relieved value. The avg288 result is identical because the
@@ -181,9 +196,10 @@ static void test_threshold_boundary() {
         // and 5270) are crossed by both heights (6999 and 7001), and prev_bitsq
         // is identical (we seeded the chain with the same value).
         auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 1801, 800000);
-        uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1);
+        uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                           nt_open(c_pre));
 
-        TEST("prev_elapsed=1801 → Slingshot drop fires",
+        TEST("prev_elapsed=1801, current=1200 → Slingshot drop fires",
              b_post == apply_slingshot(b_pre));
     }
 }
@@ -193,11 +209,7 @@ static void test_threshold_boundary() {
 // We isolate the avg288 result by running with a normal last interval at
 // pre-fork (so no Slingshot ever) and then with the SAME last interval > 1800
 // post-fork. The ratio between post and pre values is exactly the Slingshot.
-//
-// To prove the multiplier alone we ALSO use the well-defined comparison:
-//   b_post(slow) == apply_slingshot(b_pre_at_same_shape(slow))
-// already exercised in test_threshold_boundary. Here we test multiple seed
-// values and a hand-computed expected.
+// (Gate 2 held open.)
 // ---------------------------------------------------------------------
 static void test_drop_math() {
     printf("\n=== 3. Drop math (12.5%% off) ===\n");
@@ -210,8 +222,9 @@ static void test_drop_math() {
     for (uint32_t seed : seeds) {
         auto c_post = build_chain(tip, 2000, seed);
         auto c_pre  = build_chain(V11_SLINGSHOT_HEIGHT - 2, 2000, seed);
-        uint32_t b_post = casert_next_bitsq(c_post, tip + 1);
-        uint32_t b_pre  = casert_next_bitsq(c_pre,  V11_SLINGSHOT_HEIGHT - 1);
+        uint32_t b_post = casert_next_bitsq(c_post, tip + 1, nt_open(c_post));
+        uint32_t b_pre  = casert_next_bitsq(c_pre,  V11_SLINGSHOT_HEIGHT - 1,
+                                            nt_open(c_pre));
         char msg[128];
         std::snprintf(msg, sizeof(msg),
                       "seed=%u, prev_elapsed=2000 → b_post == apply_slingshot(b_pre) (b_pre=%u, b_post=%u)",
@@ -222,14 +235,7 @@ static void test_drop_math() {
 
 // ---------------------------------------------------------------------
 // 4. MIN_BITSQ floor — drop never produces a value below MIN_BITSQ.
-//
-// To engage the clamp we need bitsQ_pre that is so small that
-// pre * 8750/10000 < MIN_BITSQ.
-// MIN_BITSQ = Q16_ONE = 65536. Pre needs to be < 74898 (74898 * 0.875 ≈ 65536).
-// We can't easily push avg288 to that small a value; the smallest stable
-// state is bitsQ near MIN_BITSQ. Approach: seed prev_bitsq close to MIN_BITSQ
-// AND make avg288 think the chain is way too slow (so delta is positive but
-// capped). Then the post-Slingshot floor clamp engages.
+// (Gate 2 held open.)
 // ---------------------------------------------------------------------
 static void test_min_bitsq_floor() {
     printf("\n=== 4. MIN_BITSQ floor clamp ===\n");
@@ -239,22 +245,20 @@ static void test_min_bitsq_floor() {
     // Seed with bitsQ exactly at MIN_BITSQ. The avg288 calculation may shift
     // it slightly, but post-Slingshot result should never be below MIN_BITSQ.
     auto c = build_chain(tip, 2000, MIN_BITSQ);
-    uint32_t b = casert_next_bitsq(c, tip + 1);
+    uint32_t b = casert_next_bitsq(c, tip + 1, nt_open(c));
     TEST("seed=MIN_BITSQ + slow prev → result >= MIN_BITSQ (floor honored)",
          b >= MIN_BITSQ);
 
     // Seed slightly above MIN_BITSQ but where Slingshot would push below.
     // MIN_BITSQ = 65536. 70000 * 0.875 = 61250 < 65536 → clamp engages.
     auto c2 = build_chain(tip, 2000, 70000);
-    uint32_t b2 = casert_next_bitsq(c2, tip + 1);
+    uint32_t b2 = casert_next_bitsq(c2, tip + 1, nt_open(c2));
     TEST("seed=70000 + slow prev → result clamped to MIN_BITSQ",
          b2 >= MIN_BITSQ);
 
     // Direct construction: even though avg288 may modify the value, the floor
     // clamp must run AFTER the Slingshot multiplication. Verify the helper
-    // logic by manual computation: if pre-Slingshot is, say, 60000 (below
-    // MIN_BITSQ already, which avg288 would never produce, but as a sanity
-    // check on apply_slingshot itself):
+    // logic by manual computation:
     TEST("apply_slingshot(MIN_BITSQ-1) clamps to MIN_BITSQ",
          apply_slingshot(MIN_BITSQ - 1) == MIN_BITSQ);
     TEST("apply_slingshot(MIN_BITSQ) clamps to MIN_BITSQ (since 0.875 < 1)",
@@ -266,12 +270,7 @@ static void test_min_bitsq_floor() {
 // ---------------------------------------------------------------------
 // 5. Single-shot — slow block N triggers drop on N+1, normal block N+1
 // triggers NO drop on N+2.
-//
-// We simulate this by building the chain in stages:
-//   - stage A: tip is at height H, prev interval was slow (3600 s)
-//     → next block (H+1) gets the drop
-//   - stage B: append a normal block at H+1 with interval 600 s
-//     → next block (H+2) gets NO drop because prev_elapsed = 600
+// (Gate 2 held open for both stages so the prev gate is the only variable.)
 // ---------------------------------------------------------------------
 static void test_single_shot() {
     printf("\n=== 5. Single-shot — drop applies once, then resets ===\n");
@@ -280,9 +279,10 @@ static void test_single_shot() {
     auto chain = build_chain(tip, 3600, 800000);  // last interval = 60 min (> threshold)
 
     // Stage A: bitsQ for next block (tip+1) WITH Slingshot drop
-    uint32_t b_A_post = casert_next_bitsq(chain, tip + 1);
+    uint32_t b_A_post = casert_next_bitsq(chain, tip + 1, nt_open(chain));
     auto chain_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 3600, 800000);
-    uint32_t b_A_pre = casert_next_bitsq(chain_pre, V11_SLINGSHOT_HEIGHT - 1);
+    uint32_t b_A_pre = casert_next_bitsq(chain_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                         nt_open(chain_pre));
     TEST("Stage A: slow prev → Slingshot drop applied at H+1",
          b_A_post == apply_slingshot(b_A_pre));
 
@@ -296,39 +296,17 @@ static void test_single_shot() {
     chain.push_back(extra);
 
     // Stage B: bitsQ for next block (tip+2). prev_elapsed now = 600 s, NO drop.
-    uint32_t b_B = casert_next_bitsq(chain, tip + 2);
-    // To verify "no drop", build the same chain shape at a pre-fork height
-    // and compare. Note: avg288 will incorporate the slow interval at
-    // chain[-2..-3] but NOT multiply by 0.875.
-    auto chain_pre2 = chain;  // copy
-    // We can't easily move the chain to pre-fork (heights differ), but the
-    // strong test is: compare b_B against b_B with Slingshot HYPOTHETICALLY
-    // re-applied. They MUST differ unless b_B was already at MIN_BITSQ.
+    // Even with gate 2 wide open, gate 1 fails (600 == threshold for OUR avg
+    // gate but here prev_elapsed = 600 s which is NOT > 1800 s).
+    uint32_t b_B = casert_next_bitsq(chain, tip + 2, nt_open(chain));
     TEST("Stage B: normal prev (600s) → NO Slingshot drop on H+2",
          b_B != apply_slingshot(b_B) || b_B == MIN_BITSQ);
-
-    // Stronger: build a chain ending in two normal blocks (no slow tail) and
-    // compare. With identical avg288 input, b_B should match a normal-tail
-    // chain's result. We need to be careful: our build_chain only varies the
-    // very last interval, but here we have a slow block 2 positions back.
-    // Simpler check: drop must NOT have been applied. apply_slingshot(b_B)
-    // would yield b_B * 0.875 — strictly below b_B (unless at floor). Good.
 }
 
 // ---------------------------------------------------------------------
 // 6. No ratcheting — 3 consecutive slow blocks each get one drop, NEVER
-// compounded against an already-relieved value. Each drop is 12.5% off the
-// CURRENT avg288, not 12.5% off the previously-relieved bitsQ.
-//
-// The implementation contract:
-//   for each block: result = apply_slingshot(avg288_for_this_block)
-// where avg288_for_this_block uses chain.back().powDiffQ as prev_bitsq.
-//
-// To prove "no ratcheting" we replay the same chain shape with the SAME
-// stored prev_bitsq values, once at post-fork heights and once at pre-fork
-// heights. The post-fork run must equal apply_slingshot(pre-fork run) at
-// every step — i.e., the drop is always exactly 12.5% off avg288, never
-// off a previously-relieved value.
+// compounded against an already-relieved value.
+// (Gate 2 held open at every step.)
 // ---------------------------------------------------------------------
 static void test_no_ratcheting() {
     printf("\n=== 6. No ratcheting — each drop computed against avg288, not previous ===\n");
@@ -336,8 +314,6 @@ static void test_no_ratcheting() {
     const int64_t SLOW = 2400;  // 40 min, > threshold
     const uint32_t SEED = 800000;
 
-    // Build a SHIFTED pair: same intervals + same stored bitsQ in every block,
-    // just at different heights. height_offset = 0 → post-fork, -100 → pre-fork.
     auto build_pair = [&](int64_t tip_post, int64_t tip_pre) {
         return std::make_pair(build_chain(tip_post, SLOW, SEED),
                               build_chain(tip_pre,  SLOW, SEED));
@@ -348,16 +324,11 @@ static void test_no_ratcheting() {
 
     auto [chain, chain_pre] = build_pair(tip_post, tip_pre);
 
-    uint32_t b1_post = casert_next_bitsq(chain,     tip_post + 1);
-    uint32_t b1_pre  = casert_next_bitsq(chain_pre, tip_pre  + 1);
+    uint32_t b1_post = casert_next_bitsq(chain,     tip_post + 1, nt_open(chain));
+    uint32_t b1_pre  = casert_next_bitsq(chain_pre, tip_pre  + 1, nt_open(chain_pre));
     TEST("Slow #1 → drop computed against avg288",
          b1_post == apply_slingshot(b1_pre));
 
-    // Append slow block #2. Critical for the no-ratcheting test: BOTH chains
-    // store the SAME prev_bitsq in the new tip. We pick `b1_pre` (the
-    // un-relieved value) for both, so the avg288 path is identical between
-    // the two chains. This isolates the Slingshot multiplier as the only
-    // post-avg288 difference.
     auto append_slow = [&](std::vector<BlockMeta>& c, uint32_t store_bq) {
         BlockMeta nb{};
         nb.block_id = ZERO_HASH();
@@ -370,26 +341,22 @@ static void test_no_ratcheting() {
     append_slow(chain,     b1_pre);
     append_slow(chain_pre, b1_pre);
 
-    uint32_t b2_post = casert_next_bitsq(chain,     tip_post + 2);
-    uint32_t b2_pre  = casert_next_bitsq(chain_pre, tip_pre  + 2);
+    uint32_t b2_post = casert_next_bitsq(chain,     tip_post + 2, nt_open(chain));
+    uint32_t b2_pre  = casert_next_bitsq(chain_pre, tip_pre  + 2, nt_open(chain_pre));
     TEST("Slow #2 → drop is exactly 12.5%% off fresh avg288 (no ratcheting)",
          b2_post == apply_slingshot(b2_pre));
 
-    // The crucial no-compounding check: a hypothetical compound drop would
-    // be 0.875 * 0.875 = 76.5625% of avg288. Verify b2_post is NOT that.
     uint32_t compounded = apply_slingshot(apply_slingshot(b2_pre));
     TEST("Slow #2 does NOT compound the previous drop",
          b2_post != compounded || b2_pre == MIN_BITSQ);
 
-    // Append slow block #3
     append_slow(chain,     b2_pre);
     append_slow(chain_pre, b2_pre);
-    uint32_t b3_post = casert_next_bitsq(chain,     tip_post + 3);
-    uint32_t b3_pre  = casert_next_bitsq(chain_pre, tip_pre  + 3);
+    uint32_t b3_post = casert_next_bitsq(chain,     tip_post + 3, nt_open(chain));
+    uint32_t b3_pre  = casert_next_bitsq(chain_pre, tip_pre  + 3, nt_open(chain_pre));
     TEST("Slow #3 → still 12.5%% off fresh avg288 (no triple-compound)",
          b3_post == apply_slingshot(b3_pre));
 
-    // Triple-compound would be 0.875^3 = 66.99%. Verify we are NOT that low.
     uint32_t triple = apply_slingshot(apply_slingshot(apply_slingshot(b3_pre)));
     TEST("Slow #3 does NOT triple-compound the previous drops",
          b3_post != triple || b3_pre == MIN_BITSQ);
@@ -397,10 +364,6 @@ static void test_no_ratcheting() {
 
 // ---------------------------------------------------------------------
 // 7. Genesis edge case — chain.size() < 2.
-// casert_next_bitsq returns GENESIS_BITSQ when chain.empty() or size < 10
-// (V6++ branch requires >= 10; below that the legacy anchor branch runs).
-// We're verifying that the Slingshot guard (size >= 2) does not crash on
-// tiny chains and that the result is sensible.
 // ---------------------------------------------------------------------
 static void test_genesis_edge() {
     printf("\n=== 7. Genesis edge case (chain.size() < 2) ===\n");
@@ -418,7 +381,8 @@ static void test_genesis_edge() {
     only.powDiffQ = GENESIS_BITSQ;
     only.profile_index = 0;
     one.push_back(only);
-    uint32_t b_one = casert_next_bitsq(one, V11_SLINGSHOT_HEIGHT + 1);
+    uint32_t b_one = casert_next_bitsq(one, V11_SLINGSHOT_HEIGHT + 1,
+                                       only.time + 1200);
     // size=1 < 10 → V6++ branch skipped, legacy anchor branch runs.
     // No crash, no Slingshot.
     TEST("size=1 chain → no crash, returns a valid bitsQ in [MIN, MAX]",
@@ -433,11 +397,12 @@ static void test_determinism() {
 
     int64_t tip = V11_SLINGSHOT_HEIGHT + 10;
     auto chain = build_chain(tip, 2700, 1234567);  // 45 min slow tail
+    int64_t nt = nt_open(chain);
 
-    uint32_t first = casert_next_bitsq(chain, tip + 1);
+    uint32_t first = casert_next_bitsq(chain, tip + 1, nt);
     bool all_equal = true;
     for (int i = 0; i < 10; ++i) {
-        uint32_t b = casert_next_bitsq(chain, tip + 1);
+        uint32_t b = casert_next_bitsq(chain, tip + 1, nt);
         if (b != first) { all_equal = false; break; }
     }
     TEST("10 identical calls → 10 identical outputs",
@@ -445,9 +410,172 @@ static void test_determinism() {
 
     // Also: confirm value is non-trivial (Slingshot fired).
     auto chain_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 2700, 1234567);
-    uint32_t pre = casert_next_bitsq(chain_pre, V11_SLINGSHOT_HEIGHT - 1);
+    uint32_t pre = casert_next_bitsq(chain_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                     nt_open(chain_pre));
     TEST("determinism check: post-fork value matches apply_slingshot(pre-fork)",
          first == apply_slingshot(pre));
+}
+
+// ---------------------------------------------------------------------
+// 9. (V2 hotfix) Second gate: current_elapsed > TARGET_SPACING.
+// Slingshot fires ONLY if BOTH:
+//   prev_elapsed    > 1800   (strict >)
+//   current_elapsed > 600    (strict >)
+// ---------------------------------------------------------------------
+static void test_second_gate_boundary() {
+    printf("\n=== 9. Second-gate boundary on current_elapsed (strict > 600 s) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT;
+    const uint32_t SEED = 800000;
+
+    // Compute the un-relieved baseline once (pre-fork heights, gate 2 wide open
+    // to keep the call signature uniform — pre-fork ignores Slingshot).
+    auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 1801, SEED);
+    uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                       nt_open(c_pre));
+
+    // 9.1 current_elapsed = 599 → gate 2 fails → NO drop
+    {
+        auto c = build_chain(tip, 1801, SEED);
+        uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 599);
+        TEST("prev=1801, current=599 → NO drop (gate 2 fails, 599 < 600)",
+             b == b_pre);
+    }
+
+    // 9.2 current_elapsed = 600 → gate 2 fails (strict >) → NO drop
+    {
+        auto c = build_chain(tip, 1801, SEED);
+        uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 600);
+        TEST("prev=1801, current=600 → NO drop (strict >, 600 == threshold)",
+             b == b_pre);
+    }
+
+    // 9.3 current_elapsed = 601 → gate 2 fires → drop applied
+    {
+        auto c = build_chain(tip, 1801, SEED);
+        uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 601);
+        TEST("prev=1801, current=601 → drop applied (both gates fire)",
+             b == apply_slingshot(b_pre));
+    }
+}
+
+static void test_free_relief_prevented() {
+    printf("\n=== 9b. Free-relief prevention (prev huge but current short) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT;
+    const uint32_t SEED = 800000;
+
+    // prev_elapsed = 7800 s (130 min — chain was very stalled) but current
+    // block solves in 60 s → gate 2 fails → NO drop (this is the bug v2 fixes).
+    auto c = build_chain(tip, 7800, SEED);
+    uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 60);
+
+    // Reference: same shape at pre-fork height, no Slingshot ever applies.
+    auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 7800, SEED);
+    uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                       nt_open(c_pre));
+
+    TEST("prev=7800, current=60 → NO drop (network has already recovered)",
+         b == b_pre);
+    // Strong negative: confirm the v1-era buggy behaviour is gone.
+    TEST("free-relief check: result is NOT apply_slingshot(b_pre)",
+         b != apply_slingshot(b_pre) || b_pre == MIN_BITSQ);
+}
+
+static void test_both_gates_open_slow_current() {
+    printf("\n=== 9c. Both gates wide open (slow current too) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT;
+    const uint32_t SEED = 800000;
+
+    // prev_elapsed = 1801, current_elapsed = 1500 (25 min) → both gates fire.
+    auto c = build_chain(tip, 1801, SEED);
+    uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 1500);
+
+    auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 1801, SEED);
+    uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                       nt_open(c_pre));
+
+    TEST("prev=1801, current=1500 → drop applied",
+         b == apply_slingshot(b_pre));
+}
+
+static void test_only_current_gate() {
+    printf("\n=== 9d. Only current gate (prev not slow) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT;
+    const uint32_t SEED = 800000;
+
+    // prev_elapsed = 600 (normal), current_elapsed = 700 → gate 1 fails → NO drop.
+    auto c = build_chain(tip, 600, SEED);
+    uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 700);
+
+    // Compare against the same chain shape with current_elapsed deep below
+    // the gate (e.g. 1) — both must produce the same value (no Slingshot
+    // either way) since gate 1 fails.
+    auto c2 = build_chain(tip, 600, SEED);
+    uint32_t b2 = casert_next_bitsq(c2, tip + 1, c2.back().time + 1);
+
+    TEST("prev=600, current=700 → NO drop (gate 1 fails)",
+         b == b2);
+}
+
+static void test_now_time_unavailable_safe_default() {
+    printf("\n=== 9e. now_time<=0 → no Slingshot (safe default) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT;
+    const uint32_t SEED = 800000;
+
+    // prev_elapsed = 3600 (would normally trigger if gate 2 were open), but
+    // now_time = 0 → guard suppresses Slingshot entirely.
+    auto c = build_chain(tip, 3600, SEED);
+    uint32_t b_zero = casert_next_bitsq(c, tip + 1, 0);
+    uint32_t b_neg  = casert_next_bitsq(c, tip + 1, -1);
+
+    auto c_pre = build_chain(V11_SLINGSHOT_HEIGHT - 2, 3600, SEED);
+    uint32_t b_pre = casert_next_bitsq(c_pre, V11_SLINGSHOT_HEIGHT - 1,
+                                       nt_open(c_pre));
+
+    TEST("now_time=0 → no Slingshot (matches pre-fork un-relieved)",
+         b_zero == b_pre);
+    TEST("now_time<0 → no Slingshot (matches pre-fork un-relieved)",
+         b_neg  == b_pre);
+    // Default arg also reaches this path (no now_time supplied)
+    uint32_t b_default = casert_next_bitsq(c, tip + 1);
+    TEST("default now_time (omitted) → no Slingshot",
+         b_default == b_pre);
+}
+
+static void test_dual_gate_determinism() {
+    printf("\n=== 9f. Dual-gate determinism (10 runs) ===\n");
+
+    int64_t tip = V11_SLINGSHOT_HEIGHT + 5;
+    auto chain = build_chain(tip, 2200, 1500000);
+    int64_t nt = chain.back().time + 750;  // gate 2 open by 150 s
+
+    uint32_t first = casert_next_bitsq(chain, tip + 1, nt);
+    bool all_equal = true;
+    for (int i = 0; i < 10; ++i) {
+        uint32_t b = casert_next_bitsq(chain, tip + 1, nt);
+        if (b != first) { all_equal = false; break; }
+    }
+    TEST("10 identical calls (dual-gate, drop fires) → 10 identical outputs",
+         all_equal);
+
+    // Also check the no-drop branch is deterministic.
+    int64_t nt_small = chain.back().time + 100;  // gate 2 closed
+    uint32_t first_nd = casert_next_bitsq(chain, tip + 1, nt_small);
+    bool all_equal_nd = true;
+    for (int i = 0; i < 10; ++i) {
+        uint32_t b = casert_next_bitsq(chain, tip + 1, nt_small);
+        if (b != first_nd) { all_equal_nd = false; break; }
+    }
+    TEST("10 identical calls (gate 2 closed, no drop) → 10 identical outputs",
+         all_equal_nd);
+
+    // Drop branch and no-drop branch must differ when only gate 2 toggles.
+    TEST("dual-gate: gate-2-open value differs from gate-2-closed value",
+         first != first_nd);
 }
 
 int main() {
@@ -455,6 +583,7 @@ int main() {
     printf("V11_SLINGSHOT_HEIGHT     = %lld\n", (long long)V11_SLINGSHOT_HEIGHT);
     printf("SLINGSHOT_THRESHOLD_SECS = %lld\n", (long long)SLINGSHOT_THRESHOLD_SECONDS);
     printf("SLINGSHOT_DROP_BPS       = %d\n",   (int)SLINGSHOT_DROP_BPS);
+    printf("TARGET_SPACING (gate 2)  = %lld\n", (long long)TARGET_SPACING);
     printf("MIN_BITSQ                = %u\n",   (unsigned)MIN_BITSQ);
 
     test_pre_fork_unchanged();
@@ -465,6 +594,13 @@ int main() {
     test_no_ratcheting();
     test_genesis_edge();
     test_determinism();
+    // V2 hotfix — second-gate suite (§9)
+    test_second_gate_boundary();
+    test_free_relief_prevented();
+    test_both_gates_open_slow_current();
+    test_only_current_gate();
+    test_now_time_unavailable_safe_default();
+    test_dual_gate_determinism();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

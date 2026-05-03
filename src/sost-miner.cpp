@@ -963,7 +963,11 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     int64_t h = (int64_t)g_chain.size();
     int32_t epoch = (int32_t)(h / BLOCKS_PER_EPOCH);
 
-    uint32_t bits_q = casert_next_bitsq(g_chain, h);
+    // V11 Phase 3 — Slingshot v2 needs now_time to evaluate its second
+    // gate (current_elapsed > 600 s). Pass current wall-clock here; the
+    // RPC override below pulls the node's authoritative diff (computed
+    // with the node's wall-clock) which the miner adopts on mismatch.
+    uint32_t bits_q = casert_next_bitsq(g_chain, h, std::time(nullptr));
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_compute(g_chain, h, std::time(nullptr));
 

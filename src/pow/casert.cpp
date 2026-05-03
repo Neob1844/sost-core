@@ -150,24 +150,40 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         int64_t result = (int64_t)prev_bitsq + delta;
         result = std::max<int64_t>((int64_t)MIN_BITSQ, std::min<int64_t>((int64_t)MAX_BITSQ, result));
 
-        // V11 Phase 3 — Slingshot single-shot bitsQ relief
+        // V11 Phase 3 — Slingshot single-shot bitsQ relief (v2: dual gate)
         // Spec: include/sost/params.h V11_SLINGSHOT_HEIGHT.
-        // If the previous block elapsed more than SLINGSHOT_THRESHOLD_SECONDS,
-        // reduce the just-computed bitsQ by SLINGSHOT_DROP_BPS basis points
-        // for THIS block only. Self-resetting: the next block recomputes
-        // avg288 fresh and only re-applies the relief if its own previous
-        // block also exceeded the threshold.
         //
-        // CONSENSUS-CRITICAL: the comparison is `prev_elapsed > threshold`
-        // (strict >) — prev_elapsed == 1800 does NOT trigger. The drop is
-        // applied AFTER the avg288/MAX clamp and is then re-clamped to the
-        // MIN_BITSQ floor only (we never want to push the difficulty above
-        // the just-computed value, only below it). Both miner and validator
-        // route through this single function so post-Slingshot bitsQ is
+        // Fires iff BOTH conditions hold (strict greater-than on each):
+        //     prev_elapsed    > SLINGSHOT_THRESHOLD_SECONDS (1800 s, 30 min)
+        //     current_elapsed > TARGET_SPACING              (600 s, 10 min)
+        // where
+        //     prev_elapsed    = chain.back().time - chain[size-2].time
+        //     current_elapsed = now_time - chain.back().time
+        //
+        // The two-gate design closes the "free relief" loophole present in
+        // v1: with only the prev gate, a chain that already recovered (the
+        // candidate solves in 30 s) would still receive a 12.5 % drop on a
+        // block that does not need it. Requiring current_elapsed > 600 s
+        // means the relief only applies while the current block is itself
+        // running long, i.e. the chain is genuinely still struggling.
+        //
+        // If now_time is unavailable (now_time <= 0) the second gate cannot
+        // be evaluated; safe default = no Slingshot. The miner pipeline
+        // therefore must pass the candidate timestamp (or current wall-clock
+        // for getinfo polling) for the relief to engage at the producer.
+        // The validator passes the actual block.timestamp, so consensus is
         // identical on both sides.
-        if (next_height >= V11_SLINGSHOT_HEIGHT && chain.size() >= 2) {
-            int64_t prev_elapsed = chain.back().time - chain[chain.size() - 2].time;
-            if (prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS) {
+        //
+        // The drop is applied AFTER the avg288/MAX clamp and is then re-
+        // clamped to the MIN_BITSQ floor only (we never want to push the
+        // difficulty above the just-computed value, only below it). Self-
+        // resetting: the next block recomputes avg288 fresh and only re-
+        // applies the relief if both its own gates fire again.
+        if (next_height >= V11_SLINGSHOT_HEIGHT && chain.size() >= 2 && now_time > 0) {
+            int64_t prev_elapsed    = chain.back().time - chain[chain.size() - 2].time;
+            int64_t current_elapsed = now_time - chain.back().time;
+            if (prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS
+                && current_elapsed > TARGET_SPACING) {
                 int64_t relieved = (result * (10000 - (int64_t)SLINGSHOT_DROP_BPS)) / 10000;
                 if (relieved < (int64_t)MIN_BITSQ) relieved = (int64_t)MIN_BITSQ;
                 result = relieved;

@@ -1437,7 +1437,12 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     if (!g_blocks.empty()) {
         std::vector<BlockMeta> meta;
         for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
-        next_bits = sost::casert_next_bitsq(meta, next_height);
+        // V11 Phase 3 — Slingshot v2 needs now_time to evaluate its
+        // second gate. Use current wall-clock at template build; the
+        // miner stamps its own block.timestamp >= curtime, and the
+        // validator re-runs casert_next_bitsq with that timestamp.
+        int64_t tmpl_now = (int64_t)time(nullptr);
+        next_bits = sost::casert_next_bitsq(meta, next_height, tmpl_now);
     }
     int64_t curtime = (int64_t)time(nullptr);
     int64_t subsidy = sost_subsidy_stocks(next_height);
