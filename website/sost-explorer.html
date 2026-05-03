@@ -458,6 +458,16 @@ make -j$(nproc)</pre>
     <b style="color:#f97316">◆ Miner bug fixed</b><br>
     The miner could previously loop on <code>fetch_lottery_state height mismatch</code>. This was a miner-side sync issue, not a chain split or consensus failure. The miner now resyncs when the RPC node is ahead.<br><br>
 
+    <b style="color:#67e8f9">◆ MY MINER ALERTS</b><br>
+    Put your mining address in the <code>MY MINER</code> field at the top of the explorer. If that address finds a block, you will see a special <code>YOUR BLOCK</code> alert and hear a fanfare.<br><br>
+
+    This setting is saved locally in your browser only. It is not synced between devices.<br><br>
+
+    If you switch to a new Phase 2 wallet address, update <code>MY MINER</code> with the new address printed by <code>sost-miner</code> at startup.<br><br>
+
+    If you have any issue with this tool, please let me know here:<br>
+    <a href="https://sostcore.com/sost-contact.html" target="_blank" rel="noopener" style="color:#67e8f9">https://sostcore.com/sost-contact.html</a><br><br>
+
     <span style="color:var(--text3)">SOST is experimental native PoW software. Issues may appear and will be corrected transparently. Thank you for your patience and for updating quickly.</span>
   </div>
 </div>
