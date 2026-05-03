@@ -757,6 +757,7 @@ make -j$(nproc)</pre>
         <span class="pi" onclick="toggleParamInfo('bitsq')">bitsQ: <span id="miningBitsQRaw" style="color:var(--yellow);font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
         <span class="pi" onclick="toggleParamInfo('profile')" title="Estimated from current chain lag — actual consensus profile may differ by ±1 level">profile: <span id="miningProfileName" style="font-weight:600;">—</span> <span id="miningProfileParams" style="color:var(--red);">(scale=1 k=4 margin=165 steps=4)</span> <span class="pi-i">ⓘ</span></span>
         <span class="pi" onclick="toggleParamInfo('stability')">stability: <span id="miningStabRate" style="font-weight:600;">—</span> <span class="pi-i">ⓘ</span></span>
+        <span id="miningLotteryInfo" style="color:var(--text3);font-weight:600;">lottery: —</span>
         <span id="miningDecayInfo" style="color:#fbbf24;display:none;"></span>
       </div>
       <!-- Row 3: Probability -->
@@ -2754,6 +2755,20 @@ function updateMiningPanel(elapsed){
   var bqReal=bq/65536;
   var mh=document.getElementById('miningHeight');
   if(mh)mh.textContent='#'+nextH;
+  var li=document.getElementById('miningLotteryInfo');
+  if(li){
+    var phase2=7100, permanent=12100;
+    var triggered=false, mode='pre-Phase 2';
+    if(nextH>=phase2&&nextH<permanent){triggered=(nextH%3)!==0;mode='2-of-3 schedule';}
+    else if(nextH>=permanent){triggered=(nextH%3)===0;mode='1-of-3 schedule';}
+    if(nextH<phase2){
+      li.textContent='lottery: pre-Phase 2';
+      li.style.color='var(--text3)';
+    }else{
+      li.textContent='lottery: '+(triggered?'YES':'NO')+' · '+mode;
+      li.style.color=triggered?'var(--purple)':'var(--text3)';
+    }
+  }
   var md=document.getElementById('miningDiff');
   if(md)md.textContent=bqReal.toFixed(3)+' bits';
   // Prev hash
