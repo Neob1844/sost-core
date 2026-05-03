@@ -511,10 +511,11 @@ make -j$(nproc)</pre>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')">
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
-    <div class="dash-val cyan">DTD</div>
-    <div class="dash-sub" id="dDTD">click to scan</div>
+    <div class="dash-val" style="color:var(--orange)">DTD</div>
+    <div class="dash-sub" id="dDTD" style="color:var(--orange)">eligible count</div>
+    <div class="dash-sub">click to scan</div>
   </div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
@@ -1180,6 +1181,7 @@ function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
+try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;});}catch(e){}
 var _dtdCache=null;
 var _dtdFilter='all';
 function dtdStocks(v){v=Number(v||0);return isFinite(v)?v:0;}
@@ -1338,7 +1340,7 @@ async function renderDTDPanel(body,title,silent){
     var eligibleRows=rows.filter(function(r){
       return r.status==='Eligible'||r.status==='eligible at 7100'||(height<7100&&r.minedBlocks>0);
     }).length;
-    var dd=document.getElementById('dDTD');if(dd)dd.textContent=eligibleRows+' eligible';
+    var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     renderDTDTable(_dtdCache);
   }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
 }
