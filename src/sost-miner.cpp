@@ -451,6 +451,57 @@ static std::string rpc_call(const std::string& method, const std::string& params
     return response.substr(bp + 4);
 }
 
+
+// Resync local miner chain state from the RPC node when the node is ahead.
+// This is a miner-side recovery path only; it does not change consensus.
+static bool sync_local_chain_to_rpc_tip() {
+    if (g_rpc_url.empty()) return false;
+
+    std::string info = rpc_call("getinfo");
+    if (info.empty()) return false;
+
+    int64_t node_height = jint(info, "blocks");
+    if (node_height < 0) return false;
+
+    uint32_t node_diff = 0;
+    int64_t nd = jint(info, "next_difficulty");
+    if (nd <= 0) nd = jint(info, "difficulty");
+    if (nd > 0) node_diff = (uint32_t)nd;
+
+    std::string best = rpc_call("getbestblockhash");
+    std::string tip_hex = jstr(best, "result");
+    if (tip_hex.size() == 64) {
+        g_tip_hash = from_hex(tip_hex);
+    }
+
+    int64_t local_height = (int64_t)g_chain.size() - 1;
+    if (node_height < local_height) {
+        printf("[MINER] RPC resync refused: node height %lld < local height %lld\n",
+               (long long)node_height, (long long)local_height);
+        return false;
+    }
+
+    while ((int64_t)g_chain.size() - 1 < node_height) {
+        BlockMeta pad{};
+        pad.height = (int64_t)g_chain.size();
+        pad.time = (int64_t)time(nullptr);
+        pad.powDiffQ = node_diff > 0 ? node_diff : GENESIS_BITSQ;
+        pad.profile_index = 0;
+        pad.block_id = ZERO_HASH();
+        g_chain.push_back(pad);
+    }
+
+    if (!g_chain.empty()) {
+        g_chain.back().block_id = g_tip_hash;
+        if (node_diff > 0) g_chain.back().powDiffQ = node_diff;
+    }
+
+    printf("[MINER] Resynced local chain to RPC height %lld tip=%s\n",
+           (long long)node_height, hex(g_tip_hash).substr(0, 16).c_str());
+    return true;
+}
+
+
 // =============================================================================
 // Fetch block template from node (mempool txs + fees)
 // =============================================================================
