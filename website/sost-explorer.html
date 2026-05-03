@@ -422,6 +422,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <span style="display:block;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
         PHASE 2 · BLOCK 7,100 · LOTTERY + SbPoW · MINERS MUST UPDATE BEFORE 7,100
       </span>
+      <span style="display:block;color:#c084fc;font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
+        PHASE 3 · TBD · TAILGUARD EMERGENCY bitsQ ANTI-STALL · DESIGN STAGE
+      </span>
     </div>
 
     <!-- ============== READY · UPDATE BEFORE BLOCK 7,000 ============== -->
@@ -526,6 +529,44 @@ After that, permanently:                       1 of every 3 blocks</pre>
         <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
 
         <span style="color:var(--text3);font-style:italic">Clarification: a &ldquo;triggered block&rdquo; is a block where the lottery is scheduled by the frequency rules above. Non-triggered blocks follow the normal 50/25/25 reward split and never carry lottery payouts, even if a pending jackpot exists. The jackpot waits for the next scheduled lottery block.</span>
+      </div>
+    </div>
+
+    <!-- ============== PHASE 3 — TAILGUARD ============== -->
+    <div style="background:linear-gradient(135deg,rgba(168,85,247,0.10),rgba(34,211,238,0.04));border:1px dashed #a855f7;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(168,85,247,.18)">
+      <div style="color:#c084fc;font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
+        ◆ PHASE 3 — TAILGUARD EMERGENCY RELIEF · ACTIVATION HEIGHT TBD
+      </div>
+      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
+        <b style="color:#c084fc">E · TailGuard — emergency bitsQ anti-stall.</b>
+        Backup layer for rare extreme block tails. The V11 cascade (component A) lowers the ConvergenceX profile until the <code>E7</code> floor is reached — that solves normal slow-block cases. But if the network has already reached <code>E7</code> and a single block remains overdue for an extreme amount of time, profile relief has no further room to move. TailGuard addresses that tail-risk case by applying a small, capped bitsQ relief to the current block <i>after</i> the normal avg288 difficulty calculation. It does NOT replace cASERT, the cascade, normal block production, or any other rule — it only activates when a single block is abnormally delayed.
+      </div>
+
+      <div style="color:var(--text2);font-size:11px;line-height:1.7">
+        <b style="color:var(--text)">Two-layer rule (proposed, height-gated by V11_TAILGUARD_HEIGHT):</b>
+
+        <pre style="background:rgba(0,0,0,.35);padding:9px 11px;border-radius:3px;font-size:10.5px;color:#d8b4fe;margin:8px 0;line-height:1.55;overflow-x:auto"><b>Layer 1 — EarlyArm (fast, transient)</b>
+  if  prev_block_elapsed   &gt; 60 min
+  AND current_block_elapsed &gt; 10 min
+  then bitsQ -= 1 % (this block only, self-reset on next block)
+
+<b>Layer 2 — Continuous (deep, escalating)</b>
+  if  current_block_elapsed &gt;= 90 min
+  then bitsQ -= 2 % per 30 min over 90 min, capped at 12 %</pre>
+
+        <b style="color:var(--text)">Why two layers.</b> EarlyArm reacts <i>fast</i> to a network where the previous block was already abnormally slow — at minute 10 of the next block, not minute 90. Continuous catches deep stalls when EarlyArm relief was insufficient. Both are independent and self-resetting per block. The maximum drop is the <i>larger</i> of the two layers, not the sum.<br><br>
+
+        <b style="color:var(--text)">Why this matters.</b> On 2026-05-03, block 6,989 took 129 min 35 s to mine — purely Poisson variance amplified by a coordinated update window with no consensus fault. With TailGuard active, the relief would have started at minute 10 (EarlyArm armed by no prior block of equal severity), then escalated through Continuous at minute 90, recovering bitsQ proportionally and shortening the tail. The current rules can leave bitsQ static for hours when avg288 is in the deadband and the cascade is already at <code>E7</code>.<br><br>
+
+        <b style="color:var(--text)">Safety constraints.</b>
+        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10px;color:var(--text2);margin:6px 0 8px 0;line-height:1.55;overflow-x:auto">- height-gated; pre-activation blocks unchanged
+- avg288 difficulty rule still runs first; TailGuard only applies after
+- elapsed = candidate.timestamp - prev.timestamp, bounded by MTP rules
+- no cumulative effect across blocks; every block recalculates fresh
+- absolute cap 12 % per block + MIN_BITSQ floor still respected
+- profile cascade, lottery, SbPoW, coinbase logic untouched</pre>
+
+        <span style="color:var(--text3);font-style:italic">TailGuard is a backup mechanism, not a normal operating mode. It only fires under abnormal conditions (extreme tails). Normal cASERT + V11 cascade + Phase 2 lottery / SbPoW are completely unchanged. Activation height set after implementation passes the same test gates V11 Phase 1 + Phase 2 cleared (C9-style Monte Carlo, accounting invariant, reorg, determinism). For now: design only, code lands as a follow-up commit before activation.</span>
       </div>
     </div>
 
