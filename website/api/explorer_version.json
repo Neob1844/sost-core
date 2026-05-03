@@ -1,1 +1,1 @@
-{"v":"2026-05-03-v108","note":"DTD dashboard adds per-address DTD WON lottery payout totals using getblock lottery_winner_address and lottery_payout fields."}
+{"v":"2026-05-04-v110","note":"DTD card layout polished: Token Distribution title, DTD label, and live eligible-address count."}
