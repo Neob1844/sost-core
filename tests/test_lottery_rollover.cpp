@@ -14,7 +14,7 @@
 // the C7 spec are covered.
 //
 // No Schnorr dependency; built unconditionally. The production
-// V11_PHASE2_HEIGHT (= 10000, set by C10) is re-checked in §1 and §10;
+// V11_PHASE2_HEIGHT (= 7100, set by C13) is re-checked in §1 and §10;
 // the INT64_MAX sentinel remains a test-only fallback used to exercise
 // the dormant branch with a literal value.
 
@@ -82,15 +82,15 @@ static LotteryApplyInput mk_input(int64_t height,
 }
 
 // ---------------------------------------------------------------------------
-// 1 — V11_PHASE2_HEIGHT pinned at 10000; INT64_MAX sentinel still idle
+// 1 — V11_PHASE2_HEIGHT pinned at 7100; INT64_MAX sentinel still idle
 // ---------------------------------------------------------------------------
 static void test_phase2_activation_height() {
-    printf("\n=== 1) V11_PHASE2_HEIGHT == 10000 (set by C10); INT64_MAX still idle ===\n");
+    printf("\n=== 1) V11_PHASE2_HEIGHT == 7100 (set by C13); INT64_MAX still idle ===\n");
     auto eligible = std::vector<LotteryEligibilityEntry>{mk_entry(0x10), mk_entry(0x20)};
 
-    // Verify the activation constant is the C10 value.
-    TEST("V11_PHASE2_HEIGHT == 10000 (C10 decision)",
-         V11_PHASE2_HEIGHT == 10000);
+    // Verify the activation constant is the C13 value.
+    TEST("V11_PHASE2_HEIGHT == 7100 (C13 decision)",
+         V11_PHASE2_HEIGHT == 7100);
 
     // INT64_MAX sentinel remains a usable test-only "never trigger" value:
     // any chain height passed against it returns IDLE.
@@ -105,12 +105,12 @@ static void test_phase2_activation_height() {
     TEST("winner_index == -1",               r.winner_index == -1);
 
     // Pre-activation chain heights against the production constant: IDLE.
-    auto in_pre = mk_input(/*height*/9999, /*phase2*/V11_PHASE2_HEIGHT,
+    auto in_pre = mk_input(/*height*/7099, /*phase2*/V11_PHASE2_HEIGHT,
                            /*pending*/12345, /*amount*/100, eligible);
     auto r_pre = apply_lottery_block(in_pre);
-    TEST("height=9999 vs V11_PHASE2_HEIGHT → triggered=false",
+    TEST("height=7099 vs V11_PHASE2_HEIGHT → triggered=false",
          !r_pre.triggered);
-    TEST("height=9999 vs V11_PHASE2_HEIGHT → pending unchanged",
+    TEST("height=7099 vs V11_PHASE2_HEIGHT → pending unchanged",
          r_pre.pending_after == 12345);
 }
 
@@ -363,7 +363,8 @@ static void test_serialization_deferred() {
     //   - V11_PHASE2_HEIGHT was INT64_MAX at the time of the C7 commit,
     //     so the new fields would always be zero in production until
     //     the height was finalised. C8 added the schema + callers; C10
-    //     finalised the activation height to 10000.
+    //     set the activation height to 10000; C13 reduced it to 7100
+    //     after Phase 1 (block 7000) shipped successfully.
     //   - Persisting them now requires updating StoredBlock + 4
     //     locations in src/sost-node.cpp (struct, save_chain_internal
     //     fallback, load_chain JSON parser, raw_block_json
@@ -394,8 +395,8 @@ static void test_no_coinbase_mutation() {
     auto r = apply_lottery_block(in);
     TEST("apply_lottery_block does not depend on coinbase shape",
          r.triggered);
-    TEST("V11_PHASE2_HEIGHT == 10000 (C10)",
-         V11_PHASE2_HEIGHT == 10000);
+    TEST("V11_PHASE2_HEIGHT == 7100 (C13)",
+         V11_PHASE2_HEIGHT == 7100);
     TEST("LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW unchanged",
          LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW == 5);
     TEST("LOTTERY_HIGH_FREQ_WINDOW unchanged",

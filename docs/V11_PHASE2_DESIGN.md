@@ -7,7 +7,7 @@
 
 This document is **docs-only**. It captures the CTO-approved design decisions for Phase 2 after the C1 + D1 reconnaissance of the existing codebase. **No code, no constants, no CMake wiring, no test activation lands with this commit.** Subsequent commits implement the design point-by-point under the order listed in §7.
 
-**Status (post-C10)**: `V11_PHASE2_HEIGHT = 10000` (set in `include/sost/params.h`). Every gate in §6 (G3.1–G3.4 + G4.1–G4.5) cleared in C2–C9; C10 finalised the activation height. The sentinel value `INT64_MAX` remains a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal.
+**Status (post-C13)**: `V11_PHASE2_HEIGHT = 7100` (set in `include/sost/params.h`). Every gate in §6 (G3.1–G3.4 + G4.1–G4.5) cleared in C2–C9; C10 set the activation height to 10,000; C11–C12 wired the production miner; C13 reduced the activation height to 7,100 (100-block deployment window after Phase 1 hard fork at block 7,000). The sentinel value `INT64_MAX` remains a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal.
 
 ---
 
@@ -300,7 +300,7 @@ If the benchmark fails, **Commit 6.5** introduces an incremental index `miner_fi
 
 ### 5.4 Preliminary lottery eligibility simulation
 
-> **Status: C5 set the default to `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`; C9 confirmed the value (formal Monte Carlo + fairness review PASS, see `docs/V11_PHASE2_MONTE_CARLO.md`); C10 finalised the activation height to `V11_PHASE2_HEIGHT = 10000`.**
+> **Status: C5 set the default to `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`; C9 confirmed the value (formal Monte Carlo + fairness review PASS, see `docs/V11_PHASE2_MONTE_CARLO.md`); C10 set the activation height to `V11_PHASE2_HEIGHT = 10000`; C13 reduced it to `V11_PHASE2_HEIGHT = 7100` after Phase 1 shipped.**
 
 A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool only — NOT consensus code, NOT wired into CMake) was executed across 256 scenarios (4 hashrate values × 4 honest-miner counts × 4 sybil counts × 4 exclusion windows, 10 000 blocks each) to inform the C5 default of `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`.
 
@@ -329,7 +329,7 @@ A preliminary Monte Carlo run with `tools/lottery_montecarlo.py` (analysis tool 
 - **`no_cap` minimizes sybil incentive globally** (Δ_10 ≈ +56 pp) at the cost of giving the dominant a baseline ~3.3 % lottery share when they play honestly with one address. This is the simplest and most defensive option if the design assumes a sophisticated dominant.
 - **No eligibility window protects against a 100-sybil attack.** Across all variants (0 / 5 / 10 / 30) the dominant captures 93-97 % of the lottery once they pre-legitimate ~100 sybil addresses (a roughly 24 h investment at 70 % hashrate, with no real opportunity cost since the block-reward keeps flowing). The eligibility rule is therefore not a sybil defense — that role belongs to Memory-Lock per-instance (planned post block 12 000) and any future stake-locked eligibility once a SOST market exists.
 - **Honest-miner median lottery share is essentially flat across all windows** (14.40 %–15.10 %). The "cap protects honest miners" framing is not supported by the data; the effective protection on honest miners comes from the bootstrap 2-of-3 frequency window, not the recent-winner cooldown.
-- **C5 default set to `cap_5`** based on the above. **C9 confirmed the value** in the formal Monte Carlo + fairness review. **C10 set `V11_PHASE2_HEIGHT = 10000`** — Phase 2 (and the cap=5 rule) is live for chain heights ≥ 10,000.
+- **C5 default set to `cap_5`** based on the above. **C9 confirmed the value** in the formal Monte Carlo + fairness review. **C10 set `V11_PHASE2_HEIGHT = 10000`**, then **C13 reduced it to `7100`** — Phase 2 (and the cap=5 rule) is live for chain heights ≥ 7,100.
 
 #### Implementation implication — C5 default + post-C9 flexibility
 
@@ -344,7 +344,7 @@ inline constexpr int32_t LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5;  // C5 defa
 
 #### Banner / public messaging
 
-C5 shipped banner **v83** (`website/sost-explorer.html` + `website/api/explorer_version.json`) with the cooldown wording revised from "last 30 blocks" to "last 5 blocks", and an explicit note that the change followed the preliminary Monte Carlo. C10 (this commit) ships banner **v92** announcing the Phase 2 activation height of block 10,000. Banner v82 (the rollover-clarification update on the parallel `banner-v82-rollover-clarification` branch) is orthogonal and merges separately.
+C5 shipped banner **v83** (`website/sost-explorer.html` + `website/api/explorer_version.json`) with the cooldown wording revised from "last 30 blocks" to "last 5 blocks", and an explicit note that the change followed the preliminary Monte Carlo. C10 shipped banner **v92** announcing the Phase 2 activation height. C13 (this commit) ships banner **v94** finalising the activation height at block 7,100 (100-block window after Phase 1 hard fork at block 7,000). Banner v82 (the rollover-clarification update on the parallel `banner-v82-rollover-clarification` branch) is orthogonal and merges separately.
 
 #### Reproducing the run
 
@@ -359,13 +359,13 @@ $ python3 tools/lottery_montecarlo.py --seed 42
 
 ## 6 · `V11_PHASE2_HEIGHT` — activation criteria
 
-### 6.1 Final value (set by C10)
+### 6.1 Final value (set by C13)
 
 ```cpp
-inline constexpr int64_t V11_PHASE2_HEIGHT = 10000;
+inline constexpr int64_t V11_PHASE2_HEIGHT = 7100;
 ```
 
-C2–C9 cleared every gate listed in §6.2 (G3.1–G3.4 + G4.1–G4.5). C10 finalised the activation height to block 10,000 — separated from Phase 1 (block 7,000) by ~3,000 blocks (~3 weeks at the 600-second target) so the two hard forks remain independently observable in production. The previous sentinel `INT64_MAX` is preserved as a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal.
+C2–C9 cleared every gate listed in §6.2 (G3.1–G3.4 + G4.1–G4.5). C10 originally set the activation height to block 10,000 (max conservative margin); C11/C12 wired the production miner without touching the constant; C13 reduced the activation height to block 7,100 — separated from Phase 1 (block 7,000) by 100 blocks (~16-17h at the 600-second target) so the two hard forks remain independently observable in production while keeping the deployment window tight enough to ship within a single operational shift. The previous sentinel `INT64_MAX` is preserved as a TEST-ONLY value used by unit tests to exercise the dormant branch with a literal.
 
 ### 6.2 GO criteria — ALL must be true
 
@@ -400,7 +400,7 @@ Sequence on branch `v11-phase2`. Each commit is reviewed independently. **No mer
 | 2 | phase2 C: SbPoW header v2 + serialization + tests | `block.h/cpp`, `BlockHeader::Serialize/DeserializeFrom` height-gated; tests for v1/v2 roundtrip and malformed-v2 rejection |
 | 3 | phase2 C: SbPoW miner integration + privkey loading | `--wallet`, `--mining-key-label` flags; signing in `sost-miner.cpp` between line 1107 (witnesses) and 1118 (submit); secure_memzero helper |
 | 4 | phase2 C: SbPoW validator + adversarial tests + Schnorr build gate | `ValidateBlockSbPoW()` in `block_validation.cpp` L2; CMake Schnorr feature check; replace 10 TODOs in `test_sbpow_phase2.cpp` with real adversarial cases; wire in CMakeLists |
-| 5 | phase2 D: lottery frequency function + constants | `params.h` constants (`V11_PHASE2_HEIGHT = INT64_MAX` provisional → finalised to `10000` in C10, `LOTTERY_HIGH_FREQ_WINDOW = 5000`, `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`, `LOTTERY_RNG_DOMAIN`); `is_lottery_block()` pure function |
+| 5 | phase2 D: lottery frequency function + constants | `params.h` constants (`V11_PHASE2_HEIGHT = INT64_MAX` provisional → `10000` in C10 → `7100` in C13, `LOTTERY_HIGH_FREQ_WINDOW = 5000`, `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = 5`, `LOTTERY_RNG_DOMAIN`); `is_lottery_block()` pure function |
 | 6 | phase2 D: eligibility set lazy scan + cache | `eligibility_set_at()` in `lottery.cpp`; cache invalidation hooked into `connect_block`/`disconnect_block`/`try_reorganize`; benchmark `tools/eligibility_bench.cpp` |
 | 6.5 | (conditional) phase2 D: incremental `miner_first_seen` index | Only if Commit 6 fails the 50 ms benchmark |
 | 7 | phase2 D: pending_lottery_amount state + undo data | 5-field extension to `StoredBlock`; 1-field extension to `BlockUndo`; chain.json serialization with backward-compat read |

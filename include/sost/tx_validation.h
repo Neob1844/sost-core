@@ -120,7 +120,7 @@ enum class TxValCode : int {
     CB10_CB_PAYLOAD        = 310,
 
     // V11 Phase 2 — lottery coinbase (CB11-CB14). Only reachable on
-    // blocks at heights >= V11_PHASE2_HEIGHT (= 10000, set by C10).
+    // blocks at heights >= V11_PHASE2_HEIGHT (= 7100, set by C13).
     // See ValidateCoinbaseConsensus + Phase2CoinbaseContext for usage.
     CB11_LOTTERY_SHAPE         = 311,  // wrong output count for trigger kind
     CB12_LOTTERY_AMOUNT        = 312,  // miner or lottery output amount mismatch
@@ -205,8 +205,8 @@ TxValidationResult ValidateTransactionPolicy(
 // V11 Phase 2 (C8) — when `phase2_ctx` is non-null AND
 // `height >= phase2_ctx->phase2_height`, the validator switches to the
 // lottery coinbase shape (see Phase2CoinbaseContext below). Pre-Phase 2
-// callers may continue to pass nullptr; with V11_PHASE2_HEIGHT = 10000
-// (params.h, C10) the Phase 2 path activates from chain block 10000
+// callers may continue to pass nullptr; with V11_PHASE2_HEIGHT = 7100
+// (params.h, C13) the Phase 2 path activates from chain block 7100
 // onwards. Tests may inject an alternate finite phase2_height through
 // this context to exercise the active path on synthetic heights.
 struct Phase2CoinbaseContext;

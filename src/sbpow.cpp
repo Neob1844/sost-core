@@ -19,7 +19,7 @@
 //   - validate_sbpow_for_block stays correct: pre-activation it never
 //     reaches Schnorr verify (legacy v1 headers); the version check
 //     still fires and rejects premature v2 blocks. Post-activation
-//     (height >= V11_PHASE2_HEIGHT = 10000) it MUST be built with the
+//     (height >= V11_PHASE2_HEIGHT = 7100) it MUST be built with the
 //     full BIP-340 path; OFF builds are TEST-ONLY and not deployable.
 //   - Schnorr-only test binaries are NOT built (CMake gates them).
 // When SOST_HAVE_SCHNORRSIG is defined the full BIP-340 path is live.
@@ -225,8 +225,8 @@ bool sign_sbpow_commitment(
 #else
     (void)privkey; (void)message;
     // Build was configured without SOST_HAVE_SCHNORRSIG. Production
-    // builds MUST enable SOST_ENABLE_PHASE2_SBPOW before block 10000.
-    // Pre-activation (height < 10000) miners never reach this path
+    // builds MUST enable SOST_ENABLE_PHASE2_SBPOW before block 7100.
+    // Pre-activation (height < 7100) miners never reach this path
     // because the v1 header is selected by version-gating logic; this
     // assertion only protects against a misbuilt deployment that still
     // produces v2 headers.
@@ -267,7 +267,7 @@ bool verify_sbpow_signature(
     // Without SOST_HAVE_SCHNORRSIG, verify always returns false.
     // validate_sbpow_for_block guarantees this is only called on the
     // Phase 2 active path. Production builds MUST be compiled with
-    // SOST_ENABLE_PHASE2_SBPOW=ON before block 10000 (V11_PHASE2_HEIGHT).
+    // SOST_ENABLE_PHASE2_SBPOW=ON before block 7100 (V11_PHASE2_HEIGHT).
     return false;
 #endif
 }
@@ -395,7 +395,7 @@ ValidationResult validate_sbpow_for_block(
 
     // ---- Step 1 — version gate (always) ------------------------------------
     // Pre-Phase 2 must be v1; Phase 2 must be v2. Anything else is a hard
-    // reject. Pre-activation (height < V11_PHASE2_HEIGHT = 10000) a
+    // reject. Pre-activation (height < V11_PHASE2_HEIGHT = 7100) a
     // premature v2 block is rejected here even though the signature
     // path below is skipped on the legacy v1 branch.
     if (!phase2_active) {

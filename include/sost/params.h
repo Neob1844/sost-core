@@ -284,27 +284,28 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
 // V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
-// Final activation height set by C10 (height-decision gate) to block 10000.
+// Phase 1 activates at 7000; Phase 2 at 7100 — 100-block (~16-17h)
+// deployment window between hard forks. C11+C12 wired the miner
+// production loop; C13 commits the live activation height.
 // Reasoning (see docs/V11_PHASE2_RELEASE_NOTES.md):
 //   - Phase 1 (cASERT cascade + state-dependent dataset) activates at
 //     CASERT_V11_HEIGHT = 7000. Activating Phase 2 at the same height
 //     would mix two consensus changes simultaneously; spacing them
 //     keeps each fork independently observable in production.
-//   - ~3000-block margin (~3 weeks at the 600-second target) gives
-//     miners time to update node + miner binaries and gives the team
-//     time to wire the eligibility-fetcher RPC into the production
-//     miner loop before Phase 2 lights up.
+//   - 100-block margin (~16-17h at the 600-second target) gives miners
+//     time to update node + miner binaries after Phase 1 lights up and
+//     before Phase 2 hard-fork rules begin to apply.
 //   - C9 Monte Carlo + accounting + reorg + determinism PASS
 //     (docs/V11_PHASE2_MONTE_CARLO.md).
 // Single source of truth: Phase 2 components C (SbPoW) and D (lottery)
 // BOTH gate on this height. Other height-bearing constants
 // (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT) live in this same file
 // for the same reason — keeps consensus heights in one place.
-inline constexpr int64_t  V11_PHASE2_HEIGHT                = 10000;
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
 
 // V11 Phase 2 — PoP lottery (component D) consensus constants.
 //
-// All values gate on V11_PHASE2_HEIGHT above (block 10000).
+// All values gate on V11_PHASE2_HEIGHT above (block 7100).
 //
 // Frequency schedule (used by sost::lottery::is_lottery_block):
 //   For h in [V11_PHASE2_HEIGHT, V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW):

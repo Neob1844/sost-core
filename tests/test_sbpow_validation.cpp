@@ -3,7 +3,7 @@
 // Exercises sost::sbpow::validate_sbpow_for_block() — the height-gated
 // SbPoW consensus check. Tests inject a synthetic small phase2_height
 // (e.g. 100) so the active branch is reached on test heights well
-// below the production activation (V11_PHASE2_HEIGHT = 10000).
+// below the production activation (V11_PHASE2_HEIGHT = 7100).
 //
 // Coverage (14 cases):
 //    1. pre-Phase 2 v1 accepted

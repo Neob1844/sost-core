@@ -429,15 +429,15 @@ bool DisconnectBlock(
 }
 
 // ==========================================================================
-// V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 10000)
+// V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 7100)
 // ==========================================================================
 //
 // Thin wrapper around sost::sbpow::validate_sbpow_for_block(). Lives
 // in block_validation.cpp so block-validator callers don't need to
-// include sbpow.h directly. With V11_PHASE2_HEIGHT = 10000 (set by
-// C10), the version gate (v1 pre-Phase 2 / v2 Phase 2) rejects
-// premature v2 blocks before height 10000 and demands a verifying
-// pubkey + Schnorr signature on every block at height >= 10000.
+// include sbpow.h directly. With V11_PHASE2_HEIGHT = 7100 (set by
+// C13), the version gate (v1 pre-Phase 2 / v2 Phase 2) rejects
+// premature v2 blocks before height 7100 and demands a verifying
+// pubkey + Schnorr signature on every block at height >= 7100.
 bool ValidateSbPoW(
     uint32_t                              header_version,
     const Bytes32&                        prev_hash,

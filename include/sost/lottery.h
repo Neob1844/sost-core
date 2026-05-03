@@ -5,7 +5,8 @@
 //              implementation (header-only inline). All other entry
 //              points still SKELETON / abort-on-call (eligibility,
 //              winner picking, rollover state, reorg) until C6+.
-// Activation: V11_PHASE2_HEIGHT (params.h) — block 10000 (set by C10).
+// Activation: V11_PHASE2_HEIGHT (params.h) — block 7100 (set by C13;
+//             100-block window after Phase 1 hard fork at block 7000).
 //
 // Lottery frequency schedule (height-only, no chain state needed):
 //   With H = V11_PHASE2_HEIGHT and W = LOTTERY_HIGH_FREQ_WINDOW = 5000,
@@ -76,9 +77,9 @@ inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 
 //      else:
 //          return (height % 3) == 0     (1-of-3 permanent, after bootstrap)
 //
-// Production: V11_PHASE2_HEIGHT == 10000 (params.h, set by C10).
-// This function returns false for every chain height < 10000 and the
-// schedule above for height >= 10000. Tests may pass alternate finite
+// Production: V11_PHASE2_HEIGHT == 7100 (params.h, set by C13).
+// This function returns false for every chain height < 7100 and the
+// schedule above for height >= 7100. Tests may pass alternate finite
 // phase2_height values (or the INT64_MAX sentinel) to exercise specific
 // boundary cases.
 //

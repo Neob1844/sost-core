@@ -14,9 +14,9 @@
 //
 // CONSENSUS-CRITICAL: the C6 helpers are pure functions over a chain
 // view. They do NOT touch coinbase, rewards, UTXO, chain state, or
-// validation paths. Phase 2 activates at V11_PHASE2_HEIGHT = 10000
-// (params.h); pre-activation chain heights take the dormant branch
-// because is_lottery_block returns false for every height < 10000.
+// validation paths. Phase 2 activates at V11_PHASE2_HEIGHT = 7100
+// (params.h, set by C13); pre-activation chain heights take the dormant
+// branch because is_lottery_block returns false for every height < 7100.
 #include "sost/lottery.h"
 
 #include "sost/crypto.h"      // sha256()

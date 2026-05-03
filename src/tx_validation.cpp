@@ -572,8 +572,8 @@ TxValidationResult ValidateCoinbaseConsensus(
     // hold:
     //   1. Caller provided a Phase2CoinbaseContext (non-null).
     //   2. The context's phase2_height is finite (!= INT64_MAX). In
-    //      production this is V11_PHASE2_HEIGHT = 10000 (params.h, set
-    //      by C10); the INT64_MAX sentinel remains a test-only value
+    //      production this is V11_PHASE2_HEIGHT = 7100 (params.h, set
+    //      by C13); the INT64_MAX sentinel remains a test-only value
     //      to exercise the dormant branch.
     //   3. The current block's height is at or above phase2_height.
     //   4. The block is a triggered lottery block (caller computes via

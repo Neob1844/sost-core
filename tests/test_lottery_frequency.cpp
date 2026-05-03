@@ -5,9 +5,9 @@
 // Schnorr dependency (this test file is built unconditionally,
 // regardless of -DSOST_ENABLE_PHASE2_SBPOW).
 //
-// Production schedule verified: V11_PHASE2_HEIGHT == 10000 (set by C10).
-// is_lottery_block returns false for every chain height < 10000 and
-// follows the documented 2-of-3 / 1-of-3 schedule for height >= 10000.
+// Production schedule verified: V11_PHASE2_HEIGHT == 7100 (set by C13).
+// is_lottery_block returns false for every chain height < 7100 and
+// follows the documented 2-of-3 / 1-of-3 schedule for height >= 7100.
 // Section 7 below pins both the dormant range and the active boundary.
 // The INT64_MAX sentinel remains a test-only value used to exercise
 // the "never trigger" fallback.
@@ -39,8 +39,8 @@ static void test_int64_max_sentinel_always_false() {
          !is_lottery_block(0, SENTINEL));
     TEST("height=7000 (post-Phase 1), INT64_MAX → false",
          !is_lottery_block(7000, SENTINEL));
-    TEST("height=10'000, INT64_MAX → false",
-         !is_lottery_block(10000, SENTINEL));
+    TEST("height=7'100, INT64_MAX → false",
+         !is_lottery_block(7100, SENTINEL));
     TEST("height=1'000'000, INT64_MAX → false",
          !is_lottery_block(1000000, SENTINEL));
     TEST("height=INT64_MAX-1, INT64_MAX → false",
@@ -173,21 +173,27 @@ static void test_constants_pinned() {
          std::string(LOTTERY_RNG_DOMAIN) == "SOST_LOTTERY_V11");
     TEST("LOTTERY_RNG_DOMAIN_LEN == strlen of constant",
          LOTTERY_RNG_DOMAIN_LEN == std::strlen(LOTTERY_RNG_DOMAIN));
-    TEST("V11_PHASE2_HEIGHT == 10000 (set by C10)",
-         V11_PHASE2_HEIGHT == 10000);
+    TEST("V11_PHASE2_HEIGHT == 7100 (set by C13)",
+         V11_PHASE2_HEIGHT == 7100);
 }
 
 // ---------------------------------------------------------------------------
-// 7 — Production schedule with V11_PHASE2_HEIGHT from params.h (= 10000).
-//     Every chain height < 10000 returns false; from 10000 onwards the
+// 7 — Production schedule with V11_PHASE2_HEIGHT from params.h (= 7100).
+//     Every chain height < 7100 returns false; from 7100 onwards the
 //     2-of-3 (bootstrap) and 1-of-3 (permanent) schedules apply.
+//
+//     Modular arithmetic reference (verified):
+//       7098 = 3 × 2366            → 7098 % 3 = 0
+//       7099 % 3 = 1   7100 % 3 = 2   7101 % 3 = 0   7102 % 3 = 1
+//       12099 = 7100 + 4999, 12099 = 3 × 4033 → 12099 % 3 = 0
+//       12100 % 3 = 1   12101 % 3 = 2   12102 % 3 = 0
 // ---------------------------------------------------------------------------
 static void test_production_schedule() {
-    printf("\n=== 7) Production schedule with V11_PHASE2_HEIGHT (= 10000) ===\n");
+    printf("\n=== 7) Production schedule with V11_PHASE2_HEIGHT (= 7100) ===\n");
 
-    // Pre-activation heights: ALL must be false.
+    // Pre-activation heights: ALL must be false (height < V11_PHASE2_HEIGHT).
     const int64_t pre_heights[] = {
-        0, 1, 1450, 5000, 6700, 7000, 7001, 8000, 9000, 9998, 9999
+        0, 1, 1450, 5000, 6700, 7000, 7001, 7050, 7098, 7099
     };
     for (int64_t h : pre_heights) {
         char buf[96];
@@ -197,37 +203,42 @@ static void test_production_schedule() {
         TEST(buf, !is_lottery_block(h, V11_PHASE2_HEIGHT));
     }
 
-    // Boundary at activation:
-    //   height=10000: 10000 % 3 = 1 → bootstrap rule says (h%3) != 0 → true.
-    //   height=10001: 10001 % 3 = 2 → bootstrap → true.
-    //   height=10002: 10002 % 3 = 0 → bootstrap rule (h%3) != 0 → false.
-    TEST("activation height=10000 (bootstrap, 10000%3==1) → true",
-         is_lottery_block(10000, V11_PHASE2_HEIGHT));
-    TEST("activation height=10001 (bootstrap, 10001%3==2) → true",
-         is_lottery_block(10001, V11_PHASE2_HEIGHT));
-    TEST("activation height=10002 (bootstrap, 10002%3==0) → false",
-         !is_lottery_block(10002, V11_PHASE2_HEIGHT));
+    // Boundary at activation (bootstrap rule: triggered ⟺ h%3 != 0):
+    //   height=7099: pre-activation → false.
+    //   height=7100: 7100 % 3 = 2 → bootstrap (h%3)!=0 → true.
+    //   height=7101: 7101 % 3 = 0 → bootstrap → false.
+    //   height=7102: 7102 % 3 = 1 → bootstrap → true.
+    TEST("pre-boundary height=7099 (height < phase2) → false",
+         !is_lottery_block(7099, V11_PHASE2_HEIGHT));
+    TEST("activation height=7100 (bootstrap, 7100%3==2) → true",
+         is_lottery_block(7100, V11_PHASE2_HEIGHT));
+    TEST("activation height=7101 (bootstrap, 7101%3==0) → false",
+         !is_lottery_block(7101, V11_PHASE2_HEIGHT));
+    TEST("activation height=7102 (bootstrap, 7102%3==1) → true",
+         is_lottery_block(7102, V11_PHASE2_HEIGHT));
 
     // Last block of the high-freq window: offset = 4999 → bootstrap.
-    //   height=14999: 14999 % 3 = 2 → bootstrap (h%3)!=0 → true.
-    TEST("last bootstrap block height=14999 (offset=4999, 14999%3==2) → true",
-         is_lottery_block(14999, V11_PHASE2_HEIGHT));
+    //   height=12099: 12099 % 3 = 0 → bootstrap (h%3)!=0 → false.
+    TEST("last bootstrap block height=12099 (offset=4999, 12099%3==0) → false",
+         !is_lottery_block(12099, V11_PHASE2_HEIGHT));
 
     // First block of the permanent window: offset = 5000 → 1-of-3.
-    //   height=15000: 15000 % 3 = 0 → permanent (h%3)==0 → true.
-    //   height=15001: 15001 % 3 = 1 → permanent (h%3)==0 → false.
-    //   height=15002: 15002 % 3 = 2 → permanent → false.
-    //   height=15003: 15003 % 3 = 0 → permanent → true.
-    TEST("first permanent block height=15000 (offset=5000, 15000%3==0) → true",
-         is_lottery_block(15000, V11_PHASE2_HEIGHT));
-    TEST("permanent height=15001 (h%3==1) → false",
-         !is_lottery_block(15001, V11_PHASE2_HEIGHT));
-    TEST("permanent height=15002 (h%3==2) → false",
-         !is_lottery_block(15002, V11_PHASE2_HEIGHT));
-    TEST("permanent height=15003 (h%3==0) → true",
-         is_lottery_block(15003, V11_PHASE2_HEIGHT));
+    //   height=12100: 12100 % 3 = 1 → permanent (h%3)==0 → false.
+    //   height=12101: 12101 % 3 = 2 → permanent → false.
+    //   height=12102: 12102 % 3 = 0 → permanent → true.
+    //   height=12103: 12103 % 3 = 1 → permanent → false.
+    TEST("first permanent block height=12100 (offset=5000, 12100%3==1) → false",
+         !is_lottery_block(12100, V11_PHASE2_HEIGHT));
+    TEST("permanent height=12101 (h%3==2) → false",
+         !is_lottery_block(12101, V11_PHASE2_HEIGHT));
+    TEST("permanent height=12102 (h%3==0) → true (first permanent triggered)",
+         is_lottery_block(12102, V11_PHASE2_HEIGHT));
+    TEST("permanent height=12103 (h%3==1) → false",
+         !is_lottery_block(12103, V11_PHASE2_HEIGHT));
 
     // Long-range spot checks deep in the permanent window.
+    //   height=50001: 50001 = 3*16667 → %3==0 → permanent triggered.
+    //   height=50002: %3==1 → false.
     TEST("permanent height=50001 (h%3==0) → true",
          is_lottery_block(50001, V11_PHASE2_HEIGHT));
     TEST("permanent height=50002 (h%3==1) → false",

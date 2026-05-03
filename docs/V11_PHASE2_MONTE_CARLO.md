@@ -1,7 +1,7 @@
 # V11 Phase 2 — Formal Monte Carlo + Activation Readiness (C9)
 
-Status: **C9 review complete · C10 set the activation height.**
-`V11_PHASE2_HEIGHT = 10000` in `include/sost/params.h`. This document
+Status: **C9 review complete · C10 set the activation height to 10000 · C13 reduced it to 7100.**
+`V11_PHASE2_HEIGHT = 7100` in `include/sost/params.h`. This document
 collects the Monte Carlo evidence used to confirm the C5/C6/C7
 parameter set is safe to ship as-is, and to record what the lottery
 does and does NOT defend against.
@@ -286,7 +286,9 @@ There is no value in `{10, 30}` over `5` on either axis. Cap=5 stays.
 
 ## 11. Activation readiness verdict
 
-**`READY_FOR_ACTIVATION = YES`** (C10 set `V11_PHASE2_HEIGHT = 10000`),
+**`READY_FOR_ACTIVATION = YES`** (C10 set `V11_PHASE2_HEIGHT = 10000`;
+C13 reduced it to `7100` after Phase 1 shipped successfully on the
+live chain),
 with the following honest caveats recorded in this doc and visible to
 any reviewer:
 
@@ -307,11 +309,11 @@ any reviewer:
    `project_useful_compute_trial.md` already notes that any rewarded
    B+D phase requires a future redesign. The lottery as shipped is
    the C-side mechanism only.
-5. **Activation height set by C10 to block 10,000.** Phase 1 (cASERT
-   cascade + state-dependent dataset) activates at block 7,000;
-   Phase 2 follows ~3,000 blocks (~3 weeks) later. See
-   `docs/V11_PHASE2_RELEASE_NOTES.md` for the operational notes
-   (miner update path, eligibility-set RPC follow-up commit).
+5. **Activation height finalised by C13 at block 7,100.** Phase 1
+   (cASERT cascade + state-dependent dataset) activates at block 7,000;
+   Phase 2 follows 100 blocks (~16-17h at the 600-second target) later.
+   See `docs/V11_PHASE2_RELEASE_NOTES.md` for the operational notes
+   (miner update path, eligibility-set RPC wiring done in C11/C12).
 
 ## Appendix A — How to reproduce
 
@@ -332,16 +334,16 @@ python3 tools/lottery_montecarlo.py --determinism
 Seed defaults to 42. Two runs with the same flags produce
 bit-identical output.
 
-## Appendix B — Test matrix (post-C10, with V11_PHASE2_HEIGHT = 10000)
+## Appendix B — Test matrix (post-C13, with V11_PHASE2_HEIGHT = 7100)
 
 ON-mode build (`cmake -DSOST_ENABLE_PHASE2_SBPOW=ON`):
 
 ```
-12/12 targeted Phase 2 tests PASS
-     lottery-frequency      PASS  (boundary tests added at 9999/10000/14999/15000)
-     lottery-eligibility    PASS  (activation-height pin updated)
-     lottery-rollover       PASS  (V11_PHASE2_HEIGHT == 10000 assertion)
-     coinbase-phase2        PASS  (real-height boundary §1b added)
+14/14 targeted Phase 2 tests PASS
+     lottery-frequency      PASS  (boundary tests added at 7099/7100/7101/7102/12099/12100/12101/12102)
+     lottery-eligibility    PASS  (activation-height pin updated to 7100)
+     lottery-rollover       PASS  (V11_PHASE2_HEIGHT == 7100 assertion)
+     coinbase-phase2        PASS  (real-height boundary §1b updated to 7100)
      casert-v11             PASS
      convergencex-v11       PASS
      transcript-v2          PASS

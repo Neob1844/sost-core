@@ -19,9 +19,10 @@
 //
 // Phase 2 has cleared C2 (verification), C3 (header serialization),
 // C4 (validator + adversarial), and C9 (Monte Carlo + accounting).
-// Activation height set by C10 to V11_PHASE2_HEIGHT = 10000. Below
-// that height these functions are unreached on real chain blocks
-// (legacy v1 headers); from height 10000 onwards they are mandatory.
+// Activation height set by C13 to V11_PHASE2_HEIGHT = 7100 (100-block
+// window after the Phase 1 hard fork at block 7000). Below that height
+// these functions are unreached on real chain blocks (legacy v1
+// headers); from height 7100 onwards they are mandatory.
 #pragma once
 
 #include "sost/types.h"
@@ -214,11 +215,11 @@ MinerKeyResolution resolve_miner_key(
 // pipeline. It is height-gated by an injectable `phase2_height`
 // parameter so:
 //
-//   - Production callers pass `params.h::V11_PHASE2_HEIGHT` (= 10000).
-//     For block heights < 10000 the signature-checking branch is
-//     skipped (legacy v1 headers); from height 10000 onwards every
+//   - Production callers pass `params.h::V11_PHASE2_HEIGHT` (= 7100).
+//     For block heights < 7100 the signature-checking branch is
+//     skipped (legacy v1 headers); from height 7100 onwards every
 //     v2 header MUST carry a verifying miner_pubkey + miner_signature.
-//     Premature v2 blocks (height < 10000 with header_version == 2)
+//     Premature v2 blocks (height < 7100 with header_version == 2)
 //     are rejected with VERSION_MISMATCH.
 //   - Tests pass a finite phase2_height to exercise the active path
 //     before the chain reaches the production activation height.
@@ -272,8 +273,8 @@ struct ValidationInputs {
     // Coinbase binding: pkh paid by the miner-subsidy coinbase output.
     PubKeyHash         coinbase_miner_pkh{};
 
-    // Activation gate. Production = V11_PHASE2_HEIGHT (= 10000, set by
-    // C10 in params.h). Tests may inject an alternate value (including
+    // Activation gate. Production = V11_PHASE2_HEIGHT (= 7100, set by
+    // C13 in params.h). Tests may inject an alternate value (including
     // the INT64_MAX sentinel) to exercise dormancy or boundary cases.
     int64_t            phase2_height{INT64_MAX};
 };

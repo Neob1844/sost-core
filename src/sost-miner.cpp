@@ -95,7 +95,7 @@ static std::string g_miner_address = "";
 static PubKeyHash  g_miner_pkh{};
 
 // V11 Phase 2 — wallet-backed signing key (mandatory at height >=
-// V11_PHASE2_HEIGHT = 10000). When --wallet + --mining-key-label are
+// V11_PHASE2_HEIGHT = 7100). When --wallet + --mining-key-label are
 // passed, the wallet is loaded into g_wallet and the resolved key's
 // pubkey/pkh are cached here. The privkey lives only inside g_wallet;
 // callers (signing helpers) read it on demand and the process zeroes
@@ -260,9 +260,9 @@ static Transaction build_coinbase_tx(int64_t height, int64_t total_reward, const
 // `miner_share` MUST equal sost::lottery::phase2_coinbase_split(
 // subsidy + fees).miner_share so the validator's CB12 check passes.
 //
-// Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10).
+// Phase 2 activates at V11_PHASE2_HEIGHT = 7100 (params.h, set by C13).
 // Production miners MUST wire this builder into the mining loop before
-// the chain reaches height 10000 (see follow-up commit: eligibility-set
+// the chain reaches height 7100 (see follow-up commit: eligibility-set
 // RPC + winner selection at the call site in mine_loop). It is currently
 // exposed for tests and for that future wiring.
 static Transaction build_phase2_update_coinbase_tx(int64_t height,
@@ -288,9 +288,9 @@ static Transaction build_phase2_update_coinbase_tx(int64_t height,
 // per-block share plus any rolled-over jackpot from prior empty
 // triggered blocks. No GOLD/POPC outputs are emitted.
 //
-// Phase 2 activates at V11_PHASE2_HEIGHT = 10000 (params.h, set by C10).
+// Phase 2 activates at V11_PHASE2_HEIGHT = 7100 (params.h, set by C13).
 // Production miners MUST wire this builder into the mining loop before
-// the chain reaches height 10000 (see follow-up commit). Currently
+// the chain reaches height 7100 (see follow-up commit). Currently
 // exposed for tests and for that future wiring.
 static Transaction build_phase2_payout_coinbase_tx(int64_t height,
                                                    int64_t miner_share,
@@ -1961,9 +1961,9 @@ int main(int argc, char** argv) {
     //                                            (Phase 2 path; --address must MATCH
     //                                            the address derived from the key)
     //
-    // V11_PHASE2_HEIGHT is 10000 (set by C10). Until the chain reaches
-    // 10000, phase2_required stays `false` at startup and the resolver
-    // accepts an --address-only invocation. From height 10000 onwards
+    // V11_PHASE2_HEIGHT is 7100 (set by C13). Until the chain reaches
+    // 7100, phase2_required stays `false` at startup and the resolver
+    // accepts an --address-only invocation. From height 7100 onwards
     // the per-block strict path requires a wallet-backed signing key —
     // miners that did not configure --wallet + --mining-key-label
     // before activation will fail to produce valid v2 headers.

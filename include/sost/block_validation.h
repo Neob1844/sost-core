@@ -145,12 +145,12 @@ bool DisconnectBlock(
 int64_t GetBlockSubsidy(int64_t height);
 
 // ---------------------------------------------------------------------------
-// V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 10000)
+// V11 Phase 2 — SbPoW consensus gate (height-gated, activates at block 7100)
 // ---------------------------------------------------------------------------
 //
 // Thin wrapper around sost::sbpow::validate_sbpow_for_block() that
 // belongs to the block-validation public surface. With
-// V11_PHASE2_HEIGHT = 10000 (set by C10), pre-activation blocks must
+// V11_PHASE2_HEIGHT = 7100 (set by C13), pre-activation blocks must
 // carry header_version == 1 (legacy v1 header) and post-activation
 // blocks must carry a verifying v2 header (miner_pubkey + Schnorr
 // signature over the PoW commitment + height).
