@@ -1417,7 +1417,11 @@ async function updateDashboard(info){
     v11Urgent.classList.toggle('v11-update-pulse-window',inUpdateWindow);
   }
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
-  document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
+  var nextLotteryHeight=(info.blocks||0)+1;
+  var nextLotteryLabel='pre-Phase 2';
+  if(nextLotteryHeight>=7100&&nextLotteryHeight<12100)nextLotteryLabel=((nextLotteryHeight%3)!==0)?'LOTTERY':'NORMAL';
+  else if(nextLotteryHeight>=12100)nextLotteryLabel=((nextLotteryHeight%3)===0)?'LOTTERY':'NORMAL';
+  document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs · next: '+nextLotteryLabel;
   // V5 activation banner removed after successful fork activation at block 4,300.
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;

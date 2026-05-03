@@ -1,1 +1,1 @@
-{"v":"2026-05-04-v115","note":"Mining panel now shows whether the block currently being mined is scheduled for Phase 2 lottery rewards."}
+{"v":"2026-05-04-v116","note":"Block Height card now shows whether the next block is pre-Phase-2, NORMAL, or LOTTERY according to the Phase 2 schedule."}
