@@ -1,1 +1,1 @@
-{"v":"2026-05-03-v105","note":"Adds DTD Deterministic Token Distribution dashboard with miner distribution, constitutional address labels, public balance/UTXO view where available, and lottery eligibility/cooldown status. Also keeps V11 7100 update warning behavior."}
+{"v":"2026-05-03-v106","note":"DTD dashboard polish: pre-Phase-2 mined addresses now show eligible at 7100, and explorer clients auto-reload to pick up the updated view."}

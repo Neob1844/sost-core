@@ -1175,7 +1175,7 @@ function dtdRole(addr,row){
   return 'Normal address';
 }
 function dtdStatus(row,height,cooldownSet){
-  if(height<7100)return 'pre-Phase 2';
+  if(height<7100)return (row&&row.minedBlocks>0)?'eligible at 7100':'pre-Phase 2';
   if(!row||row.minedBlocks<=0)return 'Not eligible';
   if(cooldownSet[row.addr])return 'Cooldown';
   return 'Eligible';
@@ -1183,7 +1183,7 @@ function dtdStatus(row,height,cooldownSet){
 function dtdStatusColor(status){
   if(status==='Eligible')return 'var(--green)';
   if(status==='Cooldown')return '#fbbf24';
-  if(status==='pre-Phase 2')return 'var(--cyan)';
+  if(status==='pre-Phase 2'||status==='eligible at 7100')return 'var(--cyan)';
   return 'var(--text3)';
 }
 function setDTDFilter(f){_dtdFilter=f;if(_dtdCache)renderDTDTable(_dtdCache);}
