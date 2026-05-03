@@ -848,6 +848,13 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                     Transaction cbtx;
                     if(Transaction::Deserialize(cbraw,cbtx,&cberr)&&!cbtx.outputs.empty()){
                         s<<",\"miner_address\":\""<<address_encode(cbtx.outputs[0].pubkey_hash)<<"\"";
+                        for(const auto& out : cbtx.outputs){
+                            if(out.type == OUT_COINBASE_LOTTERY){
+                                s<<",\"lottery_winner_address\":\""<<address_encode(out.pubkey_hash)<<"\""
+                                 <<",\"lottery_payout\":"<<out.amount;
+                                break;
+                            }
+                        }
                     }
                 }
                 // Include txids

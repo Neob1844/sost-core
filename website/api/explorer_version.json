@@ -1,1 +1,1 @@
-{"v":"2026-05-03-v108","note":"Makes the V11 update banner collapsible while keeping the Developer Note fixed. Explorer clients auto-reload to pick up the banner UX update."}
+{"v":"2026-05-03-v108","note":"DTD dashboard adds per-address DTD WON lottery payout totals using getblock lottery_winner_address and lottery_payout fields."}

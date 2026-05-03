@@ -1237,8 +1237,8 @@ function renderDTDTable(cache){
   html+=dtdFilterButton('balance','non-zero balance');
   html+='</div>';
   html+='<div style="overflow:auto;max-height:520px;border:1px solid rgba(255,255,255,.06)">';
-  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>LOTTERY STATUS</th></tr></thead><tbody>';
-  if(!rows.length){html+='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
+  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>DTD WON</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>LOTTERY STATUS</th></tr></thead><tbody>';
+  if(!rows.length){html+='<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
     var role=dtdRole(r.addr,r);
@@ -1246,11 +1246,13 @@ function renderDTDTable(cache){
     var bal=(r.balanceStocks===null)?'n/a':(dtdSost8(r.balanceStocks)+' SOST');
     var rec=(r.receivedStocks===null)?'n/a':(dtdSost8(r.receivedStocks)+' SOST');
     var mined=dtdSost8(r.minedStocks)+' SOST';
+    var dtdWon=dtdSost8(r.dtdWonStocks||0)+' SOST';
     html+='<tr style="border-bottom:1px solid #111">';
     html+='<td><span class="td-link" onclick="showAddress(\''+r.addr+'\')" title="'+r.addr+'">'+dtdShort(r.addr)+'</span></td>';
     html+='<td><span style="color:'+roleColor+';font-weight:600">'+role+'</span></td>';
     html+='<td style="text-align:right;color:var(--orange);font-weight:600">'+r.minedBlocks+'</td>';
     html+='<td style="text-align:right;color:#fbbf24">'+mined+'</td>';
+    html+='<td style="text-align:right;color:var(--purple);font-weight:600">'+dtdWon+'</td>';
     html+='<td style="text-align:right;color:var(--green)">'+rec+'</td>';
     html+='<td style="text-align:right;color:var(--text3)">n/a</td>';
     html+='<td style="text-align:right;color:'+(r.balanceStocks>0?'var(--green)':'var(--text3)')+'">'+bal+'</td>';
@@ -1273,7 +1275,7 @@ async function renderDTDPanel(body,title,silent){
     var CHUNK=40;
     function ensure(addr){
       if(!addr)return null;
-      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
+      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
       return rowsByAddr[addr];
     }
     ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');
@@ -1291,6 +1293,7 @@ async function renderDTDPanel(body,title,silent){
         var popcReward=Object.prototype.hasOwnProperty.call(b,'popc_pool_reward')?dtdStocks(b.popc_pool_reward):Math.floor(subsidy/4);
         var lotteryReward=dtdStocks(b.lottery_payout||b.lottery_reward||0);
         totalSubsidy+=subsidy;totalMiner+=minerReward;totalGold+=goldReward;totalPopc+=popcReward;totalLottery+=lotteryReward;
+        if(lotteryReward>0&&b.lottery_winner_address){var wr=ensure(b.lottery_winner_address);if(wr)wr.dtdWonStocks+=lotteryReward;}
         if(b.miner_address){
           var r=ensure(b.miner_address);r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
           if((b.height||0)>height-5)latestWinners.push(b.miner_address);
