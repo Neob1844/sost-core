@@ -1421,7 +1421,7 @@ async function updateDashboard(info){
   var nextLotteryLabel='pre-Phase 2';
   if(nextLotteryHeight>=7100&&nextLotteryHeight<12100)nextLotteryLabel=((nextLotteryHeight%3)!==0)?'LOTTERY':'NORMAL';
   else if(nextLotteryHeight>=12100)nextLotteryLabel=((nextLotteryHeight%3)===0)?'LOTTERY':'NORMAL';
-  document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs · next: '+nextLotteryLabel;
+  document.getElementById('dHeightSub').innerHTML=fComma(info.utxo_count)+' UTXOs &middot;<br><span style="color:var(--yellow);font-weight:600">next: '+nextLotteryLabel+'</span>';
   // V5 activation banner removed after successful fork activation at block 4,300.
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
@@ -2767,10 +2767,10 @@ function updateMiningPanel(elapsed){
     else if(nextH>=permanent){triggered=(nextH%3)===0;mode='1-of-3 schedule';}
     if(nextH<phase2){
       li.textContent='lottery: pre-Phase 2';
-      li.style.color='var(--text3)';
+      li.style.color='#ff00ff';
     }else{
       li.textContent='lottery: '+(triggered?'YES':'NO')+' · '+mode;
-      li.style.color=triggered?'var(--purple)':'var(--text3)';
+      li.style.color='#ff00ff';
     }
   }
   var md=document.getElementById('miningDiff');
