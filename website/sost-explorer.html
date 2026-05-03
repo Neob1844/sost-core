@@ -511,7 +511,7 @@ make -j$(nproc)</pre>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')"><div class="dash-label" style="white-space:nowrap">DTD &middot; TOKEN DISTRIBUTION</div><div class="dash-val cyan" id="dDTD">&mdash;</div><div class="dash-sub" id="dDTDSub">deterministic view</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')"><div class="dash-label" style="white-space:nowrap">DTD</div><div class="dash-val cyan" id="dDTD">&mdash;</div><div class="dash-sub" id="dDTDSub">Token Distribution</div></div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -1240,7 +1240,7 @@ function renderDTDTable(cache){
 }
 async function renderDTDPanel(body,title,silent){
   title.textContent='// DTD · DETERMINISTIC TOKEN DISTRIBUTION';
-  if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain distribution... <span style="color:var(--cyan)">this may take a moment</span></div>';
+  if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">this may take a moment</span></div>';
   try{
     var height=H||await rpc('getblockcount');
     var totalSubsidy=0,totalMiner=0,totalGold=0,totalPopc=0,totalLottery=0;
@@ -1272,7 +1272,7 @@ async function renderDTDPanel(body,title,silent){
           if((b.height||0)>height-5)latestWinners.push(b.miner_address);
         }
       }
-      if(!silent&&start%(CHUNK*10)===0){body.innerHTML='<div style="color:var(--text3)">Scanning public chain distribution... <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span></div>';}
+      if(!silent&&start%(CHUNK*10)===0){body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span></div>';}
     }
     var gv=ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');if(gv)gv.receivedStocks=totalGold;
     var pp=ensure('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f');if(pp)pp.receivedStocks=totalPopc;
