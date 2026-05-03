@@ -1157,8 +1157,17 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         return false;
     }
     if (ls.height_next != h) {
-        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; "
-               "aborting block candidate.\n",
+        if (ls.height_next > h) {
+            printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node is ahead, resyncing.\\n",
+                   (long long)ls.height_next, (long long)h);
+            if (sync_local_chain_to_rpc_tip()) {
+                return false; // outer loop retries from refreshed RPC height
+            }
+            printf("[MINER] RPC resync failed; aborting block candidate.\\n");
+            return false;
+        }
+
+        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node appears behind, aborting block candidate.\\n",
                (long long)ls.height_next, (long long)h);
         return false;
     }
