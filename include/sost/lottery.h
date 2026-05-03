@@ -90,6 +90,7 @@ namespace sost::lottery {
 // ---------------------------------------------------------------------------
 inline constexpr char    LOTTERY_RNG_DOMAIN[]    = "SOST_LOTTERY_V11";
 inline constexpr size_t  LOTTERY_RNG_DOMAIN_LEN  = sizeof(LOTTERY_RNG_DOMAIN) - 1;
+inline constexpr int64_t LOTTERY_RNG_HISTORY_BLOCKS = 16;
 
 // ---------------------------------------------------------------------------
 // V11 Phase 2 — height-only lottery trigger rule (C5, real, pure).
@@ -234,6 +235,25 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     const PubKeyHash&                         current_miner_pkh,
     int64_t                                   exclusion_window =
         LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+
+// Select the winning index into a lex-sorted eligibility vector from a
+// recent block-history seed. Production Phase 2 uses this path so a
+// single previous block hash does not dominate the lottery roll.
+//
+// Determinism contract:
+//   seed   = sha256(LOTTERY_RNG_DOMAIN || recent_hashes || height_le)
+//   roll   = read_u64_le(seed.data())
+//   index  = roll % eligible.size()
+//
+// recent_hashes are the available hashes in ascending height order for:
+//   [height - LOTTERY_RNG_HISTORY_BLOCKS, height - 1]
+//
+// The current block hash is deliberately NOT included: the winner must
+// be known before the coinbase is built.
+int64_t select_lottery_winner_index_from_history(
+    const std::vector<LotteryEligibilityEntry>& eligible,
+    const std::vector<LotteryMinedBlockView>&   blocks,
+    int64_t                                     height);
 
 // Select the winning index into a lex-sorted eligibility vector.
 //

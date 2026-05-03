@@ -1038,11 +1038,9 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     const bool    phase2_active = (height_next >= phase2_h) && (phase2_h != INT64_MAX);
 
     int64_t pending_before = 0;
-    Bytes32 prev_block_hash{};
     if (!g_blocks.empty()) {
         const auto& tip = g_blocks.back();
         pending_before = tip.pending_lottery_after;
-        prev_block_hash = tip.block_id;
     }
 
     const int64_t subsidy = sost_subsidy_stocks(height_next);
@@ -1111,8 +1109,8 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         eligibility_empty = eligible.empty();
 
         if (!eligible.empty()) {
-            winner_index = sost::lottery::select_lottery_winner_index(
-                eligible, prev_block_hash, height_next);
+            winner_index = sost::lottery::select_lottery_winner_index_from_history(
+                eligible, history, height_next);
             if (winner_index >= 0 && winner_index < (int64_t)eligible.size()) {
                 winner_pkh = eligible[(size_t)winner_index].pkh;
             }
@@ -3511,24 +3509,126 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
+    // V11 Phase 2: build the lottery coinbase context from local chain
+    // state. This mirrors getlotterystate, but uses the actual block fees
+    // and is authoritative for submitblock validation.
+    Phase2CoinbaseContext phase2_ctx;
+    const Phase2CoinbaseContext* phase2_ctx_ptr = nullptr;
+    if (sost::V11_PHASE2_HEIGHT != INT64_MAX && height >= sost::V11_PHASE2_HEIGHT) {
+        phase2_ctx.phase2_height = sost::V11_PHASE2_HEIGHT;
+        phase2_ctx.pending_before = g_blocks.empty() ? 0 : g_blocks.back().pending_lottery_after;
+        phase2_ctx.triggered = sost::lottery::is_lottery_block(height, sost::V11_PHASE2_HEIGHT);
+        phase2_ctx.paid_out = false;
+        phase2_ctx.lottery_payout = 0;
+        phase2_ctx.expected_winner_pkh = PubKeyHash{};
+        phase2_ctx.expected_pending_after = phase2_ctx.pending_before;
+
+        if (phase2_ctx.triggered) {
+            std::vector<sost::lottery::LotteryMinedBlockView> history;
+            history.reserve(g_blocks.size());
+            for (const auto& b : g_blocks) {
+                if (b.tx_hexes.empty()) continue;
+
+                std::vector<Byte> raw;
+                raw.reserve(b.tx_hexes[0].size() / 2);
+                auto hx = [](char c) -> int {
+                    if (c >= '0' && c <= '9') return c - '0';
+                    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+                    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+                    return -1;
+                };
+                const std::string& hexstr = b.tx_hexes[0];
+                bool ok_hex = (hexstr.size() % 2) == 0;
+                for (size_t i = 0; ok_hex && i + 1 < hexstr.size(); i += 2) {
+                    int hi = hx(hexstr[i]);
+                    int lo = hx(hexstr[i + 1]);
+                    if (hi < 0 || lo < 0) { ok_hex = false; break; }
+                    raw.push_back((Byte)((hi << 4) | lo));
+                }
+                if (!ok_hex || raw.empty()) continue;
+
+                Transaction cb;
+                std::string derr;
+                if (!Transaction::Deserialize(raw, cb, &derr)) continue;
+                if (cb.outputs.empty()) continue;
+
+                sost::lottery::LotteryMinedBlockView v;
+                v.height = b.height;
+                v.miner_pkh = cb.outputs[0].pubkey_hash;
+                v.block_hash = b.block_id;
+                history.push_back(v);
+            }
+
+            if (txs[0].outputs.empty()) {
+                printf("[BLOCK] REJECTED: coinbase has no outputs (Phase 2 lottery context)\n");
+                return false;
+            }
+
+            auto eligible = sost::lottery::compute_lottery_eligibility_set(
+                history, height, txs[0].outputs[0].pubkey_hash,
+                sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+
+            const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
+            if (eligible.empty()) {
+                phase2_ctx.paid_out = false;
+                phase2_ctx.expected_pending_after =
+                    phase2_ctx.pending_before + p2split.lottery_share;
+            } else {
+                int64_t winner_index = sost::lottery::select_lottery_winner_index_from_history(
+                    eligible, history, height);
+                if (winner_index < 0 || winner_index >= (int64_t)eligible.size()) {
+                    printf("[BLOCK] REJECTED: lottery winner index invalid\n");
+                    return false;
+                }
+                phase2_ctx.paid_out = true;
+                phase2_ctx.expected_winner_pkh = eligible[(size_t)winner_index].pkh;
+                phase2_ctx.lottery_payout =
+                    p2split.lottery_share + phase2_ctx.pending_before;
+                phase2_ctx.expected_pending_after = 0;
+            }
+        }
+        phase2_ctx_ptr = &phase2_ctx;
+    }
+
     // Validate coinbase amounts/destinations against subsidy+fees
     PubKeyHash gold_pkh{}, popc_pkh{};
     address_decode(ADDR_GOLD_VAULT, gold_pkh);
     address_decode(ADDR_POPC_POOL, popc_pkh);
-    auto cbr = ValidateCoinbaseConsensus(txs[0], height, subsidy, total_fees, gold_pkh, popc_pkh);
+    auto cbr = ValidateCoinbaseConsensus(
+        txs[0], height, subsidy, total_fees, gold_pkh, popc_pkh, phase2_ctx_ptr);
     if(!cbr.ok){
         printf("[BLOCK] REJECTED: coinbase invalid: %s\n", cbr.message.c_str());
         return false;
     }
 
     // Also check JSON claimed split matches real coinbase outputs (hardening)
-    if((int64_t)txs[0].outputs.size()!=3){
-        printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
-        return false;
-    }
-    if(txs[0].outputs[0].amount!=miner_r || txs[0].outputs[1].amount!=gold_r || txs[0].outputs[2].amount!=popc_r){
-        printf("[BLOCK] REJECTED: JSON rewards mismatch vs coinbase tx outputs\n");
-        return false;
+    if (!phase2_ctx_ptr || !phase2_ctx.triggered) {
+        if((int64_t)txs[0].outputs.size()!=3){
+            printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
+            return false;
+        }
+        if(txs[0].outputs[0].amount!=miner_r || txs[0].outputs[1].amount!=gold_r || txs[0].outputs[2].amount!=popc_r){
+            printf("[BLOCK] REJECTED: JSON rewards mismatch vs coinbase tx outputs\n");
+            return false;
+        }
+    } else if (!phase2_ctx.paid_out) {
+        if((int64_t)txs[0].outputs.size()!=1){
+            printf("[BLOCK] REJECTED: Phase 2 UPDATE coinbase outputs != 1\n");
+            return false;
+        }
+        if(txs[0].outputs[0].amount!=miner_r || gold_r != 0 || popc_r != 0){
+            printf("[BLOCK] REJECTED: Phase 2 UPDATE JSON rewards mismatch\n");
+            return false;
+        }
+    } else {
+        if((int64_t)txs[0].outputs.size()!=2){
+            printf("[BLOCK] REJECTED: Phase 2 PAYOUT coinbase outputs != 2\n");
+            return false;
+        }
+        if(txs[0].outputs[0].amount!=miner_r || gold_r != 0 || popc_r != 0){
+            printf("[BLOCK] REJECTED: Phase 2 PAYOUT JSON rewards mismatch\n");
+            return false;
+        }
     }
 
     // Recompute block_id and verify PoW
@@ -4118,6 +4218,8 @@ static bool process_block(const std::string& block_json) {
     sb.miner_reward = miner_r;
     sb.gold_vault_reward = gold_r;
     sb.popc_pool_reward = popc_r;
+    sb.pending_lottery_after =
+        phase2_ctx_ptr ? phase2_ctx.expected_pending_after : 0;
     sb.stability_metric = stb;
     sb.x_bytes_hex = x_bytes_hex;
     sb.final_state_hex = final_state_hex;
@@ -5672,8 +5774,18 @@ static bool save_chain_internal(const std::string& path) {
         const auto& b = g_blocks[i];
         if (!b.raw_block_json.empty()) {
             // Write complete original JSON — preserves ALL Transcript V2 proof data
-            // (checkpoint_leaves, segment_proofs, round_witnesses)
-            f << "    " << b.raw_block_json;
+            // (checkpoint_leaves, segment_proofs, round_witnesses), while
+            // injecting node-derived Phase 2 rollover state when needed.
+            std::string raw = b.raw_block_json;
+            if (b.pending_lottery_after > 0
+                && raw.find("\"pending_lottery_after\"") == std::string::npos) {
+                size_t end = raw.rfind('}');
+                if (end != std::string::npos) {
+                    raw.insert(end, ",\"pending_lottery_after\":"
+                               + std::to_string(b.pending_lottery_after));
+                }
+            }
+            f << "    " << raw;
         } else {
             // Fallback reconstruction for genesis/legacy blocks without raw JSON
             f << "    {\"block_id\":\"" << to_hex(b.block_id.data(),32)

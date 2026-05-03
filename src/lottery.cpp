@@ -182,6 +182,45 @@ int64_t select_lottery_winner_index(
     return (int64_t)(roll % n);
 }
 
+int64_t select_lottery_winner_index_from_history(
+    const std::vector<LotteryEligibilityEntry>& eligible,
+    const std::vector<LotteryMinedBlockView>&   blocks,
+    int64_t                                     height)
+{
+    if (eligible.empty()) return -1;
+
+    std::vector<LotteryMinedBlockView> window;
+    window.reserve((size_t)LOTTERY_RNG_HISTORY_BLOCKS);
+    const int64_t lo = height - LOTTERY_RNG_HISTORY_BLOCKS;
+    const int64_t hi = height - 1;
+    for (const auto& b : blocks) {
+        if (b.height < lo || b.height > hi) continue;
+        window.push_back(b);
+    }
+
+    std::sort(window.begin(), window.end(),
+              [](const LotteryMinedBlockView& a, const LotteryMinedBlockView& b) {
+                  return a.height < b.height;
+              });
+
+    std::vector<uint8_t> buf;
+    buf.reserve(LOTTERY_RNG_DOMAIN_LEN + window.size() * 32 + 8);
+    buf.insert(buf.end(),
+               reinterpret_cast<const uint8_t*>(LOTTERY_RNG_DOMAIN),
+               reinterpret_cast<const uint8_t*>(LOTTERY_RNG_DOMAIN)
+                   + LOTTERY_RNG_DOMAIN_LEN);
+
+    for (const auto& b : window) {
+        append(buf, b.block_hash);
+    }
+    append_u64_le(buf, (uint64_t)height);
+
+    Bytes32 seed = sha256(buf);
+    const uint64_t roll = read_u64_le(seed.data());
+    const uint64_t n    = (uint64_t)eligible.size();
+    return (int64_t)(roll % n);
+}
+
 // ============================================================================
 // C7 — rollover state machinery (real, pure)
 // ============================================================================

@@ -3,6 +3,7 @@
 // Exercises:
 //   sost::lottery::compute_lottery_eligibility_set
 //   sost::lottery::select_lottery_winner_index
+//   sost::lottery::select_lottery_winner_index_from_history
 //   sost::lottery::is_recent_reward_winner
 //
 // Pure functions; no Schnorr dependency; built unconditionally. The
@@ -327,6 +328,57 @@ static void test_winner_selection_determinism_and_sensitivity() {
     }
 }
 
+static void test_history_seed_winner_selection() {
+    printf("\n=== 7b) Winner selection: 16-block history seed ===\n");
+    std::vector<LotteryEligibilityEntry> eligible;
+    for (uint8_t s : {0x10, 0x20, 0x30, 0x40, 0x50}) {
+        LotteryEligibilityEntry e{};
+        e.pkh = mk_pkh(s);
+        e.first_mined_height = 1;
+        e.last_mined_height = 50;
+        e.blocks_mined = 1;
+        eligible.push_back(e);
+    }
+
+    const int64_t height = 7100;
+    auto miner = mk_pkh(0xA0);
+    std::vector<LotteryMinedBlockView> history;
+    for (int64_t h = height - 20; h < height; ++h) {
+        history.push_back(mk_block(h, miner));
+    }
+
+    int64_t i1 = select_lottery_winner_index_from_history(eligible, history, height);
+    int64_t i2 = select_lottery_winner_index_from_history(eligible, history, height);
+    TEST("same 16-block history -> same index", i1 == i2);
+    TEST("history-seeded index in [0, eligible.size())",
+         i1 >= 0 && i1 < (int64_t)eligible.size());
+
+    std::vector<LotteryEligibilityEntry> empty;
+    TEST("history-seeded empty eligible -> -1",
+         select_lottery_winner_index_from_history(empty, history, height) == -1);
+
+    {
+        std::set<int64_t> indices;
+        for (uint8_t s = 1; s <= 64; ++s) {
+            auto changed = history;
+            changed.back().block_hash = mk_hash(s);
+            indices.insert(select_lottery_winner_index_from_history(
+                eligible, changed, height));
+        }
+        TEST("changing an in-window hash explores >=2 distinct indices",
+             indices.size() >= 2);
+    }
+
+    {
+        auto old_changed = history;
+        old_changed.front().block_hash = mk_hash(0xEE); // height - 20, outside last 16
+        int64_t old_idx = select_lottery_winner_index_from_history(
+            eligible, old_changed, height);
+        TEST("changing hash older than the 16-block window does not affect index",
+             old_idx == i1);
+    }
+}
+
 static void test_sybil_neutrality() {
     printf("\n=== 8) Selection is uniform per-pkh, NOT weighted by blocks_mined ===\n");
     // A pair of pkhs where one has 100 historical wins and the other
@@ -452,6 +504,7 @@ int main() {
     test_duplicate_miner_history();
     test_deterministic_lex_sort();
     test_winner_selection_determinism_and_sensitivity();
+    test_history_seed_winner_selection();
     test_sybil_neutrality();
     test_phase2_activation_height();
     test_current_miner_NOT_excluded_outside_window();

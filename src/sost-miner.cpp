@@ -1148,6 +1148,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     // here and pass that into the Phase 2 builders.
     int64_t total_reward = subsidy + total_fees;
     auto split = coinbase_split(total_reward);
+    int64_t json_miner_reward = split.miner;
+    int64_t json_gold_reward = split.gold_vault;
+    int64_t json_popc_reward = split.popc_pool;
     Transaction coinbase_tx;
 
     LotteryStateRpc ls = fetch_lottery_state(h);
@@ -1158,16 +1161,16 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     }
     if (ls.height_next != h) {
         if (ls.height_next > h) {
-            printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node is ahead, resyncing.\\n",
+            printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node is ahead, resyncing.\n",
                    (long long)ls.height_next, (long long)h);
             if (sync_local_chain_to_rpc_tip()) {
                 return false; // outer loop retries from refreshed RPC height
             }
-            printf("[MINER] RPC resync failed; aborting block candidate.\\n");
+            printf("[MINER] RPC resync failed; aborting block candidate.\n");
             return false;
         }
 
-        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node appears behind, aborting block candidate.\\n",
+        printf("[MINER] fetch_lottery_state height mismatch: rpc=%lld, expected=%lld; node appears behind, aborting block candidate.\n",
                (long long)ls.height_next, (long long)h);
         return false;
     }
@@ -1179,6 +1182,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         // in chain-state pending; emit ONLY a MINER output.
         const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
         const int64_t miner_share = p2split.miner_share;
+        json_miner_reward = miner_share;
+        json_gold_reward = 0;
+        json_popc_reward = 0;
         coinbase_tx = build_phase2_update_coinbase_tx(h, miner_share, g_miner_pkh);
         printf("[MINER] Phase 2 UPDATE_EMPTY: miner_share=%lld, lottery_share=%lld "
                "→ pending (no winner this block)\n",
@@ -1189,6 +1195,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         const int64_t miner_share = p2split.miner_share;
         const int64_t lottery_amount =
             p2split.lottery_share + ls.pending_lottery_before;
+        json_miner_reward = miner_share;
+        json_gold_reward = 0;
+        json_popc_reward = 0;
 
         // Decode winner pkh from RPC hex.
         if (ls.lottery_winner_pkh_hex.size() != 40) {
@@ -1426,7 +1435,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                n, my_extra, (long long)elapsed, block_txs.size(), tid, hdr_version);
                         printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                                (long long)subsidy, (long long)total_fees,
-                               (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
+                               (long long)json_miner_reward,
+                               (long long)json_gold_reward,
+                               (long long)json_popc_reward);
                         fflush(stdout);
 
                         // Save hc72 for witness generation after join()
@@ -1458,9 +1469,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         tr.mb.segment_proofs = res.segment_proofs;
                         tr.mb.round_witnesses = res.round_witnesses;
                         tr.mb.subsidy = subsidy;
-                        tr.mb.miner_reward = split.miner;
-                        tr.mb.gold_vault_reward = split.gold_vault;
-                        tr.mb.popc_pool_reward = split.popc_pool;
+                        tr.mb.miner_reward = json_miner_reward;
+                        tr.mb.gold_vault_reward = json_gold_reward;
+                        tr.mb.popc_pool_reward = json_popc_reward;
                         tr.mb.header_version    = hdr_version;
                         tr.mb.miner_pubkey      = sig_pubkey;
                         tr.mb.miner_signature   = sig_signature;
@@ -1757,7 +1768,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                        nonce, extra_nonce, (long long)elapsed, block_txs.size(), hdr_version);
                 printf("  sub=%lld fees=%lld miner=%lld gold=%lld popc=%lld\n",
                        (long long)subsidy, (long long)total_fees,
-                       (long long)split.miner, (long long)split.gold_vault, (long long)split.popc_pool);
+                       (long long)json_miner_reward,
+                       (long long)json_gold_reward,
+                       (long long)json_popc_reward);
 
                 // Generate Transcript V2 witnesses (replays challenged rounds)
                 printf("  Generating Transcript V2 witnesses...\n");
@@ -1788,9 +1801,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 mb.segment_proofs = res.segment_proofs;
                 mb.round_witnesses = res.round_witnesses;
                 mb.subsidy = subsidy;
-                mb.miner_reward = split.miner;
-                mb.gold_vault_reward = split.gold_vault;
-                mb.popc_pool_reward = split.popc_pool;
+                mb.miner_reward = json_miner_reward;
+                mb.gold_vault_reward = json_gold_reward;
+                mb.popc_pool_reward = json_popc_reward;
                 mb.header_version  = hdr_version;
                 mb.miner_pubkey    = sig_pubkey;
                 mb.miner_signature = sig_signature;
