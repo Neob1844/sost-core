@@ -575,7 +575,7 @@ After that, permanently:                       1 of every 3 blocks</pre>
         ⚠ LIVE INCIDENT — BLOCK 6,989 OVERDUE · DIAGNOSTIC IN PROGRESS
       </span>
       <span style="display:block;color:#ffc857;font-size:10.5px;font-weight:700;letter-spacing:1.5px">
-        elapsed ≈ 80 min &middot; rollback threshold at 150 min total &middot; ~70 min runway remaining
+        elapsed ≈ 80 min &middot; isolation threshold at 120 min total &middot; ~40 min runway remaining
       </span>
     </div>
 
@@ -600,22 +600,36 @@ After that, permanently:                       1 of every 3 blocks</pre>
       <b style="color:#ffc857">Coordinated update window.</b> The V11 Phase 1 + Phase 2 hard-fork code was pushed to <code>origin/main</code> ~80 min ago. Multiple operators are simultaneously pulling, rebuilding (with the 60-second ConvergenceX dataset rebuild on first start), and restarting their node + miner. While that update window is open, the network's effective hashrate drops temporarily. Combined with natural Poisson variance on a difficulty-locked block at the cASERT cascade floor (<code>E7</code>, drop = 46 levels), block intervals can stretch to 1.5–2 h before the next nonce lands. <b>This is operationally expected, not a consensus fault.</b>
     </div>
 
-    <!-- ROLLBACK PLAN -->
+    <!-- WHAT THE ROLLBACK ACTUALLY DOES -->
+    <div style="color:var(--cyan);font-size:11.5px;font-weight:800;letter-spacing:1.2px;margin-bottom:6px">
+      ◇ WHAT THE BINARY ISOLATION DOES (and does NOT do)
+    </div>
+    <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-bottom:12px;padding-left:12px;border-left:2px solid rgba(34,211,238,.5)">
+      The seed node currently runs the new binary that already contains both Phase 1 and Phase 2 code (Phase 2 is dormant in source via <code>V11_PHASE2_HEIGHT = 7,100</code>). Even though every consensus-relevant check above passes, an operator wants to be able to <i>discard</i> the new binary as a possible cause of unusual network behaviour <b>before</b> the chain reaches block 7,000. The procedure if it triggers:
+      <pre style="background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:3px;font-size:10px;color:#a7f3d0;line-height:1.55;margin:6px 0 4px 0;overflow-x:auto">sudo systemctl stop sost-node
+cp /opt/sost/build/sost-node.pre-phase2-7100.bak /opt/sost/build/sost-node
+sudo systemctl start sost-node</pre>
+      <span style="font-size:10px;color:var(--text3);font-style:italic">Same chain.json. Same blocks. Same UTXO set. Same network. Only the validator/miner program is swapped to the prior verified binary while diagnostics continue.</span><br><br>
+      <b style="color:#4ade80">If a block lands quickly with the old binary &rarr;</b> the new binary needs investigation before activation.<br>
+      <b style="color:#ffc857">If the chain stays slow with the old binary too &rarr;</b> the new binary is exonerated; the cause was hashrate / network slowness all along.
+    </div>
+
+    <!-- ISOLATION THRESHOLD -->
     <div style="color:#fb010d;font-size:11.5px;font-weight:800;letter-spacing:1.2px;margin-bottom:6px">
-      ⏱ AUTOMATIC CONTINGENCY AT 150 MIN TOTAL (≈70 MIN FROM NOW)
+      ⏱ ISOLATION THRESHOLD: 120 MIN TOTAL (≈40 MIN FROM NOW)
     </div>
     <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-bottom:8px;padding-left:12px;border-left:2px solid rgba(251,1,13,.55)">
-      If block 6,989 has not landed by <b style="color:#fb010d">150 minutes</b> total elapsed since block 6,988, the operations team will execute the documented rollback to the backup binary <code>sost-node.pre-phase2-7100.bak</code> on the production node. The rollback restores the pre-V11-Phase-2 sost-node binary while preserving the chain database. <code>V11_PHASE2_HEIGHT</code> in source stays at 7,100; only the binary in service is reverted while diagnostics continue.
+      If block 6,989 has not landed by <b style="color:#fb010d">120 minutes</b> total elapsed since block 6,988, the seed node is temporarily reverted to the backup binary <code>sost-node.pre-phase2-7100.bak</code>. The 120-minute (rather than 150-minute) threshold is chosen because the chain is only ~12 blocks from the V11 Phase 1 fork at block 7,000 — there is no operational margin to spend further time leaving the new binary in service if there is even a small probability it is the cause. <code>V11_PHASE2_HEIGHT</code> in source stays at 7,100. Only the program in service is swapped while diagnostics continue.
     </div>
     <div style="color:var(--text3);font-size:10px;line-height:1.7;padding-left:12px;font-style:italic">
-      Probability that block 6,989 takes &gt;150 min purely from variance at the network's pre-update hashrate ≈ <code>e^(-12) ≈ 1 in 165,000</code>. If that threshold is reached, a real operational issue exists and the rollback is executed without further deliberation.
+      Probability that block 6,989 takes &gt;120 min purely from variance at the network's pre-update hashrate ≈ <code>e^(-9.6) ≈ 1 in 14,800</code>. If that threshold is reached, isolation is executed without further deliberation.
     </div>
 
     <!-- WHAT MINERS SHOULD DO -->
     <div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
-      <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// WHAT MINERS SHOULD DO RIGHT NOW</span>
+      <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// MINERS</span>
       <span style="display:block;font-size:10.5px;color:var(--text2);line-height:1.75">
-        <b>Keep your miner running.</b> Every nonce contributes to flushing this block. If you have already updated to the V11 binary (Phase 1 active at 7,000), you are good through both forks — Phase 2 will not activate until block 7,100 regardless of what happens with block 6,989. Do <b>not</b> manually intervene with the chain; do not roll your own node back unilaterally; the coordinated rollback (if needed) is executed by the operations team on the seed node only.
+        Chain verified, no fork, block delayed by simultaneous update — <b>keep your miner running</b>. Do not roll back individually.
       </span>
     </div>
 
