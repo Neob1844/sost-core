@@ -571,30 +571,40 @@ pkill -9 sost-miner &amp;&amp; ./sost-miner ...   # miners</pre>
       </div>
 
       <div style="color:var(--text2);font-size:11.5px;line-height:1.75">
-        <b style="color:var(--text)">Rule (height-gated by V11_SLINGSHOT_HEIGHT = 7,000):</b>
+        <b style="color:var(--text)">Rule — DUAL-GATE (height-gated by V11_SLINGSHOT_HEIGHT = 7,000):</b>
 
         <pre style="background:rgba(0,0,0,.45);padding:10px 12px;border-radius:3px;font-size:11.5px;color:#d8b4fe;margin:8px 0;line-height:1.55;overflow-x:auto"><b>For block N at height &gt;= 7,000:</b>
-  prev_elapsed = chain.tip.timestamp - chain[tip-1].timestamp
-  bitsQ_avg288 = (normal avg288 difficulty calculation)
+  prev_elapsed    = chain.tip.timestamp − chain[tip-1].timestamp
+  current_elapsed = candidate.timestamp − chain.tip.timestamp
+  bitsQ_avg288    = (normal avg288 difficulty calculation)
 
-  if prev_elapsed &gt; <b style="color:#fb010d">30 minutes</b> (1,800 s):
-      bitsQ_block_N = bitsQ_avg288 * (10000 - <b style="color:#fb010d">1250</b>) / 10000
+  <b style="color:#fb010d">if  prev_elapsed    &gt; 30 minutes (1,800 s)
+  AND current_elapsed &gt; 10 minutes (600 s)</b>:
+      bitsQ_block_N = bitsQ_avg288 * (10000 − <b style="color:#fb010d">1250</b>) / 10000
                     = bitsQ_avg288 * 0.875
   else:
       bitsQ_block_N = bitsQ_avg288   (no override)</pre>
 
-        <b style="color:var(--text)">Example.</b> Block 6,989 took 129 min — under Slingshot, block 6,990 would have entered with bitsQ already 12.5 % lower (instead of the actual −0.29 % avg288 adjustment), making the next nonce 12.5 % easier. If block 6,990 then mined fast (which it did), block 6,991 returns to normal avg288-derived bitsQ. <b>The relief is for ONE block only.</b><br><br>
+        <b style="color:#fb010d">Both gates must hold.</b> If <code>prev_elapsed</code> &gt; 30 min but the current block solves quickly (e.g. in 30 s), Slingshot does <b>NOT</b> fire — there is no need to give a "free" difficulty discount when the network has already recovered. The relief only applies when the CURRENT block itself is also struggling past the 600 s target. This prevents the mechanism from over-correcting after isolated outliers.<br><br>
+
+        <b style="color:var(--text)">Example.</b> Block 6,989 took 129 min — under dual-gate Slingshot, block 6,990 starts at <code>bitsQ_avg288</code>. If 6,990 reaches second 601 still unsolved, Slingshot kicks in and bitsQ drops to <code>bitsQ_avg288 × 0.875</code> for the rest of that block's nonce search. If 6,990 mines fast (under 10 min), Slingshot never fires — the relief was not needed. Block 6,991 always recomputes against avg288 freshly. <b>The relief is for ONE block only and only after both gates open.</b><br><br>
 
         <b style="color:var(--text)">Safety.</b>
         <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin:6px 0 8px 0;line-height:1.55;overflow-x:auto">· height-gated by V11_SLINGSHOT_HEIGHT = 7,000; pre-fork blocks unchanged
+· DUAL gate: BOTH prev_elapsed &gt; 1,800 s AND current_elapsed &gt; 600 s
+  must hold; otherwise no override
 · bitsQ_avg288 still calculated first; Slingshot only adjusts the result
+· strict greater-than on both gates (1800 fails, 1801 passes;
+  600 fails, 601 passes)
 · uses elapsed = candidate.timestamp − prev.timestamp, bounded by MTP rules
-· NO cumulative effect: bitsQ resets to avg288 on every block where prev ≤ 30 min
+· NO cumulative effect: bitsQ resets to avg288 on every block where
+  either gate is closed
 · NO ratcheting: a sequence of slow blocks each gets one-shot relief, but
   the relief is recomputed against avg288 every block, never against
   the previously-relieved value
 · profile cascade, lottery, SbPoW, coinbase logic untouched
-· consensus-critical: miners producing wrong bitsQ after 7,000 are rejected</pre>
+· consensus-critical: miners producing wrong bitsQ after 7,000 are rejected
+· verified by 39 / 39 dual-gate tests in test-slingshot.cpp</pre>
 
         <span style="color:var(--text3);font-style:italic">Slingshot is a backup mechanism, not a normal operating mode. It only fires under abnormal conditions (a previous block taking &gt; 30 min). The 30-minute trigger is conservative: typical block intervals fluctuate around the 600-second target, and reaching 30 minutes on a single block is itself a tail event (~5 σ at network nominal hashrate). When it does fire, the 12.5 % drop matches the historical V2 maximum cap and is large enough to make a meaningful difference on the next block without destabilising the chain.</span>
       </div>
