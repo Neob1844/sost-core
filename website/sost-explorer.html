@@ -407,6 +407,25 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
+<style>
+@keyframes v11UpdatePulse {
+  0%, 100% {
+    color: #ffd700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, .45);
+    transform: scale(1);
+  }
+  50% {
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(251, 1, 13, .95), 0 0 26px rgba(255, 215, 0, .75);
+    transform: scale(1.015);
+  }
+}
+.v11-update-pulse-window {
+  display: inline-block;
+  animation: v11UpdatePulse 1.05s ease-in-out infinite;
+}
+</style>
+
 <!-- V11 HOTFIX BANNER — block 7100 -->
 <div class="v11-banner" style="border:1px solid rgba(251,1,13,.45);background:linear-gradient(180deg,rgba(251,1,13,.10),rgba(0,0,0,.18));padding:14px 16px;margin:12px 0 18px 0">
   <div style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">
@@ -421,7 +440,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     · Phase 2 also activates at block <b>7,100</b>: Lottery + SbPoW.<br>
     · Miner-side RPC sync bug fixed.<br><br>
 
-    <span style="color:#ffd700;font-weight:900">MINERS AND NODE OPERATORS MUST UPDATE NOW.</span><br><br>
+    <span id="v11UpdateUrgent" style="color:#ffd700;font-weight:900">MINERS AND NODE OPERATORS MUST UPDATE BETWEEN BLOCKS 7,090 AND 7,100.</span><br><br>
 
 <pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 10px 0">cd &lt;your sost-core directory&gt;
 git pull --ff-only origin main
@@ -492,6 +511,7 @@ make -j$(nproc)</pre>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')"><div class="dash-label" style="white-space:nowrap">DTD &middot; TOKEN DISTRIBUTION</div><div class="dash-val cyan" id="dDTD">&mdash;</div><div class="dash-sub" id="dDTDSub">deterministic view</div></div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -1135,6 +1155,159 @@ async function showNewBlockToast(h){var t=document.getElementById('newBlockToast
 function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'gold':r==='POPC POOL'?'cyan':'yellow';return ' <span style="color:var(--'+c+');font-size:9px;font-weight:600">['+r+']</span>';}
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
+
+var _dtdCache=null;
+var _dtdFilter='all';
+function dtdStocks(v){v=Number(v||0);return isFinite(v)?v:0;}
+function dtdSost(v){return (dtdStocks(v)/100000000).toFixed(4);}
+function dtdSost8(v){return (dtdStocks(v)/100000000).toFixed(8);}
+function dtdShort(addr){return addr?addr.substring(0,12)+'…'+addr.substring(addr.length-6):'n/a';}
+function dtdRole(addr,row){
+  var role=ROLES[addr];
+  if(role==='GENESIS MINER')return 'Constitutional / Genesis Miner';
+  if(role==='GOLD VAULT')return 'Gold Vault';
+  if(role==='POPC POOL')return 'PoPC Pool';
+  if(row&&row.minedBlocks>0)return 'Lottery eligible';
+  return 'Normal address';
+}
+function dtdStatus(row,height,cooldownSet){
+  if(height<7100)return 'pre-Phase 2';
+  if(!row||row.minedBlocks<=0)return 'Not eligible';
+  if(cooldownSet[row.addr])return 'Cooldown';
+  return 'Eligible';
+}
+function dtdStatusColor(status){
+  if(status==='Eligible')return 'var(--green)';
+  if(status==='Cooldown')return '#fbbf24';
+  if(status==='pre-Phase 2')return 'var(--cyan)';
+  return 'var(--text3)';
+}
+function setDTDFilter(f){_dtdFilter=f;if(_dtdCache)renderDTDTable(_dtdCache);}
+function dtdFilterButton(f,label){
+  var active=_dtdFilter===f;
+  return '<button class="tx-filter '+(active?'active':'')+'" onclick="setDTDFilter(\''+f+'\')">'+label+'</button>';
+}
+function renderDTDTable(cache){
+  var host=document.getElementById('dtdTableHost');if(!host)return;
+  var rows=cache.rows.slice();
+  rows=rows.filter(function(r){
+    if(_dtdFilter==='miners')return r.minedBlocks>0;
+    if(_dtdFilter==='eligible')return r.status==='Eligible'||(cache.height<7100&&r.minedBlocks>0);
+    if(_dtdFilter==='cooldown')return r.status==='Cooldown';
+    if(_dtdFilter==='constitutional')return !!ROLES[r.addr];
+    if(_dtdFilter==='balance')return r.balanceStocks!==null&&r.balanceStocks>0;
+    return true;
+  });
+  rows.sort(function(a,b){
+    if((b.balanceStocks||0)!==(a.balanceStocks||0))return (b.balanceStocks||0)-(a.balanceStocks||0);
+    if(b.minedBlocks!==a.minedBlocks)return b.minedBlocks-a.minedBlocks;
+    return a.addr.localeCompare(b.addr);
+  });
+  var html='';
+  html+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 12px 0">';
+  html+=dtdFilterButton('all','all');
+  html+=dtdFilterButton('miners','miners');
+  html+=dtdFilterButton('eligible','lottery eligible');
+  html+=dtdFilterButton('cooldown','cooldown');
+  html+=dtdFilterButton('constitutional','constitutional');
+  html+=dtdFilterButton('balance','non-zero balance');
+  html+='</div>';
+  html+='<div style="overflow:auto;max-height:520px;border:1px solid rgba(255,255,255,.06)">';
+  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>LOTTERY STATUS</th></tr></thead><tbody>';
+  if(!rows.length){html+='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var role=dtdRole(r.addr,r);
+    var roleColor=ROLES[r.addr]?(ROLES[r.addr]==='GOLD VAULT'?'var(--gold)':ROLES[r.addr]==='POPC POOL'?'var(--cyan)':'#fbbf24'):(r.minedBlocks>0?'var(--orange)':'var(--text2)');
+    var bal=(r.balanceStocks===null)?'n/a':(dtdSost8(r.balanceStocks)+' SOST');
+    var rec=(r.receivedStocks===null)?'n/a':(dtdSost8(r.receivedStocks)+' SOST');
+    var mined=dtdSost8(r.minedStocks)+' SOST';
+    html+='<tr style="border-bottom:1px solid #111">';
+    html+='<td><span class="td-link" onclick="showAddress(\''+r.addr+'\')" title="'+r.addr+'">'+dtdShort(r.addr)+'</span></td>';
+    html+='<td><span style="color:'+roleColor+';font-weight:600">'+role+'</span></td>';
+    html+='<td style="text-align:right;color:var(--orange);font-weight:600">'+r.minedBlocks+'</td>';
+    html+='<td style="text-align:right;color:#fbbf24">'+mined+'</td>';
+    html+='<td style="text-align:right;color:var(--green)">'+rec+'</td>';
+    html+='<td style="text-align:right;color:var(--text3)">n/a</td>';
+    html+='<td style="text-align:right;color:'+(r.balanceStocks>0?'var(--green)':'var(--text3)')+'">'+bal+'</td>';
+    html+='<td style="text-align:right;color:var(--text3)">'+(r.lastMined?('#'+r.lastMined):'—')+'</td>';
+    html+='<td style="text-align:right;color:'+dtdStatusColor(r.status)+';font-weight:600">'+r.status+'</td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table></div>';
+  html+='<div style="font-size:9px;color:var(--text3);line-height:1.7;margin-top:10px">DTD is derived from public chain data. Wallet files are private and are never visible on-chain; only addresses and transactions are public.</div>';
+  host.innerHTML=html;
+}
+async function renderDTDPanel(body,title,silent){
+  title.textContent='// DTD · DETERMINISTIC TOKEN DISTRIBUTION';
+  if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain distribution... <span style="color:var(--cyan)">this may take a moment</span></div>';
+  try{
+    var height=H||await rpc('getblockcount');
+    var totalSubsidy=0,totalMiner=0,totalGold=0,totalPopc=0,totalLottery=0;
+    var rowsByAddr={};
+    var latestWinners=[];
+    var CHUNK=40;
+    function ensure(addr){
+      if(!addr)return null;
+      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
+      return rowsByAddr[addr];
+    }
+    ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');
+    ensure('sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33');
+    ensure('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f');
+    for(var start=0;start<=height;start+=CHUNK){
+      var hs=[];for(var h=start;h<=Math.min(height,start+CHUNK-1);h++)hs.push(h);
+      var hashes=await Promise.all(hs.map(function(hh){return rpc('getblockhash',[String(hh)]).catch(function(){return null;});}));
+      var blocks=await Promise.all(hashes.map(function(hash){return hash?rpc('getblock',[hash]).catch(function(){return null;}):null;}));
+      for(var bi=0;bi<blocks.length;bi++){
+        var b=blocks[bi];if(!b)continue;
+        var subsidy=dtdStocks(b.subsidy);
+        var minerReward=Object.prototype.hasOwnProperty.call(b,'miner_reward')?dtdStocks(b.miner_reward):Math.floor(subsidy/2);
+        var goldReward=Object.prototype.hasOwnProperty.call(b,'gold_vault_reward')?dtdStocks(b.gold_vault_reward):Math.floor(subsidy/4);
+        var popcReward=Object.prototype.hasOwnProperty.call(b,'popc_pool_reward')?dtdStocks(b.popc_pool_reward):Math.floor(subsidy/4);
+        var lotteryReward=dtdStocks(b.lottery_payout||b.lottery_reward||0);
+        totalSubsidy+=subsidy;totalMiner+=minerReward;totalGold+=goldReward;totalPopc+=popcReward;totalLottery+=lotteryReward;
+        if(b.miner_address){
+          var r=ensure(b.miner_address);r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
+          if((b.height||0)>height-5)latestWinners.push(b.miner_address);
+        }
+      }
+      if(!silent&&start%(CHUNK*10)===0){body.innerHTML='<div style="color:var(--text3)">Scanning public chain distribution... <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span></div>';}
+    }
+    var gv=ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');if(gv)gv.receivedStocks=totalGold;
+    var pp=ensure('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f');if(pp)pp.receivedStocks=totalPopc;
+    var cooldownSet={};latestWinners.slice(-5).forEach(function(a){cooldownSet[a]=true;});
+    var addrs=Object.keys(rowsByAddr);
+    await Promise.all(addrs.slice(0,120).map(function(addr){return rpc('getaddressinfo',[addr]).then(function(info){
+      var bal=0,rec=0;
+      if(info&&info.utxos){for(var ui=0;ui<info.utxos.length;ui++){var u=info.utxos[ui];var amt=Math.round(parseFloat(u.amount||0)*100000000);bal+=amt;if(!u.coinbase)rec+=amt;}}
+      rowsByAddr[addr].balanceStocks=bal; if(rowsByAddr[addr].receivedStocks===null)rowsByAddr[addr].receivedStocks=rec;
+    }).catch(function(){rowsByAddr[addr].balanceStocks=null;if(rowsByAddr[addr].receivedStocks===null)rowsByAddr[addr].receivedStocks=null;});}));
+    var lot=null;try{lot=await rpc('getlotterystate');}catch(e){}
+    addrs.forEach(function(addr){rowsByAddr[addr].status=dtdStatus(rowsByAddr[addr],height,cooldownSet);});
+    var rows=addrs.map(function(a){return rowsByAddr[a];});
+    var nonZero=rows.filter(function(r){return r.balanceStocks!==null&&r.balanceStocks>0;}).length;
+    var pending=lot?dtdStocks(lot.pending_lottery_before||lot.expected_pending_after||0):null;
+    var summary='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;font-size:10px;margin-bottom:10px">';
+    function cell(k,v,c){return '<div style="border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.22);padding:8px"><div style="color:var(--text3);letter-spacing:1px">'+k+'</div><div style="color:'+(c||'var(--text)')+';font-weight:700;margin-top:3px">'+v+'</div></div>';}
+    summary+=cell('current height','#'+height,'#fb010d');
+    summary+=cell('total emitted',dtdSost8(totalSubsidy)+' SOST','var(--green)');
+    summary+=cell('miner rewards',dtdSost8(totalMiner)+' SOST','#fbbf24');
+    summary+=cell('Gold Vault allocation',dtdSost8(totalGold)+' SOST','var(--gold)');
+    summary+=cell('PoPC Pool allocation',dtdSost8(totalPopc)+' SOST','var(--cyan)');
+    summary+=cell('lottery paid',totalLottery?dtdSost8(totalLottery)+' SOST':'0.00000000 SOST','var(--purple)');
+    summary+=cell('pending jackpot',pending===null?'n/a':dtdSost8(pending)+' SOST','#fbbf24');
+    summary+=cell('unique miners',rows.filter(function(r){return r.minedBlocks>0;}).length,'var(--orange)');
+    summary+=cell('known non-zero balances',nonZero||'n/a','var(--green)');
+    summary+='</div><div id="dtdTableHost"></div>';
+    body.innerHTML=summary;
+    _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
+    var dd=document.getElementById('dDTD');if(dd)dd.textContent=rows.filter(function(r){return r.minedBlocks>0;}).length;
+    var ds=document.getElementById('dDTDSub');if(ds)ds.textContent='miners · public data';
+    renderDTDTable(_dtdCache);
+  }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
+}
+
 function openDetail(){
   var p=document.getElementById('detailPanel');
   p.style.display='';
@@ -1200,6 +1373,11 @@ function renderStats(i){
   document.getElementById('statsCode').innerHTML='<span class="s-comment">// SOST network status</span>\n<span class="s-type">const</span> <span class="s-key">chain</span> <span class="s-sep">=</span> <span class="s-bracket">{</span>\n  <span class="s-key">height</span><span class="s-sep">:</span>    <span class="s-red">'+i.blocks.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">bits_q</span><span class="s-sep">:</span>    <span class="s-num">'+i.difficulty.toLocaleString()+'</span><span class="s-sep">,</span>    <span class="s-comment">// SOSTCompact Q16.16</span>\n  <span class="s-key">bits_real</span><span class="s-sep">:</span>  <span class="s-num">'+(i.difficulty/65536).toFixed(3)+'</span><span class="s-sep">,</span>    <span class="s-comment">// bits_q \u00F7 65536</span>\n  <span class="s-key">peers</span><span class="s-sep">:</span>      <span class="s-num">'+i.connections+'</span><span class="s-sep">,</span>\n  <span class="s-key">mempool</span><span class="s-sep">:</span>    <span class="s-num">'+i.mempool_size+'</span><span class="s-sep">,</span>\n  <span class="s-key">utxo_set</span><span class="s-sep">:</span>  <span class="s-num">'+i.utxo_count.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">version</span><span class="s-sep">:</span>   <span class="s-str">"'+i.version+'"</span><span class="s-sep">,</span>\n  <span class="s-key">balance</span><span class="s-sep">:</span>   <span class="s-str">"'+i.balance+' SOST"</span>\n<span class="s-bracket">}</span><span class="s-sep">;</span>';
 }
 async function updateDashboard(info){
+  var v11Urgent=document.getElementById('v11UpdateUrgent');
+  if(v11Urgent){
+    var inUpdateWindow=info.blocks>=7090&&info.blocks<7100;
+    v11Urgent.classList.toggle('v11-update-pulse-window',inUpdateWindow);
+  }
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   document.getElementById('dHeightSub').textContent=fComma(info.utxo_count)+' UTXOs';
   // V5 activation banner removed after successful fork activation at block 4,300.
@@ -2128,6 +2306,8 @@ function renderDashPanel(key,body,title,silent){
         else{el.textContent='(still loading...)';clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       },1000);
     }
+  } else if(key==='dtd'){
+    renderDTDPanel(body,title,silent);
   } else if(key==='distribution'){
     title.textContent='// MINING DISTRIBUTION';
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading distribution data...</div>';return;}
