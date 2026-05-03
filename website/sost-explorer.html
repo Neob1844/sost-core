@@ -511,7 +511,11 @@ make -j$(nproc)</pre>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')"><div class="dash-label" style="white-space:nowrap">DTD</div><div class="dash-val cyan" id="dDTD">&mdash;</div><div class="dash-sub" id="dDTDSub">Token Distribution</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="color:var(--orange)">
+    <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
+    <div class="dash-val orange" id="dDTD">DTD</div>
+    <div class="dash-sub" id="dDTDSub" style="color:var(--orange)">scan chain</div>
+  </div>
 </div>
 <div id="dashPanel" style="display:none;max-width:1400px;margin:0 auto;padding:0 24px;">
   <div style="background:var(--bg2);border:1px solid var(--border);padding:16px 20px;margin-top:8px;transition:all .2s;">
@@ -1302,8 +1306,8 @@ async function renderDTDPanel(body,title,silent){
     summary+='</div><div id="dtdTableHost"></div>';
     body.innerHTML=summary;
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
-    var dd=document.getElementById('dDTD');if(dd)dd.textContent=rows.filter(function(r){return r.minedBlocks>0;}).length;
-    var ds=document.getElementById('dDTDSub');if(ds)ds.textContent='miners · public data';
+    var dd=document.getElementById('dDTD');if(dd)dd.textContent='DTD';
+    var ds=document.getElementById('dDTDSub');if(ds)ds.textContent='scan chain';
     renderDTDTable(_dtdCache);
   }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
 }
