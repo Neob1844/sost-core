@@ -407,252 +407,62 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<!-- V11 HARD FORK BANNER — Phase 1 (block 7000) + Phase 2 (block 7100) -->
-<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(255,200,87,0.06));border:2px solid #4ade80;border-left:6px solid #4ade80;padding:14px 18px;box-shadow:0 0 24px rgba(74,222,128,.4);">
+<!-- V11 HOTFIX BANNER — block 7100 -->
+<div class="v11-banner" style="border:1px solid rgba(251,1,13,.45);background:linear-gradient(180deg,rgba(251,1,13,.10),rgba(0,0,0,.18));padding:14px 16px;margin:12px 0 18px 0">
+  <div style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">
+    ⚡ SOST V11 UPDATE — ACTION REQUIRED BEFORE BLOCK 7,100 ⚡
+  </div>
 
-    <!-- SLOGAN ROJO PULSE -->
-    <div style="text-align:center;margin-bottom:14px;padding:10px 14px;background:rgba(251,1,13,0.08);border:1px solid rgba(251,1,13,0.55);border-radius:4px;animation:pulse 1.8s ease infinite;box-shadow:0 0 14px rgba(251,1,13,.35)">
-      <span style="display:block;color:#fb010d;font-size:15px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(251,1,13,0.6);margin-bottom:4px">
-        ⚡ V11 HARD FORK — TWO PHASES ⚡
-      </span>
-      <span style="display:block;color:#ffc857;font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:2px">
-        PHASE 1 · BLOCK 7,000 · CASCADE + DATASET HARDENING
-      </span>
-      <span style="display:block;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
-        PHASE 2 · BLOCK 7,100 · LOTTERY + SbPoW · MINERS MUST UPDATE BEFORE 7,100
-      </span>
-      <span style="display:block;color:#c084fc;font-size:10.5px;font-weight:700;letter-spacing:1.5px;margin-top:1px">
-        PHASE 3 · BLOCK 7,000 · SLINGSHOT — SINGLE-SHOT bitsQ RELIEF · SHIPS WITH PHASE 1
-      </span>
-    </div>
+  <div style="color:var(--text);font-size:12px;line-height:1.65">
+    <b>Current status:</b><br>
+    · Phase 1 is already active since block <b>7,000</b>.<br>
+    · The linear cascade/equalizer is live for blocks <b>7,000–7,099</b>.<br>
+    · Hotfix pushed: the intended <b>triangular equalizer</b> activates at block <b>7,100</b>.<br>
+    · Phase 2 also activates at block <b>7,100</b>: Lottery + SbPoW.<br>
+    · Miner-side RPC sync bug fixed.<br><br>
 
-    <!-- ============== READY · UPDATE BEFORE BLOCK 7,000 ============== -->
-    <div style="background:linear-gradient(135deg,rgba(74,222,128,0.18),rgba(74,222,128,0.04));border:2px solid #4ade80;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 18px rgba(74,222,128,.35)">
-      <div style="color:#4ade80;font-size:13px;font-weight:900;letter-spacing:2px;margin-bottom:8px;text-shadow:0 0 6px rgba(74,222,128,.5)">
-        ✅ PHASE 1 READY FOR ACTIVATION — MINERS, UPDATE NOW
-      </div>
+    <span style="color:#ffd700;font-weight:900">MINERS AND NODE OPERATORS MUST UPDATE NOW.</span><br><br>
 
-      <div style="color:var(--text);font-size:11.5px;line-height:1.75;margin-bottom:10px">
-        Phase 1 code is committed to <code>origin/main</code> and verified:
-      </div>
-
-      <div style="color:var(--text2);font-size:10.5px;line-height:1.85;margin-bottom:12px;padding-left:10px;border-left:2px solid rgba(74,222,128,.45)">
-        · <b style="color:#4ade80">40 / 40</b> V11 unit tests passing (<code>test-casert-v11</code> 29/29 + <code>test-convergencex-v11</code> 11/11, <i>includes miner&harr;verifier roundtrip regression guard</i>)<br>
-        · Build verified on Linux x86_64 (VPS and WSL environments)<br>
-        · <b>Zero regressions</b> in the pre-existing test suite
-      </div>
-
-      <div style="color:#ffc857;font-size:11.5px;font-weight:700;line-height:1.7;margin-bottom:8px">
-        Activation: block 7,000 (~20 h from this update).
-      </div>
-
-      <div style="color:var(--text);font-size:11.5px;line-height:1.75;margin-bottom:6px">
-        <b>Update both your node AND your miner binaries before block 7,000:</b>
-      </div>
-
-      <pre style="background:rgba(0,0,0,.55);padding:10px 12px;border-radius:3px;font-size:11px;color:#a7f3d0;line-height:1.6;overflow-x:auto;margin:0 0 10px 0">cd &lt;your sost-core directory&gt;
-git pull origin main
-mkdir -p build-v11 &amp;&amp; cd build-v11
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)</pre>
-
-      <div style="color:var(--text2);font-size:10.5px;line-height:1.7;margin-bottom:6px">
-        If your node and miner run on separate machines (e.g. node on VPS, miner on local), <b style="color:#ffc857">update both</b>. The node validates against V11 rules; the miner produces blocks under V11 rules. Updating only one will cause your own blocks to be rejected by your own node after block 7,000.
-      </div>
-
-      <div style="color:var(--text2);font-size:10.5px;line-height:1.7">
-        If you do not update before block 7,000, your node will reject post-V11 blocks (V11 cascade rules differ from V10).
-      </div>
-    </div>
-
-    <!-- ============== PHASE 1 BOX ============== -->
-    <div style="background:linear-gradient(135deg,rgba(255,200,87,0.14),rgba(74,222,128,0.06));border:1px solid var(--gold);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(255,200,87,.18)">
-      <div style="color:var(--gold);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ PHASE 1 — ACTIVATES AT BLOCK 7,000
-      </div>
-      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        Two consensus changes ship at block 7,000. Both passed unit tests, regression tests and chain-safety review.
-      </div>
-
-      <div style="color:var(--text2);font-size:11px;line-height:1.7">
-        <b style="color:var(--text)">A · Extended cASERT linear cascade.</b>
-        V11 replaces the V10 single-step relief with a <b>linear</b> relief curve — no artificial cap, the cascade keeps escalating each 60 s until the natural E7 floor is reached:
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed &lt;  540 s   →  drop 0
-elapsed &gt;= 540 s   →  drop = 1 + floor((elapsed - 540) / 60)</pre>
-        Examples:
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">elapsed = 540 s    →  drop 1
-elapsed = 600 s    →  drop 2
-elapsed = 660 s    →  drop 3
-elapsed = 720 s    →  drop 4
-elapsed = 780 s    →  drop 5
-elapsed = 840 s    →  drop 6
-elapsed = 900 s    →  drop 7
-elapsed = 3000 s   →  drop 42  (reaches E7 floor from H35)</pre>
-        The <b>E7 floor</b> is preserved by the existing clamp; although the formula keeps growing, the resulting profile never crosses below E7. bitsQ, anti-stall and lag clamp unchanged.<br><br>
-
-        <b style="color:var(--text)">B · State-dependent dataset access.</b>
-        The 4 GB dataset index per round changes from <code>r % dataset_size</code> (predictable, prefetchable) to <code>state_lo % dataset_size</code> derived from the previous round&rsquo;s SHA-256 state. CPU prefetchers and large parallel setups can no longer anticipate the next access. Dataset + scratchpad sizes unchanged: <b>still 4 GB + 4 GB = 8 GB total</b>. CPU mining minimum stays at <b>8 GB RAM</b>.<br><br>
-
-        <span style="color:var(--text3);font-style:italic">V11 Phase 1 does not change RAM requirements. The Memory-Lock per-instance proposal is under study for a future fork (no earlier than block 12,000), not part of V11.</span>
-      </div>
-    </div>
-
-    <!-- ============== PHASE 2 BOX ============== -->
-    <div style="background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(74,222,128,0.04));border:1px dashed var(--cyan);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 12px rgba(34,211,238,.15)">
-      <div style="color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px">
-        ◆ PHASE 2 — ACTIVATES AT BLOCK 7,100
-      </div>
-      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        <b style="color:#4ade80">Phase 2 activates at block 7,100</b> — separated from Phase 1 (block 7,000) by 100 blocks (~16-17h at the 600-second target) so the two hard forks remain independently observable while keeping the deployment window tight. C9 Monte Carlo + accounting + reorg + determinism gates all PASS. <b style="color:#fb010d">MINERS MUST UPDATE node + miner binaries before block 7,100</b> — old miners will produce invalid coinbase on triggered Phase 2 blocks (CB11_LOTTERY_SHAPE) AND missing SbPoW signature (rejected by ValidateSbPoW).
-      </div>
-
-      <div style="color:var(--text2);font-size:11px;line-height:1.7">
-        <b style="color:var(--text)">C · SbPoW — signature-bound proof.</b>
-        Each block header will carry a public key and a signature over the PoW commitment. A block will be valid only if (i) the signature verifies against that key and (ii) the coinbase miner output pays the address derived from that key. Post-hoc coinbase relabeling becomes impossible — identity is bound <b>before</b> the hash is committed.<br><br>
-
-        <b style="color:var(--text)">D · Fair-share lottery with jackpot rollover.</b>
-        On triggered blocks, the <b>full protocol-side allocation</b> — the 25% Gold Vault share <i>and</i> the 25% PoPC Pool share, together <b>50% of the block reward</b> — is redirected to one eligible miner via deterministic lottery. The PoW miner always keeps the other 50% (subsidy + all transaction fees); the lottery never touches the miner's share.<br><br>
-
-        <span style="color:var(--text)">Frequency schedule (from Phase 2 activation height):</span>
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.5">First 5,000 blocks after Phase 2 activation:  2 of every 3 blocks
-After that, permanently:                       1 of every 3 blocks</pre>
-
-        <b style="color:var(--text)">Eligibility</b>: any address that has produced at least 1 block since genesis enters the lottery pool automatically. No registration, no operator, no fee.<br><br>
-
-        <b style="color:var(--text)">Exclusion (single rule)</b>: an address is excluded from the lottery if it won a block reward in the previous <b>5</b> blocks (the <b>5-block cooldown</b>). The current block itself does NOT count for cooldown — the current block winner may enter the lottery if that address did not win any of the previous 5 blocks.<br><br>
-
-        Selection seed is derived from the previous block hash; the result is reproducible by every node.<br><br>
-
-        <span style="color:var(--text3);font-style:italic">The cooldown window was revised from 30 to 5 blocks after Monte Carlo analysis showed lower rollover risk and lower Sybil incentive while preserving recent-winner rotation. The earlier draft also auto-excluded the current block winner; that auto-exclusion was dropped in C7.1 — a miner who finds the current block can still participate if they did not also win in the previous 5 blocks. Cap=5 confirmed by C9 formal Monte Carlo (docs/V11_PHASE2_MONTE_CARLO.md). Phase 2 activation height set to block 10,000 by C10, then reduced to block 7,100 by C13 after Phase 1 shipped. Caveat: Phase 2 is NOT Sybil-proof — pre-legitimated sybil sets defeat eligibility-based defences regardless of cap.</span><br><br>
-
-        <b style="color:var(--text)">Jackpot rollover</b>: if the eligibility set is empty after exclusions on a triggered block, the lottery amount is <b>NOT</b> redirected to Gold Vault / PoPC Pool. It accumulates into a pending jackpot that is added to the next triggered block where the eligibility set is non-empty. The jackpot has no cap — it grows until a valid lottery clears it. This protects small networks: when most active miners are temporarily in cooldown, no protocol-side allocation is lost, and the next valid lottery becomes proportionally more attractive to small miners.<br><br>
-
-        <span style="color:var(--text3);font-style:italic">Clarification: a &ldquo;triggered block&rdquo; is a block where the lottery is scheduled by the frequency rules above. Non-triggered blocks follow the normal 50/25/25 reward split and never carry lottery payouts, even if a pending jackpot exists. The jackpot waits for the next scheduled lottery block.</span>
-      </div>
-    </div>
-
-    <!-- ============== EMERGENCY ANNOUNCEMENT — RESTART NOW ============== -->
-    <style>
-    @keyframes restartFlash {
-      0%, 100% { box-shadow: 0 0 18px rgba(251,1,13,0.55), 0 0 36px rgba(251,1,13,0.30); border-color: rgba(251,1,13,0.95); background-color: rgba(251,1,13,0.18); }
-      50%      { box-shadow: 0 0 32px rgba(251,1,13,1.00), 0 0 64px rgba(251,1,13,0.60); border-color: rgba(255,255,255,0.95); background-color: rgba(251,1,13,0.34); }
-    }
-    .restart-now-banner { animation: restartFlash 1.4s ease-in-out infinite; }
-    </style>
-    <div class="restart-now-banner" style="border:3px solid #fb010d;border-radius:6px;padding:18px 22px;margin-bottom:14px;text-align:center">
-      <div style="color:#ffffff;font-size:22px;font-weight:900;letter-spacing:3px;text-shadow:0 0 12px rgba(251,1,13,0.95),0 0 24px rgba(251,1,13,0.60);line-height:1.2;margin-bottom:8px">
-        ⚠ MINERS &amp; NODE OPERATORS — RESTART NOW ⚠
-      </div>
-      <div style="color:#ffe4e6;font-size:13.5px;font-weight:800;letter-spacing:1.5px;line-height:1.5;margin-bottom:8px;text-shadow:0 0 6px rgba(0,0,0,.6)">
-        V11 Phase 1 ships <b style="color:#ffd700">PHASE 3 SLINGSHOT</b> together at block 7,000.<br>
-        Pull <code>origin/main</code>, rebuild, restart node + miner before block 7,000.
-      </div>
-      <pre style="background:rgba(0,0,0,0.65);color:#ffd700;font-size:11.5px;font-weight:700;padding:10px 14px;border-radius:4px;margin:8px auto 6px;display:inline-block;text-align:left;letter-spacing:0.3px">cd &lt;your sost-core directory&gt;
-git pull origin main
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 10px 0">cd &lt;your sost-core directory&gt;
+git pull --ff-only origin main
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
-make -j$(nproc)
-sudo systemctl restart sost-node    # node operators
-pkill -9 sost-miner &amp;&amp; ./sost-miner ...   # miners</pre>
-      <div style="color:#ffe4e6;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:6px;text-shadow:0 0 6px rgba(0,0,0,.6)">
-        Old binaries will produce invalid blocks after 7,000 — both Phase 1 (cascade + dataset) AND Phase 3 (Slingshot bitsQ relief) are consensus-critical.
-      </div>
-    </div>
+make -j$(nproc)</pre>
 
-    <!-- ============== PHASE 3 — SLINGSHOT ============== -->
-    <div style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(34,211,238,0.04));border:2px solid #c084fc;border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 0 14px rgba(168,85,247,.25)">
-      <div style="color:#c084fc;font-size:13px;font-weight:900;letter-spacing:1.8px;margin-bottom:8px">
-        ◆ PHASE 3 — SLINGSHOT · ACTIVATES AT BLOCK 7,000 (with Phase 1)
-      </div>
-      <div style="color:var(--text);font-size:12px;line-height:1.75;margin-bottom:10px">
-        <b style="color:#c084fc">E · Slingshot — single-shot bitsQ relief after a slow block.</b>
-        After any block that takes longer than <b>30 minutes</b>, the very next block enters with bitsQ already reduced by <b>12.5 %</b>. The relief is one-shot (this block only) and self-resetting (the block after returns to normal avg288-derived bitsQ). Slingshot does NOT replace cASERT, the V11 cascade, the lottery, SbPoW, or any other rule. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the <code>E7</code> floor.
-      </div>
+    <b>Node operators:</b> <code>sudo systemctl restart sost-node</code><br>
+    <b>Miners:</b> restart <code>sost-miner</code> after rebuilding.<br><br>
 
-      <div style="color:var(--text2);font-size:11.5px;line-height:1.75">
-        <b style="color:var(--text)">Rule — DUAL-GATE (height-gated by V11_SLINGSHOT_HEIGHT = 7,000):</b>
+    From block <b>7,100</b>, <code>--address</code> only is no longer enough. Miners must use wallet-backed mining:<br>
 
-        <pre style="background:rgba(0,0,0,.45);padding:10px 12px;border-radius:3px;font-size:11.5px;color:#d8b4fe;margin:8px 0;line-height:1.55;overflow-x:auto"><b>For block N at height &gt;= 7,000:</b>
-  prev_elapsed    = chain.tip.timestamp − chain[tip-1].timestamp
-  current_elapsed = candidate.timestamp − chain.tip.timestamp
-  bitsQ_avg288    = (normal avg288 difficulty calculation)
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:8px 0 10px 0">./sost-miner \
+  --wallet wallet.json \
+  --mining-key-label YOUR_LABEL \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user USER \
+  --rpc-pass PASS \
+  --blocks 999999 \
+  --profile mainnet \
+  --threads N</pre>
 
-  <b style="color:#fb010d">if  prev_elapsed    &gt; 30 minutes (1,800 s)
-  AND current_elapsed &gt; 10 minutes (600 s)</b>:
-      bitsQ_block_N = bitsQ_avg288 * (10000 − <b style="color:#fb010d">1250</b>) / 10000
-                    = bitsQ_avg288 * 0.875
-  else:
-      bitsQ_block_N = bitsQ_avg288   (no override)</pre>
+    <b style="color:#c084fc">◆ Equalizer hotfix</b><br>
+    At block <b>7,000</b>, V11 activated the linear equalizer:<br>
+    <code>540s → drop 1 · 600s → drop 2 · 660s → drop 3 · 720s → drop 4 · 840s → drop 6</code><br><br>
 
-        <b style="color:#fb010d">Both gates must hold.</b> If <code>prev_elapsed</code> &gt; 30 min but the current block solves quickly (e.g. in 30 s), Slingshot does <b>NOT</b> fire — there is no need to give a "free" difficulty discount when the network has already recovered. The relief only applies when the CURRENT block itself is also struggling past the 600 s target. This prevents the mechanism from over-correcting after isolated outliers.<br><br>
+    The intended triangular equalizer activates at block <b>7,100</b>:<br>
+    <code>540s → drop 1 · 600s → drop 3 · 660s → drop 6 · 720s → drop 10 · 780s → drop 15 · 840s → reaches E7 floor from H13</code><br>
+    The <code>E7</code> floor is preserved.<br><br>
 
-        <b style="color:var(--text)">Example.</b> Block 6,989 took 129 min — under dual-gate Slingshot, block 6,990 starts at <code>bitsQ_avg288</code>. If 6,990 reaches second 601 still unsolved, Slingshot kicks in and bitsQ drops to <code>bitsQ_avg288 × 0.875</code> for the rest of that block's nonce search. If 6,990 mines fast (under 10 min), Slingshot never fires — the relief was not needed. Block 6,991 always recomputes against avg288 freshly. <b>The relief is for ONE block only and only after both gates open.</b><br><br>
+    <b style="color:#22c55e">◆ Phase 2 — Lottery + SbPoW</b><br>
+    From block <b>7,100</b>, blocks must be signed by the miner key, and the coinbase miner address must match that wallet key. Triggered lottery blocks redirect the protocol-side 50% allocation to one eligible miner. Eligibility is automatic for any address that has mined at least 1 block since genesis. A 5-block cooldown applies to recent winners.<br><br>
 
-        <b style="color:var(--text)">Safety.</b>
-        <pre style="background:rgba(0,0,0,.35);padding:8px 10px;border-radius:3px;font-size:10.5px;color:var(--text2);margin:6px 0 8px 0;line-height:1.55;overflow-x:auto">· height-gated by V11_SLINGSHOT_HEIGHT = 7,000; pre-fork blocks unchanged
-· DUAL gate: BOTH prev_elapsed &gt; 1,800 s AND current_elapsed &gt; 600 s
-  must hold; otherwise no override
-· bitsQ_avg288 still calculated first; Slingshot only adjusts the result
-· strict greater-than on both gates (1800 fails, 1801 passes;
-  600 fails, 601 passes)
-· uses elapsed = candidate.timestamp − prev.timestamp, bounded by MTP rules
-· NO cumulative effect: bitsQ resets to avg288 on every block where
-  either gate is closed
-· NO ratcheting: a sequence of slow blocks each gets one-shot relief, but
-  the relief is recomputed against avg288 every block, never against
-  the previously-relieved value
-· profile cascade, lottery, SbPoW, coinbase logic untouched
-· consensus-critical: miners producing wrong bitsQ after 7,000 are rejected
-· verified by 39 / 39 dual-gate tests in test-slingshot.cpp</pre>
+    <b style="color:#f97316">◆ Miner bug fixed</b><br>
+    The miner could previously loop on <code>fetch_lottery_state height mismatch</code>. This was a miner-side sync issue, not a chain split or consensus failure. The miner now resyncs when the RPC node is ahead.<br><br>
 
-        <span style="color:var(--text3);font-style:italic">Slingshot is a backup mechanism, not a normal operating mode. It only fires under abnormal conditions (a previous block taking &gt; 30 min). The 30-minute trigger is conservative: typical block intervals fluctuate around the 600-second target, and reaching 30 minutes on a single block is itself a tail event (~5 σ at network nominal hashrate). When it does fire, the 12.5 % drop matches the historical V2 maximum cap and is large enough to make a meaningful difference on the next block without destabilising the chain.</span>
-      </div>
-    </div>
-
-    <!-- INVARIANTS PRESERVED -->
-    <div style="background:rgba(255,255,255,0.025);border:1px solid var(--border-dim);padding:10px 14px;border-radius:3px;margin-bottom:14px">
-      <span style="color:var(--text);font-size:11px;font-weight:800;letter-spacing:1.5px">INVARIANTS PRESERVED ACROSS BOTH PHASES</span>
-      <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-top:4px">
-        · PoW block winner keeps full <b>50% miner share</b><br>
-        · Total emission schedule unchanged — no supply change<br>
-        · <b>8 GB RAM minimum</b> for CPU mining unchanged<br>
-        · Block time target 600 s, coinbase maturity 1,000 blocks, bitsQ controller all unchanged<br>
-        · Pre-fork blocks (height &lt; 7,000) follow V10 rules exactly — no retroactive change
-      </div>
-    </div>
-
-    <!-- ACTIVATION GUARDRAIL -->
-    <div style="background:rgba(255,200,87,0.05);border-left:3px solid var(--gold);padding:9px 14px;border-radius:3px;margin-bottom:14px">
-      <span style="color:var(--gold);font-size:10.5px;font-weight:700;letter-spacing:1px">CONDITIONAL ACTIVATION</span>
-      <div style="color:var(--text2);font-size:10.5px;line-height:1.65;margin-top:3px">
-        Phase 1 components (A, B) activate at block 7,000. Phase 2 components (C, D) activate at block 7,100 — height set by C13 after every C2-C9 gate (verification, simulation, testnet, adversarial, formal Monte Carlo) cleared and C11/C12 wired the production miner. <b>The chain runs verified code only.</b>
-      </div>
-    </div>
-
-    <!-- HEADS-UP — auto-reload -->
-    <div style="padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
-      <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// HEADS-UP &mdash; EXPLORER AUTO-RELOADS</span>
-      <span style="display:block;font-size:11px;color:var(--text2);line-height:1.7">The explorer auto-refreshes every 60 s when a new version is deployed. Your session, RPC connection and miner address are preserved across reloads.</span>
-    </div>
-
+    <span style="color:var(--text3)">SOST is experimental native PoW software. Issues may appear and will be corrected transparently. Thank you for your patience and for updating quickly.</span>
   </div>
 </div>
 
-<!-- ============== INCIDENT RESOLVED — block 6989 ============== -->
-<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(74,222,128,0.10),rgba(34,211,238,0.06));border:1px solid rgba(74,222,128,0.55);border-left:5px solid #4ade80;border-radius:4px;padding:10px 14px;box-shadow:0 0 14px rgba(74,222,128,.18)">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="color:#4ade80;font-size:11px;font-weight:900;letter-spacing:2px;flex:0 0 auto">
-        ✅ INCIDENT RESOLVED
-      </span>
-      <span style="color:var(--text2);font-size:10.5px;font-weight:600;flex:1 1 auto;min-width:200px">
-        Block 6,989 mined at 129m 35s by <code>sost1aa1b9…d205</code> &middot; ~20 min before the 150-min isolation threshold &middot; chain back to profile <b style="color:#4ade80">B0</b>, bitsQ adjusted -0.29% &middot; mining 6,990 normally.
-      </span>
-      <span style="color:var(--text3);font-size:9.5px;font-style:italic;flex:0 0 auto">
-        Diagnosis: variance tail event amplified by coordinated V11 update window (operators rebuilding simultaneously). No bug, no fork, no rollback executed. Lessons folded into the V12 bitsQ-anti-stall draft.
-      </span>
-    </div>
+
   </div>
 </div>
 
