@@ -93,12 +93,31 @@ inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V2  = 8;       // relative delta c
 // bitsQ is the primary controller. Equalizer is emergency-only.
 inline constexpr int64_t  CASERT_V6PP_HEIGHT        = 5175;
 inline constexpr int64_t  BITSQ_HALF_LIFE_V6PP      = 43200;  // 12h fallback (used pre-5175)
-inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V6PP  = 8;      // 12.5% cap per block
+// Legacy V6++ static cap (12.5% per block) — used only for heights
+// in [5175, 5260). At block 5260 the median-based dynamic cap took
+// over, and at block 5270 the avg288-only dynamic cap (see comment
+// block below) became the active rule. This constant is therefore
+// dead code at every height >= 5260; it is retained for historical
+// consensus replay only. DO NOT use this constant to estimate the
+// effective per-block cap on the live chain.
+inline constexpr int32_t  BITSQ_MAX_DELTA_DEN_V6PP  = 8;      // 12.5% — pre-5260 only
 
 // avg288-based bitsQ (block 5175+)
 // bitsQ adjusts based on the average interval of the last 288 blocks.
-// Dead band: no adjustment if avg is within ±30s of target.
-// Outside dead band: proportional correction capped at 12.5%/block.
+//
+// ACTIVE RULE (height >= 5270 — current network):
+//   Dead band ±15s of target (585-615s) → no adjustment.
+//   Outside dead band, dynamic cap by deviation magnitude:
+//      |dev| in (15, 60]   →  max delta 0.5% per block
+//      |dev| in (60, 120]  →  max delta 1.0%
+//      |dev| in (120, 240] →  max delta 2.0%
+//      |dev|  > 240        →  max delta 3.0%   ← effective ceiling
+//
+// The historical "12.5%/block" cap (BITSQ_MAX_DELTA_DEN_V6PP) only
+// applies on heights in [5175, 5260) and is dead code at any live
+// height today. Documentation that quotes 12.5%/block as the cap
+// is talking about the V2/legacy path, not the active rule.
+//
 // Live bitsQ: during mining, bitsQ decreases as wall clock advances
 // (current elapsed time counts as a virtual interval).
 inline constexpr int32_t  BITSQ_AVG288_WINDOW       = 288;
