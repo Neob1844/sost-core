@@ -281,6 +281,26 @@ static void test_helper_compute_v11_cascade_drop() {
          compute_v11_cascade_drop(-100) == 0);
 }
 
+static void test_triangular_cascade_activation() {
+    printf("\n=== V11 triangular cascade activation at 7100 ===\n");
+
+    auto pre = chain_with_lag(CASERT_TRIANGULAR_CASCADE_HEIGHT - 1, 10);
+    TEST("h=7099, elapsed=600 -> still linear drop 2 (H8)",
+         profile_at(pre, CASERT_TRIANGULAR_CASCADE_HEIGHT - 1, 600) == 8);
+
+    auto post = chain_with_lag(CASERT_TRIANGULAR_CASCADE_HEIGHT, 10);
+    TEST("h=7100, elapsed=540 -> triangular drop 1 (H9)",
+         profile_at(post, CASERT_TRIANGULAR_CASCADE_HEIGHT, 540) == 9);
+    TEST("h=7100, elapsed=600 -> triangular drop 3 (H7)",
+         profile_at(post, CASERT_TRIANGULAR_CASCADE_HEIGHT, 600) == 7);
+    TEST("h=7100, elapsed=660 -> triangular drop 6 (H4)",
+         profile_at(post, CASERT_TRIANGULAR_CASCADE_HEIGHT, 660) == 4);
+    TEST("h=7100, elapsed=720 -> triangular drop 10 (B0)",
+         profile_at(post, CASERT_TRIANGULAR_CASCADE_HEIGHT, 720) == 0);
+    TEST("h=7100, elapsed=840 -> triangular reaches E7 floor",
+         profile_at(post, CASERT_TRIANGULAR_CASCADE_HEIGHT, 840) == CASERT_H_MIN);
+}
+
 int main() {
     printf("\n=== cASERT V11 Cascade Tests ===\n");
     printf("Activation height: %lld\n", (long long)CASERT_V11_HEIGHT);
@@ -290,6 +310,7 @@ int main() {
     test_floor_clamp();
     test_transition_sharp();
     test_helper_compute_v11_cascade_drop();
+    test_triangular_cascade_activation();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

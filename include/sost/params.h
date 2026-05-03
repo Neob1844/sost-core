@@ -302,6 +302,10 @@ inline constexpr int32_t  CASERT_GRANULAR_DROP_PER_STEP    = 1;
 // on the same block since both touch consensus.
 inline constexpr int64_t  CASERT_V11_HEIGHT                = 7000;
 
+// V11 hotfix: triangular cascade from Phase 2 height onward.
+// Preserves blocks 7000-7099 under the already-active linear V11 rule.
+inline constexpr int64_t  CASERT_TRIANGULAR_CASCADE_HEIGHT = 7100;
+
 // V11 Phase 3 — Slingshot single-shot bitsQ relief
 // Activates alongside Phase 1 at block 7000. If the previous block's
 // elapsed time exceeded SLINGSHOT_THRESHOLD_SECONDS, the current

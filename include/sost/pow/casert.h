@@ -46,6 +46,7 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
 // Active for `next_height >= CASERT_V11_HEIGHT`. For pre-V11 heights
 // the V9/V10 continuous formula in casert.cpp is used instead.
 int32_t compute_v11_cascade_drop(int64_t block_elapsed_s);
+int32_t compute_v11_cascade_drop_triangular(int64_t block_elapsed_s);
 
 // ---- Timestamp validation ----
 int64_t median_time_past(const std::vector<BlockMeta>& chain,

@@ -505,7 +505,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 // Single source of truth used by both miner and validator
                 // — see include/sost/pow/casert.h for the rationale on why
                 // the formula deliberately keeps growing past elapsed=840.
-                drop = compute_v11_cascade_drop(block_elapsed);
+                drop = ((next_height >= CASERT_TRIANGULAR_CASCADE_HEIGHT) ? compute_v11_cascade_drop_triangular(block_elapsed) : compute_v11_cascade_drop(block_elapsed));
             } else {
                 // V9/V10: continuous formula
                 int64_t start;
@@ -967,6 +967,12 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
 int32_t compute_v11_cascade_drop(int64_t block_elapsed_s) {
     if (block_elapsed_s < 540) return 0;
     return 1 + (int32_t)((block_elapsed_s - 540) / 60);
+}
+
+int32_t compute_v11_cascade_drop_triangular(int64_t block_elapsed_s) {
+    if (block_elapsed_s < 540) return 0;
+    int32_t n = 1 + (int32_t)((block_elapsed_s - 540) / 60);
+    return (n * (n + 1)) / 2;
 }
 
 } // namespace sost
