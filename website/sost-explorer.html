@@ -428,11 +428,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 <!-- V11 HOTFIX BANNER — block 7100 -->
 <div class="v11-banner" style="border:1px solid rgba(251,1,13,.45);background:linear-gradient(180deg,rgba(251,1,13,.10),rgba(0,0,0,.18));padding:14px 16px;margin:12px 0 18px 0">
-  <div style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">
-    ⚡ SOST V11 UPDATE — ACTION REQUIRED BEFORE BLOCK 7,100 ⚡
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px">⚡ SOST V11 UPDATE — ACTION REQUIRED BEFORE BLOCK 7,100 ⚡</div>
+    <button id="v11BannerToggle" onclick="toggleV11Banner()" style="background:rgba(251,1,13,.12);border:1px solid rgba(251,1,13,.65);color:#ffd700;cursor:pointer;font-family:var(--code);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px">COLLAPSE</button>
   </div>
-
-  <div style="color:var(--text);font-size:12px;line-height:1.65">
+  <div id="v11BannerBody" style="color:var(--text);font-size:12px;line-height:1.65">
     <b>Current status:</b><br>
     · Phase 1 is already active since block <b>7,000</b>.<br>
     · The linear cascade/equalizer is live for blocks <b>7,000–7,099</b>.<br>
@@ -1156,6 +1156,26 @@ async function showNewBlockToast(h){var t=document.getElementById('newBlockToast
   if(isMyBlock){t.textContent='\u26CF\u26CF\u26CF YOUR BLOCK #'+h+' \u26CF\u26CF\u26CF';t.style.background='linear-gradient(135deg,rgba(74,222,128,0.95),rgba(34,197,94,0.9))';t.style.color='#000';t.style.fontWeight='700';playMyBlockFanfare();}
   else{t.textContent='\u26CF NEW BLOCK #'+h;t.style.background='';t.style.color='';t.style.fontWeight='';playBlockBeep();}
   t.classList.add('show');setTimeout(function(){t.classList.remove('show');t.style.background='';t.style.color='';t.style.fontWeight='';},isMyBlock?5000:3000);}
+function toggleV11Banner(){
+  var body=document.getElementById('v11BannerBody');
+  var btn=document.getElementById('v11BannerToggle');
+  if(!body)return;
+  var opening=body.style.display==='none';
+  body.style.display=opening?'':'none';
+  if(btn)btn.textContent=opening?'COLLAPSE':'EXPAND';
+  try{localStorage.setItem('sost_v11_banner_collapsed',opening?'0':'1');}catch(e){}
+}
+function initV11Banner(){
+  var body=document.getElementById('v11BannerBody');
+  var btn=document.getElementById('v11BannerToggle');
+  if(!body)return;
+  var collapsed=false;
+  try{collapsed=localStorage.getItem('sost_v11_banner_collapsed')==='1';}catch(e){}
+  body.style.display=collapsed?'none':'';
+  if(btn)btn.textContent=collapsed?'EXPAND':'COLLAPSE';
+}
+setTimeout(initV11Banner,0);
+
 function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'gold':r==='POPC POOL'?'cyan':'yellow';return ' <span style="color:var(--'+c+');font-size:9px;font-weight:600">['+r+']</span>';}
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
