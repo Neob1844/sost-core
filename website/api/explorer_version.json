@@ -1,1 +1,1 @@
-{"v":"2026-05-04-v139","note":"RPC ACTIVITY card added — per-method JSON-RPC telemetry (calls, errors, avg/max latency) since node boot. Click the card to expand the per-method breakdown sorted by calls. Sourced from new getrpcstats RPC on the node. Hard reload (Ctrl+Shift+R)."}
+{"v":"2026-05-04-v140","note":"↑ SENT (non-mining) row added to address detail, sourced from new getaddressflows node RPC. Walks the chain once per tip (cached) and returns lifetime non-coinbase received + sent per address. Also v139 RPC ACTIVITY card. Hard reload (Ctrl+Shift+R)."}

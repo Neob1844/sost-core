@@ -1821,6 +1821,107 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
     return rpc_result(id, s.str());
 }
 
+// =============================================================================
+// AddressFlowsCache — lifetime non-mining flow per address.
+//
+// Walks every block in g_blocks once, deserializing every tx, and tallies
+//   received_non_mining = sum of non-coinbase outputs paying to <addr>
+//   sent_non_mining     = sum of non-coinbase inputs spent FROM <addr>,
+//                          using a transient outpoint→(amount, pkh) map
+//                          built during the same walk so prior outputs
+//                          can be looked up when an input references them
+//
+// Cached by chain tip height. A single rebuild covers ALL addresses; the
+// per-address map is then probed by the RPC handler. Rebuild cost is
+// roughly O(total_outputs_ever_created) — for ~7K blocks with a couple of
+// outputs each, well under a second on modern hardware.
+//
+// Coinbase outputs (mining rewards, lottery payouts) are intentionally
+// excluded so the explorer's "↓ RECEIVED (non-mining)" / "↑ SENT
+// (non-mining)" rows surface user-driven flow only.
+// =============================================================================
+struct AddressFlows {
+    int64_t received_non_mining{0};
+    int64_t sent_non_mining{0};
+};
+struct AddressFlowsCache {
+    std::mutex mu;
+    int64_t cached_tip{-1};
+    std::map<std::string, AddressFlows> by_addr;
+};
+static AddressFlowsCache g_addr_flows;
+
+// Caller must hold g_addr_flows.mu and g_chain_mu.
+static void rebuild_address_flows_locked(int64_t tip) {
+    g_addr_flows.by_addr.clear();
+    // Transient: every output ever produced, keyed by (txid, vout). Built
+    // during the linear walk so an input on a later block can resolve its
+    // prev value/owner. Memory is dropped at function exit.
+    std::map<OutPoint, std::pair<int64_t, PubKeyHash>> outpoint_lookup;
+
+    for (int64_t h = 0; h <= tip && h < (int64_t)g_blocks.size(); ++h) {
+        const auto& sb = g_blocks[h];
+        for (size_t ti = 0; ti < sb.tx_hexes.size(); ++ti) {
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(sb.tx_hexes[ti], raw)) continue;
+            Transaction tx;
+            std::string derr;
+            if (!Transaction::Deserialize(raw, tx, &derr)) continue;
+
+            Hash256 txid{};
+            if (!tx.ComputeTxId(txid, &derr)) continue;
+
+            // First tx in a block is coinbase. Its outputs are mining rewards
+            // (and lottery payouts on PAYOUT blocks); those are NOT counted as
+            // "received_non_mining". Coinbase has no real inputs to scan.
+            bool is_coinbase = (ti == 0);
+
+            for (size_t vo = 0; vo < tx.outputs.size(); ++vo) {
+                const auto& out = tx.outputs[vo];
+                outpoint_lookup[OutPoint{txid, (uint32_t)vo}] = {out.amount, out.pubkey_hash};
+                if (!is_coinbase) {
+                    std::string a = address_encode(out.pubkey_hash);
+                    g_addr_flows.by_addr[a].received_non_mining += out.amount;
+                }
+            }
+            if (!is_coinbase) {
+                for (const auto& in : tx.inputs) {
+                    OutPoint op{in.prev_txid, in.prev_index};
+                    auto it = outpoint_lookup.find(op);
+                    if (it == outpoint_lookup.end()) continue;
+                    std::string a = address_encode(it->second.second);
+                    g_addr_flows.by_addr[a].sent_non_mining += it->second.first;
+                }
+            }
+        }
+    }
+    g_addr_flows.cached_tip = tip;
+}
+
+static std::string handle_getaddressflows(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "missing address");
+    const std::string& addr = p[0];
+
+    int64_t tip;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        if (g_blocks.empty()) return rpc_error(id, -1, "no blocks");
+        tip = g_blocks.back().height;
+
+        std::lock_guard<std::mutex> ck(g_addr_flows.mu);
+        if (g_addr_flows.cached_tip != tip) {
+            rebuild_address_flows_locked(tip);
+        }
+        auto it = g_addr_flows.by_addr.find(addr);
+        std::ostringstream s;
+        s << "{\"received_non_mining\":" << (it == g_addr_flows.by_addr.end() ? 0 : it->second.received_non_mining)
+          << ",\"sent_non_mining\":"     << (it == g_addr_flows.by_addr.end() ? 0 : it->second.sent_non_mining)
+          << ",\"scanned_height\":"      << tip
+          << "}";
+        return rpc_result(id, s.str());
+    }
+}
+
 static std::string handle_getaddressinfo(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing address");
@@ -3018,6 +3119,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
     {"getaddressinfo",handle_getaddressinfo},
+    {"getaddressflows",handle_getaddressflows},
     {"gettransaction",handle_gettransaction},
     {"estimatefee",handle_estimatefee},
     {"getaddressbalance",handle_getaddressbalance},

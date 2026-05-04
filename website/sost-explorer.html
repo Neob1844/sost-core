@@ -4197,6 +4197,13 @@ async function showAddress(addr){
     var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
     balHtml+='<div class="k" style="color:#ffd700" title="Coinbase rewards from blocks this address mined ('+minedCount+' blocks). Excludes lottery payouts (those appear in DTD LOTTERY RECEIVED below).">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
     balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
+    // \u2191 SENT (non-mining) \u2014 lifetime outflow. Sourced from the node's
+    // getaddressflows RPC, which walks every block once and returns
+    // received_non_mining + sent_non_mining for the address. The result
+    // is cached by chain tip on the node, so subsequent address views
+    // hit the cache instead of re-scanning. Hydrated async; the row
+    // shows "\u2014" while the RPC is in flight, then updates in place.
+    balHtml+='<div class="k" id="addrSentLbl" style="color:#fb010d" title="Lifetime sum of non-coinbase outputs spent FROM this address. Computed by the node by walking the chain once and tracking input amounts via prev-tx lookup. Updates after the RPC returns.">\u2191 SENT (non-mining)</div><div class="v" id="addrSentVal"><span style="color:var(--text3)">loading...</span></div>';
     // DTD lottery received row. lottAmtSost / lottCount were computed early
     // (right after the coinbase loop) so we could subtract them from MINED.
     // The row title clarifies the breakdown: TOTAL = MINED + RECEIVED + LOTTERY.
@@ -4268,6 +4275,33 @@ async function showAddress(addr){
     window.scrollTo({top:0,behavior:'smooth'});
     // Render address charts
     setTimeout(function(){renderAddrCharts(sorted);renderMainWalletChart(sorted,totalBalance,matureBalance,immatureBalance,minedAmt,minedCount,inAmt);},100);
+    // Async hydrate ↑ SENT (non-mining). The first call after a new block
+    // triggers a chain rebuild on the node (cached afterwards by tip
+    // height), so it can take a few hundred ms — keep this off the
+    // critical render path. If the RPC is missing (older node binary),
+    // gracefully fall back to "n/a".
+    (function(addr){
+      var lbl=document.getElementById('addrSentLbl');
+      var val=document.getElementById('addrSentVal');
+      if(!val)return;
+      rpc('getaddressflows',[addr]).then(function(f){
+        if(!f||typeof f.sent_non_mining!=='number'){
+          val.innerHTML='<span style="color:var(--text3)">n/a</span>';return;
+        }
+        var sent=f.sent_non_mining/100000000;
+        var recv=f.received_non_mining/100000000;
+        val.innerHTML='<span style="color:#fb010d;font-weight:600">'+sent.toFixed(8)+' SOST</span> <span style="color:var(--text3)">(lifetime · scanned through #'+f.scanned_height+')</span>';
+        // Also retro-fit the RECEIVED tooltip with the lifetime number
+        // so the tooltip matches what the node actually computed.
+        var rcvLbl=null;
+        document.querySelectorAll('.k').forEach(function(k){if(k.textContent.indexOf('RECEIVED (non-mining)')>=0)rcvLbl=k;});
+        if(rcvLbl){
+          rcvLbl.title='Currently-held non-coinbase UTXOs (snapshot, shown to the right). Lifetime received non-mining (across all txs ever) is '+recv.toFixed(8)+' SOST per the node.';
+        }
+      }).catch(function(){
+        val.innerHTML='<span style="color:var(--text3)">n/a (older node — getaddressflows missing)</span>';
+      });
+    })(a.address);
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
 }
 function renderMainWalletChart(utxos,totalBal,matureBal,immatureBal,minedAmt,minedCount,inAmt){
