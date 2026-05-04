@@ -2386,16 +2386,41 @@ function drawSparkline(){
   ctx.beginPath();
   for(var i=0;i<len;i++){var x=(i/(len-1))*W,y=yPos(data[i].d);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(192,132,252,.8)';ctx.lineWidth=1.5;ctx.stroke();
-  // Dot markers
+  // Dot markers — Slingshot-active blocks rendered in magenta with a halo.
+  // Detection per block i (oldest-first array):
+  //   gate 1: prev block's interval > 1800 s
+  //   gate 2: this block's own interval > 600 s
+  //   height: this block at >= V11_SLINGSHOT_HEIGHT (= 7000)
+  var SS_HEIGHT=7000, SS_T1=1800, SS_T2=600;
+  var ssCount=0;
   for(var i=0;i<len;i++){
     var x=(i/(len-1))*W,y=yPos(data[i].d);
-    ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
+    var fired=false;
+    if(i>=2 && data[i].h>=SS_HEIGHT){
+      var prevInt = data[i-1].t - data[i-2].t;
+      var thisInt = data[i].t   - data[i-1].t;
+      if(prevInt>SS_T1 && thisInt>SS_T2) fired=true;
+    }
+    if(fired){
+      ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,0,255,.18)';ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);
+      ctx.fillStyle='#ff00ff';ctx.fill();
+      ssCount++;
+    }else{
+      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
+    }
   }
+  window._sparkSsCount=ssCount;
   var last=data[len-1],first=data[0];
   var change=(first.d>0)?((last.d-first.d)/first.d*100).toFixed(1):'0.0';
   var arrow=last.d>=first.d?'\u25B2':'\u25BC';
   var clr=last.d>=first.d?'var(--red)':'var(--green)';
-  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks</span>';
+  var ssBadge=(window._sparkSsCount>0)
+    ? ' <span style="color:#ff00ff;margin-left:8px">● '+window._sparkSsCount+' Slingshot</span>'
+    : '';
+  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks</span>'+ssBadge;
 }
 (function(){
   var cv=document.getElementById('sparkCanvas');
@@ -3820,14 +3845,10 @@ async function showAddress(addr){
       if(u2.coinbase){minedAmt+=amt2;minedCount++;}
       else{inAmt+=amt2;inCount++;}
     }
-    // Balance section — clean vertical rows
-    var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
-    balHtml+='<div class="k" style="color:#ffd700" title="Total coinbase rewards from mining '+minedCount+' blocks">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
-    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
-    // DTD lottery received \u2014 historical lottery payouts (Phase 2 PAYOUT blocks).
-    // Sourced from the DTD scan cache; if the user has not opened the DTD section
-    // yet we hydrate from localStorage. If neither is available, fall back to a
-    // hint so the row still surfaces the feature.
+    // Hydrate DTD lottery cache early so we can subtract lottery payouts from
+    // MINED below. Lottery payouts are coinbase outputs, so they were just
+    // counted into minedAmt above. Splitting them out avoids visual double-
+    // counting in the address detail panel (TOTAL = MINED + RECEIVED + LOTTERY).
     var dtdLottery=null;
     try{
       if(window._dtdLotteryByAddr&&window._dtdLotteryByAddr[addr]){
@@ -3843,11 +3864,23 @@ async function showAddress(addr){
         }
       }
     }catch(e){}
+    var lottAmtSost=0, lottCount=0;
     if(dtdLottery&&dtdLottery.amt>0){
-      var lottSost=(dtdLottery.amt/100000000).toFixed(8);
-      var lottCount=dtdLottery.count||0;
-      balHtml+='<div class="k" style="color:#ff00ff" title="Total SOST received as PoP Lottery payouts in Phase 2 PAYOUT blocks. Counted from the DTD scan; refresh the DTD section for the latest figure.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
-      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottSost+' SOST</span> <span style="color:var(--text3)">('+lottCount+(lottCount===1?' win':' wins')+')</span></div>';
+      lottAmtSost=dtdLottery.amt/100000000;
+      lottCount=dtdLottery.count||0;
+      minedAmt=Math.max(0, minedAmt - lottAmtSost);
+      minedCount=Math.max(0, minedCount - lottCount);
+    }
+    // Balance section — clean vertical rows
+    var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
+    balHtml+='<div class="k" style="color:#ffd700" title="Coinbase rewards from blocks this address mined ('+minedCount+' blocks). Excludes lottery payouts (those appear in DTD LOTTERY RECEIVED below).">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
+    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
+    // DTD lottery received row. lottAmtSost / lottCount were computed early
+    // (right after the coinbase loop) so we could subtract them from MINED.
+    // The row title clarifies the breakdown: TOTAL = MINED + RECEIVED + LOTTERY.
+    if(lottAmtSost>0){
+      balHtml+='<div class="k" style="color:#ff00ff" title="SOST received as PoP Lottery payouts on Phase 2 PAYOUT blocks. Already excluded from MINED above so the rows sum to TOTAL BALANCE without double-counting.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
+      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottAmtSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottCount+(lottCount===1?' win':' wins')+')</span></div>';
     }else{
       balHtml+='<div class="k" style="color:#ff00ff" title="DTD scan has not run yet in this session. Open the DTD section to populate lottery history for all addresses.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
       balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan</span></div>';
