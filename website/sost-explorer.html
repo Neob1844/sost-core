@@ -1010,8 +1010,8 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   </div>
   <div class="section" id="blocksSection">
     <div class="sec-head"><div class="sec-title">// <b style="cursor:pointer" onclick="off=0;loadBlocks();">LATEST BLOCKS</b></div><div class="sec-meta" id="blockRange"></div></div>
-    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th></tr></thead>
-    <tbody id="blocksBody"><tr><td colspan="7" class="ld">loading blocks</td></tr></tbody></table>
+    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th><th>LOTTERY</th></tr></thead>
+    <tbody id="blocksBody"><tr><td colspan="9" class="ld">loading blocks</td></tr></tbody></table>
     <div class="pager">
       <button onclick="newestPage()" id="btnFirst" style="display:none">⟪ NEWEST</button>
       <button onclick="prevPage()" id="btnP" style="display:none">← NEWER</button>
@@ -2424,74 +2424,18 @@ function drawSparkline(){
   ctx.beginPath();
   for(var i=0;i<len;i++){var x=(i/(len-1))*W,y=yPos(data[i].d);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(192,132,252,.8)';ctx.lineWidth=1.5;ctx.stroke();
-  // Slingshot-active block detection — pre-pass collects indices, then we
-  // render the visual cues in three layers so the marker survives over the
-  // purple line and the fill gradient.
-  // Detection per block i (oldest-first array):
-  //   gate 1: prev block's interval > 1800 s
-  //   gate 2: this block's own interval > 600 s
-  //   height: this block at >= V11_SLINGSHOT_HEIGHT (= 7000)
-  var SS_HEIGHT=7000, SS_T1=1800, SS_T2=600;
-  var ssIndices=[];
-  for(var ii=0;ii<len;ii++){
-    if(ii>=2 && data[ii].h>=SS_HEIGHT){
-      var prevInt = data[ii-1].t - data[ii-2].t;
-      var thisInt = data[ii].t   - data[ii-1].t;
-      if(prevInt>SS_T1 && thisInt>SS_T2) ssIndices.push(ii);
-    }
-  }
-  // Layer A — vertical magenta accent line full height (subtle but unmissable).
-  if(ssIndices.length>0){
-    ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,0,255,.28)';
-    for(var sk=0;sk<ssIndices.length;sk++){
-      var sx=(ssIndices[sk]/(len-1))*W;
-      ctx.beginPath();ctx.moveTo(sx,pad);ctx.lineTo(sx,Hc-pad);ctx.stroke();
-    }
-  }
-  // Dot markers — purple for normal, magenta with glow + white outline for Slingshot.
-  var ssSet={};for(var ssi=0;ssi<ssIndices.length;ssi++)ssSet[ssIndices[ssi]]=true;
+  // Dot markers — flat purple dots, the sparkline stays a clean difficulty
+  // chart. Slingshot fires are surfaced in the LATEST BLOCKS table column.
   for(var i=0;i<len;i++){
     var x=(i/(len-1))*W,y=yPos(data[i].d);
-    if(ssSet[i]){
-      // Outer glow
-      ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,0,255,.10)';ctx.fill();
-      // Mid glow
-      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,0,255,.32)';ctx.fill();
-      // Solid core
-      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);
-      ctx.fillStyle='#ff00ff';ctx.fill();
-      // White outline for contrast against the purple line
-      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);
-      ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1;ctx.stroke();
-    }else{
-      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);
-      ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
-    }
+    ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
   }
-  // Layer C — small magenta triangle at the top of the chart pointing at the
-  // Slingshot block, so the marker is detectable even at a glance.
-  if(ssIndices.length>0){
-    ctx.fillStyle='#ff00ff';
-    for(var tk=0;tk<ssIndices.length;tk++){
-      var tx=(ssIndices[tk]/(len-1))*W;
-      ctx.beginPath();
-      ctx.moveTo(tx-4, pad-1);
-      ctx.lineTo(tx+4, pad-1);
-      ctx.lineTo(tx,   pad+5);
-      ctx.closePath();ctx.fill();
-    }
-  }
-  window._sparkSsCount=ssIndices.length;
   var last=data[len-1],first=data[0];
   var change=(first.d>0)?((last.d-first.d)/first.d*100).toFixed(1):'0.0';
   var arrow=last.d>=first.d?'\u25B2':'\u25BC';
   var clr=last.d>=first.d?'var(--red)':'var(--green)';
-  var ssBadge=(window._sparkSsCount>0)
-    ? ' <span style="color:#ff00ff;margin-left:8px">● '+window._sparkSsCount+' Slingshot</span>'
-    : '';
-  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks</span>'+ssBadge;
+  document.getElementById('sparkInfo').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks</span>';
 }
 (function(){
   var cv=document.getElementById('sparkCanvas');
@@ -3690,12 +3634,23 @@ async function loadBlocks(){
       } else {
         blockProfileLabel=_effSpan;
       }
+      // LOTTERY cell — DTD lottery winner address (linked, magenta) on PAYOUT
+      // blocks, dash on NORMAL / UPDATE_EMPTY / pre-Phase-2 blocks.
+      var lottAmt=parseInt(b.lottery_payout||0,10);
+      var lottWin=b.lottery_winner_address||'';
+      var lottCell;
+      if(lottAmt>0&&lottWin){
+        var lottAmtSost=(lottAmt/100000000).toFixed(4);
+        lottCell='<span class="td-link" onclick="showAddress(\''+lottWin+'\')" style="color:#ff00ff;font-size:10px" title="'+lottWin+' won '+lottAmtSost+' SOST">\u{1F3B0} '+lottWin.substr(0,10)+'…'+lottWin.substr(-4)+'</span> <span style="color:var(--text3);font-size:9px">'+lottAmtSost+'</span>';
+      }else{
+        lottCell='<span style="color:var(--text3)">—</span>';
+      }
       var minerAddr=b.miner_address||'';
       var minerShort=minerAddr?'<span class="td-link" onclick="showAddress(\''+minerAddr+'\')" style="color:var(--orange);font-size:10px" title="'+minerAddr+'">'+minerAddr.substr(0,10)+'\u2026'+minerAddr.substr(-4)+'</span>':'';
-      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td>';
+      tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td><td>'+lottCell+'</td>';
       tb.appendChild(tr);}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
-  }catch(e){tb.innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
+  }catch(e){tb.innerHTML='<tr><td colspan="9" class="td-err">'+e.message+'</td></tr>';}
 }
 function nextPage(){off+=PS;loadBlocks();}
 function prevPage(){off=Math.max(0,off-PS);loadBlocks();}
