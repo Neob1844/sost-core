@@ -1349,7 +1349,7 @@ async function renderDTDPanel(body,title,silent){
     var CHUNK=40;
     function ensure(addr){
       if(!addr)return null;
-      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
+      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
       return rowsByAddr[addr];
     }
     ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');
@@ -1367,7 +1367,7 @@ async function renderDTDPanel(body,title,silent){
         var popcReward=Object.prototype.hasOwnProperty.call(b,'popc_pool_reward')?dtdStocks(b.popc_pool_reward):Math.floor(subsidy/4);
         var lotteryReward=dtdStocks(b.lottery_payout||b.lottery_reward||0);
         totalSubsidy+=subsidy;totalMiner+=minerReward;totalGold+=goldReward;totalPopc+=popcReward;totalLottery+=lotteryReward;
-        if(lotteryReward>0&&b.lottery_winner_address){var wr=ensure(b.lottery_winner_address);if(wr)wr.dtdWonStocks+=lotteryReward;}
+        if(lotteryReward>0&&b.lottery_winner_address){var wr=ensure(b.lottery_winner_address);if(wr){wr.dtdWonStocks+=lotteryReward;wr.dtdWonCount=(wr.dtdWonCount||0)+1;}}
         if(b.miner_address){
           var r=ensure(b.miner_address);r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
           if((b.height||0)>height-5)latestWinners.push(b.miner_address);
@@ -1409,6 +1409,14 @@ async function renderDTDPanel(body,title,silent){
     summary+='</div><div id="dtdTableHost"></div>';
     body.innerHTML=summary;
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
+    // Cache lottery wins per address so showAddress can display 'DTD LOTTERY RECEIVED'
+    // without re-scanning the chain. Only addresses with a non-zero dtdWonStocks are stored.
+    try{
+      var lotteryByAddr={};
+      rows.forEach(function(r){if((r.dtdWonStocks||0)>0)lotteryByAddr[r.addr]={amt:r.dtdWonStocks,count:r.dtdWonCount||0};});
+      window._dtdLotteryByAddr=lotteryByAddr;
+      localStorage.setItem('sost_dtd_lottery_v1',JSON.stringify({h:height,by:lotteryByAddr}));
+    }catch(e){}
     var eligibleRows=rows.filter(function(r){
       if(cooldownSet[r.addr])return false;
       if(r.status==='Eligible')return true;
@@ -3451,6 +3459,34 @@ async function showAddress(addr){
     var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
     balHtml+='<div class="k" style="color:#ffd700" title="Total coinbase rewards from mining '+minedCount+' blocks">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
     balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
+    // DTD lottery received \u2014 historical lottery payouts (Phase 2 PAYOUT blocks).
+    // Sourced from the DTD scan cache; if the user has not opened the DTD section
+    // yet we hydrate from localStorage. If neither is available, fall back to a
+    // hint so the row still surfaces the feature.
+    var dtdLottery=null;
+    try{
+      if(window._dtdLotteryByAddr&&window._dtdLotteryByAddr[addr]){
+        dtdLottery=window._dtdLotteryByAddr[addr];
+      }else{
+        var rawCache=localStorage.getItem('sost_dtd_lottery_v1');
+        if(rawCache){
+          var parsed=JSON.parse(rawCache);
+          if(parsed&&parsed.by){
+            window._dtdLotteryByAddr=parsed.by;
+            if(parsed.by[addr])dtdLottery=parsed.by[addr];
+          }
+        }
+      }
+    }catch(e){}
+    if(dtdLottery&&dtdLottery.amt>0){
+      var lottSost=(dtdLottery.amt/100000000).toFixed(8);
+      var lottCount=dtdLottery.count||0;
+      balHtml+='<div class="k" style="color:#ff00ff" title="Total SOST received as PoP Lottery payouts in Phase 2 PAYOUT blocks. Counted from the DTD scan; refresh the DTD section for the latest figure.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
+      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottSost+' SOST</span> <span style="color:var(--text3)">('+lottCount+(lottCount===1?' win':' wins')+')</span></div>';
+    }else{
+      balHtml+='<div class="k" style="color:#ff00ff" title="DTD scan has not run yet in this session. Open the DTD section to populate lottery history for all addresses.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
+      balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan</span></div>';
+    }
     if(immatureCount>0){
       balHtml+='<div class="k" style="color:#00ff88">\u25A0 SPENDABLE</div><div class="v"><span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span></div>';
       balHtml+='<div class="k" style="color:#fbbf24">\u25A1 IMMATURE</div><div class="v"><span style="color:#fbbf24;font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
