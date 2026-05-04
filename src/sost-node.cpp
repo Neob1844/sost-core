@@ -1271,6 +1271,176 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     return rpc_result(id, s.str());
 }
 
+// =============================================================================
+// getlotteryaudit <height>
+//
+// Reproduces the deterministic lottery selection for a historical block so
+// any operator can verify the chain is not picking favourites.
+// Returns:
+//   {
+//     height, block_hash, miner_address, is_lottery_block,
+//     winner_address, winner_index, eligible_count,
+//     rng_history_blocks: [ { height, hash } ... ],   // up to 16
+//     seed_input_hex,                                  // domain || hashes || height_le
+//     seed_hex,                                        // sha256(seed_input)
+//     roll_le_u64,                                     // first 8 bytes of seed
+//     cooldown_addresses: [ ... ]                      // recent winners excluded
+//   }
+//
+// Pure read-only. Replays the same code path apply_lottery_block uses
+// at consensus time, so a mismatch between winner_address and the
+// coinbase output proves manipulation.
+// =============================================================================
+static std::string handle_getlotteryaudit(const std::string& id, const std::vector<std::string>& p) {
+    if (p.empty()) return rpc_error(id, -1, "missing height");
+    int64_t height = 0;
+    try { height = std::stoll(p[0]); } catch (...) { return rpc_error(id, -8, "invalid height"); }
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+
+    if (height < 0 || height >= (int64_t)g_blocks.size()) {
+        return rpc_error(id, -8, "height out of range");
+    }
+    const auto& block = g_blocks[(size_t)height];
+
+    // Phase 2 + lottery-block check — IDLE blocks return is_lottery_block=false.
+    const int64_t phase2_h = sost::V11_PHASE2_HEIGHT;
+    const bool phase2_active = (height >= phase2_h) && (phase2_h != INT64_MAX);
+    const bool lottery_triggered = phase2_active && sost::lottery::is_lottery_block(height, phase2_h);
+
+    // Decode the coinbase to get this block's miner address.
+    std::string miner_addr;
+    {
+        std::vector<Byte> raw;
+        if (!block.tx_hexes.empty() && decode_tx_hex(block.tx_hexes[0], raw)) {
+            Transaction cb;
+            std::string derr;
+            if (Transaction::Deserialize(raw, cb, &derr) && !cb.outputs.empty()) {
+                miner_addr = address_encode(cb.outputs[0].pubkey_hash);
+            }
+        }
+    }
+
+    std::ostringstream s;
+    s << "{\"height\":" << height
+      << ",\"block_hash\":\"" << to_hex(block.block_id.data(), 32) << "\""
+      << ",\"miner_address\":\"" << miner_addr << "\""
+      << ",\"is_lottery_block\":" << (lottery_triggered ? "true" : "false");
+
+    if (!lottery_triggered) {
+        s << "}";
+        return rpc_result(id, s.str());
+    }
+
+    // Build LotteryMinedBlockView history from g_blocks up to (but excluding) `height`.
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb;
+        std::string derr;
+        if (!Transaction::Deserialize(raw, cb, &derr) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height     = b.height;
+        v.miner_pkh  = cb.outputs[0].pubkey_hash;
+        v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+
+    PubKeyHash zero_pkh{};
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, zero_pkh,
+        sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+    int64_t winner_index = -1;
+    PubKeyHash winner_pkh{};
+    if (!eligible.empty()) {
+        winner_index = sost::lottery::select_lottery_winner_index_from_history(
+            eligible, history, height);
+        if (winner_index >= 0 && winner_index < (int64_t)eligible.size()) {
+            winner_pkh = eligible[(size_t)winner_index].pkh;
+        }
+    }
+
+    // Reconstruct the exact seed input used by select_lottery_winner_index_from_history.
+    // The lo..hi window must mirror the helper byte-for-byte.
+    const int64_t lo = height - sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS;
+    const int64_t hi = height - 1;
+    std::vector<sost::lottery::LotteryMinedBlockView> window;
+    for (const auto& b : history) {
+        if (b.height >= lo && b.height <= hi) window.push_back(b);
+    }
+    std::sort(window.begin(), window.end(),
+              [](const sost::lottery::LotteryMinedBlockView& a,
+                 const sost::lottery::LotteryMinedBlockView& b) {
+                  return a.height < b.height;
+              });
+    std::vector<uint8_t> seed_input;
+    seed_input.reserve(sost::lottery::LOTTERY_RNG_DOMAIN_LEN + window.size() * 32 + 8);
+    for (size_t i = 0; i < sost::lottery::LOTTERY_RNG_DOMAIN_LEN; ++i) {
+        seed_input.push_back((uint8_t)sost::lottery::LOTTERY_RNG_DOMAIN[i]);
+    }
+    for (const auto& w : window) {
+        for (size_t i = 0; i < 32; ++i) seed_input.push_back(w.block_hash[i]);
+    }
+    for (int i = 0; i < 8; ++i) {
+        seed_input.push_back((uint8_t)((uint64_t)height >> (i * 8)));
+    }
+    Bytes32 seed = sha256(seed_input);
+    uint64_t roll = 0;
+    for (int i = 0; i < 8; ++i) {
+        roll |= ((uint64_t)seed[i]) << (i * 8);
+    }
+
+    // Cooldown — addresses excluded by recent-winner rule.
+    // Mirrors lottery.cpp compute_lottery_eligibility_set: any block within
+    // [height - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, height - 1] whose
+    // PAYOUT coinbase emitted a lottery output excludes that pkh.
+    std::vector<std::string> cooldown_addrs;
+    {
+        const int64_t cd_lo = height - sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;
+        const int64_t cd_hi = height - 1;
+        for (const auto& b : g_blocks) {
+            if (b.height < cd_lo || b.height > cd_hi) continue;
+            if (b.tx_hexes.empty()) continue;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+            Transaction cb;
+            std::string derr;
+            if (!Transaction::Deserialize(raw, cb, &derr)) continue;
+            for (const auto& out : cb.outputs) {
+                if (out.type == OUT_COINBASE_LOTTERY) {
+                    cooldown_addrs.push_back(address_encode(out.pubkey_hash));
+                    break;
+                }
+            }
+        }
+    }
+
+    s << ",\"eligible_count\":" << eligible.size()
+      << ",\"winner_index\":" << winner_index
+      << ",\"winner_address\":\""
+        << (winner_index >= 0 ? address_encode(winner_pkh) : std::string())
+        << "\""
+      << ",\"rng_history_blocks\":[";
+    for (size_t i = 0; i < window.size(); ++i) {
+        if (i) s << ",";
+        s << "{\"height\":" << window[i].height
+          << ",\"hash\":\"" << to_hex(window[i].block_hash.data(), 32) << "\"}";
+    }
+    s << "],\"seed_input_hex\":\"" << to_hex(seed_input.data(), seed_input.size()) << "\""
+      << ",\"seed_hex\":\""        << to_hex(seed.data(), 32) << "\""
+      << ",\"roll_le_u64\":\""     << roll << "\""
+      << ",\"cooldown_addresses\":[";
+    for (size_t i = 0; i < cooldown_addrs.size(); ++i) {
+        if (i) s << ",";
+        s << "\"" << cooldown_addrs[i] << "\"";
+    }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
     int64_t total=g_wallet.balance(g_chain_height);
     int64_t locked=g_wallet.locked_balance(g_chain_height);
@@ -3106,6 +3276,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getblock",handle_getblock},
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
+    {"getlotteryaudit",handle_getlotteryaudit},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},

@@ -1847,7 +1847,17 @@ async function renderDTDPanel(body,title,silent){
       summary+='</div>';
     }
     summary+='<div id="dtdTableHost"></div>';
+    summary+='<div style="margin-top:18px;background:rgba(0,0,0,.3);border:1px solid var(--border);padding:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div style="font-size:10px;letter-spacing:2px;color:var(--text3)">// LOTTERY AUDIT — reproduce on-chain selection per PAYOUT block</div>'
+        +'<button class="btn btn-small" onclick="loadLotteryAudit()" style="font-size:10px">Run audit</button>'
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-bottom:8px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b>Audit winner</b> differs from <b>On-chain winner</b> would be evidence of selection tampering. Cooldown column shows addresses excluded by the recent-winner rule (last 5 blocks).</div>'
+      +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b>Run audit</b> to scan all PAYOUT blocks</div>'
+    +'</div>';
     body.innerHTML=summary;
+    // Stash payouts list so the audit knows which heights to scan.
+    window._dtdPayouts = ph2.payouts.slice();
     // Draw all 4 charts after DOM is in place. Wrapped in try so a render error
     // never blocks the table from loading below.
     try{ _drawDtdCharts(ph2,rows,cooldownSet,height); }catch(e){console.warn('[dtd] chart render failed',e);}
@@ -1871,6 +1881,73 @@ async function renderDTDPanel(body,title,silent){
     renderDTDTable(_dtdCache);
   }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
 }
+
+// loadLotteryAudit() — calls getlotteryaudit per PAYOUT block and renders a
+// table comparing the re-derived winner against the on-chain winner. Each
+// row is verifiable: the seed_hex shown is sha256(SOST_LOTTERY_V11 || 16
+// prev block hashes || height_le); same input → same winner → no tampering.
+window.loadLotteryAudit = async function(){
+  var host=document.getElementById('lotteryAuditTable');
+  if(!host)return;
+  var payouts=window._dtdPayouts||[];
+  if(!payouts.length){
+    host.innerHTML='<span style="color:var(--text3)">no PAYOUT blocks yet</span>';
+    return;
+  }
+  host.innerHTML='<span style="color:var(--cyan)">scanning '+payouts.length+' PAYOUT blocks...</span>';
+  var rows=await Promise.all(payouts.map(function(p){
+    return rpc('getlotteryaudit',[String(p.h)]).catch(function(){return null;});
+  }));
+
+  // For each row, determine if the re-derived winner matches the chain.
+  var html='<table class="tbl" style="font-size:10px;width:100%"><thead>'
+    +'<tr><th>BLOCK</th><th>MINER</th><th>ON-CHAIN WINNER</th><th>AUDIT WINNER</th>'
+    +'<th>WINNER IDX</th><th>ELIG</th><th>SEED</th><th>COOLDOWN</th><th>MATCH</th></tr>'
+    +'</thead><tbody>';
+  var matches=0,total=0,mismatches=[];
+  for(var i=0;i<rows.length;i++){
+    var p=payouts[i];
+    var r=rows[i];
+    if(!r){
+      html+='<tr><td>#'+p.h+'</td><td colspan="8" style="color:var(--text3)">RPC failed (older node?)</td></tr>';
+      continue;
+    }
+    total++;
+    var chainWinner=p.addr||'';
+    var auditWinner=r.winner_address||'';
+    var ok=(chainWinner===auditWinner);
+    if(ok)matches++; else mismatches.push(p.h);
+    var minerShort=r.miner_address?(r.miner_address.substring(0,10)+'…'):'';
+    var chainShort=chainWinner?(chainWinner.substring(0,10)+'…'):'';
+    var auditShort=auditWinner?(auditWinner.substring(0,10)+'…'):'';
+    var seedShort=r.seed_hex?(r.seed_hex.substring(0,12)+'…'):'';
+    var cdCount=Array.isArray(r.cooldown_addresses)?r.cooldown_addresses.length:0;
+    var cdTitle=Array.isArray(r.cooldown_addresses)?r.cooldown_addresses.join('\n'):'';
+    var matchTag=ok
+      ? '<span style="color:#4ade80;font-weight:700">OK</span>'
+      : '<span style="color:#fb010d;font-weight:700">MISMATCH</span>';
+    html+='<tr style="border-bottom:1px solid #111">'
+      +'<td>#'+p.h+'</td>'
+      +'<td title="'+(r.miner_address||'')+'" style="font-family:monospace">'+minerShort+'</td>'
+      +'<td title="'+chainWinner+'" style="font-family:monospace">'+chainShort+'</td>'
+      +'<td title="'+auditWinner+'" style="font-family:monospace">'+auditShort+'</td>'
+      +'<td style="text-align:right">'+(typeof r.winner_index==='number'?r.winner_index:'-')+'</td>'
+      +'<td style="text-align:right">'+(r.eligible_count||0)+'</td>'
+      +'<td title="'+(r.seed_hex||'')+'\nseed_input: '+(r.seed_input_hex||'').substring(0,80)+'…" style="font-family:monospace;color:var(--purple)">'+seedShort+'</td>'
+      +'<td title="'+cdTitle+'" style="text-align:center">'+cdCount+'</td>'
+      +'<td style="text-align:center">'+matchTag+'</td>'
+      +'</tr>';
+  }
+  html+='</tbody></table>';
+  var summary='<div style="margin-top:6px;font-size:10px">'
+    +'<span style="color:'+(matches===total?'#4ade80':'#fb010d')+';font-weight:700">'
+    +matches+' / '+total+' blocks match consensus</span>';
+  if(mismatches.length){
+    summary+=' · <span style="color:#fb010d">mismatches at: #'+mismatches.join(', #')+'</span>';
+  }
+  summary+='</div>';
+  host.innerHTML=summary+html;
+};
 
 function openDetail(){
   var p=document.getElementById('detailPanel');
