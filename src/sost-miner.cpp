@@ -882,6 +882,42 @@ static std::atomic<int32_t> g_node_profile{0};        // latest profile from nod
 // Multi-threaded mining
 static int g_num_threads = 1;
 static std::atomic<bool> g_block_found{false};
+
+// V11 Phase 3 — Slingshot rebuild signal. Flipped to true by any worker
+// thread that detects the gate-2 threshold being crossed mid-search; the
+// outer loop in mine_one_block() observes this, aborts the candidate, and
+// returns false so the caller restarts mine_one_block() with a fresh
+// bits_q computed at the *current* wall-clock. This eliminates the
+// consensus divergence between miner-committed bits_q (computed at
+// template build time) and validator-expected bits_q (recomputed at
+// block.timestamp).
+static std::atomic<bool> g_slingshot_rebuild{false};
+
+// Helper extracted for unit testing of the gate-2 mid-search rebuild
+// predicate. Returns true iff a Slingshot rebuild should be triggered:
+//   gate1 was armed at template build time (prev_elapsed > threshold),
+//   gate2 was closed at template build time (so the miner committed a
+//   non-relieved bits_q), AND the current wall-clock has now crossed
+//   gate2 (now_t - tip.time > TARGET_SPACING). Pure function over its
+//   arguments + the chain tip — no globals — so the unit test can
+//   simulate any scenario.
+static inline bool should_rebuild_for_slingshot(
+    const std::vector<BlockMeta>& chain,
+    int64_t prev_elapsed,
+    bool gate2_at_start,
+    int64_t now_t)
+{
+    if (chain.empty()) return false;
+    int64_t height_after_tip = (int64_t)chain.size();  // h for the next block
+    bool gate1_armed = (height_after_tip >= sost::V11_SLINGSHOT_HEIGHT)
+                       && (prev_elapsed > sost::SLINGSHOT_THRESHOLD_SECONDS);
+    if (!gate1_armed) return false;
+    if (gate2_at_start) return false;  // already drop-applied at build
+    int64_t tip_time = chain.back().time;
+    if (now_t <= tip_time) return false;
+    int64_t cur = now_t - tip_time;
+    return cur > (int64_t)sost::TARGET_SPACING;
+}
 static std::atomic<uint64_t> g_total_attempts{0};  // global attempt counter for hashrate
 static std::mutex g_submit_mu;  // protects block submission
 
@@ -1019,6 +1055,29 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     // RPC override below pulls the node's authoritative diff (computed
     // with the node's wall-clock) which the miner adopts on mismatch.
     uint32_t bits_q = casert_next_bitsq(g_chain, h, std::time(nullptr));
+
+    // V11 Phase 3 — Slingshot mid-search rebuild watch. Snapshot gate
+    // state once at template build time. If gate-1 is armed but gate-2
+    // is still closed, the worker threads watch for gate-2 to flip and
+    // abort the candidate so we can recompute bits_q before submitting.
+    int64_t  ss_prev_elapsed = (g_chain.size() >= 2)
+                               ? (g_chain.back().time - g_chain[g_chain.size()-2].time)
+                               : 0;
+    bool ss_gate1_armed = (h >= sost::V11_SLINGSHOT_HEIGHT)
+                          && (ss_prev_elapsed > sost::SLINGSHOT_THRESHOLD_SECONDS);
+    int64_t start_now = std::time(nullptr);
+    int64_t ss_cur_at_start = (!g_chain.empty() && start_now > g_chain.back().time)
+                              ? (start_now - g_chain.back().time) : 0;
+    bool ss_gate2_at_start = (ss_cur_at_start > (int64_t)sost::TARGET_SPACING);
+    bool ss_watch = ss_gate1_armed && !ss_gate2_at_start;
+    g_slingshot_rebuild.store(false, std::memory_order_relaxed);
+
+    if (ss_gate1_armed) {
+        printf("[SLINGSHOT] gate-1 armed  prev_elapsed=%llds  bits_q=%u  watch=%d\n",
+               (long long)ss_prev_elapsed, bits_q, (int)ss_watch);
+        fflush(stdout);
+    }
+
     ConsensusParams params = get_consensus_params(prof, h);
     auto cdec = casert_compute(g_chain, h, std::time(nullptr));
 
@@ -1299,7 +1358,7 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                 uint32_t my_extra = 0;
                 // Each thread starts at nonce=tid and steps by g_num_threads
                 for (uint32_t n = (uint32_t)tid; ; n += (uint32_t)g_num_threads) {
-                    if (g_block_found || g_chain_advanced || g_lag_changed) return;
+                    if (g_block_found || g_chain_advanced || g_lag_changed || g_slingshot_rebuild) return;
 
                     // Thread-local timestamp. Clamp to min_valid_ts so post-
                     // TIMESTAMP_MTP_FORK_HEIGHT we never produce a candidate
@@ -1345,6 +1404,28 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                hashrate, stab_pct, my_target, effective_rate,
                                g_num_threads, elapsed_s);
                         fflush(stdout);
+
+                        // V11 Phase 3 — Slingshot gate-2 mid-search watch.
+                        // If gate 1 was armed at template build but gate 2
+                        // was still closed, our committed bits_q reflects
+                        // pre-relief difficulty. The moment current_elapsed
+                        // crosses TARGET_SPACING the validator's expected
+                        // bits_q drops by SLINGSHOT_DROP_BPS — we MUST
+                        // abort and rebuild on a fresh bits_q to avoid
+                        // submitting a block with a stale committed value.
+                        if (ss_watch && !g_slingshot_rebuild.load(std::memory_order_relaxed)) {
+                            int64_t now_t = std::time(nullptr);
+                            if (now_t > g_chain.back().time) {
+                                int64_t cur = now_t - g_chain.back().time;
+                                if (cur > (int64_t)sost::TARGET_SPACING) {
+                                    printf("[SLINGSHOT] gate-2 crossed during mining  current_elapsed=%llds  abort candidate, recompute bitsQ\n",
+                                           (long long)cur);
+                                    fflush(stdout);
+                                    g_slingshot_rebuild.store(true, std::memory_order_relaxed);
+                                    return;
+                                }
+                            }
+                        }
 
                         // Check if anti-stall changed the profile (when stability is 0%)
                         if (stab_pct < 1.0 && elapsed_s > 120 && !g_rpc_url.empty()) {
@@ -1483,6 +1564,18 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
 
         // Wait for all threads to finish
         for (auto& t : threads) t.join();
+
+        // V11 Phase 3 — Slingshot rebuild takes priority over a chain-advance
+        // race: if gate 2 crossed during this candidate, we must restart
+        // mine_one_block() so the next iteration recomputes bits_q with the
+        // post-relief value before any other recovery path runs.
+        if (g_slingshot_rebuild) {
+            printf("[SLINGSHOT] candidate aborted, retrying mine_one_block with fresh bits_q\n");
+            fflush(stdout);
+            g_slingshot_rebuild = false;
+            stop_block_monitor();
+            return false;  // caller's outer loop will retry mine_one_block
+        }
 
         // Check if chain advanced (abort)
         if (g_chain_advanced) {
@@ -1642,6 +1735,32 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     fflush(stdout);
                     diag_stable = 0; diag_target = 0; diag_total = 0;
                 }
+            }
+            // V11 Phase 3 — Slingshot gate-2 mid-search watch (single-thread).
+            // Mirror of the multi-thread logic: check periodically (every 200
+            // attempts, matching the worker-thread cadence) and abort the
+            // candidate if gate 2 has crossed.
+            if (ss_watch && (nonce % 200) == 0 && !g_slingshot_rebuild.load(std::memory_order_relaxed)) {
+                int64_t now_t = std::time(nullptr);
+                if (!g_chain.empty() && now_t > g_chain.back().time) {
+                    int64_t cur = now_t - g_chain.back().time;
+                    if (cur > (int64_t)sost::TARGET_SPACING) {
+                        printf("[SLINGSHOT] gate-2 crossed during mining  current_elapsed=%llds  abort candidate, recompute bitsQ\n",
+                               (long long)cur);
+                        fflush(stdout);
+                        g_slingshot_rebuild.store(true, std::memory_order_relaxed);
+                    }
+                }
+            }
+            // Slingshot rebuild takes priority over the chain-advance check
+            // so a mid-search relief crossing is handled cleanly even if the
+            // background monitor also flips g_chain_advanced.
+            if (g_slingshot_rebuild) {
+                printf("[SLINGSHOT] candidate aborted, retrying mine_one_block with fresh bits_q\n");
+                fflush(stdout);
+                g_slingshot_rebuild = false;
+                stop_block_monitor();
+                return false;
             }
             // Lag-adjust: profile changed, restart search
             if (g_lag_changed) {

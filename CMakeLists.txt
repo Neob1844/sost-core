@@ -228,6 +228,15 @@ add_executable(test-slingshot tests/test_slingshot.cpp)
 target_link_libraries(test-slingshot PRIVATE sost-core)
 add_test(NAME slingshot COMMAND test-slingshot)
 
+# V11 Phase 3 — Slingshot miner-side rebuild predicate. Verifies the
+# miner aborts the in-flight candidate the instant gate 2 crosses
+# during nonce search, so the next mine_one_block iteration can
+# recompute bits_q and avoid the consensus divergence between
+# miner-committed bits_q and validator-expected bits_q.
+add_executable(test-slingshot-miner-rebuild tests/test_slingshot_miner_rebuild.cpp)
+target_link_libraries(test-slingshot-miner-rebuild PRIVATE sost-core)
+add_test(NAME slingshot-miner-rebuild COMMAND test-slingshot-miner-rebuild)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
