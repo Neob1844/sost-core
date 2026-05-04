@@ -269,6 +269,24 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .ld::after{content:'_';animation:blink .6s step-end infinite}
 @keyframes blink{50%{opacity:0}}
 @keyframes miningPulse{0%,100%{opacity:1;color:#fbbf24}50%{opacity:.4;color:#fb923c}}
+/* Continuous red pulse for the PHASE 2 READY MINERS card while the post-fork
+   miner set is centralised (< 3 distinct addresses). Border + outer glow
+   throb in red while the card text itself stays blue, mirroring the visual
+   language of the AVG BLOCK TIME 'CONSENSUS' card but with motion. */
+@keyframes phase2CentralisedPulse{
+  0%,100%{
+    border-color:rgba(251,1,13,.55);
+    box-shadow:0 0 8px rgba(251,1,13,.28),inset 0 0 4px rgba(251,1,13,.10);
+  }
+  50%{
+    border-color:rgba(251,1,13,1);
+    box-shadow:0 0 22px rgba(251,1,13,.85),inset 0 0 10px rgba(251,1,13,.32);
+  }
+}
+.phase2-centralised-pulse{
+  border:2px solid rgba(251,1,13,.55);
+  animation:phase2CentralisedPulse 1.6s ease-in-out infinite;
+}
 .footer{text-align:center;padding:20px 24px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);letter-spacing:1px;position:relative;z-index:2}
 .footer a{color:var(--red)}
 .footer .pipe{color:var(--border2);margin:0 8px}
@@ -1905,14 +1923,22 @@ async function updateDashboard(info){
     var ph2count=Object.keys(ph2set).length;
     var ph2el=document.getElementById('dPhase2Miners');
     var ph2sub=document.getElementById('dPhase2MinersSub');
+    var ph2card=document.getElementById('phase2ReadyMinersCard');
     if(ph2el){
       ph2el.textContent=String(ph2count);
-      var ph2color=(ph2count>=3)?'#22c55e':(ph2count===2)?'#fbbf24':'#fb010d';
-      ph2el.style.color=ph2color;
+      // All text stays in the card's blue (#4488ff). Status is conveyed by
+      // the pulsing red border instead — applied via the class below — so the
+      // numbers themselves remain readable in any colour-blind setting.
       if(ph2sub){
         var ph2label=(ph2count>=3)?'healthy':(ph2count===2)?'thin':(ph2count===1)?'centralised':'no Phase 2 miners';
         ph2sub.textContent='since #7100 · '+ph2label;
-        ph2sub.style.color=ph2color;
+      }
+      if(ph2card){
+        // Pulse continuously in red while Phase 2 is centralised (< 3 distinct
+        // miners). Drop the class once the network reaches >= 3 distinct
+        // post-fork miners — at which point the card is just a flat blue card.
+        if(ph2count<3) ph2card.classList.add('phase2-centralised-pulse');
+        else            ph2card.classList.remove('phase2-centralised-pulse');
       }
     }
     // Update mining distribution card with top-3 share (288-window only)
