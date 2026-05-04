@@ -2386,33 +2386,66 @@ function drawSparkline(){
   ctx.beginPath();
   for(var i=0;i<len;i++){var x=(i/(len-1))*W,y=yPos(data[i].d);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
   ctx.strokeStyle='rgba(192,132,252,.8)';ctx.lineWidth=1.5;ctx.stroke();
-  // Dot markers — Slingshot-active blocks rendered in magenta with a halo.
+  // Slingshot-active block detection — pre-pass collects indices, then we
+  // render the visual cues in three layers so the marker survives over the
+  // purple line and the fill gradient.
   // Detection per block i (oldest-first array):
   //   gate 1: prev block's interval > 1800 s
   //   gate 2: this block's own interval > 600 s
   //   height: this block at >= V11_SLINGSHOT_HEIGHT (= 7000)
   var SS_HEIGHT=7000, SS_T1=1800, SS_T2=600;
-  var ssCount=0;
+  var ssIndices=[];
+  for(var ii=0;ii<len;ii++){
+    if(ii>=2 && data[ii].h>=SS_HEIGHT){
+      var prevInt = data[ii-1].t - data[ii-2].t;
+      var thisInt = data[ii].t   - data[ii-1].t;
+      if(prevInt>SS_T1 && thisInt>SS_T2) ssIndices.push(ii);
+    }
+  }
+  // Layer A — vertical magenta accent line full height (subtle but unmissable).
+  if(ssIndices.length>0){
+    ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,0,255,.28)';
+    for(var sk=0;sk<ssIndices.length;sk++){
+      var sx=(ssIndices[sk]/(len-1))*W;
+      ctx.beginPath();ctx.moveTo(sx,pad);ctx.lineTo(sx,Hc-pad);ctx.stroke();
+    }
+  }
+  // Dot markers — purple for normal, magenta with glow + white outline for Slingshot.
+  var ssSet={};for(var ssi=0;ssi<ssIndices.length;ssi++)ssSet[ssIndices[ssi]]=true;
   for(var i=0;i<len;i++){
     var x=(i/(len-1))*W,y=yPos(data[i].d);
-    var fired=false;
-    if(i>=2 && data[i].h>=SS_HEIGHT){
-      var prevInt = data[i-1].t - data[i-2].t;
-      var thisInt = data[i].t   - data[i-1].t;
-      if(prevInt>SS_T1 && thisInt>SS_T2) fired=true;
-    }
-    if(fired){
-      ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,0,255,.18)';ctx.fill();
-      ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);
+    if(ssSet[i]){
+      // Outer glow
+      ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,0,255,.10)';ctx.fill();
+      // Mid glow
+      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,0,255,.32)';ctx.fill();
+      // Solid core
+      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);
       ctx.fillStyle='#ff00ff';ctx.fill();
-      ssCount++;
+      // White outline for contrast against the purple line
+      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1;ctx.stroke();
     }else{
       ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);
       ctx.fillStyle='rgba(192,132,252,.5)';ctx.fill();
     }
   }
-  window._sparkSsCount=ssCount;
+  // Layer C — small magenta triangle at the top of the chart pointing at the
+  // Slingshot block, so the marker is detectable even at a glance.
+  if(ssIndices.length>0){
+    ctx.fillStyle='#ff00ff';
+    for(var tk=0;tk<ssIndices.length;tk++){
+      var tx=(ssIndices[tk]/(len-1))*W;
+      ctx.beginPath();
+      ctx.moveTo(tx-4, pad-1);
+      ctx.lineTo(tx+4, pad-1);
+      ctx.lineTo(tx,   pad+5);
+      ctx.closePath();ctx.fill();
+    }
+  }
+  window._sparkSsCount=ssIndices.length;
   var last=data[len-1],first=data[0];
   var change=(first.d>0)?((last.d-first.d)/first.d*100).toFixed(1):'0.0';
   var arrow=last.d>=first.d?'\u25B2':'\u25BC';
