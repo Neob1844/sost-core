@@ -452,6 +452,112 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
      banner below, which carries the same 'how to upgrade' instructions
      plus the post-fork incident context. -->
 
+<!-- ============== V12 HARDFORK COUNTDOWN BANNER — activates at block 7350 ============== -->
+<div id="v12CountdownBanner" class="v12-countdown-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
+<div style="background:linear-gradient(180deg,rgba(251,1,13,.10),rgba(0,0,0,.18));border:2px solid #fb010d;border-left:6px solid #fb010d;border-radius:4px;padding:14px 18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px">⚡ SOST V12 HARDFORK — ACTIVATION AT BLOCK 7,350</span>
+      <span class="phase2-centralised-pulse" style="background:rgba(251,1,13,.15);color:#fb010d;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ ALL OPERATORS: UPDATE BEFORE 7,350</span>
+    </div>
+    <button id="v12BannerToggle" onclick="toggleV12Banner()" style="background:rgba(251,1,13,.12);border:1px solid rgba(251,1,13,.65);color:#fecaca;cursor:pointer;font-family:var(--code);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px">COLLAPSE</button>
+  </div>
+  <div id="v12BannerBody" style="color:var(--text);font-size:12px;line-height:1.65">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:11px;margin-bottom:12px">
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(251,1,13,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">CURRENT HEIGHT</div><div id="v12CurH" style="color:#fb010d;font-weight:700;font-size:14px">—</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(251,1,13,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">ACTIVATION</div><div style="color:#fb010d;font-weight:700;font-size:14px">#7,350</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(251,1,13,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">BLOCKS LEFT</div><div id="v12BlocksLeft" style="color:#fb010d;font-weight:700;font-size:14px">—</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(251,1,13,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">EST. TIME LEFT</div><div id="v12EtaLeft" style="color:#fb010d;font-weight:700;font-size:14px">—</div></div>
+    </div>
+
+    <div style="color:#fb010d;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ WHAT V12 CHANGES</div>
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li><b>cASERT profile ceiling raised H13 → H20</b> — gives the equalizer 7 more profiles of headroom for transient hashrate spikes.</li>
+      <li><b>Triangular cascade extended to 7 steps</b> (max drop 28). Cascade still reaches E7 floor from the new H20 ceiling within 900 s.</li>
+      <li><b>Slingshot redesign: same-block, single-gate, 4 tiers</b>:
+        <code>14&nbsp;min → −6.5%</code>,
+        <code>29&nbsp;min → −12.5%</code>,
+        <code>59&nbsp;min → −25%</code>,
+        <code>119&nbsp;min → −37.5%</code>.
+        Self-resetting per block — no compounding.</li>
+      <li><b>Capsule activation lowered to #7,350</b> — on-chain messages become valid simultaneously with the fork (down from #10,000).</li>
+    </ul>
+
+    <div style="color:#fb010d;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ HOW TO UPGRADE</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd &lt;your sost-core directory&gt;
+git pull --ff-only origin main
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+make -j$(nproc) sost-node sost-miner
+sudo systemctl restart sost-node
+
+# If you mine, also restart the miner with wallet-backed signing
+pkill -9 -f sost-miner 2&gt;/dev/null || true
+./sost-miner \
+  --wallet YOUR_WALLET.json \
+  --mining-key-label YOUR_LABEL \
+  --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS \
+  --blocks 999999 --profile mainnet --threads N</pre>
+    <div style="font-size:11.5px;color:var(--text);line-height:1.7">
+      Verify your binary loaded V12 by checking the startup log — look for the "<code>SOST V12 HARDFORK -- ACTIVATION AT BLOCK 7350</code>" notice on every <code>sost-node</code> / <code>sost-miner</code> launch. Once your local height crosses 7,350 the notice flips to a one-line "<code>[V12] active</code>" confirmation.
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  function fmtEta(blocks){
+    var sec = blocks * 600;
+    var d = Math.floor(sec/86400);
+    var h = Math.floor((sec%86400)/3600);
+    var m = Math.floor((sec%3600)/60);
+    if (d>0) return d+'d '+h+'h';
+    if (h>0) return h+'h '+m+'m';
+    return m+'m';
+  }
+  function update(){
+    try{
+      var hEl = document.getElementById('dHeight');
+      if(!hEl) return;
+      var raw = (hEl.textContent||'').replace(/[^0-9]/g,'');
+      if(!raw) return;
+      var h = parseInt(raw,10);
+      if(!isFinite(h)) return;
+      var V12 = 7350;
+      var bn = document.getElementById('v12CountdownBanner');
+      if (h >= V12) { if(bn) bn.style.display = 'none'; return; }
+      if(bn) bn.style.display = '';
+      var elH = document.getElementById('v12CurH');
+      var elL = document.getElementById('v12BlocksLeft');
+      var elE = document.getElementById('v12EtaLeft');
+      if (elH) elH.textContent = '#'+h.toLocaleString();
+      if (elL) elL.textContent = (V12 - h).toLocaleString();
+      if (elE) elE.textContent = fmtEta(V12 - h);
+    }catch(e){}
+  }
+  setInterval(update, 4000);
+  setTimeout(update, 1500);
+})();
+function toggleV12Banner(){
+  var body = document.getElementById('v12BannerBody');
+  var btn  = document.getElementById('v12BannerToggle');
+  if(!body) return;
+  var open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  if(btn) btn.textContent = open ? 'COLLAPSE' : 'EXPAND';
+  try{ localStorage.setItem('sost_v12_banner_collapsed', open ? '0' : '1'); }catch(e){}
+}
+(function initV12Banner(){
+  var body = document.getElementById('v12BannerBody');
+  var btn  = document.getElementById('v12BannerToggle');
+  if(!body) return;
+  var collapsed = false;
+  try{ collapsed = localStorage.getItem('sost_v12_banner_collapsed') === '1'; }catch(e){}
+  body.style.display = collapsed ? 'none' : '';
+  if(btn) btn.textContent = collapsed ? 'EXPAND' : 'COLLAPSE';
+})();
+</script>
+
 <!-- ============== PHASE 2 RESUMED BANNER — block 7100 incident resolved ============== -->
 <div class="phase2-resolved-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
 <div style="background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(0,0,0,.18));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:4px;padding:14px 18px">
