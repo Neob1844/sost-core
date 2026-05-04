@@ -237,6 +237,28 @@ add_executable(test-slingshot-miner-rebuild tests/test_slingshot_miner_rebuild.c
 target_link_libraries(test-slingshot-miner-rebuild PRIVATE sost-core)
 add_test(NAME slingshot-miner-rebuild COMMAND test-slingshot-miner-rebuild)
 
+# V12 hard fork — cASERT profile ceiling H13→H20 + 7-step triangular cascade
+add_executable(test-casert-v12-ceiling tests/test_casert_v12_ceiling.cpp)
+target_link_libraries(test-casert-v12-ceiling PRIVATE sost-core)
+add_test(NAME casert-v12-ceiling COMMAND test-casert-v12-ceiling)
+
+# V12 hard fork — same-block 4-tier Slingshot ladder (current_elapsed only)
+add_executable(test-slingshot-v12-tier tests/test_slingshot_v12_tier.cpp)
+target_link_libraries(test-slingshot-v12-tier PRIVATE sost-core)
+add_test(NAME slingshot-v12-tier COMMAND test-slingshot-v12-tier)
+
+# V12 hard fork — capsule activation height moved 10000 → 7350
+add_executable(test-capsule-v12-activation tests/test_capsule_v12_activation.cpp)
+target_link_libraries(test-capsule-v12-activation PRIVATE sost-core)
+add_test(NAME capsule-v12-activation COMMAND test-capsule-v12-activation)
+
+# V12 hard fork — timestamp manipulation safety audit. Pins drift cap,
+# tier spacings, and MTP/min_delta heights so any future change to these
+# constants surfaces as a test failure forcing re-audit.
+add_executable(test-slingshot-v12-timestamp-safety tests/test_slingshot_v12_timestamp_safety.cpp)
+target_link_libraries(test-slingshot-v12-timestamp-safety PRIVATE sost-core)
+add_test(NAME slingshot-v12-timestamp-safety COMMAND test-slingshot-v12-timestamp-safety)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
