@@ -517,6 +517,149 @@ bool Wallet::create_transaction(
 }
 
 // =============================================================================
+// sendmany — single tx, N outputs, one input set, one change output.
+//
+// Mirrors create_transaction() above but accepts a recipient vector instead
+// of a single (addr, amount) pair. Output ordering: recipients in input
+// order, then change output (if any) appended last. Constitutional UTXO
+// guard preserved (gold vault / popc pool never spent).
+// =============================================================================
+bool Wallet::create_transaction_many(
+    const std::vector<Recipient>& recipients,
+    int64_t fee,
+    const Hash256& genesis_hash,
+    Transaction& out_tx,
+    int64_t chain_height,
+    std::string* err)
+{
+    if (recipients.empty()) {
+        if (err) *err = "no recipients";
+        return false;
+    }
+    if (fee < 0) {
+        if (err) *err = "fee must be non-negative";
+        return false;
+    }
+
+    // Decode all destination addresses up front.
+    std::vector<PubKeyHash> to_pkhs;
+    to_pkhs.reserve(recipients.size());
+    int64_t total_out = 0;
+    for (size_t i = 0; i < recipients.size(); ++i) {
+        const auto& r = recipients[i];
+        if (r.amount <= 0) {
+            if (err) {
+                char buf[128];
+                snprintf(buf, sizeof(buf),
+                    "recipient %zu (%s): amount must be positive",
+                    i, r.address.c_str());
+                *err = buf;
+            }
+            return false;
+        }
+        PubKeyHash pkh{};
+        if (!address_decode(r.address, pkh)) {
+            if (err) *err = "invalid destination address: " + r.address;
+            return false;
+        }
+        to_pkhs.push_back(pkh);
+        total_out += r.amount;
+    }
+
+    int64_t needed = total_out + fee;
+
+    // Select UTXOs (oldest first) — maturity-aware, constitutional-aware.
+    auto unspent = list_unspent(chain_height);
+    std::vector<size_t> selected;
+    int64_t total_in = 0;
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
+        if (!find_key_by_pkh(u.pkh)) continue;
+        std::string utxo_addr = address_encode(u.pkh);
+        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
+            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
+        selected.push_back(i);
+        total_in += u.amount;
+        if (total_in >= needed) break;
+    }
+
+    if (total_in < needed) {
+        if (err) {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                "insufficient funds: have %lld.%08lld SOST, need %lld.%08lld SOST "
+                "(%zu recipients + fee)",
+                (long long)(total_in / 100000000LL),
+                (long long)(total_in % 100000000LL),
+                (long long)(needed / 100000000LL),
+                (long long)(needed % 100000000LL),
+                recipients.size());
+            *err = buf;
+        }
+        return false;
+    }
+
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = 0x00;  // TRANSFER
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        TxInput inp{};
+        inp.prev_txid  = u.txid;
+        inp.prev_index = u.vout;
+        out_tx.inputs.push_back(inp);
+    }
+
+    // Outputs 0..N-1: recipients in declared order.
+    for (size_t i = 0; i < recipients.size(); ++i) {
+        TxOutput out{};
+        out.amount = recipients[i].amount;
+        out.type   = 0x00;
+        out.pubkey_hash = to_pkhs[i];
+        out_tx.outputs.push_back(out);
+    }
+
+    // Optional change output appended last → first input's address.
+    int64_t change = total_in - needed;
+    if (change > 0) {
+        const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        if (!change_key) {
+            if (err) *err = "internal error: no key for change address";
+            return false;
+        }
+        TxOutput out{};
+        out.amount = change;
+        out.type   = 0x00;
+        out.pubkey_hash = change_key->pkh;
+        out_tx.outputs.push_back(out);
+    }
+
+    // Sign each input.
+    for (size_t i = 0; i < selected.size(); ++i) {
+        const auto& u = unspent[selected[i]];
+        const WalletKey* key = find_key_by_pkh(u.pkh);
+        if (!key) {
+            if (err) *err = "no private key for UTXO";
+            return false;
+        }
+        SpentOutput spent;
+        spent.amount = u.amount;
+        spent.type   = u.output_type;
+        if (!SignTransactionInput(out_tx, i, spent, genesis_hash, key->privkey, err)) {
+            return false;
+        }
+    }
+
+    for (size_t idx : selected) {
+        const auto& u = unspent[idx];
+        mark_spent(u.txid, u.vout);
+    }
+
+    return true;
+}
+
+// =============================================================================
 // Bond/Escrow transaction creation
 // =============================================================================
 

@@ -89,6 +89,25 @@ public:
         int64_t chain_height = -1,       // maturity filter
         std::string* err = nullptr);
 
+    // sendmany: single TRANSFER tx with N outputs (one per recipient).
+    // Caller passes a vector of (address, amount) pairs. Change (if any)
+    // is appended as one extra output to the first input's address.
+    // Total tx size must stay below MAX_TX_BYTES_CONSENSUS — caller is
+    // responsible for sizing the recipient list (a 1MB block / 100KB tx
+    // can hold ~3000 recipients). Returns false if total > balance,
+    // any address invalid, or signing fails.
+    struct Recipient {
+        std::string address;
+        int64_t     amount;   // in stocks
+    };
+    bool create_transaction_many(
+        const std::vector<Recipient>& recipients,
+        int64_t fee,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
     // v1.4: create BOND_LOCK transaction (locks funds until lock_until height)
     bool create_bond_transaction(
         int64_t amount,

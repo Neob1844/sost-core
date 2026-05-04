@@ -1128,6 +1128,177 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
+    // sendmany <addr1>:<amount1> <addr2>:<amount2> ...
+    //
+    // Single TRANSFER tx with N outputs. No recipient cap — bounded only
+    // by MAX_TX_BYTES_CONSENSUS (100 KB → ~3000 recipients). One signed
+    // input set, one change output (if any), atomic broadcast.
+    // =====================================================================
+    if (cmd == "sendmany") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli sendmany <addr1>:<amount1> [<addr2>:<amount2> ...]\n");
+            fprintf(stderr, "  Single tx with N outputs. Address and amount separated by ':'.\n");
+            fprintf(stderr, "  Amount is SOST (decimal).\n");
+            fprintf(stderr, "\nExamples:\n");
+            fprintf(stderr, "  sost-cli sendmany sost1abc:5 sost1def:10\n");
+            fprintf(stderr, "  sost-cli sendmany sost1abc:0.5 sost1def:0.5 sost1ghi:0.5 sost1jkl:0.5\n");
+            return 1;
+        }
+
+        std::vector<sost::Wallet::Recipient> recipients;
+        int64_t total_amount = 0;
+        for (int i = arg_start + 1; i < argc; ++i) {
+            std::string a(argv[i]);
+            auto colon = a.rfind(':');
+            if (colon == std::string::npos || colon == 0 || colon == a.size() - 1) {
+                fprintf(stderr, "Error: recipient '%s' must be <address>:<amount>\n", argv[i]);
+                return 1;
+            }
+            sost::Wallet::Recipient r;
+            r.address = a.substr(0, colon);
+            r.amount  = parse_amount(a.substr(colon + 1).c_str());
+            if (r.amount <= 0) {
+                fprintf(stderr, "Error: recipient %d (%s) amount must be positive\n",
+                        i - arg_start, r.address.c_str());
+                return 1;
+            }
+            recipients.push_back(r);
+            total_amount += r.amount;
+        }
+
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) {
+            fprintf(stderr, "Error: cannot connect to node at %s:%d\n",
+                    g_node_host.c_str(), g_node_port);
+            return 1;
+        }
+        printf("Chain height: %lld\n", (long long)chain_height);
+
+        w.clear_utxos();
+        int synced = sync_wallet_utxos_from_node(w);
+        if (synced > 0) {
+            printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
+        } else if (w.num_utxos() == 0) {
+            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", w.default_address().c_str());
+            return 1;
+        }
+
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
+
+        // Two-pass fee calculation (same as send).
+        int64_t est_fee = MIN_FEE_STOCKS;
+        sost::Transaction tx;
+        std::string err;
+        if (!w.create_transaction_many(recipients, est_fee, genesis_hash,
+                                       tx, chain_height, &err)) {
+            fprintf(stderr, "Error: %s\n", err.c_str());
+            return 1;
+        }
+        std::vector<sost::Byte> raw;
+        std::string ser_err;
+        if (!tx.Serialize(raw, &ser_err)) {
+            fprintf(stderr, "Error serializing: %s\n", ser_err.c_str());
+            return 1;
+        }
+        int64_t real_fee = calculate_fee((int64_t)raw.size());
+        if (real_fee != est_fee) {
+            sost::Transaction tx2;
+            if (!w.create_transaction_many(recipients, real_fee, genesis_hash,
+                                           tx2, chain_height, &err)) {
+                fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
+                return 1;
+            }
+            tx = tx2;
+            raw.clear();
+            tx.Serialize(raw, &ser_err);
+            int64_t final_fee = calculate_fee((int64_t)raw.size());
+            if (final_fee > real_fee) {
+                sost::Transaction tx3;
+                if (!w.create_transaction_many(recipients, final_fee, genesis_hash,
+                                               tx3, chain_height, &err)) {
+                    fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
+                    return 1;
+                }
+                tx = tx3;
+                raw.clear();
+                tx.Serialize(raw, &ser_err);
+                real_fee = final_fee;
+            } else {
+                real_fee = final_fee;
+            }
+        }
+
+        // Refuse to broadcast a tx larger than consensus limit.
+        if ((int32_t)raw.size() > sost::MAX_TX_BYTES_CONSENSUS) {
+            fprintf(stderr,
+                "Error: tx size %zu bytes exceeds MAX_TX_BYTES_CONSENSUS (%d). "
+                "Split the recipient list into multiple sendmany calls.\n",
+                raw.size(), sost::MAX_TX_BYTES_CONSENSUS);
+            return 1;
+        }
+
+        if (!w.save(wallet_path, &err)) {
+            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
+        }
+
+        std::string raw_hex = to_hex(raw.data(), raw.size());
+        sost::Hash256 txid;
+        tx.ComputeTxId(txid);
+
+        printf("\n========== SENDMANY SUMMARY ==========\n");
+        printf("  TXID:        %s\n", to_hex(txid.data(), 32).c_str());
+        printf("  Recipients:  %zu\n", recipients.size());
+        for (size_t i = 0; i < recipients.size(); ++i) {
+            printf("    %2zu. %s  %s SOST\n",
+                   i + 1, recipients[i].address.c_str(),
+                   format_sost(recipients[i].amount).c_str());
+        }
+        printf("  Total out:   %s SOST\n", format_sost(total_amount).c_str());
+        printf("  Fee:         %s SOST (%zu bytes x %lld stock/byte)\n",
+               format_sost(real_fee).c_str(), raw.size(), (long long)g_fee_rate);
+        printf("  Size:        %zu bytes\n", raw.size());
+        printf("======================================\n");
+
+        if (!g_yes_flag) {
+            printf("Confirm sendmany? [yes/no]: ");
+            fflush(stdout);
+            char confirm[16] = {};
+            if (!fgets(confirm, sizeof(confirm), stdin) ||
+                (strncmp(confirm, "yes", 3) != 0 && strncmp(confirm, "y", 1) != 0)) {
+                printf("Transaction cancelled.\n");
+                return 0;
+            }
+        }
+
+        // Broadcast.
+        printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);
+        std::string resp = rpc_call("sendrawtransaction",
+                                    "[\"" + raw_hex + "\"]");
+        if (resp.find("\"result\":\"") != std::string::npos) {
+            printf("\nTX accepted by node! Txid: %s\n",
+                   to_hex(txid.data(), 32).c_str());
+            printf("  Waiting for next mined block to confirm...\n");
+            return 0;
+        }
+        if (resp.find("401") != std::string::npos) {
+            fprintf(stderr, "\nTX rejected: 401 Unauthorized\n");
+            fprintf(stderr, "  Use: --rpc-user <user> --rpc-pass <pass>\n");
+            return 1;
+        }
+        auto err_pos = resp.find("\"message\":\"");
+        if (err_pos != std::string::npos) {
+            auto err_end = resp.find('"', err_pos + 11);
+            std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
+            fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
+        } else {
+            fprintf(stderr, "\nTX rejected (unknown error)\n");
+            fprintf(stderr, "  Raw response: %s\n", resp.c_str());
+        }
+        return 1;
+    }
+
+    // =====================================================================
     // create-bond <amount_sost> <lock_blocks>
     // =====================================================================
     if (cmd == "create-bond") {
