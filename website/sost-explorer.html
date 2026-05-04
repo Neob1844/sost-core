@@ -1847,13 +1847,16 @@ async function renderDTDPanel(body,title,silent){
       summary+='</div>';
     }
     summary+='<div id="dtdTableHost"></div>';
-    summary+='<div style="margin-top:18px;background:rgba(0,0,0,.3);border:1px solid var(--border);padding:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-        +'<div style="font-size:10px;letter-spacing:2px;color:var(--text3)">// LOTTERY AUDIT — reproduce on-chain selection per PAYOUT block</div>'
-        +'<button class="btn btn-small" onclick="loadLotteryAudit()" style="font-size:10px">Run audit</button>'
+    summary+='<div style="margin-top:18px;background:linear-gradient(180deg,rgba(168,85,247,.06),rgba(0,0,0,.25));border:1px solid rgba(168,85,247,.35);border-left:4px solid #a855f7;padding:14px 16px;border-radius:3px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:10px;flex-wrap:wrap">'
+        +'<div style="flex:1;min-width:220px">'
+          +'<div style="font-size:14px;font-weight:800;color:#a855f7;letter-spacing:1px;margin-bottom:3px">🔍 LOTTERY AUDIT</div>'
+          +'<div style="font-size:9px;letter-spacing:1.5px;color:var(--text3)">REPRODUCE ON-CHAIN SELECTION PER PAYOUT BLOCK</div>'
+        +'</div>'
+        +'<button id="lotteryAuditBtn" onclick="loadLotteryAudit()" style="font-size:13px;font-weight:700;letter-spacing:1.5px;background:#a855f7;color:#fff;border:0;padding:10px 22px;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35);transition:transform .12s ease,box-shadow .12s ease" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 0 0 1px #a855f7,0 4px 18px rgba(168,85,247,.55)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35)\'">▶ RUN AUDIT</button>'
       +'</div>'
-      +'<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-bottom:8px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b>Audit winner</b> differs from <b>On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the previous 5 blocks — those addresses are excluded from the lottery for THIS height. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
-      +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b>Run audit</b> to scan all PAYOUT blocks</div>'
+      +'<div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b style="color:#fb010d">Audit winner</b> differs from <b style="color:#22c55e">On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the previous 5 blocks — those addresses are excluded from THIS lottery. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
+      +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b style="color:#a855f7">▶ RUN AUDIT</b> to scan all PAYOUT blocks</div>'
     +'</div>';
     body.innerHTML=summary;
     // Stash payouts list so the audit knows which heights to scan.
@@ -1905,7 +1908,12 @@ window.loadLotteryAudit = async function(){
 
   var AUDIT_CONCURRENCY=8;
   var total=payouts.length;
-  var done=0,matches=0,mismatches=[];
+  // Track three outcomes separately so the summary can distinguish
+  // "audit verified the selection" (matches/mismatches) from "audit
+  // could not even run" (rpcFails). A node that lacks getlotteryaudit
+  // returns errors for every height; that must NOT read as "all 94
+  // mismatches" — it reads as "audit unavailable, restart with V12".
+  var done=0,matches=0,mismatches=[],rpcFails=0;
   var rowsByH={};
 
   // Pre-render skeleton table; rows fill in as RPCs complete.
@@ -1920,7 +1928,8 @@ window.loadLotteryAudit = async function(){
 
   function buildRow(p,r){
     if(!r){
-      return '<tr data-h="'+p.h+'"><td>#'+p.h+'</td><td colspan="8" style="color:var(--text3)">RPC failed (older node?)</td></tr>';
+      rpcFails++;
+      return '<tr data-h="'+p.h+'"><td>#'+p.h+'</td><td colspan="8" style="color:#fbbf24">RPC unavailable — node missing getlotteryaudit (restart with V12 build)</td></tr>';
     }
     var chainWinner=p.addr||'';
     var auditWinner=r.winner_address||'';
@@ -1974,10 +1983,23 @@ window.loadLotteryAudit = async function(){
   await Promise.all(workers);
 
   if(statusEl){
-    var col=(matches===total)?'#4ade80':'#fb010d';
-    var msg='<span style="color:'+col+';font-weight:700">'+matches+' / '+total+' blocks match consensus</span>';
-    if(mismatches.length){
-      msg+=' · <span style="color:#fb010d">mismatches at: #'+mismatches.join(', #')+'</span>';
+    var verified=matches+mismatches.length;       // blocks the RPC actually answered
+    var msg;
+    if(verified===0 && rpcFails===total){
+      // Every RPC failed — audit could not run. Tell the user *that*,
+      // don't say "0/94 match" which sounds like 94 mismatches.
+      msg='<span style="color:#fbbf24;font-weight:700">⚠ AUDIT UNAVAILABLE</span> '
+        +'<span style="color:var(--text3)">— node returned no <code>getlotteryaudit</code> for any of '+total+' PAYOUT blocks. '
+        +'The node is probably running a pre-V12 binary; restart with the latest build to enable on-chain lottery auditing.</span>';
+    } else {
+      var col=(matches===verified && verified>0)?'#4ade80':'#fb010d';
+      msg='<span style="color:'+col+';font-weight:700">'+matches+' / '+verified+' blocks match consensus</span>';
+      if(mismatches.length){
+        msg+=' · <span style="color:#fb010d;font-weight:700">MISMATCH at: #'+mismatches.join(', #')+'</span>';
+      }
+      if(rpcFails>0){
+        msg+=' · <span style="color:#fbbf24">'+rpcFails+' RPC failure'+(rpcFails===1?'':'s')+' (skipped)</span>';
+      }
     }
     statusEl.innerHTML=msg;
   }
