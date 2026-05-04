@@ -719,14 +719,26 @@ document.addEventListener('DOMContentLoaded', () => {
       <p class="subtitle">Construct and broadcast a transaction</p>
 
       <div class="card">
-        <div class="form-group">
-          <label class="form-label">Recipient Address</label>
-          <input type="text" id="sendTo" class="form-input" placeholder="sost1..." oninput="checkAddressBook()">
-          <div id="sendAddrInfo" style="margin-top:6px;font-size:12px;display:none"></div>
+        <div id="recipientRows">
+          <!-- Row 0 keeps the legacy ids sendTo / sendAmount so the
+               single-recipient path and the address-book lookup stay
+               wired without touching downstream code. Extra rows have
+               recipient-row-N ids and feed sendmany. -->
+          <div class="recipient-row" data-row="0">
+            <div class="form-group">
+              <label class="form-label">Recipient Address</label>
+              <input type="text" id="sendTo" class="form-input" placeholder="sost1..." oninput="checkAddressBook()">
+              <div id="sendAddrInfo" style="margin-top:6px;font-size:12px;display:none"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount (SOST)</label>
+              <input type="text" id="sendAmount" class="form-input" placeholder="0.00000000">
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Amount (SOST)</label>
-          <input type="text" id="sendAmount" class="form-input" placeholder="0.00000000">
+        <div class="form-group" style="margin-top:-4px">
+          <button type="button" class="btn btn-small" onclick="addRecipientRow()" style="font-size:11px">+ Add recipient</button>
+          <span style="font-size:11px;color:var(--text-dim);margin-left:8px">Single tx, all recipients atomic. Capsule disabled when &gt;1 recipient.</span>
         </div>
         <div class="form-group">
           <label class="form-label">Fee Mode</label>
@@ -1863,6 +1875,165 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
 }
 
 // ============================================================
+// buildAndSignManyTx — sendmany variant.
+// Same SOST tx format as buildAndSignTx, but accepts an array of
+// { address, amount } recipients. One signed input set, N recipient
+// outputs in declared order, optional change output to changeAddr.
+// ============================================================
+async function buildAndSignManyTx(utxos, recipients, feeStocks, changeAddr) {
+  if (!Array.isArray(recipients) || recipients.length === 0) {
+    throw new Error('No recipients');
+  }
+  let totalOut = 0;
+  for (const r of recipients) {
+    if (!r.address || !validateAddress(r.address)) {
+      throw new Error('Invalid recipient address: ' + (r.address || ''));
+    }
+    if (!Number.isFinite(r.amount) || r.amount <= 0) {
+      throw new Error('Recipient amount must be positive: ' + r.address);
+    }
+    totalOut += r.amount;
+  }
+
+  // Coin selection (smallest-first, same as single-recipient path).
+  const sorted = [...utxos].sort((a, b) => a.amount - b.amount);
+  const selected = [];
+  let total = 0;
+  for (const u of sorted) {
+    selected.push(u);
+    total += u.amount;
+    if (total >= totalOut + feeStocks) break;
+  }
+  if (total < totalOut + feeStocks) throw new Error('Insufficient funds');
+
+  const change = total - totalOut - feeStocks;
+  const txOutputs = recipients.map(r => ({
+    address: r.address, amount: r.amount, type: 0x00
+  }));
+  if (change > 0) txOutputs.push({ address: changeAddr, amount: change, type: 0x00 });
+
+  const privKeyBytes = hexToBytes(wallet.privKey);
+  const pubKeyBytes  = hexToBytes(wallet.pubKey);
+  const genesisBytes = hexToBytes(GENESIS_HASH);
+
+  const hpParts = [];
+  for (const u of selected) {
+    hpParts.push(hexToBytes(u.txid));
+    hpParts.push(writeU32LE(u.vout));
+  }
+  const hashPrevouts = doubleSha256(concatBytes(...hpParts));
+
+  const hoParts = [];
+  for (const out of txOutputs) {
+    hoParts.push(writeU64LE(out.amount));
+    hoParts.push(new Uint8Array([out.type]));
+    hoParts.push(addressToPKH(out.address));
+    hoParts.push(new Uint8Array([0x00]));
+  }
+  const hashOutputs = doubleSha256(concatBytes(...hoParts));
+
+  const signatures = [];
+  for (let i = 0; i < selected.length; i++) {
+    const u = selected[i];
+    const spentType = u.output_type || u.type || 0x00;
+    const preimage = concatBytes(
+      writeU32LE(1),
+      new Uint8Array([0x00]),
+      hashPrevouts,
+      hexToBytes(u.txid),
+      writeU32LE(u.vout),
+      writeU64LE(u.amount),
+      new Uint8Array([spentType]),
+      hashOutputs,
+      genesisBytes
+    );
+    const hash = doubleSha256(preimage);
+    const sig = secp.sign(hash, wallet.privKey, { lowS: true });
+    signatures.push(sig.toCompactRawBytes());
+  }
+
+  const parts = [];
+  parts.push(writeU32LE(1));
+  parts.push(new Uint8Array([0x00]));
+  parts.push(encodeVarInt(selected.length));
+  for (let i = 0; i < selected.length; i++) {
+    const u = selected[i];
+    parts.push(hexToBytes(u.txid));
+    parts.push(writeU32LE(u.vout));
+    parts.push(signatures[i]);
+    parts.push(pubKeyBytes);
+  }
+  parts.push(encodeVarInt(txOutputs.length));
+  for (const out of txOutputs) {
+    parts.push(writeU64LE(out.amount));
+    parts.push(new Uint8Array([out.type]));
+    parts.push(addressToPKH(out.address));
+    parts.push(new Uint8Array([0x00, 0x00]));
+  }
+
+  const rawTx = bytesToHex(concatBytes(...parts));
+  console.log('[TX-MANY] Raw SOST TX:', rawTx.substring(0, 80) + '... (' + rawTx.length/2 + ' bytes, ' + recipients.length + ' recipients)');
+  return { rawTx, selected, totalOut, change };
+}
+
+// addRecipientRow() — UI helper for sendmany. Clones a recipient
+// pair (address + amount) below the existing rows. Each extra row
+// gets a remove (✕) button. Does not change the legacy row 0 ids.
+window.addRecipientRow = function() {
+  const wrap = document.getElementById('recipientRows');
+  if (!wrap) return;
+  const idx = wrap.querySelectorAll('.recipient-row').length;
+  const row = document.createElement('div');
+  row.className = 'recipient-row';
+  row.dataset.row = String(idx);
+  row.style.borderTop = '1px solid #222';
+  row.style.paddingTop = '10px';
+  row.style.marginTop  = '10px';
+  row.innerHTML =
+    '<div class="form-group">' +
+      '<label class="form-label" style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span>Recipient ' + (idx + 1) + '</span>' +
+        '<button type="button" class="btn btn-small" style="font-size:10px;padding:2px 6px;border-color:#553;color:#aa6" onclick="removeRecipientRow(this)">✕ remove</button>' +
+      '</label>' +
+      '<input type="text" class="form-input recipient-addr" placeholder="sost1...">' +
+    '</div>' +
+    '<div class="form-group">' +
+      '<label class="form-label">Amount (SOST)</label>' +
+      '<input type="text" class="form-input recipient-amount" placeholder="0.00000000">' +
+    '</div>';
+  wrap.appendChild(row);
+};
+
+window.removeRecipientRow = function(btn) {
+  const row = btn.closest('.recipient-row');
+  if (row) row.remove();
+};
+
+// collectRecipients() — read all rows, drop empties, return
+// [{ address, amount }] in stocks. Throws on validation errors.
+function collectRecipients() {
+  const rows = document.querySelectorAll('#recipientRows .recipient-row');
+  const out = [];
+  rows.forEach((row, i) => {
+    let addr, amt;
+    if (i === 0) {
+      addr = (document.getElementById('sendTo').value || '').trim();
+      amt  = (document.getElementById('sendAmount').value || '').trim();
+    } else {
+      addr = (row.querySelector('.recipient-addr').value || '').trim();
+      amt  = (row.querySelector('.recipient-amount').value || '').trim();
+    }
+    if (!addr && !amt) return;  // empty row, skip
+    if (!validateAddress(addr)) throw new Error('Invalid address (recipient ' + (i + 1) + '): ' + addr);
+    const stocks = parseSost(amt);
+    if (!Number.isFinite(stocks) || stocks <= 0) throw new Error('Invalid amount (recipient ' + (i + 1) + ')');
+    out.push({ address: addr, amount: stocks });
+  });
+  if (out.length === 0) throw new Error('No recipients filled in');
+  return out;
+}
+
+// ============================================================
 // buildAndSignCancellationTx — RBF replacement for a pending TX.
 // Spends the SAME inputs as the original TX back to `returnAddr`
 // with a HIGHER absolute fee. The chain enforces full RBF
@@ -2504,7 +2675,19 @@ window.estimateFee = async function() {
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
 
-  const toAddr = document.getElementById('sendTo').value.trim();
+  // Multi-recipient (sendmany) path: if more than one recipient row is
+  // filled, route to a separate handler. The single-recipient path below
+  // is left untouched so the existing capsule + address-book flow keeps
+  // working byte-identically.
+  let recipients;
+  try { recipients = collectRecipients(); }
+  catch (e) { return showError('sendResult', e.message); }
+
+  if (recipients.length > 1) {
+    return sendTransactionMany(recipients);
+  }
+
+  const toAddr = recipients[0].address;
   const amountStr = document.getElementById('sendAmount').value.trim();
   const feePerByte = parseInt(document.getElementById('sendFee').value) || 1000;
 
@@ -2632,6 +2815,122 @@ window.sendTransaction = async function() {
     document.getElementById('sendBtn').disabled = false;
   }
 };
+
+// sendTransactionMany — path used when collectRecipients() returned >1.
+// Builds one TRANSFER tx with N recipient outputs + change. Capsules
+// are intentionally not supported here — sendmany is for value-only
+// distribution; capsules belong on a single-recipient tx.
+async function sendTransactionMany(recipients) {
+  const feePerByte = parseInt(document.getElementById('sendFee').value) || 1000;
+
+  if (isTotpEnabled()) {
+    const code = document.getElementById('sendTotp').value.trim();
+    if (!(await verifyTotpCode(code))) return showError('sendResult', '2FA code is invalid');
+  }
+
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const [nodeInfo, balResult] = await Promise.all([
+      rpcCall('getinfo'),
+      rpcCall('getaddressinfo', [wallet.address])
+    ]);
+    const chainHeight = nodeInfo.blocks || 0;
+    const rawUtxos = balResult.utxos || [];
+    if (rawUtxos.length === 0) throw new Error('No UTXOs available');
+    const utxos = rawUtxos
+      .map(u => ({ ...u, amount: Math.round((u.amount || 0) * SAT),
+                   confs: chainHeight - (u.height || 0) }))
+      .filter(u => !u.coinbase || u.confs >= 1000);
+    if (utxos.length === 0) throw new Error('No spendable UTXOs (coinbase needs 1000 confs)');
+
+    // Estimate size: ~148 * inputs + 34 * outputs + 10. We don't yet
+    // know the input count, but most sends fit in <= 5 inputs.
+    const inputCount = Math.min(utxos.length, 10);
+    const outputCount = recipients.length + 1;  // +1 for change
+    const estSize = 148 * inputCount + 34 * outputCount + 10;
+    const feeStocks = feePerByte * estSize;
+
+    const totalOut = recipients.reduce((s, r) => s + r.amount, 0);
+    const totalIn  = utxos.slice(0, inputCount).reduce((s, u) => s + u.amount, 0);
+    const changeAmt = totalIn - totalOut - feeStocks;
+
+    let lines = recipients.map((r, i) =>
+      '  ' + (i + 1) + '. ' + r.address.substring(0, 12) + '...  ' + formatSost(r.amount) + ' SOST'
+    ).join('\n');
+    const confirmMsg =
+      'SENDMANY CONFIRMATION\n\n' +
+      'Recipients: ' + recipients.length + '\n' +
+      lines + '\n\n' +
+      'Total out: ' + formatSost(totalOut) + ' SOST\n' +
+      'Fee rate:  ' + feePerByte + ' st/B\n' +
+      'TX size:   ~' + estSize + ' bytes\n' +
+      'Total fee: ' + formatSost(feeStocks) + ' SOST\n' +
+      'Inputs:    up to ' + inputCount + ' UTXOs\n' +
+      'Change:    ' + formatSost(Math.max(0, changeAmt)) + ' SOST\n\n' +
+      'Confirm and broadcast?';
+    if (!confirm(confirmMsg)) {
+      showError('sendResult', 'Transaction cancelled by user.');
+      return;
+    }
+
+    const built = await buildAndSignManyTx(utxos, recipients, feeStocks, wallet.address);
+    const rawTx = built.rawTx;
+    const txSize = rawTx.length / 2;
+
+    // Hard-stop tx size before broadcast (consensus = 100 KB).
+    if (txSize > 100000) {
+      throw new Error('TX too large (' + txSize + ' bytes > 100 KB consensus). Split recipients into multiple sendmany calls.');
+    }
+
+    console.log('[TX-MANY] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
+    const result = await rpcCall('sendrawtransaction', [rawTx]);
+    const txid = result.txid || result || 'unknown';
+
+    const explorerUrl = 'https://sostcore.com/sost-explorer.html';
+    const recipList = recipients.map((r, i) =>
+      '<div style="margin:2px 0"><span style="color:var(--text-dim);width:30px;display:inline-block">#' + (i + 1) + '</span>' +
+      '<span style="color:var(--text-primary)">' + r.address + '</span>' +
+      ' <b style="color:var(--green-primary)">' + formatSost(r.amount) + ' SOST</b></div>'
+    ).join('');
+    showSuccess('sendResult',
+      '<div style="border:1px solid var(--green-primary,#4ade80);border-radius:6px;padding:12px;margin-top:8px;background:rgba(74,222,128,0.03)">' +
+        '<div style="color:var(--green-primary);font-weight:600;margin-bottom:8px">Sendmany Broadcast (' + recipients.length + ' recipients)</div>' +
+        '<div style="font-size:12px;line-height:1.8">' +
+          '<div><span style="color:var(--text-dim)">TXID</span> ' +
+            '<a href="' + explorerUrl + '" target="_blank" style="color:var(--cyan-primary,#67e8f9);word-break:break-all;text-decoration:none">' + txid + '</a></div>' +
+          '<div><span style="color:var(--text-dim)">FROM</span> ' + wallet.address + '</div>' +
+          '<div style="margin-top:6px"><span style="color:var(--text-dim)">RECIPIENTS</span></div>' +
+          recipList +
+          '<div style="margin-top:6px"><span style="color:var(--text-dim)">TOTAL OUT</span> ' + formatSost(totalOut) + ' SOST</div>' +
+          '<div><span style="color:var(--text-dim)">FEE</span> ' + formatSost(feeStocks) + ' SOST</div>' +
+          '<div><span style="color:var(--text-dim)">SIZE</span> ' + txSize + ' bytes</div>' +
+        '</div>' +
+      '</div>');
+
+    saveTxToHistory({
+      txid, type: 'sendmany',
+      recipients: recipients.map(r => ({ address: r.address, amount: r.amount })),
+      amount: totalOut, fee: feeStocks, time: Date.now(),
+      inputs: built.selected.map(u => ({ txid: u.txid, vout: u.vout, amount: u.amount, type: u.output_type || 0 }))
+    });
+
+    // Reset all extra recipient rows (keep row 0 cleared too).
+    document.querySelectorAll('#recipientRows .recipient-row').forEach((row, i) => {
+      if (i === 0) {
+        document.getElementById('sendTo').value = '';
+        document.getElementById('sendAmount').value = '';
+      } else {
+        row.remove();
+      }
+    });
+  } catch (e) {
+    console.error('[sendmany] error:', e);
+    showError('sendResult', 'Sendmany failed: ' + (e.message || e));
+  } finally {
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
 
 // ==================== RECEIVE ====================
 
