@@ -1854,7 +1854,7 @@ async function updateDashboard(info){
         if(h>info.blocks-AVG_WINDOW)times.push(b.time);
         if(h>info.blocks-600)times600.push(b.time);
         if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);
-        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||''});
+        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||'',lp:parseInt(b.lottery_payout||0,10),lw:b.lottery_winner_address||''});
         if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);
       }
     }
@@ -1872,6 +1872,41 @@ async function updateDashboard(info){
     // diffs[] contains the latest AVG_WINDOW_LONG (1000) blocks already, so we
     // cover all post-fork blocks today and well into the future.
     var ph2set={};
+    // Auto-hydrate the DTD lottery-by-address cache from the freshly fetched
+    // diffs[] window (last 1000 blocks). Replaces the old behaviour where the
+    // cache only populated after the user opened the DTD section. With this
+    // every showAddress call sees the lottery wins instantly. As Phase 2
+    // grows past 1000 blocks the rolling window may drop the earliest wins;
+    // running the full DTD scan still fills the all-time totals into
+    // localStorage, which we merge below so we never regress.
+    var lotteryByAddr={};
+    for(var li=0;li<diffs.length;li++){
+      var ld=diffs[li]; if(!ld)continue;
+      if(ld.lp>0&&ld.lw){
+        if(!lotteryByAddr[ld.lw]) lotteryByAddr[ld.lw]={amt:0,count:0};
+        lotteryByAddr[ld.lw].amt+=ld.lp;
+        lotteryByAddr[ld.lw].count+=1;
+      }
+    }
+    // Merge with any localStorage snapshot that may carry older wins beyond
+    // the 1000-block window. Keep the larger amt/count per address so we
+    // never under-report.
+    try{
+      var prevRaw=localStorage.getItem('sost_dtd_lottery_v1');
+      if(prevRaw){
+        var prev=JSON.parse(prevRaw);
+        if(prev&&prev.by){
+          Object.keys(prev.by).forEach(function(a){
+            var p=prev.by[a]; if(!p)return;
+            if(!lotteryByAddr[a]||p.amt>lotteryByAddr[a].amt){
+              lotteryByAddr[a]={amt:p.amt,count:p.count||0};
+            }
+          });
+        }
+      }
+    }catch(e){}
+    window._dtdLotteryByAddr=lotteryByAddr;
+    try{ localStorage.setItem('sost_dtd_lottery_v1',JSON.stringify({h:info.blocks||0,by:lotteryByAddr})); }catch(e){}
     for(var pi=0;pi<diffs.length;pi++){
       var d=diffs[pi]; if(!d||!d.miner)continue;
       if((d.h||0)>=7100) ph2set[d.miner]=true;
