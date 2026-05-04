@@ -1077,7 +1077,7 @@ thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThreshold
 exptime:'EXPECTED TIME \u2014 Estimated time until block found. Shows two values: target (the protocol design block time of 600 s = 10 min) and avg288 (empirical, from the last 288 blocks at the current nonce-per-second rate). If the avg288 countdown reaches zero, it RECALCULATES from the same empirical baseline.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
 antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 3600 seconds (60 min).\n\nV6 immediate first drop: profile drops by 1 immediately when threshold is reached.\n\nDecay zones toward B0:\nH13-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E7 only after 6 additional hours at B0.\n\nRelief valve: V8 single E7 cliff at 605 s (5,750+); V9 staged drop 3/60 s from 540 s (6,550+); V10 granular drop 1/60 s from 600 s (6,700+). Floor stays at E7.\nLag-adjust ~2 s (miner v0.9+; block 5,750+). Anti-stall serves as a last-resort safety net.\n\nH13 ceiling active (block 5,750+). H14-H35 reserved.\nbitsQ avg288-based (block 5,175+) with dynamic cap (block 5,260+).\n\nEnsures the chain NEVER permanently stalls.',
-slingshot:'SLINGSHOT \u2014 V11 Phase 3 single-shot bitsQ relief (active block 7,000+).\n\nDual-gate rule (both must hold, strict greater-than):\n  prev_elapsed    > 1800 s (30 min)   \u2014 last block was slow\n  current_elapsed > 600 s  (10 min)   \u2014 current block is also taking long\n\nWhen both gates fire:\n  bitsQ = bitsQ_avg288 \u00d7 (10000 - 1250) / 10000  =  bitsQ_avg288 \u00d7 0.875\n  bitsQ = max(MIN_BITSQ, bitsQ)\n\nSelf-resetting: the next block re-evaluates fresh against avg288 \u2014 no compounding, no ratchet. Three back-to-back slow blocks each receive a single 12.5% drop, never 12.5% \u00d7 12.5% \u00d7 12.5%.\n\nWhy two gates: gate 2 prevents \u201cfree relief\u201d \u2014 if the chain already recovered (current block solves in 30 s after a slow predecessor), Slingshot does NOT fire.\n\nIndicator states:\n  PRE-FORK \u2014 chain below height 7,000 (Slingshot inactive)\n  OFF        \u2014 prev block was within target (gate 1 closed)\n  ARMED      \u2014 gate 1 open, waiting for current_elapsed > 600 s\n  FIRING     \u2014 both gates open: bitsQ already \u221212.5% on this block\n\nSlingshot does NOT replace cASERT, the V11 cascade, the lottery, or SbPoW. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the E7 floor.'
+slingshot:'SLINGSHOT \u2014 single-shot bitsQ relief. Two consensus paths gated by height.\n\n[V11 path] active block 7,000 .. 7,349 (dual-gate, single tier):\n  prev_elapsed    > 1800 s (30 min)   \u2014 last block was slow\n  current_elapsed > 600 s  (10 min)   \u2014 current block is also taking long\n  When both gates fire: bitsQ = bitsQ_avg288 \u00d7 0.875  (\u221212.5%)\n\n[V12 path] active block 7,350 onward (single-gate, 4 tiers, same-block):\n  current_elapsed >  840 s ( 14 min) \u2192 T1 \u2192 \u22126.5%\n  current_elapsed > 1740 s ( 29 min) \u2192 T2 \u2192 \u221212.5%\n  current_elapsed > 3540 s ( 59 min) \u2192 T3 \u2192 \u221225%\n  current_elapsed > 7140 s (119 min) \u2192 T4 \u2192 \u221237.5%\n  Strict greater-than at each threshold; the drop is applied AFTER the\n  avg288 / dynamic-cap clamp and re-clamped to MIN_BITSQ.\n\nBoth paths are self-resetting: the next block re-evaluates fresh against avg288. No compounding. Three back-to-back slow blocks each receive their own single drop, never drop \u00d7 drop \u00d7 drop.\n\nWhy V12 dropped the second gate: in V11 the second gate prevented \u201cfree relief\u201d when the chain already recovered. In V12 the same-block design + the 4-tier ladder makes that protection structural \u2014 short blocks never cross even T1, so no relief is given when the chain is already healthy.\n\nIndicator states:\n  PRE-FORK              \u2014 chain below #7,000\n  [V11] OFF             \u2014 prev block within target (gate 1 closed)\n  [V11] ARMED           \u2014 gate 1 open, waiting for current > 10 min\n  [V11] FIRING \u221212.5%   \u2014 both gates open\n  [V12] OFF             \u2014 current_elapsed below T1 (\u2264 14 min)\n  [V12] FIRING T1..T4   \u2014 current crossed the corresponding threshold\n\nSlingshot does NOT replace cASERT, the cascade, the lottery, or SbPoW. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the E7 floor.'
     };
     var _openParam=null;
     function _closeAllCharts(){
@@ -3756,38 +3756,71 @@ function updateMiningPanel(elapsed){
       }
     }
   }
-  // ---- V11 Phase 3 Slingshot indicator ---------------------------------
-  // Mirrors anti-stall but tracks the Slingshot dual-gate:
-  //   prev_elapsed > 1800 s AND current_elapsed > 600 s -> bitsQ * 0.875.
-  // current_elapsed = elapsed (already computed for the anti-stall block).
-  // prev_elapsed    = _prevBlockInterval (interval of the most recent block).
+  // ---- Slingshot indicator (V11 dual-gate up to #7349, V12 4-tier from #7350)
+  //
+  // V11 (height 7000..7349): dual-gate, fires once when both
+  //     prev_elapsed > 1800 s  AND  current_elapsed > 600 s.
+  // V12 (height >= 7350): single-gate ladder on current_elapsed only:
+  //     >  840 s \u2192  -6.5%   (T1)
+  //     > 1740 s \u2192  -12.5%  (T2)
+  //     > 3540 s \u2192  -25%    (T3)
+  //     > 7140 s \u2192  -37.5%  (T4)
+  // The indicator switches paths automatically when the next-to-mine
+  // height crosses V12_HEIGHT, matching the consensus rule in
+  // src/pow/casert.cpp.
   var ssInd=document.getElementById('ssIndicator');
   var ssDet=document.getElementById('ssDetail');
   if(ssInd&&ssDet){
-    var SS_HEIGHT=7000, SS_T1=1800, SS_T2=600, SS_DROP=0.125;
+    var V11_SS_HEIGHT=7000, V12_HEIGHT=7350;
+    var V11_T1=1800, V11_T2=600, V11_DROP=0.125;
+    // V12 ladder (must match params.h V12_SLINGSHOT_T*_SECONDS).
+    var V12_T1=840, V12_T2=1740, V12_T3=3540, V12_T4=7140;
+    var V12_DROP1=6.5, V12_DROP2=12.5, V12_DROP3=25, V12_DROP4=37.5;
     var nextH=(_chainTipHeight||0)+1;
     var prevEl=_prevBlockInterval||0;
     var curEl=Math.max(0,elapsed||0);
     function fmtMS(s){var s2=Math.max(0,Math.floor(s));var m=Math.floor(s2/60),x=s2%60;return m+'m '+('0'+x).slice(-2)+'s';}
-    if(nextH<SS_HEIGHT){
+    if(nextH<V11_SS_HEIGHT){
       ssInd.innerHTML='<span style="color:var(--text3);">\u25cf PRE-FORK</span>';
-      ssDet.textContent='activates at #'+SS_HEIGHT;ssDet.style.color='var(--text3)';
+      ssDet.textContent='V11 Slingshot activates at #'+V11_SS_HEIGHT+' \u00b7 V12 ladder activates at #'+V12_HEIGHT;
+      ssDet.style.color='var(--text3)';
+    }else if(nextH>=V12_HEIGHT){
+      // V12 same-block 4-tier path. Only current_elapsed matters; no
+      // ARMED state because there is no second gate to wait on.
+      var tier=0,drop=0;
+      if(curEl>V12_T4){tier=4;drop=V12_DROP4;}
+      else if(curEl>V12_T3){tier=3;drop=V12_DROP3;}
+      else if(curEl>V12_T2){tier=2;drop=V12_DROP2;}
+      else if(curEl>V12_T1){tier=1;drop=V12_DROP1;}
+      if(tier===0){
+        var nextThresh=V12_T1, rem=Math.max(0,nextThresh-curEl);
+        ssInd.innerHTML='<span style="color:var(--red);">\u25cf OFF [V12]</span>';
+        ssDet.textContent='current '+fmtMS(curEl)+' \u2014 T1 (\u22126.5%) fires at '+fmtMS(V12_T1)+' (in '+fmtMS(rem)+')';
+        ssDet.style.color='var(--text3)';
+      }else{
+        var nextT=tier===1?V12_T2:tier===2?V12_T3:tier===3?V12_T4:null;
+        var nextDrop=tier===1?V12_DROP2:tier===2?V12_DROP3:tier===3?V12_DROP4:null;
+        var tail=nextT?(' \u2014 next: T'+(tier+1)+' (\u2212'+nextDrop+'%) at '+fmtMS(nextT)):' (max tier)';
+        ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING T'+tier+' \u2212'+drop.toFixed(1)+'% [V12]</span>';
+        ssDet.textContent='current '+fmtMS(curEl)+' \u00b7 bitsQ relieved by '+drop.toFixed(1)+'% (same-block, self-resets next block)'+tail;
+        ssDet.style.color='#ff00ff';
+      }
     }else if(prevEl<=0){
       ssInd.innerHTML='<span style="color:var(--text3);">\u25cf \u2014</span>';
       ssDet.textContent='waiting for chain data';ssDet.style.color='var(--text3)';
-    }else if(prevEl<=SS_T1){
-      ssInd.innerHTML='<span style="color:var(--red);">\u25cf OFF</span>';
-      var deficit=SS_T1-prevEl;
-      ssDet.textContent='prev block '+fmtMS(prevEl)+' \u2014 needed > '+fmtMS(SS_T1)+' to arm (\u0394 '+fmtMS(deficit)+')';
+    }else if(prevEl<=V11_T1){
+      ssInd.innerHTML='<span style="color:var(--red);">\u25cf OFF [V11]</span>';
+      var deficit=V11_T1-prevEl;
+      ssDet.textContent='prev block '+fmtMS(prevEl)+' \u2014 needed > '+fmtMS(V11_T1)+' to arm (\u0394 '+fmtMS(deficit)+')';
       ssDet.style.color='var(--text3)';
-    }else if(curEl<=SS_T2){
-      ssInd.innerHTML='<span style="color:#fbbf24;animation:blink 1s infinite;">\u25cf ARMED</span>';
-      var rem=SS_T2-curEl;
+    }else if(curEl<=V11_T2){
+      ssInd.innerHTML='<span style="color:#fbbf24;animation:blink 1s infinite;">\u25cf ARMED [V11]</span>';
+      var rem=V11_T2-curEl;
       ssDet.textContent='prev '+fmtMS(prevEl)+' (gate 1 OK) \u2014 fires in '+fmtMS(rem)+' if block still unsolved';
       ssDet.style.color='#fbbf24';
     }else{
-      ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING \u2212'+(SS_DROP*100).toFixed(1)+'%</span>';
-      ssDet.textContent='prev '+fmtMS(prevEl)+' \u00b7 current '+fmtMS(curEl)+' \u2014 bitsQ relieved by '+(SS_DROP*100).toFixed(1)+'% (single-shot, self-resets next block)';
+      ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING \u2212'+(V11_DROP*100).toFixed(1)+'% [V11]</span>';
+      ssDet.textContent='prev '+fmtMS(prevEl)+' \u00b7 current '+fmtMS(curEl)+' \u2014 bitsQ relieved by '+(V11_DROP*100).toFixed(1)+'% (single-shot, self-resets next block)';
       ssDet.style.color='#ff00ff';
     }
   }
