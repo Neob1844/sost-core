@@ -622,12 +622,100 @@ int main(int argc, char** argv) {
 
     // =====================================================================
     // getbalance [address]
+    //
+    // No address  → wallet-local balance (sum of imported UTXOs minus locks).
+    // With address → chain-truth balance via node RPC getaddressutxos.
+    //               Previously called w.balance(addr), which only saw
+    //               UTXOs the wallet had imported. For any address the
+    //               wallet had not pre-tracked (e.g. a public lookup of a
+    //               foreign address) it returned 0 even when the chain
+    //               had thousands of UTXOs. Now sums getaddressutxos
+    //               directly so the printed number matches the explorer.
     // =====================================================================
     if (cmd == "getbalance") {
         int64_t chain_height = query_chain_height();
         if (argc > arg_start + 1) {
             std::string addr = argv[arg_start + 1];
-            printf("%s SOST\n", format_sost(w.balance(addr)).c_str());
+
+            std::string resp = rpc_call("getaddressutxos", "[\"" + addr + "\"]");
+            if (resp.empty()) {
+                fprintf(stderr, "Error: cannot reach node at %s:%d (RPC call failed)\n",
+                        g_node_host.c_str(), g_node_port);
+                fprintf(stderr, "  Falling back to wallet-local balance.\n");
+                printf("%s SOST\n", format_sost(w.balance(addr)).c_str());
+                return 1;
+            }
+
+            // Strip HTTP headers and locate the result array.
+            auto body_start = resp.find("\r\n\r\n");
+            std::string json_body = (body_start != std::string::npos)
+                                      ? resp.substr(body_start + 4) : resp;
+            auto result_pos = json_body.find("\"result\":");
+            if (result_pos != std::string::npos) {
+                json_body = json_body.substr(result_pos + 9);
+            }
+            auto arr_start = json_body.find('[');
+            auto arr_end   = json_body.rfind(']');
+
+            int64_t total_stocks    = 0;
+            int64_t spendable_stocks = 0;
+            int64_t mature_stocks   = 0;
+            int64_t immature_stocks = 0;
+            int     utxo_count      = 0;
+            int     mature_count    = 0;
+            int     immature_count  = 0;
+
+            if (arr_start != std::string::npos && arr_end != std::string::npos
+                && arr_end > arr_start) {
+                std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
+                size_t pos = 0;
+                while (pos < arr.size()) {
+                    auto obj_start = arr.find('{', pos);
+                    if (obj_start == std::string::npos) break;
+                    auto obj_end = arr.find('}', obj_start);
+                    if (obj_end == std::string::npos) break;
+                    std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
+                    pos = obj_end + 1;
+
+                    auto get_int = [&](const std::string& key) -> int64_t {
+                        auto p = obj.find("\"" + key + "\":");
+                        if (p == std::string::npos) return 0;
+                        p += key.size() + 3;
+                        try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
+                    };
+                    auto get_bool = [&](const std::string& key) -> bool {
+                        auto p = obj.find("\"" + key + "\":");
+                        if (p == std::string::npos) return false;
+                        return obj.substr(p + key.size() + 3, 4) == "true";
+                    };
+
+                    int64_t amt    = get_int("amount_stocks");
+                    bool spendable = get_bool("spendable");
+                    bool mature    = get_bool("mature");
+                    if (amt <= 0) continue;
+
+                    total_stocks += amt;
+                    utxo_count++;
+                    if (spendable) spendable_stocks += amt;
+                    if (mature)   { mature_stocks   += amt; mature_count++; }
+                    else          { immature_stocks += amt; immature_count++; }
+                }
+            }
+
+            // Backward-compatible: first line is the simple SOST total so
+            // any script grepping for it still works.
+            printf("%s SOST\n", format_sost(total_stocks).c_str());
+            printf("Total:     %s SOST  (%d UTXO%s)\n",
+                   format_sost(total_stocks).c_str(),
+                   utxo_count, utxo_count == 1 ? "" : "s");
+            printf("Spendable: %s SOST  (%d mature)\n",
+                   format_sost(mature_stocks).c_str(), mature_count);
+            if (immature_stocks > 0) {
+                printf("Immature:  %s SOST  (%d UTXO%s, need 1000 confirmations)\n",
+                       format_sost(immature_stocks).c_str(),
+                       immature_count, immature_count == 1 ? "" : "s");
+            }
+            return 0;
         } else {
             int64_t total = w.balance(chain_height);
             int64_t locked = w.locked_balance(chain_height);
