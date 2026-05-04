@@ -668,6 +668,7 @@ make -j$(nproc) sost-miner</pre>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Counts distinct addresses that have produced an accepted Phase II block in the last 1000 blocks (since #7100 activation). Lower bound on adoption — miners that fail to produce valid blocks are not counted. Card pulses red permanently as a standing centralisation reminder; count itself is unbounded." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
+  <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
@@ -1825,6 +1826,30 @@ async function updateDashboard(info){
     var inUpdateWindow=info.blocks>=7090&&info.blocks<7100;
     v11Urgent.classList.toggle('v11-update-pulse-window',inUpdateWindow);
   }
+  // MINING ATTEMPTS — fire-and-forget RPC, separate from getinfo so a slow
+  // node never blocks the rest of the dashboard. Counters are in-memory on
+  // the node, so this is cheap (<1ms typical).
+  rpc('getminerstats').then(function(stats){
+    if(!stats)return;
+    var lifetime=stats.lifetime||{};
+    var received=lifetime.submitblock_received||0;
+    var accepted=lifetime.submitblock_accepted||0;
+    var rejected=lifetime.submitblock_rejected||0;
+    var el=document.getElementById('dMineAttempts');
+    var sub=document.getElementById('dMineAttemptsSub');
+    if(el&&sub){
+      el.textContent=fComma(received);
+      var ratio=received>0?(rejected/received):0;
+      // Green if rejection ratio is healthy (<20%), amber if elevated (<50%),
+      // red if rejections dominate. Pure visual signal; no consensus impact.
+      var col=ratio>0.5?'#fb010d':ratio>0.2?'#fbbf24':'#22c55e';
+      el.style.color=col;
+      sub.textContent=fComma(accepted)+' accepted · '+fComma(rejected)+' rejected';
+      sub.style.color=ratio>0.2?'#fbbf24':'var(--text3)';
+    }
+    // Stash for the click-to-expand panel renderer.
+    window._minerStats=stats;
+  }).catch(function(){});
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   var nextLotteryHeight=(info.blocks||0)+1;
   var nextLotteryLabel='pre-Phase 2';
@@ -2831,6 +2856,62 @@ function renderDashPanel(key,body,title,silent){
         else{el.textContent='(still loading...)';clearInterval(_minersCountdownInterval);_minersCountdownInterval=null;}
       },1000);
     }
+  } else if(key==='mineattempts'){
+    title.textContent='// MINING ATTEMPTS — submitblock telemetry (since node boot)';
+    var s=window._minerStats;
+    if(!s){body.innerHTML='<div style="color:var(--text3)">Waiting for getminerstats… click again in a moment.</div>';return;}
+    var lt=s.lifetime||{};
+    var received=lt.submitblock_received||0;
+    var accepted=lt.submitblock_accepted||0;
+    var rejected=lt.submitblock_rejected||0;
+    var ratio=received>0?(rejected/received*100):0;
+    var uptimeS=s.uptime_seconds||0;
+    function fmtUptime(s){
+      if(s<60)return s+'s';
+      if(s<3600)return Math.floor(s/60)+'m '+(s%60)+'s';
+      if(s<86400)return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
+      return Math.floor(s/86400)+'d '+Math.floor((s%86400)/3600)+'h';
+    }
+    var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">';
+    function tile(lbl,val,col){return '<div style="background:var(--bg);border:1px solid var(--border);padding:8px 10px"><div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl+'</div><div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';}
+    grid+=tile('UPTIME',fmtUptime(uptimeS),'var(--text)');
+    grid+=tile('RECEIVED',fComma(received),'var(--text)');
+    grid+=tile('ACCEPTED',fComma(accepted),'#22c55e');
+    grid+=tile('REJECTED',fComma(rejected),rejected>0?'#fb010d':'var(--text3)');
+    grid+=tile('REJECT %',ratio.toFixed(1)+'%',ratio>50?'#fb010d':ratio>20?'#fbbf24':'#22c55e');
+    grid+=tile('GETBLOCKTEMPLATE',fComma(lt.getblocktemplate_calls||0),'var(--text)');
+    grid+=tile('MISBEHAVIOR',fComma(lt.misbehavior_events||0),(lt.misbehavior_events||0)>0?'#fbbf24':'var(--text3)');
+    grid+='</div>';
+    var html=grid;
+    var reasons=s.rejected_reasons||{};
+    var reasonKeys=Object.keys(reasons).sort(function(a,b){return reasons[b]-reasons[a];});
+    if(reasonKeys.length>0){
+      html+='<div style="font-size:10px;letter-spacing:1px;color:var(--text3);margin:14px 0 6px">// TOP REJECTION REASONS</div>';
+      html+='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+      html+='<tr style="color:var(--text3)"><th style="text-align:left;padding:4px;border-bottom:1px solid var(--border)">Reason</th><th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Count</th></tr>';
+      for(var i=0;i<Math.min(10,reasonKeys.length);i++){
+        var rk=reasonKeys[i];
+        var rkSafe=String(rk).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        html+='<tr><td style="padding:4px;border-bottom:1px solid var(--border)"><code style="color:var(--cyan)">'+rkSafe+'</code></td><td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:#fb010d">'+fComma(reasons[rk])+'</td></tr>';
+      }
+      html+='</table>';
+    } else {
+      html+='<div style="font-size:11px;color:var(--text3);margin:10px 0">No rejections recorded since boot.</div>';
+    }
+    var sources=s.reject_sources||{};
+    var sourceKeys=Object.keys(sources).sort(function(a,b){return sources[b]-sources[a];});
+    if(sourceKeys.length>0){
+      html+='<div style="font-size:10px;letter-spacing:1px;color:var(--text3);margin:14px 0 6px">// TOP REJECTION SOURCES (P2P relay only — direct RPC submits not tracked)</div>';
+      html+='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+      html+='<tr style="color:var(--text3)"><th style="text-align:left;padding:4px;border-bottom:1px solid var(--border)">Source IP</th><th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Count</th></tr>';
+      for(var j=0;j<Math.min(10,sourceKeys.length);j++){
+        var sk=sourceKeys[j];
+        var skSafe=String(sk).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        html+='<tr><td style="padding:4px;border-bottom:1px solid var(--border)"><code>'+skSafe+'</code></td><td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:#fb010d">'+fComma(sources[sk])+'</td></tr>';
+      }
+      html+='</table>';
+    }
+    body.innerHTML=html;
   } else if(key==='dtd'){
     renderDTDPanel(body,title,silent);
   } else if(key==='distribution'){

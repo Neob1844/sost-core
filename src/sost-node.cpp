@@ -109,6 +109,40 @@ static std::string g_rpc_pass = "";
 static bool        g_rpc_auth_required = true;
 static bool        g_rpc_public = false; // default: bind to 127.0.0.1 only
 
+// =============================================================================
+// MinerStats — non-consensus telemetry counters for the getminerstats RPC.
+// Counts are updated in-process (atomic for scalars; mutex-protected for the
+// per-reason / per-source maps). NOT persisted across restarts. v1 exposes
+// only lifetime counters; a 24h sliding window can be added later via a ring
+// buffer of timestamped events (see TODO in handle_getminerstats).
+// =============================================================================
+struct MinerStats {
+    std::atomic<uint64_t> submitblock_received{0};
+    std::atomic<uint64_t> submitblock_accepted{0};
+    std::atomic<uint64_t> submitblock_rejected{0};
+    std::atomic<uint64_t> getblocktemplate_calls{0};
+    std::atomic<uint64_t> misbehavior_events{0};
+    int64_t boot_time_unix{0};
+
+    // Per-reason and per-source breakdowns (lifetime, lock-protected).
+    // reject_sources only tracks rejects that arrived via the P2P relay
+    // path (where peer IP is known). Direct local RPC submitblock calls
+    // don't contribute to reject_sources because the call has no peer IP.
+    std::mutex map_mu;
+    std::map<std::string, uint64_t> rejected_reasons;
+    std::map<std::string, uint64_t> reject_sources_24h;
+};
+static MinerStats g_miner_stats;
+
+// Thread-local "last reject reason" — set by record_block_reject() at every
+// `[BLOCK] REJECTED:` site that opts in, read by handle_submitblock and the
+// P2P BLCK handler when process_block() returns false. If no specific site
+// recorded a reason, the caller falls back to a generic "validation_failure".
+static thread_local std::string g_last_reject_reason;
+static inline void record_block_reject(const std::string& reason) {
+    g_last_reject_reason = reason;
+}
+
 // Block record — stores everything needed for P2P relay and chain.json persistence
 struct StoredBlock {
     Hash256 block_id, prev_hash, merkle_root;
@@ -472,6 +506,7 @@ static void ban_peer(int fd, const std::string& addr, const char* reason) {
 
 // Add misbehavior score to a peer; returns true if peer was banned
 static bool add_misbehavior(int fd, const std::string& addr, int points, const char* reason) {
+    g_miner_stats.misbehavior_events.fetch_add(1, std::memory_order_relaxed);
     int new_score = 0;
     {
         std::lock_guard<std::mutex> lk(g_peers_mu);
@@ -1421,10 +1456,33 @@ static std::string handle_getpeerinfo(const std::string& id, const std::vector<s
 }
 
 static std::string handle_submitblock(const std::string& id, const std::vector<std::string>& p) {
+    g_miner_stats.submitblock_received.fetch_add(1, std::memory_order_relaxed);
     printf("[SUBMITBLOCK] Received block submission (params=%zu)\n", p.size()); fflush(stdout);
-    if(p.empty()) { printf("[SUBMITBLOCK] REJECTED: missing block JSON\n"); fflush(stdout); return rpc_error(id,-1,"missing block JSON"); }
-    if(process_block(p[0])) { printf("[SUBMITBLOCK] ACCEPTED\n"); fflush(stdout); return rpc_result(id,"true"); }
+    if(p.empty()) {
+        printf("[SUBMITBLOCK] REJECTED: missing block JSON\n"); fflush(stdout);
+        g_miner_stats.submitblock_rejected.fetch_add(1, std::memory_order_relaxed);
+        {
+            std::lock_guard<std::mutex> lg(g_miner_stats.map_mu);
+            g_miner_stats.rejected_reasons["missing block JSON"]++;
+        }
+        return rpc_error(id,-1,"missing block JSON");
+    }
+    g_last_reject_reason.clear();
+    if(process_block(p[0])) {
+        printf("[SUBMITBLOCK] ACCEPTED\n"); fflush(stdout);
+        g_miner_stats.submitblock_accepted.fetch_add(1, std::memory_order_relaxed);
+        return rpc_result(id,"true");
+    }
     printf("[SUBMITBLOCK] REJECTED by process_block\n"); fflush(stdout);
+    g_miner_stats.submitblock_rejected.fetch_add(1, std::memory_order_relaxed);
+    {
+        std::lock_guard<std::mutex> lg(g_miner_stats.map_mu);
+        const std::string& r = g_last_reject_reason.empty()
+            ? std::string("validation_failure") : g_last_reject_reason;
+        g_miner_stats.rejected_reasons[r]++;
+        // No peer IP for local RPC submitblock — reject_sources_24h is
+        // only populated via the P2P BLCK relay path.
+    }
     return rpc_error(id,-25,"Block rejected");
 }
 
@@ -1432,6 +1490,7 @@ static std::string handle_submitblock(const std::string& id, const std::vector<s
 static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
+    g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES);
 
@@ -2812,6 +2871,60 @@ static std::string handle_license_list(const std::string& id, const std::vector<
     return rpc_result(id, s.str());
 }
 
+// =============================================================================
+// getminerstats — non-consensus telemetry RPC.
+//
+// Returns lifetime counters (since node boot) for submitblock activity,
+// getblocktemplate calls, and P2P misbehavior events, plus per-reason and
+// per-source-IP rejection breakdowns. Useful for explorer / monitoring
+// dashboards. NOT used by validation.
+//
+// TODO: add 24h sliding window via a ring buffer of timestamped events.
+// v1 ships lifetime-only — owner OK.
+// =============================================================================
+static std::string handle_getminerstats(const std::string& id, const std::vector<std::string>&) {
+    int64_t now = (int64_t)time(nullptr);
+    int64_t uptime = now - g_miner_stats.boot_time_unix;
+    if (g_miner_stats.boot_time_unix == 0) uptime = 0;
+
+    std::ostringstream s;
+    s << "{";
+    s << "\"uptime_seconds\":" << uptime;
+    s << ",\"boot_time_unix\":" << g_miner_stats.boot_time_unix;
+    s << ",\"lifetime\":{";
+    s << "\"submitblock_received\":" << g_miner_stats.submitblock_received.load();
+    s << ",\"submitblock_accepted\":" << g_miner_stats.submitblock_accepted.load();
+    s << ",\"submitblock_rejected\":" << g_miner_stats.submitblock_rejected.load();
+    s << ",\"getblocktemplate_calls\":" << g_miner_stats.getblocktemplate_calls.load();
+    s << ",\"misbehavior_events\":" << g_miner_stats.misbehavior_events.load();
+    s << "}";
+
+    {
+        std::lock_guard<std::mutex> lg(g_miner_stats.map_mu);
+
+        s << ",\"rejected_reasons\":{";
+        bool first = true;
+        for (auto& kv : g_miner_stats.rejected_reasons) {
+            if (!first) s << ",";
+            first = false;
+            s << "\"" << json_escape(kv.first) << "\":" << kv.second;
+        }
+        s << "}";
+
+        s << ",\"reject_sources\":{";
+        first = true;
+        for (auto& kv : g_miner_stats.reject_sources_24h) {
+            if (!first) s << ",";
+            first = false;
+            s << "\"" << json_escape(kv.first) << "\":" << kv.second;
+        }
+        s << "}";
+    }
+
+    s << "}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -2853,6 +2966,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getsostprice",handle_getsostprice},
     {"license_verify",handle_license_verify},
     {"license_list",handle_license_list},
+    {"getminerstats",handle_getminerstats},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
@@ -3178,6 +3292,7 @@ static bool process_block(const std::string& block_json) {
 
     if(bid.size()!=64 || prev.size()!=64 || mrkl.size()!=64 || commit_hex.size()!=64 || croot_hex.size()!=64){
         printf("[BLOCK] REJECTED: missing/invalid required hex fields\n");
+        record_block_reject("missing/invalid required hex fields");
         return false;
     }
 
@@ -3341,6 +3456,7 @@ static bool process_block(const std::string& block_json) {
     // Timestamp rules
     if(!g_blocks.empty() && ts64 <= g_blocks.back().timestamp){
         printf("[BLOCK] REJECTED: timestamp not increasing\n");
+        record_block_reject("timestamp not increasing");
         return false;
     }
     int64_t now_ts=(int64_t)time(nullptr);
@@ -3357,6 +3473,7 @@ static bool process_block(const std::string& block_json) {
     if(ts64 > now_ts + future_drift){
         printf("[BLOCK] REJECTED: timestamp too far in future (drift cap=%lld)\n",
                (long long)future_drift);
+        record_block_reject("timestamp too far in future");
         return false;
     }
 
@@ -3380,6 +3497,7 @@ static bool process_block(const std::string& block_json) {
                    mtp_err.c_str(),
                    (long long)ts64, (long long)g_blocks.back().timestamp,
                    (long long)height, (long long)TIMESTAMP_MTP_FORK_HEIGHT);
+            record_block_reject("ValidatePostForkTimestamp: " + mtp_err);
             return false;
         }
     }
@@ -3396,6 +3514,7 @@ static bool process_block(const std::string& block_json) {
         (height >= CASERT_V6PP_HEIGHT) ? ts64 : 0);
     if(bits_q != expected_diff){
         printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
+        record_block_reject("bits_q mismatch");
         return false;
     }
 
@@ -3466,6 +3585,7 @@ static bool process_block(const std::string& block_json) {
         printf("[BLOCK] REJECTED: merkle_root mismatch\n");
         printf("  got:      %s\n", to_hex(mrkl_h.data(),32).c_str());
         printf("  computed: %s\n", to_hex(computed_mrkl.data(),32).c_str());
+        record_block_reject("merkle_root mismatch");
         return false;
     }
 
@@ -3513,6 +3633,7 @@ static bool process_block(const std::string& block_json) {
     if(subsidy != expected_sub){
         printf("[BLOCK] REJECTED: subsidy mismatch (got=%lld expected=%lld)\n",
                (long long)subsidy,(long long)expected_sub);
+        record_block_reject("subsidy mismatch");
         return false;
     }
 
@@ -3666,10 +3787,12 @@ static bool process_block(const std::string& block_json) {
         std::string msg_hex = jstr(block_json, "miner_signature");
         if (mpk_hex.empty()) {
             printf("[BLOCK] REJECTED: submitblock: v2 header missing miner_pubkey\n");
+            record_block_reject("v2 header missing miner_pubkey");
             return false;
         }
         if (msg_hex.empty()) {
             printf("[BLOCK] REJECTED: submitblock: v2 header missing miner_signature\n");
+            record_block_reject("v2 header missing miner_signature");
             return false;
         }
         auto is_hex_only = [](const std::string& s) -> bool {
@@ -3693,11 +3816,13 @@ static bool process_block(const std::string& block_json) {
         if (mpk_hex.size() != 66 || !is_hex_only(mpk_hex)) {
             printf("[BLOCK] REJECTED: submitblock: malformed miner_pubkey "
                    "(expected 33 bytes hex, got %zu chars)\n", mpk_hex.size());
+            record_block_reject("malformed miner_pubkey");
             return false;
         }
         if (msg_hex.size() != 128 || !is_hex_only(msg_hex)) {
             printf("[BLOCK] REJECTED: submitblock: malformed miner_signature "
                    "(expected 64 bytes hex, got %zu chars)\n", msg_hex.size());
+            record_block_reject("malformed miner_signature");
             return false;
         }
         hex_to_bytes(mpk_hex, sbpow_pubkey.data(),    sbpow_pubkey.size());
@@ -3722,6 +3847,7 @@ static bool process_block(const std::string& block_json) {
         printf("  ACTIVE_PROFILE: %s (magic bytes in header)\n",
                ACTIVE_PROFILE==Profile::MAINNET?"MAINNET":
                ACTIVE_PROFILE==Profile::TESTNET?"TESTNET":"DEV");
+        record_block_reject("block_id mismatch");
         return false;
     }
 
@@ -3729,6 +3855,7 @@ static bool process_block(const std::string& block_json) {
     // This runs regardless of fast sync mode.
     if(!pow_meets_target(commit32, bits_q)){
         printf("[BLOCK] REJECTED: PoW invalid (commit !<= target)\n");
+        record_block_reject("PoW invalid");
         return false;
     }
 
@@ -5049,6 +5176,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
             int64_t blk_height = jint(block_json, "height");
             auto t_start = std::chrono::steady_clock::now();
+            g_last_reject_reason.clear();
             if (!process_block(block_json)) {
                 std::string blk_bid = jstr(block_json, "block_id");
                 uint32_t blk_bitsq = (uint32_t)jint(block_json, "bits_q");
@@ -5069,6 +5197,18 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     printf("[SYNC] Block #%lld from %s failed validation — stopping sync\n",
                            (long long)blk_height, addr.c_str());
                     if (add_misbehavior(fd, addr, 10, "invalid block")) return false;
+                }
+                // Telemetry: count this as a submitblock-equivalent rejection
+                // and bucket it by peer IP (only the P2P relay path has one).
+                // Skip when the block was just stored as a fork/orphan — that
+                // is normal relay behaviour, not a real rejection.
+                if (!stored_as_fork) {
+                    g_miner_stats.submitblock_rejected.fetch_add(1, std::memory_order_relaxed);
+                    std::lock_guard<std::mutex> lg(g_miner_stats.map_mu);
+                    const std::string& r = g_last_reject_reason.empty()
+                        ? std::string("validation_failure") : g_last_reject_reason;
+                    g_miner_stats.rejected_reasons[r]++;
+                    g_miner_stats.reject_sources_24h[peer_ip(addr)]++;
                 }
             } else {
                 // Block accepted — update peer's known height
@@ -5535,7 +5675,8 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "gettransaction",
         "estimatefee",
         "getaddressbalance",
-        "listbonds"
+        "listbonds",
+        "getminerstats"
     };
     return kReadOnly.count(m) > 0;
 }
@@ -5888,6 +6029,9 @@ int main(int argc, char** argv) {
     signal(SIGABRT, crash_handler);
     signal(SIGFPE,  crash_handler);
     setbuf(stdout, NULL); // unbuffered for crash visibility
+
+    // Telemetry boot timestamp for the getminerstats RPC.
+    g_miner_stats.boot_time_unix = (int64_t)time(nullptr);
 
     // =========================================================================
     // FIX #1: Set ACTIVE_PROFILE BEFORE anything that touches magic bytes.
