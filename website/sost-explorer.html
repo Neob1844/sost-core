@@ -948,6 +948,12 @@ make -j$(nproc) sost-miner</pre>
         <span id="asIndicator" style="font-weight:600;"></span>
         <span id="asCountdown" style="color:#fbbf24;"></span>
       </div>
+      <!-- Row 6: Slingshot v2 (V11 Phase 3) — single-shot bitsQ relief, dual-gate. -->
+      <div id="slingshotPanel" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="pi" onclick="toggleParamInfo('slingshot')" style="letter-spacing:1px;color:var(--text3);font-size:9px;">SLINGSHOT: <span class="pi-i">ⓘ</span></span>
+        <span id="ssIndicator" style="font-weight:600;"></span>
+        <span id="ssDetail" style="color:var(--text3);"></span>
+      </div>
     </div>
     <!-- Parameter explanation panel -->
     <div id="paramExplain" style="display:none;background:#0d0d0d;border-left:3px solid #00e5ff;padding:0 14px;margin-top:6px;font-family:var(--code);font-size:10px;color:#ccc;line-height:1.7;white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;border-radius:0 4px 4px 0;"></div>
@@ -964,7 +970,8 @@ psolve:'P(SOLVE) \u2014 Probability of solving with a SINGLE nonce attempt. Calc
 thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThresholds calculated from the AVERAGE nonce of the last 288 blocks (~48h).\nThe average = 100%. Each threshold is a percentage of that average.\n\n  25% \u2014 quarter of average effort (lucky early find)\n  50% \u2014 half the average effort\n  75% \u2014 three quarters of typical effort\n  90% \u2014 approaching full average\n  95% \u2014 nearly at the average nonce count\n 100% \u2014 E[288] average \u2014 most blocks found around here\n\nPassing 100% means the block is taking longer than usual.\nThis is normal variance \u2014 some blocks take 2-3x average.\nThe checkmark \u2713 appears when the miner PASSES a threshold.\n\nUnlike theoretical probability, these reflect ACTUAL chain\nconditions: difficulty changes, hashrate, real variance.',
 exptime:'EXPECTED TIME \u2014 Estimated time until block found. Shows two values: target (the protocol design block time of 600 s = 10 min) and avg288 (empirical, from the last 288 blocks at the current nonce-per-second rate). If the avg288 countdown reaches zero, it RECALCULATES from the same empirical baseline.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
-antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 3600 seconds (60 min).\n\nV6 immediate first drop: profile drops by 1 immediately when threshold is reached.\n\nDecay zones toward B0:\nH13-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E7 only after 6 additional hours at B0.\n\nRelief valve: V8 single E7 cliff at 605 s (5,750+); V9 staged drop 3/60 s from 540 s (6,550+); V10 granular drop 1/60 s from 600 s (6,700+). Floor stays at E7.\nLag-adjust ~2 s (miner v0.9+; block 5,750+). Anti-stall serves as a last-resort safety net.\n\nH13 ceiling active (block 5,750+). H14-H35 reserved.\nbitsQ avg288-based (block 5,175+) with dynamic cap (block 5,260+).\n\nEnsures the chain NEVER permanently stalls.'
+antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 3600 seconds (60 min).\n\nV6 immediate first drop: profile drops by 1 immediately when threshold is reached.\n\nDecay zones toward B0:\nH13-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E7 only after 6 additional hours at B0.\n\nRelief valve: V8 single E7 cliff at 605 s (5,750+); V9 staged drop 3/60 s from 540 s (6,550+); V10 granular drop 1/60 s from 600 s (6,700+). Floor stays at E7.\nLag-adjust ~2 s (miner v0.9+; block 5,750+). Anti-stall serves as a last-resort safety net.\n\nH13 ceiling active (block 5,750+). H14-H35 reserved.\nbitsQ avg288-based (block 5,175+) with dynamic cap (block 5,260+).\n\nEnsures the chain NEVER permanently stalls.',
+slingshot:'SLINGSHOT \u2014 V11 Phase 3 single-shot bitsQ relief (active block 7,000+).\n\nDual-gate rule (both must hold, strict greater-than):\n  prev_elapsed    > 1800 s (30 min)   \u2014 last block was slow\n  current_elapsed > 600 s  (10 min)   \u2014 current block is also taking long\n\nWhen both gates fire:\n  bitsQ = bitsQ_avg288 \u00d7 (10000 - 1250) / 10000  =  bitsQ_avg288 \u00d7 0.875\n  bitsQ = max(MIN_BITSQ, bitsQ)\n\nSelf-resetting: the next block re-evaluates fresh against avg288 \u2014 no compounding, no ratchet. Three back-to-back slow blocks each receive a single 12.5% drop, never 12.5% \u00d7 12.5% \u00d7 12.5%.\n\nWhy two gates: gate 2 prevents \u201cfree relief\u201d \u2014 if the chain already recovered (current block solves in 30 s after a slow predecessor), Slingshot does NOT fire.\n\nIndicator states:\n  PRE-FORK \u2014 chain below height 7,000 (Slingshot inactive)\n  OFF        \u2014 prev block was within target (gate 1 closed)\n  ARMED      \u2014 gate 1 open, waiting for current_elapsed > 600 s\n  FIRING     \u2014 both gates open: bitsQ already \u221212.5% on this block\n\nSlingshot does NOT replace cASERT, the V11 cascade, the lottery, or SbPoW. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the E7 floor.'
     };
     var _openParam=null;
     function _closeAllCharts(){
@@ -1123,6 +1130,11 @@ let _loading=false;
 let _navStack=[];
 var _diffHistory=[];
 var _lastBlockTime=0;
+// Slingshot panel needs the interval of the most recent block (prev_elapsed
+// in the dual-gate spec) and the chain tip height. These are populated by the
+// fetchInfo loop right after _lastBlockTime is set.
+var _prevBlockInterval=0;
+var _chainTipHeight=0;
 var _avgBlockTime=120;
 var _avgNonceReal=0;     // dynamic E[nonce] from last 288 blocks
 var _prevAvgNonceReal=0; // for trend arrow
@@ -2033,6 +2045,8 @@ async function updateDashboard(info){
             :'H/s (Bitcoin-style)';
     }
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;
+    _prevBlockInterval=(times.length>=2)?(times[0]-times[1]):0;
+    _chainTipHeight=info.blocks||0;
     // Store cASERT profile from RPC (Phase 5A fix)
     if(info.casert_profile)_rpcCasertProfile=info.casert_profile;
     if(info.casert_profile_index!==undefined)_rpcCasertProfileIdx=info.casert_profile_index;
@@ -3404,6 +3418,41 @@ function updateMiningPanel(elapsed){
         asInd.innerHTML='<span style="color:var(--cyan);animation:blink 1s infinite;">\u25CF EASING E'+easingLevel+'</span>';
         asCd.textContent='emergency easing active \u2014 next level in '+nM+'m';asCd.style.color='var(--cyan)';
       }
+    }
+  }
+  // ---- V11 Phase 3 Slingshot indicator ---------------------------------
+  // Mirrors anti-stall but tracks the Slingshot dual-gate:
+  //   prev_elapsed > 1800 s AND current_elapsed > 600 s -> bitsQ * 0.875.
+  // current_elapsed = elapsed (already computed for the anti-stall block).
+  // prev_elapsed    = _prevBlockInterval (interval of the most recent block).
+  var ssInd=document.getElementById('ssIndicator');
+  var ssDet=document.getElementById('ssDetail');
+  if(ssInd&&ssDet){
+    var SS_HEIGHT=7000, SS_T1=1800, SS_T2=600, SS_DROP=0.125;
+    var nextH=(_chainTipHeight||0)+1;
+    var prevEl=_prevBlockInterval||0;
+    var curEl=Math.max(0,elapsed||0);
+    function fmtMS(s){var s2=Math.max(0,Math.floor(s));var m=Math.floor(s2/60),x=s2%60;return m+'m '+('0'+x).slice(-2)+'s';}
+    if(nextH<SS_HEIGHT){
+      ssInd.innerHTML='<span style="color:var(--text3);">\u25cf PRE-FORK</span>';
+      ssDet.textContent='activates at #'+SS_HEIGHT;ssDet.style.color='var(--text3)';
+    }else if(prevEl<=0){
+      ssInd.innerHTML='<span style="color:var(--text3);">\u25cf \u2014</span>';
+      ssDet.textContent='waiting for chain data';ssDet.style.color='var(--text3)';
+    }else if(prevEl<=SS_T1){
+      ssInd.innerHTML='<span style="color:var(--red);">\u25cf OFF</span>';
+      var deficit=SS_T1-prevEl;
+      ssDet.textContent='prev block '+fmtMS(prevEl)+' \u2014 needed > '+fmtMS(SS_T1)+' to arm (\u0394 '+fmtMS(deficit)+')';
+      ssDet.style.color='var(--text3)';
+    }else if(curEl<=SS_T2){
+      ssInd.innerHTML='<span style="color:#fbbf24;animation:blink 1s infinite;">\u25cf ARMED</span>';
+      var rem=SS_T2-curEl;
+      ssDet.textContent='prev '+fmtMS(prevEl)+' (gate 1 OK) \u2014 fires in '+fmtMS(rem)+' if block still unsolved';
+      ssDet.style.color='#fbbf24';
+    }else{
+      ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING \u2212'+(SS_DROP*100).toFixed(1)+'%</span>';
+      ssDet.textContent='prev '+fmtMS(prevEl)+' \u00b7 current '+fmtMS(curEl)+' \u2014 bitsQ relieved by '+(SS_DROP*100).toFixed(1)+'% (single-shot, self-resets next block)';
+      ssDet.style.color='#ff00ff';
     }
   }
 }
