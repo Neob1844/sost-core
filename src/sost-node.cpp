@@ -1409,7 +1409,22 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     for(size_t i=0;i<entry->tx.inputs.size();++i){
         if(i)s<<",";
         const auto& in=entry->tx.inputs[i];
-        s<<"{\"txid\":\""<<to_hex(in.prev_txid.data(),32)<<"\",\"vout\":"<<in.prev_index<<"}";
+        s<<"{\"txid\":\""<<to_hex(in.prev_txid.data(),32)
+         <<"\",\"vout\":"<<in.prev_index;
+        // Mempool acceptance does not consume UTXOs from the chain set
+        // (consumption happens at block connect), so each input's prev
+        // UTXO is still resolvable via g_utxo_set.GetUTXO. Surface its
+        // amount + owner here so an RBF-replacement client (e.g. CLI
+        // `cancel-tx`) can rebuild and sign the tx without keeping its
+        // own input ledger.
+        OutPoint op{in.prev_txid,in.prev_index};
+        auto utxo=g_utxo_set.GetUTXO(op);
+        if(utxo){
+            s<<",\"prev_value\":"<<utxo->amount
+             <<",\"prev_address\":\""<<address_encode(utxo->pubkey_hash)<<"\""
+             <<",\"prev_type\":"<<(int)utxo->type;
+        }
+        s<<"}";
     }
     s<<"],\"vout\":[";
     for(size_t i=0;i<entry->tx.outputs.size();++i){

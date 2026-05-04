@@ -42,6 +42,7 @@
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/address.h"
+#include "sost/tx_signer.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -1293,6 +1294,258 @@ int main(int argc, char** argv) {
             fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
         } else {
             fprintf(stderr, "\nTX rejected (unknown error)\n");
+            fprintf(stderr, "  Raw response: %s\n", resp.c_str());
+        }
+        return 1;
+    }
+
+    // =====================================================================
+    // cancel-tx <txid> [--fee-bump N]
+    //
+    // RBF replacement of a still-pending tx. Spends the SAME inputs as the
+    // original tx back to this wallet's default address with a strictly
+    // higher absolute fee. Requires:
+    //   - tx is still in the node's mempool (not yet mined)
+    //   - all inputs belong to this wallet (we need the private keys)
+    // The chain's mempool enforces RBF_MIN_FEE_BUMP_PER_BYTE = 1 stock/byte;
+    // we default to a 2 stock/byte bump for headroom. Override with
+    // --fee-bump N (stocks per byte added on top of the original fee).
+    // =====================================================================
+    if (cmd == "cancel-tx") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli cancel-tx <txid> [--fee-bump <stocks_per_byte>]\n");
+            fprintf(stderr, "  Replaces a pending tx with a higher-fee TX that returns\n");
+            fprintf(stderr, "  all input value to your wallet address.\n");
+            fprintf(stderr, "  Default fee bump: 2 stocks/byte (chain min: 1).\n");
+            return 1;
+        }
+        std::string orig_txid = argv[arg_start + 1];
+        int64_t fee_bump_per_byte = 2;
+        for (int i = arg_start + 2; i < argc; ++i) {
+            if (std::string(argv[i]) == "--fee-bump" && i + 1 < argc) {
+                fee_bump_per_byte = std::stoll(argv[i + 1]);
+                if (fee_bump_per_byte < 1) {
+                    fprintf(stderr, "Error: --fee-bump must be >= 1\n");
+                    return 1;
+                }
+                ++i;
+            }
+        }
+
+        // 1) Confirm tx is still in mempool.
+        std::string mp_resp = rpc_call("getrawmempool");
+        if (mp_resp.find("\"" + orig_txid + "\"") == std::string::npos) {
+            fprintf(stderr, "Error: tx %s is not in the mempool. It may already be\n",
+                    orig_txid.c_str());
+            fprintf(stderr, "  confirmed or have been dropped — RBF is no longer possible.\n");
+            return 1;
+        }
+
+        // 2) Pull verbose tx with prev_value / prev_address per vin.
+        std::string tx_resp = rpc_call("getrawtransaction",
+                                       "[\"" + orig_txid + "\",1]");
+        if (tx_resp.find("\"result\":") == std::string::npos) {
+            fprintf(stderr, "Error: getrawtransaction failed.\n");
+            fprintf(stderr, "  Raw response: %s\n", tx_resp.c_str());
+            return 1;
+        }
+
+        // 3) Tiny field extractor for the JSON shape we control.
+        auto extract_int = [&](const std::string& key, size_t pos) -> int64_t {
+            std::string pat = "\"" + key + "\":";
+            auto p = tx_resp.find(pat, pos);
+            if (p == std::string::npos) return -1;
+            p += pat.size();
+            return std::stoll(tx_resp.c_str() + p);
+        };
+        auto extract_str = [&](const std::string& key, size_t pos) -> std::string {
+            std::string pat = "\"" + key + "\":\"";
+            auto p = tx_resp.find(pat, pos);
+            if (p == std::string::npos) return "";
+            p += pat.size();
+            auto e = tx_resp.find('"', p);
+            return tx_resp.substr(p, e - p);
+        };
+
+        int64_t orig_size = extract_int("size", 0);
+        int64_t orig_fee  = extract_int("fee",  0);
+        if (orig_size <= 0 || orig_fee < 0) {
+            fprintf(stderr, "Error: malformed getrawtransaction response.\n");
+            return 1;
+        }
+
+        // 4) Walk vin[] and gather inputs.
+        struct VinEntry {
+            std::string txid;
+            uint32_t    vout{0};
+            int64_t     prev_value{0};
+            std::string prev_address;
+            uint8_t     prev_type{0};
+        };
+        std::vector<VinEntry> vins;
+        auto vin_start = tx_resp.find("\"vin\":[");
+        auto vin_end   = tx_resp.find("],\"vout\"", vin_start);
+        if (vin_start == std::string::npos || vin_end == std::string::npos) {
+            fprintf(stderr, "Error: missing vin[] in response.\n");
+            return 1;
+        }
+        size_t cur = vin_start;
+        while (true) {
+            auto obj = tx_resp.find('{', cur);
+            if (obj == std::string::npos || obj >= vin_end) break;
+            auto obj_end = tx_resp.find('}', obj);
+            if (obj_end == std::string::npos || obj_end > vin_end) break;
+            VinEntry v;
+            v.txid         = extract_str("txid", obj);
+            v.vout         = (uint32_t)extract_int("vout", obj);
+            v.prev_value   = extract_int("prev_value", obj);
+            v.prev_address = extract_str("prev_address", obj);
+            v.prev_type    = (uint8_t)extract_int("prev_type", obj);
+            if (v.txid.empty() || v.prev_value < 0 || v.prev_address.empty()) {
+                fprintf(stderr, "Error: vin missing prev_value/prev_address. "
+                                "Node may need redeploy of the extended RPC.\n");
+                return 1;
+            }
+            vins.push_back(v);
+            cur = obj_end + 1;
+        }
+        if (vins.empty()) {
+            fprintf(stderr, "Error: no vin entries parsed.\n");
+            return 1;
+        }
+
+        // 5) Verify wallet owns every input.
+        int64_t total_in = 0;
+        for (const auto& v : vins) {
+            sost::PubKeyHash pkh{};
+            if (!sost::address_decode(v.prev_address, pkh)) {
+                fprintf(stderr, "Error: cannot decode prev_address %s\n", v.prev_address.c_str());
+                return 1;
+            }
+            if (!w.find_key_by_pkh(pkh)) {
+                fprintf(stderr, "Error: input %s:%u belongs to %s (not in this wallet).\n",
+                        v.txid.c_str(), v.vout, v.prev_address.c_str());
+                fprintf(stderr, "  Cannot sign a replacement for a tx whose inputs we do not own.\n");
+                return 1;
+            }
+            total_in += v.prev_value;
+        }
+
+        // 6) Compute new fee + return amount. Replacement size will be
+        //    smaller (1 output instead of N), but we conservatively reuse
+        //    the original size for the bump calc — chain only requires
+        //    new_fee/new_size > old_fee/old_size AND new_fee >= old_fee +
+        //    new_size * RBF_MIN_FEE_BUMP_PER_BYTE.
+        int64_t new_fee = orig_fee + orig_size * fee_bump_per_byte;
+        if (total_in <= new_fee) {
+            fprintf(stderr, "Error: replacement fee (%lld) exceeds total input value (%lld). "
+                            "Original fee was already too close to inputs.\n",
+                    (long long)new_fee, (long long)total_in);
+            return 1;
+        }
+        int64_t return_amount = total_in - new_fee;
+        std::string return_addr = w.default_address();
+        sost::PubKeyHash return_pkh{};
+        if (!sost::address_decode(return_addr, return_pkh)) {
+            fprintf(stderr, "Error: cannot decode wallet default address %s\n", return_addr.c_str());
+            return 1;
+        }
+
+        // 7) Build replacement: same inputs, single output to self.
+        sost::Transaction rtx{};
+        rtx.version = 1;
+        rtx.tx_type = 0x00;
+        for (const auto& v : vins) {
+            if (v.txid.size() != 64) {
+                fprintf(stderr, "Error: bad input txid length %zu (expected 64 hex)\n",
+                        v.txid.size());
+                return 1;
+            }
+            sost::TxInput in{};
+            in.prev_txid  = sost::from_hex(v.txid);
+            in.prev_index = v.vout;
+            rtx.inputs.push_back(in);
+        }
+        sost::TxOutput out{};
+        out.amount      = return_amount;
+        out.type        = 0x00;
+        out.pubkey_hash = return_pkh;
+        rtx.outputs.push_back(out);
+
+        // 8) Sign each input.
+        sost::Hash256 genesis_hash = sost::from_hex(
+            "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
+        for (size_t i = 0; i < vins.size(); ++i) {
+            sost::PubKeyHash pkh{};
+            sost::address_decode(vins[i].prev_address, pkh);
+            const sost::WalletKey* key = w.find_key_by_pkh(pkh);
+            if (!key) {
+                fprintf(stderr, "Error: lost key for input %zu\n", i);
+                return 1;
+            }
+            sost::SpentOutput spent{};
+            spent.amount = vins[i].prev_value;
+            spent.type   = vins[i].prev_type;
+            std::string sign_err;
+            if (!sost::SignTransactionInput(rtx, i, spent, genesis_hash,
+                                            key->privkey, &sign_err)) {
+                fprintf(stderr, "Error signing input %zu: %s\n", i, sign_err.c_str());
+                return 1;
+            }
+        }
+
+        std::vector<sost::Byte> raw;
+        std::string ser_err;
+        if (!rtx.Serialize(raw, &ser_err)) {
+            fprintf(stderr, "Error serializing replacement: %s\n", ser_err.c_str());
+            return 1;
+        }
+        sost::Hash256 new_txid;
+        rtx.ComputeTxId(new_txid);
+        std::string raw_hex = to_hex(raw.data(), raw.size());
+
+        printf("\n========== CANCEL-TX (RBF) ==========\n");
+        printf("  Original txid:    %s\n", orig_txid.c_str());
+        printf("  Original size:    %lld bytes\n", (long long)orig_size);
+        printf("  Original fee:     %s SOST\n", format_sost(orig_fee).c_str());
+        printf("  Inputs spent:     %zu  (total %s SOST)\n",
+               vins.size(), format_sost(total_in).c_str());
+        printf("  Replacement txid: %s\n", to_hex(new_txid.data(), 32).c_str());
+        printf("  Replacement size: %zu bytes\n", raw.size());
+        printf("  Replacement fee:  %s SOST  (+%s SOST, +%lld stocks/byte)\n",
+               format_sost(new_fee).c_str(),
+               format_sost(new_fee - orig_fee).c_str(),
+               (long long)fee_bump_per_byte);
+        printf("  Refund to:        %s\n", return_addr.c_str());
+        printf("  Refund amount:    %s SOST\n", format_sost(return_amount).c_str());
+        printf("=====================================\n");
+
+        if (!g_yes_flag) {
+            printf("Confirm cancel? [yes/no]: ");
+            fflush(stdout);
+            char confirm[16] = {};
+            if (!fgets(confirm, sizeof(confirm), stdin) ||
+                (strncmp(confirm, "yes", 3) != 0 && strncmp(confirm, "y", 1) != 0)) {
+                printf("Cancellation aborted.\n");
+                return 0;
+            }
+        }
+
+        printf("Broadcasting replacement...\n");
+        std::string resp = rpc_call("sendrawtransaction", "[\"" + raw_hex + "\"]");
+        if (resp.find("\"result\":\"") != std::string::npos) {
+            printf("\nReplacement accepted! New txid: %s\n",
+                   to_hex(new_txid.data(), 32).c_str());
+            printf("  Original tx %s is now replaced.\n", orig_txid.c_str());
+            return 0;
+        }
+        auto err_pos = resp.find("\"message\":\"");
+        if (err_pos != std::string::npos) {
+            auto err_end = resp.find('"', err_pos + 11);
+            std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
+            fprintf(stderr, "\nReplacement rejected: %s\n", err_msg.c_str());
+        } else {
+            fprintf(stderr, "\nReplacement rejected (unknown error)\n");
             fprintf(stderr, "  Raw response: %s\n", resp.c_str());
         }
         return 1;
