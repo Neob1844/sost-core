@@ -2112,6 +2112,8 @@ async function updateDashboard(info){
   }).catch(function(){});
   // RPC ACTIVITY — per-method telemetry. Same fire-and-forget pattern as
   // getminerstats. Cheap on the node (in-memory atomic counters).
+  // The catch surfaces a "method missing" hint so an operator running an
+  // older binary doesn't stare at a silent "—" placeholder forever.
   rpc('getrpcstats').then(function(stats){
     if(!stats||!stats.methods)return;
     var methods=stats.methods;
@@ -2132,7 +2134,28 @@ async function updateDashboard(info){
       sub.style.color=errRatio>0.02?'#fbbf24':'var(--text3)';
     }
     window._rpcStats=stats;
-  }).catch(function(){});
+  }).catch(function(e){
+    var msg=String((e&&e.message)||e);
+    var el=document.getElementById('dRpcAct');
+    var sub=document.getElementById('dRpcActSub');
+    if(el&&sub){
+      if(msg.indexOf('Method not found')!==-1){
+        el.textContent='n/a';
+        el.style.color='#fbbf24';
+        sub.textContent='node missing getrpcstats — restart with V12 build';
+        sub.style.color='#fbbf24';
+      } else {
+        // Network / auth / other error. Show the message so the operator
+        // can act on it instead of a silent dash.
+        el.textContent='!';
+        el.style.color='#fb010d';
+        sub.textContent=msg.substring(0,60);
+        sub.style.color='#fb010d';
+      }
+    }
+    // Stash error for the click-to-expand panel.
+    window._rpcStatsError=msg;
+  });
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   var nextLotteryHeight=(info.blocks||0)+1;
   var nextLotteryLabel='pre-Phase 2';
@@ -3210,7 +3233,21 @@ function renderDashPanel(key,body,title,silent){
   } else if(key==='rpcstats'){
     title.textContent='// RPC ACTIVITY — per-method telemetry (since node boot)';
     var rs=window._rpcStats;
-    if(!rs||!rs.methods){body.innerHTML='<div style="color:var(--text3)">Waiting for getrpcstats… click again in a moment.</div>';return;}
+    if(!rs||!rs.methods){
+      var errMsg=window._rpcStatsError||'';
+      if(errMsg.indexOf('Method not found')!==-1){
+        body.innerHTML='<div style="color:#fbbf24;line-height:1.7">'
+          +'<b>⚠ Node is missing <code>getrpcstats</code>.</b><br>'
+          +'<span style="color:var(--text3)">The binary running on this node was built before commit <code>2e14954</code>. Rebuild + restart fixes it:</span>'
+          +'<pre style="background:rgba(0,0,0,.4);border:1px solid #333;padding:8px;margin-top:6px;font-size:10px;color:var(--cyan);white-space:pre-wrap">cd /opt/sost \ngit pull --ff-only origin main \ncd build \ncmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON \nmake -j$(nproc) sost-node \nsudo systemctl restart sost-node</pre>'
+          +'<span style="color:var(--text3);font-size:10px">After restart hard-reload this page (Ctrl+Shift+R).</span></div>';
+      } else if(errMsg){
+        body.innerHTML='<div style="color:#fb010d;line-height:1.7"><b>⚠ RPC error:</b> '+errMsg+'</div>';
+      } else {
+        body.innerHTML='<div style="color:var(--text3)">Waiting for getrpcstats… click again in a moment.</div>';
+      }
+      return;
+    }
     var methods=rs.methods;
     var rows=Object.keys(methods).map(function(name){
       var m=methods[name];
