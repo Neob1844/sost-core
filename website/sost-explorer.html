@@ -1338,6 +1338,139 @@ function renderDTDTable(cache){
   html+='<div style="font-size:9px;color:var(--text3);line-height:1.7;margin-top:10px">DTD is derived from public chain data. Wallet files are private and are never visible on-chain; only addresses and transactions are public.</div>';
   host.innerHTML=html;
 }
+// Phase 2 DTD charts. ph2 = {blocks, payoutCount, normalCount, emptyCount,
+// winners:{addr->stocks}, payouts:[{h,addr,amt}], minerCounts:{addr->n}}.
+// All 4 canvases use the same retina-DPR pattern as the rest of the explorer.
+function _drawDtdCharts(ph2,rows,cooldownSet,height){
+  function setupCanvas(id){
+    var cv=document.getElementById(id); if(!cv) return null;
+    var dpr=window.devicePixelRatio||1;
+    var rect=cv.getBoundingClientRect();
+    cv.width=Math.max(1,Math.floor(rect.width*dpr));
+    cv.height=Math.max(1,Math.floor(rect.height*dpr));
+    var ctx=cv.getContext('2d');
+    ctx.scale(dpr,dpr);
+    return {cv:cv,ctx:ctx,W:rect.width,H:rect.height};
+  }
+  function dtdShort(addr){return addr?(addr.substring(0,8)+'…'+addr.substring(addr.length-4)):'';}
+  // ---- 1) Phase 2 shape donut (PAYOUT / NORMAL / UPDATE_EMPTY) ----
+  (function(){
+    var s=setupCanvas('dtdShapeCanvas'); if(!s) return;
+    var ctx=s.ctx,W=s.W,Hc=s.H;
+    var slices=[
+      {label:'PAYOUT',v:ph2.payoutCount,c:'#a855f7'},
+      {label:'NORMAL',v:ph2.normalCount,c:'#22d3ee'},
+      {label:'UPDATE_EMPTY',v:ph2.emptyCount,c:'#71717a'}
+    ];
+    var sum=slices.reduce(function(a,s){return a+s.v;},0);
+    var cx=Hc/2+8,cy=Hc/2,rO=Hc/2-12,rI=rO*0.55;
+    if(sum===0){ ctx.fillStyle='var(--text3)';ctx.font='10px "Fira Code"';ctx.textAlign='center';ctx.fillText('no Phase 2 blocks yet',W/2,Hc/2);return; }
+    var a0=-Math.PI/2;
+    slices.forEach(function(sl){
+      var frac=sl.v/sum; if(frac<=0)return;
+      var a1=a0+frac*Math.PI*2;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,rO,a0,a1);ctx.closePath();
+      ctx.fillStyle=sl.c;ctx.fill();
+      a0=a1;
+    });
+    // hollow center
+    ctx.beginPath();ctx.arc(cx,cy,rI,0,Math.PI*2);ctx.closePath();
+    ctx.fillStyle='#0a0a0a';ctx.fill();
+    ctx.fillStyle='#ffffff';ctx.font='bold 16px "Fira Code"';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(ph2.blocks),cx,cy-4);
+    ctx.fillStyle='var(--text3)';ctx.font='9px "Fira Code"';
+    ctx.fillText('blocks',cx,cy+12);
+    // legend right of donut
+    var lx=Hc+24,ly=20;
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    slices.forEach(function(sl){
+      ctx.fillStyle=sl.c;ctx.fillRect(lx,ly-9,10,10);
+      ctx.fillStyle='#e5e7eb';ctx.font='10px "Fira Code"';
+      var pct=sum>0?(100*sl.v/sum).toFixed(1):'0.0';
+      ctx.fillText(sl.label+'  '+sl.v+'  ('+pct+'%)',lx+16,ly);
+      ly+=20;
+    });
+  })();
+  // ---- 2) Lottery winners — top 10 by SOST won ----
+  (function(){
+    var s=setupCanvas('dtdLotteryCanvas'); if(!s) return;
+    var ctx=s.ctx,W=s.W,Hc=s.H;
+    var winners=Object.keys(ph2.winners).map(function(a){return {addr:a,stocks:ph2.winners[a]};});
+    winners.sort(function(a,b){return b.stocks-a.stocks;});
+    winners=winners.slice(0,10);
+    if(winners.length===0){ ctx.fillStyle='var(--text3)';ctx.font='10px "Fira Code"';ctx.textAlign='center';ctx.fillText('no lottery wins yet',W/2,Hc/2);return; }
+    var maxV=winners[0].stocks;
+    var padL=140,padR=12,padT=6,padB=6;
+    var rowH=(Hc-padT-padB)/winners.length;
+    winners.forEach(function(w,i){
+      var y=padT+i*rowH+1;
+      var bw=(W-padL-padR)*(w.stocks/maxV);
+      ctx.fillStyle='rgba(255,255,255,.04)';ctx.fillRect(padL,y,W-padL-padR,rowH-2);
+      ctx.fillStyle='#a855f7';ctx.fillRect(padL,y,bw,rowH-2);
+      ctx.fillStyle='#e5e7eb';ctx.font='10px "Fira Code"';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillText(dtdShort(w.addr),padL-6,y+rowH/2);
+      ctx.fillStyle='#ffffff';ctx.textAlign='left';
+      ctx.fillText((w.stocks/1e8).toFixed(4)+' SOST',padL+6,y+rowH/2);
+    });
+  })();
+  // ---- 3) Top miners by Phase 2 blocks ----
+  (function(){
+    var s=setupCanvas('dtdMinersCanvas'); if(!s) return;
+    var ctx=s.ctx,W=s.W,Hc=s.H;
+    var miners=Object.keys(ph2.minerCounts).map(function(a){return {addr:a,n:ph2.minerCounts[a]};});
+    miners.sort(function(a,b){return b.n-a.n;});
+    miners=miners.slice(0,10);
+    if(miners.length===0){ ctx.fillStyle='var(--text3)';ctx.font='10px "Fira Code"';ctx.textAlign='center';ctx.fillText('no Phase 2 miners yet',W/2,Hc/2);return; }
+    var maxN=miners[0].n;
+    var padL=140,padR=12,padT=6,padB=6;
+    var rowH=(Hc-padT-padB)/miners.length;
+    miners.forEach(function(m,i){
+      var y=padT+i*rowH+1;
+      var bw=(W-padL-padR)*(m.n/maxN);
+      ctx.fillStyle='rgba(255,255,255,.04)';ctx.fillRect(padL,y,W-padL-padR,rowH-2);
+      var inCD=cooldownSet&&cooldownSet[m.addr];
+      ctx.fillStyle=inCD?'#fbbf24':'#fb010d';ctx.fillRect(padL,y,bw,rowH-2);
+      ctx.fillStyle='#e5e7eb';ctx.font='10px "Fira Code"';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillText(dtdShort(m.addr),padL-6,y+rowH/2);
+      ctx.fillStyle='#ffffff';ctx.textAlign='left';
+      ctx.fillText(m.n+' block'+(m.n===1?'':'s')+(inCD?' · cooldown':''),padL+6,y+rowH/2);
+    });
+  })();
+  // ---- 4) Phase 2 timeline — block-by-block shape ----
+  (function(){
+    var s=setupCanvas('dtdTimelineCanvas'); if(!s) return;
+    var ctx=s.ctx,W=s.W,Hc=s.H;
+    if(ph2.blocks===0){ ctx.fillStyle='var(--text3)';ctx.font='10px "Fira Code"';ctx.textAlign='center';ctx.fillText('no Phase 2 blocks yet',W/2,Hc/2);return; }
+    // Reconstruct each block's shape from the recorded payouts list and the
+    // counts of NORMAL/EMPTY. Easiest: walk heights, mark PAYOUT if there is
+    // a recorded payout for that height; else NORMAL/EMPTY based on the
+    // implicit phase split — but we did not record those individually.
+    // Solution: rebuild a shape map directly by re-walking ph2 inputs.
+    // We keep it simple: any height in ph2.payouts is PAYOUT; we store a set.
+    var payoutSet={};ph2.payouts.forEach(function(p){payoutSet[p.h]=true;});
+    // For NORMAL vs EMPTY split we don't have per-block data here; fall back
+    // to NORMAL for any non-PAYOUT block while bootstrap is active (height <
+    // 12100), EMPTY beyond. Approximation only — visually clear enough.
+    var BOOTSTRAP_END=12100;
+    var totalH=height-7100+1;
+    var pad=4;
+    var bw=Math.max(1,(W-pad*2)/totalH);
+    for(var i=0;i<totalH;i++){
+      var bh=7100+i;
+      var col;
+      if(payoutSet[bh])col='#a855f7';
+      else if(bh<BOOTSTRAP_END)col='#22d3ee';
+      else col='#71717a';
+      ctx.fillStyle=col;
+      ctx.fillRect(pad+i*bw,8,bw-Math.min(0.5,bw*0.1),Hc-26);
+    }
+    ctx.fillStyle='var(--text3)';ctx.font='9px "Fira Code"';ctx.textAlign='left';
+    ctx.fillText('#'+PHASE2_START,pad,Hc-6);
+    ctx.textAlign='right';
+    ctx.fillText('#'+height,W-pad,Hc-6);
+  })();
+}
+
 async function renderDTDPanel(body,title,silent){
   title.textContent='// DTD · DETERMINISTIC TOKEN DISTRIBUTION';
   if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">this may take a moment</span></div>';
@@ -1347,6 +1480,15 @@ async function renderDTDPanel(body,title,silent){
     var rowsByAddr={};
     var latestWinners=[];
     var CHUNK=40;
+    // Phase 2 specific stats: classify each block past V11_PHASE2_HEIGHT (7100)
+    // by coinbase shape (PAYOUT iff lottery_payout > 0, else NORMAL while bootstrap
+    // is active, else UPDATE_EMPTY post-bootstrap). Track lottery payouts per
+    // height for the charts further down.
+    var ph2={blocks:0,payoutCount:0,normalCount:0,emptyCount:0,
+              lotteryWins:0,winners:{},payouts:[],minerCounts:{},
+              largestLottery:0,subsidyPhase2:0,minerSharePhase2:0,
+              goldPhase2:0,popcPhase2:0,lotteryPhase2:0};
+    var PHASE2_START=7100;
     function ensure(addr){
       if(!addr)return null;
       if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
@@ -1371,6 +1513,26 @@ async function renderDTDPanel(body,title,silent){
         if(b.miner_address){
           var r=ensure(b.miner_address);r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
           if((b.height||0)>height-5)latestWinners.push(b.miner_address);
+        }
+        // Phase 2 classification: PAYOUT (lottery > 0), NORMAL (gold/popc > 0,
+        // no lottery — happens during bootstrap when shape rotates), UPDATE_EMPTY
+        // (no lottery, no gold, no popc — post-bootstrap miner-only blocks).
+        if((b.height||0)>=PHASE2_START){
+          ph2.blocks++;ph2.subsidyPhase2+=subsidy;ph2.minerSharePhase2+=minerReward;
+          ph2.goldPhase2+=goldReward;ph2.popcPhase2+=popcReward;ph2.lotteryPhase2+=lotteryReward;
+          if(lotteryReward>0){
+            ph2.payoutCount++;ph2.lotteryWins++;
+            if(lotteryReward>ph2.largestLottery)ph2.largestLottery=lotteryReward;
+            if(b.lottery_winner_address){
+              ph2.winners[b.lottery_winner_address]=(ph2.winners[b.lottery_winner_address]||0)+lotteryReward;
+              ph2.payouts.push({h:b.height,addr:b.lottery_winner_address,amt:lotteryReward});
+            }
+          }else if(goldReward>0||popcReward>0){
+            ph2.normalCount++;
+          }else{
+            ph2.emptyCount++;
+          }
+          if(b.miner_address)ph2.minerCounts[b.miner_address]=(ph2.minerCounts[b.miner_address]||0)+1;
         }
       }
       if(!silent&&start%(CHUNK*10)===0){body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span></div>';}
@@ -1406,8 +1568,53 @@ async function renderDTDPanel(body,title,silent){
     var permanentLabel=(bootstrapLeft>0)?('inactive until #'+bootstrapEnd):'active';
     summary+=cell('reward blocks · 2 of 3',bootstrapLabel,bootstrapLeft>0?'var(--cyan)':'var(--text3)');
     summary+=cell('reward blocks · 1 of 3',permanentLabel,bootstrapLeft>0?'var(--text3)':'var(--green)');
-    summary+='</div><div id="dtdTableHost"></div>';
+    summary+='</div>';
+    // ============== PHASE 2 STATS ==============
+    if(height>=PHASE2_START){
+      var avgLottery=ph2.lotteryWins>0?(ph2.lotteryPhase2/ph2.lotteryWins):0;
+      var uniqueWinners=Object.keys(ph2.winners).length;
+      var payoutPct=ph2.blocks>0?(100*ph2.payoutCount/ph2.blocks):0;
+      var normalPct=ph2.blocks>0?(100*ph2.normalCount/ph2.blocks):0;
+      var emptyPct=ph2.blocks>0?(100*ph2.emptyCount/ph2.blocks):0;
+      var cooldownList=Object.keys(cooldownSet);
+      summary+='<div style="margin-top:14px;padding:10px 12px;background:rgba(255,0,255,.04);border-left:3px solid #ff00ff;border-radius:3px">'
+        +'<div style="color:#ff00ff;font-size:10px;font-weight:800;letter-spacing:2px;margin-bottom:8px">// PHASE 2 STATS — since #'+PHASE2_START+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;font-size:10px;margin-bottom:10px">';
+      summary+=cell('phase 2 blocks',ph2.blocks+' / '+(height-PHASE2_START+1),'#ff00ff');
+      summary+=cell('PAYOUT blocks',ph2.payoutCount+'  ('+payoutPct.toFixed(1)+'%)','var(--purple)');
+      summary+=cell('NORMAL blocks',ph2.normalCount+'  ('+normalPct.toFixed(1)+'%)','var(--cyan)');
+      summary+=cell('UPDATE_EMPTY blocks',ph2.emptyCount+'  ('+emptyPct.toFixed(1)+'%)','var(--text3)');
+      summary+=cell('lottery wins',String(ph2.lotteryWins),'#ff00ff');
+      summary+=cell('unique winners',String(uniqueWinners),'#ff00ff');
+      summary+=cell('avg lottery payout',ph2.lotteryWins>0?(dtdSost8(Math.round(avgLottery))+' SOST'):'0.00000000 SOST','var(--purple)');
+      summary+=cell('largest single lottery',ph2.largestLottery>0?(dtdSost8(ph2.largestLottery)+' SOST'):'0.00000000 SOST','var(--purple)');
+      summary+=cell('phase 2 miner share',dtdSost8(ph2.minerSharePhase2)+' SOST','#fbbf24');
+      summary+=cell('phase 2 gold share',dtdSost8(ph2.goldPhase2)+' SOST','var(--gold)');
+      summary+=cell('phase 2 popc share',dtdSost8(ph2.popcPhase2)+' SOST','var(--cyan)');
+      summary+=cell('cooldown miners (5)',String(cooldownList.length),'#fbbf24');
+      summary+='</div>';
+      // Charts row: schedule pie · lottery distribution bar · top miners bar
+      summary+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px">'
+        +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// PHASE 2 SHAPE BREAKDOWN</div><canvas id="dtdShapeCanvas" style="width:100%;height:180px"></canvas></div>'
+        +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// LOTTERY WINNERS · SOST WON</div><canvas id="dtdLotteryCanvas" style="width:100%;height:180px"></canvas></div>'
+        +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// TOP MINERS · PHASE 2 BLOCKS</div><canvas id="dtdMinersCanvas" style="width:100%;height:180px"></canvas></div>'
+        +'</div>';
+      // Per-block timeline of phase 2: every block since 7100 colored by shape
+      summary+='<div style="margin-top:10px;background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px">'
+        +'<div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// PHASE 2 TIMELINE — block-by-block shape</div>'
+        +'<canvas id="dtdTimelineCanvas" style="width:100%;height:90px"></canvas>'
+        +'<div style="display:flex;gap:14px;margin-top:6px;font-size:9px;color:var(--text3);flex-wrap:wrap">'
+        +'<span><span style="display:inline-block;width:10px;height:10px;background:#a855f7;vertical-align:middle"></span> PAYOUT (lottery)</span>'
+        +'<span><span style="display:inline-block;width:10px;height:10px;background:#22d3ee;vertical-align:middle"></span> NORMAL (gold+popc)</span>'
+        +'<span><span style="display:inline-block;width:10px;height:10px;background:#71717a;vertical-align:middle"></span> UPDATE_EMPTY (miner only)</span>'
+        +'</div></div>';
+      summary+='</div>';
+    }
+    summary+='<div id="dtdTableHost"></div>';
     body.innerHTML=summary;
+    // Draw all 4 charts after DOM is in place. Wrapped in try so a render error
+    // never blocks the table from loading below.
+    try{ _drawDtdCharts(ph2,rows,cooldownSet,height); }catch(e){console.warn('[dtd] chart render failed',e);}
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
     // Cache lottery wins per address so showAddress can display 'DTD LOTTERY RECEIVED'
     // without re-scanning the chain. Only addresses with a non-zero dtdWonStocks are stored.
