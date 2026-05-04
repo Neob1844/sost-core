@@ -27,6 +27,20 @@
     "https://github.com/Neob1844/sost-core"
   ]
 }
+
+function syncPhase2ReadyMinerCard(){
+  var card=document.getElementById('phase2ReadyMinersCard');
+  if(!card)return;
+  card.querySelectorAll('.dash-label,.dash-val,.dash-sub').forEach(function(el){
+    el.style.color='#4488ff';
+  });
+  var txt=(card.textContent||'').toLowerCase();
+  var risky=txt.indexOf('centralised')>=0 || txt.indexOf('no phase 2 miners')>=0;
+  card.classList.toggle('phase2-ready-risk-pulse',risky);
+}
+setInterval(syncPhase2ReadyMinerCard,2000);
+setTimeout(syncPhase2ReadyMinerCard,500);
+
 </script>
 <meta charset="utf-8"/>
 <link rel="canonical" href="https://sostcore.com/sost-explorer.html">
@@ -280,6 +294,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   .search-pre{display:none}
 }
   .nav-hamburger { display:none; background:none; border:1px solid var(--border-dim); color:var(--text-dim); font-size:20px; padding:4px 8px; cursor:pointer; border-radius:4px; line-height:1; }
+
+@keyframes phase2ReadyRedPulse {
+  0%, 100% { border-color:rgba(251,1,13,.55); box-shadow:0 0 0 rgba(251,1,13,0); }
+  50% { border-color:#fb010d; box-shadow:0 0 18px rgba(251,1,13,.75), inset 0 0 14px rgba(251,1,13,.12); }
+}
+.phase2-ready-risk-pulse {
+  animation:phase2ReadyRedPulse 1.15s ease-in-out infinite;
+}
+
 </style>
 <script src="js/security.js"></script>
 <script src="js/nav-toggle.js" defer></script>
@@ -670,7 +693,7 @@ make -j$(nproc) sost-miner</pre>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="Bitcoin-style network hashrate (2^bits/blocktime). Effective attempts/sec shown as secondary, profile-adjusted for ConvergenceX filter."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
-  <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')" title="Distinct addresses that have mined a block since V11 Phase 2 activation at #7100. Red &lt; 2, amber = 2, green &gt;= 3. Centralisation risk while &lt; 3."><div class="dash-label">&#9874; PHASE 2 READY MINERS</div><div class="dash-val" id="dPhase2Miners">—</div><div class="dash-sub" id="dPhase2MinersSub">since #7100</div></div>
+  <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Distinct addresses that have mined a block since V11 Phase 2 activation at #7100. Red &lt; 2, amber = 2, green &gt;= 3. Centralisation risk while &lt; 3." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; PHASE 2 READY MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">

@@ -1,1 +1,1 @@
-{"v":"2026-05-04-v128","note":"Explorer dashboard label clarified: Phase 2 miners are now shown as Phase 2 Ready Miners, meaning addresses that have mined valid post-7100 blocks."}
+{"v":"2026-05-04-v128","note":"Explorer highlights Phase 2 ready miners card in blue and pulses red while Phase 2 mining is centralised."}
