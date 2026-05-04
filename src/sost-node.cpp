@@ -2940,6 +2940,62 @@ static std::string handle_getminerstats(const std::string& id, const std::vector
     return rpc_result(id, s.str());
 }
 
+// =============================================================================
+// RpcStats — per-method telemetry for getrpcstats. Records call count,
+// error count (any response containing "error":), summed latency in
+// microseconds, and the worst-case latency seen. Atomic scalars; the
+// per_method map is locked only on first-time insertion of a method
+// name. Wrapper lives in dispatch_rpc below. Lifetime counters only,
+// reset on process restart (boot_time_unix surfaces when the snapshot
+// began so the dashboard can show a "since" timestamp).
+// =============================================================================
+struct RpcMethodEntry {
+    std::atomic<uint64_t> calls{0};
+    std::atomic<uint64_t> errors{0};
+    std::atomic<uint64_t> total_us{0};
+    std::atomic<uint64_t> max_us{0};
+};
+struct RpcStats {
+    std::mutex mu;
+    std::map<std::string, std::shared_ptr<RpcMethodEntry>> per_method;
+    int64_t boot_time_unix{0};
+};
+static RpcStats g_rpc_stats;
+
+static std::shared_ptr<RpcMethodEntry> rpc_stats_get_or_create(const std::string& method) {
+    std::lock_guard<std::mutex> lk(g_rpc_stats.mu);
+    auto& slot = g_rpc_stats.per_method[method];
+    if (!slot) slot = std::make_shared<RpcMethodEntry>();
+    return slot;
+}
+
+static std::string handle_getrpcstats(const std::string& id, const std::vector<std::string>&) {
+    std::ostringstream s;
+    s << "{\"boot_time_unix\":" << g_rpc_stats.boot_time_unix
+      << ",\"methods\":{";
+    std::lock_guard<std::mutex> lk(g_rpc_stats.mu);
+    bool first = true;
+    for (const auto& kv : g_rpc_stats.per_method) {
+        if (!first) s << ",";
+        first = false;
+        const auto& e = *kv.second;
+        uint64_t calls = e.calls.load(std::memory_order_relaxed);
+        uint64_t errs  = e.errors.load(std::memory_order_relaxed);
+        uint64_t tot   = e.total_us.load(std::memory_order_relaxed);
+        uint64_t mx    = e.max_us.load(std::memory_order_relaxed);
+        uint64_t avg   = calls ? (tot / calls) : 0;
+        s << "\"" << kv.first << "\":{"
+          << "\"calls\":" << calls
+          << ",\"errors\":" << errs
+          << ",\"total_us\":" << tot
+          << ",\"avg_us\":" << avg
+          << ",\"max_us\":" << mx
+          << "}";
+    }
+    s << "}}";
+    return rpc_result(id, s.str());
+}
+
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -2982,6 +3038,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"license_verify",handle_license_verify},
     {"license_list",handle_license_list},
     {"getminerstats",handle_getminerstats},
+    {"getrpcstats",handle_getrpcstats},
 };
 
 static std::string dispatch_rpc(const std::string& req) {
@@ -2993,7 +3050,27 @@ static std::string dispatch_rpc(const std::string& req) {
     if(method.empty()) return rpc_error(id,-32600,"missing method");
     auto it=g_handlers.find(method);
     if(it==g_handlers.end()) return rpc_error(id,-32601,"Method not found: "+method);
-    return it->second(id,json_get_params(req));
+
+    // Per-method telemetry. Skip self-instrumentation of getrpcstats so
+    // a polling explorer card doesn't dominate the stats it's reading.
+    if (method == "getrpcstats") {
+        return it->second(id,json_get_params(req));
+    }
+    auto stats = rpc_stats_get_or_create(method);
+    auto t0 = std::chrono::steady_clock::now();
+    std::string resp = it->second(id, json_get_params(req));
+    auto t1 = std::chrono::steady_clock::now();
+    uint64_t us = (uint64_t)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+    stats->calls.fetch_add(1, std::memory_order_relaxed);
+    stats->total_us.fetch_add(us, std::memory_order_relaxed);
+    {
+        uint64_t prev = stats->max_us.load(std::memory_order_relaxed);
+        while (us > prev && !stats->max_us.compare_exchange_weak(prev, us, std::memory_order_relaxed)) {}
+    }
+    if (resp.find("\"error\":") != std::string::npos) {
+        stats->errors.fetch_add(1, std::memory_order_relaxed);
+    }
+    return resp;
 }
 
 // =============================================================================
@@ -6061,6 +6138,7 @@ int main(int argc, char** argv) {
 
     // Telemetry boot timestamp for the getminerstats RPC.
     g_miner_stats.boot_time_unix = (int64_t)time(nullptr);
+    g_rpc_stats.boot_time_unix   = g_miner_stats.boot_time_unix;
 
     // =========================================================================
     // FIX #1: Set ACTIVE_PROFILE BEFORE anything that touches magic bytes.

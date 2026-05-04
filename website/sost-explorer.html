@@ -775,6 +775,7 @@ make -j$(nproc) sost-miner</pre>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Counts distinct addresses that have produced an accepted Phase II block in the last 1000 blocks (since #7100 activation). Lower bound on adoption — miners that fail to produce valid blocks are not counted. Card pulses red permanently as a standing centralisation reminder; count itself is unbounded." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
+  <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
@@ -1956,6 +1957,29 @@ async function updateDashboard(info){
     // Stash for the click-to-expand panel renderer.
     window._minerStats=stats;
   }).catch(function(){});
+  // RPC ACTIVITY — per-method telemetry. Same fire-and-forget pattern as
+  // getminerstats. Cheap on the node (in-memory atomic counters).
+  rpc('getrpcstats').then(function(stats){
+    if(!stats||!stats.methods)return;
+    var methods=stats.methods;
+    var names=Object.keys(methods);
+    var totalCalls=0,totalErrs=0;
+    for(var ki=0;ki<names.length;ki++){
+      totalCalls+=methods[names[ki]].calls||0;
+      totalErrs+=methods[names[ki]].errors||0;
+    }
+    var el=document.getElementById('dRpcAct');
+    var sub=document.getElementById('dRpcActSub');
+    if(el&&sub){
+      el.textContent=fComma(totalCalls);
+      var errRatio=totalCalls>0?(totalErrs/totalCalls):0;
+      var col=errRatio>0.1?'#fb010d':errRatio>0.02?'#fbbf24':'#22c55e';
+      el.style.color=col;
+      sub.textContent=names.length+' methods · '+fComma(totalErrs)+' errors';
+      sub.style.color=errRatio>0.02?'#fbbf24':'var(--text3)';
+    }
+    window._rpcStats=stats;
+  }).catch(function(){});
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   var nextLotteryHeight=(info.blocks||0)+1;
   var nextLotteryLabel='pre-Phase 2';
@@ -3014,6 +3038,61 @@ function renderDashPanel(key,body,title,silent){
         var sk=sourceKeys[j];
         var skSafe=String(sk).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         html+='<tr><td style="padding:4px;border-bottom:1px solid var(--border)"><code>'+skSafe+'</code></td><td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:#fb010d">'+fComma(sources[sk])+'</td></tr>';
+      }
+      html+='</table>';
+    }
+    body.innerHTML=html;
+  } else if(key==='rpcstats'){
+    title.textContent='// RPC ACTIVITY — per-method telemetry (since node boot)';
+    var rs=window._rpcStats;
+    if(!rs||!rs.methods){body.innerHTML='<div style="color:var(--text3)">Waiting for getrpcstats… click again in a moment.</div>';return;}
+    var methods=rs.methods;
+    var rows=Object.keys(methods).map(function(name){
+      var m=methods[name];
+      return {name:name,calls:m.calls||0,errors:m.errors||0,avg_us:m.avg_us||0,max_us:m.max_us||0,total_us:m.total_us||0};
+    });
+    rows.sort(function(a,b){return b.calls-a.calls;});
+    var totalCalls=0,totalErrs=0;
+    for(var ri=0;ri<rows.length;ri++){totalCalls+=rows[ri].calls;totalErrs+=rows[ri].errors;}
+    function fmtUs(us){
+      if(us<1000)return us+' &micro;s';
+      if(us<1000000)return (us/1000).toFixed(1)+' ms';
+      return (us/1000000).toFixed(2)+' s';
+    }
+    var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">';
+    function tileR(lbl,val,col){return '<div style="background:var(--bg);border:1px solid var(--border);padding:8px 10px"><div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl+'</div><div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';}
+    var errPct=totalCalls>0?(totalErrs/totalCalls*100):0;
+    grid+=tileR('METHODS SEEN',rows.length,'var(--text)');
+    grid+=tileR('TOTAL CALLS',fComma(totalCalls),'var(--text)');
+    grid+=tileR('TOTAL ERRORS',fComma(totalErrs),totalErrs>0?'#fb010d':'var(--text3)');
+    grid+=tileR('ERROR %',errPct.toFixed(2)+'%',errPct>10?'#fb010d':errPct>2?'#fbbf24':'#22c55e');
+    grid+='</div>';
+    var html=grid;
+    if(rows.length>0){
+      html+='<div style="font-size:10px;letter-spacing:1px;color:var(--text3);margin:14px 0 6px">// PER-METHOD BREAKDOWN (sorted by calls)</div>';
+      html+='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+      html+='<tr style="color:var(--text3)">'
+        +'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--border)">Method</th>'
+        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Calls</th>'
+        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Errors</th>'
+        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Err %</th>'
+        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Avg</th>'
+        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Max</th>'
+        +'</tr>';
+      for(var i=0;i<rows.length;i++){
+        var r=rows[i];
+        var rNameSafe=String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var pct=r.calls>0?(r.errors/r.calls*100):0;
+        var pctCol=pct>10?'#fb010d':pct>2?'#fbbf24':'var(--text3)';
+        var maxCol=r.max_us>500000?'#fb010d':r.max_us>50000?'#fbbf24':'var(--text3)';
+        html+='<tr>'
+          +'<td style="padding:4px;border-bottom:1px solid var(--border)"><code style="color:var(--cyan)">'+rNameSafe+'</code></td>'
+          +'<td style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">'+fComma(r.calls)+'</td>'
+          +'<td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:'+(r.errors>0?'#fb010d':'var(--text3)')+'">'+fComma(r.errors)+'</td>'
+          +'<td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:'+pctCol+'">'+pct.toFixed(2)+'%</td>'
+          +'<td style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">'+fmtUs(r.avg_us)+'</td>'
+          +'<td style="text-align:right;padding:4px;border-bottom:1px solid var(--border);color:'+maxCol+'">'+fmtUs(r.max_us)+'</td>'
+          +'</tr>';
       }
       html+='</table>';
     }
