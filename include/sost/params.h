@@ -327,10 +327,10 @@ inline constexpr int32_t  SLINGSHOT_DROP_BPS            = 1250;   // 12.5%
 // Tier ladder (strict greater-than at each threshold; boundary values do
 // NOT trigger the higher tier — see slingshot_v12_tier in casert.cpp):
 //
-//   current_elapsed >  720 s (12 min) → tier 1 → -6.5%   bitsQ drop
-//   current_elapsed >  900 s (15 min) → tier 2 → -12.5%
-//   current_elapsed > 1800 s (30 min) → tier 3 → -25%
-//   current_elapsed > 3600 s (60 min) → tier 4 → -37.5%
+//   current_elapsed >  840 s ( 14 min) → tier 1 → -6.5%   bitsQ drop
+//   current_elapsed > 1740 s ( 29 min) → tier 2 → -12.5%
+//   current_elapsed > 3540 s ( 59 min) → tier 3 → -25%
+//   current_elapsed > 7140 s (119 min) → tier 4 → -37.5%
 //
 // The drop is applied AFTER the avg288 / dynamic-cap clamp and is then
 // re-clamped to MIN_BITSQ. Self-resetting per block — no compounding

@@ -59,11 +59,11 @@ int32_t compute_v11_cascade_drop_triangular_h(int64_t block_elapsed_s,
 // V12 Slingshot tier ladder (consensus-critical helper).
 // Returns 0..4 — strict greater-than at every threshold, boundary
 // values do NOT trigger the higher tier:
-//   current_elapsed >  V12_SLINGSHOT_T4_SECONDS (3600) → 4
-//   current_elapsed >  V12_SLINGSHOT_T3_SECONDS (1800) → 3
-//   current_elapsed >  V12_SLINGSHOT_T2_SECONDS (900)  → 2
-//   current_elapsed >  V12_SLINGSHOT_T1_SECONDS (720)  → 1
-//   else                                                 → 0
+//   current_elapsed >  V12_SLINGSHOT_T4_SECONDS (7140 = 119 min) → 4
+//   current_elapsed >  V12_SLINGSHOT_T3_SECONDS (3540 =  59 min) → 3
+//   current_elapsed >  V12_SLINGSHOT_T2_SECONDS (1740 =  29 min) → 2
+//   current_elapsed >  V12_SLINGSHOT_T1_SECONDS ( 840 =  14 min) → 1
+//   else                                                          → 0
 //
 // Used identically by miner (mid-search rebuild watch) and validator
 // (bitsQ relief) so consensus is symmetric. Pure function — no globals.
