@@ -108,6 +108,12 @@ public:
         int64_t chain_height = -1,
         std::string* err = nullptr);
 
+    // Mark every input of `tx` as spent in this wallet's UTXO list. Use
+    // after a tx built via create_transaction_many has been successfully
+    // broadcast — that function intentionally does NOT auto-mark so the
+    // CLI can run multiple fee-estimation passes without losing UTXOs.
+    void mark_tx_inputs_spent(const Transaction& tx);
+
     // v1.4: create BOND_LOCK transaction (locks funds until lock_until height)
     bool create_bond_transaction(
         int64_t amount,

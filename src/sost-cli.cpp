@@ -1239,10 +1239,10 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (!w.save(wallet_path, &err)) {
-            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
-        }
-
+        // Wallet save + mark-inputs-spent are intentionally deferred until
+        // after the broadcast succeeds. Marking now would leave the local
+        // UTXO list out of sync with the chain if the user aborts at the
+        // confirm prompt, or if the node rejects the tx.
         std::string raw_hex = to_hex(raw.data(), raw.size());
         sost::Hash256 txid;
         tx.ComputeTxId(txid);
@@ -1277,6 +1277,15 @@ int main(int argc, char** argv) {
         std::string resp = rpc_call("sendrawtransaction",
                                     "[\"" + raw_hex + "\"]");
         if (resp.find("\"result\":\"") != std::string::npos) {
+            // Now that the node accepted the tx, mark its inputs as spent
+            // in the local UTXO list and persist the wallet so subsequent
+            // CLI invocations don't try to reuse those UTXOs before the
+            // node's mempool propagates back.
+            w.mark_tx_inputs_spent(tx);
+            std::string save_err;
+            if (!w.save(wallet_path, &save_err)) {
+                fprintf(stderr, "Warning: failed to save wallet: %s\n", save_err.c_str());
+            }
             printf("\nTX accepted by node! Txid: %s\n",
                    to_hex(txid.data(), 32).c_str());
             printf("  Waiting for next mined block to confirm...\n");

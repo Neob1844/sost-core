@@ -651,11 +651,13 @@ bool Wallet::create_transaction_many(
         }
     }
 
-    for (size_t idx : selected) {
-        const auto& u = unspent[idx];
-        mark_spent(u.txid, u.vout);
-    }
-
+    // NOTE: do NOT mark inputs as spent here. The CLI's sendmany flow
+    // calls this function 2-3 times during fee estimation; marking inputs
+    // on the first pass would either drop them from list_unspent on
+    // subsequent passes or force a re-sync between passes. Caller must
+    // invoke Wallet::mark_tx_inputs_spent(tx) ONLY after the broadcast
+    // succeeds — that way an aborted/rejected tx leaves the wallet's
+    // local UTXO state untouched.
     return true;
 }
 
@@ -855,6 +857,16 @@ bool Wallet::create_escrow_transaction(
         mark_spent(u.txid, u.vout);
     }
     return true;
+}
+
+// Walks tx.inputs and marks each (prev_txid, prev_index) as spent in the
+// wallet's UTXO list. Used by callers that build a tx via the no-mark
+// variants (create_transaction_many) and only want the local state to
+// reflect the spend after the broadcast actually went through.
+void Wallet::mark_tx_inputs_spent(const Transaction& tx) {
+    for (const auto& in : tx.inputs) {
+        mark_spent(in.prev_txid, in.prev_index);
+    }
 }
 
 // =============================================================================
