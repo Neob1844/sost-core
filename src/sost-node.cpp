@@ -5406,11 +5406,14 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                            (long long)blk_height, addr.c_str());
                     if (add_misbehavior(fd, addr, 10, "invalid block")) return false;
                 }
-                // Telemetry: count this as a submitblock-equivalent rejection
-                // and bucket it by peer IP (only the P2P relay path has one).
-                // Skip when the block was just stored as a fork/orphan — that
-                // is normal relay behaviour, not a real rejection.
+                // Telemetry: bump received + rejected together so the
+                // invariant `received = accepted + rejected` holds for the
+                // P2P path the same way it does for the RPC submitblock
+                // path. Skip fork/orphan storage — that's normal relay
+                // behaviour, neither an attempt nor a rejection of the
+                // active chain.
                 if (!stored_as_fork) {
+                    g_miner_stats.submitblock_received.fetch_add(1, std::memory_order_relaxed);
                     g_miner_stats.submitblock_rejected.fetch_add(1, std::memory_order_relaxed);
                     std::lock_guard<std::mutex> lg(g_miner_stats.map_mu);
                     const std::string& r = g_last_reject_reason.empty()
@@ -5419,7 +5422,13 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     g_miner_stats.reject_sources_24h[peer_ip(addr)]++;
                 }
             } else {
-                // Block accepted — update peer's known height
+                // Block accepted via P2P — bump received + accepted so the
+                // MINING ATTEMPTS panel sees both successful relays and
+                // local submitblock acceptances under the same invariant
+                // (received = accepted + rejected).
+                g_miner_stats.submitblock_received.fetch_add(1, std::memory_order_relaxed);
+                g_miner_stats.submitblock_accepted.fetch_add(1, std::memory_order_relaxed);
+                // Update peer's known height
                 if (blk_height > 0) {
                     std::lock_guard<std::mutex> lk_ph(g_peers_mu);
                     for (auto& p : g_peers) {
