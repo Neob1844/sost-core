@@ -317,6 +317,47 @@ inline constexpr int64_t  V11_SLINGSHOT_HEIGHT          = 7000;
 inline constexpr int64_t  SLINGSHOT_THRESHOLD_SECONDS   = 1800;   // 30 min
 inline constexpr int32_t  SLINGSHOT_DROP_BPS            = 1250;   // 12.5%
 
+// =========================================================================
+// V12 hard fork — single-purpose: raise cASERT profile ceiling H13 → H20,
+// extend triangular cascade max steps 6 → 7, replace V11 dual-gate next-
+// block Slingshot with a same-block 4-tier relief keyed on current_elapsed.
+// Activation: V12_HEIGHT (block 7350). Pre-V12 path stays bit-identical so
+// historical blocks 7000-7349 continue to validate.
+//
+// Tier ladder (strict greater-than at each threshold; boundary values do
+// NOT trigger the higher tier — see slingshot_v12_tier in casert.cpp):
+//
+//   current_elapsed >  720 s (12 min) → tier 1 → -6.5%   bitsQ drop
+//   current_elapsed >  900 s (15 min) → tier 2 → -12.5%
+//   current_elapsed > 1800 s (30 min) → tier 3 → -25%
+//   current_elapsed > 3600 s (60 min) → tier 4 → -37.5%
+//
+// The drop is applied AFTER the avg288 / dynamic-cap clamp and is then
+// re-clamped to MIN_BITSQ. Self-resetting per block — no compounding
+// across consecutive blocks.
+// =========================================================================
+inline constexpr int64_t  V12_HEIGHT                       = 7350;
+
+// cASERT profile ceiling — raised from H13 to H20 at V12.
+// H21-H35 stay reserved (not used by the lag-based controller).
+inline constexpr int32_t  CASERT_MAX_ACTIVE_PROFILE_PRE_V12 = 13;
+inline constexpr int32_t  CASERT_MAX_ACTIVE_PROFILE_V12     = 20;
+
+// Triangular cascade max steps — extended 6 → 7 so the cascade still
+// reaches E7 floor from the new H20 ceiling within 900 s.
+inline constexpr int32_t  CASERT_TRIANGULAR_MAX_STEPS_PRE_V12 = 6;
+inline constexpr int32_t  CASERT_TRIANGULAR_MAX_STEPS_V12     = 7;
+
+// V12 Slingshot — same-block, single-gate (only current_elapsed)
+inline constexpr int64_t  V12_SLINGSHOT_T1_SECONDS  = 840;    // 14 min
+inline constexpr int64_t  V12_SLINGSHOT_T2_SECONDS  = 1740;   // 29 min
+inline constexpr int64_t  V12_SLINGSHOT_T3_SECONDS  = 3540;   // 59 min
+inline constexpr int64_t  V12_SLINGSHOT_T4_SECONDS  = 7140;   // 119 min
+inline constexpr int32_t  V12_SLINGSHOT_T1_DROP_BPS = 650;    //  -6.5%
+inline constexpr int32_t  V12_SLINGSHOT_T2_DROP_BPS = 1250;   // -12.5%
+inline constexpr int32_t  V12_SLINGSHOT_T3_DROP_BPS = 2500;   // -25%
+inline constexpr int32_t  V12_SLINGSHOT_T4_DROP_BPS = 3750;   // -37.5%
+
 // V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
 // Phase 1 activates at 7000; Phase 2 at 7100 — 100-block (~16-17h)
 // deployment window between hard forks. C11+C12 wired the miner

@@ -179,7 +179,30 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
         // difficulty above the just-computed value, only below it). Self-
         // resetting: the next block recomputes avg288 fresh and only re-
         // applies the relief if both its own gates fire again.
-        if (next_height >= V11_SLINGSHOT_HEIGHT && chain.size() >= 2 && now_time > 0) {
+        // V12 Slingshot (next_height >= V12_HEIGHT) — same-block, single-gate
+        // 4-tier relief keyed only on current_elapsed. Replaces the V11 dual-
+        // gate next-block prev_elapsed-based design. Strict greater-than at
+        // every threshold (slingshot_v12_tier). Self-resetting per block.
+        //
+        // V11 Slingshot (V11_SLINGSHOT_HEIGHT <= next_height < V12_HEIGHT) —
+        // PRESERVED VERBATIM from the pre-V12 implementation so historical
+        // blocks 7000-7349 continue to validate bit-identically.
+        if (next_height >= V12_HEIGHT && chain.size() >= 1 && now_time > 0) {
+            int64_t cur = now_time - chain.back().time;
+            int t = slingshot_v12_tier(cur);
+            int32_t drop_bps = 0;
+            if      (t == 4) drop_bps = V12_SLINGSHOT_T4_DROP_BPS;
+            else if (t == 3) drop_bps = V12_SLINGSHOT_T3_DROP_BPS;
+            else if (t == 2) drop_bps = V12_SLINGSHOT_T2_DROP_BPS;
+            else if (t == 1) drop_bps = V12_SLINGSHOT_T1_DROP_BPS;
+            if (drop_bps > 0) {
+                int64_t r = (result * (10000 - drop_bps)) / 10000;
+                if (r < (int64_t)MIN_BITSQ) r = (int64_t)MIN_BITSQ;
+                result = r;
+            }
+        } else if (next_height >= V11_SLINGSHOT_HEIGHT
+                   && next_height < V12_HEIGHT
+                   && chain.size() >= 2 && now_time > 0) {
             int64_t prev_elapsed    = chain.back().time - chain[chain.size() - 2].time;
             int64_t current_elapsed = now_time - chain.back().time;
             if (prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS
@@ -364,8 +387,10 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
         // Compute current ceiling based on height
         int32_t current_ceiling;
-        if (next_height >= CASERT_CEILING_H13_HEIGHT)
-            current_ceiling = CASERT_HARD_PROFILE_CEILING_H13;
+        if (next_height >= V12_HEIGHT)
+            current_ceiling = CASERT_MAX_ACTIVE_PROFILE_V12;       // H20 (V12)
+        else if (next_height >= CASERT_CEILING_H13_HEIGHT)
+            current_ceiling = CASERT_HARD_PROFILE_CEILING_H13;     // H13
         else if (next_height >= CASERT_CEILING_H12_HEIGHT)
             current_ceiling = CASERT_HARD_PROFILE_CEILING_H12;
         else if (next_height >= CASERT_CEILING_H11_HEIGHT)
@@ -505,7 +530,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
                 // Single source of truth used by both miner and validator
                 // — see include/sost/pow/casert.h for the rationale on why
                 // the formula deliberately keeps growing past elapsed=840.
-                drop = ((next_height >= CASERT_TRIANGULAR_CASCADE_HEIGHT) ? compute_v11_cascade_drop_triangular(block_elapsed) : compute_v11_cascade_drop(block_elapsed));
+                drop = ((next_height >= CASERT_TRIANGULAR_CASCADE_HEIGHT)
+                        ? compute_v11_cascade_drop_triangular_h(block_elapsed, next_height)
+                        : compute_v11_cascade_drop(block_elapsed));
             } else {
                 // V9/V10: continuous formula
                 int64_t start;
@@ -843,9 +870,12 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
     // ---- Hard profile ceiling (progressive activation) ----
     // Block 5075: H10. Block 5480: H11. Block 5635: H12. Block 5750: H13.
+    // Block V12_HEIGHT (7350): H20. H21-H35 stay reserved.
     if (next_height >= CASERT_CEILING_HEIGHT) {
         int32_t ceiling;
-        if (next_height >= CASERT_CEILING_H13_HEIGHT)
+        if (next_height >= V12_HEIGHT)
+            ceiling = CASERT_MAX_ACTIVE_PROFILE_V12;       // H20 (V12)
+        else if (next_height >= CASERT_CEILING_H13_HEIGHT)
             ceiling = CASERT_HARD_PROFILE_CEILING_H13;
         else if (next_height >= CASERT_CEILING_H12_HEIGHT)
             ceiling = CASERT_HARD_PROFILE_CEILING_H12;
@@ -970,9 +1000,31 @@ int32_t compute_v11_cascade_drop(int64_t block_elapsed_s) {
 }
 
 int32_t compute_v11_cascade_drop_triangular(int64_t block_elapsed_s) {
+    return compute_v11_cascade_drop_triangular_h(block_elapsed_s, /*next_height=*/0);
+}
+
+// Height-aware variant — pre-V12 keeps the legacy 6-step cap, V12+ uses 7
+// so the cascade reaches E7 from H20 within 900 s (H20 - 20 drops below E7,
+// 7-step triangular = 28 drops > 20, schedule stays inside anti-stall).
+int32_t compute_v11_cascade_drop_triangular_h(int64_t block_elapsed_s,
+                                               int64_t next_height) {
     if (block_elapsed_s < 540) return 0;
     int32_t n = 1 + (int32_t)((block_elapsed_s - 540) / 60);
+    int32_t max_steps = (next_height >= V12_HEIGHT)
+        ? CASERT_TRIANGULAR_MAX_STEPS_V12
+        : CASERT_TRIANGULAR_MAX_STEPS_PRE_V12;
+    if (n > max_steps) n = max_steps;
     return (n * (n + 1)) / 2;
+}
+
+// V12 Slingshot tier ladder — strict greater-than, boundary values stay
+// at the lower tier. See include/sost/pow/casert.h for spec.
+int32_t slingshot_v12_tier(int64_t current_elapsed) {
+    if (current_elapsed > V12_SLINGSHOT_T4_SECONDS) return 4;
+    if (current_elapsed > V12_SLINGSHOT_T3_SECONDS) return 3;
+    if (current_elapsed > V12_SLINGSHOT_T2_SECONDS) return 2;
+    if (current_elapsed > V12_SLINGSHOT_T1_SECONDS) return 1;
+    return 0;
 }
 
 } // namespace sost

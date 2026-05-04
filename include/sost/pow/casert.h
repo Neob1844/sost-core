@@ -48,6 +48,27 @@ ConsensusParams casert_apply_profile(const ConsensusParams& base,
 int32_t compute_v11_cascade_drop(int64_t block_elapsed_s);
 int32_t compute_v11_cascade_drop_triangular(int64_t block_elapsed_s);
 
+// Height-gated triangular cascade — pre-V12 caps at 6 steps, V12+ caps at 7.
+// Used by the production validator/miner path. The legacy
+// compute_v11_cascade_drop_triangular(elapsed) is preserved as a thin
+// wrapper that calls this with next_height=0 (= pre-V12 cap) so existing
+// callers / tests are unaffected.
+int32_t compute_v11_cascade_drop_triangular_h(int64_t block_elapsed_s,
+                                               int64_t next_height);
+
+// V12 Slingshot tier ladder (consensus-critical helper).
+// Returns 0..4 — strict greater-than at every threshold, boundary
+// values do NOT trigger the higher tier:
+//   current_elapsed >  V12_SLINGSHOT_T4_SECONDS (3600) → 4
+//   current_elapsed >  V12_SLINGSHOT_T3_SECONDS (1800) → 3
+//   current_elapsed >  V12_SLINGSHOT_T2_SECONDS (900)  → 2
+//   current_elapsed >  V12_SLINGSHOT_T1_SECONDS (720)  → 1
+//   else                                                 → 0
+//
+// Used identically by miner (mid-search rebuild watch) and validator
+// (bitsQ relief) so consensus is symmetric. Pure function — no globals.
+int32_t slingshot_v12_tier(int64_t current_elapsed);
+
 // ---- Timestamp validation ----
 int64_t median_time_past(const std::vector<BlockMeta>& chain,
                           int32_t window = MTP_WINDOW);

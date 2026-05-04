@@ -14,7 +14,11 @@ namespace sost {
 // Capsule activation — payload allowed in OUT_TRANSFER after this height
 // Before: R14 enforces payload_len == 0 on all active types (genesis-safe)
 // After:  OUT_TRANSFER may carry payload <= 255 (Capsule Protocol v1)
-inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_MAINNET = 10000;
+//
+// V12 hard fork (block 7350): capsule activation moves up from 10000 to
+// 7350 so capsules become valid on-chain at the same height as V12. The
+// existing R14 reject path is unchanged — only the activation gate moves.
+inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_MAINNET = 7350;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_TESTNET = 100;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_DEV     = 1;
 
