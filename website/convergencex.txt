@@ -49,10 +49,11 @@ the relief valve handle the asymmetry of slow vs fast blocks.
 ----------------------------------------------------------------
 
   Range            E7 (-7) ... B0 (0) ... H13 (+13) ... H35 (+35)
-  Active range     E7 ... H13                       (block 5,750+)
-  Reserved range   H14 ... H35                       (margin = 115)
+  Active range     pre-V12 (#5,750..#7,349): E7 ... H13   (21 profiles)
+                   V12 (#7,350+):           E7 ... H20   (28 profiles)
+  Reserved range   pre-V12: H14 ... H35  /  V12: H21 ... H35  (margin = 115)
   Floor            E7  (CASERT_H_MIN)
-  Ceiling          H13 (block 5,750+); previously H10/H11/H12
+  Ceiling          H13 pre-V12 (#5,750..#7,349); H20 from V12 (#7,350+); previously H10/H11/H12
   Easing           E1..E7 only after 6+ hours at B0
   Slew             ±1 profile level per block (V6 calibration)
   Anti-stall       60 minutes — emergency-only zone-based decay
