@@ -1438,7 +1438,11 @@ async function renderDTDPanel(body,title,silent){
     body.innerHTML=summary;
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
     var eligibleRows=rows.filter(function(r){
-      return r.status==='Eligible'||r.status==='eligible at 7100'||(height<7100&&r.minedBlocks>0);
+      if(cooldownSet[r.addr])return false;
+      if(r.status==='Eligible')return true;
+      if(r.status==='eligible at 7100')return true;
+      if(height<7100&&r.minedBlocks>0)return true;
+      return false;
     }).length;
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     renderDTDTable(_dtdCache);
