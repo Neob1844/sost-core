@@ -481,7 +481,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <code>119&nbsp;min → −37.5%</code>.
         Self-resetting per block — no compounding.</li>
       <li><b>Capsule activation lowered to #7,350</b> — on-chain messages become valid simultaneously with the fork (down from #10,000).</li>
+      <li><b>getminerstats diagnostics</b> — new RPC + MINING ATTEMPTS dashboard card showing submitblock received / accepted / rejected per node, with per-reason breakdowns. Non-consensus telemetry, useful for spotting miners running stale binaries.</li>
     </ul>
+    <div style="background:rgba(251,191,36,.08);border-left:3px solid #fbbf24;padding:8px 12px;margin:6px 0 10px 0;font-size:11.5px;line-height:1.6">
+      <div style="color:#fbbf24;font-weight:800;letter-spacing:1px;margin-bottom:3px">RECOMMENDED UPGRADE WINDOW</div>
+      <div style="color:var(--text)">Restart between block <b>#7,330</b> and <b>#7,350</b>. Earlier is safe but harder to coordinate; do not leave it past #7,349 — the first V12 block won't validate on a pre-V12 binary.</div>
+    </div>
+    <div style="background:rgba(251,1,13,.08);border-left:3px solid #fb010d;padding:8px 12px;margin:6px 0 10px 0;font-size:11.5px;line-height:1.6">
+      <div style="color:#fb010d;font-weight:800;letter-spacing:1px;margin-bottom:3px">⚠ MINER ADVISORY — WALLET-BACKED MINING</div>
+      <div style="color:var(--text)">Address-only mining has not been valid since Phase 2 (#7,100). V12 miners must still run with <code>--wallet</code> and <code>--mining-key-label</code>. If your miner is launched with only <code>--mining-address</code>, V12 blocks you produce will be rejected.</div>
+    </div>
 
     <div style="color:#fb010d;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ HOW TO UPGRADE</div>
 <pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd &lt;your sost-core directory&gt;
