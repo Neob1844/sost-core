@@ -670,6 +670,7 @@ make -j$(nproc) sost-miner</pre>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="Bitcoin-style network hashrate (2^bits/blocktime). Effective attempts/sec shown as secondary, profile-adjusted for ConvergenceX filter."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
+  <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')" title="Distinct addresses that have mined a block since V11 Phase 2 activation at #7100. Red &lt; 2, amber = 2, green &gt;= 3. Centralisation risk while &lt; 3."><div class="dash-label">&#9874; PHASE 2 MINERS</div><div class="dash-val" id="dPhase2Miners">—</div><div class="dash-sub" id="dPhase2MinersSub">since #7100</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
@@ -1869,6 +1870,28 @@ async function updateDashboard(info){
     // Update unique miners card from freshly fetched data (288-window only)
     document.getElementById('dMiners').textContent=minerSet.size;
     document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
+    // Phase 2 miners health card — distinct addresses that mined any block at
+    // height >= 7100. Centralisation indicator: red < 2, amber = 2, green >= 3.
+    // diffs[] contains the latest AVG_WINDOW_LONG (1000) blocks already, so we
+    // cover all post-fork blocks today and well into the future.
+    var ph2set={};
+    for(var pi=0;pi<diffs.length;pi++){
+      var d=diffs[pi]; if(!d||!d.miner)continue;
+      if((d.h||0)>=7100) ph2set[d.miner]=true;
+    }
+    var ph2count=Object.keys(ph2set).length;
+    var ph2el=document.getElementById('dPhase2Miners');
+    var ph2sub=document.getElementById('dPhase2MinersSub');
+    if(ph2el){
+      ph2el.textContent=String(ph2count);
+      var ph2color=(ph2count>=3)?'#22c55e':(ph2count===2)?'#fbbf24':'#fb010d';
+      ph2el.style.color=ph2color;
+      if(ph2sub){
+        var ph2label=(ph2count>=3)?'healthy':(ph2count===2)?'thin':(ph2count===1)?'centralised':'no Phase 2 miners';
+        ph2sub.textContent='since #7100 · '+ph2label;
+        ph2sub.style.color=ph2color;
+      }
+    }
     // Update mining distribution card with top-3 share (288-window only)
     var _distMiners={};var _distEnd=Math.min(diffs.length,AVG_WINDOW);for(var di2=0;di2<_distEnd;di2++){var dm=diffs[di2].miner;if(dm){if(!_distMiners[dm])_distMiners[dm]=0;_distMiners[dm]++;}}
     var _distSorted=Object.keys(_distMiners).sort(function(a,b){return _distMiners[b]-_distMiners[a];});
