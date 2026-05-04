@@ -495,76 +495,166 @@ make -j$(nproc)</pre>
   </div>
 </div>
 
-<!-- ============== EMERGENCY BANNER — block 7100 SbPoW miner_pubkey bug — fix in progress ============== -->
-<div id="emergencyBanner7100" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(34,197,94,0.10),rgba(34,197,94,0.03));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:6px;padding:14px 18px;">
+<!-- ============== PHASE 2 RESUMED BANNER — block 7100 incident resolved ============== -->
+<div class="phase2-resolved-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
+<div style="background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(0,0,0,.18));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:4px;padding:14px 18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="color:#22c55e;font-size:15px;font-weight:900;letter-spacing:1.2px">✅ SOST V11 PHASE 2 — CHAIN RESUMED, LOTTERY LIVE</div>
+    <button id="phase2ResolvedToggle" onclick="togglePhase2Resolved()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.65);color:#bbf7d0;cursor:pointer;font-family:var(--code);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px">COLLAPSE</button>
+  </div>
+  <div id="phase2ResolvedBody" style="color:var(--text);font-size:12px;line-height:1.65">
 
-    <!-- TITLE -->
-    <div style="text-align:center;margin-bottom:12px;padding:10px 14px;background:rgba(34,197,94,0.10);border:1px solid rgba(34,197,94,0.55);border-radius:4px">
-      <span style="display:block;color:#4ade80;font-size:17px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(34,197,94,0.45);margin-bottom:4px">
-        ⚠ NETWORK STATUS — BLOCK 7,100 STUCK · FIX IN PROGRESS
-      </span>
-      <span style="display:block;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:1.4px">
-        V11 Phase 2 activated as designed · miner-side serialization bug identified · patch under development
-      </span>
-    </div>
+    <div style="color:#f97316;font-weight:800;margin-bottom:8px">Network status update — block 7,100 incident resolved</div>
 
-    <!-- WHAT IS HAPPENING -->
-    <div style="color:var(--text);font-size:11px;line-height:1.85;margin-bottom:12px">
-      V11 Phase 2 activated at block 7,100 as planned, but a bug in the SbPoW miner code prevents producing valid v2 block headers. The chain is currently waiting at height 7,099 / next block 7,100 while the bug is being investigated and fixed.
-    </div>
+    SOST V11 Phase 2 activated at block <b>7,100</b> with:
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li><b>SbPoW</b> — miner identity bound to the block through miner_pubkey + signature</li>
+      <li><b>DTD Lottery</b> — deterministic lottery payout on scheduled reward blocks</li>
+      <li><b>PAYOUT coinbase shape</b> — miner share + lottery winner output</li>
+    </ul>
 
-    <!-- BULLETS -->
-    <div style="color:var(--text2);font-size:10.5px;line-height:1.95;margin-bottom:12px;padding-left:12px;border-left:2px solid rgba(34,197,94,.45)">
-      · <b style="color:#4ade80">CAUSE:</b> Miner-side serialization bug — not consensus rule failure<br>
-      · <b style="color:#4ade80">SCOPE:</b> Appears to affect current Phase 2 miner binaries<br>
-      · <b style="color:#4ade80">CHAIN STATE:</b> Funds safe, history intact, paused not corrupted<br>
-      · <b style="color:#4ade80">PRE-7,100 BLOCKS:</b> All valid, all in chain<br>
-      · <b style="color:#4ade80">POST-7,100 BLOCKS:</b> Cannot be produced until fix is deployed
-    </div>
+    After activation, the network paused at height <b>7,099</b> because several external peers were submitting invalid v2 blocks rejected by validators with:
 
-    <!-- MINERS -->
-    <div style="margin-bottom:10px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
-      <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// MINERS</span>
-      <span style="display:block;font-size:10.5px;color:var(--text2);line-height:1.75">
-        Please stop your miner. Running it now only adds misbehavior penalty against your peers without producing valid blocks. Wait for the patched binary announcement.
-      </span>
-    </div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 10px 0">[BLOCK] REJECTED: submitblock: v2 header missing miner_pubkey</pre>
 
-    <!-- HOLDERS -->
-    <div style="margin-bottom:10px;padding:10px 12px;background:rgba(34,197,94,.07);border-left:3px solid #22c55e;border-radius:3px;">
-      <span style="display:block;color:#4ade80;font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// HOLDERS</span>
-      <span style="display:block;font-size:10.5px;color:var(--text2);line-height:1.75">
-        Your SOST balance is unaffected. Pre-fork transactions are confirmed and immutable.
-      </span>
-    </div>
+    After review, the production source was verified. The issue was not a consensus rollback problem. A correctly rebuilt miner from current <code>main</code> produced valid Phase 2 blocks.<br><br>
 
-    <!-- ETA -->
-    <div style="color:var(--text3);font-size:10px;letter-spacing:1px;margin-top:8px">
-      ETA FIX: <span style="color:var(--text2);font-weight:700">under investigation — updates as available</span>
-    </div>
+    <span style="color:#22c55e;font-weight:900">The chain has resumed successfully.</span>
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:8px 0 10px 0">First valid Phase 2 block: #7100
+Status now verified through: #7104
+SbPoW submit path: OK
+DTD lottery payouts: OK
+Gold / PoPC reactivation on normal blocks: OK
+Pending jackpot: 0</pre>
+
+    <b style="color:var(--cyan)">Blocks 7,098–7,104</b>
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">Block   Type                Miner          Lottery Winner   Gold   PoPC
+7098    NORMAL pre-Phase2   ca9097...bc18  —                25%    25%
+7099    NORMAL pre-Phase2   191f95...a21f  —                25%    25%
+7100    PAYOUT              ca9097...bc18  d0a1cf...45c9    0      0
+7101    NORMAL              ca9097...bc18  —                25%    25%
+7102    PAYOUT              ca9097...bc18  9f15d9...5e19    0      0
+7103    PAYOUT              ca9097...bc18  4dc422...1265    0      0
+7104    NORMAL              ca9097...bc18  —                25%    25%</pre>
+
+    <b style="color:#ff00ff">DTD lottery verification</b><br>
+    Phase 2 has already paid <b>3 deterministic lottery rewards</b>:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">#7100 -> d0a1cf...45c9 -> 3.92550431 SOST
+#7102 -> 9f15d9...5e19 -> 3.92550431 SOST
+#7103 -> 4dc422...1265 -> 3.92550431 SOST</pre>
+
+    Total DTD lottery paid:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">11.77651293 SOST = 3 x 3.92550431 SOST</pre>
+
+    There is currently <b>no pending jackpot</b>:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">pending_lottery_before = 0
+expected_pending_after = 0</pre>
+
+    The jackpot only accumulates if a scheduled lottery block has no eligible address after cooldown filtering. With <b>36 eligible addresses</b>, payouts cleared normally.<br><br>
+
+    <b style="color:#fbbf24">Cooldown clarification</b><br>
+    The 5-block cooldown applies to <b>miners who produced recent blocks</b>, not to lottery winners.
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li>An address that mines one of the previous 5 blocks is temporarily excluded from the lottery.</li>
+      <li>An address that only wins the DTD lottery remains eligible unless it also mined recently.</li>
+      <li>Winning lottery does not trigger cooldown.</li>
+      <li>Mining a block does not automatically win the lottery.</li>
+    </ul>
+    This matches the C7.1 Phase 2 design.<br><br>
+
+    <b style="color:var(--cyan)">Explorer v121 update</b><br>
+    Explorer v121 adds a new address-panel field:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">DTD LOTTERY RECEIVED</pre>
+
+    Example:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">DTD LOTTERY RECEIVED   3.92550431 SOST   (1 win)</pre>
+
+    This lets any address verify lottery winnings directly from public chain data.<br><br>
+
+    If the field says:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">open DTD section to scan</pre>
+
+    open the DTD dashboard once and the explorer will compute lottery winnings per address.<br><br>
+
+    <b style="color:#fb010d">ACTION REQUIRED FOR MINERS AND NODE OPERATORS</b><br>
+    All miners and node operators should update to the latest <code>main</code> now.<br><br>
+
+    <b>Node operators:</b>
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">cd &lt;your sost-core directory&gt;
+git pull --ff-only origin main
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+make -j$(nproc) sost-node
+sudo systemctl restart sost-node</pre>
+
+    Then verify:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">curl -s -u "USER:PASS" -d '{"method":"getinfo"}' http://127.0.0.1:18232/</pre>
+
+    You should see the chain above block <b>7,100</b>.<br><br>
+
+    <b>Miners:</b><br>
+    Stop old miners:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">pkill -9 -f sost-miner 2>/dev/null || true</pre>
+
+    Update and rebuild:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">cd &lt;your sost-core directory&gt;
+git pull --ff-only origin main
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+make -j$(nproc) sost-miner</pre>
+
+    From block <b>7,100</b>, miners must run with wallet-backed SbPoW signing:
+
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">./sost-miner \
+  --wallet YOUR_WALLET.json \
+  --mining-key-label YOUR_LABEL \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user USER \
+  --rpc-pass PASS \
+  --blocks 999999 \
+  --profile mainnet \
+  --threads N</pre>
+
+    Do <b>not</b> use address-only mining after block <b>7,100</b>. Phase 2 requires the block to carry a valid miner_pubkey and SbPoW signature.<br><br>
+
+    <b>Important:</b>
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li>If you run only a node, update and restart the node.</li>
+      <li>If you run only a miner, update and restart the miner.</li>
+      <li>If your node and miner are on different machines, update both.</li>
+      <li>If your miner starts with <code>--address</code> only, it will not produce valid Phase 2 blocks.</li>
+      <li>If your miner starts with <code>--wallet</code> and <code>--mining-key-label</code>, it is Phase 2 compatible.</li>
+    </ul>
+
+    <b style="color:#22c55e">Final status</b>
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li>Pre-7,100 chain history: <b>intact</b></li>
+      <li>Holder funds: <b>safe</b></li>
+      <li>Phase 2 activation: <b>live</b></li>
+      <li>SbPoW: <b>confirmed working with valid rebuilt miner</b></li>
+      <li>DTD lottery: <b>confirmed paid and verifiable</b></li>
+      <li>Gold / PoPC normal allocation: <b>confirmed on non-lottery blocks</b></li>
+      <li>Pending jackpot: <b>0</b></li>
+    </ul>
+
+    Thank you to everyone who stayed patient during the activation window.<br><br>
+
+    — <b>NeoB</b>
   </div>
 </div>
-<script>
-(function(){
-  // Auto-hide banner once block 7,100 has landed.
-  function checkHide(){
-    try{
-      var hVal = document.getElementById('dHeight');
-      if(!hVal) return;
-      var raw = (hVal.textContent||'').replace(/[^0-9]/g,'');
-      if(!raw) return;
-      var h = parseInt(raw,10);
-      if(isFinite(h) && h >= 7100){
-        var bn = document.getElementById('emergencyBanner7100');
-        if(bn) bn.style.display='none';
-      }
-    }catch(e){}
-  }
-  setInterval(checkHide, 4000);
-  setTimeout(checkHide, 1500);
-})();
-</script>
+</div>
 
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
@@ -1248,6 +1338,25 @@ function initV11Banner(){
   if(btn)btn.textContent=collapsed?'EXPAND':'COLLAPSE';
 }
 setTimeout(initV11Banner,0);
+function togglePhase2Resolved(){
+  var body=document.getElementById('phase2ResolvedBody');
+  var btn=document.getElementById('phase2ResolvedToggle');
+  if(!body)return;
+  var opening=body.style.display==='none';
+  body.style.display=opening?'':'none';
+  if(btn)btn.textContent=opening?'COLLAPSE':'EXPAND';
+  try{localStorage.setItem('sost_phase2_resolved_collapsed',opening?'0':'1');}catch(e){}
+}
+function initPhase2Resolved(){
+  var body=document.getElementById('phase2ResolvedBody');
+  var btn=document.getElementById('phase2ResolvedToggle');
+  if(!body)return;
+  var collapsed=false;
+  try{collapsed=localStorage.getItem('sost_phase2_resolved_collapsed')==='1';}catch(e){}
+  body.style.display=collapsed?'none':'';
+  if(btn)btn.textContent=collapsed?'EXPAND':'COLLAPSE';
+}
+setTimeout(initPhase2Resolved,0);
 
 function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'gold':r==='POPC POOL'?'cyan':'yellow';return ' <span style="color:var(--'+c+');font-size:9px;font-weight:600">['+r+']</span>';}
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
