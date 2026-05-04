@@ -1852,7 +1852,7 @@ async function renderDTDPanel(body,title,silent){
         +'<div style="font-size:10px;letter-spacing:2px;color:var(--text3)">// LOTTERY AUDIT — reproduce on-chain selection per PAYOUT block</div>'
         +'<button class="btn btn-small" onclick="loadLotteryAudit()" style="font-size:10px">Run audit</button>'
       +'</div>'
-      +'<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-bottom:8px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b>Audit winner</b> differs from <b>On-chain winner</b> would be evidence of selection tampering. Cooldown column shows addresses excluded by the recent-winner rule (last 5 blocks).</div>'
+      +'<div style="font-size:9px;color:var(--text3);line-height:1.5;margin-bottom:8px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b>Audit winner</b> differs from <b>On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the previous 5 blocks — those addresses are excluded from the lottery for THIS height. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
       +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b>Run audit</b> to scan all PAYOUT blocks</div>'
     +'</div>';
     body.innerHTML=summary;
@@ -1882,37 +1882,46 @@ async function renderDTDPanel(body,title,silent){
   }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
 }
 
-// loadLotteryAudit() — calls getlotteryaudit per PAYOUT block and renders a
-// table comparing the re-derived winner against the on-chain winner. Each
-// row is verifiable: the seed_hex shown is sha256(SOST_LOTTERY_V11 || 16
+// loadLotteryAudit() — calls getlotteryaudit per PAYOUT block and renders
+// a table comparing the re-derived winner against the on-chain winner.
+// Each row is verifiable: seed_hex shown is sha256(SOST_LOTTERY_V11 || 16
 // prev block hashes || height_le); same input → same winner → no tampering.
+//
+// RPC scheduling: up to AUDIT_CONCURRENCY in flight at a time. With
+// thousands of PAYOUT blocks expected over Phase 2, a flat Promise.all
+// would either freeze the browser or spike the node. The pool keeps
+// node load bounded and renders rows progressively.
+var _lotteryAuditRunning=false;
 window.loadLotteryAudit = async function(){
+  if(_lotteryAuditRunning)return;
   var host=document.getElementById('lotteryAuditTable');
   if(!host)return;
-  var payouts=window._dtdPayouts||[];
+  var payouts=(window._dtdPayouts||[]).slice();
   if(!payouts.length){
     host.innerHTML='<span style="color:var(--text3)">no PAYOUT blocks yet</span>';
     return;
   }
-  host.innerHTML='<span style="color:var(--cyan)">scanning '+payouts.length+' PAYOUT blocks...</span>';
-  var rows=await Promise.all(payouts.map(function(p){
-    return rpc('getlotteryaudit',[String(p.h)]).catch(function(){return null;});
-  }));
+  _lotteryAuditRunning=true;
 
-  // For each row, determine if the re-derived winner matches the chain.
-  var html='<table class="tbl" style="font-size:10px;width:100%"><thead>'
+  var AUDIT_CONCURRENCY=8;
+  var total=payouts.length;
+  var done=0,matches=0,mismatches=[];
+  var rowsByH={};
+
+  // Pre-render skeleton table; rows fill in as RPCs complete.
+  var statusHtml='<div id="lotteryAuditStatus" style="margin-bottom:6px;font-size:10px;color:var(--cyan)">scanning 0 / '+total+' PAYOUT blocks...</div>';
+  var tableHead='<table class="tbl" style="font-size:10px;width:100%"><thead>'
     +'<tr><th>BLOCK</th><th>MINER</th><th>ON-CHAIN WINNER</th><th>AUDIT WINNER</th>'
     +'<th>WINNER IDX</th><th>ELIG</th><th>SEED</th><th>COOLDOWN</th><th>MATCH</th></tr>'
-    +'</thead><tbody>';
-  var matches=0,total=0,mismatches=[];
-  for(var i=0;i<rows.length;i++){
-    var p=payouts[i];
-    var r=rows[i];
+    +'</thead><tbody id="lotteryAuditBody"></tbody></table>';
+  host.innerHTML=statusHtml+tableHead;
+  var statusEl=document.getElementById('lotteryAuditStatus');
+  var bodyEl=document.getElementById('lotteryAuditBody');
+
+  function buildRow(p,r){
     if(!r){
-      html+='<tr><td>#'+p.h+'</td><td colspan="8" style="color:var(--text3)">RPC failed (older node?)</td></tr>';
-      continue;
+      return '<tr data-h="'+p.h+'"><td>#'+p.h+'</td><td colspan="8" style="color:var(--text3)">RPC failed (older node?)</td></tr>';
     }
-    total++;
     var chainWinner=p.addr||'';
     var auditWinner=r.winner_address||'';
     var ok=(chainWinner===auditWinner);
@@ -1922,11 +1931,11 @@ window.loadLotteryAudit = async function(){
     var auditShort=auditWinner?(auditWinner.substring(0,10)+'…'):'';
     var seedShort=r.seed_hex?(r.seed_hex.substring(0,12)+'…'):'';
     var cdCount=Array.isArray(r.cooldown_addresses)?r.cooldown_addresses.length:0;
-    var cdTitle=Array.isArray(r.cooldown_addresses)?r.cooldown_addresses.join('\n'):'';
+    var cdTitle=Array.isArray(r.cooldown_addresses)?('Recent miners (last 5 blocks) excluded from this lottery:\n'+r.cooldown_addresses.join('\n')):'';
     var matchTag=ok
       ? '<span style="color:#4ade80;font-weight:700">OK</span>'
       : '<span style="color:#fb010d;font-weight:700">MISMATCH</span>';
-    html+='<tr style="border-bottom:1px solid #111">'
+    return '<tr data-h="'+p.h+'" style="border-bottom:1px solid #111">'
       +'<td>#'+p.h+'</td>'
       +'<td title="'+(r.miner_address||'')+'" style="font-family:monospace">'+minerShort+'</td>'
       +'<td title="'+chainWinner+'" style="font-family:monospace">'+chainShort+'</td>'
@@ -1938,15 +1947,41 @@ window.loadLotteryAudit = async function(){
       +'<td style="text-align:center">'+matchTag+'</td>'
       +'</tr>';
   }
-  html+='</tbody></table>';
-  var summary='<div style="margin-top:6px;font-size:10px">'
-    +'<span style="color:'+(matches===total?'#4ade80':'#fb010d')+';font-weight:700">'
-    +matches+' / '+total+' blocks match consensus</span>';
-  if(mismatches.length){
-    summary+=' · <span style="color:#fb010d">mismatches at: #'+mismatches.join(', #')+'</span>';
+
+  // Bounded-concurrency worker pool. Each worker picks the next pending
+  // payout off the queue, awaits the RPC, appends the row, repeats until
+  // the queue drains.
+  var queue=payouts.slice();
+  async function worker(){
+    while(queue.length){
+      var p=queue.shift();
+      var r=null;
+      try { r=await rpc('getlotteryaudit',[String(p.h)]); }
+      catch(e){ r=null; }
+      rowsByH[p.h]=buildRow(p,r);
+      done++;
+      if(statusEl) statusEl.textContent='scanning '+done+' / '+total+' PAYOUT blocks...';
+      // Render rows in payout order (ascending height) — sort each tick.
+      // Cheap because total payout count is bounded by the visible scan.
+      var ordered=payouts.slice().sort(function(a,b){return a.h-b.h;})
+        .map(function(pp){return rowsByH[pp.h]||'';})
+        .filter(function(s){return s;}).join('');
+      if(bodyEl) bodyEl.innerHTML=ordered;
+    }
   }
-  summary+='</div>';
-  host.innerHTML=summary+html;
+  var workers=[];
+  for(var w=0;w<Math.min(AUDIT_CONCURRENCY,total);++w) workers.push(worker());
+  await Promise.all(workers);
+
+  if(statusEl){
+    var col=(matches===total)?'#4ade80':'#fb010d';
+    var msg='<span style="color:'+col+';font-weight:700">'+matches+' / '+total+' blocks match consensus</span>';
+    if(mismatches.length){
+      msg+=' · <span style="color:#fb010d">mismatches at: #'+mismatches.join(', #')+'</span>';
+    }
+    statusEl.innerHTML=msg;
+  }
+  _lotteryAuditRunning=false;
 };
 
 function openDetail(){

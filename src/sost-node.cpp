@@ -1393,14 +1393,22 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
         roll |= ((uint64_t)seed[i]) << (i * 8);
     }
 
-    // Cooldown — addresses excluded by recent-winner rule.
-    // Mirrors lottery.cpp compute_lottery_eligibility_set: any block within
-    // [height - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, height - 1] whose
-    // PAYOUT coinbase emitted a lottery output excludes that pkh.
+    // Cooldown — addresses excluded by the recent-MINER rule.
+    //
+    // compute_lottery_eligibility_set keys the exclusion window on the
+    // MINER of each recent block (cb.outputs[0].pubkey_hash, copied into
+    // LotteryMinedBlockView::miner_pkh and read back at lottery.cpp:128
+    // as `recent_winners[b.miner_pkh] = 1`). It is NOT keyed on the
+    // recent lottery output recipients — winning a lottery does not put
+    // an address into cooldown. So the audit must list miners over
+    // [height - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, height - 1],
+    // not lottery payout recipients, otherwise the column misleads
+    // exactly the question this audit is meant to answer.
     std::vector<std::string> cooldown_addrs;
     {
         const int64_t cd_lo = height - sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;
         const int64_t cd_hi = height - 1;
+        std::set<std::string> seen;  // dedup: a miner appears once per cooldown
         for (const auto& b : g_blocks) {
             if (b.height < cd_lo || b.height > cd_hi) continue;
             if (b.tx_hexes.empty()) continue;
@@ -1409,12 +1417,9 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
             Transaction cb;
             std::string derr;
             if (!Transaction::Deserialize(raw, cb, &derr)) continue;
-            for (const auto& out : cb.outputs) {
-                if (out.type == OUT_COINBASE_LOTTERY) {
-                    cooldown_addrs.push_back(address_encode(out.pubkey_hash));
-                    break;
-                }
-            }
+            if (cb.outputs.empty()) continue;
+            std::string miner = address_encode(cb.outputs[0].pubkey_hash);
+            if (seen.insert(miner).second) cooldown_addrs.push_back(miner);
         }
     }
 
