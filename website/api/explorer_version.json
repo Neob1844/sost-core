@@ -1,1 +1,1 @@
-{"v":"2026-05-04-v128","note":"Explorer highlights Phase 2 ready miners card in blue and pulses red while Phase 2 mining is centralised."}
+{"v":"2026-05-04-v129","note":"PHASE II READY MINERS card renamed to UPDATED MINERS — clearer semantics (miners that have rebuilt with -DSOST_ENABLE_PHASE2_SBPOW=ON and run with --wallet/--mining-key-label, vs miners stuck on the pre-fork binary). Tooltip retained the Phase II context. Empty-state sub label now reads 'no updated miners'. Pulse logic, blue text and counter behaviour from v128 unchanged."}
