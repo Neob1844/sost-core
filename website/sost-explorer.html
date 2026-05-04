@@ -3191,14 +3191,30 @@ function renderDashPanel(key,body,title,silent){
       return Math.floor(s/86400)+'d '+Math.floor((s%86400)/3600)+'h';
     }
     var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">';
-    function tile(lbl,val,col){return '<div style="background:var(--bg);border:1px solid var(--border);padding:8px 10px"><div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl+'</div><div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';}
-    grid+=tile('UPTIME',fmtUptime(uptimeS),'var(--text)');
-    grid+=tile('RECEIVED',fComma(received),'var(--text)');
-    grid+=tile('ACCEPTED',fComma(accepted),'#22c55e');
-    grid+=tile('REJECTED',fComma(rejected),rejected>0?'#fb010d':'var(--text3)');
-    grid+=tile('REJECT %',ratio.toFixed(1)+'%',ratio>50?'#fb010d':ratio>20?'#fbbf24':'#22c55e');
-    grid+=tile('GETBLOCKTEMPLATE',fComma(lt.getblocktemplate_calls||0),'var(--text)');
-    grid+=tile('MISBEHAVIOR',fComma(lt.misbehavior_events||0),(lt.misbehavior_events||0)>0?'#fbbf24':'var(--text3)');
+    // tile(lbl,val,col,tip): hover-tooltip via title attribute. The ⓘ on
+    // the label and cursor:help give a visual cue that the tile is
+    // interactive even on desktop where hover discoverability is poor.
+    function tile(lbl,val,col,tip){
+      var safeTip=String(tip||'').replace(/"/g,'&quot;');
+      return '<div title="'+safeTip+'" style="background:var(--bg);border:1px solid var(--border);padding:8px 10px;cursor:help">'
+        +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl
+        +(tip?' <span style="color:var(--purple);opacity:.6">ⓘ</span>':'')+'</div>'
+        +'<div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';
+    }
+    grid+=tile('UPTIME',fmtUptime(uptimeS),'var(--text)',
+      'Time since the local node booted. All counters in this panel are in-memory and reset on every restart — they are not persisted to disk.');
+    grid+=tile('RECEIVED',fComma(received),'var(--text)',
+      'Total submitblock attempts the node has seen since boot. Counts both ACCEPTED and REJECTED block submissions, including blocks relayed by peers that fail validation. By invariant: RECEIVED = ACCEPTED + REJECTED (unless a P2P fork/orphan was stored, which is not counted here).');
+    grid+=tile('ACCEPTED',fComma(accepted),'#22c55e',
+      'Blocks that passed full validation and entered the active chain — locally mined submitblock RPC calls AND P2P-relayed blocks accepted into our tip.');
+    grid+=tile('REJECTED',fComma(rejected),rejected>0?'#fb010d':'var(--text3)',
+      'Blocks that failed validation: bad PoW, bad signature, wrong merkle root, profile out of range, future timestamp, etc. A growing rejection rate usually means miners on a stale binary or someone spamming malformed blocks.');
+    grid+=tile('REJECT %',ratio.toFixed(1)+'%',ratio>50?'#fb010d':ratio>20?'#fbbf24':'#22c55e',
+      'rejected / received. Green when below 20% (healthy), amber 20–50% (worth a look), red above 50% (most submitted blocks are failing — investigate the TOP REJECTION REASONS table below).');
+    grid+=tile('GETBLOCKTEMPLATE',fComma(lt.getblocktemplate_calls||0),'var(--text)',
+      'How many times the getblocktemplate RPC was called since boot. Each active miner polls it roughly every 6 seconds, so this is a proxy for how many miners are working against this node.');
+    grid+=tile('MISBEHAVIOR',fComma(lt.misbehavior_events||0),(lt.misbehavior_events||0)>0?'#fbbf24':'var(--text3)',
+      'Peers that crossed the misbehavior threshold (sending malformed messages, invalid blocks, duplicate floods, etc.) and were penalised. Cumulative since boot. Zero is the normal value on a healthy network.');
     grid+='</div>';
     var html=grid;
     var reasons=s.rejected_reasons||{};
@@ -3262,24 +3278,34 @@ function renderDashPanel(key,body,title,silent){
       return (us/1000000).toFixed(2)+' s';
     }
     var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">';
-    function tileR(lbl,val,col){return '<div style="background:var(--bg);border:1px solid var(--border);padding:8px 10px"><div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl+'</div><div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';}
+    function tileR(lbl,val,col,tip){
+      var safeTip=String(tip||'').replace(/"/g,'&quot;');
+      return '<div title="'+safeTip+'" style="background:var(--bg);border:1px solid var(--border);padding:8px 10px;cursor:help">'
+        +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">'+lbl
+        +(tip?' <span style="color:var(--purple);opacity:.6">ⓘ</span>':'')+'</div>'
+        +'<div style="font-size:18px;font-weight:600;color:'+(col||'var(--text)')+'">'+val+'</div></div>';
+    }
     var errPct=totalCalls>0?(totalErrs/totalCalls*100):0;
-    grid+=tileR('METHODS SEEN',rows.length,'var(--text)');
-    grid+=tileR('TOTAL CALLS',fComma(totalCalls),'var(--text)');
-    grid+=tileR('TOTAL ERRORS',fComma(totalErrs),totalErrs>0?'#fb010d':'var(--text3)');
-    grid+=tileR('ERROR %',errPct.toFixed(2)+'%',errPct>10?'#fb010d':errPct>2?'#fbbf24':'#22c55e');
+    grid+=tileR('METHODS SEEN',rows.length,'var(--text)',
+      'Distinct JSON-RPC methods this node has handled since boot. Includes any custom or experimental endpoints; the per-method table below shows them all.');
+    grid+=tileR('TOTAL CALLS',fComma(totalCalls),'var(--text)',
+      'Sum of every RPC call across every method since boot. Useful as a load proxy: divide by uptime to get average calls/sec for this node.');
+    grid+=tileR('TOTAL ERRORS',fComma(totalErrs),totalErrs>0?'#fb010d':'var(--text3)',
+      'Sum of RPC responses that contained an "error" object — invalid params, missing data, auth failures, methods not found. Per-method breakdown below shows which API surface is failing.');
+    grid+=tileR('ERROR %',errPct.toFixed(2)+'%',errPct>10?'#fb010d':errPct>2?'#fbbf24':'#22c55e',
+      'errors / calls. Green when below 2% (normal: occasional bad params, missing txids), amber 2–10%, red above 10% (something is consistently broken — check which method dominates the per-method breakdown).');
     grid+='</div>';
     var html=grid;
     if(rows.length>0){
-      html+='<div style="font-size:10px;letter-spacing:1px;color:var(--text3);margin:14px 0 6px">// PER-METHOD BREAKDOWN (sorted by calls)</div>';
+      html+='<div style="font-size:10px;letter-spacing:1px;color:var(--text3);margin:14px 0 6px">// PER-METHOD BREAKDOWN (sorted by calls) — hover any column header for what it means</div>';
       html+='<table style="width:100%;font-size:11px;border-collapse:collapse">';
       html+='<tr style="color:var(--text3)">'
-        +'<th style="text-align:left;padding:4px;border-bottom:1px solid var(--border)">Method</th>'
-        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Calls</th>'
-        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Errors</th>'
-        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Err %</th>'
-        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Avg</th>'
-        +'<th style="text-align:right;padding:4px;border-bottom:1px solid var(--border)">Max</th>'
+        +'<th title="JSON-RPC method name. Custom node endpoints (getminerstats, getrpcstats, getlotteryaudit, getaddressflows) appear alongside standard ones (getblock, sendrawtransaction, etc)." style="text-align:left;padding:4px;border-bottom:1px solid var(--border);cursor:help">Method ⓘ</th>'
+        +'<th title="How many times this method was called since the node booted. The table is sorted by this column." style="text-align:right;padding:4px;border-bottom:1px solid var(--border);cursor:help">Calls ⓘ</th>'
+        +'<th title="How many calls produced a JSON-RPC error response. Common reasons: bad params, txid not in mempool, invalid hex, missing arguments. Errors here are NOT consensus failures, just RPC handler errors." style="text-align:right;padding:4px;border-bottom:1px solid var(--border);cursor:help">Errors ⓘ</th>'
+        +'<th title="errors/calls per method. Anything above ~2% per method warrants a look. Methods like getrawtransaction often have non-zero errors when callers query mempool for already-confirmed txs (Not in mempool error)." style="text-align:right;padding:4px;border-bottom:1px solid var(--border);cursor:help">Err % ⓘ</th>'
+        +'<th title="Average wall-clock latency per call (microseconds, milliseconds, or seconds). Cheap RPCs (getblockcount, getbestblockhash) are typically &lt;100µs. Heavy ones (getaddressinfo, getlotteryaudit) can take 5–50ms." style="text-align:right;padding:4px;border-bottom:1px solid var(--border);cursor:help">Avg ⓘ</th>'
+        +'<th title="Worst-case latency observed for this method since boot. A high max with a low avg means an outlier (a slow burst, contention with the miner thread). A consistently high max means structural slowness." style="text-align:right;padding:4px;border-bottom:1px solid var(--border);cursor:help">Max ⓘ</th>'
         +'</tr>';
       for(var i=0;i<rows.length;i++){
         var r=rows[i];
