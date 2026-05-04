@@ -495,104 +495,76 @@ make -j$(nproc)</pre>
   </div>
 </div>
 
-<!-- ============== LIVE INCIDENT BANNER — block 7100 (Phase 2 boundary) overdue ============== -->
-<style>
-@keyframes incidentPulse7100 {
-  0%, 100% { box-shadow: 0 0 14px rgba(251,1,13,0.45), 0 0 28px rgba(245,158,11,0.20); border-color: rgba(251,1,13,0.85); }
-  50%      { box-shadow: 0 0 28px rgba(251,1,13,0.95), 0 0 56px rgba(245,158,11,0.50); border-color: rgba(255,255,255,0.95); }
-}
-.incident-7100-banner { animation: incidentPulse7100 1.6s ease-in-out infinite; }
-</style>
-<div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div class="incident-7100-banner" style="background:linear-gradient(135deg,rgba(251,1,13,0.18),rgba(245,158,11,0.06));border:3px solid #fb010d;border-left:6px solid #fb010d;border-radius:6px;padding:14px 18px;">
+<!-- ============== EMERGENCY BANNER — block 7100 SbPoW miner_pubkey bug — fix in progress ============== -->
+<div id="emergencyBanner7100" style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
+  <div style="background:linear-gradient(135deg,rgba(34,197,94,0.10),rgba(34,197,94,0.03));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:6px;padding:14px 18px;">
 
     <!-- TITLE -->
-    <div style="text-align:center;margin-bottom:12px;padding:10px 14px;background:rgba(251,1,13,0.18);border:1px solid rgba(251,1,13,0.7);border-radius:4px">
-      <span style="display:block;color:#ffffff;font-size:18px;font-weight:900;letter-spacing:3px;text-shadow:0 0 10px rgba(251,1,13,0.95),0 0 22px rgba(251,1,13,0.55);margin-bottom:4px">
-        ⚠ BLOCK 7,100 OVERDUE — INVESTIGATING SbPoW ⚠
+    <div style="text-align:center;margin-bottom:12px;padding:10px 14px;background:rgba(34,197,94,0.10);border:1px solid rgba(34,197,94,0.55);border-radius:4px">
+      <span style="display:block;color:#4ade80;font-size:17px;font-weight:900;letter-spacing:2.5px;text-shadow:0 0 8px rgba(34,197,94,0.45);margin-bottom:4px">
+        ⚠ NETWORK STATUS — BLOCK 7,100 STUCK · FIX IN PROGRESS
       </span>
-      <span style="display:block;color:#ffe4e6;font-size:11px;font-weight:700;letter-spacing:1.5px;text-shadow:0 0 6px rgba(0,0,0,0.6)">
-        Phase 2 activation block stuck · ~73 min elapsed at observation · 150-min rollback threshold
+      <span style="display:block;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:1.4px">
+        V11 Phase 2 activated as designed · miner-side serialization bug identified · patch under development
       </span>
     </div>
 
-    <!-- LARGE COUNTDOWN -->
-    <div style="text-align:center;margin-bottom:14px;padding:14px 18px;background:rgba(0,0,0,0.45);border:2px dashed rgba(251,1,13,0.9);border-radius:6px">
-      <div style="color:#fb010d;font-size:9.5px;font-weight:800;letter-spacing:2.5px;margin-bottom:4px;text-shadow:0 0 6px rgba(251,1,13,0.6)">
-        // ROLLBACK COUNTDOWN — TIME TO 150 MIN TOTAL THRESHOLD
-      </div>
-      <div id="rollback7100Val" style="color:#ffd700;font-size:48px;font-weight:900;letter-spacing:6px;font-family:'JetBrains Mono','Space Mono',ui-monospace,monospace;line-height:1.05;text-shadow:0 0 14px rgba(255,215,0,0.7),0 0 28px rgba(251,1,13,0.45);margin:2px 0">
-        --:--:--
-      </div>
-      <div style="color:var(--text3);font-size:10px;letter-spacing:1.2px;margin-top:4px">
-        deadline (UTC): <span style="color:var(--text2);font-weight:700">2026-05-04 02:51:31</span>
-      </div>
-    </div>
-    <script>
-    (function(){
-      var DEADLINE_UNIX_MS = 1777863091 * 1000; // 2026-05-04 02:51:31 UTC
-      function pad(n){return n<10?'0'+n:''+n;}
-      function tick(){
-        var el = document.getElementById('rollback7100Val');
-        if(!el) return;
-        var ms = DEADLINE_UNIX_MS - Date.now();
-        if (ms <= 0) {
-          el.textContent = 'EXECUTE ROLLBACK';
-          el.style.color = '#fb010d';
-          el.style.textShadow = '0 0 18px rgba(251,1,13,0.95), 0 0 36px rgba(251,1,13,0.55)';
-          return;
-        }
-        var s = Math.floor(ms/1000);
-        var h = Math.floor(s/3600); s -= h*3600;
-        var m = Math.floor(s/60);   s -= m*60;
-        el.textContent = pad(h)+':'+pad(m)+':'+pad(s);
-        if (ms < 5*60*1000)      { el.style.color='#fb010d'; el.style.textShadow='0 0 18px rgba(251,1,13,0.95),0 0 36px rgba(251,1,13,0.55)'; }
-        else if (ms < 15*60*1000){ el.style.color='#f59e0b'; el.style.textShadow='0 0 14px rgba(245,158,11,0.75),0 0 30px rgba(251,1,13,0.4)'; }
-        else                      { el.style.color='#ffd700'; el.style.textShadow='0 0 14px rgba(255,215,0,0.7),0 0 28px rgba(251,1,13,0.45)'; }
-      }
-      tick(); setInterval(tick, 1000);
-    })();
-    </script>
-
-    <!-- WHAT WE VERIFIED -->
-    <div style="color:#4ade80;font-size:11.5px;font-weight:800;letter-spacing:1.2px;margin-bottom:6px">
-      ✅ NODE STATE VERIFIED CORRECT — Phase 2 logic is ready
-    </div>
-    <div style="color:var(--text2);font-size:10.5px;line-height:1.85;margin-bottom:12px;padding-left:12px;border-left:2px solid rgba(74,222,128,.45)">
-      · <code>getlotterystate</code> returns <b style="color:#4ade80">phase2_active = true</b>, <code>height_next = 7,100</code>, <code>coinbase_shape = PAYOUT</code><br>
-      · Lottery winner <b style="color:#4ade80">deterministically pre-selected</b> (winner_index = 27 of 36 eligible miners)<br>
-      · Emission invariant exact: <code>miner_amount (392,550,432) + lottery_payout (392,550,431) = 785,100,863 = subsidy</code><br>
-      · No chain split — public RPC tip hash matches local node tip<br>
-      · ConvergenceX stability at 100 % — PoW commitment validation is healthy<br>
-      · 6 peer connections active, mempool clean, RPC responsive
+    <!-- WHAT IS HAPPENING -->
+    <div style="color:var(--text);font-size:11px;line-height:1.85;margin-bottom:12px">
+      V11 Phase 2 activated at block 7,100 as planned, but a bug in the SbPoW miner code prevents producing valid v2 block headers. The chain is currently waiting at height 7,099 / next block 7,100 while the bug is being investigated and fixed.
     </div>
 
-    <!-- HYPOTHESIS -->
-    <div style="color:var(--gold);font-size:11.5px;font-weight:800;letter-spacing:1.2px;margin-bottom:6px">
-      ◆ SUSPECTED CAUSE: SbPoW MINER-SIDE FLOW
-    </div>
-    <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-bottom:12px;padding-left:12px;border-left:2px solid rgba(255,200,87,.5)">
-      The validator (node) is fully ready for Phase 2 — every consensus invariant verifies pre-block. What appears to be failing is the <b style="color:#ffc857">miner side</b>: candidate blocks for height 7,100 either are not reaching the validator or are being rejected before they propagate. Most likely vector is the <b style="color:#ffc857">SbPoW v2 header signing path</b> (BIP-340 Schnorr signature over PoW commit + height + miner_pubkey) — if any field mismatch occurs between sign-time and validate-time, the validator rejects. Investigation in progress: validator logs, miner submitblock payload, header version field. Slingshot bitsQ relief is <b>not</b> applicable to this block (block 7,099 took 10 min 36 s, below the 30-min threshold), so no compensation will fire automatically.
-    </div>
-
-    <!-- ROLLBACK PLAN -->
-    <div style="color:#fb010d;font-size:11.5px;font-weight:800;letter-spacing:1.2px;margin-bottom:6px">
-      ⏱ AUTOMATIC ROLLBACK AT 150 MIN TOTAL ELAPSED
-    </div>
-    <div style="color:var(--text2);font-size:10.5px;line-height:1.75;margin-bottom:8px;padding-left:12px;border-left:2px solid rgba(251,1,13,.55)">
-      If block 7,100 has not landed by <b style="color:#fb010d">150 minutes</b> total elapsed since block 7,099, the seed node will be reverted to the backup binary <code>sost-node.pre-phase2-7100.bak</code> (preserves chain.json, swaps only the validator program). Phase 2 source-side activation height stays at 7,100; only the validator binary in service is reverted while the SbPoW miner-side flow is investigated and fixed. Operators will receive an updated build before Phase 2 is re-attempted at a future height.
+    <!-- BULLETS -->
+    <div style="color:var(--text2);font-size:10.5px;line-height:1.95;margin-bottom:12px;padding-left:12px;border-left:2px solid rgba(34,197,94,.45)">
+      · <b style="color:#4ade80">CAUSE:</b> Miner-side serialization bug — not consensus rule failure<br>
+      · <b style="color:#4ade80">SCOPE:</b> Appears to affect current Phase 2 miner binaries<br>
+      · <b style="color:#4ade80">CHAIN STATE:</b> Funds safe, history intact, paused not corrupted<br>
+      · <b style="color:#4ade80">PRE-7,100 BLOCKS:</b> All valid, all in chain<br>
+      · <b style="color:#4ade80">POST-7,100 BLOCKS:</b> Cannot be produced until fix is deployed
     </div>
 
-    <!-- WHAT MINERS SHOULD DO -->
-    <div style="margin-top:12px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
+    <!-- MINERS -->
+    <div style="margin-bottom:10px;padding:10px 12px;background:rgba(34,211,238,.06);border-left:3px solid var(--cyan);border-radius:3px;">
       <span style="display:block;color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// MINERS</span>
       <span style="display:block;font-size:10.5px;color:var(--text2);line-height:1.75">
-        <b>Keep mining.</b> No individual rollback. If your miner is producing v2 signed blocks against the seed node and they are being rejected, capture the rejection message from <code>journalctl -u sost-node | grep -Ei "reject\|sbpow\|invalid"</code> and report it. The coordinated rollback (if needed) is executed by the operations team only.
+        Please stop your miner. Running it now only adds misbehavior penalty against your peers without producing valid blocks. Wait for the patched binary announcement.
       </span>
     </div>
 
+    <!-- HOLDERS -->
+    <div style="margin-bottom:10px;padding:10px 12px;background:rgba(34,197,94,.07);border-left:3px solid #22c55e;border-radius:3px;">
+      <span style="display:block;color:#4ade80;font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px">// HOLDERS</span>
+      <span style="display:block;font-size:10.5px;color:var(--text2);line-height:1.75">
+        Your SOST balance is unaffected. Pre-fork transactions are confirmed and immutable.
+      </span>
+    </div>
+
+    <!-- ETA -->
+    <div style="color:var(--text3);font-size:10px;letter-spacing:1px;margin-top:8px">
+      ETA FIX: <span style="color:var(--text2);font-weight:700">under investigation — updates as available</span>
+    </div>
   </div>
 </div>
+<script>
+(function(){
+  // Auto-hide banner once block 7,100 has landed.
+  function checkHide(){
+    try{
+      var hVal = document.getElementById('dHeight');
+      if(!hVal) return;
+      var raw = (hVal.textContent||'').replace(/[^0-9]/g,'');
+      if(!raw) return;
+      var h = parseInt(raw,10);
+      if(isFinite(h) && h >= 7100){
+        var bn = document.getElementById('emergencyBanner7100');
+        if(bn) bn.style.display='none';
+      }
+    }catch(e){}
+  }
+  setInterval(checkHide, 4000);
+  setTimeout(checkHide, 1500);
+})();
+</script>
 
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
