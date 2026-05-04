@@ -2446,11 +2446,18 @@ function updateChainSync(){
     cdEl.innerHTML='\u23F1 behind schedule \u00B7 profile B0';
   } else if(cdEl){cdEl.style.display='none';}
 
-  // Relief-valve cascade hint. The active chain runs the V10 granular
-  // rule (block 6,700+): drop 1 profile level every 60 s once the
-  // current block search has exceeded 600 s; floor stays at E7. Older
-  // V8 / V9 regimes are historical and not surfaced here. Pure
-  // read-only display — the rule itself lives in src/pow/casert.cpp.
+  // Two distinct cASERT mechanisms are surfaced here:
+  //
+  //  1) V10 granular relief valve (block 6,700+): drop 1 profile level
+  //     every 60 s once the current block search has exceeded 600 s.
+  //     Floor stays at E7. Activates when the chain is STUCK.
+  //
+  //  2) Triangular cascade lag clamp: caps the profile drop relative
+  //     to lag using n*(n+1)/2. Pre-V12 (#5,750..#7,349): max 6 steps
+  //     → max drop 21. V12 (#7,350+): max 7 steps → max drop 28.
+  //     Activates when the chain is AHEAD of schedule.
+  //
+  // Both rules live in src/pow/casert.cpp; this is read-only display.
   var cascadeEl=document.getElementById('csLagCascade');
   if(cascadeEl){
     var nextH=actual+1;  // height being mined
@@ -2458,17 +2465,22 @@ function updateChainSync(){
       cascadeEl.style.display='none';
     } else {
       cascadeEl.style.display='block';
-      var head='<span style="color:#22d3ee;letter-spacing:.4px">V10 granular</span> cascade · −1 / 60s after 600s · floor E7';
+      var v12Active=(nextH>=7350);
+      var triangularSteps=v12Active?7:6;
+      var triangularMaxDrop=triangularSteps*(triangularSteps+1)/2;
+      var head='<span style="color:#22d3ee;letter-spacing:.4px">V10 granular</span> relief −1/60s after 600s · floor E7'
+        +' · <span style="color:#a855f7">triangular cascade</span> max '+triangularSteps+' steps (drop '+triangularMaxDrop+')'
+        +(v12Active?' <span style="color:#fb010d;font-weight:700">[V12]</span>':'');
       var dyn='';
       if(timeSinceTip>=600){
         var sinceStart=timeSinceTip-600;
         var stepsTaken=Math.floor(sinceStart/60)+1;  // first drop fires AT 600s
         var nextStepAt=600+stepsTaken*60;
         var secsToNext=Math.max(0,Math.ceil(nextStepAt-timeSinceTip));
-        dyn=' · <span style="color:#fbbf24">drop '+stepsTaken+' lvl, next in '+secsToNext+'s</span>';
+        dyn=' · <span style="color:#fbbf24">relief drop '+stepsTaken+' lvl, next in '+secsToNext+'s</span>';
       } else {
         var armSecs=Math.max(0,Math.ceil(600-timeSinceTip));
-        dyn=' · <span style="color:var(--text3)">arms in '+armSecs+'s</span>';
+        dyn=' · <span style="color:var(--text3)">relief arms in '+armSecs+'s</span>';
       }
       cascadeEl.innerHTML=head+dyn;
     }
