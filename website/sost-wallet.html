@@ -2844,16 +2844,49 @@ async function sendTransactionMany(recipients) {
       .filter(u => !u.coinbase || u.confs >= 1000);
     if (utxos.length === 0) throw new Error('No spendable UTXOs (coinbase needs 1000 confs)');
 
-    // Estimate size: ~148 * inputs + 34 * outputs + 10. We don't yet
-    // know the input count, but most sends fit in <= 5 inputs.
-    const inputCount = Math.min(utxos.length, 10);
-    const outputCount = recipients.length + 1;  // +1 for change
-    const estSize = 148 * inputCount + 34 * outputCount + 10;
-    const feeStocks = feePerByte * estSize;
-
+    // Two-pass fee calculation, mirroring the CLI sendmany flow.
+    //
+    // Pass 1: build with a rough estimate based on Math.min(utxos.length, 10).
+    //         buildAndSignManyTx may select more inputs if the recipient
+    //         total + estimated fee is greater than what 10 UTXOs cover.
+    // Pass 2: re-measure rawTx size, recompute fee at the configured
+    //         per-byte rate, and rebuild ONLY if the new fee differs from
+    //         pass 1 (which means pass 1 picked a different input count
+    //         than the size estimate assumed).
+    //
+    // The confirmation prompt always shows post-pass-2 numbers so the
+    // user is never asked to approve a value that's about to change.
     const totalOut = recipients.reduce((s, r) => s + r.amount, 0);
-    const totalIn  = utxos.slice(0, inputCount).reduce((s, u) => s + u.amount, 0);
-    const changeAmt = totalIn - totalOut - feeStocks;
+    const outputCount = recipients.length + 1;  // recipients + change
+    const seedInputCount = Math.min(utxos.length, 10);
+    const seedSize = 148 * seedInputCount + 34 * outputCount + 10;
+    let feeStocks = feePerByte * seedSize;
+
+    let built = await buildAndSignManyTx(utxos, recipients, feeStocks, wallet.address);
+    let rawTx = built.rawTx;
+    let txSize = rawTx.length / 2;
+
+    let realFee = feePerByte * txSize;
+    if (realFee !== feeStocks) {
+      // Real input count differs from the seed estimate. Rebuild with
+      // the corrected fee. One extra pass is enough because the size
+      // delta from changing fee_stocks alone is at most a few bytes.
+      feeStocks = realFee;
+      built = await buildAndSignManyTx(utxos, recipients, feeStocks, wallet.address);
+      rawTx = built.rawTx;
+      txSize = rawTx.length / 2;
+      const finalFee = feePerByte * txSize;
+      if (finalFee > feeStocks) {
+        // Pass 3 only if the second rebuild grew the tx (rare —
+        // happens when an extra input is added on the boundary).
+        feeStocks = finalFee;
+        built = await buildAndSignManyTx(utxos, recipients, feeStocks, wallet.address);
+        rawTx = built.rawTx;
+        txSize = rawTx.length / 2;
+      }
+    }
+    const inputCount = built.selected.length;
+    const changeAmt = built.change || 0;
 
     let lines = recipients.map((r, i) =>
       '  ' + (i + 1) + '. ' + r.address.substring(0, 12) + '...  ' + formatSost(r.amount) + ' SOST'
@@ -2864,19 +2897,15 @@ async function sendTransactionMany(recipients) {
       lines + '\n\n' +
       'Total out: ' + formatSost(totalOut) + ' SOST\n' +
       'Fee rate:  ' + feePerByte + ' st/B\n' +
-      'TX size:   ~' + estSize + ' bytes\n' +
+      'TX size:   ' + txSize + ' bytes (real)\n' +
       'Total fee: ' + formatSost(feeStocks) + ' SOST\n' +
-      'Inputs:    up to ' + inputCount + ' UTXOs\n' +
+      'Inputs:    ' + inputCount + ' UTXOs\n' +
       'Change:    ' + formatSost(Math.max(0, changeAmt)) + ' SOST\n\n' +
       'Confirm and broadcast?';
     if (!confirm(confirmMsg)) {
       showError('sendResult', 'Transaction cancelled by user.');
       return;
     }
-
-    const built = await buildAndSignManyTx(utxos, recipients, feeStocks, wallet.address);
-    const rawTx = built.rawTx;
-    const txSize = rawTx.length / 2;
 
     // Hard-stop tx size before broadcast (consensus = 100 KB).
     if (txSize > 100000) {
