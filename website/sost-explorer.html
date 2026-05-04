@@ -448,93 +448,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </div>
 
-<style>
-@keyframes v11UpdatePulse {
-  0%, 100% {
-    color: #ffd700;
-    text-shadow: 0 0 6px rgba(255, 215, 0, .45);
-    transform: scale(1);
-  }
-  50% {
-    color: #ffffff;
-    text-shadow: 0 0 14px rgba(251, 1, 13, .95), 0 0 26px rgba(255, 215, 0, .75);
-    transform: scale(1.015);
-  }
-}
-.v11-update-pulse-window {
-  display: inline-block;
-  animation: v11UpdatePulse 1.05s ease-in-out infinite;
-}
-</style>
-
-<!-- V11 HOTFIX BANNER — block 7100 -->
-<div class="v11-banner" style="border:1px solid rgba(251,1,13,.45);background:linear-gradient(180deg,rgba(251,1,13,.10),rgba(0,0,0,.18));padding:14px 16px;margin:12px 0 18px 0">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
-    <div style="color:#fb010d;font-size:15px;font-weight:900;letter-spacing:1.2px">⚡ SOST V11 UPDATE — ACTION REQUIRED BEFORE BLOCK 7,100 ⚡</div>
-    <button id="v11BannerToggle" onclick="toggleV11Banner()" style="background:rgba(251,1,13,.12);border:1px solid rgba(251,1,13,.65);color:#ffd700;cursor:pointer;font-family:var(--code);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px">COLLAPSE</button>
-  </div>
-  <div id="v11BannerBody" style="color:var(--text);font-size:12px;line-height:1.65">
-    <b>Current status:</b><br>
-    · Phase 1 is already active since block <b>7,000</b>.<br>
-    · The linear cascade/equalizer is live for blocks <b>7,000–7,099</b>.<br>
-    · Hotfix pushed: the intended <b>triangular equalizer</b> activates at block <b>7,100</b>.<br>
-    · Phase 2 also activates at block <b>7,100</b>: Lottery + SbPoW.<br>
-    · Miner-side RPC sync bug fixed.<br><br>
-
-    <span id="v11UpdateUrgent" style="color:#ffd700;font-weight:900">MINERS AND NODE OPERATORS MUST UPDATE BETWEEN BLOCKS 7,090 AND 7,100.</span><br><br>
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 10px 0">cd &lt;your sost-core directory&gt;
-git pull --ff-only origin main
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
-make -j$(nproc)</pre>
-
-    <b>Node operators:</b> <code>sudo systemctl restart sost-node</code><br>
-    <b>Miners:</b> restart <code>sost-miner</code> after rebuilding.<br><br>
-
-    From block <b>7,100</b>, <code>--address</code> only is no longer enough. Miners must use wallet-backed mining:<br>
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:8px 0 10px 0">./sost-miner \
-  --wallet wallet.json \
-  --mining-key-label YOUR_LABEL \
-  --rpc 127.0.0.1:18232 \
-  --rpc-user USER \
-  --rpc-pass PASS \
-  --blocks 999999 \
-  --profile mainnet \
-  --threads N</pre>
-
-    <b style="color:#c084fc">◆ Equalizer hotfix</b><br>
-    At block <b>7,000</b>, V11 activated the linear equalizer:<br>
-    <code>540s → drop 1 · 600s → drop 2 · 660s → drop 3 · 720s → drop 4 · 840s → drop 6</code><br><br>
-
-    The intended triangular equalizer activates at block <b>7,100</b>:<br>
-    <code>540s → drop 1 · 600s → drop 3 · 660s → drop 6 · 720s → drop 10 · 780s → drop 15 · 840s → reaches E7 floor from H13</code><br>
-    The <code>E7</code> floor is preserved.<br><br>
-
-    <b style="color:#22c55e">◆ Phase 2 — Lottery + SbPoW</b><br>
-    From block <b>7,100</b>, blocks must be signed by the miner key, and the coinbase miner address must match that wallet key. Triggered lottery blocks redirect the protocol-side 50% allocation to one eligible miner. Eligibility is automatic for any address that has mined at least 1 block since genesis. A 5-block cooldown applies to recent winners.<br><br>
-
-    <b style="color:#f97316">◆ Miner bug fixed</b><br>
-    The miner could previously loop on <code>fetch_lottery_state height mismatch</code>. This was a miner-side sync issue, not a chain split or consensus failure. The miner now resyncs when the RPC node is ahead.<br><br>
-
-    <b style="color:#67e8f9">◆ MY MINER ALERTS</b><br>
-    Put your mining address in the <code>MY MINER</code> field at the top of the explorer. If that address finds a block, you will see a special <code>YOUR BLOCK</code> alert and hear a fanfare.<br><br>
-
-    This setting is saved locally in your browser only. It is not synced between devices.<br><br>
-
-    If you switch to a new Phase 2 wallet address, update <code>MY MINER</code> with the new address printed by <code>sost-miner</code> at startup.<br><br>
-
-    If you have any issue with this tool, please let me know here:<br>
-    <a href="https://sostcore.com/sost-contact.html" target="_blank" rel="noopener" style="color:#67e8f9">https://sostcore.com/sost-contact.html</a><br><br>
-
-    <span style="color:var(--text3)">SOST is experimental native PoW software. Issues may appear and will be corrected transparently. Thank you for your patience and for updating quickly.</span>
-  </div>
-</div>
-
-
-  </div>
-</div>
+<!-- V11 hotfix banner removed in v133: superseded by the Phase 2 resumed
+     banner below, which carries the same 'how to upgrade' instructions
+     plus the post-fork incident context. -->
 
 <!-- ============== PHASE 2 RESUMED BANNER — block 7100 incident resolved ============== -->
 <div class="phase2-resolved-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
