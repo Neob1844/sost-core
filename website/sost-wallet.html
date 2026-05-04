@@ -771,6 +771,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <textarea id="capsuleText" class="form-input" rows="2" maxlength="80" placeholder="" style="font-size:12px;resize:vertical"></textarea>
             <span id="capsuleCharCount" style="position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--text-dim)">0 / 80</span>
           </div>
+          <div style="font-size:10px;color:var(--yellow-primary,#fbbf24);margin-top:6px;line-height:1.5;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.04);padding:6px 8px;border-radius:3px">
+            <b>⚠ Web wallet capsule attach is preview-only.</b> The form lets you draft content but the current build does NOT yet write the payload into the broadcast transaction. To prevent silently sending a plain transfer, the wallet will REFUSE to broadcast when Message Type is anything other than "None". Use <code>sost-cli</code> for capsule transactions until this is wired up.
+          </div>
         </div>
         <div id="sendTotpGroup" class="form-group hidden">
           <label class="form-label">2FA Code</label>
@@ -2544,6 +2547,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== CAPSULE UI ====================
 
+// V12 lowered capsule activation from #10,000 to #7,350. This MUST match
+// CAPSULE_ACTIVATION_HEIGHT_MAINNET in include/sost/tx_validation.h. If
+// the chain has not crossed this height, every node will reject any tx
+// whose outputs carry a non-zero payload, so the web wallet must NOT
+// broadcast such a tx. The current build does not yet attach capsule
+// payloads at all (see capsule guard in sendTransaction).
+const CAPSULE_ACTIVATION_HEIGHT = 7350;
+
 const CAPSULE_DESCS = {
   none: '',
   open_note: 'Public text visible to everyone on the blockchain. Use for memos, labels, greetings. Max 80 characters.',
@@ -2578,8 +2589,8 @@ window.updateCapsuleUI = function() {
     const max = CAPSULE_MAX[type] || 80;
     textArea.maxLength = max;
     counter.textContent = '0 / ' + max;
-    textArea.placeholder = capsuleBlockHeight < 5000
-      ? 'Capsule activates at block 10,000. Currently at #' + capsuleBlockHeight + '.'
+    textArea.placeholder = capsuleBlockHeight < CAPSULE_ACTIVATION_HEIGHT
+      ? 'Capsule activates at block ' + CAPSULE_ACTIVATION_HEIGHT.toLocaleString() + '. Currently at #' + capsuleBlockHeight + '.'
       : 'Enter your ' + type.replace(/_/g, ' ') + ' content here...';
   }
 };
@@ -2603,21 +2614,21 @@ function updateCapsuleActivation(height) {
 
   if (!badge) return;
 
-  if (height >= 5000) {
+  if (height >= CAPSULE_ACTIVATION_HEIGHT) {
     badge.style.background = 'rgba(74,222,128,0.1)';
     badge.style.border = '1px solid rgba(74,222,128,0.3)';
     badge.style.color = 'var(--green-primary,#4ade80)';
-    badge.textContent = '✅ ACTIVE — Capsule Protocol enabled';
+    badge.textContent = '✅ ACTIVE — Capsule Protocol enabled (consensus). Web wallet attach: see notice below.';
     if (select) select.disabled = false;
     if (textArea) textArea.disabled = false;
     if (group) group.style.opacity = '1';
   } else {
-    const blocksLeft = 5000 - height;
+    const blocksLeft = CAPSULE_ACTIVATION_HEIGHT - height;
     const daysLeft = Math.ceil(blocksLeft * 10 / 60 / 24);
     badge.style.background = 'rgba(251,191,36,0.1)';
     badge.style.border = '1px solid rgba(251,191,36,0.3)';
     badge.style.color = 'var(--yellow-primary,#fbbf24)';
-    badge.textContent = '⏳ Activates at block 10,000 (~' + daysLeft + ' days) — Currently #' + height;
+    badge.textContent = '⏳ Activates at block ' + CAPSULE_ACTIVATION_HEIGHT.toLocaleString() + ' (~' + daysLeft + ' days) — Currently #' + height;
     if (select) select.disabled = true;
     if (textArea) textArea.disabled = true;
     if (group) { group.style.opacity = '0.5'; group.style.cursor = 'not-allowed'; }
@@ -2674,6 +2685,19 @@ window.estimateFee = async function() {
 
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
+
+  // Capsule guard. The web wallet's tx builder does NOT yet attach
+  // capsule payloads (every output is serialized with payload_len=0),
+  // so if a user selected a capsule type from the form, broadcasting
+  // would silently strip the content. Refuse with a loud error and
+  // tell them to use the CLI. Lifted automatically once the JS
+  // builder learns to write the payload.
+  const capsuleSel = document.getElementById('capsuleType');
+  if (capsuleSel && capsuleSel.value && capsuleSel.value !== 'none') {
+    return showError('sendResult',
+      'Capsule send from web wallet is not yet implemented. The form would silently broadcast a plain transfer with NO payload attached. ' +
+      'Set Message Type back to "None" to send a plain transfer, or use sost-cli for capsule transactions.');
+  }
 
   // Multi-recipient (sendmany) path: if more than one recipient row is
   // filled, route to a separate handler. The single-recipient path below
