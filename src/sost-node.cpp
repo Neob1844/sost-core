@@ -4116,6 +4116,20 @@ static bool process_block(const std::string& block_json) {
                            declared_pi, CASERT_H_MIN, CASERT_H_MAX);
                     return false;
                 }
+                // V12 hard profile ceiling — H20 from V12_HEIGHT, H13 before.
+                // Hardens the broader [E7, H35] structural bound above to the
+                // active operational range so blocks declaring a reserved
+                // profile (H21-H35) are rejected outright.
+                {
+                    int32_t max_profile = (height >= V12_HEIGHT)
+                        ? CASERT_MAX_ACTIVE_PROFILE_V12
+                        : CASERT_MAX_ACTIVE_PROFILE_PRE_V12;
+                    if (declared_pi > max_profile) {
+                        printf("[BLOCK] REJECTED: profile_index %d exceeds active ceiling %d at height %lld\n",
+                               declared_pi, max_profile, (long long)height);
+                        return false;
+                    }
+                }
                 if (declared_pi > base_profile) {
                     printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
                            declared_pi, base_profile);
@@ -6132,6 +6146,37 @@ int main(int argc, char** argv) {
                    g_blocks.size(),(long long)g_chain_height,g_utxo_set.Size());
         } else {
             printf("Warning: failed to load chain from %s\n",chain_path.c_str());
+        }
+    }
+
+    // V12 hard fork startup notice. Printed after chain load so the local
+    // height is accurate. Operators below V12_HEIGHT get the warning
+    // banner; operators at or past V12_HEIGHT get a one-line confirmation.
+    {
+        int64_t local_h = g_chain_height;
+        if (local_h < sost::V12_HEIGHT) {
+            int64_t left = sost::V12_HEIGHT - local_h;
+            fprintf(stderr,
+                "============================================================\n"
+                " SOST V12 HARDFORK -- ACTIVATION AT BLOCK %lld\n"
+                "============================================================\n"
+                " If your local chain is below %lld you must run a binary\n"
+                " built from current main before that block to follow the\n"
+                " chain. Details: https://sostcore.com (top banner).\n"
+                "\n"
+                " Local height : %lld\n"
+                " Activation   : %lld\n"
+                " Blocks left  : %lld\n"
+                "============================================================\n",
+                (long long)sost::V12_HEIGHT,
+                (long long)sost::V12_HEIGHT,
+                (long long)local_h,
+                (long long)sost::V12_HEIGHT,
+                (long long)left);
+        } else {
+            fprintf(stderr,
+                "[V12] active since block %lld. Your binary is up to date.\n",
+                (long long)sost::V12_HEIGHT);
         }
     }
 
