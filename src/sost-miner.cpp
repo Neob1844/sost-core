@@ -1060,21 +1060,37 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     // state once at template build time. If gate-1 is armed but gate-2
     // is still closed, the worker threads watch for gate-2 to flip and
     // abort the candidate so we can recompute bits_q before submitting.
+    //
+    // V12 (h >= V12_HEIGHT) replaces the V11 dual-gate path with a same-
+    // block 4-tier ladder keyed on current_elapsed only. Each time the
+    // tier increases mid-search the validator's expected bits_q drops by
+    // a strictly larger drop_bps, so we MUST abort and rebuild on every
+    // tier crossing to keep the committed bits_q in sync. Pre-V12 path
+    // stays bit-identical for blocks 7000-7349.
     int64_t  ss_prev_elapsed = (g_chain.size() >= 2)
                                ? (g_chain.back().time - g_chain[g_chain.size()-2].time)
                                : 0;
-    bool ss_gate1_armed = (h >= sost::V11_SLINGSHOT_HEIGHT)
+    bool ss_gate1_armed = (h >= sost::V11_SLINGSHOT_HEIGHT && h < sost::V12_HEIGHT)
                           && (ss_prev_elapsed > sost::SLINGSHOT_THRESHOLD_SECONDS);
     int64_t start_now = std::time(nullptr);
     int64_t ss_cur_at_start = (!g_chain.empty() && start_now > g_chain.back().time)
                               ? (start_now - g_chain.back().time) : 0;
     bool ss_gate2_at_start = (ss_cur_at_start > (int64_t)sost::TARGET_SPACING);
     bool ss_watch = ss_gate1_armed && !ss_gate2_at_start;
+    // V12 tier snapshot — only meaningful at heights >= V12_HEIGHT.
+    int  ss_v12_tier_at_start = (h >= sost::V12_HEIGHT)
+                                  ? sost::slingshot_v12_tier(ss_cur_at_start) : 0;
+    bool ss_v12_watch = (h >= sost::V12_HEIGHT) && !g_chain.empty();
     g_slingshot_rebuild.store(false, std::memory_order_relaxed);
 
     if (ss_gate1_armed) {
         printf("[SLINGSHOT] gate-1 armed  prev_elapsed=%llds  bits_q=%u  watch=%d\n",
                (long long)ss_prev_elapsed, bits_q, (int)ss_watch);
+        fflush(stdout);
+    }
+    if (ss_v12_watch) {
+        printf("[SLINGSHOT] V12 watch armed  current_elapsed=%llds  tier=%d  bits_q=%u\n",
+               (long long)ss_cur_at_start, ss_v12_tier_at_start, bits_q);
         fflush(stdout);
     }
 
@@ -1427,6 +1443,25 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                             }
                         }
 
+                        // V12 — same-block 4-tier rebuild watch. Whenever
+                        // current_elapsed crosses into a higher tier the
+                        // validator's expected bits_q drops further, so a
+                        // candidate committed at a lower tier becomes stale.
+                        if (ss_v12_watch && !g_slingshot_rebuild.load(std::memory_order_relaxed)) {
+                            int64_t now_t = std::time(nullptr);
+                            if (now_t > g_chain.back().time) {
+                                int64_t cur_now = now_t - g_chain.back().time;
+                                int ss_tier_now = sost::slingshot_v12_tier(cur_now);
+                                if (ss_tier_now > ss_v12_tier_at_start) {
+                                    printf("[SLINGSHOT] V12 tier %d -> %d crossed at %llds, rebuild\n",
+                                           ss_v12_tier_at_start, ss_tier_now, (long long)cur_now);
+                                    fflush(stdout);
+                                    g_slingshot_rebuild.store(true, std::memory_order_relaxed);
+                                    return;
+                                }
+                            }
+                        }
+
                         // Check if anti-stall changed the profile (when stability is 0%)
                         if (stab_pct < 1.0 && elapsed_s > 120 && !g_rpc_url.empty()) {
                             std::string pi_check = rpc_call("getinfo");
@@ -1752,6 +1787,20 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     if (cur > (int64_t)sost::TARGET_SPACING) {
                         printf("[SLINGSHOT] gate-2 crossed during mining  current_elapsed=%llds  abort candidate, recompute bitsQ\n",
                                (long long)cur);
+                        fflush(stdout);
+                        g_slingshot_rebuild.store(true, std::memory_order_relaxed);
+                    }
+                }
+            }
+            // V12 — same-block 4-tier rebuild watch (single-thread mirror).
+            if (ss_v12_watch && (nonce % 200) == 0 && !g_slingshot_rebuild.load(std::memory_order_relaxed)) {
+                int64_t now_t = std::time(nullptr);
+                if (!g_chain.empty() && now_t > g_chain.back().time) {
+                    int64_t cur_now = now_t - g_chain.back().time;
+                    int ss_tier_now = sost::slingshot_v12_tier(cur_now);
+                    if (ss_tier_now > ss_v12_tier_at_start) {
+                        printf("[SLINGSHOT] V12 tier %d -> %d crossed at %llds, rebuild\n",
+                               ss_v12_tier_at_start, ss_tier_now, (long long)cur_now);
                         fflush(stdout);
                         g_slingshot_rebuild.store(true, std::memory_order_relaxed);
                     }
@@ -2257,6 +2306,41 @@ int main(int argc, char** argv) {
             load_chain(chain_path);
             printf("Continuing from height %lld, tip=%s\n\n",
                    (long long)(g_chain.size()-1), hex(g_tip_hash).substr(0,16).c_str());
+        }
+    }
+
+    // V12 hard fork startup notice — printed once after the chain has
+    // been loaded so the local height is accurate. Operators below
+    // V12_HEIGHT receive the warning banner; operators at or past it
+    // receive a one-line confirmation.
+    {
+        // local_h is the height of the last block known locally; chain.size()
+        // = number of blocks including genesis (height 0). So local_h =
+        // chain.size() - 1, clamped at 0 if no chain.
+        int64_t local_h = g_chain.empty() ? 0 : (int64_t)(g_chain.size() - 1);
+        if (local_h < sost::V12_HEIGHT) {
+            int64_t left = sost::V12_HEIGHT - local_h;
+            fprintf(stderr,
+                "============================================================\n"
+                " SOST V12 HARDFORK -- ACTIVATION AT BLOCK %lld\n"
+                "============================================================\n"
+                " If your local chain is below %lld you must run a binary\n"
+                " built from current main before that block to follow the\n"
+                " chain. Details: https://sostcore.com (top banner).\n"
+                "\n"
+                " Local height : %lld\n"
+                " Activation   : %lld\n"
+                " Blocks left  : %lld\n"
+                "============================================================\n",
+                (long long)sost::V12_HEIGHT,
+                (long long)sost::V12_HEIGHT,
+                (long long)local_h,
+                (long long)sost::V12_HEIGHT,
+                (long long)left);
+        } else {
+            fprintf(stderr,
+                "[V12] active since block %lld. Your binary is up to date.\n",
+                (long long)sost::V12_HEIGHT);
         }
     }
 
