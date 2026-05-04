@@ -1468,8 +1468,11 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                             // than emit an unsigned v2 header (rejected by node).
                             if (!g_signing_key_loaded) {
                                 printf(
-                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet-backed mining key required. "
-                                    "Use --wallet PATH --mining-key-label LABEL.\n",
+                                    "[MINER] FATAL: Phase 2 active at height %lld.\n"
+                                    "        Your binary or launch flags are not Phase 2 compatible.\n"
+                                    "        Required flags : --wallet PATH --mining-key-label LABEL\n"
+                                    "        Required build : -DSOST_ENABLE_PHASE2_SBPOW=ON\n"
+                                    "        Upgrade guide  : https://sostcore.com  (top banner)\n",
                                     (long long)h);
                                 fflush(stdout);
                                 g_chain_advanced = true;
@@ -1479,7 +1482,9 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                                 g_wallet.find_key_by_label(g_mining_key_label);
                             if (!wk) {
                                 printf(
-                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n",
+                                    "[MINER] FATAL: Phase 2 active at height %lld — wallet key '%s' not found.\n"
+                                    "        Check --mining-key-label matches a key inside the wallet JSON.\n"
+                                    "        Upgrade guide: https://sostcore.com  (top banner)\n",
                                     (long long)h, g_mining_key_label.c_str());
                                 fflush(stdout);
                                 g_chain_advanced = true;
@@ -2277,9 +2282,11 @@ int main(int argc, char** argv) {
             sost::V11_PHASE2_HEIGHT != INT64_MAX &&
             !g_signing_key_loaded) {
             fprintf(stderr,
-                "[MINER] FATAL: Phase 2 active at height >= V11_PHASE2_HEIGHT "
-                "(=%lld) — wallet-backed mining key required. "
-                "Use --wallet PATH --mining-key-label LABEL.\n",
+                "[MINER] FATAL: Phase 2 active at height >= V11_PHASE2_HEIGHT (=%lld).\n"
+                "        Your binary or launch flags are not Phase 2 compatible.\n"
+                "        Required flags : --wallet PATH --mining-key-label LABEL\n"
+                "        Required build : -DSOST_ENABLE_PHASE2_SBPOW=ON\n"
+                "        Upgrade guide  : https://sostcore.com  (top banner)\n",
                 (long long)sost::V11_PHASE2_HEIGHT);
             return 1;
         }
