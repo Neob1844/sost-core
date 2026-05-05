@@ -779,7 +779,7 @@ make -j$(nproc) sost-miner</pre>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
-  <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="Bitcoin-style network hashrate (2^bits/blocktime). Effective attempts/sec shown as secondary, profile-adjusted for ConvergenceX filter."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
+  <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Counts distinct addresses that have produced an accepted Phase II block in the last 1000 blocks (since #7100 activation). Lower bound on adoption — miners that fail to produce valid blocks are not counted. Card pulses red permanently as a standing centralisation reminder; count itself is unbounded." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
@@ -2278,7 +2278,18 @@ async function updateDashboard(info){
         else if(ph2count===1) ph2label='centralised';
         else if(ph2count===2) ph2label='thin';
         else                   ph2label='growing';
-        ph2sub.textContent='since #7100 · '+ph2label;
+        // The fixed-window scan loads only the last AVG_WINDOW_LONG=1000
+        // blocks. While the chain is below #7100+1000=#8100, every Phase 2
+        // block is in view → "since #7100" is accurate. Past #8100 the
+        // window starts dropping the earliest Phase 2 blocks and "since
+        // #7100" becomes misleading; switch the label so the operator
+        // sees what is actually being measured.
+        var phase2Start=7100;
+        var visibleStart=Math.max(phase2Start,(info.blocks||0)-AVG_WINDOW_LONG);
+        var rangeLabel=(visibleStart===phase2Start)
+          ?'since #'+phase2Start
+          :'last '+AVG_WINDOW_LONG+' blocks';
+        ph2sub.textContent=rangeLabel+' · '+ph2label;
       }
       if(ph2card){
         // Pulse continuously in red — permanent. The card stays in alert
@@ -2992,7 +3003,36 @@ function renderDashPanel(key,body,title,silent){
   } else if(key==='hashrate'){
     title.textContent='// EST. HASHRATE (last '+data.length+' blocks)';
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
-    body.innerHTML='<div style="position:relative"><canvas id="dpHashCanvas" style="width:100%;height:200px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid rgba(251,146,60,.3);padding:8px 12px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);box-shadow:0 0 15px rgba(251,146,60,.15);"></div></div>';
+    // Live numbers from the dashboard cards. Computed once from the
+    // current chain state so the panel matches what the user sees on
+    // the card (avg block time, current bitsQ, current profile).
+    var _hrPrim=document.getElementById('dHashrate')?(document.getElementById('dHashrate').textContent||'—'):'—';
+    var _hrSub=document.getElementById('dHashrateSub')?(document.getElementById('dHashrateSub').textContent||''):'';
+    var _curProf=window._rpcCasertProfile||'B0';
+    var _profObj=CASERT_PROFILES.find(function(p){return p.name===_curProf;})||{scale:1,k:4,steps:4};
+    var _compute=_profObj.scale*_profObj.k*_profObj.steps;
+    var _bitsRealNow=(_lastBitsQ||0)/65536;
+    body.innerHTML=''+
+      '<div style="background:rgba(0,0,0,.3);border-left:3px solid #fb923c;padding:10px 14px;margin-bottom:12px;font-family:var(--code);font-size:11px;line-height:1.7;color:#ccc">'+
+        '<div style="color:#fb923c;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">// WHAT THE NUMBER MEANS IN SOST</div>'+
+        '<div>The big number on the card (<b>'+_hrPrim+' '+_hrSub.split(' ')[0]+'</b>) is the rate of <b>qualified attempts</b> per second across the network. A "qualified attempt" is a nonce that PASSED the ConvergenceX stability test for the current profile — only those become valid hash candidates that can solve the block.</div>'+
+        '<br>'+
+        '<div>It is computed as:</div>'+
+        '<pre style="margin:6px 0;padding:8px;background:#0d0d0d;border-radius:3px;color:var(--cyan)">qualified_atts/sec  =  2^bits_real  /  avg_block_time\n                    =  2^'+_bitsRealNow.toFixed(3)+'  /  '+(Math.round(_avgBlockTime||600))+'s\n                    =  '+_hrPrim+' (per second, network total)</pre>'+
+        '<div>The <b>secondary "eff X att/s"</b> on the sub-label is the <b>raw inner attempts</b> per second — including the ones that failed the stability filter. The ratio between them is the current pass rate (typically ~1% at H13 → 100× more raw work than qualified hashes).</div>'+
+      '</div>'+
+      '<div style="background:rgba(0,0,0,.3);border-left:3px solid #67e8f9;padding:10px 14px;margin-bottom:12px;font-family:var(--code);font-size:11px;line-height:1.7;color:#ccc">'+
+        '<div style="color:#67e8f9;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">// WHY IT LOOKS "LOW" COMPARED TO BITCOIN</div>'+
+        '<div>One Bitcoin "hash" = 1 SHA-256d evaluation (~ns of work). One SOST "qualified attempt" = stability test (current profile <b>'+_curProf+', compute = scale × k × steps = '+_profObj.scale+' × '+_profObj.k+' × '+_profObj.steps+' = '+_compute+'</b>) + 1 final hash. So one SOST qualified attempt costs roughly <b>'+_compute+'×</b> what one Bitcoin hash costs.</div>'+
+        '<br>'+
+        '<div>A modern CPU core that can do ~100K SHA-256/s in Bitcoin can only do roughly <b>'+Math.round(100000/_compute)+' qualified atts/s</b> in SOST at profile '+_curProf+'. That is by design — ConvergenceX trades raw throughput for stability proofs. The number on the card is therefore intrinsically smaller than a Bitcoin hashrate at the same hardware level.</div>'+
+      '</div>'+
+      '<div style="background:rgba(0,0,0,.3);border-left:3px solid #4ade80;padding:10px 14px;margin-bottom:12px;font-family:var(--code);font-size:11px;line-height:1.7;color:#ccc">'+
+        '<div style="color:#4ade80;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">// HOW IT SCALES</div>'+
+        '<div>If the network adds miners or the per-miner throughput grows, the rate goes up. cASERT then increases bitsQ to keep avg_block_time at the 600s target, which moves bits_real up and pushes 2^bits_real higher → the displayed number grows together with real network capacity. The "below average" feeling at startup phases (small networks) is normal and self-corrects as adoption grows.</div>'+
+      '</div>'+
+      '<div style="font-size:10px;letter-spacing:1.5px;color:var(--text3);margin:14px 0 6px">// PER-BLOCK QUALIFIED-ATTEMPTS RATE (last '+data.length+' blocks)</div>'+
+      '<div style="position:relative"><canvas id="dpHashCanvas" style="width:100%;height:200px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid rgba(251,146,60,.3);padding:8px 12px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);box-shadow:0 0 15px rgba(251,146,60,.15);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpHashCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
