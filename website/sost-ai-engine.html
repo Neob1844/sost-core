@@ -1820,11 +1820,364 @@
   </div>
 </section>
 
+<!-- SCIENTIFIC INTAKE ENGINE — Phases I-X -->
+<section class="section" id="scientific-intake">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// 08 — SCIENTIFIC INTAKE ENGINE</div>
+      <h2 class="section-title">10 phases &middot; <span class="accent">169 tests</span> &middot; offline by default</h2>
+    </div>
+
+    <div class="info-box">
+      <h3>// SUMMARY</h3>
+      <p>
+        The Scientific Intake Engine is the working layer inside the
+        <a href="sost-materials-engine.html" style="color:var(--cyan-primary)">Materials Engine</a>
+        that turns free-form scientific text (papers, news, proposals,
+        speculative ideas) into a structured, audited research pipeline:
+        claims &rarr; evidence &rarr; multi-agent reasoning &rarr;
+        falsification-first experiment plan &rarr; feedback loop &rarr;
+        portfolio campaigns &rarr; knowledge graph &rarr; dossiers &rarr;
+        review queue &rarr; autonomous orchestration. Ten phases shipped
+        end-to-end. Every phase is local-first, deterministic, append-only,
+        and offline by default. <strong>Zero paid API dependencies.</strong>
+      </p>
+    </div>
+
+    <div class="info-box green">
+      <h3>// HARD RULES (enforced in code, not just documented)</h3>
+      <p>
+        <strong>Impossible-physics never escapes the kitchen.</strong>
+        Sources flagged with closed-timelike-curve / perpetual-motion /
+        over-unity / exceeds-Carnot language are capped at REJECT,
+        cannot be promoted to high-priority, cannot enter a publication
+        package, and cannot be transitioned to <code>published</code> —
+        even with explicit operator override. <br><br>
+        <strong>No auto-publish.</strong> The autonomous orchestrator
+        only ever enqueues review items; the operator must walk them
+        through <code>inbox &rarr; reviewing &rarr; approved &rarr;
+        published</code> manually. <br><br>
+        <strong>No procedural detail, ever.</strong> A shared sanitiser
+        scrubs grams / temperatures / pressures / ignition / detonation
+        cues from every report and plan field before persistence. <br><br>
+        <strong>Auth on writes, public on reads</strong> (with the
+        single exception of the operational review surface, which is
+        auth on both sides).
+      </p>
+    </div>
+
+    <div class="info-box gold">
+      <h3>// THE FULL CHAIN</h3>
+      <p style="font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--text-primary)">
+        Scientific text<br>
+        &rarr; Phase I &nbsp;&nbsp;&nbsp;claims / entities / 6 scores / hypotheses<br>
+        &rarr; Phase II &nbsp;&nbsp;evidence acquisition (Crossref / arXiv / Semantic Scholar)<br>
+        &rarr; Phase III &nbsp;multi-agent reasoning + decision memo<br>
+        &rarr; Phase IV &nbsp;falsification-first experiment plan + safety gates<br>
+        &rarr; Phase V &nbsp;&nbsp;&nbsp;feedback loop + active learning + calibration<br>
+        &rarr; Phase VI &nbsp;autonomous campaigns + portfolio ranking<br>
+        &rarr; Phase VII &nbsp;knowledge graph + clusters + opportunities<br>
+        &rarr; Phase VIII dossiers + reports (Markdown / JSON / HTML)<br>
+        &rarr; Phase IX &nbsp;&nbsp;review queue + state machine + publication packages<br>
+        &rarr; Phase X &nbsp;&nbsp;&nbsp;autonomous orchestration (5 modes, one endpoint)
+      </p>
+    </div>
+
+    <h3 style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:2px;font-size:11px;color:var(--text-dim);margin:32px 0 14px 0">// PHASE-BY-PHASE</h3>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">Phase I &mdash; Scientific Intake (text &rarr; claims &rarr; scoring)</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 14 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Free-form text intake with claim extraction, named-entity
+          recognition (materials, formulas, technologies, institutions,
+          people, physical concepts), six-score evaluation
+          (credibility / novelty / feasibility / evidence / commercial /
+          research priority) and seed hypothesis generation. SHA-256
+          dedup. Auth via <code>X-Intake-Key</code>, sliding-window
+          per-IP rate limit. Impossible-physics gate forces REJECT
+          regardless of score.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">Phase II &mdash; Evidence acquisition adapters</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 13 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Free-tier Crossref / arXiv / Semantic Scholar adapters with
+          per-source dedup keyed on <code>doi &rarr; arxiv_id &rarr;
+          lower-title</code>. Public-source-only. Cache + retry built in.
+          Re-scores the source's evaluation against acquired evidence.
+          No paid API dependency anywhere.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <div class="spec-name">Phase III &mdash; Multi-agent evidence reasoning</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 11 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Five local deterministic agents
+          (Skeptic / Evidence / Feasibility / Commercial / DecisionMemo)
+          produce per-claim stance assessments
+          (<code>supports / contradicts / mixed / unrelated /
+          insufficient</code>) and a decision memo with six component
+          scores. Impossible-physics survives Phase 3 too &mdash; final
+          score capped at 15 in that case.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">Phase IV &mdash; Experiment planning + safety guardrails</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 12 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Five local agents (Safety / Simulation / Falsification /
+          Designer / Milestone) produce a falsification-first plan:
+          <em>literature_review &rarr; falsification &rarr; calculation
+          &rarr; simulation &rarr; safety_review &rarr; benchmark &rarr;
+          external_lab &rarr; bench_test &rarr; prototype</em>. Hydrogen,
+          combustion, high-pressure, cryogenic, radiation, toxic
+          domains all surface as <code>safety_review</code> with mandatory
+          external-lab routing. Refuses procedural detail entirely.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">Phase V &mdash; Active learning feedback loop</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 14 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Append-only feedback ingestion (literature_review / simulation /
+          benchmark / lab_result / expert_review / correction) with six
+          outcomes
+          (supports / contradicts / inconclusive / unsafe /
+          failed_replication / successful_replication). Per-outcome
+          delta tables, confidence scaling, recommendation rank ladder.
+          Hard-coded floor: expert review can never lift an
+          impossible-physics source above REJECT, even with
+          confidence_score=100.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">Phase VI &mdash; Autonomous research campaigns</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 16 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Group sources into named campaigns. Nine-signal portfolio
+          ranker
+          (final_project_score / evidence_alignment / contradiction_inverse /
+          feasibility / novelty / commercial / safety_inverse /
+          feedback_confidence / evidence_coverage) with configurable
+          weights and a small domain-alignment bonus. Safe local
+          auto-execute only &mdash; never auto-promote, never invoke
+          external paid APIs, never auto-run dangerous experiments.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon gold"></div>
+          <div class="spec-name">Phase VII &mdash; Knowledge graph + concept discovery</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 17 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Typed knowledge graph (13 node types &times; 13 edge types)
+          per source / campaign / global. Lexicon-based theme clustering
+          (hydrogen, combustion, battery, quantum, ctc-impossible,
+          manufacturing, safety, &hellip;). Six opportunity types:
+          missing_evidence, contradiction, underexplored_material,
+          cross_domain_transfer, experiment_gap, commercialization_gap.
+          Impossible-physics caps every opportunity priority and
+          suppresses cross-domain transfers entirely.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <div class="spec-name">Phase VIII &mdash; Research dossiers + reports</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 15 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Five report types (source_dossier / executive_summary /
+          technical_review / opportunity_brief / campaign_dossier),
+          two visibilities (<code>private</code> = full detail,
+          <code>public</code> = redacted: bands instead of raw scores,
+          no operational thresholds, no procedural detail), three
+          export formats (Markdown / JSON / HTML). Every report carries
+          a Reproducibility &amp; audit section with
+          source_id / evidence_ids / memo_id / plan_id / graph_build_id.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <div class="spec-name">Phase IX &mdash; Review queue + publication packages</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 16 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Operational state machine
+          <code>inbox &rarr; reviewing &rarr; approved &rarr; published</code>
+          (plus <code>rejected</code> as a terminal failure path).
+          Append-only notes + decision audit trail.
+          Four publication package types (<code>bct</code>,
+          <code>paper</code>, <code>lab</code>, <code>investor</code>).
+          Internal review surface is auth-only on <em>both</em> reads
+          and writes &mdash; only the curated publication packages are
+          public. Impossible-physics items can be reviewed and rejected
+          but never published nor packaged.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <div class="spec-name">Phase X &mdash; Autonomous research orchestration</div>
+        </div>
+        <span class="spec-tag overlay">SHIPPED &middot; 18 tests</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          One endpoint, five modes:
+          <code>intake_only</code>, <code>full_private</code>,
+          <code>full_review</code>, <code>campaign_cycle</code>,
+          <code>report_only</code>. Composes Phases 1&ndash;9 into a
+          single controlled pipeline with per-step audit trail and
+          per-job artifact log. <strong>Never auto-publishes</strong>
+          &mdash; <code>full_review</code> only enqueues a review item;
+          the operator transitions it manually. Publication packages
+          are opt-in (<code>allow_publication_package=true</code>) and
+          even then enforce the impossible-physics + unsafe-feedback
+          gates from Phase IX. Failures are captured per-step and never
+          crash the API.
+        </p>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:2px;font-size:11px;color:var(--text-dim);margin:32px 0 14px 0">// AT A GLANCE</h3>
+
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Engineering footprint</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          <strong>10 phases shipped end-to-end</strong><br>
+          <strong>169 / 169 tests pass</strong> (146 phase + 14 api + 10 db)<br>
+          <strong>0 paid API dependencies</strong><br>
+          <strong>0 mandatory LLM calls</strong><br>
+          <strong>SQLite-backed</strong> (portable to Postgres)<br>
+          <strong>Append-only audit</strong> on every persistent write<br>
+          ~80 HTTP endpoints under <code>/intake/*</code>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--cyan-primary)"></span> Hard guardrails</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          Impossible-physics &rarr; never published<br>
+          No auto-publish, ever<br>
+          No procedural detail in any report<br>
+          Auth on every write surface<br>
+          Internal review surface auth on both sides<br>
+          Publication packages opt-in only<br>
+          Append-only history on jobs / steps / artifacts
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--gold)"></span> Public surface</div>
+        <div class="mode-params" style="font-size:11px;line-height:1.8">
+          <code>GET /intake/sources/&hellip;</code><br>
+          <code>GET /intake/campaigns/&hellip;</code><br>
+          <code>GET /intake/reports/&hellip;</code><br>
+          <code>GET /intake/publications</code><br>
+          <code>GET /intake/autonomous/jobs</code><br>
+          <code>GET /intake/graph/&hellip;</code><br>
+          All with <code>?include_*=true</code> aggregations
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-mono);text-transform:uppercase;letter-spacing:2px;font-size:11px;color:var(--text-dim);margin:32px 0 14px 0">// AUDIT TRAIL &middot; SHIPPING COMMITS</h3>
+
+    <div class="spec-block">
+      <div class="spec-body">
+        <p class="spec-desc" style="font-family:var(--font-mono);font-size:11px;line-height:2">
+          Phase I &mdash; <code>scientific-intake: phase 1 &mdash; text &rarr; claims/entities/scoring/hypotheses + auth</code><br>
+          Phase II &mdash; <code>scientific-intake: phase 2 evidence acquisition adapters</code><br>
+          Phase III &mdash; <code>scientific-intake: phase 3 multi-agent evidence reasoning</code><br>
+          Phase IV &mdash; <code>scientific-intake: phase 4 experiment planning and validation gates</code><br>
+          Phase V &mdash; <code>scientific-intake: phase 5 active learning feedback loop</code><br>
+          Phase VI &mdash; <code>scientific-intake: phase 6 autonomous research campaigns</code><br>
+          Phase VII &mdash; <code>scientific-intake: phase 7 knowledge graph and concept discovery</code><br>
+          Phase VIII &mdash; <code>scientific-intake: phase 8 research dossiers and reports</code><br>
+          Phase IX &mdash; <code>scientific-intake: phase 9 review workspace and publication packages</code><br>
+          Phase X &mdash; <code>scientific-intake: phase 10 autonomous research orchestration</code> (commit <code>b43d0d2</code>)<br><br>
+          All ten commits authored by <code>NeoB &lt;noreply@sostprotocol.org&gt;</code>.
+          Repository: <code>materials-engine-private</code> &middot; module:
+          <code>src/scientific_intake/</code>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ROADMAP -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// 08 — NEXT</div>
+      <div class="section-id">// 09 — NEXT</div>
       <h2 class="section-title">What's <span class="accent">deferred</span></h2>
     </div>
 
