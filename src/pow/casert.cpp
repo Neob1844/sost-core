@@ -888,8 +888,16 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     }
 
     // ---- Anti-stall (mining only): zone-based decay targeting B0 ----
-    // Decay zones: H9-H7 = 600s/lvl, H6-H4 = 900s/lvl, H3-H1 = 1200s/lvl
-    // B0 is the natural destination. Easing (E1-E4) only after 6h extra at B0.
+    // Decay zones (cover the full active profile range):
+    //   H >= 7              — fast    (600 s/lvl, 10 min)
+    //   H == 4..6           — medium  (900 s/lvl, 15 min)
+    //   H == 1..3           — standard (1200 s/lvl, 20 min)
+    // B0 is the natural destination. Easing (E1-E7) only after 6h extra at B0.
+    //
+    // Vestigial under V12: the V10 granular relief valve (1 lvl / 60 s
+    // from 600 s) and the 7-step triangular cascade (extended at V12)
+    // resolve any practical stall to E7 within ~900 s, well before the
+    // 60-min anti-stall threshold fires. Kept as a deep safety net.
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
         // Anti-stall threshold: V4 and earlier use 7200s (2h). V5 reduces it to
@@ -897,7 +905,7 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
         // complements EBR which handles lag-triggered recovery, while anti-stall
         // handles time-triggered recovery (block completely stuck).
         int64_t t_act = (next_height >= CASERT_V6_CALIBRATION_HEIGHT)
-            ? CASERT_ANTISTALL_FLOOR_V6C   // 5400s = 90 min
+            ? CASERT_ANTISTALL_FLOOR_V6C   // 3600s = 60 min (kept at V5 level)
             : (next_height >= CASERT_V5_FORK_HEIGHT)
             ? CASERT_ANTISTALL_FLOOR_V5   // 3600s = 60 min
             : CASERT_ANTISTALL_FLOOR;     // 7200s = 2 hours
@@ -909,9 +917,9 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
             int32_t decayed_H = H - 1; // immediate first drop
             while (decayed_H > 0 && decay_time > 0) {
                 int64_t cost;
-                if (decayed_H >= 7) cost = 600;       // H9-H7: fast (10 min)
-                else if (decayed_H >= 4) cost = 900;   // H6-H4: medium (15 min)
-                else cost = 1200;                       // H3-H1: standard (20 min)
+                if (decayed_H >= 7) cost = 600;       // H >= 7: fast (10 min)
+                else if (decayed_H >= 4) cost = 900;   // H 4..6: medium (15 min)
+                else cost = 1200;                       // H 1..3: standard (20 min)
                 if (decay_time < cost) break;
                 decay_time -= cost;
                 decayed_H--;
