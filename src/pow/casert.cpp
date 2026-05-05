@@ -894,10 +894,15 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     //   H == 1..3           — standard (1200 s/lvl, 20 min)
     // B0 is the natural destination. Easing (E1-E7) only after 6h extra at B0.
     //
-    // Vestigial under V12: the V10 granular relief valve (1 lvl / 60 s
-    // from 600 s) and the 7-step triangular cascade (extended at V12)
-    // resolve any practical stall to E7 within ~900 s, well before the
-    // 60-min anti-stall threshold fires. Kept as a deep safety net.
+    // Vestigial under V12: the SOLE active relief mechanism at
+    // height >= V12_HEIGHT is the 7-step triangular cascade
+    // (compute_v11_cascade_drop_triangular_h with MAX_STEPS_V12=7,
+    // max drop 28). It reaches E7 from H20 in ~900 s on any practical
+    // stall — well before the 60-min anti-stall threshold could fire.
+    // V8 cliff, V9 staged, V10 granular and V11 linear are historical
+    // branches that only run for their own height windows; under V12
+    // they are NOT invoked. Anti-stall is kept as a deep safety net,
+    // but in practice it almost never activates.
     if (now_time > 0 && !chain.empty()) {
         int64_t stall = std::max<int64_t>(0, now_time - chain.back().time);
         // Anti-stall threshold: V4 and earlier use 7200s (2h). V5 reduces it to
