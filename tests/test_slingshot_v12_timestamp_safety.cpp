@@ -98,11 +98,11 @@ static void test_earliest_via_inflation() {
     // The "stolen" time is exactly drift_cap.
     int64_t cap = MAX_FUTURE_DRIFT_STAGED;
 
-    TEST("T1 earliest at real_elapsed > 780 s (T1 - cap = 13 min)",
+    TEST("T1 earliest at real_elapsed > 1140 s (T1 - cap = 19 min)",
          V12_SLINGSHOT_T1_SECONDS - cap == 1140);
-    TEST("T2 earliest at real_elapsed > 1680 s (T2 - cap = 28 min)",
+    TEST("T2 earliest at real_elapsed > 1740 s (T2 - cap = 29 min)",
          V12_SLINGSHOT_T2_SECONDS - cap == 1740);
-    TEST("T3 earliest at real_elapsed > 3480 s (T3 - cap = 58 min)",
+    TEST("T3 earliest at real_elapsed > 3540 s (T3 - cap = 59 min)",
          V12_SLINGSHOT_T3_SECONDS - cap == 3540);
     TEST("T4 earliest at real_elapsed > 7140 s (T4 - cap = 119 min)",
          V12_SLINGSHOT_T4_SECONDS - cap == 7140);

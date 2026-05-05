@@ -4105,12 +4105,12 @@ function updateMiningPanel(elapsed){
       if(tier===0){
         var nextThresh=V12_T1, rem=Math.max(0,nextThresh-curEl);
         ssInd.innerHTML='<span style="color:var(--red);">\u25cf OFF [V12]</span>';
-        ssDet.textContent='current '+fmtMS(curEl)+' \u2014 T1 (\u22126.5%) fires at '+fmtMS(V12_T1)+' (in '+fmtMS(rem)+')';
+        ssDet.textContent='current '+fmtMS(curEl)+' \u2014 T1 (\u22126.5%) fires after '+fmtMS(V12_T1)+' (in '+fmtMS(rem)+', strict >)';
         ssDet.style.color='var(--text3)';
       }else{
         var nextT=tier===1?V12_T2:tier===2?V12_T3:tier===3?V12_T4:tier===4?V12_T5:null;
         var nextDrop=tier===1?V12_DROP2:tier===2?V12_DROP3:tier===3?V12_DROP4:tier===4?V12_DROP5:null;
-        var tail=nextT?(' \u2014 next: T'+(tier+1)+' (\u2212'+nextDrop+'%) at '+fmtMS(nextT)):' (max tier \u2014 catastrophic)';
+        var tail=nextT?(' \u2014 next: T'+(tier+1)+' (\u2212'+nextDrop+'%) after '+fmtMS(nextT)):' (max tier \u2014 catastrophic)';
         ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING T'+tier+' \u2212'+drop.toFixed(1)+'% [V12]</span>';
         ssDet.textContent='current '+fmtMS(curEl)+' \u00b7 bitsQ relieved by '+drop.toFixed(1)+'% (same-block, self-resets next block)'+tail;
         ssDet.style.color='#ff00ff';
