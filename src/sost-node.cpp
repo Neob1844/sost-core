@@ -6069,7 +6069,14 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "estimatefee",
         "getaddressbalance",
         "listbonds",
-        "getminerstats"
+        "getminerstats",
+        // Telemetry / audit RPCs — pure reads, exposed publicly so the
+        // explorer can render dashboards and the lottery audit panel
+        // without requiring per-user auth setup. None of these mutate
+        // state, none reveal credentials.
+        "getrpcstats",
+        "getaddressflows",
+        "getlotteryaudit"
     };
     return kReadOnly.count(m) > 0;
 }
