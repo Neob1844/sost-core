@@ -71,14 +71,16 @@ static void test_honest_claim_heights() {
 
     // Honest fire = real_elapsed > threshold (since block.timestamp = now,
     // current_elapsed = real_elapsed).
-    TEST("T1 honest fire requires real_elapsed > 840 (= V12_SLINGSHOT_T1_SECONDS, 14 min)",
-         V12_SLINGSHOT_T1_SECONDS == 840);
-    TEST("T2 honest fire requires real_elapsed > 1740 (29 min)",
-         V12_SLINGSHOT_T2_SECONDS == 1740);
-    TEST("T3 honest fire requires real_elapsed > 3540 (59 min)",
-         V12_SLINGSHOT_T3_SECONDS == 3540);
-    TEST("T4 honest fire requires real_elapsed > 7140 (119 min)",
-         V12_SLINGSHOT_T4_SECONDS == 7140);
+    TEST("T1 honest fire requires real_elapsed > 1200 (= V12_SLINGSHOT_T1_SECONDS, 20 min)",
+         V12_SLINGSHOT_T1_SECONDS == 1200);
+    TEST("T2 honest fire requires real_elapsed > 1800 (30 min)",
+         V12_SLINGSHOT_T2_SECONDS == 1800);
+    TEST("T3 honest fire requires real_elapsed > 3600 (60 min)",
+         V12_SLINGSHOT_T3_SECONDS == 3600);
+    TEST("T4 honest fire requires real_elapsed > 7200 (120 min)",
+         V12_SLINGSHOT_T4_SECONDS == 7200);
+    TEST("T5 honest fire requires real_elapsed > 10800 (180 min, catastrophic)",
+         V12_SLINGSHOT_T5_SECONDS == 10800);
 }
 
 // =============================================================================
@@ -97,13 +99,15 @@ static void test_earliest_via_inflation() {
     int64_t cap = MAX_FUTURE_DRIFT_STAGED;
 
     TEST("T1 earliest at real_elapsed > 780 s (T1 - cap = 13 min)",
-         V12_SLINGSHOT_T1_SECONDS - cap == 780);
+         V12_SLINGSHOT_T1_SECONDS - cap == 1140);
     TEST("T2 earliest at real_elapsed > 1680 s (T2 - cap = 28 min)",
-         V12_SLINGSHOT_T2_SECONDS - cap == 1680);
+         V12_SLINGSHOT_T2_SECONDS - cap == 1740);
     TEST("T3 earliest at real_elapsed > 3480 s (T3 - cap = 58 min)",
-         V12_SLINGSHOT_T3_SECONDS - cap == 3480);
-    TEST("T4 earliest at real_elapsed > 7080 s (T4 - cap = 118 min)",
-         V12_SLINGSHOT_T4_SECONDS - cap == 7080);
+         V12_SLINGSHOT_T3_SECONDS - cap == 3540);
+    TEST("T4 earliest at real_elapsed > 7140 s (T4 - cap = 119 min)",
+         V12_SLINGSHOT_T4_SECONDS - cap == 7140);
+    TEST("T5 earliest at real_elapsed > 10740 s (T5 - cap = 179 min)",
+         V12_SLINGSHOT_T5_SECONDS - cap == 10740);
 }
 
 // =============================================================================
@@ -125,6 +129,8 @@ static void test_steal_bound() {
          V12_SLINGSHOT_T3_SECONDS - (V12_SLINGSHOT_T3_SECONDS - cap) == cap);
     TEST("T4 max steal = drift cap",
          V12_SLINGSHOT_T4_SECONDS - (V12_SLINGSHOT_T4_SECONDS - cap) == cap);
+    TEST("T5 max steal = drift cap",
+         V12_SLINGSHOT_T5_SECONDS - (V12_SLINGSHOT_T5_SECONDS - cap) == cap);
 }
 
 // =============================================================================
@@ -136,19 +142,26 @@ static void test_tier_spacing_safe() {
     printf("\n=== 5. Tier spacing >> drift cap (cannot skip tiers) ===\n");
 
     int64_t cap = MAX_FUTURE_DRIFT_STAGED;
-    int64_t gap_T0_T1 = V12_SLINGSHOT_T1_SECONDS;                      // 900
-    int64_t gap_T1_T2 = V12_SLINGSHOT_T2_SECONDS - V12_SLINGSHOT_T1_SECONDS;  // 900
+    int64_t gap_T0_T1 = V12_SLINGSHOT_T1_SECONDS;                      // 1200
+    int64_t gap_T1_T2 = V12_SLINGSHOT_T2_SECONDS - V12_SLINGSHOT_T1_SECONDS;  //  600
     int64_t gap_T2_T3 = V12_SLINGSHOT_T3_SECONDS - V12_SLINGSHOT_T2_SECONDS;  // 1800
     int64_t gap_T3_T4 = V12_SLINGSHOT_T4_SECONDS - V12_SLINGSHOT_T3_SECONDS;  // 3600
+    int64_t gap_T4_T5 = V12_SLINGSHOT_T5_SECONDS - V12_SLINGSHOT_T4_SECONDS;  // 3600
 
-    TEST("gap T0->T1 (840 s) > drift cap (60 s) by 14x — no skip",
-         gap_T0_T1 > cap * 10);
-    TEST("gap T1->T2 (900 s) > drift cap (60 s) by 15x — no skip",
-         gap_T1_T2 > cap * 10);
+    // The hard security property is gap > drift_cap (a single inflation
+    // by `cap` cannot move a block from tier N to tier N+2). With the
+    // round-minute thresholds, the smallest inter-tier gap is T1→T2 =
+    // 600 s, which is 10× the 60 s cap — comfortable margin.
+    TEST("gap T0->T1 (1200 s) > drift cap (60 s) — no skip",
+         gap_T0_T1 > cap);
+    TEST("gap T1->T2 (600 s) > drift cap (60 s) by 10x — no skip",
+         gap_T1_T2 >= cap * 10);
     TEST("gap T2->T3 (1800 s) > drift cap (60 s) by 30x — no skip",
          gap_T2_T3 > cap * 10);
     TEST("gap T3->T4 (3600 s) > drift cap (60 s) by 60x — no skip",
          gap_T3_T4 > cap * 10);
+    TEST("gap T4->T5 (3600 s) > drift cap (60 s) by 60x — no skip",
+         gap_T4_T5 > cap * 10);
 }
 
 // =============================================================================

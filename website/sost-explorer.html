@@ -474,11 +474,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <ul style="margin:6px 0 10px 18px;padding:0">
       <li><b>cASERT profile ceiling raised H13 → H20</b> — gives the equalizer 7 more profiles of headroom for transient hashrate spikes.</li>
       <li><b>Triangular cascade extended to 7 steps</b> (max drop 28). Cascade still reaches E7 floor from the new H20 ceiling within 900 s.</li>
-      <li><b>Slingshot redesign: same-block, single-gate, 4 tiers</b>:
-        <code>14&nbsp;min → −6.5%</code>,
-        <code>29&nbsp;min → −12.5%</code>,
-        <code>59&nbsp;min → −25%</code>,
-        <code>119&nbsp;min → −37.5%</code>.
+      <li><b>Slingshot redesign: same-block, single-gate, 5 tiers (emergency-only)</b>:
+        <code>20&nbsp;min → −6.5%</code>,
+        <code>30&nbsp;min → −12.5%</code>,
+        <code>60&nbsp;min → −25%</code>,
+        <code>120&nbsp;min → −37.5%</code>,
+        <code>180&nbsp;min → −50%</code> (catastrophic).
         Self-resetting per block — no compounding.</li>
       <li><b>Capsule activation lowered to #7,350</b> — on-chain messages become valid simultaneously with the fork (down from #10,000).</li>
       <li><b>getminerstats diagnostics</b> — new RPC + MINING ATTEMPTS dashboard card showing submitblock received / accepted / rejected per node, with per-reason breakdowns. Non-consensus telemetry, useful for spotting miners running stale binaries.</li>
@@ -1086,7 +1087,7 @@ thresholds:'PROBABILITY THRESHOLDS \u2014 Based on real mining data\n\nThreshold
 exptime:'EXPECTED TIME \u2014 Estimated time until block found. Shows two values: target (the protocol design block time of 600 s = 10 min) and avg288 (empirical, from the last 288 blocks at the current nonce-per-second rate). If the avg288 countdown reaches zero, it RECALCULATES from the same empirical baseline.',
 nonce:'NONCE COUNTER \u2014 Estimated attempts tried so far = elapsed \u00D7 5.5 att/s. Compared against E[n] (theoretical) and E[288] (288-block average). If current exceeds both, the miner is experiencing above-average variance \u2014 normal in probabilistic mining.',
 antistall:'ANTI-STALL \u2014 Emergency profile decay. Activates if NO block mined for 3600 seconds (60 min).\n\nV6 immediate first drop: profile drops by 1 immediately when threshold is reached.\n\nDecay zones toward B0:\nH13-H7: fast (600s/level = 10 min)\nH6-H4: medium (900s/level = 15 min)\nH3-H1: standard (1200s/level = 20 min)\n\nB0 is the natural destination. Easing E1-E7 only after 6 additional hours at B0.\n\nRelief valve: V8 single E7 cliff at 605 s (5,750+); V9 staged drop 3/60 s from 540 s (6,550+); V10 granular drop 1/60 s from 600 s (6,700+). Floor stays at E7.\nLag-adjust ~2 s (miner v0.9+; block 5,750+). Anti-stall serves as a last-resort safety net.\n\nH13 ceiling pre-V12 (#5,750..#7,349). H14-H35 reserved pre-V12. V12 (#7,350+) raises ceiling to H20: H14-H20 become active, H21-H35 reserved.\nbitsQ avg288-based (block 5,175+) with dynamic cap (block 5,260+).\n\nEnsures the chain NEVER permanently stalls.',
-slingshot:'SLINGSHOT \u2014 single-shot bitsQ relief. Two consensus paths gated by height.\n\n[V11 path] active block 7,000 .. 7,349 (dual-gate, single tier):\n  prev_elapsed    > 1800 s (30 min)   \u2014 last block was slow\n  current_elapsed > 600 s  (10 min)   \u2014 current block is also taking long\n  When both gates fire: bitsQ = bitsQ_avg288 \u00d7 0.875  (\u221212.5%)\n\n[V12 path] active block 7,350 onward (single-gate, 4 tiers, same-block):\n  current_elapsed >  840 s ( 14 min) \u2192 T1 \u2192 \u22126.5%\n  current_elapsed > 1740 s ( 29 min) \u2192 T2 \u2192 \u221212.5%\n  current_elapsed > 3540 s ( 59 min) \u2192 T3 \u2192 \u221225%\n  current_elapsed > 7140 s (119 min) \u2192 T4 \u2192 \u221237.5%\n  Strict greater-than at each threshold; the drop is applied AFTER the\n  avg288 / dynamic-cap clamp and re-clamped to MIN_BITSQ.\n\nBoth paths are self-resetting: the next block re-evaluates fresh against avg288. No compounding. Three back-to-back slow blocks each receive their own single drop, never drop \u00d7 drop \u00d7 drop.\n\nWhy V12 dropped the second gate: in V11 the second gate prevented \u201cfree relief\u201d when the chain already recovered. In V12 the same-block design + the 4-tier ladder makes that protection structural \u2014 short blocks never cross even T1, so no relief is given when the chain is already healthy.\n\nIndicator states:\n  PRE-FORK              \u2014 chain below #7,000\n  [V11] OFF             \u2014 prev block within target (gate 1 closed)\n  [V11] ARMED           \u2014 gate 1 open, waiting for current > 10 min\n  [V11] FIRING \u221212.5%   \u2014 both gates open\n  [V12] OFF             \u2014 current_elapsed below T1 (\u2264 14 min)\n  [V12] FIRING T1..T4   \u2014 current crossed the corresponding threshold\n\nSlingshot does NOT replace cASERT, the cascade, the lottery, or SbPoW. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the E7 floor.'
+slingshot:'SLINGSHOT \u2014 single-shot bitsQ relief. Two consensus paths gated by height.\n\n[V11 path] active block 7,000 .. 7,349 (dual-gate, single tier):\n  prev_elapsed    > 1800 s (30 min)   \u2014 last block was slow\n  current_elapsed > 600 s  (10 min)   \u2014 current block is also taking long\n  When both gates fire: bitsQ = bitsQ_avg288 \u00d7 0.875  (\u221212.5%)\n\n[V12 path] active block 7,350 onward (single-gate, 5 tiers, same-block, emergency-only):\n  current_elapsed >  1200 s ( 20 min) \u2192 T1 \u2192 \u22126.5%\n  current_elapsed >  1800 s ( 30 min) \u2192 T2 \u2192 \u221212.5%\n  current_elapsed >  3600 s ( 60 min) \u2192 T3 \u2192 \u221225%\n  current_elapsed >  7200 s (120 min) \u2192 T4 \u2192 \u221237.5%\n  current_elapsed > 10800 s (180 min) \u2192 T5 \u2192 \u221250%   (catastrophic)\n  Strict greater-than at each threshold; the drop is applied AFTER the\n  avg288 / dynamic-cap clamp and re-clamped to MIN_BITSQ.\n\nBoth paths are self-resetting: the next block re-evaluates fresh against avg288. No compounding. Three back-to-back slow blocks each receive their own single drop, never drop \u00d7 drop \u00d7 drop.\n\nWhy V12 dropped the second gate: in V11 the second gate prevented \u201cfree relief\u201d when the chain already recovered. In V12 the same-block design + the 5-tier ladder makes that protection structural \u2014 short blocks never cross even T1, so no relief is given when the chain is already healthy.\n\nIndicator states:\n  PRE-FORK              \u2014 chain below #7,000\n  [V11] OFF             \u2014 prev block within target (gate 1 closed)\n  [V11] ARMED           \u2014 gate 1 open, waiting for current > 10 min\n  [V11] FIRING \u221212.5%   \u2014 both gates open\n  [V12] OFF             \u2014 current_elapsed below T1 (\u2264 20 min)\n  [V12] FIRING T1..T5   \u2014 current crossed the corresponding threshold; T5 is the catastrophic-relief tier (>180 min)\n\nSlingshot does NOT replace cASERT, the cascade, the lottery, or SbPoW. It is an additional safety layer that prevents long-tail variance from compounding into back-to-back stalls when the cascade is already at the E7 floor.'
     };
     var _openParam=null;
     function _closeAllCharts(){
@@ -4063,15 +4064,16 @@ function updateMiningPanel(elapsed){
       }
     }
   }
-  // ---- Slingshot indicator (V11 dual-gate up to #7349, V12 4-tier from #7350)
+  // ---- Slingshot indicator (V11 dual-gate up to #7349, V12 5-tier from #7350)
   //
   // V11 (height 7000..7349): dual-gate, fires once when both
   //     prev_elapsed > 1800 s  AND  current_elapsed > 600 s.
   // V12 (height >= 7350): single-gate ladder on current_elapsed only:
-  //     >  840 s \u2192  -6.5%   (T1)
-  //     > 1740 s \u2192  -12.5%  (T2)
-  //     > 3540 s \u2192  -25%    (T3)
-  //     > 7140 s \u2192  -37.5%  (T4)
+  //     >  1200 s \u2192  -6.5%   (T1, emergency threshold)
+  //     >  1800 s \u2192  -12.5%  (T2)
+  //     >  3600 s \u2192  -25%    (T3)
+  //     >  7200 s \u2192  -37.5%  (T4)
+  //     > 10800 s \u2192  -50%    (T5, catastrophic)
   // The indicator switches paths automatically when the next-to-mine
   // height crosses V12_HEIGHT, matching the consensus rule in
   // src/pow/casert.cpp.
@@ -4080,9 +4082,9 @@ function updateMiningPanel(elapsed){
   if(ssInd&&ssDet){
     var V11_SS_HEIGHT=7000, V12_HEIGHT=7350;
     var V11_T1=1800, V11_T2=600, V11_DROP=0.125;
-    // V12 ladder (must match params.h V12_SLINGSHOT_T*_SECONDS).
-    var V12_T1=840, V12_T2=1740, V12_T3=3540, V12_T4=7140;
-    var V12_DROP1=6.5, V12_DROP2=12.5, V12_DROP3=25, V12_DROP4=37.5;
+    // V12 ladder — 5 tiers, must match params.h V12_SLINGSHOT_T*_SECONDS.
+    var V12_T1=1200, V12_T2=1800, V12_T3=3600, V12_T4=7200, V12_T5=10800;
+    var V12_DROP1=6.5, V12_DROP2=12.5, V12_DROP3=25, V12_DROP4=37.5, V12_DROP5=50;
     var nextH=(_chainTipHeight||0)+1;
     var prevEl=_prevBlockInterval||0;
     var curEl=Math.max(0,elapsed||0);
@@ -4092,10 +4094,11 @@ function updateMiningPanel(elapsed){
       ssDet.textContent='V11 Slingshot activates at #'+V11_SS_HEIGHT+' \u00b7 V12 ladder activates at #'+V12_HEIGHT;
       ssDet.style.color='var(--text3)';
     }else if(nextH>=V12_HEIGHT){
-      // V12 same-block 4-tier path. Only current_elapsed matters; no
-      // ARMED state because there is no second gate to wait on.
+      // V12 same-block 5-tier path (emergency-only). Only current_elapsed
+      // matters; no ARMED state because there is no second gate to wait on.
       var tier=0,drop=0;
-      if(curEl>V12_T4){tier=4;drop=V12_DROP4;}
+      if(curEl>V12_T5){tier=5;drop=V12_DROP5;}
+      else if(curEl>V12_T4){tier=4;drop=V12_DROP4;}
       else if(curEl>V12_T3){tier=3;drop=V12_DROP3;}
       else if(curEl>V12_T2){tier=2;drop=V12_DROP2;}
       else if(curEl>V12_T1){tier=1;drop=V12_DROP1;}
@@ -4105,9 +4108,9 @@ function updateMiningPanel(elapsed){
         ssDet.textContent='current '+fmtMS(curEl)+' \u2014 T1 (\u22126.5%) fires at '+fmtMS(V12_T1)+' (in '+fmtMS(rem)+')';
         ssDet.style.color='var(--text3)';
       }else{
-        var nextT=tier===1?V12_T2:tier===2?V12_T3:tier===3?V12_T4:null;
-        var nextDrop=tier===1?V12_DROP2:tier===2?V12_DROP3:tier===3?V12_DROP4:null;
-        var tail=nextT?(' \u2014 next: T'+(tier+1)+' (\u2212'+nextDrop+'%) at '+fmtMS(nextT)):' (max tier)';
+        var nextT=tier===1?V12_T2:tier===2?V12_T3:tier===3?V12_T4:tier===4?V12_T5:null;
+        var nextDrop=tier===1?V12_DROP2:tier===2?V12_DROP3:tier===3?V12_DROP4:tier===4?V12_DROP5:null;
+        var tail=nextT?(' \u2014 next: T'+(tier+1)+' (\u2212'+nextDrop+'%) at '+fmtMS(nextT)):' (max tier \u2014 catastrophic)';
         ssInd.innerHTML='<span style="color:#ff00ff;animation:blink 1s infinite;">\u25cf FIRING T'+tier+' \u2212'+drop.toFixed(1)+'% [V12]</span>';
         ssDet.textContent='current '+fmtMS(curEl)+' \u00b7 bitsQ relieved by '+drop.toFixed(1)+'% (same-block, self-resets next block)'+tail;
         ssDet.style.color='#ff00ff';

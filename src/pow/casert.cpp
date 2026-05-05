@@ -191,7 +191,8 @@ uint32_t casert_next_bitsq(const std::vector<BlockMeta>& chain, int64_t next_hei
             int64_t cur = now_time - chain.back().time;
             int t = slingshot_v12_tier(cur);
             int32_t drop_bps = 0;
-            if      (t == 4) drop_bps = V12_SLINGSHOT_T4_DROP_BPS;
+            if      (t == 5) drop_bps = V12_SLINGSHOT_T5_DROP_BPS;
+            else if (t == 4) drop_bps = V12_SLINGSHOT_T4_DROP_BPS;
             else if (t == 3) drop_bps = V12_SLINGSHOT_T3_DROP_BPS;
             else if (t == 2) drop_bps = V12_SLINGSHOT_T2_DROP_BPS;
             else if (t == 1) drop_bps = V12_SLINGSHOT_T1_DROP_BPS;
@@ -1020,6 +1021,7 @@ int32_t compute_v11_cascade_drop_triangular_h(int64_t block_elapsed_s,
 // V12 Slingshot tier ladder — strict greater-than, boundary values stay
 // at the lower tier. See include/sost/pow/casert.h for spec.
 int32_t slingshot_v12_tier(int64_t current_elapsed) {
+    if (current_elapsed > V12_SLINGSHOT_T5_SECONDS) return 5;
     if (current_elapsed > V12_SLINGSHOT_T4_SECONDS) return 4;
     if (current_elapsed > V12_SLINGSHOT_T3_SECONDS) return 3;
     if (current_elapsed > V12_SLINGSHOT_T2_SECONDS) return 2;

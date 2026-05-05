@@ -1,14 +1,15 @@
-// V12 Slingshot — same-block 4-tier relief tests.
+// V12 Slingshot — same-block 5-tier relief tests.
 //
 // V12 hard fork (block V12_HEIGHT = 7350) replaces the V11 dual-gate
 // next-block prev_elapsed-based Slingshot with a same-block, single-gate
-// 4-tier ladder keyed on current_elapsed only:
+// 5-tier ladder keyed on current_elapsed only. Round-minute thresholds:
 //
 //   slingshot_v12_tier(current_elapsed):
-//     > V12_SLINGSHOT_T4_SECONDS (7140)  → 4   (>119 min)
-//     > V12_SLINGSHOT_T3_SECONDS (3540)  → 3   (>59 min)
-//     > V12_SLINGSHOT_T2_SECONDS (1740)  → 2   (>29 min)
-//     > V12_SLINGSHOT_T1_SECONDS  (840)  → 1   (>14 min)
+//     > V12_SLINGSHOT_T5_SECONDS (10800) → 5  (>180 min, catastrophic)
+//     > V12_SLINGSHOT_T4_SECONDS  (7200) → 4  (>120 min)
+//     > V12_SLINGSHOT_T3_SECONDS  (3600) → 3  (>60 min)
+//     > V12_SLINGSHOT_T2_SECONDS  (1800) → 2  (>30 min)
+//     > V12_SLINGSHOT_T1_SECONDS  (1200) → 1  (>20 min)
 //     else                                → 0
 //
 // Strict greater-than at every threshold; the boundary value itself does
@@ -18,6 +19,7 @@
 //   tier 2 → V12_SLINGSHOT_T2_DROP_BPS  = 1250 (-12.5%)
 //   tier 3 → V12_SLINGSHOT_T3_DROP_BPS  = 2500 (-25%)
 //   tier 4 → V12_SLINGSHOT_T4_DROP_BPS  = 3750 (-37.5%)
+//   tier 5 → V12_SLINGSHOT_T5_DROP_BPS  = 5000 (-50%)
 //
 // At heights < V12_HEIGHT the V11 dual-gate single-12.5% path is
 // preserved and must keep firing exactly as before. At height
@@ -40,8 +42,7 @@ static int g_pass = 0, g_fail = 0;
 
 // Build a chain of `len` blocks ending at height `last_height`. All
 // intervals = TARGET_SPACING (600 s) EXCEPT the very last interval, set
-// to `last_interval_s`. Mirrors test_slingshot.cpp::build_chain so this
-// test exercises the same shape as the V11 suite.
+// to `last_interval_s`.
 static std::vector<BlockMeta> build_chain(int64_t last_height,
                                           int64_t last_interval_s,
                                           uint32_t seed_bitsq,
@@ -73,6 +74,7 @@ static uint32_t apply_v12_drop(uint32_t base, int32_t drop_bps) {
 
 static int32_t drop_bps_for_tier(int t) {
     switch (t) {
+        case 5: return V12_SLINGSHOT_T5_DROP_BPS;
         case 4: return V12_SLINGSHOT_T4_DROP_BPS;
         case 3: return V12_SLINGSHOT_T3_DROP_BPS;
         case 2: return V12_SLINGSHOT_T2_DROP_BPS;
@@ -82,35 +84,40 @@ static int32_t drop_bps_for_tier(int t) {
 }
 
 // =============================================================================
-// 1. Tier ladder boundaries — the strict > rule must be honored at every
-//    threshold. Boundary values stay at the lower tier.
+// 1. Tier ladder boundaries — strict > rule honored at every threshold.
+//    Boundary values stay at the lower tier.
 // =============================================================================
 static void test_tier_ladder_boundaries() {
     printf("\n=== 1. V12 tier ladder boundaries (strict >) ===\n");
 
     // Below T1 — no drop.
-    TEST("current=0    → tier 0", slingshot_v12_tier(0) == 0);
-    TEST("current=839  → tier 0", slingshot_v12_tier(839) == 0);
-    TEST("current=840  → tier 0 (boundary, strict >)", slingshot_v12_tier(840) == 0);
+    TEST("current=0     → tier 0", slingshot_v12_tier(0) == 0);
+    TEST("current=1199  → tier 0", slingshot_v12_tier(1199) == 0);
+    TEST("current=1200  → tier 0 (boundary, strict >)", slingshot_v12_tier(1200) == 0);
 
-    // T1 (840, 1740].
-    TEST("current=841  → tier 1 (-6.5%)", slingshot_v12_tier(841) == 1);
-    TEST("current=1739 → tier 1", slingshot_v12_tier(1739) == 1);
-    TEST("current=1740 → tier 1 (boundary, strict >)", slingshot_v12_tier(1740) == 1);
+    // T1 (1200, 1800].
+    TEST("current=1201  → tier 1 (-6.5%)", slingshot_v12_tier(1201) == 1);
+    TEST("current=1799  → tier 1", slingshot_v12_tier(1799) == 1);
+    TEST("current=1800  → tier 1 (boundary, strict >)", slingshot_v12_tier(1800) == 1);
 
-    // T2 (1740, 3540].
-    TEST("current=1741 → tier 2 (-12.5%)", slingshot_v12_tier(1741) == 2);
-    TEST("current=3539 → tier 2", slingshot_v12_tier(3539) == 2);
-    TEST("current=3540 → tier 2 (boundary, strict >)", slingshot_v12_tier(3540) == 2);
+    // T2 (1800, 3600].
+    TEST("current=1801  → tier 2 (-12.5%)", slingshot_v12_tier(1801) == 2);
+    TEST("current=3599  → tier 2", slingshot_v12_tier(3599) == 2);
+    TEST("current=3600  → tier 2 (boundary, strict >)", slingshot_v12_tier(3600) == 2);
 
-    // T3 (3540, 7140].
-    TEST("current=3541 → tier 3 (-25%)", slingshot_v12_tier(3541) == 3);
-    TEST("current=7139 → tier 3", slingshot_v12_tier(7139) == 3);
-    TEST("current=7140 → tier 3 (boundary, strict >)", slingshot_v12_tier(7140) == 3);
+    // T3 (3600, 7200].
+    TEST("current=3601  → tier 3 (-25%)", slingshot_v12_tier(3601) == 3);
+    TEST("current=7199  → tier 3", slingshot_v12_tier(7199) == 3);
+    TEST("current=7200  → tier 3 (boundary, strict >)", slingshot_v12_tier(7200) == 3);
 
-    // T4 (7140, ∞).
-    TEST("current=7141 → tier 4 (-37.5%)", slingshot_v12_tier(7141) == 4);
-    TEST("current=86400 → tier 4 (no further tier above 4)", slingshot_v12_tier(86400) == 4);
+    // T4 (7200, 10800].
+    TEST("current=7201  → tier 4 (-37.5%)", slingshot_v12_tier(7201) == 4);
+    TEST("current=10799 → tier 4", slingshot_v12_tier(10799) == 4);
+    TEST("current=10800 → tier 4 (boundary, strict >)", slingshot_v12_tier(10800) == 4);
+
+    // T5 (10800, ∞).
+    TEST("current=10801 → tier 5 (-50%, catastrophic)", slingshot_v12_tier(10801) == 5);
+    TEST("current=86400 → tier 5 (no further tier above 5)", slingshot_v12_tier(86400) == 5);
 
     // Negative / zero — defensive.
     TEST("current=-1 → tier 0", slingshot_v12_tier(-1) == 0);
@@ -129,11 +136,7 @@ static void test_drop_magnitudes() {
     const uint32_t SEED = 800000;
 
     // For the un-relieved reference we evaluate at a pre-V12 height with
-    // current_elapsed=0 — gate 2 closed, no V11 drop, no V12 drop. The
-    // avg288 result is identical to the post-fork chain shape because
-    // intervals are identical (all TARGET_SPACING with the last set to
-    // `last_interval`); the only consensus difference is the Slingshot
-    // path itself.
+    // current_elapsed=0 — gate 2 closed, no V11 drop, no V12 drop.
     auto run_pre = [&](int64_t last_interval) {
         auto c_pre = build_chain(V12_HEIGHT - 5, last_interval, SEED);
         return casert_next_bitsq(c_pre, V12_HEIGHT - 4, c_pre.back().time + 1);
@@ -144,58 +147,61 @@ static void test_drop_magnitudes() {
         return casert_next_bitsq(c, tip + 1, c.back().time + cur_elapsed);
     };
 
-    // Tier 1 — current_elapsed = 1000 s (> T1=840, < T2=1740).
+    // Tier 1 — current_elapsed = 1500 s (> T1=1200, < T2=1800).
     {
         uint32_t pre  = run_pre(600);
-        uint32_t post = run_post(600, 1000);
-        TEST("tier 1 (cur=1000) → bits_q == pre * 0.935",
+        uint32_t post = run_post(600, 1500);
+        TEST("tier 1 (cur=1500) → bits_q == pre * 0.935",
              post == apply_v12_drop(pre, drop_bps_for_tier(1)));
     }
 
-    // Tier 2 — current_elapsed = 2000 s (> T2=1740, < T3=3540).
+    // Tier 2 — current_elapsed = 2400 s (> T2=1800, < T3=3600).
     {
         uint32_t pre  = run_pre(600);
-        uint32_t post = run_post(600, 2000);
-        TEST("tier 2 (cur=2000) → bits_q == pre * 0.875",
+        uint32_t post = run_post(600, 2400);
+        TEST("tier 2 (cur=2400) → bits_q == pre * 0.875",
              post == apply_v12_drop(pre, drop_bps_for_tier(2)));
     }
 
-    // Tier 3 — current_elapsed = 4000 s (> T3=3540, < T4=7140).
+    // Tier 3 — current_elapsed = 5000 s (> T3=3600, < T4=7200).
     {
         uint32_t pre  = run_pre(600);
-        uint32_t post = run_post(600, 4000);
-        TEST("tier 3 (cur=4000) → bits_q == pre * 0.75",
+        uint32_t post = run_post(600, 5000);
+        TEST("tier 3 (cur=5000) → bits_q == pre * 0.75",
              post == apply_v12_drop(pre, drop_bps_for_tier(3)));
     }
 
-    // Tier 4 — current_elapsed = 8000 s (> T4=7140).
+    // Tier 4 — current_elapsed = 9000 s (> T4=7200, < T5=10800).
     {
         uint32_t pre  = run_pre(600);
-        uint32_t post = run_post(600, 8000);
-        TEST("tier 4 (cur=8000) → bits_q == pre * 0.625",
+        uint32_t post = run_post(600, 9000);
+        TEST("tier 4 (cur=9000) → bits_q == pre * 0.625",
              post == apply_v12_drop(pre, drop_bps_for_tier(4)));
+    }
+
+    // Tier 5 — current_elapsed = 12000 s (> T5=10800, catastrophic).
+    {
+        uint32_t pre  = run_pre(600);
+        uint32_t post = run_post(600, 12000);
+        TEST("tier 5 (cur=12000) → bits_q == pre * 0.5 (catastrophic)",
+             post == apply_v12_drop(pre, drop_bps_for_tier(5)));
     }
 }
 
 // =============================================================================
-// 3. Pre-V12 path unchanged — at height < V12_HEIGHT, the V11 dual-gate
+// 3. Pre-V12 path unchanged — at height < V12_HEIGHT, V11 dual-gate
 //    single-12.5% Slingshot must still fire (prev_elapsed=1801 + current=601).
 // =============================================================================
 static void test_pre_v12_unchanged() {
     printf("\n=== 3. Pre-V12 path — V11 dual-gate must still fire ===\n");
 
-    // Tip at V12_HEIGHT - 2, so next_height = V12_HEIGHT - 1 (= 7349). That
-    // is still pre-V12 and post-V11_SLINGSHOT_HEIGHT (7000), so V11 rules apply.
     int64_t tip = V12_HEIGHT - 2;
     const uint32_t SEED = 800000;
 
-    // V11 gate 1: prev_elapsed > SLINGSHOT_THRESHOLD_SECONDS (1800 s).
-    // V11 gate 2: current_elapsed > TARGET_SPACING (600 s).
     auto c = build_chain(tip, 1801, SEED);              // gate 1 open (1801 > 1800)
     int64_t now_t = c.back().time + 601;                // gate 2 open (601 > 600)
     uint32_t b_v11 = casert_next_bitsq(c, tip + 1, now_t);
 
-    // Reference at pre-V11_SLINGSHOT_HEIGHT — no Slingshot at all.
     auto c_ref = build_chain(V11_SLINGSHOT_HEIGHT - 2, 1801, SEED);
     uint32_t b_ref = casert_next_bitsq(c_ref, V11_SLINGSHOT_HEIGHT - 1,
                                        c_ref.back().time + 601);
@@ -206,16 +212,16 @@ static void test_pre_v12_unchanged() {
          b_v11 == (uint32_t)expected);
 
     // Verify the V12 tier ladder is NOT consulted at pre-V12 heights:
-    // a chain with current_elapsed > 840 s but prev_elapsed=600 (V11 gate 1
+    // a chain with current_elapsed > 1200 s but prev_elapsed=600 (V11 gate 1
     // closed) must NOT receive a V12 tier-1 drop on a pre-V12 height.
     {
         auto c2 = build_chain(tip, 600, SEED);          // V11 gate 1 closed
-        uint32_t b = casert_next_bitsq(c2, tip + 1, c2.back().time + 1000);
+        uint32_t b = casert_next_bitsq(c2, tip + 1, c2.back().time + 1500);
 
         auto c2_ref = build_chain(V11_SLINGSHOT_HEIGHT - 2, 600, SEED);
         uint32_t b_ref2 = casert_next_bitsq(c2_ref, V11_SLINGSHOT_HEIGHT - 1,
-                                            c2_ref.back().time + 1000);
-        TEST("pre-V12 + V11 gate 1 closed (prev=600) + cur=1000 → no drop",
+                                            c2_ref.back().time + 1500);
+        TEST("pre-V12 + V11 gate 1 closed (prev=600) + cur=1500 → no drop",
              b == b_ref2);
     }
 }
@@ -239,14 +245,9 @@ static void test_self_reset() {
         return casert_next_bitsq(c, V12_HEIGHT - 4, c.back().time + cur_elapsed);
     };
 
-    // The V12 path mixes the avg288 result with the tier multiplier. To
-    // isolate the multiplier, we compare against a pre-V12 reference at
-    // the same intervals — that pre-V12 baseline never sees any drop
-    // because gate 1 is closed (last_interval=600) — and confirm the
-    // post-V12 value matches reference * (1 - drop_bps).
-    int64_t cur1 = 1000;  // tier 1 (> 840)
-    int64_t cur2 = 2000;  // tier 2 (> 1740)
-    int64_t cur3 = 4000;  // tier 3 (> 3540)
+    int64_t cur1 = 1500;  // tier 1 (> 1200)
+    int64_t cur2 = 2400;  // tier 2 (> 1800)
+    int64_t cur3 = 5000;  // tier 3 (> 3600)
     uint32_t pre_ref = run_at_pre_v12(0); // baseline (cur=0 → tier 0)
 
     uint32_t post1 = run_at_v12(cur1, V12_HEIGHT);
@@ -260,8 +261,8 @@ static void test_self_reset() {
     TEST("tier 3 fresh — does not depend on previous block",
          post3 == apply_v12_drop(pre_ref, drop_bps_for_tier(3)));
 
-    // Strong negative — a tier-2 result must NOT equal a compounded
-    // tier-1 application (i.e. T1(T1(base))) — those differ.
+    // Strong negative — tier-2 result must NOT equal compounded
+    // tier-1 application (T1(T1(base))).
     uint32_t compounded = apply_v12_drop(apply_v12_drop(pre_ref,
                                           drop_bps_for_tier(1)),
                                           drop_bps_for_tier(1));
@@ -279,37 +280,31 @@ static void test_safe_defaults() {
     const uint32_t SEED = 800000;
     auto c = build_chain(tip, 600, SEED);
 
-    // Reference baseline (pre-V12, no Slingshot path active).
     auto c_ref = build_chain(V12_HEIGHT - 5, 600, SEED);
     uint32_t b_ref = casert_next_bitsq(c_ref, V12_HEIGHT - 4, c_ref.back().time + 1);
 
     uint32_t b_zero = casert_next_bitsq(c, tip + 1, 0);
     uint32_t b_neg  = casert_next_bitsq(c, tip + 1, -1);
-    uint32_t b_def  = casert_next_bitsq(c, tip + 1);  // default arg = 0
+    uint32_t b_def  = casert_next_bitsq(c, tip + 1);
 
-    TEST("now_time=0 → no V12 drop (matches pre-V12 baseline)",
-         b_zero == b_ref);
+    TEST("now_time=0 → no V12 drop (matches pre-V12 baseline)", b_zero == b_ref);
     TEST("now_time<0 → no V12 drop", b_neg == b_ref);
     TEST("now_time omitted → no V12 drop", b_def == b_ref);
 
-    // now_time < tip.time → current_elapsed would be negative; tier helper
-    // returns 0 → no drop.
     uint32_t b_past = casert_next_bitsq(c, tip + 1, c.back().time - 100);
-    TEST("now_time<tip.time → tier 0 → no drop",
-         b_past == b_ref);
+    TEST("now_time<tip.time → tier 0 → no drop", b_past == b_ref);
 }
 
 // =============================================================================
 // 6. Determinism — 10 identical calls produce 10 identical outputs.
 // =============================================================================
 static void test_determinism() {
-    printf("\n=== 6. V12 determinism (10 runs each, drop branch + no-drop branch) ===\n");
+    printf("\n=== 6. V12 determinism (10 runs each) ===\n");
 
     int64_t tip = V12_HEIGHT + 7;
     auto chain = build_chain(tip, 600, 1234567);
 
-    // Tier 3 path (current_elapsed = 4000 > T3=3600, < T4=7200)
-    int64_t nt_t3 = chain.back().time + 4000;
+    int64_t nt_t3 = chain.back().time + 5000;  // tier 3 (> T3=3600, < T4=7200)
     uint32_t first_t3 = casert_next_bitsq(chain, tip + 1, nt_t3);
     bool all_eq_t3 = true;
     for (int i = 0; i < 10; ++i) {
@@ -317,7 +312,6 @@ static void test_determinism() {
     }
     TEST("10 calls in tier-3 path → 10 identical outputs", all_eq_t3);
 
-    // No-drop path
     int64_t nt_t0 = chain.back().time + 100;
     uint32_t first_t0 = casert_next_bitsq(chain, tip + 1, nt_t0);
     bool all_eq_t0 = true;
@@ -326,44 +320,48 @@ static void test_determinism() {
     }
     TEST("10 calls in no-drop path → 10 identical outputs", all_eq_t0);
 
-    // Drop branch and no-drop branch must differ.
     TEST("tier-3 and no-drop branches produce different bits_q",
          first_t3 != first_t0);
 }
 
 // =============================================================================
-// 7. MIN_BITSQ floor — even tier 4 (37.5% off) cannot drop below MIN_BITSQ.
+// 7. MIN_BITSQ floor — even tier 5 (50% off) cannot drop below MIN_BITSQ.
 // =============================================================================
 static void test_min_bitsq_floor() {
     printf("\n=== 7. MIN_BITSQ floor — V12 drop never goes below MIN_BITSQ ===\n");
 
-    // Synthesize a base near the floor.
-    TEST("apply_v12_drop(MIN_BITSQ, T4) == MIN_BITSQ",
-         apply_v12_drop(MIN_BITSQ, V12_SLINGSHOT_T4_DROP_BPS) == MIN_BITSQ);
-    TEST("apply_v12_drop(MIN_BITSQ+1, T4) == MIN_BITSQ",
-         apply_v12_drop(MIN_BITSQ + 1, V12_SLINGSHOT_T4_DROP_BPS) == MIN_BITSQ);
-    TEST("apply_v12_drop(MIN_BITSQ*4, T4) is well above MIN_BITSQ",
-         apply_v12_drop(MIN_BITSQ * 4, V12_SLINGSHOT_T4_DROP_BPS) > MIN_BITSQ);
+    TEST("apply_v12_drop(MIN_BITSQ, T5) == MIN_BITSQ",
+         apply_v12_drop(MIN_BITSQ, V12_SLINGSHOT_T5_DROP_BPS) == MIN_BITSQ);
+    TEST("apply_v12_drop(MIN_BITSQ+1, T5) == MIN_BITSQ",
+         apply_v12_drop(MIN_BITSQ + 1, V12_SLINGSHOT_T5_DROP_BPS) == MIN_BITSQ);
+    TEST("apply_v12_drop(MIN_BITSQ*4, T5) is well above MIN_BITSQ",
+         apply_v12_drop(MIN_BITSQ * 4, V12_SLINGSHOT_T5_DROP_BPS) > MIN_BITSQ);
 
     // Direct chain test with seed at MIN_BITSQ.
     int64_t tip = V12_HEIGHT;
     auto c = build_chain(tip, 600, MIN_BITSQ);
-    uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 8000); // tier 4 (> T4=7200)
-    TEST("seed=MIN_BITSQ + tier 4 → result >= MIN_BITSQ",
-         b >= MIN_BITSQ);
+    uint32_t b = casert_next_bitsq(c, tip + 1, c.back().time + 12000); // tier 5
+    TEST("seed=MIN_BITSQ + tier 5 → result >= MIN_BITSQ", b >= MIN_BITSQ);
 }
 
 int main() {
-    printf("\n=== V12 Slingshot tier tests ===\n");
+    printf("\n=== V12 Slingshot tier tests (5-tier ladder) ===\n");
     printf("V12_HEIGHT                  = %lld\n", (long long)V12_HEIGHT);
-    printf("V12_SLINGSHOT_T1_SECONDS    = %lld\n", (long long)V12_SLINGSHOT_T1_SECONDS);
-    printf("V12_SLINGSHOT_T2_SECONDS    = %lld\n", (long long)V12_SLINGSHOT_T2_SECONDS);
-    printf("V12_SLINGSHOT_T3_SECONDS    = %lld\n", (long long)V12_SLINGSHOT_T3_SECONDS);
-    printf("V12_SLINGSHOT_T4_SECONDS    = %lld\n", (long long)V12_SLINGSHOT_T4_SECONDS);
+    printf("V12_SLINGSHOT_T1_SECONDS    = %lld  (= %lld min)\n",
+           (long long)V12_SLINGSHOT_T1_SECONDS, (long long)V12_SLINGSHOT_T1_SECONDS / 60);
+    printf("V12_SLINGSHOT_T2_SECONDS    = %lld  (= %lld min)\n",
+           (long long)V12_SLINGSHOT_T2_SECONDS, (long long)V12_SLINGSHOT_T2_SECONDS / 60);
+    printf("V12_SLINGSHOT_T3_SECONDS    = %lld  (= %lld min)\n",
+           (long long)V12_SLINGSHOT_T3_SECONDS, (long long)V12_SLINGSHOT_T3_SECONDS / 60);
+    printf("V12_SLINGSHOT_T4_SECONDS    = %lld  (= %lld min)\n",
+           (long long)V12_SLINGSHOT_T4_SECONDS, (long long)V12_SLINGSHOT_T4_SECONDS / 60);
+    printf("V12_SLINGSHOT_T5_SECONDS    = %lld  (= %lld min)\n",
+           (long long)V12_SLINGSHOT_T5_SECONDS, (long long)V12_SLINGSHOT_T5_SECONDS / 60);
     printf("V12_SLINGSHOT_T1_DROP_BPS   = %d\n",  V12_SLINGSHOT_T1_DROP_BPS);
     printf("V12_SLINGSHOT_T2_DROP_BPS   = %d\n",  V12_SLINGSHOT_T2_DROP_BPS);
     printf("V12_SLINGSHOT_T3_DROP_BPS   = %d\n",  V12_SLINGSHOT_T3_DROP_BPS);
     printf("V12_SLINGSHOT_T4_DROP_BPS   = %d\n",  V12_SLINGSHOT_T4_DROP_BPS);
+    printf("V12_SLINGSHOT_T5_DROP_BPS   = %d\n",  V12_SLINGSHOT_T5_DROP_BPS);
 
     test_tier_ladder_boundaries();
     test_drop_magnitudes();

@@ -325,12 +325,14 @@ inline constexpr int32_t  SLINGSHOT_DROP_BPS            = 1250;   // 12.5%
 // historical blocks 7000-7349 continue to validate.
 //
 // Tier ladder (strict greater-than at each threshold; boundary values do
-// NOT trigger the higher tier — see slingshot_v12_tier in casert.cpp):
+// NOT trigger the higher tier — see slingshot_v12_tier in casert.cpp).
+// 5-tier emergency-only design with round-minute thresholds:
 //
-//   current_elapsed >  840 s ( 14 min) → tier 1 → -6.5%   bitsQ drop
-//   current_elapsed > 1740 s ( 29 min) → tier 2 → -12.5%
-//   current_elapsed > 3540 s ( 59 min) → tier 3 → -25%
-//   current_elapsed > 7140 s (119 min) → tier 4 → -37.5%
+//   current_elapsed >  1200 s ( 20 min) → tier 1 → -6.5%   bitsQ drop
+//   current_elapsed >  1800 s ( 30 min) → tier 2 → -12.5%
+//   current_elapsed >  3600 s ( 60 min) → tier 3 → -25%
+//   current_elapsed >  7200 s (120 min) → tier 4 → -37.5%
+//   current_elapsed > 10800 s (180 min) → tier 5 → -50%   (catastrophic)
 //
 // The drop is applied AFTER the avg288 / dynamic-cap clamp and is then
 // re-clamped to MIN_BITSQ. Self-resetting per block — no compounding
@@ -349,14 +351,20 @@ inline constexpr int32_t  CASERT_TRIANGULAR_MAX_STEPS_PRE_V12 = 6;
 inline constexpr int32_t  CASERT_TRIANGULAR_MAX_STEPS_V12     = 7;
 
 // V12 Slingshot — same-block, single-gate (only current_elapsed)
-inline constexpr int64_t  V12_SLINGSHOT_T1_SECONDS  = 840;    // 14 min
-inline constexpr int64_t  V12_SLINGSHOT_T2_SECONDS  = 1740;   // 29 min
-inline constexpr int64_t  V12_SLINGSHOT_T3_SECONDS  = 3540;   // 59 min
-inline constexpr int64_t  V12_SLINGSHOT_T4_SECONDS  = 7140;   // 119 min
+// 5-tier ladder, emergency-only thresholds. T1 calibrated to fire
+// only on real outliers (P ≈ 13.5% at target). T5 added as a true
+// catastrophic-relief layer for multi-hour stalls (P ≈ 1e-8).
+// Round-number minutes for clean operator mental math.
+inline constexpr int64_t  V12_SLINGSHOT_T1_SECONDS  = 1200;   //  20 min
+inline constexpr int64_t  V12_SLINGSHOT_T2_SECONDS  = 1800;   //  30 min
+inline constexpr int64_t  V12_SLINGSHOT_T3_SECONDS  = 3600;   //  60 min
+inline constexpr int64_t  V12_SLINGSHOT_T4_SECONDS  = 7200;   // 120 min
+inline constexpr int64_t  V12_SLINGSHOT_T5_SECONDS  = 10800;  // 180 min
 inline constexpr int32_t  V12_SLINGSHOT_T1_DROP_BPS = 650;    //  -6.5%
 inline constexpr int32_t  V12_SLINGSHOT_T2_DROP_BPS = 1250;   // -12.5%
 inline constexpr int32_t  V12_SLINGSHOT_T3_DROP_BPS = 2500;   // -25%
 inline constexpr int32_t  V12_SLINGSHOT_T4_DROP_BPS = 3750;   // -37.5%
+inline constexpr int32_t  V12_SLINGSHOT_T5_DROP_BPS = 5000;   // -50%
 
 // V11 Phase 2 activation height (SbPoW + PoP lottery + jackpot rollover).
 // Phase 1 activates at 7000; Phase 2 at 7100 — 100-block (~16-17h)
