@@ -4437,7 +4437,7 @@ function renderIndexedTx(tx,c){
   var changeIdx=-1;
   if(!isCB&&tx.vout&&tx.vout.length===2){var a0=parseFloat(tx.vout[0].amount||0),a1=parseFloat(tx.vout[1].amount||0);changeIdx=a0<a1?0:1;}
   var outputsHtml='';
-  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);var isChange=i===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
+  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);var isChange=i===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
   var feeHtml='';
   if(!isCB&&fee>0){feeHtml='<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div><div class="k">total input</div><div class="v">'+fS(Math.round(sumIn))+' SOST</div>';}
   c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+feeHtml+'<div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div><div class="k">inputs / outputs</div><div class="v">'+(tx.vin?tx.vin.length:0)+' / '+(tx.vout?tx.vout.length:0)+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
@@ -4449,8 +4449,8 @@ function renderFallbackTx(txid,outputs,c){
   var inputsHtml='';
   if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div><div class="tx-io-amt">'+totalOut.toFixed(8)+' SOST</div></div>';}
   else{inputsHtml='<div class="tx-io-item"><div class="tx-io-label">INPUTS</div><div style="font-size:11px;color:var(--text2)">Input details unavailable (outputs partially spent)</div></div>';}
-  var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
-  var typeColors2=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
+  var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'];
+  var typeColors2=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'];
   var changeIdx=-1;
   if(!isCB&&outputs.length===2){var a0=typeof outputs[0].amount==='number'?outputs[0].amount:parseFloat(outputs[0].amount);var a1=typeof outputs[1].amount==='number'?outputs[1].amount:parseFloat(outputs[1].amount);changeIdx=a0<a1?0:1;}
   var outputsHtml='';
@@ -4471,8 +4471,8 @@ function renderMempoolTx(tx,c){
 }
 // --- UTXO Pagination helpers ---
 var _addrUtxos=[],_addrTxidCounts={},_addrPage=0,_addrPageSize=10;
-var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc'];
-var typeColors=['var(--green)','var(--orange)','var(--gold)','var(--cyan)'];
+var typeLabels=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'];
+var typeColors=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'];
 function _buildUtxoRow(u,txidCounts){
   var txid=u.txid||'';var confs=H-u.height+1;
   var isCoinbase=u.coinbase;var isMature=!isCoinbase||(confs>=COINBASE_MATURITY);
@@ -4550,18 +4550,28 @@ async function showAddress(addr){
     } else if(role==='POPC POOL'){
       protectionHtml='<div class="k">protection</div><div class="v"><span style="color:var(--cyan);font-weight:600">\u{1F551} CONSTITUTIONAL RESERVE</span> <span style="color:var(--text3)">// accumulates rewards for PoPC participants \u2014 distributed after audit cycle</span></div>';
     }
-    // Compute MINED (coinbase) vs IN (regular) vs OUT
+    // Compute MINED (coinbase miner — type 1) vs LOTTERY UNSPENT (type 4) vs IN
+    // (regular non-coinbase). Splitting lottery directly off u.type means the
+    // breakdown is correct from the very first render — no dependency on the
+    // DTD scan having populated _dtdLotteryByAddr. Lifetime totals (which
+    // include already-spent lottery UTXOs) are still surfaced separately
+    // below if the cache has them.
     var minedAmt=0,minedCount=0,inAmt=0,inCount=0;
+    var lottUnspentAmt=0, lottUnspentCount=0;
     for(var mi2=0;mi2<sorted.length;mi2++){
       var u2=sorted[mi2];
       var amt2=typeof u2.amount==='number'?u2.amount:parseFloat(u2.amount);
-      if(u2.coinbase){minedAmt+=amt2;minedCount++;}
-      else{inAmt+=amt2;inCount++;}
+      if(u2.coinbase){
+        if((u2.type|0)===4){lottUnspentAmt+=amt2;lottUnspentCount++;}
+        else{minedAmt+=amt2;minedCount++;}
+      } else {
+        inAmt+=amt2;inCount++;
+      }
     }
-    // Hydrate DTD lottery cache early so we can subtract lottery payouts from
-    // MINED below. Lottery payouts are coinbase outputs, so they were just
-    // counted into minedAmt above. Splitting them out avoids visual double-
-    // counting in the address detail panel (TOTAL = MINED + RECEIVED + LOTTERY).
+    // DTD lottery cache — used for *lifetime* lottery (includes spent lottery
+    // UTXOs); unspent count/amount is already known precisely above. The
+    // cache is best-effort: if missing, we still show the UNSPENT row, which
+    // is always correct.
     var dtdLottery=null;
     try{
       if(window._dtdLotteryByAddr&&window._dtdLotteryByAddr[addr]){
@@ -4577,16 +4587,14 @@ async function showAddress(addr){
         }
       }
     }catch(e){}
-    var lottAmtSost=0, lottCount=0;
+    var lottLifetimeSost=0, lottLifetimeCount=0;
     if(dtdLottery&&dtdLottery.amt>0){
-      lottAmtSost=dtdLottery.amt/100000000;
-      lottCount=dtdLottery.count||0;
-      minedAmt=Math.max(0, minedAmt - lottAmtSost);
-      minedCount=Math.max(0, minedCount - lottCount);
+      lottLifetimeSost=dtdLottery.amt/100000000;
+      lottLifetimeCount=dtdLottery.count||0;
     }
     // Balance section — clean vertical rows
     var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
-    balHtml+='<div class="k" style="color:#ffd700" title="Coinbase rewards from blocks this address mined ('+minedCount+' blocks). Excludes lottery payouts (those appear in DTD LOTTERY RECEIVED below).">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
+    balHtml+='<div class="k" style="color:#ffd700" title="Coinbase miner outputs (type=1) currently unspent at this address. The address has '+minedCount+' such UTXOs whose miner-share output has not yet been spent. Lottery payouts (type=4) are split into the row below so totals don\'t double-count.">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
     balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
     // \u2191 SENT (non-mining) \u2014 lifetime outflow. Sourced from the node's
     // getaddressflows RPC, which walks every block once and returns
@@ -4595,15 +4603,29 @@ async function showAddress(addr){
     // hit the cache instead of re-scanning. Hydrated async; the row
     // shows "\u2014" while the RPC is in flight, then updates in place.
     balHtml+='<div class="k" id="addrSentLbl" style="color:#fb010d" title="Lifetime sum of non-coinbase outputs spent FROM this address. Computed by the node by walking the chain once and tracking input amounts via prev-tx lookup. Updates after the RPC returns.">\u2191 SENT (non-mining)</div><div class="v" id="addrSentVal"><span style="color:var(--text3)">loading...</span></div>';
-    // DTD lottery received row. lottAmtSost / lottCount were computed early
-    // (right after the coinbase loop) so we could subtract them from MINED.
-    // The row title clarifies the breakdown: TOTAL = MINED + RECEIVED + LOTTERY.
-    if(lottAmtSost>0){
-      balHtml+='<div class="k" style="color:#ff00ff" title="SOST received as PoP Lottery payouts on Phase 2 PAYOUT blocks. Already excluded from MINED above so the rows sum to TOTAL BALANCE without double-counting.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
-      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottAmtSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottCount+(lottCount===1?' win':' wins')+')</span></div>';
+    // Lottery rows. CURRENT UNSPENT comes directly from u.type==4 (always
+    // accurate). LIFETIME WON uses the DTD cache when available; if not, we
+    // tell the user to open DTD to populate it. TOTAL BALANCE always equals
+    // MINED + RECEIVED + LOTTERY UNSPENT — the lifetime row is informational
+    // and does not affect the sum.
+    if(lottUnspentCount>0){
+      balHtml+='<div class="k" style="color:#ff00ff" title="Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. PoP-Lottery wins from Phase 2 PAYOUT blocks whose lottery output has not yet been spent. Already excluded from MINED above so rows sum to TOTAL BALANCE without double-counting.">\u{1F3B0} DTD LOTTERY (current unspent)</div>';
+      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottUnspentAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottUnspentCount+' UTXO'+(lottUnspentCount===1?'':'s')+')</span></div>';
+    }
+    if(lottLifetimeCount>0){
+      var lottDeltaTxt='';
+      if(lottLifetimeCount>lottUnspentCount){
+        var spentN=lottLifetimeCount-lottUnspentCount;
+        lottDeltaTxt=' · <span style="color:var(--text3)">'+spentN+' already spent</span>';
+      }
+      balHtml+='<div class="k" style="color:#ff00ff" title="Lifetime PoP-Lottery wins for this address (from the DTD chain scan). Includes payouts that have already been spent — those are still reflected in TOTAL BALANCE through the change outputs of the spending transactions.">\u{1F3B0} DTD LOTTERY WON (lifetime)</div>';
+      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')+lottDeltaTxt+')</span></div>';
+    }else if(lottUnspentCount===0){
+      balHtml+='<div class="k" style="color:#ff00ff" title="No Phase 2 lottery payouts currently held at this address. The DTD scan can confirm whether any have been won and already spent.">\u{1F3B0} DTD LOTTERY</div>';
+      balHtml+='<div class="v"><span style="color:var(--text3)">no lottery UTXOs · open DTD section to confirm lifetime</span></div>';
     }else{
-      balHtml+='<div class="k" style="color:#ff00ff" title="DTD scan has not run yet in this session. Open the DTD section to populate lottery history for all addresses.">\u{1F3B0} DTD LOTTERY RECEIVED</div>';
-      balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan</span></div>';
+      balHtml+='<div class="k" style="color:#ff00ff" title="DTD scan has not run yet in this session. The CURRENT UNSPENT row above is exact; open the DTD section to populate the lifetime total (which also includes lottery UTXOs already spent).">\u{1F3B0} DTD LOTTERY WON (lifetime)</div>';
+      balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan lifetime</span></div>';
     }
     if(immatureCount>0){
       balHtml+='<div class="k" style="color:#00ff88">\u25A0 SPENDABLE</div><div class="v"><span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span></div>';
@@ -4934,13 +4956,17 @@ function renderAddrCharts(utxos){
   var matBar=document.getElementById('addrMatBar');
   var matLeg=document.getElementById('addrMatLegend');
   if(matBar){
-    var mature=0,almost=0,immature=0;
+    var mature=0,almost=0,immature=0,lottUtxos=0,lottAmt=0;
     byHeight.forEach(function(u){
       var confs=H-u.height+1;
       var isCb=u.coinbase;
       if(!isCb||confs>=1000)mature++;
       else if(confs>=500)almost++;
       else immature++;
+      if((u.type|0)===4){
+        lottUtxos++;
+        lottAmt+=(typeof u.amount==='number'?u.amount:parseFloat(u.amount));
+      }
     });
     var total=mature+almost+immature;if(total===0)total=1;
     var mPct=(mature/total*100).toFixed(1),aPct=(almost/total*100).toFixed(1),iPct=(immature/total*100).toFixed(1);
@@ -4948,9 +4974,10 @@ function renderAddrCharts(utxos){
       (mature?'<div style="width:'+mPct+'%;background:#3a3a3a;height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
       (almost?'<div style="width:'+aPct+'%;background:#555;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
       (immature?'<div style="width:'+iPct+'%;background:#666;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
+    var lottLegend=lottUtxos?(' &nbsp; <span style="color:#ff00ff;" title="PoP-Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. Spent lottery wins are not in this count \u2014 they are reflected in TOTAL BALANCE via change outputs.">\u{1F3B0}</span> Lottery: '+lottUtxos+' ('+lottAmt.toFixed(8)+' SOST)'):'';
     matLeg.innerHTML='<span style="color:#3a3a3a;">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
       (almost?'<span style="color:#555;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
-      (immature?'<span style="color:#666;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'');
+      (immature?'<span style="color:#666;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'')+lottLegend;
   }
 }
 
