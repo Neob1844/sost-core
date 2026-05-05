@@ -999,7 +999,7 @@ make -j$(nproc) sost-miner</pre>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">WALL CLOCK ELAPSED</div><div id="csWall" style="font-size:16px;font-weight:600;color:var(--green)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">real time since genesis</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">CHAIN TIME ELAPSED</div><div id="csChain" style="font-size:16px;font-weight:600;color:var(--purple)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">height × 10 min target</div></div>
-        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div><div id="csLagCascade" style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.4;display:none" title="Active relief-valve regime by block height. The cascade lowers the cASERT profile by N levels every K seconds once the current block search exceeds the start threshold; floor stays at E7."></div></div>
+        <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">BLOCK LAG</div><div id="csLag" style="font-size:16px;font-weight:600;color:var(--orange)">—</div><div id="csLagSub" style="font-size:9px;color:var(--text3);margin-top:2px">expected − actual</div><div id="csLagCountdown" style="font-size:10px;color:#fbbf24;margin-top:4px;display:none"></div><div id="csLagCascade" style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.4;display:none" title="V12 7-step triangular cascade — the only active cASERT relief mechanism at the current height. Arms at 540s into the current block search; advances one step every 60s; cap at n=7 (max drop 28 levels). Drop applied = n*(n+1)/2. Floor stays at E7. Source: compute_v11_cascade_drop_triangular_h in src/pow/casert.cpp."></div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">EXPECTED BLOCKS</div><div id="csExpected" style="font-size:16px;font-weight:600;color:var(--yellow)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at 10 min/block target</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">ACTUAL BLOCKS</div><div id="csActual" style="font-size:16px;font-weight:600;color:var(--red)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">mined on chain</div></div>
         <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px">TIME OFFSET</div><div id="csOffset" style="font-size:16px;font-weight:600;color:var(--cyan)">—</div><div style="font-size:9px;color:var(--text3);margin-top:2px">at tip · <span id="csSinceTip" style="color:var(--yellow)">—</span> since last block</div></div>
@@ -2674,41 +2674,38 @@ function updateChainSync(){
     cdEl.innerHTML='\u23F1 behind schedule \u00B7 profile B0';
   } else if(cdEl){cdEl.style.display='none';}
 
-  // Two distinct cASERT mechanisms are surfaced here:
-  //
-  //  1) V10 granular relief valve (block 6,700+): drop 1 profile level
-  //     every 60 s once the current block search has exceeded 600 s.
-  //     Floor stays at E7. Activates when the chain is STUCK.
-  //
-  //  2) Triangular cascade lag clamp: caps the profile drop relative
-  //     to lag using n*(n+1)/2. Pre-V12 (#5,750..#7,349): max 6 steps
-  //     → max drop 21. V12 (#7,350+): max 7 steps → max drop 28.
-  //     Activates when the chain is AHEAD of schedule.
-  //
-  // Both rules live in src/pow/casert.cpp; this is read-only display.
+  // V12 7-step triangular cascade — the SOLE relief mechanism at the
+  // current height. compute_v11_cascade_drop_triangular_h in
+  // src/pow/casert.cpp: arms at 540 s, advances n by 1 every 60 s,
+  // capped at MAX_STEPS_V12=7. Drop applied = n*(n+1)/2 (1, 3, 6, 10,
+  // 15, 21, 28). V8 cliff / V9 staged / V10 granular / V11 6-step are
+  // historical branches kept in consensus for past heights only — they
+  // do not execute on new blocks. Floor stays at E7. This widget is
+  // read-only display.
   var cascadeEl=document.getElementById('csLagCascade');
   if(cascadeEl){
     var nextH=actual+1;  // height being mined
-    if(nextH<6700){
+    if(nextH<7350){
       cascadeEl.style.display='none';
     } else {
       cascadeEl.style.display='block';
-      var v12Active=(nextH>=7350);
-      var triangularSteps=v12Active?7:6;
-      var triangularMaxDrop=triangularSteps*(triangularSteps+1)/2;
-      var head='<span style="color:#22d3ee;letter-spacing:.4px">V10 granular</span> relief −1/60s after 600s · floor E7'
-        +' · <span style="color:#a855f7">triangular cascade</span> max '+triangularSteps+' steps (drop '+triangularMaxDrop+')'
-        +(v12Active?' <span style="color:#fb010d;font-weight:700">[V12]</span>':'');
+      var head='<span style="color:#a855f7">V12 7-step triangular cascade</span> · arms at 540s, steps every 60s · max drop 28 (n=7) · floor E7';
       var dyn='';
-      if(timeSinceTip>=600){
-        var sinceStart=timeSinceTip-600;
-        var stepsTaken=Math.floor(sinceStart/60)+1;  // first drop fires AT 600s
-        var nextStepAt=600+stepsTaken*60;
-        var secsToNext=Math.max(0,Math.ceil(nextStepAt-timeSinceTip));
-        dyn=' · <span style="color:#fbbf24">relief drop '+stepsTaken+' lvl, next in '+secsToNext+'s</span>';
+      if(timeSinceTip>=540){
+        // n = 1 + floor((elapsed - 540) / 60), capped at 7. Drop is n*(n+1)/2.
+        var n=Math.min(7, 1 + Math.floor((timeSinceTip-540)/60));
+        var drop=n*(n+1)/2;
+        if(n>=7){
+          dyn=' · <span style="color:#fb010d;font-weight:700">cascade capped at n=7, drop=28</span>';
+        } else {
+          var nextStepAt=540+n*60;
+          var secsToNext=Math.max(0,Math.ceil(nextStepAt-timeSinceTip));
+          var nextN=n+1, nextDrop=nextN*(nextN+1)/2;
+          dyn=' · <span style="color:#fbbf24">n='+n+' · drop='+drop+' · next n='+nextN+' (drop='+nextDrop+') in '+secsToNext+'s</span>';
+        }
       } else {
-        var armSecs=Math.max(0,Math.ceil(600-timeSinceTip));
-        dyn=' · <span style="color:var(--text3)">relief arms in '+armSecs+'s</span>';
+        var armSecs=Math.max(0,Math.ceil(540-timeSinceTip));
+        dyn=' · <span style="color:var(--text3)">cascade arms in '+armSecs+'s</span>';
       }
       cascadeEl.innerHTML=head+dyn;
     }
