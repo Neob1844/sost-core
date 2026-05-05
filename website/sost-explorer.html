@@ -1575,6 +1575,8 @@ function renderDTDTable(cache){
     var roleColor=ROLES[r.addr]?(ROLES[r.addr]==='GOLD VAULT'?'var(--gold)':ROLES[r.addr]==='POPC POOL'?'var(--cyan)':'#fbbf24'):(r.minedBlocks>0?'var(--orange)':'var(--text2)');
     var bal=(r.balanceStocks===null)?'n/a':(dtdSost8(r.balanceStocks)+' SOST');
     var rec=(r.receivedStocks===null)?'n/a':(dtdSost8(r.receivedStocks)+' SOST');
+    var sent=(r.sentStocks===null||r.sentStocks===undefined)?'n/a':(dtdSost8(r.sentStocks)+' SOST');
+    var sentColor=(r.sentStocks&&r.sentStocks>0)?'#fb010d':'var(--text3)';
     var mined=dtdSost8(r.minedStocks)+' SOST';
     var dtdWon=dtdSost8(r.dtdWonStocks||0)+' SOST';
     html+='<tr style="border-bottom:1px solid #111">';
@@ -1584,7 +1586,7 @@ function renderDTDTable(cache){
     html+='<td style="text-align:right;color:#fbbf24">'+mined+'</td>';
     html+='<td style="text-align:right;color:var(--purple);font-weight:600">'+dtdWon+'</td>';
     html+='<td style="text-align:right;color:var(--green)">'+rec+'</td>';
-    html+='<td style="text-align:right;color:var(--text3)">n/a</td>';
+    html+='<td style="text-align:right;color:'+sentColor+'" title="Lifetime SOST sent from this address (non-mining transactions only — mining outputs are tracked separately under MINED). Computed by getaddressflows on the node.">'+sent+'</td>';
     html+='<td style="text-align:right;color:'+(r.balanceStocks>0?'var(--green)':'var(--text3)')+'">'+bal+'</td>';
     html+='<td style="text-align:right;color:var(--text3)">'+(r.lastMined?('#'+r.lastMined):'—')+'</td>';
     html+='<td style="text-align:right;color:'+dtdStatusColor(r.status)+';font-weight:600">'+r.status+'</td>';
@@ -1747,7 +1749,7 @@ async function renderDTDPanel(body,title,silent){
     var PHASE2_START=7100;
     function ensure(addr){
       if(!addr)return null;
-      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
+      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,sentStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
       return rowsByAddr[addr];
     }
     ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');
@@ -1802,6 +1804,11 @@ async function renderDTDPanel(body,title,silent){
       if(info&&info.utxos){for(var ui=0;ui<info.utxos.length;ui++){var u=info.utxos[ui];var amt=Math.round(parseFloat(u.amount||0)*100000000);bal+=amt;if(!u.coinbase)rec+=amt;}}
       rowsByAddr[addr].balanceStocks=bal; if(rowsByAddr[addr].receivedStocks===null)rowsByAddr[addr].receivedStocks=rec;
     }).catch(function(){rowsByAddr[addr].balanceStocks=null;if(rowsByAddr[addr].receivedStocks===null)rowsByAddr[addr].receivedStocks=null;});}));
+    // Lifetime SENT (non-mining) per address via getaddressflows. Best-effort:
+    // older nodes that lack this RPC leave sentStocks=null and the table shows 'n/a'.
+    await Promise.all(addrs.slice(0,120).map(function(addr){return rpc('getaddressflows',[addr]).then(function(f){
+      if(f&&typeof f.sent_non_mining==='number'){rowsByAddr[addr].sentStocks=f.sent_non_mining;}
+    }).catch(function(){});}));
     var lot=null;try{lot=await rpc('getlotterystate');}catch(e){}
     addrs.forEach(function(addr){rowsByAddr[addr].status=dtdStatus(rowsByAddr[addr],height,cooldownSet);});
     var rows=addrs.map(function(a){return rowsByAddr[a];});
@@ -1873,7 +1880,10 @@ async function renderDTDPanel(body,title,silent){
           +'<div style="font-size:14px;font-weight:800;color:#a855f7;letter-spacing:1px;margin-bottom:3px">🔍 LOTTERY AUDIT</div>'
           +'<div style="font-size:9px;letter-spacing:1.5px;color:var(--text3)">REPRODUCE ON-CHAIN SELECTION PER PAYOUT BLOCK</div>'
         +'</div>'
-        +'<button id="lotteryAuditBtn" onclick="loadLotteryAudit()" style="font-size:13px;font-weight:700;letter-spacing:1.5px;background:#a855f7;color:#fff;border:0;padding:10px 22px;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35);transition:transform .12s ease,box-shadow .12s ease" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 0 0 1px #a855f7,0 4px 18px rgba(168,85,247,.55)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35)\'">▶ RUN AUDIT</button>'
+        +'<div style="display:flex;gap:8px;align-items:center">'
+          +'<button id="lotteryAuditBtn" onclick="loadLotteryAudit()" style="font-size:13px;font-weight:700;letter-spacing:1.5px;background:#a855f7;color:#fff;border:0;padding:10px 22px;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35);transition:transform .12s ease,box-shadow .12s ease" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 0 0 1px #a855f7,0 4px 18px rgba(168,85,247,.55)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 0 0 1px rgba(168,85,247,.4),0 2px 12px rgba(168,85,247,.35)\'">▶ RUN AUDIT</button>'
+          +'<button id="lotteryAuditCloseBtn" onclick="closeLotteryAudit()" title="Close audit and clear results" style="display:none;font-size:14px;font-weight:700;background:transparent;color:#a855f7;border:1px solid rgba(168,85,247,.5);width:34px;height:34px;border-radius:3px;cursor:pointer;line-height:1;padding:0" onmouseover="this.style.background=\'rgba(168,85,247,.15)\'" onmouseout="this.style.background=\'transparent\'">✕</button>'
+        +'</div>'
       +'</div>'
       +'<div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b style="color:#fb010d">Audit winner</b> differs from <b style="color:#22c55e">On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the previous 5 blocks — those addresses are excluded from THIS lottery. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
       +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b style="color:#a855f7">▶ RUN AUDIT</b> to scan all PAYOUT blocks</div>'
@@ -1915,6 +1925,16 @@ async function renderDTDPanel(body,title,silent){
 // would either freeze the browser or spike the node. The pool keeps
 // node load bounded and renders rows progressively.
 var _lotteryAuditRunning=false;
+window.closeLotteryAudit = function(){
+  // Clears the audit table and lets the user start fresh. If the scan is
+  // still in flight, the running flag is reset so a re-run is allowed; the
+  // pending RPC workers will finish and write into a hidden DOM node, no harm.
+  _lotteryAuditRunning=false;
+  var host=document.getElementById('lotteryAuditTable');
+  if(host) host.innerHTML='click <b style="color:#a855f7">▶ RUN AUDIT</b> to scan all PAYOUT blocks';
+  var btn=document.getElementById('lotteryAuditBtn'); if(btn) btn.style.display='';
+  var x=document.getElementById('lotteryAuditCloseBtn'); if(x) x.style.display='none';
+};
 window.loadLotteryAudit = async function(){
   if(_lotteryAuditRunning)return;
   var host=document.getElementById('lotteryAuditTable');
@@ -1925,6 +1945,10 @@ window.loadLotteryAudit = async function(){
     return;
   }
   _lotteryAuditRunning=true;
+  // Show the close (✕) button now that the audit is open; hide RUN AUDIT
+  // so the user only sees the close action while results are visible.
+  var _xbtn=document.getElementById('lotteryAuditCloseBtn'); if(_xbtn) _xbtn.style.display='';
+  var _runbtn=document.getElementById('lotteryAuditBtn'); if(_runbtn) _runbtn.style.display='none';
 
   var AUDIT_CONCURRENCY=8;
   var total=payouts.length;
@@ -1938,9 +1962,25 @@ window.loadLotteryAudit = async function(){
 
   // Pre-render skeleton table; rows fill in as RPCs complete.
   var statusHtml='<div id="lotteryAuditStatus" style="margin-bottom:6px;font-size:10px;color:var(--cyan)">scanning 0 / '+total+' PAYOUT blocks...</div>';
+  var TT_BLOCK='Height of the PAYOUT block being audited. Phase 2 schedules a lottery payout on every 3rd reward block; only those blocks appear here.';
+  var TT_MINER='Address that mined this PAYOUT block. The miner is excluded from winning the lottery on the same block (the cooldown rule covers this and the previous 4 blocks).';
+  var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the PoP Lottery payout output in this block.';
+  var TT_AUDIT='Lottery winner address re-derived in real time from the same 16-block window the consensus rule uses (sha256(SOST_LOTTERY_V11 || prev16_hashes || height_le)). Same input → same winner. Any divergence from ON-CHAIN WINNER is evidence of selection tampering.';
+  var TT_WIDX='Index of the winner inside the eligible-set list at this block. Deterministic: idx = first 8 bytes of seed mod eligible_count.';
+  var TT_ELIG='Number of eligible addresses considered for this block — coinbase-bearing addresses minus the cooldown set (last 5 distinct miners).';
+  var TT_SEED='First 12 hex chars of sha256(SOST_LOTTERY_V11 || 16 prev block hashes || height_le). Hover for the full seed and the seed-input prefix used to build it.';
+  var TT_COOL='Count of distinct miners in the previous 5 blocks — those addresses are excluded from THIS lottery. Hover the cell for the actual addresses. Winning the lottery does NOT trigger cooldown; only mining a recent block does.';
+  var TT_MATCH='OK = audit winner equals on-chain winner (selection reproduces from public chain data). MISMATCH = the on-chain payout went to a different address than the consensus rule produces — would indicate tampering.';
   var tableHead='<table class="tbl" style="font-size:10px;width:100%"><thead>'
-    +'<tr><th>BLOCK</th><th>MINER</th><th>ON-CHAIN WINNER</th><th>AUDIT WINNER</th>'
-    +'<th>WINNER IDX</th><th>ELIG</th><th>SEED</th><th>COOLDOWN</th><th>MATCH</th></tr>'
+    +'<tr><th title="'+TT_BLOCK+'">BLOCK</th>'
+    +'<th title="'+TT_MINER+'">MINER</th>'
+    +'<th title="'+TT_ON+'">ON-CHAIN WINNER</th>'
+    +'<th title="'+TT_AUDIT+'">AUDIT WINNER</th>'
+    +'<th title="'+TT_WIDX+'">WINNER IDX</th>'
+    +'<th title="'+TT_ELIG+'">ELIG</th>'
+    +'<th title="'+TT_SEED+'">SEED</th>'
+    +'<th title="'+TT_COOL+'">COOLDOWN</th>'
+    +'<th title="'+TT_MATCH+'">MATCH</th></tr>'
     +'</thead><tbody id="lotteryAuditBody"></tbody></table>';
   host.innerHTML=statusHtml+tableHead;
   var statusEl=document.getElementById('lotteryAuditStatus');

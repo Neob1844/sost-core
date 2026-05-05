@@ -644,6 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="icon">&#9881;</span> <span>Settings</span>
       </button>
     </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Session</div>
+      <button class="sidebar-btn" id="endSessionBtn" onclick="endWalletSession()" title="Lock the wallet and clear keys from memory. You will need your password to come back in.">
+        <span class="icon" style="color:#fb010d">&#x1F510;</span> <span style="color:#fb010d">End Session</span>
+      </button>
+    </div>
     <div class="sidebar-spacer"></div>
     <div class="sidebar-status">
       <span class="status-dot" id="statusDot"></span>
@@ -3143,6 +3149,22 @@ function lockWallet() {
   document.getElementById('app').style.filter = 'blur(8px)';
   document.getElementById('app').style.pointerEvents = 'none';
 }
+
+// User-initiated end-of-session. Same effect as the auto-lock timer
+// firing: keys are wiped from memory and the unlock screen is shown.
+// Confirmation prompt avoids losing an in-progress action by accident.
+window.endWalletSession = function() {
+  if (!wallet) return;
+  if (!confirm('End session and lock the wallet?\nYou will need your password to come back in.')) return;
+  clearTimeout(lockTimer);
+  if (wallet && wallet.watchOnly) {
+    // Watch-only: just send the user back to the welcome screen.
+    wallet = null; walletPassword = null;
+    showView('welcome');
+    return;
+  }
+  lockWallet();
+};
 
 window.unlockWallet = async function() {
   const pass = document.getElementById('unlockPass').value;
