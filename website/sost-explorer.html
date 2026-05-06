@@ -2254,6 +2254,13 @@ async function updateDashboard(info){
     // avg1000 informational cards above. Slice ensures BURST/VOLATILITY,
     // BLOCK INTERVALS and DIFF HISTORY charts keep showing 288 blocks (~48h)
     // matching their headers.
+    //
+    // Defensive sort by descending height: parallel chunked fetch can leave
+    // gaps if any getblock call fails (blocks with !b are silently skipped),
+    // and downstream charts assume monotonic ordering. Sorting before the
+    // slice guarantees we always pick the highest 288 successfully-fetched
+    // blocks rather than relying on push order.
+    diffs.sort(function(a,b){return b.h-a.h;});
     _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
     // Update unique miners card from freshly fetched data (288-window only)
     document.getElementById('dMiners').textContent=minerSet.size;
@@ -2991,14 +2998,26 @@ function renderDashPanel(key,body,title,silent){
       setupDpTooltip('dpHeightCanvas',tipData,function(d){return '<span style="color:var(--purple);font-weight:600">'+d.hr+'</span><br>Blocks: <span style="color:var(--text)">'+d.count+'</span>';});
     },50);
   } else if(key==='avgtime'){
-    title.textContent='// BLOCK INTERVALS (last '+data.length+' blocks)';
+    // Build intervals only between TRULY adjacent heights. If a getblock RPC
+    // failed during the dashboard fetch, the dropped block leaves a gap in
+    // data[]; the previous code blindly subtracted timestamps across the
+    // gap, producing one fake bar of e.g. 24,000s for a 40-block missing
+    // span (visible in the chart as a 7383->7424 jump). Now we skip those
+    // and surface the gap count in the title so it's auditable.
     if(!data||data.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data</div>';return;}
+    var _gaps=0;
+    for(var _gi=1;_gi<data.length;_gi++){
+      if(data[_gi].h !== data[_gi-1].h+1) _gaps++;
+    }
+    var _firstH=data[0].h, _lastH=data[data.length-1].h;
+    title.textContent='// BLOCK INTERVALS (#'+_firstH+' → #'+_lastH+', '+data.length+' blocks'+(_gaps?', '+_gaps+' gap'+(_gaps>1?'s':'')+' skipped':'')+')';
     body.innerHTML='<div style="position:relative"><canvas id="dpAvgCanvas" style="width:100%;height:140px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code);"></div></div>';
     setTimeout(function(){
       var cv=document.getElementById('dpAvgCanvas');if(!cv)return;
       var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
       cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
-      var intervals=[];for(var i=1;i<data.length;i++)intervals.push({h:data[i].h,v:data[i].t-data[i-1].t});
+      var intervals=[];for(var i=1;i<data.length;i++){if(data[i].h!==data[i-1].h+1)continue;intervals.push({h:data[i].h,v:data[i].t-data[i-1].t});}
+      if(!intervals.length){ctx.fillStyle='var(--text3)';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('no adjacent intervals (all gaps)',W/2,Hc/2);return;}
       var mx=Math.max.apply(null,intervals.map(function(d){return d.v;}))||1;
       if(mx<660)mx=660;
       var pad={l:40,r:10,t:10,b:20},cw=W-pad.l-pad.r,ch=Hc-pad.t-pad.b;
