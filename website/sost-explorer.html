@@ -4422,9 +4422,9 @@ async function showBlock(hash){
         var savedBitsQ=natural_bits_q-b.bits_q;
         var thresholdMin=Math.floor(ssTier.sec/60);
         ssHtml='<span style="color:#a855f7;font-weight:700">\u26A1 TIER '+ssTier.t+' ACTIVE</span> '
-          +'<span style="color:var(--text3)">\u2014 bits_q dropped by </span>'
+          +'<span style="color:#fff">\u2014 bits_q dropped by </span>'
           +'<span style="color:#fbbf24;font-weight:700">\u2212'+pctDrop+'%</span> '
-          +'<span style="color:var(--text3)">(mining_time '+miningTimeStr+' &gt; '+thresholdMin+'m threshold). '
+          +'<span style="color:#fff">(mining_time '+miningTimeStr+' &gt; '+thresholdMin+'m threshold). '
           +'Without slingshot, bits_q would have been ~'+natural_bits_q.toLocaleString()
           +' (~'+(natural_bits_q/65536).toFixed(3)+' bits) \u2014 saved ~'+savedBitsQ.toLocaleString()+' bits_q '
           +'(~'+(savedBitsQ/65536).toFixed(3)+' bits).</span>';
