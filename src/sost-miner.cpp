@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -2377,13 +2378,36 @@ int main(int argc, char** argv) {
     }
 
     int mined = 0;
+    int consecutive_fails = 0;
     for (int i = 0; i < num_blocks; ++i) {
         if (!mine_one_block(prof, max_nonce, sim_time)) {
-            // mine_one_block returns false on: RPC reconnect (retry same height)
-            // or extra_nonce exhaustion (stop)
-            if (!g_rpc_url.empty()) { --i; continue; } // retry same block after reconnect
+            // mine_one_block returns false on: RPC failure (retry same
+            // height after backoff), height/profile resync (retry same
+            // height), Slingshot mid-search rebuild, or extra_nonce
+            // exhaustion (stop in standalone).
+            //
+            // Exponential backoff is purely miner-side defense against
+            // RPC outages. Without it, fetch_lottery_state fails fast on
+            // a closed socket and this loop spins at ~7000 retries/s,
+            // pegging CPU at 100% and flooding the log until the tunnel
+            // returns. Schedule (capped at 5 s, reset on first success):
+            //   #1=100ms  #2=200ms  #3=400ms  #4=800ms
+            //   #5=1.6s   #6=3.2s   #7+=5s
+            // The 100 ms first-fail penalty is also harmless on legitimate
+            // fast-restart paths (Slingshot rebuild, profile change),
+            // since dataset regen between blocks already costs more.
+            // Does NOT touch consensus, cASERT, Slingshot, or bits_q.
+            if (!g_rpc_url.empty()) {
+                consecutive_fails++;
+                int shift = std::min(consecutive_fails - 1, 6);
+                int sleep_ms = std::min(5000, 100 << shift);
+                std::this_thread::sleep_for(
+                    std::chrono::milliseconds(sleep_ms));
+                --i; continue;
+            }
             else break; // standalone mode: stop
         }
+        consecutive_fails = 0;
         mined++;
         if (g_rpc_url.empty()) save_chain(chain_path);
     }
