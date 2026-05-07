@@ -209,7 +209,14 @@ struct LotteryEligibilityResult {
 //   exclusion_window     — how many recent blocks count for the
 //                          recent-winner exclusion. Defaults to
 //                          LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW
-//                          (= 5 in the C5 default).
+//                          (= 5, the pre-V13 value).
+//
+//                          CONSENSUS CALLERS MUST pass this explicitly
+//                          via sost::lottery_exclusion_window_at(height)
+//                          (see params.h). The default is retained for
+//                          window-agnostic tests only; using the default
+//                          on a fork-aware path silently freezes pre-V13
+//                          behaviour.
 //
 // Eligibility rule (C7.1, revised from C6):
 //   1. Address has won >= 1 block before `height`.
@@ -219,9 +226,11 @@ struct LotteryEligibilityResult {
 //
 // The current block winner CAN enter the lottery iff their address
 // passes rule 2 (i.e. they did not also win any of the previous
-// `exclusion_window` blocks). Under the C5 default of 5, a winning
-// miner whose previous win was at H-6 or earlier IS eligible; one
-// whose previous win was at H-1..H-5 is excluded by rule 2.
+// `exclusion_window` blocks). With window = 5 (pre-V13), a winner whose
+// previous win was at H-6 or earlier IS eligible; one whose previous
+// win was at H-1..H-5 is excluded. With window = 6 (post-V13_HEIGHT),
+// the boundary moves: only H-7 or earlier is eligible; H-1..H-6 are
+// excluded. See docs/V13_COOLDOWN_AUDIT.md for the rationale.
 //
 // Output:
 //   Vector of entries sorted lex by raw pkh bytes (stable across

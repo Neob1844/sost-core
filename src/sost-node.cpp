@@ -1143,10 +1143,13 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         }
 
         // current_miner_pkh is unused by the C7.1 rule; pass zero pkh.
+        // Cooldown window is height-gated through V13: pre-V13_HEIGHT this
+        // returns 5 (LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW); from V13_HEIGHT
+        // onwards it returns 6. See docs/V13_COOLDOWN_AUDIT.md.
         PubKeyHash zero_pkh{};
         auto eligible = sost::lottery::compute_lottery_eligibility_set(
             history, height_next, zero_pkh,
-            sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+            sost::lottery_exclusion_window_at(height_next));
         eligible_count = (int64_t)eligible.size();
         eligibility_empty = eligible.empty();
 
@@ -1349,10 +1352,12 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
         history.push_back(v);
     }
 
+    // Cooldown window is height-gated through V13. The audit RPC must
+    // report the same window the consensus path used for `height`.
     PubKeyHash zero_pkh{};
     auto eligible = sost::lottery::compute_lottery_eligibility_set(
         history, height, zero_pkh,
-        sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+        sost::lottery_exclusion_window_at(height));
     int64_t winner_index = -1;
     PubKeyHash winner_pkh{};
     if (!eligible.empty()) {
@@ -1401,12 +1406,16 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
     // as `recent_winners[b.miner_pkh] = 1`). It is NOT keyed on the
     // recent lottery output recipients — winning a lottery does not put
     // an address into cooldown. So the audit must list miners over
-    // [height - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW, height - 1],
+    // [height - lottery_exclusion_window_at(height), height - 1],
     // not lottery payout recipients, otherwise the column misleads
     // exactly the question this audit is meant to answer.
+    //
+    // The window is height-gated through V13 (5 pre-12000, 6 from 12000),
+    // so the audited bounds match the consensus eligibility computation
+    // performed above byte-for-byte.
     std::vector<std::string> cooldown_addrs;
     {
-        const int64_t cd_lo = height - sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;
+        const int64_t cd_lo = height - sost::lottery_exclusion_window_at(height);
         const int64_t cd_hi = height - 1;
         std::set<std::string> seen;  // dedup: a miner appears once per cooldown
         for (const auto& b : g_blocks) {
@@ -4062,9 +4071,13 @@ static bool process_block(const std::string& block_json) {
                 return false;
             }
 
+            // Block-validation path: the cooldown window for `height`
+            // is height-gated by lottery_exclusion_window_at (5 pre-V13,
+            // 6 from V13_HEIGHT). Pre-V13 callers receive the existing
+            // 5-block window unchanged; post-V13 callers receive 6.
             auto eligible = sost::lottery::compute_lottery_eligibility_set(
                 history, height, txs[0].outputs[0].pubkey_hash,
-                sost::LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+                sost::lottery_exclusion_window_at(height));
 
             const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
             if (eligible.empty()) {

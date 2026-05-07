@@ -268,6 +268,16 @@ add_executable(test-v13-helpers tests/test_v13_helpers.cpp)
 target_link_libraries(test-v13-helpers PRIVATE sost-core)
 add_test(NAME v13-helpers COMMAND test-v13-helpers)
 
+# V13 hard fork @ block 12000 — lottery cooldown wire-up boundary.
+# Exercises the FULL eligibility computation path
+# (compute_lottery_eligibility_set + lottery_exclusion_window_at) to
+# verify the cooldown reaches one block further from V13_HEIGHT and that
+# the helper produces a byte-identical eligibility set vs. literal-window
+# calls (pre-fork = 5 literal, post-fork = 6 literal).
+add_executable(test-v13-lottery-cooldown-fork tests/test_v13_lottery_cooldown_fork.cpp)
+target_link_libraries(test-v13-lottery-cooldown-fork PRIVATE sost-core)
+add_test(NAME v13-lottery-cooldown-fork COMMAND test-v13-lottery-cooldown-fork)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
